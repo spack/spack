@@ -103,6 +103,31 @@ def mock_patchelf(tmpdir):
     return _factory
 
 
+@pytest.fixture()
+def hello_world(tmpdir):
+    source = tmpdir.join('main.c')
+    source.write("""
+#include <stdio.h>
+int main(){
+    printf("Hello world!");
+}
+""")
+
+    def _factory(rpaths):
+        gcc = spack.util.executable.which('gcc')
+        executable = source.dirpath('main.x')
+        rpath_str = ':'.join(rpaths)
+        opts = [
+            '-Wl,--disable-new-dtags',
+            '-Wl,-rpath={0}'.format(rpath_str),
+            str(source), '-o', str(executable)
+        ]
+        gcc(*opts)
+        return executable
+
+    return _factory
+
+
 @pytest.mark.requires_executables(
     '/usr/bin/gcc', 'patchelf', 'strings', 'file'
 )
@@ -118,9 +143,7 @@ def test_file_is_relocatable(source_file, is_relocatable):
     assert spack.relocate.file_is_relocatable(executable) is is_relocatable
 
 
-@pytest.mark.requires_executables(
-    'patchelf', 'strings', 'file'
-)
+@pytest.mark.requires_executables('patchelf', 'strings', 'file')
 def test_patchelf_is_relocatable():
     patchelf = spack.relocate._patchelf()
     assert llnl.util.filesystem.is_exe(patchelf)
@@ -194,3 +217,94 @@ def test_normalize_relative_paths(start_path, relative_paths, expected):
         start_path, relative_paths
     )
     assert normalized == expected
+
+
+def test_set_elf_rpaths(mock_patchelf):
+    # Try to relocate a mock version of patchelf and check
+    # the call made to patchelf itself
+    patchelf = mock_patchelf('echo $@')
+    rpaths = ['/usr/lib', '/usr/lib64', '/opt/local/lib']
+    output = spack.relocate._set_elf_rpaths(patchelf, rpaths)
+
+    # Assert that the arguments of the call to patchelf are as expected
+    assert '--force-rpath' in output
+    assert '--set-rpath ' + ':'.join(rpaths) in output
+    assert patchelf in output
+
+
+def test_set_elf_rpaths_warning(mock_patchelf):
+    # Mock a failing patchelf command and ensure it warns users
+    patchelf = mock_patchelf('exit 1')
+    rpaths = ['/usr/lib', '/usr/lib64', '/opt/local/lib']
+    # To avoid using capfd in order to check if the warning was triggered
+    # here we just check that output is not set
+    output = spack.relocate._set_elf_rpaths(patchelf, rpaths)
+    assert output is None
+
+
+@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+def test_replace_prefix_bin(hello_world):
+    # Compile an "Hello world!" executable and set RPATHs
+    executable = hello_world(rpaths=['/usr/lib', '/usr/lib64'])
+
+    # Relocate the RPATHs
+    spack.relocate._replace_prefix_bin(str(executable), '/usr', '/foo')
+
+    # Check that the RPATHs changed
+    patchelf = spack.util.executable.which('patchelf')
+    output = patchelf('--print-rpath', str(executable), output=str)
+    assert output.strip() == '/foo/lib:/foo/lib64'
+
+
+@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+def test_relocate_elf_binaries_absolute_paths(hello_world, tmpdir):
+    # Create an executable, set some RPATHs, copy it to another location
+    orig_binary = hello_world(rpaths=[str(tmpdir.mkdir('lib')), '/usr/lib64'])
+    new_root = tmpdir.mkdir('another_dir')
+    shutil.copy(str(orig_binary), str(new_root))
+
+    # Relocate the binary
+    new_binary = new_root.join('main.x')
+    spack.relocate.relocate_elf_binaries(
+        binaries=[str(new_binary)],
+        orig_root=str(orig_binary.dirpath()),
+        new_root=None,  # Not needed when relocating absolute paths
+        new_prefixes={
+            str(tmpdir): '/foo'
+        },
+        rel=False,
+        # Not needed when relocating absolute paths
+        orig_prefix=None, new_prefix=None
+    )
+
+    # Check that the RPATHs changed
+    patchelf = spack.util.executable.which('patchelf')
+    output = patchelf('--print-rpath', str(new_binary), output=str)
+    assert output.strip() == '/foo/lib:/usr/lib64'
+
+
+@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+def test_relocate_elf_binaries_relative_paths(hello_world, tmpdir):
+    # Create an executable, set some RPATHs, copy it to another location
+    orig_binary = hello_world(
+        rpaths=['$ORIGIN/lib', '$ORIGIN/lib64', '/opt/local/lib']
+    )
+    new_root = tmpdir.mkdir('another_dir')
+    shutil.copy(str(orig_binary), str(new_root))
+
+    # Relocate the binary
+    new_binary = new_root.join('main.x')
+    spack.relocate.relocate_elf_binaries(
+        binaries=[str(new_binary)],
+        orig_root=str(orig_binary.dirpath()),
+        new_root=str(new_root),
+        new_prefixes={str(tmpdir): '/foo'},
+        rel=True,
+        orig_prefix=str(orig_binary.dirpath()),
+        new_prefix=str(new_root)
+    )
+
+    # Check that the RPATHs changed
+    patchelf = spack.util.executable.which('patchelf')
+    output = patchelf('--print-rpath', str(new_binary), output=str)
+    assert output.strip() == '/foo/lib:/foo/lib64:/opt/local/lib'
