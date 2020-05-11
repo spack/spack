@@ -338,12 +338,16 @@ def _createtarball(env, spec_yaml, packages, add_spec, add_deps,
     elif packages:
         packages = packages
 
+    elif env:
+        packages = env.roots()
+
     else:
         tty.die("build cache file creation requires at least one" +
                 " installed package argument or else path to a" +
                 " yaml file containing a spec to install")
     pkgs = set(packages)
     specs = set()
+    tty.debug("pkgs = ", pkgs)
 
     mirror = spack.mirror.MirrorCollection().lookup(output_location)
     outdir = url_util.format(mirror.push_url)
@@ -356,6 +360,7 @@ def _createtarball(env, spec_yaml, packages, add_spec, add_deps,
         signkey = key
 
     matches = find_matching_specs(pkgs, env=env)
+    tty.debug("matches = ", matches)
 
     if matches:
         tty.debug('Found at least one matching spec')

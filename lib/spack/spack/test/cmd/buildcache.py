@@ -11,10 +11,13 @@ import pytest
 
 import spack.main
 import spack.binary_distribution
+import spack.environment as ev
 from spack.spec import Spec
 
 buildcache = spack.main.SpackCommand('buildcache')
 install = spack.main.SpackCommand('install')
+env = spack.main.SpackCommand('env')
+add = spack.main.SpackCommand('add')
 
 
 @pytest.fixture()
@@ -47,7 +50,6 @@ def test_buildcache_list_duplicates(mock_get_specs, capsys):
     assert output.count('mpileaks') == 3
 
 
-def test_buildcache_create_fail_on_perm_denied(
 def tests_buildcache_create(
     install_mockery, mock_fetch, monkeypatch, tmpdir):
     """"Ensure that buildcache create creates output files"""
@@ -63,6 +65,27 @@ def tests_buildcache_create(
         spack.binary_distribution.tarball_name(spec, '.spec.yaml')))
 
 
+def tests_buildcache_create_env(
+    install_mockery, mock_fetch, monkeypatch, tmpdir,
+    mutable_mock_env_path):
+    """"Ensure that buildcache create creates output files from env"""
+    pkg = 'trivial-install-test-package'
+
+    env('create', 'test')
+    with ev.read('test'):
+        add(pkg)
+        install()
+
+        buildcache('create', '-d', str(tmpdir), '--unsigned')
+
+    spec = Spec(pkg).concretized()
+    assert os.path.exists(os.path.join(str(tmpdir), 'build_cache',
+        spack.binary_distribution.tarball_path_name(spec, '.spack')))
+    assert os.path.exists(os.path.join(str(tmpdir), 'build_cache',
+        spack.binary_distribution.tarball_name(spec, '.spec.yaml')))
+
+
+def test_buildcache_create_fail_on_perm_denied(
         install_mockery, mock_fetch, monkeypatch, tmpdir):
     """Ensure that buildcache create fails on permission denied error."""
     install('trivial-install-test-package')
