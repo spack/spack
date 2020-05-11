@@ -30,7 +30,7 @@ cd "$SPACK_ROOT"
 
 # Run bash tests with coverage enabled, but pipe output to /dev/null
 # because it seems that kcov seems to undo the script's redirection
-if [ "$BASH_COVERAGE" = true ]; then
+if [ "$COVERAGE" = true ]; then
     "$QA_DIR/bashcov" "$QA_DIR/setup-env-test.sh" &> /dev/null
     "$QA_DIR/bashcov" "$QA_DIR/completion-test.sh" &> /dev/null
 else

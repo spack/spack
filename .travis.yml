@@ -42,9 +42,6 @@ jobs:
             - perl
             - perl-base
             - realpath
-            - r-base
-            - r-base-core
-            - r-base-dev
             - zsh
       env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '2.7'
