@@ -336,3 +336,11 @@ def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
     )
 
     assert rpaths_for(new_binary) == '$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib'
+
+
+def test_raise_if_not_relocatable(monkeypatch):
+    monkeypatch.setattr(spack.relocate, 'file_is_relocatable', lambda x: False)
+    with pytest.raises(spack.relocate.InstallRootStringError):
+        spack.relocate.raise_if_not_relocatable(
+            ['an_executable'], allow_root=False
+        )
