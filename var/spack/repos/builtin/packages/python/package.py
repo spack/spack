@@ -913,12 +913,13 @@ class Python(AutotoolsPackage):
             # cover cases A and B, as well as case C in some rare cases.
             ldshared = self.get_config_var('LDSHARED')
             dep_compiler = dependent_spec.package.compiler
-            if ldshared.startswith(dep_compiler.cc):
-                env.set('LDSHARED', ldshared.replace(
-                    dep_compiler.cc,
-                    join_path(spack.paths.build_env_path,
-                              dep_compiler.link_paths['cc'])))
-            else:
+            dep_real_cc = dep_compiler.cc
+            dep_spack_cc = join_path(spack.paths.build_env_path,
+                                     dep_compiler.link_paths['cc'])
+            if ldshared.startswith(dep_real_cc):
+                env.set('LDSHARED',
+                        dep_spack_cc + ldshared[len(dep_real_cc):])
+            elif not ldshared.startswith(dep_spack_cc):
                 tty.warn("Failed to set LDSHARED environment variable: Python "
                          "compiled extensions might be linked without Spack "
                          "compiler wrappers.")
