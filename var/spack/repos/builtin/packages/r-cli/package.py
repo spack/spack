@@ -23,3 +23,5 @@ class RCli(RPackage):
     depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-assertthat', type=('build', 'run'))
     depends_on('r-crayon@1.3.4:', type=('build', 'run'))
+    depends_on('r-glue', type=('build', 'run'))
+    depends_on('r-fansi', type=('build', 'run'))
