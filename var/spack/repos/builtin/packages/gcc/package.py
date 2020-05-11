@@ -25,6 +25,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version('develop', svn=svn + 'trunk')
 
+    version('10.1.0', sha256='b6898a23844b656f1b68691c5c012036c2e694ac4b53a8918d4712ad876e7ea2')
+
     version('9.3.0', sha256='71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1')
     version('9.2.0', sha256='ea6ef08f121239da5695f76c9b33637a118dcf63e24164422231917fa61fb206')
     version('9.1.0', sha256='79a66834e96a6050d8fe78db2c3b32fb285b230b855d0a66288235bc04b327a0')
@@ -92,8 +94,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gmp@4.3.2:')
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
-    depends_on('mpfr@2.4.2:3.1.6')
-    depends_on('mpc@0.8.1:', when='@4.5:')
+    depends_on('mpfr@2.4.2:3.1.6', when='@:9.9')
+    depends_on('mpfr@3.1.0:', when='@10:')
+    depends_on('mpc@1.0.1:', when='@4.5:')
     # Already released GCC versions do not support any newer version of ISL
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
@@ -101,8 +104,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('isl@0.14', when='@5.0:5.2')
     depends_on('isl@0.15', when='@5.3:5.9')
     depends_on('isl@0.15:0.18', when='@6:8.9')
-    depends_on('isl@0.15:0.20', when='@9:')
+    depends_on('isl@0.15:0.20', when='@9:9.9')
+    depends_on('isl@0.15:', when='@10:')
     depends_on('zlib', when='@6:')
+    depends_on('zstd', when='@10:')
     depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
@@ -252,6 +257,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('sys_ustat.h.patch', when='@5.0:6.4,7.0:7.3,8.1')
     patch('sys_ustat-4.9.patch', when='@4.9')
 
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95005
+    patch('zstd.patch', when='@10:')
+
     build_directory = 'spack-build'
 
     def url_for_version(self, version):
@@ -311,6 +319,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Use installed libz
         if self.version >= Version('6'):
             options.append('--with-system-zlib')
+
+        if 'zstd' in spec:
+            options.append('--with-zstd={0}'.format(spec['zstd'].prefix))
 
         # Enabling language "jit" requires --enable-host-shared.
         if 'languages=jit' in spec:
