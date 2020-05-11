@@ -96,11 +96,6 @@ addons:
       - mercurial
       - ninja-build
       - patchelf
-      - perl
-      - perl-base
-      - r-base
-      - r-base-core
-      - r-base-dev
       - zsh
     update: true
 
@@ -115,7 +110,7 @@ cache:
 before_install:
   - ccache -M 2G && ccache -z
   # Install kcov manually, since it's not packaged for bionic beaver
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$COVERAGE" == "true" ]]; then
         sudo apt-get -y install binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev;
         KCOV_ROOT=$(mktemp -d);
         wget --output-document=${KCOV_ROOT}/34.tar.gz https://github.com/SimonKagstrom/kcov/archive/v34.tar.gz;
