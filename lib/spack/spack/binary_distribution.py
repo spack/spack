@@ -514,7 +514,7 @@ def make_package_relative(workdir, spec, allow_root):
             platform.system().lower() == 'linux'):
         relocate.make_elf_binaries_relative(cur_path_names, orig_path_names,
                                             old_layout_root)
-    relocate.check_files_relocatable(cur_path_names, allow_root)
+    relocate.raise_if_not_relocatable(cur_path_names, allow_root)
     orig_path_names = list()
     cur_path_names = list()
     for linkname in buildinfo.get('relocate_links', []):
@@ -532,7 +532,7 @@ def check_package_relocatable(workdir, spec, allow_root):
     cur_path_names = list()
     for filename in buildinfo['relocate_binaries']:
         cur_path_names.append(os.path.join(workdir, filename))
-    relocate.check_files_relocatable(cur_path_names, allow_root)
+    relocate.raise_if_not_relocatable(cur_path_names, allow_root)
 
 
 def relocate_package(spec, allow_root):

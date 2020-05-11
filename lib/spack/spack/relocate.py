@@ -728,15 +728,19 @@ def make_elf_binaries_relative(new_binaries, orig_binaries, orig_layout_root):
             _set_elf_rpaths(new_binary, new_rpaths)
 
 
-def check_files_relocatable(cur_path_names, allow_root):
+def raise_if_not_relocatable(binaries, allow_root):
+    """Raise an error if any binary in the list is not relocatable.
+
+    Args:
+        binaries (list): list of binaries to check
+        allow_root (bool): whether root dir is allowed or not in a binary
+
+    Raises:
+        InstallRootStringError: if the file is not relocatable
     """
-    Check binary files for the current install root
-    """
-    for cur_path in cur_path_names:
-        if (not allow_root and
-                not file_is_relocatable(cur_path)):
-            raise InstallRootStringError(
-                cur_path, spack.store.layout.root)
+    for binary in binaries:
+        if not (allow_root or file_is_relocatable(binary)):
+            raise InstallRootStringError(binary, spack.store.layout.root)
 
 
 def relocate_links(linknames, old_layout_root, new_layout_root,
