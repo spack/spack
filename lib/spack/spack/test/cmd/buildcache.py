@@ -5,11 +5,13 @@
 
 import errno
 import platform
+import os
 
 import pytest
 
 import spack.main
 import spack.binary_distribution
+from spack.spec import Spec
 
 buildcache = spack.main.SpackCommand('buildcache')
 install = spack.main.SpackCommand('install')
@@ -46,6 +48,21 @@ def test_buildcache_list_duplicates(mock_get_specs, capsys):
 
 
 def test_buildcache_create_fail_on_perm_denied(
+def tests_buildcache_create(
+    install_mockery, mock_fetch, monkeypatch, tmpdir):
+    """"Ensure that buildcache create creates output files"""
+    pkg = 'trivial-install-test-package'
+    install(pkg)
+
+    buildcache('create', '-d', str(tmpdir), '--unsigned', pkg)
+
+    spec = Spec(pkg).concretized()
+    assert os.path.exists(os.path.join(str(tmpdir), 'build_cache',
+        spack.binary_distribution.tarball_path_name(spec, '.spack')))
+    assert os.path.exists(os.path.join(str(tmpdir), 'build_cache',
+        spack.binary_distribution.tarball_name(spec, '.spec.yaml')))
+
+
         install_mockery, mock_fetch, monkeypatch, tmpdir):
     """Ensure that buildcache create fails on permission denied error."""
     install('trivial-install-test-package')
