@@ -40,4 +40,4 @@ class RDevtools(RPackage):
     depends_on('r-sessioninfo@1.1.1:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-testthat@2.3.2:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-versions@2.0.1:', when='@2.0.0:', type==('build', 'run'))
-    depends_on('r-dt@0.13:', when='@2.3.0', type==('build', 'run'))
+    depends_on('r-dt@0.13:', when='@2.3.0:', type==('build', 'run'))
