@@ -20,6 +20,13 @@ import spack.tengine
 import spack.util.executable
 
 
+def rpaths_for(new_binary):
+    """Return the RPATHs or RUNPATHs of a binary."""
+    patchelf = spack.util.executable.which('patchelf')
+    output = patchelf('--print-rpath', str(new_binary), output=str)
+    return output.strip()
+
+
 @pytest.fixture(params=[True, False])
 def is_relocatable(request):
     return request.param
@@ -105,6 +112,9 @@ def mock_patchelf(tmpdir):
 
 @pytest.fixture()
 def hello_world(tmpdir):
+    """Factory fixture that compiles an ELF binary setting its RPATH. Relative
+    paths are encoded with `$ORIGIN` prepended.
+    """
     source = tmpdir.join('main.c')
     source.write("""
 #include <stdio.h>
@@ -116,6 +126,9 @@ int main(){
     def _factory(rpaths):
         gcc = spack.util.executable.which('gcc')
         executable = source.dirpath('main.x')
+        # Encode relative RPATHs using `$ORIGIN` as the root prefix
+        rpaths = [x if os.path.isabs(x) else os.path.join('$ORIGIN', x)
+                  for x in rpaths]
         rpath_str = ':'.join(rpaths)
         opts = [
             '-Wl,--disable-new-dtags',
@@ -126,6 +139,19 @@ int main(){
         return executable
 
     return _factory
+
+
+@pytest.fixture()
+def copy_binary():
+    """Returns a function that copies a binary somewhere and
+    returns the new location.
+    """
+    def _copy_somewhere(orig_binary):
+        new_root = orig_binary.mkdtemp()
+        new_binary = new_root.join('main.x')
+        shutil.copy(str(orig_binary), str(new_binary))
+        return new_binary
+    return _copy_somewhere
 
 
 @pytest.mark.requires_executables(
@@ -250,23 +276,18 @@ def test_replace_prefix_bin(hello_world):
     # Relocate the RPATHs
     spack.relocate._replace_prefix_bin(str(executable), '/usr', '/foo')
 
-    # Check that the RPATHs changed
-    patchelf = spack.util.executable.which('patchelf')
-    output = patchelf('--print-rpath', str(executable), output=str)
-
     # Some compilers add rpaths so ensure changes included in final result
-    assert '/foo/lib:/foo/lib64' in output
+    assert '/foo/lib:/foo/lib64' in rpaths_for(executable)
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
-def test_relocate_elf_binaries_absolute_paths(hello_world, tmpdir):
+def test_relocate_elf_binaries_absolute_paths(
+        hello_world, copy_binary, tmpdir
+):
     # Create an executable, set some RPATHs, copy it to another location
     orig_binary = hello_world(rpaths=[str(tmpdir.mkdir('lib')), '/usr/lib64'])
-    new_root = tmpdir.mkdir('another_dir')
-    shutil.copy(str(orig_binary), str(new_root))
+    new_binary = copy_binary(orig_binary)
 
-    # Relocate the binary
-    new_binary = new_root.join('main.x')
     spack.relocate.relocate_elf_binaries(
         binaries=[str(new_binary)],
         orig_root=str(orig_binary.dirpath()),
@@ -279,38 +300,39 @@ def test_relocate_elf_binaries_absolute_paths(hello_world, tmpdir):
         orig_prefix=None, new_prefix=None
     )
 
-    # Check that the RPATHs changed
-    patchelf = spack.util.executable.which('patchelf')
-    output = patchelf('--print-rpath', str(new_binary), output=str)
-
     # Some compilers add rpaths so ensure changes included in final result
-    assert '/foo/lib:/usr/lib64' in output
+    assert '/foo/lib:/usr/lib64' in rpaths_for(new_binary)
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
-def test_relocate_elf_binaries_relative_paths(hello_world, tmpdir):
+def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = hello_world(
-        rpaths=['$ORIGIN/lib', '$ORIGIN/lib64', '/opt/local/lib']
-    )
-    new_root = tmpdir.mkdir('another_dir')
-    shutil.copy(str(orig_binary), str(new_root))
+    orig_binary = hello_world(rpaths=['lib', 'lib64', '/opt/local/lib'])
+    new_binary = copy_binary(orig_binary)
 
-    # Relocate the binary
-    new_binary = new_root.join('main.x')
     spack.relocate.relocate_elf_binaries(
         binaries=[str(new_binary)],
         orig_root=str(orig_binary.dirpath()),
-        new_root=str(new_root),
-        new_prefixes={str(tmpdir): '/foo'},
+        new_root=str(new_binary.dirpath()),
+        new_prefixes={str(orig_binary.dirpath()): '/foo'},
         rel=True,
         orig_prefix=str(orig_binary.dirpath()),
-        new_prefix=str(new_root)
+        new_prefix=str(new_binary.dirpath())
     )
 
-    # Check that the RPATHs changed
-    patchelf = spack.util.executable.which('patchelf')
-    output = patchelf('--print-rpath', str(new_binary), output=str)
-
     # Some compilers add rpaths so ensure changes included in final result
-    assert '/foo/lib:/foo/lib64:/opt/local/lib' in output
+    assert '/foo/lib:/foo/lib64:/opt/local/lib' in rpaths_for(new_binary)
+
+
+@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
+    orig_binary = hello_world(rpaths=[
+        str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
+    ])
+    new_binary = copy_binary(orig_binary)
+
+    spack.relocate.make_elf_binaries_relative(
+        [str(new_binary)], [str(orig_binary)], str(orig_binary.dirpath())
+    )
+
+    assert rpaths_for(new_binary) == '$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib'

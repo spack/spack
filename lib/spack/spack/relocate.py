@@ -712,7 +712,7 @@ def make_macho_binaries_relative(cur_path_names, orig_path_names,
 def make_elf_binaries_relative(new_binaries, orig_binaries, orig_layout_root):
     """Replace the original RPATHs in the new binaries making them
     relative to the original layout root.
-    
+
     Args:
         new_binaries (list): new binaries whose RPATHs is to be made relative
         orig_binaries (list): original binaries
