@@ -71,6 +71,10 @@ jobs:
     - python: '3.8'
       os: linux
       language: python
+      env: [ TEST_SUITE=shell, COVERAGE=true ]
+    - python: '3.8'
+      os: linux
+      language: python
       env: TEST_SUITE=doc
 
 stages:
@@ -156,6 +160,10 @@ after_success:
                         --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
             fi
             ;;
+        shell)
+            codecov --env PYTHON_VERSION
+            --required
+            --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
     esac
 
 #=============================================================================
