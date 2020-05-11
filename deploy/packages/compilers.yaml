@@ -37,7 +37,7 @@ packages:
       - architecture
       - compiler
     specs:
-      - gcc@9.2.0
+      - gcc@9.3.0
       - gcc@8.3.0
       - intel-parallel-studio+advisor+clck+daal+gdb+inspector+ipp+itac+mkl+mpi+rpath+shared+tbb+vtune@cluster.2019.5
       #- intel@18.0.3

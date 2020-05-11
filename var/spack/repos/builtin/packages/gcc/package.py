@@ -25,6 +25,7 @@ class Gcc(AutotoolsPackage):
 
     version('develop', svn=svn + 'trunk')
 
+    version('9.3.0', sha256='71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1')
     version('9.2.0', sha256='ea6ef08f121239da5695f76c9b33637a118dcf63e24164422231917fa61fb206')
     version('9.1.0', sha256='79a66834e96a6050d8fe78db2c3b32fb285b230b855d0a66288235bc04b327a0')
 
@@ -100,7 +101,7 @@ class Gcc(AutotoolsPackage):
     depends_on('isl@0.15:0.18', when='@6:8.9')
     depends_on('isl@0.15:0.20', when='@9:')
     depends_on('zlib', when='@6:')
-    depends_on('libiconv')
+    depends_on('libiconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
@@ -279,7 +280,6 @@ class Gcc(AutotoolsPackage):
                 ','.join(spec.variants['languages'].value)),
             # Drop gettext dependency
             '--disable-nls',
-            '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix),
             '--with-mpfr={0}'.format(spec['mpfr'].prefix),
             '--with-gmp={0}'.format(spec['gmp'].prefix),
         ]
@@ -328,7 +328,8 @@ class Gcc(AutotoolsPackage):
         if sys.platform == 'darwin':
             options.extend([
                 '--with-native-system-header-dir=/usr/include',
-                '--with-sysroot={0}'.format(macos_sdk_path())
+                '--with-sysroot={0}'.format(macos_sdk_path()),
+                '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix)
             ])
 
         return options
@@ -424,7 +425,7 @@ class Gcc(AutotoolsPackage):
                               self.prefix.lib, self.prefix.lib64))
         set_install_permissions(specs_file)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # Search prefix directory for possibly modified compiler names
         from spack.compilers.gcc import Gcc as Compiler
 
@@ -450,6 +451,6 @@ class Gcc(AutotoolsPackage):
                     continue
 
                 # Set the proper environment variable
-                run_env.set(lang.upper(), abspath)
+                env.set(lang.upper(), abspath)
                 # Stop searching filename/regex combos for this language
                 break
