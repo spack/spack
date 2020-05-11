@@ -16,6 +16,7 @@ class Mvdtool(CMakePackage):
     git      = "https://github.com/BlueBrain/MVDTool.git"
 
     version('develop', get_full_repo=False, submodules=True)
+    version('2.3.3', tag='v2.3.3', get_full_repo=False)
     version('2.3.2', tag='v2.3.2', get_full_repo=False)
     version('2.3.1', tag='v2.3.1', get_full_repo=False)
     version('2.3.0', tag='v2.3.0', get_full_repo=False)
