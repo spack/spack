@@ -247,7 +247,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
         enable_or_disable('mkldnn')
         if '@0.4:0.4.1+mkldnn' in self.spec:
-            env.set('MKLDNN_HOME', self.spec['intel-mkl-dnn'].prefix)
+            env.set('MKLDNN_HOME', self.spec['onednn'].prefix)
 
         enable_or_disable('nnpack')
         enable_or_disable('qnnpack')
@@ -270,8 +270,9 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('lmdb', newer=True)
         enable_or_disable('binary', keyword='BUILD', newer=True)
 
-        env.set('PYTORCH_BUILD_VERSION', self.version)
-        env.set('PYTORCH_BUILD_NUMBER', 0)
+        if not self.spec.satisfies('@master'):
+            env.set('PYTORCH_BUILD_VERSION', self.version)
+            env.set('PYTORCH_BUILD_NUMBER', 0)
 
         # BLAS to be used by Caffe2
         if '^mkl' in self.spec:

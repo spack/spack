@@ -45,18 +45,18 @@ class Command(object):
 class ArgparseWriter(argparse.HelpFormatter):
     """Analyzes an argparse ArgumentParser for easy generation of help."""
 
-    def __init__(self, prog, out=sys.stdout, aliases=False):
+    def __init__(self, prog, out=None, aliases=False):
         """Initializes a new ArgparseWriter instance.
 
         Parameters:
             prog (str): the program name
-            out (file object): the file to write to
+            out (file object): the file to write to (default sys.stdout)
             aliases (bool): whether or not to include subparsers for aliases
         """
         super(ArgparseWriter, self).__init__(prog)
         self.level = 0
         self.prog = prog
-        self.out = out
+        self.out = sys.stdout if out is None else out
         self.aliases = aliases
 
     def parse(self, parser, prog):
@@ -167,7 +167,7 @@ _rst_levels = ['=', '-', '^', '~', ':', '`']
 class ArgparseRstWriter(ArgparseWriter):
     """Write argparse output as rst sections."""
 
-    def __init__(self, prog, out=sys.stdout, aliases=False,
+    def __init__(self, prog, out=None, aliases=False,
                  rst_levels=_rst_levels):
         """Create a new ArgparseRstWriter.
 
@@ -178,6 +178,7 @@ class ArgparseRstWriter(ArgparseWriter):
             rst_levels (list of str): list of characters
                 for rst section headings
         """
+        out = sys.stdout if out is None else out
         super(ArgparseRstWriter, self).__init__(prog, out, aliases)
         self.rst_levels = rst_levels
 

@@ -41,6 +41,7 @@ class Geant4(CMakePackage):
     depends_on('cmake@3.5:', type='build')
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
 
+    depends_on('geant4-data@10.6.1', when='@10.6.1')
     depends_on('geant4-data@10.6.0', when='@10.6.0')
     depends_on('geant4-data@10.5.1', when='@10.5.1')
     depends_on('geant4-data@10.4.3', when='@10.4.3')

@@ -84,6 +84,11 @@ class NetcdfFortran(AutotoolsPackage):
             # building takes place outside of Spack environment, i.e.
             # without Spack's compiler wrappers.
             config_flags = [self.spec['netcdf-c'].libs.search_flags]
+        elif name == 'fflags' and self.spec.satisfies('%gcc@10:'):
+            # https://github.com/Unidata/netcdf-fortran/issues/212
+            if config_flags is None:
+                config_flags = []
+            config_flags.append('-fallow-argument-mismatch')
 
         return flags, None, config_flags
 
