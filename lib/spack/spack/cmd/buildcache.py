@@ -348,7 +348,6 @@ def _createtarball(env, spec_yaml, packages, add_spec, add_deps,
                 " to install")
     pkgs = set(packages)
     specs = set()
-    tty.debug("pkgs = ", pkgs)
 
     mirror = spack.mirror.MirrorCollection().lookup(output_location)
     outdir = url_util.format(mirror.push_url)
@@ -361,7 +360,6 @@ def _createtarball(env, spec_yaml, packages, add_spec, add_deps,
         signkey = key
 
     matches = find_matching_specs(pkgs, env=env)
-    tty.debug("matches = ", matches)
 
     if matches:
         tty.debug('Found at least one matching spec')
