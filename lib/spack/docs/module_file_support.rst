@@ -17,22 +17,16 @@ Spack integrates with `Environment Modules
 <http://lmod.readthedocs.io/en/latest/>`_ by
 providing post-install hooks that generate module files and commands to manipulate them.
 
-.. note::
-
-   If your machine does not already have a module system installed,
-   we advise you to use either Environment Modules or LMod. See :ref:`InstallEnvironmentModules`
-   for more details.
-
 .. _shell-support:
 
 ----------------------------
 Using module files via Spack
 ----------------------------
 
-If you have installed a supported module system either manually or through
-``spack bootstrap``, you should be able to run either ``module avail`` or
-``use -l spack`` to see what module files have been installed.  Here is
-sample output of those programs, showing lots of installed packages:
+If you have installed a supported module system you should be able to
+run either ``module avail`` or ``use -l spack`` to see what module
+files have been installed.  Here is sample output of those programs,
+showing lots of installed packages:
 
 .. code-block:: console
 
@@ -93,9 +87,7 @@ Note that in the latter case it is necessary to explicitly set ``SPACK_ROOT``
 before sourcing the setup file (you will get a meaningful error message
 if you don't).
 
-When ``bash`` and ``ksh`` users update their environment with ``setup-env.sh``, it will check for spack-installed environment modules and add the ``module`` command to their environment; This only occurs if the module command is not already available. You can install ``environment-modules`` with ``spack bootstrap`` as described in :ref:`InstallEnvironmentModules`.
-
-Finally, if you want to have Spack's shell support available on the command line at
+If you want to have Spack's shell support available on the command line at
 any login you can put this source line in one of the files that are sourced
 at startup (like ``.profile``, ``.bashrc`` or ``.cshrc``). Be aware though
 that the startup time may be slightly increased because of that.
