@@ -37,6 +37,8 @@ class Apbs(AutotoolsPackage):
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
+    version('1.4.2.1', sha256='aa3de78394ccfdbc29115f07fb005480603a4884628b8f82c9e38d93889dc2be',
+            url="https://downloads.sourceforge.net/project/apbs/apbs/apbs-1.4.2/apbs-1.4.2.1-source.tar.gz" )
     version('1.3', sha256='5fa5b597f7d5a3d9bb55429ec4fefc69e7d0f918d568c3c4a288088c0fde9ef2')
 
     variant('python', default=False, description='Build with python wrappers')
