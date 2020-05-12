@@ -55,22 +55,16 @@ class Revbayes(CMakePackage):
     def regenerate(self):
         with working_dir(join_path('projects', 'cmake')):
             mkdirp('build')
-            generate_version = Executable('./generate_version_number.sh')
-            generate_version()
-            dest = join_path('..', '..', 'src', 'revlanguage', 'utils')
-            install('GitVersion.cpp', dest)
-            regenerate = Executable('./regenerate.sh')
-            regenerate()
-
-    @when('@:1.1.0')
-    @run_before('cmake')
-    def regenerate(self):
-        with working_dir(join_path('projects', 'cmake')):
-            mkdirp('build')
-            edit = FileFilter('regenerate.sh')
-            edit.filter('boost="true"', 'boost="false"')
-            if '+mpi' in self.spec:
-                edit.filter('mpi="false"', 'mpi="true"')
+            if self.spec.version > Version('1.0.13'):
+                generate_version = Executable('./generate_version_number.sh')
+                generate_version()
+                dest = join_path('..', '..', 'src', 'revlanguage', 'utils')
+                install('GitVersion.cpp', dest)
+            else:
+                edit = FileFilter('regenerate.sh')
+                edit.filter('boost="true"', 'boost="false"')
+                if '+mpi' in self.spec:
+                    edit.filter('mpi="false"', 'mpi="true"')
             regenerate = Executable('./regenerate.sh')
             regenerate()
 
