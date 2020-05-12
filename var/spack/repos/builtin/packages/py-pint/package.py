@@ -22,6 +22,5 @@ class PyPint(PythonPackage):
     version('0.8.1', sha256='afcf31443a478c32bbac4b00337ee9026a13d0e2ac83d30c79151462513bb0d4')
 
     depends_on('python@3.6:', type=('build', 'run'), when='@0.10:')
-    depends_on('python', type=('build', 'run'), when='@0.8.1,0.9')
     depends_on('py-setuptools', type=('build', ))
     depends_on('py-setuptools-scm', type=('build', ))
