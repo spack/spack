@@ -12,8 +12,9 @@ class RRversions(RPackage):
        versions and their release dates.
     """
 
-    homepage = "https://cran.r-project.org/web/packages/rversions/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rversions_2.0.1.tar.gz"
+    homepage = "https://cloud.r-project.org/package=rversions"
+    url      = "https://cloud.r-project.org/src/contrib/rversions_2.0.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rversions"
 
     version('2.0.1', sha256='51ec1f64e7d628e88d716a020d5d521eba71d472e3c9ae7b694428ef6dd786c5')
     version('2.0.0', sha256='b50c321d9e973284ae6b1d0c89bd46a40f5174de51fb28e3c77cd12ef34f6f56')
