@@ -147,11 +147,6 @@ def clean_environment():
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
 
-    # Remove all pkgconfig stuff from craype
-    for varname in os.environ.keys():
-        if 'PKGCONF' in varname:
-            env.unset(varname)
-
     build_lang = spack.config.get('config:build_language')
     if build_lang:
         # Override language-related variables. This can be used to force
