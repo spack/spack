@@ -23,7 +23,7 @@ import spack.schema.packages
 import spack.schema.mirrors
 import spack.schema.repos
 import spack.util.spack_yaml as syaml
-from spack.util.path import canonicalize_path
+import spack.util.path as spack_path
 
 
 # sample config data
@@ -272,31 +272,31 @@ def test_substitute_config_variables(mock_low_high_config):
 
     assert os.path.join(
         '/foo/bar/baz', prefix
-    ) == canonicalize_path('/foo/bar/baz/$spack')
+    ) == spack_path.canonicalize_path('/foo/bar/baz/$spack')
 
     assert os.path.join(
         spack.paths.prefix, 'foo/bar/baz'
-    ) == canonicalize_path('$spack/foo/bar/baz/')
+    ) == spack_path.canonicalize_path('$spack/foo/bar/baz/')
 
     assert os.path.join(
         '/foo/bar/baz', prefix, 'foo/bar/baz'
-    ) == canonicalize_path('/foo/bar/baz/$spack/foo/bar/baz/')
+    ) == spack_path.canonicalize_path('/foo/bar/baz/$spack/foo/bar/baz/')
 
     assert os.path.join(
         '/foo/bar/baz', prefix
-    ) == canonicalize_path('/foo/bar/baz/${spack}')
+    ) == spack_path.canonicalize_path('/foo/bar/baz/${spack}')
 
     assert os.path.join(
         spack.paths.prefix, 'foo/bar/baz'
-    ) == canonicalize_path('${spack}/foo/bar/baz/')
+    ) == spack_path.canonicalize_path('${spack}/foo/bar/baz/')
 
     assert os.path.join(
         '/foo/bar/baz', prefix, 'foo/bar/baz'
-    ) == canonicalize_path('/foo/bar/baz/${spack}/foo/bar/baz/')
+    ) == spack_path.canonicalize_path('/foo/bar/baz/${spack}/foo/bar/baz/')
 
     assert os.path.join(
         '/foo/bar/baz', prefix, 'foo/bar/baz'
-    ) != canonicalize_path('/foo/bar/baz/${spack/foo/bar/baz/')
+    ) != spack_path.canonicalize_path('/foo/bar/baz/${spack/foo/bar/baz/')
 
 
 packages_merge_low = {
@@ -345,17 +345,41 @@ def test_merge_with_defaults(mock_low_high_config, write_config_file):
 
 def test_substitute_user(mock_low_high_config):
     user = getpass.getuser()
-    assert '/foo/bar/' + user + '/baz' == canonicalize_path(
+    assert '/foo/bar/' + user + '/baz' == spack_path.canonicalize_path(
         '/foo/bar/$user/baz'
     )
 
 
 def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
-    assert tempdir == canonicalize_path('$tempdir')
-    assert tempdir + '/foo/bar/baz' == canonicalize_path(
+    assert tempdir == spack_path.canonicalize_path('$tempdir')
+    assert tempdir + '/foo/bar/baz' == spack_path.canonicalize_path(
         '$tempdir/foo/bar/baz'
     )
+
+
+def test_substitute_padding(mock_low_high_config):
+    max_system_path = spack_path.get_system_path_max()
+    expected_length = (max_system_path -
+                       spack_path.SPACK_MAX_INSTALL_PATH_LENGTH)
+
+    install_path = spack_path.canonicalize_path('/foo/bar/${padding}/baz')
+
+    assert spack_path.SPACK_PATH_PADDING_CHARS in install_path
+    assert len(install_path) == expected_length
+
+    install_path = spack_path.canonicalize_path('/foo/bar/baz/gah/$padding')
+
+    assert spack_path.SPACK_PATH_PADDING_CHARS in install_path
+    assert len(install_path) == expected_length
+
+    i_path = spack_path.canonicalize_path('/foo/$padding:10')
+    i_expect = os.path.join('/foo', spack_path.SPACK_PATH_PADDING_CHARS[:10])
+    assert i_path == i_expect
+
+    i_path = spack_path.canonicalize_path('/foo/${padding:20}')
+    i_expect = os.path.join('/foo', spack_path.SPACK_PATH_PADDING_CHARS[:20])
+    assert i_path == i_expect
 
 
 def test_read_config(mock_low_high_config, write_config_file):
