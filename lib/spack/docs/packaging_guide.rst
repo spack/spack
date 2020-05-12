@@ -4050,11 +4050,12 @@ File functions
 
 .. _make-package-findable:
 
---------------------------------------------------------
-Making a package discoverable with "spack external find"
---------------------------------------------------------
+----------------------------------------------------------
+Making a package discoverable with ``spack external find``
+----------------------------------------------------------
 
-To make a package discoverable with ``spack external find`` you must
+To make a package discoverable with
+:ref:`spack external find <cmd-spack-external-find>` you must
 define one or more executables associated with the package and must
 implement a method to generate a Spec when given an executable.
 
@@ -4063,7 +4064,7 @@ attribute which is a list of strings (see example below); each string
 is treated as a regular expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3',
 'my-weird-gcc', etc.).
 
-The method, ``determine_spec_details``, has the following signature:
+The method ``determine_spec_details`` has the following signature:
 
 .. code-block:: python
 

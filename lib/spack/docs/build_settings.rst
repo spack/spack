@@ -158,6 +158,8 @@ Spack can then use any of the listed external implementations of MPI
 to satisfy a dependency, and will choose depending on the compiler and
 architecture.
 
+.. _cmd-spack-external-find:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Automatically Find External Packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
