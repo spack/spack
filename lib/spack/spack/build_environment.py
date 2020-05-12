@@ -725,7 +725,8 @@ def setup_package(pkg, dirty):
 
     implicit_rpaths = pkg.compiler.implicit_rpaths()
     if implicit_rpaths:
-        build_env.set('SPACK_COMPILER_IMPLICIT_RPATHS', ':'.join(implicit_rpaths))
+        build_env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
+                      ':'.join(implicit_rpaths))
 
     # Make sure nothing's strange about the Spack environment.
     validate(build_env, tty.warn)
