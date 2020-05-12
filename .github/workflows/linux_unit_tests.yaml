@@ -31,10 +31,15 @@ jobs:
       run: |
           pip install --upgrade pip six setuptools
           pip install --upgrade codecov coverage==4.5.4
+    - name: Setup git configuration
+      run: |
+        # Need this for the git tests to succeed.
+        git --version
+        git config --global user.email "spack@example.com"
+        git config --global user.name "Test User"
+        git fetch -u origin develop:develop
     - name: Run unit tests
       run: |
-        git --version
-        git fetch -u origin develop:develop
         . share/spack/setup-env.sh
         coverage run $(which spack) test
         coverage combine
