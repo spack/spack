@@ -46,7 +46,7 @@ class PyHorovod(PythonPackage):
 
     # Framework dependencies
     depends_on('py-tensorflow@1.1.0:',  type=('build', 'link', 'run'), when='frameworks=tensorflow')
-    depends_on('py-torch@0.4.0:',       type=('build', 'run'),         when='frameworks=pytorch')
+    depends_on('py-torch@0.4.0:',       type=('build', 'link', 'run'), when='frameworks=pytorch')
     depends_on('py-torchvision',        type=('build', 'run'),         when='frameworks=pytorch')
     depends_on('py-cffi@1.4.0:',        type=('build', 'run'),         when='frameworks=pytorch')
     depends_on('mxnet@1.4.1:+python',   type=('build', 'link', 'run'), when='frameworks=mxnet')
