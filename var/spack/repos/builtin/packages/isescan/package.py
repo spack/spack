@@ -40,15 +40,15 @@ class Isescan(Package):
 
         # set paths to required programs
         blast_pfx = self.spec['blast-plus'].prefix.bin
-        blastn_path = join_path(blast_pfx, 'blastn')
-        blastp_path = join_path(blast_pfx, 'blastp')
-        makeblastdb_path = join_path(blast_pfx, 'makeblastdb')
+        blastn_path = blast_pfx.blastn
+        blastp_path = blast_pfx.blastp
+        makeblastdb_path = blast_pfx.makeblastdb
 
         hmmer_pfx = self.spec['hmmer'].prefix.bin
-        phmmer_path = join_path(hmmer_pfx, 'phmmer')
-        hmmsearch_path = join_path(hmmer_pfx, 'hmmsearch')
+        phmmer_path = hmmer_pfx.phmmer
+        hmmsearch_path = hmmer_pfx.hmmsearch
 
-        fgs_pfx = self.spec['fraggenescan'].prefix
+        fgs_pfx = self.spec['fraggenescan'].prefix.bin
         fgs_path = join_path(fgs_pfx, 'run_FragGeneScan.pl')
 
         constants = FileFilter('constants.py')
