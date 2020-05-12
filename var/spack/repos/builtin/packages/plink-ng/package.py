@@ -7,9 +7,9 @@ from spack import *
 
 
 class PlinkNg(RPackage):
-    """FIXME: Put a proper description of your package here."""
+    """A comprehensive update to the PLINK association analysis toolset."""
 
-    homepage = "https://www.example.com"
+    homepage = "https://www.cog-genomics.org/plink/2.0/"
     url      = "https://www.cog-genomics.org/static/bin/plink2_src_200511.zip"
 
     version('2_src_200511', sha256='00cff19bece88acb7a21ba098501cb677b78d22c9f3ca5bcdc869139a40db816')
