@@ -512,4 +512,4 @@ class Axom(CMakePackage, CudaPackage):
 
     @run_after('install')
     def install_cmake_cache(self):
-        install(self._get_host_config_path(spec), prefix)
+        install(self._get_host_config_path(self.spec), prefix)
