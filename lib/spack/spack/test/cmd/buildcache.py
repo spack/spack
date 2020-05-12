@@ -61,8 +61,10 @@ def tests_buildcache_create(
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
     tarball = spack.binary_distribution.tarball_name(spec, '.spec.yaml')
-    assert os.path.exists(os.path.join(tmpdir, 'build_cache', tarball_path))
-    assert os.path.exists(os.path.join(tmpdir, 'build_cache', tarball))
+    assert os.path.exists(
+        os.path.join(str(tmpdir), 'build_cache', tarball_path))
+    assert os.path.exists(
+        os.path.join(str(tmpdir), 'build_cache', tarball))
 
 
 def tests_buildcache_create_env(
@@ -81,8 +83,10 @@ def tests_buildcache_create_env(
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
     tarball = spack.binary_distribution.tarball_name(spec, '.spec.yaml')
-    assert os.path.exists(os.path.join(tmpdir, 'build_cache', tarball_path))
-    assert os.path.exists(os.path.join(tmpdir, 'build_cache', tarball))
+    assert os.path.exists(
+        os.path.join(str(tmpdir), 'build_cache', tarball_path))
+    assert os.path.exists(
+        os.path.join(str(tmpdir), 'build_cache', tarball))
 
 
 def test_buildcache_create_fail_on_perm_denied(
