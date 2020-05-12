@@ -43,7 +43,7 @@ class Synapsetool(CMakePackage):
 
     patch("tests-unit-cmake.patch", when='@:0.5.6')
     patch("tests-unit-cmake-057.patch", when='@0.5.7:0.5.8')
-    patch("fix_highfive_v_2_2_1.patch", when='^highfive@2.2:')
+    patch("fix_highfive_v_2_2_1.patch", when='@:0.5.9^highfive@2.2:')
 
     @property
     def libs(self):
