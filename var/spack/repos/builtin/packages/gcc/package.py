@@ -121,14 +121,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # The server is sometimes a bit slow to respond
     timeout = {'timeout': 60}
 
-    resource(
-             name='newlib',
+    resource(name='newlib',
              url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
              sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
              destination='newlibsource',
              when='+nvptx',
-             fetch_options=timeout
-            )
+             fetch_options=timeout)
 
     # nvptx-tools does not seem to work as a dependency,
     # but does fine when the source is inside the gcc build directory
@@ -271,7 +269,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # mirrors are tried. It takes care of modifying the suffix of gnu
         # mirror path so that Spack will also look for the correct file in
         # the mirrors
-        if (version < Version('6.4.0')and version != Version('5.5.0')) \
+        if (version < Version('6.4.0') and version != Version('5.5.0')) \
                 or version == Version('7.1.0'):
             self.gnu_mirror_path = self.gnu_mirror_path.replace('xz', 'bz2')
         return super(Gcc, self).url_for_version(version)
