@@ -1,0 +1,62 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+# ----------------------------------------------------------------------------
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install ns-3-dev
+#
+# You can edit this file again by typing:
+#
+#     spack edit ns-3-dev
+#
+# See the Spack documentation for more information on packaging.
+# ----------------------------------------------------------------------------
+
+from spack import *
+
+
+class Ns3Dev(WafPackage):
+    """FIXME: Put a proper description of your package here."""
+
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "https://www.example.com"
+    url      = "https://gitlab.com/nsnam/ns-3-dev/-/archive/ns-3.30.1/ns-3-dev-ns-3.30.1.tar.bz2"
+
+    maintainers = ['yee29']
+
+    version('3.30.1', sha256='e8b3849d83a224f42c0cd2b9e692ec961455aca23f36fb86fcf6bbed2b495a3d')
+    version('3.30',   sha256='53cefcad74fec6cc332368a05ed1f8c1a29f86295cb44b6b0509c6d2d18d90d0')
+    version('3.29',   sha256='0254341487891421e4c6040476c6634c4c2931d4f7c6b9617a6ae494c8ee6ffd')
+    version('3.28',   sha256='5295e1f6e2ee1ff8cd92d3937c8b3266e0d5926adffc42c7fb0ea9ce549a91b7')
+    version('3.27',   sha256='26233011654043822b8ede525a52f8532ed181997b609a606681a0d5c8d64a26')
+
+    variant('helics', default=False, description="Enable Helics support in ns-3")
+    variant('boost', default=True, description="Compile with Boost libraries")
+
+    # Build dependency
+    depends_on('helics', when='+helics')
+    depends_on('boost')
+    depends_on('pkgconfig', type='build')
+
+    resource(name='helics',
+             when='+helics',
+             git='https://github.com/GMLC-TDC/helics-ns3.git',
+             destination='contrib', placement='helics')
+
+    # FIXME: Override configure_args(), build_args(),
+    # or install_args() if necessary.
+    def configure_args(self):
+        args = ['--boost-includes={0}'.format(self.spec['boost'].prefix.include),
+                '--boost-libs={0}'.format(self.spec['boost'].prefix.lib)]
+
+        if '+helics' in self.spec:
+            args.append('--with-helics={0}'.format(self.spec['helics'].prefix))
+        return args
