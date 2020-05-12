@@ -19,11 +19,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = 'https://gcc.gnu.org'
     gnu_mirror_path = 'gcc/gcc-9.2.0/gcc-9.2.0.tar.xz'
-    svn      = 'svn://gcc.gnu.org/svn/gcc/'
+    git      = 'git://gcc.gnu.org/git/gcc.git'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
-    version('develop', svn=svn + 'trunk')
+    maintainers = ['michaelkuhn']
+
+    version('master', branch='master')
 
     version('10.1.0', sha256='b6898a23844b656f1b68691c5c012036c2e694ac4b53a8918d4712ad876e7ea2')
 
@@ -90,6 +92,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
 
+    depends_on('flex', type='build', when='@master')
+
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
     # GCC 7.3 does not compile with newer releases on some platforms, see
@@ -117,14 +121,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # The server is sometimes a bit slow to respond
     timeout = {'timeout': 60}
 
-    resource(
-             name='newlib',
+    resource(name='newlib',
              url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
              sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
              destination='newlibsource',
              when='+nvptx',
-             fetch_options=timeout
-            )
+             fetch_options=timeout)
 
     # nvptx-tools does not seem to work as a dependency,
     # but does fine when the source is inside the gcc build directory
@@ -267,7 +269,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # mirrors are tried. It takes care of modifying the suffix of gnu
         # mirror path so that Spack will also look for the correct file in
         # the mirrors
-        if (version < Version('6.4.0')and version != Version('5.5.0')) \
+        if (version < Version('6.4.0') and version != Version('5.5.0')) \
                 or version == Version('7.1.0'):
             self.gnu_mirror_path = self.gnu_mirror_path.replace('xz', 'bz2')
         return super(Gcc, self).url_for_version(version)
