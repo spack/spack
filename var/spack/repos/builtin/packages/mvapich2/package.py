@@ -208,8 +208,8 @@ class Mvapich2(AutotoolsPackage):
             env.set('SLURM_MPI_TYPE', 'pmi2')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        # On Cray, the regular compiler wrappers *are* the MPI wrappers.
-        if 'platform=cray' in self.spec:
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        if self.spec.external_module and 'cray' in self.spec.external_module:
             env.set('MPICC',  spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
