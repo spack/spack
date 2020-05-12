@@ -11,8 +11,9 @@ class RRematch2(RPackage):
        the match results in tidy data frames.
     """
 
-    homepage = "https://cran.r-project.org/web/packages/rematch2/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rematch2_2.1.2.tar.gz"
+    homepage = "https://cloud.r-project.org/package=rematch2"
+    url      = "https://cloud.r-project.org/src/contrib/rematch2_2.1.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rematch2"
 
     version('2.1.2', sha256='fe9cbfe99dd7731a0a2a310900d999f80e7486775b67f3f8f388c30737faf7bb')
     version('2.1.1', sha256='d0423a418e8b46ac3a4819af7a7d19c39ca7c8c862c1e9a1c1294aa19152518f')
