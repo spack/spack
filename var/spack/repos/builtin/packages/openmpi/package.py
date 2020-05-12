@@ -567,8 +567,12 @@ class Openmpi(AutotoolsPackage):
 
     @run_after('install')
     def setup_install_tests(self):
-        self.copy_src_to_install(self.extra_install_tests,
-                                 self.extra_install_tests)
+        """
+        Copy the example files after the package is installed to an
+        install test subdirectory for use during `spack test run`.
+        """
+        self.cache_extra_test_source(self.extra_install_tests,
+                                     self.extra_install_tests)
 
     def _test_bin_ops(self):
         info = ([], ['Ident string: {0}'.format(self.spec.version), 'MCA'],

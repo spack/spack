@@ -1475,8 +1475,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return self.test_stage.join(
             self.spec.format('{name}-{version}-{hash}'))
 
-    def copy_src_to_install(self, src_subdir, install_subdir):
+    def cache_extra_test_source(self, src_subdir, install_subdir):
         """Copy the source subdirectory to the install test subdirectory.
+
+        This method is intended as an optional test set up helper for use
+        during the install process when the goal is to leverage existing
+        package source files (e.g., tests, examples) for package installation
+        testing.
 
         Args:
             src_subdir (str): name of the subdirectory under staged source
