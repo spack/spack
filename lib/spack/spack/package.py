@@ -1584,13 +1584,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     return
 
                 self._run_test_helper(
-                    exe, runner, options, expected, status, installed, purpose)
+                    runner, options, expected, status, installed, purpose)
                 print("PASSED")
             except BaseException as e:
                 # print a summary of the error to the log file
                 # so that cdash and junit reporters know about it
                 exc_type, _, tb = sys.exc_info()
-                print('FAILED: %s' % e)
+                print('FAILED: {0}'.format(e))
                 import traceback
                 # remove the current call frame to get back to
                 stack = traceback.extract_stack()[:-1]
@@ -1634,27 +1634,29 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 else:
                     self.test_failures.append((exc, m))
 
-    def _run_test_helper(self, exe, runner, options, expected, status,
-                         installed, purpose):
+    def _run_test_helper(self, runner, options, expected, status, installed,
+                         purpose):
         status = [status] if not isinstance(status, list) else status
         if purpose:
             tty.msg(purpose)
         else:
             tty.debug('test: {0}: expect command status in {1}'
-                      .format(exe, status))
+                      .format(runner.name, status))
 
-        assert runner is not None, "Failed to find executable '%s'" % exe
+        assert runner is not None, \
+            "Failed to find executable '{0}'".format(runner.name)
 
         if installed:
-            msg = "Executable '%s' expected in prefix" % exe
-            msg += ", found in %s instead" % runner.path
+            msg = "Executable '{0}' expected in prefix".format(runner.name)
+            msg += ", found in {0} instead".format(runner.path)
             assert self.spec.prefix in runner.path, msg
 
         try:
             output = runner(*options, output=str.split, error=str.split)
 
             can_pass = None in status or 0 in status
-            assert can_pass, 'Expected {0} execution to fail'.format(exe)
+            assert can_pass, \
+                'Expected {0} execution to fail'.format(runner.name)
         except ProcessError as err:
             output = str(err)
             match = re.search(r'exited with status ([0-9]+)', output)
@@ -1662,9 +1664,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise
 
         for check in expected:
-            cmd = ' '.join([exe] + options)
-            msg = "Expected '%s' to match output of `%s`" % (check, cmd)
-            msg += '\n\nOutput: %s' % output
+            cmd = ' '.join([runner.name] + options)
+            msg = "Expected '{0}' to match output of `{1}`".format(check, cmd)
+            msg += '\n\nOutput: {0}'.format(output)
             assert re.search(check, output), msg
 
     def unit_test_check(self):
