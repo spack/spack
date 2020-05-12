@@ -28,6 +28,7 @@ class RTestthat(RPackage):
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-r6@2.2.0:', type=('build', 'run'))
     depends_on('r-cli', when='@2.0.0:', type=('build', 'run'))
-    depends_on('r-rlang@0.4.1:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-rlang@0.3.0:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-rlang@0.4.1:', when='@2.3.2:', type=('build', 'run'))
     depends_on('r-withr@2.0.0:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-evaluate', when='@2.2.0:', type=('build', 'run'))
