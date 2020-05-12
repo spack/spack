@@ -53,6 +53,7 @@ import spack.main
 import spack.paths
 import spack.schema.environment
 import spack.store
+import spack.architecture as arch
 from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
@@ -146,6 +147,16 @@ def clean_environment():
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
+
+    # Test the host architecture because old cray systems (i.e. Blue Waters)
+    # do not work when we clean aspects of the cray environment.
+    # Cleaning these is necessary on cray "cluster" systems.
+    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
+    if str(hostarch.platform) == 'cray' and str(hostarch.os) != 'cnl5':
+        env.unset('CRAY_LD_LIBRARY_PATH')
+        for varname in os.environ.keys():
+            if 'PKGCONF' in varname:
+                env.unset(varname)
 
     build_lang = spack.config.get('config:build_language')
     if build_lang:
