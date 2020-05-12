@@ -12,6 +12,8 @@ class PyDask(PythonPackage):
     homepage = "https://github.com/dask/dask/"
     url      = "https://pypi.io/packages/source/d/dask/dask-1.1.0.tar.gz"
 
+    maintainers = ['skosukhin']
+
     version('2.16.0', sha256='2af5b0dcd48ce679ce0321cf91de623f4fe376262789b951fefa3c334002f350')
     version('1.2.2', sha256='5e7876bae2a01b355d1969b73aeafa23310febd8c353163910b73e93dc7e492c')
     version('1.1.2', sha256='93b355b9a9c9a3ddbb39fab99d5759aad5cfd346f4520b87788970e80cf97256')
