@@ -19,11 +19,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = 'https://gcc.gnu.org'
     gnu_mirror_path = 'gcc/gcc-9.2.0/gcc-9.2.0.tar.xz'
-    svn      = 'svn://gcc.gnu.org/svn/gcc/'
+    git      = 'git://gcc.gnu.org/git/gcc.git'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
-    version('develop', svn=svn + 'trunk')
+    maintainers = ['michaelkuhn']
+
+    version('master', branch='master')
 
     version('10.1.0', sha256='b6898a23844b656f1b68691c5c012036c2e694ac4b53a8918d4712ad876e7ea2')
 
@@ -89,6 +91,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('nvptx',
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
+
+    depends_on('flex', type='build', when='@master')
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
