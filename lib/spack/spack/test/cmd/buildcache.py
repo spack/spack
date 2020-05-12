@@ -51,7 +51,7 @@ def test_buildcache_list_duplicates(mock_get_specs, capsys):
 
 
 def tests_buildcache_create(
-    install_mockery, mock_fetch, monkeypatch, tmpdir):
+        install_mockery, mock_fetch, monkeypatch, tmpdir):
     """"Ensure that buildcache create creates output files"""
     pkg = 'trivial-install-test-package'
     install(pkg)
@@ -59,15 +59,15 @@ def tests_buildcache_create(
     buildcache('create', '-d', str(tmpdir), '--unsigned', pkg)
 
     spec = Spec(pkg).concretized()
-    assert os.path.exists(os.path.join(str(tmpdir), 'build_cache',
-        spack.binary_distribution.tarball_path_name(spec, '.spack')))
-    assert os.path.exists(os.path.join(str(tmpdir), 'build_cache',
-        spack.binary_distribution.tarball_name(spec, '.spec.yaml')))
+    tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
+    tarball = spack.binary_distribution.tarball_name(spec, '.spec.yaml')
+    assert os.path.exists(os.path.join(tmpdir, 'build_cache', tarball_path))
+    assert os.path.exists(os.path.join(tmpdir, 'build_cache', tarball))
 
 
 def tests_buildcache_create_env(
-    install_mockery, mock_fetch, monkeypatch, tmpdir,
-    mutable_mock_env_path):
+        install_mockery, mock_fetch, monkeypatch,
+        tmpdir, mutable_mock_env_path):
     """"Ensure that buildcache create creates output files from env"""
     pkg = 'trivial-install-test-package'
 
@@ -79,10 +79,10 @@ def tests_buildcache_create_env(
         buildcache('create', '-d', str(tmpdir), '--unsigned')
 
     spec = Spec(pkg).concretized()
-    assert os.path.exists(os.path.join(str(tmpdir), 'build_cache',
-        spack.binary_distribution.tarball_path_name(spec, '.spack')))
-    assert os.path.exists(os.path.join(str(tmpdir), 'build_cache',
-        spack.binary_distribution.tarball_name(spec, '.spec.yaml')))
+    tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
+    tarball = spack.binary_distribution.tarball_name(spec, '.spec.yaml')
+    assert os.path.exists(os.path.join(tmpdir, 'build_cache', tarball_path))
+    assert os.path.exists(os.path.join(tmpdir, 'build_cache', tarball))
 
 
 def test_buildcache_create_fail_on_perm_denied(
