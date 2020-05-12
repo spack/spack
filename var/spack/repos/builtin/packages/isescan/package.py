@@ -33,9 +33,9 @@ class Isescan(Package):
     def install(self, spec, prefix):
         # build bundled SSW library
         with working_dir('ssw201507'):
-            which('gcc')(
-                '-O3', '-pipe', '-fPIC', '-shared', '-rdynamic',
-                '-o', 'libssw.so', 'ssw.c', 'ssw.h',
+            Executable(spack_cc)(
+                '-O3', '-pipe', self.compiler.cc_pic_flag, '-shared',
+                '-rdynamic', '-o', 'libssw.' + dso_suffix, 'ssw.c', 'ssw.h',
             )
 
         # set paths to required programs
