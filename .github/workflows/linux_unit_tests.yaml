@@ -1,0 +1,46 @@
+name: linux tests
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+jobs:
+  unittests:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install System packages
+      run: |
+          sudo apt-get -y update
+          sudo apt-get install -y ccache coreutils gfortran graphviz gnupg2 mercurial ninja-build patchelf
+    - name: Install Python packages
+      run: |
+          pip install --upgrade pip six setuptools
+          pip install --upgrade codecov coverage==4.5.4
+    - name: Run unit tests
+      run: |
+        git --version
+        git fetch -u origin develop:develop
+        . share/spack/setup-env.sh
+        coverage run $(which spack) test
+        coverage combine
+        coverage xml
+    - name: Upload to codecov.io
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
+        flags: unittests,linux
