@@ -14,4 +14,5 @@ class PyFastcluster(PythonPackage):
 
     version('1.1.26', sha256='a202f44a3b06f5cf9cdba3c67d6c523288922d6e6a1cdf737292f93759aa82f7')
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.9:', type=('build', 'run'))
