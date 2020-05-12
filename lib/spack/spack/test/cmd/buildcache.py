@@ -89,6 +89,13 @@ def tests_buildcache_create_env(
         os.path.join(str(tmpdir), 'build_cache', tarball))
 
 
+def test_buildcache_create_fails_on_noargs(tmpdir):
+    """Ensure that buildcache create fails when given no args or
+    environment."""
+    with pytest.raises(spack.main.SpackCommandError):
+        buildcache('create', '-d', str(tmpdir), '--unsigned')
+
+
 def test_buildcache_create_fail_on_perm_denied(
         install_mockery, mock_fetch, monkeypatch, tmpdir):
     """Ensure that buildcache create fails on permission denied error."""
