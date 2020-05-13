@@ -216,7 +216,7 @@ def root_path(name):
     """
     # Root folders where the various module files should be written
     roots = spack.config.get('config:module_roots', {})
-    module_base = os.path.join(spack.store.root, 'modules')
+    module_base = os.path.join(str(spack.store.root), 'modules')
 
     path = roots.get(name, os.path.join(module_base, name))
     return spack.util.path.canonicalize_path(path)
