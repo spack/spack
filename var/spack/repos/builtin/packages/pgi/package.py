@@ -20,6 +20,7 @@ class Pgi(Package):
 
     homepage = "http://www.pgroup.com/"
 
+    version('19.10', sha256='52e7e6ad557be209d1dd0564f27494aa08337e6abdd0f3c54c54938b8088891c')
     version('19.4',  sha256='23eee0d4da751dd6f247d624b68b03538ebd172e63a053c41bb67013f07cf68e')
     version('19.1',  sha256='3e05a6db2bf80b5d15f6ff83188f20cb89dc23e233417921e5c0822e7e57d34f')
     version('18.10', sha256='4b3ff83d2a13de6001bed599246eff8e63ef711b8952d4a9ee12efd666b3e326')
@@ -87,16 +88,17 @@ class Pgi(Package):
         # Run install script
         os.system("./install")
 
-    def setup_environment(self, spack_env, run_env):
-        prefix = Prefix(join_path(self.prefix, 'linux86-64-llvm', self.version))
+    def setup_run_environment(self, env):
+        llvm_backend = join_path(self.prefix, 'linux86-64-llvm', self.version)
+        prefix = Prefix(llvm_backend)
 
-        run_env.set('CC',  join_path(prefix.bin, 'pgcc'))
-        run_env.set('CXX', join_path(prefix.bin, 'pgc++'))
-        run_env.set('F77', join_path(prefix.bin, 'pgfortran'))
-        run_env.set('FC',  join_path(prefix.bin, 'pgfortran'))
+        env.set('CC',  join_path(prefix.bin, 'pgcc'))
+        env.set('CXX', join_path(prefix.bin, 'pgc++'))
+        env.set('F77', join_path(prefix.bin, 'pgfortran'))
+        env.set('FC',  join_path(prefix.bin, 'pgfortran'))
 
-        run_env.prepend_path('PATH',            prefix.bin)
-        run_env.prepend_path('CPATH',           prefix.include)
-        run_env.prepend_path('LIBRARY_PATH',    prefix.lib)
-        run_env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
-        run_env.prepend_path('MANPATH',         prefix.man)
+        env.prepend_path('PATH',            prefix.bin)
+        env.prepend_path('CPATH',           prefix.include)
+        env.prepend_path('LIBRARY_PATH',    prefix.lib)
+        env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
+        env.prepend_path('MANPATH',         prefix.man)

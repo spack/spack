@@ -297,8 +297,9 @@ configure_compilers() {
         fi
 
         GCC_DIR=$(spack location --latest --install-dir gcc@${BASE_GCC_VERSION})
+        log "...using gcc ${BASE_GCC_VERSION} from ${GCC_DIR}"
         if [[ ${line} = *"intel"* ]]; then
-            # update intel modules to use gcc@6.4.0 in .cfg files
+            # update intel modules to use newer gcc in .cfg files
             install_dir=$(spack location --latest --install-dir ${line})
             for f in $(find ${install_dir} -name "icc.cfg" -o -name "icpc.cfg" -o -name "ifort.cfg"); do
                 if ! grep -q "${GCC_DIR}" $f; then
@@ -312,9 +313,8 @@ configure_compilers() {
             #update pgi modules for network installation
             PGI_DIR=$(dirname $(which makelocalrc))
             makelocalrc ${PGI_DIR} -gcc ${GCC_DIR}/bin/gcc -gpp ${GCC_DIR}/bin/g++ -g77 ${GCC_DIR}/bin/gfortran -x -net
-
             #configure pgi network license
-            template=$(find $PGI_DIR -name localrc* | tail -n 1)
+            template=$(find $PGI_DIR -name localrc* ! -iname "*.bak" | tail -n 1)
             for node in bbpv1 bbpv2 bbptadm tds03 tds04 r2i3n0 r2i3n1 r2i3n2 r2i3n3 r2i3n4 r2i3n5 r2i3n6; do
                 cp $template $PGI_DIR/localrc.$node || true
             done
