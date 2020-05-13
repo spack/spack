@@ -128,8 +128,8 @@ class QuantumEspresso(Package):
     # folder QE expects as a link, we issue a conflict here.
     conflicts('+elpa', when='@:5.4.0')
 
-    # Some QMCPACK converters only without internal patches. HDF5
-    # is a hard requirement. Need to do two HDF5 cases explicitly
+    # Some QMCPACK converters are incompatible with upstream patches.
+    # HDF5 is a hard requirement. Need to do two HDF5 cases explicitly
     # since Spack lacks support for expressing NOT operation.
     conflicts(
         '@6.4+patch',
