@@ -503,13 +503,15 @@ most likely via the ``+blas`` variant specification.
 .. note::
    TCL module files
      A modification that is specific to ``tcl`` module files is the possibility
-     to change the naming scheme of modules.
+     to change the naming scheme of modules. This uses the projections format
+     covered in :ref:`_adding_projections_to_views`.
 
      .. code-block:: yaml
 
        modules:
          tcl:
-           naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
+           projections:
+             all: '{name}/{version}-{compiler.name}-{compiler.version}'
            all:
              conflict:
                - '{name}'
