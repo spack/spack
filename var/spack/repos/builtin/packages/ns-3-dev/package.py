@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install ns-3-dev
-#
-# You can edit this file again by typing:
-#
-#     spack edit ns-3-dev
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
@@ -45,7 +28,7 @@ class Ns3Dev(WafPackage):
 
     # Build dependency
     depends_on('helics', when='+helics')
-    depends_on('boost')
+    depends_on('boost', when='+boost')
     depends_on('pkgconfig', type='build')
 
     resource(name='helics',
@@ -54,10 +37,13 @@ class Ns3Dev(WafPackage):
              destination='contrib', placement='helics')
 
     def configure_args(self):
-        args = [
-            '--boost-includes={0}'.format(self.spec['boost'].prefix.include),
-            '--boost-libs={0}'.format(self.spec['boost'].prefix.lib)
-        ]
+        args = []
+
+        if '+boost' in self.spec:
+            args.extend([
+                '--boost-includes={0}'.format(self.spec['boost'].prefix.include),
+                '--boost-libs={0}'.format(self.spec['boost'].prefix.lib)
+            ])
 
         if '+helics' in self.spec:
             args.append('--with-helics={0}'.format(self.spec['helics'].prefix))
