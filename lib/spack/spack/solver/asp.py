@@ -497,8 +497,9 @@ class AspGenerator(object):
             node_os = fn.node_os_set
             node_target = fn.node_target_set
             variant = fn.variant_set
-            node_compiler = fn.node_compiler
-            node_compiler_version = fn.node_compiler_version
+            node_compiler = fn.node_compiler_hard
+            node_compiler_version = fn.node_compiler_version_hard
+            node_flag = fn.node_flag_set
 
         class Body(object):
             node = fn.node
@@ -508,6 +509,7 @@ class AspGenerator(object):
             variant = fn.variant_value
             node_compiler = fn.node_compiler
             node_compiler_version = fn.node_compiler_version
+            node_flag = fn.node_flag
 
         f = Body if body else Head
 
@@ -564,7 +566,7 @@ class AspGenerator(object):
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
-                self.fact(fn.node_flag_set(spec.name, flag_type, flag))
+                self.fact(f.node_flag(spec.name, flag_type, flag))
 
         # TODO
         # external_path
