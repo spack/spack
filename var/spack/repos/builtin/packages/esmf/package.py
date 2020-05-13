@@ -146,6 +146,9 @@ class Esmf(MakefilePackage):
             # Build an optimized version of the library.
             os.environ['ESMF_BOPT'] = 'O'
 
+        if self.spec.satisfies('%gcc@10:'):
+            os.environ['ESMF_F90COMPILEOPTS'] = '-fallow-argument-mismatch'
+
         #######
         # MPI #
         #######
