@@ -11,7 +11,6 @@ on:
       - develop
 jobs:
   unittests:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -31,8 +30,7 @@ jobs:
           sudo apt-get -y install cmake binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools
-          pip install --upgrade codecov coverage==4.5.4
+          pip install --upgrade pip six setuptools codecov coverage==4.5.4
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -60,5 +58,4 @@ jobs:
     - name: Upload to codecov.io
       uses: codecov/codecov-action@v1
       with:
-        file: ./coverage.xml
         flags: unittests,linux
