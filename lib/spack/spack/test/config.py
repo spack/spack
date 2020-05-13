@@ -7,7 +7,7 @@ import os
 import collections
 import getpass
 import tempfile
-from six import StringIO
+from six import StringIO, string_types
 
 from llnl.util.filesystem import touch, mkdirp
 
@@ -32,7 +32,8 @@ config_low = {
         'install_trees:': {
             'tree1': '/path1/'},
         'shared_install_trees': {},
-        'build_stage': ['path1', 'path2', 'path3']}}
+        'build_stage': ['path1', 'path2', 'path3'],
+        'dirty': False}}
 
 config_override_all = {
     'config:': {
@@ -78,6 +79,26 @@ def _combined_dicts(*dicts):
 
 def _convert_to_cfg(nested_dict):
     return syaml.load_config(syaml.dump_config(nested_dict))
+
+
+def _convert_to_nested_dict(cfg):
+    """Replaces ordered dictionaries with dictionaries"""
+    if isinstance(cfg, string_types):
+        return cfg
+
+    try:
+        items = cfg.items()
+        return dict((k, _convert_to_nested_dict(v)) for k, v in items)
+    except AttributeError:
+        pass
+
+    try:
+        iter(cfg)
+        return list(_convert_to_nested_dict(v) for v in cfg)
+    except TypeError:
+        pass
+
+    return cfg
 
 
 @pytest.fixture()
@@ -394,11 +415,13 @@ def test_read_config_override_key(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_key, 'high')
     cfg = spack.config.get('config')
-    assert cfg == _convert_to_cfg(
-        _combined_dicts(
-            config_override_key['config'],
-            {'build_stage': ['path1', 'path2', 'path3']})
+
+    expected_cfg = _combined_dicts(
+        config_low['config'],
+        config_override_key['config'],
     )
+    expected_cfg = _convert_to_nested_dict(_convert_to_cfg(expected_cfg))
+    assert _convert_to_nested_dict(cfg) == expected_cfg
 
 
 def test_read_config_merge_list(mock_low_high_config, write_config_file):
@@ -425,7 +448,7 @@ def test_internal_config_update(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
 
     before = mock_low_high_config.get('config')
-    assert before['install_trees'] == _convert_to_cfg({'tree1': '/path1/'})
+    assert before['dirty'] == False
 
     # add an internal configuration scope
     scope = spack.config.InternalConfigScope('command_line')
@@ -434,12 +457,12 @@ def test_internal_config_update(mock_low_high_config, write_config_file):
     mock_low_high_config.push_scope(scope)
 
     command_config = mock_low_high_config.get('config', scope='command_line')
-    command_config['install_trees'] = {'tree3': '/path3/'}
+    command_config['dirty'] = True
 
     mock_low_high_config.set('config', command_config, scope='command_line')
 
     after = mock_low_high_config.get('config')
-    assert after['install_trees'] == {'tree3': '/path3/'}
+    assert after['dirty'] == True
 
 
 def test_internal_config_filename(mock_low_high_config, write_config_file):
