@@ -567,25 +567,24 @@ class VariantMap(lang.HashableMap):
         # print keys in order
         sorted_keys = sorted(self.keys())
 
+        # Separate boolean variants from key-value pairs as they print
+        # differently. All booleans go first to avoid ' ~foo' strings that
+        # break spec reuse in zsh.
+        bool_keys = []
+        kv_keys = []
+        for key in sorted_keys:
+            bool_keys.append(key) if isinstance(self[key].value, bool) \
+                else kv_keys.append(key)
+
         # add spaces before and after key/value variants.
         string = StringIO()
 
-        kv = False
-        for key in sorted_keys:
-            vspec = self[key]
+        for key in bool_keys:
+            string.write(str(self[key]))
 
-            if not isinstance(vspec.value, bool):
-                # add space before all kv pairs.
-                string.write(' ')
-                kv = True
-            else:
-                # not a kv pair this time
-                if kv:
-                    # if it was LAST time, then pad after.
-                    string.write(' ')
-                kv = False
-
-            string.write(str(vspec))
+        for key in kv_keys:
+            string.write(' ')
+            string.write(str(self[key]))
 
         return string.getvalue()
 
