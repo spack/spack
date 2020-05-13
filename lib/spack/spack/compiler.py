@@ -315,22 +315,21 @@ class Compiler(object):
         # By default every compiler returns the empty list
         return []
 
-    @classmethod
-    def _get_compiler_link_paths(cls, paths):
+    def _get_compiler_link_paths(self, paths):
         first_compiler = next((c for c in paths if c), None)
         if not first_compiler:
             return []
-        if not cls.verbose_flag():
+        if not self.verbose_flag():
             # In this case there is no mechanism to learn what link directories
             # are used by the compiler
             return []
 
         flags = ['cppflags', 'ldflags']
-        if cls.flags:
+        if self.flags:
             # cls is an instance not a class
-            if first_compiler == cls.cc:
+            if first_compiler == self.cc:
                 flags = ['cflags'] + flags
-            elif first_compiler == cls.cxx:
+            elif first_compiler == self.cxx:
                 flags = ['cxxflags'] + flags
             else:
                 flags.append('fflags')
@@ -346,9 +345,9 @@ class Compiler(object):
                     '(void)argc; (void)argv; return 0; }\n')
             compiler_exe = spack.util.executable.Executable(first_compiler)
             for flag_type in flags:
-                for flag in cls.flags[flag_type]:
+                for flag in self.flags.get(flag_type, []):
                     compiler_exe.add_default_arg(flag)
-            output = str(compiler_exe(cls.verbose_flag(), fin, '-o', fout,
+            output = str(compiler_exe(self.verbose_flag(), fin, '-o', fout,
                                       output=str, error=str))  # str for py2
 
             return _parse_non_system_link_dirs(output)
