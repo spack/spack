@@ -1,0 +1,17 @@
+diff --git a/extra/nrnivmodl_core_makefile.in b/extra/nrnivmodl_core_makefile.in
+index bb1becb..4d8a73f 100644
+--- a/extra/nrnivmodl_core_makefile.in
++++ b/extra/nrnivmodl_core_makefile.in
+@@ -18,7 +18,11 @@ datadir:= $(ROOT)/share/coreneuron
+ datadir_mod2c := $(ROOT)/share/mod2c
+ 
+ # Binary of MOD2C/NMODL depending on what was activated
+-nmodl_binary_path = $(if $(NMODL_BINARY),$(NMODL_BINARY), $(bindir)/@nmodl_binary_name@)
++ifeq (@nmodl_FOUND@, TRUE)
++    nmodl_binary_path = $(if $(NMODL_BINARY),$(NMODL_BINARY), @CORENRN_NMODL_BINARY@)
++else
++    nmodl_binary_path = $(if $(NMODL_BINARY),$(NMODL_BINARY), $(bindir)/@nmodl_binary_name@)
++endif
+ 
+ # Additional variables set in CMAKE usable here
+ # - @CORENRN_COMPILE_DEFS
