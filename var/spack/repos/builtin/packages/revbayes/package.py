@@ -15,7 +15,7 @@ class Revbayes(CMakePackage):
     git      = "https://github.com/revbayes/revbayes.git"
 
     version('develop', branch='development')
-    version('1.1.0', sha256='6adede8148cb10e4e75dba8da28cf5c747ea8de71a5aa24990ab9ae17e43b0b1')
+    version('1.1.0', sha256='a9f35178d8289d0dd32c9d936f6384f260e8e81e7b80a5155169064a24666012')
     version('1.0.13', sha256='e85e2e1fe182fe9f504900150d936a06d252a362c591b9d3d8272dd085aa85d9')
     version('1.0.12', sha256='80c926bb6b37288d02e36e07b44e4663841cd1fe541e2cc0b0e44c89ca929759')
     version('1.0.11', sha256='03052194baa220dde7e622a739f09f34393f67ea00a0b163b409d313d7fc7c02')
