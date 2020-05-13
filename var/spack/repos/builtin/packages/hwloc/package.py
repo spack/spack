@@ -50,6 +50,7 @@ class Hwloc(AutotoolsPackage):
     variant('gl', default=False, description="Support GL device discovery")
     variant('cuda', default=False, description="Support CUDA devices")
     variant('libxml2', default=True, description="Build with libxml2")
+    variant('libudev', default=False, description="Build with libhudev")
     variant('pci', default=(sys.platform != 'darwin'),
             description="Support analyzing devices on PCI bus")
     variant('shared', default=True, description="Build shared libraries")
@@ -66,6 +67,9 @@ class Hwloc(AutotoolsPackage):
 
     # netloc isn't available until version 2.0.0
     conflicts('+netloc', when="@:1.99.99")
+
+    # libudev isn't available until version 1.11.1
+    conflicts('+libudev', when="@:1.10.0")
 
     depends_on('pkgconfig', type='build')
     depends_on('m4', type='build', when='@master')
@@ -102,6 +106,7 @@ class Hwloc(AutotoolsPackage):
         args.extend(self.enable_or_disable('gl'))
         args.extend(self.enable_or_disable('cuda'))
         args.extend(self.enable_or_disable('libxml2'))
+        args.extend(self.enable_or_disable('libudev'))
         args.extend(self.enable_or_disable('pci'))
         args.extend(self.enable_or_disable('shared'))
 
