@@ -14,6 +14,7 @@ class PyHorovod(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master', submodules=True)
+    version('0.19.2', tag='v0.19.2', submodules=True)
     version('0.19.1', tag='v0.19.1', submodules=True)
     version('0.19.0', tag='v0.19.0', submodules=True)
     version('0.18.2', tag='v0.18.2', submodules=True)
@@ -47,13 +48,14 @@ class PyHorovod(PythonPackage):
     # Framework dependencies
     depends_on('py-tensorflow@1.1.0:',  type=('build', 'link', 'run'), when='frameworks=tensorflow')
     depends_on('py-torch@0.4.0:',       type=('build', 'link', 'run'), when='frameworks=pytorch')
-    depends_on('py-torchvision',        type=('build', 'run'),         when='frameworks=pytorch')
+    depends_on('py-torchvision',        type=('build', 'run'),         when='frameworks=pytorch @:0.19.1')
     depends_on('py-cffi@1.4.0:',        type=('build', 'run'),         when='frameworks=pytorch')
     depends_on('mxnet@1.4.1:+python',   type=('build', 'link', 'run'), when='frameworks=mxnet')
     depends_on('py-keras@2.0.8,2.1.2:', type=('build', 'run'),         when='frameworks=keras')
     depends_on('py-h5py@2.9:',          type=('build', 'run'),         when='frameworks=spark')
     depends_on('py-numpy',              type=('build', 'run'),         when='frameworks=spark')
-    depends_on('py-petastorm@0.8.2',    type=('build', 'run'),         when='frameworks=spark')
+    depends_on('py-petastorm@0.8.2',    type=('build', 'run'),         when='frameworks=spark @:0.19.1')
+    depends_on('py-petastorm@0.9.0:',   type=('build', 'run'),         when='frameworks=spark @0.19.2:')
     depends_on('py-pyarrow@0.15.0:',    type=('build', 'run'),         when='frameworks=spark')
     depends_on('py-pyspark@2.3.2:',     type=('build', 'run'),         when='frameworks=spark')
 
