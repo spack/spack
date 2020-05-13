@@ -331,7 +331,7 @@ class Compiler(object):
             if first_compiler == cls.cc:
                 flags = ['cflags'] + flags
             elif first_compiler == cls.cxx:
-                flags = ['cxxflgs'] + flags
+                flags = ['cxxflags'] + flags
             else:
                 flags.append('fflags')
 
