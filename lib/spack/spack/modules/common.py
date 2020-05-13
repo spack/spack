@@ -382,6 +382,9 @@ class BaseConfiguration(object):
     querying easier. It needs to be sub-classed for specific module types.
     """
 
+    default_projections = {
+        'all': '{name}-{version}-{compiler.name}-{compiler.version}'}
+
     def __init__(self, spec):
         # Module where type(self) is defined
         self.module = inspect.getmodule(self)
@@ -395,9 +398,7 @@ class BaseConfiguration(object):
     def projections(self):
         """Projection from specs to module names"""
         projections = self.module.configuration().get(
-            'projections',
-            {'all': '{name}-{version}-{compiler.name}-{compiler.version}'}
-        )
+            'projections', self.default_projections)
 
         # Ensure the named tokens we are expanding are allowed, see
         # issue #2884 for reference
@@ -554,6 +555,9 @@ class BaseFileLayout(object):
         non-hierarchical layouts.
         """
         projection = proj.get_projection(self.conf.projections, self.spec)
+        if not projection:
+            projection = self.conf.default_projections['all']
+
         name = self.spec.format(projection)
         # Not everybody is working on linux...
         parts = name.split('/')
