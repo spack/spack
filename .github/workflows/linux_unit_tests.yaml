@@ -61,4 +61,4 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         file: ./coverage.xml
-        flags: unittests,linux,${{ matrix.python-version }}
+        flags: unittests,linux
