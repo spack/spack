@@ -138,7 +138,7 @@ class QuantumEspresso(Package):
         'deactivatation of upstream patches'
     )
     conflicts(
-        'hdf5=serial',
+        '@6.3:6.4.0 hdf5=serial',
         when='+qmcpack',
         msg='QE-to-QMCPACK wave function converter only '
         'supported with parallel HDF5'
@@ -332,7 +332,8 @@ class QuantumEspresso(Package):
         # Filter file must be applied after configure executes
         # QE 6.4.0 to QE 6.4 have `-L` missing in front of zlib library
         if spec.variants['hdf5'].value != 'none':
-            if spec.satisfies('@6.1.0:6.4.0'):
+            if (spec.satisfies('@6.1.0:6.4.0') or
+                (spec.satisfies('@6.4.1') and '+qmcpack' in spec)):
                 make_inc = join_path(self.stage.source_path, 'make.inc')
                 zlib_libs = spec['zlib'].prefix.lib + ' -lz'
                 filter_file(
