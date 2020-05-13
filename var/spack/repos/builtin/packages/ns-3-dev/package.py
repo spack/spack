@@ -41,8 +41,10 @@ class Ns3Dev(WafPackage):
 
         if '+boost' in self.spec:
             args.extend([
-                '--boost-includes={0}'.format(self.spec['boost'].prefix.include),
-                '--boost-libs={0}'.format(self.spec['boost'].prefix.lib)
+                '--boost-includes={0}'.format(
+                    self.spec['boost'].prefix.include),
+                '--boost-libs={0}'.format(
+                    self.spec['boost'].prefix.lib)
             ])
 
         if '+helics' in self.spec:
