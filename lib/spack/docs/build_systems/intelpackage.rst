@@ -1055,6 +1055,6 @@ Footnotes
    2. Set the hash length in ``install-path-scheme``, also in ``config.yaml``
       (:ref:`q.v. <config-yaml>`).
    3. You will want to set the *same* hash length for
-      :ref:`module files <modules-naming-projections>`
+      :ref:`module files <modules-projections>`
       if you have Spack produce them for you, under ``projections`` in
       ``modules.yaml``.
