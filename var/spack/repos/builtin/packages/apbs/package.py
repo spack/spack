@@ -39,3 +39,9 @@ class Apbs(AutotoolsPackage):
             args.append('--disable-python')
 
         return args
+
+    def install(self, spec, prefix):
+        super(Apbs, self).install(spec, prefix)
+        mkdir(prefix.src)
+        cp = which('cp')
+        cp('-r', '{0}/.'.format(self.stage.source_path), prefix.src)
