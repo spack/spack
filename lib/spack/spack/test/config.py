@@ -448,7 +448,7 @@ def test_internal_config_update(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
 
     before = mock_low_high_config.get('config')
-    assert before['dirty'] == False
+    assert before['dirty'] is False
 
     # add an internal configuration scope
     scope = spack.config.InternalConfigScope('command_line')
@@ -462,7 +462,7 @@ def test_internal_config_update(mock_low_high_config, write_config_file):
     mock_low_high_config.set('config', command_config, scope='command_line')
 
     after = mock_low_high_config.get('config')
-    assert after['dirty'] == True
+    assert after['dirty'] is True
 
 
 def test_internal_config_filename(mock_low_high_config, write_config_file):
