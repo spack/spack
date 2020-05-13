@@ -608,7 +608,7 @@ def get_rpaths(pkg):
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
-    return rpaths
+    return list(dedupe(filter_system_paths(rpaths)))
 
 
 def get_std_cmake_args(pkg):
