@@ -324,7 +324,7 @@ class Compiler(object):
             # In this case there is no mechanism to learn what link directories
             # are used by the compiler
             return []
-        
+
         flags = ['cppflags', 'ldflags']
         if cls.flags:
             # cls is an instance not a class
