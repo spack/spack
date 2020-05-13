@@ -502,7 +502,7 @@ most likely via the ``+blas`` variant specification.
 
 The most heavyweight solution to module naming is to change the entire
 naming convention for module files. This uses the projections format
-covered in :ref:`_adding_projections_to_views`.
+covered in :ref:`adding_projections_to_views`.
 
 .. code-block:: yaml
 
