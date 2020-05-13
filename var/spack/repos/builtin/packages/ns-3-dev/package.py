@@ -24,10 +24,12 @@ from spack import *
 
 
 class Ns3Dev(WafPackage):
-    """FIXME: Put a proper description of your package here."""
+    """
+    ns-3 is a discrete-event network simulator,
+    targeted primarily for research and educational use
+    """
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://www.nsnam.org/"
     url      = "https://gitlab.com/nsnam/ns-3-dev/-/archive/ns-3.30.1/ns-3-dev-ns-3.30.1.tar.bz2"
 
     maintainers = ['yee29']
@@ -51,11 +53,11 @@ class Ns3Dev(WafPackage):
              git='https://github.com/GMLC-TDC/helics-ns3.git',
              destination='contrib', placement='helics')
 
-    # FIXME: Override configure_args(), build_args(),
-    # or install_args() if necessary.
     def configure_args(self):
-        args = ['--boost-includes={0}'.format(self.spec['boost'].prefix.include),
-                '--boost-libs={0}'.format(self.spec['boost'].prefix.lib)]
+        args = [
+            '--boost-includes={0}'.format(self.spec['boost'].prefix.include),
+            '--boost-libs={0}'.format(self.spec['boost'].prefix.lib)
+        ]
 
         if '+helics' in self.spec:
             args.append('--with-helics={0}'.format(self.spec['helics'].prefix))
