@@ -22,4 +22,4 @@ class RXml2(RPackage):
     depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-rcpp@0.12.12:', when='@:1.2', type=('build', 'run'))
     depends_on('r-bh', when='@:1.1.1', type=('build', 'run'))
-    depends_on('libxml2', when='@:1.2')
+    depends_on('libxml2')
