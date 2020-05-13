@@ -6,12 +6,14 @@ For the development documentation of the deployment stack, see
 
 For some common issues, please see the [FAQ](FAQ.md).
 
-## Building software on Ubuntu 18.04
+## Building software on Ubuntu
 
 <details>
 <summary>
 Use Spack on the workstations provided by the project
 </summary>
+
+#### Ubuntu 18.04
 
 We build Docker images based on Ubuntu 18.04, and the same settings can be
 used to set Spack up on the desktops:
@@ -23,7 +25,7 @@ used to set Spack up on the desktops:
     $ . spack/share/spack/setup-env.sh
     $ spack compiler find
 
-For Ubuntu 20.04:
+#### Ubuntu 20.04
 
     $ git clone https://github.com/BlueBrain/spack.git
     $ mkdir ~/.spack
