@@ -154,7 +154,8 @@ class TestTcl(object):
         expected = {
             'all': '{name}/{version}-{compiler.name}',
             'mpileaks': '{name}-mpiprojection'
-            }
+        }
+
         assert writer.conf.projections == expected
         projection = writer.spec.format(writer.conf.projections['mpileaks'])
         assert projection in writer.layout.use_name
@@ -171,7 +172,7 @@ class TestTcl(object):
         expected = {
             'all': '{name}/{version}-{compiler.name}',
             'mpileaks': '{name}-mpiprojection'
-            }
+        }
 
         assert writer.conf.projections == expected
         projection = writer.spec.format(writer.conf.projections['all'])

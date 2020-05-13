@@ -403,8 +403,8 @@ class BaseConfiguration(object):
         # Ensure the named tokens we are expanding are allowed, see
         # issue #2884 for reference
         msg = 'some tokens cannot be part of the module naming scheme'
-        for proj in projections.values():
-            _check_tokens_are_valid(proj, message=msg)
+        for projection in projections.values():
+            _check_tokens_are_valid(projection, message=msg)
 
         return projections
 
