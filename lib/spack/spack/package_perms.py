@@ -9,11 +9,18 @@ import spack.config as scon
 
 
 def get_package_dir_permissions(spec):
-    """Return the permissions configured for the spec.
+    """Return the permissions configured for the spec or for ``all`` if no spec
 
     Include the GID bit if group permissions are on. This makes the group
     attribute sticky for the directory. Package-specific settings take
-    precedent over settings for ``all``"""
+    precedent over settings for ``all``.
+
+    Args:
+        spec (Spec or None): spec instance or None if want all permissions
+
+    Returns:
+        perms (int): the appropriate stat permissions or mode
+    """
     perms = get_package_permissions(spec)
     if perms & stat.S_IRWXG and scon.get('config:allow_sgid', True):
         perms |= stat.S_ISGID
@@ -21,12 +28,20 @@ def get_package_dir_permissions(spec):
 
 
 def get_package_permissions(spec):
-    """Return the permissions configured for the spec.
+    """Return the permissions configured for the spec or for ``all`` if no spec
 
-    Package-specific settings take precedence over settings for ``all``"""
+    Package-specific settings take precedence over settings for ``all``.
+
+    Args:
+        spec (Spec or None): spec instance or None if want all permissions
+
+    Returns:
+        perms (int): the appropriate stat permissions or mode
+    """
+    names = ['all'] if spec is None else [spec.name, 'all']
 
     # Get read permissions level
-    for name in (spec.name, 'all'):
+    for name in names:
         try:
             readable = scon.get('packages:%s:permissions:read' % name, '')
             if readable:
@@ -35,7 +50,7 @@ def get_package_permissions(spec):
             readable = 'world'
 
     # Get write permissions level
-    for name in (spec.name, 'all'):
+    for name in names:
         try:
             writable = scon.get('packages:%s:permissions:write' % name, '')
             if writable:
@@ -66,10 +81,19 @@ def get_package_permissions(spec):
 
 
 def get_package_group(spec):
-    """Return the unix group associated with the spec.
+    """Return the unix group associated with the spec or for ``all`` if no spec
 
-    Package-specific settings take precedence over settings for ``all``"""
-    for name in (spec.name, 'all'):
+    Package-specific settings take precedence over settings for ``all``.
+
+    Args:
+        spec (Spec or None): spec instance or None if want all permissions
+
+    Returns:
+        group (str): the appropriate group name
+    """
+    names = ['all'] if spec is None else [spec.name, 'all']
+
+    for name in names:
         try:
             group = scon.get('packages:%s:permissions:group' % name, '')
             if group:
