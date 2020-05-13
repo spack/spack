@@ -330,7 +330,9 @@ class QuantumEspresso(Package):
         configure(*options)
 
         # Filter file must be applied after configure executes
-        # QE 6.4.0 to QE 6.4 have `-L` missing in front of zlib library
+        # QE 6.1.0 to QE 6.4 have `-L` missing in front of zlib library
+        # This issue is backported through an internal patch in 6.4.1, but
+        # can't be applied to the '+qmcpack' variant
         if spec.variants['hdf5'].value != 'none':
             if (spec.satisfies('@6.1.0:6.4.0') or
                 (spec.satisfies('@6.4.1') and '+qmcpack' in spec)):
