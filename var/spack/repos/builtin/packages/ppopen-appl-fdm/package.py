@@ -24,7 +24,10 @@ class PpopenApplFdm(MakefilePackage):
     patch('unused.patch')
     # remove iargc external definition
     # iargc is intrinsic in gfortran
-    patch('gfortran_iargc.patch')
+    patch('gfortran_iargc.patch', when='%gcc')
+
+    # Fixed a problem that 'iargc' was not declared in advance
+    patch('iargc_definition.patch', when='%fj')
 
     depends_on('ppopen-math-vis', type='link')
     depends_on('mpi')
