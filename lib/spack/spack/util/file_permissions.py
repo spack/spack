@@ -6,17 +6,17 @@
 import os
 import stat as st
 import llnl.util.filesystem as fs
-import spack.package_prefs as pp
+import spack.package_perms as spp
 from spack.error import SpackError
 
 
 def set_permissions_by_spec(path, spec):
     # Get permissions for spec
     if os.path.isdir(path):
-        perms = pp.get_package_dir_permissions(spec)
+        perms = spp.get_package_dir_permissions(spec)
     else:
-        perms = pp.get_package_permissions(spec)
-    group = pp.get_package_group(spec)
+        perms = spp.get_package_permissions(spec)
+    group = spp.get_package_group(spec)
 
     set_permissions(path, perms, group)
 

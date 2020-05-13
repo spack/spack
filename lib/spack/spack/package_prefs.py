@@ -3,18 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import stat
+import six
 
-from six import string_types
-
-import spack.repo
 import spack.error
-from spack.util.path import canonicalize_path
-from spack.version import VersionList
-from spack.config import ConfigError
+import spack.repo
+import spack.spec
+import spack.version
+
+import spack.util.path as sup
+
 
 _lesser_spec_types = {'compiler': spack.spec.CompilerSpec,
-                      'version': VersionList}
+                      'version': spack.version.VersionList}
 
 
 def _spec_type(component):
@@ -144,7 +144,7 @@ class PackagePrefs(object):
                 break
 
         # allow variants to be list or string
-        if not isinstance(variants, string_types):
+        if not isinstance(variants, six.string_types):
             variants = " ".join(variants)
 
         # Only return variants that are actually supported by the package
@@ -174,7 +174,7 @@ def spec_externals(spec):
 
         for external_spec, path in pkg_paths.items():
             external_spec = spack.spec.Spec(
-                external_spec, external_path=canonicalize_path(path))
+                external_spec, external_path=sup.canonicalize_path(path))
             if external_spec.satisfies(spec):
                 external_specs.append(external_spec)
 
@@ -195,80 +195,6 @@ def is_spec_buildable(spec):
                     if not entry.get('buildable', True)]
     return not (spec.name in do_not_build or
                 any(spec.package.provides(name) for name in do_not_build))
-
-
-def get_package_dir_permissions(spec):
-    """Return the permissions configured for the spec.
-
-    Include the GID bit if group permissions are on. This makes the group
-    attribute sticky for the directory. Package-specific settings take
-    precedent over settings for ``all``"""
-    perms = get_package_permissions(spec)
-    if perms & stat.S_IRWXG and spack.config.get('config:allow_sgid', True):
-        perms |= stat.S_ISGID
-    return perms
-
-
-def get_package_permissions(spec):
-    """Return the permissions configured for the spec.
-
-    Package-specific settings take precedence over settings for ``all``"""
-
-    # Get read permissions level
-    for name in (spec.name, 'all'):
-        try:
-            readable = spack.config.get('packages:%s:permissions:read' % name,
-                                        '')
-            if readable:
-                break
-        except AttributeError:
-            readable = 'world'
-
-    # Get write permissions level
-    for name in (spec.name, 'all'):
-        try:
-            writable = spack.config.get('packages:%s:permissions:write' % name,
-                                        '')
-            if writable:
-                break
-        except AttributeError:
-            writable = 'user'
-
-    perms = stat.S_IRWXU
-    if readable in ('world', 'group'):  # world includes group
-        perms |= stat.S_IRGRP | stat.S_IXGRP
-    if readable == 'world':
-        perms |= stat.S_IROTH | stat.S_IXOTH
-
-    if writable in ('world', 'group'):
-        if readable == 'user':
-            raise ConfigError('Writable permissions may not be more' +
-                              ' permissive than readable permissions.\n' +
-                              '      Violating package is %s' % spec.name)
-        perms |= stat.S_IWGRP
-    if writable == 'world':
-        if readable != 'world':
-            raise ConfigError('Writable permissions may not be more' +
-                              ' permissive than readable permissions.\n' +
-                              '      Violating package is %s' % spec.name)
-        perms |= stat.S_IWOTH
-
-    return perms
-
-
-def get_package_group(spec):
-    """Return the unix group associated with the spec.
-
-    Package-specific settings take precedence over settings for ``all``"""
-    for name in (spec.name, 'all'):
-        try:
-            group = spack.config.get('packages:%s:permissions:group' % name,
-                                     '')
-            if group:
-                break
-        except AttributeError:
-            group = ''
-    return group
 
 
 class VirtualInPackagesYAMLError(spack.error.SpackError):

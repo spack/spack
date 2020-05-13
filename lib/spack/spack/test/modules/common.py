@@ -56,7 +56,7 @@ def mock_module_filename(monkeypatch, tmpdir):
 @pytest.fixture()
 def mock_package_perms(monkeypatch):
     perms = stat.S_IRGRP | stat.S_IWGRP
-    monkeypatch.setattr(spack.package_prefs,
+    monkeypatch.setattr(spack.package_perms,
                         'get_package_permissions',
                         lambda spec: perms)
 

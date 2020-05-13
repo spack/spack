@@ -15,7 +15,7 @@ import spack.binary_distribution
 import spack.compilers
 import spack.directory_layout as dl
 import spack.installer as inst
-import spack.package_prefs as prefs
+import spack.package_perms as spp
 import spack.repo
 import spack.spec
 import spack.store
@@ -635,7 +635,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     def _chgrp(path, group):
         tty.msg(mock_chgrp_msg.format(path, group))
 
-    monkeypatch.setattr(prefs, 'get_package_group', _get_group)
+    monkeypatch.setattr(spp, 'get_package_group', _get_group)
     monkeypatch.setattr(fs, 'chgrp', _chgrp)
 
     spec, installer = create_installer('trivial-install-test-package')
