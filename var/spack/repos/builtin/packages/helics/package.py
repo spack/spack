@@ -49,7 +49,6 @@ class Helics(CMakePackage):
 
     depends_on('libzmq@4.3:', when='+zmq')
     depends_on('mpi@2', when='+mpi')
-
     depends_on('python@3:', when='+python')
 
     # OpenMPI doesn't work with HELICS <=2.4.1
@@ -111,7 +110,6 @@ class Helics(CMakePackage):
         # Python
         args.append('-DBUILD_PYTHON_INTERFACE={0}'.format(
             'ON' if '+python' in spec else 'OFF'))
-
 
         return args
 
