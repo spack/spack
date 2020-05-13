@@ -297,8 +297,10 @@ class Compiler(object):
         if self.enable_implicit_rpaths is False:
             return []
 
+        # Put CXX first since it has the most linking issues
+        # And because it has flags that affect linking
         exe_paths = [
-            x for x in [self.cc, self.cxx, self.fc, self.f77] if x]
+            x for x in [self.cxx, self.cc, self.fc, self.f77] if x]
         link_dirs = self._get_compiler_link_paths(exe_paths)
 
         all_required_libs = (
@@ -322,6 +324,16 @@ class Compiler(object):
             # In this case there is no mechanism to learn what link directories
             # are used by the compiler
             return []
+        
+        flags = ['cppflags', 'ldflags']
+        if cls.flags:
+            # cls is an instance not a class
+            if first_compiler == cls.cc:
+                flags = ['cflags'] + flags
+            elif first_compiler == cls.cxx:
+                flags = ['cxxflgs'] + flags
+            else:
+                flags.append('fflags')
 
         try:
             tmpdir = tempfile.mkdtemp(prefix='spack-implicit-link-info')
@@ -333,6 +345,9 @@ class Compiler(object):
                     'int main(int argc, char* argv[]) { '
                     '(void)argc; (void)argv; return 0; }\n')
             compiler_exe = spack.util.executable.Executable(first_compiler)
+            for flag_type in flags:
+                for flag in cls.flags[flag_type]:
+                    compiler_exe.add_default_arg(flag)
             output = str(compiler_exe(cls.verbose_flag(), fin, '-o', fout,
                                       output=str, error=str))  # str for py2
 
