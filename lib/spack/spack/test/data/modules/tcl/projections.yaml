@@ -1,0 +1,6 @@
+enable:
+  - tcl
+tcl:
+  projections:
+    all: '{name}/{version}-{compiler.name}'
+    mpileaks: '{name}-mpiprojection'
