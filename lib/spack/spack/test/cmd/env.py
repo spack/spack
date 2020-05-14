@@ -448,8 +448,9 @@ env:
     external_config = StringIO("""\
 packages:
   a:
-    paths:
-      a: {a_prefix}
+    externals:
+    - spec: a
+      prefix: {a_prefix}
     buildable: false
 """.format(a_prefix=str(fake_prefix)))
     external_config_dict = spack.util.spack_yaml.load_config(external_config)

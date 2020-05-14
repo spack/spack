@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Schema for packages.yaml configuration files.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/packages.py
@@ -59,10 +58,6 @@ properties = {
                             },
                         },
                     },
-                    'modules': {
-                        'type': 'object',
-                        'default': {},
-                    },
                     'providers': {
                         'type':  'object',
                         'default': {},
@@ -72,17 +67,36 @@ properties = {
                                 'type': 'array',
                                 'default': [],
                                 'items': {'type': 'string'}, }, }, },
-                    'paths': {
-                        'type': 'object',
-                        'default': {},
-                    },
                     'variants': {
                         'oneOf': [
                             {'type': 'string'},
                             {'type': 'array',
                              'items': {'type': 'string'}}],
                     },
+                    'externals': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'object',
+                            'properties': {
+                                'spec': {'type': 'string'},
+                            },
+                            'additionalProperties': True,
+                            'required': ['spec']
+                        }
+                    },
+                    # Deprecated properties, will trigger an error with a
+                    # message telling how to update.
+                    'paths': {'type': 'object'},
+                    'modules': {'type': 'object'},
                 },
+                'deprecatedProperties': {
+                    'properties': ['modules', 'paths'],
+                    'message': 'the attributes "modules" and "paths" in '
+                               'packages.yaml have been deprecated. Run '
+                               '"spack config update packages" to update '
+                               'your configuration',
+                    'error': True
+                }
             },
         },
     },
@@ -97,3 +111,33 @@ schema = {
     'additionalProperties': False,
     'properties': properties,
 }
+
+
+def update(data):
+    """Update in-place the data to remove deprecated properties.
+
+    Args:
+        data (dict): dictionary to be updated
+
+    Returns:
+        True if data was changed, False otherwise
+    """
+    changed = False
+    for cfg_object in data.values():
+        externals = []
+        paths = cfg_object.pop('paths', {})
+        for spec, prefix in paths.items():
+            externals.append({
+                'spec': str(spec),
+                'prefix': str(prefix)
+            })
+        modules = cfg_object.pop('modules', {})
+        for spec, module in modules.items():
+            externals.append({
+                'spec': str(spec),
+                'module': str(module)
+            })
+        if externals:
+            changed = True
+            cfg_object['externals'] = externals
+    return changed

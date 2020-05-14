@@ -167,24 +167,23 @@ def spec_externals(spec):
     external_specs = []
     for name in names:
         pkg_config = allpkgs.get(name, {})
-        pkg_paths = pkg_config.get('paths', {})
-        pkg_modules = pkg_config.get('modules', {})
-        if (not pkg_paths) and (not pkg_modules):
-            continue
-
-        for external_spec, path in pkg_paths.items():
+        pkg_externals = pkg_config.get('externals', [])
+        for entry in pkg_externals:
+            # FIXME: Copy and pop?
+            spec_str = entry['spec']
+            external_path = entry.get('prefix', None)
+            if external_path:
+                external_path = canonicalize_path(external_path)
+            external_module = entry.get('module', None)
             external_spec = spack.spec.Spec(
-                external_spec, external_path=canonicalize_path(path))
+                spec_str,
+                external_path=external_path,
+                external_module=external_module
+            )
             if external_spec.satisfies(spec):
                 external_specs.append(external_spec)
 
-        for external_spec, module in pkg_modules.items():
-            external_spec = spack.spec.Spec(
-                external_spec, external_module=module)
-            if external_spec.satisfies(spec):
-                external_specs.append(external_spec)
-
-    # defensively copy returned specs
+    # Defensively copy returned specs
     return [s.copy() for s in external_specs]
 
 

@@ -735,6 +735,11 @@ def scopes():
     return config.scopes
 
 
+def file_scopes():
+    """Return the list of scopes associated with a file."""
+    return [s for s, k in config.scopes.items() if type(k) == ConfigScope]
+
+
 def _validate_section_name(section):
     """Exit if the section is not a valid section."""
     if section not in section_schemas:

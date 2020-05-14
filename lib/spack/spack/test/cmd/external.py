@@ -70,21 +70,20 @@ def test_find_external_two_instances_same_package(create_exe):
 
 
 def test_find_external_update_config(mutable_config):
-    pkg_to_entries = {
-        'cmake': [
-            ExternalPackageEntry(Spec('cmake@1.foo'), '/x/y1/'),
-            ExternalPackageEntry(Spec('cmake@3.17.2'), '/x/y2/'),
-        ]
-    }
+    entries = [
+        ExternalPackageEntry(Spec.from_detection('cmake@1.foo'), '/x/y1/'),
+        ExternalPackageEntry(Spec.from_detection('cmake@3.17.2'), '/x/y2/'),
+    ]
+    pkg_to_entries = {'cmake': entries}
 
     spack.cmd.external._update_pkg_config(pkg_to_entries, False)
 
     pkgs_cfg = spack.config.get('packages')
     cmake_cfg = pkgs_cfg['cmake']
-    cmake_paths_cfg = cmake_cfg['paths']
+    cmake_externals = cmake_cfg['externals']
 
-    assert cmake_paths_cfg['cmake@1.foo'] == '/x/y1/'
-    assert cmake_paths_cfg['cmake@3.17.2'] == '/x/y2/'
+    assert {'spec': 'cmake@1.foo', 'prefix': '/x/y1/'} in cmake_externals
+    assert {'spec': 'cmake@3.17.2', 'prefix': '/x/y2/'} in cmake_externals
 
 
 def test_get_executables(working_env, create_exe):
@@ -103,15 +102,16 @@ def test_find_external_cmd(mutable_config, working_env, create_exe):
     which restricts the set of packages that Spack looks for.
     """
     cmake_path1 = create_exe("cmake", "cmake version 1.foo")
+    prefix = os.path.dirname(os.path.dirname(cmake_path1))
 
     os.environ['PATH'] = ':'.join([os.path.dirname(cmake_path1)])
     external('find', 'cmake')
 
     pkgs_cfg = spack.config.get('packages')
     cmake_cfg = pkgs_cfg['cmake']
-    cmake_paths_cfg = cmake_cfg['paths']
+    cmake_externals = cmake_cfg['externals']
 
-    assert 'cmake@1.foo' in cmake_paths_cfg
+    assert {'spec': 'cmake@1.foo', 'prefix': prefix} in cmake_externals
 
 
 def test_find_external_cmd_not_buildable(
@@ -134,16 +134,18 @@ def test_find_external_cmd_full_repo(
     """
 
     exe_path1 = create_exe(
-        "find-externals1-exe", "find-externals1 version 1.foo")
+        "find-externals1-exe", "find-externals1 version 1.foo"
+    )
+    prefix = os.path.dirname(os.path.dirname(exe_path1))
 
     os.environ['PATH'] = ':'.join([os.path.dirname(exe_path1)])
     external('find')
 
     pkgs_cfg = spack.config.get('packages')
     pkg_cfg = pkgs_cfg['find-externals1']
-    pkg_paths_cfg = pkg_cfg['paths']
+    pkg_externals = pkg_cfg['externals']
 
-    assert 'find-externals1@1.foo' in pkg_paths_cfg
+    assert {'spec': 'find-externals1@1.foo', 'prefix': prefix} in pkg_externals
 
 
 def test_find_external_merge(mutable_config, mutable_mock_repo):
@@ -152,26 +154,31 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
     """
     pkgs_cfg_init = {
         'find-externals1': {
-            'paths': {
-                'find-externals1@1.1': '/preexisting-prefix/'
-            },
+            'externals': [{
+                'spec': 'find-externals1@1.1',
+                'prefix': '/preexisting-prefix/'
+            }],
             'buildable': False
         }
     }
 
     mutable_config.update_config('packages', pkgs_cfg_init)
-
-    pkg_to_entries = {
-        'find-externals1': [
-            ExternalPackageEntry(Spec('find-externals1@1.1'), '/x/y1/'),
-            ExternalPackageEntry(Spec('find-externals1@1.2'), '/x/y2/'),
-        ]
-    }
+    entries = [
+        ExternalPackageEntry(
+            Spec.from_detection('find-externals1@1.1'), '/x/y1/'
+        ),
+        ExternalPackageEntry(
+            Spec.from_detection('find-externals1@1.2'), '/x/y2/'
+        )
+    ]
+    pkg_to_entries = {'find-externals1': entries}
     spack.cmd.external._update_pkg_config(pkg_to_entries, False)
 
     pkgs_cfg = spack.config.get('packages')
     pkg_cfg = pkgs_cfg['find-externals1']
-    pkg_paths_cfg = pkg_cfg['paths']
+    pkg_externals = pkg_cfg['externals']
 
-    assert pkg_paths_cfg['find-externals1@1.1'] == '/preexisting-prefix/'
-    assert pkg_paths_cfg['find-externals1@1.2'] == '/x/y2/'
+    assert {'spec': 'find-externals1@1.1',
+            'prefix': '/preexisting-prefix/'} in pkg_externals
+    assert {'spec': 'find-externals1@1.2',
+            'prefix': '/x/y2/'} in pkg_externals

@@ -4,14 +4,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
+
 import os
 import re
+import shutil
 
 import llnl.util.tty as tty
-
 import spack.config
 import spack.schema.env
 import spack.environment as ev
+import spack.schema.packages
 import spack.util.spack_yaml as syaml
 from spack.util.editor import editor
 
@@ -79,6 +81,11 @@ def setup_parser(subparser):
 
     # Make the add parser available later
     setup_parser.add_parser = add_parser
+
+    update = sp.add_parser(
+        'update', help='update configuration files to the latest format'
+    )
+    update.add_argument('section', help='section to update')
 
 
 def _get_scope_and_section(args):
@@ -275,12 +282,55 @@ def config_remove(args):
     set_config(args, path, existing, scope)
 
 
+def config_update(args):
+    # Check if the Python module defines an update function. If not
+    # there's no need to update.
+    section_module_name = 'spack.schema.' + args.section
+    section_module = __import__(section_module_name, fromlist=['update'])
+    update_fn = getattr(section_module, 'update', None)
+    if not update_fn:
+        tty.msg('Configuration files in the "{0}" section '
+                'need no update'.format(args.section))
+        return
+
+    scopes = [args.scope] if args.scope else spack.config.file_scopes()
+    for scope in scopes:
+        cfg_file = spack.config.config.get_config_filename(scope, args.section)
+        if not os.path.exists(cfg_file):
+            continue
+
+        with open(cfg_file) as f:
+            data = syaml.load(f) or {}
+            data = data.pop(args.section, {})
+
+        # Check if the file needs update
+        needs_update = update_fn(data)
+        if not needs_update:
+            msg = "no update needed for file {0} [section={1}, scope={2}]"
+            tty.debug(msg.format(cfg_file, section, scope))
+            continue
+
+        # Make a backup copy and rewrite the file
+        bkp_file = cfg_file + '.bkp'
+        if os.path.exists(bkp_file):
+            msg = ('backup file "{0}" exists on disk. Check the content '
+                   'and remove it before trying to update again.')
+            tty.die(msg.format(bkp_file))
+        shutil.copy(cfg_file, bkp_file)
+        spack.config.set(args.section, data, scope=scope)
+        msg = 'File "{0}" updated [backup={1}]'
+        tty.msg(msg.format(cfg_file, bkp_file))
+
+
 def config(parser, args):
-    action = {'get': config_get,
-              'blame': config_blame,
-              'edit': config_edit,
-              'list': config_list,
-              'add': config_add,
-              'rm': config_remove,
-              'remove': config_remove}
+    action = {
+        'get': config_get,
+        'blame': config_blame,
+        'edit': config_edit,
+        'list': config_list,
+        'add': config_add,
+        'rm': config_remove,
+        'remove': config_remove,
+        'update': config_update
+    }
     action[args.config_command](args)
