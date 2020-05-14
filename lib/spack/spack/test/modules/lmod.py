@@ -27,6 +27,7 @@ def compiler(request):
 
 @pytest.fixture(params=[
     ('mpich@3.0.4', ('mpi',)),
+    ('mpich@3.0.1', []),
     ('openblas@0.2.15', ('blas',)),
     ('openblas-with-lapack@0.2.15', ('blas', 'lapack'))
 ])
@@ -54,7 +55,8 @@ class TestLmod(object):
         # Check that the compiler part of the path has no hash and that it
         # is transformed to r"Core" if the compiler is listed among core
         # compilers
-        if compiler == 'clang@3.3':
+        # Check that specs listed as core_specs are transformed to "Core"
+        if compiler == 'clang@3.3' or spec_string == 'mpich@3.0.1':
             assert 'Core' in layout.available_path_parts
         else:
             assert compiler.replace('@', '/') in layout.available_path_parts

@@ -111,6 +111,11 @@ class LmodConfiguration(BaseConfiguration):
         return value
 
     @property
+    def core_specs(self):
+        """Returns the list of "Core" specs"""
+        return configuration().get('core_specs', [])
+
+    @property
     def hierarchy_tokens(self):
         """Returns the list of tokens that are part of the modulefile
         hierarchy. 'compiler' is always present.
@@ -140,6 +145,11 @@ class LmodConfiguration(BaseConfiguration):
         to the actual provider. 'compiler' is always present among the
         requirements.
         """
+        # If it's a core_spec, lie and say it requires a core compiler
+        if any(self.spec.satisfies(core_spec)
+               for core_spec in self.core_specs):
+            return {'compiler': self.core_compilers[0]}
+
         # Keep track of the requirements that this package has in terms
         # of virtual packages that participate in the hierarchical structure
         requirements = {'compiler': self.spec.compiler}
