@@ -1013,6 +1013,10 @@ class Spec(object):
         self.external_module = external_module
         self._full_hash = full_hash
 
+        # This attribute is used to store custom information for
+        # external specs
+        self._extra_attributes = None
+
         if isinstance(spec_like, six.string_types):
             spec_list = SpecParser(self).parse(spec_like)
             if len(spec_list) > 1:
@@ -1969,6 +1973,45 @@ class Spec(object):
         except Exception as e:
             tty.debug(e)
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
+
+    @staticmethod
+    def from_detection(spec_str, extra_attributes=None):
+        """Construct a spec from a spec string determined during external
+        detection and attach extra attributes to it.
+
+        Args:
+            spec_str (str): spec string
+            extra_attributes (dict): dictionary containing extra attributes
+
+        Returns:
+            Spec object (external spec)
+        """
+        s = Spec(spec_str)
+        extra_attributes = extra_attributes or {}
+        # This is needed to be able to validate multi-valued variants,
+        # otherwise they'll still be abstract in the context of detection.
+        vt.substitute_abstract_variants(s)
+        s._extra_attributes = extra_attributes
+        s._mark_concrete()
+        return s
+
+    def validate_detection(self):
+        """Validate the detection of an external spec.
+
+        This method is used as part of Spack's detection protocol, and is
+        not meant for client code use.
+        """
+        # Assert that _extra_attributes is a Mapping and not None,
+        # which likely means the spec was created with Spec.from_detection
+        msg = ('cannot validate "{0}" since it was not created '
+               'using Spec.from_detection'.format(self))
+        assert isinstance(self._extra_attributes, collections.Mapping), msg
+
+        # Validate the spec calling a package specific method
+        validate_fn = getattr(
+            self.package, 'validate_detected_spec', lambda x, y: None
+        )
+        validate_fn(self, self._extra_attributes)
 
     def _concretize_helper(self, concretizer, presets=None, visited=None):
         """Recursive helper function for concretize().

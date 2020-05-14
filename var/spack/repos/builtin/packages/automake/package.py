@@ -44,7 +44,7 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
             match = re.search(r'GNU automake\)\s+(\S+)', output)
             if match:
                 version_str = match.group(1)
-                return Spec('automake@{0}'.format(version_str))
+                return Spec.from_detection('automake@{0}'.format(version_str))
 
     def patch(self):
         # The full perl shebang might be too long

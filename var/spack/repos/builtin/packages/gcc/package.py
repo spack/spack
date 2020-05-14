@@ -280,22 +280,30 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     @classmethod
     def determine_spec_details(cls, prefix, exes_in_prefix):
         exes_by_version = collections.defaultdict(list)
+        exes_in_prefix = cls.filter_detected_exes(prefix, exes_in_prefix)
         for exe in exes_in_prefix:
-            # clang++ matches g++ -> clan[g++]
-            if 'clang' in exe:
-                continue
-
             version_str = cls.determine_version(exe)
             if version_str:
                 exes_by_version[version_str].append(exe)
 
         specs = []
         for version_str, exes in exes_by_version.items():
-            spec_str = cls.determine_variants(exes, version_str)
-            if spec_str:
-                specs.append(Spec(spec_str))
+            specs.extend(cls.determine_variants(exes, version_str))
 
         return specs
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        result = []
+        for exe in exes_in_prefix:
+            # clang++ matches g++ -> clan[g++]
+            if 'clang' in exe:
+                continue
+            # Filter out links in favor of real executables
+            if os.path.islink(exe):
+                continue
+            result.append(exe)
+        return result
 
     @classmethod
     def determine_version(cls, exe):
@@ -316,17 +324,41 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     @classmethod
     def determine_variants(cls, exes, version_str):
         spec_str = 'gcc@{0} languages={1}'
-        languages = set()
-
+        languages, compilers = set(), {}
         for exe in exes:
             if 'gcc' in exe:
                 languages.add('c')
+                compilers['c'] = exe
             if 'g++' in exe:
                 languages.add('c++')
+                compilers['cxx'] = exe
             if 'gfortran' in exe:
                 languages.add('fortran')
+                compilers['fortran'] = exe
 
-        return spec_str.format(version_str, ','.join(languages))
+        spec_str = spec_str.format(version_str, ','.join(languages))
+        return [Spec.from_detection(
+            spec_str, extra_attributes={'compilers': compilers}
+        )]
+
+    @classmethod
+    def validate_detected_spec(cls, spec, extra_attributes):
+        # For GCC 'compilers' is a mandatory attribute
+        msg = ('the extra attribute "compilers" must be set for '
+               'the detected spec "{0}"'.format(spec))
+        assert 'compilers' in extra_attributes, msg
+
+        #
+        compilers = extra_attributes['compilers']
+        for constraint, key in {
+            'languages=c': 'c',
+            'languages=c++': 'cxx',
+            'languages=fortran': 'fortran'
+        }.items():
+            if spec.satisfies(constraint, strict=True):
+                # TODO: Here the variants are still abstract
+                msg = '{0} not in {1}'
+                assert key in compilers, msg.format(key, spec)
 
     def url_for_version(self, version):
         # This function will be called when trying to fetch from url, before

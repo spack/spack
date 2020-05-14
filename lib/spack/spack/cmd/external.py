@@ -259,6 +259,14 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                 else:
                     resolved_specs[spec] = prefix
 
+                try:
+                    spec.validate_detection()
+                except Exception as e:
+                    msg = ('"{0}" has been detected on the system but will '
+                           'not be added to packages.yaml [{1}]')
+                    tty.warn(msg.format(spec, str(e)))
+                    continue
+
                 pkg_to_entries[pkg.name].append(
                     ExternalPackageEntry(spec=spec, base_dir=pkg_prefix))
 

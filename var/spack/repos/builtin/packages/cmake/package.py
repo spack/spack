@@ -175,7 +175,7 @@ class Cmake(Package):
             match = re.search(r'cmake.*version\s+(\S+)', output)
             if match:
                 version_str = match.group(1)
-                return Spec('cmake@{0}'.format(version_str))
+                return Spec.from_detection('cmake@{0}'.format(version_str))
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':
