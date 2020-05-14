@@ -50,7 +50,7 @@ class Hwloc(AutotoolsPackage):
     variant('gl', default=False, description="Support GL device discovery")
     variant('cuda', default=False, description="Support CUDA devices")
     variant('libxml2', default=True, description="Build with libxml2")
-    variant('libudev', default=False, description="Build with libhudev")
+    variant('libudev', default=False, description="Build with libudev")
     variant('pci', default=(sys.platform != 'darwin'),
             description="Support analyzing devices on PCI bus")
     variant('shared', default=True, description="Build shared libraries")
