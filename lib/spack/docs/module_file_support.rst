@@ -562,6 +562,11 @@ most likely via the ``+blas`` variant specification.
      ``Core`` hierarchy of the lua modules.
 
 .. warning::
+  Consistency of Core packages
+   The user is responsible for maintining consistency among core packages, as ``core_specs``
+   bypasses the hierarchy that allows LMod to safely switch between coherent software stacks.
+
+.. warning::
   Deep hierarchies and ``lmod spider``
    For hierarchies that are deeper than three layers ``lmod spider`` may have some issues.
    See `this discussion on the LMod project <https://github.com/TACC/Lmod/issues/114>`_.
