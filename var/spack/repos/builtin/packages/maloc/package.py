@@ -11,21 +11,7 @@ class Maloc(AutotoolsPackage):
     is a small, portable, abstract C environment library for
     object-oriented C programming. MALOC is used as the
     foundation layer for a number of scientific applications,
-    including MC, SG, and APBS. MALOC can be used as a small
-    stand-alone abstraction environment for writing portable C
-    programs which need access to resources which are typically
-    architecture-dependent, such as INET sockets, timing
-    routines, and so on. MALOC provides abstract datatypes,
-    memory management routines, timing routines, machine
-    epsilon, access to UNIX and INET sockets, MPI, and so on.
-    All things that can vary from one architecture to another
-    are abstracted out of an application code and placed in
-    MALOC. To port the application code to a new architecture,
-    only the small MALOC library needs to be ported (usually
-    just "./configure ; make"). MALOC takes the pain of varying
-    UNIX (and Win32) platforms with differing library and
-    header layous completely out of the software development
-    picture."""
+    including MC, SG, and APBS."""
 
     homepage = "http://fetk.org/codes/maloc/"
     url      = "http://www.fetk.org/codes/download/maloc-1.0.tar.gz"
