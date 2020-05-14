@@ -518,6 +518,12 @@ word ``module`` before the hash for all specs that do not depend on
 mpi, and will have the same information plus the MPI implementation
 name and version for all packages that depend on mpi.
 
+When specifying module names by projection for Lmod modules, we
+recommend NOT including names of dependencies (e.g., MPI, compilers)
+that are already in the LMod hierarchy.
+
+
+
 .. note::
    TCL modules
      TCL modules also allow for explicit conflicts between modulefiles.
@@ -572,9 +578,6 @@ name and version for all packages that depend on mpi.
      All packages built with a compiler in ``core_compilers`` and all
      packages that satisfy a spec in ``core_specs`` will be put in the
      ``Core`` hierarchy of the lua modules.
-
-     It is highly recommended NOT to include dependencies in the lmod
-     hierarchy in the projections for lmod modules.
 
 .. warning::
   Consistency of Core packages
