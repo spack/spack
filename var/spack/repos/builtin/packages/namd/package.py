@@ -74,6 +74,7 @@ class Namd(MakefilePackage):
         return '{0}-spack'.format(self.arch)
 
     def edit(self, spec, prefix):
+        m64 = '-m64 ' if not spec.satisfies('arch=aarch64:') else ''
         with working_dir('arch'):
             with open('{0}.arch'.format(self.build_directory), 'w') as fh:
                 # this options are take from the default provided
@@ -81,12 +82,12 @@ class Namd(MakefilePackage):
                 # https://github.com/UIUC-PPL/charm/pull/2778
                 if self.spec.satisfies('^charmpp@:6.10.1'):
                     optims_opts = {
-                        'gcc': '-m64 -O3 -fexpensive-optimizations \
+                        'gcc': m64 + '-O3 -fexpensive-optimizations \
                                 -ffast-math -lpthread',
                         'intel': '-O2 -ip'}
                 else:
                     optims_opts = {
-                        'gcc': '-m64 -O3 -fexpensive-optimizations \
+                        'gcc': m64 + '-O3 -fexpensive-optimizations \
                                 -ffast-math',
                         'intel': '-O2 -ip'}
 
