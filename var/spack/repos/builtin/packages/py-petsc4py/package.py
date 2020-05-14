@@ -37,7 +37,7 @@ class PyPetsc4py(PythonPackage):
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
 
     depends_on('petsc+mpi', when='+mpi')
-    depends_on('petsc~mpi~hdf5~hypre~superlu-dist', when='~mpi')
+    depends_on('petsc~mpi', when='~mpi')
     depends_on('petsc@develop', when='@develop')
     depends_on('petsc@3.13:3.13.99', when='@3.13:3.13.99')
     depends_on('petsc@3.12:3.12.99', when='@3.12:3.12.99')
