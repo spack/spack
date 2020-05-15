@@ -13,7 +13,8 @@ class RPolspline(RPackage):
     """
 
     homepage = "https://cloud.r-project.org/package=polspline"
-    url      = "https://cran.r-project.org/src/contrib/polspline_1.1.18.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/polspline_1.1.18.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/polspline"
 
     version('1.1.18', sha256='df250ee144bfff154249ba50308f46863107ef3efb2333ad908e599ed0eb0102')
     version('1.1.17', sha256='d67b269d01105d4a6ea774737e921e66e065a859d1931ae38a70f88b6fb7ee30')
