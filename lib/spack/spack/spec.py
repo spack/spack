@@ -2003,7 +2003,7 @@ class Spec(object):
     def _replace_with(self, concrete):
         """Replace this virtual spec with a concrete spec."""
         assert(self.virtual)
-        for name, dep_spec in self._dependents.items():
+        for dep_spec in self._dependents.values():
             dependent = dep_spec.parent
             deptypes = dep_spec.deptypes
 
