@@ -145,8 +145,8 @@ default_compiler_entry = {
     'paths': {
         'cc': 'cc-path',
         'cxx': 'cxx-path',
-        'fc': None,
-        'f77': None
+        'fc': 'fc-path',
+        'f77': 'f77-path'
     },
     'flags': {},
     'modules': None
@@ -197,7 +197,7 @@ def test_implicit_rpaths(dirs_with_libfiles, monkeypatch):
     assert set(retrieved_rpaths) == expected_rpaths
 
 
-def test_get_compiler_link_paths(tmpdir, monkeypatch):
+def test_get_compiler_link_paths(monkeypatch):
     # Mock compiler call
     test_dirs = ['/path/to/first/lib', '/path/to/second/lib64']
     test_output = 'ld -L%s -L%s' % tuple(test_dirs)
@@ -213,7 +213,7 @@ def test_get_compiler_link_paths(tmpdir, monkeypatch):
     assert dirs == test_dirs
 
 
-def test_get_compiler_link_paths_with_flags(tmpdir, monkeypatch):
+def test_get_compiler_link_paths_with_cxxflags(monkeypatch):
     # Mock compiler call
     test_dirs = ['/path/to/first/lib', '/path/to/second/lib64']
     test_output = 'ld -L%s -L%s' % tuple(test_dirs)
@@ -230,6 +230,63 @@ def test_get_compiler_link_paths_with_flags(tmpdir, monkeypatch):
     dirs = compiler._get_compiler_link_paths([compiler.cxx])
 
     assert dirs == test_dirs
+
+
+def test_get_compiler_link_paths_with_cflags(monkeypatch):
+    # Mock compiler call
+    test_dirs = ['/path/to/first/lib', '/path/to/second/lib64']
+    test_output = 'ld -L%s -L%s' % tuple(test_dirs)
+
+    def call_compiler(exe, *args, **kwargs):
+        if '--correct-flag' in exe.exe:
+            return test_output
+        return []
+    monkeypatch.setattr(
+        spack.util.executable.Executable, '__call__', call_compiler)
+
+    compiler = MockCompiler()
+    setattr(compiler, 'flags', {'cflags': ['--correct-flag', '-O2']})
+    dirs = compiler._get_compiler_link_paths([compiler.cc])
+
+    assert dirs == test_dirs
+
+
+def test_get_compiler_link_paths_with_fflags(monkeypatch):
+    # Mock compiler call
+    test_dirs = ['/path/to/first/lib', '/path/to/second/lib64']
+    test_output = 'ld -L%s -L%s' % tuple(test_dirs)
+
+    def call_compiler(exe, *args, **kwargs):
+        if '--correct-flag' in exe.exe:
+            return test_output
+        return []
+    monkeypatch.setattr(
+        spack.util.executable.Executable, '__call__', call_compiler)
+
+    compiler = MockCompiler()
+    setattr(compiler, 'flags', {'fflags': ['--correct-flag', '-O2']})
+    dirs = compiler._get_compiler_link_paths([compiler.fc])
+
+    assert dirs == test_dirs
+
+
+def test_get_compiler_link_paths_no_path():
+    compiler = MockCompiler()
+    compiler.cc = None
+    compiler.cxx = None
+    compiler.f77 = None
+    compiler.fc = None
+
+    dirs = compiler._get_compiler_link_paths([compiler.cxx])
+    assert dirs == []
+
+
+def test_get_compiler_link_paths_no_verbose_flag():
+    compiler = MockCompiler()
+    compiler.verbose_flag = lambda: None
+
+    dirs = compiler._get_compiler_link_paths([compiler.cxx])
+    assert dirs == []
 
 
 # Get the desired flag from the specified compiler spec.
