@@ -1531,6 +1531,7 @@ class Spec(object):
             d['external'] = syaml.syaml_dict([
                 ('path', self.external_path),
                 ('module', self.external_module),
+                ('extra_attributes', self.extra_attributes)
             ])
 
         if not self._concrete:
@@ -1699,9 +1700,9 @@ class Spec(object):
             for name in FlagMap.valid_compiler_flags():
                 spec.compiler_flags[name] = []
 
+        spec.external_path = None
+        spec.external_module = None
         if 'external' in node:
-            spec.external_path = None
-            spec.external_module = None
             # This conditional is needed because sometimes this function is
             # called with a node already constructed that contains a 'versions'
             # and 'external' field. Related to virtual packages provider
@@ -1711,9 +1712,9 @@ class Spec(object):
                 spec.external_module = node['external']['module']
                 if spec.external_module is False:
                     spec.external_module = None
-        else:
-            spec.external_path = None
-            spec.external_module = None
+                spec.extra_attributes = node['external'].get(
+                    'extra_attributes', syaml.syaml_dict()
+                )
 
         # specs read in are concrete unless marked abstract
         spec._concrete = node.get('concrete', True)
@@ -1992,7 +1993,6 @@ class Spec(object):
         # otherwise they'll still be abstract in the context of detection.
         vt.substitute_abstract_variants(s)
         s.extra_attributes = extra_attributes
-        s._mark_concrete()
         return s
 
     def validate_detection(self):
@@ -3118,6 +3118,7 @@ class Spec(object):
         self.variants.spec = self
         self.external_path = other.external_path
         self.external_module = other.external_module
+        self.extra_attributes = other.extra_attributes
         self.namespace = other.namespace
 
         # Cached fields are results of expensive operations.

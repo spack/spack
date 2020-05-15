@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import copy
 import stat
 
 from six import string_types
@@ -169,16 +169,20 @@ def spec_externals(spec):
         pkg_config = allpkgs.get(name, {})
         pkg_externals = pkg_config.get('externals', [])
         for entry in pkg_externals:
-            # FIXME: Copy and pop?
-            spec_str = entry['spec']
-            external_path = entry.get('prefix', None)
+            # This copy makes it safe to pop out of entry without
+            # Modifying the object in config
+            entry = copy.deepcopy(entry)
+            spec_str = entry.pop('spec')
+            external_path = entry.pop('prefix', None)
             if external_path:
                 external_path = canonicalize_path(external_path)
-            external_module = entry.get('module', None)
-            external_spec = spack.spec.Spec(
-                spec_str,
-                external_path=external_path,
-                external_module=external_module
+            external_module = entry.pop('module', None)
+            external_spec = spack.spec.Spec.from_detection(
+                spack.spec.Spec(
+                    spec_str,
+                    external_path=external_path,
+                    external_module=external_module
+                ), extra_attributes=entry
             )
             if external_spec.satisfies(spec):
                 external_specs.append(external_spec)
