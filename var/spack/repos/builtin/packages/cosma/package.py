@@ -6,6 +6,7 @@
 
 from spack import *
 
+
 class Cosma(CMakePackage):
     """
     Distributed Communication-Optimal Matrix-Matrix Multiplication Library
