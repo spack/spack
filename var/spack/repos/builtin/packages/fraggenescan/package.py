@@ -16,6 +16,8 @@ class Fraggenescan(MakefilePackage):
 
     version('1.31', sha256='cd3212d0f148218eb3b17d24fcd1fc897fb9fee9b2c902682edde29f895f426c')
 
+    build_targets = ['fgs']
+
     def edit(self, spec, prefix):
         filter_file('gcc', self.compiler.cc, 'Makefile', string=True)
 
