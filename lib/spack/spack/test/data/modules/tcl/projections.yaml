@@ -3,7 +3,4 @@ enable:
 tcl:
   projections:
     all: '{name}/{version}-{compiler.name}'
-  all:
-    conflict:
-      - '{name}'
-      - 'intel/14.0.1'
+    mpileaks: '{name}-mpiprojection'

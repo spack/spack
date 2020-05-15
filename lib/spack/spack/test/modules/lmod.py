@@ -280,3 +280,39 @@ class TestLmod(object):
         assert str(spec.target.family) in writer.layout.arch_dirname
         if spec.target.family != spec.target:
             assert str(spec.target) not in writer.layout.arch_dirname
+
+    def test_projections_specific(self, factory, module_configuration):
+        """Tests reading the correct naming scheme."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration('projections')
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory('mpileaks')
+        expected = {
+            'all': '{name}/v{version}',
+            'mpileaks': '{name}-mpiprojection'
+        }
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections['mpileaks'])
+        assert projection in writer.layout.use_name
+
+    def test_projections_all(self, factory, module_configuration):
+        """Tests reading the correct naming scheme."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration('projections')
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory('libelf')
+        expected = {
+            'all': '{name}/v{version}',
+            'mpileaks': '{name}-mpiprojection'
+        }
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections['all'])
+        assert projection in writer.layout.use_name
