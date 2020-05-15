@@ -124,4 +124,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
            and (self.compiler.name == 'fj' or self.compiler.name == 'clang')\
            and self.version <= ver('2.31.1'):
             flags.append('-Wno-narrowing')
+        elif name == 'cflags':
+            if self.spec.satisfies('@:2.34 %gcc@10:'):
+                flags.append('-fcommon')
         return (flags, None, None)
