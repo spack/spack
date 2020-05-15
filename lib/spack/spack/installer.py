@@ -707,6 +707,7 @@ class PackageInstaller(object):
                 form = 'external' if dep_pkg.spec.external else 'upstream'
                 tty.debug('Flagging {0} {1} as installed'.format(form, dep_id))
                 self.installed.add(dep_id)
+                # TODO: Remove from dependents (so their tasks re-queued)
                 continue
 
             # Check the database to see if the dependency has been installed
@@ -716,6 +717,7 @@ class PackageInstaller(object):
                 tty.debug('Flagging {0} as installed per the database'
                           .format(dep_id))
                 self.installed.add(dep_id)
+                # TODO: Remove from dependents (so their tasks re-queued)
 
     def _prepare_for_install(self, task, keep_prefix, keep_stage,
                              restage=False):
@@ -957,52 +959,74 @@ class PackageInstaller(object):
         self.locks[pkg_id] = (lock_type, lock)
         return self.locks[pkg_id]
 
-    def _init_queue(self, install_deps, install_package):
+    def _queue_pkg(self, pkg, install_compilers):
+        """
+        Add the package to the build queue.
+
+        Args:
+            pkg (Package): package instance
+            install_compilers (bool): ``True`` if compilers to be added to
+                the queue; otherwise ``False``
+        """
+        tty.debug('Adding {0} to the build queue'.format(pkg.name))
+        pkg_id = package_id(pkg)
+
+        _, installed_in_db = self._check_db(pkg.spec)
+        if installed_in_db:
+            tty.verbose('{0} is installed per the database'.format(pkg_id))
+            self.installed.add(pkg_id)
+            self._rm_installed_from_deps(pkg)
+            return
+
+        # Be sure to force clearance of any previous failure markings for the
+        # explicit package.  Otherwise, clear any persistent failure markings
+        # _unless_ they are associated with another process in this parallel
+        # build of the spec.
+        force = pkg_id == self.pkg_id
+        spack.store.db.clear_failure(pkg.spec, force=force)
+
+        # Now add the package itself, if appropriate
+        if pkg_id not in self.build_tasks:
+            self._push_task(pkg, False, 0, 0, STATUS_ADDED)
+
+        # Push any missing compilers (if requested) as part of the
+        # package dependencies.
+        if install_compilers:
+            self._add_bootstrap_compilers(pkg)
+
+    def _init_queue(self, install_package, install_deps):
         """
         Initialize the build task priority queue and spec state.
 
         Args:
-            install_deps (bool): ``True`` if installing package dependencies,
-                otherwise ``False``
             install_package (bool): ``True`` if installing the package,
+                otherwise ``False``
+            install_deps (bool): ``True`` if installing package dependencies,
                 otherwise ``False``
         """
         tty.debug('Initializing the build queue for {0}'.format(self.pkg.name))
         install_compilers = spack.config.get(
             'config:install_missing_compilers', False)
 
-        if install_deps:
-            for dep in self.spec.traverse(order='post', root=False):
-                dep_pkg = dep.package
+        if install_package:
+            self._queue_pkg(self.pkg, install_compilers)
 
-                # First push any missing compilers (if requested)
-                if install_compilers:
-                    self._add_bootstrap_compilers(dep_pkg)
-
-                if package_id(dep_pkg) not in self.build_tasks:
-                    self._push_task(dep_pkg, False, 0, 0, STATUS_ADDED)
-
-                # Clear any persistent failure markings _unless_ they are
-                # associated with another process in this parallel build
-                # of the spec.
-                spack.store.db.clear_failure(dep, force=False)
-
-            # Push any missing compilers (if requested) as part of the
-            # package dependencies.
-            if install_compilers:
-                self._add_bootstrap_compilers(self.pkg)
-
-        if install_package and self.pkg_id not in self.build_tasks:
-            # Be sure to clear any previous failure
-            spack.store.db.clear_failure(self.pkg.spec, force=True)
+            # Don't proceed if the explicit package has already been installed
+            if self.pkg_id in self.installed:
+                tty.info('{0} is already installed'.format(self.pkg_id))
+                return
 
             # If not installing dependencies, then determine their
-            # installation status before proceeding
+            # installation status before proceeding.
             if not install_deps:
                 self._check_deps_status()
+                return
 
-            # Now add the package itself, if appropriate
-            self._push_task(self.pkg, False, 0, 0, STATUS_ADDED)
+        if install_deps:
+            # Traverse dependencies from the bottom-up so any that are flagged
+            # as installed can be readily removed
+            for dep in self.pkg.spec.traverse(root=False):
+                self._queue_pkg(dep.package, install_compilers)
 
     def _install_task(self, task, **kwargs):
         """
@@ -1250,6 +1274,33 @@ class PackageInstaller(object):
                     tty.warn(err.format(exc.__class__.__name__, ltype,
                                         pkg_id, str(exc)))
 
+    def _rm_installed_from_deps(self, pkg):
+        """
+        Remove the package from any uninstalled dependent's build tasks.
+
+        Args:
+            pkg (Package): the package to be removed from its dependents
+        """
+        pkg_id = package_id(pkg)
+        assert pkg_id in self.installed, \
+            "Only installed packages can be removed from its dependents tasks"
+
+        dependents = set(package_id(d.package) for d in pkg.spec.dependents())
+        for dep_id in dependents:
+            tty.debug('Removing {0} from {1}\'s uninstalled dependents.'
+                      .format(pkg_id, dep_id))
+            if dep_id in self.build_tasks:
+                # Ensure the dependent's uninstalled dependencies are
+                # up-to-date.  This will require requeueing the task.
+                dep_task = self.build_tasks[dep_id]
+                dep_task.flag_installed(self.installed)
+                self._push_task(dep_task.pkg, dep_task.compiler,
+                                dep_task.start, dep_task.attempts,
+                                dep_task.status)
+            else:
+                tty.debug('{0} has no build task to update for {1}\'s success'
+                          .format(dep_id, pkg_id))
+
     def _remove_task(self, pkg_id):
         """
         Mark the existing package build task as being removed and return it.
@@ -1358,20 +1409,7 @@ class PackageInstaller(object):
 
         self.installed.add(pkg_id)
         task.status = STATUS_INSTALLED
-        for dep_id in task.dependents:
-            tty.debug('Removing {0} from {1}\'s uninstalled dependencies.'
-                      .format(pkg_id, dep_id))
-            if dep_id in self.build_tasks:
-                # Ensure the dependent's uninstalled dependencies are
-                # up-to-date.  This will require requeueing the task.
-                dep_task = self.build_tasks[dep_id]
-                dep_task.flag_installed(self.installed)
-                self._push_task(dep_task.pkg, dep_task.compiler,
-                                dep_task.start, dep_task.attempts,
-                                dep_task.status)
-            else:
-                tty.debug('{0} has no build task to update for {1}\'s success'
-                          .format(dep_id, pkg_id))
+        self._rm_installed_from_deps(task.pkg)
 
     def install(self, **kwargs):
         """
@@ -1399,7 +1437,7 @@ class PackageInstaller(object):
             return
 
         # Initialize the build task queue
-        self._init_queue(install_deps, install_package)
+        self._init_queue(install_package, install_deps)
 
         # Proceed with the installation
         while self.build_pq:
