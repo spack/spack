@@ -2,17 +2,33 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import pytest
 import os
 
-from llnl.util.filesystem import mkdirp
+import pytest
 
 import spack.config
 import spack.environment as ev
+import spack.util.spack_yaml as syaml
+from llnl.util.filesystem import mkdirp
 from spack.main import SpackCommand
 
 config = SpackCommand('config')
 env = SpackCommand('env')
+
+
+@pytest.fixture()
+def packages_yaml(mutable_config):
+    """Create a packages.yaml in the old format"""
+    def _create():
+        old_data = {'packages': {'cmake': {'paths': {'cmake@3.14.0': '/usr'}}}}
+        old_data['packages'].update(
+            {'gcc': {'modules': {'gcc@8.3.0': 'gcc-8'}}}
+        )
+        scope = spack.config.default_modify_scope()
+        cfg_file = spack.config.config.get_config_filename(scope, 'packages')
+        with open(cfg_file, 'w') as f:
+            syaml.dump(old_data, stream=f)
+    return _create
 
 
 def test_get_config_scope(mock_low_high_config):
@@ -403,3 +419,35 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
 
 """
     assert output == expected
+
+
+def test_config_update(packages_yaml):
+    packages_yaml()
+    config('update', 'packages')
+
+    # Check the entries have been transformed
+    data = spack.config.get('packages')
+    assert 'externals' in data['cmake']
+    externals = data['cmake']['externals']
+    assert {'spec': 'cmake@3.14.0', 'prefix': '/usr'} in externals
+    assert 'externals' in data['gcc']
+    externals = data['gcc']['externals']
+    assert {'spec': 'gcc@8.3.0', 'module': 'gcc-8'} in externals
+
+
+def test_config_update_not_needed(mutable_config):
+    data_before = spack.config.get('repos')
+    config('update', 'repos')
+    data_after = spack.config.get('repos')
+    assert data_before == data_after
+
+
+def test_config_update_fail_if_bkp_is_there(packages_yaml):
+    # The first time it will upate and create the backup file
+    packages_yaml()
+    config('update', 'packages')
+    # The second time it will stop because a backup file
+    # is already present
+    packages_yaml()
+    with pytest.raises(spack.main.SpackCommandError):
+        config('update', 'packages')
