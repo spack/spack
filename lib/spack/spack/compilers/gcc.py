@@ -43,6 +43,14 @@ class Gcc(Compiler):
         return "-v"
 
     @property
+    def debug_flags(self):
+        return ['-g', '-gstabs+', '-gstabs', '-gxcoff+', '-gxcoff', '-gvms']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-Os', '-Ofast', '-Og']
+
+    @property
     def openmp_flag(self):
         return "-fopenmp"
 
