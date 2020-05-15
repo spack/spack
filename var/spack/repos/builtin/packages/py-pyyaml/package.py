@@ -30,6 +30,9 @@ class PyPyyaml(PythonPackage):
 
         if '+libyaml' in self.spec:
             args.insert(0, '--with-libyaml')
+            args.append('build_ext')
+            args.append('-I{0}'.format(self.spec['libyaml'].prefix.include))
+            args.append('-L{0}'.format(self.spec['libyaml'].prefix.lib))
         else:
             args.insert(0, '--without-libyaml')
 
