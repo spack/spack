@@ -1014,8 +1014,8 @@ class Spec(object):
         self._full_hash = full_hash
 
         # This attribute is used to store custom information for
-        # external specs
-        self._extra_attributes = None
+        # external specs. None signal that it was not set yet.
+        self.extra_attributes = None
 
         if isinstance(spec_like, six.string_types):
             spec_list = SpecParser(self).parse(spec_like)
@@ -1987,11 +1987,11 @@ class Spec(object):
             Spec object (external spec)
         """
         s = Spec(spec_str)
-        extra_attributes = extra_attributes or {}
+        extra_attributes = syaml.sorted_dict(extra_attributes or {})
         # This is needed to be able to validate multi-valued variants,
         # otherwise they'll still be abstract in the context of detection.
         vt.substitute_abstract_variants(s)
-        s._extra_attributes = extra_attributes
+        s.extra_attributes = extra_attributes
         s._mark_concrete()
         return s
 
@@ -2005,13 +2005,13 @@ class Spec(object):
         # which likely means the spec was created with Spec.from_detection
         msg = ('cannot validate "{0}" since it was not created '
                'using Spec.from_detection'.format(self))
-        assert isinstance(self._extra_attributes, collections.Mapping), msg
+        assert isinstance(self.extra_attributes, collections.Mapping), msg
 
         # Validate the spec calling a package specific method
         validate_fn = getattr(
             self.package, 'validate_detected_spec', lambda x, y: None
         )
-        validate_fn(self, self._extra_attributes)
+        validate_fn(self, self.extra_attributes)
 
     def _concretize_helper(self, concretizer, presets=None, visited=None):
         """Recursive helper function for concretize().

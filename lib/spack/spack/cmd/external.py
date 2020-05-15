@@ -92,7 +92,7 @@ def _generate_pkg_config(external_pkg_entries):
             continue
 
         external_items = [('spec', str(e.spec)), ('prefix', e.base_dir)]
-        external_items.extend(e.spec._extra_attributes.items())
+        external_items.extend(e.spec.extra_attributes.items())
         pkg_dict['externals'].append(
             syaml.syaml_dict(external_items)
         )
