@@ -35,6 +35,27 @@ from spack.version import ver
 _max_line = 80
 
 
+class Timer(object):
+    """Simple timer for timing phases of a solve"""
+    def __init__(self):
+        self.start = time.time()
+        self.last = self.start
+        self.phases = {}
+
+    def phase(self, name):
+        last = self.last
+        now = time.time()
+        self.phases[name] = now - last
+        self.last = now
+
+    def write(self, out=sys.stdout):
+        now = time.time()
+        out.write("Time:\n")
+        for phase, t in self.phases.items():
+            out.write("    %-15s%.4f\n" % (phase + ":", t))
+        out.write("Total: %.4f\n" % (now - self.start))
+
+
 def issequence(obj):
     if isinstance(obj, string_types):
         return False
@@ -106,15 +127,6 @@ class AspAnd(AspObject):
         return s
 
 
-class AspOr(AspObject):
-    def __init__(self, *args):
-        args = listify(args)
-        self.args = args
-
-    def __str__(self):
-        return " | ".join(str(arg) for arg in self.args)
-
-
 class AspNot(AspObject):
     def __init__(self, arg):
         self.arg = arg
@@ -181,13 +193,22 @@ def check_packages_exist(specs):
                 raise spack.repo.UnknownPackageError(s.name)
 
 
-class AspGenerator(object):
-    def __init__(self, out):
-        self.out = out
-        self.func = AspFunctionBuilder()
-        self.possible_versions = {}
-        self.possible_virtuals = None
-        self.possible_compilers = []
+class Result(object):
+    """Result of an ASP solve."""
+    def __init__(self, asp):
+        self.asp = asp
+        self.satisfiable = None
+        self.optimal = None
+        self.warnings = None
+
+        # specs ordered by optimization level
+        self.answers = []
+
+
+class ClingoDriver(object):
+    def __init__(self):
+        self.clingo = which("clingo", required=True)
+        self.out = None
 
     def title(self, name, char):
         self.out.write('\n')
@@ -203,17 +224,11 @@ class AspGenerator(object):
     def h2(self, name):
         self.title(name, "-")
 
-    def section(self, name):
-        self.out.write("\n")
-        self.out.write("%\n")
-        self.out.write("%% %s\n" % name)
-        self.out.write("%\n")
+    def newline(self):
+        self.out.write('\n')
 
     def one_of(self, *args):
         return AspOneOf(*args)
-
-    def _or(self, *args):
-        return AspOr(*args)
 
     def _and(self, *args):
         return AspAnd(*args)
@@ -232,9 +247,152 @@ class AspGenerator(object):
             rule_line = re.sub(r' \| ', "\n| ", rule_line)
         self.out.write(rule_line)
 
-    def constraint(self, body):
-        """ASP integrity constraint (rule with no head; can't be true)."""
-        self.out.write(":- %s.\n" % body)
+    def before_setup(self):
+        """Must be called before program is generated."""
+        # read the main ASP program from concrtize.lp
+        concretize_lp = pkgutil.get_data('spack.solver', 'concretize.lp')
+        self.out.write(concretize_lp.decode("utf-8"))
+        return self
+
+    def after_setup(self):
+        """Must be called after program is generated."""
+        self.out.write('\n')
+        display_lp = pkgutil.get_data('spack.solver', 'display.lp')
+        self.out.write(display_lp.decode("utf-8"))
+
+    def parse_model_functions(self, function_strings):
+        function_re = re.compile(r'(\w+)\(([^)]*)\)')
+
+        # parse functions out of ASP output
+        functions = []
+        for string in function_strings:
+            m = function_re.match(string)
+            name, arg_string = m.groups()
+            args = re.split(r'\s*,\s*', arg_string)
+            args = [s.strip('"') if s.startswith('"') else int(s)
+                    for s in args]
+            functions.append((name, args))
+        return functions
+
+    def parse_competition_format(self, output, builder, result):
+        """Parse Clingo's competition output format, which gives one answer."""
+        best_model_number = 0
+        for line in output:
+            match = re.match(r"% Answer: (\d+)", line)
+            if match:
+                best_model_number = int(match.group(1))
+
+            if re.match("INCONSISTENT", line):
+                result.satisfiable = False
+                return
+
+            if re.match("ANSWER", line):
+                result.satisfiable = True
+
+                answer = next(output)
+                functions = [
+                    f.rstrip(".") for f in re.split(r"\s+", answer.strip())
+                ]
+                function_tuples = self.parse_model_functions(functions)
+                specs = builder.build_specs(function_tuples)
+
+                costs = re.split(r"\s+", next(output).strip())
+                opt = [int(x) for x in costs[1:]]
+
+                result.answers.append((opt, best_model_number, specs))
+
+    def solve(self, solver_setup, specs, dump=None, models=0, timers=False):
+        def colorize(string):
+            color.cprint(highlight(color.cescape(string)))
+
+        timer = Timer()
+        with tempfile.TemporaryFile("w+") as program:
+            self.out = program
+
+            self.before_setup()
+            solver_setup.setup(self, specs)
+            self.after_setup()
+            timer.phase("generate")
+
+            program.seek(0)
+
+            result = Result(program.read())
+            program.seek(0)
+
+            if dump and 'asp' in dump:
+                if sys.stdout.isatty():
+                    tty.msg('ASP program:')
+
+                if dump == ['asp']:
+                    print(result.asp)
+                    return
+                else:
+                    colorize(result.asp)
+                timer.phase("dump")
+
+            with tempfile.TemporaryFile("w+") as output:
+                with tempfile.TemporaryFile() as warnings:
+                    self.clingo(
+                        '--models=%d' % models,
+                        # 1 is "competition" format with just optimal answer
+                        # 2 is JSON format with all explored answers
+                        '--outf=1',
+                        # Use a highest priority criteria-first optimization
+                        # strategy, which means we'll explore recent
+                        # versions, preferred packages first.  This works
+                        # well because Spack solutions are pretty easy to
+                        # find -- there are just a lot of them.  Without
+                        # this, it can take a VERY long time to find good
+                        # solutions, and a lot of models are explored.
+                        '--opt-strategy=bb,hier',
+                        input=program,
+                        output=output,
+                        error=warnings,
+                        fail_on_error=False)
+                    timer.phase("solve")
+
+                    warnings.seek(0)
+                    result.warnings = warnings.read().decode("utf-8")
+
+                    # dump any warnings generated by the solver
+                    if result.warnings:
+                        if sys.stdout.isatty():
+                            tty.msg('Clingo gave the following warnings:')
+                        colorize(result.warnings)
+
+                    output.seek(0)
+                    result.output = output.read()
+                    timer.phase("read")
+
+                    # dump the raw output of the solver
+                    if dump and 'output' in dump:
+                        if sys.stdout.isatty():
+                            tty.msg('Clingo output:')
+                        print(result.output)
+
+                        if 'solutions' not in dump:
+                            return
+
+                    output.seek(0)
+                    builder = SpecBuilder(specs)
+                    self.parse_competition_format(output, builder, result)
+                    timer.phase("parse")
+
+            if timers:
+                timer.write()
+                print()
+
+        return result
+
+
+class SpackSolverSetup(object):
+    """Class to set up and run a Spack concretization solve."""
+
+    def __init__(self):
+        self.gen = None  # set by setup()
+        self.possible_versions = {}
+        self.possible_virtuals = None
+        self.possible_compilers = []
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -280,7 +438,7 @@ class AspGenerator(object):
         )
 
         for i, v in enumerate(most_to_least_preferred):
-            self.fact(fn.version_declared(pkg.name, v, i))
+            self.gen.fact(fn.version_declared(pkg.name, v, i))
 
     def spec_versions(self, spec):
         """Return list of clauses expressing spec's version constraints."""
@@ -304,13 +462,13 @@ class AspGenerator(object):
 
         # conflict with any versions that do not satisfy the spec
         if predicates:
-            return [self.one_of(*predicates)]
+            return [self.gen.one_of(*predicates)]
         return []
 
     def available_compilers(self):
         """Facts about available compilers."""
 
-        self.h2("Available compilers")
+        self.gen.h2("Available compilers")
         compilers = self.possible_compilers
 
         compiler_versions = collections.defaultdict(lambda: set())
@@ -318,16 +476,15 @@ class AspGenerator(object):
             compiler_versions[compiler.name].add(compiler.version)
 
         for compiler in sorted(compiler_versions):
-            self.fact(fn.compiler(compiler))
-            self.rule(
-                self._or(
-                    fn.compiler_version(compiler, v)
-                    for v in sorted(compiler_versions[compiler])),
-                fn.compiler(compiler))
+            self.gen.fact(fn.compiler(compiler))
+            for v in sorted(compiler_versions[compiler]):
+                self.gen.fact(fn.compiler_version(compiler, v))
+
+            self.gen.newline()
 
     def compiler_defaults(self):
         """Set compiler defaults, given a list of possible compilers."""
-        self.h2("Default compiler preferences")
+        self.gen.h2("Default compiler preferences")
 
         compiler_list = self.possible_compilers.copy()
         compiler_list = sorted(
@@ -337,7 +494,7 @@ class AspGenerator(object):
 
         for i, cspec in enumerate(matches):
             f = fn.default_compiler_preference(cspec.name, cspec.version, i)
-            self.fact(f)
+            self.gen.fact(f)
 
     def package_compiler_defaults(self, pkg):
         """Facts about packages' compiler prefs."""
@@ -354,7 +511,7 @@ class AspGenerator(object):
         matches = sorted(compiler_list, key=ppk)
 
         for i, cspec in enumerate(matches):
-            self.fact(fn.node_compiler_preference(
+            self.gen.fact(fn.node_compiler_preference(
                 pkg.name, cspec.name, cspec.version, i))
 
     def pkg_rules(self, pkg):
@@ -362,23 +519,24 @@ class AspGenerator(object):
 
         # versions
         self.pkg_version_rules(pkg)
-        self.out.write('\n')
+        self.gen.newline()
 
         # variants
         for name, variant in sorted(pkg.variants.items()):
-            self.fact(fn.variant(pkg.name, name))
+            self.gen.fact(fn.variant(pkg.name, name))
 
             single_value = not variant.multi
             single = fn.variant_single_value(pkg.name, name)
             if single_value:
-                self.fact(single)
-                self.fact(
+                self.gen.fact(single)
+                self.gen.fact(
                     fn.variant_default_value(pkg.name, name, variant.default))
             else:
-                self.fact(self._not(single))
+                self.gen.fact(self.gen._not(single))
                 defaults = variant.default.split(',')
                 for val in sorted(defaults):
-                    self.fact(fn.variant_default_value(pkg.name, name, val))
+                    self.gen.fact(
+                        fn.variant_default_value(pkg.name, name, val))
 
             values = variant.values
             if values is None:
@@ -394,9 +552,9 @@ class AspGenerator(object):
                 values = [variant.default]
 
             for value in sorted(values):
-                self.fact(fn.variant_possible_value(pkg.name, name, value))
+                self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
 
-            self.out.write('\n')
+            self.gen.newline()
 
         # default compilers for this package
         self.package_compiler_defaults(pkg)
@@ -410,37 +568,37 @@ class AspGenerator(object):
 
                 if cond == spack.spec.Spec():
                     for t in sorted(dep.type):
-                        self.fact(
+                        self.gen.fact(
                             fn.declared_dependency(
                                 dep.pkg.name, dep.spec.name, t
                             )
                         )
                 else:
                     for t in sorted(dep.type):
-                        self.rule(
+                        self.gen.rule(
                             fn.declared_dependency(
                                 dep.pkg.name, dep.spec.name, t
                             ),
-                            self._and(
+                            self.gen._and(
                                 *self.spec_clauses(named_cond, body=True)
                             )
                         )
 
                 # add constraints on the dependency from dep spec.
                 for clause in self.spec_clauses(dep.spec):
-                    self.rule(
+                    self.gen.rule(
                         clause,
-                        self._and(
+                        self.gen._and(
                             fn.depends_on(dep.pkg.name, dep.spec.name),
                             *self.spec_clauses(named_cond, body=True)
                         )
                     )
-            self.out.write('\n')
+            self.gen.newline()
 
         # virtual preferences
         self.virtual_preferences(
             pkg.name,
-            lambda v, p, i: self.fact(
+            lambda v, p, i: self.gen.fact(
                 fn.pkg_provider_preference(pkg.name, v, p, i)
             )
         )
@@ -457,27 +615,28 @@ class AspGenerator(object):
                 func(vspec, provider, i)
 
     def provider_defaults(self):
-        self.h2("Default virtual providers")
+        self.gen.h2("Default virtual providers")
         assert self.possible_virtuals is not None
         self.virtual_preferences(
             "all",
-            lambda v, p, i: self.fact(fn.default_provider_preference(v, p, i))
+            lambda v, p, i: self.gen.fact(
+                fn.default_provider_preference(v, p, i))
         )
 
     def flag_defaults(self):
-        self.h2("Compiler flag defaults")
+        self.gen.h2("Compiler flag defaults")
 
         # types of flags that can be on specs
         for flag in spack.spec.FlagMap.valid_compiler_flags():
-            self.fact(fn.flag_type(flag))
-        self.out.write("\n")
+            self.gen.fact(fn.flag_type(flag))
+        self.gen.newline()
 
         # flags from compilers.yaml
         compilers = compilers_for_default_arch()
         for compiler in compilers:
             for name, flags in compiler.flags.items():
                 for flag in flags:
-                    self.fact(fn.compiler_version_flag(
+                    self.gen.fact(fn.compiler_version_flag(
                         compiler.name, compiler.version, name, flag))
 
     def spec_clauses(self, spec, body=False):
@@ -557,7 +716,7 @@ class AspGenerator(object):
                     for compiler in compiler_list
                     if compiler.satisfies(spec.compiler)
                 ]
-                clauses.append(self.one_of(*possible_compiler_versions))
+                clauses.append(self.gen.one_of(*possible_compiler_versions))
                 for version in possible_compiler_versions:
                     clauses.append(
                         fn.node_compiler_version_hard(
@@ -566,7 +725,7 @@ class AspGenerator(object):
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
-                self.fact(f.node_flag(spec.name, flag_type, flag))
+                self.gen.fact(f.node_flag(spec.name, flag_type, flag))
 
         # TODO
         # external_path
@@ -615,12 +774,12 @@ class AspGenerator(object):
         return sorted(supported, reverse=True)
 
     def platform_defaults(self):
-        self.h2('Default platform')
+        self.gen.h2('Default platform')
         default = default_arch()
-        self.fact(fn.node_platform_default(default.platform))
+        self.gen.fact(fn.node_platform_default(default.platform))
 
     def os_defaults(self, specs):
-        self.h2('Possible operating systems')
+        self.gen.h2('Possible operating systems')
         platform = spack.architecture.platform()
 
         # create set of OS's to consider
@@ -632,20 +791,20 @@ class AspGenerator(object):
 
         # make directives for possible OS's
         for os in sorted(possible):
-            self.fact(fn.os(os))
+            self.gen.fact(fn.os(os))
 
         # mark this one as default
-        self.fact(fn.node_os_default(platform.default_os))
+        self.gen.fact(fn.node_os_default(platform.default_os))
 
     def target_defaults(self, specs):
         """Add facts about targets and target compatibility."""
-        self.h2('Default target')
+        self.gen.h2('Default target')
         default = default_arch()
-        self.fact(fn.node_target_default(default_arch().target))
+        self.gen.fact(fn.node_target_default(default_arch().target))
 
         uarch = default.target.microarchitecture
 
-        self.h2('Target compatibility')
+        self.gen.h2('Target compatibility')
 
         # listing too many targets can be slow, at least with our current
         # encoding. To reduce the number of options to consider, only
@@ -666,9 +825,9 @@ class AspGenerator(object):
 
             for target in supported:
                 best_targets.add(target.name)
-                self.fact(fn.compiler_supports_target(
+                self.gen.fact(fn.compiler_supports_target(
                     compiler.name, compiler.version, target.name))
-                self.fact(fn.compiler_supports_target(
+                self.gen.fact(fn.compiler_supports_target(
                     compiler.name, compiler.version, uarch.family.name))
 
         # add any targets explicitly mentioned in specs
@@ -684,31 +843,31 @@ class AspGenerator(object):
 
         i = 0
         for target in compatible_targets:
-            self.fact(fn.target(target.name))
-            self.fact(fn.target_family(target.name, target.family.name))
+            self.gen.fact(fn.target(target.name))
+            self.gen.fact(fn.target_family(target.name, target.family.name))
             for parent in sorted(target.parents):
-                self.fact(fn.target_parent(target.name, parent.name))
+                self.gen.fact(fn.target_parent(target.name, parent.name))
 
             # prefer best possible targets; weight others poorly so
             # they're not used unless set explicitly
             if target.name in best_targets:
-                self.fact(fn.target_weight(target.name, i))
+                self.gen.fact(fn.target_weight(target.name, i))
                 i += 1
             else:
-                self.fact(fn.target_weight(target.name, 100))
+                self.gen.fact(fn.target_weight(target.name, 100))
 
-            self.out.write("\n")
+            self.gen.newline()
 
     def virtual_providers(self):
-        self.h2("Virtual providers")
+        self.gen.h2("Virtual providers")
         assert self.possible_virtuals is not None
 
         # what provides what
         for vspec in sorted(self.possible_virtuals):
-            self.fact(fn.virtual(vspec))
+            self.gen.fact(fn.virtual(vspec))
             for provider in sorted(spack.repo.path.providers_for(vspec)):
                 # TODO: handle versioned and conditional virtuals
-                self.fact(fn.provides_virtual(provider.name, vspec))
+                self.gen.fact(fn.provides_virtual(provider.name, vspec))
 
     def generate_possible_compilers(self, specs):
         default_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
@@ -733,13 +892,16 @@ class AspGenerator(object):
 
         return cspecs
 
-    def generate_asp_program(self, specs):
-        """Write an ASP program for specs.
+    def setup(self, driver, specs):
+        """Generate an ASP program with relevant constarints for specs.
 
-        Writes to this AspGenerator's output stream.
+        This calls methods on the solve driver to set up the problem with
+        facts and rules from all possible dependencies of the input
+        specs, as well as constraints from the specs themselves.
 
         Arguments:
             specs (list): list of Specs to solve
+
         """
         # preliminary checks
         check_packages_exist(specs)
@@ -753,17 +915,17 @@ class AspGenerator(object):
         )
         pkgs = set(possible)
 
+        # driver is used by all the functions below to add facts and
+        # rules to generate an ASP program.
+        self.gen = driver
+
         # get possible compilers
         self.possible_compilers = self.generate_possible_compilers(specs)
-
-        # read the main ASP program from concrtize.lp
-        concretize_lp = pkgutil.get_data('spack.solver', 'concretize.lp')
-        self.out.write(concretize_lp.decode("utf-8"))
 
         # traverse all specs and packages to build dict of possible versions
         self.build_version_dict(possible, specs)
 
-        self.h1('General Constraints')
+        self.gen.h1('General Constraints')
         self.available_compilers()
         self.compiler_defaults()
 
@@ -776,33 +938,28 @@ class AspGenerator(object):
         self.provider_defaults()
         self.flag_defaults()
 
-        self.h1('Package Constraints')
+        self.gen.h1('Package Constraints')
         for pkg in sorted(pkgs):
-            self.h2('Package: %s' % pkg)
+            self.gen.h2('Package: %s' % pkg)
             self.pkg_rules(pkg)
 
-        self.h1('Spec Constraints')
+        self.gen.h1('Spec Constraints')
         for spec in sorted(specs):
-            self.fact(fn.root(spec.name))
+            self.gen.fact(fn.root(spec.name))
             for dep in spec.traverse():
-                self.h2('Spec: %s' % str(dep))
+                self.gen.h2('Spec: %s' % str(dep))
 
                 if dep.virtual:
-                    self.fact(fn.virtual_node(dep.name))
+                    self.gen.fact(fn.virtual_node(dep.name))
                 else:
                     for clause in self.spec_clauses(dep):
-                        self.fact(clause)
-
-        self.out.write('\n')
-        display_lp = pkgutil.get_data('spack.solver', 'display.lp')
-        self.out.write(display_lp.decode("utf-8"))
+                        self.gen.fact(clause)
 
 
-class ResultParser(object):
-    """Class with actions that can re-parse a spec from ASP."""
+class SpecBuilder(object):
+    """Class with actions to rebuild a spec from ASP results."""
     def __init__(self, specs):
         self._result = None
-
         self._command_line_specs = specs
         self._flag_sources = collections.defaultdict(lambda: set())
         self._flag_compiler_defaults = set()
@@ -893,7 +1050,7 @@ class ResultParser(object):
             for spec in self._command_line_specs
             for s in spec.traverse())
 
-        # iterate through specs with specified flaggs
+        # iterate through specs with specified flags
         for pkg, sources in self._flag_sources.items():
             spec = self._specs[pkg]
 
@@ -917,29 +1074,17 @@ class ResultParser(object):
             check_same_flags(spec.compiler_flags, flags)
             spec.compiler_flags.update(flags)
 
-    def call_actions_for_functions(self, function_strings):
-        function_re = re.compile(r'(\w+)\(([^)]*)\)')
-
-        # parse functions out of ASP output
-        functions = []
-        for string in function_strings:
-            m = function_re.match(string)
-            name, arg_string = m.groups()
-            args = re.split(r'\s*,\s*', arg_string)
-            args = [s.strip('"') if s.startswith('"') else int(s)
-                    for s in args]
-            functions.append((name, args))
-
+    def build_specs(self, function_tuples):
         # Functions don't seem to be in particular order in output.  Sort
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
-        functions.sort(key=lambda f: {
+        function_tuples.sort(key=lambda f: {
             "node": -2,
             "node_compiler": -1,
         }.get(f[0], 0))
 
         self._specs = {}
-        for name, args in functions:
+        for name, args in function_tuples:
             action = getattr(self, name, None)
             if not action:
                 print("%s(%s)" % (name, ", ".join(str(a) for a in args)))
@@ -948,77 +1093,19 @@ class ResultParser(object):
             assert action and callable(action)
             action(*args)
 
-    def parse_json(self, data, result):
-        """Parse Clingo's JSON output format, which can give a lot of answers.
+        # namespace assignment is done after the fact, as it is not
+        # currently part of the solve
+        for spec in self._specs.values():
+            repo = spack.repo.path.repo_for_pkg(spec)
+            spec.namespace = repo.namespace
 
-        This can be slow, espeically if Clingo comes back having explored
-        a lot of models.
-        """
-        if data["Result"] == "UNSATISFIABLE":
-            result.satisfiable = False
-            return
+            # once this is done, everything is concrete
+            spec._mark_concrete()
 
-        result.satisfiable = True
-        if data["Result"] == "OPTIMUM FOUND":
-            result.optimal = True
-
-        nmodels = data["Models"]["Number"]
-        best_model_number = nmodels - 1
-        best_model = data["Call"][0]["Witnesses"][best_model_number]
-        opt = list(best_model["Costs"])
-
-        functions = best_model["Value"]
-
-        self.call_actions_for_functions(functions)
+        # fix flags after all specs are constructed
         self.reorder_flags()
-        result.answers.append((opt, best_model_number, self._specs))
 
-    def parse_best(self, output, result):
-        """Parse Clingo's competition output format, which gives one answer."""
-        best_model_number = 0
-        for line in output:
-            match = re.match(r"% Answer: (\d+)", line)
-            if match:
-                best_model_number = int(match.group(1))
-
-            if re.match("INCONSISTENT", line):
-                result.satisfiable = False
-                return
-
-            if re.match("ANSWER", line):
-                result.satisfiable = True
-
-                answer = next(output)
-                functions = [
-                    f.rstrip(".") for f in re.split(r"\s+", answer.strip())
-                ]
-                self.call_actions_for_functions(functions)
-
-                costs = re.split(r"\s+", next(output).strip())
-                opt = [int(x) for x in costs[1:]]
-
-                for spec in self._specs.values():
-                    # namespace assignment can be done after the fact, as
-                    # it is not part of the solve
-                    repo = spack.repo.path.repo_for_pkg(spec)
-                    spec.namespace = repo.namespace
-
-                    # once this is done, everything is concrete
-                    spec._mark_concrete()
-
-                self.reorder_flags()
-                result.answers.append((opt, best_model_number, self._specs))
-
-
-class Result(object):
-    def __init__(self, asp):
-        self.asp = asp
-        self.satisfiable = None
-        self.optimal = None
-        self.warnings = None
-
-        # specs ordered by optimization level
-        self.answers = []
+        return self._specs
 
 
 def highlight(string):
@@ -1054,26 +1141,6 @@ def highlight(string):
     return string
 
 
-class Timer(object):
-    def __init__(self):
-        self.start = time.time()
-        self.last = self.start
-        self.phases = {}
-
-    def phase(self, name):
-        last = self.last
-        now = time.time()
-        self.phases[name] = now - last
-        self.last = now
-
-    def write(self, out=sys.stdout):
-        now = time.time()
-        out.write("Time:\n")
-        for phase, t in self.phases.items():
-            out.write("    %-15s%.4f\n" % (phase + ":", t))
-        out.write("Total: %.4f\n" % (now - self.start))
-
-
 #
 # These are handwritten parts for the Spack ASP model.
 #
@@ -1085,82 +1152,6 @@ def solve(specs, dump=None, models=0, timers=False):
         dump (tuple): what to dump
         models (int): number of models to search (default: 0)
     """
-    clingo = which('clingo', required=True)
-    parser = ResultParser(specs)
-
-    def colorize(string):
-        color.cprint(highlight(color.cescape(string)))
-
-    timer = Timer()
-    with tempfile.TemporaryFile("w+") as program:
-        generator = AspGenerator(program)
-        generator.generate_asp_program(specs)
-        timer.phase("generate")
-        program.seek(0)
-
-        result = Result(program.read())
-        program.seek(0)
-
-        if dump and 'asp' in dump:
-            if sys.stdout.isatty():
-                tty.msg('ASP program:')
-
-            if dump == ['asp']:
-                print(result.asp)
-                return
-            else:
-                colorize(result.asp)
-            timer.phase("dump")
-
-        with tempfile.TemporaryFile("w+") as output:
-            with tempfile.TemporaryFile() as warnings:
-                clingo(
-                    '--models=%d' % models,
-                    # 1 is "competition" format with just optimal answer
-                    # 2 is JSON format with all explored answers
-                    '--outf=1',
-                    # Use a highest priority criteria-first optimization
-                    # strategy, which means we'll explore recent
-                    # versions, preferred packages first.  This works
-                    # well because Spack solutions are pretty easy to
-                    # find -- there are just a lot of them.  Without
-                    # this, it can take a VERY long time to find good
-                    # solutions, and a lot of models are explored.
-                    '--opt-strategy=bb,hier',
-                    input=program,
-                    output=output,
-                    error=warnings,
-                    fail_on_error=False)
-                timer.phase("solve")
-
-                warnings.seek(0)
-                result.warnings = warnings.read().decode("utf-8")
-
-                # dump any warnings generated by the solver
-                if result.warnings:
-                    if sys.stdout.isatty():
-                        tty.msg('Clingo gave the following warnings:')
-                    colorize(result.warnings)
-
-                output.seek(0)
-                result.output = output.read()
-                timer.phase("read")
-
-                # dump the raw output of the solver
-                if dump and 'output' in dump:
-                    if sys.stdout.isatty():
-                        tty.msg('Clingo output:')
-                    print(result.output)
-
-                    if 'solutions' not in dump:
-                        return
-
-                output.seek(0)
-                parser.parse_best(output, result)
-                timer.phase("parse")
-
-        if timers:
-            timer.write()
-            print()
-
-    return result
+    driver = ClingoDriver()
+    setup = SpackSolverSetup()
+    return driver.solve(setup, specs, dump, models, timers)
