@@ -892,11 +892,13 @@ def test_prefix_write_lock_error(mutable_database, monkeypatch):
 
 
 @pytest.mark.regression('11983')
-def test_multiple_dependents(database):
-    specs = spack.store.db.query('dyninst')
+def test_multiple_dependents(install_mockery, mock_fetch):
+    _mock_install('optional-dep-test+a')
+    _mock_install('optional-dep-test+a+mpi')
+    specs = spack.store.db.query('a')
     assert len(specs) == 1
     spec = specs[0]
     counthash = defaultdict(int)
     for name in [x.name for x in spec.dependents()]:
         counthash[name] += 1
-    assert(counthash['callpath'] == 3)
+    assert(counthash['optional-dep-test'] == 2)
