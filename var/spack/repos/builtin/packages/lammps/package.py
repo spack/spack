@@ -182,3 +182,7 @@ class Lammps(CMakePackage, CudaPackage):
             args.append('-DEXTERNAL_KOKKOS=ON')
 
         return args
+
+    def setup_run_environment(self, env):
+        env.set('LAMMPS_POTENTIALS',
+                self.prefix.share.lammps.potentials)
