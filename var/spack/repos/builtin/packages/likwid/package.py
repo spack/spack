@@ -106,6 +106,12 @@ class Likwid(Package):
                             spec['lua'].prefix.bin),
                         'config.mk')
 
+        # https://github.com/RRZE-HPC/likwid/issues/287
+        if self.spec.satisfies('@:5.0.2 %gcc@10:'):
+            filter_file(r'^(CFLAGS.*)',
+                        '\\1 -fcommon',
+                        'make/include_GCC.mk')
+
         env['PWD'] = os.getcwd()
         make()
         make('install')
