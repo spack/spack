@@ -201,6 +201,7 @@ def test_get_compiler_link_paths(tmpdir, monkeypatch):
     # Mock compiler call
     test_dirs = ['/path/to/first/lib', '/path/to/second/lib64']
     test_output = 'ld -L%s -L%s' % tuple(test_dirs)
+
     def call_compiler(*args, **kwargs):
         return test_output
     monkeypatch.setattr(
@@ -216,6 +217,7 @@ def test_get_compiler_link_paths_with_flags(tmpdir, monkeypatch):
     # Mock compiler call
     test_dirs = ['/path/to/first/lib', '/path/to/second/lib64']
     test_output = 'ld -L%s -L%s' % tuple(test_dirs)
+
     def call_compiler(exe, *args, **kwargs):
         if '--correct-flag' in exe.exe:
             return test_output
