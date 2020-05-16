@@ -1503,7 +1503,7 @@ def build_process(pkg, build_kwargs):
         # the directory is created.
         spack.hooks.pre_install(pkg.spec)
         if fake:
-            do_fake_install(pkg)
+            _do_fake_install(pkg)
         else:
             source_path = pkg.stage.source_path
             if install_source and os.path.isdir(source_path):
