@@ -224,6 +224,114 @@ class Python(AutotoolsPackage):
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
 
+    executables = ['python']
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        """Allow ``spack external find python`` to locate Python installations.
+
+        Parameters:
+            prefix (str): the directory containing the executables
+            exes_in_prefix (set): the executables that match the regex
+
+        Returns:
+            spack.spec.Spec: the spec of this Python installation
+        """
+        # Possible executable names:
+        # * python, python3, python3.7, python3.7m
+        # Possible red herrings:
+        # * python-config, python3-config, python3.7-config
+        # * spack-python
+        # Take the shortest executable name and hope for the best
+        python = Executable(min(exes_in_prefix))
+        if python.name.startswith('spack-') or python.name.endswith('-config'):
+            return None
+
+        # First, get the Python version
+        # Newer versions of Python support `--version`,
+        # but older versions only support `-V`
+        # Python 2 sends to STDERR, while Python 3 sends to STDOUT
+        # Output looks like:
+        #   Python 3.7.7
+        output = python('-VV', output=str, error=str)
+        match = re.match(r'Python\s+(\S+)', output)
+        version = ''
+        if match:
+            version = '@' + match.group(1)
+
+        # The use of `-VV` instead of `-V` above gives additional information,
+        # including which compiler was used to build the executable, at least
+        # for Python 3
+        # Output looks like:
+        #   Python 3.7.7 (default, May  5 2020, 22:46:17)
+        #   [Clang 11.0.3 (clang-1103.0.32.59)]
+        # TODO: How to make this more robust? How to differentiate between
+        # Clang and Apple Clang?
+        match = re.search(r'(Clang|GCC)\s+(\S+)', output)
+        compiler = ''
+        if match:
+            compiler = '%' + match.group(1).lower() + '@' + match.group(2)
+
+        # Next, see which variants are enabled
+        variants = ''
+        for module in ['readline', 'sqlite3', 'dbm', 'nis',
+                       'zlib', 'bz2', 'lzma', 'ctypes', 'uuid']:
+            try:
+                python('-c', 'import ' + module, error=os.devnull)
+                variants += '+' + module
+            except ProcessError:
+                variants += '~' + module
+
+        # Some variants enable multiple modules
+        try:
+            python('-c', 'import ssl', error=os.devnull)
+            python('-c', 'import hashlib', error=os.devnull)
+            variants += '+ssl'
+        except ProcessError:
+            variants += '~ssl'
+
+        try:
+            python('-c', 'import xml.parsers.expat', error=os.devnull)
+            python('-c', 'import xml.etree.ElementTree', error=os.devnull)
+            variants += '+pyexpat'
+        except ProcessError:
+            variants += '~pyexpat'
+
+        # Some modules changed names in Python 3
+        if Version(version[1:]) > Version('3'):
+            try:
+                python('-c', 'import tkinter', error=os.devnull)
+                variants += '+tkinter'
+            except ProcessError:
+                variants += '~tkinter'
+
+            try:
+                python('-c', 'import tkinter.tix', error=os.devnull)
+                variants += '+tix'
+            except ProcessError:
+                variants += '~tix'
+        else:
+            try:
+                python('-c', 'import Tkinter', error=os.devnull)
+                variants += '+tkinter'
+            except ProcessError:
+                variants += '~tkinter'
+
+            try:
+                python('-c', 'import Tix', error=os.devnull)
+                variants += '+tix'
+            except ProcessError:
+                variants += '~tix'
+
+        # Other variants
+        if Version(version[1:]) > Version('3'):
+            if python.name == 'python':
+                variants += '+pythoncmd'
+            else:
+                variants += '~pythoncmd'
+
+        return Spec('python' + version + compiler + variants)
+
     def url_for_version(self, version):
         url = "https://www.python.org/ftp/python/{0}/Python-{1}.tgz"
         return url.format(re.split('[a-z]', str(version))[0], version)
@@ -605,6 +713,13 @@ class Python(AutotoolsPackage):
             # Ensure that uuid module works
             if '+uuid' in spec:
                 self.command('-c', 'import uuid')
+
+            # Ensure that tix module works
+            if '+tix' in spec:
+                if spec.satisfies('@3:'):
+                    self.command('-c', 'import tkinter.tix')
+                else:
+                    self.command('-c', 'import Tix')
 
     # ========================================================================
     # Set up environment to make install easy for python extensions.
