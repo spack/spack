@@ -20,9 +20,9 @@ class Cosma(CMakePackage):
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version('master', branch='master', submodules=True)
-    version('2.2.0', '8f3c6b9235c83092777a958bda37bfc2fa2b0da4')
-    version('2.0.7', '70d0d9ab45f2af3d06c5c0e856e28b2adb246ff9')
-    version('2.0.2', 'fcedd19be56ca75d122782f29872923d9bead847')
+    version('2.2.0', sha256='1eb92a98110df595070a12193b9221eecf9d103ced8836c960f6c79a2bd553ca')
+    version('2.0.7', sha256='8d70bfcbda6239b6a8fbeaca138790bbe58c0c3aa576879480d2632d4936cf7e')
+    version('2.0.2', sha256='4f3354828bc718f3eef2f0098c3bdca3499297497a220da32db1acd57920c68d')
 
     variant('gpu', default=False,
             description='Build with the GPU back end.')
