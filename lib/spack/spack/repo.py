@@ -759,8 +759,8 @@ class Repo(object):
 
         """
         parent = None
-        for l in range(1, len(self._names) + 1):
-            ns = '.'.join(self._names[:l])
+        for upper_bound in range(1, len(self._names) + 1):
+            ns = '.'.join(self._names[:upper_bound])
 
             if ns not in sys.modules:
                 module = SpackNamespace(ns)
@@ -773,7 +773,7 @@ class Repo(object):
                 # This ensures that we can do things like:
                 #    import spack.pkg.builtin.mpich as mpich
                 if parent:
-                    modname = self._names[l - 1]
+                    modname = self._names[upper_bound - 1]
                     setattr(parent, modname, module)
             else:
                 # no need to set up a module

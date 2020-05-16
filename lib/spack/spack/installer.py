@@ -1013,15 +1013,9 @@ class PackageInstaller(object):
             task (BuildTask): the installation build task for a package"""
 
         cache_only = kwargs.get('cache_only', False)
-        dirty = kwargs.get('dirty', False)
-        fake = kwargs.get('fake', False)
-        install_source = kwargs.get('install_source', False)
-        keep_stage = kwargs.get('keep_stage', False)
-        skip_patch = kwargs.get('skip_patch', False)
         tests = kwargs.get('tests', False)
         unsigned = kwargs.get('unsigned', False)
         use_cache = kwargs.get('use_cache', True)
-        verbose = kwargs.get('verbose', False)
 
         build_kwargs = kwargs.copy()
         build_kwargs['dirty'] = kwargs.get('dirty', False)
@@ -1042,8 +1036,6 @@ class PackageInstaller(object):
             return
 
         pkg.run_tests = (tests is True or tests and pkg.name in tests)
-
-        pre = '{0}: {1}:'.format(self.pid, pkg.name)
 
         # hook that allows tests to inspect the Package before installation
         # see unit_test_check() docs.
@@ -1482,17 +1474,11 @@ def build_process(pkg, build_kwargs):
     """
     kwargs = build_kwargs
 
-    keep_prefix = kwargs.get('keep_prefix', False)
     keep_stage = kwargs.get('keep_stage', False)
     install_source = kwargs.get('install_source', False)
-    install_deps = kwargs.get('install_deps', True)
     skip_patch = kwargs.get('skip_patch', False)
     verbose = kwargs.get('verbose', False)
     fake = kwargs.get('fake', False)
-    explicit = kwargs.get('explicit', False)
-    tests = kwargs.get('tests', False)
-    dirty = kwargs.get('dirty', False)
-    restage = kwargs.get('restage', False)
 
     start_time = time.time()
     if not fake:
@@ -1508,16 +1494,16 @@ def build_process(pkg, build_kwargs):
 
     # get verbosity from do_install() parameter or saved value
     echo = verbose
-    if PackageBase._verbose is not None:
-        echo = PackageBase._verbose
+    if spack.package.PackageBase._verbose is not None:
+        echo = spack.package.PackageBase._verbose
 
     pkg.stage.keep = keep_stage
     with pkg.stage:
         # Run the pre-install hook in the child process after
         # the directory is created.
-        spack.hooks.pre_install(self.spec)
+        spack.hooks.pre_install(pkg.spec)
         if fake:
-            self.do_fake_install()
+            do_fake_install(pkg)
         else:
             source_path = pkg.stage.source_path
             if install_source and os.path.isdir(source_path):
@@ -1528,7 +1514,7 @@ def build_process(pkg, build_kwargs):
                 fs.install_tree(pkg.stage.source_path, src_target)
 
             # Do the real install in the source directory.
-            with working_dir(pkg.stage.source_path):
+            with fs.working_dir(pkg.stage.source_path):
                 # Save the build environment in a file before building.
                 dump_environment(pkg.env_path)
 
