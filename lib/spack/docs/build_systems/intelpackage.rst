@@ -418,9 +418,11 @@ Adapt the following example. Be sure to maintain the indentation:
    # other content ...
 
      intel-mkl:
-       modules:
-         intel-mkl@2018.2.199  arch=linux-centos6-x86_64:  intel-mkl/18/18.0.2
-         intel-mkl@2018.3.222  arch=linux-centos6-x86_64:  intel-mkl/18/18.0.3
+       externals:
+       - spec: "intel-mkl@2018.2.199  arch=linux-centos6-x86_64"
+         module:  intel-mkl/18/18.0.2
+       - spec: "intel-mkl@2018.3.222  arch=linux-centos6-x86_64"
+         module:  intel-mkl/18/18.0.3
 
 The version numbers for the ``intel-mkl`` specs defined here correspond to file
 and directory names that Intel uses for its products because they were adopted
@@ -451,9 +453,11 @@ mechanism.
 
    packages:
      intel-parallel-studio:
-       modules:
-         intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64:  intel/18/18.0.2
-         intel-parallel-studio@cluster.2018.3.222 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64:  intel/18/18.0.3
+       externals:
+       - spec: "intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64"
+         module:  intel/18/18.0.2
+       - spec: "intel-parallel-studio@cluster.2018.3.222 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64"
+         module:  intel/18/18.0.3
        buildable: False
 
 One additional example illustrates the use of ``paths:`` instead of
@@ -464,9 +468,11 @@ suitable:
 
    packages:
      intel-parallel-studio:
-       paths:
-         intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal: /opt/intel
-         intel-parallel-studio@cluster.2018.3.222 +mkl+mpi+ipp+tbb+daal: /opt/intel
+       externals:
+       - spec: "intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal"
+         prefix: /opt/intel
+       - spec: "intel-parallel-studio@cluster.2018.3.222 +mkl+mpi+ipp+tbb+daal"
+         prefix: /opt/intel
        buildable: False
 
 Note that for the Intel packages discussed here, the directory values in the
