@@ -100,6 +100,8 @@ class Trilinos(CMakePackage):
             description='Compile with Matio')
     variant('metis',        default=True,
             description='Compile with METIS and ParMETIS')
+    variant('mpi',          default=True,
+            description='Compile with MPI parallelism')
     variant('mumps',        default=True,
             description='Compile with support for MUMPS solvers')
     variant('netcdf',       default=True,
@@ -334,11 +336,11 @@ class Trilinos(CMakePackage):
     depends_on('zlib', when="+zlib")
 
     # MPI related dependencies
-    depends_on('mpi')
-    depends_on('netcdf-c+mpi', when="+netcdf~pnetcdf")
+    depends_on('mpi', when='+mpi')
+    depends_on('netcdf-c+mpi', when="+netcdf~pnetcdf+mpi")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
     depends_on('parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
-    depends_on('parmetis', when='+metis')
+    depends_on('parmetis', when='+metis+mpi')
     depends_on('cgns', when='+cgns')
     depends_on('adios2', when='+adios2')
     # Trilinos' Tribits config system is limited which makes it very tricky to
@@ -361,10 +363,15 @@ class Trilinos(CMakePackage):
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
     depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
     # We need hdf5+hl to match with netcdf during concretization
-    depends_on('hdf5+hl+mpi', when='+hdf5')
+    depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
+
+    # Dependencies/conflicts when MPI is disabled
+    depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
+    conflicts('+parmetis', when='~mpi')
+    conflicts('+pnetcdf', when='~mpi')
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
     patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl')
@@ -381,13 +388,13 @@ class Trilinos(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        define = CMakePackage.define
 
         cxx_flags = []
         options = []
 
         # #################### Base Settings #######################
 
-        mpi_bin = spec['mpi'].prefix.bin
         options.extend([
             '-DTrilinos_VERBOSE_CONFIGURE:BOOL=OFF',
             '-DTrilinos_ENABLE_TESTS:BOOL=OFF',
@@ -397,7 +404,6 @@ class Trilinos(CMakePackage):
                 'ON' if '+shared' in spec else 'OFF'),
             '-DTrilinos_ENABLE_DEBUG:BOOL=%s' % (
                 'ON' if '+debug' in spec else 'OFF'),
-
             # The following can cause problems on systems that don't have
             # static libraries available for things like dl and pthreads
             # for example when trying to build static libs
@@ -405,16 +411,21 @@ class Trilinos(CMakePackage):
             #     'ON' if '+shared' in spec else 'OFF'),
             # '-DTrilinos_LINK_SEARCH_START_STATIC:BOOL=%s' % (
             #     'OFF' if '+shared' in spec else 'ON'),
+        ])
 
+
+        options.append(self.define_from_variant('TPL_ENABLE_MPI', 'mpi'))
+        if '+mpi' in spec:
             # Force Trilinos to use the MPI wrappers instead of raw compilers
             # this is needed on Apple systems that require full resolution of
             # all symbols when linking shared libraries
-            '-DTPL_ENABLE_MPI:BOOL=ON',
-            '-DCMAKE_C_COMPILER=%s'       % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-            '-DMPI_BASE_DIR:PATH=%s'      % spec['mpi'].prefix
-        ])
+            mpi_bin = spec['mpi'].prefix.bin
+            options.extend([
+                define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
+                define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
+                define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc),
+                define('MPI_BASE_DIR', spec['mpi'].prefix),
+            ])
 
         # ################## Trilinos Packages #####################
 
@@ -733,17 +744,18 @@ class Trilinos(CMakePackage):
                     '-DTpetra_INST_OPENMP:BOOL=ON'
                 ])
 
-        # Fortran lib
-        if '+fortran' in spec:
-            if spec.satisfies('%gcc') or spec.satisfies('%clang'):
+        # Fortran lib (assumes clang is built with gfortran!)
+        if '+fortran' in spec and (
+                spec.satisfies('%gcc') or spec.satisfies('%clang')):
+            options.append(define('Trilinos_ENABLE_Fortran', True))
+            if '+mpi' in spec:
                 libgfortran = os.path.dirname(os.popen(
                     '%s --print-file-name libgfortran.a' %
                     join_path(mpi_bin, 'mpif90')).read())
-                options.extend([
+                options.append(
                     '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % (
                         libgfortran),
-                    '-DTrilinos_ENABLE_Fortran=ON'
-                ])
+                )
 
         float_s = 'ON' if '+float' in spec else 'OFF'
         complex_s = 'ON' if '+complex' in spec else 'OFF'
