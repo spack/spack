@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,7 +42,8 @@ class IntelXed(Package):
 
     variant('debug', default=False, description='Enable debug symbols')
 
-    depends_on('python@2.7:', type='build')
+    # python module 'platform.linux_distribution' was removed in python 3.8
+    depends_on('python@2.7:3.7', type='build')
 
     conflicts('target=ppc64:', msg='intel-xed only runs on x86')
     conflicts('target=ppc64le:', msg='intel-xed only runs on x86')

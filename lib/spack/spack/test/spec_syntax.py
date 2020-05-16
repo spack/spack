@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,10 @@ from spack.parse import Token
 from spack.spec import Spec
 from spack.spec import SpecParseError, RedundantSpecError
 from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
-from spack.spec import DuplicateArchitectureError, DuplicateVariantError
+from spack.spec import DuplicateArchitectureError
 from spack.spec import DuplicateDependencyError, DuplicateCompilerSpecError
 from spack.spec import SpecFilenameError, NoSuchSpecFileError
+from spack.variant import DuplicateVariantError
 
 
 # Sample output for a complex lexing.
@@ -176,7 +177,7 @@ class TestSpecSyntax(object):
             " ^stackwalker@8.1_1e")
         self.check_parse(
             "mvapich_foo"
-            " ^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2"
             " ^stackwalker@8.1_1e")
         self.check_parse(
             'mvapich_foo'
@@ -184,7 +185,7 @@ class TestSpecSyntax(object):
             ' ^stackwalker@8.1_1e')
         self.check_parse(
             "mvapich_foo"
-            " ^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2"
             " ^stackwalker@8.1_1e arch=test-redhat6-x86")
 
     def test_canonicalize(self):

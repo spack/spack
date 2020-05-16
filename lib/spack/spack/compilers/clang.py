@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -174,7 +174,19 @@ class Clang(Compiler):
             return "-std=c11"
 
     @property
-    def pic_flag(self):
+    def cc_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def f77_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def fc_pic_flag(self):
         return "-fPIC"
 
     required_libs = ['libclang']
@@ -208,7 +220,9 @@ class Clang(Compiler):
             r'^Apple (?:LLVM|clang) version ([^ )]+)|'
             # Normal clang compiler versions are left as-is
             r'clang version ([^ )]+)-svn[~.\w\d-]*|'
-            r'clang version ([^ )]+)-[~.\w\d-]*|'
+            # Don't include hyphenated patch numbers in the version
+            # (see https://github.com/spack/spack/pull/14365 for details)
+            r'clang version ([^ )]+?)-[~.\w\d-]*|'
             r'clang version ([^ )]+)',
             output
         )

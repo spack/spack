@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,11 @@ class Graphviz(AutotoolsPackage):
     version('2.42.2', commit='da4c2ec6f24ca1b6d1752c6b5bc4389e55682147')
     # This commit hash is tag='stable_release_2.40.1'
     version('2.40.1', commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
+
+    conflicts('%gcc@:5.9',
+              when='@2.40.1+qt ^qt@5:',
+              msg='graphviz-2.40.1 needs gcc-6 or greater to compile with QT5 '
+              'suppport')
 
     # Language bindings
     language_bindings = ['java']
@@ -50,6 +55,8 @@ class Graphviz(AutotoolsPackage):
             description='Build with libgd support (more output formats)')
     variant('pangocairo', default=False,
             description='Build with pango+cairo support (more output formats)')
+    variant('poppler', default=False,
+            description='Build with poppler support (pdf formats)')
     variant('qt', default=False,
             description='Build with Qt support')
     variant('quartz', default=(MACOS_VERSION is not None),
@@ -59,14 +66,14 @@ class Graphviz(AutotoolsPackage):
 
     patch('http://www.linuxfromscratch.org/patches/blfs/9.0/graphviz-2.40.1-qt5-1.patch',
           sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
-          when='+qt^qt@5:')
+          when='@:2.40+qt^qt@5:')
     patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.38.0_icc_sfio.patch',
           sha256='393a0a772315a89dcc970b5efd4765d22dba83493d7956303673eb89c45b949f',
           level=0,
-          when='%intel')
+          when='@:2.40%intel')
     patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.40.1_icc_vmalloc.patch',
           sha256='813e6529e79161a18b0f24a969b7de22f8417b2e942239e658b5402884541bc2',
-          when='%intel')
+          when='@:2.40%intel')
 
     if not MACOS_VERSION:
         conflicts('+quartz',
@@ -88,14 +95,15 @@ class Graphviz(AutotoolsPackage):
     depends_on('ghostscript', when='+ghostscript')
     depends_on('gtkplus', when='+gtkplus')
     depends_on('gts', when='+gts')
-    depends_on('cairo', when='+pangocairo')
+    depends_on('cairo+pdf+png+svg', when='+pangocairo')
     depends_on('fontconfig', when='+pangocairo')
     depends_on('freetype', when='+pangocairo')
     depends_on('glib', when='+pangocairo')
     depends_on('libpng', when='+pangocairo')
     depends_on('pango', when='+pangocairo')
+    depends_on('poppler+glib', when='+poppler')
     depends_on('zlib')
-    depends_on('qt@4', when='+qt')
+    depends_on('qt', when='+qt')
     depends_on('libx11', when="+x")
 
     # Build dependencies
@@ -142,7 +150,7 @@ class Graphviz(AutotoolsPackage):
         args.append('--{0}-swig'.format('enable' if use_swig else 'disable'))
 
         for var in ["expat", "gts", "ghostscript", "libgd", "pangocairo",
-                    "qt", "quartz", "x"]:
+                    "poppler", "qt", "quartz", "x"]:
             args += self.with_or_without(var)
 
         args.append('--{0}-gtk'.format(

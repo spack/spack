@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,22 +17,16 @@ Spack integrates with `Environment Modules
 <http://lmod.readthedocs.io/en/latest/>`_ by
 providing post-install hooks that generate module files and commands to manipulate them.
 
-.. note::
-
-   If your machine does not already have a module system installed,
-   we advise you to use either Environment Modules or LMod. See :ref:`InstallEnvironmentModules`
-   for more details.
-
 .. _shell-support:
 
 ----------------------------
 Using module files via Spack
 ----------------------------
 
-If you have installed a supported module system either manually or through
-``spack bootstrap``, you should be able to run either ``module avail`` or
-``use -l spack`` to see what module files have been installed.  Here is
-sample output of those programs, showing lots of installed packages:
+If you have installed a supported module system you should be able to
+run either ``module avail`` or ``use -l spack`` to see what module
+files have been installed.  Here is sample output of those programs,
+showing lots of installed packages:
 
 .. code-block:: console
 
@@ -93,9 +87,7 @@ Note that in the latter case it is necessary to explicitly set ``SPACK_ROOT``
 before sourcing the setup file (you will get a meaningful error message
 if you don't).
 
-When ``bash`` and ``ksh`` users update their environment with ``setup-env.sh``, it will check for spack-installed environment modules and add the ``module`` command to their environment; This only occurs if the module command is not already available. You can install ``environment-modules`` with ``spack bootstrap`` as described in :ref:`InstallEnvironmentModules`.
-
-Finally, if you want to have Spack's shell support available on the command line at
+If you want to have Spack's shell support available on the command line at
 any login you can put this source line in one of the files that are sourced
 at startup (like ``.profile``, ``.bashrc`` or ``.cshrc``). Be aware though
 that the startup time may be slightly increased because of that.
@@ -119,7 +111,7 @@ For example this will add the ``mpich`` package built with ``gcc`` to your path:
 
    # ... wait for install ...
 
-   $ spack load mpich %gcc@4.4.7    # modules
+   $ spack load mpich %gcc@4.4.7
    $ which mpicc
    ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
 
@@ -129,27 +121,29 @@ want to use a package, you can type unload or unuse similarly:
 
 .. code-block:: console
 
-   $ spack unload mpich %gcc@4.4.7  # modules
+   $ spack unload mpich %gcc@4.4.7
 
 .. note::
 
-   The ``load`` and ``unload`` subcommands are
-   only available if you have enabled Spack's shell support *and* you
-   have environment-modules installed on your machine.
+   The ``load`` and ``unload`` subcommands are only available if you
+   have enabled Spack's shell support. These command DO NOT use the
+   underlying Spack-generated module files.
 
-^^^^^^^^^^^^^^^^^^^^^^
-Ambiguous module names
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
+Ambiguous specs
+^^^^^^^^^^^^^^^
 
-If a spec used with load/unload or use/unuse is ambiguous (i.e. more
-than one installed package matches it), then Spack will warn you:
+If a spec used with load/unload or is ambiguous (i.e. more than one
+installed package matches it), then Spack will warn you:
 
 .. code-block:: console
 
    $ spack load libelf
-   ==> Error: Multiple matches for spec libelf.  Choose one:
-   libelf@0.8.13%gcc@4.4.7 arch=linux-debian7-x86_64
-   libelf@0.8.13%intel@15.0.0 arch=linux-debian7-x86_64
+   ==> Error: libelf matches multiple packages.
+   Matching packages:
+     libelf@0.8.13%gcc@4.4.7 arch=linux-debian7-x86_64
+     libelf@0.8.13%intel@15.0.0 arch=linux-debian7-x86_64
+   Use a more specific spec
 
 You can either type the ``spack load`` command again with a fully
 qualified argument, or you can add just enough extra constraints to
@@ -163,16 +157,21 @@ used ``gcc``.  You could therefore just type:
 
 To identify just the one built with the Intel compiler.
 
-.. _extensions:
-
 .. _cmd-spack-module-loads:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack module tcl loads``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In some cases, it is desirable to load not just a module, but also all
-the modules it depends on.  This is not required for most modules
+In some cases, it is desirable to use a Spack-generated module, rather
+than relying on Spack's built-in user-environment modification
+capabilities. To translate a spec into a module name, use ``spack
+module tcl loads`` or ``spack module lmod loads`` depending on the
+module system desired.
+
+
+To load not just a module, but also all the modules it depends on, use
+the ``--dependencies`` option. This is not required for most modules
 because Spack builds binaries with RPATH support.  However, not all
 packages use RPATH to find their dependencies: this can be true in
 particular for Python extensions, which are currently *not* built with

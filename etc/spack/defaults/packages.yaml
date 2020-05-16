@@ -27,6 +27,7 @@ packages:
       glx: [mesa+glx, opengl]
       glu: [mesa-glu, openglu]
       golang: [gcc]
+      iconv: [libiconv]
       ipp: [intel-ipp]
       java: [openjdk, jdk, ibm-java]
       jpeg: [libjpeg-turbo, libjpeg]
@@ -40,9 +41,11 @@ packages:
       pil: [py-pillow]
       pkgconfig: [pkgconf, pkg-config]
       scalapack: [netlib-scalapack]
+      sycl: [hipsycl]
       szip: [libszip, libaec]
       tbb: [intel-tbb]
       unwind: [libunwind]
+      sycl: [hipsycl]
     permissions:
       read: world
       write: user

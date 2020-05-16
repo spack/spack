@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,7 @@
 from spack import *
 
 
-# TODO: try switching to CMakePackage for more control over build
-class PyTorch(PythonPackage):
+class PyTorch(PythonPackage, CudaPackage):
     """Tensors and Dynamic neural networks in Python
     with strong GPU acceleration."""
 
@@ -51,17 +50,22 @@ class PyTorch(PythonPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.5.0', tag='v1.5.0', submodules=True)
+    version('1.4.1', tag='v1.4.1', submodules=True)
+    version('1.4.0', tag='v1.4.0', submodules=True,
+            submodules_delete=['third_party/fbgemm'])
     version('1.3.1', tag='v1.3.1', submodules=True)
     version('1.3.0', tag='v1.3.0', submodules=True)
     version('1.2.0', tag='v1.2.0', submodules=True)
     version('1.1.0', tag='v1.1.0', submodules=True)
     version('1.0.1', tag='v1.0.1', submodules=True)
     version('1.0.0', tag='v1.0.0', submodules=True)
-    version('0.4.1', tag='v0.4.1', submodules=True)
+    version('0.4.1', tag='v0.4.1', submodules=True,
+            submodules_delete=['third_party/nervanagpu'])
     version('0.4.0', tag='v0.4.0', submodules=True)
     version('0.3.1', tag='v0.3.1', submodules=True)
 
-    variant('cuda', default=True, description='Enables CUDA build')
+    variant('cuda', default=True, description='Build with CUDA')
     variant('cudnn', default=True, description='Enables the cuDNN build')
     variant('magma', default=False, description='Enables the MAGMA build')
     variant('fbgemm', default=False, description='Enables the FBGEMM build')
@@ -70,6 +74,7 @@ class PyTorch(PythonPackage):
     variant('mkldnn', default=True, description='Enables use of MKLDNN')
     variant('nnpack', default=False, description='Enables NNPACK build')
     variant('qnnpack', default=False, description='Enables QNNPACK build (quantized 8-bit operators)')
+    variant('xnnpack', default=False, description='Enables XNNPACK build')
     variant('distributed', default=False, description='Enables distributed (c10d, gloo, mpi, etc.) build')
     variant('nccl', default=True, description='Use Spack-installed NCCL')
     variant('caffe2', default=False, description='Enables Caffe2 operators build')
@@ -90,6 +95,7 @@ class PyTorch(PythonPackage):
     conflicts('+miopen', when='@:0.4')
     conflicts('+mkldnn', when='@:0.3')
     conflicts('+qnnpack', when='@:0.4')
+    conflicts('+xnnpack', when='@:1.4')
     conflicts('+nccl', when='~cuda')
     conflicts('+opencv', when='@:0.4')
     conflicts('+ffmpeg', when='@:0.4')
@@ -99,19 +105,26 @@ class PyTorch(PythonPackage):
     conflicts('+redis', when='@:1.0')
     conflicts('+zstd', when='@:1.0')
     conflicts('+tbb', when='@:1.1')
+    # https://github.com/pytorch/pytorch/issues/35149
+    conflicts('+fbgemm', when='@1.4.0')
+
+    conflicts('cuda_arch=none', when='+cuda',
+              msg='Must specify CUDA compute capabilities of your GPU, see '
+              'https://developer.nvidia.com/cuda-gpus')
 
     # Required dependencies
     depends_on('cmake@3.5:', type='build')
     # Use Ninja generator to speed up build times
     # Automatically used if found
     depends_on('ninja@1.5:', type='build')
+    depends_on('python@3.5:', when='@1.5:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-future', when='@1.1: ^python@:2', type='build')
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-typing', when='@0.4: ^python@:3.4', type=('build', 'run'))
-    depends_on('py-pybind11', when='@0.4:', type=('build', 'run'))
+    depends_on('py-pybind11', when='@0.4:', type=('build', 'link', 'run'))
     depends_on('blas')
     depends_on('lapack')
     depends_on('protobuf', when='@0.4:')
@@ -128,10 +141,15 @@ class PyTorch(PythonPackage):
     # depends_on('fbgemm', when='+fbgemm')
     # TODO: add dependency: https://github.com/ROCmSoftwarePlatform/MIOpen
     # depends_on('miopen', when='+miopen')
-    depends_on('intel-mkl-dnn', when='+mkldnn')
+    # TODO: See if there is a way to use an external mkldnn installation.
+    # Currently, only older versions of py-torch use an external mkldnn
+    # library.
+    depends_on('onednn', when='@0.4:0.4.1+mkldnn')
     # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
     # depends_on('nnpack', when='+nnpack')
     depends_on('qnnpack', when='+qnnpack')
+    # TODO: add dependency: https://github.com/google/XNNPACK
+    # depends_on('xnnpack', when='+xnnpack')
     depends_on('mpi', when='+distributed')
     depends_on('nccl', when='+nccl')
     depends_on('gloo', when='+gloo')
@@ -148,6 +166,17 @@ class PyTorch(PythonPackage):
     depends_on('py-hypothesis', type='test')
     depends_on('py-six', type='test')
     depends_on('py-psutil', type='test')
+
+    # https://github.com/pytorch/pytorch/pull/35607
+    # https://github.com/pytorch/pytorch/pull/37865
+    # Fixes CMake configuration error when XNNPACK is disabled
+    patch('xnnpack.patch', when='@1.5.0')
+
+    # https://github.com/pytorch/pytorch/pull/37086
+    # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
+    patch('https://github.com/pytorch/pytorch/commit/e921cd222a8fbeabf5a3e74e83e0d8dfb01aa8b5.patch',
+          sha256='7781c7ec0a661bf5a946a659f80e90df9dba116ad168762f15b10547113ae600',
+          when='@1.1:1.5')
 
     # Both build and install run cmake/make/make install
     # Only run once to speed up build times
@@ -180,11 +209,6 @@ class PyTorch(PythonPackage):
                 else:
                     env.set('NO_' + var, 'ON')
 
-        # Build system has problems locating MKL libraries
-        # See https://github.com/pytorch/pytorch/issues/24334
-        if 'mkl' in self.spec:
-            env.prepend_path('CMAKE_PREFIX_PATH', self.spec['mkl'].prefix.mkl)
-
         # Build in parallel to speed up build times
         env.set('MAX_JOBS', make_jobs)
 
@@ -202,6 +226,10 @@ class PyTorch(PythonPackage):
         enable_or_disable('cuda')
         if '+cuda' in self.spec:
             env.set('CUDA_HOME', self.spec['cuda'].prefix)
+            torch_cuda_arch = ';'.join('{0:.1f}'.format(float(i) / 10.0) for i
+                                       in
+                                       self.spec.variants['cuda_arch'].value)
+            env.set('TORCH_CUDA_ARCH_LIST', torch_cuda_arch)
 
         enable_or_disable('cudnn')
         if '+cudnn' in self.spec:
@@ -218,11 +246,12 @@ class PyTorch(PythonPackage):
             env.set('MIOPEN_LIBRARY', self.spec['miopen'].libs[0])
 
         enable_or_disable('mkldnn')
-        if '+mkldnn' in self.spec:
-            env.set('MKLDNN_HOME', self.spec['intel-mkl-dnn'].prefix)
+        if '@0.4:0.4.1+mkldnn' in self.spec:
+            env.set('MKLDNN_HOME', self.spec['onednn'].prefix)
 
         enable_or_disable('nnpack')
         enable_or_disable('qnnpack')
+        enable_or_disable('xnnpack')
         enable_or_disable('distributed')
 
         enable_or_disable('nccl')
@@ -241,8 +270,9 @@ class PyTorch(PythonPackage):
         enable_or_disable('lmdb', newer=True)
         enable_or_disable('binary', keyword='BUILD', newer=True)
 
-        env.set('PYTORCH_BUILD_VERSION', self.version)
-        env.set('PYTORCH_BUILD_NUMBER', 0)
+        if not self.spec.satisfies('@master'):
+            env.set('PYTORCH_BUILD_VERSION', self.version)
+            env.set('PYTORCH_BUILD_NUMBER', 0)
 
         # BLAS to be used by Caffe2
         if '^mkl' in self.spec:
@@ -262,9 +292,11 @@ class PyTorch(PythonPackage):
         enable_or_disable('zstd', newer=True)
         enable_or_disable('tbb', newer=True)
 
-    def test(self):
-        pass
-
     def install_test(self):
         with working_dir('test'):
             python('run_test.py')
+
+    # Tests need to be re-added since `phases` was overridden
+    run_after('install')(
+        PythonPackage._run_default_install_time_test_callbacks)
+    run_after('install')(PythonPackage.sanity_check_prefix)

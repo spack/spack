@@ -1,16 +1,14 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 
 
 class PyScikitLearn(PythonPackage):
     """A set of python modules for machine learning and data mining."""
 
     homepage = "https://pypi.python.org/pypi/scikit-learn"
-    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.22.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.23.0.tar.gz"
     git      = "https://github.com/scikit-learn/scikit-learn.git"
 
     maintainers = ['adamjstewart']
@@ -33,10 +31,13 @@ class PyScikitLearn(PythonPackage):
     ]
 
     version('master', branch='master')
+    version('0.23.0', sha256='639a53df6273acc6a7510fb0c658b94e0c70bb13dafff9d14932c981ff9baff4')
+    version('0.22.1', sha256='51ee25330fc244107588545c70e2f3570cfc4017cff09eed69d6e1d82a212b7d')
     version('0.22',   sha256='314abf60c073c48a1e95feaae9f3ca47a2139bd77cebb5b877c23a45c9e03012')
     version('0.21.3', sha256='eb9b8ebf59eddd8b96366428238ab27d05a19e89c5516ce294abc35cea75d003')
     version('0.21.2', sha256='0aafc312a55ebf58073151b9308761a5fcfa45b7f7730cea4b1f066f824c72db')
     version('0.21.1', sha256='228d0611e69e5250946f8cd7bbefec75347950f0ca426d0c518db8f06583f660')
+    version('0.20.3', sha256='c503802a81de18b8b4d40d069f5e363795ee44b1605f38bc104160ca3bfe2c41')
     version('0.20.2', sha256='bc5bc7c7ee2572a1edcb51698a6caf11fae554194aaab9a38105d9ec419f29e6')
     version('0.20.0', sha256='97d1d971f8ec257011e64b7d655df68081dd3097322690afa1a71a1d755f8c18')
     version('0.19.1', sha256='5ca0ad32ee04abe0d4ba02c8d89d501b4e5e0304bdf4d45c2e9875a735b323a0')
@@ -51,13 +52,17 @@ class PyScikitLearn(PythonPackage):
     depends_on('python@2.6:2.8,3.3:', when='@:0.19', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@0.20.0:0.20.999', type=('build', 'run'))
     depends_on('python@3.5:', when='@0.21:', type=('build', 'run'))
+    depends_on('python@3.6:', when='@0.23:', type=('build', 'run'))
     depends_on('py-numpy@1.6.1:', when='@:0.19', type=('build', 'run'))
     depends_on('py-numpy@1.8.2:', when='@0.20.0:0.20.999', type=('build', 'run'))
     depends_on('py-numpy@1.11.0:', when='@0.21:', type=('build', 'run'))
+    depends_on('py-numpy@1.13.3:', when='@0.23:', type=('build', 'run'))
     depends_on('py-scipy@0.9:', when='@:0.19', type=('build', 'run'))
     depends_on('py-scipy@0.13.3:', when='@0.20.0:0.20.999', type=('build', 'run'))
     depends_on('py-scipy@0.17.0:', when='@0.21:', type=('build', 'run'))
+    depends_on('py-scipy@0.19.1:', when='@0.23:', type=('build', 'run'))
     depends_on('py-joblib@0.11:', type=('build', 'run'))
+    depends_on('py-threadpoolctl@2.0.0:', when='@0.23:', type=('build', 'run'))
     depends_on('py-cython@0.23:', type='build')
     depends_on('py-cython@0.28.5:', when='@0.21:', type='build')
     depends_on('py-pytest@3.3.0:', type='test')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -218,8 +218,8 @@ def test_target_json_schema():
     ('icelake', 'clang', '8.0.0',
      '-march=icelake-client -mtune=icelake-client'),
     ('zen2', 'clang', '9.0.0', '-march=znver2 -mtune=znver2'),
-    ('power9le', 'clang', '8.0.0', '-march=ppc64le -mcpu=pwr9'),
-    ('thunderx2', 'clang', '6.0.0', '-march=armv8-a -mcpu=generic'),
+    ('power9le', 'clang', '8.0.0', '-mcpu=power9 -mtune=power9'),
+    ('thunderx2', 'clang', '6.0.0', '-mcpu=thunderx2t99'),
     # Test Intel on Intel CPUs
     ('sandybridge', 'intel', '17.0.2', '-march=corei7-avx -mtune=corei7-avx'),
     ('sandybridge', 'intel', '18.0.5',
@@ -245,7 +245,7 @@ def test_unsupported_optimization_flags(target_name, compiler, version):
     target = llnl.util.cpu.targets[target_name]
     with pytest.raises(
             llnl.util.cpu.UnsupportedMicroarchitecture,
-            matches='cannot produce optimized binary'
+            match='cannot produce optimized binary'
     ):
         target.optimization_flags(compiler, version)
 
@@ -278,3 +278,14 @@ def test_version_components(version, expected_number, expected_suffix):
     number, suffix = llnl.util.cpu.version_components(version)
     assert number == expected_number
     assert suffix == expected_suffix
+
+
+def test_invalid_family():
+    targets = llnl.util.cpu.targets
+    multi_parents = Microarchitecture(
+        name='chimera', parents=[targets['pentium4'], targets['power7']],
+        vendor='Imagination', features=[], compilers={}, generation=0
+    )
+    with pytest.raises(AssertionError,
+                       match='a target is expected to belong'):
+        multi_parents.family

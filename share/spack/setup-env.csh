@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ if ($?SPACK_ROOT) then
 
     # Command aliases point at separate source files
     alias spack          'set _sp_args = (\!*); source $_spack_share_dir/csh/spack.csh'
+    alias spacktivate    'spack env activate'
     alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/pathadd.csh'
 
     # Set variables needed by this script

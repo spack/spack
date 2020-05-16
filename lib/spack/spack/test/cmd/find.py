@@ -1,14 +1,16 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
 import json
+import os
 
 import pytest
 import spack.cmd as cmd
 import spack.cmd.find
+import spack.user_environment as uenv
 from spack.main import SpackCommand
 from spack.spec import Spec
 from spack.util.pattern import Bunch
@@ -318,3 +320,14 @@ def test_find_prefix_in_env(mutable_mock_env_path, install_mockery, mock_fetch,
         find('-l')
         find('-L')
         # Would throw error on regression
+
+
+def test_find_loaded(database, working_env):
+    output = find('--loaded', '--group')
+    assert output == ''
+
+    os.environ[uenv.spack_loaded_hashes_var] = ':'.join(
+        [x.dag_hash() for x in spack.store.db.query()])
+    output = find('--loaded')
+    expected = find()
+    assert output == expected

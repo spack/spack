@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,7 +70,19 @@ class Xl(Compiler):
                                       '< 12.1')
 
     @property
-    def pic_flag(self):
+    def cc_pic_flag(self):
+        return "-qpic"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-qpic"
+
+    @property
+    def f77_pic_flag(self):
+        return "-qpic"
+
+    @property
+    def fc_pic_flag(self):
         return "-qpic"
 
     @property

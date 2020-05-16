@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,8 @@ class PyScipy(PythonPackage):
     It provides many user-friendly and efficient numerical routines such
     as routines for numerical integration and optimization."""
 
-    homepage = "http://www.scipy.org/"
-    url = "https://pypi.io/packages/source/s/scipy/scipy-1.3.3.tar.gz"
+    homepage = "https://www.scipy.org/"
+    url      = "https://pypi.io/packages/source/s/scipy/scipy-1.4.1.tar.gz"
 
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -30,10 +30,13 @@ class PyScipy(PythonPackage):
         'scipy.sparse.linalg.eigen.lobpcg', 'scipy.special._precompute'
     ]
 
+    version('1.4.1',  sha256='dee1bbf3a6c8f73b6b218cb28eed8dd13347ea2f87d572ce19b289d6fd3fbc59')
+    version('1.4.0',  sha256='31f7cfa93b01507c935c12b535e24812594002a02a56803d7cd063e9920d25e8')
     version('1.3.3',  sha256='64bf4e8ae0db2d42b58477817f648d81e77f0b381d0ea4427385bba3f959380a')
     version('1.3.2',  sha256='a03939b431994289f39373c57bbe452974a7da724ae7f9620a1beee575434da4')
     version('1.3.1',  sha256='2643cfb46d97b7797d1dbdb6f3c23fe3402904e3c90e6facfe6a9b98d808c1b5')
     version('1.3.0',  sha256='c3bb4bd2aca82fb498247deeac12265921fe231502a6bc6edea3ee7fe6c40a7a')
+    version('1.2.3',  sha256='ecbe6413ca90b8e19f8475bfa303ac001e81b04ec600d17fa7f816271f7cca57')
     version('1.2.2',  sha256='a4331e0b8dab1ff75d2c67b5158a8bb9a83c799d7140094dda936d876c7cfbb1')
     version('1.2.1',  sha256='e085d1babcb419bbe58e2e805ac61924dac4ca45a07c9fa081144739e500aa3c')
     version('1.1.0',  sha256='878352408424dffaa695ffedf2f9f92844e116686923ed9aa8626fc30d32cfd1')
@@ -48,6 +51,8 @@ class PyScipy(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', when='@0.18:', type=('build', 'run'))
     depends_on('python@3.5:', when='@1.3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-pybind11@2.4.0:', when='@1.4.1:', type='build')
+    depends_on('py-pybind11@2.2.4:', when='@1.4.0:', type='build')
     depends_on('py-numpy@1.5.1:+blas+lapack', type=('build', 'run'))
     depends_on('py-numpy@1.6.2:+blas+lapack', when='@0.16:', type=('build', 'run'))
     depends_on('py-numpy@1.7.1:+blas+lapack', when='@0.18:', type=('build', 'run'))

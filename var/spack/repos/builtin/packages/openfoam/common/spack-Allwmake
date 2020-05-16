@@ -1,8 +1,15 @@
 #!/bin/bash
-# Build wrapper script - FOAM_INST_DIR is only required by foam-extend
+# Build wrapper script
+
+# FOAM_INST_DIR is only required by foam-extend
 export FOAM_INST_DIR=$(cd .. && pwd -L)
+
+# Prevent influence of user/site config when building
+export FOAM_CONFIG_MODE="o"
+
 . "$PWD/etc/bashrc" ''                              # No arguments
 mkdir -p "$FOAM_APPBIN" "$FOAM_LIBBIN" 2>/dev/null  # Allow build interrupt
+
 echo "Build openfoam with SPACK ($@)"
 echo "WM_PROJECT_DIR = $WM_PROJECT_DIR"
 

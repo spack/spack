@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,7 +56,7 @@ class Dataspaces(AutotoolsPackage):
         args = []
         cookie = self.spec.variants['gni-cookie'].value
         ptag = self.spec.variants['ptag'].value
-        args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
+        args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
         if self.spec.satisfies('+dimes'):
             args.append('--enable-dimes')
         if self.spec.satisfies('+cray-drc'):

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,19 @@
 # avoids the need to come up with a user-friendly naming scheme for
 # spack module files.
 ########################################################################
+# Store LD_LIBRARY_PATH variables from spack shell function
+# This is necessary because MacOS System Integrity Protection clears
+# variables that affect dyld on process start.
+if ( ${?LD_LIBRARY_PATH} ) then
+    setenv SPACK_LD_LIBRARY_PATH $LD_LIBRARY_PATH
+endif
+if ( ${?DYLD_LIBRARY_PATH} ) then
+    setenv SPACK_DYLD_LIBRARY_PATH $DYLD_LIBRARY_PATH
+endif
+if ( ${?DYLD_FALLBACK_LIBRARY_PATH} ) then
+    setenv SPACK_DYLD_FALLBACK_LIBRARY_PATH $DYLD_FALLBACK_LIBRARY_PATH
+endif
+
 # accumulate initial flags for main spack command
 set _sp_flags = ""
 while ( $#_sp_args > 0 )
@@ -47,8 +60,7 @@ set _sp_spec=""
 [ $#_sp_args -gt 0 ] && set _sp_subcommand = ($_sp_args[1])
 [ $#_sp_args -gt 1 ] && set _sp_spec = ($_sp_args[2-])
 
-# Figure out what type of module we're running here.
-set _sp_modtype = ""
+# Run subcommand
 switch ($_sp_subcommand)
 case cd:
     shift _sp_args  # get rid of 'cd'
@@ -57,7 +69,7 @@ case cd:
     [ $#_sp_args -gt 0 ] && set _sp_arg = ($_sp_args[1])
     shift _sp_args
 
-    if ( "$_sp_arg" == "-h" ) then
+    if ( "$_sp_arg" == "-h" || "$_sp_args" == "--help" ) then
         \spack cd -h
     else
         cd `\spack location $_sp_arg $_sp_args`
@@ -69,7 +81,7 @@ case env:
     set _sp_arg=""
     [ $#_sp_args -gt 0 ] && set _sp_arg = ($_sp_args[1])
 
-    if ( "$_sp_arg" == "-h" ) then
+    if ( "$_sp_arg" == "-h" || "$_sp_arg" == "--help" ) then
         \spack env -h
     else
         switch ($_sp_arg)
@@ -77,12 +89,18 @@ case env:
                 set _sp_env_arg=""
                 [ $#_sp_args -gt 1 ] && set _sp_env_arg = ($_sp_args[2])
 
-                if ( "$_sp_env_arg" == "" || "$_sp_args" =~ "*--sh*" || "$_sp_args" =~ "*--csh*" || "$_sp_args" =~ "*-h*" ) then
-                    # no args or args contain -h/--help, --sh, or --csh: just execute
+                # Space needed here to differentiate between `-h`
+                # argument and environments with "-h" in the name.
+                if ( "$_sp_env_arg" == "" || \
+                     "$_sp_args" =~ "* --sh*" || \
+                     "$_sp_args" =~ "* --csh*" || \
+                     "$_sp_args" =~ "* -h*" || \
+                     "$_sp_args" =~ "* --help*" ) then
+                    # No args or args contain --sh, --csh, or -h/--help: just execute.
                     \spack $_sp_flags env $_sp_args
                 else
                     shift _sp_args  # consume 'activate' or 'deactivate'
-                    # actual call to activate: source the output
+                    # Actual call to activate: source the output.
                     eval `\spack $_sp_flags env activate --csh $_sp_args`
                 endif
                 breaksw
@@ -90,51 +108,43 @@ case env:
                 set _sp_env_arg=""
                 [ $#_sp_args -gt 1 ] && set _sp_env_arg = ($_sp_args[2])
 
-                if ( "$_sp_env_arg" != "" ) then
-                    # with args: execute the command
+                # Space needed here to differentiate between `--sh`
+                # argument and environments with "--sh" in the name.
+                if ( "$_sp_args" =~ "* --sh*" || \
+                     "$_sp_args" =~ "* --csh*" ) then
+                    # Args contain --sh or --csh: just execute.
                     \spack $_sp_flags env $_sp_args
+                else if ( "$_sp_env_arg" != "" ) then
+                    # Any other arguments are an error or -h/--help: just run help.
+                    \spack $_sp_flags env deactivate -h
                 else
-                    # no args: source the output
+                    # No args: source the output of the command.
                     eval `\spack $_sp_flags env deactivate --csh`
                 endif
                 breaksw
             default:
-                echo default
                 \spack $_sp_flags env $_sp_args
                 breaksw
         endsw
     endif
+    breaksw
+
 case load:
 case unload:
-    set _sp_module_args=""""
-    if ( "$_sp_spec" =~ "-*" ) then
-        set _sp_module_args = $_sp_spec[1]
-        shift _sp_spec
-        set _sp_spec = ($_sp_spec)
+    # Get --sh, --csh, -h, or --help arguments.
+    # Space needed here to differentiate between `-h`
+    # argument and specs with "-h" in the name.
+    if ( " $_sp_spec" =~ "* --sh*" || \
+         " $_sp_spec" =~ "* --csh*" || \
+         " $_sp_spec" =~ "* -h*" || \
+         " $_sp_spec" =~ "* --help*") then
+        # Args contain --sh, --csh, or -h/--help: just execute.
+        \spack $_sp_flags $_sp_subcommand $_sp_spec
+    else
+        # Otherwise, eval with csh.
+        eval `\spack $_sp_flags $_sp_subcommand --csh $_sp_spec || \
+             echo "exit 1"`
     endif
-
-    # Here the user has run load or unload with a spec.  Find a matching
-    # spec using 'spack module find', then use the appropriate module
-    # tool's commands to add/remove the result from the environment.
-    switch ($_sp_subcommand)
-        case "load":
-            # _sp_module_args may be "-r" for recursive spec retrieval
-            set _sp_full_spec = ( "`\spack $_sp_flags module tcl find $_sp_module_args $_sp_spec`" )
-            if ( "$_sp_module_args" == "-r" ) then
-                # module load can handle the list of modules to load and "-r" is not a valid option
-                set _sp_module_args = ""
-            endif
-            if ( $? == 0 ) then
-                module load $_sp_module_args $_sp_full_spec
-            endif
-            breaksw
-        case "unload":
-            set _sp_full_spec = ( "`\spack $_sp_flags module tcl find $_sp_spec`" )
-            if ( $? == 0 ) then
-                module unload $_sp_module_args $_sp_full_spec
-            endif
-            breaksw
-    endsw
     breaksw
 
 default:
@@ -143,6 +153,5 @@ default:
 endsw
 
 _sp_end:
-unset _sp_args _sp_full_spec _sp_modtype _sp_module_args
-unset _sp_sh_cmd _sp_spec _sp_subcommand _sp_flags
+unset _sp_args _sp_full_spec _sp_sh_cmd _sp_spec _sp_subcommand _sp_flags
 unset _sp_arg _sp_env_arg

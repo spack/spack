@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import glob
 import sys
 
 
-class Valgrind(AutotoolsPackage):
+class Valgrind(AutotoolsPackage, SourcewarePackage):
     """An instrumentation framework for building dynamic analysis.
 
     There are Valgrind tools that can automatically detect many memory
@@ -19,7 +19,7 @@ class Valgrind(AutotoolsPackage):
     under the GNU General Public License, version 2.
     """
     homepage = "http://valgrind.org/"
-    url      = "https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2"
+    sourceware_mirror_path = "valgrind/valgrind-3.13.0.tar.bz2"
     git      = "git://sourceware.org/git/valgrind.git"
 
     version('develop', branch='master')

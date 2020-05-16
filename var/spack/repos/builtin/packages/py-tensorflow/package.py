@@ -1,10 +1,8 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
-import os
 import sys
 
 
@@ -13,13 +11,17 @@ class PyTensorflow(Package, CudaPackage):
     """
 
     homepage = "https://www.tensorflow.org"
-    url      = "https://github.com/tensorflow/tensorflow/archive/v2.0.0.tar.gz"
+    url      = "https://github.com/tensorflow/tensorflow/archive/v2.2.0.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = ['tensorflow']
 
-    version('2.1.0-rc0', sha256='674cc90223f1d6b7fa2969e82636a630ce453e48a9dec39d73d6dba2fd3fd243')
-    version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617', preferred=True)
+    version('2.2.0',  sha256='69cd836f87b8c53506c4f706f655d423270f5a563b76dc1cfa60fbc3184185a3')
+    version('2.1.0',  sha256='638e541a4981f52c69da4a311815f1e7989bf1d67a41d204511966e1daed14f7')
+    version('2.0.1',  sha256='29197d30923b9670992ee4b9c6161f50c7452e9a4158c720746e846080ac245a')
+    version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617')
+    version('1.15.2', sha256='d95d75d26a298211b5e802842e87fda5b8b14f6ad83719377b391e5fb71b8746')
+    version('1.15.1', sha256='19b6e72bc8675937f618cede364d7228a71c2eeaffc42801bcefd98dda7ca056')
     version('1.15.0', sha256='a5d49c00a175a61da7431a9b289747d62339be9cf37600330ad63b611f7f5dc9')
     version('1.14.0', sha256='aa2a6a1daafa3af66807cfe0bc77bfe1144a9a53df9a96bab52e3e575b3047ed')
     version('1.13.2', sha256='abe3bf0c47845a628b7df4c57646f41a10ee70f914f1b018a5c761be75e1f1a9')
@@ -58,9 +60,7 @@ class PyTensorflow(Package, CudaPackage):
 
     variant('mkl', default=False, description='Build with MKL support')
     variant('jemalloc', default=False, description='Build with jemalloc as malloc support')
-    # FIXME: ~gcp does not build for 2.0.0
-    # See https://github.com/tensorflow/tensorflow/issues/34878
-    variant('gcp', default=True, description='Build with Google Cloud Platform support')
+    variant('gcp', default=False, description='Build with Google Cloud Platform support')
     variant('hdfs', default=False, description='Build with Hadoop File System support')
     variant('aws', default=False, description='Build with Amazon AWS Platform support')
     variant('kafka', default=False, description='Build with Apache Kafka Platform support')
@@ -83,6 +83,7 @@ class PyTensorflow(Package, CudaPackage):
     variant('dynamic_kernels', default=False, description='Build kernels into separate shared objects')
 
     extends('python')
+    depends_on('python@3:', type=('build', 'run'), when='@2.1:')
 
     # TODO: Older versions of TensorFlow don't list the viable version range,
     # just the minimum version of bazel that will work. The latest version of
@@ -90,7 +91,8 @@ class PyTensorflow(Package, CudaPackage):
     # Need to investigate further.
 
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
-    depends_on('bazel@0.27.1:0.29.1', type='build', when='@2.1:')
+    depends_on('bazel@2.0.0',         type='build', when='@2.2:')
+    depends_on('bazel@0.27.1:0.29.1', type='build', when='@2.1.0:2.1.999')
     depends_on('bazel@0.24.1:0.26.1', type='build', when='@1.15:2.0')
     # See call to check_bazel_version in configure.py
     depends_on('bazel@0.24.1:0.25.2', type='build', when='@1.14.0')
@@ -117,18 +119,22 @@ class PyTensorflow(Package, CudaPackage):
     # Listed under REQUIRED_PACKAGES in tensorflow/tools/pip_package/setup.py
     depends_on('py-absl-py@0.7.0:', type=('build', 'run'), when='@1.12.1,1.14:')
     depends_on('py-absl-py@0.1.6:', type=('build', 'run'), when='@1.5:')
-    depends_on('py-astor@0.6.0:', type=('build', 'run'), when='@1.6:')
+    depends_on('py-astunparse@1.6.3', type=('build', 'run'), when='@2.2:')
+    depends_on('py-astor@0.6.0:', type=('build', 'run'), when='@1.6:2.1')
     depends_on('py-backports-weakref@1.0:', type=('build', 'run'), when='@1.3: ^python@:3.3')
     depends_on('py-backports-weakref@1.0rc1', type=('build', 'run'), when='@1.2.0:1.2.1')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.5: ^python@:3.3')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.4.0:1.4.1')
-    depends_on('py-gast@0.2.2', type=('build', 'run'), when='@1.15:')
-    depends_on('py-gast@0.2.0:', type=('build', 'run'), when='@1.6:')
+    depends_on('py-gast@0.3.3', type=('build', 'run'), when='@2.2:')
+    depends_on('py-gast@0.2.2', type=('build', 'run'), when='@1.15:2.1')
+    depends_on('py-gast@0.2.0:', type=('build', 'run'), when='@1.6:1.14')
+    depends_on('py-google-pasta@0.1.8:', type=('build', 'run'), when='@2.1:')
     depends_on('py-google-pasta@0.1.6:', type=('build', 'run'), when='@1.14:')
     depends_on('py-google-pasta@0.1.2:', type=('build', 'run'), when='@1.12.1')
-    depends_on('py-keras-applications@1.0.8:', type=('build', 'run'), when='@1.15:')
-    depends_on('py-keras-applications@1.0.6:', type=('build', 'run'), when='@1.12:')
-    depends_on('py-keras-applications@1.0.5:', type=('build', 'run'), when='@1.11:')
+    depends_on('py-h5py@2.10.0:2.10.999', type=('build', 'run'), when='@2.2:')
+    depends_on('py-keras-applications@1.0.8:', type=('build', 'run'), when='@1.15:2.1')
+    depends_on('py-keras-applications@1.0.6:', type=('build', 'run'), when='@1.12:1.14')
+    depends_on('py-keras-applications@1.0.5:', type=('build', 'run'), when='@1.11.0:1.11.999')
     depends_on('py-keras-preprocessing@1.1.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-keras-preprocessing@1.0.5:', type=('build', 'run'), when='@1.12:')
     depends_on('py-keras-preprocessing@1.0.3:', type=('build', 'run'), when='@1.11:')
@@ -153,6 +159,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-protobuf@3.0.0', type=('build', 'run'), when='@0.11.0')
     depends_on('py-protobuf@3.0.0b2', type=('build', 'run'), when='@0.7.1:0.10')
     depends_on('py-protobuf@3.0.0a3', type=('build', 'run'), when='@0.6:0.7.0')
+    depends_on('protobuf')
     # tensorboard
     # tensorflow-estimator
     depends_on('py-termcolor@1.1.0:', type=('build', 'run'), when='@1.6:')
@@ -163,6 +170,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-functools32@3.2.3:', type=('build', 'run'), when='@1.15: ^python@:2')
     depends_on('py-six@1.12.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.0')
+    depends_on('py-scipy@1.2.2', type=('build', 'run'), when='@2.1: ^python@:2')
+    depends_on('py-scipy@1.4.1', type=('build', 'run'), when='@2.1: ^python@3:')
     depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.6:1.7')
     if sys.byteorder == 'little':
         # Only builds correctly on little-endian machines
@@ -194,8 +203,8 @@ class PyTensorflow(Package, CudaPackage):
     conflicts('+gcp', when='@:0.8')
     conflicts('+hdfs', when='@:0.10')
     conflicts('+aws', when='@:1.3')
-    conflicts('+kafka', when='@:1.5')
-    conflicts('+ignite', when='@:1.11')
+    conflicts('+kafka', when='@:1.5,2.1:')
+    conflicts('+ignite', when='@:1.11,2.1:')
     conflicts('+xla', when='@:0')
     conflicts('+gdr', when='@:1.3')
     conflicts('+verbs', when='@:1.1')
@@ -235,9 +244,14 @@ class PyTensorflow(Package, CudaPackage):
     # TODO: why is this needed?
     patch('crosstool.patch', when='@0.10.0+cuda')
     # Avoid build error: "no such package '@io_bazel_rules_docker..."
-    patch('io_bazel_rules_docker2.patch', when='@1.15.0,2.0.0')
+    patch('io_bazel_rules_docker2.patch', when='@1.15:2.0')
     # Avoide build error: "name 'new_http_archive' is not defined"
     patch('http_archive.patch', when='@1.12.3')
+    # Backport of 837c8b6b upstream
+    # "Remove contrib cloud bigtable and storage ops/kernels."
+    # Allows 2.0.* releases to build with '--config=nogcp'
+    patch('0001-Remove-contrib-cloud-bigtable-and-storage-ops-kernel.patch',
+          when='@2.0.0:2.0.1')
 
     phases = ['configure', 'build', 'install']
 
@@ -492,6 +506,11 @@ class PyTensorflow(Package, CudaPackage):
         mkdirp(tmp_path)
         env.set('TEST_TMPDIR', tmp_path)
 
+        env.set('TF_SYSTEM_LIBS', 'com_google_protobuf')
+        # NOTE: INCLUDEDIR is not just relevant to protobuf
+        # see third_party/systemlibs/jsoncpp.BUILD
+        env.set('INCLUDEDIR', spec['protobuf'].prefix.include)
+
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
         # environment variables, this interactivity is skipped. If you don't,
@@ -578,6 +597,12 @@ class PyTensorflow(Package, CudaPackage):
                 spec['nccl'].prefix.include + '"',
                 '.tf_configure.bazelrc')
 
+        # see tensorflow issue #31187 on github
+        if spec.satisfies('@2.0.0:2.0.1'):
+            filter_file(r'\#define RUY_DONOTUSEDIRECTLY_AVX512 1',
+                        '#define RUY_DONOTUSEDIRECTLY_AVX512 0',
+                        'tensorflow/lite/experimental/ruy/platform.h')
+
         if spec.satisfies('+cuda'):
             libs = spec['cuda'].libs.directories
             libs.extend(spec['cudnn'].libs.directories)
@@ -607,6 +632,16 @@ class PyTensorflow(Package, CudaPackage):
             '--color=no',
             '--jobs={0}'.format(make_jobs),
             '--config=opt',
+            # Enable verbose output for failures
+            '--verbose_failures',
+            # Show (formatted) subcommands being executed
+            '--subcommands=pretty_print',
+            # Ask bazel to explain what it's up to
+            # Needs a filename as argument
+            '--explain=explainlogfile.txt',
+            '--incompatible_no_support_tools_in_action_inputs=false',
+            # Increase verbosity of explanation,
+            '--verbose_explanations',
         ]
 
         # See .bazelrc for when each config flag is supported
@@ -641,14 +676,15 @@ class PyTensorflow(Package, CudaPackage):
             if '~hdfs' in spec:
                 args.append('--config=nohdfs')
 
+            if '~nccl' in spec:
+                args.append('--config=nonccl')
+
+        if spec.satisfies('@1.12.1:2.0'):
             if '~ignite' in spec:
                 args.append('--config=noignite')
 
             if '~kafka' in spec:
                 args.append('--config=nokafka')
-
-            if '~nccl' in spec:
-                args.append('--config=nonccl')
 
         if spec.satisfies('@1.12.1,1.14:'):
             if '+numa' in spec:
@@ -657,39 +693,18 @@ class PyTensorflow(Package, CudaPackage):
         if spec.satisfies('@2:'):
             args.append('--config=v2')
 
-        if spec.satisfies('%gcc@5:'):
-            args.append('--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0')
-
-        if spec.satisfies('@2.1:'):
-            # TODO: is this needed?
-            args.append('--define=tensorflow_mkldnn_contraction_kernel=0')
-
         args.append('//tensorflow/tools/pip_package:build_pip_package')
 
         bazel(*args)
 
         build_pip_package = Executable(
             'bazel-bin/tensorflow/tools/pip_package/build_pip_package')
-        build_pip_package(tmp_path)
+        buildpath = join_path(self.stage.source_path, 'spack-build')
+        build_pip_package('--src', buildpath)
 
     def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            for fn in glob.iglob(join_path(
-                    '../bazel-bin/tensorflow/tools/pip_package',
-                    'build_pip_package.runfiles/org_tensorflow/*')):
-                dst = os.path.basename(fn)
-                if not os.path.exists(dst):
-                    os.symlink(fn, dst)
-            for fn in glob.iglob('../tensorflow/tools/pip_package/*'):
-                dst = os.path.basename(fn)
-                if not os.path.exists(dst):
-                    os.symlink(fn, dst)
-
-            # macOS is case-insensitive, and BUILD file in directory
-            # containing setup.py causes the following error message:
-            #     error: could not create 'build': File exists
-            # Delete BUILD file to prevent this.
-            os.remove('BUILD')
+        buildpath = join_path(self.stage.source_path, 'spack-build')
+        with working_dir(buildpath):
 
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')

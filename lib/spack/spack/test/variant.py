@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -694,7 +694,7 @@ class TestVariantMapTest(object):
         c['foobar'] = SingleValuedVariant('foobar', 'fee')
         c['feebar'] = SingleValuedVariant('feebar', 'foo')
         c['shared'] = BoolValuedVariant('shared', True)
-        assert str(c) == ' feebar=foo foo=bar,baz foobar=fee +shared'
+        assert str(c) == '+shared feebar=foo foo=bar,baz foobar=fee'
 
 
 def test_disjoint_set_initialization_errors():

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Cinch(Package):
     url = "https://github.com/laristra/cinch/archive/1.0.zip"
     git      = "https://github.com/laristra/cinch.git"
 
-    version('develop', branch='master', submodules=False)
+    version('master', branch='master', submodules=False)
     version('1.0', sha256='98b73473829b478191481621d84c3d63c662da6e951321f858a032eae3ca07b7')
 
     def install(self, spec, prefix):

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -145,6 +145,9 @@ class Esmf(MakefilePackage):
         else:
             # Build an optimized version of the library.
             os.environ['ESMF_BOPT'] = 'O'
+
+        if self.spec.satisfies('%gcc@10:'):
+            os.environ['ESMF_F90COMPILEOPTS'] = '-fallow-argument-mismatch'
 
         #######
         # MPI #

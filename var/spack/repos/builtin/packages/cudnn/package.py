@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,9 +23,11 @@ class Cudnn(Package):
     maintainers = ['adamjstewart']
 
     # cuDNN 7.6.5
-    version('7.6.5.32-10.1-linux-x64',
-            sha256='7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3',
+    version('7.6.5.32-10.2-linux-x64',
+            sha256='600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20',
             preferred=True)
+    version('7.6.5.32-10.1-linux-x64',
+            sha256='7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3')
     version('7.6.5.32-10.1-osx-x64',
             sha256='8ecce28a5ed388a2b9b2d239e08d7c550f53b79288e6d9e5eb4c152bfc711aff')
     version('7.6.5.32-10.1-linux-ppc64le',
@@ -119,6 +121,9 @@ class Cudnn(Package):
     version('5.1-8.0-linux-x64',
             sha256='c10719b36f2dd6e9ddc63e3189affaa1a94d7d027e63b71c3f64d449ab0645ce')
 
+    # CUDA 10.2
+    depends_on('cuda@10.2.0:10.2.999', when='@7.6.5.32-10.2-linux-x64')
+
     # CUDA 10.1
     depends_on('cuda@10.1.0:10.1.999', when='@7.6.5.32-10.1-osx-x64')
     depends_on('cuda@10.1.0:10.1.999', when='@7.6.5.32-10.1-linux-x64')
@@ -184,6 +189,11 @@ class Cudnn(Package):
             cuda = version[2:]
 
         return url.format(directory, cuda, ver)
+
+    def setup_run_environment(self, env):
+        if 'target=ppc64le: platform=linux' in self.spec:
+            env.set('cuDNN_ROOT', os.path.join(
+                self.prefix, 'targets', 'ppc64le-linux'))
 
     def install(self, spec, prefix):
         install_tree('.', prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,3 +28,7 @@ class Falcon(PythonPackage):
     depends_on('pacbio-daligner', type='run')
     depends_on('pacbio-dextractor', type='run')
     depends_on('pacbio-damasker', type='run')
+
+    # Python version 3 and later should return
+    # a value of PyObject type. [-Wreturn-type]
+    patch('Py_None.patch', when='^python@3:')

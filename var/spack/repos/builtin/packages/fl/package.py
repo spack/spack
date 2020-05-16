@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Fl(Package):
 
     def install(self, spec, prefix):
         if (self.spec.satisfies('platform=linux') and
-           self.spec.satisfies('target=x86_64')):
+           self.spec.target.family == 'x86_64'):
             with working_dir('fl_{0}'.format(spec.version)):
                 install_tree('.', prefix)
         else:

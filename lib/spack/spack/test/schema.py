@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -107,7 +107,7 @@ def test_module_suffixes(module_suffixes_schema):
     'repos'
 ])
 def test_schema_validation(meta_schema, config_name):
-    import importlib
+    import importlib  # novm
     module_name = 'spack.schema.{0}'.format(config_name)
     module = importlib.import_module(module_name)
     schema = getattr(module, 'schema')

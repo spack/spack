@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,11 +23,17 @@ class Mstk(CMakePackage):
 
     homepage = "https://github.com/MeshToolkit/MSTK"
     git      = "https://github.com/MeshToolkit/MSTK"
-    url      = "https://github.com/MeshToolkit/MSTK/archive/3.2.1.tar.gz"
+    url      = "https://github.com/MeshToolkit/MSTK/archive/3.3.1.tar.gz"
 
     maintainers = ['raovgarimella', 'julienloiseau']
 
     version('master', branch='master')
+    version('3.3.5', sha256='64c976e12d1393aafd086ef941b176add6cfb963f463c33259596e7ef641cdd8')
+    version('3.3.4', sha256='bd34d31fc1fc468147a51e8d837d6bf9902ca8d38c7c0615e7f20968d4659da2')
+    version('3.3.3', sha256='54ea7929c9046915472f38367c83f75af634a6989ce0b89aad17fb9f4a25023e')
+    version('3.3.2', sha256='fb4ffa97af4d0a0d4771c8585d0b27538b013d8b1cfaff992e5e054fef62af0b')
+    version('3.3.1', sha256='9fdb0c33c1b68714d708b355d963547cf41332812658d4560d4db43904fc78de')
+    version('3.3.0', sha256='205c48fb5619937b5dd83788da739b7c2060155b7c41793e29ce05422b8f7dfb')
     version('3.2.1', sha256='09bc6684abb576e34c324322db6f71f8987c6ec436a54256b85ef4db40185470')
     version('3.2.0', sha256='57e58c5a7a456dbc608ce9f834a06c212a1aa64ac3ebc880ea0b8a19b000dab0')
     version('3.1.3', sha256='03f6901cd6d563e1705a173c1a2fbbef10ab9a43f533f6ba758e357c03bdfa16')
@@ -50,7 +56,7 @@ class Mstk(CMakePackage):
     conflicts('partitioner=all', when='-parallel')
     conflicts('partitioner=zoltan', when='-parallel')
 
-    # MSTK turns on METIS only for parallel buildsu
+    # MSTK turns on METIS only for parallel builds
     conflicts('partitioner=metis', when='-parallel')
 
     # dependencies

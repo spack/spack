@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class Pdt(AutotoolsPackage):
     version('3.19',   sha256='d57234077e2e999f2acf9860ea84369a4694b50cc17fa6728e5255dc5f4a2160')
     version('3.18.1', sha256='d06c2d1793fadebf169752511e5046d7e02cf3fead6135a35c34b1fee6d6d3b2')
 
+    variant('pic', default=False, description="Builds with pic")
+
     def patch(self):
         if self.spec.satisfies('%clang'):
             filter_file(r'PDT_GXX=g\+\+ ',
@@ -43,6 +45,15 @@ class Pdt(AutotoolsPackage):
             options.append('-icpc')
         elif self.compiler.name == 'pgi':
             options.append('-pgCC')
+        elif self.compiler.name == 'gcc':
+            options.append('-GNU')
+        elif self.compiler.name == 'clang':
+            options.append('-clang')
+        else:
+            raise InstallError('Unknown/unsupported compiler family')
+
+        if '+pic' in spec:
+            options.append('-useropt=' + self.compiler.cxx_pic_flag)
 
         configure(*options)
 

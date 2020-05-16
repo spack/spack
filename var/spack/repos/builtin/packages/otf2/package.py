@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,7 @@ class Otf2(AutotoolsPackage):
             'CXX={0}'.format(spack_cxx),
             'F77={0}'.format(spack_f77),
             'FC={0}'.format(spack_fc),
-            'CFLAGS={0}'.format(self.compiler.pic_flag),
-            'CXXFLAGS={0}'.format(self.compiler.pic_flag)
+            'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
+            'CXXFLAGS={0}'.format(self.compiler.cxx_pic_flag),
+            'PYTHON_FOR_GENERATOR=:',
         ]

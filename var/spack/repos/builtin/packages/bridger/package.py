@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,12 @@ from spack import *
 from os import symlink
 
 
-class Bridger(MakefilePackage):
+class Bridger(MakefilePackage, SourceforgePackage):
     """Bridger : An Efficient De novo Transcriptome Assembler For
        RNA-Seq Data"""
 
     homepage = "https://sourceforge.net/projects/rnaseqassembly/"
-    url      = "https://downloads.sourceforge.net/project/rnaseqassembly/Bridger_r2014-12-01.tar.gz"
+    sourceforge_mirror_path = "rnaseqassembly/Bridger_r2014-12-01.tar.gz"
 
     version('2014-12-01', sha256='8fbec8603ea8ad2162cbd0c658e4e0a4af6453bdb53310b4b7e0d112e40b5737')
 
