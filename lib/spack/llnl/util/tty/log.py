@@ -284,9 +284,6 @@ class log_output(object):
         # OS-level pipe for redirecting output to logger
         self.read_fd, self.write_fd = os.pipe()
 
-        os.set_inheritable(self.read_fd, True)
-        os.set_inheritable(self.write_fd, True)
-
         # Multiprocessing pipe for communication back from the daemon
         # Currently only used to save echo value between uses
         self.parent, self.child = multiprocessing.Pipe()
@@ -295,19 +292,19 @@ class log_output(object):
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
             try:
-                input_fd = os.dup(sys.stdin.fileno())
+                input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
             except BaseException:
-                input_fd = None  # just don't forward input if this fails
+                input_stream = None  # just don't forward input if this fails
 
             self.process = multiprocessing.Process(
-                target=self._writer_daemon, args=(input_fd,))
+                target=self._writer_daemon, args=(input_stream,))
             self.process.daemon = True  # must set before start()
             self.process.start()
             os.close(self.read_fd)  # close in the parent process
 
         finally:
-            if input_fd:
-                os.close(input_fd)
+            if input_stream:
+                input_stream.close()
 
         # Flush immediately before redirecting so that anything buffered
         # goes to the original stream
@@ -415,13 +412,12 @@ class log_output(object):
         sys.stdout.write(xoff)
         sys.stdout.flush()
 
-    def _writer_daemon(self, input_fd):
+    def _writer_daemon(self, stdin):
         """Daemon that writes output to the log file and stdout."""
         # Use line buffering (3rd param = 1) since Python 3 has a bug
         # that prevents unbuffered text I/O.
         in_pipe = os.fdopen(self.read_fd, 'r', 1)
         os.close(self.write_fd)
-        stdin = os.fdopen(input_fd)
 
         echo = self.echo        # initial echo setting, user-controllable
         force_echo = False      # parent can force echo for certain output
