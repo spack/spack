@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Cosma(CMakePackage):
+class Cosma(CMakePackage, CudaPackage):
     """
     Distributed Communication-Optimal Matrix-Matrix Multiplication Library
     """
@@ -24,18 +24,13 @@ class Cosma(CMakePackage):
     version('2.0.7', sha256='8d70bfcbda6239b6a8fbeaca138790bbe58c0c3aa576879480d2632d4936cf7e')
     version('2.0.2', sha256='4f3354828bc718f3eef2f0098c3bdca3499297497a220da32db1acd57920c68d')
 
-    variant('gpu', default=False,
-            description='Build with the GPU back end.')
     variant('scalapack', default=False,
             description='Build with ScaLAPACK API.')
 
     depends_on('cmake@3.12:', type='build')
     depends_on('mpi@3:')
-    depends_on('blas', when='~gpu')
+    depends_on('blas', when='~cuda')
     depends_on('scalapack', when='+scalapack')
-    # COSMA is written entirely in C/C++, it may use cublas but a CUDA capable
-    # compiler is not needed. There is no need for CudaPackage in this recipe.
-    depends_on('cuda', when='+gpu')
 
     def setup_build_environment(self, env):
         if '+cuda' in self.spec:
@@ -56,7 +51,7 @@ class Cosma(CMakePackage):
             args += ['-DCOSMA_BLAS=CUSTOM']
         elif '^openblas' in spec:
             args += ['-DCOSMA_BLAS=OPENBLAS']
-        elif '+gpu' in spec:
+        elif '+cuda' in spec:
             args += ['-DCOSMA_BLAS=CUDA']
         else:  # TODO '^rocm' in spec:
             args += ['-DCOSMA_BLAS=ROCM']
