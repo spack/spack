@@ -56,7 +56,7 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
         version = ''
         try:
             output = libtool('--version', output=str, error=os.devnull)
-            match = re.match(r'\(GNU libtool\) ([0-9.]+)', output)
+            match = re.search(r'\(GNU libtool\) ([0-9.]+)', output)
             if match:
                 version = '@' + match.group(1)
         except ProcessError:
