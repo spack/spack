@@ -45,7 +45,7 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
         # Possible executable names:
         # * autoconf, autoheader, autom4te, autoreconf, autoscan, autoupdate
         # * ifnames
-        # Take the shortest executable name and hope for the best
+        # Take the first alphabetical executable name and hope for the best
         autoconf = Executable(min(exes_in_prefix))
 
         output = autoconf('--version', output=str, error=os.devnull)
