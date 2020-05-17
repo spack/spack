@@ -47,7 +47,7 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
         """
         # Possible executable names:
         # * libtool, glibtool, libtoolize, glibtoolize
-        # Take the shortest executable name and hope for the best
+        # Take the first alphabetical executable name and hope for the best
         libtool = Executable(min(exes_in_prefix))
 
         # macOS libtool does not support the `--version` flag
