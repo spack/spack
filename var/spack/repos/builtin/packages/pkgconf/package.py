@@ -31,6 +31,33 @@ class Pkgconf(AutotoolsPackage):
     # TODO: Add a package for the kyua testing framework
     # depends_on('kyua', type='test')
 
+    executables = ['pkgconf', 'pkg-config']
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        """Allow ``spack external find pkgconf`` to locate
+        pkgconf installations.
+
+        Parameters:
+            prefix (str): the directory containing the executables
+            exes_in_prefix (set): the executables that match the regex
+
+        Returns:
+            spack.spec.Spec: the spec of this pkgconf installation
+        """
+        # Possible executable names:
+        # * pkgconf, pkg-config
+        # Take the shortest executable name and hope for the best
+        pkgconf = Executable(min(exes_in_prefix))
+
+        # Make sure this is actually pkgconf, not pkg-config
+        if 'usage: pkgconf' not in pkgconf('--help', output=str):
+            return None
+
+        version = pkgconf('--version', output=str).rstrip()
+
+        return (cls.name + '@' + version)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Adds the ACLOCAL path for autotools."""
         env.append_path('ACLOCAL_PATH', self.prefix.share.aclocal)
