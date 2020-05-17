@@ -358,6 +358,36 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 msg = '{0} not in {1}'
                 assert key in compilers, msg.format(key, spec)
 
+    @property
+    def cc(self):
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('c', None)
+        return self.spec.prefix.bin.gcc if 'languages=c' in self.spec else None
+
+    @property
+    def cxx(self):
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('cxx', None)
+        result = None
+        if 'languages=c++' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'g++')
+        return result
+
+    @property
+    def fortran(self):
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('fortran', None)
+        result = None
+        if 'languages=fortran' in self.spec:
+            result = self.spec.prefix.bin.gfortran
+        return result
+
     def url_for_version(self, version):
         # This function will be called when trying to fetch from url, before
         # mirrors are tried. It takes care of modifying the suffix of gnu
