@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
+import re
 
 
 class Libtool(AutotoolsPackage, GNUMirrorPackage):
@@ -29,6 +30,40 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
     patch('flag_space.patch', when='@develop')
 
     build_directory = 'spack-build'
+
+    executables = ['libtool']
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        """Allow ``spack external find libtool`` to locate
+        libtool installations.
+
+        Parameters:
+            prefix (str): the directory containing the executables
+            exes_in_prefix (set): the executables that match the regex
+
+        Returns:
+            spack.spec.Spec: the spec of this libtool installation
+        """
+        # Possible executable names:
+        # * libtool, glibtool, libtoolize, glibtoolize
+        # Take the shortest executable name and hope for the best
+        libtool = Executable(min(exes_in_prefix))
+
+        # macOS libtool does not support the `--version` flag
+        # It does support `-V`, but it returns the version of cctools,
+        # not the version of libtool
+        version = ''
+        try:
+            output = libtool('--version', output=str, error=os.devnull)
+            match = re.match(
+                r'g?libtool(?:ize)? \(GNU libtool(?:ize)?\) ([0-9.]+)', output)
+            if match:
+                version = '@' + match.group(1)
+        except ProcessError:
+            pass
+
+        return Spec(cls.name + version)
 
     @when('@2.4.2,develop')
     def autoreconf(self, spec, prefix):
