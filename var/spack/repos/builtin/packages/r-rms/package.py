@@ -46,4 +46,3 @@ class RRms(RPackage):
     depends_on('r-multcomp', type=('build', 'run'))
     depends_on('r-htmltable@1.11.0:', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-hmisc@4.3:', type=('build', 'run'))
