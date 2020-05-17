@@ -56,7 +56,7 @@ class Pkgconf(AutotoolsPackage):
 
         version = pkgconf('--version', output=str).rstrip()
 
-        return (cls.name + '@' + version)
+        return Spec(cls.name + '@' + version)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Adds the ACLOCAL path for autotools."""
