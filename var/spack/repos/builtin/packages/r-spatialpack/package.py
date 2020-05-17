@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSpatialpack(RPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Tools to assess the association between two spatial processes."""
 
     homepage = "https://cloud.r-project.org/package=SpatialPack"
     url      = "https://cloud.r-project.org/src/contrib/SpatialPack_0.3-8.tar.gz"
