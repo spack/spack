@@ -242,7 +242,7 @@ class Python(AutotoolsPackage):
         # Possible red herrings:
         # * python-config, python3-config, python3.7-config
         # * spack-python
-        # Take the shortest executable name and hope for the best
+        # Take the first alphabetical executable name and hope for the best
         python = Executable(min(exes_in_prefix))
         if python.name.startswith('spack-') or python.name.endswith('-config'):
             return None
