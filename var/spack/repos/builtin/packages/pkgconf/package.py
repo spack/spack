@@ -47,7 +47,7 @@ class Pkgconf(AutotoolsPackage):
         """
         # Possible executable names:
         # * pkgconf, pkg-config
-        # Take the shortest executable name and hope for the best
+        # Take the first alphabetical executable name and hope for the best
         pkgconf = Executable(min(exes_in_prefix))
 
         # Make sure this is actually pkgconf, not pkg-config
