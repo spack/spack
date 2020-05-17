@@ -37,7 +37,7 @@ class RRms(RPackage):
     depends_on('r-hmisc@4.3:', type=('build', 'run'))
     depends_on('r-survival@3.1-6', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-polspline,', type=('build', 'run'))
+    depends_on('r-polspline', type=('build', 'run'))
     depends_on('r-ggplot2@2.2:', type=('build', 'run'))
     depends_on('r-sparsem', type=('build', 'run'))
     depends_on('r-quantreg', type=('build', 'run'))
