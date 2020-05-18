@@ -14,11 +14,6 @@
 #   ~/.spack/config.yaml
 # -------------------------------------------------------------------------
 config:
-  # This is the path to the root of the Spack install tree.
-  # You can use $spack here to refer to the root of the spack instance.
-  install_tree: $spack/opt/spack
-
-
   # Locations where templates should be found
   template_dirs:
     - $spack/share/spack/templates
@@ -67,7 +62,7 @@ config:
 
   # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.
-  source_cache: $spack/var/spack/cache
+  source_cache: ~/.spack/cache/downloads
 
 
   # Cache directory for miscellaneous files, like the package index.
