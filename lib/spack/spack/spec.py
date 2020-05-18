@@ -79,6 +79,7 @@ expansion when it is the first character in an id typed on the command line.
 import base64
 import sys
 import collections
+import copy
 import hashlib
 import itertools
 import operator
@@ -1185,6 +1186,17 @@ class Spec(object):
 
         self._user_requested_providers[virtual] = spec
 
+    def reconstruct_virtuals_on_edges(self):
+        """Reconstruct virtuals on edges. Used to read from old DB
+        and reindex.
+        """
+        possible_virtuals = [x for x in self.package.dependencies
+                             if Spec(x).virtual]
+        for vspec in possible_virtuals:
+            if vspec in self:
+                name = self[vspec].name
+                self._dependencies[name].update_virtuals([vspec])
+
     #
     # Public interface
     #
@@ -1807,12 +1819,12 @@ class Spec(object):
                 dag_hash, deptypes = elt['hash'], elt['type']
                 # {}.get instead of subscripting is needed for backward
                 # compatibility. Without it reindex would fail
-                virtuals = elt.get('provides', [])
+                virtuals = elt.get('provides', None)
             else:
                 raise spack.error.SpecError(
                     "Couldn't parse dependency types in spec.")
 
-            yield dep_name, dag_hash, list(deptypes), virtuals[:]
+            yield dep_name, dag_hash, list(deptypes), copy.copy(virtuals)
 
     @staticmethod
     def from_literal(spec_dict, normal=True):
@@ -1984,7 +1996,7 @@ class Spec(object):
             raise spack.error.SpecError("YAML spec contains no nodes.")
         deps = dict((spec.name, spec) for spec in dep_list)
         spec = dep_list[0]
-
+        reconstruct_virtuals_on_edges = False
         for node in nodes:
             # get dependency dict from the node.
             name = next(iter(node))
@@ -1995,9 +2007,14 @@ class Spec(object):
             yaml_deps = node[name]['dependencies']
             for item in Spec.read_yaml_dep_specs(yaml_deps):
                 dname, dhash, dtypes, virtuals = item
+                if virtuals is None:
+                    virtuals = []
+                    reconstruct_virtuals_on_edges = True
                 deps[name]._add_dependency(
                     deps[dname], dtypes, virtuals=virtuals
                 )
+        if reconstruct_virtuals_on_edges:
+            spec.reconstruct_virtuals_on_edges()
 
         return spec
 
