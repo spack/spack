@@ -18,6 +18,7 @@ from ordereddict_backport import OrderedDict
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
+import llnl.util.lang
 
 import spack.concretize
 import spack.error
@@ -46,8 +47,17 @@ spack_env_var = 'SPACK_ENV'
 _active_environment = None
 
 
+def _env_path():
+    if spack.config.shared_spack():
+        # If this is a shared spack instance, then environments should be
+        # stored in the install tree root.
+        return os.path.join(spack.store.root, 'environments')
+    else:
+        return os.path.join(spack.paths.var_path, 'environments')
+
+
 #: path where environments are stored in the spack tree
-env_path = os.path.join(spack.paths.var_path, 'environments')
+env_path = llnl.util.lang.Singleton(_env_path)
 
 
 #: Name of the input yaml file for an environment
@@ -320,7 +330,7 @@ def get_env(args, cmd_name, required=False):
 
 def _root(name):
     """Non-validating version of root(), to be used internally."""
-    return os.path.join(env_path, name)
+    return os.path.join(str(env_path), name)
 
 
 def root(name):
@@ -373,7 +383,7 @@ def all_environment_names():
     """List the names of environments that currently exist."""
     # just return empty if the env path does not exist.  A read-only
     # operation like list should not try to create a directory.
-    if not os.path.exists(env_path):
+    if not os.path.exists(str(env_path)):
         return []
 
     candidates = sorted(os.listdir(env_path))
@@ -695,7 +705,7 @@ class Environment(object):
     @property
     def internal(self):
         """Whether this environment is managed by Spack."""
-        return self.path.startswith(env_path)
+        return self.path.startswith(str(env_path))
 
     @property
     def name(self):

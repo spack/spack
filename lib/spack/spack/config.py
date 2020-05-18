@@ -723,6 +723,14 @@ def _config():
 config = llnl.util.lang.Singleton(_config)
 
 
+def shared_spack():
+    # Note: this (and _config) assume that a shared spack instance will always
+    # define 'shared_install_trees', although it could be that an admin
+    # wants to provide a shared instance without installing any packages to
+    # that instance
+    return bool(spack.config.config.get('config:shared_install_trees'))
+
+
 def get(path, default=None, scope=None):
     """Module-level wrapper for ``Configuration.get()``."""
     return config.get(path, default, scope)
