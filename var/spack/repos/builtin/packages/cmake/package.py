@@ -2,18 +2,19 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
 import re
 import os
 
+import spack.package
 
+
+@spack.package.detectable
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
-       tools designed to build, test and package software."""
+    tools designed to build, test and package software.
+    """
     homepage = 'https://www.cmake.org'
-    url      = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
+    url = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
     maintainers = ['chuckatkins']
 
     executables = ['cmake']
@@ -162,20 +163,14 @@ class Cmake(Package):
     phases = ['bootstrap', 'build', 'install']
 
     @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        exe_to_path = dict(
-            (os.path.basename(p), p) for p in exes_in_prefix
-        )
-        if 'cmake' not in exe_to_path:
+    def determine_version(cls, exe):
+        if os.path.basename(exe) != 'cmake':
             return None
 
-        cmake = spack.util.executable.Executable(exe_to_path['cmake'])
+        cmake = spack.util.executable.Executable(exe)
         output = cmake('--version', output=str)
-        if output:
-            match = re.search(r'cmake.*version\s+(\S+)', output)
-            if match:
-                version_str = match.group(1)
-                return Spec.from_detection('cmake@{0}'.format(version_str))
+        match = re.search(r'cmake.*version\s+(\S+)', output)
+        return match.group(1) if match else None
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':

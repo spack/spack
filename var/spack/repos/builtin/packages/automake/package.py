@@ -2,13 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
 import os
 import re
 
+import spack.package
 
+
+@spack.package.detectable
 class Automake(AutotoolsPackage, GNUMirrorPackage):
     """Automake -- make file builder part of autotools"""
 
@@ -31,20 +31,13 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
     executables = ['automake']
 
     @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        exe_to_path = dict(
-            (os.path.basename(p), p) for p in exes_in_prefix
-        )
-        if 'automake' not in exe_to_path:
+    def determine_version(cls, exe):
+        if os.path.basename(exe) != 'automake':
             return None
 
-        exe = spack.util.executable.Executable(exe_to_path['automake'])
-        output = exe('--version', output=str)
-        if output:
-            match = re.search(r'GNU automake\)\s+(\S+)', output)
-            if match:
-                version_str = match.group(1)
-                return Spec.from_detection('automake@{0}'.format(version_str))
+        output = spack.util.executable.Executable(exe)('--version', output=str)
+        match = re.search(r'GNU automake\)\s+(\S+)', output)
+        return match.group(1) if match else None
 
     def patch(self):
         # The full perl shebang might be too long

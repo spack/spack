@@ -2268,9 +2268,19 @@ def detectable(decorated_cls):
 
         return sorted(specs)
 
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        spec_str = '{0}@{1}'.format(cls.name, version_str)
+        return [spack.spec.Spec.from_detection(spec_str)]
+
     detectable_packages[decorated_cls.namespace].append(decorated_cls.name)
+    default = False
     if not hasattr(decorated_cls, 'determine_spec_details'):
+        default = True
         decorated_cls.determine_spec_details = determine_spec_details
+
+    if default and not hasattr(decorated_cls, 'determine_variants'):
+        decorated_cls.determine_variants = determine_variants
 
     return decorated_cls
 
