@@ -47,6 +47,8 @@ class Paraview(CMakePackage, CudaPackage):
     variant('hdf5', default=False, description="Use external HDF5")
     variant('shared', default=True,
             description='Builds a shared version of the library')
+    variant('kits', default=True,
+            description='Use module kits')
 
     conflicts('+python', when='+python3')
     conflicts('+python', when='@5.6:')
@@ -270,6 +272,17 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DVTK_USE_X:BOOL=OFF',
                 '-DPARAVIEW_DO_UNIX_STYLE_INSTALLS:BOOL=ON',
             ])
+
+        if '+kits' in spec:
+            if spec.satisfies('@5.0:5.6'):
+                cmake_args.append(
+                    '-DVTK_ENABLE_KITS:BOOL=ON')
+            elif spec.satisfies('@5.7'):
+                cmake_args.append(
+                    '-DPARAVIEW_ENABLE_KITS:BOOL=ON')
+            else:
+                cmake_args.append(
+                    '-DPARAVIEW_BUILD_WITH_KITS:BOOL=ON')
 
         # Hide git from Paraview so it will not use `git describe`
         # to find its own version number
