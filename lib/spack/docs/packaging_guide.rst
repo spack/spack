@@ -2414,8 +2414,8 @@ Packages can provide multiple virtual dependencies and sometimes, due mainly
 to implementation details, they need to provide them simultaneously. A good
 example for such a case is ``openblas``. This package provides both the ``lapack``
 and ``blas`` APIs in a single library called ``libopenblas`` therefore, if a
-spec is using ``openblas`` for one of the two virtuals, it needs to use it
-also for the other.
+spec is using ``openblas`` for one of the two virtuals, it must use it
+for the other, as well.
 
 To express this constraint in a package, the two virtual dependencies must be
 listed in the same ``provides`` directive:
