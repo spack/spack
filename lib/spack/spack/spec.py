@@ -1410,7 +1410,7 @@ class Spec(object):
         self._prefix = spack.util.prefix.Prefix(value)
 
     @property
-    def providers(self):
+    def _providers(self):
         try:
             return spack.provider_index.IndexWithBindings(
                 self.traverse(), self._user_requested_providers
@@ -2350,8 +2350,8 @@ class Spec(object):
 
         # Check that there are no inconsistencies with providers
         # providing multiple virtual dependencies together
-        for virtual_dep in list(self.providers):
-            provider_spec = self.providers.providers_for(virtual_dep)[0]
+        for virtual_dep in list(self._providers):
+            provider_spec = self._providers.providers_for(virtual_dep)[0]
             vdeps = spack.provider_index.used_together(
                 provider_spec, virtual_dep
             )
@@ -3331,7 +3331,7 @@ class Spec(object):
                 itertools.chain(
                     # Regular specs
                     (x for x in self.traverse() if x.name == name),
-                    self.providers.providers_for(name)
+                    self._providers.providers_for(name)
                 )
             )
         except StopIteration:
