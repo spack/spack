@@ -10,7 +10,7 @@ class Ipopt(AutotoolsPackage):
     """Ipopt (Interior Point OPTimizer, pronounced eye-pea-Opt) is a
        software package for large-scale nonlinear optimization."""
     homepage = "https://projects.coin-or.org/Ipopt"
-    url      = "http://www.coin-or.org/download/source/Ipopt/Ipopt-3.12.4.tgz"
+    url      = "https://www.coin-or.org/download/source/Ipopt/Ipopt-3.12.4.tgz"
 
     version('3.12.10', sha256='e1a3ad09e41edbfe41948555ece0bdc78757a5ca764b6be5a9a127af2e202d2e')
     version('3.12.9', sha256='8ff3fe1a8560896fc5559839a87c2530cac4ed231b0806e487bfd3cf2d294ab8')
