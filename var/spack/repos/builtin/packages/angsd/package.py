@@ -20,12 +20,16 @@ class Angsd(MakefilePackage):
     version('0.921', sha256='8892d279ce1804f9e17fe2fc65a47e5498e78fc1c1cb84d2ca2527fd5c198772')
     version('0.919', sha256='c2ea718ca5a5427109f4c3415e963dcb4da9afa1b856034e25c59c003d21822a')
 
+    variant('r', default=True, description='Enable R dependency')
+
     depends_on('htslib')
     conflicts('^htslib@1.6:', when='@0.919')
 
     depends_on('zlib')
     depends_on('lzma')
     depends_on('curl')
+
+    depends_on('r', type='run', when='+rlib')
 
     def setup_run_environment(self, env):
         env.set('R_LIBS', self.prefix.R)
