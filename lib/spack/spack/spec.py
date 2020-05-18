@@ -1981,7 +1981,6 @@ class Spec(object):
                     dag_node, dependency_types = spec_and_dependency_types(s)
 
                 dependency_spec = spec_builder({dag_node: s_dependencies})
-                # FIXME: check "virtuals" argument
                 spec._add_dependency(
                     dependency_spec, dependency_types, virtuals=[]
                 )
