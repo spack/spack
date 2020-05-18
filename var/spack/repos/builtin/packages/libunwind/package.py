@@ -32,6 +32,8 @@ class Libunwind(AutotoolsPackage):
             description='Support zlib compressed symbol tables '
             '(1.5 and later).')
 
+    patch('gcc.patch', when=':@1.6 %gcc@10.0:')
+
     # The libunwind releases contain the autotools generated files,
     # but the git repo snapshots do not.
     depends_on('autoconf', type='build', when='@master,1.4-head,1.5-head')
