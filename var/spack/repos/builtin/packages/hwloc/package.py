@@ -27,6 +27,8 @@ class Hwloc(AutotoolsPackage):
     list_depth = 2
     git = 'https://github.com/open-mpi/hwloc.git'
 
+    maintainers = ['bgoglin']
+
     version('master', branch='master')
     version('2.2.0', sha256='2defba03ddd91761b858cbbdc2e3a6e27b44e94696dbfa21380191328485a433')
     version('2.1.0',  sha256='1fb8cc1438de548e16ec3bb9e4b2abb9f7ce5656f71c0906583819fcfa8c2031')
