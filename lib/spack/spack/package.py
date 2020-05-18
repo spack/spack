@@ -11,6 +11,7 @@ packages.
 
 """
 import base64
+import collections
 import contextlib
 import copy
 import functools
@@ -23,19 +24,12 @@ import sys
 import textwrap
 import time
 import traceback
-from six import StringIO
-from six import string_types
-from six import with_metaclass
-from ordereddict_backport import OrderedDict
 
 import llnl.util.tty as tty
-
-import spack.config
-import spack.paths
-import spack.store
 import spack.compilers
-import spack.directives
+import spack.config
 import spack.dependency
+import spack.directives
 import spack.directory_layout
 import spack.error
 import spack.fetch_strategy as fs
@@ -43,15 +37,19 @@ import spack.hooks
 import spack.mirror
 import spack.mixins
 import spack.multimethod
+import spack.paths
 import spack.repo
+import spack.store
 import spack.url
 import spack.util.environment
 import spack.util.web
-import spack.multimethod
-
 from llnl.util.filesystem import mkdirp, touch, working_dir
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
+from ordereddict_backport import OrderedDict
+from six import StringIO
+from six import string_types
+from six import with_metaclass
 from spack.filesystem_view import YamlFilesystemView
 from spack.installer import \
     install_args_docstring, PackageInstaller, InstallError
@@ -2233,6 +2231,48 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
         pkg.possible_dependencies(visited=visited, **kwargs)
 
     return visited
+
+
+#: Registers which are the detectable packages, by repo and package name
+detectable_packages = collections.defaultdict(list)
+
+
+def detectable(decorated_cls):
+    """Mark a package class as detectable and add a default implementation
+    for detection logic.
+
+    The decorator registers the class as detectable and attaches to it a
+    default implementation of ``determine_spec_details``.
+
+    Args:
+        decorated_cls: class to be decorated
+
+    Returns:
+        Decorated class
+    """
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        exes_by_version = collections.defaultdict(list)
+        # The default filter function is the identity function for the
+        # list of executables
+        filter_fn = getattr(cls, 'filter_detected_exes', lambda x, exes: exes)
+        exes_in_prefix = filter_fn(prefix, exes_in_prefix)
+        for exe in exes_in_prefix:
+            version_str = cls.determine_version(exe)
+            if version_str:
+                exes_by_version[version_str].append(exe)
+
+        specs = []
+        for version_str, exes in exes_by_version.items():
+            specs.extend(cls.determine_variants(exes, version_str))
+
+        return sorted(specs)
+
+    detectable_packages[decorated_cls.namespace].append(decorated_cls.name)
+    if not hasattr(decorated_cls, 'determine_spec_details'):
+        decorated_cls.determine_spec_details = determine_spec_details
+
+    return decorated_cls
 
 
 class FetchError(spack.error.SpackError):

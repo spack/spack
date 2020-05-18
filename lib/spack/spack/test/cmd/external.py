@@ -182,3 +182,8 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
             'prefix': '/preexisting-prefix/'} in pkg_externals
     assert {'spec': 'find-externals1@1.2',
             'prefix': '/x/y2/'} in pkg_externals
+
+
+def test_list_detectable_packages(mutable_config, mutable_mock_repo):
+    external("list")
+    assert external.returncode == 0

@@ -2,19 +2,20 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import collections
 import glob
 import itertools
 import os
 import re
 import sys
 
+import llnl.util.tty as tty
+import spack.package
 import spack.util.executable
-from llnl.util import tty
+
 from spack.operating_systems.mac_os import macos_version, macos_sdk_path
 
 
+@spack.package.detectable
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Compiler Collection includes front ends for C, C++, Objective-C,
     Fortran, Ada, and Go, as well as libraries for these languages."""
@@ -276,21 +277,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         names = [r'gcc', r'[^\w]?g\+\+', r'gfortran']
         suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d', r'\d\d']
         return [r''.join(x) for x in itertools.product(names, suffixes)]
-
-    @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        exes_by_version = collections.defaultdict(list)
-        exes_in_prefix = cls.filter_detected_exes(prefix, exes_in_prefix)
-        for exe in exes_in_prefix:
-            version_str = cls.determine_version(exe)
-            if version_str:
-                exes_by_version[version_str].append(exe)
-
-        specs = []
-        for version_str, exes in exes_by_version.items():
-            specs.extend(cls.determine_variants(exes, version_str))
-
-        return specs
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):

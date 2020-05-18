@@ -2,13 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
 import os
 import re
 
+import spack.package
 
+
+@spack.package.detectable
 class FindExternals1(AutotoolsPackage):
     executables = ['find-externals1-exe']
 

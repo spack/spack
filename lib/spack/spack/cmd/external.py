@@ -2,22 +2,24 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from __future__ import print_function
-from collections import defaultdict, namedtuple
+
 import argparse
 import os
 import re
-import six
+import sys
+from collections import defaultdict, namedtuple
 
+import llnl.util.filesystem
+import llnl.util.tty as tty
+import llnl.util.tty.colify as colify
+import six
 import spack
 import spack.error
-import llnl.util.tty as tty
-import spack.util.spack_yaml as syaml
 import spack.util.environment
-import llnl.util.filesystem
+import spack.util.spack_yaml as syaml
 
-description = "add external packages to Spack configuration"
+description = "Manage external packages in Spack configuration"
 section = "config"
 level = "short"
 
@@ -26,11 +28,17 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='external_command')
 
-    find_parser = sp.add_parser('find', help=external_find.__doc__)
+    find_parser = sp.add_parser(
+        'find', help='add external packages to packages.yaml'
+    )
     find_parser.add_argument(
         '--not-buildable', action='store_true', default=False,
         help="packages with detected externals won't be built with Spack")
     find_parser.add_argument('packages', nargs=argparse.REMAINDER)
+
+    _ = sp.add_parser(
+        'list', help='list detectable packages, by repository and name'
+    )
 
 
 def is_executable(path):
@@ -282,7 +290,16 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
     return pkg_to_entries
 
 
-def external(parser, args):
-    action = {'find': external_find}
+def external_list(args):
+    # Trigger a read of all packages, might take a long time.
+    list(spack.repo.path.all_packages())
+    # Print all the detectable packages
+    tty.msg("Detectable packages per repository")
+    for namespace, pkgs in sorted(spack.package.detectable_packages.items()):
+        print("Repository:", namespace)
+        colify.colify(pkgs, indent=4, output=sys.stdout)
 
+
+def external(parser, args):
+    action = {'find': external_find, 'list': external_list}
     action[args.external_command](args)
