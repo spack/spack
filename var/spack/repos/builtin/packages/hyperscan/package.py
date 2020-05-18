@@ -29,7 +29,3 @@ class Hyperscan(CMakePackage):
     depends_on('boost')
     depends_on('pcre')
     depends_on('ragel', type='build')
-
-    def cmake_args(self):
-        args = []
-        return args
