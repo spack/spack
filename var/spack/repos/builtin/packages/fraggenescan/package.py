@@ -19,7 +19,7 @@ class Fraggenescan(MakefilePackage):
     build_targets = ['fgs']
 
     def edit(self, spec, prefix):
-        filter_file('gcc', self.compiler.cc, 'Makefile', string=True)
+        filter_file('gcc', spack_cc, 'Makefile', string=True)
 
     def install(self, spec, prefix):
         install_tree('.', prefix.bin)
