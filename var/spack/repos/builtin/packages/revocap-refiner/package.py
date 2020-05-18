@@ -24,7 +24,7 @@ class RevocapRefiner(MakefilePackage):
 
     def edit(self, spec, prefix):
         cflags = ['-O']
-        cxxflags = ['-O',  self.compiler.pic_flag]
+        cxxflags = ['-O',  self.compiler.cxx_pic_flag]
         fflags = ['']
         ldshare = ['']
         libs = ['-lstdc++']
