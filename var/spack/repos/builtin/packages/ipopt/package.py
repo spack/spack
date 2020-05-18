@@ -12,7 +12,6 @@ class Ipopt(AutotoolsPackage):
     homepage = "https://projects.coin-or.org/Ipopt"
     url      = "https://github.com/coin-or/Ipopt/archive/releases/3.13.2.tar.gz"
 
-
     version('3.13.2',  sha256='891ab9e9c7db29fc8ac5c779ccec6313301098de7bbf735ca230cd5544c49496')
     version('3.13.1',  sha256='64fc63a3fe27cf5efaf17ebee861f7db5bf70aacf9c316c0d37e4beb4eb72e11')
     version('3.13.0',  sha256='dc392396be28c4a0d49bfab399320cb3f70db5b8f090028a883d826a47744ecf')
