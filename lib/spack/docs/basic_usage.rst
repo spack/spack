@@ -1206,7 +1206,16 @@ for ``lapack`` and ``blas``:
        ^openblas@0.3.9%gcc@9.0.1~consistent_fpcsr~ilp64+pic+shared threads=none arch=linux-ubuntu18.04-broadwell
 
 The ``^<virtual>=<spec>`` syntax tells Spack to use ``<spec>`` to satisfy the
-requested virtual, and to only use other virtuals provided by it as a last resort.
+requested virtual (so ``^mpi=intel-parallel-studio`` tells Spack to use
+``intel-parallel-studio`` as the ``mpi`` provider) and to consider its other virtual
+dependencies after any other explicitly mentioned package. Adding ``^openblas``
+to the spec thus means that ``openblas`` will then be used for ``lapack``, and
+``blas`` because it is specified explicitly.
+
+In this example, that covers all the virtual dependencies, but if there were other
+virtual dependencies, Spack could try to satisfy them with ``intel-parallel-studio``.
+For instance, if another package depended on ``tbb`` or ``daal`` (which ``intel-parallel-studio``
+also provides), Spack could use ``intel-parallel-studio`` to satisfy them as a last resort.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Specifying Specs by Hash
