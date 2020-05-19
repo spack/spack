@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import datetime
 
 
 class HttpPing(MakefilePackage):
@@ -13,7 +14,12 @@ class HttpPing(MakefilePackage):
     homepage = "http://www.acme.com/software/http_ping/"
     url      = "http://www.acme.com/software/http_ping/http_ping_09Mar2016.tar.gz"
 
-    version('09Mar2016', sha256='6bdc570c776a760d2c08f7d18e00b0edd74cf603400929c66c512801b6bb5871')
+    version('2016-03-09', sha256='6bdc570c776a760d2c08f7d18e00b0edd74cf603400929c66c512801b6bb5871')
+
+    def url_for_version(self, version):
+        ver = datetime.datetime.strptime(str(version), '%Y-%m-%d').date()
+        verstr = datetime.datetime.strftime(ver, '%d%b%Y')
+        return "http://www.acme.com/software/http_ping/http_ping_{0}.tar.gz".format(verstr)
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
