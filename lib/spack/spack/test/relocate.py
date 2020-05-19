@@ -253,6 +253,8 @@ def test_replace_prefix_bin(hello_world):
     # Check that the RPATHs changed
     patchelf = spack.util.executable.which('patchelf')
     output = patchelf('--print-rpath', str(executable), output=str)
+
+    # Some compilers add rpaths so ensure changes included in final result
     assert '/foo/lib:/foo/lib64' in output
 
 
@@ -280,6 +282,8 @@ def test_relocate_elf_binaries_absolute_paths(hello_world, tmpdir):
     # Check that the RPATHs changed
     patchelf = spack.util.executable.which('patchelf')
     output = patchelf('--print-rpath', str(new_binary), output=str)
+
+    # Some compilers add rpaths so ensure changes included in final result
     assert '/foo/lib:/usr/lib64' in output
 
 
@@ -307,4 +311,6 @@ def test_relocate_elf_binaries_relative_paths(hello_world, tmpdir):
     # Check that the RPATHs changed
     patchelf = spack.util.executable.which('patchelf')
     output = patchelf('--print-rpath', str(new_binary), output=str)
+
+    # Some compilers add rpaths so ensure changes included in final result
     assert '/foo/lib:/foo/lib64:/opt/local/lib' in output
