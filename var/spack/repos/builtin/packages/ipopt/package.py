@@ -9,20 +9,22 @@ from spack import *
 class Ipopt(AutotoolsPackage):
     """Ipopt (Interior Point OPTimizer, pronounced eye-pea-Opt) is a
        software package for large-scale nonlinear optimization."""
-    homepage = "https://github.com/coin-or/Ipopt"
-    url      = "https://github.com/coin-or/Ipopt/archive/releases/3.13.2.tar.gz"
 
-    version('3.13.2',  sha256='891ab9e9c7db29fc8ac5c779ccec6313301098de7bbf735ca230cd5544c49496')
-    version('3.13.1',  sha256='64fc63a3fe27cf5efaf17ebee861f7db5bf70aacf9c316c0d37e4beb4eb72e11')
-    version('3.13.0',  sha256='dc392396be28c4a0d49bfab399320cb3f70db5b8f090028a883d826a47744ecf')
-    version('3.12.13', sha256='ab8b9457dc6c7240a45e74b4a3851821ccafc2927cfa5c8998e95941d67a94d0')
-    version('3.12.12', sha256='7587c21f48bc85ae3a84d544fc67cff0d61c41bf2168879f46f7500ee5cabf73')
-    version('3.12.11', sha256='d2c402b9e760f8a20314324ff967b8a3dee73d5bcf3739dd8c06a9f2e99da927')
-    version('3.12.10', sha256='dfd29dc95ec815e1ff0a3b7dc86ecc8944b24977e40724c35dac25aa192ac3cd')
-    version('3.12.9',  sha256='af2b65338d388c9b5528cc3952ecf8d943c46564b6705087d964d0fcdb79a552')
-    version('3.12.8',  sha256='fa120112cd3722927f4c9ab3fb7eff9a25638ea28d467874854779a81c7cdde8')
-    version('3.12.7',  sha256='f20017c8e880ec1e55d3efbb615209dfe28a58d0ec5147ce9490fe90afe9d445')
-    version('3.12.6',  sha256='6e7253705d5c2d1e9bab2dad9f6b0658439cc83f1c51b923aac056bd26bc0f6f')
+    homepage = "https://github.com/coin-or/Ipopt"
+    url      = "https://www.coin-or.org/download/source/Ipopt/Ipopt-3.13.2.tgz"
+    #Alternative: url      = "https://github.com/coin-or/Ipopt/archive/releases/3.13.2.tar.gz"
+
+    version('3.12.10', sha256='e1a3ad09e41edbfe41948555ece0bdc78757a5ca764b6be5a9a127af2e202d2e')
+    version('3.12.9', sha256='8ff3fe1a8560896fc5559839a87c2530cac4ed231b0806e487bfd3cf2d294ab8')
+    version('3.12.8', sha256='62c6de314220851b8f4d6898b9ae8cf0a8f1e96b68429be1161f8550bb7ddb03')
+    version('3.12.7', sha256='9c8b02149fa4f0cdf63e838ae68f86aa41a577d7f05932139eede9179f314861')
+    version('3.12.6', sha256='6aaa6bd862d54eba6fb966950fa6928ca01d66cf4cb842b2f41a7ebfa61eee2b')
+    version('3.12.5', sha256='53e7af6eefcb6de1f8e936c9c887c7bcb5a9fa4fcf7673a227f16de131147325')
+    version('3.12.4', sha256='292afd952c25ec9fe6225041683dcbd3cb76e15a128764671927dbaf881c2e89')
+    version('3.12.3', sha256='754fb9473bc683b59a53d2057ff852d0a8d56198bcdba2e2529ce299243fdaa5')
+    version('3.12.2', sha256='3903657788bff7d7743f8bb25c34ccf91c445e72a4710cb821c024107bd1b474')
+    version('3.12.1', sha256='d6c18f7c5bf486712b493167d27ec6e940ad376c5b903b97acc5a3ade1c0a3ef')
+    version('3.12.0', sha256='ed19e5e7174355e93c93c798b5056036e2fd2ec78cf0f3954876483f74fe618b')
 
     variant('coinhsl', default=False,
             description="Build with Coin Harwell Subroutine Libraries")
