@@ -11,7 +11,7 @@ class PyGeant4(CMakePackage):
 
     homepage = "http://geant4.cern.ch/"
     git = "https://gitlab.cern.ch/geant4/geant4.git"
-    url = "https://gitlab.cern.ch/geant4/geant4/-/archive/v10.6.0/geant4-v10.6.0.tar.gz"
+    url = "https://gitlab.cern.ch/geant4/geant4/-/archive/v10.6.1/geant4-v10.6.1.tar.gz"
 
     variant('cxxstd',
             default='11',
@@ -41,7 +41,7 @@ class PyGeant4(CMakePackage):
     depends_on('xerces-c cxxstd=17', when='cxxstd=17')
 
     depends_on('boost +python')
-    depends_on('python')
+    extends('python')
     depends_on('root')
 
     root_cmakelists_dir = 'environments/g4py'
