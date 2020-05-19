@@ -21,6 +21,8 @@ class Icarus(AutotoolsPackage):
     depends_on('readline @4.2:', type=('build', 'link'))
     depends_on('zlib', type=('build', 'link'))
 
+    patch('fix-gcc-10.patch', when='@v10_3')
+
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autoconf.sh')
