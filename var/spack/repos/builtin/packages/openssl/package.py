@@ -154,3 +154,6 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             if os.path.isdir(sys_certs) and not os.path.islink(pkg_certs):
                 os.rmdir(pkg_certs)
                 os.symlink(sys_certs, pkg_certs)
+
+    def setup_build_environment(self, env):
+        env.set('PERL', self.spec['perl'].prefix.bin.perl)
