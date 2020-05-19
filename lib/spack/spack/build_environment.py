@@ -538,7 +538,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
 
     # TODO: Compiler arguments should not be hardcoded but provided by
     #       the different compiler classes.
-    if 'linux' in arch:
+    if 'linux' in arch or 'cray' in arch:
         soname = os.path.basename(shared_lib)
 
         if compat_version:
