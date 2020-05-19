@@ -34,18 +34,7 @@ import spack.util.web as web_util
 
 
 JOB_RETRY_CONDITIONS = [
-    'unknown_failure',
-    'api_failure',
-    'stuck_or_timeout_failure',
-    'runner_system_failure',
-    'missing_dependency_failure',
-    'runner_unsupported',
-    'stale_schedule',
-    'job_execution_timeout',
-    'archived_failure',
-    'unmet_prerequisites',
-    'scheduler_failure',
-    'data_integrity_failure',
+    'always',
 ]
 
 spack_gpg = SpackCommand('gpg')
@@ -505,10 +494,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         if not custom_spack_ref:
             custom_spack_ref = 'master'
         before_script = [
-            ('git clone "{0}" --branch "{1}" --depth 1 '
-             '--single-branch'.format(custom_spack_repo, custom_spack_ref)),
-            # Next line just shows spack version in pipeline output
-            'pushd ./spack && git rev-parse HEAD && popd',
+            ('git clone "{0}"'.format(custom_spack_repo)),
+            'pushd ./spack && git checkout "{0}" && popd'.format(
+                custom_spack_ref),
             '. "./spack/share/spack/setup-env.sh"',
         ]
         after_script = [
