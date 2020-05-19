@@ -180,7 +180,7 @@ spack package at this time.''',
         env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
-        if 'platform=cray' in self.spec:
+        if self.spec.external_module and 'cray' in self.spec.external_module:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx
             self.spec.mpifc = spack_fc
