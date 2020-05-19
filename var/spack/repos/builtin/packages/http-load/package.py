@@ -13,7 +13,7 @@ class HttpLoad(MakefilePackage):
     homepage = "http://www.acme.com/software/http_load/"
     url      = "http://www.acme.com/software/http_load/http_load-09Mar2016.tar.gz"
 
-    version('2016-05-09', sha256='a2bf118d88f6acd2a082cbf275d141538149caaa0a4ce1bcc66680668e781306')
+    version('2016-03-09', sha256='a2bf118d88f6acd2a082cbf275d141538149caaa0a4ce1bcc66680668e781306')
 
     def url_for_version(self, version):
         ver = datetime.datetime.strptime(str(version), '%Y-%m-%d').date()
