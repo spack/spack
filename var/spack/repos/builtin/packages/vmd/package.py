@@ -10,6 +10,7 @@ import os
 class Vmd(Package):
     """VMD provides user-editable materials which can be applied
     to molecular geometry.
+
     These material properties control the details of how VMD shades
     the molecular geometry, and how transparent or opaque the displayed
     molecular geometry is. With this feature, one can easily create nice
