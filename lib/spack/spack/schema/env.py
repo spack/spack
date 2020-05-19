@@ -79,17 +79,7 @@ schema = {
                         'additionalProperties': False,
                         'patternProperties': {
                             r'\w[\w-]*': {
-                                'type': 'object',
-                                'required': ['source', 'version'],
-                                'additionalProperties': False,
-                                'properties': {
-                                    'source': {
-                                        'type': 'string',
-                                    },
-                                    'version': {
-                                        'type': 'string',
-                                    },
-                                },
+                                'type': 'string',
                             },
                         },
                     },

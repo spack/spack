@@ -708,6 +708,15 @@ class Environment(object):
         configuration = config_dict(self.yaml)
         self.concretization = configuration.get('concretization')
 
+        # Retrieve dev-build packages:
+        dev_builds = configuration['dev-build']
+        self.dev_specs = {}
+        for a_spec, path in dev_builds.items():
+            # Path must exist and spec must include version
+            assert Spec(a_spec).version
+            assert os.path.exists(path)
+            self.dev_specs[a_spec] = path
+
     @property
     def user_specs(self):
         return self.spec_lists[user_speclist_name]
@@ -723,6 +732,7 @@ class Environment(object):
 
     def clear(self):
         self.spec_lists = {user_speclist_name: SpecList()}  # specs from yaml
+        self.dev_specs = {}               # dev-build specs from yaml
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []       # roots of last concretize, in order
         self.specs_by_hash = {}           # concretized specs by hash
@@ -976,6 +986,40 @@ class Environment(object):
                 dag_hash = self.concretized_order[i]
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
+
+    def develop(self, spec, path):
+        """Add dev-build info for spec, set to version and path.
+
+        Returns False if it already existed.
+        Returns True if no entry existed.
+        Returns "path" if only the path was updated
+        """
+        ret = True
+
+        for idx, entry in enumerate(self.dev_specs.items()):
+            e_spec, e_path = entry
+            # check string equality first for easy path
+            if spec == e_spec or Spec(e_spec) == Spec(spec):
+                same_path = e_config['source'] == path
+                if same_path:
+                    return False
+                else:
+                    ret = 'path'
+                    spec = e_spec  # no duplicate entries for "spelling" diffs
+
+        # If it wasn't already in the list, append it
+        self.dev_specs[spec] = path
+        return ret
+
+    def undevelop(self, spec):
+        """Remove dev-build info for abstract spec ``spec``.
+
+        returns True on success, False if no entry existed."""
+        spec = str(spec)  # In case it's a spec object
+        if spec in self.dev_specs:
+            del self.dev_specs[spec]
+            return True
+        return False
 
     def concretize(self, force=False):
         """Concretize user_specs in this environment.
@@ -1263,25 +1307,14 @@ class Environment(object):
         # "spec" must be concrete
         package = spec.package
 
-        dev_builds = config_dict(self.yaml).get('dev-build', {})
-        if spec.name in dev_builds:
-            dev_info = dev_builds[spec.name]
-            # Check that the version matches the dev-build version
-            # if the user provides a dev-build version
-            version = dev_info['version']
-            version_prefix = '' if version[0] == '@' else '@'
-            version = version_prefix + version
-            if not spec.satisfies(version):
-                raise SpackEnvironmentError(
-                    "Spec for '%s' must match dev-build version '%s'" %
-                    (spec.name, version))
+        for dev_spec, path in self.dev_specs.items():
+            if spec.satisfies(dev_spec, strict=True):
+                source_path = os.path.abspath(path)
+                package.stage = spack.stage.DIYStage(source_path)
 
-            # Get source from specified path instead of downloading
-            source_path = os.path.abspath(dev_info['source'])
-            package.stage = spack.stage.DIYStage(source_path)
-
-            # Don't delete dev-build stages
-            install_args['keep_stage'] = True
+                # Don't delete dev-build stages
+                install_args['keep_stage'] = True
+                break
 
         package.do_install(**install_args)
 
@@ -1609,6 +1642,10 @@ class Environment(object):
         else:
             view = False
         yaml_dict['view'] = view
+
+        if self.dev_specs:
+            yaml_dict['dev-build'] = self.dev_specs
+
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident
         with fs.temp_cwd() as env_dir:
