@@ -170,18 +170,13 @@ def test_env_modifications_error_on_activate(
 
     e = ev.read('test')
     with e:
-        install('cmake-client')
+        install('trivial-install-test-package-broken-runtime')
 
-    def setup_error(pkg, env):
-        raise RuntimeError("cmake-client had issues!")
-
-    pkg = spack.repo.path.get_pkg_class("cmake-client")
-    monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
     with e:
         pass
 
     _, err = capfd.readouterr()
-    assert "cmake-client had issues!" in err
+    assert "runtime setup had issues!" in err
     assert "Warning: couldn't get environment settings" in err
 
 
