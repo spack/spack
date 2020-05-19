@@ -118,6 +118,11 @@ class Adios2(CMakePackage):
     # See https://github.com/ornladios/ADIOS2/pull/1899
     patch('2.5-fix-clear_cache.patch', when='@2.5.0')
 
+    def setup_build_environment(self, env):
+        # https://github.com/ornladios/ADIOS2/issues/2228
+        if self.spec.satisfies('%gcc@10: +fortran'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
+
     def cmake_args(self):
         spec = self.spec
 

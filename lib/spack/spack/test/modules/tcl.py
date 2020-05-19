@@ -142,18 +142,41 @@ class TestTcl(object):
         assert len([x for x in content if 'is-loaded' in x]) == 1
         assert len([x for x in content if 'module load ' in x]) == 1
 
-    def test_naming_scheme(self, factory, module_configuration):
+    def test_projections_specific(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
 
         # This configuration has no error, so check the conflicts directives
         # are there
-        module_configuration('conflicts')
+        module_configuration('projections')
 
         # Test we read the expected configuration for the naming scheme
         writer, _ = factory('mpileaks')
-        expected = '{name}/{version}-{compiler.name}'
+        expected = {
+            'all': '{name}/{version}-{compiler.name}',
+            'mpileaks': '{name}-mpiprojection'
+        }
 
-        assert writer.conf.naming_scheme == expected
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections['mpileaks'])
+        assert projection in writer.layout.use_name
+
+    def test_projections_all(self, factory, module_configuration):
+        """Tests reading the correct naming scheme."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration('projections')
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory('libelf')
+        expected = {
+            'all': '{name}/{version}-{compiler.name}',
+            'mpileaks': '{name}-mpiprojection'
+        }
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections['all'])
+        assert projection in writer.layout.use_name
 
     def test_invalid_naming_scheme(self, factory, module_configuration):
         """Tests the evaluation of an invalid naming scheme."""

@@ -11,14 +11,18 @@ class PyTensorflow(Package, CudaPackage):
     """
 
     homepage = "https://www.tensorflow.org"
-    url      = "https://github.com/tensorflow/tensorflow/archive/v2.1.0.tar.gz"
+    url      = "https://github.com/tensorflow/tensorflow/archive/v2.2.0.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = ['tensorflow']
 
+    version('2.2.0',  sha256='69cd836f87b8c53506c4f706f655d423270f5a563b76dc1cfa60fbc3184185a3')
+    version('2.1.1',  sha256='a200bc16e4b630db3ac7225bcb6f239a76841967b0aec1d7d7bbe44dc5661318')
     version('2.1.0',  sha256='638e541a4981f52c69da4a311815f1e7989bf1d67a41d204511966e1daed14f7')
+    version('2.0.2',  sha256='a548742bbafd302eec51e2794d7687674a64f6b10ce1414073858cb83c0cefc2')
     version('2.0.1',  sha256='29197d30923b9670992ee4b9c6161f50c7452e9a4158c720746e846080ac245a')
     version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617')
+    version('1.15.3', sha256='9ab1d92e58eb813922b040acc7622b32d73c2d8d971fe6491a06f9df4c778151')
     version('1.15.2', sha256='d95d75d26a298211b5e802842e87fda5b8b14f6ad83719377b391e5fb71b8746')
     version('1.15.1', sha256='19b6e72bc8675937f618cede364d7228a71c2eeaffc42801bcefd98dda7ca056')
     version('1.15.0', sha256='a5d49c00a175a61da7431a9b289747d62339be9cf37600330ad63b611f7f5dc9')
@@ -82,6 +86,7 @@ class PyTensorflow(Package, CudaPackage):
     variant('dynamic_kernels', default=False, description='Build kernels into separate shared objects')
 
     extends('python')
+    depends_on('python@3:', type=('build', 'run'), when='@2.1:')
 
     # TODO: Older versions of TensorFlow don't list the viable version range,
     # just the minimum version of bazel that will work. The latest version of
@@ -89,7 +94,8 @@ class PyTensorflow(Package, CudaPackage):
     # Need to investigate further.
 
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
-    depends_on('bazel@0.27.1:0.29.1', type='build', when='@2.1:')
+    depends_on('bazel@2.0.0',         type='build', when='@2.2:')
+    depends_on('bazel@0.27.1:0.29.1', type='build', when='@2.1.0:2.1.999')
     depends_on('bazel@0.24.1:0.26.1', type='build', when='@1.15:2.0')
     # See call to check_bazel_version in configure.py
     depends_on('bazel@0.24.1:0.25.2', type='build', when='@1.14.0')
@@ -116,18 +122,22 @@ class PyTensorflow(Package, CudaPackage):
     # Listed under REQUIRED_PACKAGES in tensorflow/tools/pip_package/setup.py
     depends_on('py-absl-py@0.7.0:', type=('build', 'run'), when='@1.12.1,1.14:')
     depends_on('py-absl-py@0.1.6:', type=('build', 'run'), when='@1.5:')
-    depends_on('py-astor@0.6.0:', type=('build', 'run'), when='@1.6:')
+    depends_on('py-astunparse@1.6.3', type=('build', 'run'), when='@2.2:')
+    depends_on('py-astor@0.6.0:', type=('build', 'run'), when='@1.6:2.1')
     depends_on('py-backports-weakref@1.0:', type=('build', 'run'), when='@1.3: ^python@:3.3')
     depends_on('py-backports-weakref@1.0rc1', type=('build', 'run'), when='@1.2.0:1.2.1')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.5: ^python@:3.3')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.4.0:1.4.1')
-    depends_on('py-gast@0.2.2', type=('build', 'run'), when='@1.15:')
-    depends_on('py-gast@0.2.0:', type=('build', 'run'), when='@1.6:')
+    depends_on('py-gast@0.3.3', type=('build', 'run'), when='@2.2:')
+    depends_on('py-gast@0.2.2', type=('build', 'run'), when='@1.15:2.1')
+    depends_on('py-gast@0.2.0:', type=('build', 'run'), when='@1.6:1.14')
+    depends_on('py-google-pasta@0.1.8:', type=('build', 'run'), when='@2.1:')
     depends_on('py-google-pasta@0.1.6:', type=('build', 'run'), when='@1.14:')
     depends_on('py-google-pasta@0.1.2:', type=('build', 'run'), when='@1.12.1')
-    depends_on('py-keras-applications@1.0.8:', type=('build', 'run'), when='@1.15:')
-    depends_on('py-keras-applications@1.0.6:', type=('build', 'run'), when='@1.12:')
-    depends_on('py-keras-applications@1.0.5:', type=('build', 'run'), when='@1.11:')
+    depends_on('py-h5py@2.10.0:2.10.999', type=('build', 'run'), when='@2.2:')
+    depends_on('py-keras-applications@1.0.8:', type=('build', 'run'), when='@1.15:2.1')
+    depends_on('py-keras-applications@1.0.6:', type=('build', 'run'), when='@1.12:1.14')
+    depends_on('py-keras-applications@1.0.5:', type=('build', 'run'), when='@1.11.0:1.11.999')
     depends_on('py-keras-preprocessing@1.1.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-keras-preprocessing@1.0.5:', type=('build', 'run'), when='@1.12:')
     depends_on('py-keras-preprocessing@1.0.3:', type=('build', 'run'), when='@1.11:')
@@ -152,6 +162,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-protobuf@3.0.0', type=('build', 'run'), when='@0.11.0')
     depends_on('py-protobuf@3.0.0b2', type=('build', 'run'), when='@0.7.1:0.10')
     depends_on('py-protobuf@3.0.0a3', type=('build', 'run'), when='@0.6:0.7.0')
+    depends_on('protobuf')
     # tensorboard
     # tensorflow-estimator
     depends_on('py-termcolor@1.1.0:', type=('build', 'run'), when='@1.6:')
@@ -498,6 +509,11 @@ class PyTensorflow(Package, CudaPackage):
         mkdirp(tmp_path)
         env.set('TEST_TMPDIR', tmp_path)
 
+        env.set('TF_SYSTEM_LIBS', 'com_google_protobuf')
+        # NOTE: INCLUDEDIR is not just relevant to protobuf
+        # see third_party/systemlibs/jsoncpp.BUILD
+        env.set('INCLUDEDIR', spec['protobuf'].prefix.include)
+
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
         # environment variables, this interactivity is skipped. If you don't,
@@ -626,6 +642,7 @@ class PyTensorflow(Package, CudaPackage):
             # Ask bazel to explain what it's up to
             # Needs a filename as argument
             '--explain=explainlogfile.txt',
+            '--incompatible_no_support_tools_in_action_inputs=false',
             # Increase verbosity of explanation,
             '--verbose_explanations',
         ]
@@ -678,9 +695,6 @@ class PyTensorflow(Package, CudaPackage):
 
         if spec.satisfies('@2:'):
             args.append('--config=v2')
-
-        if spec.satisfies('%gcc@5:'):
-            args.append('--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0')
 
         args.append('//tensorflow/tools/pip_package:build_pip_package')
 

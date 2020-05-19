@@ -1,0 +1,33 @@
+diff --git a/src/butil/containers/case_ignored_flat_map.cpp b/src/butil/containers/case_ignored_flat_map.cpp
+index 7f2fadc5..a7471561 100644
+--- a/src/butil/containers/case_ignored_flat_map.cpp
++++ b/src/butil/containers/case_ignored_flat_map.cpp
+@@ -19,7 +19,7 @@
+ 
+ namespace butil {
+ 
+-static const char g_tolower_map_base[] = {
++static const signed char g_tolower_map_base[] = {
+     -128, -127, -126, -125, -124, -123, -122, -121, -120,
+     -119, -118, -117, -116, -115, -114, -113, -112, -111, -110,
+     -109, -108, -107, -106, -105, -104, -103, -102, -101, -100,
+@@ -48,6 +48,6 @@ static const char g_tolower_map_base[] = {
+     120, 121, 122, 123, 124, 125, 126, 127
+ };
+ 
+-extern const char* const g_tolower_map = g_tolower_map_base + 128;
++extern const signed char* const g_tolower_map = g_tolower_map_base + 128;
+ 
+ } // namespace butil
+diff --git a/src/butil/containers/case_ignored_flat_map.h b/src/butil/containers/case_ignored_flat_map.h
+index ed6e58b4..6bc1a9af 100644
+--- a/src/butil/containers/case_ignored_flat_map.h
++++ b/src/butil/containers/case_ignored_flat_map.h
+@@ -27,7 +27,7 @@ namespace butil {
+ // NOTE: Using ascii_tolower instead of ::tolower shortens 150ns in
+ // FlatMapTest.perf_small_string_map (with -O2 added, -O0 by default)
+ inline char ascii_tolower(char c) {
+-    extern const char* const g_tolower_map;
++    extern const signed char* const g_tolower_map;
+     return g_tolower_map[(int)c];
+ }

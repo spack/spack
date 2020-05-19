@@ -540,6 +540,35 @@ class Openfoam(Package):
                     rcfile,
                     backup=False)
 
+    @when('@1906: %fj')
+    @run_before('configure')
+    def make_fujitsu_rules(self):
+        """Create Fujitsu rules (clang variant) unless supplied upstream.
+        Implemented for 1906 and newer - older rules are messier to edit
+        """
+        general_rules = 'wmake/rules/General'
+        arch_rules = join_path('wmake/rules/linuxARM64')  # self.arch
+        src = arch_rules + 'Clang'
+        dst = arch_rules + 'Fujitsu'  # self.compiler
+
+        if os.path.exists(dst):
+            return
+
+        tty.info('Add Fujitsu wmake rules')
+        copy_tree(src, dst)
+
+        for cfg in ['c', 'c++', 'general']:
+            rule = join_path(dst, cfg)
+            filter_file('Clang', 'Fujitsu', rule, backup=False)
+
+        src = join_path(general_rules, 'Clang')
+        dst = join_path(general_rules, 'Fujitsu')  # self.compiler
+        copy_tree(src, dst)
+        filter_file('clang', spack_cc, join_path(dst, 'c'),
+                    backup=False, string=True)
+        filter_file('clang++', spack_cxx, join_path(dst, 'c++'),
+                    backup=False, string=True)
+
     def configure(self, spec, prefix):
         """Make adjustments to the OpenFOAM configuration files in their various
         locations: etc/bashrc, etc/config.sh/FEATURE and customizations that
@@ -800,7 +829,7 @@ class OpenfoamArch(object):
 
     #: Map spack compiler names to OpenFOAM compiler names
     #  By default, simply capitalize the first letter
-    compiler_mapping = {'intel': 'icc'}
+    compiler_mapping = {'intel': 'Icc', 'fj': 'Fujitsu'}
 
     def __init__(self, spec, **kwargs):
         # Some user settings, to be adjusted manually or via variants
@@ -855,10 +884,9 @@ class OpenfoamArch(object):
 
         self.arch = platform
 
-        # Capitalized version of the compiler name, which usually corresponds
-        # to how OpenFOAM will camel-case things.
+        # Capitalized version of the compiler name, which corresponds
+        # to how OpenFOAM handles things (eg, gcc -> Gcc).
         # Use compiler_mapping to handing special cases.
-        # Also handle special compiler options (eg, KNL)
         comp = spec.compiler.name
 
         if comp in self.compiler_mapping:

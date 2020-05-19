@@ -28,6 +28,7 @@ class RDigest(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/digest_0.6.12.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/digest"
 
+    version('0.6.25', sha256='15ccadb7b8bccaa221b6700bb549011719d0f4b38dbd3a1f29face3e019e2de5')
     version('0.6.20', sha256='05674b0b5d888461ff770176c67b10a11be062b0fee5dbd9298f25a9a49830c7')
     version('0.6.19', sha256='28d159bd589ecbd01b8da0826eaed417f5c1bf5a11b79e76bf67ce8d935cccf4')
     version('0.6.12', sha256='a479463f120037ad8e88bb1387170842e635a1f07ce7e3575316efd6e14d9eab')

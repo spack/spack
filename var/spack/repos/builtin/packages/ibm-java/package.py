@@ -10,15 +10,20 @@ import os
 
 class IbmJava(Package):
     """Binary distribution of the IBM Java Software Development Kit
-    for big and little-endian powerpc (power7, 8 and 9)."""
+    for big and little-endian powerpc (power7, 8 and 9).  Note: IBM
+    is fairly aggressive about taking down old versions, so old
+    (and even current) versions may not be available."""
 
     homepage = "https://developer.ibm.com/javasdk/"
+    maintainers = ['mwkrentel']
 
     # Note: IBM is fairly aggressive about taking down old versions,
     # so we may need to update this frequently.  Also, old revs may
     # not be available for download.
 
     version_list = [
+        ('8.0.6.7',  'ppc64',   'a1accb461a039af4587ea86511e317fea1d423e7f781459a17ed3947afed2982'),
+        ('8.0.6.7',  'ppc64le', '9ede76a597af28c7f10c6f8a68788cc2dcd39fdab178c9bac56df8b3766ac717'),
         ('8.0.6.0',  'ppc64',   'e142746a83e47ab91d71839d5776f112ed154ae180d0628e3f10886151dad710'),
         ('8.0.6.0',  'ppc64le', '18c2eccf99225e6e7643141d8da4110cacc39f2fa00149fc26341d2272cc0102'),
         ('8.0.5.30', 'ppc64',   'd39ce321bdadd2b2b829637cacf9c1c0d90235a83ff6e7dcfa7078faca2f212f'),

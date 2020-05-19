@@ -127,13 +127,18 @@ class Adios(AutotoolsPackage):
 
         return '--without-phdf5'
 
+    def setup_build_environment(self, env):
+        # https://github.com/ornladios/ADIOS/issues/206
+        if self.spec.satisfies('%gcc@10: +fortran'):
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
+
     def configure_args(self):
         spec = self.spec
         self.validate(spec)
 
         extra_args = [
             # required, otherwise building its python bindings will fail
-            'CFLAGS={0}'.format(self.compiler.pic_flag)
+            'CFLAGS={0}'.format(self.compiler.cc_pic_flag)
         ]
 
         extra_args += self.enable_or_disable('shared')

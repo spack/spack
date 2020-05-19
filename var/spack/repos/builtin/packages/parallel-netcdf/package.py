@@ -95,9 +95,27 @@ class ParallelNetcdf(AutotoolsPackage):
         args += self.enable_or_disable('cxx')
         args += self.enable_or_disable('fortran')
 
+        flags = {
+            'CFLAGS': [],
+            'CXXFLAGS': [],
+            'FFLAGS': [],
+            'FCFLAGS': [],
+        }
+
         if '+pic' in self.spec:
-            args.extend(['{0}FLAGS={1}'.format(lang, self.compiler.pic_flag)
-                         for lang in ['C', 'CXX', 'F', 'FC']])
+            flags['CFLAGS'].append(self.compiler.cc_pic_flag)
+            flags['CXXFLAGS'].append(self.compiler.cxx_pic_flag)
+            flags['FFLAGS'].append(self.compiler.f77_pic_flag)
+            flags['FCFLAGS'].append(self.compiler.fc_pic_flag)
+
+        # https://github.com/Parallel-NetCDF/PnetCDF/issues/61
+        if self.spec.satisfies('%gcc@10:'):
+            flags['FFLAGS'].append('-fallow-argument-mismatch')
+            flags['FCFLAGS'].append('-fallow-argument-mismatch')
+
+        for key, value in sorted(flags.items()):
+            if value:
+                args.append('{0}={1}'.format(key, ' '.join(value)))
 
         if self.version >= Version('1.8'):
             args.append('--enable-relax-coord-bound')

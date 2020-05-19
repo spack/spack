@@ -111,7 +111,7 @@ def setup_parser(sp):
             help='add package files to a filesystem view via symbolic links'),
         "hardlink": ssp.add_parser(
             'hardlink', aliases=['hard'],
-            help='add packages files to a filesystem via via hard links'),
+            help='add packages files to a filesystem view via hard links'),
         "remove": ssp.add_parser(
             'remove', aliases=['rm'],
             help='remove packages from a filesystem view'),

@@ -24,7 +24,6 @@ import spack.cmd.buildcache as buildcache
 import spack.compilers as compilers
 import spack.config as cfg
 import spack.environment as ev
-from spack.dependency import all_deptypes
 from spack.error import SpackError
 import spack.hash_types as ht
 from spack.main import SpackCommand
@@ -33,6 +32,10 @@ from spack.spec import Spec
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
 
+
+JOB_RETRY_CONDITIONS = [
+    'always',
+]
 
 spack_gpg = SpackCommand('gpg')
 spack_compiler = SpackCommand('compiler')
@@ -360,7 +363,6 @@ def compute_spec_deps(spec_list):
        }
 
     """
-    deptype = all_deptypes
     spec_labels = {}
 
     specs = []
@@ -380,7 +382,7 @@ def compute_spec_deps(spec_list):
 
         rkey, rlabel = spec_deps_key_label(spec)
 
-        for s in spec.traverse(deptype=deptype):
+        for s in spec.traverse(deptype=all):
             if s.external:
                 tty.msg('Will not stage external pkg: {0}'.format(s))
                 continue
@@ -392,7 +394,7 @@ def compute_spec_deps(spec_list):
             }
             append_dep(rlabel, slabel)
 
-            for d in s.dependencies(deptype=deptype):
+            for d in s.dependencies(deptype=all):
                 dkey, dlabel = spec_deps_key_label(d)
                 if d.external:
                     tty.msg('Will not stage external dep: {0}'.format(d))
@@ -400,11 +402,11 @@ def compute_spec_deps(spec_list):
 
                 append_dep(slabel, dlabel)
 
-    for l, d in spec_labels.items():
+    for spec_label, spec_holder in spec_labels.items():
         specs.append({
-            'label': l,
-            'spec': d['spec'],
-            'root_spec': d['root'],
+            'label': spec_label,
+            'spec': spec_holder['spec'],
+            'root_spec': spec_holder['root'],
         })
 
     deps_json_obj = {
@@ -429,6 +431,21 @@ def find_matching_config(spec, ci_mappings):
 
 def pkg_name_from_spec_label(spec_label):
     return spec_label[:spec_label.index('/')]
+
+
+def format_job_needs(phase_name, strip_compilers, dep_jobs,
+                     osname, build_group, enable_artifacts_buildcache):
+    needs_list = []
+    for dep_job in dep_jobs:
+        needs_list.append({
+            'job': get_job_name(phase_name,
+                                strip_compilers,
+                                dep_job,
+                                osname,
+                                build_group),
+            'artifacts': enable_artifacts_buildcache,
+        })
+    return needs_list
 
 
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
@@ -466,6 +483,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             tty.verbose("Using CDash auth token from environment")
             cdash_auth_token = os.environ.get('SPACK_CDASH_AUTH_TOKEN')
 
+    is_pr_pipeline = (
+        os.environ.get('SPACK_IS_PR_PIPELINE', '').lower() == 'true'
+    )
+
     # Make sure we use a custom spack if necessary
     before_script = None
     after_script = None
@@ -473,10 +494,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         if not custom_spack_ref:
             custom_spack_ref = 'master'
         before_script = [
-            ('git clone "{0}" --branch "{1}" --depth 1 '
-             '--single-branch'.format(custom_spack_repo, custom_spack_ref)),
-            # Next line just shows spack version in pipeline output
-            'pushd ./spack && git rev-parse HEAD && popd',
+            ('git clone "{0}"'.format(custom_spack_repo)),
+            'pushd ./spack && git checkout "{0}" && popd'.format(
+                custom_spack_ref),
             '. "./spack/share/spack/setup-env.sh"',
         ]
         after_script = [
@@ -537,6 +557,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     stage_id = 0
 
     stage_names = []
+
+    max_length_needs = 0
+    max_needs_job = ''
 
     for phase in phases:
         phase_name = phase['name']
@@ -601,25 +624,35 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                         root_spec, main_phase, strip_compilers),
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
                     'SPACK_COMPILER_ACTION': compiler_action,
+                    'SPACK_IS_PR_PIPELINE': str(is_pr_pipeline),
                 }
 
                 job_dependencies = []
                 if spec_label in dependencies:
-                    for dep_label in dependencies[spec_label]:
-                        dep_pkg = pkg_name_from_spec_label(dep_label)
-                        dep_spec = spec_labels[dep_label]['rootSpec'][dep_pkg]
-                        dep_job_name = get_job_name(
-                            phase_name, strip_compilers, dep_spec, osname,
-                            build_group)
-                        job_dependencies.append(dep_job_name)
+                    if enable_artifacts_buildcache:
+                        dep_jobs = [
+                            d for d in release_spec.traverse(deptype=all,
+                                                             root=False)
+                        ]
+                    else:
+                        dep_jobs = []
+                        for dep_label in dependencies[spec_label]:
+                            dep_pkg = pkg_name_from_spec_label(dep_label)
+                            dep_root = spec_labels[dep_label]['rootSpec']
+                            dep_jobs.append(dep_root[dep_pkg])
+
+                    job_dependencies.extend(
+                        format_job_needs(phase_name, strip_compilers, dep_jobs,
+                                         osname, build_group,
+                                         enable_artifacts_buildcache))
 
                 # This next section helps gitlab make sure the right
                 # bootstrapped compiler exists in the artifacts buildcache by
                 # creating an artificial dependency between this spec and its
                 # compiler.  So, if we are in the main phase, and if the
                 # compiler we are supposed to use is listed in any of the
-                # bootstrap spec lists, then we will add one more dependency to
-                # "job_dependencies" (that compiler).
+                # bootstrap spec lists, then we will add more dependencies to
+                # the job (that compiler and maybe it's dependencies as well).
                 if is_main_phase(phase_name):
                     compiler_pkg_spec = compilers.pkg_spec_for_compiler(
                         release_spec.compiler)
@@ -627,12 +660,25 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                         bs_arch = bs['spec'].architecture
                         if (bs['spec'].satisfies(compiler_pkg_spec) and
                             bs_arch == release_spec.architecture):
-                            c_job_name = get_job_name(bs['phase-name'],
-                                                      bs['strip-compilers'],
-                                                      bs['spec'],
-                                                      str(bs_arch),
-                                                      build_group)
-                            job_dependencies.append(c_job_name)
+                            # We found the bootstrap compiler this release spec
+                            # should be built with, so for DAG scheduling
+                            # purposes, we will at least add the compiler spec
+                            # to the jobs "needs".  But if artifact buildcache
+                            # is enabled, we'll have to add all transtive deps
+                            # of the compiler as well.
+                            dep_jobs = [bs['spec']]
+                            if enable_artifacts_buildcache:
+                                dep_jobs = [
+                                    d for d in bs['spec'].traverse(deptype=all)
+                                ]
+
+                            job_dependencies.extend(
+                                format_job_needs(bs['phase-name'],
+                                                 bs['strip-compilers'],
+                                                 dep_jobs,
+                                                 str(bs_arch),
+                                                 build_group,
+                                                 enable_artifacts_buildcache))
 
                 if enable_cdash_reporting:
                     cdash_build_name = get_cdash_build_name(
@@ -647,7 +693,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
                     job_vars['SPACK_CDASH_BUILD_NAME'] = cdash_build_name
                     job_vars['SPACK_RELATED_BUILDS_CDASH'] = ';'.join(
-                        related_builds)
+                        sorted(related_builds))
 
                 variables.update(job_vars)
 
@@ -657,7 +703,12 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 ]
 
                 if enable_artifacts_buildcache:
-                    artifact_paths.append('local_mirror/build_cache')
+                    bc_root = 'local_mirror/build_cache'
+                    artifact_paths.extend([os.path.join(bc_root, p) for p in [
+                        bindist.tarball_name(release_spec, '.spec.yaml'),
+                        bindist.tarball_name(release_spec, '.cdashid'),
+                        bindist.tarball_directory_name(release_spec),
+                    ]])
 
                 job_object = {
                     'stage': stage_name,
@@ -668,8 +719,17 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                         'paths': artifact_paths,
                         'when': 'always',
                     },
-                    'dependencies': job_dependencies,
+                    'needs': sorted(job_dependencies, key=lambda d: d['job']),
+                    'retry': {
+                        'max': 2,
+                        'when': JOB_RETRY_CONDITIONS,
+                    }
                 }
+
+                length_needs = len(job_dependencies)
+                if length_needs > max_length_needs:
+                    max_length_needs = length_needs
+                    max_needs_job = job_name
 
                 if before_script:
                     job_object['before_script'] = before_script
@@ -691,6 +751,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     tty.debug('{0} build jobs generated in {1} stages'.format(
         job_id, stage_id))
 
+    tty.debug('The max_needs_job is {0}, with {1} needs'.format(
+        max_needs_job, max_length_needs))
+
     # Use "all_job_names" to populate the build group for this set
     if enable_cdash_reporting and cdash_auth_token:
         try:
@@ -701,7 +764,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     else:
         tty.warn('Unable to populate buildgroup without CDash credentials')
 
-    if final_job_config:
+    if final_job_config and not is_pr_pipeline:
         # Add an extra, final job to regenerate the index
         final_stage = 'stage-rebuild-index'
         final_job = {
@@ -721,8 +784,12 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
     output_object['stages'] = stage_names
 
+    sorted_output = {}
+    for output_key, output_value in sorted(output_object.items()):
+        sorted_output[output_key] = output_value
+
     with open(output_file, 'w') as outf:
-        outf.write(syaml.dump_config(output_object, default_flow_style=True))
+        outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
 
 
 def url_encode_string(input_string):

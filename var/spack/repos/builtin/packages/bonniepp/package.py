@@ -19,3 +19,7 @@ class Bonniepp(AutotoolsPackage):
         configure_args = []
         configure_args.append('--enable-debug')
         return configure_args
+
+    def setup_run_environment(self, env):
+        """Prepend the sbin directory to PATH."""
+        env.prepend_path('PATH', self.prefix.sbin)

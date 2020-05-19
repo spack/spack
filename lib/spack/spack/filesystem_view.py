@@ -22,6 +22,7 @@ import spack.util.spack_yaml as s_yaml
 import spack.spec
 import spack.store
 import spack.schema.projections
+import spack.projections
 import spack.config
 from spack.error import SpackError
 from spack.directory_layout import ExtensionAlreadyInstalledError
@@ -470,14 +471,9 @@ class YamlFilesystemView(FilesystemView):
         if spec.package.extendee_spec:
             locator_spec = spec.package.extendee_spec
 
-        all_fmt_str = None
-        for spec_like, fmt_str in self.projections.items():
-            if locator_spec.satisfies(spec_like, strict=True):
-                return os.path.join(self._root, locator_spec.format(fmt_str))
-            elif spec_like == 'all':
-                all_fmt_str = fmt_str
-        if all_fmt_str:
-            return os.path.join(self._root, locator_spec.format(all_fmt_str))
+        proj = spack.projections.get_projection(self.projections, locator_spec)
+        if proj:
+            return os.path.join(self._root, locator_spec.format(proj))
         return self._root
 
     def get_all_specs(self):

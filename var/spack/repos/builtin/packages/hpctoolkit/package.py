@@ -66,6 +66,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('bzip2+shared', type='link')
     depends_on('dyninst@9.3.2:')
     depends_on('elfutils+bzip2+xz~nls', type='link')
+    depends_on('gotcha@1.0.3:')
     depends_on('intel-tbb+shared')
     depends_on('libdwarf')
     depends_on('libmonitor+hpctoolkit+bgq', when='+bgq')
@@ -105,6 +106,7 @@ class Hpctoolkit(AutotoolsPackage):
             '--with-bzip=%s'         % spec['bzip2'].prefix,
             '--with-dyninst=%s'      % spec['dyninst'].prefix,
             '--with-elfutils=%s'     % spec['elfutils'].prefix,
+            '--with-gotcha=%s'       % spec['gotcha'].prefix,
             '--with-tbb=%s'          % spec['intel-tbb'].prefix,
             '--with-libdwarf=%s'     % spec['libdwarf'].prefix,
             '--with-libmonitor=%s'   % spec['libmonitor'].prefix,

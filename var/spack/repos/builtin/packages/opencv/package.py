@@ -121,6 +121,12 @@ class Opencv(CMakePackage, CudaPackage):
     # the current development branch of OpenCV. See #8461 for more information.
     patch('dnn_cuda.patch', when='@3.3.0:3.4.1+cuda+dnn')
 
+    patch('opencv3.2_cmake.patch', when='@3.2')
+    patch('opencv3.2_vtk.patch', when='@3.2+vtk')
+    patch('opencv3.2_regacyvtk.patch', when='@3.2+vtk')
+    patch('opencv3.2_ffmpeg.patch', when='@3.2+videoio')
+    patch('opencv3.2_python3.7.patch', when='@3.2+python')
+
     depends_on('eigen', when='+eigen')
     depends_on('zlib', when='+zlib')
     depends_on('libpng', when='+png')
@@ -146,6 +152,9 @@ class Opencv(CMakePackage, CudaPackage):
     # See https://github.com/opencv/opencv_contrib/issues/1786
     conflicts('cuda@10:', when='+cudacodec')
     conflicts('cuda', when='~contrib', msg='cuda support requires +contrib')
+
+    # IPP is provided x86_64 only
+    conflicts('+ipp', when="arch=aarch64:")
 
     extends('python', when='+python')
 

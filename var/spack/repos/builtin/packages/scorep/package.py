@@ -25,7 +25,8 @@ class Scorep(AutotoolsPackage):
     version('1.4.2', sha256='d7f3fcca2efeb2f5d5b5f183b3b2c4775e66cbb3400ea2da841dd0428713ebac')
     version('1.3',   sha256='dcfd42bd05f387748eeefbdf421cb3cd98ed905e009303d70b5f75b217fd1254')
 
-    patch('gcc7.patch', when='@:3')
+    patch('gcc7.patch', when='@1.4:3')
+    patch('gcc10.patch', when='@3.1:')
 
     variant('mpi', default=True, description="Enable MPI support")
     variant('papi', default=True, description="Enable PAPI")
@@ -106,8 +107,8 @@ class Scorep(AutotoolsPackage):
             config_args.append('--with-mpi=openmpi')
 
         config_args.extend([
-            'CFLAGS={0}'.format(self.compiler.pic_flag),
-            'CXXFLAGS={0}'.format(self.compiler.pic_flag)
+            'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
+            'CXXFLAGS={0}'.format(self.compiler.cxx_pic_flag)
         ])
 
         if "+mpi" in spec:

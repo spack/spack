@@ -15,9 +15,11 @@ class Grass(AutotoolsPackage):
     homepage = "https://grass.osgeo.org"
     url      = "https://grass.osgeo.org/grass78/source/grass-7.8.2.tar.gz"
     list_url = "https://grass.osgeo.org/download/software/sources/"
+    git      = "https://github.com/OSGeo/grass.git"
 
     maintainers = ['adamjstewart']
 
+    version('master', branch='master')
     version('7.8.2', sha256='33576f7078f805b39ca20c2fa416ac79c64260c0581072a6dc7d813f53aa9abb')
     version('7.8.1', sha256='6ae578fd67afcce7abec4ba4505dcc55b3d2dfe0ca46b99d966cb148c654abb3')
     version('7.8.0', sha256='4b1192294e959ffd962282344e4ff325c4472f73abe605e246a1da3beda7ccfa')
@@ -66,7 +68,10 @@ class Grass(AutotoolsPackage):
     depends_on('proj@:4', when='@:7.5')
     # GRASS 7.8.0 was supposed to support PROJ 6, but it still checks for
     # share/proj/epsg, which was removed in PROJ 6
-    depends_on('proj@:5', when='@:7.8')
+    depends_on('proj@:5', when='@:7.8.0')
+    # PROJ6 support released in GRASS 7.8.1
+    # https://courses.neteler.org/grass-gis-7-8-1-released-with-proj-6-and-gdal-3-support/
+    depends_on('proj@6:', when='@7.8.1:')
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('python@2.7:2.8', when='@:7.6', type=('build', 'run'))
     depends_on('py-six', when='@7.8:', type=('build', 'run'))

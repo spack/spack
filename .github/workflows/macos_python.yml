@@ -1,0 +1,58 @@
+# These are nightly package tests for macOS
+# focus areas:
+# - initial user experience
+# - scientific python stack
+name: macOS builds nightly
+
+on:
+  schedule:
+    # nightly at 1 AM
+    - cron: '0 1 * * *'
+
+# GitHub Action Limits
+# https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
+
+jobs:
+  install_gcc:
+    name: gcc with clang
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: spack install
+      run: |
+        . .github/workflows/install_spack.sh
+        spack install -v gcc
+
+  install_jupyter_clang:
+    name: jupyter
+    runs-on: macos-latest
+    timeout-minutes: 700
+    steps:
+    - uses: actions/checkout@v2
+    - name: spack install
+      run: |
+        . .github/workflows/install_spack.sh
+        spack install -v py-jupyter %clang
+
+  install_scipy_clang:
+    name: scipy, mpl, pd
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: spack install
+      run: |
+        . .github/workflows/install_spack.sh
+        spack install -v py-scipy %clang
+        spack install -v py-matplotlib %clang
+        spack install -v py-pandas %clang
+
+  install_mpi4py_clang:
+    name: mpi4py, petsc4py
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: spack install
+      run: |
+        . .github/workflows/install_spack.sh
+        spack install -v py-mpi4py %clang
+        spack install -v py-petsc4py %clang
