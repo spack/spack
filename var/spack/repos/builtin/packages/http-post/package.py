@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import datetime
 
 
 class HttpPost(MakefilePackage):
@@ -14,7 +15,12 @@ class HttpPost(MakefilePackage):
     homepage = "http://www.acme.com/software/http_post/"
     url      = "http://www.acme.com/software/http_post/http_post_18May2018.tar.gz"
 
-    version('18May2018', sha256='981c62bcc5cd12b8531f887b3e3779a63a7b7f370062575cded412865a20ea2c')
+    version('2018-05-18', sha256='981c62bcc5cd12b8531f887b3e3779a63a7b7f370062575cded412865a20ea2c')
+
+    def url_for_version(self, version):
+        ver = datetime.datetime.strptime(str(version), '%Y-%m-%d').date()
+        verstr = datetime.datetime.strftime(ver, '%d%b%Y')
+        return "http://www.acme.com/software/http_post/http_post_{0}.tar.gz".format(verstr)
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
