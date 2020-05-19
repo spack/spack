@@ -26,17 +26,12 @@ class Podio(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release'))
 
-    variant('cxxstd',
-            default='17',
-            values=('14', '17'),
-            multi=False,
-            description='Use the specified C++ standard when building.')
+    # cpack config throws an error on some systems
+    patch('cpack.patch', when="@:0.10.0")
 
-    _cxxstd_values = ('14', '17')
-    for s in _cxxstd_values:
-        depends_on('root@6.08.06: cxxstd=' + s, when='cxxstd=' + s)
+    depends_on('root@6.08.06:')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@3.8:', type='build')
     depends_on('python', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
 
@@ -44,8 +39,8 @@ class Podio(CMakePackage):
         args = []
         # C++ Standard
         args.append('-DCMAKE_CXX_STANDARD=%s'
-                    % self.spec.variants['cxxstd'].value)
-        args.append('-DBUILD_TESTING=OFF')
+                    % self.spec['root'].variants['cxxstd'].value)
+        args.append('-DBUILD_TESTING=%s' % self.run_tests)
         return args
 
     def setup_build_environment(self, spack_env):
