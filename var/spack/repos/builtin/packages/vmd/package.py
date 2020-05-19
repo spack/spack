@@ -10,7 +10,7 @@ import os
 class Vmd(Package):
     """VMD provides user-editable materials which can be applied
     to molecular geometry.
-    
+ 
     These material properties control the details of how VMD shades
     the molecular geometry, and how transparent or opaque the displayed
     molecular geometry is. With this feature, one can easily create nice
@@ -26,10 +26,11 @@ class Vmd(Package):
 
     phases = ['configure', 'install']
 
-    def configure(self, spec, prefix):
-        os.environ['VMDINSTALLBINDIR'] = prefix.bin
-        os.environ['VMDINSTALLLIBRARYDIR'] = prefix.lib64
+    def setup_build_environment(self, env):
+        env.set('VMDINSTALLBINDIR', self.prefix.bin)
+        env.set('VMDINSTALLLIBRARYDIR', self.prefix.lib64)
 
+    def configure(self, spec, prefix):
         configure = Executable('./configure')
         configure('LINUXAMD64')
 
