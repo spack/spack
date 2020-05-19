@@ -19,6 +19,7 @@ import spack.error
 import spack.spec
 import spack.architecture
 import spack.util.executable
+import spack.util.module_cmd
 import spack.compilers
 from spack.util.environment import filter_system_paths
 
@@ -433,6 +434,45 @@ class Compiler(object):
         """Returns the flag used by the FC compiler to produce
         Position Independent Code (PIC)."""
         return '-fPIC'
+
+    # Note: This is not a class method. The class methods are used to detect
+    # compilers on PATH based systems, and do not set up the run environment of
+    # the compiler. This method can be called on `module` based systems as well
+    def get_real_version(self):
+        """Query the compiler for its version.
+
+        This is the "real" compiler version, regardless of what is in the
+        compilers.yaml file, which the user can change to name their compiler.
+
+        Use the runtime environment of the compiler (modules and environment
+        modifications) to enable the compiler to run properly on any platform.
+        """
+        # store environment to replace later
+        backup_env = os.environ.copy()
+
+        # load modules and set env variables
+        for module in self.modules:
+            # On cray, mic-knl module cannot be loaded without cce module
+            # See: https://github.com/spack/spack/issues/3153
+            if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
+                spack.util.module_cmd.load_module('cce')
+            spack.util.module_cmd.load_module(module)
+
+        # apply other compiler environment changes
+        env = spack.util.environment.EnvironmentModifications()
+        env.extend(spack.schema.environment.parse(self.environment))
+        env.apply_modifications()
+
+        cc = spack.util.executable.Executable(self.cc)
+        output = cc(self.version_argument,
+                    output=str, error=str,
+                    ignore_errors=tuple(self.ignore_version_errors))
+
+        # Restore environment
+        os.environ.clear()
+        os.environ.update(backup_env)
+
+        return self.extract_version_from_output(output)
 
     #
     # Compiler classes have methods for querying the version of

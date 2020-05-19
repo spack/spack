@@ -55,6 +55,8 @@ class Graphviz(AutotoolsPackage):
             description='Build with libgd support (more output formats)')
     variant('pangocairo', default=False,
             description='Build with pango+cairo support (more output formats)')
+    variant('poppler', default=False,
+            description='Build with poppler support (pdf formats)')
     variant('qt', default=False,
             description='Build with Qt support')
     variant('quartz', default=(MACOS_VERSION is not None),
@@ -93,12 +95,13 @@ class Graphviz(AutotoolsPackage):
     depends_on('ghostscript', when='+ghostscript')
     depends_on('gtkplus', when='+gtkplus')
     depends_on('gts', when='+gts')
-    depends_on('cairo', when='+pangocairo')
+    depends_on('cairo+pdf+png+svg', when='+pangocairo')
     depends_on('fontconfig', when='+pangocairo')
     depends_on('freetype', when='+pangocairo')
     depends_on('glib', when='+pangocairo')
     depends_on('libpng', when='+pangocairo')
     depends_on('pango', when='+pangocairo')
+    depends_on('poppler+glib', when='+poppler')
     depends_on('zlib')
     depends_on('qt', when='+qt')
     depends_on('libx11', when="+x")
@@ -147,7 +150,7 @@ class Graphviz(AutotoolsPackage):
         args.append('--{0}-swig'.format('enable' if use_swig else 'disable'))
 
         for var in ["expat", "gts", "ghostscript", "libgd", "pangocairo",
-                    "qt", "quartz", "x"]:
+                    "poppler", "qt", "quartz", "x"]:
             args += self.with_or_without(var)
 
         args.append('--{0}-gtk'.format(

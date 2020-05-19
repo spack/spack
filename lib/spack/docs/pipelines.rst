@@ -32,30 +32,46 @@ for setting up a build pipeline are as follows:
 #. Create a repository on your gitlab instance
 #. Add a ``spack.yaml`` at the root containing your pipeline environment (see
    below for details)
-#. Add a ``.gitlab-ci.yml`` at the root containing a single job, similar to
+#. Add a ``.gitlab-ci.yml`` at the root containing two jobs (one to generate
+   the pipeline dynamically, and one to run the generated jobs), similar to
    this one:
 
    .. code-block:: yaml
 
-      pipeline-job:
+      stages: [generate, build]
+
+      generate-pipeline:
+        stage: generate
         tags:
           - <custom-tag>
-          ...
         script:
-          - spack ci start
+          - spack ci generate
+            --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
+        artifacts:
+          paths:
+            - "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
+
+      build-jobs:
+        stage: build
+        trigger:
+          include:
+            - artifact: "jobs_scratch_dir/pipeline.yml"
+              job: generate-pipeline
+          strategy: depend
+
 
 #. Add any secrets required by the CI process to environment variables using the
    CI web ui
 #. Push a commit containing the ``spack.yaml`` and ``.gitlab-ci.yml`` mentioned above
    to the gitlab repository
 
-The ``<custom-tag>``, above, is used to pick one of your configured runners,
-while the use of the ``spack ci start`` command implies that runner has an
-appropriate version of spack installed and configured for use.  Of course, there
-are myriad ways to customize the process.  You can configure CDash reporting
-on the progress of your builds, set up S3 buckets to mirror binaries built by
-the pipeline, clone a custom spack repository/ref for use by the pipeline, and
-more.
+The ``<custom-tag>``, above, is used to pick one of your configured runners to
+run the pipeline generation phase (this is implemented in the ``spack ci generate``
+command, which assumes the runner has an appropriate version of spack installed
+and configured for use).  Of course, there are many ways to customize the process.
+You can configure CDash reporting on the progress of your builds, set up S3 buckets
+to mirror binaries built by the pipeline, clone a custom spack repository/ref for
+use by the pipeline, and more.
 
 While it is possible to set up pipelines on gitlab.com, the builds there are
 limited to 60 minutes and generic hardware.  It is also possible to
@@ -64,15 +80,24 @@ Gitlab to Google Kubernetes Engine (`GKE <https://cloud.google.com/kubernetes-en
 or Amazon Elastic Kubernetes Service (`EKS <https://aws.amazon.com/eks>`_), though those
 topics are outside the scope of this document.
 
+Spack's pipelines are now making use of the
+`trigger <https://docs.gitlab.com/12.9/ee/ci/yaml/README.html#trigger>` syntax to run
+dynamically generated
+`child pipelines <https://docs.gitlab.com/12.9/ee/ci/parent_child_pipelines.html>`.
+Note that the use of dynamic child pipelines requires running Gitlab version
+``>= 12.9``.
+
 -----------------------------------
 Spack commands supporting pipelines
 -----------------------------------
 
-Spack provides a command `ci` with sub-commands for doing various things related
-to automated build pipelines.  All of the ``spack ci ...`` commands must be run
-from within a environment, as each one makes use of the environment for different
-purposes.  Additionally, some options to the commands (or conditions present in
-the spack environment file) may require particular environment variables to be
+Spack provides a command ``ci`` with two sub-commands: ``spack ci generate`` generates
+a pipeline (a .gitlab-ci.yml file) from a spack environment, and ``spack ci rebuild``
+checks a spec against a remote mirror and possibly rebuilds it from source and updates
+the binary mirror with the latest built package.  Both ``spack ci ...`` commands must
+be run from within the same environment, as each one makes use of the environment for
+different purposes.  Additionally, some options to the commands (or conditions present
+in the spack environment file) may require particular environment variables to be
 set in order to function properly.  Examples of these are typically secrets
 needed for pipeline operation that should not be visible in a spack environment
 file.  These environment variables are described in more detail
@@ -87,15 +112,6 @@ file.  These environment variables are described in more detail
 Super-command for functionality related to generating pipelines and executing
 pipeline jobs.
 
-.. _cmd_spack_ci_start:
-
-^^^^^^^^^^^^^^^^^^
-``spack ci start``
-^^^^^^^^^^^^^^^^^^
-
-Currently this command is a short-cut to first run ``spack ci generate``, followed
-by ``spack ci pushyaml``.
-
 .. _cmd_spack_ci_generate:
 
 ^^^^^^^^^^^^^^^^^^^^^
@@ -104,39 +120,6 @@ by ``spack ci pushyaml``.
 
 Concretizes the specs in the active environment, stages them (as described in
 :ref:`staging_algorithm`), and writes the resulting ``.gitlab-ci.yml`` to disk.
-
-.. _cmd_spack_ci_pushyaml:
-
-^^^^^^^^^^^^^^^^^^^^^
-``spack ci pushyaml``
-^^^^^^^^^^^^^^^^^^^^^
-
-Generates a commit containing the generated ``.gitlab-ci.yml`` and pushes it to a
-``DOWNSTREAM_CI_REPO``, which is frequently the same repository.  The branch
-created has the same name as the current branch being tested, but has ``multi-ci-``
-prepended to the branch name.  Once Gitlab CI has full support for dynamically
-defined workloads, this command will be deprecated.
-
-Until this command is no longer needed and can be deprecated, there are
-a few gotchas to note.  While you can embed your username and password in the
-`DOWNSTREAM_CI_REPO` url, you may not be able to have Gitlab mask the value, as
-it will likely contain characters that Gitlab cannot currently mask.  Another
-option is to set up an SSH token, but for this to work, the associated SSH
-key must be passphrase-less so that it can be provided in an automated manner.
-
-If you attempt to set up an SSH token that does require a passphrase, you may
-see a log message similar to:
-
-```
-fatal: https://<instance-url>/<org>/<project>:<port>/info/refs not valid: is this a git repository?
-```
-
-In this case, you can try a passphrase-less SSH key, or else embed your gitlab
-username and password in the `DOWNSTREAM_CI_REPO` as in the following example:
-
-```
-https://<username>:<password>@<instance-url>/<org>/<project>.git
-```
 
 .. _cmd_spack_ci_rebuild:
 
@@ -179,14 +162,14 @@ sections describing a build pipeline:
              - os=ubuntu18.04
            runner-attributes:
              tags:
-               - spack-k8s
-             image: spack/spack_builder_ubuntu_18.04
+               - spack-kube
+             image: spack/ubuntu-bionic
          - match:
              - os=centos7
            runner-attributes:
              tags:
-               - spack-k8s
-             image: spack/spack_builder_centos_7
+               - spack-kube
+             image: spack/centos7
      cdash:
        build-group: Release Testing
        url: https://cdash.spack.io
@@ -389,22 +372,29 @@ containing the url and branch/tag you want to clone (calling them, for example,
 ``SPACK_REPO`` and ``SPACK_REF``), use them to clone spack in your pre-ci
 ``before_script``, and finally pass those same values along to the workload
 generation process via the ``spack-repo`` and ``spack-ref`` cli args.  Here's
-an example:
+the ``generate-pipeline`` job from the top of this document, updated to clone
+a custom spack and make sure the generated rebuild jobs will clone it too:
 
 .. code-block:: yaml
 
-   pipeline-job:
+   generate-pipeline:
      tags:
        - <some-other-tag>
    before_script:
      - git clone ${SPACK_REPO} --branch ${SPACK_REF}
      - . ./spack/share/spack/setup-env.sh
    script:
-     - spack ci start --spack-repo ${SPACK_REPO} --spack-ref ${SPACK_REF} <...args>
+     - spack ci generate
+       --spack-repo ${SPACK_REPO} --spack-ref ${SPACK_REF}
+       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
    after_script:
      - rm -rf ./spack
+   artifacts:
+     paths:
+       - "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
 
-If the ``spack ci start`` command receives those extra command line arguments,
+
+If the ``spack ci generate`` command receives those extra command line arguments,
 then it adds similar ``before_script`` and ``after_script`` sections for each of
 the ``spack ci rebuild`` jobs it generates (cloning and sourcing a custom
 spack in the ``before_script`` and removing it again in the ``after_script``).
@@ -451,11 +441,3 @@ SPACK_SIGNING_KEY
 ^^^^^^^^^^^^^^^^^
 
 Needed to sign/verify binary packages from the remote binary mirror.
-
-^^^^^^^^^^^^^^^^^^
-DOWNSTREAM_CI_REPO
-^^^^^^^^^^^^^^^^^^
-
-Needed until Gitlab CI supports dynamic job generation.  Can contain connection
-credentials embedded in the url, and could be the same repository or a different
-one.

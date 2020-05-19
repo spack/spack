@@ -1,0 +1,15 @@
+diff --git a/src/osgPlugins/jp2/ReaderWriterJP2.cpp b/src/osgPlugins/jp2/ReaderWriterJP2.cpp
+index 7b3c6cc..d949c2c 100644
+--- a/src/osgPlugins/jp2/ReaderWriterJP2.cpp
++++ b/src/osgPlugins/jp2/ReaderWriterJP2.cpp
+@@ -15,6 +15,10 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
++#ifndef SIZE_MAX
++#define SIZE_MAX ((size_t)(-1))
++#endif
++
+ extern "C"
+ {
+     #include <jasper/jasper.h>

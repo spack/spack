@@ -19,11 +19,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = 'https://gcc.gnu.org'
     gnu_mirror_path = 'gcc/gcc-9.2.0/gcc-9.2.0.tar.xz'
-    svn      = 'svn://gcc.gnu.org/svn/gcc/'
+    git      = 'git://gcc.gnu.org/git/gcc.git'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
-    version('develop', svn=svn + 'trunk')
+    maintainers = ['michaelkuhn']
+
+    version('master', branch='master')
+
+    version('10.1.0', sha256='b6898a23844b656f1b68691c5c012036c2e694ac4b53a8918d4712ad876e7ea2')
 
     version('9.3.0', sha256='71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1')
     version('9.2.0', sha256='ea6ef08f121239da5695f76c9b33637a118dcf63e24164422231917fa61fb206')
@@ -88,12 +92,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
 
+    depends_on('flex', type='build', when='@master')
+
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
-    depends_on('mpfr@2.4.2:3.1.6')
-    depends_on('mpc@0.8.1:', when='@4.5:')
+    depends_on('mpfr@2.4.2:3.1.6', when='@:9.9')
+    depends_on('mpfr@3.1.0:', when='@10:')
+    depends_on('mpc@1.0.1:', when='@4.5:')
     # Already released GCC versions do not support any newer version of ISL
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
@@ -101,8 +108,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('isl@0.14', when='@5.0:5.2')
     depends_on('isl@0.15', when='@5.3:5.9')
     depends_on('isl@0.15:0.18', when='@6:8.9')
-    depends_on('isl@0.15:0.20', when='@9:')
+    depends_on('isl@0.15:0.20', when='@9:9.9')
+    depends_on('isl@0.15:', when='@10:')
     depends_on('zlib', when='@6:')
+    depends_on('zstd', when='@10:')
     depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
@@ -112,14 +121,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # The server is sometimes a bit slow to respond
     timeout = {'timeout': 60}
 
-    resource(
-             name='newlib',
+    resource(name='newlib',
              url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
              sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
              destination='newlibsource',
              when='+nvptx',
-             fetch_options=timeout
-            )
+             fetch_options=timeout)
 
     # nvptx-tools does not seem to work as a dependency,
     # but does fine when the source is inside the gcc build directory
@@ -252,6 +259,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('sys_ustat.h.patch', when='@5.0:6.4,7.0:7.3,8.1')
     patch('sys_ustat-4.9.patch', when='@4.9')
 
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95005
+    patch('zstd.patch', when='@10:')
+
     build_directory = 'spack-build'
 
     def url_for_version(self, version):
@@ -259,7 +269,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # mirrors are tried. It takes care of modifying the suffix of gnu
         # mirror path so that Spack will also look for the correct file in
         # the mirrors
-        if (version < Version('6.4.0')and version != Version('5.5.0')) \
+        if (version < Version('6.4.0') and version != Version('5.5.0')) \
                 or version == Version('7.1.0'):
             self.gnu_mirror_path = self.gnu_mirror_path.replace('xz', 'bz2')
         return super(Gcc, self).url_for_version(version)
@@ -311,6 +321,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Use installed libz
         if self.version >= Version('6'):
             options.append('--with-system-zlib')
+
+        if 'zstd' in spec:
+            options.append('--with-zstd={0}'.format(spec['zstd'].prefix))
 
         # Enabling language "jit" requires --enable-host-shared.
         if 'languages=jit' in spec:

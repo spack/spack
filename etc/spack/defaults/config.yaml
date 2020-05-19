@@ -157,3 +157,7 @@ config:
   # Has no effect on macOS. DO NOT MIX these within the same install tree.
   # See the Spack documentation for details.
   shared_linking: 'rpath'
+
+  # Set to 'false' to allow installation on filesystems that doesn't allow setgid bit
+  # manipulation by unprivileged user (e.g. AFS)
+  config:allow_sgid: true

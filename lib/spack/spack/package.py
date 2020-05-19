@@ -115,7 +115,11 @@ class InstallPhase(object):
         return phase_wrapper
 
     def _on_phase_start(self, instance):
-        pass
+        # If a phase has a matching stop_before_phase attribute,
+        # stop the installation process raising a StopIteration
+        if getattr(instance, 'stop_before_phase', None) == self.name:
+            raise StopIteration('Stopping before \'{0}\' phase'
+                                .format(self.name))
 
     def _on_phase_exit(self, instance):
         # If a phase has a matching last_phase attribute,
@@ -2006,6 +2010,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         urls = []
         if hasattr(self, 'url') and self.url:
             urls.append(self.url)
+
+        # fetch from first entry in urls to save time
+        if hasattr(self, 'urls') and self.urls:
+            urls.append(self.urls[0])
 
         for args in self.versions.values():
             if 'url' in args:

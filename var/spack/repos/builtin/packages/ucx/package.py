@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Ucx(AutotoolsPackage):
+class Ucx(AutotoolsPackage, CudaPackage):
     """a communication library implementing high-performance messaging for
     MPI/PGAS frameworks"""
 
@@ -48,11 +48,16 @@ class Ucx(AutotoolsPackage):
             description='Builds with PIC support')
     variant('java', default=False,
             description='Builds with Java bindings')
+    variant('gdrcopy', default=False,
+            description='Enable gdrcopy support')
 
     depends_on('numactl')
     depends_on('rdma-core')
     depends_on('java@8', when='+java')
     depends_on('maven', when='+java')
+    depends_on('gdrcopy@1.3', when='+gdrcopy')
+    conflicts('+gdrcopy', when='~cuda',
+              msg='gdrcopy currently requires cuda support')
 
     def configure_args(self):
         spec = self.spec
@@ -91,5 +96,17 @@ class Ucx(AutotoolsPackage):
             config_args.append('--with-java=%s' % spec['java'].prefix)
         else:
             config_args.append('--without-java')
+
+        if '+cuda' in spec:
+            config_args.append('--with-cuda={0}'.format(
+                self.spec['cuda'].prefix))
+        else:
+            config_args.append('--without-cuda')
+
+        if '+gdrcopy' in spec:
+            config_args.append('--with-gdrcopy={0}'.format(
+                self.spec['gdrcopy'].prefix))
+        else:
+            config_args.append('--without-gdrcopy')
 
         return config_args

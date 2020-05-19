@@ -163,6 +163,28 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == 'cmake-client'
 
 
+def test_env_modifications_error_on_activate(
+        install_mockery, mock_fetch, monkeypatch, capfd):
+    env('create', 'test')
+    install = SpackCommand('install')
+
+    e = ev.read('test')
+    with e:
+        install('cmake-client')
+
+    def setup_error(pkg, env):
+        raise RuntimeError("cmake-client had issues!")
+
+    pkg = spack.repo.path.get_pkg_class("cmake-client")
+    monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
+    with e:
+        pass
+
+    _, err = capfd.readouterr()
+    assert "cmake-client had issues!" in err
+    assert "Warning: couldn't get environment settings" in err
+
+
 def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
     env('create', 'test')
 
@@ -1038,6 +1060,55 @@ env:
 
         assert Spec('mpileaks') in test.user_specs
         assert Spec('callpath') in test.user_specs
+
+
+def test_stack_yaml_definitions_as_constraints(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - mpis: [mpich, openmpi]
+  specs:
+    - matrix:
+      - [$packages]
+      - [$^mpis]
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        test = ev.read('test')
+
+        assert Spec('mpileaks^mpich') in test.user_specs
+        assert Spec('callpath^mpich') in test.user_specs
+        assert Spec('mpileaks^openmpi') in test.user_specs
+        assert Spec('callpath^openmpi') in test.user_specs
+
+
+def test_stack_yaml_definitions_as_constraints_on_matrix(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - mpis:
+      - matrix:
+        - [mpich]
+        - ['@3.0.4', '@3.0.3']
+  specs:
+    - matrix:
+      - [$packages]
+      - [$^mpis]
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        test = ev.read('test')
+
+        assert Spec('mpileaks^mpich@3.0.4') in test.user_specs
+        assert Spec('callpath^mpich@3.0.4') in test.user_specs
+        assert Spec('mpileaks^mpich@3.0.3') in test.user_specs
+        assert Spec('callpath^mpich@3.0.3') in test.user_specs
 
 
 @pytest.mark.regression('12095')

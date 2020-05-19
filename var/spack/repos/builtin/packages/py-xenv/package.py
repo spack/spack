@@ -18,4 +18,4 @@ class PyXenv(PythonPackage):
     version('develop',            branch='master')
     version('develop_2018-12-20', commit='ddc3bf5e65e1689da499f639af7a27c5c4242841')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))

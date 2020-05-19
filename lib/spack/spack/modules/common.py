@@ -41,6 +41,7 @@ import spack.build_environment as build_environment
 import spack.error
 import spack.paths
 import spack.schema.environment
+import spack.projections as proj
 import spack.tengine as tengine
 import spack.util.environment
 import spack.util.file_permissions as fp
@@ -381,6 +382,9 @@ class BaseConfiguration(object):
     querying easier. It needs to be sub-classed for specific module types.
     """
 
+    default_projections = {
+        'all': '{name}-{version}-{compiler.name}-{compiler.version}'}
+
     def __init__(self, spec):
         # Module where type(self) is defined
         self.module = inspect.getmodule(self)
@@ -391,19 +395,18 @@ class BaseConfiguration(object):
         self.conf = merge_config_rules(self.module.configuration(), self.spec)
 
     @property
-    def naming_scheme(self):
-        """Naming scheme suitable for non-hierarchical layouts"""
-        scheme = self.module.configuration().get(
-            'naming_scheme',
-            '{name}-{version}-{compiler.name}-{compiler.version}'
-        )
+    def projections(self):
+        """Projection from specs to module names"""
+        projections = self.module.configuration().get(
+            'projections', self.default_projections)
 
         # Ensure the named tokens we are expanding are allowed, see
         # issue #2884 for reference
         msg = 'some tokens cannot be part of the module naming scheme'
-        _check_tokens_are_valid(scheme, message=msg)
+        for projection in projections.values():
+            _check_tokens_are_valid(projection, message=msg)
 
-        return scheme
+        return projections
 
     @property
     def template(self):
@@ -551,7 +554,11 @@ class BaseFileLayout(object):
         to console to use it. This implementation fits the needs of most
         non-hierarchical layouts.
         """
-        name = self.spec.format(self.conf.naming_scheme)
+        projection = proj.get_projection(self.conf.projections, self.spec)
+        if not projection:
+            projection = self.conf.default_projections['all']
+
+        name = self.spec.format(projection)
         # Not everybody is working on linux...
         parts = name.split('/')
         name = os.path.join(*parts)

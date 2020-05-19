@@ -10,7 +10,7 @@ import llnl.util.tty as tty
 
 import spack.error
 import spack.version
-from spack.architecture import OperatingSystem
+from spack.operating_systems.linux_distro import LinuxDistro
 from spack.util.module_cmd import module
 
 #: Possible locations of the Cray CLE release file,
@@ -68,7 +68,7 @@ def read_clerelease_file():
             return line.strip()
 
 
-class Cnl(OperatingSystem):
+class CrayBackend(LinuxDistro):
     """Compute Node Linux (CNL) is the operating system used for the Cray XC
     series super computers. It is a very stripped down version of GNU/Linux.
     Any compilers found through this operating system will be used with
@@ -79,7 +79,15 @@ class Cnl(OperatingSystem):
     def __init__(self):
         name = 'cnl'
         version = self._detect_crayos_version()
-        super(Cnl, self).__init__(name, version)
+        if version:
+            # If we found a CrayOS version, we do not want the information
+            # from LinuxDistro. In order to skip the logic from
+            # external.distro.linux_distribution, while still calling __init__
+            # methods further up the MRO, we skip LinuxDistro in the MRO and
+            # call the OperatingSystem superclass __init__ method
+            super(LinuxDistro, self).__init__(name, version)
+        else:
+            super(CrayBackend, self).__init__()
         self.modulecmd = module
 
     def __str__(self):
@@ -95,8 +103,15 @@ class Cnl(OperatingSystem):
             v = read_clerelease_file()
             return spack.version.Version(v)[0]
         else:
-            raise spack.error.UnsupportedPlatformError(
-                'Unable to detect Cray OS version')
+            # Not all Cray systems run CNL on the backend.
+            # Systems running in what Cray calls "cluster" mode run other
+            # linux OSs under the Cray PE.
+            # So if we don't detect any Cray OS version on the system,
+            # we return None. We can't ever be sure we will get a Cray OS
+            # version.
+            # Returning None allows the calling code to test for the value
+            # being "True-ish" rather than requiring a try/except block.
+            return None
 
     def arguments_to_detect_version_fn(self, paths):
         import spack.compilers

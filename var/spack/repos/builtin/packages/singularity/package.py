@@ -17,7 +17,10 @@ class Singularity(MakefilePackage):
        which has a different install base (Autotools).
 
        Needs post-install chmod/chown steps to enable full functionality.
-       See package definition or `spack-build-out.txt` build log for details.
+       See package definition or `spack-build-out.txt` build log for details,
+       e.g.
+
+       tail -15 $(spack location -i singularity)/.spack/spack-build-out.txt
     '''
 
     homepage = "https://www.sylabs.io/singularity/"
@@ -37,9 +40,12 @@ class Singularity(MakefilePackage):
 
     variant('suid', default=True, description='install SUID binary')
     variant('network', default=True, description='install network plugins')
+
+    depends_on('pkgconfig', type='build')
     depends_on('go')
     depends_on('libuuid')
     depends_on('libgpg-error')
+    depends_on('libseccomp')
     depends_on('squashfs', type='run')
     depends_on('git', when='@develop')  # mconfig uses it for version info
     depends_on('shadow', type='run', when='@3.3:')

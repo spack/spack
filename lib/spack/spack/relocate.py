@@ -11,6 +11,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 import macholib.MachO
 import macholib.mach_o
+import spack.architecture
 import spack.cmd
 import spack.repo
 import spack.spec
@@ -97,70 +98,98 @@ def _patchelf():
     return exe_path if os.path.exists(exe_path) else None
 
 
-def get_existing_elf_rpaths(path_name):
+def _elf_rpaths_for(path):
+    """Return the RPATHs for an executable or a library.
+
+    The RPATHs are obtained by ``patchelf --print-rpath PATH``.
+
+    Args:
+        path (str): full path to the executable or library
+
+    Return:
+        RPATHs as a list of strings.
     """
-    Return the RPATHS returned by patchelf --print-rpath path_name
-    as a list of strings.
-    """
+    # If we're relocating patchelf itself, use it
+    patchelf_path = path if path.endswith("/bin/patchelf") else _patchelf()
+    patchelf = executable.Executable(patchelf_path)
 
-    # if we're relocating patchelf itself, use it
-
-    if path_name.endswith("/bin/patchelf"):
-        patchelf = executable.Executable(path_name)
-    else:
-        patchelf = executable.Executable(_patchelf())
-
-    rpaths = list()
+    output = ''
     try:
-        output = patchelf('--print-rpath', '%s' %
-                          path_name, output=str, error=str)
-        rpaths = output.rstrip('\n').split(':')
+        output = patchelf('--print-rpath', path, output=str, error=str)
+        output = output.strip('\n')
     except executable.ProcessError as e:
-        msg = 'patchelf --print-rpath %s produced an error %s' % (path_name, e)
-        tty.warn(msg)
-    return rpaths
+        msg = 'patchelf --print-rpath {0} produced an error [{1}]'
+        tty.warn(msg.format(path, str(e)))
+
+    return output.split(':') if output else []
 
 
-def get_relative_elf_rpaths(path_name, orig_layout_root, orig_rpaths):
+def _make_relative(reference_file, path_root, paths):
+    """Return a list where any path in ``paths`` that starts with
+    ``path_root`` is made relative to the directory in which the
+    reference file is stored.
+
+    After a path is made relative it is prefixed with the ``$ORIGIN``
+    string.
+
+    Args:
+        reference_file (str): file from which the reference directory
+            is computed
+        path_root (str): root of the relative paths
+        paths: paths to be examined
+
+    Returns:
+        List of relative paths
     """
-    Replaces orig rpath with relative path from dirname(path_name) if an rpath
-    in orig_rpaths contains orig_layout_root. Prefixes $ORIGIN
-    to relative paths and returns replacement rpaths.
-    """
-    rel_rpaths = []
-    for rpath in orig_rpaths:
-        if re.match(orig_layout_root, rpath):
-            rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
-            rel_rpaths.append(os.path.join('$ORIGIN', '%s' % rel))
-        else:
-            rel_rpaths.append(rpath)
-    return rel_rpaths
+    start_directory = os.path.dirname(reference_file)
+    pattern = re.compile(path_root)
+    relative_paths = []
+
+    for path in paths:
+        if pattern.match(path):
+            rel = os.path.relpath(path, start=start_directory)
+            path = os.path.join('$ORIGIN', rel)
+
+        relative_paths.append(path)
+
+    return relative_paths
 
 
-def get_normalized_elf_rpaths(orig_path_name, rel_rpaths):
+def _normalize_relative_paths(start_path, relative_paths):
+    """Normalize the relative paths with respect to the original path name
+    of the file (``start_path``).
+
+    The paths that are passed to this function existed or were relevant
+    on another filesystem, so os.path.abspath cannot be used.
+
+    A relative path may contain the signifier $ORIGIN. Assuming that
+    ``start_path`` is absolute, this implies that the relative path
+    (relative to start_path) should be replaced with an absolute path.
+
+    Args:
+        start_path (str): path from which the starting directory
+            is extracted
+        relative_paths (str): list of relative paths as obtained by a
+            call to :ref:`_make_relative`
+
+    Returns:
+        List of normalized paths
     """
-    Normalize the relative rpaths with respect to the original path name
-    of the file. If the rpath starts with $ORIGIN replace $ORIGIN with the
-    dirname of the original path name and then normalize the rpath.
-    A dictionary mapping relativized rpaths to normalized rpaths is returned.
-    """
-    norm_rpaths = list()
-    for rpath in rel_rpaths:
-        if rpath.startswith('$ORIGIN'):
-            sub = re.sub(re.escape('$ORIGIN'),
-                         os.path.dirname(orig_path_name),
-                         rpath)
-            norm = os.path.normpath(sub)
-            norm_rpaths.append(norm)
-        else:
-            norm_rpaths.append(rpath)
-    return norm_rpaths
+    normalized_paths = []
+    pattern = re.compile(re.escape('$ORIGIN'))
+    start_directory = os.path.dirname(start_path)
+
+    for path in relative_paths:
+        if path.startswith('$ORIGIN'):
+            sub = pattern.sub(start_directory, path)
+            path = os.path.normpath(sub)
+        normalized_paths.append(path)
+
+    return normalized_paths
 
 
-def set_placeholder(dirname):
-    """
-    return string of @'s with same length
-    """
+def _placeholder(dirname):
+    """String of  of @'s with same length of the argument"""
     return '@' * len(dirname)
 
 
@@ -357,57 +386,79 @@ def macholib_get_paths(cur_path):
     return (rpaths, deps, ident)
 
 
-def modify_elf_object(path_name, new_rpaths):
+def _set_elf_rpaths(target, rpaths):
+    """Replace the original RPATH of the target with the paths passed
+    as arguments.
+
+    This function uses ``patchelf`` to set RPATHs.
+
+    Args:
+        target: target executable. Must be an ELF object.
+        rpaths: paths to be set in the RPATH
+
+    Returns:
+        A string concatenating the stdout and stderr of the call
+        to ``patchelf``
     """
-    Replace orig_rpath with new_rpath in RPATH of elf object path_name
-    """
+    # Join the paths using ':' as a separator
+    rpaths_str = ':'.join(rpaths)
 
-    new_joined = ':'.join(new_rpaths)
+    # If we're relocating patchelf itself, make a copy and use it
+    bak_path = None
+    if target.endswith("/bin/patchelf"):
+        bak_path = target + ".bak"
+        shutil.copy(target, bak_path)
 
-    # if we're relocating patchelf itself, use it
-    bak_path = path_name + ".bak"
-
-    if path_name[-13:] == "/bin/patchelf":
-        shutil.copy(path_name, bak_path)
-        patchelf = executable.Executable(bak_path)
-    else:
-        patchelf = executable.Executable(_patchelf())
-
+    patchelf, output = executable.Executable(bak_path or _patchelf()), None
     try:
-        patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
-                 '%s' % path_name, output=str, error=str)
+        # TODO: revisit the use of --force-rpath as it might be conditional
+        # TODO: if we want to support setting RUNPATH from binary packages
+        patchelf_args = ['--force-rpath', '--set-rpath', rpaths_str, target]
+        output = patchelf(*patchelf_args, output=str, error=str)
     except executable.ProcessError as e:
-        msg = 'patchelf --force-rpath --set-rpath %s failed with error %s' % (
-            path_name, e)
-        tty.warn(msg)
-    if os.path.exists(bak_path):
-        os.remove(bak_path)
+        msg = 'patchelf --force-rpath --set-rpath {0} failed with error {1}'
+        tty.warn(msg.format(target, e))
+    finally:
+        if bak_path and os.path.exists(bak_path):
+            os.remove(bak_path)
+    return output
 
 
 def needs_binary_relocation(m_type, m_subtype):
-    """
-    Check whether the given filetype is a binary that may need relocation.
+    """Returns True if the file with MIME type/subtype passed as arguments
+    needs binary relocation, False otherwise.
+
+    Args:
+        m_type (str): MIME type of the file
+        m_subtype (str): MIME subtype of the file
     """
     if m_type == 'application':
-        if (m_subtype == 'x-executable' or m_subtype == 'x-sharedlib' or
-                m_subtype == 'x-mach-binary'):
+        if m_subtype in ('x-executable', 'x-sharedlib', 'x-mach-binary'):
             return True
     return False
 
 
 def needs_text_relocation(m_type, m_subtype):
+    """Returns True if the file with MIME type/subtype passed as arguments
+    needs text relocation, False otherwise.
+
+    Args:
+        m_type (str): MIME type of the file
+        m_subtype (str): MIME subtype of the file
     """
-    Check whether the given filetype is text that may need relocation.
-    """
-    return (m_type == "text")
+    return m_type == 'text'
 
 
-def replace_prefix_text(path_name, old_dir, new_dir):
+def _replace_prefix_text(filename, old_dir, new_dir):
+    """Replace all the occurrences of the old install prefix with a
+    new install prefix in text files that are utf-8 encoded.
+
+    Args:
+        filename (str): target text file (utf-8 encoded)
+        old_dir (str): directory to be searched in the file
+        new_dir (str): substitute for the old directory
     """
-    Replace old install prefix with new install prefix
-    in text files using utf-8 encoded strings.
-    """
-    with open(path_name, 'rb+') as f:
+    with open(filename, 'rb+') as f:
         data = f.read()
         f.seek(0)
         # Replace old_dir with new_dir if it appears at the beginning of a path
@@ -426,13 +477,18 @@ def replace_prefix_text(path_name, old_dir, new_dir):
         f.truncate()
 
 
-def replace_prefix_bin(path_name, old_dir, new_dir):
-    """
-    Attempt to replace old install prefix with new install prefix
-    in binary files by prefixing new install prefix with os.sep
-    until the lengths of the prefixes are the same.
-    """
+def _replace_prefix_bin(filename, old_dir, new_dir):
+    """Replace all the occurrences of the old install prefix with a
+    new install prefix in binary files.
 
+    The new install prefix is prefixed with ``os.sep`` until the
+    lengths of the prefixes are the same.
+
+    Args:
+        filename (str): target binary file
+        old_dir (str): directory to be searched in the file
+        new_dir (str): substitute for the old directory
+    """
     def replace(match):
         occurances = match.group().count(old_dir.encode('utf-8'))
         olen = len(old_dir.encode('utf-8'))
@@ -440,11 +496,12 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
         padding = (olen - nlen) * occurances
         if padding < 0:
             return data
-        return match.group().replace(old_dir.encode('utf-8'),
-                                     os.sep.encode('utf-8') * padding +
-                                     new_dir.encode('utf-8'))
+        return match.group().replace(
+            old_dir.encode('utf-8'),
+            os.sep.encode('utf-8') * padding + new_dir.encode('utf-8')
+        )
 
-    with open(path_name, 'rb+') as f:
+    with open(filename, 'rb+') as f:
         data = f.read()
         f.seek(0)
         original_data_len = len(data)
@@ -454,43 +511,7 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
         ndata = pat.sub(replace, data)
         if not len(ndata) == original_data_len:
             raise BinaryStringReplacementError(
-                path_name, original_data_len, len(ndata))
-        f.write(ndata)
-        f.truncate()
-
-
-def replace_prefix_nullterm(path_name, old_dir, new_dir):
-    """
-    Attempt to replace old install prefix with new install prefix
-    in binary files by replacing with null terminated string
-    that is the same length unless the old path is shorter
-    Used on linux to replace mach-o rpaths
-    """
-
-    def replace(match):
-        occurances = match.group().count(old_dir.encode('utf-8'))
-        olen = len(old_dir.encode('utf-8'))
-        nlen = len(new_dir.encode('utf-8'))
-        padding = (olen - nlen) * occurances
-        if padding < 0:
-            return data
-        return match.group().replace(old_dir.encode('utf-8'),
-                                     new_dir.encode('utf-8')) + b'\0' * padding
-
-    if len(new_dir) > len(old_dir):
-        raise BinaryTextReplaceError(old_dir, new_dir)
-
-    with open(path_name, 'rb+') as f:
-        data = f.read()
-        f.seek(0)
-        original_data_len = len(data)
-        pat = re.compile(re.escape(old_dir).encode('utf-8') + b'([^\0]*?)\0')
-        if not pat.search(data):
-            return
-        ndata = pat.sub(replace, data)
-        if not len(ndata) == original_data_len:
-            raise BinaryStringReplacementError(
-                path_name, original_data_len, len(ndata))
+                filename, original_data_len, len(ndata))
         f.write(ndata)
         f.truncate()
 
@@ -569,50 +590,89 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                                        paths_to_paths)
 
 
-def elf_find_paths(orig_rpaths, old_layout_root, prefix_to_prefix):
-    new_rpaths = list()
+def _transform_rpaths(orig_rpaths, orig_root, new_prefixes):
+    """Return an updated list of RPATHs where each entry in the original list
+    starting with the old root is relocated to another place according to the
+    mapping passed as argument.
+
+    Args:
+        orig_rpaths (list): list of the original RPATHs
+        orig_root (str): original root to be substituted
+        new_prefixes (dict): dictionary that maps the original prefixes to
+            where they should be relocated
+
+    Returns:
+        List of paths
+    """
+    new_rpaths = []
     for orig_rpath in orig_rpaths:
-        if orig_rpath.startswith(old_layout_root):
-            for old_prefix, new_prefix in prefix_to_prefix.items():
-                if orig_rpath.startswith(old_prefix):
-                    new_rpaths.append(re.sub(re.escape(old_prefix),
-                                             new_prefix, orig_rpath))
-        else:
+        # If the original RPATH doesn't start with the target root
+        # append it verbatim and proceed
+        if not orig_rpath.startswith(orig_root):
             new_rpaths.append(orig_rpath)
+            continue
+
+        # Otherwise inspect the mapping and transform + append any prefix
+        # that starts with a registered key
+        for old_prefix, new_prefix in new_prefixes.items():
+            if orig_rpath.startswith(old_prefix):
+                new_rpaths.append(
+                    re.sub(re.escape(old_prefix), new_prefix, orig_rpath)
+                )
+
     return new_rpaths
 
 
-def relocate_elf_binaries(path_names, old_layout_root, new_layout_root,
-                          prefix_to_prefix, rel, old_prefix, new_prefix):
-    """
-    Use patchelf to get the original rpaths and then replace them with
+def relocate_elf_binaries(binaries, orig_root, new_root,
+                          new_prefixes, rel, orig_prefix, new_prefix):
+    """Relocate the binaries passed as arguments by changing their RPATHs.
+
+    Use patchelf to get the original RPATHs and then replace them with
     rpaths in the new directory layout.
-    New rpaths are determined from a dictionary mapping the prefixes in the
+
+    New RPATHs are determined from a dictionary mapping the prefixes in the
     old directory layout to the prefixes in the new directory layout if the
     rpath was in the old layout root, i.e. system paths are not replaced.
+
+    Args:
+        binaries (list): list of binaries that might need relocation, located
+            in the new prefix
+        orig_root (str): original root to be substituted
+        new_root (str): new root to be used, only relevant for relative RPATHs
+        new_prefixes (dict): dictionary that maps the original prefixes to
+            where they should be relocated
+        rel (bool): True if the RPATHs are relative, False if they are absolute
+        orig_prefix (str): prefix where the executable was originally located
+        new_prefix (str): prefix where we want to relocate the executable
     """
-    for path_name in path_names:
-        orig_rpaths = get_existing_elf_rpaths(path_name)
-        new_rpaths = list()
+    for new_binary in binaries:
+        orig_rpaths = _elf_rpaths_for(new_binary)
+        # TODO: Can we deduce `rel` from the original RPATHs?
         if rel:
-            # get the file path in the old_prefix
-            orig_path_name = re.sub(re.escape(new_prefix), old_prefix,
-                                    path_name)
-            # get the normalized rpaths in the old prefix using the file path
+            # Get the file path in the original prefix
+            orig_binary = re.sub(
+                re.escape(new_prefix), orig_prefix, new_binary
+            )
+
+            # Get the normalized RPATHs in the old prefix using the file path
             # in the orig prefix
-            orig_norm_rpaths = get_normalized_elf_rpaths(orig_path_name,
-                                                         orig_rpaths)
-            # get the normalize rpaths in the new prefix
-            norm_rpaths = elf_find_paths(orig_norm_rpaths, old_layout_root,
-                                         prefix_to_prefix)
-            # get the relativized rpaths in the new prefix
-            new_rpaths = get_relative_elf_rpaths(path_name, new_layout_root,
-                                                 norm_rpaths)
-            modify_elf_object(path_name, new_rpaths)
+            orig_norm_rpaths = _normalize_relative_paths(
+                orig_binary, orig_rpaths
+            )
+            # Get the normalize RPATHs in the new prefix
+            new_norm_rpaths = _transform_rpaths(
+                orig_norm_rpaths, orig_root, new_prefixes
+            )
+            # Get the relative RPATHs in the new prefix
+            new_rpaths = _make_relative(
+                new_binary, new_root, new_norm_rpaths
+            )
+            _set_elf_rpaths(new_binary, new_rpaths)
         else:
-            new_rpaths = elf_find_paths(orig_rpaths, old_layout_root,
-                                        prefix_to_prefix)
-            modify_elf_object(path_name, new_rpaths)
+            new_rpaths = _transform_rpaths(
+                orig_rpaths, orig_root, new_prefixes
+            )
+            _set_elf_rpaths(new_binary, new_rpaths)
 
 
 def make_link_relative(cur_path_names, orig_path_names):
@@ -652,11 +712,11 @@ def make_elf_binaries_relative(cur_path_names, orig_path_names,
     Replace old RPATHs with paths relative to old_dir in binary files
     """
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        orig_rpaths = get_existing_elf_rpaths(cur_path)
+        orig_rpaths = _elf_rpaths_for(cur_path)
         if orig_rpaths:
-            new_rpaths = get_relative_elf_rpaths(orig_path, old_layout_root,
-                                                 orig_rpaths)
-            modify_elf_object(cur_path, new_rpaths)
+            new_rpaths = _make_relative(orig_path, old_layout_root,
+                                        orig_rpaths)
+            _set_elf_rpaths(cur_path, new_rpaths)
 
 
 def check_files_relocatable(cur_path_names, allow_root):
@@ -679,7 +739,7 @@ def relocate_links(linknames, old_layout_root, new_layout_root,
     link target is create by replacing the old install prefix with the new
     install prefix.
     """
-    placeholder = set_placeholder(old_layout_root)
+    placeholder = _placeholder(old_layout_root)
     link_names = [os.path.join(new_install_prefix, linkname)
                   for linkname in linknames]
     for link_name in link_names:
@@ -710,11 +770,11 @@ def relocate_text(path_names, old_layout_root, new_layout_root,
     sbangnew = '#!/bin/bash %s/bin/sbang' % new_spack_prefix
 
     for path_name in path_names:
-        replace_prefix_text(path_name, old_install_prefix, new_install_prefix)
+        _replace_prefix_text(path_name, old_install_prefix, new_install_prefix)
         for orig_dep_prefix, new_dep_prefix in prefix_to_prefix.items():
-            replace_prefix_text(path_name, orig_dep_prefix, new_dep_prefix)
-        replace_prefix_text(path_name, old_layout_root, new_layout_root)
-        replace_prefix_text(path_name, sbangre, sbangnew)
+            _replace_prefix_text(path_name, orig_dep_prefix, new_dep_prefix)
+        _replace_prefix_text(path_name, old_layout_root, new_layout_root)
+        _replace_prefix_text(path_name, sbangre, sbangnew)
 
 
 def relocate_text_bin(path_names, old_layout_root, new_layout_root,
@@ -730,9 +790,9 @@ def relocate_text_bin(path_names, old_layout_root, new_layout_root,
         for path_name in path_names:
             for old_dep_prefix, new_dep_prefix in prefix_to_prefix.items():
                 if len(new_dep_prefix) <= len(old_dep_prefix):
-                    replace_prefix_bin(
+                    _replace_prefix_bin(
                         path_name, old_dep_prefix, new_dep_prefix)
-            replace_prefix_bin(path_name, old_spack_prefix, new_spack_prefix)
+            _replace_prefix_bin(path_name, old_spack_prefix, new_spack_prefix)
     else:
         if len(path_names) > 0:
             raise BinaryTextReplaceError(
@@ -810,7 +870,7 @@ def file_is_relocatable(file, paths_to_relocate=None):
 
     if platform.system().lower() == 'linux':
         if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
-            rpaths = ':'.join(get_existing_elf_rpaths(file))
+            rpaths = ':'.join(_elf_rpaths_for(file))
             set_of_strings.discard(rpaths)
     if platform.system().lower() == 'darwin':
         if m_subtype == 'x-mach-binary':

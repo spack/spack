@@ -35,4 +35,4 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
             configure_args.append('--without-gmp')
             configure_args.append('gl_cv_func_ftello_works=yes')
 
-            return configure_args
+        return configure_args

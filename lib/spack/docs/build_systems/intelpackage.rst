@@ -1055,6 +1055,6 @@ Footnotes
    2. Set the hash length in ``install-path-scheme``, also in ``config.yaml``
       (:ref:`q.v. <config-yaml>`).
    3. You will want to set the *same* hash length for
-      :ref:`tcl module files <modules-naming-scheme>`
-      if you have Spack produce them for you, under ``naming_scheme`` in
-      ``modules.yaml``.  Other module dialects cannot be altered in this manner.
+      :ref:`module files <modules-projections>`
+      if you have Spack produce them for you, under ``projections`` in
+      ``modules.yaml``.

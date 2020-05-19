@@ -87,7 +87,13 @@ def get_path_args_from_module_line(line):
         words_and_symbols = line.split(lua_quote)
         path_arg = words_and_symbols[-2]
     else:
-        path_arg = line.split()[2]
+        # The path arg is the 3rd "word" of the line in a TCL module
+        # OPERATION VAR_NAME PATH_ARG
+        words = line.split()
+        if len(words) > 2:
+            path_arg = line.split()[2]
+        else:
+            return []
 
     paths = path_arg.split(':')
     return paths

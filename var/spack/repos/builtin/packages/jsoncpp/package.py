@@ -15,6 +15,7 @@ class Jsoncpp(CMakePackage):
     homepage = "https://github.com/open-source-parsers/jsoncpp"
     url      = "https://github.com/open-source-parsers/jsoncpp/archive/1.7.3.tar.gz"
 
+    version('1.9.2', sha256='77a402fb577b2e0e5d0bdc1cf9c65278915cdb25171e3452c68b6da8a561f8f0')
     version('1.9.1', sha256='c7b40f5605dd972108f503f031b20186f5e5bca2b65cd4b8bd6c3e4ba8126697')
     version('1.9.0', sha256='bdd3ba9ed1f110b3eb57474d9094e90ab239b93b4803b4f9b1722c281e85a4ac')
     version('1.8.4', sha256='c49deac9e0933bcb7044f08516861a2d560988540b23de2ac1ad443b219afdb6')
@@ -41,6 +42,17 @@ class Jsoncpp(CMakePackage):
 
     depends_on('cmake@3.1:', type='build')
     depends_on('python', type='test')
+
+    # Ref: https://github.com/open-source-parsers/jsoncpp/pull/1023
+    # Released in 1.9.2, patch does not apply cleanly across releases.
+    # May apply to more compilers in the future.
+    @when('@:1.9.1 %clang@10.0.0:')
+    def patch(self):
+        filter_file(
+            'return d >= min && d <= max;',
+            'return d >= static_cast<double>(min) && '
+            'd <= static_cast<double>(max);',
+            'src/lib_json/json_value.cpp')
 
     def cmake_args(self):
         args = ['-DBUILD_SHARED_LIBS=ON']

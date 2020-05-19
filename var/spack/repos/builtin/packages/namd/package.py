@@ -15,8 +15,11 @@ class Namd(MakefilePackage):
 
     homepage = "http://www.ks.uiuc.edu/Research/namd/"
     url      = "file://{0}/NAMD_2.12_Source.tar.gz".format(os.getcwd())
+    git      = "https://charm.cs.illinois.edu/gerrit/namd.git"
     manual_download = True
 
+    version("develop", branch="master")
+    version('2.14b1', sha256='9407e54f5271b3d3039a5a9d2eae63c7e108ce31b7481e2197c19e1125b43919')
     version('2.13', '9e3323ed856e36e34d5c17a7b0341e38')
     version('2.12', '2a1191909b1ab03bf0205971ad4d8ee9')
 
@@ -26,7 +29,9 @@ class Namd(MakefilePackage):
     variant('interface', default='none', values=('none', 'tcl', 'python'),
             description='Enables TCL and/or python interface')
 
-    depends_on('charmpp')
+    depends_on('charmpp@6.10.1:', when="@2.14b1:")
+    depends_on('charmpp@6.8.2', when="@2.13")
+    depends_on('charmpp@6.7.1', when="@2.12")
 
     depends_on('fftw@:2.99', when="fftw=2")
     depends_on('fftw@3:', when="fftw=3")
@@ -69,21 +74,29 @@ class Namd(MakefilePackage):
         return '{0}-spack'.format(self.arch)
 
     def edit(self, spec, prefix):
+        m64 = '-m64 ' if not spec.satisfies('arch=aarch64:') else ''
         with working_dir('arch'):
             with open('{0}.arch'.format(self.build_directory), 'w') as fh:
                 # this options are take from the default provided
                 # configuration files
-                optims_opts = {
-                    'gcc': '-m64 -O3 -fexpensive-optimizations -ffast-math',
-                    'intel': '-O2 -ip'
-                }
+                # https://github.com/UIUC-PPL/charm/pull/2778
+                if self.spec.satisfies('^charmpp@:6.10.1'):
+                    optims_opts = {
+                        'gcc': m64 + '-O3 -fexpensive-optimizations \
+                                -ffast-math -lpthread',
+                        'intel': '-O2 -ip'}
+                else:
+                    optims_opts = {
+                        'gcc': m64 + '-O3 -fexpensive-optimizations \
+                                -ffast-math',
+                        'intel': '-O2 -ip'}
 
                 optim_opts = optims_opts[self.compiler.name] \
                     if self.compiler.name in optims_opts else ''
 
                 fh.write('\n'.join([
                     'NAMD_ARCH = {0}'.format(self.arch),
-                    'CHARMARCH = ',
+                    'CHARMARCH = {0}'.format(self.spec['charmpp'].charmarch),
                     'CXX = {0.cxx} {0.cxx11_flag}'.format(
                         self.compiler),
                     'CXXOPTS = {0}'.format(optim_opts),
