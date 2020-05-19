@@ -41,6 +41,7 @@ packages:
       pil: [py-pillow]
       pkgconfig: [pkgconf, pkg-config]
       scalapack: [netlib-scalapack]
+      sendmail: [ssmtp]
       sycl: [hipsycl]
       szip: [libszip, libaec]
       tbb: [intel-tbb]
