@@ -9,7 +9,7 @@ from spack import *
 class Ipopt(AutotoolsPackage):
     """Ipopt (Interior Point OPTimizer, pronounced eye-pea-Opt) is a
        software package for large-scale nonlinear optimization."""
-    homepage = "https://projects.coin-or.org/Ipopt"
+    homepage = "https://github.com/coin-or/Ipopt"
     url      = "https://github.com/coin-or/Ipopt/archive/releases/3.13.2.tar.gz"
 
     version('3.13.2',  sha256='891ab9e9c7db29fc8ac5c779ccec6313301098de7bbf735ca230cd5544c49496')
