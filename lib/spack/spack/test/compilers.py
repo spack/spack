@@ -216,6 +216,7 @@ def fake_compiler_verbose_output(monkeypatch):
         spack.util.executable.Executable, '__call__', call_compiler)
     yield MockCompiler()
 
+
 def test_get_compiler_link_paths(fake_compiler_verbose_output):
     compiler = fake_compiler_verbose_output
     dirs = compiler._get_compiler_link_paths([compiler.cc])
