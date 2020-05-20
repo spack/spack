@@ -979,4 +979,4 @@ def mime_type(file):
     if '/' not in output:
         output += '/'
     split_by_slash = output.strip().split('/')
-    return (split_by_slash[0], "/".join(split_by_slash[1:]))
+    return split_by_slash[0], "/".join(split_by_slash[1:])
