@@ -2254,6 +2254,15 @@ def detectable(decorated_cls):
     """
     @classmethod
     def determine_spec_details(cls, prefix, exes_in_prefix):
+        """Allow ``spack external find ...`` to locate installations.
+
+        Args:
+            prefix (str): the directory containing the executables
+            exes_in_prefix (set): the executables that match the regex
+
+        Returns:
+            The list of detected specs for this package
+        """
         exes_by_version = collections.defaultdict(list)
         # The default filter function is the identity function for the
         # list of executables
