@@ -36,7 +36,7 @@ def setup_parser(subparser):
         help="packages with detected externals won't be built with Spack")
     find_parser.add_argument('packages', nargs=argparse.REMAINDER)
 
-    _ = sp.add_parser(
+    sp.add_parser(
         'list', help='list detectable packages, by repository and name'
     )
 
