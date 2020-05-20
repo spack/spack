@@ -309,7 +309,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        spec_str = 'gcc@{0} languages={1}'
         languages, compilers = set(), {}
         for exe in exes:
             if 'gcc' in exe:
@@ -321,11 +320,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             if 'gfortran' in exe:
                 languages.add('fortran')
                 compilers['fortran'] = exe
-
-        spec_str = spec_str.format(version_str, ','.join(languages))
-        return [Spec.from_detection(
-            spec_str, extra_attributes={'compilers': compilers}
-        )]
+        variant_str = 'languages={0}'.format(','.join(languages))
+        return variant_str, {'compilers': compilers}
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):

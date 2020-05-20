@@ -25,6 +25,8 @@ import textwrap
 import time
 import traceback
 
+import six
+
 import llnl.util.tty as tty
 import spack.compilers
 import spack.config
@@ -2258,20 +2260,38 @@ def detectable(decorated_cls):
         filter_fn = getattr(cls, 'filter_detected_exes', lambda x, exes: exes)
         exes_in_prefix = filter_fn(prefix, exes_in_prefix)
         for exe in exes_in_prefix:
-            version_str = cls.determine_version(exe)
-            if version_str:
-                exes_by_version[version_str].append(exe)
+            try:
+                version_str = cls.determine_version(exe)
+                if version_str:
+                    exes_by_version[version_str].append(exe)
+            except Exception as e:
+                msg = ('An error occurred when trying to detect the version '
+                       'of "{0}" [{1}]')
+                tty.debug(msg.format(exe, str(e)))
 
         specs = []
         for version_str, exes in exes_by_version.items():
-            specs.extend(cls.determine_variants(exes, version_str))
+            variants = cls.determine_variants(exes, version_str)
+            # Normalize output to list
+            if not isinstance(variants, list):
+                variants = [variants]
+
+            for variant in variants:
+                if isinstance(variant, six.string_types):
+                    variant = (variant, {})
+                variant_str, extra_attributes = variant
+                spec_str = '{0}@{1} {2}'.format(
+                    cls.name, version_str, variant_str
+                )
+                specs.append(spack.spec.Spec.from_detection(
+                    spec_str, extra_attributes=extra_attributes
+                ))
 
         return sorted(specs)
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        spec_str = '{0}@{1}'.format(cls.name, version_str)
-        return [spack.spec.Spec.from_detection(spec_str)]
+        return ''
 
     detectable_packages[decorated_cls.namespace].append(decorated_cls.name)
     default = False
