@@ -1437,9 +1437,9 @@ class Environment(object):
                 # The primary list is handled differently
                 continue
 
-            active_yaml_lists = [L for L in yaml_dict.get('definitions', [])
-                                 if name in L and
-                                 _eval_conditional(L.get('when', 'True'))]
+            active_yaml_lists = [x for x in yaml_dict.get('definitions', [])
+                                 if name in x and
+                                 _eval_conditional(x.get('when', 'True'))]
 
             # Remove any specs in yaml that are not in internal representation
             for ayl in active_yaml_lists:
