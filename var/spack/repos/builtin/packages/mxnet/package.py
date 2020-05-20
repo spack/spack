@@ -81,19 +81,21 @@ class Mxnet(MakefilePackage):
             if spec.satisfies('@1.3.0'):
                 filter_file(
                     '$(shell pkg-config --cflags opencv)',
-                    '-I%s' % spec['opencv'].prefix.include,
+                    spec['opencv'].headers.include_flags,
                     'Makefile', string=True
                 )
                 filter_file(
                     '$(filter-out -lopencv_ts, '
                     '$(shell pkg-config --libs opencv))',
-                    '-lopencv_core -lopencv_imgproc -lopencv_imgcodecs',
+                    spec['opencv'].libs.link_flags,
                     'Makefile', string=True
                 )
             else:
                 args.extend(
-                    ['USE_OPENCV_INC_PATH=%s' % spec['opencv'].prefix.include,
-                     'USE_OPENCV_LIB_PATH=%s' % spec['opencv'].prefix.lib64]
+                    ['USE_OPENCV_INC_PATH=' +
+                        spec['opencv'].headers.directories[0],
+                     'USE_OPENCV_LIB_PATH=' +
+                        spec['opencv'].libs.directories[0]]
                 )
 
         if 'openblas' in spec:
