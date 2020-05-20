@@ -324,15 +324,14 @@ class Compiler(object):
             # are used by the compiler
             return []
 
+        # What flag types apply to first_compiler, in what order
         flags = ['cppflags', 'ldflags']
-        if self.flags:
-            # cls is an instance not a class
-            if first_compiler == self.cc:
-                flags = ['cflags'] + flags
-            elif first_compiler == self.cxx:
-                flags = ['cxxflags'] + flags
-            else:
-                flags.append('fflags')
+        if first_compiler == self.cc:
+            flags = ['cflags'] + flags
+        elif first_compiler == self.cxx:
+            flags = ['cxxflags'] + flags
+        else:
+            flags.append('fflags')
 
         try:
             tmpdir = tempfile.mkdtemp(prefix='spack-implicit-link-info')
