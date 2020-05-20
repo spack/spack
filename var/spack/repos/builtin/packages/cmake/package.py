@@ -4,10 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
-import spack.package
 
-
-@spack.package.detectable
+@detectable
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
     tools designed to build, test and package software.

@@ -4,10 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
-import spack.package
 
-
-@spack.package.detectable
+@detectable
 class Automake(AutotoolsPackage, GNUMirrorPackage):
     """Automake -- make file builder part of autotools"""
 

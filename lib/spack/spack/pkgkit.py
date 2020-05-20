@@ -13,7 +13,7 @@ from llnl.util.filesystem import *
 
 from spack.package import \
     Package, BundlePackage, \
-    run_before, run_after, on_package_attributes
+    run_before, run_after, on_package_attributes, detectable
 from spack.package import inject_flags, env_flags, build_system_flags
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.aspell_dict import AspellDictPackage
