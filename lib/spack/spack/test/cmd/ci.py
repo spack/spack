@@ -529,7 +529,7 @@ spack:
         with open(outputfile) as f:
             yaml_contents = syaml.load(f)
 
-        # Check that the "externaltool package was not erroneously staged
+        # Check that the "externaltool" package was not erroneously staged
         assert not any('externaltool' in key for key in yaml_contents)
 
 
