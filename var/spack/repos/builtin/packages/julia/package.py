@@ -34,6 +34,7 @@ class Julia(Package):
 
     variant('cxx', default=False, description='Prepare for Julia Cxx package')
     variant('mkl', default=False, description='Use Intel MKL')
+    variant('perf', default=False, description='perf profiling support')
 
     patch('gc.patch', when='@0.4:0.4.5')
     patch('openblas.patch', when='@0.4:0.4.5')
@@ -91,6 +92,8 @@ class Julia(Package):
     # USE_SYSTEM_LIBGIT2=0
 
     conflicts('+cxx', when='@:0.6', msg='Variant cxx requires Julia >= 1.0.0')
+    conflicts('+perf', when='@:0.6',
+              msg='Variant perf requires Julia >= 1.0.0')
 
     conflicts('@:0.7.0', when='target=aarch64:')
 
@@ -172,6 +175,13 @@ class Julia(Package):
             options += [
                 'USE_INTEL_MKL=1',
             ]
+
+        if '+perf' in spec:
+            options += [
+                'USE_PERF_JITEVENTS=1',
+                'USE_BINARYBUILDER_LLVM=0'
+            ]
+
         with open('Make.user', 'w') as f:
             f.write('\n'.join(options) + '\n')
 
