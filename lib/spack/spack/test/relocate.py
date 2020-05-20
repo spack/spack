@@ -344,3 +344,28 @@ def test_raise_if_not_relocatable(monkeypatch):
         spack.relocate.raise_if_not_relocatable(
             ['an_executable'], allow_root=False
         )
+
+
+@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
+    orig_binary = hello_world(rpaths=[
+        str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
+    ])
+    new_binary = copy_binary(orig_binary)
+
+    # Check this call succeed
+    spack.relocate.relocate_text_bin(
+        [str(new_binary)],
+        str(orig_binary.dirpath()), str(new_binary.dirpath()),
+        spack.paths.spack_root, spack.paths.spack_root,
+        {str(orig_binary.dirpath()): str(new_binary.dirpath())}
+    )
+
+
+def test_relocate_text_bin_raise_if_new_prefix_is_longer():
+    short_prefix = '/short'
+    long_prefix = '/much/longer'
+    with pytest.raises(spack.relocate.BinaryTextReplaceError):
+        spack.relocate.relocate_text_bin(
+            ['item'], short_prefix, long_prefix, None, None, None
+        )
