@@ -21,7 +21,7 @@ class RSpatstat(RPackage):
     depends_on('r@3.3:', type=('build', 'run'))
     depends_on('r-rpart', type=('build', 'run'))
     depends_on('r-nlme', type=('build', 'run'))
-    depends_on('r-spatstat-data', type=('build', 'run'))
+    depends_on('r-spatstat-data@1.4-2:', type=('build', 'run'))
     depends_on('r-spatstat-utils@1.17:', type=('build', 'run'))
     depends_on('r-mgcv', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
