@@ -743,32 +743,43 @@ def raise_if_not_relocatable(binaries, allow_root):
             raise InstallRootStringError(binary, spack.store.layout.root)
 
 
-def relocate_links(linknames, old_layout_root, new_layout_root,
-                   old_install_prefix, new_install_prefix, prefix_to_prefix):
-    """
-    The symbolic links in filenames are absolute links or placeholder links.
+def relocate_links(links, orig_layout_root,
+                   orig_install_prefix, new_install_prefix):
+    """Relocate links to a new install prefix.
+
+    The symbolic links are relative to the original installation prefix.
     The old link target is read and the placeholder is replaced by the old
     layout root. If the old link target is in the old install prefix, the new
     link target is create by replacing the old install prefix with the new
     install prefix.
+
+    Args:
+        links (list): list of links to be relocated
+        orig_layout_root (str): original layout root
+        orig_install_prefix (str): install prefix of the original installation
+        new_install_prefix (str): install prefix where we want to relocate
     """
-    placeholder = _placeholder(old_layout_root)
-    link_names = [os.path.join(new_install_prefix, linkname)
-                  for linkname in linknames]
-    for link_name in link_names:
-        link_target = os.readlink(link_name)
-        link_target = re.sub(placeholder, old_layout_root, link_target)
-        if link_target.startswith(old_install_prefix):
-            new_link_target = re.sub(
-                old_install_prefix, new_install_prefix, link_target)
-            os.unlink(link_name)
-            os.symlink(new_link_target, link_name)
+    placeholder = _placeholder(orig_layout_root)
+    abs_links = [os.path.join(new_install_prefix, link) for link in links]
+    for abs_link in abs_links:
+        link_target = os.readlink(abs_link)
+        link_target = re.sub(placeholder, orig_layout_root, link_target)
+        # If the link points to a file in the original install prefix,
+        # compute the corresponding target in the new prefix and relink
+        if link_target.startswith(orig_install_prefix):
+            link_target = re.sub(
+                orig_install_prefix, new_install_prefix, link_target
+            )
+            os.unlink(abs_link)
+            os.symlink(link_target, abs_link)
+
+        # If the link is absolute and has not been relocated then
+        # warn the user about that
         if (os.path.isabs(link_target) and
             not link_target.startswith(new_install_prefix)):
-            msg = 'Link target %s' % link_target
-            msg += ' for symbolic link %s is outside' % link_name
-            msg += ' of the newinstall prefix %s.\n' % new_install_prefix
-            tty.warn(msg)
+            msg = ('Link target "{0}" for symbolic link "{1}" is outside'
+                   ' of the new install prefix {2}')
+            tty.warn(msg.format(link_target, abs_link, new_install_prefix))
 
 
 def relocate_text(path_names, old_layout_root, new_layout_root,
