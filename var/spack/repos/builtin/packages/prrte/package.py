@@ -50,7 +50,7 @@ class Prrte(AutotoolsPackage):
 
         # libevent
         config_args.append(
-            '--with-libev={0}'.format(spec['libevent'].prefix))
+            '--with-libevent={0}'.format(spec['libevent'].prefix))
         # hwloc
         config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
         # pmix
