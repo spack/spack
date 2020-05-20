@@ -632,7 +632,6 @@ def relocate_package(spec, allow_root):
 
         # relocate the install prefixes in binary files including dependencies
         relocate.relocate_text_bin(files_to_relocate,
-                                   old_layout_root, new_layout_root,
                                    old_prefix, new_prefix,
                                    old_spack_prefix,
                                    new_spack_prefix,

@@ -815,26 +815,38 @@ def relocate_text(
         _replace_prefix_text(file, sbang_regex, new_sbang)
 
 
-def relocate_text_bin(path_names, old_layout_root, new_layout_root,
-                      old_install_prefix, new_install_prefix,
-                      old_spack_prefix, new_spack_prefix,
-                      prefix_to_prefix):
+def relocate_text_bin(
+        binaries, orig_install_prefix, new_install_prefix,
+        orig_spack, new_spack, new_prefixes
+):
+    """Replace null terminated path strings hard coded into binaries.
+
+    The new install prefix must be shorter than the original one.
+
+    Args:
+        binaries (list): binaries to be relocated
+        orig_install_prefix (str): install prefix of the original installation
+        new_install_prefix (str): install prefix where we want to relocate
+        orig_spack (str): path to the original Spack
+        new_spack (str): path to the new Spack
+        new_prefixes (dict): dictionary that maps the original prefixes to
+            where they should be relocated
+
+    Raises:
+      BinaryTextReplaceError: when the new path in longer than the old path
     """
-      Replace null terminated path strings hard coded into binaries.
-      Raise an exception when the new path in longer than the old path
-      because this breaks the binary.
-      """
-    if len(new_install_prefix) <= len(old_install_prefix):
-        for path_name in path_names:
-            for old_dep_prefix, new_dep_prefix in prefix_to_prefix.items():
-                if len(new_dep_prefix) <= len(old_dep_prefix):
-                    _replace_prefix_bin(
-                        path_name, old_dep_prefix, new_dep_prefix)
-            _replace_prefix_bin(path_name, old_spack_prefix, new_spack_prefix)
-    else:
-        if len(path_names) > 0:
-            raise BinaryTextReplaceError(
-                old_install_prefix, new_install_prefix)
+    # Raise if the new install prefix is longer than the
+    # original one, since it means we can't change the original
+    # binary to relocate it
+    new_prefix_is_shorter = len(new_install_prefix) <= len(orig_install_prefix)
+    if not new_prefix_is_shorter and len(binaries) > 0:
+        raise BinaryTextReplaceError(orig_install_prefix, new_install_prefix)
+
+    for binary in binaries:
+        for old_dep_prefix, new_dep_prefix in new_prefixes.items():
+            if len(new_dep_prefix) <= len(old_dep_prefix):
+                _replace_prefix_bin(binary, old_dep_prefix, new_dep_prefix)
+        _replace_prefix_bin(binary, orig_spack, new_spack)
 
 
 def is_relocatable(spec):
