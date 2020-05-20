@@ -48,6 +48,9 @@ _active_environment = None
 
 
 def _env_path():
+    # Note the configuration must be read before 'config.shared_spack' is
+    # called. so this call is wrapped in a singleton to ensure that this
+    # state is only retrieved when necessary (at the latest time possible).
     if spack.config.shared_spack():
         # If this is a shared spack instance, then environments should be
         # stored in the install tree root.
@@ -386,7 +389,7 @@ def all_environment_names():
     if not os.path.exists(str(env_path)):
         return []
 
-    candidates = sorted(os.listdir(env_path))
+    candidates = sorted(os.listdir(str(env_path)))
     names = []
     for candidate in candidates:
         yaml_path = os.path.join(_root(candidate), manifest_name)
