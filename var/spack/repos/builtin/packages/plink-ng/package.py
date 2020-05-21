@@ -30,6 +30,7 @@ class PlinkNg(Package):
         env.set('ZLIB', zlib)
 
     def install(self, spec, prefix):
-        filter_file('-llapack -lcblas -lblas', '-lopenblas', 'build.sh', string=True)
+        filter_file('-llapack -lcblas -lblas', '-lopenblas',
+                    'build.sh', string=True)
         which('sh')('build.sh')
         install_tree('.', prefix)
