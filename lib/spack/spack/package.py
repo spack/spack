@@ -864,19 +864,22 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return os.path.join(self.stage.path, _spack_build_envfile)
 
     @property
+    def metadata_dir(self):
+        """Return the install metadata directory."""
+        return spack.store.layout.metadata_path(self.spec)
+
+    @property
     def install_env_path(self):
         """
         Return the build environment file path on successful installation.
         """
-        install_path = spack.store.layout.metadata_path(self.spec)
-
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
-        old_filename = os.path.join(install_path, 'build.env')
+        old_filename = os.path.join(self.metadata_dir, 'build.env')
         if os.path.exists(old_filename):
             return old_filename
         else:
-            return os.path.join(install_path, _spack_build_envfile)
+            return os.path.join(self.metadata_dir, _spack_build_envfile)
 
     @property
     def log_path(self):
@@ -893,16 +896,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def install_log_path(self):
         """Return the build log file path on successful installation."""
-        install_path = spack.store.layout.metadata_path(self.spec)
-
         # Backward compatibility: Return the name of an existing install log.
         for filename in ['build.out', 'build.txt']:
-            old_log = os.path.join(install_path, filename)
+            old_log = os.path.join(self.metadata_dir, filename)
             if os.path.exists(old_log):
                 return old_log
 
         # Otherwise, return the current install log path name.
-        return os.path.join(install_path, _spack_build_logfile)
+        return os.path.join(self.metadata_dir, _spack_build_logfile)
 
     @property
     def configure_args_path(self):
@@ -912,14 +913,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def install_configure_args_path(self):
         """Return the configure args file path on successful installation."""
-        install_path = spack.store.layout.metadata_path(self.spec)
-
-        return os.path.join(install_path, _spack_configure_argsfile)
+        return os.path.join(self.metadata_dir, _spack_configure_argsfile)
 
     @property
     def install_test_root(self):
         """Return the install test root directory."""
-        return spack.store.layout.metadata_path(self.spec)
+        return self.metadata_dir
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
