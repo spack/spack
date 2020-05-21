@@ -7,16 +7,18 @@ from __future__ import print_function
 
 import codecs
 import errno
-import re
+import multiprocessing.pool
 import os
 import os.path
+import re
 import shutil
 import ssl
 import sys
 import traceback
 
-from six.moves.urllib.request import urlopen, Request
+import six
 from six.moves.urllib.error import URLError
+from six.moves.urllib.request import urlopen, Request
 
 try:
     # Python 2 had these in the HTMLParser package.
@@ -307,98 +309,6 @@ def list_url(url):
             for key in _iter_s3_prefix(s3, url)))
 
 
-def _spider(url, visited, root, depth, max_depth, raise_on_error):
-    """Fetches URL and any pages it links to up to max_depth.
-
-       depth should initially be zero, and max_depth is the max depth of
-       links to follow from the root.
-
-       Prints out a warning only if the root can't be fetched; it ignores
-       errors with pages that the root links to.
-
-       Returns a tuple of:
-       - pages: dict of pages visited (URL) mapped to their full text.
-       - links: set of links encountered while visiting the pages.
-    """
-    pages = {}     # dict from page URL -> text content.
-    links = set()  # set of all links seen on visited pages.
-
-    try:
-        response_url, _, response = read_from_url(url, 'text/html')
-        if not response_url or not response:
-            return pages, links
-
-        page = codecs.getreader('utf-8')(response).read()
-        pages[response_url] = page
-
-        # Parse out the links in the page
-        link_parser = LinkParser()
-        subcalls = []
-        link_parser.feed(page)
-
-        while link_parser.links:
-            raw_link = link_parser.links.pop()
-            abs_link = url_util.join(
-                response_url,
-                raw_link.strip(),
-                resolve_href=True)
-            links.add(abs_link)
-
-            # Skip stuff that looks like an archive
-            if any(raw_link.endswith(suf) for suf in ALLOWED_ARCHIVE_TYPES):
-                continue
-
-            # Skip things outside the root directory
-            if not abs_link.startswith(root):
-                continue
-
-            # Skip already-visited links
-            if abs_link in visited:
-                continue
-
-            # If we're not at max depth, follow links.
-            if depth < max_depth:
-                subcalls.append((abs_link, visited, root,
-                                 depth + 1, max_depth, raise_on_error))
-                visited.add(abs_link)
-
-        if subcalls:
-            results = [_spider(*args) for args in subcalls]
-
-            for sub_pages, sub_links in results:
-                pages.update(sub_pages)
-                links.update(sub_links)
-
-    except URLError as e:
-        tty.debug(e)
-
-        if hasattr(e, 'reason') and isinstance(e.reason, ssl.SSLError):
-            tty.warn("Spack was unable to fetch url list due to a certificate "
-                     "verification problem. You can try running spack -k, "
-                     "which will not check SSL certificates. Use this at your "
-                     "own risk.")
-
-        if raise_on_error:
-            raise NoNetworkConnectionError(str(e), url)
-
-    except HTMLParseError as e:
-        # This error indicates that Python's HTML parser sucks.
-        msg = "Got an error parsing HTML."
-
-        # Pre-2.7.3 Pythons in particular have rather prickly HTML parsing.
-        if sys.version_info[:3] < (2, 7, 3):
-            msg += " Use Python 2.7.3 or newer for better HTML parsing."
-
-        tty.warn(msg, url, "HTMLParseError: " + str(e))
-
-    except Exception as e:
-        # Other types of errors are completely ignored, except in debug mode.
-        tty.debug("Error in _spider: %s:%s" % (type(e), e),
-                  traceback.format_exc())
-
-    return pages, links
-
-
 def _urlopen(req, *args, **kwargs):
     """Wrapper for compatibility with old versions of Python."""
     url = req
@@ -420,18 +330,152 @@ def _urlopen(req, *args, **kwargs):
     return opener(req, *args, **kwargs)
 
 
-def spider(root, depth=0):
-    """Gets web pages from a root URL.
+def spider(roots, depth=0):
+    """Get web pages from root URLs.
 
-       If depth is specified (e.g., depth=2), then this will also follow
-       up to <depth> levels of links from the root.
+    If depth is specified (e.g., depth=2), then this will also follow
+    up to <depth> levels of links from each root.
 
-       This will spawn processes to fetch the children, for much improved
-       performance over a sequential fetch.
+    Args:
+        roots: root urls used as a starting point for spidering
+        depth: level of recursion into links
 
+    Returns:
+        A dict of pages visited (URL) mapped to their full text and the
+        set of visited links.
     """
-    root = url_util.parse(root)
-    pages, links = _spider(root, set(), root, 0, depth, False)
+    # Cache of visited links, meant to be captured by the closure below
+    _visited = set()
+
+    def _spider(url, root, collect_nested):
+        """Fetches URL and any pages it links to.
+
+        Prints out a warning only if the root can't be fetched; it ignores
+        errors with pages that the root links to.
+
+        Args:
+            url (str): url being fetched and searched for links
+            root (str): base url on which we want to restrict our search
+            collect_nested (bool): whether we want to collect arguments
+                for nested spidering on the links found in this url
+
+        Returns:
+            A tuple of:
+            - pages: dict of pages visited (URL) mapped to their full text.
+            - links: set of links encountered while visiting the pages.
+            - spider_args: argument for subsequent call to spider
+        """
+        pages = {}  # dict from page URL -> text content.
+        links = set()  # set of all links seen on visited pages.
+        subcalls = []
+
+        try:
+            response_url, _, response = read_from_url(url, 'text/html')
+            if not response_url or not response:
+                return pages, links, subcalls
+
+            page = codecs.getreader('utf-8')(response).read()
+            pages[response_url] = page
+
+            # Parse out the links in the page
+            link_parser = LinkParser()
+            link_parser.feed(page)
+
+            while link_parser.links:
+                raw_link = link_parser.links.pop()
+                abs_link = url_util.join(
+                    response_url,
+                    raw_link.strip(),
+                    resolve_href=True)
+                links.add(abs_link)
+
+                # Skip stuff that looks like an archive
+                if any(raw_link.endswith(s) for s in ALLOWED_ARCHIVE_TYPES):
+                    continue
+
+                # Skip things outside the root directory
+                if not abs_link.startswith(root):
+                    continue
+
+                # Skip already-visited links
+                if abs_link in _visited:
+                    continue
+
+                # If we're not at max depth, follow links.
+                if collect_nested:
+                    subcalls.append((abs_link, root))
+                    _visited.add(abs_link)
+
+        except URLError as e:
+            tty.debug(str(e))
+
+            if hasattr(e, 'reason') and isinstance(e.reason, ssl.SSLError):
+                tty.warn("Spack was unable to fetch url list due to a "
+                         "certificate verification problem. You can try "
+                         "running spack -k, which will not check SSL "
+                         "certificates. Use this at your own risk.")
+
+        except HTMLParseError as e:
+            # This error indicates that Python's HTML parser sucks.
+            msg = "Got an error parsing HTML."
+
+            # Pre-2.7.3 Pythons in particular have rather prickly HTML parsing.
+            if sys.version_info[:3] < (2, 7, 3):
+                msg += " Use Python 2.7.3 or newer for better HTML parsing."
+
+            tty.warn(msg, url, "HTMLParseError: " + str(e))
+
+        except Exception as e:
+            # Other types of errors are completely ignored,
+            # except in debug mode
+            tty.debug("Error in _spider: %s:%s" % (type(e), str(e)),
+                      traceback.format_exc())
+
+        finally:
+            tty.debug("SPIDER: {0}".format(url))
+
+        return pages, links, subcalls
+
+    # TODO: Needed until we drop support for Python 2.X
+    def star(func):
+        def _wrapper(args):
+            return func(*args)
+        return _wrapper
+
+    if isinstance(roots, six.string_types):
+        roots = [roots]
+
+    # Clear the local cache of visited pages before starting the search
+    _visited.clear()
+
+    current_depth = 0
+    pages, links, spider_args = {}, set(), []
+
+    collect = current_depth < depth
+    for root in roots:
+        root = url_util.parse(root)
+        spider_args.append((root, root, collect))
+
+    tp = multiprocessing.pool.ThreadPool(processes=128)
+    try:
+        while current_depth <= depth:
+            tty.debug("Current depth: {0} [max={1}, len={2}]".format(
+                current_depth, depth, len(spider_args))
+            )
+            results = tp.map(star(_spider), spider_args)
+            spider_args = []
+            collect = current_depth < depth
+            for sub_pages, sub_links, sub_spider_args in results:
+                sub_spider_args = [x + (collect,) for x in sub_spider_args]
+                pages.update(sub_pages)
+                links.update(sub_links)
+                spider_args.extend(sub_spider_args)
+
+            current_depth += 1
+    finally:
+        tp.terminate()
+        tp.join()
+
     return pages, links
 
 
@@ -471,12 +515,7 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     list_urls |= additional_list_urls
 
     # Grab some web pages to scrape.
-    pages = {}
-    links = set()
-    for lurl in list_urls:
-        pg, lnk = spider(lurl, depth=list_depth)
-        pages.update(pg)
-        links.update(lnk)
+    pages, links = spider(list_urls, depth=list_depth)
 
     # Scrape them for archive URLs
     regexes = []
