@@ -10,7 +10,6 @@ class FdFind(CargoPackage):
     """A simple, fast and user-friendly alternative to 'find'."""
 
     homepage = "https://github.com/sharkdp/fd"
-
     crates_io = "fd-find"
     git = "https://github.com/sharkdp/fd.git"
 
