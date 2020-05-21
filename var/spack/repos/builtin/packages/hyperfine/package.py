@@ -12,7 +12,7 @@ class Hyperfine(CargoPackage):
     homepage  = "https://github.com/sharkdp/hyperfine"
     crates_io = "hyperfine"
     git       = "https://github.com/sharkdp/hyperfine.git"
-    
+
     maintainers = ['AndrewGaspar']
 
     version('master', branch='master')
@@ -31,5 +31,3 @@ class Hyperfine(CargoPackage):
     version('0.3.0', sha256='5ba014b5663eef867dc2b5826a3fc3735369df669340860f6151a5ef82871ec2')
     version('0.2.0', sha256='b94617e670f6181d790fd47877d8088b38b4b1a1d26ea0dcc8115c1223930bfe')
     version('0.1.0', sha256='ecb1eb4d22ec7dea151354d17f4a98dd3348d9fa64923f42a293c9ac79eaa77b')
-
-

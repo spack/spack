@@ -23,6 +23,3 @@ class Exa(CargoPackage):
     version('master', branch='master')
     version('0.9.0', sha256='0463ccb5038bd6a0ee042e0a8ff5cd9792906e19a29f0ce631217c7a5f1720e9')
     version('0.8.0', sha256='4291b26960413bfa2d7c682644b18aeadb0ff9182ec0d980cf22806b8d3bb6a4')
-
-
-

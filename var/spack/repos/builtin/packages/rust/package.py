@@ -6,8 +6,6 @@
 from spack import *
 from six import iteritems
 
-import llnl.util.tty as tty
-
 
 class Rust(Package):
     """The Rust programming language toolchain

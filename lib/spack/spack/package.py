@@ -22,7 +22,6 @@ import shutil
 import sys
 import textwrap
 import time
-import json
 from six import StringIO
 from six import string_types
 from six import with_metaclass
@@ -57,7 +56,6 @@ from spack.installer import \
     install_args_docstring, PackageInstaller, InstallError
 from spack.stage import \
     stage_prefix, Stage, ResourceStage, StageComposite, CargoStage
-from spack.util.executable import which
 from spack.util.package_hash import package_hash
 from spack.version import Version
 

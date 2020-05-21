@@ -574,10 +574,11 @@ class CratesIOURLFetchStrategy(URLFetchStrategy):
     url_attr = 'crates_io'
 
     def __init__(self, crate, version, *args, **kwargs):
-        url = "https://crates.io/api/v1/crates/{crate}/{version}/download".format(
-            crate=crate,
-            version=version
-        )
+        url = "https://crates.io/api/v1/crates/{crate}/{version}/download"\
+            .format(
+                crate=crate,
+                version=version
+            )
         super(CratesIOURLFetchStrategy, self).__init__(
             url=url, extension='tar.gz', *args, **kwargs
         )
@@ -1336,7 +1337,7 @@ def for_package_version(pkg, version):
         # do not treat those attributes as a hint at the 'url' fetcher for
         # crates_io packages
         if hasattr(pkg, fetcher.url_attr) or \
-            (fetcher.url_attr == 'url' and not hasattr(pkg, 'crates_io')):
+                (fetcher.url_attr == 'url' and not hasattr(pkg, 'crates_io')):
             optionals = fetcher.optional_attrs
             if optionals and any(a in args for a in optionals):
                 _check_version_attributes(fetcher, pkg, version)

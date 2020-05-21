@@ -20,7 +20,7 @@ import llnl.util.tty as tty
 import llnl.util.filesystem as filesystem
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
 from llnl.util.filesystem import \
-    partition_path, remove_linked_tree, join_path, ancestor, working_dir
+    partition_path, remove_linked_tree, join_path, working_dir
 
 import spack.paths
 import spack.caches
@@ -807,6 +807,7 @@ class CargoStage(object):
         ) + '.tar.gz'
 
     def fetch(self, *args, **kwargs):
+        """Vendors dependencies or unpacks cache of the dependencies."""
         if self.expanded:
             tty.msg("Cargo dependencies already staged")
             return
@@ -839,7 +840,6 @@ class CargoStage(object):
         #     for mirror in spack.mirror.MirrorCollection().values():
         #         for rel_path in self.mirror_paths:
         #             urls.append(url_util.join(mirror.fetch_url, rel_path))
-            
 
         # Fetching the cargo stage requires the package is expanded
         self.package_stage.expand_archive()
@@ -847,7 +847,9 @@ class CargoStage(object):
         cargo = deepcopy(self.cargo)
         checksum = spack.config.get('config:checksum')
         if checksum and not os.path.exists(self.manifest_lock_path):
-            tty.warn("There is no Cargo.lock file to vendor crate depenencies safely.")
+            tty.warn(
+                "There is no Cargo.lock file to vendor crate depenencies \
+                 safely.")
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
@@ -870,8 +872,8 @@ class CargoStage(object):
         # Create the vendored dependencies directory
         mkdirp(self.vendor_stage)
 
-        # TODO: Tweak the config file that 'cargo vendor' writes out to make the
-        # path to the vendor directory relative and write it out.
+        # TODO: Tweak the config file that 'cargo vendor' writes out to make
+        # the path to the vendor directory relative and write it out.
         #
         # This also needs to be cached
         try:
@@ -892,7 +894,7 @@ class CargoStage(object):
 
             with open(join_path(config_dir_path, 'config'), 'w') as f:
                 f.write(config)
-        except:
+        except BaseException:
             # Remove the spack-cargo-vendor dir because it's used to determine
             # that dependencies have already been staged
             os.rmdir(self.vendor_stage)
@@ -913,11 +915,13 @@ class CargoStage(object):
         # If Cargo.lock already exists, then the package is "locked"
         self.locked = os.path.exists(self.manifest_lock_path)
 
-        if os.path.exists(join_path(self.package_stage.path, 'spack-cargo-vendor.tar.gz')):
+        if os.path.exists(join_path(
+                self.package_stage.path, 'spack-cargo-vendor.tar.gz')):
             tar = which('tar', required=True)
             with working_dir(self.package_stage.path):
                 tar('-xf', 'spack-cargo-vendor.tar.gz')
-            self.locked = not os.path.exists(join_path(_source_path_subdir, 'Cargo.lock'))
+            self.locked = not os.path.exists(
+                join_path(_source_path_subdir, 'Cargo.lock'))
         else:
             tty.die(
                 "CargoStage failed to vendor the cargo dependencies"
@@ -934,29 +938,36 @@ class CargoStage(object):
         pass
 
     def cache_local(self):
-        tar_file = join_path(self.package_stage.path, 'spack-cargo-vendor.tar.gz')
+        tar_file = join_path(
+            self.package_stage.path, 'spack-cargo-vendor.tar.gz')
         # If the tar_file already exists, that means we're expanded from cache
         # or a mirror, and so can just copy the file back to cache
         if not os.path.exists(tar_file):
             # Archive the dependencies and configuration files
             tar = which('tar', required=True)
 
-            tar_file = join_path(self.package_stage.path, 'spack-cargo-vendor.tar.gz')
+            tar_file = join_path(
+                self.package_stage.path, 'spack-cargo-vendor.tar.gz')
             with working_dir(self.package_stage.path):
                 if not self.locked:
                     tar(
                         '-czf',
                         tar_file,
-                        'spack-cargo-vendor', # Cache the vendored dependencies
-                        '.cargo', # And the cargo configuration
-                        self.manifest_lock_path # And the Cargo.lock for unlocked crates
+                        # Cache the vendored dependencies
+                        'spack-cargo-vendor',
+                        # And the cargo configuration
+                        '.cargo',
+                        # And the Cargo.lock for unlocked crates
+                        self.manifest_lock_path
                     )
                 else:
                     tar(
                         '-czf',
                         tar_file,
-                        'spack-cargo-vendor', # Cache the vendored dependencies
-                        '.cargo' # And the cargo configuration
+                        # Cache the vendored dependencies
+                        'spack-cargo-vendor',
+                        # And the cargo configuration
+                        '.cargo',
                     )
 
         # Place the archive in <cache-location>/_cargo-cache/<parent-mirror-id>
@@ -1016,7 +1027,7 @@ def get_checksums_for_versions(
     """
     sorted_versions = \
         list((str(v) for v in sorted((Version(v) for v in url_dict.keys()),
-            reverse=True)))
+                                     reverse=True)))
 
     # Find length of longest string in the list for padding
     max_len = max(len(str(v)) for v in sorted_versions)

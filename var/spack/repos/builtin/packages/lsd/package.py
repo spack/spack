@@ -9,7 +9,7 @@ from spack import *
 class Lsd(CargoPackage):
     """
     LSD (LSDeluxe)
-    
+
     The next gen ls command
     """
 

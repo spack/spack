@@ -39,7 +39,6 @@ import shutil
 import sys
 import traceback
 import types
-import copy
 from six import StringIO
 
 import llnl.util.tty as tty

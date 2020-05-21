@@ -4,13 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from copy import deepcopy
 import inspect
 import json
 import spack
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir, join_path, copy
+from llnl.util.filesystem import join_path, copy, mkdirp
 from spack.directives import cargo_manifest, depends_on, variant
 from spack.package import PackageBase
 from spack.util.executable import Executable
@@ -20,14 +18,14 @@ class CargoPackage(PackageBase):
     """
     Specialized class for installing packages that use the Cargo package
     manager.
-    
+
     Cargo is the official build tool and package manager of the Rust
     programming language. It has its own package repository, which this
     class will automatically pull from while ensuring checksums are respected.
 
     This package can install both executable files and C-style static and
-    dynamic libraries from a cargo package. It can not install native Rust-style
-    libraries.
+    dynamic libraries from a cargo package. It can not install native
+    Rust-style libraries.
     """
 
     phases = ['build', 'install']
@@ -58,7 +56,7 @@ class CargoPackage(PackageBase):
         cargo_build.add_default_arg('build')
         cargo_build.add_default_arg('--jobs')
         cargo_build.add_default_arg(str(jobs))
-        cargo_build.add_default_arg('-vv') # Very verbose output
+        cargo_build.add_default_arg('-vv')  # Very verbose output
         cargo_build.add_default_arg('--manifest-path')
         cargo_build.add_default_arg(self.manifest_path)
         if 'build_type=release' in self.spec:
@@ -78,7 +76,7 @@ class CargoPackage(PackageBase):
     @property
     def metadata(self):
         """Returns the metadata description of the crate.
-        
+
         Used to determine the installable targets in the crate"""
         return json.loads(inspect.getmodule(self).cargo(
             'metadata', '--manifest-path', self.manifest_path,
@@ -88,7 +86,8 @@ class CargoPackage(PackageBase):
     @property
     def target_path(self):
         return join_path(
-            self.stage.source_path, 'target', self.spec.variants['build_type'].value)
+            self.stage.source_path, 'target',
+            self.spec.variants['build_type'].value)
 
     def build(self, spec, prefix):
         """cargo build"""

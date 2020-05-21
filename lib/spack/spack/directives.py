@@ -658,7 +658,7 @@ def cargo_manifest(**kwargs):
         if os.path.isabs(path):
             message = ('The path keyword of a cargo_manifest directive '
                        'can\'t be an absolute path.\n')
-            message += "\path : '{path}\n'".format(path=path)
+            message += "\tpath : '{path}\n'".format(path=path)
             raise RuntimeError(message)
 
         pkg.cargo_manifest = path

@@ -8,8 +8,8 @@ from spack import *
 
 class Tokei(CargoPackage):
     """Tokei is a program that displays statistics about your code. Tokei will
-    show the number of files, total lines within those files and code, comments,
-    and blanks grouped by language.
+    show the number of files, total lines within those files and code,
+    comments, and blanks grouped by language.
     """
 
     homepage = "https://github.com/xampprocky/tokei"

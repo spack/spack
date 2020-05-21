@@ -182,8 +182,8 @@ class CargoPackageTemplate(PackageTemplate):
 
 class CratesIOPackageTemplate(PackageTemplate):
     """Provides a template for a package from crates.io
-    
-    Different from CargoPackageTemplate because it pulls directly from 
+
+    Different from CargoPackageTemplate because it pulls directly from
     crates.io rather than a generic source control or web release."""
 
     base_class_name = 'CargoPackage'
@@ -211,7 +211,7 @@ class CratesIOPackageTemplate(PackageTemplate):
 
         home = \
             homepage if homepage else \
-                "https://crates.io/crates/{id}".format(id=crate["id"])
+            "https://crates.io/crates/{id}".format(id=crate["id"])
 
         self.homepage = """\
     homepage  = "{home}"\
