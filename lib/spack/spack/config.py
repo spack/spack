@@ -505,7 +505,10 @@ class Configuration(object):
             return {}
 
         # take the top key off before returning.
-        return merged_section[section]
+        ret = merged_section[section]
+        if isinstance(ret, dict):
+            ret = syaml.syaml_dict(ret)
+        return ret
 
     def get(self, path, default=None, scope=None):
         """Get a config section or a single value from one.
@@ -551,7 +554,15 @@ class Configuration(object):
             data = section_data
             while len(parts) > 1:
                 key = parts.pop(0)
-                data = data[key]
+                new = data[key]
+                if isinstance(data, dict):
+                    # Make it an ordered dict
+                    new = syaml.syaml_dict(new)
+                    # reattach to parent object
+                    data[key] = new
+                data = new
+
+            # update new value
             data[parts[0]] = value
 
             self.update_config(section, section_data, scope=scope)

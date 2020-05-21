@@ -162,9 +162,7 @@ def merge_value(existing, value):
     # dictionaries have special handling
     if isinstance(value, dict) or isinstance(existing, dict):
         if isinstance(value, dict) and isinstance(existing, dict):
-            if existing:
-                new = existing
-                new.update(value)
+            # If they're both dicts, then "existing" is a default
             new = value
         elif existing is None:
             new = value

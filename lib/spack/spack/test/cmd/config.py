@@ -99,7 +99,7 @@ def test_config_list():
     assert 'packages' in output
 
 
-def test_config_add(mock_config):
+def test_config_add(mutable_empty_config):
     config('add', 'config:dirty:true')
     output = config('get', 'config')
 
@@ -108,7 +108,7 @@ def test_config_add(mock_config):
 """
 
 
-def test_config_add_list(mock_config):
+def test_config_add_list(mutable_empty_config):
     config('add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
     config('add', 'config:template_dirs:test3')
@@ -122,21 +122,34 @@ def test_config_add_list(mock_config):
 """
 
 
-def test_config_add_update_dict(mock_config):
-    config('add', 'packages:all:compiler:[gcc]')  # TODO
+def test_config_add_update_dict(mutable_empty_config):
+    config('add', 'packages:all:compiler:[gcc]')
     config('add', 'packages:all:version:1.0.0')
     output = config('get', 'packages')
 
-    assert output == """packages:
+    expected = """packages:
   all:
-    version:
-    - 1.0.0
     compiler:
     - gcc
+    version:
+    - 1.0.0
+"""
+
+    assert output == expected
+
+
+def test_config_add_ordered_dict(mutable_empty_config):
+    config('add', 'mirrors:first:/path/to/first')
+    config('add', 'mirrors:second:/path/to/second')
+    output = config('get', 'mirrors')
+
+    assert output == """mirrors:
+  first: /path/to/first
+  second: /path/to/second
 """
 
 
-def test_config_remove_value(mock_config):
+def test_config_remove_value(mutable_empty_config):
     config('add', 'config:dirty:true')
     config('remove', 'config:dirty:true')
     output = config('get', 'config')
@@ -145,7 +158,7 @@ def test_config_remove_value(mock_config):
 """
 
 
-def test_config_remove_alias_rm(mock_config):
+def test_config_remove_alias_rm(mutable_empty_config):
     config('add', 'config:dirty:true')
     config('rm', 'config:dirty:true')
     output = config('get', 'config')
@@ -154,7 +167,7 @@ def test_config_remove_alias_rm(mock_config):
 """
 
 
-def test_config_remove_dict(mock_config):
+def test_config_remove_dict(mutable_empty_config):
     config('add', 'config:dirty:true')
     config('rm', 'config:dirty')
     output = config('get', 'config')
@@ -163,7 +176,7 @@ def test_config_remove_dict(mock_config):
 """
 
 
-def test_remove_from_list(mock_config):
+def test_remove_from_list(mutable_empty_config):
     config('add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
     config('add', 'config:template_dirs:test3')
@@ -177,7 +190,7 @@ def test_remove_from_list(mock_config):
 """
 
 
-def test_remove_list(mock_config):
+def test_remove_list(mutable_empty_config):
     config('add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
     config('add', 'config:template_dirs:test3')
@@ -191,7 +204,7 @@ def test_remove_list(mock_config):
 """
 
 
-def test_config_add_to_env(mock_config, mutable_mock_env_path):
+def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
     env = ev.create('test')
     with env:
         config('add', 'config:dirty:true')
@@ -205,7 +218,7 @@ def test_config_add_to_env(mock_config, mutable_mock_env_path):
     assert output == expected
 
 
-def test_config_remove_from_env(mock_config, mutable_mock_env_path):
+def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     env('create', 'test')
 
     with ev.read('test'):
