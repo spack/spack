@@ -39,7 +39,7 @@ class Ffr(MakefilePackage):
         fflags = flags[:]
         if spec.satisfies('%gcc'):
             fflags.append('-ffixed-line-length-none')
-        if spec.satisfies('%fj'):
+        elif spec.satisfies('%fj'):
             fflags.append('-Fwide')
         d = find('.', 'src_main', recursive=True)
         root_dir  = os.path.dirname(d[0])
