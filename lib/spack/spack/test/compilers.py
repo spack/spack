@@ -205,43 +205,44 @@ flag_output = 'ld -L%s -L%s' % tuple(flag_dirs)
 
 
 def call_compiler(exe, *args, **kwargs):
+    # This method can replace Executable.__call__ to emulate a compiler that
+    # changes libraries depending on a flag.
     if '--correct-flag' in exe.exe:
         return flag_output
     return no_flag_output
 
 
-@pytest.fixture()
-def fake_compiler_verbose_output(monkeypatch):
+@pytest.mark.parametrize('exe,flagname', [
+        ('cxx', ''),
+        ('cxx', 'cxxflags'),
+        ('cxx', 'cppflags'),
+        ('cxx', 'ldflags'),
+        ('cc', ''),
+        ('cc', 'cflags'),
+        ('cc', 'cppflags'),
+        ('fc', ''),
+        ('fc', 'fflags'),
+        ('f77', 'fflags'),
+        ('f77', 'cppflags'),
+])
+def test_get_compiler_link_paths(monkeypatch, exe, flagname):
+    # create fake compiler that emits mock verbose output
+    compiler = MockCompiler()
     monkeypatch.setattr(
         spack.util.executable.Executable, '__call__', call_compiler)
-    yield MockCompiler()
 
+    # Grab executable path to test
+    paths = [getattr(compiler, exe)]
 
-def test_get_compiler_link_paths(fake_compiler_verbose_output):
-    compiler = fake_compiler_verbose_output
-    dirs = compiler._get_compiler_link_paths([compiler.cc])
+    # Test without flags
+    dirs = compiler._get_compiler_link_paths(paths)
     assert dirs == no_flag_dirs
 
-
-def test_get_compiler_link_paths_with_cxxflags(fake_compiler_verbose_output):
-    compiler = fake_compiler_verbose_output
-    setattr(compiler, 'flags', {'cxxflags': ['--correct-flag']})
-    dirs = compiler._get_compiler_link_paths([compiler.cxx])
-    assert dirs == flag_dirs
-
-
-def test_get_compiler_link_paths_with_cflags(fake_compiler_verbose_output):
-    compiler = fake_compiler_verbose_output
-    setattr(compiler, 'flags', {'cflags': ['--correct-flag']})
-    dirs = compiler._get_compiler_link_paths([compiler.cc])
-    assert dirs == flag_dirs
-
-
-def test_get_compiler_link_paths_with_fflags(fake_compiler_verbose_output):
-    compiler = fake_compiler_verbose_output
-    setattr(compiler, 'flags', {'fflags': ['--correct-flag']})
-    dirs = compiler._get_compiler_link_paths([compiler.fc])
-    assert dirs == flag_dirs
+    if flagname:
+        # set flags and test
+        setattr(compiler, 'flags', {flagname: ['--correct-flag']})
+        dirs = compiler._get_compiler_link_paths(paths)
+        assert dirs == flag_dirs
 
 
 def test_get_compiler_link_paths_no_path():
