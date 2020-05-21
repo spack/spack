@@ -614,7 +614,7 @@ _spack_config_list() {
     SPACK_COMPREPLY="-h --help"
 }
 
- _spack_config_add {
+_spack_config_add {
     if $list_options
     then
         compgen -W "-h --help" -- "$cur"
