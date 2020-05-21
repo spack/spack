@@ -17,7 +17,6 @@ import traceback
 
 from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
-import multiprocessing.pool
 
 try:
     # Python 2 had these in the HTMLParser package.
@@ -61,34 +60,6 @@ class LinkParser(HTMLParser):
             for attr, val in attrs:
                 if attr == 'href':
                     self.links.append(val)
-
-
-class NonDaemonProcess(multiprocessing.Process):
-    """Process that allows sub-processes, so pools can have sub-pools."""
-    @property
-    def daemon(self):
-        return False
-
-    @daemon.setter
-    def daemon(self, value):
-        pass
-
-
-if sys.version_info[0] < 3:
-    class NonDaemonPool(multiprocessing.pool.Pool):
-        """Pool that uses non-daemon processes"""
-        Process = NonDaemonProcess
-else:
-
-    class NonDaemonContext(type(multiprocessing.get_context())):  # novm
-        Process = NonDaemonProcess
-
-    class NonDaemonPool(multiprocessing.pool.Pool):
-        """Pool that uses non-daemon processes"""
-
-        def __init__(self, *args, **kwargs):
-            kwargs['context'] = NonDaemonContext()
-            super(NonDaemonPool, self).__init__(*args, **kwargs)
 
 
 def uses_ssl(parsed_url):
@@ -392,17 +363,11 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
                 visited.add(abs_link)
 
         if subcalls:
-            pool = NonDaemonPool(processes=len(subcalls))
-            try:
-                results = pool.map(_spider_wrapper, subcalls)
+            results = [_spider(*args) for args in subcalls]
 
-                for sub_pages, sub_links in results:
-                    pages.update(sub_pages)
-                    links.update(sub_links)
-
-            finally:
-                pool.terminate()
-                pool.join()
+            for sub_pages, sub_links in results:
+                pages.update(sub_pages)
+                links.update(sub_links)
 
     except URLError as e:
         tty.debug(e)
@@ -432,11 +397,6 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
                   traceback.format_exc())
 
     return pages, links
-
-
-def _spider_wrapper(args):
-    """Wrapper for using spider with multiprocessing."""
-    return _spider(*args)
 
 
 def _urlopen(req, *args, **kwargs):
