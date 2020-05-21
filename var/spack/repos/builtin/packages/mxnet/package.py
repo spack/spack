@@ -15,6 +15,7 @@ class Mxnet(MakefilePackage):
 
     maintainers = ['adamjstewart']
 
+    version('1.6.0', sha256='01eb06069c90f33469c7354946261b0a94824bbaf819fd5d5a7318e8ee596def')
     version('1.3.0', sha256='c00d6fbb2947144ce36c835308e603f002c1eb90a9f4c5a62f4d398154eed4d2')
 
     variant('cuda', default=False, description='Enable CUDA support')
@@ -33,14 +34,18 @@ class Mxnet(MakefilePackage):
     depends_on('cudnn', when='+cuda')
     depends_on('cudnn', when='+cuda')
     depends_on('cub', when='+cuda')
+    depends_on('opencv+core+imgproc+highgui+jpeg+png+tiff~eigen~ipp@3.0:3.4.99', when='@1.3.0 +opencv')
     depends_on('opencv+core+imgproc+highgui+jpeg+png+tiff~eigen~ipp@3.0:', when='+opencv')
 
     # python extensions
     depends_on('python@2.7:', type=('build', 'run'), when='+python')
     depends_on('py-setuptools', type='build', when='+python')
+    depends_on('py-numpy@:1.15.0', type=('build', 'run'), when='@1.3.0 +python')
+    depends_on('py-numpy@1.16:', type=('build', 'run'), when='@1.6.0 +python')
     extends('python', when='+python')
 
     patch('makefile.patch', when='@0.10:0.11')
+    patch('makefile.opencv.patch', when='@1.6.0')
 
     def build(self, spec, prefix):
         # copy template configuration file
@@ -73,13 +78,25 @@ class Mxnet(MakefilePackage):
         ]
 
         if '+opencv' in spec:
-            filter_file('$(shell pkg-config --cflags opencv)',
-                        '-I%s' % spec['opencv'].prefix.include,
-                        'Makefile', string=True)
-            filter_file('$(filter-out -lopencv_ts, '
-                        '$(shell pkg-config --libs opencv))',
-                        '-lopencv_core -lopencv_imgproc -lopencv_imgcodecs',
-                        'Makefile', string=True)
+            if spec.satisfies('@1.3.0'):
+                filter_file(
+                    '$(shell pkg-config --cflags opencv)',
+                    spec['opencv'].headers.include_flags,
+                    'Makefile', string=True
+                )
+                filter_file(
+                    '$(filter-out -lopencv_ts, '
+                    '$(shell pkg-config --libs opencv))',
+                    spec['opencv'].libs.link_flags,
+                    'Makefile', string=True
+                )
+            else:
+                args.extend(
+                    ['USE_OPENCV_INC_PATH=' +
+                        spec['opencv'].headers.directories[0],
+                     'USE_OPENCV_LIB_PATH=' +
+                        spec['opencv'].libs.directories[0]]
+                )
 
         if 'openblas' in spec:
             args.extend(['USE_BLAS=openblas'])
