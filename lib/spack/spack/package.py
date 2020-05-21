@@ -27,6 +27,7 @@ from six import string_types
 from six import with_metaclass
 from ordereddict_backport import OrderedDict
 
+import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
 
 import spack.config
@@ -48,7 +49,6 @@ import spack.util.environment
 import spack.util.web
 import spack.multimethod
 
-from llnl.util.filesystem import mkdirp, touch, working_dir
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from spack.filesystem_view import YamlFilesystemView
@@ -1165,7 +1165,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise FetchError("Archive was empty for %s" % self.name)
         else:
             # Support for post-install hooks requires a stage.source_path
-            mkdirp(self.stage.source_path)
+            fsys.mkdirp(self.stage.source_path)
 
     def do_patch(self):
         """Applies patches if they haven't been applied already."""
@@ -1211,7 +1211,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         patched = False
         for patch in patches:
             try:
-                with working_dir(self.stage.source_path):
+                with fsys.working_dir(self.stage.source_path):
                     patch.apply(self.stage)
                 tty.msg('Applied patch %s' % patch.path_or_url)
                 patched = True
@@ -1220,12 +1220,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
                 # Touch bad file if anything goes wrong.
                 tty.msg('Patch %s failed.' % patch.path_or_url)
-                touch(bad_file)
+                fsys.touch(bad_file)
                 raise
 
         if has_patch_fun:
             try:
-                with working_dir(self.stage.source_path):
+                with fsys.working_dir(self.stage.source_path):
                     self.patch()
                 tty.msg("Ran patch() for %s" % self.name)
                 patched = True
@@ -1243,7 +1243,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
                 # Touch bad file if anything goes wrong.
                 tty.msg("patch() function failed for %s" % self.name)
-                touch(bad_file)
+                fsys.touch(bad_file)
                 raise
 
         # Get rid of any old failed file -- patches have either succeeded
@@ -1254,9 +1254,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # touch good or no patches file so that we skip next time.
         if patched:
-            touch(good_file)
+            fsys.touch(good_file)
         else:
-            touch(no_patches_file)
+            fsys.touch(no_patches_file)
 
     @classmethod
     def all_patches(cls):
@@ -1514,7 +1514,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         self.test_stage = Prefix(spack.cmd.test.get_stage(name))
         if not os.path.exists(self.test_stage):
-            mkdirp(self.test_stage)
+            fsys.mkdirp(self.test_stage)
         self.test_log_file = os.path.join(self.test_stage, self.test_log_name)
 
         def test_process():
@@ -1531,7 +1531,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 testdir = self.test_dir
                 if os.path.exists(testdir):
                     shutil.rmtree(testdir)
-                mkdirp(testdir)
+                fsys.mkdirp(testdir)
 
                 # copy test data into testdir/data
                 datadir = Prefix(self.package_dir).test
@@ -1581,7 +1581,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             work_dir (str or None): path to the smoke test directory
         """
         wdir = '.' if work_dir is None else work_dir
-        with working_dir(wdir):
+        with fsys.working_dir(wdir):
             try:
                 runner = which(exe)
                 if runner is None and skip_missing:
@@ -2017,7 +2017,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # copy spec metadata to "deprecated" dir of deprecator
         depr_yaml = spack.store.layout.deprecated_file_path(spec,
                                                             deprecator)
-        fs.mkdirp(os.path.dirname(depr_yaml))
+        fsys.mkdirp(os.path.dirname(depr_yaml))
         shutil.copy2(self_yaml, depr_yaml)
 
         # Any specs deprecated in favor of this spec are re-deprecated in
