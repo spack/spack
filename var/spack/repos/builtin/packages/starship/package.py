@@ -24,6 +24,10 @@ class Starship(CargoPackage):
         env.append_flags('LIBGIT2_SYS_USE_PKG_CONFIG', '1')
 
     version('master', branch='master')
+    version('0.41.3', sha256='891dec63d2b8ffed3d2388c0449dbd939f6da1b26747ba0ed1a01e4d47f32fce')
+    version('0.41.2', sha256='cf001ee42fa48e9f51a272796f8e773ef3f69eb799a288724a7a8252512df862')
+    version('0.41.1', sha256='0f9adb5803700dc8b489e48bf30caef979b7ae4a55587af2e84c039e89692eee')
+    version('0.41.0', sha256='fd80f0b4fa3961ff1e31452cf12c7b2ae9166566a200a0bd89cffd261fbcbaeb')
     version('0.40.1', sha256='9ef6088232e4ad958bdf63ff55ce93c6c1455acdc4ca92808126b7218c1fab18')
     version('0.40.0', sha256='5ab9c11cb41f17d60f9d6807d01152c009f5b76501f664074772df7e26b2759b')
     version('0.39.0', sha256='596bca871e5a61006c78fb59ca7a03ee822ab7d91f65af8e3d8492ece9ae7df1')
