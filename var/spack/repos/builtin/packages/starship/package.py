@@ -12,10 +12,7 @@ class Starship(CargoPackage):
     """
 
     homepage = "https://starship.rs/"
-
-    # Pull directly from crates.io for published releases
     crates_io = "starship"
-    # Can install master branch from GitHub
     git = "https://github.com/starship/starship.git"
 
     depends_on('libgit2')
