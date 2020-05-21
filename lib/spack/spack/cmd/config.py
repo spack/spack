@@ -71,7 +71,6 @@ def setup_parser(subparser):
                                'values separated by colons (:).')
 
 
-
 def _get_scope_and_section(args):
     """Extract config scope and section from arguments."""
     scope = args.scope

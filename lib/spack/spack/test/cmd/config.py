@@ -14,6 +14,7 @@ from spack.main import SpackCommand
 config = SpackCommand('config')
 env = SpackCommand('env')
 
+
 def test_get_config_scope(mock_low_high_config):
     assert config('get', 'compilers').strip() == 'compilers: {}'
 
