@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PlinkNg(RPackage):
+class PlinkNg(Package):
     """A comprehensive update to the PLINK association analysis toolset."""
 
     homepage = "https://www.cog-genomics.org/plink/2.0/"
