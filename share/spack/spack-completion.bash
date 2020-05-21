@@ -617,14 +617,27 @@ _spack_config_list() {
 _spack_config_add() {
     if $list_options
     then
-        compgen -W "-h --help" -- "$cur"
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
     fi
 }
 
 _spack_config_remove() {
     if $list_options
     then
-        compgen -W "-h --help" -- "$cur"
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_config_rm() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
     fi
 }
 
