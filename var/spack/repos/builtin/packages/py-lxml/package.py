@@ -32,3 +32,9 @@ class PyLxml(PythonPackage):
     depends_on('py-html5lib', when='+html5', type=('build', 'run'))
     depends_on('py-beautifulsoup4', when='+htmlsoup', type=('build', 'run'))
     depends_on('py-cssselect@0.7:', when='+cssselect', type=('build', 'run'))
+
+    # When compiling on MacOS but without Apple Clang, we need to amend some
+    # flags to prevent a compilation error.
+    patch('setupinfo_py_darwin_remove_isysroot.patch',
+          sha256='e626db2877dda210aa77723771df0b12499be12e9821b91e6031d34066b62bfd',
+          when='@4.4.1: %clang platform=darwin')

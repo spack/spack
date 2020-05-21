@@ -1,0 +1,12 @@
+--- ./setupinfo.py	2020-05-19 10:46:59.000000000 +0200
++++ ./setupinfo.py	2020-05-21 14:02:05.000000000 +0200
+@@ -121,7 +121,8 @@
+         ])
+     _library_dirs = _prefer_reldirs(base_dir, library_dirs(static_library_dirs))
+     _cflags = cflags(static_cflags)
+-    _ldflags = ['-isysroot', get_xcode_isysroot()] if sys.platform == 'darwin' else None
++    #_ldflags = ['-isysroot', get_xcode_isysroot()] if sys.platform == 'darwin' else None
++    _ldflags = None
+     _define_macros = define_macros()
+     _libraries = libraries()
+ 
