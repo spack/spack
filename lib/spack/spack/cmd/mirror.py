@@ -268,6 +268,7 @@ def mirror_create(args):
                 tty.die("Cannot pass specs on the command line with --file.")
             specs = _read_specs_from_file(args.file)
 
+        env_specs = None
         if not specs:
             # If nothing is passed, use environment or all if no active env
             if not args.all:
@@ -277,12 +278,9 @@ def mirror_create(args):
 
             env = ev.get_env(args, 'mirror')
             if env:
-                mirror_specs = env.specs_by_hash.values()
+                env_specs = env.specs_by_hash.values()
             else:
                 specs = [Spec(n) for n in spack.repo.all_package_names()]
-                mirror_specs = spack.mirror.get_all_versions(specs)
-                mirror_specs.sort(
-                    key=lambda s: (s.name, s.version))
         else:
             # If the user asked for dependencies, traverse spec DAG get them.
             if args.dependencies:
@@ -301,11 +299,19 @@ def mirror_create(args):
                 msg = 'Skipping {0} as it is an external spec.'
                 tty.msg(msg.format(spec.cshort_spec))
 
+        if env_specs:
+            if args.versions_per_spec:
+                tty.warn("Ignoring '--versions-per-spec' for mirroring specs"
+                         " in environment.")
+            mirror_specs = env_specs
+        else:
             if num_versions == 'all':
                 mirror_specs = spack.mirror.get_all_versions(specs)
             else:
                 mirror_specs = spack.mirror.get_matching_versions(
                     specs, num_versions=num_versions)
+            mirror_specs.sort(
+                key=lambda s: (s.name, s.version))
 
     if args.exclude_file:
         exclude_specs = _read_specs_from_file(args.exclude_file)
