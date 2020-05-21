@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,9 @@ class Xgboost(CMakePackage, CudaPackage):
 
     homepage = "https://xgboost.ai/"
     url      = "https://github.com/dmlc/xgboost/releases/download/v0.81/xgboost-0.81.tar.bz2"
+    git      = "https://github.com/dmlc/xgboost.git"
 
+    version('0.90', tag='v0.90', submodules=True)
     version('0.81', sha256='9d8ff161699111d45c96bd15229aa6d80eb1cab7cbbef7e8eaa60ccfb5a4f806')
 
     def cmake_args(self):

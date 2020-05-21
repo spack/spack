@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Gdal(AutotoolsPackage):
     """
 
     homepage   = "https://www.gdal.org/"
-    url        = "https://download.osgeo.org/gdal/3.0.2/gdal-3.0.2.tar.xz"
+    url        = "https://download.osgeo.org/gdal/3.0.4/gdal-3.0.4.tar.xz"
     list_url   = "https://download.osgeo.org/gdal/"
     list_depth = 1
 
@@ -29,9 +29,14 @@ class Gdal(AutotoolsPackage):
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
+    version('3.1.0',  sha256='e754a22242ccbec731aacdb2333b567d4c95b9b02d3ba1ea12f70508d244fcda')
+    version('3.0.4',  sha256='5569a4daa1abcbba47a9d535172fc335194d9214fdb96cd0f139bb57329ae277')
+    version('3.0.3',  sha256='e20add5802265159366f197a8bb354899e1693eab8dbba2208de14a457566109')
     version('3.0.2',  sha256='c3765371ce391715c8f28bd6defbc70b57aa43341f6e94605f04fe3c92468983')
     version('3.0.1',  sha256='45b4ae25dbd87282d589eca76481c426f72132d7a599556470d5c38263b09266')
     version('3.0.0',  sha256='ad316fa052d94d9606e90b20a514b92b2dd64e3142dfdbd8f10981a5fcd5c43e')
+    version('2.4.4',  sha256='a383bd3cf555d6e1169666b01b5b3025b2722ed39e834f1b65090f604405dcd8')
+    version('2.4.3',  sha256='d52dc3e0cff3af3e898d887c4151442989f416e839948e73f0994f0224bbff60')
     version('2.4.2',  sha256='dcc132e469c5eb76fa4aaff238d32e45a5d947dc5b6c801a123b70045b618e0c')
     version('2.4.1',  sha256='fd51b4900b2fc49b98d8714f55fc8a78ebfd07218357f93fb796791115a5a1ad')
     version('2.4.0',  sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27')
@@ -95,7 +100,7 @@ class Gdal(AutotoolsPackage):
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
     depends_on('libgeotiff@1.2.1:1.4', when='@:2.4.0')
-    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4.2')
+    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4.99')
     depends_on('libgeotiff@1.5:', when='@3.0.0:')
     depends_on('json-c')
     depends_on('json-c@0.12.1', when='@:2.2')
@@ -103,7 +108,7 @@ class Gdal(AutotoolsPackage):
     # Optional dependencies
     depends_on('libtool', type='build', when='+libtool')
     depends_on('zlib', when='+libz')
-    depends_on('libiconv', when='+libiconv')
+    depends_on('iconv', when='+libiconv')
     depends_on('xz', when='+liblzma')
     depends_on('zstd', when='+zstd @2.3:')
     depends_on('postgresql', when='+pg')
@@ -168,6 +173,7 @@ class Gdal(AutotoolsPackage):
     # https://trac.osgeo.org/gdal/wiki/BuildHints
     def configure_args(self):
         spec = self.spec
+        libs = []
 
         # Required dependencies
         args = [
@@ -246,7 +252,7 @@ class Gdal(AutotoolsPackage):
 
         if '+libiconv' in spec:
             args.append('--with-libiconv-prefix={0}'.format(
-                spec['libiconv'].prefix))
+                spec['iconv'].prefix))
         else:
             args.append('--with-libiconv-prefix=no')
 
@@ -290,6 +296,9 @@ class Gdal(AutotoolsPackage):
         # https://trac.osgeo.org/gdal/wiki/HDF
         if '+hdf4' in spec:
             args.append('--with-hdf4={0}'.format(spec['hdf'].prefix))
+            hdf4 = self.spec['hdf']
+            if '+libtirpc' in hdf4:
+                libs.append('-ltirpc')
         else:
             args.append('--with-hdf4=no')
 
@@ -475,6 +484,9 @@ class Gdal(AutotoolsPackage):
                 '--with-gnm=no',
                 '--with-pdfium=no',
             ])
+
+        if libs:
+            args.append('LIBS=' + ' '.join(libs))
 
         return args
 

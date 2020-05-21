@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -123,7 +123,7 @@ class Neuron(Package):
             flags = '-O3 -qtune=qp -qarch=qp -q64 -qstrict -qnohot -g'
 
         if self.spec.satisfies('%pgi'):
-            flags += ' ' + self.compiler.pic_flag
+            flags += ' ' + self.compiler.cc_pic_flag
 
         return ['CFLAGS=%s' % flags,
                 'CXXFLAGS=%s' % flags]

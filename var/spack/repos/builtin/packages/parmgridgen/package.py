@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,8 +28,8 @@ class Parmgridgen(Package):
     def install(self, spec, prefix):
         make_opts = [
             'make=make',
-            'COPTIONS={0}'.format(self.compiler.pic_flag),
-            'LDOPTIONS={0}'.format(self.compiler.pic_flag),
+            'COPTIONS={0}'.format(self.compiler.cc_pic_flag),
+            'LDOPTIONS={0}'.format(self.compiler.cc_pic_flag),
             'CC={0}'.format(self.compiler.cc),
             'LD={0}'.format(self.compiler.cc),
             'LIBDIR=-L../..',

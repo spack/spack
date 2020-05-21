@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 from spack import *
 import os
 import subprocess
+import sys
 import llnl.util.tty as tty
 
 
@@ -133,7 +134,12 @@ class Catalyst(CMakePackage):
                                     'Editions')
         catalyst_source_dir = os.path.abspath(self.root_cmakelists_dir)
 
-        command = ['python', catalyst_script,
+        python_path = (os.path.realpath(
+            spec['python3'].command.path if '+python3' in self.spec else
+            spec['python'].command.path if '+python' in self.spec else
+            sys.executable))
+
+        command = [python_path, catalyst_script,
                    '-r', self.stage.source_path,
                    '-o', catalyst_source_dir]
 

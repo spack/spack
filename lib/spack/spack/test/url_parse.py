@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -74,6 +74,8 @@ from spack.version import Version
     ('numpy-1.12.0-cp27-cp27m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl', 'numpy-1.12.0'),  # noqa
     # PyPI - exe
     ('PyYAML-3.12.win-amd64-py3.5.exe', 'PyYAML-3.12'),
+    # Combinations of multiple patterns - bin, release
+    ('rocketmq-all-4.5.2-bin-release', 'rocketmq-all-4.5.2'),
     # Combinations of multiple patterns - all
     ('p7zip_9.04_src_all', 'p7zip_9.04'),
     # Combinations of multiple patterns - run

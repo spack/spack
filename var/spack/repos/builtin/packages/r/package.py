@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class R(AutotoolsPackage):
 
     extendable = True
 
+    version('3.6.3', sha256='89302990d8e8add536e12125ec591d6951022cf8475861b3690bc8bf1cefaa8f')
+    version('3.6.2', sha256='bd65a45cddfb88f37370fbcee4ac8dd3f1aebeebe47c2f968fd9770ba2bbc954')
     version('3.6.1', sha256='5baa9ebd3e71acecdcc3da31d9042fb174d55a42829f8315f2457080978b1389')
     version('3.6.0', sha256='36fcac3e452666158e62459c6fc810adc247c7109ed71c5b6c3ad5fc2bf57509')
     version('3.5.3', sha256='2bfa37b7bd709f003d6b8a172ddfb6d03ddd2d672d6096439523039f7a8e678c')
@@ -83,6 +85,12 @@ class R(AutotoolsPackage):
     depends_on('java')
 
     patch('zlib.patch', when='@:3.3.2')
+
+    # R cannot be built with '-O2' optimization
+    # with Fujitsu Compiler @4.1.0 now.
+    # Until the Fujitsu compiler resolves this problem,
+    # temporary fix to lower the optimization level.
+    patch('change_optflags_tmp.patch', when='%fj@4.1.0')
 
     filter_compiler_wrappers(
         'Makeconf', relative_root=os.path.join('rlib', 'R', 'etc')
@@ -155,7 +163,8 @@ class R(AutotoolsPackage):
 
         # Set FPICFLAGS for compilers except 'gcc'.
         if self.compiler.name != 'gcc':
-            config_args.append('FPICFLAGS={0}'.format(self.compiler.pic_flag))
+            config_args.append('FPICFLAGS={0}'.format(
+                self.compiler.cc_pic_flag))
 
         return config_args
 

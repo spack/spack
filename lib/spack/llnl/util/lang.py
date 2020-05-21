@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,12 +17,6 @@ import sys
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
-
-
-class classproperty(property):
-    """classproperty decorator: like property but for classmethods."""
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
 
 
 def index_by(objects, *funcs):
@@ -612,14 +606,41 @@ def load_module_from_file(module_name, module_path):
     """
     if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
         import importlib.util
-        spec = importlib.util.spec_from_file_location(module_name, module_path)
-        module = importlib.util.module_from_spec(spec)
+        spec = importlib.util.spec_from_file_location(  # novm
+            module_name, module_path)
+        module = importlib.util.module_from_spec(spec)  # novm
         spec.loader.exec_module(module)
     elif sys.version_info[0] == 3 and sys.version_info[1] < 5:
         import importlib.machinery
-        loader = importlib.machinery.SourceFileLoader(module_name, module_path)
+        loader = importlib.machinery.SourceFileLoader(  # novm
+            module_name, module_path)
         module = loader.load_module()
     elif sys.version_info[0] == 2:
         import imp
         module = imp.load_source(module_name, module_path)
     return module
+
+
+def uniq(sequence):
+    """Remove strings of duplicate elements from a list.
+
+    This works like the command-line ``uniq`` tool.  It filters strings
+    of duplicate elements in a list. Adjacent matching elements are
+    merged into the first occurrence.
+
+    For example::
+
+        uniq([1, 1, 1, 1, 2, 2, 2, 3, 3]) == [1, 2, 3]
+        uniq([1, 1, 1, 1, 2, 2, 2, 1, 1]) == [1, 2, 1]
+
+    """
+    if not sequence:
+        return []
+
+    uniq_list = [sequence[0]]
+    last = sequence[0]
+    for element in sequence[1:]:
+        if element != last:
+            uniq_list.append(element)
+            last = element
+    return uniq_list

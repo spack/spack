@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,11 @@ from spack.spec import Spec
 from spack.util.package_hash import package_content
 from spack.version import VersionChecksumError
 import spack.directives
+
+
+def _generate_content_strip_name(spec):
+    content = package_content(spec)
+    return content.replace(spec.package.__class__.__name__, '')
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -53,40 +58,49 @@ class TestPackage(object):
         assert '_3db' == mod_to_class('3db')
 
     def test_content_hash_all_same_but_patch_contents(self):
-        spec1 = Spec("hash-test1@1.1")
-        spec2 = Spec("hash-test2@1.1")
-        spec1.concretize()
-        spec2.concretize()
-        content1 = package_content(spec1)
-        content1 = content1.replace(spec1.package.__class__.__name__, '')
-        content2 = package_content(spec2)
-        content2 = content2.replace(spec2.package.__class__.__name__, '')
+        spec1 = Spec("hash-test1@1.1").concretized()
+        spec2 = Spec("hash-test2@1.1").concretized()
+        content1 = _generate_content_strip_name(spec1)
+        content2 = _generate_content_strip_name(spec2)
         assert spec1.package.content_hash(content=content1) != \
             spec2.package.content_hash(content=content2)
 
     def test_content_hash_different_variants(self):
-        spec1 = Spec("hash-test1@1.2 +variantx")
-        spec2 = Spec("hash-test2@1.2 ~variantx")
-        spec1.concretize()
-        spec2.concretize()
-        content1 = package_content(spec1)
-        content1 = content1.replace(spec1.package.__class__.__name__, '')
-        content2 = package_content(spec2)
-        content2 = content2.replace(spec2.package.__class__.__name__, '')
+        spec1 = Spec("hash-test1@1.2 +variantx").concretized()
+        spec2 = Spec("hash-test2@1.2 ~variantx").concretized()
+        content1 = _generate_content_strip_name(spec1)
+        content2 = _generate_content_strip_name(spec2)
         assert spec1.package.content_hash(content=content1) == \
             spec2.package.content_hash(content=content2)
 
+    def test_content_hash_cannot_get_details_from_ast(self):
+        """Packages hash-test1 and hash-test3 would be considered the same
+           except that hash-test3 conditionally executes a phase based on
+           a "when" directive that Spack cannot evaluate by examining the
+           AST. This test ensures that Spack can compute a content hash
+           for hash-test3. If Spack cannot determine when a phase applies,
+           it adds it by default, so the test also ensures that the hashes
+           differ where Spack includes a phase on account of AST-examination
+           failure.
+        """
+        spec3 = Spec("hash-test1@1.7").concretized()
+        spec4 = Spec("hash-test3@1.7").concretized()
+        content3 = _generate_content_strip_name(spec3)
+        content4 = _generate_content_strip_name(spec4)
+        assert(spec3.package.content_hash(content=content3) !=
+               spec4.package.content_hash(content=content4))
+
     def test_all_same_but_archive_hash(self):
-        spec1 = Spec("hash-test1@1.3")
-        spec2 = Spec("hash-test2@1.3")
-        spec1.concretize()
-        spec2.concretize()
-        content1 = package_content(spec1)
-        content1 = content1.replace(spec1.package.__class__.__name__, '')
-        content2 = package_content(spec2)
-        content2 = content2.replace(spec2.package.__class__.__name__, '')
+        spec1 = Spec("hash-test1@1.3").concretized()
+        spec2 = Spec("hash-test2@1.3").concretized()
+        content1 = _generate_content_strip_name(spec1)
+        content2 = _generate_content_strip_name(spec2)
         assert spec1.package.content_hash(content=content1) != \
             spec2.package.content_hash(content=content2)
+
+    def test_parse_dynamic_function_call(self):
+        spec = Spec("hash-test4").concretized()
+        spec.package.content_hash()
 
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
@@ -172,7 +186,7 @@ def test_urls_for_versions(mock_packages, config):
         assert url == 'http://www.doesnotexist.org/url_override-0.8.1.tar.gz'
 
 
-def test_url_for_version_with_no_urls():
+def test_url_for_version_with_no_urls(mock_packages, config):
     pkg = spack.repo.get('git-test')
     with pytest.raises(spack.package.NoURLError):
         pkg.url_for_version('1.0')
@@ -388,3 +402,24 @@ def test_bundle_patch_directive(mock_directive_bundle,
                        match="Patches are not allowed"):
         patch = spack.directives.patch('mock/patch.txt')
         patch(mock_directive_bundle)
+
+
+def test_fetch_options(mock_packages, config):
+    """Test fetch options inference."""
+
+    pkg = spack.repo.get('fetch-options')
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.digest == 'abc10'
+    assert fetcher.extra_options == {'timeout': 42, 'cookie': 'foobar'}
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.1')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.digest == 'abc11'
+    assert fetcher.extra_options == {'timeout': 65}
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.2')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.digest == 'abc12'
+    assert fetcher.extra_options == {'cookie': 'baz'}

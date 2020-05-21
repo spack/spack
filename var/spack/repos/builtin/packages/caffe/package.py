@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,7 +40,7 @@ class Caffe(CMakePackage):
     depends_on('protobuf')
     depends_on('glog')
     depends_on('gflags')
-    depends_on('hdf5')
+    depends_on('hdf5 +hl +cxx')
 
     # Optional dependencies
     depends_on('opencv@3.2.0+core+highgui+imgproc', when='+opencv')

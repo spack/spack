@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,15 +6,17 @@
 from spack import *
 
 
-class Gdb(AutotoolsPackage):
+class Gdb(AutotoolsPackage, GNUMirrorPackage):
     """GDB, the GNU Project debugger, allows you to see what is going on
     'inside' another program while it executes -- or what another
     program was doing at the moment it crashed.
     """
 
     homepage = "https://www.gnu.org/software/gdb"
-    url      = "https://ftpmirror.gnu.org/gdb/gdb-7.10.tar.gz"
+    gnu_mirror_path = "gdb/gdb-7.10.tar.gz"
 
+    version('9.1', sha256='fcda54d4f35bc53fb24b50009a71ca98410d71ff2620942e3c829a7f5d614252')
+    version('8.3.1', sha256='26ce655216cd03f4611518a7a1c31d80ec8e884c16715e9ba8b436822e51434b')
     version('8.3', sha256='b2266ec592440d0eec18ee1790f8558b3b8a2845b76cc83a872e39b501ce8a28')
     version('8.2.1', sha256='0107985f1edb8dddef6cdd68a4f4e419f5fec0f488cc204f0b7d482c0c6c9282')
     version('8.2', sha256='847e4b65e5a7b872e86019dd59659029e2b06cae962e0ef345f169dcb4b851b8')
@@ -31,6 +33,11 @@ class Gdb(AutotoolsPackage):
 
     variant('python', default=True, description='Compile with Python support')
     variant('xz', default=True, description='Compile with lzma support')
+    variant('source-highlight', default=False, description='Compile with source-highlight support')
+    variant('lto', default=False, description='Enable lto')
+    variant('quad', default=False, description='Enable quad')
+    variant('gold', default=False, description='Enable gold linker')
+    variant('ld', default=False, description='Enable ld')
 
     # Required dependency
     depends_on('texinfo', type='build')
@@ -38,6 +45,9 @@ class Gdb(AutotoolsPackage):
     # Optional dependencies
     depends_on('python', when='+python')
     depends_on('xz', when='+xz')
+    depends_on('source-highlight', when='+source-highlight')
+
+    build_directory = 'spack-build'
 
     def configure_args(self):
         args = []
@@ -45,4 +55,17 @@ class Gdb(AutotoolsPackage):
             args.append('--with-python')
             args.append('LDFLAGS={0}'.format(
                 self.spec['python'].libs.ld_flags))
+
+        if '+lto' in self.spec:
+            args.append('--enable-lto')
+
+        if '+quad' in self.spec:
+            args.append('--with-quad')
+
+        if '+gold' in self.spec:
+            args.append('--enable-gold')
+
+        if '+ld' in self.spec:
+            args.append('--enable-ld')
+
         return args

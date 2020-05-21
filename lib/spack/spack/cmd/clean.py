@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ import llnl.util.tty as tty
 
 import spack.caches
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.stage
 from spack.paths import lib_path, var_path
@@ -43,11 +44,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-a', '--all', action=AllClean, help="equivalent to -sdmp", nargs=0
     )
-    subparser.add_argument(
-        'specs',
-        nargs=argparse.REMAINDER,
-        help="removes the build stages and tarballs for specs"
-    )
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 def clean(parser, args):

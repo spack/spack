@@ -1,15 +1,15 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
 
 
-class Libexif(AutotoolsPackage):
+class Libexif(AutotoolsPackage, SourceforgePackage):
     """A library to parse an EXIF file and read the data from those tags"""
 
     homepage = "https://sourceforge.net/projects/libexif"
-    url      = "https://downloads.sourceforge.net/sourceforge/libexif/libexif-0.6.21.tar.bz2"
+    sourceforge_mirror_path = "libexif/libexif-0.6.21.tar.bz2"
 
     maintainers = ['TheQueasle']
 

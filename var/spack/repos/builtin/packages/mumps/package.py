@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -125,7 +125,8 @@ class Mumps(Package):
         # when building shared libs need -fPIC, otherwise
         # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
         # can not be used when making a shared object; recompile with -fPIC
-        fpic = self.compiler.pic_flag if '+shared' in self.spec else ''
+        cpic = self.compiler.cc_pic_flag if '+shared' in self.spec else ''
+        fpic = self.compiler.fc_pic_flag if '+shared' in self.spec else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
 
@@ -146,8 +147,8 @@ class Mumps(Package):
                 ])
 
             makefile_conf.extend([
-                'OPTL = %s -O%s' % (fpic, opt_level),
-                'OPTC = %s -O%s -DINTSIZE64' % (fpic, opt_level)
+                'OPTL = %s -O%s' % (cpic, opt_level),
+                'OPTC = %s -O%s -DINTSIZE64' % (cpic, opt_level)
             ])
         else:
             if using_xlf:
@@ -157,8 +158,8 @@ class Mumps(Package):
                     fpic, opt_level))
 
             makefile_conf.extend([
-                'OPTL = %s -O%s' % (fpic, opt_level),
-                'OPTC = %s -O%s' % (fpic, opt_level)
+                'OPTL = %s -O%s' % (cpic, opt_level),
+                'OPTC = %s -O%s' % (cpic, opt_level)
             ])
 
         if '+mpi' in self.spec:
@@ -241,7 +242,7 @@ class Mumps(Package):
         else:
             makefile_conf.extend([
                 'LIBEXT  = .a',
-                'AR = ar vr',
+                'AR = ar vr ',
                 'RANLIB = ranlib'
             ])
 

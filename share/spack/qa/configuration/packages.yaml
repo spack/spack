@@ -2,12 +2,25 @@ packages:
   cmake:
     buildable: False
     paths:
-      cmake@2.8.12.2: /usr
+      cmake@3.12.4: /usr
   r:
     buildable: False
     paths:
-      r@3.0.2: /usr
+      r@3.4.4: /usr
   perl:
     buildable: False
     paths:
-      perl@5.18.2: /usr
+      perl@5.26.1: /usr
+  findutils:
+    buildable: False
+    paths:
+      findutils@4.6.0: /usr
+  openssl:
+    buildable: False
+    paths:
+      openssl@1.1.1: /usr
+  libpciaccess:
+    buildable: False
+    paths:
+      libpciaccess@0.13.5: /usr
+

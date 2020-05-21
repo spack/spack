@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,6 @@ class PyDnaio(PythonPackage):
 
     version('0.3', sha256='47e4449affad0981978fe986684fc0d9c39736f05a157f6cf80e54dae0a92638')
 
-    depends_on('python@3.4:', type=('build', 'run'))    
+    depends_on('python@3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-xopen@0.8.2:', type=('build', 'run'))

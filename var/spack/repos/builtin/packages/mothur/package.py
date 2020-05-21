@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Mothur(MakefilePackage):
 
     depends_on('boost')
     depends_on('readline')
-    depends_on('vsearch',  when='+vsearch', type='run')
+    depends_on('vsearch@2.13.3',  when='+vsearch', type='run')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')

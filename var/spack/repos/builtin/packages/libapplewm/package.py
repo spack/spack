@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,13 +6,13 @@
 from spack import *
 
 
-class Libapplewm(AutotoolsPackage):
+class Libapplewm(AutotoolsPackage, XorgPackage):
     """AppleWM is a simple library designed to interface with the Apple-WM
     extension. This extension allows X window managers to better interact with
     the Mac OS X Aqua user interface when running X11 in a rootless mode."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libAppleWM"
-    url      = "https://www.x.org/archive/individual/lib/libAppleWM-1.4.1.tar.gz"
+    xorg_mirror_path = "lib/libAppleWM-1.4.1.tar.gz"
 
     version('1.4.1', sha256='d7fb098d65ad4d840f60e5c92de7f58f1725bd70d0d132755ea453462fd50049')
 

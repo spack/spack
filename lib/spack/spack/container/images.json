@@ -1,0 +1,50 @@
+{
+  "ubuntu:18.04": {
+    "update": "apt-get -yqq update && apt-get -yqq upgrade",
+    "install": "apt-get -yqq install",
+    "clean": "rm -rf /var/lib/apt/lists/*",
+    "environment": [],
+    "build": "spack/ubuntu-bionic",
+    "build_tags": {
+      "develop": "latest",
+      "0.14": "0.14",
+      "0.14.0": "0.14.0"
+    }
+  },
+  "ubuntu:16.04": {
+    "update": "apt-get -yqq update && apt-get -yqq upgrade",
+    "install": "apt-get -yqq install",
+    "clean": "rm -rf /var/lib/apt/lists/*",
+    "environment": [],
+    "build": "spack/ubuntu-xenial",
+    "build_tags": {
+      "develop": "latest",
+      "0.14": "0.14",
+      "0.14.0": "0.14.0"
+    }
+  },
+  "centos:7": {
+    "update": "yum update -y && yum install -y epel-release && yum update -y",
+    "install": "yum install -y",
+    "clean": "rm -rf /var/cache/yum  && yum clean all",
+    "environment": [],
+    "build": "spack/centos7",
+    "build_tags": {
+      "develop": "latest",
+      "0.14": "0.14",
+      "0.14.0": "0.14.0"
+    }
+  },
+  "centos:6": {
+    "update": "yum update -y && yum install -y epel-release && yum update -y",
+    "install": "yum install -y",
+    "clean": "rm -rf /var/cache/yum  && yum clean all",
+    "environment": [],
+    "build": "spack/centos6",
+    "build_tags": {
+      "develop": "latest",
+      "0.14": "0.14",
+      "0.14.0": "0.14.0"
+    }
+  }
+}

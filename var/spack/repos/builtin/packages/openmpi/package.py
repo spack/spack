@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -75,16 +75,20 @@ class Openmpi(AutotoolsPackage):
     list_url = "http://www.open-mpi.org/software/ompi/"
     git = "https://github.com/open-mpi/ompi.git"
 
-    version('develop', branch='master')
+    maintainers = ['hppritcha']
+
+    version('master', branch='master')
 
     # Current
-    version('4.0.2', sha256='900bf751be72eccf06de9d186f7b1c4b5c2fa9fa66458e53b77778dffdfe4057')  # libmpi.so.40.20.2
+    version('4.0.3', sha256='1402feced8c3847b3ab8252165b90f7d1fa28c23b6b2ca4632b6e4971267fd03')  # libmpi.so.40.20.3
 
     # Still supported
+    version('4.0.2', sha256='900bf751be72eccf06de9d186f7b1c4b5c2fa9fa66458e53b77778dffdfe4057')  # libmpi.so.40.20.2
     version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
     version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
+    version('3.1.6', preferred=True, sha256='50131d982ec2a516564d74d5616383178361c2f08fdd7d1202b80bdf66a0d279')  # libmpi.so.40.10.4
     version('3.1.5', sha256='fbf0075b4579685eec8d56d34d4d9c963e6667825548554f5bf308610af72133')  # libmpi.so.40.10.4
-    version('3.1.4', preferred=True, sha256='17a69e0054db530c7dc119f75bd07d079efa147cf94bf27e590905864fe379d6')  # libmpi.so.40.10.4
+    version('3.1.4', sha256='17a69e0054db530c7dc119f75bd07d079efa147cf94bf27e590905864fe379d6')  # libmpi.so.40.10.4
     version('3.1.3', sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
     version('3.1.2', sha256='c654ed847f34a278c52a15c98add40402b4a90f0c540779f1ae6c489af8a76c5')  # libmpi.so.40.10.2
     version('3.1.1', sha256='3f11b648dd18a8b878d057e9777f2c43bf78297751ad77ae2cef6db0fe80c77c')  # libmpi.so.40.10.1
@@ -96,6 +100,7 @@ class Openmpi(AutotoolsPackage):
     version('3.0.1', sha256='663450d1ee7838b03644507e8a76edfb1fba23e601e9e0b5b2a738e54acd785d')  # libmpi.so.40.00.1
     version('3.0.0', sha256='f699bff21db0125d8cccfe79518b77641cd83628725a1e1ed3e45633496a82d7')  # libmpi.so.40.00.0
 
+    # Retired
     version('2.1.6', sha256='98b8e1b8597bbec586a0da79fcd54a405388190247aa04d48e8c40944d4ca86e')  # libmpi.so.20.10.3
     version('2.1.5', sha256='b807ccab801f27c3159a5edf29051cd3331d3792648919f9c4cee48e987e7794')  # libmpi.so.20.10.3
     version('2.1.4', sha256='3e03695ca8bd663bc2d89eda343c92bb3d4fc79126b178f5ddcb68a8796b24e2')  # libmpi.so.20.10.3
@@ -104,7 +109,6 @@ class Openmpi(AutotoolsPackage):
     version('2.1.1', sha256='bd7badd4ff3afa448c0d7f3ca0ee6ce003b957e9954aa87d8e4435759b5e4d16')  # libmpi.so.20.10.1
     version('2.1.0', sha256='b169e15f5af81bf3572db764417670f508c0df37ce86ff50deb56bd3acb43957')  # libmpi.so.20.10.0
 
-    # Retired
     version('2.0.4', sha256='4f82d5f7f294becbd737319f74801206b08378188a95b70abe706fdc77a0c20b')  # libmpi.so.20.0.4
     version('2.0.3', sha256='b52c0204c0e5954c9c57d383bb22b4181c09934f97783292927394d29f2a808a')  # libmpi.so.20.0.3
     version('2.0.2', sha256='cae396e643f9f91f0a795f8d8694adf7bacfb16f967c22fb39e9e28d477730d3')  # libmpi.so.20.0.2
@@ -191,7 +195,7 @@ class Openmpi(AutotoolsPackage):
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
-    patch('fix-ucx-1.7.0-api-instability.patch', when='@4.0.0:4.0.3')
+    patch('fix-ucx-1.7.0-api-instability.patch', when='@4.0.0:4.0.2')
 
     # Vader Bug: https://github.com/open-mpi/ompi/issues/5375
     # Haven't release fix for 2.1.x
@@ -200,6 +204,13 @@ class Openmpi(AutotoolsPackage):
     # Fixed in 3.0.3 and 3.1.3
     patch('btl_vader.patch', when='@3.0.1:3.0.2')
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
+
+    # Reported upstream: https://github.com/open-mpi/ompi/pull/6378
+    # We support only versions based on Libtool 2.4.6.
+    patch('nag_ltmain_1.patch', when='@2.1.4:2.1.999,3.0.1:4%nag')
+    patch('nag_ltmain_2.patch', when='@2.1.2:2.1.3,3.0.0%nag')
+    patch('nag_ltmain_3.patch', when='@2.0.0:2.1.1%nag')
+    patch('nag_ltmain_4.patch', when='@1.10.4:1.10.999%nag')
 
     variant(
         'fabrics',
@@ -220,14 +231,19 @@ class Openmpi(AutotoolsPackage):
     )
 
     # Additional support options
+    variant('atomics', default=False, description='Enable built-in atomics')
     variant('java', default=False, description='Build Java support')
+    variant('static', default=True, description='Build static libraries')
     variant('sqlite3', default=False, description='Build SQLite3 support')
     variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
-    variant('cxx_exceptions', default=True, description='Enable C++ Exception support')
+    variant('runpath', default=True, description='Enable wrapper runpath')
+    variant('cxx', default=False, description='Enable C++ MPI bindings')
+    variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
+    variant('gpfs', default=True, description='Enable GPFS support (if present)')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -273,6 +289,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('zlib', when='@3.0.0:')
     depends_on('valgrind~mpi', when='+memchecker')
     depends_on('ucx', when='fabrics=ucx')
+    depends_on('ucx +thread_multiple', when='fabrics=ucx +thread_multiple')
+    depends_on('ucx +thread_multiple', when='@3.0.0: fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
     depends_on('slurm', when='schedulers=slurm')
     depends_on('lsf', when='schedulers=lsf')
@@ -287,6 +305,10 @@ class Openmpi(AutotoolsPackage):
     conflicts('schedulers=loadleveler', when='@3.0.0:',
               msg='The loadleveler scheduler is not supported with '
               'openmpi(>=3.0.0).')
+    conflicts('+cxx', when='@5:',
+              msg='C++ MPI bindings are removed in 5.0.X release')
+    conflicts('+cxx_exceptions', when='@5:',
+              msg='C++ exceptions are removed in 5.0.X release')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
@@ -390,10 +412,16 @@ class Openmpi(AutotoolsPackage):
         perl = which('perl')
         perl('autogen.pl')
 
+    def setup_build_environment(self, env):
+        if '~gpfs' in self.spec:
+            env.set('ac_cv_header_gpfs_h', 'no')
+            env.set('ac_cv_header_gpfs_fcntl_h', 'no')
+
     def configure_args(self):
         spec = self.spec
         config_args = [
             '--enable-shared',
+            '--disable-silent-rules'
         ]
 
         # Add extra_rpaths dirs from compilers.yaml into link wrapper
@@ -402,6 +430,11 @@ class Openmpi(AutotoolsPackage):
         config_args.extend([
             '--with-wrapper-ldflags={0}'.format(' '.join(rpaths))
         ])
+
+        if '+atomics' in spec:
+            config_args.append('--enable-builtin-atomics')
+        else:
+            config_args.append('--disable-builtin-atomics')
 
         # According to this comment on github:
         #
@@ -413,17 +446,22 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('schedulers=slurm'):
             config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
             if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
-                config_args.append('--enable-static')
+                if '+static' in spec:
+                    config_args.append('--enable-static')
         else:
-            config_args.append('--enable-static')
-            config_args.extend(self.with_or_without('pmi'))
+            if '+static' in spec:
+                config_args.append('--enable-static')
+            else:
+                config_args.append('--disable-static')
 
-        if spec.satisfies('@2.0:'):
-            # for Open-MPI 2.0:, C++ bindings are disabled by default.
-            config_args.extend(['--enable-mpi-cxx'])
+            config_args.extend(self.with_or_without('pmi'))
 
         if spec.satisfies('@3.0.0:', strict=True):
             config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
+
+        if spec.satisfies('@4.0.0:4.0.2'):
+            # uct btl doesn't work with some UCX versions so just disable
+            config_args.append('--enable-mca-no-build=btl-uct')
 
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see
@@ -515,10 +553,24 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
-        if '+cxx_exceptions' in spec:
-            config_args.append('--enable-cxx-exceptions')
+        if '+runpath' in spec:
+            config_args.append('--enable-wrapper-rpath')
+            config_args.append('--enable-wrapper-runpath')
         else:
-            config_args.append('--disable-cxx-exceptions')
+            config_args.append('--disable-wrapper-rpath')
+            config_args.append('--disable-wrapper-runpath')
+
+        if spec.satisfies('@:4'):
+            if '+cxx' in spec:
+                config_args.append('--enable-mpi-cxx')
+            else:
+                config_args.append('--disable-mpi-cxx')
+
+            if '+cxx_exceptions' in spec:
+                config_args.append('--enable-cxx-exceptions')
+            else:
+                config_args.append('--disable-cxx-exceptions')
+
         return config_args
 
     @run_after('install')

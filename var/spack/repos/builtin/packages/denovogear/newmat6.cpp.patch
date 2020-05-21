@@ -1,0 +1,11 @@
+--- spack-src/src/contrib/newmat/newmat6.cpp.org	2020-03-19 14:06:13.679032667 +0900
++++ spack-src/src/contrib/newmat/newmat6.cpp	2020-03-19 14:07:34.267492838 +0900
+@@ -428,7 +428,7 @@
+ {
+    if (&gm == this) { REPORT tag_val = -1; return; }
+    REPORT
+-   if (indx > 0) { delete [] indx; indx = 0; }
++   if (indx != NULL) { delete [] indx; indx = 0; }
+    ((CroutMatrix&)gm).get_aux(*this);
+    Eq(gm);
+ }

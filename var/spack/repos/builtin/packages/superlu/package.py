@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -73,10 +73,10 @@ class Superlu(Package):
         if '+pic' in spec:
             config.extend([
                 # Use these lines instead when pic_flag capability arrives
-                'CFLAGS     = -O3 {0}'.format(self.compiler.pic_flag),
-                'NOOPTS     = {0}'.format(self.compiler.pic_flag),
-                'FFLAGS     = -O2 {0}'.format(self.compiler.pic_flag),
-                'LOADOPTS   = {0}'.format(self.compiler.pic_flag)
+                'CFLAGS     = -O3 {0}'.format(self.compiler.cc_pic_flag),
+                'NOOPTS     = {0}'.format(self.compiler.cc_pic_flag),
+                'FFLAGS     = -O2 {0}'.format(self.compiler.f77_pic_flag),
+                'LOADOPTS   = {0}'.format(self.compiler.cc_pic_flag)
             ])
         else:
             config.extend([
