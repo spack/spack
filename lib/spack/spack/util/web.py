@@ -330,15 +330,17 @@ def _urlopen(req, *args, **kwargs):
     return opener(req, *args, **kwargs)
 
 
-def spider(roots, depth=0):
+def spider(roots, depth=0, concurrency=128):
     """Get web pages from root URLs.
 
     If depth is specified (e.g., depth=2), then this will also follow
     up to <depth> levels of links from each root.
 
     Args:
-        roots: root urls used as a starting point for spidering
-        depth: level of recursion into links
+        roots (str or list of str): root urls used as a starting point
+            for spidering
+        depth (int): level of recursion into links
+        concurrency (int): number of simultaneous requests that can be sent
 
     Returns:
         A dict of pages visited (URL) mapped to their full text and the
@@ -432,7 +434,7 @@ def spider(roots, depth=0):
                       traceback.format_exc())
 
         finally:
-            tty.debug("SPIDER: {0}".format(url))
+            tty.debug("SPIDER: [url={0}]".format(url))
 
         return pages, links, subcalls
 
@@ -456,10 +458,10 @@ def spider(roots, depth=0):
         root = url_util.parse(root)
         spider_args.append((root, root, collect))
 
-    tp = multiprocessing.pool.ThreadPool(processes=128)
+    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
     try:
         while current_depth <= depth:
-            tty.debug("Current depth: {0} [max={1}, len={2}]".format(
+            tty.debug("SPIDER: [depth={0}, max_depth={1}, urls={2}]".format(
                 current_depth, depth, len(spider_args))
             )
             results = tp.map(star(_spider), spider_args)
