@@ -19,6 +19,8 @@ class PlinkNg(RPackage):
     depends_on('cblas')
     depends_on('openblas')
 
+    conflicts('%gcc@:4.99')
+
     def setup_build_environment(self, env):
         zlib = join_path(self.spec['zlib'].prefix.lib, 'libz.a')
         env.set('ZLIB', zlib)
