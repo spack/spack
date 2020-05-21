@@ -481,22 +481,22 @@ def spider(roots, depth=0, concurrency=128):
     return pages, links
 
 
-def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
+def find_versions_of_archive(
+        archive_urls, list_url=None, list_depth=0, concurrency=128
+):
     """Scrape web pages for new versions of a tarball.
 
-    Arguments:
+    Args:
         archive_urls (str or list or tuple): URL or sequence of URLs for
             different versions of a package. Typically these are just the
             tarballs from the package file itself. By default, this searches
             the parent directories of archives.
-
-    Keyword Arguments:
         list_url (str or None): URL for a listing of archives.
             Spack will scrape these pages for download links that look
             like the archive URL.
-
-        list_depth (int): Max depth to follow links on list_url pages.
+        list_depth (int): max depth to follow links on list_url pages.
             Defaults to 0.
+        concurrency (int): maximum number of concurrent requests
     """
     if not isinstance(archive_urls, (list, tuple)):
         archive_urls = [archive_urls]
@@ -517,7 +517,7 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     list_urls |= additional_list_urls
 
     # Grab some web pages to scrape.
-    pages, links = spider(list_urls, depth=list_depth)
+    pages, links = spider(list_urls, depth=list_depth, concurrency=concurrency)
 
     # Scrape them for archive URLs
     regexes = []
