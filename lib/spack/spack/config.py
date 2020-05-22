@@ -555,7 +555,7 @@ class Configuration(object):
             while len(parts) > 1:
                 key = parts.pop(0)
                 new = data[key]
-                if isinstance(data, dict):
+                if isinstance(new, dict):
                     # Make it an ordered dict
                     new = syaml.syaml_dict(new)
                     # reattach to parent object
