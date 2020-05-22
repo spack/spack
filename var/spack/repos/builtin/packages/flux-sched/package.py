@@ -36,13 +36,14 @@ class FluxSched(AutotoolsPackage):
     depends_on("pkgconfig")
 
     depends_on("flux-core", type=('build', 'link', 'run'))
-    depends_on("flux-core+cuda", when='+cuda')
-    depends_on("flux-core@0.8.0", when='@0.4.0')
-    depends_on("flux-core@0.9.0", when='@0.5.0')
-    depends_on("flux-core@0.10.0", when='@0.6.0')
-    depends_on("flux-core@0.11.0", when='@0.7.0')
-    depends_on("flux-core@0.11.2:0.11.99", when='@0.7.1')
-    depends_on("flux-core@master", when='@master')
+    depends_on("flux-core+cuda", when='+cuda', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.8.0", when='@0.4.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.9.0", when='@0.5.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.10.0", when='@0.6.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.11.0", when='@0.7.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.11.2:0.11.99", when='@0.7.1', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.16.0:0.16.99", when='@0.8.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@master", when='@master', type=('build', 'run', 'link'))
 
     # Need autotools when building on master:
     depends_on("autoconf", type='build', when='@master')
