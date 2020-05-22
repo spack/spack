@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import pytest
 import os
 
 from llnl.util.filesystem import mkdirp
@@ -148,6 +148,12 @@ def test_config_add_ordered_dict(mutable_empty_config):
   first: /path/to/first
   second: /path/to/second
 """
+
+
+def test_config_add_dict_to_non_dict_fails(mutable_empty_config):
+    config('add', 'packages:all:variants:+debug')
+    with pytest.raises(spack.config.ConfigError):
+        config('add', 'packages:all:True')
 
 
 def test_config_remove_value(mutable_empty_config):
