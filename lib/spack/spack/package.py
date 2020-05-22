@@ -1474,24 +1474,32 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return self.test_stage.join(
             self.spec.format('{name}-{version}-{hash}'))
 
-    def cache_extra_test_source(self, src_subdir, install_subdir):
-        """Copy the source subdirectory to the install test subdirectory.
+    def cache_extra_test_sources(self, srcs):
+        """Copy relative source path(s) to the corresponding install test subdir
 
-        This method is intended as an optional test set up helper for use
-        during the install process when the goal is to leverage existing
-        package source files (e.g., tests, examples) for package installation
-        testing.
+        This method is intended as an optional install test setup helper for
+        grabbing source files/directories during the installation process and
+        copying them to the installation test subdirectory for subsequent use
+        during install testing.
 
         Args:
-            src_subdir (str): name of the subdirectory under staged source
-                that is to be copied to the install test directory
-            install_subdir (str): name of the target subdirectory under the
-                install test directory
+            srcs (str or list of str): relative path for files and or
+                subdirectories located in the staged source path that are to
+                be copied to the corresponding location(s) under the install
+                testing directory.
         """
-        test_dir = os.path.join(self.stage.source_path, src_subdir)
-        dest_dir = os.path.join(self.install_test_root, install_subdir)
-        if os.path.isdir(test_dir):
-            shutil.copytree(test_dir, dest_dir)
+        paths = [srcs] if isinstance(srcs, string_types) else srcs
+
+        def skip_file(path):
+            return path not in paths
+
+        for path in paths:
+            src_path = os.path.join(self.stage.source_path, path)
+            dest_path = os.path.join(self.install_test_root, path)
+            if os.path.isdir(src_path):
+                fsys.copy_tree(src_path, dest_path)
+            else:
+                fsys.copy_tree(src_path, dest_path, ignore=skip_file)
 
     test_requires_compiler = False
     test_failures = None
