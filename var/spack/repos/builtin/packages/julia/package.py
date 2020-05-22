@@ -47,7 +47,8 @@ class Julia(Package):
     # Python only needed to build LLVM?
     depends_on('python@2.7:2.8', type='build', when='@:1.1')
     depends_on('python@2.7:', type='build', when='@1.2:')
-    depends_on('cmake @2.8:', type='build', when='@1.0:')
+    depends_on('cmake@2.8:', type='build', when='@1.0:')
+    depends_on('cmake@:3.11', type='build', when='@:1.4')
     depends_on('git', type='build', when='@master')
 
     # Combined build-time and run-time dependencies:
