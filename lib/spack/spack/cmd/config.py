@@ -205,8 +205,11 @@ def config_add(args):
                     spack.config.validate(
                         test_data, spack.config.section_schemas[section])
                     break
-                except spack.config.ConfigFormatError:
+                except (spack.config.ConfigFormatError, AttributeError):
                     # Wrong type, try the next one
+                    # Except AttributeError because undefined behavior of dict
+                    # ordering in python 3.5 can cause the validator to raise
+                    # an AttributeError instead of a ConfigFormatError
                     pass
 
             # construct value from this point down
