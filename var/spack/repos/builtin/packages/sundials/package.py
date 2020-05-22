@@ -21,6 +21,8 @@ class Sundials(CMakePackage):
     # Versions
     # ==========================================================================
     version('develop', branch='develop')
+    version('5.3.0', sha256='88dff7e11a366853d8afd5de05bf197a8129a804d9d4461fb64297f1ef89bca7')
+    version('5.2.0', sha256='95f058acce5bd66e654de65acdbb1c9f44c90cf1b4e28f8d933cdb4415ebba3e')
     version('5.1.0', sha256='fb22d14fad42203809dc46d046b001149ec4e901b23882bd4a80619157fd9b21')
     version('5.0.0', sha256='345141ec01c641d0bdfb3476c478b7e74fd6a7192a478a27cafe75d9da2d7dd3')
     version('4.1.0', sha256='280de1c27b2360170a6f46cb3799b2aee9dff3bddbafc8b08c291a47ab258aa5')
