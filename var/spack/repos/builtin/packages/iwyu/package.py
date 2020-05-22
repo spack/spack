@@ -21,9 +21,14 @@ class Iwyu(CMakePackage):
     version('0.12', sha256='a5892fb0abccb820c394e4e245c00ef30fc94e4ae58a048b23f94047c0816025')
     version('0.11', sha256='2d2877726c4aed9518cbb37673ffbc2b7da9c239bf8fe29432da35c1c0ec367a')
 
-    patch('iwyu-013-cmake.patch', when='@0.13')
+    patch('iwyu-013-cmake.patch', when='@0.13:0.14')
 
     depends_on('llvm+clang@10.0:10.999', when='@0.14')
     depends_on('llvm+clang@9.0:9.999', when='@0.13')
     depends_on('llvm+clang@8.0:8.999', when='@0.12')
     depends_on('llvm+clang@7.0:7.999', when='@0.11')
+
+    @when('@0.14:')
+    def cmake_args(self):
+        return [self.define('CMAKE_CXX_STANDARD', 14),
+                self.define('CMAKE_CXX_EXTENSIONS', False)]
