@@ -46,6 +46,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('vdwxc', default=False, description="Enable libvdwxc support")
     variant('scalapack', default=False, description="Enable scalapack support")
     variant('magma', default=False, description="Enable MAGMA support")
+    variant('nlcglib', default=False, description="enable robust wave function optimization")
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -77,6 +78,7 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('spfft+cuda', when='@develop+cuda')
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
+    depends_on('nlcglib', when='+nlcglib')
     depends_on('libvdwxc+mpi', when='+vdwxc')
     depends_on('scalapack', when='+scalapack')
     depends_on('cuda', when='+cuda')
@@ -134,6 +136,7 @@ class Sirius(CMakePackage, CudaPackage):
             _def('+openmp'),
             _def('+elpa'),
             _def('+magma'),
+            _def('+nlcglib'),
             _def('+vdwxc'),
             _def('+memory_pool'),
             _def('+scalapack'),
