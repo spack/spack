@@ -7,7 +7,7 @@ from spack import *
 
 
 class Libical(CMakePackage):
-    """Libical — an implementation of iCalendar protocols and data formats."""
+    """Libical - an implementation of iCalendar protocols and data formats."""
 
     homepage = "https://github.com/libical/libical"
     url = "https://github.com/libical/libical/archive/v3.0.8.tar.gz"

@@ -9,8 +9,8 @@ from spack import *
 
 class Pbspro(AutotoolsPackage):
     """PBS Professional software optimizes job scheduling and workload
-    management in high-performance computing (HPC) environments – clusters,
-    clouds, and supercomputers – improving system efficiency and people’s
+    management in high-performance computing (HPC) environments - clusters,
+    clouds, and supercomputers - improving system efficiency and people's
     productivity."""
 
     homepage = "https://www.pbspro.org"
