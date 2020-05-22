@@ -45,10 +45,13 @@ class FluxCore(AutotoolsPackage):
     depends_on("lua@5.1:5.2.99", when="@0.10.0:,master")
     depends_on("lua-luaposix")
     depends_on("munge", when="@0.1.0:0.10.0")
-    depends_on("python", type=('build', 'run'))
-    depends_on("python@2.7:2.99", when="@0.1.0:0.11.0")
-    depends_on("python@2.7:", when="@0.11.1:")
-    depends_on("python@3.6:", when="@0.17.0:,master")
+    # `link` dependency on python due to Flux's `pymod` module
+    depends_on("python", type=('build', 'run', 'link'))
+    depends_on("python@2.7:2.99",
+               when="@0.1.0:0.11.0",
+               type=('build', 'run', 'link'))
+    depends_on("python@2.7:", when="@0.11.1:", type=('build', 'run', 'link'))
+    depends_on("python@3.6:", when="@0.17.0:,master", type=('build', 'run', 'link'))
     depends_on("py-cffi", type=('build', 'run'))
     depends_on("py-six", type=('build', 'run'), when="@0.11.0:")
     depends_on("py-pyyaml", type=('build', 'run'), when="@0.11.0:")
