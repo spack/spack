@@ -406,8 +406,12 @@ def validate(data, filename=None):
     try:
         spack.schema.Validator(spack.schema.env.schema).validate(validate_data)
     except jsonschema.ValidationError as e:
+        if hasattr(e.instance, 'lc'):
+            line_number = e.instance.lc.line + 1
+        else:
+            line_number = None
         raise spack.config.ConfigFormatError(
-            e, data, filename, e.instance.lc.line + 1)
+            e, data, filename, line_number)
     return validate_data
 
 
