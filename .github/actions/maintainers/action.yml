@@ -1,0 +1,26 @@
+name: 'maintainers'
+author: 'Adam J. Stewart and Todd Gamblin'
+description: 'Notify or request maintainers for modified packages'
+inputs:
+  author:
+    description: 'The person who submitted the pull request'
+    required: true
+  changes:
+    description: 'JSON array of changed files'
+    required: true
+outputs:
+  packages-with-maintainers:
+    description: 'Array of modified packages with maintainers'
+  packages-without-maintainers:
+    description: 'Array of modified packages without maintainers'
+  maintainers:
+    description: 'Array of maintainers for modified packages'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.author }}
+    - ${{ inputs.changes }}
+branding:
+  icon: 'user-check'
+  color: 'blue'
