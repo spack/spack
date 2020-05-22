@@ -32,4 +32,3 @@ class Iwyu(CMakePackage):
     def cmake_args(self):
         return [self.define('CMAKE_CXX_STANDARD', 14),
                 self.define('CMAKE_CXX_EXTENSIONS', False)]
-
