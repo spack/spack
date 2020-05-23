@@ -47,7 +47,15 @@ class Libunwind(AutotoolsPackage):
 
     provides('unwind')
 
-    flag_handler = AutotoolsPackage.build_system_flags
+    def flag_handler(self, name, flags):
+        wrapper_flags = None
+
+        if name == 'cflags':
+            # https://github.com/libunwind/libunwind/pull/166
+            if self.spec.satisfies('@:1.4 %gcc@10:'):
+                wrapper_flags = ['-fcommon']
+
+        return (wrapper_flags, None, flags)
 
     def configure_args(self):
         spec = self.spec
