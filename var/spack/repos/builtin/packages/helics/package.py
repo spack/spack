@@ -39,6 +39,7 @@ class Helics(CMakePackage):
     variant('asio', default=True, description="Compile with ASIO libraries")
     variant('swig', default=False, description="Build language bindings with SWIG")
     variant('webserver', default=True, description="Enable the integrated webserver in the HELICS broker server")
+    variant('python', default=False, description="Enable Python interface")
 
     # Build dependency
     depends_on('git', type='build', when='@master:')
@@ -48,6 +49,7 @@ class Helics(CMakePackage):
 
     depends_on('libzmq@4.3:', when='+zmq')
     depends_on('mpi@2', when='+mpi')
+    depends_on('python@3:', when='+python')
 
     # OpenMPI doesn't work with HELICS <=2.4.1
     conflicts('^openmpi', when='@:2.4.1 +mpi')
@@ -59,6 +61,8 @@ class Helics(CMakePackage):
     # ASIO (vendored in HELICS repo) is required for tcp and udp options
     conflicts('+tcp', when='~asio')
     conflicts('+udp', when='~asio')
+
+    extends('python', when='+python')
 
     def cmake_args(self):
         spec = self.spec
@@ -103,4 +107,13 @@ class Helics(CMakePackage):
         args.append('-DHELICS_ENABLE_SWIG={0}'.format(
             'ON' if '+swig' in spec else 'OFF'))
 
+        # Python
+        args.append('-DBUILD_PYTHON_INTERFACE={0}'.format(
+            'ON' if '+python' in spec else 'OFF'))
+
         return args
+
+    def setup_run_environment(self, env):
+        spec = self.spec
+        if '+python' in spec:
+            env.prepend_path('PYTHONPATH', self.prefix.python)

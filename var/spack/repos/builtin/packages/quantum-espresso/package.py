@@ -128,8 +128,8 @@ class QuantumEspresso(Package):
     # folder QE expects as a link, we issue a conflict here.
     conflicts('+elpa', when='@:5.4.0')
 
-    # Some QMCPACK converters only without internal patches. HDF5
-    # is a hard requirement. Need to do two HDF5 cases explicitly
+    # Some QMCPACK converters are incompatible with upstream patches.
+    # HDF5 is a hard requirement. Need to do two HDF5 cases explicitly
     # since Spack lacks support for expressing NOT operation.
     conflicts(
         '@6.4+patch',
@@ -138,7 +138,7 @@ class QuantumEspresso(Package):
         'deactivatation of upstream patches'
     )
     conflicts(
-        'hdf5=serial',
+        '@6.3:6.4.0 hdf5=serial',
         when='+qmcpack',
         msg='QE-to-QMCPACK wave function converter only '
         'supported with parallel HDF5'
@@ -330,9 +330,12 @@ class QuantumEspresso(Package):
         configure(*options)
 
         # Filter file must be applied after configure executes
-        # QE 6.4.0 to QE 6.4 have `-L` missing in front of zlib library
+        # QE 6.1.0 to QE 6.4 have `-L` missing in front of zlib library
+        # This issue is backported through an internal patch in 6.4.1, but
+        # can't be applied to the '+qmcpack' variant
         if spec.variants['hdf5'].value != 'none':
-            if spec.satisfies('@6.1.0:6.4.0'):
+            if (spec.satisfies('@6.1.0:6.4.0') or
+                (spec.satisfies('@6.4.1') and '+qmcpack' in spec)):
                 make_inc = join_path(self.stage.source_path, 'make.inc')
                 zlib_libs = spec['zlib'].prefix.lib + ' -lz'
                 filter_file(

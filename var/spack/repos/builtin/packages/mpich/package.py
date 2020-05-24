@@ -156,6 +156,10 @@ spack package at this time.''',
         env.unset('F90')
         env.unset('F90FLAGS')
 
+        # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
+        if self.spec.satisfies('%gcc@10:'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         # On Cray, the regular compiler wrappers *are* the MPI wrappers.
         if 'platform=cray' in self.spec:

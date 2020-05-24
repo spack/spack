@@ -12,13 +12,14 @@ class Tasmanian(CMakePackage):
     interpolation as well as parameter calibration."""
 
     homepage = 'http://tasmanian.ornl.gov'
-    url      = 'https://github.com/ORNL/TASMANIAN/archive/v7.0.tar.gz'
+    url      = 'https://github.com/ORNL/TASMANIAN/archive/v7.1.tar.gz'
     git      = 'https://github.com/ORNL/TASMANIAN.git'
 
     maintainers = ['mkstoyanov']
 
     version('develop', branch='master')
 
+    version('7.1', sha256='9c24a591506a478745b802f1fa5c557da7bc80b12d8070855de6bc7aaca7547a')
     version('7.0', sha256='4094ba4ee2f1831c575d00368c8471d3038f813398be2e500739cef5c7c4a47b')  # use for xsdk-0.5.0
     version('6.0', sha256='ceab842e9fbce2f2de971ba6226967caaf1627b3e5d10799c3bd2e7c3285ba8b')  # use for xsdk-0.4.0
     version('5.1', sha256='b0c1be505ce5f8041984c63edca9100d81df655733681858f5cc10e8c0c72711')
@@ -67,6 +68,7 @@ class Tasmanian(CMakePackage):
     depends_on('mpi', when="+mpi", type=('build', 'run'))  # openmpi 2 and 3 tested
 
     depends_on('blas', when="+blas", type=('build', 'run'))  # openblas 0.2.18 or newer
+    depends_on('lapack', when="+blas @7.1:", type=('build', 'run'))  # lapack used since 7.1
 
     depends_on('cuda@8.0.61:', when='+cuda', type=('build', 'run'))
     depends_on('cuda@8.0.61:', when='+magma', type=('build', 'run'))

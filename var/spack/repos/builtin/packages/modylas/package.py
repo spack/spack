@@ -40,6 +40,8 @@ class Modylas(AutotoolsPackage):
         fflags = ['-O3', self.compiler.openmp_flag]
         if self.spec.satisfies('%gcc'):
             fflags.append('-cpp')
+        elif self.spec.satisfies('%fj'):
+            fflags.append('-Cpp')
         env.set('FCFLAGS', ' '.join(fflags))
 
     def configure_args(self):
