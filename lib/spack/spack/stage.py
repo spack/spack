@@ -751,7 +751,6 @@ class CargoStage(object):
     def __init__(self, manifest, package_stage, mirror_paths=None):
         self.manifest = manifest
         self.package_stage = package_stage
-        self.cargo = which('cargo', required=True)
 
         self.default_fetcher = \
             fs.CargoVendorFetchStrategy(manifest, package_stage)
