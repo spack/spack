@@ -1191,7 +1191,6 @@ class CargoVendorFetchStrategy(FetchStrategy):
     def __init__(self, manifest, package_stage):
         self.manifest = manifest
         self.package_stage = package_stage
-        self.cargo = which('cargo', required=True)
 
     @property
     def cachable(self):
@@ -1233,7 +1232,8 @@ class CargoVendorFetchStrategy(FetchStrategy):
             .format(name=self.package_stage.name))
         self.package_stage.expand_archive()
 
-        cargo = copy.deepcopy(self.cargo)
+        cargo = which('cargo', required=True)
+
         checksum = spack.config.get('config:checksum')
         if checksum and not os.path.exists(self.manifest_lock_path):
             tty.warn(
@@ -1265,7 +1265,7 @@ class CargoVendorFetchStrategy(FetchStrategy):
             # Run from a relative directory so the generated configuration is
             # relative to the staging directory
             with working_dir(self.package_stage.path):
-                config = self.cargo(
+                config = cargo(
                     'vendor', '--versioned-dirs',
                     '--manifest-path',
                     self.manifest_path,
