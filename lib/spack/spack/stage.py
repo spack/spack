@@ -771,7 +771,10 @@ class CargoStage(object):
 
     @property
     def archive_file(self):
-        return self.save_filename
+        if os.path.exists(self.save_filename):
+            return self.save_filename
+
+        return None
 
     @property
     def manifest_path(self):
@@ -789,6 +792,10 @@ class CargoStage(object):
     def expanded(self):
         """Checks if the dependencies are already vendored"""
         return os.path.exists(self.vendor_stage)
+
+    @property
+    def path(self):
+        return self.package_stage.path
 
     @property
     def vendor_stage(self):
