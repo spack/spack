@@ -35,12 +35,13 @@ import six
 import six.moves.urllib.parse as urllib_parse
 import spack.config
 import spack.error
+import spack.fetch_strategy as fs
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
 from llnl.util.filesystem import (
-    working_dir, mkdirp, temp_rename, temp_cwd, get_single_file)
+    working_dir, mkdirp, temp_rename, temp_cwd, get_single_file, join_path)
 from spack.util.compression import decompressor_for, extension
 from spack.util.executable import which
 from spack.util.string import comma_and, quote
@@ -48,6 +49,9 @@ from spack.version import Version, ver
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
+
+# Well-known vendor subdirectory name
+_cargo_vendor_subdir = 'spack-cargo-vendor'
 
 CONTENT_TYPE_MISMATCH_WARNING_TEMPLATE = (
     "The contents of {subject} look like {content_type}.  Either the URL"
@@ -1177,6 +1181,130 @@ class S3FetchStrategy(URLFetchStrategy):
 
         if not self.archive_file:
             raise FailedDownloadError(self.url)
+
+
+class CargoVendorFetchStrategy(FetchStrategy):
+    """This fetch strategy is used for fetching the dependencies of a cargo
+    package using the `cargo vendor` command. It is not a standalone fetch
+    strategy - it's only used by packages that use the `cargo_manifest`
+    directive."""
+
+    def __init__(self, manifest, package_stage):
+        self.manifest = manifest
+        self.package_stage = package_stage
+        self.cargo = which('cargo', required=True)
+
+    @property
+    def cachable(self):
+        return True
+
+    @property
+    def manifest_path(self):
+        return join_path(self.package_stage.source_path, self.manifest)
+
+    @property
+    def manifest_dir(self):
+        return os.path.dirname(self.manifest_path)
+
+    @property
+    def manifest_dir_rel(self):
+        return os.path.dirname(self.manifest)
+
+    @property
+    def manifest_lock_path(self):
+        return join_path(self.manifest_dir, 'Cargo.lock')
+
+    @property
+    def manifest_lock_path_rel(self):
+        return join_path(self.manifest_dir_rel, 'Cargo.lock')
+
+    @property
+    def vendor_stage(self):
+        return join_path(
+            self.package_stage.path, _cargo_vendor_subdir)
+
+    @property
+    def vendor_tar(self):
+        return self.vendor_stage + '.tar.gz'
+
+    def fetch(self):
+        # Fetching the cargo stage requires the package is expanded
+        tty.msg(
+            "Creating stage for {name} in order to fetch cargo dependencies"
+            .format(name=self.package_stage.name))
+        self.package_stage.expand_archive()
+
+        cargo = copy.deepcopy(self.cargo)
+        checksum = spack.config.get('config:checksum')
+        if checksum and not os.path.exists(self.manifest_lock_path):
+            tty.warn(
+                "There is no Cargo.lock file to vendor crate depenencies \
+                 safely.")
+
+            # Ask the user whether to skip the checksum if we're
+            # interactive, but just fail if non-interactive.
+            ck_msg = "Add a checksum or use --no-checksum to skip this check."
+            ignore_checksum = False
+            if sys.stdout.isatty():
+                ignore_checksum = tty.get_yes_or_no("  Fetch anyway?",
+                                                    default=False)
+                if ignore_checksum:
+                    tty.msg("Vendoring with no checksum.", ck_msg)
+                    cargo.add_default_arg('--locked')
+
+            if not ignore_checksum:
+                raise fs.FetchError("Will not vendor cargo dependencies")
+
+            locked = False
+        else:
+            locked = True
+
+        # Create the vendored dependencies directory
+        mkdirp(self.vendor_stage)
+
+        try:
+            # Run from a relative directory so the generated configuration is
+            # relative to the staging directory
+            with working_dir(self.package_stage.path):
+                config = self.cargo(
+                    'vendor', '--versioned-dirs',
+                    '--manifest-path',
+                    self.manifest_path,
+                    _cargo_vendor_subdir,
+                    output=str
+                )
+
+            # Set-up config
+            config_dir_path = join_path(self.package_stage.path, '.cargo')
+            mkdirp(config_dir_path)
+
+            with open(join_path(config_dir_path, 'config'), 'w') as f:
+                f.write(config)
+        except BaseException:
+            # Remove the spack-cargo-vendor dir on error because it's used to
+            # determine if dependencies have already been staged
+            os.rmdir(self.vendor_stage)
+            raise
+
+        # Archive the dependencies and configuration files
+        tar = which('tar', required=True)
+
+        with working_dir(self.package_stage.path):
+            # Cache the vendored dependencies and the cargo configuration
+            src_files = [_cargo_vendor_subdir, '.cargo']
+            if not locked:
+                # And the Cargo.lock for unlocked crates
+                src_files.append(
+                    join_path('spack-src', self.manifest_lock_path_rel))
+
+            tar('-czf', self.vendor_tar, *src_files)
+
+    def archive(self, destination):
+        """Just moves the spack-cargo-vendor.tar.gz to the destination."""
+        web_util.push_to_url(
+            self.vendor_tar,
+            destination,
+            keep_original=True)
 
 
 def stable_target(fetcher):

@@ -48,7 +48,7 @@ import spack.util.environment
 import spack.util.web
 import spack.multimethod
 
-from llnl.util.filesystem import mkdirp, touch, working_dir
+from llnl.util.filesystem import mkdirp, touch, working_dir, join_path
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from spack.filesystem_view import YamlFilesystemView
@@ -816,6 +816,17 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                       path=self.path, search_fn=download_search)
         return stage
 
+    def _make_cargo_stage(self, root_stage):
+        return CargoStage(
+            self.cargo_manifest, root_stage,
+            mirror_paths=[
+                join_path(
+                    '_cargo-cache',
+                    root_stage.fetcher.mirror_id()
+                ) + '.tar.gz'
+            ]
+        )
+
     def _make_stage(self):
         # Construct a composite stage on top of the composite FetchStrategy
         composite_fetcher = self.fetcher
@@ -835,8 +846,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if self.cargo_manifest:
             composite_stage.append(
-                CargoStage(self.cargo_manifest, root_stage)
-            )
+                self._make_cargo_stage(root_stage))
 
         return composite_stage
 
