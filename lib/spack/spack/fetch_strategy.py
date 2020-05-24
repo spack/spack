@@ -35,7 +35,6 @@ import six
 import six.moves.urllib.parse as urllib_parse
 import spack.config
 import spack.error
-import spack.fetch_strategy as fs
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
@@ -1253,7 +1252,7 @@ class CargoVendorFetchStrategy(FetchStrategy):
                     cargo.add_default_arg('--locked')
 
             if not ignore_checksum:
-                raise fs.FetchError("Will not vendor cargo dependencies")
+                raise FetchError("Will not vendor cargo dependencies")
 
             locked = False
         else:
