@@ -7,16 +7,19 @@ import llnl.util.tty as tty
 from spack import *
 
 
-class Pbspro(AutotoolsPackage):
+class Openpbs(AutotoolsPackage):
     """PBS Professional software optimizes job scheduling and workload
     management in high-performance computing (HPC) environments - clusters,
     clouds, and supercomputers - improving system efficiency and people's
     productivity."""
 
-    homepage = "https://www.pbspro.org"
-    url = "https://github.com/PBSPro/pbspro/archive/v19.1.3.tar.gz"
+    # TODO: update the description and the homepage url once the renaming is
+    #  finished: http://community.pbspro.org/t/openpbs-and-version-20-0/2075
 
-    version('19.1.3', sha256='709134de2cefe999d0edca8073abffd034d9a64796c74cb37071990a1369701c')
+    homepage = "https://www.pbspro.org"
+    url = "https://github.com/openpbs/openpbs/archive/v19.1.3.tar.gz"
+
+    version('19.1.3', sha256='6e9d2614f839ff3d91d0ace3de04752b7c075da60c72fe6def76437aa05c9857')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

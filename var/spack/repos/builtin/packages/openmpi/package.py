@@ -253,7 +253,7 @@ class Openmpi(AutotoolsPackage):
 
     depends_on('slurm', when='schedulers=slurm')
     depends_on('lsf', when='schedulers=lsf')
-    depends_on('pbspro', when='schedulers=tm')
+    depends_on('openpbs', when='schedulers=tm')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
@@ -328,7 +328,7 @@ class Openmpi(AutotoolsPackage):
     def with_or_without_tm(self, activated):
         if not activated:
             return '--without-tm'
-        return '--with-tm={0}'.format(self.spec['pbspro'].prefix)
+        return '--with-tm={0}'.format(self.spec['openpbs'].prefix)
 
     @run_before('autoreconf')
     def die_without_fortran(self):
