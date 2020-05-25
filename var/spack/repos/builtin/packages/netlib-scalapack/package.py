@@ -82,7 +82,8 @@ class NetlibScalapack(CMakePackage):
                 "-DCMAKE_Fortran_FLAGS=%s" % self.compiler.fc_pic_flag
             ])
 
-        if '^fujitsu-mpi' in spec:
+        # Specify Fujitsu-MPI's location
+        if spec.satisfies('%fj') and '^fujitsu-mpi' in spec:
             options.extend([
                 '-DMPI_C_COMPILER=%s'       % spec['mpi'].mpicc,
                 '-DMPI_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
