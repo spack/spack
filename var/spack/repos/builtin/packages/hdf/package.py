@@ -130,7 +130,11 @@ class Hdf(AutotoolsPackage):
         config_args += self.enable_or_disable('netcdf')
         config_args += self.enable_or_disable('fortran')
         config_args += self.enable_or_disable('java')
-        config_args += self.with_or_without('szip', activation_value='prefix')
+
+        if '+szip' in self.spec:
+            config_args.append('--with-szlib=%s' % self.spec['szip'].prefix)
+        else:
+            config_args.append('--without-szlib')
 
         if '~external-xdr' in self.spec:
             config_args.append('--enable-hdf4-xdr')
@@ -140,7 +144,7 @@ class Hdf(AutotoolsPackage):
             config_args.append('LIBS=%s' % self.spec['rpc'].libs.link_flags)
         return config_args
 
-    # Otherwise, we get something like:
+    # Otherwise, we randomly get:
     # SDgetfilename:
     #   incorrect file being opened - expected <file755>, retrieved <file754>
     def check(self):
