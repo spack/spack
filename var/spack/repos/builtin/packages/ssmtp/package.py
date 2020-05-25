@@ -25,8 +25,6 @@ class Ssmtp(AutotoolsPackage):
     depends_on('libnsl')
     depends_on('openssl', when='+ssl')
 
-    provides('sendmail')
-
     patch('install.patch')
 
     @when('+ssl')

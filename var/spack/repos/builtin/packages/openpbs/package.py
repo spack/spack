@@ -29,7 +29,7 @@ class Openpbs(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('perl', type='build')
 
-    depends_on('sendmail', type=('build', 'run'))
+    depends_on('ssmtp', type=('build', 'run'))
     depends_on('xauth', type=('build', 'run'))
 
     depends_on('python@2.6:2.7', type=('build', 'link', 'run'))
@@ -77,7 +77,7 @@ class Openpbs(AutotoolsPackage):
             '--with-editline=%s' % self.spec['libedit'].prefix,
             '--with-hwloc=%s' % self.spec['hwloc'].prefix,
             '--with-libical=%s' % self.spec['libical'].prefix,
-            '--with-sendmail=%s' % self.spec['sendmail'].prefix.sbin.sendmail,
+            '--with-sendmail=%s' % self.spec['ssmtp'].prefix.sbin.sendmail,
             '--with-swig=%s' % self.spec['swig'].prefix,
             '--with-tcl=%s' % self.spec['tcl'].prefix,
             # The argument --with-tk is introduced with with_lib.patch
