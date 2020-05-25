@@ -21,85 +21,53 @@ page_3 = 'file://' + os.path.join(web_data_path, '3.html')
 page_4 = 'file://' + os.path.join(web_data_path, '4.html')
 
 
-def test_spider_0():
-    pages, links = spack.util.web.spider(root, depth=0)
+@pytest.mark.parametrize(
+    'depth,expected_found,expected_not_found,expected_text', [
+        (0,
+         {'pages': [root], 'links': [page_1]},
+         {'pages': [page_1, page_2, page_3, page_4],
+          'links': [root, page_2, page_3, page_4]},
+         {root: "This is the root page."}),
+        (1,
+         {'pages': [root, page_1], 'links': [page_1, page_2]},
+         {'pages': [page_2, page_3, page_4],
+          'links': [root, page_3, page_4]},
+         {root: "This is the root page.",
+          page_1: "This is page 1."}),
+        (2,
+         {'pages': [root, page_1, page_2],
+          'links': [page_1, page_2, page_3, page_4]},
+         {'pages': [page_3, page_4], 'links': [root]},
+         {root: "This is the root page.",
+          page_1: "This is page 1.",
+          page_2: "This is page 2."}),
+        (3,
+         {'pages': [root, page_1, page_2, page_3, page_4],
+          'links': [root, page_1, page_2, page_3, page_4]},
+         {'pages': [], 'links': []},
+         {root: "This is the root page.",
+          page_1: "This is page 1.",
+          page_2: "This is page 2.",
+          page_3: "This is page 3.",
+          page_4: "This is page 4."}),
+    ])
+def test_spider(depth, expected_found, expected_not_found, expected_text):
+    pages, links = spack.util.web.spider(root, depth=depth)
 
-    assert root in pages
-    assert page_1 not in pages
-    assert page_2 not in pages
-    assert page_3 not in pages
-    assert page_4 not in pages
+    for page in expected_found['pages']:
+        assert page in pages
 
-    assert "This is the root page." in pages[root]
+    for page in expected_not_found['pages']:
+        assert page not in pages
 
-    assert root not in links
-    assert page_1 in links
-    assert page_2 not in links
-    assert page_3 not in links
-    assert page_4 not in links
+    for link in expected_found['links']:
+        assert link in links
 
+    for link in expected_not_found['links']:
+        assert link not in links
 
-def test_spider_1():
-    pages, links = spack.util.web.spider(root, depth=1)
-
-    assert root in pages
-    assert page_1 in pages
-    assert page_2 not in pages
-    assert page_3 not in pages
-    assert page_4 not in pages
-
-    assert "This is the root page." in pages[root]
-    assert "This is page 1." in pages[page_1]
-
-    assert root not in links
-    assert page_1 in links
-    assert page_2 in links
-    assert page_3 not in links
-    assert page_4 not in links
-
-
-def test_spider_2():
-    pages, links = spack.util.web.spider(root, depth=2)
-
-    assert root in pages
-    assert page_1 in pages
-    assert page_2 in pages
-    assert page_3 not in pages
-    assert page_4 not in pages
-
-    assert "This is the root page." in pages[root]
-    assert "This is page 1." in pages[page_1]
-    assert "This is page 2." in pages[page_2]
-
-    assert root not in links
-    assert page_1 in links
-    assert page_1 in links
-    assert page_2 in links
-    assert page_3 in links
-    assert page_4 in links
-
-
-def test_spider_3():
-    pages, links = spack.util.web.spider(root, depth=3)
-
-    assert root in pages
-    assert page_1 in pages
-    assert page_2 in pages
-    assert page_3 in pages
-    assert page_4 in pages
-
-    assert "This is the root page." in pages[root]
-    assert "This is page 1." in pages[page_1]
-    assert "This is page 2." in pages[page_2]
-    assert "This is page 3." in pages[page_3]
-    assert "This is page 4." in pages[page_4]
-
-    assert root in links  # circular link on page 3
-    assert page_1 in links
-    assert page_1 in links
-    assert page_2 in links
-    assert page_3 in links
-    assert page_4 in links
+    for page, text in expected_text.items():
+        assert text in pages[page]
 
 
 def test_find_versions_of_archive_0():
