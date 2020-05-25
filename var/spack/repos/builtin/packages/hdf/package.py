@@ -22,8 +22,8 @@ class Hdf(AutotoolsPackage):
     version('4.2.11', sha256='c3f7753b2fb9b27d09eced4d2164605f111f270c9a60b37a578f7de02de86d24')
 
     variant('szip', default=False, description="Enable szip support")
-    variant('xdr', default='system', values=('system', 'embedded', 'external'),
-            description="Specify XDR backend")
+    variant('external-xdr', default=True,
+            description="Use an external XDR backend")
     variant('netcdf', default=False,
             description='Build NetCDF API (version 2.3.2)')
     variant('fortran', default=False,
@@ -37,24 +37,33 @@ class Hdf(AutotoolsPackage):
     depends_on('zlib@1.1.4:')
     depends_on('jpeg')
     depends_on('szip', when='+szip')
-    depends_on('libtirpc', when='xdr=external')
+    depends_on('rpc', when='+external-xdr')
 
     depends_on('bison', type='build')
     depends_on('flex',  type='build')
     depends_on('java@7:', when='+java', type=('build', 'run'))
 
     # https://forum.hdfgroup.org/t/cant-build-hdf-4-2-14-with-jdk-11-and-enable-java/5702
-    patch('disable_javadoc.patch', when='@:4.2.14+java')
+    patch('disable_doclint.patch', when='@:4.2.14^java@9:')
 
     conflicts('^libjpeg@:6a')
 
-    conflicts('+shared', when='+fortran')
+    # configure: error: Cannot build shared fortran libraries.
+    # Please configure with --disable-fortran flag.
+    conflicts('+fortran', when='+shared')
 
+    # configure: error: Java requires shared libraries to be built
     conflicts('+java', when='~shared')
+
+    # configure: WARNING: unrecognized options: --enable-java
     conflicts('+java', when='@:4.2.11')
+
+    # The Java interface library uses netcdf-related macro definitions even
+    # when netcdf is disabled and the macros are not defined, e.g.:
+    # hdfsdsImp.c:158:30: error: 'MAX_NC_NAME' undeclared
     conflicts('+java', when='@4.2.12:4.2.13~netcdf')
 
-    # TODO: '@:4.2.14 xdr=embedded' and the fact that we compile for 64 bit
+    # TODO: '@:4.2.14 ~external-xdr' and the fact that we compile for 64 bit
     #  architecture should be in conflict
 
     @property
@@ -96,8 +105,9 @@ class Hdf(AutotoolsPackage):
             libs += self.spec['zlib:transitive'].libs
             if '+szip' in self.spec:
                 libs += self.spec['szip:transitive'].libs
-            if self.spec.variants['xdr'].value == 'external':
-                libs += self.spec['libtirpc:transitive'].libs
+            if ('+external-xdr' in self.spec and
+                    self.spec['rpc'].name != 'libc'):
+                libs += self.spec['rpc:transitive'].libs
 
         return libs
 
@@ -122,14 +132,17 @@ class Hdf(AutotoolsPackage):
         config_args += self.enable_or_disable('java')
         config_args += self.with_or_without('szip', activation_value='prefix')
 
-        if self.spec.variants['xdr'].value == 'embedded':
+        if '~external-xdr' in self.spec:
             config_args.append('--enable-hdf4-xdr')
-        elif self.spec.variants['xdr'].value == 'external':
-            # Due to a bug in the configure script, we should specify
-            # '--disable-hdf4-xdr' neither here nor in the else branch.
-            libtirpc = self.spec['libtirpc']
-            libtirpc_libs = libtirpc.libs
-            config_args.extend(['CPPFLAGS=%s' % libtirpc.headers.cpp_flags,
-                                'LDFLAGS=%s' % libtirpc_libs.search_flags,
-                                'LIBS=%s' % libtirpc_libs.link_flags])
+        elif self.spec['rpc'].name != 'libc':
+            # We should not specify '--disable-hdf4-xdr' due to a bug in the
+            # configure script.
+            config_args.append('LIBS=%s' % self.spec['rpc'].libs.link_flags)
         return config_args
+
+    # Otherwise, we get something like:
+    # SDgetfilename:
+    #   incorrect file being opened - expected <file755>, retrieved <file754>
+    def check(self):
+        with working_dir(self.build_directory):
+            make('check', parallel=False)
