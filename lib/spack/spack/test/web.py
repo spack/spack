@@ -10,15 +10,18 @@ import spack.paths
 import spack.util.web
 from spack.version import ver
 
-web_data_path = os.path.join(spack.paths.test_path, 'data', 'web')
 
-root = 'file://' + web_data_path + '/index.html'
-root_tarball = 'file://' + web_data_path + '/foo-0.0.0.tar.gz'
+def _create_url(relative_url):
+    web_data_path = os.path.join(spack.paths.test_path, 'data', 'web')
+    return 'file://' + os.path.join(web_data_path, relative_url)
 
-page_1 = 'file://' + os.path.join(web_data_path, '1.html')
-page_2 = 'file://' + os.path.join(web_data_path, '2.html')
-page_3 = 'file://' + os.path.join(web_data_path, '3.html')
-page_4 = 'file://' + os.path.join(web_data_path, '4.html')
+
+root = _create_url('index.html')
+root_tarball = _create_url('foo-0.0.0.tar.gz')
+page_1 = _create_url('1.html')
+page_2 = _create_url('2.html')
+page_3 = _create_url('3.html')
+page_4 = _create_url('4.html')
 
 
 @pytest.mark.parametrize(
@@ -68,6 +71,15 @@ def test_spider(depth, expected_found, expected_not_found, expected_text):
 
     for page, text in expected_text.items():
         assert text in pages[page]
+
+
+def test_spider_no_response(monkeypatch):
+    # Mock the absence of a response
+    monkeypatch.setattr(
+        spack.util.web, 'read_from_url', lambda x, y: (None, None, None)
+    )
+    pages, links = spack.util.web.spider(root, depth=0)
+    assert not pages and not links
 
 
 def test_find_versions_of_archive_0():
