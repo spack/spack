@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import hashlib
 import os
 
 import pytest
@@ -16,6 +17,13 @@ config = SpackCommand('config')
 env = SpackCommand('env')
 
 
+def md5sum(file):
+    md5 = hashlib.md5()
+    with open(file, "rb") as f:
+        md5.update(f.read())
+    return md5.digest()
+
+
 @pytest.fixture()
 def packages_yaml(mutable_config):
     """Create a packages.yaml in the old format"""
@@ -28,6 +36,7 @@ def packages_yaml(mutable_config):
         cfg_file = spack.config.config.get_config_filename(scope, 'packages')
         with open(cfg_file, 'w') as f:
             syaml.dump(old_data, stream=f)
+        return cfg_file
     return _create
 
 
@@ -443,7 +452,7 @@ def test_config_update_not_needed(mutable_config):
 
 
 def test_config_update_fail_if_bkp_is_there(packages_yaml):
-    # The first time it will upate and create the backup file
+    # The first time it will update and create the backup file
     packages_yaml()
     config('update', 'packages')
     # The second time it will stop because a backup file
@@ -451,3 +460,31 @@ def test_config_update_fail_if_bkp_is_there(packages_yaml):
     packages_yaml()
     with pytest.raises(spack.main.SpackCommandError):
         config('update', 'packages')
+
+
+def test_config_revert(packages_yaml):
+    cfg_file = packages_yaml()
+    bkp_file = cfg_file + '.bkp'
+
+    config('update', 'packages')
+
+    # Check that the backup file exists, compute its md5 sum
+    assert os.path.exists(bkp_file)
+    md5bkp = md5sum(bkp_file)
+
+    config('revert', '--force', 'packages')
+
+    # Check that the backup file does not exist anymore and
+    # that the md5 sum of the configuration file is the same
+    # as that of the old backup file
+    assert not os.path.exists(bkp_file)
+    assert md5bkp == md5sum(cfg_file)
+
+
+def test_config_revert_raise_if_not_force(packages_yaml):
+    packages_yaml()
+    config('update', 'packages')
+    # The command raises with an helpful error if a configuration
+    # file is to be deleted and the user didn't specify --force
+    with pytest.raises(spack.main.SpackCommandError):
+        config('revert', 'packages')

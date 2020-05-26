@@ -87,6 +87,14 @@ def setup_parser(subparser):
     )
     update.add_argument('section', help='section to update')
 
+    update = sp.add_parser(
+        'revert',
+        help='revert configuration files to their state before update'
+    )
+    update.add_argument('--force', action='store_true',
+                        help='force removal of configuration file')
+    update.add_argument('section', help='section to update')
+
 
 def _get_scope_and_section(args):
     """Extract config scope and section from arguments."""
@@ -313,13 +321,34 @@ def config_update(args):
         # Make a backup copy and rewrite the file
         bkp_file = cfg_file + '.bkp'
         if os.path.exists(bkp_file):
-            msg = ('backup file "{0}" exists on disk. Check the content '
+            msg = ('backup file "{0}" exists on disk. Check its content '
                    'and remove it before trying to update again.')
             tty.die(msg.format(bkp_file))
         shutil.copy(cfg_file, bkp_file)
         spack.config.set(args.section, data, scope=scope)
         msg = 'File "{0}" updated [backup={1}]'
         tty.msg(msg.format(cfg_file, bkp_file))
+
+
+def config_revert(args):
+    scopes = [args.scope] if args.scope else spack.config.file_scopes()
+    for scope in scopes:
+        cfg_file = spack.config.config.get_config_filename(scope, args.section)
+        bkp_file = cfg_file + '.bkp'
+        if not os.path.exists(bkp_file):
+            continue
+
+        if os.path.exists(cfg_file) and not args.force:
+            msg = ('configuration file "{0}" exists on disk. Check '
+                   'its content and remove it before trying to revert '
+                   'again. use the --force option to overwrite existing '
+                   'files')
+            tty.die(msg.format(cfg_file))
+
+        shutil.copy(bkp_file, cfg_file)
+        os.unlink(bkp_file)
+        msg = 'File "{0}" reverted to old state'
+        tty.msg(msg.format(cfg_file))
 
 
 def config(parser, args):
@@ -331,6 +360,7 @@ def config(parser, args):
         'add': config_add,
         'rm': config_remove,
         'remove': config_remove,
-        'update': config_update
+        'update': config_update,
+        'revert': config_revert
     }
     action[args.config_command](args)

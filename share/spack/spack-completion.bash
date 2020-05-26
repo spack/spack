@@ -570,7 +570,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit list add remove rm update"
+        SPACK_COMPREPLY="get blame edit list add remove rm update revert"
     fi
 }
 
@@ -641,12 +641,12 @@ _spack_config_update() {
     fi
 }
 
-_spack_configure() {
+_spack_config_revert() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -v --verbose"
+        SPACK_COMPREPLY="-h --help --force"
     else
-        _all_packages
+        _config_sections
     fi
 }
 
