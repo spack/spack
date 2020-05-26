@@ -39,7 +39,7 @@ packages:
       - py-morph-tool@0.1.14
       - py-morphio@2.3.4
       - py-neurodamus
-      - py-sonata-network-reduction@0.0.6 ^neuron%intel@19.0.4^py-ipython%gcc
+      - py-sonata-network-reduction@0.0.6 ^neuron%intel@19.0.4^py-ipython%gcc^lunchbox%gcc
 
   gnu-stable-serial-ophiophob:
     target_matrix:
@@ -134,7 +134,7 @@ packages:
       - architecture
       - compiler
     specs:
-      - neurodamus-core+common@2.9.2
+      - neurodamus-core+common@2.10.1
       - ultraliser
 
   intel-stable:
@@ -165,7 +165,7 @@ packages:
       - mpi
       - python
     specs:
-      - neurodamus-core~common@2.9.2
+      - neurodamus-core~common@2.10.1
       - neurodamus-neocortex+coreneuron@0.3
       - neurodamus-hippocampus+coreneuron@0.4
       - neurodamus-thalamus+coreneuron@0.3
