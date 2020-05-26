@@ -14,6 +14,7 @@ class Morphio(CMakePackage):
     git      = "https://github.com/BlueBrain/MorphIO.git"
 
     version('develop', git=url, submodules=True)
+    version('2.3.9', tag='v2.3.9', submodules=True)
     version('2.3.4', tag='v2.3.4', submodules=True)
     version('2.2.1', tag='v2.2.1', submodules=True)
     version('2.1.2', tag='v2.1.2', submodules=True)

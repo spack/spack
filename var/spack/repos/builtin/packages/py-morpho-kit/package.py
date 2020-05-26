@@ -14,12 +14,15 @@ class PyMorphoKit(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/morpho-kit"
 
     version('develop', branch='master', submodules=True, get_full_repo=True)
+    version('0.2.0', tag='v0.2.0', submodules=True, get_full_repo=True)
     version('0.1.0', tag='v0.1.0', submodules=True, get_full_repo=True)
 
     depends_on('py-setuptools', type='build')
 
     depends_on('morphio~mpi', type=('build', 'link'), when='@0.1.0:')
     depends_on('morphio~mpi@:2.2.1', type=('build', 'link'), when='@0.1.0')
+    depends_on('morphio~mpi@2.3.9:', type=('build', 'link'), when='@0.2.0:')
 
     depends_on('cmake@3.2:', type='build')
     depends_on('py-numpy', type='run')
+    depends_on('boost', when='@0.2.0:')
