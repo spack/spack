@@ -2145,8 +2145,8 @@ class Spec(object):
         force = False
 
         user_spec_deps = self.flat_dependencies(copy=False)
-        import spack.concretize
-        concretizer = spack.concretize.Concretizer(self.copy())
+        import spack.concretize as ce
+        concretizer = ce.Concretizer(self.copy())
         while changed:
             changes = (self.normalize(force, tests=tests,
                                       user_spec_deps=user_spec_deps),
