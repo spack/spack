@@ -19,7 +19,7 @@ import spack.error
 import spack.util.environment
 import spack.util.spack_yaml as syaml
 
-description = "Manage external packages in Spack configuration"
+description = "manage external packages in Spack configuration"
 section = "config"
 level = "short"
 

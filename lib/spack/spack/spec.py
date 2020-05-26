@@ -1985,7 +1985,7 @@ class Spec(object):
             extra_attributes (dict): dictionary containing extra attributes
 
         Returns:
-            Spec object (external spec)
+            spack.spec.Spec: external spec
         """
         s = Spec(spec_str)
         extra_attributes = syaml.sorted_dict(extra_attributes or {})
