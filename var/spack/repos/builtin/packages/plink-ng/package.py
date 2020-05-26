@@ -17,7 +17,8 @@ class PlinkNg(Package):
     depends_on('zlib')
     depends_on('zstd@1.4.4:')
     depends_on('cblas')
-    depends_on('openblas')
+    depends_on('blas')
+    depends_on('lapack')
 
     conflicts('%gcc@:4.99')
 
