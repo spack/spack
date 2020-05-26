@@ -60,15 +60,22 @@ def setup_parser(subparser):
     sp.add_parser('list', help='list configuration sections')
 
     add_parser = sp.add_parser('add', help='add configuration parameters')
-    add_parser.add_argument('value',
-                            help='configuration value to set. Nested values '
-                            'separated by colons (:)')
+    add_parser.add_argument(
+        'value', nargs='?',
+        help='config value to set. Nested values separated by colons (:)')
+    add_parser.add_argument(
+        '-f', '--file',
+        help="file from which to set all config values"
+    )
 
     remove_parser = sp.add_parser('remove', aliases=['rm'],
                                   help='remove configuration parameters')
     remove_parser.add_argument('value',
                                help='configuration value to remove. Nested '
                                'values separated by colons (:).')
+
+    # Make the add parser available later
+    setup_parser.add_parser = add_parser
 
 
 def _get_scope_and_section(args):
@@ -90,7 +97,7 @@ def _get_scope_and_section(args):
             scope = spack.config.default_modify_scope(subscopes=False)
 
     # special handling for commands that take value instead of section
-    if hasattr(args, 'value'):
+    if getattr(args, 'value', None):
         value = args.value
         section = value[:value.find(':')] if ':' in value else value
         if not scope:
@@ -184,52 +191,72 @@ def config_add(args):
     """Add the given configuration to the specified config scope
 
     This is a stateful operation that edits the config files under the hood"""
+    if not (args.file or args.value):
+        tty.error("No changes requested. Specify a file or value.")
+        setup_parser.add_parser.print_help()
+        exit(1)
+
     scope, section = _get_scope_and_section(args)
 
-    components = args.value.split(':')
-    path = None
-    for idx, name in enumerate(components[:-1]):
-        test_path = ':'.join(components[:idx + 1])
-        test_existing = spack.config.get(test_path, scope=scope)
-        if test_existing is None:
-            path = test_path
-            # We've nested further than existing config, so we need empty value
-            # get type to ensure we treat lists properly when empty
-            for type in (list, dict, str, bool, int, float):
-                try:
-                    # Try validating with different types
-                    existing = type()
-                    test_data = existing
-                    for component in reversed(components[:idx + 1]):
-                        test_data = {component: test_data}
-                    spack.config.validate(
-                        test_data, spack.config.section_schemas[section])
-                    break
-                except (spack.config.ConfigFormatError, AttributeError):
-                    # Wrong type, try the next one
-                    # Except AttributeError because undefined behavior of dict
-                    # ordering in python 3.5 can cause the validator to raise
-                    # an AttributeError instead of a ConfigFormatError
-                    pass
+    # Updates from file
+    if args.file:
+        # Get file as config dict
+        with open(args.file, 'r') as f:
+            data = syaml.load_config(f)
+        spack.environment.validate(data, 'spack.yaml')
+        config_dict = spack.environment.config_dict(data)
 
-            # construct value from this point down
-            value = syaml.load(components[-1])
-            for component in reversed(components[idx + 1:-1]):
-                value = {component: value}
-            break
+        # update all sections from config dict
+        for section in spack.config.section_schemas.keys():
+            if section in config_dict:
+                new = config_dict[section]
+                spack.config.config.update_config(section, new, scope)
 
-    if path is None:
-        path, _, value = args.value.rpartition(':')
-        value = syaml.load(value)
-        existing = spack.config.get(path, scope=scope)
+    if args.value:
+        components = args.value.split(':')
+        path = None
+        for idx, name in enumerate(components[:-1]):
+            test_path = ':'.join(components[:idx + 1])
+            test_existing = spack.config.get(test_path, scope=scope)
+            if test_existing is None:
+                path = test_path
+                # We've nested further than existing config, so we need empty value
+                # get type to ensure we treat lists properly when empty
+                for type in (list, dict, str, bool, int, float):
+                    try:
+                        # Try validating with different types
+                        existing = type()
+                        test_data = existing
+                        for component in reversed(components[:idx + 1]):
+                            test_data = {component: test_data}
+                        spack.config.validate(
+                            test_data, spack.config.section_schemas[section])
+                        break
+                    except (spack.config.ConfigFormatError, AttributeError):
+                        # Wrong type, try the next one
+                        # Except AttributeError because undefined behavior of dict
+                        # ordering in python 3.5 can cause the validator to raise
+                        # an AttributeError instead of a ConfigFormatError
+                        pass
 
-    new = merge_value(existing, value)
+                # construct value from this point down
+                value = syaml.load(components[-1])
+                for component in reversed(components[idx + 1:-1]):
+                    value = {component: value}
+                break
 
-    if re.match(r'env.*', scope or ''):
-        e = ev.get_env(args, 'config add')
-        e.set_config(path, new)
-    else:
-        spack.config.set(path, new, scope=scope)
+        if path is None:
+            path, _, value = args.value.rpartition(':')
+            value = syaml.load(value)
+            existing = spack.config.get(path, scope=scope)
+
+        new = merge_value(existing, value)
+
+        if re.match(r'env.*', scope or ''):
+            e = ev.get_env(args, 'config add')
+            e.set_config(path, new)
+        else:
+            spack.config.set(path, new, scope=scope)
 
 
 def config_remove(args):
