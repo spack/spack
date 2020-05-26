@@ -31,13 +31,8 @@ class GridlabD(AutotoolsPackage):
 
     maintainers = ['0t1s1', 'yee29', 'afisher1']
 
-    # FIXME: Add proper versions and checksums here.
-    #version('master', branch='master')
+    # Using only develop as other branches and releases did not build properly.
     version('develop', branch='develop')
-    #version('4.1.0', tag='v4.1.0')
-    #version('4.0.0', tag='v4.0.0')
-    #version('3.2.0', tag='v3.2.0')
-    #version('slac-aws-1.0', tag='slac-aws-1.0')
 
     variant("mysql", default=False, description="Enable MySQL support for Gridlab-D.")
     variant('helics', default=False, description='Enable Helics support for Gridlab-D.')
