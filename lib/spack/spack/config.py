@@ -498,7 +498,7 @@ class Configuration(object):
             if section not in data:
                 continue
 
-            merged_section = _merge_yaml(merged_section, data)
+            merged_section = merge_yaml(merged_section, data)
 
         # no config files -- empty config.
         if section not in merged_section:
@@ -731,7 +731,10 @@ def validate(data, schema, set_defaults=True):
     """
     import jsonschema
     try:
-        spack.schema.Validator(schema).validate(data)
+        # validate a copy to avoid adding defaults
+        # This allows us to round-trip data without adding to it.
+        test_data = copy.deepcopy(data)
+        spack.schema.Validator(schema).validate(test_data)
     except jsonschema.ValidationError as e:
         raise ConfigFormatError(e, data)
 
@@ -798,13 +801,39 @@ def _mark_internal(data, name):
     return d
 
 
-def _merge_yaml(dest, source):
+def type_of(path):
+    """Returns an instance of a type that will pass validation for path.
+
+    The instance is created by calling the constructor with no arguments.
+    If multiple types will satisfy validation for data at the configuration
+    path given, the priority order is ``list``, ``dict``, ``str``, ``bool``,
+    ``int``, ``float``.
+    """
+    components = path.split(':')
+    section = components[0]
+    for type in (list, dict, str, bool, int, float):
+        try:
+            ret = type()
+            test_data = ret
+            for component in reversed(components):
+                test_data = {component: test_data}
+            validate(test_data, section_schemas[section])
+            break
+        except (ConfigFormatError, AttributeError):
+            # This type won't validate, try the next one
+            # Except AttributeError because undefined behavior of dict ordering
+            # in python 3.5 can cause the validator to raise an AttributeError
+            # instead of a ConfigFormatError.
+            pass
+    return ret
+
+def merge_yaml(dest, source):
     """Merges source into dest; entries in source take precedence over dest.
 
     This routine may modify dest and should be assigned to dest, in
     case dest was None to begin with, e.g.:
 
-       dest = _merge_yaml(dest, source)
+       dest = merge_yaml(dest, source)
 
     Config file authors can optionally end any attribute in a dict
     with `::` instead of `:`, and the key will override that of the
@@ -835,7 +864,7 @@ def _merge_yaml(dest, source):
                 # copy ruamel comments manually
             else:
                 # otherwise, merge the YAML
-                dest[sk] = _merge_yaml(dest[sk], source[sk])
+                dest[sk] = merge_yaml(dest[sk], source[sk])
 
             # this seems unintuitive, but see below. We need this because
             # Python dicts do not overwrite keys on insert, and we want

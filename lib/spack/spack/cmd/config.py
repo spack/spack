@@ -164,29 +164,6 @@ def config_list(args):
     print(' '.join(list(spack.config.section_schemas)))
 
 
-def merge_value(existing, value):
-    # dictionaries have special handling
-    if isinstance(value, dict) or isinstance(existing, dict):
-        if isinstance(value, dict) and isinstance(existing, dict):
-            # If they're both dicts, then "existing" is a default
-            new = value
-        elif existing is None:
-            new = value
-        else:
-            raise spack.config.ConfigError(
-                'Cannot overwrite config dict with non-dict entry')
-
-    elif isinstance(existing, list):
-        if isinstance(value, list):
-            new = existing + value
-        else:
-            new = existing + [value]
-    else:
-        new = value
-
-    return new
-
-
 def config_add(args):
     """Add the given configuration to the specified config scope
 
@@ -209,35 +186,37 @@ def config_add(args):
         # update all sections from config dict
         for section in spack.config.section_schemas.keys():
             if section in config_dict:
-                new = config_dict[section]
-                spack.config.config.update_config(section, new, scope)
+                value = config_dict[section]
+                existing = spack.config.get(section, scope=scope)
+                new = spack.config.merge_yaml(existing, value)
+
+                # Special handling for compiler scope difference
+                if scope is None:
+                    if section == 'compilers':
+                        scope = spack.config.default_modify_scope()
+                    else:
+                        scope = spack.config.default_modify_scope(subscopes=False)
+
+                if re.match(r'env.*', scope or ''):
+                    e = ev.get_env(args, 'config add')
+                    e.set_config(section, new)
+                else:
+                    spack.config.set(section, new, scope=scope)
 
     if args.value:
         components = args.value.split(':')
-        path = None
+
+        has_existing_value = True
         for idx, name in enumerate(components[:-1]):
-            test_path = ':'.join(components[:idx + 1])
-            test_existing = spack.config.get(test_path, scope=scope)
-            if test_existing is None:
-                path = test_path
-                # We've nested further than existing config, so we need empty value
-                # get type to ensure we treat lists properly when empty
-                for type in (list, dict, str, bool, int, float):
-                    try:
-                        # Try validating with different types
-                        existing = type()
-                        test_data = existing
-                        for component in reversed(components[:idx + 1]):
-                            test_data = {component: test_data}
-                        spack.config.validate(
-                            test_data, spack.config.section_schemas[section])
-                        break
-                    except (spack.config.ConfigFormatError, AttributeError):
-                        # Wrong type, try the next one
-                        # Except AttributeError because undefined behavior of dict
-                        # ordering in python 3.5 can cause the validator to raise
-                        # an AttributeError instead of a ConfigFormatError
-                        pass
+            # Test whether there is an existing value at this level
+            path = ':'.join(components[:idx + 1])
+            existing = spack.config.get(path, scope=scope)
+            if existing is None:
+                has_existing_value = False
+                # We've nested further than existing config, so we need the type
+                # information for validation to know how to handle bare values
+                # appended to lists.
+                existing = spack.config.type_of(':'.join(components[:idx + 1]))
 
                 # construct value from this point down
                 value = syaml.load(components[-1])
@@ -245,12 +224,17 @@ def config_add(args):
                     value = {component: value}
                 break
 
-        if path is None:
+        if has_existing_value:
             path, _, value = args.value.rpartition(':')
             value = syaml.load(value)
             existing = spack.config.get(path, scope=scope)
 
-        new = merge_value(existing, value)
+        # append values to lists appropriately
+        if isinstance(existing, list) and not isinstance(value, list):
+            value = [value]
+
+        # merge value into existing
+        new = spack.config.merge_yaml(existing, value)
 
         if re.match(r'env.*', scope or ''):
             e = ev.get_env(args, 'config add')

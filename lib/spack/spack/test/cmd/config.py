@@ -117,9 +117,9 @@ def test_config_add_list(mutable_empty_config):
 
     assert output == """config:
   template_dirs:
-  - test1
-  - test2
   - test3
+  - test2
+  - test1
 """
 
 
@@ -150,9 +150,11 @@ def test_config_add_ordered_dict(mutable_empty_config):
 """
 
 
-def test_config_add_dict_to_non_dict_fails(mutable_empty_config):
+def test_config_add_invalid_fails(mutable_empty_config):
     config('add', 'packages:all:variants:+debug')
-    with pytest.raises(spack.config.ConfigError):
+    with pytest.raises(
+        (spack.config.ConfigFormatError, AttributeError)
+    ):
         config('add', 'packages:all:True')
 
 
@@ -192,8 +194,8 @@ def test_remove_from_list(mutable_empty_config):
 
     assert output == """config:
   template_dirs:
-  - test1
   - test3
+  - test1
 """
 
 
@@ -206,8 +208,8 @@ def test_remove_list(mutable_empty_config):
 
     assert output == """config:
   template_dirs:
-  - test1
   - test3
+  - test1
 """
 
 
