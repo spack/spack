@@ -22,6 +22,7 @@ class Ripgrep(CargoPackage):
     version('master', branch='master')
 
     # Crates.io working versions
+    version('12.1.0', sha256='4549a261aa8674d0ffdfe40c68bd282e8913f810bee728fac5441bbfe17aca45')
     version('12.0.1', sha256='7dc6e92652933ac66d236d78ef61658b73c09639981bd1be0630461ce64d3cab')
     version('12.0.0', sha256='117f3608a82950b647d8f158cbd3388bffc0a594f29b2c39198392134126b6c0')
     version('11.0.2', sha256='d903146d825e92f77f95d1e1e8e5272f42253978c07d58c2294467a14dca126f')
