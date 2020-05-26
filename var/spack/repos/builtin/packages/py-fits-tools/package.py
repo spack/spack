@@ -26,9 +26,3 @@ class PyFitsTools(PythonPackage):
     depends_on('py-astropy-helpers')
     depends_on('py-scipy')
     depends_on('py-numpy')
-
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
