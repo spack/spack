@@ -15,6 +15,7 @@ class Synapsetool(CMakePackage):
     git      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
 
     version('develop', submodules=True)
+    version('0.5.9', tag='v0.5.9', submodules=True)
     version('0.5.8', tag='v0.5.8', submodules=True)
     version('0.5.6', tag='v0.5.6', submodules=True)
     version('0.5.5', tag='v0.5.5', submodules=True)
@@ -43,7 +44,7 @@ class Synapsetool(CMakePackage):
 
     patch("tests-unit-cmake.patch", when='@:0.5.6')
     patch("tests-unit-cmake-057.patch", when='@0.5.7:0.5.8')
-    patch("fix_highfive_v_2_2_1.patch", when='@:0.5.9^highfive@2.2:')
+    patch("fix_highfive_v_2_2_1.patch", when='@:0.5.8^highfive@2.2:')
 
     @property
     def libs(self):
@@ -64,7 +65,7 @@ class Synapsetool(CMakePackage):
 
         boost_libs = ['libboost_system', 'libboost_filesystem']
         if spec['boost'].satisfies('+multithreaded'):
-            boost_libs = [l + '-mt' for l in boost_libs]
+            boost_libs = [lib + '-mt' for lib in boost_libs]
 
         libraries = (
             find_libraries(boost_libs, spec['boost'].prefix,
