@@ -16,6 +16,7 @@ class PyMdanalysis(PythonPackage):
     homepage = "http://www.mdanalysis.org"
     url      = "https://pypi.io/packages/source/M/MDAnalysis/MDAnalysis-0.19.2.tar.gz"
 
+    version('0.20.1', sha256='d04b71b193b9716d2597ffb9938b93f43487fa535da1bb5c1f2baccf356d7df9')
     version('0.19.2', sha256='c5395bbafa5efca2e1aee4715d26129844140c47cb8301da0293106cb969de7d')
     version('0.19.1', sha256='ff1d694f8598c0833ec340de6a6adb3b5e62b92d0fa94ee6401718ba972db3cc')
     version('0.19.0', sha256='248e3b37fc6150e31c609cc18a3927c32aee37b76d29cbfedf635e7e1aa982cf')
@@ -38,7 +39,10 @@ class PyMdanalysis(PythonPackage):
     depends_on('py-six@1.4.0:', type=('build', 'run'))
     depends_on('py-biopython@1.59:', type=('build', 'run'))
     depends_on('py-networkx@1.0:', type=('build', 'run'))
-    depends_on('py-griddataformats@0.3.2:', type=('build', 'run'))
+    depends_on('py-griddataformats@0.4:', type=('build', 'run'))
+    depends_on('py-gsd', type=('build', 'run'))
+    depends_on('py-mmtf-python', type=('build', 'run'))
+    depends_on('py-scikit-learn', type=('build', 'run'))
 
     depends_on('py-matplotlib', when='+analysis', type=('build', 'run'))
     depends_on('py-scipy', when='+analysis', type=('build', 'run'))
