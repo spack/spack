@@ -962,9 +962,7 @@ def get_checksums_for_versions(
         (str): A multi-line string containing versions and corresponding hashes
 
     """
-    sorted_versions = \
-        list((str(v) for v in sorted((Version(v) for v in url_dict.keys()),
-                                     reverse=True)))
+    sorted_versions = list(sorted(url_dict.keys(), reverse=True))
 
     # Find length of longest string in the list for padding
     max_len = max(len(str(v)) for v in sorted_versions)

@@ -20,6 +20,7 @@ from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
 import multiprocessing.pool
 
+from spack.version import Version
 from spack.util.executable import which
 
 try:
@@ -503,7 +504,7 @@ def find_crate_versions(crate_name):
     versions = {}
     for v in crate["versions"]:
         if not v["yanked"]:
-            versions[v["num"]] = "https://crates.io" + v["dl_path"]
+            versions[Version(v["num"])] = "https://crates.io" + v["dl_path"]
     return versions
 
 
