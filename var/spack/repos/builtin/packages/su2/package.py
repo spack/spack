@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Su2(AutotoolsPackage):
+class Su2(MesonPackage):
     """SU2 is a suite of open-source software tools written in C++ for
     the numerical solution of partial differential equations (PDE) and
     performing PDE constrained optimization."""
@@ -20,8 +20,4 @@ class Su2(AutotoolsPackage):
     version('7.0.0', sha256='6207dcca15eaebc11ce12b2866c937b4ad9b93274edf6f23d0487948ac3963b8')
     version('6.2.0', sha256='ffc953326e8432a1a6534556a5f6cf086046d3149cfcec6b4e7390eebe30ce2e')
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
     depends_on('python@3:', type=('build', 'run'))
