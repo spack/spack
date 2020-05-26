@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyFitsTools(PythonPackage):
-    """Tools for manipulating FITS images using primarily scipy & native python routines"""
+    """Tools for manipulating FITS images using primarily scipy
+    & native python routines"""
 
     homepage = "https://github.com/keflavich/FITS_tools"
     url      = "https://github.com/keflavich/FITS_tools/archive/v0.2.tar.gz"
