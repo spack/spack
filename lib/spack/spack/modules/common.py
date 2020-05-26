@@ -397,8 +397,13 @@ class BaseConfiguration(object):
     @property
     def projections(self):
         """Projection from specs to module names"""
-        projections = self.module.configuration().get(
-            'projections', self.default_projections)
+        # backwards compatiblity for naming_scheme key
+        conf = self.module.configuration()
+        if 'naming_scheme' in conf:
+            default = {'all': conf['naming_scheme']}
+        else:
+            default = self.default_projections
+        projections = conf.get('projections', default)
 
         # Ensure the named tokens we are expanding are allowed, see
         # issue #2884 for reference
