@@ -7,7 +7,7 @@ from spack import *
 
 
 class GridlabD(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Autotools package for Gridlab-D. One day the devs will convert to Cmake!"""
 
     homepage = "https://www.gridlabd.org/"
     git      = "https://github.com/gridlab-d/gridlab-d"
