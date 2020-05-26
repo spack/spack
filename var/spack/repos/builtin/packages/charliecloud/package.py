@@ -30,7 +30,7 @@ class Charliecloud(AutotoolsPackage):
     depends_on('umoci',          type='run', when='@0.10:0.13')
     depends_on('python+libxml2', type='run', when='@0.10:0.13')
 
-    # Use python for ch-grow versions 0.14 and above.
+    # Use python for ch-grow 0.14 and above version dependencies.
     depends_on('python@3.5:',    type='run', when='@0.14:')
     depends_on('py-lark-parser', type='run', when='@0.14:')
     depends_on('py-requests',    type='run', when='@0.14:')
@@ -44,7 +44,7 @@ class Charliecloud(AutotoolsPackage):
     # See https://github.com/spack/spack/pull/16049.
     conflicts('platform=darwin', msg='This package does not build on macOS')
 
-    # Bash automated testing harness (bats)
+    # Bash automated testing harness (bats).
     depends_on('bats@0.4.0', type='test')
     depends_on('python@3.5:', type='test')
 
