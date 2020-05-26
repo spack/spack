@@ -7,7 +7,9 @@ from spack import *
 
 
 class GridlabD(AutotoolsPackage):
-    """Autotools package for Gridlab-D. One day the devs will convert to Cmake!"""
+    """
+    Autotools package for Gridlab-D. One day the devs will convert to Cmake!
+    """
 
     homepage = "https://www.gridlabd.org/"
     git      = "https://github.com/gridlab-d/gridlab-d"
@@ -17,8 +19,12 @@ class GridlabD(AutotoolsPackage):
     # Using only develop as other branches and releases did not build properly.
     version('develop', branch='develop')
 
-    variant("mysql", default=False, description="Enable MySQL support for Gridlab-D.")
-    variant('helics', default=False, description='Enable Helics support for Gridlab-D.')
+    variant("mysql",
+            default=False,
+            description="Enable MySQL support for Gridlab-D.")
+    variant('helics',
+            default=False,
+            description='Enable Helics support for Gridlab-D.')
 
     # Add dependencies.
     depends_on('autoconf', type='build')
@@ -33,7 +39,8 @@ class GridlabD(AutotoolsPackage):
         args = []
 
         if '+helics' in self.spec:
-            # Taken from https://github.com/GMLC-TDC/HELICS-Tutorial/tree/master/setup
+            # Taken from
+            # https://github.com/GMLC-TDC/HELICS-Tutorial/tree/master/setup
             args.append('--with-helics=' + self.spec['helics'].prefix)
             args.append('CFLAGS=-g -O0 -w')
             args.append('CXXFLAGS=-g -O0 -w -std=c++14')
