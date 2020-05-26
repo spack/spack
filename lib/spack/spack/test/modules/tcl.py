@@ -156,7 +156,6 @@ class TestTcl(object):
         projection = writer.spec.format(writer.conf.projections['all'])
         assert projection in writer.layout.use_name
 
-
     def test_projections_specific(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
 
