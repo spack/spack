@@ -17,6 +17,8 @@ class Jql(CargoPackage):
     git = "https://github.com/yamafaktory/jql.git"
 
     version('master', branch='master')
+    version('2.5.1', sha256='1c84ff188c6061383e211d9dddc76b082d2616e6d4ed52cd0d496ff975ffb46f')
+    version('2.5.0', sha256='e762490c168f2876d6ed19c7bba5603934143adcc189b718cff860487ade78d4')
     version('2.4.9', sha256='2536ee235232a4d20237e55ad2d316c18004168c4a69d806f8b269e7e674254e')
     version('2.4.8', sha256='93d331d547410bb83525c9a381402b7ce5bc47ffa5eae0d13a1d87ae964c3d97')
     version('2.4.7', sha256='9e3b2d5e07308e26b69046d655c6645dd02b72f0c1f16191dea2b52a8363d0ac')
