@@ -39,6 +39,8 @@ class Ffr(MakefilePackage):
         fflags = flags[:]
         if spec.satisfies('%gcc'):
             fflags.append('-ffixed-line-length-none')
+        elif spec.satisfies('%fj'):
+            fflags.append('-Fwide')
         d = find('.', 'src_main', recursive=True)
         root_dir  = os.path.dirname(d[0])
         make = join_path(root_dir, 'src_pre', 'src', 'Makefile')

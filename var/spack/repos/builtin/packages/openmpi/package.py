@@ -9,54 +9,6 @@ import sys
 import llnl.util.tty as tty
 
 
-def _verbs_dir():
-    """Try to find the directory where the OpenFabrics verbs package is
-    installed. Return None if not found.
-    """
-    try:
-        # Try to locate Verbs by looking for a utility in the path
-        ibv_devices = which("ibv_devices")
-        # Run it (silently) to ensure it works
-        ibv_devices(output=str, error=str)
-        # Get path to executable
-        path = ibv_devices.exe[0]
-        # Remove executable name and "bin" directory
-        path = os.path.dirname(path)
-        path = os.path.dirname(path)
-        # There's usually no "/include" on Unix; use "/usr/include" instead
-        if path == "/":
-            path = "/usr"
-        return path
-    except TypeError:
-        return None
-    except ProcessError:
-        return None
-
-
-def _mxm_dir():
-    """Look for default directory where the Mellanox package is
-    installed. Return None if not found.
-    """
-    # Only using default directory; make this more flexible in the future
-    path = "/opt/mellanox/mxm"
-    if os.path.isdir(path):
-        return path
-    else:
-        return None
-
-
-def _tm_dir():
-    """Look for default directory where the PBS/TM package is
-    installed. Return None if not found.
-    """
-    # /opt/pbs from PBS 18+; make this more flexible in the future
-    paths_list = ("/opt/pbs", )
-    for path in paths_list:
-        if os.path.isdir(path) and os.path.isfile(path + "/include/tm.h"):
-            return path
-    return None
-
-
 class Openmpi(AutotoolsPackage):
     """An open source Message Passing Interface implementation.
 
@@ -276,6 +228,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('m4',       type='build', when='@develop')
     depends_on('perl',     type='build', when='@develop')
 
+    depends_on('pkgconfig', type='build')
+
     depends_on('hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
@@ -288,13 +242,18 @@ class Openmpi(AutotoolsPackage):
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('zlib', when='@3.0.0:')
     depends_on('valgrind~mpi', when='+memchecker')
+
     depends_on('ucx', when='fabrics=ucx')
     depends_on('ucx +thread_multiple', when='fabrics=ucx +thread_multiple')
     depends_on('ucx +thread_multiple', when='@3.0.0: fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
+    depends_on('mxm', when='fabrics=mxm')
+    depends_on('binutils+libiberty', when='fabrics=mxm')
+    depends_on('rdma-core', when='fabrics=verbs')
+
     depends_on('slurm', when='schedulers=slurm')
     depends_on('lsf', when='schedulers=lsf')
-    depends_on('binutils+libiberty', when='fabrics=mxm')
+    depends_on('openpbs', when='schedulers=tm')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
@@ -359,43 +318,17 @@ class Openmpi(AutotoolsPackage):
         ]
 
     def with_or_without_verbs(self, activated):
-        # Up through version 1.6, this option was previously named
-        # --with-openib
-        opt = 'openib'
-        # In version 1.7, it was renamed to be --with-verbs
-        if self.spec.satisfies('@1.7:'):
-            opt = 'verbs'
-        # If the option has not been activated return
-        # --without-openib or --without-verbs
+        # Up through version 1.6, this option was named --with-openib.
+        # In version 1.7, it was renamed to be --with-verbs.
+        opt = 'verbs' if self.spec.satisfies('@1.7:') else 'openib'
         if not activated:
             return '--without-{0}'.format(opt)
-        line = '--with-{0}'.format(opt)
-        path = _verbs_dir()
-        if (path is not None) and (path not in ('/usr', '/usr/local')):
-            line += '={0}'.format(path)
-        return line
-
-    def with_or_without_mxm(self, activated):
-        opt = 'mxm'
-        # If the option has not been activated return --without-mxm
-        if not activated:
-            return '--without-{0}'.format(opt)
-        line = '--with-{0}'.format(opt)
-        path = _mxm_dir()
-        if path is not None:
-            line += '={0}'.format(path)
-        return line
+        return '--with-{0}={1}'.format(opt, self.spec['rdma-core'].prefix)
 
     def with_or_without_tm(self, activated):
-        opt = 'tm'
-        # If the option has not been activated return --without-tm
         if not activated:
-            return '--without-{0}'.format(opt)
-        line = '--with-{0}'.format(opt)
-        path = _tm_dir()
-        if path is not None:
-            line += '={0}'.format(path)
-        return line
+            return '--without-tm'
+        return '--with-tm={0}'.format(self.spec['openpbs'].prefix)
 
     @run_before('autoreconf')
     def die_without_fortran(self):
@@ -471,7 +404,8 @@ class Openmpi(AutotoolsPackage):
 
         # Fabrics
         if 'fabrics=auto' not in spec:
-            config_args.extend(self.with_or_without('fabrics'))
+            config_args.extend(self.with_or_without('fabrics',
+                                                    activation_value='prefix'))
         # The wrappers fail to automatically link libfabric. This will cause
         # undefined references unless we add the appropriate flags.
         if 'fabrics=libfabric' in spec:

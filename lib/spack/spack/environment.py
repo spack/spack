@@ -406,8 +406,12 @@ def validate(data, filename=None):
     try:
         spack.schema.Validator(spack.schema.env.schema).validate(validate_data)
     except jsonschema.ValidationError as e:
+        if hasattr(e.instance, 'lc'):
+            line_number = e.instance.lc.line + 1
+        else:
+            line_number = None
         raise spack.config.ConfigFormatError(
-            e, data, filename, e.instance.lc.line + 1)
+            e, data, filename, line_number)
     return validate_data
 
 
@@ -1445,9 +1449,9 @@ class Environment(object):
                 # The primary list is handled differently
                 continue
 
-            active_yaml_lists = [l for l in yaml_dict.get('definitions', [])
-                                 if name in l and
-                                 _eval_conditional(l.get('when', 'True'))]
+            active_yaml_lists = [x for x in yaml_dict.get('definitions', [])
+                                 if name in x and
+                                 _eval_conditional(x.get('when', 'True'))]
 
             # Remove any specs in yaml that are not in internal representation
             for ayl in active_yaml_lists:

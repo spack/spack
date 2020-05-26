@@ -21,6 +21,7 @@ class Glib(Package):
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    version('2.64.3', sha256='fe9cbc97925d14c804935f067a3ad77ef55c0bbe9befe68962318f5a767ceb22')
     version('2.64.2', sha256='9a2f21ed8f13b9303399de13a0252b7cbcede593d26971378ec6cb90e87f2277')
     version('2.64.1', sha256='17967603bcb44b6dbaac47988d80c29a3d28519210b28157c2bd10997595bbc7')
     version('2.62.6', sha256='104fa26fbefae8024ff898330c671ec23ad075c1c0bce45c325c6d5657d58b9c')

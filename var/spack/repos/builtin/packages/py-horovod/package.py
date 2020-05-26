@@ -14,6 +14,7 @@ class PyHorovod(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master', submodules=True)
+    version('0.19.3', tag='v0.19.3', submodules=True)
     version('0.19.2', tag='v0.19.2', submodules=True)
     version('0.19.1', tag='v0.19.1', submodules=True)
     version('0.19.0', tag='v0.19.0', submodules=True)
@@ -65,7 +66,7 @@ class PyHorovod(PythonPackage):
     depends_on('cmake', type='build', when='controllers=gloo')
 
     # Tensor Operations dependencies
-    depends_on('nccl', when='tensor_ops=nccl')
+    depends_on('nccl@2:', when='tensor_ops=nccl')
     depends_on('mpi', when='tensor_ops=mpi')
     # There does not appear to be a way to use an external Gloo installation
     depends_on('cmake', type='build', when='tensor_ops=gloo')
