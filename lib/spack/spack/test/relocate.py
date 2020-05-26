@@ -2,10 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import collections
 import os.path
 import platform
+import re
 import shutil
 
 import llnl.util.filesystem
@@ -25,6 +25,16 @@ def rpaths_for(new_binary):
     patchelf = spack.util.executable.which('patchelf')
     output = patchelf('--print-rpath', str(new_binary), output=str)
     return output.strip()
+
+
+def text_in_bin(text, binary):
+    with open(str(binary), "rb") as f:
+        data = f.read()
+        f.seek(0)
+        pat = re.compile(text.encode('utf-8'))
+        if not pat.search(data):
+            return False
+        return True
 
 
 @pytest.fixture(params=[True, False])
@@ -115,15 +125,14 @@ def hello_world(tmpdir):
     """Factory fixture that compiles an ELF binary setting its RPATH. Relative
     paths are encoded with `$ORIGIN` prepended.
     """
-    source = tmpdir.join('main.c')
-    source.write("""
-#include <stdio.h>
-int main(){
-    printf("Hello world!");
-}
-""")
-
-    def _factory(rpaths):
+    def _factory(rpaths, message="Hello world!"):
+        source = tmpdir.join('main.c')
+        source.write("""
+        #include <stdio.h>
+        int main(){{
+            printf("{0}");
+        }}
+        """.format(message))
         gcc = spack.util.executable.which('gcc')
         executable = source.dirpath('main.x')
         # Encode relative RPATHs using `$ORIGIN` as the root prefix
@@ -350,8 +359,12 @@ def test_raise_if_not_relocatable(monkeypatch):
 def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     orig_binary = hello_world(rpaths=[
         str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
-    ])
+    ], message=str(tmpdir))
     new_binary = copy_binary(orig_binary)
+
+    # Check original directory is in the executabel and the new one is not
+    assert text_in_bin(str(tmpdir), new_binary)
+    assert not text_in_bin(str(new_binary.dirpath()), new_binary)
 
     # Check this call succeed
     spack.relocate.relocate_text_bin(
@@ -360,6 +373,11 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
         spack.paths.spack_root, spack.paths.spack_root,
         {str(orig_binary.dirpath()): str(new_binary.dirpath())}
     )
+
+    # Check original directory is not there anymore and it was
+    # substituted with the new one
+    assert not text_in_bin(str(tmpdir), new_binary)
+    assert text_in_bin(str(new_binary.dirpath()), new_binary)
 
 
 def test_relocate_text_bin_raise_if_new_prefix_is_longer():
