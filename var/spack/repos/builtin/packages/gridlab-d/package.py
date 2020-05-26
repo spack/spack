@@ -29,7 +29,7 @@ class GridlabD(AutotoolsPackage):
     homepage = "https://www.gridlabd.org/"
     git      = "https://github.com/gridlab-d/gridlab-d"
 
-    maintainers = ['0t1s1', 'yee29']
+    maintainers = ['0t1s1', 'yee29', 'afisher1']
 
     # FIXME: Add proper versions and checksums here.
     #version('master', branch='master')
