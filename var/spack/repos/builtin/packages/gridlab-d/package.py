@@ -8,7 +8,12 @@ from spack import *
 
 class GridlabD(AutotoolsPackage):
     """
-    Autotools package for Gridlab-D. One day the devs will convert to Cmake!
+    Autotools package for Gridlab-D, a new power distribution system simulation
+    and analysis tool that provides valuable information to users who design
+    and operate distribution systems, and to utilities that wish to take
+    advantage of the latest energy technologies. Gridlab-D is a flexible
+    simulation environment that can be integrated with a variety of third-party
+    data management and analysis tools.
     """
 
     homepage = "https://www.gridlabd.org/"
