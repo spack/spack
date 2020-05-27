@@ -445,12 +445,19 @@ class Configuration(object):
         _validate_section_name(section)  # validate section name
         scope = self._validate_scope(scope)  # get ConfigScope object
 
+        # manually preserve comments
+        cp = section in scope.sections and scope.sections[section] is not None
+        if cp:
+            comments = getattr(scope.sections[section][section],
+                               yaml.comments.Comment.attrib,
+                               None)
+
         # read only the requested section's data.
-        if section in scope.sections and scope.sections[section] is not None:
-            # don't overwrite yaml comment markings
-            scope.sections[section][section] = update_data
-        else:
-            scope.sections[section] = {section: update_data}
+        scope.sections[section] = syaml.syaml_dict({section: update_data})
+        if cp and comments:
+            setattr(scope.sections[section][section],
+                    yaml.comments.Comment.attrib,
+                    comments)
 
         scope.write_section(section)
 
@@ -556,7 +563,7 @@ class Configuration(object):
                 key = parts.pop(0)
 
                 if _override(key):
-                    new = typeof(data[key])()
+                    new = type(data[key])()
                     del data[key]
                 else:
                     new = data[key]
