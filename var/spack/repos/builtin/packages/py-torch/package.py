@@ -178,6 +178,10 @@ class PyTorch(PythonPackage, CudaPackage):
           sha256='7781c7ec0a661bf5a946a659f80e90df9dba116ad168762f15b10547113ae600',
           when='@1.1:1.5')
 
+    # Fix for 'FindOpenMP.cmake'
+    # to detect openmp settings used by Fujitsu compiler.
+    patch('detect_omp_of_fujitsu_compiler.patch', when='%fj')
+
     # Both build and install run cmake/make/make install
     # Only run once to speed up build times
     phases = ['install']
