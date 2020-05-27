@@ -1,7 +1,7 @@
 name: "Close stale issues"
 on:
   schedule:
-  - cron: "5 * * * *"
+  - cron: "0 0 * * *"
 
 jobs:
   stale:
@@ -24,3 +24,4 @@ jobs:
         exempt-issue-labels: 'bug,confirmed,status:planned'
         stale-pr-label: 'status:stale'
         exempt-pr-labels: 'hotfix,bugfix,status:planned'
+        operations-per-run: 30
