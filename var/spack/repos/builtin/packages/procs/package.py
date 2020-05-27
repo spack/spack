@@ -16,6 +16,9 @@ class Procs(CargoPackage):
     maintainers = ['AndrewGaspar']
 
     version('master', branch='master')
+    version('0.10.3', sha256='3c8082ffc492e8a9fbfa2735edd025a7da90ce3b6087d3bc55e98acff5c884d2')
+    version('0.10.2', sha256='95a30d52e86feefa785ea4e4aee761607119882e01cc28baa761b9cdf6f51e59')
+    version('0.10.1', sha256='afc17617ea0921b498c0ee433448e51c4ece3cd36ec18d416a2f142c31674ce1')
     version('0.10.0', sha256='b2ff317cd593ad30e428a51d29f1609690e36987ce74570f9ece3e73df097885')
     version('0.9.20', sha256='770cce7d9426908ac8ea8c69f51cf74fbcb322e3a9210f81dc75e1aa4e2ea45a')
     version('0.9.19', sha256='de34337d8e18677056125eacb9a0001247bdc647102c01878663d36bddd8dba7')

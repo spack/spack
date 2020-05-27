@@ -16,6 +16,7 @@ class Sd(CargoPackage):
     maintainers = ['AndrewGaspar']
 
     version('master', branch='master')
+    version('0.7.5', sha256='ebd2d98ccd28280977baadbd41347de7a8edcaa95b052e04188b24a63341ec0d')
     version('0.7.4', sha256='03dcb91467c19f3974995b5fff99aed5e073d35571ef0acabd1ef5bc4e62186b')
     version('0.7.2', sha256='95cfa8ccebd8f5ad53cf4c4ab660f58b33bb164e2502fcc1e2c0b9b6b245cfc1')
     version('0.7.1', sha256='68eabdf638f50cc23b6af62c10c2d9cb6c4eb7e017bb0de3df54afe66892bbd9')

@@ -13,10 +13,7 @@ class Tokei(CargoPackage):
     """
 
     homepage = "https://github.com/xampprocky/tokei"
-
-    # Pull directly from crates.io for published releases
     crates_io = "tokei"
-    # Can install master branch from GitHub
     git = "https://github.com/xampprocky/tokei.git"
 
     # tokei doesn't build with prefer_dynamic at present, so switch default to
@@ -28,6 +25,8 @@ class Tokei(CargoPackage):
     )
 
     version('master', branch='master')
+    version('11.2.0', sha256='88b739d6420e03fb1b4fc881c457c9e2f6d6c0c3634200e6e53a1eeadad72d33')
+    version('11.1.1', sha256='e28e6c319fa1fd848ecb764220c632232ab76872cbf2f70f59f86bf1128d64bf')
     version('11.1.0', sha256='6e8e8cd2f56cd31fc97766f07e2b989c4d774174de804503f53789e689988fe6')
     version('11.0.0', sha256='fa869112e75b141332150e957cb6f29b3b593b8960379ef923b2f7d4918aaa2d')
     version('10.1.2', sha256='3163fd12ef922838fc371ce116a7eeee0c1997fae086133a1a86d0e3cbff7a28')

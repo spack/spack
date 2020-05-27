@@ -16,6 +16,7 @@ class Hyperfine(CargoPackage):
     maintainers = ['AndrewGaspar']
 
     version('master', branch='master')
+    version('1.10.0', sha256='d3a10992f4fd470843f823e1e4784f1cd0237708e5158f54d011dac088e9d231')
     version('1.9.0', sha256='cf82875c0ec634a287137d18818ac91fbdaf2fe2ecee6598f47a7c6fef48d352')
     version('1.8.0', sha256='09620af8b35e6799ebe7babf51835e4628d650abc7fe7b32dca96f34d3f81f8b')
     version('1.7.0', sha256='4e5af0977e2c091c7ec267a9e7e0cdd8255d075f6ca70bfbc51e116127dbd130')

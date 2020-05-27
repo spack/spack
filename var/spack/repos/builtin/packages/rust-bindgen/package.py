@@ -19,6 +19,8 @@ class RustBindgen(CargoPackage):
     depends_on('llvm@6.0:', type=('build', 'run'))
 
     version('master', branch='master')
+    version('0.54.0', sha256='66c0bb6167449588ff70803f4127f0684f9063097eca5016f37eb52b92c2cf36')
+    version('0.53.3', sha256='c72a978d268b1d70b0e963217e60fdabd9523a941457a6c42a7315d15c7e89e5')
     version('0.53.2', sha256='6bb26d6a69a335b8cb0e7c7e9775cd5666611dc50a37177c3f2cedcfc040e8c8')
     version('0.53.1', sha256='99de13bb6361e01e493b3db7928085dcc474b7ba4f5481818e53a89d76b8393f')
     version('0.53.0', sha256='4cb4969a64504090d6de8522f7f02b5f88e0f0ae4ab193b24a94b0ee954d5a06')

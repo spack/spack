@@ -10,10 +10,7 @@ class Jql(CargoPackage):
     """A JSON Query Language CLI tool built with Rust"""
 
     homepage = "https://github.com/yamafaktory/jql"
-
-    # Pull directly from crates.io for published releases
     crates_io = "jql"
-    # Can install master branch from GitHub
     git = "https://github.com/yamafaktory/jql.git"
 
     # jql doesn't build with prefer_dynamic at present, so switch default to
@@ -25,6 +22,8 @@ class Jql(CargoPackage):
     )
 
     version('master', branch='master')
+    version('2.6.1', sha256='849810db82ae770c9e9c64ee5a739ef624b67cf5e37ae806ce62fccee0cb8220')
+    version('2.6.0', sha256='31de69015bba9eb1d8357f9521e7d7e90ab2acb8ec523c16596396609a7d78b5')
     version('2.5.1', sha256='1c84ff188c6061383e211d9dddc76b082d2616e6d4ed52cd0d496ff975ffb46f')
     version('2.5.0', sha256='e762490c168f2876d6ed19c7bba5603934143adcc189b718cff860487ade78d4')
     version('2.4.9', sha256='2536ee235232a4d20237e55ad2d316c18004168c4a69d806f8b269e7e674254e')
