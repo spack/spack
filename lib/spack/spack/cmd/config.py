@@ -186,16 +186,16 @@ def config_add(args):
         # update all sections from config dict
         for section in spack.config.section_schemas.keys():
             if section in config_dict:
-                value = config_dict[section]
-                existing = spack.config.get(section, scope=scope)
-                new = spack.config.merge_yaml(existing, value)
-
                 # Special handling for compiler scope difference
                 if scope is None:
                     if section == 'compilers':
                         scope = spack.config.default_modify_scope()
                     else:
                         scope = spack.config.default_modify_scope(subscopes=False)
+
+                value = config_dict[section]
+                existing = spack.config.get(section, scope=scope)
+                new = spack.config.merge_yaml(existing, value)
 
                 if re.match(r'env.*', scope or ''):
                     e = ev.get_env(args, 'config add')
@@ -204,19 +204,31 @@ def config_add(args):
                     spack.config.set(section, new, scope=scope)
 
     if args.value:
-        components = args.value.split(':')
+        components = spack.config._process_config_path(args.value)
 
         has_existing_value = True
+        path = ''
+        override = False
         for idx, name in enumerate(components[:-1]):
+            # First handle double colons in constructing path
+            colon = '::' if override else ':' if path else ''
+            path += colon + name
+            if getattr(name, 'override', False):
+                override = True
+            else:
+                override = False
+
             # Test whether there is an existing value at this level
-            path = ':'.join(components[:idx + 1])
-            existing = spack.config.get(path, scope=scope)
+            # Do not use double colons in getting values
+            get_path = path.replace('::', ':')
+            existing = spack.config.get(get_path, scope=scope)
+
             if existing is None:
                 has_existing_value = False
                 # We've nested further than existing config, so we need the type
                 # information for validation to know how to handle bare values
                 # appended to lists.
-                existing = spack.config.type_of(':'.join(components[:idx + 1]))
+                existing = spack.config.type_of(path)
 
                 # construct value from this point down
                 value = syaml.load(components[-1])
@@ -227,7 +239,10 @@ def config_add(args):
         if has_existing_value:
             path, _, value = args.value.rpartition(':')
             value = syaml.load(value)
-            existing = spack.config.get(path, scope=scope)
+
+            # remove double colons for get
+            get_path = path.replace('::', ':')
+            existing = spack.config.get(get_path, scope=scope)
 
         # append values to lists appropriately
         if isinstance(existing, list) and not isinstance(value, list):
@@ -240,6 +255,7 @@ def config_add(args):
             e = ev.get_env(args, 'config add')
             e.set_config(path, new)
         else:
+            print(path)
             spack.config.set(path, new, scope=scope)
 
 

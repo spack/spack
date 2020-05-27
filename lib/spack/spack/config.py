@@ -525,13 +525,13 @@ class Configuration(object):
         We use ``:`` as the separator, like YAML objects.
     """
         # TODO: Currently only handles maps. Think about lists if neded.
-        section, _, rest = path.partition(':')
+        parts = _process_config_path(path)
+        section = parts.pop(0)
 
         value = self.get_config(section, scope=scope)
-        if not rest:
+        if not parts:
             return value
 
-        parts = rest.split(':')
         while parts:
             key = parts.pop(0)
             value = value.get(key, default)
@@ -554,7 +554,13 @@ class Configuration(object):
             data = section_data
             while len(parts) > 1:
                 key = parts.pop(0)
-                new = data[key]
+
+                if _override(key):
+                    new = typeof(data[key])()
+                    del data[key]
+                else:
+                    new = data[key]
+
                 if isinstance(new, dict):
                     # Make it an ordered dict
                     new = syaml.syaml_dict(new)
@@ -809,7 +815,7 @@ def type_of(path):
     path given, the priority order is ``list``, ``dict``, ``str``, ``bool``,
     ``int``, ``float``.
     """
-    components = path.split(':')
+    components = _process_config_path(path)
     section = components[0]
     for type in (list, dict, str, bool, int, float):
         try:
