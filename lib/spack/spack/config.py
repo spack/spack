@@ -575,6 +575,9 @@ class Configuration(object):
                 data[key] = new
             data = new
 
+        if _override(parts[0]):
+            data.pop(parts[0], None)
+
         # update new value
         data[parts[0]] = value
 
