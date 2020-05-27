@@ -19,6 +19,14 @@ class Tokei(CargoPackage):
     # Can install master branch from GitHub
     git = "https://github.com/xampprocky/tokei.git"
 
+    # tokei doesn't build with prefer_dynamic at present, so switch default to
+    # False
+    variant(
+        'prefer_dynamic',
+        default=False,
+        description='Link Rust standard library dynamically'
+    )
+
     version('master', branch='master')
     version('11.1.0', sha256='6e8e8cd2f56cd31fc97766f07e2b989c4d774174de804503f53789e689988fe6')
     version('11.0.0', sha256='fa869112e75b141332150e957cb6f29b3b593b8960379ef923b2f7d4918aaa2d')

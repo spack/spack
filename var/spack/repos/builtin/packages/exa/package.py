@@ -15,6 +15,14 @@ class Exa(CargoPackage):
 
     maintainers = ['AndrewGaspar']
 
+    # exa doesn't build with prefer_dynamic at present, so switch default to
+    # False
+    variant(
+        'prefer_dynamic',
+        default=False,
+        description='Link Rust standard library dynamically'
+    )
+
     depends_on('libgit2')
 
     def setup_build_environment(self, env):

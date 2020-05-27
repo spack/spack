@@ -15,6 +15,22 @@ class Starship(CargoPackage):
     crates_io = "starship"
     git = "https://github.com/starship/starship.git"
 
+    # Change the defaults for prefer_dynamic and lto to reflect that starship
+    # cannot build with prefer_dynamic at this time, and prefers to be built
+    # with lto.
+    variant(
+        'prefer_dynamic',
+        default=False,
+        description='Link Rust standard library dynamically'
+    )
+
+    variant(
+        'lto',
+        default='fat',
+        description='Link binaries with link-time optimization',
+        values=('none', 'thin', 'fat')
+    )
+
     depends_on('libgit2')
 
     def setup_build_environment(self, env):

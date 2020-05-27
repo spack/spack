@@ -16,6 +16,14 @@ class Jql(CargoPackage):
     # Can install master branch from GitHub
     git = "https://github.com/yamafaktory/jql.git"
 
+    # jql doesn't build with prefer_dynamic at present, so switch default to
+    # False
+    variant(
+        'prefer_dynamic',
+        default=False,
+        description='Link Rust standard library dynamically'
+    )
+
     version('master', branch='master')
     version('2.5.1', sha256='1c84ff188c6061383e211d9dddc76b082d2616e6d4ed52cd0d496ff975ffb46f')
     version('2.5.0', sha256='e762490c168f2876d6ed19c7bba5603934143adcc189b718cff860487ade78d4')

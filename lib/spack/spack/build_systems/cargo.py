@@ -9,7 +9,8 @@ import json
 import spack
 
 from llnl.util.filesystem import join_path, copy, mkdirp
-from spack.directives import cargo_manifest, depends_on, variant
+
+from spack.directives import cargo_manifest, conflicts, depends_on, variant
 from spack.package import PackageBase
 from spack.util.executable import Executable
 
@@ -37,7 +38,37 @@ class CargoPackage(PackageBase):
             description='Cargo build type',
             values=('debug', 'release'))
 
-    depends_on('rust', type='build')
+    variant(
+        'prefer_dynamic',
+        default=True,
+        description='Link Rust standard library dynamically'
+    )
+
+    variant(
+        'lto',
+        default='none',
+        description='Link binaries with link-time optimization',
+        values=('none', 'thin', 'fat')
+    )
+
+    conflicts(
+        'lto=thin',
+        when='+prefer_dynamic',
+        msg="LTO is not possible when linking the Rust standard library "
+            "dynamically. Set '~prefer_dynamic' for this package to enable "
+            "LTO."
+    )
+
+    conflicts(
+        'lto=fat',
+        when='+prefer_dynamic',
+        msg="LTO is not possible when linking the Rust standard library "
+            "dynamically. Set '~prefer_dynamic' for this package to enable "
+            "LTO."
+    )
+
+    depends_on('rust', type='build', when='~prefer_dynamic')
+    depends_on('rust', type=('build', 'link'), when='+prefer_dynamic')
 
     cargo_manifest()
 
@@ -47,27 +78,6 @@ class CargoPackage(PackageBase):
         cargo.add_default_arg('--locked')
         cargo.add_default_arg('--offline')
         return cargo
-
-    @property
-    def cargo_build(self):
-        jobs = spack.config.get('config:build_jobs') if self.parallel else 1
-
-        cargo_build = self.cargo
-        cargo_build.add_default_arg('build')
-        cargo_build.add_default_arg('--jobs')
-        cargo_build.add_default_arg(str(jobs))
-        cargo_build.add_default_arg('-vv')  # Very verbose output
-        cargo_build.add_default_arg('--manifest-path')
-        cargo_build.add_default_arg(self.manifest_path)
-        if 'build_type=release' in self.spec:
-            cargo_build.add_default_arg('--release')
-
-        cargo_build.add_default_env(
-            'RUSTFLAGS',
-            '--codegen rpath \
-             --cap-lints warn'
-        )
-        return cargo_build
 
     @property
     def manifest_path(self):
@@ -89,45 +99,96 @@ class CargoPackage(PackageBase):
             self.stage.source_path, 'target',
             self.spec.variants['build_type'].value)
 
-    def build(self, spec, prefix):
-        """cargo build"""
-        self.cargo_build()
+    def do_stage(self, mirror_only=False):
+        """Stages and sets the config for chosen build settings"""
+        super(CargoPackage, self).do_stage(mirror_only)
 
-    def install(self, spec, prefix):
-        """Install cargo targets"""
-        # This is not implemented using "cargo install" because we want to
-        # install libraries, too.
+        # Put config in spack-src so that it does not overwrite the config
+        # from vendoring dependencies
+        mkdirp(join_path(self.stage.source_path, '.cargo'))
+        config_path = join_path(self.stage.source_path, '.cargo/config')
+
+        build_type = self.spec.variants['build_type'].value
+        lto = self.spec.variants['lto'].value
+
+        profile = 'dev' if build_type == 'debug' else build_type
+        lto = 'off' if lto == 'none' else lto
+
+        with open(config_path, 'w') as f:
+            f.write("""
+[profile.{profile}]
+rpath = true
+lto = "{lto}"
+""".format(
+                profile=profile,
+                lto=lto
+            ))
+
+    def workspace_targets(self):
         metadata = self.metadata
-
-        so_ext = 'dylib' if 'platform=darwin' in self.spec else 'so'
-
-        # This loop attempts to install all
         for p in metadata["packages"]:
             for w in metadata["workspace_members"]:
                 if p["id"] == w:
                     for t in p["targets"]:
-                        if "bin" in t["kind"]:
-                            mkdirp(prefix.bin)
-                            copy(
-                                join_path(self.target_path, t["name"]),
-                                prefix.bin
-                            )
+                        yield t
 
-                        if "staticlib" in t["kind"]:
-                            mkdirp(prefix.lib)
-                            copy(
-                                "lib{0}.a".format(
-                                    join_path(self.target_path, t["name"])
-                                ),
-                                prefix.lib
-                            )
+    def build(self, spec, prefix):
+        """cargo build"""
+        jobs = spack.config.get('config:build_jobs') if self.parallel else 1
 
-                        if "cdylib" in t["kind"]:
-                            mkdirp(prefix.lib)
-                            copy(
-                                "lib{0}.{1}".format(
-                                    join_path(self.target_path, t["name"]),
-                                    so_ext
-                                ),
-                                prefix.lib
-                            )
+        # Explicitly build each target in the workspace
+        for t in self.workspace_targets():
+            build_type_args = \
+                ["--release"] if 'build_type=release' in self.spec else []
+
+            rustc_args = ["--cap-lints", "warn"]
+            if '+prefer_dynamic' in self.spec:
+                rustc_args += ["--codegen", "prefer-dynamic"]
+
+            if "bin" in t["kind"]:
+                build_type = "--bin"
+            elif "staticlib" in t["kind"]:
+                build_type = "--lib"
+            elif "cdylib" in t["kind"]:
+                build_type = "--lib"
+            else:
+                continue
+
+            self.cargo(
+                "rustc", "--jobs", str(jobs), "-vv", "--manifest-path",
+                self.manifest_path, *build_type_args, build_type, t["name"],
+                "--", *rustc_args
+            )
+
+    def install(self, spec, prefix):
+        """Install cargo targets"""
+
+        # This is not implemented using "cargo install" because we want to
+        # install libraries, too.
+        so_ext = 'dylib' if 'platform=darwin' in self.spec else 'so'
+
+        # This loop attempts to install all
+        for t in self.workspace_targets():
+            if "bin" in t["kind"]:
+                mkdirp(prefix.bin)
+                copy(
+                    join_path(self.target_path, t["name"]),
+                    prefix.bin
+                )
+
+            if "staticlib" in t["kind"]:
+                mkdirp(prefix.lib)
+                copy(
+                    join_path(self.target_path, "lib{0}.a".format(t["name"])),
+                    prefix.lib
+                )
+
+            if "cdylib" in t["kind"]:
+                mkdirp(prefix.lib)
+                copy(
+                    join_path(
+                        self.target_path,
+                        "lib{0}.{1}".format(t["name"], so_ext)
+                    ),
+                    prefix.lib
+                )
