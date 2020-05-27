@@ -19,6 +19,7 @@ class Coreneuron(CMakePackage):
     git      = "https://github.com/BlueBrain/CoreNeuron"
 
     version('develop', branch='master', submodules=True)
+    version('0.18', tag='0.18', submodules=True)
     version('0.17', tag='0.17', submodules=True)
     version('0.16', tag='0.16', submodules=True, preferred=True)
     version('0.15', tag='0.15', submodules=True)
@@ -55,8 +56,8 @@ class Coreneuron(CMakePackage):
     depends_on('tau', when='+profile')
 
     # nmodl specific dependency
-    depends_on('nmodl@develop', when='@0.17:+nmodl')
-    depends_on('nmodl@0.3', when='@0:0.16+nmodl')
+    depends_on('nmodl@0.3b', when='@0.17:+nmodl')
+    depends_on('nmodl@0.3a', when='@0:0.16+nmodl')
     depends_on('eigen@3.3.4:~metis~scotch~fftw~suitesparse~mpfr', when='+nmodl')
     depends_on('ispc', when='+ispc')
 
@@ -75,6 +76,11 @@ class Coreneuron(CMakePackage):
     conflicts('+sympy', when='~nmodl')
     conflicts('+sympy', when='coreneuron@0.17')  # issue with include directories
     conflicts('+ispc', when='~nmodl')
+
+    # raise conflict when trying to install '+gpu' without PGI compiler
+    gpu_compiler_message = "For gpu build use %pgi"
+    conflicts('%gcc', when='+gpu', msg=gpu_compiler_message)
+    conflicts('%intel', when='+gpu', msg=gpu_compiler_message)
 
     @run_before('build')
     def profiling_wrapper_on(self):
@@ -98,7 +104,7 @@ class Coreneuron(CMakePackage):
                 flags = '-g -xMIC-AVX512 -O2 -qopt-report=5'
         if '+gpu' in spec:
             flags = '-O2'
-            flags += '-Minline=size:1000,levels:100,'
+            flags += ' -Minline=size:1000,levels:100,'
             flags += 'totalsize:40000,maxsize:4000'
             flags += ' -ta=tesla:cuda%s' % (spec['cuda'].version.up_to(2))
         if '+debug' in spec:
