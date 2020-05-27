@@ -12,7 +12,6 @@ import os
 import sys
 import json
 import re
-import sys
 
 import spack
 import llnl.util.tty as tty
