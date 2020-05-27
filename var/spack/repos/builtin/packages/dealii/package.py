@@ -140,7 +140,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('metis@5:+int64',   when='+metis+int64')
     depends_on('metis@5:~int64',   when='+metis~int64')
     depends_on('muparser', when='+muparser')
-    depends_on('nanoflann',        when='@9.0:+nanoflann')
+    # Nanoflann support has been removed after 9.2.0
+    depends_on('nanoflann',        when='@9.0:9.2+nanoflann')
     depends_on('netcdf-c+mpi',     when='+netcdf+mpi')
     depends_on('netcdf-cxx',       when='+netcdf+mpi')
     depends_on('oce',              when='+oce')
@@ -210,6 +211,10 @@ class Dealii(CMakePackage, CudaPackage):
                   msg='The interface to {0} is supported from version 9.1.0 '
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
+
+    conflicts('+nanoflann', when='@9.2.1:',
+              msg='The interface to nanoflann was removed after version 9.2.0. '
+                  'Please explicitly disable this variant via ~nanoflann')
 
     conflicts('+slepc', when='~petsc',
               msg='It is not possible to enable slepc interfaces '
