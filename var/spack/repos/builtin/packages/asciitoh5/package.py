@@ -32,7 +32,7 @@ class Asciitoh5(Package):
             include_flag = ' -I%s' % (spec['hdf5'].prefix.include)
             which('nrnivmodl')('-incflags', include_flag, '-loadflags',
                                link_flag, 'lib/mod')
-            bindir = os.path.basename(spec.neuron_archdir)
+            bindir = os.path.basename(self.nrnivmodl_outdir)
             special = join_path(bindir, 'special')
             shutil.copy(special, prefix.bin)
 

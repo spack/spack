@@ -74,7 +74,7 @@ class SimModel(Package):
 
         if '+profile' in self.spec:
             include_flag += ' -DENABLE_TAU_PROFILER'
-        output_dir = os.path.basename(self.spec.neuron_archdir)
+        output_dir = os.path.basename(self.nrnivmodl_outdir)
 
         if self.spec.satisfies('+coreneuron'):
             libnrncoremech = self.__build_mods_coreneuron(
@@ -108,7 +108,7 @@ class SimModel(Package):
         with working_dir('build_' + self.mech_name, create=True):
             force_symlink(mods_location, 'mod')
             which('nrnivmodl-core')(*nrnivmodl_params)
-            output_dir = os.path.basename(self.spec.neuron_archdir)
+            output_dir = os.path.basename(self.nrnivmodl_outdir)
             mechlib = find_libraries('libcorenrnmech' + self.lib_suffix + '*',
                                      output_dir)
             assert len(mechlib.names) == 1,\
@@ -134,7 +134,7 @@ class SimModel(Package):
     def _install_binaries(self, mech_name=None):
         # Install special
         mech_name = mech_name or self.mech_name
-        arch = os.path.basename(self.spec.neuron_archdir)
+        arch = os.path.basename(self.nrnivmodl_outdir)
         prefix = self.prefix
 
         if self.spec.satisfies('+coreneuron'):
@@ -151,28 +151,42 @@ class SimModel(Package):
         # Install special
         shutil.copy(join_path(arch, 'special'), prefix.bin)
 
-        if self.spec.satisfies('^neuron~binary'):
-            # Install libnrnmech - might have several links.
-            for f in find(arch + '/.libs', 'libnrnmech*.so*', recursive=False):
+        if (self.spec.satisfies('^neuron~binary') or
+                self.spec.satisfies('^neuron+binary+cmake')):
+            lib_suffix = ".so"
+            # Install libnrnmech - might have several links
+            if self.spec.satisfies('^neuron+cmake'):
+                libnrnmech_path = self.nrnivmodl_outdir
+                if "darwin" in self.spec.architecture:
+                    lib_suffix = ".dylib"
+            else:
+                libnrnmech_path = self.nrnivmodl_outdir + "/.libs"
+            for f in find(libnrnmech_path,
+                          'libnrnmech*' + lib_suffix + '*',
+                          recursive=False):
                 if not os.path.islink(f):
                     bname = os.path.basename(f)
-                    lib_dst = prefix.lib.join(
-                        bname[:bname.find('.')] + self.lib_suffix + '.so')
+                    if self.spec.satisfies('^neuron+binary+cmake'):
+                        lib_dst = prefix.lib.join(bname)
+                    else:
+                        lib_dst = prefix.lib.join(
+                            bname[:bname.find('.')] + self.lib_suffix + '.so')
                     shutil.move(f, lib_dst)  # Move so its not copied twice
                     break
             else:
                 raise Exception('No libnrnmech found')
 
-            # Patch special for the new libname
-            which('sed')('-i.bak',
-                         's#-dll .*#-dll %s "$@"#' % lib_dst,
-                         prefix.bin.special)
-            os.remove(prefix.bin.join('special.bak'))
+            if self.spec.satisfies('^neuron~binary'):
+                # Patch special for the new libname
+                which('sed')('-i.bak',
+                             's#-dll .*#-dll %s "$@"#' % lib_dst,
+                             prefix.bin.special)
+                os.remove(prefix.bin.join('special.bak'))
 
     def _install_src(self, prefix):
         """Copy original and translated c mods
         """
-        arch = os.path.basename(self.spec.neuron_archdir)
+        arch = os.path.basename(self.nrnivmodl_outdir)
         mkdirp(prefix.lib.mod, prefix.lib.hoc, prefix.lib.python)
         copy_all('mod', prefix.lib.mod)
         copy_all('hoc', prefix.lib.hoc)
