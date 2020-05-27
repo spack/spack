@@ -184,8 +184,9 @@ def config_add(args):
         config_dict = spack.environment.config_dict(data)
 
         # update all sections from config dict
-        for section in spack.config.section_schemas.keys():
-            if section in config_dict:
+        # We have to iterate on keys to keep overrides
+        for section in config_dict.keys():
+            if section in spack.config.section_schemas.keys():
                 # Special handling for compiler scope difference
                 if scope is None:
                     if section == 'compilers':
@@ -219,9 +220,7 @@ def config_add(args):
                 override = False
 
             # Test whether there is an existing value at this level
-            # Do not use double colons in getting values
-            get_path = path.replace('::', ':')
-            existing = spack.config.get(get_path, scope=scope)
+            existing = spack.config.get(path, scope=scope)
 
             if existing is None:
                 has_existing_value = False
@@ -239,10 +238,7 @@ def config_add(args):
         if has_existing_value:
             path, _, value = args.value.rpartition(':')
             value = syaml.load(value)
-
-            # remove double colons for get
-            get_path = path.replace('::', ':')
-            existing = spack.config.get(get_path, scope=scope)
+            existing = spack.config.get(path, scope=scope)
 
         # append values to lists appropriately
         if isinstance(existing, list) and not isinstance(value, list):
@@ -255,7 +251,6 @@ def config_add(args):
             e = ev.get_env(args, 'config add')
             e.set_config(path, new)
         else:
-            print(path)
             spack.config.set(path, new, scope=scope)
 
 

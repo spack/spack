@@ -536,8 +536,6 @@ class Configuration(object):
         section = parts.pop(0)
 
         value = self.get_config(section, scope=scope)
-        if not parts:
-            return value
 
         while parts:
             key = parts.pop(0)
@@ -550,35 +548,37 @@ class Configuration(object):
 
         Accepts the path syntax described in ``get()``.
         """
+        if ':' not in path:
+            # handle bare section name as path
+            self.update_config(path, value, scope=scope)
+            return
+
         parts = _process_config_path(path)
         section = parts.pop(0)
 
-        if not parts:
-            self.update_config(section, value, scope=scope)
-        else:
-            section_data = self.get_config(section, scope=scope)
+        section_data = self.get_config(section, scope=scope)
 
-            data = section_data
-            while len(parts) > 1:
-                key = parts.pop(0)
+        data = section_data
+        while len(parts) > 1:
+            key = parts.pop(0)
 
-                if _override(key):
-                    new = type(data[key])()
-                    del data[key]
-                else:
-                    new = data[key]
+            if _override(key):
+                new = type(data[key])()
+                del data[key]
+            else:
+                new = data[key]
 
-                if isinstance(new, dict):
-                    # Make it an ordered dict
-                    new = syaml.syaml_dict(new)
-                    # reattach to parent object
-                    data[key] = new
-                data = new
+            if isinstance(new, dict):
+                # Make it an ordered dict
+                new = syaml.syaml_dict(new)
+                # reattach to parent object
+                data[key] = new
+            data = new
 
-            # update new value
-            data[parts[0]] = value
+        # update new value
+        data[parts[0]] = value
 
-            self.update_config(section, section_data, scope=scope)
+        self.update_config(section, section_data, scope=scope)
 
     def __iter__(self):
         """Iterate over scopes in this configuration."""
