@@ -1237,8 +1237,8 @@ class CargoVendorFetchStrategy(FetchStrategy):
         checksum = spack.config.get('config:checksum')
         if checksum and not os.path.exists(self.manifest_lock_path):
             tty.warn(
-                "There is no Cargo.lock file to vendor crate depenencies \
-                 safely.")
+                "There is no Cargo.lock file to vendor crate depenencies "
+                "safely.")
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
@@ -1249,7 +1249,6 @@ class CargoVendorFetchStrategy(FetchStrategy):
                                                     default=False)
                 if ignore_checksum:
                     tty.msg("Vendoring with no checksum.", ck_msg)
-                    cargo.add_default_arg('--locked')
 
             if not ignore_checksum:
                 raise FetchError("Will not vendor cargo dependencies")
@@ -1257,6 +1256,8 @@ class CargoVendorFetchStrategy(FetchStrategy):
             locked = False
         else:
             locked = True
+
+        locked = ["--locked"] if locked else []
 
         # Create the vendored dependencies directory
         mkdirp(self.vendor_stage)
@@ -1266,6 +1267,7 @@ class CargoVendorFetchStrategy(FetchStrategy):
             # relative to the staging directory
             with working_dir(self.package_stage.path):
                 config = cargo(
+                    *locked,
                     'vendor', '--versioned-dirs',
                     '--manifest-path',
                     self.manifest_path,
