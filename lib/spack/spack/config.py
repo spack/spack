@@ -613,9 +613,9 @@ def _add_platform_scope(cfg, scope_type, name, path):
 
 def _add_os_scope(cfg, scope_type, name, path):
     """Add an os-specific subdirectory for the current platform."""
-    os = spack.architecture.sys_type().split('-')[1]
-    os_name = '%s/%s' % (name, os)
-    os_path = '%s/%s' % (path, os)
+    oss = spack.architecture.sys_type().split('-')[1]
+    os_name = '%s/%s' % (name, oss)
+    os_path = os.path.join(path, oss)
     cfg.push_scope(scope_type(os_name, os_path))
 
 
