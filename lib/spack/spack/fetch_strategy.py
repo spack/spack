@@ -1194,7 +1194,7 @@ class CargoVendorFetchStrategy(FetchStrategy):
 
     @property
     def cachable(self):
-        return True
+        return self.package_stage.default_fetcher.cachable
 
     @property
     def manifest_path(self):
