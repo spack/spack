@@ -15,6 +15,7 @@ class PyMoreItertools(PythonPackage):
     import_modules = ['more_itertools', 'more_itertools.tests']
 
     version('7.2.0', sha256='409cd48d4db7052af495b09dec721011634af3753ae1ef92d2b32f73a745f832')
+    version('7.0.0', sha256='c3e4748ba1aad8dba30a4886b0b1a2004f9a863837b8654e7059eebf727afa5a')
     version('5.0.0', sha256='38a936c0a6d98a38bcc2d03fdaaedaba9f412879461dd2ceff8d37564d6522e4')
     version('4.3.0', sha256='c476b5d3a34e12d40130bc2f935028b5f636df8f372dc2c1c01dc19681b2039e')
     version('4.1.0', sha256='c9ce7eccdcb901a2c75d326ea134e0886abfbea5f93e91cc95de9507c0816c44')

@@ -160,4 +160,4 @@ config:
 
   # Set to 'false' to allow installation on filesystems that doesn't allow setgid bit
   # manipulation by unprivileged user (e.g. AFS)
-  config:allow_sgid: true
+  allow_sgid: true

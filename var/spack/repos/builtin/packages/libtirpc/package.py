@@ -15,6 +15,8 @@ class Libtirpc(AutotoolsPackage):
 
     version('1.1.4', sha256='2ca529f02292e10c158562295a1ffd95d2ce8af97820e3534fe1b0e3aec7561d')
 
+    provides('rpc')
+
     # FIXME: build error on macOS
     # auth_none.c:81:9: error: unknown type name 'mutex_t'
 

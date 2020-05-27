@@ -265,6 +265,7 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('1912_200506', sha256='831a39ff56e268e88374d0a3922479fd80260683e141e51980242cc281484121')
     version('1912_200403', sha256='1de8f4ddd39722b75f6b01ace9f1ba727b53dd999d1cd2b344a8c677ac2db4c0')
     version('1912', sha256='437feadf075419290aa8bf461673b723a60dc39525b23322850fb58cb48548f2')
     version('1906_200312', sha256='f75645151ed5d8c5da592d307480979fe580a25627cc0c9718ef370211577594')
@@ -348,10 +349,10 @@ class Openfoam(Package):
     patch('https://develop.openfoam.com/Development/openfoam/commit/8831dfc58b0295d0d301a78341dd6f4599073d45.patch',
           when='@1806',
           sha256='21f1ab68c82dfa41ed1a4439427c94c43ddda02c84175c30da623d905d3e5d61'
-    )
+          )
 
     # Some user config settings
-    # default: 'compile-option': 'RpathOpt',
+    # default: 'compile-option': '-spack',
     # default: 'mplib': 'USERMPI',     # Use user mpi for spack
     config = {
         # Add links into bin/, lib/ (eg, for other applications)
@@ -421,15 +422,15 @@ class Openfoam(Package):
                     blacklist=[  # Blacklist these
                         # Inadvertent changes
                         # -------------------
-                        'PS1',            # Leave unaffected
-                        'MANPATH',        # Leave unaffected
+                        'PS1',              # Leave untouched
+                        'MANPATH',          # Leave untouched
 
                         # Unneeded bits
                         # -------------
                         # 'FOAM_SETTINGS',  # Do not use with modules
                         # 'FOAM_INST_DIR',  # Old
                         # 'FOAM_(APP|ETC|SRC|SOLVERS|UTILITIES)',
-                        # 'FOAM_TUTORIALS',  # can be useful
+                        # 'FOAM_TUTORIALS', # May be useful
                         # 'WM_OSTYPE',      # Purely optional value
 
                         # Third-party cruft - only used for orig compilation
@@ -443,7 +444,7 @@ class Openfoam(Package):
                         '(FOAM|WM)_.*USER_.*',
                     ],
                     whitelist=[  # Whitelist these
-                        'MPI_ARCH_PATH',  # Can be needed for compilation
+                        'MPI_ARCH_PATH',  # Can be required for compilation
                     ])
 
                 env.extend(mods)
@@ -544,15 +545,23 @@ class Openfoam(Package):
     @run_before('configure')
     def make_fujitsu_rules(self):
         """Create Fujitsu rules (clang variant) unless supplied upstream.
-        Implemented for 1906 and newer - older rules are messier to edit
+        Implemented for 1906 and later (older rules are too messy to edit).
+        Already included after 1912.
         """
         general_rules = 'wmake/rules/General'
-        arch_rules = join_path('wmake/rules/linuxARM64')  # self.arch
+        arch_rules = 'wmake/rules/linuxARM64'  # self.arch
         src = arch_rules + 'Clang'
         dst = arch_rules + 'Fujitsu'  # self.compiler
 
         if os.path.exists(dst):
             return
+
+        # Handle rules/<ARCH><COMP> or rules/<ARCH>/<COMP>
+        if not os.path.exists(src):
+            src = join_path(arch_rules, 'Clang')
+            dst = join_path(arch_rules, 'Fujitsu')  # self.compiler
+            if os.path.exists(dst):
+                return
 
         tty.info('Add Fujitsu wmake rules')
         copy_tree(src, dst)
@@ -622,11 +631,11 @@ class Openfoam(Package):
             'metis': {},
             'ensight': {},     # Disable settings
             'paraview': [],
-            'gperftools': [],  # Currently unused
+            'gperftools': [],  # Disable settings
             'vtk': [],
         }
 
-        # With adios2 after 1912 or develop (after 2019-10-01)
+        # With adios2 after 1912
         if spec.satisfies('@1912:'):
             self.etc_config['adios2'] = [
                 ('ADIOS2_ARCH_PATH', spec['adios2'].prefix),
@@ -823,7 +832,7 @@ class OpenfoamArch(object):
 
     Keywords
         label-size=[True]   supports int32/int64
-        compile-option[=RpathOpt]
+        compile-option[=-spack]
         mplib[=USERMPI]
     """
 
@@ -837,10 +846,9 @@ class OpenfoamArch(object):
         self.arch_option      = ''     # Eg, -march=knl
         self.label_size       = None   # <- +int64
         self.precision_option = 'DP'   # <- +float32
-        self.compile_option   = kwargs.get('compile-option', 'RpathOpt')
+        self.compile_option   = kwargs.get('compile-option', '-spack')
         self.arch             = None
         self.options          = None
-        self.rule             = None
         self.mplib            = kwargs.get('mplib', 'USERMPI')
 
         # Normally support WM_LABEL_OPTION, but not yet for foam-extend
@@ -851,6 +859,9 @@ class OpenfoamArch(object):
 
         if '+float32' in spec:
             self.precision_option = 'SP'
+
+        # TDB: mixed precision?
+        # self.precision_option = 'SPDP'
 
         # Processor/architecture-specific optimizations
         if '+knl' in spec:
@@ -884,9 +895,9 @@ class OpenfoamArch(object):
 
         self.arch = platform
 
-        # Capitalized version of the compiler name, which corresponds
+        # Capitalize first letter of compiler name, which corresponds
         # to how OpenFOAM handles things (eg, gcc -> Gcc).
-        # Use compiler_mapping to handing special cases.
+        # Use compiler_mapping for special cases.
         comp = spec.compiler.name
 
         if comp in self.compiler_mapping:
@@ -894,7 +905,6 @@ class OpenfoamArch(object):
         comp = comp.capitalize()
 
         self.compiler = comp
-        self.rule = self.arch + self.compiler
 
         # Build WM_OPTIONS
         # ----
@@ -904,7 +914,8 @@ class OpenfoamArch(object):
         # WM_OPTIONS=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_COMPILE_OPTION
         # ----
         self.options = ''.join([
-            self.rule,
+            self.arch,
+            self.compiler,
             self.precision_option,
             ('Int' + self.label_size if self.label_size else ''),
             self.compile_option])
@@ -925,46 +936,45 @@ class OpenfoamArch(object):
             ('WM_MPLIB',       self.mplib),
         ])
 
-    def _rule_directory(self, projdir=None, general=False):
-        """The wmake/rules/ compiler directory"""
+    def _rule_directory(self, projdir, general=False):
+        """Return the wmake/rules/ General or compiler rules directory.
+        Supports wmake/rules/<ARCH><COMP> and wmake/rules/<ARCH>/<COMP>.
+        """
+        rules_dir = os.path.join(projdir, 'wmake', 'rules')
         if general:
-            relative = os.path.join('wmake', 'rules', 'General')
+            return os.path.join(rules_dir, 'General')
+
+        arch_dir = os.path.join(rules_dir, self.arch)
+        comp_rules = arch_dir + self.compiler
+        if os.path.isdir(comp_rules):
+            return comp_rules
         else:
-            relative = os.path.join('wmake', 'rules', self.rule)
-        if projdir:
-            return os.path.join(projdir, relative)
-        else:
-            return relative
+            return os.path.join(arch_dir, self.compiler)
 
     def has_rule(self, projdir):
-        """Verify that a wmake/rules/ compiler rule exists in the project
-        directory.
+        """Verify that a wmake/rules/ compiler rule exists in the project.
         """
         # Insist on a wmake rule for this architecture/compiler combination
         rule_dir = self._rule_directory(projdir)
 
         if not os.path.isdir(rule_dir):
             raise InstallError(
-                'No wmake rule for {0}'.format(self.rule))
-        if not re.match(r'.+Opt$', self.compile_option):
-            raise InstallError(
-                "WM_COMPILE_OPTION={0} is not type '*Opt'"
-                .format(self.compile_option))
+                'No wmake rule for {0} {1}'.format(self.arch, self.compiler))
         return True
 
     def create_rules(self, projdir, foam_pkg):
-        """ Create cRpathOpt,c++RpathOpt and mplibUSER,mplibUSERMPI
+        """ Create {c,c++}-spack and mplib{USER,USERMPI}
         rules in the specified project directory.
-        The compiler rules are based on the respective cOpt,c++Opt rules
+        The compiler rules are based on the respective {c,c++}Opt rules
         but with additional rpath information for the OpenFOAM libraries.
 
-        The rpath rules allow wmake to use spack information with minimal
-        modification to OpenFOAM.
+        The '-spack' rules channel spack information into OpenFOAM wmake
+        rules with minimal modification to OpenFOAM.
         The rpath is used for the installed libpath (continue to use
         LD_LIBRARY_PATH for values during the build).
         """
         # Note: the 'c' rules normally don't need rpath, since they are just
-        # used for statically linked wmake utilities, but left in anyhow.
+        # used for some statically linked wmake tools, but left in anyhow.
 
         # rpath for installed OpenFOAM libraries
         rpath = '{0}{1}'.format(

@@ -1,0 +1,11 @@
+--- a/java/src/Makefile.in
++++ b/java/src/Makefile.in
+@@ -818,7 +818,7 @@ $(jarfile): classhdf_java.stamp classes docs
+ .PHONY: docs classes
+ 
+ docs:
+-	$(JAVADOC) -sourcepath $(srcdir) -d javadoc -use -splitIndex -windowtitle $(WINDOWTITLE) -doctitle $(DOCTITLE) -J-Xmx180m -verbose -overview $(top_srcdir)/java/src/hdf/overview.html -classpath $(CLASSPATH_ENV) hdf.hdflib
++	$(JAVADOC) -sourcepath $(srcdir) -d javadoc -use -splitIndex -windowtitle $(WINDOWTITLE) -doctitle $(DOCTITLE) -J-Xmx180m -verbose -overview $(top_srcdir)/java/src/hdf/overview.html -classpath $(CLASSPATH_ENV) hdf.hdflib -Xdoclint:none
+ 
+ clean:
+ 	rm -rf $(JAVAROOT)/*

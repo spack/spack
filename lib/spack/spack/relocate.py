@@ -458,6 +458,7 @@ def _replace_prefix_text(filename, old_dir, new_dir):
         old_dir (str): directory to be searched in the file
         new_dir (str): substitute for the old directory
     """
+    # TODO: cache regexes globally to speedup computation
     with open(filename, 'rb+') as f:
         data = f.read()
         f.seek(0)
@@ -675,16 +676,19 @@ def relocate_elf_binaries(binaries, orig_root, new_root,
             _set_elf_rpaths(new_binary, new_rpaths)
 
 
-def make_link_relative(cur_path_names, orig_path_names):
-    """
-    Change absolute links to relative links.
-    """
-    for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        target = os.readlink(orig_path)
-        relative_target = os.path.relpath(target, os.path.dirname(orig_path))
+def make_link_relative(new_links, orig_links):
+    """Compute the relative target from the original link and
+    make the new link relative.
 
-        os.unlink(cur_path)
-        os.symlink(relative_target, cur_path)
+    Args:
+        new_links (list): new links to be made relative
+        orig_links (list): original links
+    """
+    for new_link, orig_link in zip(new_links, orig_links):
+        target = os.readlink(orig_link)
+        relative_target = os.path.relpath(target, os.path.dirname(orig_link))
+        os.unlink(new_link)
+        os.symlink(relative_target, new_link)
 
 
 def make_macho_binaries_relative(cur_path_names, orig_path_names,
@@ -706,97 +710,143 @@ def make_macho_binaries_relative(cur_path_names, orig_path_names,
                                 paths_to_paths)
 
 
-def make_elf_binaries_relative(cur_path_names, orig_path_names,
-                               old_layout_root):
+def make_elf_binaries_relative(new_binaries, orig_binaries, orig_layout_root):
+    """Replace the original RPATHs in the new binaries making them
+    relative to the original layout root.
+
+    Args:
+        new_binaries (list): new binaries whose RPATHs is to be made relative
+        orig_binaries (list): original binaries
+        orig_layout_root (str): path to be used as a base for making
+            RPATHs relative
     """
-    Replace old RPATHs with paths relative to old_dir in binary files
-    """
-    for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        orig_rpaths = _elf_rpaths_for(cur_path)
+    for new_binary, orig_binary in zip(new_binaries, orig_binaries):
+        orig_rpaths = _elf_rpaths_for(new_binary)
         if orig_rpaths:
-            new_rpaths = _make_relative(orig_path, old_layout_root,
-                                        orig_rpaths)
-            _set_elf_rpaths(cur_path, new_rpaths)
+            new_rpaths = _make_relative(
+                orig_binary, orig_layout_root, orig_rpaths
+            )
+            _set_elf_rpaths(new_binary, new_rpaths)
 
 
-def check_files_relocatable(cur_path_names, allow_root):
+def raise_if_not_relocatable(binaries, allow_root):
+    """Raise an error if any binary in the list is not relocatable.
+
+    Args:
+        binaries (list): list of binaries to check
+        allow_root (bool): whether root dir is allowed or not in a binary
+
+    Raises:
+        InstallRootStringError: if the file is not relocatable
     """
-    Check binary files for the current install root
-    """
-    for cur_path in cur_path_names:
-        if (not allow_root and
-                not file_is_relocatable(cur_path)):
-            raise InstallRootStringError(
-                cur_path, spack.store.layout.root)
+    for binary in binaries:
+        if not (allow_root or file_is_relocatable(binary)):
+            raise InstallRootStringError(binary, spack.store.layout.root)
 
 
-def relocate_links(linknames, old_layout_root, new_layout_root,
-                   old_install_prefix, new_install_prefix, prefix_to_prefix):
-    """
-    The symbolic links in filenames are absolute links or placeholder links.
+def relocate_links(links, orig_layout_root,
+                   orig_install_prefix, new_install_prefix):
+    """Relocate links to a new install prefix.
+
+    The symbolic links are relative to the original installation prefix.
     The old link target is read and the placeholder is replaced by the old
     layout root. If the old link target is in the old install prefix, the new
     link target is create by replacing the old install prefix with the new
     install prefix.
+
+    Args:
+        links (list): list of links to be relocated
+        orig_layout_root (str): original layout root
+        orig_install_prefix (str): install prefix of the original installation
+        new_install_prefix (str): install prefix where we want to relocate
     """
-    placeholder = _placeholder(old_layout_root)
-    link_names = [os.path.join(new_install_prefix, linkname)
-                  for linkname in linknames]
-    for link_name in link_names:
-        link_target = os.readlink(link_name)
-        link_target = re.sub(placeholder, old_layout_root, link_target)
-        if link_target.startswith(old_install_prefix):
-            new_link_target = re.sub(
-                old_install_prefix, new_install_prefix, link_target)
-            os.unlink(link_name)
-            os.symlink(new_link_target, link_name)
+    placeholder = _placeholder(orig_layout_root)
+    abs_links = [os.path.join(new_install_prefix, link) for link in links]
+    for abs_link in abs_links:
+        link_target = os.readlink(abs_link)
+        link_target = re.sub(placeholder, orig_layout_root, link_target)
+        # If the link points to a file in the original install prefix,
+        # compute the corresponding target in the new prefix and relink
+        if link_target.startswith(orig_install_prefix):
+            link_target = re.sub(
+                orig_install_prefix, new_install_prefix, link_target
+            )
+            os.unlink(abs_link)
+            os.symlink(link_target, abs_link)
+
+        # If the link is absolute and has not been relocated then
+        # warn the user about that
         if (os.path.isabs(link_target) and
             not link_target.startswith(new_install_prefix)):
-            msg = 'Link target %s' % link_target
-            msg += ' for symbolic link %s is outside' % link_name
-            msg += ' of the newinstall prefix %s.\n' % new_install_prefix
-            tty.warn(msg)
+            msg = ('Link target "{0}" for symbolic link "{1}" is outside'
+                   ' of the new install prefix {2}')
+            tty.warn(msg.format(link_target, abs_link, new_install_prefix))
 
 
-def relocate_text(path_names, old_layout_root, new_layout_root,
-                  old_install_prefix, new_install_prefix,
-                  old_spack_prefix, new_spack_prefix,
-                  prefix_to_prefix):
+def relocate_text(
+        files, orig_layout_root, new_layout_root, orig_install_prefix,
+        new_install_prefix, orig_spack, new_spack, new_prefixes
+):
+    """Relocate text file from the original installation prefix to the
+    new prefix.
+
+    Relocation also affects the the path in Spack's sbang script.
+
+    Args:
+        files (list): text files to be relocated
+        orig_layout_root (str): original layout root
+        new_layout_root (str): new layout root
+        orig_install_prefix (str): install prefix of the original installation
+        new_install_prefix (str): install prefix where we want to relocate
+        orig_spack (str): path to the original Spack
+        new_spack (str): path to the new Spack
+        new_prefixes (dict): dictionary that maps the original prefixes to
+            where they should be relocated
     """
-    Replace old paths with new paths in text files
-    including the path the the spack sbang script
+    # TODO: reduce the number of arguments (8 seems too much)
+    sbang_regex = r'#!/bin/bash {0}/bin/sbang'.format(orig_spack)
+    new_sbang = r'#!/bin/bash {0}/bin/sbang'.format(new_spack)
+
+    for file in files:
+        _replace_prefix_text(file, orig_install_prefix, new_install_prefix)
+        for orig_dep_prefix, new_dep_prefix in new_prefixes.items():
+            _replace_prefix_text(file, orig_dep_prefix, new_dep_prefix)
+        _replace_prefix_text(file, orig_layout_root, new_layout_root)
+        _replace_prefix_text(file, sbang_regex, new_sbang)
+
+
+def relocate_text_bin(
+        binaries, orig_install_prefix, new_install_prefix,
+        orig_spack, new_spack, new_prefixes
+):
+    """Replace null terminated path strings hard coded into binaries.
+
+    The new install prefix must be shorter than the original one.
+
+    Args:
+        binaries (list): binaries to be relocated
+        orig_install_prefix (str): install prefix of the original installation
+        new_install_prefix (str): install prefix where we want to relocate
+        orig_spack (str): path to the original Spack
+        new_spack (str): path to the new Spack
+        new_prefixes (dict): dictionary that maps the original prefixes to
+            where they should be relocated
+
+    Raises:
+      BinaryTextReplaceError: when the new path in longer than the old path
     """
-    sbangre = '#!/bin/bash %s/bin/sbang' % old_spack_prefix
-    sbangnew = '#!/bin/bash %s/bin/sbang' % new_spack_prefix
+    # Raise if the new install prefix is longer than the
+    # original one, since it means we can't change the original
+    # binary to relocate it
+    new_prefix_is_shorter = len(new_install_prefix) <= len(orig_install_prefix)
+    if not new_prefix_is_shorter and len(binaries) > 0:
+        raise BinaryTextReplaceError(orig_install_prefix, new_install_prefix)
 
-    for path_name in path_names:
-        _replace_prefix_text(path_name, old_install_prefix, new_install_prefix)
-        for orig_dep_prefix, new_dep_prefix in prefix_to_prefix.items():
-            _replace_prefix_text(path_name, orig_dep_prefix, new_dep_prefix)
-        _replace_prefix_text(path_name, old_layout_root, new_layout_root)
-        _replace_prefix_text(path_name, sbangre, sbangnew)
-
-
-def relocate_text_bin(path_names, old_layout_root, new_layout_root,
-                      old_install_prefix, new_install_prefix,
-                      old_spack_prefix, new_spack_prefix,
-                      prefix_to_prefix):
-    """
-      Replace null terminated path strings hard coded into binaries.
-      Raise an exception when the new path in longer than the old path
-      because this breaks the binary.
-      """
-    if len(new_install_prefix) <= len(old_install_prefix):
-        for path_name in path_names:
-            for old_dep_prefix, new_dep_prefix in prefix_to_prefix.items():
-                if len(new_dep_prefix) <= len(old_dep_prefix):
-                    _replace_prefix_bin(
-                        path_name, old_dep_prefix, new_dep_prefix)
-            _replace_prefix_bin(path_name, old_spack_prefix, new_spack_prefix)
-    else:
-        if len(path_names) > 0:
-            raise BinaryTextReplaceError(
-                old_install_prefix, new_install_prefix)
+    for binary in binaries:
+        for old_dep_prefix, new_dep_prefix in new_prefixes.items():
+            if len(new_dep_prefix) <= len(old_dep_prefix):
+                _replace_prefix_bin(binary, old_dep_prefix, new_dep_prefix)
+        _replace_prefix_bin(binary, orig_spack, new_spack)
 
 
 def is_relocatable(spec):
@@ -929,4 +979,4 @@ def mime_type(file):
     if '/' not in output:
         output += '/'
     split_by_slash = output.strip().split('/')
-    return (split_by_slash[0], "/".join(split_by_slash[1:]))
+    return split_by_slash[0], "/".join(split_by_slash[1:])

@@ -142,6 +142,20 @@ class TestTcl(object):
         assert len([x for x in content if 'is-loaded' in x]) == 1
         assert len([x for x in content if 'module load ' in x]) == 1
 
+    def test_naming_scheme_compat(self, factory, module_configuration):
+        """Tests backwards compatibility for naming_scheme key"""
+        module_configuration('naming_scheme')
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory('mpileaks')
+        expected = {
+            'all': '{name}/{version}-{compiler.name}'
+        }
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections['all'])
+        assert projection in writer.layout.use_name
+
     def test_projections_specific(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
 
