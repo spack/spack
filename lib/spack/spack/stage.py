@@ -34,7 +34,6 @@ import spack.util.url as url_util
 
 from spack.util.crypto import prefix_bits, bit_length
 from spack.util.executable import which
-from spack.version import Version
 
 
 # The well-known stage source subdirectory name.
