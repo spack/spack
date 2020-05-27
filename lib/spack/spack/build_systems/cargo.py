@@ -138,27 +138,30 @@ lto = "{lto}"
 
         # Explicitly build each target in the workspace
         for t in self.workspace_targets():
-            build_type_args = \
-                ["--release"] if 'build_type=release' in self.spec else []
+            args = [
+                "rustc", "--jobs", str(jobs), "-vv", "--manifest-path",
+                self.manifest_path
+            ]
 
-            rustc_args = ["--cap-lints", "warn"]
-            if '+prefer_dynamic' in self.spec:
-                rustc_args += ["--codegen", "prefer-dynamic"]
+            if 'build_type=release' in self.spec:
+                args += ["--release"]
 
             if "bin" in t["kind"]:
-                build_type = "--bin"
+                args += ["--bin"]
             elif "staticlib" in t["kind"]:
-                build_type = "--lib"
+                args += ["--lib"]
             elif "cdylib" in t["kind"]:
-                build_type = "--lib"
+                args += ["--lib"]
             else:
                 continue
 
-            self.cargo(
-                "rustc", "--jobs", str(jobs), "-vv", "--manifest-path",
-                self.manifest_path, *build_type_args, build_type, t["name"],
-                "--", *rustc_args
-            )
+            args += [t["name"], "--"]
+
+            args += ["--cap-lints", "warn"]
+            if '+prefer_dynamic' in self.spec:
+                args += ["--codegen", "prefer-dynamic"]
+
+            self.cargo(*args)
 
     def install(self, spec, prefix):
         """Install cargo targets"""

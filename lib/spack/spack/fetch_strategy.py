@@ -1257,7 +1257,13 @@ class CargoVendorFetchStrategy(FetchStrategy):
         else:
             locked = True
 
-        locked = ["--locked"] if locked else []
+        args = ["--locked"] if locked else []
+        args += [
+            'vendor', '--versioned-dirs',
+            '--manifest-path',
+            self.manifest_path,
+            _cargo_vendor_subdir,
+        ]
 
         # Create the vendored dependencies directory
         mkdirp(self.vendor_stage)
@@ -1267,11 +1273,7 @@ class CargoVendorFetchStrategy(FetchStrategy):
             # relative to the staging directory
             with working_dir(self.package_stage.path):
                 config = cargo(
-                    *locked,
-                    'vendor', '--versioned-dirs',
-                    '--manifest-path',
-                    self.manifest_path,
-                    _cargo_vendor_subdir,
+                    *args,
                     output=str
                 )
 
