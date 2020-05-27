@@ -68,7 +68,7 @@ class PerlBioperl(PerlPackage):
     depends_on('perl-libwww-perl', when='@1.7.6:', type=('build', 'run'))
     depends_on('perl-libxml-perl', when='@1.7.6:', type=('build', 'run'))
 
-    @when('@1.7.2')
+    @when('@1.007002')
     def configure(self, spec, prefix):
         # Overriding default configure method in order to cater to interactive
         # Build.pl
@@ -103,10 +103,10 @@ class PerlBioperl(PerlPackage):
     # Build script is run through perl and not use the shebang, as it might be
     # too long. This is needed because this does not pick up the
     # `@run_after(configure)` step defined in `PerlPackage`.
-    @when('@1.7.2')
+    @when('@1.007002')
     def build(self, spec, prefix):
         inspect.getmodule(self).perl('Build')
 
-    @when('@1.7.2')
+    @when('@1.007002')
     def install(self, spec, prefix):
         inspect.getmodule(self).perl('Build', 'install')
