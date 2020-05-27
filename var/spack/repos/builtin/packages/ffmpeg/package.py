@@ -108,7 +108,11 @@ class Ffmpeg(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = ['--enable-pic']
+        config_args = [
+            '--enable-pic',
+            '--cc={0}'.format(spack_cc),
+            '--cxx={0}'.format(spack_cxx)
+        ]
 
         # '+X' meta variant #
 
