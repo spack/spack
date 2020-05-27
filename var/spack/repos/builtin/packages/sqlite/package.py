@@ -29,6 +29,14 @@ class Sqlite(AutotoolsPackage):
     depends_on('readline')
     depends_on('zlib')
 
+    variant('column_metadata', default=False,
+            description='something this')
+    variant('fts3', default=False,
+            description='something this')
+    variant('fts5', default=False,
+            description='something this')
+    variant('rtree', default=False,
+            description='something this')
     variant('functions', default=False,
             description='Provide mathematical and string extension functions '
                         'for SQL queries using the loadable extensions '
@@ -110,9 +118,22 @@ class Sqlite(AutotoolsPackage):
         if '+fts' not in self.spec:
             args.extend(['--disable-fts4', '--disable-fts5'])
 
-        # Ref: https://sqlite.org/rtree.html
+        cflags = []
+
+        if '+column_metadata' in self.spec:
+            cflags.append('-DSQLITE_ENABLE_COLUMN_METADATA')
+
+        if '+fts3' in self.spec:
+            cflags.append('-DSQLITE_ENABLE_FTS3')
+            cflags.append('-DSQLITE_ENABLE_FTS3_PARENTHESIS')
+
+        if '+fts5' in self.spec:
+            cflags.append('-DSQLITE_ENABLE_FTS5')
+
         if '+rtree' in self.spec:
-            args.append('CPPFLAGS=-DSQLITE_ENABLE_RTREE=1')
+            cflags.append('-DSQLITE_ENABLE_RTREE')
+
+        args.append('CFLAGS=' + ' '.join(cflags))
 
         # Ref: https://sqlite.org/compile.html
         if '+column_metadata' in self.spec:
