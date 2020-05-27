@@ -29,8 +29,6 @@ class Sqlite(AutotoolsPackage):
     depends_on('readline')
     depends_on('zlib')
 
-    variant('column_metadata', default=False,
-            description='something this')
     variant('fts3', default=False,
             description='something this')
     variant('fts5', default=False,
@@ -119,9 +117,6 @@ class Sqlite(AutotoolsPackage):
             args.extend(['--disable-fts4', '--disable-fts5'])
 
         cflags = []
-
-        if '+column_metadata' in self.spec:
-            cflags.append('-DSQLITE_ENABLE_COLUMN_METADATA')
 
         if '+fts3' in self.spec:
             cflags.append('-DSQLITE_ENABLE_FTS3')
