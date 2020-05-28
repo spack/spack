@@ -278,7 +278,7 @@ def mirror_create(args):
 
             env = ev.get_env(args, 'mirror')
             if env:
-                env_specs = env.specs_by_hash.values()
+                env_specs = env.all_specs()
             else:
                 specs = [Spec(n) for n in spack.repo.all_package_names()]
         else:
