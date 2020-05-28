@@ -21,7 +21,8 @@ class HealpixCxx(AutotoolsPackage):
         # Link libsharp static libs
         configure_fix.filter(
             r'^SHARP_LIBS=.*$',
-            'SHARP_LIBS="-L{0} -lsharp -lc_utils -lfftpack -lm"'.format(spec['libsharp'].prefix.lib)
+            'SHARP_LIBS="-L{0} -lsharp -lc_utils -lfftpack -lm"'
+            .format(spec['libsharp'].prefix.lib)
         )
 
     depends_on('cfitsio')
