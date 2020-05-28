@@ -1253,6 +1253,9 @@ class Spec(object):
                If 'children', does a traversal of this spec's children.  If
                'parents', traverses upwards in the DAG towards the root.
 
+           predicate [=None]
+               Optional truth function applied to the spec so that only specs
+               evaluating to ``True`` are traversed
         """
         # get initial values for kwargs
         depth = kwargs.get('depth', False)
@@ -1264,6 +1267,7 @@ class Spec(object):
         direction = kwargs.get('direction', 'children')
         order = kwargs.get('order', 'pre')
         deptype = dp.canonical_deptype(deptype)
+        predicate = kwargs.get('predicate', None)
 
         # Make sure kwargs have legal values; raise ValueError if not.
         def validate(name, val, allowed_values):
@@ -1297,8 +1301,10 @@ class Spec(object):
         if yield_me and order == 'pre':
             yield return_val(dep_spec)
 
-        # Edge traversal yields but skips children of visited nodes
-        if not (key in visited and cover == 'edges'):
+        # Edge traversal yields but skips children/parents of visited nodes
+        # and those that do not satisfy the predicate.
+        do_traversal = not predicate or predicate(self)
+        if not (key in visited and cover == 'edges') and do_traversal:
             visited.add(key)
 
             # This code determines direction and yields the children/parents
