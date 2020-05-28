@@ -45,15 +45,19 @@ def check_satisfies(target_spec, constraint_spec, target_concrete=False):
 
     # If target satisfies constraint, then we should be able to constrain
     # constraint by target.  Reverse is not always true.
-    constraint.copy().constrain(target)
+    # if we can constrain, it's also compatible.
+    const = constraint.copy()
+    const.compatible(target)
+    const.constrain(target)
 
 
-def check_unsatisfiable(target_spec, constraint_spec, target_concrete=False):
+def check_unsatisfiable(target_spec, constraint_spec, target_concrete=False, compatible=False):
 
     target = make_spec(target_spec, target_concrete)
     constraint = _specify(constraint_spec)
 
     assert not target.satisfies(constraint)
+    assert target.compatible(constraint) == compatible
 
     with pytest.raises(UnsatisfiableSpecError):
         constraint.copy().constrain(target)
@@ -162,7 +166,8 @@ class TestSpecSematics(object):
         check_unsatisfiable('foo@4.0%pgi@4.5', '@1:3%pgi@4.4:4.6')
 
         check_satisfies('foo %gcc@4.7.3', '%gcc@4.7')
-        check_unsatisfiable('foo %gcc@4.7', '%gcc@4.7.3')
+        # This is unsatisfiable but the reverse is compatible
+        check_unsatisfiable('foo %gcc@4.7', '%gcc@4.7.3', compatible=True)
 
     def test_satisfies_architecture(self):
         check_satisfies(

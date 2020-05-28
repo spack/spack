@@ -657,7 +657,7 @@ class FlagMap(lang.HashableMap):
             return all(k in other and set(self[k]) == set(other[k])
                        for k in self)
 
-        return all(set(self[k]) <= set(other(k))
+        return all(set(self[k]) == set(other[k])
                    for k in self if k in other)
 
     def constrain(self, other):
@@ -2726,9 +2726,10 @@ class Spec(object):
                 and not self.compiler.compatible(other.compiler):
             return False
 
-        # no need to check check compiler_flag compatibility
-        # because compiler flags can only be incompatible if spec is concrete
-        # and we already checked for that.
+        # Check compiler flag compatibility
+        if self.compiler_flags and other.compiler_flags \
+                and not self.compiler_flags.compatible(other.compiler_flags):
+            return False
 
         # if dep check dep compat
         if deps and not other.satisfies_dependencies(self):
