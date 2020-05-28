@@ -918,7 +918,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def install_test_root(self):
         """Return the install test root directory."""
-        return self.metadata_dir
+        return os.path.join(self.metadata_dir, 'test')
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -1490,9 +1490,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         paths = [srcs] if isinstance(srcs, string_types) else srcs
 
-        def skip_file(path):
-            return path not in paths
-
+        skip_file = lambda p: p not in paths
         for path in paths:
             src_path = os.path.join(self.stage.source_path, path)
             dest_path = os.path.join(self.install_test_root, path)
