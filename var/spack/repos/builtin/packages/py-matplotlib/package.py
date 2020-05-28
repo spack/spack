@@ -136,6 +136,12 @@ class PyMatplotlib(PythonPackage):
     # Patch to pick up correct freetype headers
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')
 
+    def setup_build_environment(self, env):
+        # NOTE: The build procedure for 'py-matplotlib' compiles C++ files,
+        # so we temporarily replace the C compiler (used by default for
+        # Python installs) with the C++ compiler.
+        env.set('CC', spack_cxx)
+
     @run_before('build')
     def set_backend(self):
         """Set build options with regards to backend GUI libraries."""
