@@ -1279,7 +1279,9 @@ class UnknownPackageError(UnknownEntityError):
         # special handling for specs that may have been intended as filenames
         # prompt the user to ask whether they intended to write './<name>'
         long_msg = None
-        if name.endswith(".yaml"):
+        if not name:
+            long_msg = "No package name has been specified."
+        elif name.endswith(".yaml"):
             long_msg = "Did you mean to specify a filename with './%s'?" % name
 
         super(UnknownPackageError, self).__init__(msg, long_msg)
