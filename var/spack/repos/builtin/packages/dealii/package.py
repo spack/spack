@@ -16,7 +16,7 @@ class Dealii(CMakePackage, CudaPackage):
     url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
     git      = "https://github.com/dealii/dealii.git"
 
-    maintainers = ['davydden', 'jppelteret']
+    maintainers = ['davydden', 'jppelteret', 'luca-heltai']
 
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
@@ -212,8 +212,8 @@ class Dealii(CMakePackage, CudaPackage):
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
 
-    conflicts('+nanoflann', when='@9.2.1:',
-              msg='The interface to nanoflann was removed after version 9.2.0. '
+    conflicts('+nanoflann', when='@9.3.0:',
+              msg='The interface to nanoflann was removed from version 9.3.0. '
                   'Please explicitly disable this variant via ~nanoflann')
 
     conflicts('+slepc', when='~petsc',
