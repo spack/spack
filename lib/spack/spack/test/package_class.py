@@ -10,7 +10,12 @@ etc.).  Only methods like ``possible_dependencies()`` that deal with the
 static DSL metadata for packages.
 """
 
+import os
 import pytest
+import shutil
+
+import llnl.util.filesystem as fs
+
 import spack.package
 import spack.repo
 
@@ -119,3 +124,54 @@ def test_possible_dependencies_with_multiple_classes(
     })
 
     assert expected == spack.package.possible_dependencies(*pkgs)
+
+
+def setup_install_test(source_paths, install_test_root):
+    """Set up the install test by creating sources and install test roots."""
+    fs.mkdirp(install_test_root)
+    for path in source_paths:
+        fs.mkdirp(os.path.dirname(path))
+        if os.path.splitext(path)[1]:
+            fs.touch(path)
+
+
+@pytest.mark.parametrize('spec,sources,extras,exists', [
+    ('a',
+     ['example/a.c'],   # Source(s)
+     ['example/a.c'],   # Extra test source
+     ['example/a.c']),  # Test install dir source(s)
+    ('b',
+     ['test/b.cpp', 'test/b.hpp', 'example/b.txt'],   # Source(s)
+     ['test'],                                        # Extra test source
+     ['test/b.cpp', 'test/b.hpp']),                   # Test install dir source
+    ('c',
+     ['examples/a.py', 'examples/b.py', 'examples/c.py', 'tests/d.py'],
+     ['examples/b.py', 'tests'],
+     ['examples/b.py', 'tests/d.py']),
+])
+def test_cache_extra_sources(install_mockery, spec, sources, extras, exists):
+    """Test the package's cache extra test sources helper function."""
+
+    pkg = spack.repo.get(spec)
+    pkg.spec.concretize()
+    source_path = pkg.stage.source_path
+
+    srcs = [fs.join_path(source_path, s) for s in sources]
+    setup_install_test(srcs, pkg.install_test_root)
+    for s in srcs:
+        assert os.path.exists(s), 'Expected {0} to exist'.format(s)
+
+    pkg.cache_extra_test_sources(extras)
+
+    poss_dests = [fs.join_path(pkg.install_test_root, s) for s in sources]
+    expected = [fs.join_path(pkg.install_test_root, e) for e in exists]
+
+    msg = 'Expected {0} to{1} exist'
+    for pd in poss_dests:
+        if pd in expected:
+            assert os.path.exists(pd), msg.format(pd, '')
+        else:
+            assert not os.path.exists(pd), msg.format(pd, ' not')
+
+    # Perform a little cleanup
+    shutil.rmtree(os.path.dirname(source_path))
