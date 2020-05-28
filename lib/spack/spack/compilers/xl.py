@@ -29,8 +29,8 @@ class Xl(Compiler):
     version_argument = '-qversion'
     version_regex = r'([0-9]?[0-9]\.[0-9])'
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-V"
 
     @property

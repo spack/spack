@@ -38,8 +38,8 @@ class Gcc(Compiler):
     PrgEnv = 'PrgEnv-gnu'
     PrgEnv_compiler = 'gcc'
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
 
     @property

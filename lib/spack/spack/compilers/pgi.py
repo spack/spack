@@ -33,8 +33,8 @@ class Pgi(Compiler):
     ignore_version_errors = [2]  # `pgcc -V` on PowerPC annoyingly returns 2
     version_regex = r'pg[^ ]* ([0-9.]+)-[0-9]+ (LLVM )?[^ ]+ target on '
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
 
     @property
