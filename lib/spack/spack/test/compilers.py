@@ -175,9 +175,11 @@ class MockCompiler(Compiler):
     def version(self):
         return "1.0.0"
 
+    _verbose_flag = "--verbose"
+
     @property
     def verbose_flag(self):
-        return "--verbose"
+        return self._verbose_flag
 
     required_libs = ['libgfortran']
 
@@ -259,7 +261,7 @@ def test_get_compiler_link_paths_no_path():
 
 def test_get_compiler_link_paths_no_verbose_flag():
     compiler = MockCompiler()
-    compiler.verbose_flag = lambda: None
+    compiler._verbose_flag = None
 
     dirs = compiler._get_compiler_link_paths([compiler.cxx])
     assert dirs == []
