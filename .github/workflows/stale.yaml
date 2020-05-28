@@ -20,8 +20,8 @@ jobs:
           activity occurs in the next 30 days.
         days-before-stale: 90
         days-before-close: 30
-        stale-issue-label: 'status:stale'
-        exempt-issue-labels: 'bug,confirmed,status:planned'
-        stale-pr-label: 'status:stale'
-        exempt-pr-labels: 'hotfix,bugfix,status:planned'
+        stale-issue-label: 'stale'
+        exempt-issue-labels: 'bug,planned'
+        stale-pr-label: 'stale'
+        exempt-pr-labels: 'hotfix,bugfix,planned'
         operations-per-run: 30
