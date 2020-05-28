@@ -86,34 +86,39 @@ class MockStage(object):
         return getattr(self.wrapped_stage, attr)
 
 
-def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
+def test_partial_install_delete_prefix_and_stage(
+        install_mockery, mock_fetch, monkeypatch):
+    import spack.pkg.builtin.mock.canfail
+
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
-    remove_prefix = spack.package.Package.remove_prefix
     instance_rm_prefix = pkg.remove_prefix
 
-    try:
-        pkg.succeed = False
-        spack.package.Package.remove_prefix = mock_remove_prefix
-        with pytest.raises(MockInstallError):
-            pkg.do_install()
-        assert os.path.isdir(pkg.prefix)
-        rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
-        spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
+    # Force package install to fail
+    monkeypatch.setattr(spack.pkg.builtin.mock.canfail.Canfail, 'succeed',
+                        False)
+    monkeypatch.setattr(spack.package.Package, 'remove_prefix',
+                        mock_remove_prefix)
+    with pytest.raises(MockInstallError):
+        pkg.do_install()
+    assert os.path.isdir(pkg.prefix)
 
-        # must clear failure markings for the package before re-installing it
-        spack.store.db.clear_failure(spec, True)
+    # must clear failure markings for the package before re-installing it
+    spack.store.db.clear_failure(spec, True)
 
-        pkg.succeed = True
-        pkg.stage = MockStage(pkg.stage)
+    rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
+    monkeypatch.setattr(spack.package.Package, 'remove_prefix',
+                        rm_prefix_checker.remove_prefix)
 
-        pkg.do_install(restage=True)
-        assert rm_prefix_checker.removed
-        assert pkg.stage.test_destroyed
-        assert pkg.installed
+    # Force the package install to succeed
+    monkeypatch.setattr(spack.pkg.builtin.mock.canfail.Canfail, 'succeed',
+                        True)
+    monkeypatch.setattr(spack.package.Package, 'stage', MockStage(pkg.stage))
 
-    finally:
-        spack.package.Package.remove_prefix = remove_prefix
+    pkg.do_install(restage=True)
+    assert rm_prefix_checker.removed
+    assert pkg.stage.test_destroyed
+    assert pkg.installed
 
 
 def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
@@ -181,7 +186,8 @@ def test_flatten_deps(
 
 
 def test_installed_upstream_external(
-        tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout):
+        tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout,
+        monkeypatch):
     """Check that when a dependency package is recorded as installed in
        an upstream database that it is not reinstalled.
     """
@@ -194,29 +200,24 @@ def test_installed_upstream_external(
     dependency.concretize()
     prepared_db.add(dependency, upstream_layout)
 
-    try:
-        original_db = spack.store.db
-        downstream_db_root = str(
-            tmpdir_factory.mktemp('mock_downstream_db_root'))
-        spack.store.db = spack.database.Database(
-            downstream_db_root, upstream_dbs=[prepared_db])
-        dependent = spack.spec.Spec('externaltest')
-        dependent.concretize()
+    downstream_db_root = str(tmpdir_factory.mktemp('mock_downstream_db_root'))
+    monkeypatch.setattr(spack.store, 'db', spack.database.Database(
+                        downstream_db_root, upstream_dbs=[prepared_db]))
+    dependent = spack.spec.Spec('externaltest')
+    dependent.concretize()
 
-        new_dependency = dependent['externaltool']
-        assert new_dependency.external
-        assert new_dependency.prefix == '/path/to/external_tool'
+    new_dependency = dependent['externaltool']
+    assert new_dependency.external
+    assert new_dependency.prefix == '/path/to/external_tool'
 
-        dependent.package.do_install()
+    dependent.package.do_install()
 
-        assert not os.path.exists(new_dependency.prefix)
-        assert os.path.exists(dependent.prefix)
-    finally:
-        spack.store.db = original_db
+    assert not os.path.exists(new_dependency.prefix)
+    assert os.path.exists(dependent.prefix)
 
 
 def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch,
-                            gen_mock_layout):
+                            gen_mock_layout, monkeypatch):
     """Check that when a dependency package is recorded as installed in
        an upstream database that it is not reinstalled.
     """
@@ -229,75 +230,77 @@ def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch,
     dependency.concretize()
     prepared_db.add(dependency, upstream_layout)
 
-    try:
-        original_db = spack.store.db
-        downstream_db_root = str(
-            tmpdir_factory.mktemp('mock_downstream_db_root'))
-        spack.store.db = spack.database.Database(
-            downstream_db_root, upstream_dbs=[prepared_db])
-        dependent = spack.spec.Spec('dependent-install')
-        dependent.concretize()
+    downstream_db_root = str(
+        tmpdir_factory.mktemp('mock_downstream_db_root'))
+    monkeypatch.setattr(spack.store, 'db', spack.database.Database(
+                        downstream_db_root, upstream_dbs=[prepared_db]))
+    dependent = spack.spec.Spec('dependent-install')
+    dependent.concretize()
 
-        new_dependency = dependent['dependency-install']
-        assert new_dependency.package.installed_upstream
-        assert (new_dependency.prefix ==
-                upstream_layout.path_for_spec(dependency))
+    new_dependency = dependent['dependency-install']
+    assert new_dependency.package.installed_upstream
+    assert (new_dependency.prefix ==
+            upstream_layout.path_for_spec(dependency))
 
-        dependent.package.do_install()
+    dependent.package.do_install()
 
-        assert not os.path.exists(new_dependency.prefix)
-        assert os.path.exists(dependent.prefix)
-    finally:
-        spack.store.db = original_db
+    assert not os.path.exists(new_dependency.prefix)
+    assert os.path.exists(dependent.prefix)
 
 
 @pytest.mark.disable_clean_stage_check
-def test_partial_install_keep_prefix(install_mockery, mock_fetch):
+def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
+    import spack.pkg.builtin.mock.canfail
+
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
 
     # Normally the stage should start unset, but other tests set it
     pkg._stage = None
-    remove_prefix = spack.package.Package.remove_prefix
-    try:
-        # If remove_prefix is called at any point in this test, that is an
-        # error
-        pkg.succeed = False  # make the build fail
-        spack.package.Package.remove_prefix = mock_remove_prefix
-        with pytest.raises(spack.build_environment.ChildError):
-            pkg.do_install(keep_prefix=True)
-        assert os.path.exists(pkg.prefix)
 
-        # must clear failure markings for the package before re-installing it
-        spack.store.db.clear_failure(spec, True)
-
-        pkg.succeed = True   # make the build succeed
-        pkg.stage = MockStage(pkg.stage)
+    # If remove_prefix is called at any point in this test, that is an
+    # error
+    # make the build fail
+    monkeypatch.setattr(spack.pkg.builtin.mock.canfail.Canfail, 'succeed',
+                        False)
+    monkeypatch.setattr(spack.package.Package, 'remove_prefix',
+                        mock_remove_prefix)
+    with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install(keep_prefix=True)
-        assert pkg.installed
-        assert not pkg.stage.test_destroyed
+    assert os.path.exists(pkg.prefix)
 
-    finally:
-        spack.package.Package.remove_prefix = remove_prefix
+    # must clear failure markings for the package before re-installing it
+    spack.store.db.clear_failure(spec, True)
+
+    # make the build succeed
+    monkeypatch.setattr(spack.pkg.builtin.mock.canfail.Canfail, 'succeed',
+                        True)
+    monkeypatch.setattr(spack.package.Package, 'stage', MockStage(pkg.stage))
+    pkg.do_install(keep_prefix=True)
+    assert pkg.installed
+    assert not pkg.stage.test_destroyed
 
 
-def test_second_install_no_overwrite_first(install_mockery, mock_fetch):
+def test_second_install_no_overwrite_first(
+        install_mockery, mock_fetch, monkeypatch):
+    import spack.pkg.builtin.mock.canfail
+
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
-    remove_prefix = spack.package.Package.remove_prefix
-    try:
-        spack.package.Package.remove_prefix = mock_remove_prefix
 
-        pkg.succeed = True
-        pkg.do_install()
-        assert pkg.installed
+    monkeypatch.setattr(spack.package.Package, 'remove_prefix',
+                        mock_remove_prefix)
+    # Force the package install to succeed
+    monkeypatch.setattr(spack.pkg.builtin.mock.canfail.Canfail, 'succeed',
+                        True)
+    pkg.do_install()
+    assert pkg.installed
 
-        # If Package.install is called after this point, it will fail
-        pkg.succeed = False
-        pkg.do_install()
-
-    finally:
-        spack.package.Package.remove_prefix = remove_prefix
+    # If Package.install is called after this point, it will fail
+    monkeypatch.setattr(spack.pkg.builtin.mock.canfail.Canfail, 'succeed',
+                        False)
+    pkg.do_install()
+    assert pkg.installed  # second install attempt skipped since installed
 
 
 def test_store(install_mockery, mock_fetch):
