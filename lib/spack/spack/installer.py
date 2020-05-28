@@ -1108,10 +1108,10 @@ class PackageInstaller(object):
                                                   pkg.name, 'src')
                         tty.debug('{0} Copying source to {1}'
                                   .format(pre, src_target))
-                        fs.install_tree(pkg.stage.source_path, src_target)
+                        fs.install_tree(source_path, src_target)
 
                     # Do the real install in the source directory.
-                    with fs.working_dir(pkg.stage.source_path):
+                    with fs.working_dir(source_path):
                         # Save the build environment in a file before building.
                         dump_environment(pkg.env_path)
 

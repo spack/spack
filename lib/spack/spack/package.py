@@ -24,10 +24,11 @@ import sys
 import textwrap
 import time
 import traceback
-
 import six
 
+import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
+
 import spack.compilers
 import spack.config
 import spack.dependency
@@ -44,15 +45,10 @@ import spack.repo
 import spack.store
 import spack.url
 import spack.util.environment
-import spack.util.path as sup
 import spack.util.web
-from llnl.util.filesystem import mkdirp, touch, working_dir
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from ordereddict_backport import OrderedDict
-from six import StringIO
-from six import string_types
-from six import with_metaclass
 from spack.filesystem_view import YamlFilesystemView
 from spack.installer import \
     install_args_docstring, PackageInstaller, InstallError
@@ -447,7 +443,7 @@ class PackageViewMixin(object):
             view.remove_file(src, dst)
 
 
-class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
+class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -655,7 +651,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # init internal variables
         self._stage = None
         self._fetcher = None
-        self._binaries = None
 
         # Set up timing variables
         self._fetch_time = 0.0
@@ -970,19 +965,22 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return os.path.join(self.stage.path, _spack_build_envfile)
 
     @property
+    def metadata_dir(self):
+        """Return the install metadata directory."""
+        return spack.store.layout.metadata_path(self.spec)
+
+    @property
     def install_env_path(self):
         """
         Return the build environment file path on successful installation.
         """
-        install_path = spack.store.layout.metadata_path(self.spec)
-
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
-        old_filename = os.path.join(install_path, 'build.env')
+        old_filename = os.path.join(self.metadata_dir, 'build.env')
         if os.path.exists(old_filename):
             return old_filename
         else:
-            return os.path.join(install_path, _spack_build_envfile)
+            return os.path.join(self.metadata_dir, _spack_build_envfile)
 
     @property
     def log_path(self):
@@ -999,16 +997,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def install_log_path(self):
         """Return the build log file path on successful installation."""
-        install_path = spack.store.layout.metadata_path(self.spec)
-
         # Backward compatibility: Return the name of an existing install log.
         for filename in ['build.out', 'build.txt']:
-            old_log = os.path.join(install_path, filename)
+            old_log = os.path.join(self.metadata_dir, filename)
             if os.path.exists(old_log):
                 return old_log
 
         # Otherwise, return the current install log path name.
-        return os.path.join(install_path, _spack_build_logfile)
+        return os.path.join(self.metadata_dir, _spack_build_logfile)
 
     @property
     def configure_args_path(self):
@@ -1018,9 +1014,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def install_configure_args_path(self):
         """Return the configure args file path on successful installation."""
-        install_path = spack.store.layout.metadata_path(self.spec)
+        return os.path.join(self.metadata_dir, _spack_configure_argsfile)
 
-        return os.path.join(install_path, _spack_configure_argsfile)
+    @property
+    def install_test_root(self):
+        """Return the install test root directory."""
+        return os.path.join(self.metadata_dir, 'test')
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -1295,7 +1294,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise FetchError("Archive was empty for %s" % self.name)
         else:
             # Support for post-install hooks requires a stage.source_path
-            mkdirp(self.stage.source_path)
+            fsys.mkdirp(self.stage.source_path)
 
     def do_patch(self):
         """Applies patches if they haven't been applied already."""
@@ -1341,7 +1340,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         patched = False
         for patch in patches:
             try:
-                with working_dir(self.stage.source_path):
+                with fsys.working_dir(self.stage.source_path):
                     patch.apply(self.stage)
                 tty.debug('Applied patch {0}'.format(patch.path_or_url))
                 patched = True
@@ -1350,12 +1349,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
                 # Touch bad file if anything goes wrong.
                 tty.msg('Patch %s failed.' % patch.path_or_url)
-                touch(bad_file)
+                fsys.touch(bad_file)
                 raise
 
         if has_patch_fun:
             try:
-                with working_dir(self.stage.source_path):
+                with fsys.working_dir(self.stage.source_path):
                     self.patch()
                 tty.debug('Ran patch() for {0}'.format(self.name))
                 patched = True
@@ -1373,7 +1372,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
                 # Touch bad file if anything goes wrong.
                 tty.msg('patch() function failed for {0}'.format(self.name))
-                touch(bad_file)
+                fsys.touch(bad_file)
                 raise
 
         # Get rid of any old failed file -- patches have either succeeded
@@ -1384,9 +1383,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # touch good or no patches file so that we skip next time.
         if patched:
-            touch(good_file)
+            fsys.touch(good_file)
         else:
-            touch(no_patches_file)
+            fsys.touch(no_patches_file)
 
     @classmethod
     def all_patches(cls):
@@ -1598,7 +1597,38 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def test_log_name(self):
-        return 'test-%s-out.txt' % self.spec.format('{name}-{version}-{hash:7}')
+        return 'test-{0}-out.txt' \
+            .format(self.spec.format('{name}-{version}-{hash:7}'))
+
+    @property
+    def test_dir(self):
+        return self.test_stage.join(
+            self.spec.format('{name}-{version}-{hash}'))
+
+    def cache_extra_test_sources(self, srcs):
+        """Copy relative source path(s) to the corresponding install test subdir
+
+        This method is intended as an optional install test setup helper for
+        grabbing source files/directories during the installation process and
+        copying them to the installation test subdirectory for subsequent use
+        during install testing.
+
+        Args:
+            srcs (str or list of str): relative path for files and or
+                subdirectories located in the staged source path that are to
+                be copied to the corresponding location(s) under the install
+                testing directory.
+        """
+        paths = [srcs] if isinstance(srcs, string_types) else srcs
+
+        skip_file = lambda p: p not in paths
+        for path in paths:
+            src_path = os.path.join(self.stage.source_path, path)
+            dest_path = os.path.join(self.install_test_root, path)
+            if os.path.isdir(src_path):
+                fsys.copy_tree(src_path, dest_path)
+            else:
+                fsys.copy_tree(src_path, dest_path, ignore=skip_file)
 
     test_requires_compiler = False
     test_failures = None
@@ -1621,7 +1651,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         self.test_stage = Prefix(spack.cmd.test.get_stage(name))
         if not os.path.exists(self.test_stage):
-            mkdirp(self.test_stage)
+            fsys.mkdirp(self.test_stage)
         self.test_log_file = os.path.join(self.test_stage, self.test_log_name)
 
         def test_process():
@@ -1635,11 +1665,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 tty.set_debug(True)
 
                 # setup test directory
-                testdir = self.test_stage.join(
-                    self.spec.format('{name}-{version}-{hash}'))
+                testdir = self.test_dir
                 if os.path.exists(testdir):
                     shutil.rmtree(testdir)
-                mkdirp(testdir)
+                fsys.mkdirp(testdir)
 
                 # copy test data into testdir/data
                 datadir = Prefix(self.package_dir).test
@@ -1669,7 +1698,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         pass
 
     def run_test(self, exe, options=[], expected=[], status=None,
-                 installed=False, purpose='', skip_missing=False):
+                 installed=False, purpose='', skip_missing=False,
+                 work_dir=None):
         """Run the test and confirm the expected results are obtained
 
         Log any failures and continue, they will be re-raised later
@@ -1684,92 +1714,90 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             installed (bool): the executable must be in the install prefix
             purpose (str): message to display before running test
             skip_missing (bool): skip the test if the executable is not
-                in the install prefix bin directory
+                in the install prefix bin directory or the provided work_dir
+            work_dir (str or None): path to the smoke test directory
         """
-        if self._binaries is None:
-            # Cache the installed binaries
+        wdir = '.' if work_dir is None else work_dir
+        with fsys.working_dir(wdir):
             try:
-                self._binaries = os.listdir(os.path.join(self.prefix, 'bin'))
-            except FileNotFoundError:
-                self._binaries = []
+                runner = which(exe)
+                if runner is None and skip_missing:
+                    return
 
-        if skip_missing and exe not in self._binaries:
-            return
+                self._run_test_helper(
+                    runner, options, expected, status, installed, purpose)
+                print("PASSED")
+            except BaseException as e:
+                # print a summary of the error to the log file
+                # so that cdash and junit reporters know about it
+                exc_type, _, tb = sys.exc_info()
+                print('FAILED: {0}'.format(e))
+                import traceback
+                # remove the current call frame to get back to
+                stack = traceback.extract_stack()[:-1]
 
-        try:
-            self._run_test_helper(
-                exe, options, expected, status, installed, purpose)
-            print("PASSED")
-        except BaseException as e:
-            # print a summary of the error to the log file
-            # so that cdash and junit reporters know about it
-            exc_type, _, tb = sys.exc_info()
-            print('FAILED: %s' % e)
-            import traceback
-            # remove the current call frame to get back to
-            stack = traceback.extract_stack()[:-1]
+                # Package files have a line added at import time, so we re-read
+                # the file to make line numbers match. We have to subtract two
+                # from the line number because the original line number is
+                # inflated once by the import statement and the lines are
+                # displaced one by the import statement.
+                for i, entry in enumerate(stack):
+                    filename, lineno, function, text = entry
+                    if spack.paths.is_package_file(filename):
+                        with open(filename, 'r') as f:
+                            lines = f.readlines()
+                        text = lines[lineno - 2]
+                        stack[i] = (filename, lineno, function, text)
 
-            # Package files have a line added at import time, so we re-read
-            # the file to make line numbers match. We have to subtract two from
-            # the line number because the original line number is inflated once
-            # by the import statement and the lines are displaced one by the
-            # import statement.
-            for i, entry in enumerate(stack):
-                filename, lineno, function, text = entry
-                if spack.paths.is_package_file(filename):
-                    with open(filename, 'r') as f:
-                        lines = f.readlines()
-                    text = lines[lineno - 2]
-                    stack[i] = (filename, lineno, function, text)
+                # Format the stack to print and print it
+                out = traceback.format_list(stack)
+                for line in out:
+                    print(line.rstrip('\n'))
 
-            # Format the stack to print and print it
-            out = traceback.format_list(stack)
-            for line in out:
-                print(line.rstrip('\n'))
-
-            if exc_type is spack.util.executable.ProcessError:
-                out = StringIO()
-                spack.build_environment.write_log_summary(
-                    out, 'test', self.test_log_file, last=1)
-                m = out.getvalue()
-            else:
-                # We're below the package context, so get context from stack
-                # instead of from traceback.
-                # The traceback is truncated here, so we can't use it to
-                # traverse the stack.
-                m = '\n'.join(spack.build_environment.get_package_context(
+                if exc_type is spack.util.executable.ProcessError:
+                    out = six.StringIO()
+                    spack.build_environment.write_log_summary(
+                        out, 'test', self.test_log_file, last=1)
+                    m = out.getvalue()
+                else:
+                    # We're below the package context, so get context from
+                    # stack instead of from traceback.
+                    # The traceback is truncated here, so we can't use it to
+                    # traverse the stack.
+                    m = '\n'.join(spack.build_environment.get_package_context(
                         traceback.extract_stack()))
 
-            exc = e  # e is deleted after this block
+                exc = e  # e is deleted after this block
 
-            # If we fail fast, raise another error
-            if spack.config.get('config:fail_fast', False):
-                raise TestFailure([(exc, m)])
-            else:
-                self.test_failures.append((exc, m))
+                # If we fail fast, raise another error
+                if spack.config.get('config:fail_fast', False):
+                    raise TestFailure([(exc, m)])
+                else:
+                    self.test_failures.append((exc, m))
 
-    def _run_test_helper(self, exe, options, expected, status, installed,
+    def _run_test_helper(self, runner, options, expected, status, installed,
                          purpose):
         status = [status] if not isinstance(status, list) else status
         if purpose:
             tty.msg(purpose)
         else:
             tty.debug('test: {0}: expect command status in {1}'
-                      .format(exe, status))
+                      .format(runner.name, status))
 
-        runner = which(exe)
-        assert runner is not None, "Failed to find executable '%s'" % exe
+        assert runner is not None, \
+            "Failed to find executable '{0}'".format(runner.name)
 
         if installed:
-            msg = "Executable '%s' expected in prefix" % exe
-            msg += ", found in %s instead" % runner.path
+            msg = "Executable '{0}' expected in prefix".format(runner.name)
+            msg += ", found in {0} instead".format(runner.path)
             assert self.spec.prefix in runner.path, msg
 
         try:
             output = runner(*options, output=str.split, error=str.split)
 
             can_pass = None in status or 0 in status
-            assert can_pass, 'Expected execution to fail'
+            assert can_pass, \
+                'Expected {0} execution to fail'.format(runner.name)
         except ProcessError as err:
             output = str(err)
             match = re.search(r'exited with status ([0-9]+)', output)
@@ -1777,9 +1805,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise
 
         for check in expected:
-            cmd = ' '.join([exe] + options)
-            msg = "Expected '%s' to match output of `%s`" % (check, cmd)
-            msg += '\n\nOutput: %s' % output
+            cmd = ' '.join([runner.name] + options)
+            msg = "Expected '{0}' to match output of `{1}`".format(check, cmd)
+            msg += '\n\nOutput: {0}'.format(output)
             assert re.search(check, output), msg
 
     def unit_test_check(self):
@@ -2156,7 +2184,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # copy spec metadata to "deprecated" dir of deprecator
         depr_yaml = spack.store.layout.deprecated_file_path(spec,
                                                             deprecator)
-        fs.mkdirp(os.path.dirname(depr_yaml))
+        fsys.mkdirp(os.path.dirname(depr_yaml))
         shutil.copy2(self_yaml, depr_yaml)
 
         # Any specs deprecated in favor of this spec are re-deprecated in
@@ -2335,7 +2363,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         doc = re.sub(r'\s+', ' ', self.__doc__)
         lines = textwrap.wrap(doc, 72)
-        results = StringIO()
+        results = six.StringIO()
         for line in lines:
             results.write((" " * indent) + line + "\n")
         return results.getvalue()

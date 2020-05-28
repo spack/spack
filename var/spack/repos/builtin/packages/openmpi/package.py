@@ -723,6 +723,37 @@ class Openmpi(AutotoolsPackage):
                 else:
                     copy(script_stub, exe)
 
+    extra_install_tests = 'examples'
+
+    @run_after('install')
+    def setup_install_tests(self):
+        """
+        Copy the example files after the package is installed to an
+        install test subdirectory for use during `spack test run`.
+        """
+        self.cache_extra_test_sources(self.extra_install_tests)
+
+    def _test_bin_ops(self):
+        info = ([], ['Ident string: {0}'.format(self.spec.version), 'MCA'],
+                None)
+
+        ls = (['-n', '1', 'ls', '..'],
+              ['openmpi-{0}'.format(self.spec.version)], None)
+
+        checks = {
+            'mpirun': ls,
+            'ompi_info': info,
+            'oshmem_info': info,
+            'oshrun': ls,
+            'shmemrun': ls,
+        }
+
+        for exe in checks:
+            options, expected, status = checks[exe]
+            reason = 'test {0} output'.format(exe)
+            self.run_test(exe, options, expected, status, installed=True,
+                          purpose=reason, skip_missing=True)
+
     def _test_check_versions(self):
         comp_vers = str(self.spec.compiler.version)
         spec_vers = str(self.spec.version)
@@ -786,11 +817,70 @@ class Openmpi(AutotoolsPackage):
             self.run_test(exe, ['--version'], expected, status, installed=True,
                           purpose=purpose, skip_missing=True)
 
+    def _test_examples(self):
+        # First build the examples
+        work_dir = os.path.join(self.install_test_root,
+                                self.extra_install_tests)
+        self.run_test('make', ['all'], [], None, False,
+                      purpose='test build the examples', work_dir=work_dir)
+
+        # Now run those with known results
+        have_spml = self.spec.satisfies('@2.0.0:2.1.6')
+
+        hello_world = (['Hello, world', 'I am', '0 of', '1'], None)
+
+        max_red = (['0/1 dst = 0 1 2'], None)
+
+        missing_spml = (['No available spml components'], 1)
+
+        no_out = ([''], None)
+
+        ring_out = (['1 processes in ring', '0 exiting'], None)
+
+        strided = (['not in valid range'], 255)
+
+        checks = {
+            'hello_c': hello_world,
+            'hello_cxx': hello_world,
+            'hello_mpifh': hello_world,
+            'hello_oshmem': hello_world if have_spml else missing_spml,
+            'hello_oshmemcxx': hello_world if have_spml else missing_spml,
+            'hello_oshmemfh': hello_world if have_spml else missing_spml,
+            'hello_usempi': hello_world,
+            'hello_usempif08': hello_world,
+            'oshmem_circular_shift': ring_out if have_spml else missing_spml,
+            'oshmem_max_reduction': max_red if have_spml else missing_spml,
+            'oshmem_shmalloc': no_out if have_spml else missing_spml,
+            'oshmem_strided_puts': strided if have_spml else missing_spml,
+            'oshmem_symmetric_data': no_out if have_spml else missing_spml,
+            'ring_c': ring_out,
+            'ring_cxx': ring_out,
+            'ring_mpifh': ring_out,
+            'ring_oshmem': ring_out if have_spml else missing_spml,
+            'ring_oshmemfh': ring_out if have_spml else missing_spml,
+            'ring_usempi': ring_out,
+            'ring_usempif08': ring_out,
+        }
+
+        for exe in checks:
+            expected, status = checks[exe]
+            reason = 'test {0} output'.format(exe)
+            self.run_test(exe, [], expected, status, installed=False,
+                          purpose=reason, skip_missing=True, work_dir=work_dir)
+
     def test(self):
         """Perform smoke tests on the installed package."""
-        if self.spec.version not in spack.version.ver('2.0.0:4.0.3'):
+        tty.warn('Expected results currently based on simple openmpi builds')
+
+        if not self.spec.satisfies('@2.0.0:4.0.3'):
             tty.warn('Expected results have not been confirmed for {0} {1}'
                      .format(self.name, self.spec.version))
 
         # Simple version check tests on known packages
         self._test_check_versions()
+
+        # Test the operation of selected executables
+        self._test_bin_ops()
+
+        # Test example programs pulled from the build
+        self._test_examples()
