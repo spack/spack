@@ -47,6 +47,11 @@ class Swig(AutotoolsPackage, SourceforgePackage):
 
     build_directory = 'spack-build'
 
+    def patch(self):
+        config_dir = join_path(self.stage.source_path, 'Tools', 'config')
+        copy(join_path(self.package_dir, 'config.guess'), config_dir)
+        copy(join_path(self.package_dir, 'config.sub'), config_dir)
+
     @run_after('install')
     def create_symlink(self):
         # CMake compatibility: see https://github.com/spack/spack/pull/6240
