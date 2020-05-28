@@ -51,8 +51,8 @@ def check_satisfies(target_spec, constraint_spec, target_concrete=False):
     const.constrain(target)
 
 
-def check_unsatisfiable(target_spec, constraint_spec, target_concrete=False, compatible=False):
-
+def check_unsatisfiable(target_spec, constraint_spec, target_concrete=False,
+                        compatible=False):
     target = make_spec(target_spec, target_concrete)
     constraint = _specify(constraint_spec)
 
