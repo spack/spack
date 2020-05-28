@@ -25,4 +25,4 @@ class HealpixCxx(AutotoolsPackage):
         )
 
     depends_on('cfitsio')
-    depends_on('libsharp')
+    depends_on('libsharp', type='build')
