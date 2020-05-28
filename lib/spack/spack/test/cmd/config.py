@@ -198,6 +198,129 @@ def test_config_add_invalid_fails(mutable_empty_config):
         config('add', 'packages:all:True')
 
 
+def test_config_add_from_file(mutable_empty_config, tmpdir):
+    contents = """spack:
+  config:
+    dirty: true
+"""
+
+    file = str(tmpdir.join('spack.yaml'))
+    with open(file, 'w') as f:
+        f.write(contents)
+    config('add', '-f', file)
+    output = config('get', 'config')
+
+    assert output == """config:
+  dirty: true
+"""
+
+
+def test_config_add_from_file_multiple(mutable_empty_config, tmpdir):
+    contents = """spack:
+  config:
+    dirty: true
+    template_dirs: [test1]
+"""
+
+    file = str(tmpdir.join('spack.yaml'))
+    with open(file, 'w') as f:
+        f.write(contents)
+    config('add', '-f', file)
+    output = config('get', 'config')
+
+    assert output == """config:
+  dirty: true
+  template_dirs: [test1]
+"""
+
+
+def test_config_add_override_from_file(mutable_empty_config, tmpdir):
+    config('--scope', 'site', 'add', 'config:template_dirs:test1')
+    contents = """spack:
+  config::
+    template_dirs: [test2]
+"""
+
+    file = str(tmpdir.join('spack.yaml'))
+    with open(file, 'w') as f:
+        f.write(contents)
+    config('add', '-f', file)
+    output = config('get', 'config')
+
+    assert output == """config:
+  template_dirs: [test2]
+"""
+
+
+def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir):
+    config('--scope', 'site', 'add', 'config:template_dirs:test1')
+    contents = """spack:
+  config:
+    template_dirs:: [test2]
+"""
+
+    file = str(tmpdir.join('spack.yaml'))
+    with open(file, 'w') as f:
+        f.write(contents)
+    config('add', '-f', file)
+    output = config('get', 'config')
+
+    assert output == """config:
+  'template_dirs:': [test2]
+"""
+
+
+def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
+    config('add', 'packages:all:compiler:[gcc]')
+
+    # contents to add to file
+    contents = """spack:
+  packages:
+    all:
+      version:
+      - 1.0.0
+"""
+
+    # create temp file and add it to config
+    file = str(tmpdir.join('spack.yaml'))
+    with open(file, 'w') as f:
+        f.write(contents)
+    config('add', '-f', file)
+
+    # get results
+    output = config('get', 'packages')
+
+    expected = """packages:
+  all:
+    compiler:
+    - gcc
+    version:
+    - 1.0.0
+"""
+
+    assert output == expected
+
+
+def test_config_add_invalid_file_fails(tmpdir):
+    # contents to add to file
+    # invalid because version requires a list
+    contents = """spack:
+  packages:
+    all:
+      version: 1.0.0
+"""
+
+    # create temp file and add it to config
+    file = str(tmpdir.join('spack.yaml'))
+    with open(file, 'w') as f:
+        f.write(contents)
+
+    with pytest.raises(
+        (spack.config.ConfigFormatError)
+    ):
+        config('add', '-f', file)
+
+
 def test_config_remove_value(mutable_empty_config):
     config('add', 'config:dirty:true')
     config('remove', 'config:dirty:true')
