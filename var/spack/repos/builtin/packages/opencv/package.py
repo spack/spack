@@ -126,6 +126,7 @@ class Opencv(CMakePackage, CudaPackage):
     patch('opencv3.2_regacyvtk.patch', when='@3.2+vtk')
     patch('opencv3.2_ffmpeg.patch', when='@3.2+videoio')
     patch('opencv3.2_python3.7.patch', when='@3.2+python')
+    patch('opencv3.2_fj.patch', when='@3.2 %fj')
 
     depends_on('eigen', when='+eigen')
     depends_on('zlib', when='+zlib')
