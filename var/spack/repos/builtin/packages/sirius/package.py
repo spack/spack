@@ -36,6 +36,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('openmp', default=True, description="Build with OpenMP support")
     variant('fortran', default=False, description="Build Fortran bindings")
     variant('python', default=False, description="Build Python bindings")
+    variant('memory_pool', default=True, description="Build with memory pool")
     variant('elpa', default=False, description="Use ELPA")
     variant('vdwxc', default=False, description="Enable libvdwxc support")
     variant('scalapack', default=False, description="Enable scalapack support")
@@ -48,7 +49,7 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('gsl')
     depends_on('lapack')
-    depends_on('fftw')  # SIRIUS does not care about MPI-support in FFTW
+    depends_on('fftw-api@3')
     depends_on('libxc')
     depends_on('spglib')
     depends_on('hdf5+hl')
@@ -90,7 +91,7 @@ class Sirius(CMakePackage, CudaPackage):
 
             return find_libraries(
                 libraries, root=self.prefix,
-                shared=False, recursive=True
+                shared=True, recursive=True
             )
 
         else:
@@ -126,6 +127,7 @@ class Sirius(CMakePackage, CudaPackage):
             _def('+elpa'),
             _def('+magma'),
             _def('+vdwxc'),
+            _def('+memory_pool'),
             _def('+scalapack'),
             _def('+fortran', 'CREATE_FORTRAN_BINDINGS'),
             _def('+python', 'CREATE_PYTHON_MODULE'),

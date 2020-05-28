@@ -26,7 +26,7 @@ class Spfft(CMakePackage):
     variant('fortran', default=False, description="enable fortran")
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
-    depends_on('fftw')
+    depends_on('fftw-api@3')
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
 
