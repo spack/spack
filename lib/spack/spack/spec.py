@@ -392,6 +392,9 @@ class ArchSpec(object):
 
         return False
 
+    def compatible(self, other):
+        return other.satisfies(self)
+
     def constrain(self, other):
         """Projects all architecture fields that are specified in the given
         spec onto the instance spec if they're missing from the instance
@@ -407,7 +410,7 @@ class ArchSpec(object):
         """
         other = self._autospec(other)
 
-        if not self.satisfies(other):
+        if not other.satisfies(self):
             raise UnsatisfiableArchitectureSpecError(self, other)
 
         constrained = False
@@ -523,6 +526,13 @@ class CompilerSpec(object):
         other = self._autospec(other)
         return (self.name == other.name and
                 self.versions.satisfies(other.versions, strict=strict))
+
+    def compatible(self, other):
+        """
+        Return True iff this CompilerSpec can be constrained by other.
+        """
+        other = self._autospec(other)
+        return other.satisfies(self)
 
     def constrain(self, other):
         """Intersect self's versions with other.
@@ -642,6 +652,14 @@ class FlagMap(lang.HashableMap):
             return all(set(self[f]) == set(other[f])
                        for f in other if (other[f] != [] and f in self))
 
+    def compatible(self, other):
+        if self.spec and self.spec._concrete:
+            return all(k in other and set(self[k]) == set(other[k])
+                       for k in self)
+
+        return all(set(self[k]) <= set(other(k))
+                   for k in self if k in other)
+
     def constrain(self, other):
         """Add all flags in other that aren't in self to self.
 
@@ -649,7 +667,7 @@ class FlagMap(lang.HashableMap):
         """
         if other.spec and other.spec._concrete:
             for k in self:
-                if k not in other:
+                if k not in other or set(self[k]) != set(other[k]):
                     raise UnsatisfiableCompilerFlagSpecError(
                         self[k], '<absent>')
 
@@ -659,7 +677,7 @@ class FlagMap(lang.HashableMap):
                 raise UnsatisfiableCompilerFlagSpecError(
                     ' '.join(f for f in self[k]),
                     ' '.join(f for f in other[k]))
-            elif k not in self:
+            elif k not in self or set(self[k]) != set(other[k]):
                 self[k] = other[k]
                 changed = True
         return changed
@@ -2675,6 +2693,50 @@ class Spec(object):
 
                 vt.substitute_abstract_variants(spec)
 
+    def compatible(self, other, deps=True):
+        if self.concrete:
+            return self.satisfies(other)
+
+        other = self._autospec(other)
+
+        # If both have names and they're different, not compatible
+        if self.name and other.name and self.name != other.name:
+            return False
+
+        # If both have namespaces and they're different, not compatible
+        if self.namespace and (other.namespace and
+                               self.namespace != other.namespace):
+            return False
+
+        # Check version compatibility
+        if not self.versions.overlaps(other.versions):
+            return False
+
+        # Check variant compatibility
+        if not self.variants.compatible(other.variants):
+            return False
+
+        # Confirm arch compatibility
+        if self.architecture and other.architecture \
+                and not self.architecture.compatible(other.architecture):
+            return False
+
+        # check compiler compatibility
+        if self.compiler and other.compiler \
+                and not self.compiler.compatible(other.compiler):
+            return False
+
+        # no need to check check compiler_flag compatibility
+        # because compiler flags can only be incompatible if spec is concrete
+        # and we already checked for that.
+
+        # if dep check dep compat
+        if deps and not other.satisfies_dependencies(self):
+            return False
+
+        # everything is compatible
+        return True
+
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.
 
@@ -2706,6 +2768,8 @@ class Spec(object):
         if not self.versions.overlaps(other.versions):
             raise UnsatisfiableVersionSpecError(self.versions, other.versions)
 
+        # Don't use `VariantMap.compatible` because we need the specific
+        # variant that causes the problem for the error message
         for v in [x for x in other.variants if x in self.variants]:
             if not self.variants[v].compatible(other.variants[v]):
                 raise vt.UnsatisfiableVariantSpecError(

@@ -302,7 +302,9 @@ class AbstractVariant(object):
         """
         # If names are different then `self` does not satisfy `other`
         # (`foo=bar` will never satisfy `baz=bar`)
-        return other.name == self.name
+        # Otherwise we want all the values in `other` to be also in `self`
+        return other.name == self.name and all(v in self.value
+                                               for v in other.value)
 
     @implicit_variant_conversion
     def compatible(self, other):
@@ -355,25 +357,7 @@ class AbstractVariant(object):
 
 
 class MultiValuedVariant(AbstractVariant):
-    """A variant that can hold multiple values at once."""
-    @implicit_variant_conversion
-    def satisfies(self, other):
-        """Returns true if ``other.name == self.name`` and ``other.value`` is
-        a strict subset of self. Does not try to validate.
-
-        Args:
-            other: constraint to be met for the method to return True
-
-        Returns:
-            bool: True or False
-        """
-        # If names are different then `self` does not satisfy `other`
-        # (`foo=bar` does not satisfy `baz=bar`)
-        if other.name != self.name:
-            return False
-
-        # Otherwise we want all the values in `other` to be also in `self`
-        return all(v in self.value for v in other.value)
+    pass
 
 
 class SingleValuedVariant(MultiValuedVariant):
@@ -395,10 +379,7 @@ class SingleValuedVariant(MultiValuedVariant):
     def satisfies(self, other):
         # If names are different then `self` does not satisfy `other`
         # (`foo=bar` does not satisfy `baz=bar`)
-        if other.name != self.name:
-            return False
-
-        return self.value == other.value
+        return self.name == other.name and self.value == other.value
 
     def compatible(self, other):
         return self.satisfies(other)
@@ -507,8 +488,19 @@ class VariantMap(lang.HashableMap):
         if not strict_or_concrete:
             to_be_checked = filter(lambda x: x in self, to_be_checked)
 
-        return all(k in self and self[k].satisfies(other[k])
-                   for k in to_be_checked)
+        return all(k in self and self[k].satisfies(other[k]) for k in to_be_checked)
+
+    def compatible(self, other):
+        """Returns True iff it's possible to constrain this VariantMap by other
+
+        Args:
+            other (VariantMap): VariantMap instance to check against
+
+        Returns:
+            bool
+        """
+        to_be_checked = filter(lambda x: x in self, other.keys())
+        return all(self[k].compatible(other[k]) for k in to_be_checked)
 
     def constrain(self, other):
         """Add all variants in other that aren't in self to self. Also

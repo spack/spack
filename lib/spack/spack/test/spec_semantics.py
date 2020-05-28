@@ -346,6 +346,8 @@ class TestSpecSematics(object):
         b = Spec(spec_str)
         assert not a.satisfies(b)
         assert not a.satisfies(spec_str)
+        assert not a.compatible(b)
+        assert not a.compatible(spec_str)
         # A concrete spec cannot be constrained further
         with pytest.raises(UnsatisfiableSpecError):
             a.constrain(b)
@@ -354,8 +356,8 @@ class TestSpecSematics(object):
         spec_str = 'multivalue_variant foo="bar,baz"'
         b = Spec(spec_str)
         # The specs are abstract and they **could** be constrained
-        assert a.satisfies(b)
-        assert a.satisfies(spec_str)
+        assert a.compatible(b)
+        assert a.compatible(spec_str)
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
@@ -366,6 +368,8 @@ class TestSpecSematics(object):
         b = Spec(spec_str)
         assert not a.satisfies(b)
         assert not a.satisfies(spec_str)
+        assert not a.compatible(b)
+        assert not a.compatible(spec_str)
         # A concrete spec cannot be constrained further
         with pytest.raises(UnsatisfiableSpecError):
             a.constrain(b)
@@ -374,8 +378,8 @@ class TestSpecSematics(object):
         spec_str = 'multivalue_variant foo="bar,baz,quux"'
         b = Spec(spec_str)
         # The specs are abstract and they **could** be constrained
-        assert a.satisfies(b)
-        assert a.satisfies(spec_str)
+        assert a.compatible(b)
+        assert a.compatible(spec_str)
         # An abstract spec can instead be constrained
         assert a.constrain(b)
         # ...but will fail during concretization if there are
@@ -390,8 +394,7 @@ class TestSpecSematics(object):
         # The specs are abstract and they **could** be constrained,
         # as before concretization I don't know which type of variant
         # I have (if it is not a BV)
-        assert a.satisfies(b)
-        assert a.satisfies(spec_str)
+        assert a.compatible(b)
         # A variant cannot be parsed as single-valued until we try to
         # concretize. This means that we can constrain the variant above
         assert a.constrain(b)
