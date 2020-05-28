@@ -175,6 +175,7 @@ class MockCompiler(Compiler):
     def version(self):
         return "1.0.0"
 
+    @property
     def verbose_flag(self):
         return "--verbose"
 

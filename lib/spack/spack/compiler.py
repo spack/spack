@@ -319,7 +319,7 @@ class Compiler(object):
         first_compiler = next((c for c in paths if c), None)
         if not first_compiler:
             return []
-        if not self.verbose_flag():
+        if not self.verbose_flag:
             # In this case there is no mechanism to learn what link directories
             # are used by the compiler
             return []
@@ -346,7 +346,7 @@ class Compiler(object):
             for flag_type in flags:
                 for flag in self.flags.get(flag_type, []):
                     compiler_exe.add_default_arg(flag)
-            output = str(compiler_exe(self.verbose_flag(), fin, '-o', fout,
+            output = str(compiler_exe(self.verbose_flag, fin, '-o', fout,
                                       output=str, error=str))  # str for py2
 
             return _parse_non_system_link_dirs(output)
@@ -357,8 +357,8 @@ class Compiler(object):
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         """
         This property should be overridden in the compiler subclass if a
         verbose flag is available.
