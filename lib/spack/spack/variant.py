@@ -488,7 +488,8 @@ class VariantMap(lang.HashableMap):
         if not strict_or_concrete:
             to_be_checked = filter(lambda x: x in self, to_be_checked)
 
-        return all(k in self and self[k].satisfies(other[k]) for k in to_be_checked)
+        return all(k in self and self[k].satisfies(other[k])
+                   for k in to_be_checked)
 
     def compatible(self, other):
         """Returns True iff it's possible to constrain this VariantMap by other
