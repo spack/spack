@@ -213,17 +213,17 @@ def call_compiler(exe, *args, **kwargs):
 
 
 @pytest.mark.parametrize('exe,flagname', [
-        ('cxx', ''),
-        ('cxx', 'cxxflags'),
-        ('cxx', 'cppflags'),
-        ('cxx', 'ldflags'),
-        ('cc', ''),
-        ('cc', 'cflags'),
-        ('cc', 'cppflags'),
-        ('fc', ''),
-        ('fc', 'fflags'),
-        ('f77', 'fflags'),
-        ('f77', 'cppflags'),
+    ('cxx', ''),
+    ('cxx', 'cxxflags'),
+    ('cxx', 'cppflags'),
+    ('cxx', 'ldflags'),
+    ('cc', ''),
+    ('cc', 'cflags'),
+    ('cc', 'cppflags'),
+    ('fc', ''),
+    ('fc', 'fflags'),
+    ('f77', 'fflags'),
+    ('f77', 'cppflags'),
 ])
 def test_get_compiler_link_paths(monkeypatch, exe, flagname):
     # create fake compiler that emits mock verbose output
