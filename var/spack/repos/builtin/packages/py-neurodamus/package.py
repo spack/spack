@@ -24,6 +24,7 @@ class PyNeurodamus(PythonPackage):
     depends_on('py-lazy-property', type='run')
     depends_on('py-docopt',        type='run')
     depends_on('py-six',           type='run')
+    depends_on('py-scipy',         type='run')
 
     @run_after('install')
     def install_scripts(self):
