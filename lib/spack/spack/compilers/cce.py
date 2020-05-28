@@ -40,7 +40,7 @@ class Cce(Compiler):
 
     version_regex = r'[Vv]ersion.*?(\d+(\.\d+)+)'
 
-    #property
+    @property
     def verbose_flag(self):
         return "-v"
 
