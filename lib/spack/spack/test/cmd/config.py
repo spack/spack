@@ -422,7 +422,11 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     assert output == expected
 
 
-def test_config_update(old_format_packages_yaml):
+def test_config_update_packages(old_format_packages_yaml):
+    """Test Spack updating old packages.yaml format for externals
+    to new format. Ensure that data is preserved and converted
+    properly.
+    """
     old_format_packages_yaml()
     config('update', 'packages')
 
