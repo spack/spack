@@ -208,7 +208,14 @@ class Mvapich2(AutotoolsPackage):
         if 'process_managers=slurm' in self.spec:
             env.set('SLURM_MPI_TYPE', 'pmi2')
 
+        # Because MPI functions as a compiler, we need to treat it as one and
+        # add its compiler paths to the run environment.
+        self.setup_compiler_environment(env)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_compiler_environment(env)
+
+    def setup_compiler_environment(self, env):
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
         if self.spec.external_module and 'cray' in self.spec.external_module:

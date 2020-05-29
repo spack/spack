@@ -56,3 +56,27 @@ class SpectrumMpi(Package):
         env.set('OMPI_F77', spack_f77)
 
         env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
+
+    def setup_run_environment(self, env):
+        # Because MPI functions as a compiler we need to setup the compilers
+        # in the run environment, like any compiler
+        if '%xl' in self.spec or '%xl_r' in self.spec:
+            env.set('MPICC', os.path.join(self.prefix.bin, 'mpixlc'))
+            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpixlC'))
+            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpixlf'))
+            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpixlf'))
+        elif '%pgi' in self.spec:
+            env.set('MPICC', os.path.join(self.prefix.bin, 'mpipgicc'))
+            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpipgic++'))
+            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpipgifort'))
+            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpipgifort'))
+        else:
+            env.set('MPICC', os.path.join(self.prefix.bin, 'mpicc'))
+            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpic++'))
+            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpif77'))
+            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpif90'))
+
+        env.set('OMPI_CC', spack_cc)
+        env.set('OMPI_CXX', spack_cxx)
+        env.set('OMPI_FC', spack_fc)
+        env.set('OMPI_F77', spack_f77)

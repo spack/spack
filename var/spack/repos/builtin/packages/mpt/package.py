@@ -39,6 +39,11 @@ class Mpt(Package):
         )
 
     def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+    def setup_run_environment(self, env):
+        # Because MPI is both runtime and compiler, we have to setup the mpi
+        # compilers as part of the run environment.
         env.set('MPICC',  self.prefix.bin.mpicc)
         env.set('MPICXX', self.prefix.bin.mpicxx)
         env.set('MPIF77', self.prefix.bin.mpif77)
