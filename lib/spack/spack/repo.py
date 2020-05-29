@@ -882,9 +882,7 @@ class Repo(object):
             raise UnknownPackageError(spec.name)
 
         if spec.namespace and spec.namespace != self.namespace:
-            raise UnknownPackageError(
-                "Repository %s does not contain package %s"
-                % (self.namespace, spec.fullname))
+            raise UnknownPackageError(spec.name, self.namespace)
 
         package_class = self.get_pkg_class(spec.name)
         try:
@@ -1271,16 +1269,22 @@ class UnknownPackageError(UnknownEntityError):
 
     def __init__(self, name, repo=None):
         msg = None
-        if repo:
-            msg = "Package '%s' not found in repository '%s'" % (name, repo)
-        else:
-            msg = "Package '%s' not found." % name
-
-        # special handling for specs that may have been intended as filenames
-        # prompt the user to ask whether they intended to write './<name>'
         long_msg = None
-        if name.endswith(".yaml"):
-            long_msg = "Did you mean to specify a filename with './%s'?" % name
+        if name:
+            if repo:
+                msg = \
+                    "Package '%s' not found in repository '%s'" % (name, repo)
+            else:
+                msg = "Package '%s' not found." % name
+
+            # Special handling for specs that may have been intended as
+            # filenames: prompt the user to ask whether they intended to write
+            # './<name>'.
+            if name.endswith(".yaml"):
+                long_msg = \
+                    "Did you mean to specify a filename with './%s'?" % name
+        else:
+            msg = "Attempting to retrieve anonymous package."
 
         super(UnknownPackageError, self).__init__(msg, long_msg)
         self.name = name
