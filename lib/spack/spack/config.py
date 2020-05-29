@@ -509,7 +509,7 @@ class Configuration(object):
 
         # no config files -- empty config.
         if section not in merged_section:
-            return {}
+            return syaml.syaml_dict()
 
         # take the top key off before returning.
         ret = merged_section[section]
@@ -531,7 +531,7 @@ class Configuration(object):
 
         We use ``:`` as the separator, like YAML objects.
     """
-        # TODO: Currently only handles maps. Think about lists if neded.
+        # TODO: Currently only handles maps. Think about lists if needed.
         parts = _process_config_path(path)
         section = parts.pop(0)
 
@@ -827,7 +827,7 @@ def type_of(path):
     """
     components = _process_config_path(path)
     section = components[0]
-    for type in (list, dict, str, bool, int, float):
+    for type in (list, syaml.syaml_dict, str, bool, int, float):
         try:
             ret = type()
             test_data = ret

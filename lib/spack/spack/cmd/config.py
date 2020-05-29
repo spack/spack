@@ -230,14 +230,14 @@ def config_add(args):
                 existing = spack.config.type_of(path)
 
                 # construct value from this point down
-                value = syaml.load(components[-1])
+                value = syaml.load_config(components[-1])
                 for component in reversed(components[idx + 1:-1]):
                     value = {component: value}
                 break
 
         if has_existing_value:
             path, _, value = args.value.rpartition(':')
-            value = syaml.load(value)
+            value = syaml.load_config(value)
             existing = spack.config.get(path, scope=scope)
 
         # append values to lists appropriately

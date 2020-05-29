@@ -292,8 +292,7 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
 
     expected = """packages:
   all:
-    compiler:
-    - gcc
+    compiler: [gcc]
     version:
     - 1.0.0
 """
