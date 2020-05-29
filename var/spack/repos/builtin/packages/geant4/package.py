@@ -151,7 +151,7 @@ class Geant4(CMakePackage):
 
         # Python
         if spec.version > Version('10.6.1'):
-          options.append(self.define_from_variant('GEANT4_USE_PYTHON',
-                                                  'python'))
+            options.append(self.define_from_variant('GEANT4_USE_PYTHON',
+                                                    'python'))
 
         return options
