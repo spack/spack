@@ -158,20 +158,31 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, exists):
 
     srcs = [fs.join_path(source_path, s) for s in sources]
     setup_install_test(srcs, pkg.install_test_root)
-    for s in srcs:
-        assert os.path.exists(s), 'Expected {0} to exist'.format(s)
+    try:
+        for s in srcs:
+            assert os.path.exists(s), 'Expected {0} to exist'.format(s)
 
-    pkg.cache_extra_test_sources(extras)
+            if os.path.splitext(s)[1]:
+                assert os.path.isfile(s), 'Expected {0} to be a file'.format(s)
+            else:
+                assert os.path.isdir(s), 'Expected {0} to be a file'.format(s)
 
-    poss_dests = [fs.join_path(pkg.install_test_root, s) for s in sources]
-    expected = [fs.join_path(pkg.install_test_root, e) for e in exists]
+        pkg.cache_extra_test_sources(extras)
 
-    msg = 'Expected {0} to{1} exist'
-    for pd in poss_dests:
-        if pd in expected:
-            assert os.path.exists(pd), msg.format(pd, '')
-        else:
-            assert not os.path.exists(pd), msg.format(pd, ' not')
+        poss_dests = [fs.join_path(pkg.install_test_root, s) for s in sources]
+        expected = [fs.join_path(pkg.install_test_root, e) for e in exists]
 
-    # Perform a little cleanup
-    shutil.rmtree(os.path.dirname(source_path))
+        msg = 'Expected {0} to{1} exist'
+        for pd in poss_dests:
+            if pd in expected:
+                assert os.path.exists(pd), msg.format(pd, '')
+
+                if os.path.splitext(pd)[1]:
+                    assert os.path.isfile(pd), \
+                        'Expected {0} to be a file'.format(pd)
+
+            else:
+                assert not os.path.exists(pd), msg.format(pd, ' not')
+
+    finally:
+        shutil.rmtree(os.path.dirname(source_path))

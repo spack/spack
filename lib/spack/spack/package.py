@@ -1489,15 +1489,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 testing directory.
         """
         paths = [srcs] if isinstance(srcs, string_types) else srcs
-
-        skip_file = lambda p: p not in paths
         for path in paths:
             src_path = os.path.join(self.stage.source_path, path)
             dest_path = os.path.join(self.install_test_root, path)
             if os.path.isdir(src_path):
-                fsys.copy_tree(src_path, dest_path)
+                fsys.install_tree(src_path, dest_path)
             else:
-                fsys.copy_tree(src_path, dest_path, ignore=skip_file)
+                fsys.mkdirp(os.path.dirname(dest_path))
+                fsys.copy(src_path, dest_path)
 
     test_requires_compiler = False
     test_failures = None
