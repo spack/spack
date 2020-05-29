@@ -51,6 +51,11 @@ def test_repo_unknown_pkg(mutable_mock_repo):
         mutable_mock_repo.get('builtin.mock.nonexistentpackage')
 
 
+def test_repo_anonymous_pkg(mutable_mock_repo):
+    with pytest.raises(spack.repo.UnknownPackageError):
+        mutable_mock_repo.get('+variant')
+
+
 @pytest.mark.maybeslow
 def test_repo_last_mtime():
     latest_mtime = max(os.path.getmtime(p.module.__file__)

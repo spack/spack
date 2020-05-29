@@ -1272,17 +1272,17 @@ class UnknownPackageError(UnknownEntityError):
         long_msg = None
         if name:
             if repo:
-                msg = \
-                    "Package '%s' not found in repository '%s'" % (name, repo)
+                msg = "Package '{0}' not found in repository '{1}'"
+                msg = msg.format(name, repo)
             else:
-                msg = "Package '%s' not found." % name
+                msg = "Package '{0}' not found.".format(name)
 
             # Special handling for specs that may have been intended as
             # filenames: prompt the user to ask whether they intended to write
             # './<name>'.
             if name.endswith(".yaml"):
-                long_msg = \
-                    "Did you mean to specify a filename with './%s'?" % name
+                long_msg = "Did you mean to specify a filename with './{0}'?"
+                long_msg = long_msg.format(name)
         else:
             msg = "Attempting to retrieve anonymous package."
 
