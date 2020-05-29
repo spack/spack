@@ -71,7 +71,7 @@ class Neuron(CMakePackage):
         default=True,
         description="Build Python module with setup.py",
     )
-    variant("rx3d",       default=False,  description="Enable cython translated 3-d rxd. Depends on pysetup")
+    variant("rx3d",       default=True,  description="Enable cython translated 3-d rxd. Depends on pysetup")
     variant("shared",     default=True,  description="Build shared libraries")
     variant("tests",      default=False, description="Enable unit tests")
 
@@ -139,6 +139,16 @@ class Neuron(CMakePackage):
             args.append("-DNRN_ENABLE_BINARY_SPECIAL=ON")
 
         return args
+
+    # Create symlink in share/nrn/lib for the python libraries
+    # which is the place that neuron expects the library similarly
+    # to autotools installation
+    # See : https://github.com/neuronsimulator/nrn/issues/567
+    @run_after("install")
+    def symlink_python_lib(self):
+        if "+cmake+python" in self.spec:
+            os.symlink(self.prefix.lib.python,
+                       self.prefix.share.nrn.lib.python)
 
     # ==============================================
     # == Autotools build system related functions ==
@@ -445,6 +455,13 @@ class Neuron(CMakePackage):
         if self.spec.satisfies("~cmake"):
             filter_file(env["CC"], cc_compiler, nrniv_makefile, **kwargs)
             filter_file(env["CXX"], cxx_compiler, nrniv_makefile, **kwargs)
+
+    # Added because the bin and lib directories are inside x86_64 dir in the
+    # installation directory of autotools installation
+    @when("~cmake")
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("PATH", join_path(self.basedir, "bin"))
+        env.prepend_path("LD_LIBRARY_PATH", join_path(self.basedir, "lib"))
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", join_path(self.basedir, "bin"))
