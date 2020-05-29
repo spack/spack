@@ -239,10 +239,8 @@ class Cmake(Package):
     def install(self, spec, prefix):
         make('install')
 
-    @when('%fj')
-    @run_after('install')
-    def add_fujitsu_mpi_commands(self):
-        for f in find(self.prefix, 'FindMPI.cmake', recursive=True):
-            filter_file('mpcc_r)', 'mpcc_r mpifcc)', f, string=True)
-            filter_file('mpc++_r)', 'mpc++_r mpiFCC)', f, string=True)
-            filter_file('mpifc)', 'mpifc mpifrt)', f, string=True)
+        if spec.satisfies('%fj'):
+            for f in find(self.prefix, 'FindMPI.cmake', recursive=True):
+                filter_file('mpcc_r)', 'mpcc_r mpifcc)', f, string=True)
+                filter_file('mpc++_r)', 'mpc++_r mpiFCC)', f, string=True)
+                filter_file('mpifc)', 'mpifc mpifrt)', f, string=True)
