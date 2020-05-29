@@ -145,8 +145,8 @@ default_compiler_entry = {
     'paths': {
         'cc': 'cc-path',
         'cxx': 'cxx-path',
-        'fc': None,
-        'f77': None
+        'fc': 'fc-path',
+        'f77': 'f77-path'
     },
     'flags': {},
     'modules': None
@@ -165,6 +165,8 @@ class MockCompiler(Compiler):
              default_compiler_entry['paths']['fc'],
              default_compiler_entry['paths']['f77']])
 
+    _get_compiler_link_paths = Compiler._get_compiler_link_paths
+
     @property
     def name(self):
         return "mockcompiler"
@@ -172,6 +174,12 @@ class MockCompiler(Compiler):
     @property
     def version(self):
         return "1.0.0"
+
+    _verbose_flag = "--verbose"
+
+    @property
+    def verbose_flag(self):
+        return self._verbose_flag
 
     required_libs = ['libgfortran']
 
@@ -190,6 +198,73 @@ def test_implicit_rpaths(dirs_with_libfiles, monkeypatch):
     compiler = MockCompiler()
     retrieved_rpaths = compiler.implicit_rpaths()
     assert set(retrieved_rpaths) == expected_rpaths
+
+
+no_flag_dirs = ['/path/to/first/lib', '/path/to/second/lib64']
+no_flag_output = 'ld -L%s -L%s' % tuple(no_flag_dirs)
+
+flag_dirs = ['/path/to/first/with/flag/lib', '/path/to/second/lib64']
+flag_output = 'ld -L%s -L%s' % tuple(flag_dirs)
+
+
+def call_compiler(exe, *args, **kwargs):
+    # This method can replace Executable.__call__ to emulate a compiler that
+    # changes libraries depending on a flag.
+    if '--correct-flag' in exe.exe:
+        return flag_output
+    return no_flag_output
+
+
+@pytest.mark.parametrize('exe,flagname', [
+    ('cxx', ''),
+    ('cxx', 'cxxflags'),
+    ('cxx', 'cppflags'),
+    ('cxx', 'ldflags'),
+    ('cc', ''),
+    ('cc', 'cflags'),
+    ('cc', 'cppflags'),
+    ('fc', ''),
+    ('fc', 'fflags'),
+    ('f77', 'fflags'),
+    ('f77', 'cppflags'),
+])
+def test_get_compiler_link_paths(monkeypatch, exe, flagname):
+    # create fake compiler that emits mock verbose output
+    compiler = MockCompiler()
+    monkeypatch.setattr(
+        spack.util.executable.Executable, '__call__', call_compiler)
+
+    # Grab executable path to test
+    paths = [getattr(compiler, exe)]
+
+    # Test without flags
+    dirs = compiler._get_compiler_link_paths(paths)
+    assert dirs == no_flag_dirs
+
+    if flagname:
+        # set flags and test
+        setattr(compiler, 'flags', {flagname: ['--correct-flag']})
+        dirs = compiler._get_compiler_link_paths(paths)
+        assert dirs == flag_dirs
+
+
+def test_get_compiler_link_paths_no_path():
+    compiler = MockCompiler()
+    compiler.cc = None
+    compiler.cxx = None
+    compiler.f77 = None
+    compiler.fc = None
+
+    dirs = compiler._get_compiler_link_paths([compiler.cxx])
+    assert dirs == []
+
+
+def test_get_compiler_link_paths_no_verbose_flag():
+    compiler = MockCompiler()
+    compiler._verbose_flag = None
+
+    dirs = compiler._get_compiler_link_paths([compiler.cxx])
+    assert dirs == []
 
 
 # Get the desired flag from the specified compiler spec.

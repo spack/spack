@@ -32,8 +32,8 @@ class Intel(Compiler):
     version_argument = '--version'
     version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
 
     required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng']

@@ -81,8 +81,8 @@ class Clang(Compiler):
         ver_string = str(self.version)
         return ver_string.endswith('-apple')
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
 
     @property

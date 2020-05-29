@@ -30,8 +30,8 @@ class Fj(spack.compiler.Compiler):
 
     required_libs = ['libfj90i', 'libfj90f', 'libfjsrcinfo']
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
 
     @property
