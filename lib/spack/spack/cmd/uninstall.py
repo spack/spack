@@ -26,7 +26,8 @@ level = "short"
 
 error_message = """You can either:
     a) use a more specific spec, or
-    b) use `spack uninstall --all` to uninstall ALL matching specs.
+    b) specify the package by its hash (e.g. `spack uninstall /hash`), or
+    c) use `spack uninstall --all` to uninstall ALL matching specs.
 """
 
 # Arguments for display_specs when we find ambiguity
