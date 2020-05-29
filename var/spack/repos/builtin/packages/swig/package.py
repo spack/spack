@@ -47,6 +47,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
 
     build_directory = 'spack-build'
 
+    @when('@:4.0.1')
     def patch(self):
         config_dir = join_path(self.stage.source_path, 'Tools', 'config')
         copy(join_path(self.package_dir, 'config.guess'), config_dir)
