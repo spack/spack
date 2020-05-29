@@ -170,8 +170,7 @@ def test_config_add_update_dict(mutable_empty_config):
 
     expected = """packages:
   all:
-    compiler:
-    - gcc
+    compiler: [gcc]
     version:
     - 1.0.0
 """
