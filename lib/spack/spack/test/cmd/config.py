@@ -25,7 +25,7 @@ def md5sum(file):
 
 
 @pytest.fixture()
-def packages_yaml(mutable_config):
+def old_format_packages_yaml(mutable_config):
     """Create a packages.yaml in the old format"""
     def _create():
         old_data = {'packages': {'cmake': {'paths': {'cmake@3.14.0': '/usr'}}}}
@@ -430,8 +430,8 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     assert output == expected
 
 
-def test_config_update(packages_yaml):
-    packages_yaml()
+def test_config_update(old_format_packages_yaml):
+    old_format_packages_yaml()
     config('update', 'packages')
 
     # Check the entries have been transformed
@@ -451,19 +451,19 @@ def test_config_update_not_needed(mutable_config):
     assert data_before == data_after
 
 
-def test_config_update_fail_if_bkp_is_there(packages_yaml):
+def test_config_update_fail_if_bkp_is_there(old_format_packages_yaml):
     # The first time it will update and create the backup file
-    packages_yaml()
+    old_format_packages_yaml()
     config('update', 'packages')
     # The second time it will stop because a backup file
     # is already present
-    packages_yaml()
+    old_format_packages_yaml()
     with pytest.raises(spack.main.SpackCommandError):
         config('update', 'packages')
 
 
-def test_config_revert(packages_yaml):
-    cfg_file = packages_yaml()
+def test_config_revert(old_format_packages_yaml):
+    cfg_file = old_format_packages_yaml()
     bkp_file = cfg_file + '.bkp'
 
     config('update', 'packages')
@@ -481,8 +481,8 @@ def test_config_revert(packages_yaml):
     assert md5bkp == md5sum(cfg_file)
 
 
-def test_config_revert_raise_if_not_force(packages_yaml):
-    packages_yaml()
+def test_config_revert_raise_if_not_force(old_format_packages_yaml):
+    old_format_packages_yaml()
     config('update', 'packages')
     # The command raises with an helpful error if a configuration
     # file is to be deleted and the user didn't specify --force
