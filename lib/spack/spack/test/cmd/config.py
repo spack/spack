@@ -2,26 +2,18 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import hashlib
 import os
 
 import pytest
 
+import llnl.util.filesystem as fs
 import spack.config
 import spack.environment as ev
+import spack.main
 import spack.util.spack_yaml as syaml
-from llnl.util.filesystem import mkdirp
-from spack.main import SpackCommand
 
-config = SpackCommand('config')
-env = SpackCommand('env')
-
-
-def md5sum(file):
-    md5 = hashlib.md5()
-    with open(file, "rb") as f:
-        md5.update(f.read())
-    return md5.digest()
+config = spack.main.SpackCommand('config')
+env = spack.main.SpackCommand('env')
 
 
 @pytest.fixture()
@@ -48,8 +40,8 @@ def test_get_config_scope_merged(mock_low_high_config):
     low_path = mock_low_high_config.scopes['low'].path
     high_path = mock_low_high_config.scopes['high'].path
 
-    mkdirp(low_path)
-    mkdirp(high_path)
+    fs.mkdirp(low_path)
+    fs.mkdirp(high_path)
 
     with open(os.path.join(low_path, 'repos.yaml'), 'w') as f:
         f.write('''\
@@ -470,7 +462,7 @@ def test_config_revert(old_format_packages_yaml):
 
     # Check that the backup file exists, compute its md5 sum
     assert os.path.exists(bkp_file)
-    md5bkp = md5sum(bkp_file)
+    md5bkp = fs.md5sum(bkp_file)
 
     config('revert', '--force', 'packages')
 
@@ -478,7 +470,7 @@ def test_config_revert(old_format_packages_yaml):
     # that the md5 sum of the configuration file is the same
     # as that of the old backup file
     assert not os.path.exists(bkp_file)
-    assert md5bkp == md5sum(cfg_file)
+    assert md5bkp == fs.md5sum(cfg_file)
 
 
 def test_config_revert_raise_if_not_force(old_format_packages_yaml):
