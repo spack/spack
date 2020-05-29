@@ -245,6 +245,14 @@ class Compiler(object):
             return ''
         return '--enable-new-dtags'
 
+    @property
+    def debug_flags(self):
+        return ['-g']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3']
+
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv = None
     # Name of module used to switch versions of this compiler
