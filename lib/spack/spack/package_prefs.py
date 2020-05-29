@@ -171,7 +171,7 @@ def spec_externals(spec):
         for entry in pkg_externals:
             # This copy makes it safe to pop out of entry without
             # modifying the object in config
-            entry = copy.deepcopy(entry)
+            entry = copy.copy(entry)
             spec_str = entry.pop('spec')
             external_path = entry.pop('prefix', None)
             if external_path:
