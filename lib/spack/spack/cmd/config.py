@@ -184,15 +184,16 @@ def config_add(args):
         config_dict = spack.environment.config_dict(data)
 
         # update all sections from config dict
-        # We have to iterate on keys to keep overrides
+        # We have to iterate on keys to keep overrides from the file
         for section in config_dict.keys():
             if section in spack.config.section_schemas.keys():
                 # Special handling for compiler scope difference
+                # Has to be handled after we choose a section
                 if scope is None:
                     if section == 'compilers':
                         scope = spack.config.default_modify_scope()
                     else:
-                        scope = spack.config.default_modify_scope(subscopes=False)
+                        scope = spack.config.default_modify_scope(False)
 
                 value = config_dict[section]
                 existing = spack.config.get(section, scope=scope)
@@ -224,9 +225,9 @@ def config_add(args):
 
             if existing is None:
                 has_existing_value = False
-                # We've nested further than existing config, so we need the type
-                # information for validation to know how to handle bare values
-                # appended to lists.
+                # We've nested further than existing config, so we need the
+                # type information for validation to know how to handle bare
+                # values appended to lists.
                 existing = spack.config.type_of(path)
 
                 # construct value from this point down

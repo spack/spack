@@ -843,6 +843,7 @@ def type_of(path):
             pass
     return ret
 
+
 def merge_yaml(dest, source):
     """Merges source into dest; entries in source take precedence over dest.
 
