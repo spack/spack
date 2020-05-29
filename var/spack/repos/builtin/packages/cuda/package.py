@@ -76,6 +76,7 @@ class Cuda(Package):
     depends_on('libxml2', when='@10.1.243:')
 
     def setup_build_environment(self, env):
+        env.set('CUDAHOSTCXX', self.compiler.cxx)
         if self.spec.satisfies('@10.1.243:'):
             libxml2_home  = self.spec['libxml2'].prefix
             env.set('LIBXML2HOME', libxml2_home)
@@ -83,6 +84,7 @@ class Cuda(Package):
 
     def setup_run_environment(self, env):
         env.set('CUDA_HOME', self.prefix)
+        env.set('CUDAHOSTCXX', self.compiler.cxx)
 
     def install(self, spec, prefix):
         runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
