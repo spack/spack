@@ -617,7 +617,7 @@ _spack_config_list() {
 _spack_config_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -f --file"
     else
         SPACK_COMPREPLY=""
     fi
