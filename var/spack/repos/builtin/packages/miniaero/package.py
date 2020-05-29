@@ -26,7 +26,7 @@ class Miniaero(MakefilePackage):
         targets = [
             '--directory=kokkos',
             'CXX=c++',
-            'KOKKOS_PATH={0}'.format(self.spec['kokkos'].prefix)
+            'KOKKOS_PATH={0}'.format(self.spec['kokkos-legacy'].prefix)
         ]
 
         return targets
