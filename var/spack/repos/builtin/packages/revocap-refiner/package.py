@@ -22,6 +22,11 @@ class RevocapRefiner(MakefilePackage):
 
     parallel = False
 
+    # add space between literal and identifier.
+    patch('add_space.patch')
+    # remove unused function getIndices.
+    patch('delete_getIndices.patch')
+
     def edit(self, spec, prefix):
         cflags = ['-O']
         cxxflags = ['-O',  self.compiler.cxx_pic_flag]
