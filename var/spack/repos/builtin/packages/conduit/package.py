@@ -107,10 +107,10 @@ class Conduit(Package):
     #
     # Use HDF5 1.8, for wider output compatibly
     # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5@1.8.19:1.8.999~cxx~mpi~fortran", when="+hdf5+hdf5_compat+shared")
-    depends_on("hdf5@1.8.19:1.8.999~shared~cxx~mpi~fortran", when="+hdf5+hdf5_compat~shared")
-    depends_on("hdf5~cxx~mpi~fortran", when="+hdf5~hdf5_compat+shared")
-    depends_on("hdf5~shared~cxx~mpi~fortran", when="+hdf5~hdf5_compat~shared")
+    depends_on("hdf5@1.8.19:1.8.999~cxx", when="+hdf5+hdf5_compat+shared")
+    depends_on("hdf5@1.8.19:1.8.999~shared~cxx", when="+hdf5+hdf5_compat~shared")
+    depends_on("hdf5~cxx", when="+hdf5~hdf5_compat+shared")
+    depends_on("hdf5~shared~cxx", when="+hdf5~hdf5_compat~shared")
 
     ###############
     # Silo
@@ -285,8 +285,10 @@ class Conduit(Package):
         f_compiler = None
 
         if self.compiler.fc:
-            # even if this is set, it may not exist so do one more sanity check
-            f_compiler = which(env["SPACK_FC"])
+            # even if this is set, it may not exist
+            # do one more sanity check
+            if os.path.isfile(env["SPACK_FC"]):
+                f_compiler  = env["SPACK_FC"]
 
         #######################################################################
         # By directly fetching the names of the actual compilers we appear
@@ -298,6 +300,9 @@ class Conduit(Package):
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
+
+        # are we on a specific machine
+        on_blueos = 'blueos' in sys_type
 
         ##############################################
         # Find and record what CMake is used
@@ -335,7 +340,7 @@ class Conduit(Package):
         if "+fortran" in spec and f_compiler is not None:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
             cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER",
-                                        f_compiler.path))
+                                        f_compiler))
         else:
             cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
@@ -345,16 +350,6 @@ class Conduit(Package):
         else:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
 
-        # extra fun for blueos
-        if 'blueos_3' in sys_type and "+fortran" in spec:
-            if 'xl@coral' in os.getenv('SPACK_COMPILER_SPEC', ""):
-                # Fix missing std linker flag in xlc compiler
-                cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS",
-                                            "-WF,-C! -qxlf2003=polymorphic"))
-                # Conduit can't link C++ into fortran for this spec, but works
-                # fine in host code
-                cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
-
         #######################
         # Unit Tests
         #######################
@@ -362,6 +357,32 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("ENABLE_TESTS", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
+
+        # extra fun for blueos
+        if on_blueos:
+            # All of BlueOS compilers report clang due to nvcc,
+            # override to proper compiler family
+            if "xlc" in c_compiler:
+                cfg.write(cmake_cache_entry("CMAKE_C_COMPILER_ID", "XL"))
+            if "xlC" in cpp_compiler:
+                cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER_ID", "XL"))
+
+            if "+fortran" in spec:
+                if "xlf" in f_compiler:
+                    cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID",
+                                                "XL"))
+
+                if 'xl@coral' in os.getenv('SPACK_COMPILER_SPEC', ""):
+                    # Fix missing std linker flag in xlc compiler
+                    flags = "-WF,-C! -qxlf2003=polymorphic"
+                    cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS",
+                                                flags))
+                    # Grab lib directory for the current fortran compiler
+                    libdir = os.path.join(os.path.dirname(
+                                          os.path.dirname(f_compiler)), "lib")
+                    flags = "-lstdc++ -Wl,-rpath," + libdir
+                    cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS",
+                                                flags))
 
         #######################
         # Python
@@ -419,7 +440,10 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
-            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
+            if "+fortran" in spec:
+                cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
+                                            mpifc_path))
+
             mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
             if os.path.isfile(mpiexe_bin):
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
@@ -456,12 +480,6 @@ class Conduit(Package):
 
         if "+hdf5" in spec:
             cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
-            # extra fun for BG/Q
-            if 'bgqos_0' in sys_type:
-                cfg.write(cmake_cache_entry('HDF5_C_LIBRARY_m',
-                                            '-lm', 'STRING'))
-                cfg.write(cmake_cache_entry('HDF5_C_LIBRARY_dl',
-                                            '-ldl', 'STRING'))
         else:
             cfg.write("# hdf5 not built by spack \n")
 

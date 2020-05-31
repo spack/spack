@@ -28,15 +28,15 @@ class Arborx(CMakePackage):
     # ArborX relies on Kokkos to provide devices, thus having one-to-one match
     # The only way to disable those devices is to make sure Kokkos does not
     # provide them
-    depends_on('kokkos@2.7.00:+cuda+enable_lambda cxxstd=c++14', when='+cuda')
-    depends_on('kokkos@2.7.00:+openmp cxxstd=c++14', when='+openmp')
-    depends_on('kokkos@2.7.00:+serial cxxstd=c++14', when='+serial')
+    depends_on('kokkos-legacy@2.7.00:+cuda+enable_lambda cxxstd=c++14', when='+cuda')
+    depends_on('kokkos-legacy@2.7.00:+openmp cxxstd=c++14', when='+openmp')
+    depends_on('kokkos-legacy@2.7.00:+serial cxxstd=c++14', when='+serial')
 
     def cmake_args(self):
         spec = self.spec
 
         options = [
-            '-DCMAKE_PREFIX_PATH=%s' % spec['kokkos'].prefix,
+            '-DCMAKE_PREFIX_PATH=%s' % spec['kokkos-legacy'].prefix,
             '-DARBORX_ENABLE_TESTS=OFF',
             '-DARBORX_ENABLE_EXAMPLES=OFF',
             '-DARBORX_ENABLE_BENCHMARKS=OFF',

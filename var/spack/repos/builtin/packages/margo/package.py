@@ -13,7 +13,7 @@ class Margo(AutotoolsPackage):
     url      = "https://xgitlab.cels.anl.gov/sds/margo/-/archive/v0.4.3/margo-v0.4.3.tar.gz"
     git      = "https://xgitlab.cels.anl.gov/sds/margo.git"
 
-    maintainers = ['fbudin69500', 'chuckatkins']
+    maintainers = ['fbudin69500', 'chuckatkins', 'carns']
 
     version('develop', branch='master')
     version('0.4.3', sha256='61a634d6983bee2ffa06e1e2da4c541cb8f56ddd9dd9f8e04e8044fb38657475')
@@ -28,7 +28,7 @@ class Margo(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
 
     depends_on('mercury')
-    depends_on('argobots@1.0rc1:')
+    depends_on('argobots@1.0:')
 
     build_directory = 'spack-build'
 

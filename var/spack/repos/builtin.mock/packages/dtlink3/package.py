@@ -16,6 +16,3 @@ class Dtlink3(Package):
 
     depends_on('dtbuild2', type='build')
     depends_on('dtlink4')
-
-    def install(self, spec, prefix):
-        pass

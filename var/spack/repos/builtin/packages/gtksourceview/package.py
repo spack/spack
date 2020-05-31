@@ -35,7 +35,7 @@ class Gtksourceview(AutotoolsPackage):
     depends_on('pango')
     depends_on('gdk-pixbuf')
     depends_on('atk')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     def url_for_version(self, version):
         url  = 'https://download.gnome.org/sources/gtksourceview/'

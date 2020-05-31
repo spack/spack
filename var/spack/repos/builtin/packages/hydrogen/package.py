@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 from spack import *
 
 
@@ -19,7 +18,7 @@ class Hydrogen(CMakePackage):
     maintainers = ['bvanessen']
 
     version('develop', branch='hydrogen')
-    version('1.3.3', sha256='140112066b84d33ca4b75c8e520fb15748fa648c4d2b934c1eb5510173ede5f5')
+    version('1.3.3', sha256='a51a1cfd40ac74d10923dfce35c2c04a3082477683f6b35e7b558ea9f4bb6d51')
     version('1.3.2', sha256='50bc5e87955f8130003d04dfd9dcad63107e92b82704f8107baf95b0ccf98ed6')
     version('1.3.1', sha256='a8b8521458e9e747f2b24af87c4c2749a06e500019c383e0cefb33e5df6aaa1d')
     version('1.3.0', sha256='0f3006aa1d8235ecdd621e7344c99f56651c6836c2e1bc0cf006331b70126b36')
@@ -83,7 +82,7 @@ class Hydrogen(CMakePackage):
     depends_on('netlib-lapack +external-blas', when='blas=essl')
 
     depends_on('aluminum', when='+al ~cuda')
-    depends_on('aluminum +gpu +mpi_cuda', when='+al +cuda')
+    depends_on('aluminum +gpu +nccl', when='+al +cuda')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
@@ -135,13 +134,12 @@ class Hydrogen(CMakePackage):
         ]
 
         # Add support for OS X to find OpenMP
-        if (self.spec.satisfies('%clang')):
-            if (sys.platform == 'darwin'):
-                clang = self.compiler.cc
-                clang_bin = os.path.dirname(clang)
-                clang_root = os.path.dirname(clang_bin)
-                args.extend([
-                    '-DOpenMP_DIR={0}'.format(clang_root)])
+        if (self.spec.satisfies('%clang platform=darwin')):
+            clang = self.compiler.cc
+            clang_bin = os.path.dirname(clang)
+            clang_root = os.path.dirname(clang_bin)
+            args.extend([
+                '-DOpenMP_DIR={0}'.format(clang_root)])
 
         if 'blas=openblas' in spec:
             args.extend([

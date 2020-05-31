@@ -3,12 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
+import spack.package
 import spack.repo
 import spack.store
 
@@ -42,7 +45,9 @@ def dependencies(parser, args):
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
         format_string = '{name}{@version}{%compiler}{/hash:7}'
-        tty.msg("Dependencies of %s" % spec.format(format_string, color=True))
+        if sys.stdout.isatty():
+            tty.msg(
+                "Dependencies of %s" % spec.format(format_string, color=True))
         deps = spack.store.db.installed_relatives(
             spec, 'children', args.transitive, deptype=args.deptype)
         if deps:
@@ -52,22 +57,15 @@ def dependencies(parser, args):
 
     else:
         spec = specs[0]
-
-        if not spec.virtual:
-            packages = [spec.package]
-        else:
-            packages = [
-                spack.repo.get(s.name)
-                for s in spack.repo.path.providers_for(spec)]
-
-        dependencies = set()
-        for pkg in packages:
-            possible = pkg.possible_dependencies(
-                args.transitive, args.expand_virtuals, deptype=args.deptype)
-            dependencies.update(possible)
+        dependencies = spack.package.possible_dependencies(
+            spec,
+            transitive=args.transitive,
+            expand_virtuals=args.expand_virtuals,
+            deptype=args.deptype
+        )
 
         if spec.name in dependencies:
-            dependencies.remove(spec.name)
+            del dependencies[spec.name]
 
         if dependencies:
             colify(sorted(dependencies))

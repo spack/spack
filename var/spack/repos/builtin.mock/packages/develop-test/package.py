@@ -13,6 +13,3 @@ class DevelopTest(Package):
 
     version('develop', git='https://github.com/dummy/repo.git')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
-
-    def install(self, spec, prefix):
-        pass

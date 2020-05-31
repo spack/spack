@@ -24,7 +24,7 @@ class AprUtil(AutotoolsPackage):
 
     depends_on('apr')
     depends_on('expat')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     depends_on('openssl', when='+crypto')
     depends_on('gdbm', when='+gdbm')
@@ -38,7 +38,7 @@ class AprUtil(AutotoolsPackage):
         args = [
             '--with-apr={0}'.format(spec['apr'].prefix),
             '--with-expat={0}'.format(spec['expat'].prefix),
-            '--with-iconv={0}'.format(spec['libiconv'].prefix),
+            '--with-iconv={0}'.format(spec['iconv'].prefix),
             # TODO: Add support for the following database managers
             '--without-ndbm',
             '--without-berkeley-db',

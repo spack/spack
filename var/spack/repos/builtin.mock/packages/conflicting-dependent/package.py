@@ -17,6 +17,3 @@ class ConflictingDependent(Package):
     version('1.0', '0123456789abcdef0123456789abcdef')
 
     depends_on('dependency-install@:1.0')
-
-    def install(self, spec, prefix):
-        pass

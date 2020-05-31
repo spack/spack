@@ -1,0 +1,17 @@
+--- spack-src/test/prototype_factory_test.cpp.org	2020-02-07 11:17:24.321582233 +0900
++++ spack-src/test/prototype_factory_test.cpp	2020-02-07 11:18:25.598262173 +0900
+@@ -58,6 +58,7 @@
+   virtual clone_type clone(int a) = 0;
+   virtual clone_type clone(int a, int b) = 0;
+   virtual int get() = 0;
++  virtual ~BaseMultiParms() {}
+ };
+ 
+ class DerivedSum : public BaseMultiParms {
+@@ -121,4 +122,4 @@
+   auto objb = factory.create(0, 3, 6);
+   BOOST_CHECK_EQUAL(objb->get(), 9);
+ }
+-BOOST_AUTO_TEST_SUITE_END()
+\ No newline at end of file
++BOOST_AUTO_TEST_SUITE_END()

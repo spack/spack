@@ -22,8 +22,12 @@ class Boost(Package):
     git      = "https://github.com/boostorg/boost.git"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
+    maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.73.0', sha256='4eb3b8d442b426dc35346235c8733b5ae35ba431690e38c6a8263dce9fcbb402')
+    version('1.72.0', sha256='59c9b274bc451cf91a9ba1dd2c7fdcaf5d60b1b3aa83f2c9fa143417cc660722')
+    version('1.71.0', sha256='d73a8da01e8bf8c7eda40b4c84915071a8c8a0df4a6734537ddde4a8580524ee')
     version('1.70.0', sha256='430ae8354789de4fd19ee52f3b1f739e1fba576f0aded0897c3c2bc00fb38778')
     version('1.69.0', sha256='8f32d4617390d1c2d16f26a27ab60d97807b35440d45891fa340fc2648b04406')
     version('1.68.0', sha256='7f6130bc3cf65f56a618888ce9d5ea704fa10b462be126ad053e80e553d6d8b7')
@@ -93,8 +97,12 @@ class Boost(Package):
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
     # possible (and it would be difficult to choose sensible defaults)
+    #
+    # Boost.Container can be both header-only and compiled. '+container'
+    # indicates the compiled version which requires Extended Allocator
+    # support. The header-only library is installed when no variant is given.
     default_noinstall_libs\
-        = set(['context', 'coroutine', 'fiber', 'mpi', 'python'])
+        = set(['container', 'context', 'coroutine', 'fiber', 'mpi', 'python'])
 
     all_libs = default_install_libs | default_noinstall_libs
 
@@ -118,7 +126,7 @@ class Boost(Package):
 
     variant('cxxstd',
             default='98',
-            values=('98', '11', '14', '17'),
+            values=('98', '11', '14', '17', '2a'),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant('debug', default=False,
@@ -165,11 +173,20 @@ class Boost(Package):
     conflicts('cxxstd=98', when='+fiber')  # Fiber requires >=C++11.
     conflicts('~context', when='+fiber')  # Fiber requires Context.
 
+    # C++20/2a is not support by Boost < 1.73.0
+    conflicts('cxxstd=2a', when='@:1.72.99')
+
     # C++17 is not supported by Boost<1.63.0.
     conflicts('cxxstd=17', when='@:1.62.99')
 
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
+
+    # boost-python in 1.72.0 broken with cxxstd=98
+    conflicts('cxxstd=98', when='+mpi+python @1.72.0:')
+
+    # Container's Extended Allocators were not added until 1.56.0
+    conflicts('+container', when='@:1.55.99')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
@@ -190,6 +207,17 @@ class Boost(Package):
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
+    # Fix for version comparison on newer Clang on darwin
+    # See: https://github.com/boostorg/build/issues/440
+    # See: https://github.com/macports/macports-ports/pull/6726
+    patch('darwin_clang_version.patch', level=0,
+          when='@1.56.0:1.72.0 platform=darwin')
+
+    # Fix: "Unable to compile code using boost/process.hpp"
+    # See: https://github.com/boostorg/process/issues/116
+    # Patch: https://github.com/boostorg/process/commit/6a4d2ff72114ef47c7afaf92e1042aca3dfa41b0.patch
+    patch('1.72_boost_process.patch', level=2, when='@1.72.0')
+
     # Fix the bootstrap/bjam build for Cray
     patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
 
@@ -205,7 +233,19 @@ class Boost(Package):
 
     # Add option to C/C++ compile commands in clang-linux.jam
     patch('clang-linux_add_option.patch', when='@1.56.0:1.63.0')
-    patch('clang-linux_add_option2.patch', when='@:1.55.0')
+    patch('clang-linux_add_option2.patch', when='@1.47.0:1.55.0')
+
+    # C++20 concepts fix for Beast
+    # See https://github.com/boostorg/beast/pull/1927 for details
+    patch('https://www.boost.org/patches/1_73_0/0002-beast-coroutines.patch',
+          sha256='4dd507e1f5a29e3b87b15321a4d8c74afdc8331433edabf7aeab89b3c405d556',
+          when='@1.73.0')
+
+    # Cloning a status_code with indirecting_domain leads to segmentation fault
+    # See https://github.com/ned14/outcome/issues/223 for details
+    patch('https://www.boost.org/patches/1_73_0/0001-outcome-assert.patch',
+          sha256='246508e052c44b6f4e8c2542a71c06cacaa72cd1447ab8d2a542b987bc35ace9',
+          when='@1.73.0')
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
@@ -216,9 +256,6 @@ class Boost(Package):
         return url.format(version.dotted, version.underscored)
 
     def determine_toolset(self, spec):
-        if spec.satisfies("platform=darwin"):
-            return 'darwin'
-
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang',
@@ -355,7 +392,7 @@ class Boost(Package):
                 cxxflags.append(flag)
 
         if '+pic' in self.spec:
-            cxxflags.append(self.compiler.pic_flag)
+            cxxflags.append(self.compiler.cxx_pic_flag)
 
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build
@@ -405,15 +442,6 @@ class Boost(Package):
         for lib in Boost.all_libs:
             if "+{0}".format(lib) in spec:
                 with_libs.append(lib)
-        if not with_libs:
-            # if no libraries are specified for compilation, then you dont have
-            # to configure/build anything, just copy over to the prefix
-            # directory.
-            src = join_path(self.stage.source_path, 'boost')
-            mkdirp(join_path(prefix, 'include'))
-            dst = join_path(prefix, 'include', 'boost')
-            install_tree(src, dst)
-            return
 
         # Remove libraries that the release version does not support
         if spec.satisfies('@1.69.0:') and 'signals' in with_libs:
@@ -432,6 +460,16 @@ class Boost(Package):
             with_libs.remove('exception')
         if '+graph' in spec and '+mpi' in spec:
             with_libs.append('graph_parallel')
+
+        if not with_libs:
+            # if no libraries are specified for compilation, then you dont have
+            # to configure/build anything, just copy over to the prefix
+            # directory.
+            src = join_path(self.stage.source_path, 'boost')
+            mkdirp(join_path(prefix, 'include'))
+            dst = join_path(prefix, 'include', 'boost')
+            install_tree(src, dst)
+            return
 
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = self.stage.source_path

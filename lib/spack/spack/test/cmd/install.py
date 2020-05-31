@@ -15,11 +15,12 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.config
+import spack.compilers as compilers
 import spack.hash_types as ht
 import spack.package
 import spack.cmd.install
 from spack.error import SpackError
-from spack.spec import Spec
+from spack.spec import Spec, CompilerSpec
 from spack.main import SpackCommand
 import spack.environment as ev
 
@@ -139,8 +140,7 @@ def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         out = install('build-error', fail_on_error=False)
-    assert isinstance(install.error, spack.build_environment.ChildError)
-    assert install.error.name == 'ProcessError'
+    assert 'ProcessError' in out
     assert 'configure: error: in /path/to/some/file:' in out
     assert 'configure: error: cannot run C compiled programs.' in out
 
@@ -177,9 +177,10 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
     assert install.error.pkg.name == 'build-error'
     assert 'Full build log:' in out
 
+    # Message shows up for ProcessError (1), ChildError (1), and output (1)
     errors = [line for line in out.split('\n')
               if 'configure: error: cannot run C compiled programs' in line]
-    assert len(errors) == 2
+    assert len(errors) == 3
 
 
 def test_install_overwrite(
@@ -373,8 +374,12 @@ def test_junit_output_with_errors(
         exc_type = getattr(builtins, exc_typename)
         raise exc_type(msg)
 
-    monkeypatch.setattr(spack.package.PackageBase, 'do_install', just_throw)
+    monkeypatch.setattr(spack.installer.PackageInstaller, '_install_task',
+                        just_throw)
 
+    # TODO: Why does junit output capture appear to swallow the exception
+    # TODO: as evidenced by the two failing packages getting tagged as
+    # TODO: installed?
     with tmpdir.as_cwd():
         install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
 
@@ -384,14 +389,14 @@ def test_junit_output_with_errors(
 
     content = filename.open().read()
 
-    # Count failures and errors correctly
-    assert 'tests="1"' in content
+    # Count failures and errors correctly: libdwarf _and_ libelf
+    assert 'tests="2"' in content
     assert 'failures="0"' in content
-    assert 'errors="1"' in content
+    assert 'errors="2"' in content
 
     # We want to have both stdout and stderr
     assert '<system-out>' in content
-    assert msg in content
+    assert 'error message="{0}"'.format(msg) in content
 
 
 @pytest.mark.usefixtures('noop_install', 'config')
@@ -478,9 +483,8 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
-                                  capfd):
-    # capfd interferes with Spack's capturing
+def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
             install(
@@ -498,7 +502,7 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing
+    # capfd interferes with Spack's capture of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
             install(
@@ -520,7 +524,7 @@ def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing
+    # capfd interferes with Spack's capture of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
             cdash_track = 'some_mocked_track'
@@ -569,7 +573,6 @@ def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
             report_file = report_dir.join('a_Configure.xml')
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
-            import re
             install_command_regex = re.compile(
                 r'<ConfigureCommand>(.+)</ConfigureCommand>',
                 re.MULTILINE | re.DOTALL)
@@ -599,6 +602,7 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
         msg = ''
         try:
             install('build-warnings')
+            assert False, "no exception was raised!"
         except spack.build_environment.ChildError as e:
             msg = e.long_message
 
@@ -607,12 +611,16 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
+    msg = ''
     with capfd.disabled():
         try:
             install('--cache-only', 'libdwarf')
-            assert False
-        except spack.main.SpackCommandError:
-            pass
+        except spack.installer.InstallError as e:
+            msg = str(e)
+
+    # libelf from cache failed to install, which automatically removed the
+    # the libdwarf build task and flagged the package as failed to install.
+    assert 'Installation of libdwarf failed' in msg
 
 
 def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
@@ -623,6 +631,30 @@ def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
 
     assert os.path.exists(dep.prefix)
     assert not os.path.exists(root.prefix)
+
+
+def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd):
+    msg = ''
+    with capfd.disabled():
+        try:
+            install('--only', 'package', 'dependent-install')
+        except spack.installer.InstallError as e:
+            msg = str(e)
+
+    assert 'Cannot proceed with dependent-install'  in msg
+    assert '1 uninstalled dependency' in msg
+
+
+def test_install_deps_then_package(tmpdir, mock_fetch, install_mockery):
+    dep = Spec('dependency-install').concretized()
+    root = Spec('dependent-install').concretized()
+
+    install('--only', 'dependencies', 'dependent-install')
+    assert os.path.exists(dep.prefix)
+    assert not os.path.exists(root.prefix)
+
+    install('--only', 'package', 'dependent-install')
+    assert os.path.exists(root.prefix)
 
 
 @pytest.mark.regression('12002')
@@ -687,3 +719,30 @@ def test_cdash_auth_token(tmpdir, install_mockery, capfd):
                 '--log-format=cdash',
                 'a')
             assert 'Using CDash auth token from environment' in out
+
+
+def test_compiler_bootstrap(
+        install_mockery_mutable_config, mock_packages, mock_fetch,
+        mock_archive, mutable_config, monkeypatch):
+    monkeypatch.setattr(spack.concretize.Concretizer,
+                        'check_for_compiler_existence', False)
+    spack.config.set('config:install_missing_compilers', True)
+    assert CompilerSpec('gcc@2.0') not in compilers.all_compiler_specs()
+
+    # Test succeeds if it does not raise an error
+    install('a%gcc@2.0')
+
+
+@pytest.mark.regression('16221')
+def test_compiler_bootstrap_already_installed(
+        install_mockery_mutable_config, mock_packages, mock_fetch,
+        mock_archive, mutable_config, monkeypatch):
+    monkeypatch.setattr(spack.concretize.Concretizer,
+                        'check_for_compiler_existence', False)
+    spack.config.set('config:install_missing_compilers', True)
+
+    assert CompilerSpec('gcc@2.0') not in compilers.all_compiler_specs()
+
+    # Test succeeds if it does not raise an error
+    install('gcc@2.0')
+    install('a%gcc@2.0')

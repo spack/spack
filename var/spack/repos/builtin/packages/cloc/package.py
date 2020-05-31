@@ -13,6 +13,7 @@ class Cloc(Package):
     homepage = "https://github.com/AlDanial/cloc/"
     url      = "https://github.com/AlDanial/cloc/releases/download/1.74/cloc-1.74.tar.gz"
 
+    version('1.84', sha256='c3f0a6bd2319110418ccb3e55a7a1b6d0edfd7528bfd2ae5d530938abe90f254')
     version('1.80', sha256='082f53530eee3f9ee84ec449eca59a77ff114250cd7daf9519679537b5b21d67')
     version('1.74', sha256='55ac423d5766c74236700a47838ed66bea47ba42e1d594fdd894074ba3eb0567')
 

@@ -42,11 +42,12 @@ def update_kwargs_from_args(args, kwargs):
         'use_cache': args.use_cache,
         'cache_only': args.cache_only,
         'explicit': True,  # Always true for install command
-        'stop_at': args.until
+        'stop_at': args.until,
+        'unsigned': args.unsigned,
     })
 
     kwargs.update({
-        'install_dependencies': ('dependencies' in args.things_to_install),
+        'install_deps': ('dependencies' in args.things_to_install),
         'install_package': ('package' in args.things_to_install)
     })
 
@@ -98,6 +99,10 @@ the dependencies"""
         '--cache-only', action='store_true', dest='cache_only', default=False,
         help="only install package from binary mirrors")
 
+    subparser.add_argument(
+        '--no-check-signature', action='store_true',
+        dest='unsigned', default=False,
+        help="do not check signatures of binary packages")
     subparser.add_argument(
         '--show-log-on-error', action='store_true',
         help="print full build log to stderr if build fails")

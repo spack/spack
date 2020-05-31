@@ -14,7 +14,6 @@ import shutil
 import tempfile
 import xml.etree.ElementTree
 
-import ordereddict_backport
 import py
 import pytest
 import ruamel.yaml as yaml
@@ -28,6 +27,7 @@ import spack.caches
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.package
 import spack.package_prefs
 import spack.paths
 import spack.platforms.test
@@ -37,12 +37,8 @@ import spack.util.executable
 import spack.util.gpg
 
 from spack.util.pattern import Bunch
-from spack.dependency import Dependency
-from spack.package import PackageBase
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
-from spack.spec import Spec
-from spack.version import Version
 
 
 @pytest.fixture
@@ -170,7 +166,7 @@ def ignore_stage_files():
     Used to track which leftover files in the stage have been seen.
     """
     # to start with, ignore the .lock file at the stage root.
-    return set(['.lock', spack.stage._source_path_subdir])
+    return set(['.lock', spack.stage._source_path_subdir, 'build_cache'])
 
 
 def remove_whatever_it_is(path):
@@ -301,8 +297,17 @@ def use_configuration(config):
     """Context manager to swap out the global Spack configuration."""
     saved = spack.config.config
     spack.config.config = config
+
+    # Avoid using real spack configuration that has been cached by other
+    # tests, and avoid polluting the cache with spack test configuration
+    # (including modified configuration)
+    saved_compiler_cache = spack.compilers._cache_config_file
+    spack.compilers._cache_config_file = []
+
     yield
+
     spack.config.config = saved
+    spack.compilers._cache_config_file = saved_compiler_cache
 
 
 @contextlib.contextmanager
@@ -329,8 +334,18 @@ def mock_repo_path():
     yield spack.repo.RepoPath(spack.paths.mock_packages_path)
 
 
+@pytest.fixture
+def mock_pkg_install(monkeypatch):
+    def _pkg_install_fn(pkg, spec, prefix):
+        # sanity_check_prefix requires something in the install directory
+        mkdirp(prefix.bin)
+
+    monkeypatch.setattr(spack.package.PackageBase, 'install', _pkg_install_fn,
+                        raising=False)
+
+
 @pytest.fixture(scope='function')
-def mock_packages(mock_repo_path):
+def mock_packages(mock_repo_path, mock_pkg_install):
     """Use the 'builtin.mock' repository instead of 'builtin'"""
     with use_repo(mock_repo_path):
         yield mock_repo_path
@@ -408,18 +423,14 @@ def config(mock_configuration):
 
 
 @pytest.fixture(scope='function')
-def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
+def mutable_config(tmpdir_factory, configuration_dir):
     """Like config, but tests can modify the configuration."""
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     configuration_dir.copy(mutable_dir)
 
     cfg = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(mutable_dir))
+        *[spack.config.ConfigScope(name, str(mutable_dir.join(name)))
           for name in ['site', 'system', 'user']])
-
-    # This is essential, otherwise the cache will create weird side effects
-    # that will compromise subsequent tests if compilers.yaml is modified
-    monkeypatch.setattr(spack.compilers, '_cache_config_file', [])
 
     with use_configuration(cfg):
         yield cfg
@@ -515,6 +526,8 @@ def database(mock_store, mock_packages, config):
     """This activates the mock store, packages, AND config."""
     with use_store(mock_store):
         yield mock_store.db
+    # Force reading the database again between tests
+    mock_store.db.last_seen_verifier = ''
 
 
 @pytest.fixture(scope='function')
@@ -589,6 +602,26 @@ def install_mockery(tmpdir, config, mock_packages, monkeypatch):
     spack.store.store = real_store
 
 
+@pytest.fixture(scope='function')
+def install_mockery_mutable_config(
+        tmpdir, mutable_config, mock_packages, monkeypatch):
+    """Hooks a fake install directory, DB, and stage directory into Spack.
+
+    This is specifically for tests which want to use 'install_mockery' but
+    also need to modify configuration (and hence would want to use
+    'mutable config'): 'install_mockery' does not support this.
+    """
+    real_store = spack.store.store
+    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
+
+    # We use a fake package, so temporarily disable checksumming
+    with spack.config.override('config:checksum', False):
+        yield
+
+    tmpdir.join('opt').remove()
+    spack.store.store = real_store
+
+
 @pytest.fixture()
 def mock_fetch(mock_archive):
     """Fake the URL for a package so it downloads from a file."""
@@ -599,10 +632,10 @@ def mock_fetch(mock_archive):
     def fake_fn(self):
         return fetcher
 
-    orig_fn = PackageBase.fetcher
-    PackageBase.fetcher = fake_fn
+    orig_fn = spack.package.PackageBase.fetcher
+    spack.package.PackageBase.fetcher = fake_fn
     yield
-    PackageBase.fetcher = orig_fn
+    spack.package.PackageBase.fetcher = orig_fn
 
 
 class MockLayout(object):
@@ -744,10 +777,30 @@ def mock_archive(request, tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def mock_git_repository(tmpdir_factory):
-    """Creates a very simple git repository with two branches and
-    two commits.
+    """Creates a simple git repository with two branches,
+    two commits and two submodules. Each submodule has one commit.
     """
     git = spack.util.executable.which('git', required=True)
+
+    suburls = []
+    for submodule_count in range(2):
+        tmpdir = tmpdir_factory.mktemp('mock-git-repo-submodule-dir-{0}'
+                                       .format(submodule_count))
+        tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+        repodir = tmpdir.join(spack.stage._source_path_subdir)
+        suburls.append((submodule_count, 'file://' + str(repodir)))
+
+        # Initialize the repository
+        with repodir.as_cwd():
+            git('init')
+            git('config', 'user.name', 'Spack')
+            git('config', 'user.email', 'spack@spack.io')
+
+            # r0 is just the first commit
+            submodule_file = 'r0_file_{0}'.format(submodule_count)
+            repodir.ensure(submodule_file)
+            git('add', submodule_file)
+            git('commit', '-m', 'mock-git-repo r0 {0}'.format(submodule_count))
 
     tmpdir = tmpdir_factory.mktemp('mock-git-repo-dir')
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
@@ -759,6 +812,9 @@ def mock_git_repository(tmpdir_factory):
         git('config', 'user.name', 'Spack')
         git('config', 'user.email', 'spack@spack.io')
         url = 'file://' + str(repodir)
+        for number, suburl in suburls:
+            git('submodule', 'add', suburl,
+                'third_party/submodule{0}'.format(number))
 
         # r0 is just the first commit
         r0_file = 'r0_file'
@@ -963,68 +1019,6 @@ def installation_dir_with_headers(tmpdir_factory):
 
     return root
 
-
-##########
-# Mock packages
-##########
-
-
-class MockPackage(object):
-    def __init__(self, name, dependencies, dependency_types, conditions=None,
-                 versions=None):
-        self.name = name
-        self.spec = None
-        self.dependencies = ordereddict_backport.OrderedDict()
-        self._installed_upstream = False
-
-        assert len(dependencies) == len(dependency_types)
-        for dep, dtype in zip(dependencies, dependency_types):
-            d = Dependency(self, Spec(dep.name), type=dtype)
-            if not conditions or dep.name not in conditions:
-                self.dependencies[dep.name] = {Spec(name): d}
-            else:
-                dep_conditions = conditions[dep.name]
-                dep_conditions = dict(
-                    (Spec(x), Dependency(self, Spec(y), type=dtype))
-                    for x, y in dep_conditions.items())
-                self.dependencies[dep.name] = dep_conditions
-
-        if versions:
-            self.versions = versions
-        else:
-            versions = list(Version(x) for x in [1, 2, 3])
-            self.versions = dict((x, {'preferred': False}) for x in versions)
-
-        self.variants = {}
-        self.provided = {}
-        self.conflicts = {}
-        self.patches = {}
-
-
-class MockPackageMultiRepo(object):
-    def __init__(self, packages):
-        self.spec_to_pkg = dict((x.name, x) for x in packages)
-        self.spec_to_pkg.update(
-            dict(('mockrepo.' + x.name, x) for x in packages))
-
-    def get(self, spec):
-        if not isinstance(spec, spack.spec.Spec):
-            spec = Spec(spec)
-        return self.spec_to_pkg[spec.name]
-
-    def get_pkg_class(self, name):
-        return self.spec_to_pkg[name]
-
-    def exists(self, name):
-        return name in self.spec_to_pkg
-
-    def is_virtual(self, name):
-        return False
-
-    def repo_for_pkg(self, name):
-        import collections
-        Repo = collections.namedtuple('Repo', ['namespace'])
-        return Repo('mockrepo')
 
 ##########
 # Specs of various kind

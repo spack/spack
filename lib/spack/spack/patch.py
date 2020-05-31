@@ -85,7 +85,8 @@ class Patch(object):
 
         apply_patch(stage, self.path, self.level, self.working_dir)
 
-    def cache(self):
+    @property
+    def stage(self):
         return None
 
     def to_dict(self):
@@ -248,9 +249,6 @@ class UrlPatch(Patch):
         self._stage.create()
         return self._stage
 
-    def cache(self):
-        return self.stage
-
     def clean(self):
         self.stage.destroy()
 
@@ -348,7 +346,8 @@ class PatchCache(object):
         sha_index = self.index.get(sha256)
         if not sha_index:
             raise NoSuchPatchError(
-                "Couldn't find patch with sha256: %s" % sha256)
+                "Couldn't find patch for package %s with sha256: %s"
+                % (pkg.fullname, sha256))
 
         patch_dict = sha_index.get(pkg.fullname)
         if not patch_dict:

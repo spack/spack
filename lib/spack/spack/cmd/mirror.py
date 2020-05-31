@@ -45,7 +45,10 @@ def setup_parser(subparser):
              " (this requires significant time and space)")
     create_parser.add_argument(
         '-f', '--file', help="file with specs of packages to put in mirror")
-
+    create_parser.add_argument(
+        '--skip-unstable-versions', action='store_true',
+        help="don't cache versions unless they identify a stable (unchanging)"
+             " source code")
     create_parser.add_argument(
         '-D', '--dependencies', action='store_true',
         help="also fetch all dependencies")
@@ -308,7 +311,8 @@ def mirror_create(args):
     existed = web_util.url_exists(directory)
 
     # Actually do the work to create the mirror
-    present, mirrored, error = spack.mirror.create(directory, mirror_specs)
+    present, mirrored, error = spack.mirror.create(
+        directory, mirror_specs, args.skip_unstable_versions)
     p, m, e = len(present), len(mirrored), len(error)
 
     verb = "updated" if existed else "created"

@@ -14,6 +14,7 @@ class PyPyparsing(PythonPackage):
     import_modules = ['pyparsing']
 
     version('2.4.2',  sha256='6f98a7b9397e206d78cc01df10131398f1c8b8510a2f4d97d9abd82e1aacdd80')
+    version('2.4.0',  sha256='1873c03321fc118f4e9746baf201ff990ceb915f433f23b395f5580d1840cb2a')
     version('2.3.1',  sha256='66c9268862641abcac4a96ba74506e594c884e3f57690a696d21ad8210ed667a')
     version('2.2.0',  sha256='0832bcf47acd283788593e7a0f542407bd9550a55a8a8435214a1960e04bcb04')
     version('2.1.10', sha256='811c3e7b0031021137fc83e051795025fcb98674d07eb8fe922ba4de53d39188')

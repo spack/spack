@@ -41,6 +41,7 @@ import spack.build_environment as build_environment
 import spack.error
 import spack.paths
 import spack.schema.environment
+import spack.projections as proj
 import spack.tengine as tengine
 import spack.util.environment
 import spack.util.file_permissions as fp
@@ -342,7 +343,11 @@ def get_module(module_type, spec, get_full_path, required=True):
         The module name or path. May return ``None`` if the module is not
         available.
     """
-    if spec.package.installed_upstream:
+    try:
+        upstream = spec.package.installed_upstream
+    except spack.repo.UnknownPackageError:
+        upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+    if upstream:
         module = (spack.modules.common.upstream_module_index
                   .upstream_module(spec, module_type))
         if not module:
@@ -377,6 +382,9 @@ class BaseConfiguration(object):
     querying easier. It needs to be sub-classed for specific module types.
     """
 
+    default_projections = {
+        'all': '{name}-{version}-{compiler.name}-{compiler.version}'}
+
     def __init__(self, spec):
         # Module where type(self) is defined
         self.module = inspect.getmodule(self)
@@ -387,19 +395,23 @@ class BaseConfiguration(object):
         self.conf = merge_config_rules(self.module.configuration(), self.spec)
 
     @property
-    def naming_scheme(self):
-        """Naming scheme suitable for non-hierarchical layouts"""
-        scheme = self.module.configuration().get(
-            'naming_scheme',
-            '{name}-{version}-{compiler.name}-{compiler.version}'
-        )
+    def projections(self):
+        """Projection from specs to module names"""
+        # backwards compatiblity for naming_scheme key
+        conf = self.module.configuration()
+        if 'naming_scheme' in conf:
+            default = {'all': conf['naming_scheme']}
+        else:
+            default = self.default_projections
+        projections = conf.get('projections', default)
 
         # Ensure the named tokens we are expanding are allowed, see
         # issue #2884 for reference
         msg = 'some tokens cannot be part of the module naming scheme'
-        _check_tokens_are_valid(scheme, message=msg)
+        for projection in projections.values():
+            _check_tokens_are_valid(projection, message=msg)
 
-        return scheme
+        return projections
 
     @property
     def template(self):
@@ -424,6 +436,7 @@ class BaseConfiguration(object):
         for constraint, suffix in self.conf.get('suffixes', {}).items():
             if constraint in self.spec:
                 suffixes.append(suffix)
+        suffixes = sorted(set(suffixes))
         if self.hash:
             suffixes.append(self.hash)
         return suffixes
@@ -546,7 +559,11 @@ class BaseFileLayout(object):
         to console to use it. This implementation fits the needs of most
         non-hierarchical layouts.
         """
-        name = self.spec.format(self.conf.naming_scheme)
+        projection = proj.get_projection(self.conf.projections, self.spec)
+        if not projection:
+            projection = self.conf.default_projections['all']
+
+        name = self.spec.format(projection)
         # Not everybody is working on linux...
         parts = name.split('/')
         name = os.path.join(*parts)
@@ -623,16 +640,9 @@ class BaseContext(tengine.Context):
             msg = 'unknown, software installed outside of Spack'
             return msg
 
-        # This is quite simple right now, but contains information on how
-        # to call different build system classes.
-        for attr in ('configure_args', 'cmake_args'):
-            try:
-                configure_args = getattr(pkg, attr)()
-                return ' '.join(configure_args)
-            except (AttributeError, IOError, KeyError):
-                # The method doesn't exist in the current spec,
-                # or it's not usable
-                pass
+        if os.path.exists(pkg.install_configure_args_path):
+            with open(pkg.install_configure_args_path, 'r') as args_file:
+                return args_file.read()
 
         # Returning a false-like value makes the default templates skip
         # the configure option section

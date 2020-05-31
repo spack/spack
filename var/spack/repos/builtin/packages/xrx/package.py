@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Xrx(AutotoolsPackage):
+class Xrx(AutotoolsPackage, XorgPackage):
     """The remote execution (RX) service specifies a MIME format for invoking
     applications remotely, for example via a World Wide Web browser.  This
     RX format specifies a syntax for listing network services required by
@@ -15,7 +15,7 @@ class Xrx(AutotoolsPackage):
     to invoke the application."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xrx"
-    url      = "https://www.x.org/archive/individual/app/xrx-1.0.4.tar.gz"
+    xorg_mirror_path = "app/xrx-1.0.4.tar.gz"
 
     version('1.0.4', sha256='1ffa1c2af28587c6ed7ded3af2e62e93bad8f9900423d09c45b1d59449d15134')
 

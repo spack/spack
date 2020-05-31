@@ -1,4 +1,3 @@
-
 # Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
@@ -41,7 +40,7 @@ def test_dict_functions_for_architecture():
 
 def test_platform():
     output_platform_class = spack.architecture.real_platform()
-    if os.environ.get('CRAYPE_VERSION') is not None:
+    if os.path.exists('/opt/cray/pe'):
         my_platform_class = Cray()
     elif os.path.exists('/bgsys'):
         my_platform_class = Bgq()
@@ -210,7 +209,20 @@ def test_optimization_flags_with_custom_versions(
     target = spack.architecture.Target(target_str)
     if real_version:
         monkeypatch.setattr(
-            spack.compiler.Compiler, 'cc_version', lambda x, y: real_version
-        )
+            spack.compiler.Compiler, 'get_real_version',
+            lambda x: real_version)
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
+
+
+@pytest.mark.regression('15306')
+@pytest.mark.parametrize('architecture_tuple,constraint_tuple', [
+    (('linux', 'ubuntu18.04', None), ('linux', None, 'x86_64')),
+    (('linux', 'ubuntu18.04', None), ('linux', None, 'x86_64:')),
+])
+def test_satisfy_strict_constraint_when_not_concrete(
+        architecture_tuple, constraint_tuple
+):
+    architecture = spack.spec.ArchSpec(architecture_tuple)
+    constraint = spack.spec.ArchSpec(constraint_tuple)
+    assert not architecture.satisfies(constraint, strict=True)

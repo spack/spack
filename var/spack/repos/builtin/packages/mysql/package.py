@@ -13,6 +13,9 @@ class Mysql(CMakePackage):
     homepage = "https://www.mysql.com/"
     url      = "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.15.tar.gz"
 
+    version('8.0.19', sha256='a62786d67b5e267eef928003967b4ccfe362d604b80f4523578e0688f5b9f834')
+    version('8.0.18', sha256='4cb39a315298eb243c25c53c184b3682b49c2a907a1d8432ba0620534806ade8')
+    version('8.0.17', sha256='c6e3f38199a77bfd8a4925ca00b252d3b6159b90e4980c7232f1c58d6ca759d6')
     version('8.0.16', sha256='8d9fe89920dc8bbbde2857b7b877ad2fa5ec2f231c68e941d484f3b72735eaea')
     version('8.0.15', sha256='bb1bca2dc2f23ee9dd395cc4db93b64561d4ac20b53be5d1dae563f7be64825e')
     version('8.0.14', sha256='bc53f4c914fb39650289700d144529121d71f38399d2d24a0f5c76e5a8abd204')

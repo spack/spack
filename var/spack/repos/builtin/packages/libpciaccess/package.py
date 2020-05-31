@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libpciaccess(AutotoolsPackage):
+class Libpciaccess(AutotoolsPackage, XorgPackage):
     """Generic PCI access library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libpciaccess/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libpciaccess-0.13.5.tar.gz"
+    xorg_mirror_path = "lib/libpciaccess-0.13.5.tar.gz"
 
     version('0.13.5', sha256='fe26ec788732b4ef60b550f2d3fa51c605d27f646e18ecec878f061807a3526e')
     version('0.13.4', sha256='74d92bda448e6fdb64fee4e0091255f48d625d07146a121653022ed3a0ca1f2f')

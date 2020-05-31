@@ -1298,6 +1298,20 @@
         "ppc64"
       ]
     },
+    "vsx": {
+      "reason": "VSX alitvec extensions are supported by PowerISA from v2.06 (Power7+), but might not be listed in features",
+      "families": [
+        "ppc64le",
+        "ppc64"
+      ]
+    },
+    "fma": {
+      "reason": "FMA has been supported by PowerISA since Power1, but might not be listed in features",
+      "families": [
+        "ppc64le",
+        "ppc64"
+      ]
+    },
     "sse4.1": {
       "reason": "permits to refer to sse4_1 also as sse4.1",
       "any_of": [

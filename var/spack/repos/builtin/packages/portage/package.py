@@ -31,6 +31,9 @@ class Portage(CMakePackage):
     # fixed in version above 1.2.2
     patch('rel-with-deb-info.patch', when='@1.2.2')
 
+    # intel/19.0.4 got an ICE (internal compiler error) compiling pairs.cc
+    patch('p_intel_ice.patch', when='@1.2.2')
+
     variant('mpi', default=True, description='Support MPI')
 
     depends_on("cmake@3.1:", type='build')
@@ -57,6 +60,6 @@ class Portage(CMakePackage):
                        self.spec['lapack'].libs.joined())
 
         options.append("-DLAPACKE_LIBRARY=" +
-                       self.spec["lapack"].libs.joined(";"))
+                       self.spec["lapack:c"].libs.joined(";"))
 
         return options

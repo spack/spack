@@ -14,7 +14,10 @@ class Libbsd(AutotoolsPackage):
     """
 
     homepage = "https://libbsd.freedesktop.org/wiki/"
-    url      = "https://libbsd.freedesktop.org/releases/libbsd-0.9.1.tar.xz"
+    urls     = [
+        "https://libbsd.freedesktop.org/releases/libbsd-0.9.1.tar.xz",
+        "https://mirrors.dotsrc.org/pub/mirrors/exherbo/libbsd-0.9.1.tar.xz"
+    ]
 
     version('0.10.0', sha256='34b8adc726883d0e85b3118fa13605e179a62b31ba51f676136ecb2d0bc1a887')
     version('0.9.1', sha256='56d835742327d69faccd16955a60b6dcf30684a8da518c4eca0ac713b9e0a7a4')

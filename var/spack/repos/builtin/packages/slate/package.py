@@ -27,6 +27,7 @@ class Slate(Package):
 
     depends_on('cuda@9:', when='+cuda')
     depends_on('intel-mkl')
+    depends_on('mercurial', type='build')
     depends_on('mpi', when='+mpi')
 
     conflicts('%gcc@:5')

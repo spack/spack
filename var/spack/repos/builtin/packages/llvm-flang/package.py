@@ -7,7 +7,7 @@
 from spack import *
 
 
-class LlvmFlang(CMakePackage):
+class LlvmFlang(CMakePackage, CudaPackage):
     """LLVM-Flang is the Flang fork of LLVM needed by the Flang package."""
 
     homepage = "https://github.com/flang-compiler"
@@ -30,9 +30,22 @@ class LlvmFlang(CMakePackage):
     variant('all_targets', default=False,
             description='Build all supported targets')
 
-    # Build dependency
+    variant('build_type', default='Release',
+            description='The CMake build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
+    # Universal dependency
     depends_on('cmake@3.8:', type='build')
     depends_on('python@2.7:', type='build')
+
+    # openmp dependencies
+    depends_on('perl-data-dumper', type=('build'))
+    depends_on('hwloc')
+
+    # libomptarget dependencies
+    depends_on('libelf', when='+cuda')
+    depends_on('libffi', when='+cuda')
+    depends_on('cuda@:9', when='+cuda')  # llvm 7 not compatible with newer version of cuda
 
     # LLVM-Flang Componentes: Driver, OpenMP
     resource(name='flang-driver',
@@ -142,9 +155,17 @@ class LlvmFlang(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = []
+        # universal
+        args = [
+            '-DLLVM_ENABLE_RTTI:BOOL=ON',
+            '-DLLVM_ENABLE_EH:BOOL=ON',
+            '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
+        ]
         args.append('-DPYTHON_EXECUTABLE={0}'.format(
             spec['python'].command.path))
+
+        # needed by flang-driver
+        args.append('-DFLANG_LLVM_EXTENSIONS=ON')
 
         if '+all_targets' not in spec:  # all is default in cmake
             if spec.target.family == 'x86' or spec.target.family == 'x86_64':
@@ -162,7 +183,61 @@ class LlvmFlang(CMakePackage):
                 raise InstallError(
                     'Unsupported architecture: ' + spec.target.family)
 
-            args.append(
-                '-DLLVM_TARGETS_TO_BUILD:STRING=' + target)
+            if '+cuda' in spec:
+                args.append(
+                    '-DLLVM_TARGETS_TO_BUILD:STRING=NVPTX;' + target)
+            else:
+                args.append(
+                    '-DLLVM_TARGETS_TO_BUILD:STRING=' + target)
+
+        # used by openmp
+        args.append('-DLIBOMP_USE_HWLOC=On')
+        args.append('-DLIBOMP_FORTRAN_MODULES=ON')
+        args.append('-DLIBOMP_ENABLE_SHARED=TRUE')
+
+        # used by libomptarget for NVidia gpu
+        if '+cuda' in spec:
+            args.append('-DOPENMP_ENABLE_LIBOMPTARGET=ON')
+            cuda_arch_list = spec.variants['cuda_arch'].value
+            args.append('-DCUDA_TOOLKIT_ROOT_DIR=%s' % spec['cuda'].prefix)
+            args.append('-DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES={0}'.format(
+                ','.join(cuda_arch_list)))
+            args.append('-DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_{0}'.format(
+                cuda_arch_list[-1]))
+        else:
+            args.append('-DOPENMP_ENABLE_LIBOMPTARGET=OFF')
 
         return args
+
+    @run_after("install")
+    def post_install(self):
+        spec = self.spec
+
+        # Manual bootstrap needed to get NVidia BC compiled with the
+        # clang that was just built
+        if '+cuda' in spec:
+            ompdir = 'build-bootstrapped-omp'
+            # rebuild libomptarget to get bytecode runtime library files
+            with working_dir(ompdir, create=True):
+                args = [
+                    self.stage.source_path + '/projects/openmp',
+                    '-DCMAKE_C_COMPILER:PATH={0}'.format(
+                        spec.prefix.bin + '/clang'),
+                    '-DCMAKE_CXX_COMPILER:PATH={0}'.format(
+                        spec.prefix.bin + '/clang++'),
+                    '-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(
+                        spec.prefix)
+                ]
+                args = args + self.cmake_args()
+                # args = self.cmake_args()
+                # enable CUDA bitcode
+                args.append('-DLIBOMPTARGET_NVPTX_ENABLE_BCLIB=true')
+                # work around bad libelf detection in libomptarget
+                args.append(
+                    '-DCMAKE_CXX_FLAGS:String=-I{0} -I{1}'.format(
+                        spec['libelf'].prefix.include,
+                        spec['hwloc'].prefix.include))
+
+        cmake(*args)
+        make()
+        make('install')

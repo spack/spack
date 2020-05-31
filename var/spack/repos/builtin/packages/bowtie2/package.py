@@ -11,7 +11,7 @@ class Bowtie2(Package):
     """Bowtie 2 is an ultrafast and memory-efficient tool for aligning
        sequencing reads to long reference sequences"""
 
-    homepage = "bowtie-bio.sourceforge.net/bowtie2/index.shtml"
+    homepage = "http://bowtie-bio.sourceforge.net/bowtie2/index.shtml"
     url      = "http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.3.1/bowtie2-2.3.1-source.zip"
 
     version('2.3.5.1', sha256='335c8dafb1487a4a9228ef922fbce4fffba3ce8bc211e2d7085aac092155a53f')

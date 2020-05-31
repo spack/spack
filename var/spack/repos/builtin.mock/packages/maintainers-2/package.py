@@ -15,6 +15,3 @@ class Maintainers2(Package):
     maintainers = ['user2', 'user3']
 
     version('1.0', '0123456789abcdef0123456789abcdef')
-
-    def install(self, spec, prefix):
-        pass

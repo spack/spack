@@ -7,16 +7,17 @@
 from spack import *
 
 
-class Magma(CMakePackage):
-    """The MAGMA project aims to develop a dense linear algebra library similar to
-       LAPACK but for heterogeneous/hybrid architectures, starting with current
-       "Multicore+GPU" systems.
+class Magma(CMakePackage, CudaPackage):
+    """The MAGMA project aims to develop a dense linear algebra library similar
+       to LAPACK but for heterogeneous/hybrid architectures, starting with
+       current "Multicore+GPU" systems.
     """
 
     homepage = "http://icl.cs.utk.edu/magma/"
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
-    maintainers = ['luszczek']
+    maintainers = ['stomov', 'luszczek']
 
+    version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
     version('2.5.2', sha256='065feb85558f9dd6f4cc4db36ac633a3f787827fc832d0b578a049a43a195620')
     version('2.5.1', sha256='ce32c199131515336b30c92a907effe0c441ebc5c5bdb255e4b06b2508de109f')
     version('2.5.0', sha256='4fd45c7e46bd9d9124253e7838bbfb9e6003c64c2c67ffcff02e6c36d2bcfa33')
@@ -28,13 +29,17 @@ class Magma(CMakePackage):
             description='Enable Fortran bindings support')
     variant('shared', default=True,
             description='Enable shared library')
+    variant('cuda', default=True, description='Build with CUDA')
+    variant('cuda_arch', default='none', multi=True,
+            description='Specify CUDA architecture(s)')
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('cuda')
+    depends_on('cuda@8:', when='@2.5.1:')  # See PR #14471
 
-    conflicts('%gcc@6:', when='^cuda@:8')
-    conflicts('%gcc@7:', when='^cuda@:9')
+    conflicts('~cuda', msg='Magma requires cuda')
+    conflicts('cuda_arch=none',
+              msg='Please indicate a CUDA arch value or values')
 
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')
@@ -69,11 +74,14 @@ class Magma(CMakePackage):
                     '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77
                 ])
 
-        if spec.satisfies('^cuda@9.0:'):
+        if spec.satisfies('^cuda'):
+            cuda_arch = self.spec.variants['cuda_arch'].value
             if '@:2.2.0' in spec:
-                options.extend(['-DGPU_TARGET=sm30'])
+                capabilities = ' '.join('sm{0}'.format(i) for i in cuda_arch)
+                options.extend(['-DGPU_TARGET=' + capabilities])
             else:
-                options.extend(['-DGPU_TARGET=sm_30'])
+                capabilities = ' '.join('sm_{0}'.format(i) for i in cuda_arch)
+                options.extend(['-DGPU_TARGET=' + capabilities])
 
         if '@2.5.0' in spec:
             options.extend(['-DMAGMA_SPARSE=OFF'])

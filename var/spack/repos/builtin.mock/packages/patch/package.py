@@ -21,6 +21,3 @@ class Patch(Package):
     patch('bar.patch', when='@2:')
     patch('baz.patch')
     patch('biz.patch', when='@1.0.1:1.0.2')
-
-    def install(self, spec, prefix):
-        pass

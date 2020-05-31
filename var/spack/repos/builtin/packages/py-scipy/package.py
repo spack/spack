@@ -65,6 +65,11 @@ class PyScipy(PythonPackage):
     depends_on('blas')
     depends_on('lapack')
 
+    def setup_build_environment(self, env):
+        # https://github.com/scipy/scipy/issues/11611
+        if self.spec.satisfies('@:1.4 %gcc@10:'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
+
     def build_args(self, spec, prefix):
         args = []
 

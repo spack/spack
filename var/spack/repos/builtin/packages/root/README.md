@@ -30,8 +30,6 @@ Monitoring with Monalisa depends on `libapmoncpp`.
 
 #### `oracle`
 
-#### `pythia8`
-
 #### `tcmalloc`
 
 #### `veccore`

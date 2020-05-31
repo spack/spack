@@ -1,0 +1,63 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack import *
+import os
+
+
+class PpopenApplFem(MakefilePackage):
+    """
+    ppOpen-APPL/FEM (ppohFEM) is a middleware to allow a Finite Element
+    Method (FEM) analysis code developer to devote himself to development of
+    the application software by offering a function commonly used in FEM.
+    """
+
+    homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
+    url = "file://{0}/ppohFEM_1.0.1.tar.gz".format(os.getcwd())
+
+    version('1.0.1', sha256='eea8837fa3eda284759b7ebf27c27cea8cbf9cf65cf37c62941700e1321aeb07')
+
+    depends_on('mpi')
+    depends_on('metis')
+
+    # gcc does not support OpenMP atomic to same structure reference.
+    # For example a%b = a%b - a%c
+    # To avoid this, the patch is replace as follows:
+    #   tmp = a%c
+    #   !%omp atomic
+    #   a%b = a%b - a%c
+    patch('gcc_struct_atomic.patch', when='%gcc')
+    parallel = False
+
+    def edit(self, spec, prefix):
+        fflags = ['-O3', '-I.', self.compiler.openmp_flag]
+        if spec.satisfies('%gcc'):
+            fflags.extend(['-cpp', '-ffree-line-length-none'])
+        makefile_in = FileFilter('Makefile.in')
+        makefile_in.filter(
+            r'^PREFIX *=.*$',
+            'PREFIX = {0}'.format(prefix)
+        )
+        makefile_in.filter(
+            r'^F90OPTFLAGS *=.*$',
+            'F90OPTFLAGS = {0}'.format(' '.join(fflags))
+        )
+        makefile_in.filter(
+            r'^METISDIR *=.*$',
+            'METISDIR = {0}'.format(spec['metis'].prefix)
+        )
+        makefile_in.filter('mpicc', spec['mpi'].mpicc)
+        makefile_in.filter('mpif90', spec['mpi'].mpifc)
+
+    def install(self, spec, prefix):
+        for d in ['ppohFEM', 'app_flow', 'app_heat', 'app_struct']:
+            with working_dir(d):
+                for install_dir in ['bin', 'lib', 'include']:
+                    if os.path.isdir(install_dir):
+                        install_tree(
+                            install_dir,
+                            join_path(prefix, install_dir)
+                        )

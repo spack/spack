@@ -59,7 +59,7 @@ class Cantera(SConsPackage):
             'CC={0}'.format(spack_cc),
             'CXX={0}'.format(spack_cxx),
             'FORTRAN={0}'.format(spack_fc),
-            'cc_flags={0}'.format(self.compiler.pic_flag),
+            'cc_flags={0}'.format(self.compiler.cc_pic_flag),
             # Allow Spack environment variables to propagate through to SCons
             'env_vars=all'
         ]

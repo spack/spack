@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Xvinfo(AutotoolsPackage):
+class Xvinfo(AutotoolsPackage, XorgPackage):
     """xvinfo prints out the capabilities of any video adaptors associated
     with the display that are accessible through the X-Video extension."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xvinfo"
-    url      = "https://www.x.org/archive/individual/app/xvinfo-1.1.3.tar.gz"
+    xorg_mirror_path = "app/xvinfo-1.1.3.tar.gz"
 
     version('1.1.3', sha256='1c1c2f97abfe114389e94399cc7bf3dfd802ed30ad41ba23921d005bd8a6c39f')
 

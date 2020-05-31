@@ -124,12 +124,27 @@ class SpecList(object):
         if isinstance(yaml, list):
             for idx, item in enumerate(yaml):
                 if isinstance(item, string_types) and item.startswith('$'):
-                    name = item[1:]
+                    # Reference type can add a constraint to items
+                    if item[1] in ('^', '%'):
+                        name = item[2:]
+                        sigil = item[1]
+                    else:
+                        name = item[1:]
+                        sigil = ''
                     if name in self._reference:
                         ret = [self._expand_references(i) for i in yaml[:idx]]
                         ret += self._reference[name].specs_as_yaml_list
                         ret += self._expand_references(yaml[idx + 1:])
-                        return ret
+
+                        # Add the sigil if we're mapping a sigil to a ref
+                        def sigilify(arg):
+                            if isinstance(arg, dict):
+                                if sigil:
+                                    arg['sigil'] = sigil
+                                return arg
+                            else:
+                                return sigil + arg
+                        return list(map(sigilify, ret))
                     else:
                         msg = 'SpecList %s refers to ' % self.name
                         msg += 'named list %s ' % name
@@ -159,13 +174,17 @@ def _expand_matrix_constraints(object, specify=True):
         new_row = []
         for r in row:
             if isinstance(r, dict):
-                new_row.extend(_expand_matrix_constraints(r, specify=False))
+                new_row.extend(
+                    [[' '.join(c)]
+                     for c in _expand_matrix_constraints(r, specify=False)])
             else:
                 new_row.append([r])
         expanded_rows.append(new_row)
 
-    results = []
     excludes = object.get('exclude', [])  # only compute once
+    sigil = object.get('sigil', '')
+
+    results = []
     for combo in itertools.product(*expanded_rows):
         # Construct a combined spec to test against excludes
         flat_combo = [constraint for list in combo for constraint in list]
@@ -173,6 +192,9 @@ def _expand_matrix_constraints(object, specify=True):
         test_spec = Spec(' '.join(ordered_combo))
         if any(test_spec.satisfies(x) for x in excludes):
             continue
+
+        if sigil:  # add sigil if necessary
+            ordered_combo[0] = sigil + ordered_combo[0]
 
         # Add to list of constraints
         if specify:

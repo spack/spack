@@ -6,13 +6,13 @@
 from spack import *
 
 
-class Xbiff(AutotoolsPackage):
+class Xbiff(AutotoolsPackage, XorgPackage):
     """xbiff provides graphical notification of new e-mail.
     It only handles mail stored in a filesystem accessible file,
     not via IMAP, POP or other remote access protocols."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xbiff"
-    url      = "https://www.x.org/archive/individual/app/xbiff-1.0.3.tar.gz"
+    xorg_mirror_path = "app/xbiff-1.0.3.tar.gz"
 
     version('1.0.3', sha256='b4b702348674985741685e3ec7fcb5640ffb7bf20e753fc2d708f70f2e4c304d')
 

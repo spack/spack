@@ -226,7 +226,7 @@ _config_sections() {
 _extensions() {
     if [[ -z "${SPACK_EXTENSIONS:-}" ]]
     then
-        SPACK_EXTENSIONS="aspell go-bootstrap go icedtea jdk kim-api lua matlab mofem-cephas octave openjdk perl python r ruby rust tcl yorick"
+        SPACK_EXTENSIONS="$(spack extensions)"
     fi
     SPACK_COMPREPLY="$SPACK_EXTENSIONS"
 }
@@ -303,6 +303,13 @@ _pretty_print() {
 }
 
 complete -o bashdefault -o default -F _bash_completion_spack spack
+
+# Completion for spacktivate
+complete -o bashdefault -o default -F _bash_completion_spack spacktivate
+
+_spacktivate() {
+  _spack_env_activate
+}
 
 # Spack commands
 #
