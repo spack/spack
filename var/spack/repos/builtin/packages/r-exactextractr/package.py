@@ -6,7 +6,7 @@
 from spack import *
 
 
-class RExactextractr(AutotoolsPackage):
+class RExactextractr(RPackage):
     """Provides a replacement for the 'extract' function from the 'raster'
        package that is suitable for extracting raster values using 'sf'
        polygons.
