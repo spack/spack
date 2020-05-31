@@ -315,13 +315,11 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
             return 0
         end
 
-        # TODO: should this crash (we're clearly using fish, not bash, here)?
         # looks for a single `--sh` (possibly surrounded by spaces)
         if echo $_a | string match -r -q " *--sh *"
             return 0
         end
 
-        # TODO: should this crash (we're clearly using fish, not csh, here)?
         # looks for a single `--csh` (possibly surrounded by spaces)
         if echo $_a | string match -r -q " *--csh *"
             return 0
