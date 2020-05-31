@@ -285,12 +285,18 @@ function contains_help_flags -d "checks for help (-h/--help) flags"
     # skip if called with blank input. Notes: [1] (cf. EOF)
     if test -n "$_a"
         # looks for a single `-h` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *-h *"
+        # this is a bit of a mess => [^\S] fails to match any non-space
+        # character, so this regex looks either for a "-h" but fails if there is
+        # _anything but_ a space in front of it, or it checks the entire string
+        # permitting only "-h" surrounded by spaces. The second group (after the
+        # | is necessary because the first group fails if there is no character
+        # in front of "-h"
+        if echo $_a | string match -r -q "([^\S]-h|^[\s]*-h[\s]*\$)"
             return 0
         end
 
         # looks for a single `--help` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--help *"
+        if echo $_a | string match -r -q  "([^\S]--help|^[\s]*-h[\s]*\$)"
             return 0
         end
     end
