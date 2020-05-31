@@ -549,21 +549,17 @@ def parse_version_offset(path):
         # 8th Pass: Query strings
 
         # e.g. https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0
-        (r'\?sha=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
-
+        # e.g. https://gitlab.kitware.com/api/v4/projects/icet%2Ficet/repository/archive.tar.bz2?sha=IceT-2.1.1
         # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
-        (r'\?ref=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
-
         # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
         # e.g. https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-1-0-gf15c1c3ef
-        (r'[?&]version=v?(\d[\da-zA-Z._-]*)$', suffix),
+        (r'[?&](?:sha|ref|version)=[a-zA-Z\d+-]*[_-]?v?(\d[\da-zA-Z._-]*)$', suffix),
 
         # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
         # e.g. http://laws-green.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.1_r20171213193219.tgz
-        (r'[?&]filename=[a-zA-Z\d+-]+[_-]v?(\d[\da-zA-Z.]*)', stem),
-
+        # e.g. https://evtgen.hepforge.org/downloads?f=EvtGen-01.07.00.tar.gz
         # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
-        (r'&get=[a-zA-Z\d+-]+-v?(\d[\da-zA-Z.]*)$', stem),  # noqa
+        (r'[?&](?:filename|f|get)=[a-zA-Z\d+-]+[_-]v?(\d[\da-zA-Z.]*)', stem),
 
         # 9th Pass: Version in path
 
@@ -695,6 +691,10 @@ def parse_name_offset(path, v=None):
         # ?filename=name-ver.ver
         # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
         (r'\?filename=([A-Za-z\d+-]+)$', stem),
+
+        # ?f=name-ver.ver
+        # e.g. https://evtgen.hepforge.org/downloads?f=EvtGen-01.07.00.tar.gz
+        (r'\?f=([A-Za-z\d+-]+)$', stem),
 
         # ?package=name
         # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
