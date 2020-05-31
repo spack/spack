@@ -26,7 +26,7 @@ class PyIpython(PythonPackage):
     depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
     depends_on('py-pygments',                   type=('build', 'run'))
     depends_on('py-pickleshare',                type=('build', 'run'))
-    depends_on('py-simplegeneric@0.8:',         type=('build', 'run'))
+    depends_on('py-simplegeneric@0.8:',         type=('build', 'run'), when='@:7.4.0')
     depends_on('py-prompt-toolkit@1.0.4:1.999',  when='@:7.0.0', type=('build', 'run'))
     depends_on('py-prompt-toolkit@2.0.0:2.999',  when='@7.0.0:', type=('build', 'run'))
     depends_on('py-prompt-toolkit@2.0.0:2.0.999', when='@7.5.0:', type=('build', 'run'))
@@ -37,3 +37,4 @@ class PyIpython(PythonPackage):
     depends_on('py-appnope', type=('build', 'run'), when='platform=darwin')
     depends_on('py-jedi@0.10:', type=('build', 'run'), when='@7.5.0:')
     depends_on('py-backcall', type=('build', 'run'), when='@7.5.0:')
+    depends_on('py-setuptools@18.5:', type=('build', 'run'), when='@7.5.0:')
