@@ -15,6 +15,9 @@ class HealpixCxx(AutotoolsPackage):
 
     version('3.50.0', sha256='6538ee160423e8a0c0f92cf2b2001e1a2afd9567d026a86ff6e2287c1580cb4c')
 
+    depends_on('cfitsio')
+    depends_on('libsharp', type='build')
+
     def patch(self):
         spec = self.spec
         configure_fix = FileFilter('configure')
@@ -24,6 +27,3 @@ class HealpixCxx(AutotoolsPackage):
             'SHARP_LIBS="-L{0} -lsharp -lc_utils -lfftpack -lm"'
             .format(spec['libsharp'].prefix.lib)
         )
-
-    depends_on('cfitsio')
-    depends_on('libsharp', type='build')
