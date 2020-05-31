@@ -23,7 +23,7 @@ class PyAstroid(PythonPackage):
     version('1.4.2', sha256='f9007d651f4b3514ea5812127677a4bb681ff194164290cea358987920f24ee6')
     version('1.4.1', sha256='f1ab3ee6f17f9d30981399a52b56a7a7d2747ba24f0aa504e411ee6205a01fc0')
 
-    depends_on('python@3.5:', when='@2.3.3:')
+    depends_on('python@3.5:', when='@2.3.3:', type=('build', 'run'))
     depends_on('py-lazy-object-proxy')
     depends_on('py-lazy-object-proxy@1.4:1.4.999', when='@2.3.3:')
     depends_on('py-six')
@@ -34,4 +34,4 @@ class PyAstroid(PythonPackage):
     depends_on('py-singledispatch', when='^python@:3.3.99')
     depends_on('py-backports-functools-lru-cache', when='^python@:3.2.99')
     depends_on('py-typed-ast@1.4.0:1.4.999', when='@2.3.3: ^python@:3.7.999')
-    depends_on('py-setuptools@17.1:')
+    depends_on('py-setuptools@17.1:', type='build')
