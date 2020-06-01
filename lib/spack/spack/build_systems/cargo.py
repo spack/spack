@@ -6,13 +6,15 @@
 
 import inspect
 import json
+import re
 import spack
 
 from llnl.util.filesystem import join_path, copy, mkdirp
-
 from spack.directives import cargo_manifest, conflicts, depends_on, variant
+from spack.version import Version
 from spack.package import PackageBase
 from spack.util.executable import Executable
+from spack.util.rust import target_triple_for_spec
 
 
 class CargoPackage(PackageBase):
@@ -80,6 +82,31 @@ class CargoPackage(PackageBase):
         return cargo
 
     @property
+    def rustc(self):
+        return Executable(join_path(self.spec['rust'].prefix.bin, 'rustc'))
+
+    @property
+    def llvm_version(self):
+        version_info = self.rustc("--version", "--verbose", output=str)
+        match = re.search(
+            r"^LLVM version: (\d+\.\d+)", version_info, flags=re.MULTILINE)
+        return Version(match.group(1))
+
+    @property
+    def target_cpu(self):
+        """This routine returns the target_cpu that Rust should optimize for.
+        It uses the same names as clang thanks to the shared LLVM backend. We
+        use Rust's LLVM version in place of the clang version."""
+        compiler_entry = \
+            self.spec.target.compiler_entry("clang", self.llvm_version)
+        name = compiler_entry["name"]
+
+        if name in self.rustc("--print", "target-cpus", output=str):
+            return name
+        else:
+            return None
+
+    @property
     def manifest_path(self):
         return join_path(self.stage.source_path, self.cargo_manifest)
 
@@ -97,11 +124,20 @@ class CargoPackage(PackageBase):
     def target_path(self):
         return join_path(
             self.stage.source_path, 'target',
+            target_triple_for_spec(self.spec),
             self.spec.variants['build_type'].value)
 
     def do_stage(self, mirror_only=False):
         """Stages and sets the config for chosen build settings"""
         super(CargoPackage, self).do_stage(mirror_only)
+
+        rustflags = []
+
+        target = target_triple_for_spec(self.spec)
+
+        target_cpu = self.target_cpu
+        if target_cpu:
+            rustflags.extend(["-C", "target-cpu={0}".format(target_cpu)])
 
         # Put config in spack-src so that it does not overwrite the config
         # from vendoring dependencies
@@ -116,10 +152,16 @@ class CargoPackage(PackageBase):
 
         with open(config_path, 'w') as f:
             f.write("""
+[build]
+target = "{target}"
+rustflags = "{flags}"
+
 [profile.{profile}]
 rpath = true
 lto = "{lto}"
 """.format(
+                target=target,
+                flags=" ".join(rustflags),
                 profile=profile,
                 lto=lto
             ))

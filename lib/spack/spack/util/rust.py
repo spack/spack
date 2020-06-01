@@ -28,3 +28,19 @@ rust_archs = {
         {'platform': 'darwin', 'target': 'x86_64:'}
     ]
 }
+
+
+def target_triple_for_spec(spec):
+    # type: (Spec) -> str
+    """Returns the Rust target triple that is applicable to `spec`"""
+
+    for triple, archs in iteritems(rust_archs):
+        for arch in archs:
+            test = "platform={platform} target={target}".format(
+                platform=arch["platform"],
+                target=arch["target"]
+            )
+            if test in spec:
+                return triple
+
+    return None
