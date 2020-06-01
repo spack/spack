@@ -6,23 +6,19 @@
 from spack import *
 
 
-class Exampm(CMakePackage):
-    """Exascale Material Point Method (MPM) Mini-App"""
+class Cajita(CMakePackage):
+    """An MPI+Kokkos library for logically rectilinear grids"""
 
-    homepage = "https://github.com/ECP-copa/ExaMPM"
-    git      = "https://github.com/ECP-copa/ExaMPM.git"
+    homepage = "https://github.com/ECP-copa/Cajita"
+    git      = "https://github.com/ECP-copa/Cajita.git"
 
     version('master', branch='master')
-
-    tags = ['proxy-app']
+    version('0.1', tag='0.1.0')
 
     variant('shared', default=True, description='Build shared libraries')
 
     depends_on('mpi')
     depends_on('kokkos@3.0:')
-    depends_on('silo')
-    depends_on('cabana+mpi@master')
-    depends_on('cajita@master')
 
     def cmake_args(self):
         options = [
