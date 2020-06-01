@@ -124,7 +124,7 @@ class AutotoolsPackage(PackageBase):
                 try:
                     config_path = my_config_files[config_name]
                     check_call([config_path, *config_args[config_name]],
-                        stdout=PIPE, stderr=PIPE)
+                               stdout=PIPE, stderr=PIPE)
                     # The package's config file already runs OK, so just use it
                     continue
                 except Exception as e:
@@ -134,9 +134,10 @@ class AutotoolsPackage(PackageBase):
 
             # Look for a spack-installed automake package
             if 'automake' in self.spec:
-                automake_path = os.path.join(self.spec['automake'].prefix,
-                    'share', 'automake-{0}'.format(
-                    str(self.spec['automake'].version)))
+                am_spec = self.spec['automake']
+                automake_path = os.path.join(am_spec.prefix,
+                                             'share', 'automake-{0}'.format(
+                                             str(am_spec.version)))
                 path = os.path.join(automake_path, config_file)
                 if os.path.exists(path):
                     config_files[config_name] = path
@@ -156,7 +157,7 @@ class AutotoolsPackage(PackageBase):
                     my_config_path = my_config_files[config_name]
 
                     check_call([config_path, *config_args[config_name]],
-                        stdout=PIPE, stderr=PIPE)
+                               stdout=PIPE, stderr=PIPE)
 
                     m = os.stat(my_config_path).st_mode & 0o777 | stat.S_IWUSR
                     os.chmod(my_config_path, m)
