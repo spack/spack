@@ -19,8 +19,8 @@ class GaussianView(Package):
     depends_on('gaussian@16-B.01', type='run')
 
     def url_for_version(self, version):
-        return "file://{0}/gaussian-view/gv-{1}-Linux-x86_64.tbz"
-            .format(os.getcwd(), version)
+        return "file://{0}/gaussian-view/gv-{1}-Linux-x86_64.tbz".format(
+               os.getcwd(), version)
 
     def install(self, spec, prefix):
         install_tree(os.getcwd(), self.prefix)
