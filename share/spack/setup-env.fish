@@ -309,7 +309,7 @@ function contains_help_flags -d "checks for help (-h/--help) flags"
         end
 
         # looks for a single `--help` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q  "([^\S]--help|^[\s]*-h[\s]*\$)"
+        if echo $_a | string match -r -q  "([^\S]--help|^[\s]*--help[\s]*\$)"
             return 0
         end
     end
