@@ -247,6 +247,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('ucx +thread_multiple', when='fabrics=ucx +thread_multiple')
     depends_on('ucx +thread_multiple', when='@3.0.0: fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
+    depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('mxm', when='fabrics=mxm')
     depends_on('binutils+libiberty', when='fabrics=mxm')
     depends_on('rdma-core', when='fabrics=verbs')
@@ -329,6 +330,11 @@ class Openmpi(AutotoolsPackage):
         if not activated:
             return '--without-tm'
         return '--with-tm={0}'.format(self.spec['openpbs'].prefix)
+
+    def with_or_without_psm2(self, activated):
+        if not activated:
+            return '--without-psm2'
+        return '--with-psm2={0}'.format(self.spec['opa-psm2'].prefix)
 
     @run_before('autoreconf')
     def die_without_fortran(self):
