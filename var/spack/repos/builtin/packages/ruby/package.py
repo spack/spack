@@ -61,6 +61,8 @@ class Ruby(AutotoolsPackage):
             args.append("--with-readline-dir=%s"
                         % self.spec['readline'].prefix)
         args.append('--with-tk=%s' % self.spec['tk'].prefix)
+        if self.spec.satisfies("%fj"):
+            args.append('--disable-dtrace')
         return args
 
     def setup_dependent_build_environment(self, env, dependent_spec):
