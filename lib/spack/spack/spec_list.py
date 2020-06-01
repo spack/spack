@@ -132,10 +132,6 @@ class SpecList(object):
                         name = item[1:]
                         sigil = ''
                     if name in self._reference:
-                        ret = [self._expand_references(i) for i in yaml[:idx]]
-                        ret += self._reference[name].specs_as_yaml_list
-                        ret += self._expand_references(yaml[idx + 1:])
-
                         # Add the sigil if we're mapping a sigil to a ref
                         def sigilify(arg):
                             if isinstance(arg, dict):
@@ -144,7 +140,16 @@ class SpecList(object):
                                 return arg
                             else:
                                 return sigil + arg
-                        return list(map(sigilify, ret))
+
+                        # Apply the sigil if any to current reference
+                        current = self._reference[name].specs_as_yaml_list
+                        current = list(map(sigilify, current))
+
+                        # Recurse on the rest of the entry
+                        ret = [self._expand_references(i) for i in yaml[:idx]]
+                        ret += current
+                        ret += self._expand_references(yaml[idx + 1:])
+                        return ret
                     else:
                         msg = 'SpecList %s refers to ' % self.name
                         msg += 'named list %s ' % name
