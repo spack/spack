@@ -394,9 +394,6 @@ class YamlFilesystemView(FilesystemView):
         if not os.path.lexists(dest):
             tty.warn("Tried to remove %s which does not exist" % dest)
             return
-        # TODO: Can I remove this?
-        if not os.path.islink(dest):
-            raise ValueError("%s is not a link tree!" % dest)
         # remove if dest is a hardlink/symlink to src; this will only
         # be false if two packages are merged into a prefix and have a
         # conflicting file
