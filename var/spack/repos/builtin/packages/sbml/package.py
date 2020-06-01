@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install sbml
-#
-# You can edit this file again by typing:
-#
-#     spack edit sbml
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
@@ -28,6 +11,7 @@ class Sbml(CMakePackage):
 
     maintainers = ['rblake-llnl']
     homepage = "https://sbml.org"
+
     def url_for_version(self, version):
         url = "https://downloads.sourceforge.net/project/sbml/libsbml/{0}/stable/libSBML-{1}-core-plus-packages-src.tar.gz".format(version, version)
         return url
@@ -45,14 +29,14 @@ class Sbml(CMakePackage):
 
     variant('python', default=False,
             description='Build with python support')
-    
+
     depends_on('swig@2:', type='build')
     depends_on('cmake', type='build')
     depends_on('zlib')
     depends_on('bzip2')
     depends_on('libxml2')
     depends_on('python', when="+python")
-    
+
     def cmake_args(self):
         spec = self.spec
         args = [
@@ -78,7 +62,7 @@ class Sbml(CMakePackage):
             args.extend([
                 "-DWITH_PYTHON:BOOL=ON",
                 "-DWITH_PYTHON_INCLUDE:PATH=%s" % spec['python'].prefix,
-                ])
+            ])
 
         if '+mono' in spec:
             args.append("-DWITH_CSHARP:BOOL=ON")
@@ -90,16 +74,16 @@ class Sbml(CMakePackage):
                 "-DWITH_JAVA:BOOL=ON",
                 "-DJDK_PATH:STRING=%s" % spec['java'].prefix,
                 "-DJAVA_INCLUDE_PATH:STRING=%s" % spec['java'].prefix,
-                ])
+            ])
         else:
             args.append('-DWITH_JAVA:BOOL=OFF')
-    
+
         if '+matlab' in spec:
             args.extend([
                 "-DWITH_MATLAB:BOOL=ON",
                 "-DMATLAB_ROOT_PATH:PATH=%s" % spec['matlab'].prefix,
                 "-DWITH_MATLAB_MEX:BOOL=ON",
-                ])
+            ])
         else:
             args.append('-DWITH_MATLAB:BOOL=OFF')
 
