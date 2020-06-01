@@ -1,0 +1,126 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+# ----------------------------------------------------------------------------
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install sbml
+#
+# You can edit this file again by typing:
+#
+#     spack edit sbml
+#
+# See the Spack documentation for more information on packaging.
+# ----------------------------------------------------------------------------
+
+from spack import *
+
+
+class Sbml(CMakePackage):
+    """Library for the Systems Biology Markup Language"""
+
+    maintainers = ['rblake-llnl']
+    homepage = "https://sbml.org"
+    def url_for_version(self, version):
+        url = "https://downloads.sourceforge.net/project/sbml/libsbml/{0}/stable/libSBML-{1}-core-plus-packages-src.tar.gz".format(version, version)
+        return url
+
+    version('5.18.0', sha256='6c01be2306ec0c9656b59cb082eb7b90176c39506dd0f912b02e08298a553360')
+    version('5.17.0', sha256='189216e1472777e4464b791c506b79267d07a5454cb23ac991452711f8e0ed3a')
+    version('5.16.0', sha256='c6855481434dd2a667fef73e1ff2feade509aa2f3a76d4d06e29022975ce1496')
+    version('5.15.0', sha256='c779c2a8a97c5480fe044028099d928a327261fb68cf08657ec8d4f3b3fc0a21')
+    version('5.13.0', sha256='e58430edb1b454d7414bcf1be0549bf6860a6d19d73232eb58211559485c2c05')
+    version('5.12.0', sha256='c637494b19269947fc90ebe479b624d36f80d1cb5569e45cd76ddde81dd28ae4')
+    version('5.11.4', sha256='6429188b689b331b0b8f2c8b55b3f2339196ccd4c93191648fa767e1d02152a3')
+    version('5.11.0', sha256='b21931ca7461494915c617b30d4a9f2cafe831d6ce74989b3e5874e6e3c3f72b')
+    version('5.10.2', sha256='83f32a143cf657672b1050f5f79d3591c418fc59570d180fb1f39b103f4e5286')
+    version('5.10.0', sha256='2cd8b37018ce8b1df869c8c182803addbce6d451512ae25a7f527b49981f0966')
+
+    variant('python', default=False,
+            description='Build with python support')
+    
+    depends_on('swig@2:', type='build')
+    depends_on('cmake', type='build')
+    depends_on('zlib')
+    depends_on('bzip2')
+    depends_on('libxml2')
+    depends_on('python', when="+python")
+    
+    def cmake_args(self):
+        spec = self.spec
+        args = [
+            "-DENABLE_COMP:BOOL=ON",
+            "-DENABLE_FBC:BOOL=ON",
+            "-DENABLE_GROUPS:BOOL=ON",
+            "-DENABLE_LAYOUT:BOOL=ON",
+            "-DENABLE_QUAL:BOOL=ON",
+            "-DENABLE_RENDER:BOOL=ON",
+            "-DWITH_BZIP2:BOOL=ON",
+            "-DWITH_CHECK:BOOL=OFF",
+            "-DWITH_CPP_NAMESPACE:BOOL=OFF",
+            "-DWITH_DOXYGEN:BOOL=OFF",
+            "-DWITH_EXAMPLES:BOOL=OFF",
+            "-DWITH_EXPAT:BOOL=OFF",
+            "-DWITH_LIBXML:BOOL=ON",
+            "-DWITH_SWIG:BOOL=ON",
+            "-DWITH_WALL:BOOL=ON",
+            "-DWITH_XERCES:BOOL=OFF",
+            "-DWITH_ZLIB:BOOL=ON",
+        ]
+        if '+python' in spec:
+            args.extend([
+                "-DWITH_PYTHON:BOOL=ON",
+                "-DWITH_PYTHON_INCLUDE:PATH=%s" % spec['python'].prefix,
+                ])
+
+        if '+mono' in spec:
+            args.append("-DWITH_CSHARP:BOOL=ON")
+        else:
+            args.append("-DWITH_CSHARP:BOOL=OFF")
+
+        if '+java' in spec:
+            args.extend([
+                "-DWITH_JAVA:BOOL=ON",
+                "-DJDK_PATH:STRING=%s" % spec['java'].prefix,
+                "-DJAVA_INCLUDE_PATH:STRING=%s" % spec['java'].prefix,
+                ])
+        else:
+            args.append('-DWITH_JAVA:BOOL=OFF')
+    
+        if '+matlab' in spec:
+            args.extend([
+                "-DWITH_MATLAB:BOOL=ON",
+                "-DMATLAB_ROOT_PATH:PATH=%s" % spec['matlab'].prefix,
+                "-DWITH_MATLAB_MEX:BOOL=ON",
+                ])
+        else:
+            args.append('-DWITH_MATLAB:BOOL=OFF')
+
+        if '+octave' in spec:
+            args.append("-DWITH_OCTAVE:BOOL=ON")
+        else:
+            args.append("-DWITH_OCTAVE:BOOL=OFF")
+
+        if '+perl' in spec:
+            args.append("-DWITH_PERL:BOOL=ON")
+        else:
+            args.append("-DWITH_PERL:BOOL=OFF")
+
+        if "+r" in spec:
+            args.append("-DWITH_R:BOOL=ON")
+        else:
+            args.append("-DWITH_R:BOOL=OFF")
+
+        if "+ruby" in spec:
+            args.append("-DWITH_RUBY:BOOL=OFF")
+        else:
+            args.append("-DWITH_RUBY:BOOL=OFF")
+
+        return args
