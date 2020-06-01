@@ -75,7 +75,7 @@ echo "0.0.0"
     assert 'gcc' in output
 
 
-def test_compiler_remove(config, mock_packages):
+def test_compiler_remove(mutable_config, mock_packages):
     args = spack.util.pattern.Bunch(
         all=True, compiler_spec='gcc@4.5.0', add_paths=[], scope=None
     )
@@ -85,7 +85,7 @@ def test_compiler_remove(config, mock_packages):
 
 
 def test_compiler_add(
-        config, mock_packages, mock_compiler_dir, mock_compiler_version
+        mutable_config, mock_packages, mock_compiler_dir, mock_compiler_version
 ):
     # Compilers available by default.
     old_compilers = set(spack.compilers.all_compiler_specs())
