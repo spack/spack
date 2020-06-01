@@ -200,7 +200,7 @@ def _expand_matrix_constraints(object, specify=True):
         # abstract specs without needing package information
         try:
             spack.variant.substitute_abstract_variants(test_spec)
-        except:
+        except spack.variant.UnknownVariantError:
             pass
         if any(test_spec.satisfies(x) for x in excludes):
             continue

@@ -617,6 +617,7 @@ def substitute_abstract_variants(spec):
     if failed:
         raise UnknownVariantError(spec, failed)
 
+
 # The class below inherit from Sequence to disguise as a tuple and comply
 # with the semantic expected by the 'values' argument of the variant directive
 class DisjointSetsOfValues(Sequence):
