@@ -18,7 +18,6 @@ class Evtgen(AutotoolsPackage):
     version('02-00-00', sha256='02372308e1261b8369d10538a3aa65fe60728ab343fcb64b224dac7313deb719')
     version('01-07-00', sha256='2648f1e2be5f11568d589d2079f22f589c283a2960390bbdb8d9d7f71bc9c014', preferred=True)
 
-
     variant('pythia8', default=True, description='Build with pythia8')
     variant('tauola', default=False, description='Build with tauola')
     variant('photos', default=False, description='Build with photos')
