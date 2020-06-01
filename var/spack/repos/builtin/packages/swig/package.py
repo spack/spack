@@ -43,15 +43,12 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         depends_on('autoconf', type='build', when=_version)
         depends_on('automake', type='build', when=_version)
         depends_on('libtool', type='build', when=_version)
+    # Need newer 'automake' to support newer platforms
+    for _target in ['ppc64le', 'aarch64', 'power9le']:
+        depends_on('automake@1.15:', type='build', when='target={0}:'.format(_target))
     depends_on('pkgconfig', type='build')
 
     build_directory = 'spack-build'
-
-    @when('@:4.0.1')
-    def patch(self):
-        config_dir = join_path(self.stage.source_path, 'Tools', 'config')
-        copy(join_path(self.package_dir, 'config.guess'), config_dir)
-        copy(join_path(self.package_dir, 'config.sub'), config_dir)
 
     @run_after('install')
     def create_symlink(self):
