@@ -1010,6 +1010,7 @@
         },
         "clang": {
           "versions": "3.9:",
+          "name": "pwr7",
           "flags": "-mcpu={name} -mtune={name}"
         }
       }
@@ -1033,6 +1034,7 @@
         ],
         "clang": {
           "versions": "3.9:",
+          "name": "pwr8",
           "flags": "-mcpu={name} -mtune={name}"
         }
       }
@@ -1049,6 +1051,7 @@
         },
         "clang": {
           "versions": "3.9:",
+          "name": "pwr9",
           "flags": "-mcpu={name} -mtune={name}"
         }
       }
@@ -1091,7 +1094,7 @@
         "clang": {
           "versions": "3.9:",
           "family": "ppc64le",
-          "name": "power8",
+          "name": "pwr8",
           "flags": "-mcpu={name} -mtune={name}"
         }
       }
@@ -1110,7 +1113,7 @@
         "clang": {
           "versions": "3.9:",
           "family": "ppc64le",
-          "name": "power9",
+          "name": "pwr9",
           "flags": "-mcpu={name} -mtune={name}"
         }
       }
@@ -1172,7 +1175,8 @@
           },
           {
             "versions": "5:",
-            "flags": "-mcpu=thunderx2t99"
+            "name": "thunderx2t99",
+            "flags": "-mcpu={name}"
           }
         ]
       }
