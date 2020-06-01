@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.util.rust import rust_archs
+
 from six import iteritems
 
 
@@ -324,26 +326,6 @@ class Rust(Package):
             'aarch64-unknown-linux-gnu':     '38379fbd976d2286cb73f21466db40a636a583b9f8a80af5eea73617c7912bc7',
             'x86_64-apple-darwin':           '9274e977322bb4b153f092255ac9bd85041142c73eaabf900cb2ef3d3abb2eba'
         }
-    }
-
-    # This dictionary maps Rust target architectures to Spack constraints that
-    # match that target.
-    rust_archs = {
-        'x86_64-unknown-linux-gnu': [
-            {'platform': 'linux', 'target': 'x86_64:'},
-            {'platform': 'cray', 'target': 'x86_64:'}
-        ],
-        'powerpc64le-unknown-linux-gnu': [
-            {'platform': 'linux', 'target': 'ppc64le:'},
-            {'platform': 'cray', 'target': 'ppc64le:'}
-        ],
-        'aarch64-unknown-linux-gnu': [
-            {'platform': 'linux', 'target': 'aarch64:'},
-            {'platform': 'cray', 'target': 'aarch64:'}
-        ],
-        'x86_64-apple-darwin': [
-            {'platform': 'darwin', 'target': 'x86_64:'}
-        ]
     }
 
     # Specifies the strings which represent a pre-release Rust version. These
