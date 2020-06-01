@@ -11,11 +11,13 @@ class Evtgen(AutotoolsPackage):
         the decays of heavy flavour particles, primarily B and D mesons. """
 
     homepage = "https://evtgen.hepforge.org/"
-    url      = "https://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/MCGeneratorsTarFiles/evtgen-1.7.0.tar.gz"
+    url      = "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/MCGeneratorsTarFiles/evtgen-R01-07-00.tar.gz"
 
     maintainers = ['vvolkl']
 
-    version('1.7.0', sha256='ec5c680f14b301888d6e265ef421e3fd36826cd7c9d8598f12aeb748ed8a2363')
+    version('02-00-00', sha256='02372308e1261b8369d10538a3aa65fe60728ab343fcb64b224dac7313deb719')
+    version('01-07-00', sha256='2648f1e2be5f11568d589d2079f22f589c283a2960390bbdb8d9d7f71bc9c014', preferred=True)
+
 
     variant('pythia8', default=True, description='Build with pythia8')
     variant('tauola', default=False, description='Build with tauola')
