@@ -34,7 +34,10 @@ def test_view_link_type(
     view(cmd, viewpath, 'libdwarf')
     package_prefix = os.path.join(viewpath, 'libdwarf')
     assert os.path.exists(package_prefix)
-    assert os.path.islink(package_prefix) == (cmd in ('symlink', 'add'))
+
+    # Check that we use symlinks for and only for the appropriate subcommands
+    is_link_cmd = cmd in ('symlink', 'add')
+    assert os.path.islink(package_prefix) == is_link_cmd
 
 
 @pytest.mark.parametrize('cmd', ['hardlink', 'symlink', 'hard', 'add',
@@ -56,7 +59,10 @@ def test_view_projections(
 
     package_prefix = os.path.join(viewpath, 'libdwarf-20130207/libdwarf')
     assert os.path.exists(package_prefix)
-    assert os.path.islink(package_prefix) == (cmd in ('symlink', 'add'))
+
+    # Check that we use symlinks for and only for the appropriate subcommands
+    is_symlink_cmd = cmd in ('symlink', 'add')
+    assert os.path.islink(package_prefix) == is_symlink_cmd
 
 
 def test_view_multiple_projections(
