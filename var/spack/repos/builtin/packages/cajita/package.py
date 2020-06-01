@@ -19,7 +19,7 @@ class Cajita(CMakePackage):
 
     depends_on('mpi')
     depends_on('kokkos@3.0:')
-    
+
     def cmake_args(self):
         options = [
             '-DBUILD_SHARED_LIBS=%s' % (

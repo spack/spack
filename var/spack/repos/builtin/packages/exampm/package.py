@@ -23,7 +23,7 @@ class Exampm(CMakePackage):
     depends_on('silo')
     depends_on('cabana+mpi@master')
     depends_on('cajita@master')
-    
+
     def cmake_args(self):
         options = [
             '-DBUILD_SHARED_LIBS=%s' % (
