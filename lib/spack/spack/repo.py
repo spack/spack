@@ -442,6 +442,11 @@ class RepoPath(object):
         repos (list): list Repo objects or paths to put in this RepoPath
     """
 
+    def copy(self):
+        clone = RepoPath.__new__(RepoPath)
+        clone.__init__(*self.repos)
+        return clone
+
     def __init__(self, *repos):
         self.repos = []
         self.by_namespace = nm.NamespaceTrie()
