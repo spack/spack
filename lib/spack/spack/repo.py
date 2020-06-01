@@ -637,7 +637,11 @@ class RepoPath(object):
             fullspace = get_full_namespace(namespace)
             if fullspace not in self.by_namespace:
                 raise UnknownNamespaceError(spec.namespace)
-            return self.by_namespace[fullspace]
+            if not self.by_namespace[fullspace]._fallthrough:
+                return self.by_namespace[fullspace]
+            else:
+                if name in self.by_namespace[fullspace]:
+                    return self.by_namespace[fullspace]
 
         # If there's no namespace, search in the RepoPath.
         for repo in self.repos:
@@ -746,6 +750,7 @@ class Repo(object):
         self._modules = {}
         self._classes = {}
         self._instances = {}
+        self._fallthrough = False
 
         # Maps that goes from package name to corresponding file stat
         self._fast_package_checker = None
