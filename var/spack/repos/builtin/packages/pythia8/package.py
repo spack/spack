@@ -41,12 +41,20 @@ class Pythia8(AutotoolsPackage):
             args.append('--enable-shared')
         if '+hepmc' in self.spec:
             args.append('--with-hepmc=%s' % self.spec["hepmc"].prefix)
+        else:
+            args.append('--without-hepmc')
         if '+fastjet' in self.spec:
             args.append('--with-fastjet3=%s' % self.spec["fastjet"].prefix)
+        else:
+            args.append('--without-fastjet')
         if '+evtgen' in self.spec:
             args.append('--with-evtgen=%s' % self.spec["evtgen"].prefix)
+        else:
+            args.append('--without-evtgen')
         if '+root' in self.spec:
             args.append('--with-root=%s' % self.spec["root"].prefix)
+        else:
+            args.append('--without-evtgen')
 
         return args
 
