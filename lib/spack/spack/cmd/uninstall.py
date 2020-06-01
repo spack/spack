@@ -21,12 +21,16 @@ from llnl.util import tty
 from llnl.util.tty.colify import colify
 
 description = "remove installed packages"
+description += ("\n\nSpecs to be uninstalled are specified using the spec "
+                "syntax (`spack help --spec`) and can be identified by their "
+                "hashes. To remove packages that are needed only at build "
+                "time and were not explicitly installed see `spack gc -h`.")
 section = "build"
 level = "short"
 
 error_message = """You can either:
     a) use a more specific spec, or
-    b) specify the package by its hash (e.g. `spack uninstall /hash`), or
+    b) specify the spec by its hash (e.g. `spack uninstall /hash`), or
     c) use `spack uninstall --all` to uninstall ALL matching specs.
 """
 
