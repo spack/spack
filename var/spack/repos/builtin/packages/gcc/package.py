@@ -274,7 +274,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     @property
     def executables(self):
         names = [r'gcc', r'[^\w]?g\+\+', r'gfortran']
-        suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d', r'\d\d']
+        suffixes = [r'', r'-mp-\d+\.\d', r'-\d+\.\d', r'-\d+', r'\d\d']
         return [r''.join(x) for x in itertools.product(names, suffixes)]
 
     @classmethod
@@ -282,7 +282,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         result = []
         for exe in exes_in_prefix:
             # clang++ matches g++ -> clan[g++]
-            if 'clang' in exe:
+            if any(x in exe for x in ('clang', 'ranlib')):
                 continue
             # Filter out links in favor of real executables
             if os.path.islink(exe):
@@ -292,7 +292,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        version_regex = re.compile(r'(.*)')
+        version_regex = re.compile(r'([\d\.]+)')
         for vargs in ('-dumpfullversion', '-dumpversion'):
             try:
                 output = spack.compiler.get_compiler_version_output(exe, vargs)
