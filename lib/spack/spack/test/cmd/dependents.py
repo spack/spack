@@ -26,7 +26,7 @@ def test_transitive_dependents(mock_packages):
     out = dependents('--transitive', 'libelf')
     actual = set(re.split(r'\s+', out.strip()))
     assert actual == set(
-        ['callpath', 'dyninst', 'libdwarf', 'mpileaks', 'multivalue_variant',
+        ['callpath', 'dyninst', 'libdwarf', 'mpileaks', 'multivalue-variant',
          'singlevalue-variant-dependent',
          'patch-a-dependency', 'patch-several-dependencies'])
 
