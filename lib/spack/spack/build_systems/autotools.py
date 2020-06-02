@@ -123,7 +123,7 @@ class AutotoolsPackage(PackageBase):
             if my_config_files[config_name] is not None:
                 try:
                     config_path = my_config_files[config_name]
-                    check_call([config_path, *config_args[config_name]],
+                    check_call([config_path] + config_args[config_name],
                                stdout=PIPE, stderr=PIPE)
                     # The package's config file already runs OK, so just use it
                     continue
@@ -155,7 +155,7 @@ class AutotoolsPackage(PackageBase):
                     config_path = config_files[config_name]
                     my_config_path = my_config_files[config_name]
 
-                    check_call([config_path, *config_args[config_name]],
+                    check_call([config_path] + config_args[config_name],
                                stdout=PIPE, stderr=PIPE)
 
                     m = os.stat(my_config_path).st_mode & 0o777 | stat.S_IWUSR
