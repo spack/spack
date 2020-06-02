@@ -134,10 +134,9 @@ class AutotoolsPackage(PackageBase):
 
             # Look for a spack-installed automake package
             if 'automake' in self.spec:
-                am_spec = self.spec['automake']
-                automake_path = os.path.join(am_spec.prefix,
-                                             'share', 'automake-{0}'.format(
-                                             str(am_spec.version)))
+                automake_dir = 'automake-' + str(self.spec['automake'].version)
+                automake_path = os.path.join(self.spec['automake'].prefix,
+                                             'share', automake_dir)
                 path = os.path.join(automake_path, config_file)
                 if os.path.exists(path):
                     config_files[config_name] = path
