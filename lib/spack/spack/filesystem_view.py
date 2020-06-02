@@ -54,14 +54,12 @@ def view_hardlink(src, dst, **kwargs):
     os.link(src, dst)
 
 
-def view_copy(src, dst, **kwargs):
+def view_copy(src, dst, view, spec=None):
     """
     Copy a file from src to dst.
 
-    Use spec and view from kwargs to generate relocations
+    Use spec and view to generate relocations
     """
-    spec = kwargs.get(spec, None)
-    view = kwargs.get(view)  # functools assures this is present
     shutil.copyfile(src, dst)
     if spec:
         # Not metadata, we have to relocate it
@@ -115,8 +113,12 @@ class FilesystemView(object):
         self.projections = kwargs.get('projections', {})
 
         self.ignore_conflicts = kwargs.get("ignore_conflicts", False)
-        self.link = ft.partial(kwargs.get("link", view_symlink), view=self)
         self.verbose = kwargs.get("verbose", False)
+
+        # Setup link function to include view
+        link_func = kwargs.get("link", view_symlink)
+        self.link = ft.partial(link_func, view=self)
+
 
     def add_specs(self, *specs, **kwargs):
         """
