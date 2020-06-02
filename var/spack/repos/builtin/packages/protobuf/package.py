@@ -61,7 +61,7 @@ class Protobuf(Package):
     # See https://github.com/protocolbuffers/protobuf/pull/7197
     patch('intel-v2.patch', when='@3.7:@3.11.4 %intel')
 
-    patch('protoc2.5.0_aarch64.patch', sha256='7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451', when='@2.5.0 target=aarch64:')
+    patch('protoc.patch', sha256='7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451', when='@2.5.0 target=aarch64:')
 
     def fetch_remote_versions(self):
         """Ignore additional source artifacts uploaded with releases,
@@ -75,7 +75,6 @@ class Protobuf(Package):
 
     def cmake_args(self):
         args = [
-            '-DCMAKE_INSTALL_PREFIX=%s' % self.prefix,
             '-DBUILD_SHARED_LIBS=%s' % int('+shared' in self.spec),
             '-Dprotobuf_BUILD_TESTS:BOOL=OFF',
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON'
@@ -87,6 +86,7 @@ class Protobuf(Package):
     @when('@3.0.2:')
     def install(self, spec, prefix):
         args = self.cmake_args()
+        args.extend(std_cmake_args)
 
         source_directory = join_path(self.stage.source_path, 'cmake')
         build_directory = join_path(source_directory, 'build')
