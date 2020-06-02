@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import contextlib
 import os
 import platform
 import re
@@ -354,10 +355,11 @@ class Compiler(object):
             for flag_type in flags:
                 for flag in self.flags.get(flag_type, []):
                     compiler_exe.add_default_arg(flag)
-            output = str(compiler_exe(self.verbose_flag, fin, '-o', fout,
-                                      output=str, error=str))  # str for py2
-
-            return _parse_non_system_link_dirs(output)
+            with self._compiler_environment():
+                output = str(compiler_exe(
+                    self.verbose_flag, fin, '-o', fout,
+                    output=str, error=str))  # str for py2
+                return _parse_non_system_link_dirs(output)
         except spack.util.executable.ProcessError as pe:
             tty.debug('ProcessError: Command exited with non-zero status: ' +
                       pe.long_message)
@@ -468,32 +470,12 @@ class Compiler(object):
         Use the runtime environment of the compiler (modules and environment
         modifications) to enable the compiler to run properly on any platform.
         """
-        # store environment to replace later
-        backup_env = os.environ.copy()
-
-        # load modules and set env variables
-        for module in self.modules:
-            # On cray, mic-knl module cannot be loaded without cce module
-            # See: https://github.com/spack/spack/issues/3153
-            if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
-                spack.util.module_cmd.load_module('cce')
-            spack.util.module_cmd.load_module(module)
-
-        # apply other compiler environment changes
-        env = spack.util.environment.EnvironmentModifications()
-        env.extend(spack.schema.environment.parse(self.environment))
-        env.apply_modifications()
-
         cc = spack.util.executable.Executable(self.cc)
-        output = cc(self.version_argument,
-                    output=str, error=str,
-                    ignore_errors=tuple(self.ignore_version_errors))
-
-        # Restore environment
-        os.environ.clear()
-        os.environ.update(backup_env)
-
-        return self.extract_version_from_output(output)
+        with self._compiler_environment():
+            output = cc(self.version_argument,
+                        output=str, error=str,
+                        ignore_errors=tuple(self.ignore_version_errors))
+            return self.extract_version_from_output(output)
 
     #
     # Compiler classes have methods for querying the version of
@@ -561,6 +543,30 @@ class Compiler(object):
             self.name, '\n     '.join((str(s) for s in (
                 self.cc, self.cxx, self.f77, self.fc, self.modules,
                 str(self.operating_system)))))
+
+    @contextlib.contextmanager
+    def _compiler_environment(self):
+        # store environment to replace later
+        backup_env = os.environ.copy()
+
+        # load modules and set env variables
+        for module in self.modules:
+            # On cray, mic-knl module cannot be loaded without cce module
+            # See: https://github.com/spack/spack/issues/3153
+            if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
+                spack.util.module_cmd.load_module('cce')
+            spack.util.module_cmd.load_module(module)
+
+        # apply other compiler environment changes
+        env = spack.util.environment.EnvironmentModifications()
+        env.extend(spack.schema.environment.parse(self.environment))
+        env.apply_modifications()
+
+        yield
+
+        # Restore environment
+        os.environ.clear()
+        os.environ.update(backup_env)
 
 
 class CompilerAccessError(spack.error.SpackError):

@@ -157,13 +157,14 @@ default_compiler_entry = {
 class MockCompiler(Compiler):
     def __init__(self):
         super(MockCompiler, self).__init__(
-            "badcompiler@1.0.0",
-            default_compiler_entry['operating_system'],
-            None,
-            [default_compiler_entry['paths']['cc'],
-             default_compiler_entry['paths']['cxx'],
-             default_compiler_entry['paths']['fc'],
-             default_compiler_entry['paths']['f77']])
+            cspec="badcompiler@1.0.0",
+            operating_system=default_compiler_entry['operating_system'],
+            target=None,
+            paths=[default_compiler_entry['paths']['cc'],
+                   default_compiler_entry['paths']['cxx'],
+                   default_compiler_entry['paths']['fc'],
+                   default_compiler_entry['paths']['f77']],
+            environment={})
 
     _get_compiler_link_paths = Compiler._get_compiler_link_paths
 
@@ -265,6 +266,32 @@ def test_get_compiler_link_paths_no_verbose_flag():
 
     dirs = compiler._get_compiler_link_paths([compiler.cxx])
     assert dirs == []
+
+
+def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
+    gcc = str(tmpdir.join('gcc'))
+    with open(gcc, 'w') as f:
+        f.write("""#!/bin/bash
+if [[ $ENV_SET == "1" && $MODULE_LOADED == "1" ]]; then
+  echo '""" + no_flag_output + """'
+fi
+""")
+    fs.set_executable(gcc)
+
+    # Set module load to turn compiler on
+    def module(*args):
+        if args[0] == 'show':
+            return ''
+        elif args[0] == 'load':
+            os.environ['MODULE_LOADED'] = "1"
+    monkeypatch.setattr(spack.util.module_cmd, 'module', module)
+
+    compiler = MockCompiler()
+    compiler.environment = {'set': {'ENV_SET': '1'}}
+    compiler.modules = ['turn_on']
+
+    dirs = compiler._get_compiler_link_paths([gcc])
+    assert dirs == no_flag_dirs
 
 
 # Get the desired flag from the specified compiler spec.
