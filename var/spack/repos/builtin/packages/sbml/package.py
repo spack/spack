@@ -94,10 +94,7 @@ class Sbml(CMakePackage):
         else:
             args.append('-DWITH_PYTHON:BOOL=ON')
 
-        if '+mono' in spec:
-            args.append("-DWITH_CSHARP:BOOL=ON")
-        else:
-            args.append("-DWITH_CSHARP:BOOL=OFF")
+        args.append(self.define_from_variant('WITH_CSHARP', 'mono'))
 
         if '+java' in spec:
             args.extend([
