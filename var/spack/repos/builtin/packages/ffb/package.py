@@ -25,23 +25,23 @@ class Ffb(Package):
     def install(self, spec, prefix):
         d = find('.', 'make', recursive=True)
         workdir = os.path.dirname(d[0])
-        POPT = ['-P -traditional-cpp -Dcputime']
-        COPT = ['-O3 ']
-        FOPT = ['']
+        popt = ['-P -traditional-cpp -Dcputime']
+        copt = ['-O3 ']
+        fopt = ['']
         cflags = ['-O']
         cxxflags = ['-O',  self.compiler.cxx_pic_flag]
         fflags = ['']
         ldshared = ['']
         libs = ['-lstdc++']
-        INCDIR = spec['mpi'].headers.directories[0]
-        LIBDIR = spec['mpi'].libs.directories[0]
+        incdir = spec['mpi'].headers.directories[0]
+        libdir = spec['mpi'].libs.directories[0]
         if spec.satisfies('%gcc'):
-            FOPT = ['-C ']
+            fopt = ['-C ']
             ldshared = ['g++ -shared -s']
-            FOPT.append('-mcmodel=large')
+            fopt.append('-mcmodel=large')
         if spec.satisfies('%intel'):
-            COPT = ['']
-            FOPT.append('-convert big_endian -mcmodel=large -shared-intel')
+            copt = ['']
+            fopt.append('-convert big_endian -mcmodel=large -shared-intel')
             cflags = ['-O2']
             cxxflags = ['-O2',  self.compiler.cxx_pic_flag]
             fflags = ['-O2']
@@ -54,23 +54,23 @@ class Ffb(Package):
         with open(join_path(workdir, 'make', 'OPTION.spack'), 'w') as m:
             m.write('CPP = /lib/cpp\n')
             m.write('CCOM = {0}\n'.format(spack_cc))
-            m.write('POPT = {0}\n'.format(' '.join(POPT)))
-            m.write('COPT = {0}\n'.format(' '.join(COPT)))
+            m.write('POPT = {0}\n'.format(' '.join(popt)))
+            m.write('COPT = {0}\n'.format(' '.join(copt)))
             m.write('FCOM = {0}\n'.format(spack_fc))
-            m.write('FOPT = {0}\n'.format(' '.join(FOPT)))
-            m.write('INCDIR = {0}\n'.format(INCDIR))
-            m.write('LIBDIR = {0}\n'.format(LIBDIR))
+            m.write('FOPT = {0}\n'.format(' '.join(fopt)))
+            m.write('INCDIR = {0}\n'.format(incdir))
+            m.write('LIBDIR = {0}\n'.format(libdir))
 
         # for MPI
         with open(join_path(workdir, 'make', 'OPTION'), 'w') as m:
             m.write('CPP = /lib/cpp\n')
             m.write('CCOM = {0}\n'.format(spec['mpi'].mpicc))
-            m.write('POPT = {0}\n'.format(' '.join(POPT)))
-            m.write('COPT = {0}\n'.format(' '.join(COPT)))
+            m.write('POPT = {0}\n'.format(' '.join(popt)))
+            m.write('COPT = {0}\n'.format(' '.join(copt)))
             m.write('FCOM = {0}\n'.format(spec['mpi'].mpifc))
-            m.write('FOPT = {0}\n'.format(' '.join(FOPT)))
-            m.write('INCDIR = {0}\n'.format(INCDIR))
-            m.write('LIBDIR = {0}\n'.format(LIBDIR))
+            m.write('FOPT = {0}\n'.format(' '.join(fopt)))
+            m.write('INCDIR = {0}\n'.format(incdir))
+            m.write('LIBDIR = {0}\n'.format(libdir))
 
         srcdir = join_path(workdir, 'lib', 'src')
         utildir = join_path(workdir, 'util')
@@ -82,21 +82,21 @@ class Ffb(Package):
             m.write('cd {0}\n'.format(utildir))
             m.write('./Makeall\n')
 
-        Makeall = join_path(workdir, 'lib', 'src', 'dd_mpi', 'Makeall')
+        makeall = join_path(workdir, 'lib', 'src', 'dd_mpi', 'Makeall')
         dd_mpi_dir = join_path(workdir, 'lib', 'src', 'dd_mpi')
-        with open(Makeall, 'w') as m:
+        with open(makeall, 'w') as m:
             m.write('#!/bin/csh -f\n')
             m.write('setenv LES3DHOME {0}\n'.format(''.join(workdir)))
             m.write('cd {0}\n'.format(dd_mpi_dir))
             m.write('make lib\n')
-        os.chmod(Makeall, 0o755)
+        os.chmod(makeall, 0o755)
 
-        Makeall = join_path(workdir, 'util',  'makeall')
+        makeall = join_path(workdir, 'util',  'makeall')
         les3d_dir = join_path(workdir, 'util', 'les3d.mpi')
         les3c_dir = join_path(workdir, 'util', 'les3c.mpi')
         les3ct_dir = join_path(workdir, 'util', 'les3ct.mpi')
         les3x_dir = join_path(workdir, 'util', 'les3x.mpi')
-        with open(Makeall, 'w') as m:
+        with open(makeall, 'w') as m:
             m.write('#!/bin/csh -f\n')
             m.write('setenv LES3DHOME {0}\n'.format(''.join(workdir)))
             m.write('cd {0}\n'.format(les3d_dir))
@@ -111,7 +111,7 @@ class Ffb(Package):
                 editfile = join_path(d, 'FILES')
                 m = FileFilter(editfile)
                 m.filter(r'-lmpi_f77', '')
-        os.chmod(Makeall, 0o755)
+        os.chmod(makeall, 0o755)
 
         editfile = join_path(workdir, 'lib', 'src',
                              'REVOCAP_Refiner-0.4.3', 'OPTIONS')
