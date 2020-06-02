@@ -242,10 +242,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
-    # Backport libsanitizer patch for glibc >= 2.31 and 8.1.0 <= gcc <= 9.2.0
+    # Backport libsanitizer patch for glibc >= 2.31 and 5.3.0 <= gcc <= 9.2.0
     # https://bugs.gentoo.org/708346
-    patch('glibc-2.31-libsanitizer-1.patch', when='@8.1.0:8.3.99,9.0.0:9.2.0')
-    patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:8.3.99,9.0.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-1.patch', when='@7.1.0:7.4.0,8.1.0:8.3.0,9.0.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-1-gcc-6.patch', when='@5.3.0:5.5.0,6.1.0:6.5.0')
+    patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:8.3.0,9.0.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-2-gcc-6.patch', when='@5.3.0:5.5.0,6.1.0:6.5.0')
+    patch('glibc-2.31-libsanitizer-2-gcc-7.patch', when='@7.1.0:7.4.0')
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch('ucontext_t.patch', when='@4.9,5.1:5.4,6.1:6.4,7.1')
