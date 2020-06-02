@@ -1,0 +1,20 @@
+diff --git a/modules/mixer/simple/python.c b/modules/mixer/simple/python.c
+index c822c52a..917a5d0a 100644
+--- a/modules/mixer/simple/python.c
++++ b/modules/mixer/simple/python.c
+@@ -588,7 +588,6 @@
+ pymelem_dealloc(struct pymelem *self)
+ {
+ 	selem_free(self->melem);
+-        self->ob_type->tp_free(self);
+ }
+
+ static PyGetSetDef pymelem_getseters[] = {
+@@ -800,7 +799,6 @@
+ pymixer_dealloc(struct pymixer *self)
+ {
+ 	pymixer_free(self);
+-        self->ob_type->tp_free(self);
+ }
+
+ static PyGetSetDef pymixer_getseters[] = {
