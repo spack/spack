@@ -61,7 +61,7 @@ class Protobuf(Package):
     # See https://github.com/protocolbuffers/protobuf/pull/7197
     patch('intel-v2.patch', when='@3.7:@3.11.4 %intel')
 
-    patch('protoc.patch', sha256='7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451', when='@2.5.0 target=aarch64:')
+    patch('protoc2.5.0_aarch64.patch', sha256='7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451', when='@2.5.0 target=aarch64:')
 
     def fetch_remote_versions(self):
         """Ignore additional source artifacts uploaded with releases,
