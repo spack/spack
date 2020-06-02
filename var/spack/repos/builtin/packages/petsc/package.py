@@ -109,6 +109,8 @@ class Petsc(Package):
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
 
+    conflicts('^hypre', when='@:3.12.0+complex')
+
     filter_compiler_wrappers(
         'petscvariables', relative_root='lib/petsc/conf'
     )
@@ -155,18 +157,21 @@ class Petsc(Package):
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     depends_on('valgrind', when='+valgrind')
-    # Hypre does not support complex numbers.
-    # Also PETSc prefer to build it without internal superlu, likely due to
-    # conflict in headers see
-    # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on('hypre@:2.13.99~internal-superlu~int64', when='@:3.8.99+hypre+mpi~complex~int64')
-    depends_on('hypre@:2.13.99~internal-superlu+int64', when='@:3.8.99+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:~internal-superlu~int64', when='@3.9:+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:~internal-superlu+int64', when='@3.9:+hypre+mpi~complex+int64')
-    depends_on('hypre@xsdk-0.2.0~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
-    depends_on('hypre@xsdk-0.2.0~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
-    depends_on('hypre@develop~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
-    depends_on('hypre@develop~internal-superlu~int64', when='@develop+hypre+mpi~complex~int64')
+    # PETSc prefers to build hypre without internal superlu, likely due to
+    # conflict in headers see,
+    # https://gitlab.com/petsc/petsc/-/blob/master/config/BuildSystem/config/packages/hypre.py
+    depends_on('hypre@:2.13.99~complex~internal-superlu~int64', when='@:3.8.99+hypre~complex+mpi~int64')
+    depends_on('hypre@:2.13.99~complex~internal-superlu+int64', when='@:3.8.99+hypre~complex+mpi+int64')
+    depends_on('hypre@2.14:~complex~internal-superlu~int64', when='@3.9:+hypre~complex+mpi~int64')
+    depends_on('hypre@2.14:~complex~internal-superlu+int64', when='@3.9:+hypre~complex+mpi+int64')
+    depends_on('hypre@2.16:+complex~internal-superlu~int64', when='@3.12:+hypre+complex+mpi~int64')
+    depends_on('hypre@2.16:+complex~internal-superlu+int64', when='@3.12:+hypre+complex+mpi+int64')
+    depends_on('hypre@xsdk-0.2.0~complex~internal-superlu+int64', when='@xsdk-0.2.0+hypre~complex+mpi+int64')
+    depends_on('hypre@xsdk-0.2.0~complex~internal-superlu~int64', when='@xsdk-0.2.0+hypre~complex+mpi~int64')
+    depends_on('hypre@develop~complex~internal-superlu+int64', when='@develop+hypre~complex+mpi+int64')
+    depends_on('hypre@develop~complex~internal-superlu~int64', when='@develop+hypre~complex+mpi~int64')
+    depends_on('hypre@develop+complex~internal-superlu+int64', when='@develop+hypre+complex+mpi+int64')
+    depends_on('hypre@develop+complex~internal-superlu~int64', when='@develop+hypre+complex+mpi~int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.0.0:5.1.3~int64', when='@3.7:3.7.99+superlu-dist+mpi~int64')
