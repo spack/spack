@@ -126,6 +126,31 @@
   to avoid rebuilding packages that have already been build centrally.
 </details>
 
+<details>
+  <summary>Q: Why are my local modules broken after installing software
+  manually?</summary>
+
+  When installing CMake-based software with
+
+      $ spack setup package@version
+      $ mkdir build
+      $ cd build
+      $ ../spconfig.py ..
+      $ make
+      $ make install
+
+  Spack will create a skeleton installation with bogus files to directly
+  generate a module for the package to be installed.
+  This may result in a "fake" library to be picked up when installing
+  subsequent packages.
+  Please use
+
+      $ spack dev-build package@version
+
+  to install packages locally, and use `spack setup` only for local
+  development/testing that other packages do not depend on.
+</details>
+
 ## Pull Requests
 
 <details>

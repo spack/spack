@@ -40,10 +40,9 @@ Since Ubuntu 20.04 dropped python2 support, we need to set python3 as the defaul
 
 To check that we are using python3 as python:
 
-    $ sudo update-alternatives --config python    
-    
-    $ There is only one alternative in link group python 
-    $ (providing /usr/bin/python): /usr/bin/python3.8. Nothing to configure.
+    $ sudo update-alternatives --config python
+    There is only one alternative in link group python
+    (providing /usr/bin/python): /usr/bin/python3.8. Nothing to configure.
 
 
 Now to build software, i.e., MVDTool:
