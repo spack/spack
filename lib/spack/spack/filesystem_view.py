@@ -119,7 +119,6 @@ class FilesystemView(object):
         link_func = kwargs.get("link", view_symlink)
         self.link = ft.partial(link_func, view=self)
 
-
     def add_specs(self, *specs, **kwargs):
         """
             Add given specs to view.
