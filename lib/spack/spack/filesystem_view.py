@@ -42,15 +42,26 @@ __all__ = ["FilesystemView", "YamlFilesystemView"]
 _projections_path = '.spack/projections.yaml'
 
 
-def view_symlink(src, dst, view, spec):
+def view_symlink(src, dst, **kwargs):
+    # keyword arguments are irrelevant
+    # here to fit required call signature
     os.symlink(src, dst)
 
 
-def view_hardlink(src, dst, view, spec):
+def view_hardlink(src, dst, **kwargs):
+    # keyword arguments are irrelevant
+    # here to fit required call signature
     os.link(src, dst)
 
 
-def view_copy(src, dst, view, spec):
+def view_copy(src, dst, **kwargs):
+    """
+    Copy a file from src to dst.
+
+    Use spec and view from kwargs to generate relocations
+    """
+    spec = kwargs.get(spec, None)
+    view = kwargs.get(view)  # functools assures this is present
     shutil.copyfile(src, dst)
     if spec:
         # Not metadata, we have to relocate it
@@ -71,13 +82,6 @@ def view_copy(src, dst, view, spec):
             spec.prefix, view.get_projection_for_spec(spec),
             spack.paths.spack_root, view._root, prefix_to_prefix
         )
-
-
-def view_link_wrapper(view, link_method):
-    def view_link(src, dst, spec=None):
-        link_method(src, dst, view, spec)
-
-    return view_link
 
 
 class FilesystemView(object):
@@ -106,7 +110,7 @@ class FilesystemView(object):
         self.projections = kwargs.get('projections', {})
 
         self.ignore_conflicts = kwargs.get("ignore_conflicts", False)
-        self.link = view_link_wrapper(self, kwargs.get("link", view_symlink))
+        self.link = ft.partial(kwargs.get("link", view_symlink), view=self)
         self.verbose = kwargs.get("verbose", False)
 
     def add_specs(self, *specs, **kwargs):
