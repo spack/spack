@@ -9,12 +9,8 @@ from spack import *
 class Sbml(CMakePackage):
     """Library for the Systems Biology Markup Language"""
 
-    maintainers = ['rblake-llnl']
     homepage = "https://sbml.org"
-
-    def url_for_version(self, version):
-        url = "https://downloads.sourceforge.net/project/sbml/libsbml/{0}/stable/libSBML-{1}-core-plus-packages-src.tar.gz".format(version, version)
-        return url
+    maintainers = ['rblake-llnl']
 
     version('5.18.0', sha256='6c01be2306ec0c9656b59cb082eb7b90176c39506dd0f912b02e08298a553360')
     version('5.17.0', sha256='189216e1472777e4464b791c506b79267d07a5454cb23ac991452711f8e0ed3a')
@@ -27,15 +23,47 @@ class Sbml(CMakePackage):
     version('5.10.2', sha256='83f32a143cf657672b1050f5f79d3591c418fc59570d180fb1f39b103f4e5286')
     version('5.10.0', sha256='2cd8b37018ce8b1df869c8c182803addbce6d451512ae25a7f527b49981f0966')
 
+    def url_for_version(self, version):
+        url = "https://downloads.sourceforge.net/project/sbml/libsbml/{0}/stable/libSBML-{1}-core-plus-packages-src.tar.gz".format(version, version)
+        return url
+
     variant('python', default=False,
             description='Build with python support')
+    depends_on('python', when="+python")
+
+    variant('perl', default=False,
+            description='Build with perl support')
+    depends_on('perl', when="+perl")
+
+    variant('ruby', default=False,
+            description='Build with ruby support')
+    depends_on('ruby', when="+ruby")
+
+    variant('r', default=False,
+            description='Build with R support')
+    depends_on('r', when="+r")
+
+    variant('octave', default=False,
+            description='Build with octave support')
+    depends_on('octave', when="+octave")
+
+    variant('matlab', default=False,
+            description='Build with matlab support')
+    depends_on('matlab', when="+matlab")
+
+    variant('java', default=False,
+            description='Build with java support')
+    depends_on('java', when="+java")
+
+    variant('mono', default=False,
+            description='Build with mono support')
+    depends_on('mono', when="+mono")
 
     depends_on('swig@2:', type='build')
     depends_on('cmake', type='build')
     depends_on('zlib')
     depends_on('bzip2')
     depends_on('libxml2')
-    depends_on('python', when="+python")
 
     def cmake_args(self):
         spec = self.spec
@@ -63,6 +91,8 @@ class Sbml(CMakePackage):
                 "-DWITH_PYTHON:BOOL=ON",
                 "-DWITH_PYTHON_INCLUDE:PATH=%s" % spec['python'].prefix,
             ])
+        else:
+            args.append('-DWITH_PYTHON:BOOL=ON')
 
         if '+mono' in spec:
             args.append("-DWITH_CSHARP:BOOL=ON")
@@ -103,7 +133,7 @@ class Sbml(CMakePackage):
             args.append("-DWITH_R:BOOL=OFF")
 
         if "+ruby" in spec:
-            args.append("-DWITH_RUBY:BOOL=OFF")
+            args.append("-DWITH_RUBY:BOOL=ON")
         else:
             args.append("-DWITH_RUBY:BOOL=OFF")
 
