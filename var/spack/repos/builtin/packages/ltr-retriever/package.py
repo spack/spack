@@ -23,7 +23,7 @@ class LtrRetriever(Package):
     depends_on('repeatmasker', type='run')
 
     def install(self, spec, prefix):
-        filter_file('BLAST\+=.*', 'BLAST+=%s' % spec['blast-plus'].prefix.bin,
+        filter_file(r'BLAST\+=.*', 'BLAST+=%s' % spec['blast-plus'].prefix.bin,
                     'paths')
         filter_file('RepeatMasker=.*',
                     'RepeatMasker=%s' % spec['repeatmasker'].prefix.bin,
