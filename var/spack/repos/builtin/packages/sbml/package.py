@@ -114,24 +114,9 @@ class Sbml(CMakePackage):
         else:
             args.append('-DWITH_MATLAB:BOOL=OFF')
 
-        if '+octave' in spec:
-            args.append("-DWITH_OCTAVE:BOOL=ON")
-        else:
-            args.append("-DWITH_OCTAVE:BOOL=OFF")
-
-        if '+perl' in spec:
-            args.append("-DWITH_PERL:BOOL=ON")
-        else:
-            args.append("-DWITH_PERL:BOOL=OFF")
-
-        if "+r" in spec:
-            args.append("-DWITH_R:BOOL=ON")
-        else:
-            args.append("-DWITH_R:BOOL=OFF")
-
-        if "+ruby" in spec:
-            args.append("-DWITH_RUBY:BOOL=ON")
-        else:
-            args.append("-DWITH_RUBY:BOOL=OFF")
+        args.append(self.define_from_variant('WITH_OCTAVE', 'octave'))
+        args.append(self.define_from_variant('WITH_PERL', 'perl'))
+        args.append(self.define_from_variant('WITH_R', 'r'))
+        args.append(self.define_from_variant('WITH_RUBY', 'ruby'))
 
         return args
