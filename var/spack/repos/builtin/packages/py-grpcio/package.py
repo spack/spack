@@ -29,3 +29,7 @@ class PyGrpcio(PythonPackage):
         env.set('GRPC_PYTHON_BUILD_SYSTEM_OPENSSL', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_ZLIB', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_CARES', True)
+
+    def patch(self):
+        if self.spec.satisfies('%fj'):
+            filter_file("-std=gnu99", "", "setup.py")
