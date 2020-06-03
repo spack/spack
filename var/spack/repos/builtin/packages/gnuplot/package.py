@@ -122,7 +122,7 @@ class Gnuplot(AutotoolsPackage):
             options.append('--with-qt=no')
 
         if '+wx' in spec:
-            options.append('--with-wx=%s' % spec['wxwidgets'].prefix)
+            options.append('--with-wx=%s' % spec['wx'].prefix)
         else:
             options.append('--disable-wxwidgets')
 
