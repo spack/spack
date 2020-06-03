@@ -532,7 +532,7 @@ class Configuration(object):
         We use ``:`` as the separator, like YAML objects.
     """
         # TODO: Currently only handles maps. Think about lists if needed.
-        parts = _process_config_path(path)
+        parts = process_config_path(path)
         section = parts.pop(0)
 
         value = self.get_config(section, scope=scope)
@@ -553,7 +553,7 @@ class Configuration(object):
             self.update_config(path, value, scope=scope)
             return
 
-        parts = _process_config_path(path)
+        parts = process_config_path(path)
         section = parts.pop(0)
 
         section_data = self.get_config(section, scope=scope)
@@ -825,7 +825,7 @@ def type_of(path):
     path given, the priority order is ``list``, ``dict``, ``str``, ``bool``,
     ``int``, ``float``.
     """
-    components = _process_config_path(path)
+    components = process_config_path(path)
     section = components[0]
     for type in (list, syaml.syaml_dict, str, bool, int, float):
         try:
@@ -911,7 +911,7 @@ def merge_yaml(dest, source):
 # Process a path argument to config.set() that may contain overrides ('::' or
 # trailing ':')
 #
-def _process_config_path(path):
+def process_config_path(path):
     result = []
     if path.startswith(':'):
         raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".

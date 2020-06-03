@@ -180,9 +180,19 @@ def config_add(args):
         # Get file as config dict
         with open(args.file, 'r') as f:
             data = syaml.load_config(f)
-        spack.environment.validate(data, 'spack.yaml')
-        config_dict = spack.environment.config_dict(data)
 
+        if 'env' in data or 'spack' in data:
+            # Validate as an environment
+            # use config_dict to remove top-level key
+            spack.environment.validate(data, 'spack.yaml')
+            config_dict = spack.environment.config_dict(data)
+        else:
+            # Separate config file
+            # Use schema according to first key (they each only accept one key)
+            # Do not remove top key
+            spack.config.validate(
+                data, spack.config.section_schemas[next(iter(data))])
+            config_dict = data
         # update all sections from config dict
         # We have to iterate on keys to keep overrides from the file
         for section in config_dict.keys():
@@ -206,7 +216,7 @@ def config_add(args):
                     spack.config.set(section, new, scope=scope)
 
     if args.value:
-        components = spack.config._process_config_path(args.value)
+        components = spack.config.process_config_path(args.value)
 
         has_existing_value = True
         path = ''
