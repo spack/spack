@@ -30,11 +30,11 @@ class PyRpy2(PythonPackage):
     # All versions
     depends_on('py-setuptools', type='build')
     depends_on('r',             type=('build', 'run'))
-    
+
     # @3.0.0:
     depends_on('py-cffi@1.0.0:', when='@3.0.0:', type=('build', 'run'))
     depends_on('py-simplegeneric', when='@3.0.0:', type=('build', 'run'))
-    
+
     # @2.9.0:
     depends_on('r@3.3:',    when='@2.9.0:', type=('build', 'run'))
     depends_on('python@3:', when='@2.9.0:', type=('build', 'run'))
