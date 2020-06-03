@@ -398,7 +398,7 @@ class Boost(Package):
         # and at least in clang 3.9 still fails to build
         #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
         #   https://svn.boost.org/trac/boost/ticket/12496
-        if spec.satisfies('%clang'):
+        if spec.satisfies('%clang') or spec.satisfies('%fj'):
             options.extend(['pch=off'])
             if '+clanglibcpp' in spec:
                 cxxflags.append('-stdlib=libc++')
@@ -410,8 +410,6 @@ class Boost(Package):
             # change into boost compilation
             if spec.variants['cxxstd'].value == '11':
                 cxxflags.append('-std=c++11')
-        elif spec.satisfies('%fj'):
-            options.extend(['pch=off'])
 
         if cxxflags:
             options.append('cxxflags="{0}"'.format(' '.join(cxxflags)))
