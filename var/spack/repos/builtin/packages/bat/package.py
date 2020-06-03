@@ -18,8 +18,9 @@ class Bat(CargoPackage):
     # onig-sys needs llvm for libclang in order to generate Rust code for onig
     # headers.
     depends_on('llvm@6.0:', type='build', when='@0.13.0:0.15.1')
-    depends_on('oniguruma')
+    depends_on('pkgconfig', type='build')
     depends_on('libgit2')
+    depends_on('oniguruma')
 
     version('master', branch='master')
     version('0.15.4', sha256='91f17c2d9e1cee447a788a15fa6819c0cb488fb2935e3e8c4e7120e1678b7aa8')

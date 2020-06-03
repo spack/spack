@@ -23,6 +23,7 @@ class Exa(CargoPackage):
         description='Link Rust standard library dynamically'
     )
 
+    depends_on('pkgconfig', type='build')
     depends_on('libgit2')
 
     def setup_build_environment(self, env):

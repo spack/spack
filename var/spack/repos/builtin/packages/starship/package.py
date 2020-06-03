@@ -31,6 +31,7 @@ class Starship(CargoPackage):
         values=('none', 'thin', 'fat')
     )
 
+    depends_on('pkgconfig', type='build')
     depends_on('libgit2')
 
     def setup_build_environment(self, env):
