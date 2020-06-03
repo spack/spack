@@ -64,27 +64,34 @@ def view_copy(src, dst, view, spec=None):
     if spec:
         # Not metadata, we have to relocate it
 
-        # What type of file are we relocating
-        relocate_method = spack.relocate.relocate_text_bin \
-            if spack.relocate.is_binary(dst) else spack.relocate.relocate_text
-
         # Get information on where to relocate from/to
         prefix_to_projection = dict(
             (dep.prefix, view.get_projection_for_spec(dep))
             for dep in spec.traverse()
         )
 
-        # Call actual relocation method
-        relocate_method(
-            path_names=[dst],
-            old_layout_root=spack.store.layout.root,
-            new_layout_root=view._root,
-            old_install_prefix=spec.prefix,
-            new_install_prefix=view.get_projection_for_spec(spec),
-            old_spack_prefix=spack.paths.spack_root,
-            new_spack_prefix=view._root,
-            prefix_to_prefix=prefix_to_projection
-        )
+        if spack.relocate.is_binary(dst):
+            # relocate binaries
+            spack.relocate.relocate_text_bin(
+                binaries=[dst],
+                orig_install_prefix=spec.prefix,
+                new_install_prefix=view.get_projection_for_spec(spec),
+                orig_spack=spack.paths.spack_root,
+                new_spack=view._root,
+                new_prefixes=prefix_to_projection
+            )
+        else:
+            # relocate text
+            spack.relocate.relocate_text(
+                files=[dst],
+                orig_layout_root=spack.store.layout.root,
+                new_layout_root=view._root,
+                orig_install_prefix=spec.prefix,
+                new_install_prefix=view.get_projection_for_spec(spec),
+                orig_spack=spack.paths.spack_root,
+                new_spack=view._root,
+                new_prefixes=prefix_to_projection
+            )
 
 
 class FilesystemView(object):
