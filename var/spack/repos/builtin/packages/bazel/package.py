@@ -128,7 +128,7 @@ class Bazel(Package):
     patch('compile-0.4.patch',  when='@0.4:0.5')
     patch('compile-0.3.patch',  when='@:0.3')
 
-    #for fcc
+    # for fcc
     patch('patch_for_fcc.patch', when='@0.29.1:%fj')
     patch('patch_for_fcc2.patch', when='@0.25:%fj')
 
