@@ -22,8 +22,11 @@ class Slurm(AutotoolsPackage):
     """
 
     homepage = 'https://slurm.schedmd.com'
-    url = 'https://github.com/SchedMD/slurm/archive/slurm-17-02-6-1.tar.gz'
+    url = 'https://github.com/SchedMD/slurm/archive/slurm-19-05-6-1.tar.gz'
 
+    version('19-05-6-1', sha256='1b83bce4260af06d644253b1f2ec2979b80b4418c631e9c9f48c2729ae2c95ba')
+    version('19-05-5-1', sha256='e53e67bd0bb4c37a9c481998764a746467a96bc41d6527569080514f36452c07')
+    version('18-08-9-1', sha256='32eb0b612ca18ade1e35c3c9d3b4d71aba2b857446841606a9e54d0a417c3b03')
     version('18-08-0-1', sha256='62129d0f2949bc8a68ef86fe6f12e0715cbbf42f05b8da6ef7c3e7e7240b50d9')
     version('17-11-9-2', sha256='6e34328ed68262e776f524f59cca79ac75bcd18030951d45ea545a7ba4c45906')
     version('17-02-6-1', sha256='97b3a3639106bd6d44988ed018e2657f3d640a3d5c105413d05b4721bc8ee25e')
@@ -35,6 +38,8 @@ class Slurm(AutotoolsPackage):
     variant('hdf5', default=False, description='Enable hdf5 support')
     variant('readline', default=True, description='Enable readline support')
     variant('pmix', default=False, description='Enable PMIx support')
+    variant('sysconfdir', default='PREFIX/etc', values=any,
+            description='Set system configuration path (possibly /etc/slurm)')
 
     # TODO: add variant for BG/Q and Cray support
 
@@ -93,6 +98,10 @@ class Slurm(AutotoolsPackage):
             args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
         else:
             args.append('--without-pmix')
+
+        sysconfdir = spec.variants['sysconfdir'].value
+        if sysconfdir != 'PREFIX/etc':
+            args.append('--sysconfdir={0}'.format(sysconfdir))
 
         return args
 

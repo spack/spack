@@ -18,7 +18,7 @@ class Hydrogen(CMakePackage):
     maintainers = ['bvanessen']
 
     version('develop', branch='hydrogen')
-    version('1.3.3', sha256='140112066b84d33ca4b75c8e520fb15748fa648c4d2b934c1eb5510173ede5f5')
+    version('1.3.3', sha256='a51a1cfd40ac74d10923dfce35c2c04a3082477683f6b35e7b558ea9f4bb6d51')
     version('1.3.2', sha256='50bc5e87955f8130003d04dfd9dcad63107e92b82704f8107baf95b0ccf98ed6')
     version('1.3.1', sha256='a8b8521458e9e747f2b24af87c4c2749a06e500019c383e0cefb33e5df6aaa1d')
     version('1.3.0', sha256='0f3006aa1d8235ecdd621e7344c99f56651c6836c2e1bc0cf006331b70126b36')

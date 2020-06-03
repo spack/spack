@@ -6,6 +6,7 @@
 import os
 import llnl.util.tty as tty
 from spack import *
+import platform
 
 # - vanilla CentOS 7, and possibly other systems, fail a test:
 #   TestCloneNEWUSERAndRemapRootDisableSetgroups
@@ -35,15 +36,24 @@ class Go(Package):
 
     extendable = True
 
+    version('1.14.4', sha256='7011af3bbc2ac108d1b82ea8abb87b2e63f78844f0259be20cde4d42c5c40584')
+    version('1.14.3', sha256='93023778d4d1797b7bc6a53e86c3a9b150c923953225f8a48a2d5fabc971af56')
+    version('1.14.2', sha256='98de84e69726a66da7b4e58eac41b99cbe274d7e8906eeb8a5b7eb0aadee7f7c')
+    version('1.14.1', sha256='2ad2572115b0d1b4cb4c138e6b3a31cee6294cb48af75ee86bec3dca04507676')
+    version('1.14',   sha256='6d643e46ad565058c7a39dac01144172ef9bd476521f42148be59249e4b74389')
+    version('1.13.12', sha256='17ba2c4de4d78793a21cc659d9907f4356cd9c8de8b7d0899cdedcef712eba34')
+    version('1.13.11', sha256='89ed1abce25ad003521c125d6583c93c1280de200ad221f961085200a6c00679')
+    version('1.13.10', sha256='eb9ccc8bf59ed068e7eff73e154e4f5ee7eec0a47a610fb864e3332a2fdc8b8c')
+    version('1.13.9', sha256='34bb19d806e0bc4ad8f508ae24bade5e9fedfa53d09be63b488a9314d2d4f31d')
     version('1.13.8', sha256='b13bf04633d4d8cf53226ebeaace8d4d2fd07ae6fa676d0844a688339debec34')
     version('1.13.7', sha256='e4ad42cc5f5c19521fbbbde3680995f2546110b5c6aa2b48c3754ff7af9b41f4')
     version('1.13.6', sha256='aae5be954bdc40bcf8006eb77e8d8a5dde412722bc8effcdaf9772620d06420c')
     version('1.13.5', sha256='27d356e2a0b30d9983b60a788cf225da5f914066b37a6b4f69d457ba55a626ff')
-    version('1.13.4',  sha256='95dbeab442ee2746b9acf0934c8e2fc26414a0565c008631b04addb8c02e7624')
+    version('1.13.4', sha256='95dbeab442ee2746b9acf0934c8e2fc26414a0565c008631b04addb8c02e7624')
     version('1.13.3', sha256='4f7123044375d5c404280737fbd2d0b17064b66182a65919ffe20ffe8620e3df')
     version('1.13.2', sha256='1ea68e01472e4276526902b8817abd65cf84ed921977266f0c11968d5e915f44')
     version('1.13.1', sha256='81f154e69544b9fa92b1475ff5f11e64270260d46e7e36c34aafc8bc96209358')
-    version('1.13', sha256='3fc0b8b6101d42efd7da1da3029c0a13f22079c0c37ef9730209d8ec665bf122')
+    version('1.13',    sha256='3fc0b8b6101d42efd7da1da3029c0a13f22079c0c37ef9730209d8ec665bf122')
     version('1.12.17', sha256='de878218c43aa3c3bad54c1c52d95e3b0e5d336e1285c647383e775541a28b25')
     version('1.12.15', sha256='8aba74417e527524ad5724e6e6c21016795d1017692db76d1b0851c6bdec84c3')
     version('1.12.14', sha256='39dbf05f7e2ffcb19b08f07d53dcc96feadeb1987fef9e279e7ff0c598213064')
@@ -82,7 +92,10 @@ class Go(Package):
     depends_on('git', type=('build', 'link', 'run'))
     # TODO: Make non-c self-hosting compilers feasible without backflips
     # should be a dep on external go compiler
-    depends_on('go-bootstrap', type='build')
+    if platform.machine() == 'aarch64':
+        depends_on('gcc languages=go', type='build')
+    else:
+        depends_on('go-bootstrap', type='build')
 
     # https://github.com/golang/go/issues/17545
     patch('time_test.patch', when='@1.6.4:1.7.4')

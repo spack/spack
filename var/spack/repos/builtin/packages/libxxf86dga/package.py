@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libxxf86dga(AutotoolsPackage):
+class Libxxf86dga(AutotoolsPackage, XorgPackage):
     """libXxf86dga - Client library for the XFree86-DGA extension."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXxf86dga"
-    url      = "https://www.x.org/archive/individual/lib/libXxf86dga-1.1.4.tar.gz"
+    xorg_mirror_path = "lib/libXxf86dga-1.1.4.tar.gz"
 
     version('1.1.4', sha256='e6361620a15ceba666901ca8423e8be0c6ed0271a7088742009160349173766b')
 

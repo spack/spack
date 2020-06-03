@@ -1,0 +1,244 @@
+--- spack-src/src/sequences.c.org	2020-03-05 13:34:15.764971874 +0900
++++ spack-src/src/sequences.c	2020-03-05 13:49:45.315370741 +0900
+@@ -2180,7 +2180,7 @@
+ 
+ 	ch = skip_seq_whitespace (_seq);
+ 
+-	if (ch != '>') seq_ungetc (ch, _seq);
++	if (ch != '>') seq_ungetc ((char)ch, _seq);
+ 	          else parse_fasta_header (_seq);
+ 
+ 	debugFastaFile_2;
+@@ -2298,7 +2298,7 @@
+ 	if (ch == '\r') // handle possible DOS CR-LF line ending
+ 		{
+ 		ch = seq_getc (_seq);
+-		if (ch != '\n') seq_ungetc (ch, _seq);
++		if (ch != '\n') seq_ungetc ((char)ch, _seq);
+ 		}
+ 
+ 	}
+@@ -2346,7 +2346,7 @@
+ 	while (ch != EOF)
+ 		{
+ 		if ((prevCh == '\n') && (ch == '>')) // (start of next sequence)
+-			{ seq_ungetc (ch, _seq);  break; }
++			{ seq_ungetc ((char)ch, _seq);  break; }
+ 
+ 		if ((_seq->separatorCh == 0) || (ch != _seq->separatorCh))
+ 			{
+@@ -2445,7 +2445,7 @@
+ //		while (ch != EOF)
+ //			{
+ //			if ((prevCh == '\n') && (ch == '>')) // (start of next sequence)
+-//				{ seq_ungetc (ch, _seq);  break; }
++//				{ seq_ungetc ((char)ch, _seq);  break; }
+ //
+ //			switch (char_to_fasta_type[(u8)ch])
+ //				{
+@@ -2627,7 +2627,7 @@
+ 	if (ch == '\r') // handle possible DOS CR-LF line ending
+ 		{
+ 		ch = seq_getc (_seq);
+-		if (ch != '\n') seq_ungetc (ch, _seq);
++		if (ch != '\n') seq_ungetc ((char)ch, _seq);
+ 		}
+ 
+ 	// copy from trueHeader into the header (unless the header is locked), then
+@@ -2762,7 +2762,7 @@
+ 	if (ch == '\r') // handle possible DOS CR-LF line ending
+ 		{
+ 		ch = seq_getc (_seq);
+-		if (ch != '\n') seq_ungetc (ch, _seq);
++		if (ch != '\n') seq_ungetc ((char)ch, _seq);
+ 		}
+ 
+ 	_seq->v[_seq->len] = 0;				// (set the terminating zero)
+@@ -2834,7 +2834,7 @@
+ 	if (ch == '\r') // handle possible DOS CR-LF line ending
+ 		{
+ 		ch = seq_getc (_seq);
+-		if (ch != '\n') seq_ungetc (ch, _seq);
++		if (ch != '\n') seq_ungetc ((char)ch, _seq);
+ 		}
+ 
+ 	//////////
+@@ -2877,7 +2877,7 @@
+ 	if (ch == '\r') // handle possible DOS CR-LF line ending
+ 		{
+ 		ch = seq_getc (_seq);
+-		if (ch != '\n') seq_ungetc (ch, _seq);
++		if (ch != '\n') seq_ungetc ((char)ch, _seq);
+ 		}
+ 
+ 	if (qualCount < nucCount) goto not_enough_qualities;
+@@ -3061,7 +3061,7 @@
+ 			ch = seq_getc (_seq);
+ 		}
+ 
+-	if (ch != '>') seq_ungetc (ch, _seq);
++	if (ch != '>') seq_ungetc ((char)ch, _seq);
+ 	          else parse_csfasta_header (_seq);
+ 
+ 	//////////
+@@ -3166,7 +3166,7 @@
+ 	if (ch == '\r') // handle possible DOS CR-LF line ending
+ 		{
+ 		ch = seq_getc (_seq);
+-		if (ch != '\n') seq_ungetc (ch, _seq);
++		if (ch != '\n') seq_ungetc ((char)ch, _seq);
+ 		}
+ 
+ 	}
+@@ -3223,7 +3223,7 @@
+ 		{
+ 		if ((prevCh == '\n')
+ 		 && ((ch == '#') || (ch == '>'))) 			// (start of next sequence)
+-			{ seq_ungetc (ch, _seq);  break; }
++			{ seq_ungetc ((char)ch, _seq);  break; }
+ 
+ 		chType = char_to_csfasta_type[(u8)ch];
+ 		switch (chType)
+@@ -3324,7 +3324,7 @@
+ //			{
+ //			if ((prevCh == '\n')
+ //			 && ((ch == '#') || (ch == '>')))		// (start of next sequence)
+-//				{ seq_ungetc (ch, _seq);  break; }
++//				{ seq_ungetc ((char)ch, _seq);  break; }
+ //
+ //			switch (char_to_csfasta_type[(u8)ch])
+ //				{
+@@ -4701,10 +4701,10 @@
+ 	else if (magic == oldQdnaMagicBig)    { oldFormat = bigEndian = true; }
+ 	else
+ 		{
+-		seq_ungetc ((magic >> 24) & 0xFF, _seq);
+-		seq_ungetc ((magic >> 16) & 0xFF, _seq);
+-		seq_ungetc ((magic >> 8)  & 0xFF, _seq);
+-		seq_ungetc ( magic        & 0xFF, _seq);
++		seq_ungetc ((char) ((magic >> 24) & 0xFF), _seq);
++		seq_ungetc ((char) ((magic >> 16) & 0xFF), _seq);
++		seq_ungetc ((char) ((magic >> 8)  & 0xFF), _seq);
++		seq_ungetc ((char) ( magic        & 0xFF), _seq);
+ 		oldFormat = true;
+ 		}
+ 
+@@ -5050,7 +5050,7 @@
+ 	                  _seq->filename);
+ 	if (ch == EOF) return false;			// we're at end of file now
+ 
+-	seq_ungetc (ch, _seq);					// save what we peeked at
++	seq_ungetc ((char)ch, _seq);			// save what we peeked at
+ 	return true;							// we have characters to process
+ 	}
+ 
+@@ -5074,7 +5074,8 @@
+ 	int		headerLen;
+ 	int		mustBeHeader;
+ 	int		leadingWhite;
+-	char	ch, *s;
++	int		ch;
++	char*	s;
+ 	int		ix;
+ 
+ 	debugNamesFile_12;
+@@ -5118,7 +5119,7 @@
+ 
+ 		ch = seq_getc (_seq);
+ 		if (ch == EOF) goto failure;
+-		while ((ch != '\n') && (isspace (ch)))
++		while ((ch != '\n') && (isspace (ch)))  // nota bene: isspace's arg type is an int
+ 			{
+ 			leadingWhite++;
+ 			ch = seq_getc (_seq);
+@@ -5186,7 +5187,7 @@
+ 
+ 	// unget the header
+ 
+-	seq_ungetc (ch, _seq);	// (ch terminated the header)
++	seq_ungetc ((char)ch, _seq);	// (ch terminated the header)
+ 
+ 	for (ix=strlen(buffer) ; ix>0 ; )
+ 		seq_ungetc (buffer[--ix], _seq);
+@@ -5218,7 +5219,8 @@
+ 	char	buffer[maxSequenceHeader+1];
+ 	char*	header;
+ 	int		headerLen;
+-	char	ch, *s;
++	int		ch;
++	char*	s;
+ 	int		ix;
+ 	int		ok;
+ 
+@@ -5257,7 +5259,7 @@
+ 		if (ch == '\r') // handle possible DOS CR-LF line ending
+ 			{
+ 			ch = seq_getc (_seq);
+-			if (ch != '\n') seq_ungetc (ch, _seq);
++			if (ch != '\n') seq_ungetc ((char)ch, _seq);
+ 			}
+ 
+ 		// if we have a name trigger, locate the sequence's name
+@@ -5310,7 +5312,7 @@
+ 
+ 	// unget the header
+ 
+-	seq_ungetc (ch, _seq);	// (ch terminated the header)
++	seq_ungetc ((char)ch, _seq);	// (ch terminated the header)
+ 
+ 	for (ix=strlen(buffer) ; ix>0 ; )
+ 		seq_ungetc (buffer[--ix], _seq);
+@@ -9067,10 +9069,10 @@
+ 
+ 	// put those four bytes back in the file (in reverse of the read order)
+ 
+-	seq_ungetc (magic >> 24, _seq);
+-	seq_ungetc (magic >> 16, _seq);
+-	seq_ungetc (magic >>  8, _seq);
+-	seq_ungetc (magic      , _seq);
++	seq_ungetc ((char) (magic >> 24), _seq);
++	seq_ungetc ((char) (magic >> 16), _seq);
++	seq_ungetc ((char) (magic >>  8), _seq);
++	seq_ungetc ((char)  magic       , _seq);
+ 
+ 	if (type != seq_type_unknown)
+ 		return type;
+@@ -9080,7 +9082,7 @@
+ 	//////////
+ 
+ 	ch = seq_getc (_seq);
+-	seq_ungetc (ch, _seq);
++	seq_ungetc ((char)ch, _seq);
+ 	if (ch == '@')
+ 		return seq_type_fastq;
+ 
+@@ -9095,12 +9097,12 @@
+ 	ch = seq_getc (_seq);
+ 	if (ch == '#')
+ 		{
+-		seq_ungetc (ch, _seq);
++		seq_ungetc ((char)ch, _seq);
+ 		return seq_type_csfasta;
+ 		}
+ 
+ 	if (ch != '>')
+-		seq_ungetc (ch, _seq);
++		seq_ungetc ((char)ch, _seq);
+ 	else
+ 		{
+ 		// read header
+@@ -9122,12 +9124,12 @@
+ 
+ 		intCh = seq_getc (_seq);
+ 		if (intCh == EOF) goto unknown;
+-		buffer[bufferLen++] = intCh;
++		buffer[bufferLen++] = (char) intCh;
+ 		if (ustrchr ("ACGTacgtNn", intCh) != NULL)
+ 			{
+ 			intCh = seq_getc (_seq);
+ 			if (intCh == EOF) goto unknown;
+-			buffer[bufferLen++] = intCh;
++			buffer[bufferLen++] = (char) intCh;
+ 			if (ustrchr ("ACGTacgtNn", intCh) != NULL)
+ 				type = seq_type_fasta;
+ 			else if (ustrchr ("0123", intCh) != NULL)

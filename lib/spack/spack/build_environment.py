@@ -60,7 +60,7 @@ from spack.util.environment import (
 from spack.util.environment import system_dirs
 from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
-from spack.util.module_cmd import load_module, get_path_from_module
+from spack.util.module_cmd import load_module, get_path_from_module, module
 from spack.util.log_parse import parse_log_events, make_log_context
 
 
@@ -141,10 +141,17 @@ def clean_environment():
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
     env.unset('LD_LIBRARY_PATH')
+    env.unset('CRAY_LD_LIBRARY_PATH')
     env.unset('LIBRARY_PATH')
     env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
+    env.unset('DYLD_FALLBACK_LIBRARY_PATH')
+
+    # Remove all pkgconfig stuff from craype
+    for varname in os.environ.keys():
+        if 'PKGCONF' in varname:
+            env.unset(varname)
 
     build_lang = spack.config.get('config:build_language')
     if build_lang:
@@ -414,7 +421,7 @@ def _set_variables_for_single_module(pkg, module):
     if getattr(module, marker, False):
         return
 
-    jobs = spack.config.get('config:build_jobs') if pkg.parallel else 1
+    jobs = spack.config.get('config:build_jobs', 16) if pkg.parallel else 1
     jobs = min(jobs, multiprocessing.cpu_count())
     assert jobs is not None, "no default set for config:build_jobs"
 
@@ -531,7 +538,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
 
     # TODO: Compiler arguments should not be hardcoded but provided by
     #       the different compiler classes.
-    if 'linux' in arch:
+    if 'linux' in arch or 'cray' in arch:
         soname = os.path.basename(shared_lib)
 
         if compat_version:
@@ -608,7 +615,7 @@ def get_rpaths(pkg):
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
-    return rpaths
+    return list(dedupe(filter_system_paths(rpaths)))
 
 
 def get_std_cmake_args(pkg):
@@ -715,6 +722,11 @@ def setup_package(pkg, dirty):
             if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
                 load_module("cce")
             load_module(mod)
+
+        # kludge to handle cray libsci being automatically loaded by PrgEnv
+        # modules on cray platform. Module unload does no damage when
+        # unnecessary
+        module('unload', 'cray-libsci')
 
         if pkg.architecture.target.module_name:
             load_module(pkg.architecture.target.module_name)

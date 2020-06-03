@@ -256,7 +256,7 @@ class URLFetchStrategy(FetchStrategy):
                 self.digest = kwargs[h]
 
         self.expand_archive = kwargs.get('expand', True)
-        self.extra_curl_options = kwargs.get('curl_options', [])
+        self.extra_options = kwargs.get('fetch_options', {})
         self._curl = None
 
         self.extension = kwargs.get('extension', None)
@@ -325,8 +325,6 @@ class URLFetchStrategy(FetchStrategy):
             '-D',
             '-',  # print out HTML headers
             '-L',  # resolve 3xx redirects
-            # Timeout if can't establish a connection after 10 sec.
-            '--connect-timeout', '10',
             url,
         ]
 
@@ -338,7 +336,22 @@ class URLFetchStrategy(FetchStrategy):
         else:
             curl_args.append('-sS')  # just errors when not.
 
-        curl_args += self.extra_curl_options
+        connect_timeout = spack.config.get('config:connect_timeout', 10)
+
+        if self.extra_options:
+            cookie = self.extra_options.get('cookie')
+            if cookie:
+                curl_args.append('-j')  # junk cookies
+                curl_args.append('-b')  # specify cookie
+                curl_args.append(cookie)
+
+            timeout = self.extra_options.get('timeout')
+            if timeout:
+                connect_timeout = max(connect_timeout, int(timeout))
+
+        if connect_timeout > 0:
+            # Timeout if can't establish a connection after n sec.
+            curl_args.extend(['--connect-timeout', str(connect_timeout)])
 
         # Run curl but grab the mime type from the http headers
         curl = self.curl
@@ -1148,6 +1161,15 @@ class S3FetchStrategy(URLFetchStrategy):
             raise FailedDownloadError(self.url)
 
 
+def stable_target(fetcher):
+    """Returns whether the fetcher target is expected to have a stable
+       checksum. This is only true if the target is a preexisting archive
+       file."""
+    if isinstance(fetcher, URLFetchStrategy) and fetcher.cachable:
+        return True
+    return False
+
+
 def from_url(url):
     """Given a URL, find an appropriate fetch strategy for it.
        Currently just gives you a URLFetchStrategy that uses curl.
@@ -1225,7 +1247,8 @@ def _check_version_attributes(fetcher, pkg, version):
 def _extrapolate(pkg, version):
     """Create a fetcher from an extrapolated URL for this version."""
     try:
-        return URLFetchStrategy(pkg.url_for_version(version))
+        return URLFetchStrategy(pkg.url_for_version(version),
+                                fetch_options=pkg.fetch_options)
     except spack.package.NoURLError:
         msg = ("Can't extrapolate a URL for version %s "
                "because package %s defines no URLs")
@@ -1245,6 +1268,7 @@ def _from_merged_attrs(fetcher, pkg, version):
         url = getattr(pkg, fetcher.url_attr)
         attrs = {fetcher.url_attr: url}
 
+    attrs['fetch_options'] = pkg.fetch_options
     attrs.update(pkg.versions[version])
     return fetcher(**attrs)
 
@@ -1267,8 +1291,10 @@ def for_package_version(pkg, version):
     if version not in pkg.versions:
         return _extrapolate(pkg, version)
 
+    # Set package args first so version args can override them
+    args = {'fetch_options': pkg.fetch_options}
     # Grab a dict of args out of the package version dict
-    args = pkg.versions[version]
+    args.update(pkg.versions[version])
 
     # If the version specifies a `url_attr` directly, use that.
     for fetcher in all_strategies:
@@ -1348,7 +1374,8 @@ def from_list_url(pkg):
                         args.get('checksum'))
 
                 # construct a fetcher
-                return URLFetchStrategy(url_from_list, checksum)
+                return URLFetchStrategy(url_from_list, checksum,
+                                        fetch_options=pkg.fetch_options)
             except KeyError as e:
                 tty.debug(e)
                 tty.msg("Cannot find version %s in url_list" % pkg.version)

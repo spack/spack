@@ -30,9 +30,13 @@ class Fj(spack.compiler.Compiler):
 
     required_libs = ['libfj90i', 'libfj90f', 'libfjsrcinfo']
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4']
 
     @property
     def openmp_flag(self):
@@ -59,9 +63,17 @@ class Fj(spack.compiler.Compiler):
         return "-std=c11"
 
     @property
-    def pic_flag(self):
+    def cc_pic_flag(self):
         return "-KPIC"
 
-    def setup_custom_environment(self, pkg, env):
-        env.append_flags('fcc_ENV', '-Nclang')
-        env.append_flags('FCC_ENV', '-Nclang')
+    @property
+    def cxx_pic_flag(self):
+        return "-KPIC"
+
+    @property
+    def f77_pic_flag(self):
+        return "-KPIC"
+
+    @property
+    def fc_pic_flag(self):
+        return "-KPIC"

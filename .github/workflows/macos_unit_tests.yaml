@@ -1,0 +1,48 @@
+name: macos tests
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+jobs:
+  build:
+
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: [3.7]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Python packages
+      run: |
+          pip install --upgrade pip six setuptools
+          pip install --upgrade codecov coverage==4.5.4
+          pip install --upgrade flake8 pep8-naming
+    - name: Setup Homebrew packages
+      run: |
+        brew update
+        brew upgrade
+        brew install gcc gnupg2 dash kcov
+    - name: Run unit tests
+      run: |
+        git --version
+        git fetch -u origin develop:develop
+        . share/spack/setup-env.sh
+        coverage run $(which spack) test
+        coverage combine
+        coverage xml
+    - name: Upload to codecov.io
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
+        flags: unittests,macos

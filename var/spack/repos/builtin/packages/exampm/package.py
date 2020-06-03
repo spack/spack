@@ -12,6 +12,22 @@ class Exampm(CMakePackage):
     homepage = "https://github.com/ECP-copa/ExaMPM"
     git      = "https://github.com/ECP-copa/ExaMPM.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
 
     tags = ['proxy-app']
+
+    variant('shared', default=True, description='Build shared libraries')
+
+    depends_on('mpi')
+    depends_on('kokkos@3.0:')
+    depends_on('silo')
+    depends_on('cabana+mpi@master')
+    depends_on('cajita@master')
+
+    def cmake_args(self):
+        options = [
+            '-DBUILD_SHARED_LIBS=%s' % (
+                'On' if '+shared'  in self.spec else 'Off')
+        ]
+
+        return options

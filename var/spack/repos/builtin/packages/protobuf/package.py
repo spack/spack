@@ -39,6 +39,9 @@ class Protobuf(CMakePackage):
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
 
     depends_on('zlib')
 

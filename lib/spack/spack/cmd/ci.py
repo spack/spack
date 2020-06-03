@@ -34,37 +34,6 @@ def setup_parser(subparser):
     setup_parser.parser = subparser
     subparsers = subparser.add_subparsers(help='CI sub-commands')
 
-    start = subparsers.add_parser('start', help=ci_start.__doc__)
-    start.add_argument(
-        '--output-file', default=None,
-        help="Absolute path to file where generated jobs file should be " +
-             "written.  The default is .gitlab-ci.yml in the root of the " +
-             "repository.")
-    start.add_argument(
-        '--copy-to', default=None,
-        help="Absolute path of additional location where generated jobs " +
-             "yaml file should be copied.  Default is not to copy.")
-    start.add_argument(
-        '--spack-repo', default=None,
-        help="Provide a url for this argument if a custom spack repo " +
-             "should be cloned as a step in each generated job.")
-    start.add_argument(
-        '--spack-ref', default=None,
-        help="Provide a git branch or tag if a custom spack branch " +
-             "should be checked out as a step in each generated job.  " +
-             "This argument is ignored if no --spack-repo is provided.")
-    start.add_argument(
-        '--downstream-repo', default=None,
-        help="Url to repository where commit containing jobs yaml file " +
-             "should be pushed.")
-    start.add_argument(
-        '--branch-name', default='default-branch',
-        help="Name of current branch, used in generation of pushed commit.")
-    start.add_argument(
-        '--commit-sha', default='none',
-        help="SHA of current commit, used in generation of pushed commit.")
-    start.set_defaults(func=ci_start)
-
     # Dynamic generation of the jobs yaml from a spack environment
     generate = subparsers.add_parser('generate', help=ci_generate.__doc__)
     generate.add_argument(
@@ -86,20 +55,6 @@ def setup_parser(subparser):
              "should be checked out as a step in each generated job.  " +
              "This argument is ignored if no --spack-repo is provided.")
     generate.set_defaults(func=ci_generate)
-
-    # Commit and push jobs yaml to a downstream CI repo
-    pushyaml = subparsers.add_parser('pushyaml', help=ci_pushyaml.__doc__)
-    pushyaml.add_argument(
-        '--downstream-repo', default=None,
-        help="Url to repository where commit containing jobs yaml file " +
-             "should be pushed.")
-    pushyaml.add_argument(
-        '--branch-name', default='default-branch',
-        help="Name of current branch, used in generation of pushed commit.")
-    pushyaml.add_argument(
-        '--commit-sha', default='none',
-        help="SHA of current commit, used in generation of pushed commit.")
-    pushyaml.set_defaults(func=ci_pushyaml)
 
     # Check a spec against mirror. Rebuild, create buildcache and push to
     # mirror (if necessary).
@@ -138,64 +93,6 @@ def ci_generate(args):
         if not os.path.exists(copy_to_dir):
             os.makedirs(copy_to_dir)
         shutil.copyfile(output_file, copy_yaml_to)
-
-
-def ci_pushyaml(args):
-    """Push the generated jobs yaml file to a remote repository.  The file
-       (.gitlab-ci.yaml) is expected to be in the current directory, which
-       should be the root of the repository."""
-    downstream_repo = args.downstream_repo
-    branch_name = args.branch_name
-    commit_sha = args.commit_sha
-
-    if not downstream_repo:
-        tty.die('No downstream repo to push to, exiting')
-
-    working_dir = os.getcwd()
-    jobs_yaml = os.path.join(working_dir, '.gitlab-ci.yml')
-    git_dir = os.path.join(working_dir, '.git')
-
-    if not os.path.exists(jobs_yaml):
-        tty.die('.gitlab-ci.yml must exist in current directory')
-
-    if not os.path.exists(git_dir):
-        tty.die('.git directory must exist in current directory')
-
-    # Create a temporary working directory
-    with spack_ci.TemporaryDirectory() as temp_dir:
-        git = exe.which('git', required=True)
-
-        # Push a commit with the generated file to the downstream ci repo
-        saved_git_dir = os.path.join(temp_dir, 'original-git-dir')
-
-        shutil.move('.git', saved_git_dir)
-
-        git('init', '.')
-
-        git('config', 'user.email', 'robot@spack.io')
-        git('config', 'user.name', 'Spack Build Bot')
-
-        git('add', '.')
-
-        # If the environment contains a spack directory, do not commit
-        # or push it with any other generated products
-        if os.path.exists('./spack') and os.path.isdir('./spack'):
-            git('rm', '-rf', '--cached', 'spack')
-
-        tty.msg('git commit')
-        commit_message = '{0} {1} ({2})'.format(
-            'Auto-generated commit testing', branch_name, commit_sha)
-
-        git('commit', '-m', '{0}'.format(commit_message))
-
-        tty.msg('git push')
-        git('remote', 'add', 'downstream', downstream_repo)
-        push_to_branch = 'master:multi-ci-{0}'.format(branch_name)
-        git('push', '--force', 'downstream', push_to_branch)
-
-        shutil.rmtree('.git')
-        shutil.move(saved_git_dir, '.git')
-        git('reset', '--hard', 'HEAD')
 
 
 def ci_rebuild(args):
@@ -239,6 +136,7 @@ def ci_rebuild(args):
     compiler_action = get_env_var('SPACK_COMPILER_ACTION')
     cdash_build_name = get_env_var('SPACK_CDASH_BUILD_NAME')
     related_builds = get_env_var('SPACK_RELATED_BUILDS_CDASH')
+    pr_env_var = get_env_var('SPACK_IS_PR_PIPELINE')
 
     gitlab_ci = None
     if 'gitlab-ci' in yaml_root:
@@ -283,8 +181,6 @@ def ci_rebuild(args):
 
     spack_cmd = exe.which('spack')
 
-    os.environ['FORCE_UNSAFE_CONFIGURE'] = '1'
-
     cdash_report_dir = os.path.join(ci_artifact_dir, 'cdash_report')
     temp_dir = os.path.join(ci_artifact_dir, 'jobs_scratch_dir')
     job_log_dir = os.path.join(temp_dir, 'logs')
@@ -293,11 +189,18 @@ def ci_rebuild(args):
     local_mirror_dir = os.path.join(ci_artifact_dir, 'local_mirror')
     build_cache_dir = os.path.join(local_mirror_dir, 'build_cache')
 
+    spack_is_pr_pipeline = True if pr_env_var == 'True' else False
+
     enable_artifacts_mirror = False
     artifact_mirror_url = None
     if 'enable-artifacts-buildcache' in gitlab_ci:
         enable_artifacts_mirror = gitlab_ci['enable-artifacts-buildcache']
-        if enable_artifacts_mirror:
+        if enable_artifacts_mirror or spack_is_pr_pipeline:
+            # If this is a PR pipeline, we will override the setting to
+            # make sure that artifacts buildcache is enabled.  Otherwise
+            # jobs will not have binary deps available since we do not
+            # allow pushing binaries to remote mirror during PR pipelines
+            enable_artifacts_mirror = True
             artifact_mirror_url = 'file://' + local_mirror_dir
             mirror_msg = 'artifact buildcache enabled, mirror url: {0}'.format(
                 artifact_mirror_url)
@@ -443,9 +346,12 @@ def ci_rebuild(args):
 
             spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
 
-            # 4) create buildcache on remote mirror
-            spack_ci.push_mirror_contents(env, job_spec, job_spec_yaml_path,
-                                          remote_mirror_url, cdash_build_id)
+            # 4) create buildcache on remote mirror, but not if this is
+            # running to test a spack PR
+            if not spack_is_pr_pipeline:
+                spack_ci.push_mirror_contents(
+                    env, job_spec, job_spec_yaml_path, remote_mirror_url,
+                    cdash_build_id)
 
             # 5) create another copy of that buildcache on "local artifact
             # mirror" (only done if cash reporting is enabled)
@@ -468,13 +374,6 @@ def ci_rebuild(args):
                 tty.debug('Downloading to {0}'.format(build_cache_dir))
                 buildcache.download_buildcache_files(
                     job_spec, build_cache_dir, True, remote_mirror_url)
-
-
-def ci_start(args):
-    """Kicks of the CI process (currently just calls ci_generate() then
-       ci_push())"""
-    ci_generate(args)
-    ci_pushyaml(args)
 
 
 def ci(parser, args):

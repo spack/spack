@@ -13,7 +13,7 @@ class AperturePhotometry(Package):
     homepage = "http://www.aperturephotometry.org/aptool/"
     url      = "http://www.aperturephotometry.org/aptool/wp-content/plugins/download-monitor/download.php?id=1"
 
-    version('2.7.2', '2beca6aac14c5e0a94d115f81edf0caa9ec83dc9d32893ea00ee376c9360deb0', extension='tar.gz')
+    version('2.8.2', 'cb29eb39a630dc5d17c02fb824c69571fe1870a910a6acf9115c5f76fd89dd7e', extension='tar.gz')
 
     depends_on('java')
 

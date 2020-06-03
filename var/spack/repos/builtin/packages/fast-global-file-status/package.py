@@ -18,6 +18,7 @@ class FastGlobalFileStatus(AutotoolsPackage):
     depends_on('mrnet')
     depends_on('mount-point-attributes')
     depends_on('mpi')
+    depends_on('openssl')
 
     def configure_args(self):
         spec = self.spec

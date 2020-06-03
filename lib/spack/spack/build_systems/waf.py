@@ -75,13 +75,14 @@ class WafPackage(PackageBase):
 
     def configure(self, spec, prefix):
         """Configures the project."""
-        args = self.configure_args()
+        args = ['--prefix={0}'.format(self.prefix)]
+        args += self.configure_args()
 
         self.waf('configure', *args)
 
     def configure_args(self):
         """Arguments to pass to configure."""
-        return ['--prefix={0}'.format(self.prefix)]
+        return []
 
     def build(self, spec, prefix):
         """Executes the build."""

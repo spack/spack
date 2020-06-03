@@ -47,8 +47,9 @@ Each phase provides a ``<phase>`` function that runs:
 
 where ``<jobs>`` is the number of parallel jobs to build with. Each phase
 also has a ``<phase_args>`` function that can pass arguments to this call.
-All of these functions are empty except for the ``configure_args``
-function, which passes ``--prefix=/path/to/installation/prefix``.
+All of these functions are empty. The ``configure`` phase
+automatically adds  ``--prefix=/path/to/installation/prefix``, so you
+don't need to add that in the ``configure_args``.
 
 ^^^^^^^
 Testing

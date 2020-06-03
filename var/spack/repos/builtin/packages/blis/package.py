@@ -102,6 +102,12 @@ class BlisBase(Package):
         if self.spec.satisfies('platform=darwin'):
             fix_darwin_install_name(self.prefix.lib)
 
+    @property
+    def libs(self):
+        return find_libraries(
+            ["libblis", "libblis-mt"], root=self.prefix, recursive=True
+        )
+
 
 class Blis(BlisBase):
     """BLIS is a portable software framework for instantiating high-performance

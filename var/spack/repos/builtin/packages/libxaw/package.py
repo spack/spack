@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Libxaw(AutotoolsPackage):
+class Libxaw(AutotoolsPackage, XorgPackage):
     """Xaw is the X Athena Widget Set.
     Xaw is a widget set based on the X Toolkit Intrinsics (Xt) Library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXaw"
-    url      = "https://www.x.org/archive/individual/lib/libXaw-1.0.13.tar.gz"
+    xorg_mirror_path = "lib/libXaw-1.0.13.tar.gz"
 
     version('1.0.13', sha256='7e74ac3e5f67def549722ff0333d6e6276b8becd9d89615cda011e71238ab694')
     version('1.0.12', sha256='e32abc68d759ffb643f842329838f8b6c157e31023cc91059aabf730e7222ad2')

@@ -10,10 +10,11 @@ import sys
 class Mvapich2(AutotoolsPackage):
     """MVAPICH2 is an MPI implementation for Infiniband networks."""
     homepage = "http://mvapich.cse.ohio-state.edu/"
-    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.2.tar.gz"
+    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.3.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
     # Prefer the latest stable release
+    version('2.3.3', sha256='41d3261be57e5bc8aabf4e32981543c015c5443ff032a26f18205985e18c2b73')
     version('2.3.2', sha256='30cc0d7bcaa075d204692f76bca4d65a539e0f661c7460ffa9f835d6249e1ebf')
     version('2.3.1', sha256='314e12829f75f3ed83cd4779a972572d1787aac6543a3d024ea7c6080e0ee3bf')
     version('2.3', sha256='01d5fb592454ddd9ecc17e91c8983b6aea0e7559aa38f410b111c8ef385b50dd')
@@ -207,10 +208,17 @@ class Mvapich2(AutotoolsPackage):
             env.set('SLURM_MPI_TYPE', 'pmi2')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('MPICC', os.path.join(self.prefix.bin, 'mpicc'))
-        env.set('MPICXX', os.path.join(self.prefix.bin, 'mpicxx'))
-        env.set('MPIF77', os.path.join(self.prefix.bin, 'mpif77'))
-        env.set('MPIF90', os.path.join(self.prefix.bin, 'mpif90'))
+        # On Cray, the regular compiler wrappers *are* the MPI wrappers.
+        if 'platform=cray' in self.spec:
+            env.set('MPICC',  spack_cc)
+            env.set('MPICXX', spack_cxx)
+            env.set('MPIF77', spack_fc)
+            env.set('MPIF90', spack_fc)
+        else:
+            env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
+            env.set('MPICXX', join_path(self.prefix.bin, 'mpicxx'))
+            env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+            env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
         env.set('MPICH_CC', spack_cc)
         env.set('MPICH_CXX', spack_cxx)
@@ -219,10 +227,17 @@ class Mvapich2(AutotoolsPackage):
         env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
-        self.spec.mpicc  = os.path.join(self.prefix.bin, 'mpicc')
-        self.spec.mpicxx = os.path.join(self.prefix.bin, 'mpicxx')
-        self.spec.mpifc  = os.path.join(self.prefix.bin, 'mpif90')
-        self.spec.mpif77 = os.path.join(self.prefix.bin, 'mpif77')
+        if 'platform=cray' in self.spec:
+            self.spec.mpicc = spack_cc
+            self.spec.mpicxx = spack_cxx
+            self.spec.mpifc = spack_fc
+            self.spec.mpif77 = spack_f77
+        else:
+            self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+            self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
+            self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+            self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+
         self.spec.mpicxx_shared_libs = [
             os.path.join(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
             os.path.join(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))

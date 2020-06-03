@@ -156,3 +156,10 @@ class TestSpecList(object):
                                                 ['+shared', '~shared'])
         expected = [Spec(' '.join(combo)) for combo in expected_components]
         assert set(speclist.specs) == set(expected)
+
+    def test_spec_list_matrix_exclude(self, mock_packages):
+        # Test on non-boolean variants for regression for #16841
+        matrix = [{'matrix': [['multivalue-variant'], ['foo=bar', 'foo=baz']],
+                   'exclude': ['foo=bar']}]
+        speclist = SpecList('specs', matrix)
+        assert len(speclist.specs) == 1
