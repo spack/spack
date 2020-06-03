@@ -47,7 +47,12 @@ def setup_parser(subparser):
         '-f', '--file', help="file with specs of packages to put in mirror")
     create_parser.add_argument(
         '--exclude-file',
-        help="specs which Spack should not try to add to a mirror")
+        help="specs which Spack should not try to add to a mirror"
+             " (listed in a file, one per line)")
+    create_parser.add_argument(
+        '--exclude-specs',
+        help="specs which Spack should not try to add to a mirror"
+             " (specified on command line)")
 
     create_parser.add_argument(
         '--skip-unstable-versions', action='store_true',
@@ -313,8 +318,13 @@ def mirror_create(args):
             mirror_specs.sort(
                 key=lambda s: (s.name, s.version))
 
+    exclude_specs = []
     if args.exclude_file:
-        exclude_specs = _read_specs_from_file(args.exclude_file)
+        exclude_specs.extend(_read_specs_from_file(args.exclude_file))
+    if args.exclude_specs:
+        exclude_specs.extend(
+            spack.cmd.parse_specs(str(args.exclude_specs).split()))
+    if exclude_specs:
         mirror_specs = list(
             x for x in mirror_specs
             if not any(x.satisfies(y, strict=True) for y in exclude_specs))
