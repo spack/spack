@@ -117,6 +117,28 @@ def test_exclude_specs(mock_packages):
     assert (not expected_exclude & set(mirror_specs))
 
 
+def test_exclude_file(mock_packages, tmpdir):
+    exclude_path = os.path.join(str(tmpdir), 'test-exclude.txt')
+    with open(exclude_path, 'w') as exclude_file:
+        exclude_file.write("""\
+mpich@3.0.1:3.0.2
+mpich@1.0
+""")
+
+    args = MockMirrorArgs(
+        specs=['mpich'],
+        versions_per_spec='all',
+        exclude_file=exclude_path)
+
+    mirror_specs = spack.cmd.mirror._determine_specs_to_mirror(args)
+    expected_include = set(spack.spec.Spec(x) for x in
+                           ['mpich@3.0.3', 'mpich@3.0.4', 'mpich@3.0'])
+    expected_exclude = set(spack.spec.Spec(x) for x in
+                           ['mpich@3.0.1', 'mpich@3.0.2', 'mpich@1.0'])
+    assert expected_include <= set(mirror_specs)
+    assert (not expected_exclude & set(mirror_specs))
+
+
 def test_mirror_crud(tmp_scope, capsys):
     with capsys.disabled():
         mirror('add', '--scope', tmp_scope, 'mirror', 'http://spack.io')
