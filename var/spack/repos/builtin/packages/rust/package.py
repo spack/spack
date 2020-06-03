@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.util.rust import rust_archs
+from spack.util.rust import rust_archs, RustQuery
 
 from six import iteritems
 
@@ -24,7 +24,7 @@ class Rust(Package):
 
     maintainers = ["AndrewGaspar"]
 
-    phases = ['configure', 'build', 'install']
+    phases = ['configure', 'install']
 
     extendable = True
 
@@ -516,18 +516,31 @@ sysconfdir = "etc"
             )
             )
 
-    def build(self, spec, prefix):
+    def install(self, spec, prefix):
         jobs = spack.config.get('config:build_jobs') if self.parallel else 1
 
-        python('./x.py', 'build', '-j', str(jobs), extra_env={
+        rustflags = []
+
+        target_cpu = \
+            RustQuery(
+                Executable(
+                    join_path(
+                        self.stage.source_path,
+                        'spack_bootstrap/bin/rustc'
+                    )
+                )
+            ).target_cpu(self.spec)
+
+        if target_cpu:
+            rustflags.extend(["-C", "target-cpu={0}".format(target_cpu)])
+
+        python('./x.py', 'install', '-j', str(jobs), extra_env={
             # vendored libgit2 wasn't correctly building (couldn't find the
             # vendored libssh2), so let's just have spack build it
             'LIBSSH2_SYS_USE_PKG_CONFIG': '1',
-            'LIBGIT2_SYS_USE_PKG_CONFIG': '1'
+            'LIBGIT2_SYS_USE_PKG_CONFIG': '1',
+            'RUSTFLAGS': " ".join(rustflags)
         })
-
-    def install(self, spec, prefix):
-        python('./x.py', 'install')
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before cargo modules' build() methods."""

@@ -14,7 +14,7 @@ from spack.directives import cargo_manifest, conflicts, depends_on, variant
 from spack.version import Version
 from spack.package import PackageBase
 from spack.util.executable import Executable
-from spack.util.rust import target_triple_for_spec
+from spack.util.rust import target_triple_for_spec, RustQuery
 
 
 class CargoPackage(PackageBase):
@@ -86,25 +86,12 @@ class CargoPackage(PackageBase):
         return Executable(join_path(self.spec['rust'].prefix.bin, 'rustc'))
 
     @property
-    def llvm_version(self):
-        version_info = self.rustc("--version", "--verbose", output=str)
-        match = re.search(
-            r"^LLVM version: (\d+\.\d+)", version_info, flags=re.MULTILINE)
-        return Version(match.group(1))
-
-    @property
     def target_cpu(self):
         """This routine returns the target_cpu that Rust should optimize for.
         It uses the same names as clang thanks to the shared LLVM backend. We
         use Rust's LLVM version in place of the clang version."""
-        compiler_entry = \
-            self.spec.target.compiler_entry("clang", self.llvm_version)
-        name = compiler_entry["name"]
 
-        if name in self.rustc("--print", "target-cpus", output=str):
-            return name
-        else:
-            return None
+        return RustQuery(self.rustc).target_cpu(self.spec)
 
     @property
     def manifest_path(self):
