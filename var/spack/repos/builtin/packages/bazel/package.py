@@ -131,7 +131,6 @@ class Bazel(Package):
     #for fcc
     patch('patch_for_fcc.patch', when='@0.29.1:%fj')
     patch('patch_for_fcc2.patch', when='@0.25:%fj')
-    parallel = False
 
     phases = ['bootstrap', 'install']
 
@@ -201,3 +200,7 @@ java_binary(
 
     def setup_dependent_package(self, module, dependent_spec):
         module.bazel = Executable('bazel')
+
+    @property
+    def parallel(self):
+        return not self.spec.satisfies('%fj')
