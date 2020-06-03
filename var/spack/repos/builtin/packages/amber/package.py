@@ -96,7 +96,7 @@ class Amber(Package, CudaPackage):
     depends_on('mpi', when='+mpi')
 
     # Cuda dependencies
-    depends_on('cuda@:10.1.243', when='@18:+cuda')
+    depends_on('cuda@:10.2.89', when='@18:+cuda')
     depends_on('cuda@7.5.18', when='@:16+cuda')
 
     # conflicts
