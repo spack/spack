@@ -4056,19 +4056,130 @@ Making a package discoverable with ``spack external find``
 
 To make a package discoverable with
 :ref:`spack external find <cmd-spack-external-find>` you must
-define one or more executables associated with the package and must
-implement a method to generate a Spec when given an executable.
-
-The executables are specified as a package level ``executables``
-attribute which is a list of strings (see example below); each string
-is treated as a regular expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3',
-'my-weird-gcc', etc.).
-
-The method ``determine_spec_details`` has the following signature:
+mark it with the ``detectable`` decorator:
 
 .. code-block:: python
 
-   def determine_spec_details(prefix, exes_in_prefix):
+   @detectable
+   class Gcc(AutotoolsPackage):
+      """The GNU Compiler Collection includes front ends for C, C++, Objective-C,
+      Fortran, Ada, and Go, as well as libraries for these languages."""
+
+define the executables associated with the package and must
+implement methods to generate one or more Specs when given
+a set of executables.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The ``executables`` attribute
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The executables are specified as a package level ``executables``
+attribute which is a list of strings:
+
+.. code-block:: python
+
+   class FooPackage(Package):
+       # Each string provided here is treated as a regular expression, and
+       # would match for example 'foo', 'foobar', and 'bazfoo'.
+       executables = ['foo']
+
+Each string is treated as a regular expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3',
+'my-weird-gcc', etc.) to determine a set of system executables that might be part
+or this package.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using the default workflow to detect specs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The detection of system installed packages in Spack is based on
+calling the ``determine_spec_details`` method for each detectable
+package. This method, given a ``prefix`` and a list of matching
+``executables``, is responsible of computing the list of
+detected Spec objects.
+
+When a package class is marked with the ``detectable`` decorator
+it receives automatically a default implementation of
+``determine_spec_details`` that splits the overall detection
+task into simpler operations, each with its own callback method.
+
+"""""""""""""""""""""""""""
+Filter matching executables
+"""""""""""""""""""""""""""
+
+The first method that gets called is:
+
+.. code-block:: python
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        """Return a filtered list of the executables in prefix"""
+
+which takes the prefix and matching executables and returns a
+filtered list of said executables. The implementation of this method
+is optional and, if none is given, the list of matching executables
+is returned unfiltered.
+
+""""""""""""""""""""""""""""""""""""""
+Determine the version of an executable
+""""""""""""""""""""""""""""""""""""""
+
+The callback method that follows filtering is:
+
+.. code-block:: python
+
+   @classmethod
+   def determine_version(cls, exe):
+       """Return either the version of the executable passed as argument
+       or ``None`` if the version cannot be determined
+       """
+
+which receives as input a single executable and must return as output
+its version as a string, or ``None`` is the version cannot be determined.
+This method must be implemented by a detectable package using the default
+workflow.
+
+""""""""""""""""""
+Determine variants
+""""""""""""""""""
+
+Finally, once versions are determined, a method to determine variants
+is called:
+
+.. code-block:: python
+
+   @classmethod
+   def determine_variants(cls, exes, version_str):
+       """Return either a variant string, a tuple of a variant string
+       and a dictionary of extra attributes that will be recorded in
+       packages.yaml or a list of those items.
+       """
+
+This method takes as input a list of executables that live in the same prefix and
+share the same version string, and returns either:
+
+1. A variant string (if a single spec is detected for these executables)
+2. A tuple of a variant string and a dictionary or extra attributes that need to
+   be recorded in packages.yaml for any reason
+3. A list of items matching either 1. or 2. (if multiple specs are detected
+   from the set of executables)
+
+The implementation of this method is optional and if none is given the default
+is to return an empty string (no variants detected).
+
+.. _determine_spec_details:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Implementing a custom ``determine_spec_details``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In the rare case when the default workflow doesn't fit the detection
+of a package, a custom ``determine_spec_details`` method can be
+implemented directly in the package class:
+
+.. code-block:: python
+
+   @classmethod
+   def determine_spec_details(cls, prefix, exes_in_prefix):
        # exes_in_prefix = a set of paths, each path is an executable
        # prefix = a prefix that is common to each path in exes_in_prefix
 
@@ -4076,14 +4187,14 @@ The method ``determine_spec_details`` has the following signature:
        # the package. Return one or more Specs for each instance of the
        # package which is thought to be installed in the provided prefix
 
-``determine_spec_details`` takes as parameters a set of discovered
+It takes as parameters a set of discovered
 executables (which match those specified by the user) as well as a
 common prefix shared by all of those executables. The function must
 return one or more Specs associated with the executables (it can also
 return ``None`` to indicate that no provided executables are associated
 with the package).
 
-Say for example we have a package called ``foo-package`` which
+As an example, consider a made-up package called ``foo-package`` which
 builds an executable called ``foo``. ``FooPackage`` would appear as
 follows:
 
@@ -4110,7 +4221,28 @@ follows:
            exe = spack.util.executable.Executable(exe_path)
            output = exe('--version')
            version_str = ...  # parse output for version string
-           return Spec('foo-package@{0}'.format(version_str))
+           return Spec.from_detection(
+               'foo-package@{0}'.format(version_str)
+           )
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Validate detected spec objects
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To increase detection robustness, packagers may also implement a method
+to validate the detected Spec objects:
+
+.. code-block:: python
+
+   @classmethod
+   def validate_detected_spec(cls, spec, extra_attributes):
+       """Validate a detected spec. Raise an exception if validation fails."""
+
+This method receives a detected spec along with its extra attributes and must
+raise an exception if the spec is considered invalid. In that case the spec
+will be discarded from the list of the ones detected and the exception message
+will be logged as the reason for discarding it.
+
 
 .. _package-lifecycle:
 
