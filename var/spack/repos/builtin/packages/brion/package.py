@@ -16,8 +16,8 @@ class Brion(CMakePackage):
     generator = 'Ninja'
 
     version('develop', submodules=True)
-    version('3.0.0', tag='3.0.0', submodules=True)
-    version('3.1.0', tag='3.1.0', submodules=True, preferred=True)
+    version('3.1.0', tag='3.1.0', submodules=True)
+    version('3.2.0', tag='3.2.0', submodules=True, preferred=True)
 
     variant('python', default=False, description='Build Python wrapping')
     variant('doc', default=False, description='Build documentation')
@@ -37,17 +37,21 @@ class Brion(CMakePackage):
     # TODO: bzip2 is a dependency of boost. Needed here because of linking
     # issue (libboost_iostreams.so.1.68.0 not finding libbz2.so)
     depends_on('bzip2')
-    depends_on('lunchbox')
-    depends_on('vmmlib')
-    depends_on('highfive@2.1.1 +boost ~mpi')
+    depends_on('lunchbox', when='@3.1.0')
+    depends_on('vmmlib', when='@3.1.0')
+    depends_on('highfive +boost ~mpi')
+    depends_on('highfive@2.1.1 +boost ~mpi', when='@3.1.0')
     depends_on('mvdtool ~mpi')
 
     def patch(self):
-        filter_file(r'-py36', r'36 -py36', 'CMake/common/ChoosePython.cmake')
+        choose_python_path = 'CMake/common/ChoosePython.cmake' \
+            if self.spec.version == Version('3.1.0') \
+            else 'CMake/ChoosePython.cmake'
+        filter_file(r'-py36', r'36 -py36', choose_python_path)
 
     def cmake_args(self):
-        return ['-DDISABLE_SUBPROJECTS=ON',
-                '-DBRION_SKIP_LIBSONATA_SUBMODULE=ON']
+        return ['-DBRION_SKIP_LIBSONATA_SUBMODULE=ON',
+                '-DDISABLE_SUBPROJECTS=0N']
 
     @when('+python')
     def setup_run_environment(self, env):

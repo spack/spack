@@ -39,7 +39,7 @@ packages:
       - py-morph-tool@0.1.14
       - py-morphio@2.3.4
       - py-neurodamus
-      - py-sonata-network-reduction@0.0.6 ^neuron%intel@19.0.4^py-ipython%gcc^lunchbox%gcc
+      - py-sonata-network-reduction@0.0.6 ^neuron%intel@19.0.4^py-ipython%gcc
 
   gnu-stable-serial-ophiophob:
     target_matrix:
@@ -48,8 +48,8 @@ packages:
       - architecture
       - compiler
     specs:
-      - emsim
-      - meshball
+      - emsim ^brion@3.1.0
+      - meshball ^brion@3.1.0
       - regiodesics@0.1.2
 
   gnu-stable-parallel:
@@ -64,9 +64,8 @@ packages:
       - parquet-converters@0.5.5
       - synapsetool@0.5.9
       - touchdetector@5.4.0
-      - brayns +opendeck +brion ^ospray@1.7.3%intel@19.0.4
-      - brayns@1.0.1 +brion ^ospray%intel@19.0.4
-      - brayns@immersive +opendeck +brion +optix
+      - brayns +opendeck +brion ^brion@3.1.0 ^ospray@1.7.3%intel@19.0.4
+      - brayns@1.0.1 +brion ^brion@3.1.0 ^ospray%intel@19.0.4
       - brayns-topologyviewer@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.0.4
       - brayns-brainatlas@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.0.4
       - brayns-membranelessorganelles@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.0.4

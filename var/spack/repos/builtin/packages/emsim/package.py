@@ -24,3 +24,6 @@ class Emsim(CMakePackage):
     depends_on('ispc', type='build')
 
     patch('cmake.patch')
+
+    def cmake_args(self):
+        return ['-DDISABLE_SUBPROJECTS=ON']
