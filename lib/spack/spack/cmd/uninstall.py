@@ -21,10 +21,6 @@ from llnl.util import tty
 from llnl.util.tty.colify import colify
 
 description = "remove installed packages"
-description += ("\n\nSpecs to be uninstalled are specified using the spec "
-                "syntax (`spack help --spec`) and can be identified by their "
-                "hashes. To remove packages that are needed only at build "
-                "time and were not explicitly installed see `spack gc -h`.")
 section = "build"
 level = "short"
 
@@ -44,6 +40,18 @@ display_args = {
 
 
 def setup_parser(subparser):
+    epilog_msg = ("Specs to be uninstalled are specified using the spec syntax"
+                  " (`spack help --spec`) and can be identified by their "
+                  "hashes. To remove packages that are needed only at build "
+                  "time and were not explicitly installed see `spack gc -h`."
+                  "\n\nWhen using the --all option ALL packages matching the "
+                  "supplied specs will be uninstalled. For instance, "
+                  "`spack uninstall --all libelf` uninstalls all the versions "
+                  "of `libelf` currently present in Spack's store. If no spec "
+                  "is supplied, all installed packages will be uninstalled. "
+                  "If used in an environment, all packages in the environment "
+                  "will be uninstalled.")
+    subparser.epilog = epilog_msg
     subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
         help="remove regardless of whether other packages or environments "
@@ -52,12 +60,8 @@ def setup_parser(subparser):
         subparser, ['recurse_dependents', 'yes_to_all', 'installed_specs'])
     subparser.add_argument(
         '-a', '--all', action='store_true', dest='all',
-        help="USE CAREFULLY. Remove ALL installed packages that match each "
-        "supplied spec. i.e., if you `uninstall --all libelf`,"
-        " ALL versions of `libelf` are uninstalled. If no spec is "
-        "supplied, all installed packages will be uninstalled. "
-        "If used in an environment, all packages in the environment "
-        "will be uninstalled.")
+        help="remove ALL installed packages that match each supplied spec"
+    )
 
 
 def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
