@@ -823,7 +823,7 @@ class Environment(object):
     def set_config(self, path, value):
         """Set configuration for this environment"""
         yaml = config_dict(self.yaml)
-        keys = path.split(':')
+        keys = spack.config.process_config_path(path)
         for key in keys[:-1]:
             yaml = yaml[key]
         yaml[keys[-1]] = value
@@ -1516,13 +1516,14 @@ class Environment(object):
                         del yaml_dict[key]
 
         # if all that worked, write out the manifest file at the top level
-        # Only actually write if it has changed or was never written
-        changed = self.yaml != self.raw_yaml
-        written = os.path.exists(self.manifest_path)
-        if changed or not written:
-            self.raw_yaml = copy.deepcopy(self.yaml)
-            with fs.write_tmp_and_move(self.manifest_path) as f:
-                _write_yaml(self.yaml, f)
+        # (we used to check whether the yaml had changed and not write it out
+        # if it hadn't. We can't do that anymore because it could be the only
+        # thing that changed is the "override" attribute on a config dict,
+        # which would not show up in even a string comparison between the two
+        # keys).
+        self.raw_yaml = copy.deepcopy(self.yaml)
+        with fs.write_tmp_and_move(self.manifest_path) as f:
+            _write_yaml(self.yaml, f)
 
         # TODO: rethink where this needs to happen along with
         # writing. For some of the commands (like install, which write
