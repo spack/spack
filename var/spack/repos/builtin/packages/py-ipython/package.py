@@ -39,4 +39,4 @@ class PyIpython(PythonPackage):
     depends_on('py-appnope', type=('build', 'run'), when='platform=darwin')
     depends_on('py-jedi@0.10:', type=('build', 'run'), when='@7.5.0:')
     depends_on('py-backcall', type=('build', 'run'), when='@7.5.0:')
-    depends_on('py-setuptools@18.5:', type='run', when='@4.1::')
+    depends_on('py-setuptools@18.5:', type='run', when='@4.1:')
