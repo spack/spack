@@ -16,6 +16,7 @@ class PyNeurom(PythonPackage):
     version('develop', branch='master')
     version('mut_morphio', branch='mut_morphio')
 
+    version('1.4.20', sha256='c867764511dbb6d2e276a6ac517322ac56bf0a2f85047a96afd60b0f7f54153d')
     version('1.4.15', sha256='d84f04c292ed9b2fe1d34d6e754a133f69ef81a038947d836dd4f34ccd7b4607')
     version('1.4.14', sha256='e541f6c8a11826caa2b2d1cf18015a10ec7009f12813edfc2655084c7cf5021b')
     version('1.4.10', sha256='c94823133bb15b5756c22391e05948871ff77c0212e91ad375903ca437e18aeb')

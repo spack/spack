@@ -73,7 +73,7 @@ packages:
       - mpi
     specs:
       - hdf5+mpi@1.10.5
-      - highfive+mpi@2.1.1
+      - highfive+mpi@2.2.1
       - ospray@1.7.3
       - ospray@1.8.5
 

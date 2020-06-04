@@ -12,6 +12,8 @@ class PyBluepy(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/bluepy"
     git      = "ssh://bbpcode.epfl.ch/nse/bluepy"
 
+    version('0.14.8', tag='bluepy-v0.14.8')
+    version('0.14.7', tag='bluepy-v0.14.7')
     version('0.14.6', tag='bluepy-v0.14.6')
     version('0.14.5', tag='bluepy-v0.14.5')
     version('0.14.3', tag='bluepy-v0.14.3')
@@ -25,7 +27,7 @@ class PyBluepy(PythonPackage):
     depends_on('py-h5py~mpi@2.3:', type='run')
     depends_on('py-lazy@1.0:', type='run')
     depends_on('py-lxml@3.3:', type='run')
-    depends_on('py-neurom@1.3:', type='run')
+    depends_on('py-neurom@1.4.18:', type='run')
     depends_on('py-numpy@1.8:', type='run')
     depends_on('py-pandas@0.17:', type='run')
     depends_on('py-pylru@1.0:', type='run')
@@ -34,8 +36,8 @@ class PyBluepy(PythonPackage):
     depends_on('py-sqlalchemy@1.0:', type='run')
 
     depends_on('py-bluepy-configfile@0.1.11:', type='run')
-    depends_on('py-libsonata@0.0.2:', type='run')
-    depends_on('py-bluepysnap@0.1.2', type='run')
+    depends_on('py-libsonata@0.1.3:', type='run')
+    depends_on('py-bluepysnap@0.4.1:', type='run')
 
     depends_on('brion+python@3.1.0:', type='run')
 

@@ -12,6 +12,7 @@ class PyLibsonata(PythonPackage):
     homepage = "https://github.com/BlueBrain/libsonata"
     git = "https://github.com/BlueBrain/libsonata.git"
 
+    version('0.1.3', tag='v0.1.3', submodules=True, get_full_repo=True)
     version('0.1.0', tag='v0.1.0', submodules=True, get_full_repo=True)
     version('0.0.3', tag='v0.0.3', submodules=True)
 
@@ -20,4 +21,4 @@ class PyLibsonata(PythonPackage):
     depends_on('py-pybind11')
 
     depends_on('py-numpy@1.12:', type=('build', 'run'))
-    depends_on('py-setuptools-scm', type='build', when='@0.1:')
+    depends_on('py-setuptools', type='build', when='@0.1:')
