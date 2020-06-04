@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
+
 
 class HsfCmaketools(Package):
     """CMake 'Find' modules for commonly used HEP Packages"""
@@ -15,6 +15,7 @@ class HsfCmaketools(Package):
 
     maintainers = ['vvolkl']
 
+    version('master', branch='master')
     version('1.8', sha256='91af30f5701dadf80a5d7e0d808c224c934f0784a3aff2d3b69aff24f7e1db41')
 
     def install(self, spec, prefix):
