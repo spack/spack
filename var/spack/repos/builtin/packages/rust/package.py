@@ -377,11 +377,11 @@ class Rust(Package):
                     sha256='0000000000000000000000000000000000000000000000000000000000000000',
                     destination='spack_bootstrap_stage',
                     when='@{version} platform={platform} target={target}'\
-                        .format(
-                            version=prerelease_version,
-                            platform=rust_arch['platform'],
-                            target=rust_arch['target']
-                        )
+                    .format(
+                        version=prerelease_version,
+                        platform=rust_arch['platform'],
+                        target=rust_arch['target']
+                    )
                 )
 
     # This loop generates resources for each binary distribution, and maps
@@ -408,11 +408,11 @@ class Rust(Package):
                     sha256=rust_sha256,
                     destination='spack_bootstrap_stage',
                     when='@{version} platform={platform} target={target}'\
-                        .format(
-                            version=rust_version,
-                            platform=rust_arch['platform'],
-                            target=rust_arch['target']
-                        )
+                    .format(
+                        version=rust_version,
+                        platform=rust_arch['platform'],
+                        target=rust_arch['target']
+                    )
                 )
 
     # This routine returns the target architecture we intend to build for.
