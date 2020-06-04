@@ -328,7 +328,7 @@ def spider(root_urls, depth=0, concurrency=128):
     # Cache of visited links, meant to be captured by the closure below
     _visited = set()
 
-    def _spider(url, root, collect_nested):
+    def _spider(url, collect_nested):
         """Fetches URL and any pages it links to.
 
         Prints out a warning only if the root can't be fetched; it ignores
@@ -336,7 +336,6 @@ def spider(root_urls, depth=0, concurrency=128):
 
         Args:
             url (str): url being fetched and searched for links
-            root (str): base url on which we want to restrict our search
             collect_nested (bool): whether we want to collect arguments
                 for nested spidering on the links found in this url
 
@@ -374,17 +373,13 @@ def spider(root_urls, depth=0, concurrency=128):
                 if any(raw_link.endswith(s) for s in ALLOWED_ARCHIVE_TYPES):
                     continue
 
-                # Skip things outside the root directory
-                if not abs_link.startswith(root):
-                    continue
-
                 # Skip already-visited links
                 if abs_link in _visited:
                     continue
 
                 # If we're not at max depth, follow links.
                 if collect_nested:
-                    subcalls.append((abs_link, root))
+                    subcalls.append((abs_link,))
                     _visited.add(abs_link)
 
         except URLError as e:
@@ -435,7 +430,7 @@ def spider(root_urls, depth=0, concurrency=128):
     collect = current_depth < depth
     for root in root_urls:
         root = url_util.parse(root)
-        spider_args.append((root, root, collect))
+        spider_args.append((root, collect))
 
     tp = multiprocessing.pool.ThreadPool(processes=concurrency)
     try:
