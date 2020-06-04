@@ -309,27 +309,6 @@ def list_url(url):
             for key in _iter_s3_prefix(s3, url)))
 
 
-def _urlopen(req, *args, **kwargs):
-    """Wrapper for compatibility with old versions of Python."""
-    url = req
-    try:
-        url = url.get_full_url()
-    except AttributeError:
-        pass
-
-    # We don't pass 'context' parameter because it was only introduced starting
-    # with versions 2.7.9 and 3.4.3 of Python.
-    if 'context' in kwargs:
-        del kwargs['context']
-
-    opener = urlopen
-    if url_util.parse(url).scheme == 's3':
-        import spack.s3_handler
-        opener = spack.s3_handler.open
-
-    return opener(req, *args, **kwargs)
-
-
 def spider(roots, depth=0, concurrency=128):
     """Get web pages from root URLs.
 
@@ -479,6 +458,27 @@ def spider(roots, depth=0, concurrency=128):
         tp.join()
 
     return pages, links
+
+
+def _urlopen(req, *args, **kwargs):
+    """Wrapper for compatibility with old versions of Python."""
+    url = req
+    try:
+        url = url.get_full_url()
+    except AttributeError:
+        pass
+
+    # We don't pass 'context' parameter because it was only introduced starting
+    # with versions 2.7.9 and 3.4.3 of Python.
+    if 'context' in kwargs:
+        del kwargs['context']
+
+    opener = urlopen
+    if url_util.parse(url).scheme == 's3':
+        import spack.s3_handler
+        opener = spack.s3_handler.open
+
+    return opener(req, *args, **kwargs)
 
 
 def find_versions_of_archive(
