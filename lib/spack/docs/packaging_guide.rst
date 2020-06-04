@@ -4205,9 +4205,9 @@ to validate the detected Spec objects:
        """Validate a detected spec. Raise an exception if validation fails."""
 
 This method receives a detected spec along with its extra attributes and must
-raise an exception if the spec is considered invalid. In that case the spec
-will be discarded from the list of the ones detected and the exception message
-will be logged as the reason for discarding it.
+raise an exception of any type if the spec is considered invalid. In that case
+the spec will be discarded and the exception message will be logged as the reason
+for discarding it.
 
 .. _determine_spec_details:
 
