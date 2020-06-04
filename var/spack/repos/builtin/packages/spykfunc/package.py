@@ -16,14 +16,15 @@ class Spykfunc(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
 
     version('develop', submodules=True, get_full_repo=True)
-    version('0.12.2', tag='v0.12.2', submodules=True, get_full_repo=True)
-    version('0.13.1', tag='v0.13.1', submodules=True, get_full_repo=True)
-    # versions 0.13.2-0.14.x require legacy mvdtool+python
-    version('0.15.0', tag='v0.15.0', submodules=True, get_full_repo=True)
-    version('0.15.1', tag='v0.15.1', submodules=True, get_full_repo=True)
-    version('0.15.2', tag='v0.15.2', submodules=True, get_full_repo=True)
-    version('0.15.3', tag='v0.15.3', submodules=True, get_full_repo=True)
+    version('0.15.5', tag='v0.15.5', submodules=True, get_full_repo=True)
     version('0.15.4', tag='v0.15.4', submodules=True, get_full_repo=True)
+    version('0.15.3', tag='v0.15.3', submodules=True, get_full_repo=True)
+    version('0.15.2', tag='v0.15.2', submodules=True, get_full_repo=True)
+    version('0.15.1', tag='v0.15.1', submodules=True, get_full_repo=True)
+    version('0.15.0', tag='v0.15.0', submodules=True, get_full_repo=True)
+    # versions 0.13.2-0.14.x require legacy mvdtool+python
+    version('0.13.1', tag='v0.13.1', submodules=True, get_full_repo=True)
+    version('0.12.2', tag='v0.12.2', submodules=True, get_full_repo=True)
 
     depends_on('cmake', type='build', when='@0.15.4:')
     depends_on('boost', type=('build', 'link'), when='@0.15.4:')
