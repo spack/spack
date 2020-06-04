@@ -22,7 +22,7 @@ def setup_parser(subparser):
     subparser.add_argument('-s', '--safe-only', action='store_true',
                            help='only list safe versions of the package')
     subparser.add_argument(
-        '-c', '--concurrency', default=128, type=int,
+        '-c', '--concurrency', default=32, type=int,
         help='number of concurrent requests'
     )
     arguments.add_common_arguments(subparser, ['package'])

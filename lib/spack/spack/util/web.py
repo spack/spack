@@ -309,7 +309,7 @@ def list_url(url):
             for key in _iter_s3_prefix(s3, url)))
 
 
-def spider(root_urls, depth=0, concurrency=128):
+def spider(root_urls, depth=0, concurrency=32):
     """Get web pages from root URLs.
 
     If depth is specified (e.g., depth=2), then this will also follow
@@ -477,7 +477,7 @@ def _urlopen(req, *args, **kwargs):
 
 
 def find_versions_of_archive(
-        archive_urls, list_url=None, list_depth=0, concurrency=128
+        archive_urls, list_url=None, list_depth=0, concurrency=32
 ):
     """Scrape web pages for new versions of a tarball.
 
