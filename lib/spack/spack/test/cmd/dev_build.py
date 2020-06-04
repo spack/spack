@@ -57,7 +57,6 @@ def test_dev_build_until(tmpdir, mock_packages, install_mockery):
     assert not spack.store.db.query(spec, installed=True)
 
 
-<<<<<<< HEAD
 def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
 
