@@ -14,9 +14,8 @@ class Garply(Package):
     homepage = "https://www.example.com"
     url      = "https://github.com/gartung/garply/archive/v3.0.0.tar.gz"
 
-    version(
-        '3.0.0',
-         sha256='534ac8ba7a6fed7e8bbb543bd43ca04999e65337445a531bd296939f5ac2f33d')
+    version('3.0.0',
+            sha256='534ac8ba7a6fed7e8bbb543bd43ca04999e65337445a531bd296939f5ac2f33d')
 
     def install(self, spec, prefix):
         mkdirp(prefix.lib64)
