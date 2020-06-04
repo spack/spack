@@ -51,9 +51,7 @@ def test_view_link_type_remove(
     bindir = os.path.join(viewpath, 'bin')
     assert os.path.exists(bindir)
 
-    print(list(os.walk(bindir)))
-
-    print(view('remove', viewpath, 'needs-relocation'))
+    view('remove', viewpath, 'needs-relocation')
     assert not os.path.exists(bindir)
 
 
