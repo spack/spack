@@ -88,11 +88,7 @@ class Sbml(CMakePackage):
             "-DWITH_XERCES:BOOL=OFF",
             "-DWITH_ZLIB:BOOL=ON",
         ]
-        if '+cpp' in spec:
-            args.append("-DWITH_CPP_NAMESPACE:BOOL=ON")
-        else:
-            args.append("-DWITH_CPP_NAMESPACE:BOOL=OFF")
-
+        args.append(self.define_from_variant('WITH_CPP_NAMESPACE', 'cpp'))
         if '+python' in spec:
             args.extend([
                 "-DWITH_PYTHON:BOOL=ON",
