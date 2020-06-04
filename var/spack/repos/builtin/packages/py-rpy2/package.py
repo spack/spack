@@ -32,8 +32,10 @@ class PyRpy2(PythonPackage):
     depends_on('r',             type=('build', 'run'))
 
     # @3.0.0:
+    depends_on('python@3.5:', when='@3.1.0:', type=('build', 'run'))
     depends_on('py-cffi@1.0.0:', when='@3.0.0:', type=('build', 'run'))
     depends_on('py-simplegeneric', when='@3.0.0:', type=('build', 'run'))
+    depends_on('py-pytest', when='@3:', type=('build', 'run'))
 
     # @2.9.0:
     depends_on('r@3.3:',    when='@2.9.0:', type=('build', 'run'))
@@ -44,3 +46,4 @@ class PyRpy2(PythonPackage):
     # @:2.8.6
     depends_on('r@2.8:', when='@:2.8.6', type=('build', 'run'))
     depends_on('py-singledispatch', when='^python@:2',   type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
