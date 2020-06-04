@@ -37,34 +37,13 @@ bin/spack -h
 bin/spack help -a
 
 # Profile and print top 20 lines for a simple call to spack spec
-spack -p --lines 20 spec mpileaks%gcc ^elfutils@0.170
+if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+  spack -p --lines 20 spec openmpi
+else
+  spack -p --lines 20 spec mpileaks%gcc ^elfutils@0.170
+fi
 
 #-----------------------------------------------------------
 # Run unit tests with code coverage
 #-----------------------------------------------------------
 $coverage_run $(which spack) test -x --verbose
-
-#-----------------------------------------------------------
-# Run tests for setup-env.sh
-#-----------------------------------------------------------
-# Clean the environment by removing Spack from the path and getting rid of
-# the spack shell function
-export PATH="$ORIGINAL_PATH"
-unset spack
-
-# start in the spack root directory
-cd "$SPACK_ROOT"
-
-# Run bash tests with coverage enabled, but pipe output to /dev/null
-# because it seems that kcov seems to undo the script's redirection
-if [ "$BASH_COVERAGE" = true ]; then
-    "$QA_DIR/bashcov" "$QA_DIR/setup-env-test.sh" &> /dev/null
-    "$QA_DIR/bashcov" "$QA_DIR/completion-test.sh" &> /dev/null
-fi
-
-# run the test scripts for their output (these will print nicely)
-bash "$QA_DIR/setup-env-test.sh"
-zsh  "$QA_DIR/setup-env-test.sh"
-dash "$QA_DIR/setup-env-test.sh"
-
-bash "$QA_DIR/completion-test.sh"

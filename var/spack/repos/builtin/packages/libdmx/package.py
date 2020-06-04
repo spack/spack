@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Libdmx(AutotoolsPackage):
+class Libdmx(AutotoolsPackage, XorgPackage):
     """libdmx - X Window System DMX (Distributed Multihead X) extension
     library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libdmx"
-    url      = "https://www.x.org/archive/individual/lib/libdmx-1.1.3.tar.gz"
+    xorg_mirror_path = "lib/libdmx-1.1.3.tar.gz"
 
     version('1.1.3', sha256='c4b24d7e13e5a67ead7a18f0b4cc9b7b5363c9d04cd01b83b5122ff92b3b4996')
 

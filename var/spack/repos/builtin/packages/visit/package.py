@@ -8,10 +8,44 @@ from spack import *
 
 class Visit(CMakePackage):
     """VisIt is an Open Source, interactive, scalable, visualization,
-       animation and analysis tool."""
+       animation and analysis tool. See comments in VisIt's package.py
+       for tips about building VisIt with spack.
+    """
+    ############################
+    # Suggestions for building:
+    ############################
+    # cyrush note:
+    #
+    # Out of the box, VisIt's python 2 requirement will cause
+    # spack spec constraint errors due Qt + Mesa build
+    # dependencies.
+    #
+    # You can avoid this using:
+    #
+    # linux:
+    #  spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0
+    #
+    # macOS:
+    #  spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \
+    #                      ^qt~framework
+    #
+    # Rpath issues undermine qwt (not qt) when a build as a framework
+    # VisIt's osxfixup resolves this for us in other cases,
+    # but we can't use osxfixup with spack b/c it will undermine other libs.
+    #
+    # Even with these changes, VisIt's Python CLI does not work on macOS,
+    # there is a linking issue related to OpenSSL.
+    # (dyld: Symbol not found: _GENERAL_NAME_free - which comes from OpenSSL)
+    #
+    ############################
     homepage = "https://wci.llnl.gov/simulation/computer-codes/visit/"
-    url = "https://portal.nersc.gov/project/visit/releases/3.0.1/visit3.0.1.tar.gz"
+    git      = "https://github.com/visit-dav/visit.git"
+    url = "https://github.com/visit-dav/visit/releases/download/v3.1.1/visit3.1.1.tar.gz"
 
+    maintainers = ['cyrush']
+
+    version('develop', branch='develop')
+    version('3.1.1', sha256='0b60ac52fd00aff3cf212a310e36e32e13ae3ca0ddd1ea3f54f75e4d9b6c6cf0')
     version('3.0.1', sha256='a506d4d83b8973829e68787d8d721199523ce7ec73e7594e93333c214c2c12bd')
     version('2.13.3', sha256='cf0b3d2e39e1cd102dd886d3ef6da892733445e362fc28f24d9682012cccf2e5')
     version('2.13.0', sha256='716644b8e78a00ff82691619d4d1e7a914965b6535884890b667b97ba08d6a0f')
@@ -28,21 +62,116 @@ class Visit(CMakePackage):
     variant('python', default=True, description='Enable Python support')
     variant('mpi',    default=True, description='Enable parallel engine')
 
-    patch('spack-changes.patch')
+    patch('spack-changes-3.1.patch', when="@3.1.0:,develop")
+    patch('spack-changes-3.0.1.patch', when="@3.0.1")
     patch('nonframework-qwt.patch', when='^qt~framework platform=darwin')
     patch('parallel-hdf5.patch', when='+hdf5+mpi')
 
+    #############################################
+    # Full List of dependencies from build_visit
+    #############################################
+    # cyrush note:
+    #  I added these here to give folks details
+    #  to help eventually build up to full
+    #  support for visit
+    #############################################
+    # =====================================
+    # core:
+    # =====================================
+    #  cmake (build)
+    #  vtk
+    #  qt
+    #  qwt
+    #  python
+    #  mpi
+    #
+    # =====================================
+    # rendering (optional):
+    # =====================================
+    # icet
+    # vtk-m
+    # vtk-h
+    # llvm
+    # mesagl
+    # osmesa
+    # tbb
+    # embree
+    # ispc
+    # ospray
+    #
+    # =====================================
+    # python modules:
+    # =====================================
+    # numpy
+    # pillow
+    # mpi4py
+    # seedme
+    # sphinx (build, docs)
+    # sphinx rtd theme (build, docs)
+    # pyqt (visit support deprecated)
+    # pyside (note: we want pyside 2)
+    #
+    # =====================================
+    # testing related:
+    # =====================================
+    # p7zip (build, test)
+    #
+    # =====================================
+    # io libs:
+    # =====================================
+    # adios
+    # adios2
+    # advio
+    # boost
+    # boxlib
+    # cfitsio
+    # cgns
+    # conduit
+    # damaris
+    # fastbit
+    # fastquery
+    # gdal
+    # h5part
+    # hdf4
+    # hdf5
+    # mdsplus
+    # mfem
+    # mili
+    # moab
+    # mxml
+    # nektarpp
+    # netcdf
+    # openexr
+    # pidx
+    # silo
+    # stripack
+    # szip
+    # tbb
+    # uintah
+    # xdmf
+    # xercesc
+    # xsd
+    # zlib
+    #
+    # =====================================
+
     depends_on('cmake@3.0:', type='build')
-    depends_on('vtk@8.1.0:+opengl2', when='@3.0:3.0.1')
+    # https://github.com/visit-dav/visit/issues/3498
+    depends_on('vtk@8.1.0:8.1.999+opengl2~python', when='~python @3.0:3.999,develop')
+    depends_on('vtk@8.1.0:8.1.999+opengl2+python', when='+python @3.0:3.999,develop')
     depends_on('vtk@6.1.0~opengl2', when='@:2.999')
-    depends_on('vtk+python', when='+python @3.0:')
+    depends_on('vtk+python', when='+python @3.0:,develop')
     depends_on('vtk~mpi', when='~mpi')
     depends_on('vtk+qt', when='+gui')
     depends_on('qt@4.8.6:4.999', when='+gui @:2.999')
-    depends_on('qt@5.10:', when='+gui @3.0:')
+    depends_on('qt@5.10:', when='+gui @3.0:,develop')
     depends_on('qwt', when='+gui')
     depends_on('python@2.6:2.8', when='+python')
-    depends_on('silo+shared', when='+silo')
+    # VisIt uses Silo's 'ghost zone' data structures, which are only available
+    # in v4.10+ releases: https://wci.llnl.gov/simulation/computer-codes/silo/releases/release-notes-4.10
+    depends_on('silo@4.10:+shared', when='+silo')
+    depends_on('silo~mpi', when='+silo~mpi')
+    depends_on('silo+mpi', when='+silo+mpi')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('mpi', when='+mpi')
@@ -54,7 +183,7 @@ class Visit(CMakePackage):
 
     root_cmakelists_dir = 'src'
 
-    @when('@3.0.0:3.0.1')
+    @when('@3.0.0:3.999,develop')
     def patch(self):
         # Some of VTK's targets don't create explicit libraries, so there is no
         # 'vtktiff'. Instead, replace with the library variable defined from
@@ -66,18 +195,39 @@ class Visit(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
+        cxx_flags = [self.compiler.cxx_pic_flag]
+        cc_flags = [self.compiler.cc_pic_flag]
+
+        # NOTE: This is necessary in order to allow VisIt to compile a couple
+        # of lines of code with 'const char*' to/from 'char*' conversions.
+        if spec.satisfies('@3:%gcc'):
+            cxx_flags.append('-fpermissive')
+            cc_flags.append('-fpermissive')
+
         args = [
             '-DVTK_MAJOR_VERSION=' + str(spec['vtk'].version[0]),
             '-DVTK_MINOR_VERSION=' + str(spec['vtk'].version[1]),
             '-DVISIT_VTK_DIR:PATH=' + spec['vtk'].prefix,
             '-DVISIT_ZLIB_DIR:PATH=' + spec['zlib'].prefix,
             '-DVISIT_USE_GLEW=OFF',
-            '-DCMAKE_CXX_FLAGS=' + self.compiler.pic_flag,
-            '-DCMAKE_C_FLAGS=' + self.compiler.pic_flag,
+            '-DCMAKE_CXX_FLAGS=' + ' '.join(cxx_flags),
+            '-DCMAKE_C_FLAGS=' + ' '.join(cc_flags),
         ]
 
+        if spec.satisfies('@3.1:'):
+            args.append('-DFIXUP_OSX=OFF')
+
         if '+python' in spec:
+            args.append('-DVISIT_PYTHON_SCRIPTING=ON')
+            # keep this off, we have an openssl + python linking issue
+            # that appears in spack
+            args.append('-DVISIT_PYTHON_FILTERS=OFF')
             args.append('-DPYTHON_DIR:PATH={0}'.format(spec['python'].home))
+        else:
+            args.append('-DVISIT_PYTHON_SCRIPTING=OFF')
+            # keep this off, we have an openssl + python linking issue
+            # that appears in spack
+            args.append('-DVISIT_PYTHON_FILTERS=OFF')
 
         if '+gui' in spec:
             qt_bin = spec['qt'].prefix.bin

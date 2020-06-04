@@ -16,8 +16,8 @@ class Mfem(Package):
     homepage = 'http://www.mfem.org'
     git      = 'https://github.com/mfem/mfem.git'
 
-    maintainers = ['goxberry', 'tzanio', 'markcmiller86', 'acfisher',
-                   'v-dobrev']
+    maintainers = ['v-dobrev', 'tzanio', 'acfisher',
+                   'goxberry', 'markcmiller86']
 
     # Recommended mfem builds to test when updating this file: see the shell
     # script 'test_builds.sh' in the same directory as this file.
@@ -45,13 +45,17 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    version('4.1.0',
+            '4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d',
+            url='https://bit.ly/mfem-4-1', extension='.tar.gz',
+            preferred=True)
+
     # Tagged development version used by xSDK
     version('4.0.1-xsdk', commit='c55c80d17b82d80de04b849dd526e17044f8c99a')
 
     version('4.0.0',
             'df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727',
-            url='https://bit.ly/mfem-4-0', extension='.tar.gz',
-            preferred=True)
+            url='https://bit.ly/mfem-4-0', extension='.tar.gz')
 
     # Tagged development version used by the laghos package:
     version('3.4.1-laghos-v2.0', tag='laghos-v2.0')
@@ -96,8 +100,13 @@ class Mfem(Package):
             description='Required for MPI parallelism')
     variant('openmp', default=False,
             description='Enable OpenMP parallelism')
+    variant('cuda', default=False, description='Enable CUDA support')
+    variant('cuda_arch', default='sm_60',
+            description='CUDA architecture to compile for')
     variant('occa', default=False, description='Enable OCCA backend')
     variant('raja', default=False, description='Enable RAJA backend')
+    variant('libceed', default=False, description='Enable libCEED backend')
+    variant('umpire', default=False, description='Enable Umpire support')
 
     variant('threadsafe', default=False,
             description=('Enable thread safe features.'
@@ -105,9 +114,8 @@ class Mfem(Package):
                          ' May cause minor performance issues.'))
     variant('superlu-dist', default=False,
             description='Enable MPI parallel, sparse direct solvers')
-    # Placeholder for STRUMPACK, support added in mfem v3.3.2:
-    # variant('strumpack', default=False,
-    #       description='Enable support for STRUMPACK')
+    variant('strumpack', default=False,
+            description='Enable support for STRUMPACK')
     variant('suite-sparse', default=False,
             description='Enable serial, sparse direct solvers')
     variant('petsc', default=False,
@@ -116,6 +124,8 @@ class Mfem(Package):
             description='Enable Sundials time integrators')
     variant('pumi', default=False,
             description='Enable functionality based on PUMI')
+    variant('gslib', default=False,
+            description='Enable functionality based on GSLIB')
     variant('mpfr', default=False,
             description='Enable precise, 1D quadrature rules')
     variant('lapack', default=False,
@@ -126,7 +136,7 @@ class Mfem(Package):
             description='Enable Cubit/Genesis reader')
     variant('conduit', default=False,
             description='Enable binary data I/O using Conduit')
-    variant('gzstream', default=True,
+    variant('zlib', default=True,
             description='Support zip\'d streams for I/O')
     variant('gnutls', default=False,
             description='Enable secure sockets using GnuTLS')
@@ -144,43 +154,58 @@ class Mfem(Package):
     conflicts('~static~shared')
     conflicts('~threadsafe', when='+openmp')
 
+    conflicts('+cuda', when='@:3.99.99')
     conflicts('+netcdf', when='@:3.1')
     conflicts('+superlu-dist', when='@:3.1')
+    # STRUMPACK support was added in mfem v3.3.2, however, here we allow only
+    # strumpack v3 support which is available starting with mfem v4.0:
+    conflicts('+strumpack', when='@:3.99.99')
     conflicts('+gnutls', when='@:3.1')
-    conflicts('+gzstream', when='@:3.2')
+    conflicts('+zlib', when='@:3.2')
     conflicts('+mpfr', when='@:3.2')
     conflicts('+petsc', when='@:3.2')
     conflicts('+sundials', when='@:3.2')
     conflicts('+pumi', when='@:3.3.2')
+    conflicts('+gslib', when='@:4.0.99')
     conflicts('timer=mac', when='@:3.3.0')
     conflicts('timer=mpi', when='@:3.3.0')
     conflicts('~metis+mpi', when='@:3.3.0')
     conflicts('+metis~mpi', when='@:3.3.0')
     conflicts('+conduit', when='@:3.3.2')
+    conflicts('+occa', when='mfem@:3.99.99')
+    conflicts('+raja', when='mfem@:3.99.99')
+    conflicts('+libceed', when='mfem@:4.0.99')
+    conflicts('+umpire', when='mfem@:4.0.99')
 
     conflicts('+superlu-dist', when='~mpi')
+    conflicts('+strumpack', when='~mpi')
     conflicts('+petsc', when='~mpi')
     conflicts('+pumi', when='~mpi')
     conflicts('timer=mpi', when='~mpi')
 
-    conflicts('+pumi', when='+shared')
-
     depends_on('mpi', when='+mpi')
-    depends_on('hypre@2.10.0:2.13.999', when='@:3.3.999+mpi')
+    depends_on('hypre@2.10.0:2.13.99', when='@:3.3.99+mpi')
     depends_on('hypre', when='@3.4:+mpi')
 
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')
     depends_on('lapack@3.0:', when='+lapack')
 
+    depends_on('cuda', when='+cuda')
+
     depends_on('sundials@2.7.0', when='@:3.3.0+sundials~mpi')
     depends_on('sundials@2.7.0+mpi+hypre', when='@:3.3.0+sundials+mpi')
     depends_on('sundials@2.7.0:', when='@3.3.2:+sundials~mpi')
     depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:+sundials+mpi')
-    depends_on('sundials@5.0.0', when='@4.0.1-xsdk:+sundials~mpi')
-    depends_on('pumi', when='+pumi')
+    depends_on('sundials@5.0.0:', when='@4.0.1-xsdk:+sundials~mpi')
+    depends_on('sundials@5.0.0:+mpi+hypre', when='@4.0.1-xsdk:+sundials+mpi')
+    depends_on('pumi', when='+pumi~shared')
+    depends_on('pumi+shared', when='+pumi+shared')
+    depends_on('gslib@1.0.5:+mpi', when='+gslib+mpi')
+    depends_on('gslib@1.0.5:~mpi~mpiio', when='+gslib~mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='+superlu-dist')
+    depends_on('strumpack@3.0.0:', when='+strumpack')
     # The PETSc tests in MFEM will fail if PETSc is not configured with
     # SuiteSparse and MUMPS. On the other hand, if we require the variants
     # '+suite-sparse+mumps' of PETSc, the xsdk package concretization fails.
@@ -191,23 +216,32 @@ class Mfem(Package):
     depends_on('mpfr', when='+mpfr')
     depends_on('netcdf-c@4.1.3:', when='+netcdf')
     depends_on('unwind', when='+libunwind')
-    depends_on('zlib', when='+gzstream')
+    depends_on('zlib', when='+zlib')
     depends_on('gnutls', when='+gnutls')
     depends_on('conduit@0.3.1:,master:', when='+conduit')
     depends_on('conduit+mpi', when='+conduit+mpi')
 
     # The MFEM 4.0.0 SuperLU interface fails when using hypre@2.16.0 and
     # superlu-dist@6.1.1. See https://github.com/mfem/mfem/issues/983.
-    conflicts('+hypre+superlu-dist',
-              when='mfem@4.0.0 ^hypre@2.16.0 ^superlu-dist@6.1.1')
+    # This issue was resolved in v4.1.
+    conflicts('+superlu-dist',
+              when='mfem@:4.0.99 ^hypre@2.16.0: ^superlu-dist@6:')
+    # The STRUMPACK v3 interface in MFEM seems to be broken as of MFEM v4.1
+    # when using hypre version >= 2.16.0:
+    conflicts('+strumpack', when='mfem@4.0.0: ^hypre@2.16.0:')
 
-    # The OCCA backend is first available in MFEM 4.0.0
-    depends_on('occa', when='mfem@4.0.0:+occa')
-    conflicts('+occa', when='mfem@:3.99.999')
+    depends_on('occa@1.0.8:', when='+occa')
+    depends_on('occa+cuda', when='+occa+cuda')
 
-    # The RAJA backend is first available in MFEM 4.0.0
-    depends_on('raja', when='mfem@4.0.0:+raja')
-    conflicts('+raja', when='mfem@:3.99.999')
+    depends_on('raja@0.10.0:', when='@4.0.1:+raja')
+    depends_on('raja@0.7.0:0.9.0', when='@4.0.0+raja')
+    depends_on('raja+cuda', when='+raja+cuda')
+
+    depends_on('libceed@0.6:', when='+libceed')
+    depends_on('libceed+cuda', when='+libceed+cuda')
+
+    depends_on('umpire@2.0.0:', when='+umpire')
+    depends_on('umpire+cuda', when='+umpire+cuda')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
@@ -237,18 +271,47 @@ class Mfem(Package):
         def yes_no(varstr):
             return 'YES' if varstr in self.spec else 'NO'
 
+        # See also find_system_libraries in lib/spack/llnl/util/filesystem.py
+        # where the same list of paths is used.
+        sys_lib_paths = [
+            '/lib64',
+            '/lib',
+            '/usr/lib64',
+            '/usr/lib',
+            '/usr/local/lib64',
+            '/usr/local/lib']
+
+        def is_sys_lib_path(dir):
+            return dir in sys_lib_paths
+
+        xcompiler = ''
+        xlinker = '-Wl,'
+        if '+cuda' in spec:
+            xcompiler = '-Xcompiler='
+            xlinker = '-Xlinker='
+        cuda_arch = spec.variants['cuda_arch'].value
+
         # We need to add rpaths explicitly to allow proper export of link flags
         # from within MFEM.
 
         # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
+        # Also does not add system library paths as defined by 'sys_lib_paths'
+        # above -- this is done to avoid issues like this:
+        # https://github.com/mfem/mfem/issues/1088.
         def ld_flags_from_library_list(libs_list):
-            flags = ['-Wl,-rpath,%s' % dir for dir in libs_list.directories]
-            flags += [libs_list.ld_flags]
+            flags = ['%s-rpath,%s' % (xlinker, dir)
+                     for dir in libs_list.directories
+                     if not is_sys_lib_path(dir)]
+            flags += ['-L%s' % dir for dir in libs_list.directories
+                      if not is_sys_lib_path(dir)]
+            flags += [libs_list.link_flags]
             return ' '.join(flags)
 
         def ld_flags_from_dirs(pkg_dirs_list, pkg_libs_list):
-            flags = ['-Wl,-rpath,%s' % dir for dir in pkg_dirs_list]
-            flags += ['-L%s' % dir for dir in pkg_dirs_list]
+            flags = ['%s-rpath,%s' % (xlinker, dir) for dir in pkg_dirs_list
+                     if not is_sys_lib_path(dir)]
+            flags += ['-L%s' % dir for dir in pkg_dirs_list
+                      if not is_sys_lib_path(dir)]
             flags += ['-l%s' % lib for lib in pkg_libs_list]
             return ' '.join(flags)
 
@@ -265,6 +328,9 @@ class Mfem(Package):
         if ('+metis' in spec) and spec['metis'].satisfies('@5:'):
             metis5_str = 'YES'
 
+        zlib_var = 'MFEM_USE_ZLIB' if (spec.satisfies('@4.1.0:')) else \
+                   'MFEM_USE_GZSTREAM'
+
         options = [
             'PREFIX=%s' % prefix,
             'MFEM_USE_MEMALLOC=YES',
@@ -273,32 +339,41 @@ class Mfem(Package):
             # compiler is defined by env['SPACK_CXX'].
             'CXX=%s' % env['CXX'],
             'MFEM_USE_LIBUNWIND=%s' % yes_no('+libunwind'),
-            'MFEM_USE_GZSTREAM=%s' % yes_no('+gzstream'),
+            '%s=%s' % (zlib_var, yes_no('+zlib')),
             'MFEM_USE_METIS=%s' % yes_no('+metis'),
             'MFEM_USE_METIS_5=%s' % metis5_str,
             'MFEM_THREAD_SAFE=%s' % yes_no('+threadsafe'),
             'MFEM_USE_MPI=%s' % yes_no('+mpi'),
             'MFEM_USE_LAPACK=%s' % yes_no('+lapack'),
             'MFEM_USE_SUPERLU=%s' % yes_no('+superlu-dist'),
+            'MFEM_USE_STRUMPACK=%s' % yes_no('+strumpack'),
             'MFEM_USE_SUITESPARSE=%s' % yes_no('+suite-sparse'),
             'MFEM_USE_SUNDIALS=%s' % yes_no('+sundials'),
             'MFEM_USE_PETSC=%s' % yes_no('+petsc'),
             'MFEM_USE_PUMI=%s' % yes_no('+pumi'),
+            'MFEM_USE_GSLIB=%s' % yes_no('+gslib'),
             'MFEM_USE_NETCDF=%s' % yes_no('+netcdf'),
             'MFEM_USE_MPFR=%s' % yes_no('+mpfr'),
             'MFEM_USE_GNUTLS=%s' % yes_no('+gnutls'),
             'MFEM_USE_OPENMP=%s' % yes_no('+openmp'),
-            'MFEM_USE_CONDUIT=%s' % yes_no('+conduit')]
-
-        if spec.satisfies('@4.0.0:'):
-            options += ['MFEM_USE_OCCA=%s' % yes_no('+occa'),
-                        'MFEM_USE_RAJA=%s' % yes_no('+raja')]
+            'MFEM_USE_CONDUIT=%s' % yes_no('+conduit'),
+            'MFEM_USE_CUDA=%s' % yes_no('+cuda'),
+            'MFEM_USE_OCCA=%s' % yes_no('+occa'),
+            'MFEM_USE_RAJA=%s' % yes_no('+raja'),
+            'MFEM_USE_CEED=%s' % yes_no('+libceed'),
+            'MFEM_USE_UMPIRE=%s' % yes_no('+umpire')]
 
         cxxflags = spec.compiler_flags['cxxflags']
-        if self.spec.satisfies('@4.0:'):
-            cxxflags.append(self.compiler.cxx11_flag)
 
         if cxxflags:
+            cxxflags = [(xcompiler + flag) for flag in cxxflags]
+            if '+cuda' in spec:
+                cxxflags += [
+                    '-x=cu --expt-extended-lambda -arch=%s' % cuda_arch,
+                    '-ccbin %s' % (spec['mpi'].mpicxx if '+mpi' in spec
+                                   else env['CXX'])]
+            if self.spec.satisfies('@4.0.0:'):
+                cxxflags.append(self.compiler.cxx11_flag)
             # The cxxflags are set by the spack c++ compiler wrapper. We also
             # set CXXFLAGS explicitly, for clarity, and to properly export the
             # cxxflags in the variable MFEM_CXXFLAGS in config.mk.
@@ -307,7 +382,9 @@ class Mfem(Package):
         if '~static' in spec:
             options += ['STATIC=NO']
         if '+shared' in spec:
-            options += ['SHARED=YES', 'PICFLAG=%s' % self.compiler.pic_flag]
+            options += [
+                'SHARED=YES', 'PICFLAG=%s' % self.compiler.cxx_pic_flag
+            ]
 
         if '+mpi' in spec:
             options += ['MPICXX=%s' % spec['mpi'].mpicxx]
@@ -323,7 +400,7 @@ class Mfem(Package):
             options += [
                 'METIS_OPT=-I%s' % spec['metis'].prefix.include,
                 'METIS_LIB=%s' %
-                ld_flags_from_dirs([spec['metis'].prefix.lib], ['metis'])]
+                ld_flags_from_library_list(spec['metis'].libs)]
 
         if '+lapack' in spec:
             lapack_blas = spec['lapack'].libs + spec['blas'].libs
@@ -337,10 +414,41 @@ class Mfem(Package):
                 'SUPERLU_OPT=-I%s -I%s' %
                 (spec['superlu-dist'].prefix.include,
                  spec['parmetis'].prefix.include),
-                'SUPERLU_LIB=-L%s -L%s -lsuperlu_dist -lparmetis %s' %
-                (spec['superlu-dist'].prefix.lib,
-                 spec['parmetis'].prefix.lib,
+                'SUPERLU_LIB=%s %s' %
+                (ld_flags_from_dirs([spec['superlu-dist'].prefix.lib,
+                                     spec['parmetis'].prefix.lib],
+                                    ['superlu_dist', 'parmetis']),
                  ld_flags_from_library_list(lapack_blas))]
+
+        if '+strumpack' in spec:
+            strumpack = spec['strumpack']
+            sp_opt = ['-I%s' % strumpack.prefix.include]
+            sp_lib = [ld_flags_from_library_list(strumpack.libs)]
+            # Parts of STRUMPACK use fortran, so we need to link with the
+            # fortran library and also the MPI fortran library:
+            if '~shared' in strumpack:
+                if os.path.basename(env['FC']) == 'gfortran':
+                    sp_lib += ['-lgfortran']
+                if '^mpich' in strumpack:
+                    sp_lib += ['-lmpifort']
+                elif '^openmpi' in strumpack:
+                    sp_lib += ['-lmpi_mpifh']
+            if '+openmp' in strumpack:
+                sp_opt += [self.compiler.openmp_flag]
+            if '^scalapack' in strumpack:
+                scalapack = strumpack['scalapack']
+                sp_opt += ['-I%s' % scalapack.prefix.include]
+                sp_lib += [ld_flags_from_dirs([scalapack.prefix.lib],
+                                              ['scalapack'])]
+            if '+butterflypack' in strumpack:
+                bp = strumpack['butterflypack']
+                sp_opt += ['-I%s' % bp.prefix.include]
+                sp_lib += [ld_flags_from_dirs([bp.prefix.lib],
+                                              ['dbutterflypack',
+                                               'zbutterflypack'])]
+            options += [
+                'STRUMPACK_OPT=%s' % ' '.join(sp_opt),
+                'STRUMPACK_LIB=%s' % ' '.join(sp_lib)]
 
         if '+suite-sparse' in spec:
             ss_spec = 'suite-sparse:' + self.suitesparse_components
@@ -357,14 +465,24 @@ class Mfem(Package):
                 ld_flags_from_library_list(spec[sun_spec].libs)]
 
         if '+petsc' in spec:
-            # options += ['PETSC_DIR=%s' % spec['petsc'].prefix]
             options += [
                 'PETSC_OPT=%s' % spec['petsc'].headers.cpp_flags,
                 'PETSC_LIB=%s' %
                 ld_flags_from_library_list(spec['petsc'].libs)]
 
         if '+pumi' in spec:
-            options += ['PUMI_DIR=%s' % spec['pumi'].prefix]
+            pumi_libs = ['pumi', 'crv', 'ma', 'mds', 'apf', 'pcu', 'gmi',
+                         'parma', 'lion', 'mth', 'apf_zoltan', 'spr']
+            options += [
+                'PUMI_OPT=-I%s' % spec['pumi'].prefix.include,
+                'PUMI_LIB=%s' %
+                ld_flags_from_dirs([spec['pumi'].prefix.lib], pumi_libs)]
+
+        if '+gslib' in spec:
+            options += [
+                'GSLIB_OPT=-I%s' % spec['gslib'].prefix.include,
+                'GSLIB_LIB=%s' %
+                ld_flags_from_dirs([spec['gslib'].prefix.lib], ['gs'])]
 
         if '+netcdf' in spec:
             options += [
@@ -372,7 +490,7 @@ class Mfem(Package):
                 'NETCDF_LIB=%s' %
                 ld_flags_from_dirs([spec['netcdf-c'].prefix.lib], ['netcdf'])]
 
-        if '+gzstream' in spec:
+        if '+zlib' in spec:
             if "@:3.3.2" in spec:
                 options += ['ZLIB_DIR=%s' % spec['zlib'].prefix]
             else:
@@ -407,19 +525,33 @@ class Mfem(Package):
         if '+openmp' in spec:
             options += ['OPENMP_OPT=%s' % self.compiler.openmp_flag]
 
+        if '+cuda' in spec:
+            options += [
+                'CUDA_CXX=%s' % join_path(spec['cuda'].prefix, 'bin', 'nvcc'),
+                'CUDA_ARCH=%s' % cuda_arch]
+
         if '+occa' in spec:
-            options += ['OCCA_DIR=%s' % spec['occa'].prefix,
-                        'OCCA_OPT=-I%s' % spec['occa'].prefix.include,
+            options += ['OCCA_OPT=-I%s' % spec['occa'].prefix.include,
                         'OCCA_LIB=%s' %
                         ld_flags_from_dirs([spec['occa'].prefix.lib],
                                            ['occa'])]
 
         if '+raja' in spec:
-            options += ['RAJA_DIR=%s' % spec['raja'].prefix,
-                        'RAJA_OPT=-I%s' % spec['raja'].prefix.include,
+            options += ['RAJA_OPT=-I%s' % spec['raja'].prefix.include,
                         'RAJA_LIB=%s' %
                         ld_flags_from_dirs([spec['raja'].prefix.lib],
                                            ['RAJA'])]
+
+        if '+libceed' in spec:
+            options += ['CEED_OPT=-I%s' % spec['libceed'].prefix.include,
+                        'CEED_LIB=%s' %
+                        ld_flags_from_dirs([spec['libceed'].prefix.lib],
+                                           ['ceed'])]
+
+        if '+umpire' in spec:
+            options += ['UMPIRE_OPT=-I%s' % spec['umpire'].prefix.include,
+                        'UMPIRE_LIB=%s' %
+                        ld_flags_from_library_list(spec['umpire'].libs)]
 
         timer_ids = {'std': '0', 'posix': '2', 'mac': '4', 'mpi': '6'}
         timer = spec.variants['timer'].value

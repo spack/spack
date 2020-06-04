@@ -14,6 +14,7 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "https://www.sqlite.org"
 
+    version('3.31.1', sha256='62284efebc05a76f909c580ffa5c008a7d22a1287285d68b7825a2b6b51949ae')
     version('3.30.1', sha256='8c5a50db089bd2a1b08dbc5b00d2027602ca7ff238ba7658fabca454d4298e60')
     version('3.30.0', sha256='e0a8cf4c7a87455e55e10413d16f358ca121ccec687fe1301eac95e2d340fc58')
     version('3.29.0', sha256='8e7c1e2950b5b04c5944a981cb31fffbf9d2ddda939d536838ebc854481afd5b')
@@ -71,7 +72,9 @@ class Sqlite(AutotoolsPackage):
             ''.join(['%02d' % v for v in full_version[1:]])
         # See https://sqlite.org/chronology.html for version -> year
         # correspondence.
-        if version >= Version('3.27.0'):
+        if version >= Version('3.31.0'):
+            year = '2020'
+        elif version >= Version('3.27.0'):
             year = '2019'
         elif version >= Version('3.22.0'):
             year = '2018'
@@ -122,6 +125,6 @@ class Sqlite(AutotoolsPackage):
         if '+functions' in self.spec:
             libraryname = 'libsqlitefunctions.' + dso_suffix
             cc = Executable(spack_cc)
-            cc(self.compiler.pic_flag, '-lm', '-shared',
+            cc(self.compiler.cc_pic_flag, '-lm', '-shared',
                 'extension-functions.c', '-o', libraryname)
             install(libraryname, self.prefix.lib)

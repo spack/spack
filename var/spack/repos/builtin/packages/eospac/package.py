@@ -15,7 +15,7 @@ class Eospac(Package):
     homepage = "http://laws.lanl.gov/projects/data/eos.html"
     list_url = "http://laws.lanl.gov/projects/data/eos/eospacReleases.php"
 
-    version('6.4.0',       sha256='15a953beac735c68431afe86ffe33323d540d0fbbbec03ba79438dd29736051d',
+    version('6.4.0',       sha256='15a953beac735c68431afe86ffe33323d540d0fbbbec03ba79438dd29736051d', preferred=True,
             url="http://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0_612ea8c9b8ffa6d9175d9118955571d9107f1e3c.tgz")
     version('6.4.0beta.4', sha256='0ebfd8badff575ea77444aa978629dbdca3135a0b5eb373b8daba058773d4635',
             url="http://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.4_aff6429bb6868de31a980278bafa13487c2ce83f.tgz")
@@ -25,7 +25,7 @@ class Eospac(Package):
             url="http://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.2_69196eadbc77506561eef711f19d2f03b4ab0ffa.tgz")
     version('6.4.0beta.1', sha256='14c5c804e5f628f41e8ed80bcee5a80adeb6c6f3d130715421ca99a30c7eb7e2',
             url="http://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.1_r20171213193219.tgz")
-    version('6.3.1',       sha256='aa1112c4251c9c3c2883a7ab2c7f2abff2c339f29dbbf8421ef88b0c9df904f8', preferred=True,
+    version('6.3.1',       sha256='aa1112c4251c9c3c2883a7ab2c7f2abff2c339f29dbbf8421ef88b0c9df904f8',
             url="http://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.3.1_r20161202150449.tgz")
 
     # This patch allows the use of spack's compile wrapper 'flang'

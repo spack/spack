@@ -21,9 +21,12 @@ class F18(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo'))
 
+    variant('fir', default='False', description='Build with support for FIR')
+
     # Dependencies
     depends_on('cmake@3.9.0:', type='build')
-    depends_on('llvm+clang@7:')
+    depends_on('llvm+clang@9:', when='~fir')
+    depends_on('llvm+clang+mlir@10.0.1:', when='+fir')
 
     # Conflicts
     compiler_warning = 'F18 requires a compiler with support for C++17'
@@ -31,3 +34,23 @@ class F18(CMakePackage):
     conflicts('%gcc@:7.1', msg=compiler_warning)
     conflicts('%intel', msg=compiler_warning)
     conflicts('%pgi', msg=compiler_warning)
+
+    def cmake_args(self):
+        spec = self.spec
+        args = ['-DLLVM_DIR=%s' % self.spec['llvm'].prefix.lib.cmake.llvm]
+        # Tests have linking errors with older compilers (before GCC 8.x).
+        # Don't build tests for now.
+        # https://bugs.llvm.org/show_bug.cgi?id=45463
+        if self.run_tests:
+            args.append('-DFLANG_INCLUDE_TESTS:BOOL=ON')
+        else:
+            args.append('-DFLANG_INCLUDE_TESTS:BOOL=OFF')
+
+        if '+fir' in spec:
+            args.append('-DLINK_WITH_FIR:BOOL=ON')
+            args.append(
+                '-DMLIR_DIR=%s' % self.spec['llvm'].prefix.lib.cmake.mlir)
+        else:
+            args.append('-DLINK_WITH_FIR:BOOL=OFF')
+
+        return args

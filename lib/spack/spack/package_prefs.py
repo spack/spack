@@ -6,7 +6,6 @@
 import stat
 
 from six import string_types
-from six import iteritems
 
 import spack.repo
 import spack.error
@@ -21,27 +20,6 @@ _lesser_spec_types = {'compiler': spack.spec.CompilerSpec,
 def _spec_type(component):
     """Map from component name to spec type for package prefs."""
     return _lesser_spec_types.get(component, spack.spec.Spec)
-
-
-def get_packages_config():
-    """Wrapper around get_packages_config() to validate semantics."""
-    config = spack.config.get('packages')
-
-    # Get a list of virtuals from packages.yaml.  Note that because we
-    # check spack.repo, this collects virtuals that are actually provided
-    # by sometihng, not just packages/names that don't exist.
-    # So, this won't include, e.g., 'all'.
-    virtuals = [(pkg_name, pkg_name._start_mark) for pkg_name in config
-                if spack.repo.path.is_virtual(pkg_name)]
-
-    # die if there are virtuals in `packages.py`
-    if virtuals:
-        errors = ["%s: %s" % (line_info, name) for name, line_info in virtuals]
-        raise VirtualInPackagesYAMLError(
-            "packages.yaml entries cannot be virtual packages:",
-            '\n'.join(errors))
-
-    return config
 
 
 class PackagePrefs(object):
@@ -116,7 +94,7 @@ class PackagePrefs(object):
             pkglist.append('all')
 
         for pkg in pkglist:
-            pkg_entry = get_packages_config().get(pkg)
+            pkg_entry = spack.config.get('packages').get(pkg)
             if not pkg_entry:
                 continue
 
@@ -160,7 +138,8 @@ class PackagePrefs(object):
     def preferred_variants(cls, pkg_name):
         """Return a VariantMap of preferred variants/values for a spec."""
         for pkg in (pkg_name, 'all'):
-            variants = get_packages_config().get(pkg, {}).get('variants', '')
+            variants = spack.config.get('packages').get(pkg, {}).get(
+                'variants', '')
             if variants:
                 break
 
@@ -181,33 +160,29 @@ def spec_externals(spec):
     # break circular import.
     from spack.util.module_cmd import get_path_from_module # NOQA: ignore=F401
 
-    allpkgs = get_packages_config()
-    name = spec.name
+    allpkgs = spack.config.get('packages')
+    names = set([spec.name])
+    names |= set(vspec.name for vspec in spec.package.virtuals_provided)
 
     external_specs = []
-    pkg_paths = allpkgs.get(name, {}).get('paths', None)
-    pkg_modules = allpkgs.get(name, {}).get('modules', None)
-    if (not pkg_paths) and (not pkg_modules):
-        return []
-
-    for external_spec, path in iteritems(pkg_paths):
-        if not path:
-            # skip entries without paths (avoid creating extra Specs)
+    for name in names:
+        pkg_config = allpkgs.get(name, {})
+        pkg_paths = pkg_config.get('paths', {})
+        pkg_modules = pkg_config.get('modules', {})
+        if (not pkg_paths) and (not pkg_modules):
             continue
 
-        external_spec = spack.spec.Spec(external_spec,
-                                        external_path=canonicalize_path(path))
-        if external_spec.satisfies(spec):
-            external_specs.append(external_spec)
+        for external_spec, path in pkg_paths.items():
+            external_spec = spack.spec.Spec(
+                external_spec, external_path=canonicalize_path(path))
+            if external_spec.satisfies(spec):
+                external_specs.append(external_spec)
 
-    for external_spec, module in iteritems(pkg_modules):
-        if not module:
-            continue
-
-        external_spec = spack.spec.Spec(
-            external_spec, external_module=module)
-        if external_spec.satisfies(spec):
-            external_specs.append(external_spec)
+        for external_spec, module in pkg_modules.items():
+            external_spec = spack.spec.Spec(
+                external_spec, external_module=module)
+            if external_spec.satisfies(spec):
+                external_specs.append(external_spec)
 
     # defensively copy returned specs
     return [s.copy() for s in external_specs]
@@ -215,12 +190,17 @@ def spec_externals(spec):
 
 def is_spec_buildable(spec):
     """Return true if the spec pkgspec is configured as buildable"""
-    allpkgs = get_packages_config()
-    if spec.name not in allpkgs:
-        return True
-    if 'buildable' not in allpkgs[spec.name]:
-        return True
-    return allpkgs[spec.name]['buildable']
+
+    allpkgs = spack.config.get('packages')
+    all_buildable = allpkgs.get('all', {}).get('buildable', True)
+
+    # Get the list of names for which all_buildable is overridden
+    reverse = [name for name, entry in allpkgs.items()
+               if entry.get('buildable', all_buildable) != all_buildable]
+    # Does this spec override all_buildable
+    spec_reversed = (spec.name in reverse or
+                     any(spec.package.provides(name) for name in reverse))
+    return not all_buildable if spec_reversed else all_buildable
 
 
 def get_package_dir_permissions(spec):
@@ -230,7 +210,7 @@ def get_package_dir_permissions(spec):
     attribute sticky for the directory. Package-specific settings take
     precedent over settings for ``all``"""
     perms = get_package_permissions(spec)
-    if perms & stat.S_IRWXG:
+    if perms & stat.S_IRWXG and spack.config.get('config:allow_sgid', True):
         perms |= stat.S_ISGID
     return perms
 

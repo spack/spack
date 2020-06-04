@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libxprintapputil(AutotoolsPackage):
+class Libxprintapputil(AutotoolsPackage, XorgPackage):
     """Xprint application utility routines."""
 
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXprintAppUtil/"
-    url      = "https://www.x.org/archive/individual/lib/libXprintAppUtil-1.0.1.tar.gz"
+    xorg_mirror_path = "lib/libXprintAppUtil-1.0.1.tar.gz"
 
     version('1.0.1', sha256='5af3939ffe15508b942bc1e325a29a95b1c85e8900a5f65a896101e63048bbf7')
 

@@ -30,6 +30,9 @@ class Ncl(Package):
     patch('ymake-filter.patch', when="@6.4.0")
     # ymake additional local library and includes will be filtered improperly
     patch('ymake.patch', when="@6.4.0:")
+    # ncl does not build with gcc@10:
+    # https://github.com/NCAR/ncl/issues/123
+    patch('https://src.fedoraproject.org/rpms/ncl/raw/12778c55142b5b1ccc26dfbd7857da37332940c2/f/ncl-boz.patch', when='%gcc@10:', sha256='64f3502c9deab48615a4cbc26073173081c0774faf75778b044d251e45d238f7')
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
@@ -48,7 +51,7 @@ class Ncl(Package):
     # Extra dependencies that may be missing from build system:
     depends_on('bison', type='build')
     depends_on('flex+lex')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('tcsh')
 
     # Also, the manual says that ncl requires zlib, but that comes as a
@@ -57,7 +60,7 @@ class Ncl(Package):
     # The following dependencies are required, otherwise several components
     # fail to compile:
     depends_on('curl')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('libx11')
     depends_on('libxaw')
     depends_on('libxmu')
@@ -143,6 +146,10 @@ class Ncl(Package):
             fc_flags.append('-fp-model precise')
             cc_flags.append('-fp-model precise')
             c2f_flags.extend(['-lifcore', '-lifport'])
+
+        if self.spec.satisfies('%gcc@10:'):
+            fc_flags.append('-fallow-argument-mismatch')
+            cc_flags.append('-fcommon')
 
         with open('./config/Spack', 'w') as f:
             f.writelines([

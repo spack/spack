@@ -14,8 +14,10 @@ class PyPytest(PythonPackage):
 
     import_modules = ['pytest']
 
+    version('5.3.4', sha256='1d122e8be54d1a709e56f82e2d85dcba3018313d64647f38a91aec88c239b600')
     version('5.2.1', sha256='ca563435f4941d0cb34767301c27bc65c510cb82e90b9ecf9cb52dc2c63caaa0')
     version('5.1.1', sha256='c3d5020755f70c82eceda3feaf556af9a341334414a8eca521a18f463bcead88')
+    version('4.6.9', sha256='19e8f75eac01dd3f211edd465b39efbcbdc8fc5f7866d7dd49fedb30d8adf339')
     version('4.6.5', sha256='8fc39199bdda3d9d025d3b1f4eb99a192c20828030ea7c9a0d2840721de7d347')
     version('4.6.2', sha256='bea27a646a3d74cbbcf8d3d4a06b2dfc336baf3dc2cc85cf70ad0157e73e8322')
     version('4.3.0', sha256='067a1d4bf827ffdd56ad21bd46674703fce77c5957f6c1eef731f6146bfcef1c')
@@ -46,8 +48,8 @@ class PyPytest(PythonPackage):
     depends_on('py-attrs@17.2.0:', when='@3.3:3.4', type=('build', 'run'))
     depends_on('py-attrs@17.4.0:', when='@3.5:', type=('build', 'run'))
     depends_on('py-more-itertools@4.0.0:', when='@3.5.1:', type=('build', 'run'))
-    depends_on('py-more-itertools@4.0.0:6.0.0', when='@4.2.1:4.6.5 ^python@:2', type=('build', 'run'))
-    depends_on('py-atomicwrites@1.0:', when='@3.6:', type=('build', 'run'))
+    depends_on('py-more-itertools@4.0.0:6.0.0', when='@4.2.1:4.6.9 ^python@:2', type=('build', 'run'))
+    depends_on('py-atomicwrites@1.0:', when='@3.6:5.2.999', type=('build', 'run'))
     depends_on('py-pluggy@0.12:0.999', when='@4.6:', type=('build', 'run'))
     depends_on('py-pluggy@0.9.0:0.9.999,0.11:0.999', when='@4.5.0:4.5.999', type=('build', 'run'))
     depends_on('py-pluggy@0.11:', when='@4.4.2:4.4.999', type=('build', 'run'))

@@ -19,6 +19,7 @@ class PyDgl(CMakePackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master', submodules=True)
+    version('0.4.3', tag='0.4.3', submodules=True)
     version('0.4.2', tag='0.4.2', submodules=True)
 
     variant('cuda',   default=True, description='Build with CUDA')
@@ -31,6 +32,7 @@ class PyDgl(CMakePackage):
     depends_on('llvm-openmp', when='%clang platform=darwin +openmp')
 
     # Python dependencies
+    # See python/setup.py
     extends('python')
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
@@ -38,12 +40,17 @@ class PyDgl(CMakePackage):
     depends_on('py-numpy@1.14.0:', type=('build', 'run'))
     depends_on('py-scipy@1.1.0:', type=('build', 'run'))
     depends_on('py-networkx@2.1:', type=('build', 'run'))
+    depends_on('py-requests@2.19.0:', when='@0.4.3:', type=('build', 'run'))
 
     # Backends
-    depends_on('py-torch@0.4.1:',    when='backend=pytorch',    type='run')
-    depends_on('mxnet@1.5:',         when='backend=mxnet',      type='run')
+    # See https://github.com/dmlc/dgl#installation
+    depends_on('py-torch@1.2.0:', when='@0.4.3: backend=pytorch', type='run')
+    depends_on('py-torch@0.4.1:', when='backend=pytorch', type='run')
+    depends_on('mxnet@1.5.1:', when='@0.4.3: backend=pytorch', type='run')
+    depends_on('mxnet@1.5.0:', when='backend=mxnet', type='run')
+    depends_on('py-tensorflow@2.1:', when='@0.4.3: backend=tensorflow', type='run')
     depends_on('py-tensorflow@2.0:', when='backend=tensorflow', type='run')
-    depends_on('py-tfdlpack',        when='backend=tensorflow', type='run')
+    depends_on('py-tfdlpack', when='backend=tensorflow', type='run')
 
     build_directory = 'build'
 

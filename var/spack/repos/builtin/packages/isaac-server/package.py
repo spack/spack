@@ -17,6 +17,7 @@ class IsaacServer(CMakePackage):
 
     version('develop', branch='dev')
     version('master', branch='master')
+    version('1.5.0', sha256='4d5a150dfe064289d760da368102172f84e9e8851a177c8125a56e151db58dce')
     version('1.4.0', sha256='6cbd4cc54a22de5e5a3427e44141db6e7b80b33fe7a0c707390a113655bf344e')
     version('1.3.3', sha256='92a972d05d315ad66546671c047b7edf8ed0e05d64d2b8d77ababb5bb9b93d8e')
     version('1.3.2', sha256='e6eedc641de5b0a7c5ea5cda6b11e9b6d4a78dfac8be90302147b26d09859a68')
