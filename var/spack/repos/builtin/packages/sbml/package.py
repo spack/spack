@@ -61,7 +61,7 @@ class Sbml(CMakePackage):
 
     variant('cpp', default=False,
             description="All c++ includes should be under a namespace")
-    
+
     depends_on('swig@2:', type='build')
     depends_on('cmake', type='build')
     depends_on('zlib')
