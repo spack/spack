@@ -309,14 +309,14 @@ def list_url(url):
             for key in _iter_s3_prefix(s3, url)))
 
 
-def spider(roots, depth=0, concurrency=128):
+def spider(root_urls, depth=0, concurrency=128):
     """Get web pages from root URLs.
 
     If depth is specified (e.g., depth=2), then this will also follow
     up to <depth> levels of links from each root.
 
     Args:
-        roots (str or list of str): root urls used as a starting point
+        root_urls (str or list of str): root urls used as a starting point
             for spidering
         depth (int): level of recursion into links
         concurrency (int): number of simultaneous requests that can be sent
@@ -423,8 +423,8 @@ def spider(roots, depth=0, concurrency=128):
             return func(*args)
         return _wrapper
 
-    if isinstance(roots, six.string_types):
-        roots = [roots]
+    if isinstance(root_urls, six.string_types):
+        root_urls = [root_urls]
 
     # Clear the local cache of visited pages before starting the search
     _visited.clear()
@@ -433,7 +433,7 @@ def spider(roots, depth=0, concurrency=128):
     pages, links, spider_args = {}, set(), []
 
     collect = current_depth < depth
-    for root in roots:
+    for root in root_urls:
         root = url_util.parse(root)
         spider_args.append((root, root, collect))
 
