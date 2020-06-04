@@ -92,6 +92,9 @@ class Openblas(MakefilePackage):
     # Fix https://github.com/xianyi/OpenBLAS/issues/2431
     # Patch derived from https://github.com/xianyi/OpenBLAS/pull/2424
     patch('openblas-0.3.8-darwin.patch', when='@0.3.8 platform=darwin')
+    # Fix ICE in LLVM 9.0.0 https://github.com/xianyi/OpenBLAS/pull/2329
+    # Patch as in https://github.com/xianyi/OpenBLAS/pull/2597
+    patch('openblas_appleclang11.patch', when='@0.3.8:0.3.9 %clang@11.0.3-apple')
 
     # Add conditions to f_check to determine the Fujitsu compiler
     patch('openblas_fujitsu.patch', when='%fj')
@@ -231,8 +234,8 @@ class Openblas(MakefilePackage):
         if '~shared' in self.spec:
             if '+pic' in self.spec:
                 make_defs.extend([
-                    'CFLAGS={0}'.format(self.compiler.pic_flag),
-                    'FFLAGS={0}'.format(self.compiler.pic_flag)
+                    'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
+                    'FFLAGS={0}'.format(self.compiler.f77_pic_flag)
                 ])
             make_defs += ['NO_SHARED=1']
         # fix missing _dggsvd_ and _sggsvd_

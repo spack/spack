@@ -7,13 +7,16 @@ from spack import *
 
 
 class Libc(Package):
-    """Dummy libc package to provide `iconv` virtual package"""
+    """Dummy package to provide interfaces available in libc."""
 
     homepage = "https://en.wikipedia.org/wiki/C_standard_library"
-    url      = ""
     has_code = False
     phases = []
 
     version('1.0')  # Dummy
-    variant('iconv', default=False, description='Set to True if libc provides iconv')
+
+    variant('iconv', default=False, description='Provides interfaces for Localization Functions')
+    variant('rpc', default=False, description='Provides interfaces for RPC')
+
     provides('iconv', when='+iconv')
+    provides('rpc', when='+rpc')

@@ -753,7 +753,7 @@ def purge():
 
 def get_checksums_for_versions(
         url_dict, name, first_stage_function=None, keep_stage=False,
-        fetch_options=None):
+        fetch_options=None, batch=False):
     """Fetches and checksums archives from URLs.
 
     This function is called by both ``spack checksum`` and ``spack
@@ -767,6 +767,8 @@ def get_checksums_for_versions(
         first_stage_function (callable): function that takes a Stage and a URL;
             this is run on the stage of the first URL downloaded
         keep_stage (bool): whether to keep staging area when command completes
+        batch (bool): whether to ask user how many versions to fetch (false)
+            or fetch all versions (true)
         fetch_options (dict): Options used for the fetcher (such as timeout
             or cookies)
 
@@ -788,8 +790,11 @@ def get_checksums_for_versions(
                  for v in sorted_versions]))
     print()
 
-    archives_to_fetch = tty.get_number(
-        "How many would you like to checksum?", default=1, abort='q')
+    if batch:
+        archives_to_fetch = len(sorted_versions)
+    else:
+        archives_to_fetch = tty.get_number(
+            "How many would you like to checksum?", default=1, abort='q')
 
     if not archives_to_fetch:
         tty.die("Aborted.")

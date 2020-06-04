@@ -20,12 +20,16 @@ class Hdf5(AutotoolsPackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
+    maintainers = ['lrknox']
 
     version('develop', branch='develop')
 
     version('1.12.0', sha256='a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a')
 
-    version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa')
+    # HDF5 1.12 broke API compatibility, so we currently prefer the latest
+    # 1.10 release.  packages that want later versions of HDF5 should specify,
+    # e.g., depends_on("hdf5@1.12:") to get 1.12 or higher.
+    version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa', preferred=True)
     version('1.10.5', sha256='6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8')
     version('1.10.4', sha256='8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
     version('1.10.3', sha256='b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')
@@ -60,6 +64,13 @@ class Hdf5(AutotoolsPackage):
     variant('szip', default=False, description='Enable szip support')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
+    # Build HDF5 with API compaitibility.
+    variant('api', default='none', description='choose api compatibility', values=('v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
+
+    conflicts('api=v114', when='@1.6:1.12.99', msg='v114 is not compatible with this release')
+    conflicts('api=v112', when='@1.6:1.10.99', msg='v112 is not compatible with this release')
+    conflicts('api=v110', when='@1.6:1.8.99', msg='v110 is not compatible with this release')
+    conflicts('api=v18', when='@1.6:1.6.99', msg='v18 is not compatible with this release')
 
     depends_on('autoconf', type='build', when='@develop')
     depends_on('automake', type='build', when='@develop')
@@ -227,6 +238,10 @@ class Hdf5(AutotoolsPackage):
         extra_args += self.enable_or_disable('hl')
         extra_args += self.enable_or_disable('fortran')
 
+        api = self.spec.variants['api'].value
+        if api != 'none':
+            extra_args.append('--with-default-api-version=' + api)
+
         if '+szip' in self.spec:
             extra_args.append('--with-szlib=%s' % self.spec['szip'].prefix)
         else:
@@ -256,8 +271,11 @@ class Hdf5(AutotoolsPackage):
             extra_args.append('--enable-static-exec')
 
         if '+pic' in self.spec:
-            extra_args += ['%s=%s' % (f, self.compiler.pic_flag)
-                           for f in ['CFLAGS', 'CXXFLAGS', 'FCFLAGS']]
+            extra_args.extend([
+                'CFLAGS='   + self.compiler.cc_pic_flag,
+                'CXXFLAGS=' + self.compiler.cxx_pic_flag,
+                'FCFLAGS='  + self.compiler.fc_pic_flag,
+            ])
 
         if '+mpi' in self.spec:
             # The HDF5 configure script warns if cxx and mpi are enabled

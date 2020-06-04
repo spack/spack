@@ -42,13 +42,10 @@
 spack() {
     # Store LD_LIBRARY_PATH variables from spack shell function
     # This is necessary because MacOS System Integrity Protection clears
-    # (DY?)LD_LIBRARY_PATH variables on process start.
-    if [ -n "${LD_LIBRARY_PATH-}" ]; then
-        export SPACK_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-    fi
-    if [ -n "${DYLD_LIBRARY_PATH-}" ]; then
-        export SPACK_DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
-    fi
+    # variables that affect dyld on process start.
+    for var in LD_LIBRARY_PATH DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH; do
+        eval "if [ -n \"\${${var}-}\" ]; then export SPACK_$var=\${${var}}; fi"
+    done
 
     # Zsh does not do word splitting by default, this enables it for this
     # function only
@@ -115,31 +112,44 @@ spack() {
             else
                 case $_sp_arg in
                     activate)
-                        _a="$@"
+                        # Get --sh, --csh, or -h/--help arguments.
+                        # Space needed here becauses regexes start with a space
+                        # and `-h` may be the only argument.
+                        _a=" $@"
+                        # Space needed here to differentiate between `-h`
+                        # argument and environments with "-h" in the name.
+                        # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
                         if [ -z ${1+x} ] || \
-                           [ "${_a#*--sh}" != "$_a" ] || \
-                           [ "${_a#*--csh}" != "$_a" ] || \
-                           [ "${_a#*-h}" != "$_a" ];
+                           [ "${_a#* --sh}" != "$_a" ] || \
+                           [ "${_a#* --csh}" != "$_a" ] || \
+                           [ "${_a#* -h}" != "$_a" ] || \
+                           [ "${_a#* --help}" != "$_a" ];
                         then
-                            # no args or args contain -h/--help, --sh, or --csh: just execute
+                            # No args or args contain --sh, --csh, or -h/--help: just execute.
                             command spack env activate "$@"
                         else
-                            # actual call to activate: source the output
+                            # Actual call to activate: source the output.
                             eval $(command spack $_sp_flags env activate --sh "$@")
                         fi
                         ;;
                     deactivate)
-                        _a="$@"
-                        if [ "${_a#*--sh}" != "$_a" ] || \
-                           [ "${_a#*--csh}" != "$_a" ];
+                        # Get --sh, --csh, or -h/--help arguments.
+                        # Space needed here becauses regexes start with a space
+                        # and `-h` may be the only argument.
+                        _a=" $@"
+                        # Space needed here to differentiate between `--sh`
+                        # argument and environments with "--sh" in the name.
+                        # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
+                        if [ "${_a#* --sh}" != "$_a" ] || \
+                           [ "${_a#* --csh}" != "$_a" ];
                         then
-                            # just  execute the command if --sh or --csh are provided
+                            # Args contain --sh or --csh: just execute.
                             command spack env deactivate "$@"
                         elif [ -n "$*" ]; then
-                            # any other arguments are an error or help, so just run help
+                            # Any other arguments are an error or -h/--help: just run help.
                             command spack env deactivate -h
                         else
-                            # no args: source the output of the command
+                            # No args: source the output of the command.
                             eval $(command spack $_sp_flags env deactivate --sh)
                         fi
                         ;;
@@ -151,17 +161,19 @@ spack() {
             return
             ;;
         "load"|"unload")
-            # get --sh, --csh, --help, or -h arguments
-            # space is important for -h case to differentiate between `-h`
-            # argument and specs with "-h" in package name or variant settings
+            # Get --sh, --csh, -h, or --help arguments.
+            # Space needed here becauses regexes start with a space
+            # and `-h` may be the only argument.
             _a=" $@"
+            # Space needed here to differentiate between `-h`
+            # argument and specs with "-h" in the name.
+            # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
             if [ "${_a#* --sh}" != "$_a" ] || \
                 [ "${_a#* --csh}" != "$_a" ] || \
                 [ "${_a#* -h}" != "$_a" ] || \
                 [ "${_a#* --help}" != "$_a" ];
             then
-                # just  execute the command if --sh or --csh are provided
-                # or if the -h or --help arguments are provided
+                # Args contain --sh, --csh, or -h/--help: just execute.
                 command spack $_sp_flags $_sp_subcommand "$@"
             else
                 eval $(command spack $_sp_flags $_sp_subcommand --sh "$@" || \
@@ -229,6 +241,8 @@ _sp_shell=$(_spack_determine_shell)
 if [ "$_sp_shell" = bash ]; then
     export -f spack
 fi
+
+alias spacktivate="spack env activate"
 
 #
 # Figure out where this file is.

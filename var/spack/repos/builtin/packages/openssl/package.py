@@ -25,6 +25,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
+    version('1.1.1g', sha256='ddb04774f1e32f0c49751e21b67216ac87852ceb056b75209af2443400636d46')
+    version('1.1.1f', sha256='186c6bfe6ecfba7a5b48c47f8a1673d0f3b0e5ba2e25602dd23b629975da3f35')
     version('1.1.1e', sha256='694f61ac11cb51c9bf73f54e771ff6022b0327a43bbdfa1b2f19de1662a6dcbe')
     version('1.1.1d', sha256='1e3a91bc1f9dfce01af26026f856e064eab4c8ee0a8f457b5ae30b40b8b711f2')
     version('1.1.1c', sha256='f6fb3079ad15076154eda9413fed42877d668e7069d9b87396d0804fdb3f4c90')
@@ -32,8 +34,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.1.1a', sha256='fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41')
     version('1.1.1',  sha256='2836875a0f89c03d0fdf483941512613a50cfb421d6fd94b9f41d7279d586a3d')
 
-    # The 1.1.0 series is currently only receiving security fixes and will go
-    # out of support on 11th September 2019.
+    # The 1.1.0 series is out of support and should not be used.
     version('1.1.0l', sha256='74a2f756c64fd7386a29184dc0344f4831192d61dc2481a93a4c5dd727f41148')
     version('1.1.0k', sha256='efa4965f4f773574d6cbda1cf874dbbe455ab1c0d4f906115f867d30444470b1')
     version('1.1.0j', sha256='31bec6c203ce1a8e93d5994f4ed304c63ccf07676118b6634edded12ad1b3246')
@@ -43,9 +44,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.1.0d', sha256='7d5ebb9e89756545c156ff9c13cf2aa6214193b010a468a3bc789c3c28fe60df')
     version('1.1.0c', sha256='fc436441a2e05752d31b4e46115eb89709a28aef96d4fe786abe92409b2fd6f5')
 
-    # Our previous LTS version (1.0.2 series) will continue to be supported
-    # until 31st December 2019 (security fixes only during the last year of
-    # support).
+    # The 1.0.2 series is out of support and should not be used.
     version('1.0.2u', sha256='ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16')
     version('1.0.2t', sha256='14cb464efe7ac6b54799b34456bd69558a749a4931ecfd9cf9f71d7881cac7bc')
     version('1.0.2s', sha256='cabd5c9492825ce5bd23f3c3aeed6a97f8142f606d893df216411f07d1abab96')
@@ -63,7 +62,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.0.2e', sha256='e23ccafdb75cfcde782da0151731aa2185195ac745eea3846133f2e05c0e0bff')
     version('1.0.2d', sha256='671c36487785628a703374c652ad2cebea45fa920ae5681515df25d9f2c9a8c8')
 
-    # The 1.0.1 version is now out of support and should not be used.
+    # The 1.0.1 version is out of support and should not be used.
     version('1.0.1u', sha256='4312b4ca1215b6f2c97007503d80db80d5157f76f8f7d3febbe6b4c56ff26739')
     version('1.0.1t', sha256='4a6ee491a2fdb22e519c76fdc2a628bb3cec12762cd456861d207996c8a07088')
     version('1.0.1r', sha256='784bd8d355ed01ce98b812f873f8b2313da61df7c7b5677fcf2e57b0863a3346')
@@ -155,3 +154,6 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             if os.path.isdir(sys_certs) and not os.path.islink(pkg_certs):
                 os.rmdir(pkg_certs)
                 os.symlink(sys_certs, pkg_certs)
+
+    def setup_build_environment(self, env):
+        env.set('PERL', self.spec['perl'].prefix.bin.perl)

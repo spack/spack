@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libxdmcp(AutotoolsPackage):
+class Libxdmcp(AutotoolsPackage, XorgPackage):
     """libXdmcp - X Display Manager Control Protocol library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXdmcp"
-    url      = "https://www.x.org/archive/individual/lib/libXdmcp-1.1.2.tar.gz"
+    xorg_mirror_path = "lib/libXdmcp-1.1.2.tar.gz"
 
     version('1.1.2', sha256='6f7c7e491a23035a26284d247779174dedc67e34e93cc3548b648ffdb6fc57c0')
 

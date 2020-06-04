@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Fonttosfnt(AutotoolsPackage):
+class Fonttosfnt(AutotoolsPackage, XorgPackage):
     """Wrap a bitmap font in a sfnt (TrueType) wrapper."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/fonttosfnt"
-    url      = "https://www.x.org/archive/individual/app/fonttosfnt-1.0.4.tar.gz"
+    xorg_mirror_path = "app/fonttosfnt-1.0.4.tar.gz"
 
     version('1.0.4', sha256='3873636be5b3b8e4160070e8f9a7a9221b5bd5efbf740d7abaa9092e10732673')
 
