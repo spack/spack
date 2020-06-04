@@ -439,7 +439,7 @@ class YamlFilesystemView(FilesystemView):
         # we are currently removing, as we remove files before unlinking the
         # metadata directory.
         if len([s for s in self.get_all_specs()
-                if needs_file(s, dest)]) == 1:
+                if needs_file(s, dest)]) <= 1:
             os.remove(dest)
 
     def check_added(self, spec):
