@@ -40,9 +40,13 @@ class Cce(Compiler):
 
     version_regex = r'[Vv]ersion.*?(\d+(\.\d+)+)'
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
+
+    @property
+    def debug_flags(self):
+        return ['-g', '-G0', '-G1', '-G2', '-Gfast']
 
     @property
     def openmp_flag(self):

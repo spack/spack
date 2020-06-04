@@ -24,6 +24,7 @@ import spack.store
 import spack.schema.projections
 import spack.projections
 import spack.config
+import spack.relocate
 from spack.error import SpackError
 from spack.directory_layout import ExtensionAlreadyInstalledError
 from spack.directory_layout import YamlViewExtensionsLayout
@@ -39,6 +40,58 @@ __all__ = ["FilesystemView", "YamlFilesystemView"]
 
 
 _projections_path = '.spack/projections.yaml'
+
+
+def view_symlink(src, dst, **kwargs):
+    # keyword arguments are irrelevant
+    # here to fit required call signature
+    os.symlink(src, dst)
+
+
+def view_hardlink(src, dst, **kwargs):
+    # keyword arguments are irrelevant
+    # here to fit required call signature
+    os.link(src, dst)
+
+
+def view_copy(src, dst, view, spec=None):
+    """
+    Copy a file from src to dst.
+
+    Use spec and view to generate relocations
+    """
+    shutil.copyfile(src, dst)
+    if spec:
+        # Not metadata, we have to relocate it
+
+        # Get information on where to relocate from/to
+        prefix_to_projection = dict(
+            (dep.prefix, view.get_projection_for_spec(dep))
+            for dep in spec.traverse()
+        )
+
+        if spack.relocate.is_binary(dst):
+            # relocate binaries
+            spack.relocate.relocate_text_bin(
+                binaries=[dst],
+                orig_install_prefix=spec.prefix,
+                new_install_prefix=view.get_projection_for_spec(spec),
+                orig_spack=spack.paths.spack_root,
+                new_spack=view._root,
+                new_prefixes=prefix_to_projection
+            )
+        else:
+            # relocate text
+            spack.relocate.relocate_text(
+                files=[dst],
+                orig_layout_root=spack.store.layout.root,
+                new_layout_root=view._root,
+                orig_install_prefix=spec.prefix,
+                new_install_prefix=view.get_projection_for_spec(spec),
+                orig_spack=spack.paths.spack_root,
+                new_spack=view._root,
+                new_prefixes=prefix_to_projection
+            )
 
 
 class FilesystemView(object):
@@ -67,8 +120,11 @@ class FilesystemView(object):
         self.projections = kwargs.get('projections', {})
 
         self.ignore_conflicts = kwargs.get("ignore_conflicts", False)
-        self.link = kwargs.get("link", os.symlink)
         self.verbose = kwargs.get("verbose", False)
+
+        # Setup link function to include view
+        link_func = kwargs.get("link", view_symlink)
+        self.link = ft.partial(link_func, view=self)
 
     def add_specs(self, *specs, **kwargs):
         """
@@ -355,8 +411,6 @@ class YamlFilesystemView(FilesystemView):
         if not os.path.lexists(dest):
             tty.warn("Tried to remove %s which does not exist" % dest)
             return
-        if not os.path.islink(dest):
-            raise ValueError("%s is not a link tree!" % dest)
         # remove if dest is a hardlink/symlink to src; this will only
         # be false if two packages are merged into a prefix and have a
         # conflicting file

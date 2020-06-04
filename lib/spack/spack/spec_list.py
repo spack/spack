@@ -5,6 +5,7 @@
 import itertools
 from six import string_types
 
+import spack.variant
 from spack.spec import Spec
 from spack.error import SpackError
 
@@ -189,7 +190,18 @@ def _expand_matrix_constraints(object, specify=True):
         # Construct a combined spec to test against excludes
         flat_combo = [constraint for list in combo for constraint in list]
         ordered_combo = sorted(flat_combo, key=spec_ordering_key)
+
         test_spec = Spec(' '.join(ordered_combo))
+        # Abstract variants don't have normal satisfaction semantics
+        # Convert all variants to concrete types.
+        # This method is best effort, so all existing variants will be
+        # converted before any error is raised.
+        # Catch exceptions because we want to be able to operate on
+        # abstract specs without needing package information
+        try:
+            spack.variant.substitute_abstract_variants(test_spec)
+        except spack.variant.UnknownVariantError:
+            pass
         if any(test_spec.satisfies(x) for x in excludes):
             continue
 

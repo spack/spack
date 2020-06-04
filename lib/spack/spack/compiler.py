@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import contextlib
 import os
 import platform
 import re
@@ -245,6 +246,14 @@ class Compiler(object):
             return ''
         return '--enable-new-dtags'
 
+    @property
+    def debug_flags(self):
+        return ['-g']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3']
+
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv = None
     # Name of module used to switch versions of this compiler
@@ -297,8 +306,10 @@ class Compiler(object):
         if self.enable_implicit_rpaths is False:
             return []
 
+        # Put CXX first since it has the most linking issues
+        # And because it has flags that affect linking
         exe_paths = [
-            x for x in [self.cc, self.cxx, self.fc, self.f77] if x]
+            x for x in [self.cxx, self.cc, self.fc, self.f77] if x]
         link_dirs = self._get_compiler_link_paths(exe_paths)
 
         all_required_libs = (
@@ -313,15 +324,23 @@ class Compiler(object):
         # By default every compiler returns the empty list
         return []
 
-    @classmethod
-    def _get_compiler_link_paths(cls, paths):
+    def _get_compiler_link_paths(self, paths):
         first_compiler = next((c for c in paths if c), None)
         if not first_compiler:
             return []
-        if not cls.verbose_flag():
+        if not self.verbose_flag:
             # In this case there is no mechanism to learn what link directories
             # are used by the compiler
             return []
+
+        # What flag types apply to first_compiler, in what order
+        flags = ['cppflags', 'ldflags']
+        if first_compiler == self.cc:
+            flags = ['cflags'] + flags
+        elif first_compiler == self.cxx:
+            flags = ['cxxflags'] + flags
+        else:
+            flags.append('fflags')
 
         try:
             tmpdir = tempfile.mkdtemp(prefix='spack-implicit-link-info')
@@ -333,10 +352,14 @@ class Compiler(object):
                     'int main(int argc, char* argv[]) { '
                     '(void)argc; (void)argv; return 0; }\n')
             compiler_exe = spack.util.executable.Executable(first_compiler)
-            output = str(compiler_exe(cls.verbose_flag(), fin, '-o', fout,
-                                      output=str, error=str))  # str for py2
-
-            return _parse_non_system_link_dirs(output)
+            for flag_type in flags:
+                for flag in self.flags.get(flag_type, []):
+                    compiler_exe.add_default_arg(flag)
+            with self._compiler_environment():
+                output = str(compiler_exe(
+                    self.verbose_flag, fin, '-o', fout,
+                    output=str, error=str))  # str for py2
+                return _parse_non_system_link_dirs(output)
         except spack.util.executable.ProcessError as pe:
             tty.debug('ProcessError: Command exited with non-zero status: ' +
                       pe.long_message)
@@ -344,8 +367,8 @@ class Compiler(object):
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         """
         This property should be overridden in the compiler subclass if a
         verbose flag is available.
@@ -447,32 +470,12 @@ class Compiler(object):
         Use the runtime environment of the compiler (modules and environment
         modifications) to enable the compiler to run properly on any platform.
         """
-        # store environment to replace later
-        backup_env = os.environ.copy()
-
-        # load modules and set env variables
-        for module in self.modules:
-            # On cray, mic-knl module cannot be loaded without cce module
-            # See: https://github.com/spack/spack/issues/3153
-            if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
-                spack.util.module_cmd.load_module('cce')
-            spack.util.module_cmd.load_module(module)
-
-        # apply other compiler environment changes
-        env = spack.util.environment.EnvironmentModifications()
-        env.extend(spack.schema.environment.parse(self.environment))
-        env.apply_modifications()
-
         cc = spack.util.executable.Executable(self.cc)
-        output = cc(self.version_argument,
-                    output=str, error=str,
-                    ignore_errors=tuple(self.ignore_version_errors))
-
-        # Restore environment
-        os.environ.clear()
-        os.environ.update(backup_env)
-
-        return self.extract_version_from_output(output)
+        with self._compiler_environment():
+            output = cc(self.version_argument,
+                        output=str, error=str,
+                        ignore_errors=tuple(self.ignore_version_errors))
+            return self.extract_version_from_output(output)
 
     #
     # Compiler classes have methods for querying the version of
@@ -540,6 +543,30 @@ class Compiler(object):
             self.name, '\n     '.join((str(s) for s in (
                 self.cc, self.cxx, self.f77, self.fc, self.modules,
                 str(self.operating_system)))))
+
+    @contextlib.contextmanager
+    def _compiler_environment(self):
+        # store environment to replace later
+        backup_env = os.environ.copy()
+
+        # load modules and set env variables
+        for module in self.modules:
+            # On cray, mic-knl module cannot be loaded without cce module
+            # See: https://github.com/spack/spack/issues/3153
+            if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
+                spack.util.module_cmd.load_module('cce')
+            spack.util.module_cmd.load_module(module)
+
+        # apply other compiler environment changes
+        env = spack.util.environment.EnvironmentModifications()
+        env.extend(spack.schema.environment.parse(self.environment))
+        env.apply_modifications()
+
+        yield
+
+        # Restore environment
+        os.environ.clear()
+        os.environ.update(backup_env)
 
 
 class CompilerAccessError(spack.error.SpackError):

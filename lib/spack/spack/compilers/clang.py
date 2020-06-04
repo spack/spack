@@ -50,6 +50,16 @@ class Clang(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['flang', 'gfortran', 'xlf90_r']
 
+    @property
+    def debug_flags(self):
+        return ['-gcodeview', '-gdwarf-2', '-gdwarf-3', '-gdwarf-4',
+                '-gdwarf-5', '-gline-tables-only', '-gmodules', '-gz', '-g']
+
+    @property
+    def opt_flags(self):
+        return ['-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Oz', '-Og',
+                '-O', '-O4']
+
     # Clang has support for using different fortran compilers with the
     # clang executable.
     @property
@@ -81,8 +91,8 @@ class Clang(Compiler):
         ver_string = str(self.version)
         return ver_string.endswith('-apple')
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
 
     @property

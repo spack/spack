@@ -40,5 +40,7 @@ class Libsharp(AutotoolsPackage):
         return args
 
     def install(self, spec, prefix):
-        install_tree('auto/include', join_path(prefix, 'include'))
-        install_tree('auto/lib', join_path(prefix, 'lib'))
+        # Libsharp's only caller healpix include headers like 'libsharp/xxx.h'
+        # Install xxx.h to include/libsharp
+        install_tree('auto/include', prefix.include.libsharp)
+        install_tree('auto/lib', prefix.lib)

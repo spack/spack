@@ -17,6 +17,7 @@ class Geant4(CMakePackage):
 
     maintainers = ['drbenmorgan']
 
+    version('10.6.2', sha256='e381e04c02aeade1ed8cdd9fdbe7dcf5d6f0f9b3837a417976b839318a005dbd')
     version('10.6.1', sha256='4fd64149ae26952672a81ce5579d3806fda4bd251d486897093ac57633a42b7e')
     version('10.6.0', sha256='eebe6a170546064ff81ab3b00f513ccd1d4122a026514982368d503ac55a4ee4')
     version('10.5.1', sha256='2397eb859dc4de095ff66059d8bda9f060fdc42e10469dd7890946293eeb0e39')
@@ -37,10 +38,12 @@ class Geant4(CMakePackage):
     variant('x11', default=False, description='Optional X11 support')
     variant('motif', default=False, description='Optional motif support')
     variant('qt', default=False, description='Enable Qt support')
+    variant('python', default=False, description='Enable Python bindings')
 
     depends_on('cmake@3.5:', type='build')
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
 
+    depends_on('geant4-data@10.6.2', when='@10.6.2')
     depends_on('geant4-data@10.6.1', when='@10.6.1')
     depends_on('geant4-data@10.6.0', when='@10.6.0')
     depends_on('geant4-data@10.5.1', when='@10.5.1')
@@ -50,6 +53,11 @@ class Geant4(CMakePackage):
 
     depends_on("expat")
     depends_on("zlib")
+
+    # Python, with boost requirement dealt with in cxxstd section
+    depends_on('python@3:', when='+python')
+    conflicts('+python', when='@:10.6.1',
+              msg='Geant4 <= 10.6.1 cannont be built with Python bindings')
 
     for std in _cxxstd_values:
         # CLHEP version requirements to be reviewed
@@ -69,7 +77,11 @@ class Geant4(CMakePackage):
         depends_on('vecgeom@0.3rc cxxstd=' + std,
                    when='@10.3.0:10.3.99 +vecgeom cxxstd=' + std)
 
-    # Visualization driver ependencies
+        # Boost.python, conflict handled earlier
+        depends_on('boost@1.70: +python cxxstd=' + std,
+                   when='+python cxxstd=' + std)
+
+    # Visualization driver dependencies
     depends_on("gl", when='+opengl')
     depends_on("glx", when='+opengl+x11')
     depends_on("libx11", when='+x11')
@@ -105,7 +117,8 @@ class Geant4(CMakePackage):
         options.append(self.define_from_variant('GEANT4_BUILD_MULTITHREADED',
                                                 'threads'))
         if '+threads' in spec:
-            # This should be a variant
+            # Locked at global-dynamic to allow use cases that load the
+            # geant4 libs at application runtime
             options.append('-DGEANT4_BUILD_TLS_MODEL=global-dynamic')
 
         # install the data with geant4
@@ -135,5 +148,10 @@ class Geant4(CMakePackage):
             options.append(
                 '-DQT_QMAKE_EXECUTABLE=%s' %
                 spec['qt'].prefix.bin.qmake)
+
+        # Python
+        if spec.version > Version('10.6.1'):
+            options.append(self.define_from_variant('GEANT4_USE_PYTHON',
+                                                    'python'))
 
         return options

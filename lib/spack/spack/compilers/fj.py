@@ -30,9 +30,13 @@ class Fj(spack.compiler.Compiler):
 
     required_libs = ['libfj90i', 'libfj90f', 'libfjsrcinfo']
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4']
 
     @property
     def openmp_flag(self):
