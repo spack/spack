@@ -119,8 +119,7 @@ class InstallPhase(object):
         # stop the installation process raising a StopPhase
         if getattr(instance, 'stop_before_phase', None) == self.name:
             from spack.build_environment import StopPhase
-            raise StopPhase('Stopping before \'{0}\' phase'
-                                .format(self.name))
+            raise StopPhase('Stopping before \'{0}\' phase'.format(self.name))
 
     def _on_phase_exit(self, instance):
         # If a phase has a matching last_phase attribute,

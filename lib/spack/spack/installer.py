@@ -1177,8 +1177,6 @@ class PackageInstaller(object):
             tty.debug('{0} {1}'.format(self.pid, str(e)))
             tty.debug('Package stage directory : {0}'
                       .format(pkg.stage.source_path))
-#        except spack.build_environment.ChildError as e:
-#            raise
 
     _install_task.__doc__ += install_args_docstring
 
