@@ -19,8 +19,10 @@ class PyIpython(PythonPackage):
     version('3.1.0', sha256='532092d3f06f82b1d8d1e5c37097eae19fcf025f8f6a4b670dd49c3c338d5624')
     version('2.3.1', sha256='3e98466aa2fe54540bcba9aa6e01a39f40110d67668c297340c4b9514b7cc49c')
 
-    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'), when='@:6')
+    depends_on('python@3.6:', type=('build', 'run'), when='@7.10:')
     depends_on('python@3.5:', type=('build', 'run'), when='@7:')
+    depends_on('python@3.3:', type=('build', 'run'), when='@6:')
+    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
 
     depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")
     depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
@@ -37,4 +39,4 @@ class PyIpython(PythonPackage):
     depends_on('py-appnope', type=('build', 'run'), when='platform=darwin')
     depends_on('py-jedi@0.10:', type=('build', 'run'), when='@7.5.0:')
     depends_on('py-backcall', type=('build', 'run'), when='@7.5.0:')
-    depends_on('py-setuptools@18.5:', type=('build', 'run'), when='@7.5.0:')
+    depends_on('py-setuptools@18.5:', type='run', when='@4.1:')
