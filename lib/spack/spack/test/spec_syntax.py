@@ -177,7 +177,7 @@ class TestSpecSyntax(object):
             " ^stackwalker@8.1_1e")
         self.check_parse(
             "mvapich_foo"
-            " ^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2"
             " ^stackwalker@8.1_1e")
         self.check_parse(
             'mvapich_foo'
@@ -185,7 +185,7 @@ class TestSpecSyntax(object):
             ' ^stackwalker@8.1_1e')
         self.check_parse(
             "mvapich_foo"
-            " ^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2"
             " ^stackwalker@8.1_1e arch=test-redhat6-x86")
 
     def test_canonicalize(self):

@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Xev(AutotoolsPackage):
+class Xev(AutotoolsPackage, XorgPackage):
     """xev creates a window and then asks the X server to send it X11 events
     whenever anything happens to the window (such as it being moved,
     resized, typed in, clicked in, etc.).  You can also attach it to an
@@ -16,7 +16,7 @@ class Xev(AutotoolsPackage):
     usage."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xev"
-    url      = "https://www.x.org/archive/individual/app/xev-1.2.2.tar.gz"
+    xorg_mirror_path = "app/xev-1.2.2.tar.gz"
 
     version('1.2.2', sha256='e4c0c7b6f411e8b9731f2bb10d729d167bd00480d172c28b62607a6ea9e45c57')
 

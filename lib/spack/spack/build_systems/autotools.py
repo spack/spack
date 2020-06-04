@@ -11,6 +11,7 @@ import os.path
 import shutil
 import stat
 import sys
+import re
 from subprocess import PIPE
 from subprocess import check_call
 
@@ -153,6 +154,21 @@ class AutotoolsPackage(PackageBase):
 
         raise RuntimeError('Failed to find suitable config.guess')
 
+    @run_before('configure')
+    def _set_autotools_environment_variables(self):
+        """Many autotools builds use a version of mknod.m4 that fails when
+        running as root unless FORCE_UNSAFE_CONFIGURE is set to 1.
+
+        We set this to 1 and expect the user to take responsibility if
+        they are running as root. They have to anyway, as this variable
+        doesn't actually prevent configure from doing bad things as root.
+        Without it, configure just fails halfway through, but it can
+        still run things *before* this check. Forcing this just removes a
+        nuisance -- this is not circumventing any real protection.
+
+        """
+        os.environ["FORCE_UNSAFE_CONFIGURE"] = "1"
+
     @run_after('configure')
     def _do_patch_libtool(self):
         """If configure generates a "libtool" script that does not correctly
@@ -169,7 +185,9 @@ class AutotoolsPackage(PackageBase):
                         line = 'wl="-Wl,"\n'
                     if line == 'pic_flag=""\n':
                         line = 'pic_flag="{0}"\n'\
-                               .format(self.compiler.pic_flag)
+                               .format(self.compiler.cc_pic_flag)
+                    if self.spec.satisfies('%fj') and 'fjhpctag.o' in line:
+                        line = re.sub(r'/\S*/fjhpctag.o', '', line)
                     sys.stdout.write(line)
 
     @property
@@ -219,11 +237,11 @@ class AutotoolsPackage(PackageBase):
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ['-ivf']
-            if 'pkgconfig' in spec:
-                autoreconf_args += [
-                    '-I',
-                    os.path.join(spec['pkgconfig'].prefix, 'share', 'aclocal'),
-                ]
+            for dep in spec.dependencies(deptype='build'):
+                if os.path.exists(dep.prefix.share.aclocal):
+                    autoreconf_args.extend([
+                        '-I', dep.prefix.share.aclocal
+                    ])
             autoreconf_args += self.autoreconf_extra_args
             m.autoreconf(*autoreconf_args)
 

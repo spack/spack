@@ -115,7 +115,11 @@ class InstallPhase(object):
         return phase_wrapper
 
     def _on_phase_start(self, instance):
-        pass
+        # If a phase has a matching stop_before_phase attribute,
+        # stop the installation process raising a StopIteration
+        if getattr(instance, 'stop_before_phase', None) == self.name:
+            raise StopIteration('Stopping before \'{0}\' phase'
+                                .format(self.name))
 
     def _on_phase_exit(self, instance):
         # If a phase has a matching last_phase attribute,
@@ -328,7 +332,7 @@ class PackageViewMixin(object):
         """
         for src, dst in merge_map.items():
             if not os.path.exists(dst):
-                view.link(src, dst)
+                view.link(src, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
         """Given a map of package files to files currently linked in the view,
@@ -605,11 +609,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         deptype = spack.dependency.canonical_deptype(deptype)
 
-        if visited is None:
-            visited = {cls.name: set()}
+        visited = {} if visited is None else visited
+        missing = {} if missing is None else missing
 
-        if missing is None:
-            missing = {cls.name: set()}
+        visited.setdefault(cls.name, set())
 
         for name, conditions in cls.dependencies.items():
             # check whether this dependency could be of the type asked for
@@ -624,6 +627,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     providers = spack.repo.path.providers_for(name)
                     dep_names = [spec.name for spec in providers]
                 else:
+                    visited.setdefault(cls.name, set()).add(name)
                     visited.setdefault(name, set())
                     continue
             else:
@@ -1034,6 +1038,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             any(self.spec.satisfies(c) for c in constraints)
             for s, constraints in self.provided.items() if s.name == vpkg_name
         )
+
+    @property
+    def virtuals_provided(self):
+        """
+        virtual packages provided by this package with its spec
+        """
+        return [vspec for vspec, constraints in self.provided.items()
+                if any(self.spec.satisfies(c) for c in constraints)]
 
     @property
     def installed(self):
@@ -1999,6 +2011,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if hasattr(self, 'url') and self.url:
             urls.append(self.url)
 
+        # fetch from first entry in urls to save time
+        if hasattr(self, 'urls') and self.urls:
+            urls.append(self.urls[0])
+
         for args in self.versions.values():
             if 'url' in args:
                 urls.append(args['url'])
@@ -2154,26 +2170,27 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
 
     See ``PackageBase.possible_dependencies`` for details.
     """
-    transitive = kwargs.get('transitive', True)
-    expand_virtuals = kwargs.get('expand_virtuals', True)
-    deptype = kwargs.get('deptype', 'all')
-    missing = kwargs.get('missing')
-
     packages = []
     for pos in pkg_or_spec:
         if isinstance(pos, PackageMeta):
-            pkg = pos
-        elif isinstance(pos, spack.spec.Spec):
-            pkg = pos.package
-        else:
-            pkg = spack.spec.Spec(pos).package
+            packages.append(pos)
+            continue
 
-        packages.append(pkg)
+        if not isinstance(pos, spack.spec.Spec):
+            pos = spack.spec.Spec(pos)
+
+        if spack.repo.path.is_virtual(pos.name):
+            packages.extend(
+                p.package_class
+                for p in spack.repo.path.providers_for(pos.name)
+            )
+            continue
+        else:
+            packages.append(pos.package_class)
 
     visited = {}
     for pkg in packages:
-        pkg.possible_dependencies(
-            transitive, expand_virtuals, deptype, visited, missing)
+        pkg.possible_dependencies(visited=visited, **kwargs)
 
     return visited
 

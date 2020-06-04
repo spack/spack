@@ -2134,6 +2134,8 @@ class Spec(object):
         consistent with requirements of its packages. See flatten() and
         normalize() for more details on this.
         """
+        import spack.concretize
+
         if not self.name:
             raise spack.error.SpecError(
                 "Attempting to concretize anonymous spec")
@@ -2145,7 +2147,6 @@ class Spec(object):
         force = False
 
         user_spec_deps = self.flat_dependencies(copy=False)
-        import spack.concretize
         concretizer = spack.concretize.Concretizer(self.copy())
         while changed:
             changes = (self.normalize(force, tests=tests,
@@ -2239,7 +2240,11 @@ class Spec(object):
                 for mod in compiler.modules:
                     md.load_module(mod)
 
-                s.external_path = md.get_path_from_module(s.external_module)
+                # get the path from the module
+                # the package can override the default
+                s.external_path = getattr(s.package, 'external_prefix',
+                                          md.get_path_from_module(
+                                              s.external_module))
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
@@ -3120,7 +3125,7 @@ class Spec(object):
             A copy of this spec.
 
         Examples:
-            Deep copy with dependnecies::
+            Deep copy with dependencies::
 
                 spec.copy()
                 spec.copy(deps=True)

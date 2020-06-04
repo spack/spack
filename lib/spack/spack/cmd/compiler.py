@@ -159,7 +159,19 @@ def compiler_list(args):
     tty.msg("Available compilers")
     index = index_by(spack.compilers.all_compilers(scope=args.scope),
                      lambda c: (c.spec.name, c.operating_system, c.target))
-    ordered_sections = sorted(index.items(), key=lambda item: item[0])
+
+    # For a container, take each element which does not evaluate to false and
+    # convert it to a string. For elements which evaluate to False (e.g. None)
+    # convert them to '' (in which case it still evaluates to False but is a
+    # string type). Tuples produced by this are guaranteed to be comparable in
+    # Python 3
+    convert_str = (
+        lambda tuple_container:
+        tuple(str(x) if x else '' for x in tuple_container))
+
+    index_str_keys = list(
+        (convert_str(x), y) for x, y in index.items())
+    ordered_sections = sorted(index_str_keys, key=lambda item: item[0])
     for i, (key, compilers) in enumerate(ordered_sections):
         if i >= 1:
             print()

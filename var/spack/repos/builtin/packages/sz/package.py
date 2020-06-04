@@ -54,6 +54,8 @@ class Sz(CMakePackage):
     depends_on('hdf5', when="+hdf5")
     depends_on('netcdf-c', when="+netcdf")
 
+    patch('ctags-only-if-requested.patch', when='@2.1.8.1:2.1.8.3')
+
     @property
     def build_directory(self):
         """autotools needs a different build directory to work"""
@@ -71,6 +73,9 @@ class Sz(CMakePackage):
         else:
             configure_args.append("--disable-fortran")
         configure(*configure_args)
+        # at least the v2.0.2.0 tarball contains object files
+        # which need to be cleaned out
+        make("clean")
 
     def cmake_args(self):
         """configure the package with CMake for version 2.1.8.1 and later"""

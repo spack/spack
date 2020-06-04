@@ -39,6 +39,7 @@ class Pmix(AutotoolsPackage):
     version('3.0.2',    sha256='df68f35a3ed9517eeade80b13855cebad8fde2772b36a3f6be87559b6d430670')
     version('3.0.1',    sha256='b81055d2c0d61ef5a451b63debc39c820bcd530490e2e4dcb4cdbacb618c157c')
     version('3.0.0',    sha256='ee8f68107c24b706237a53333d832445315ae37de6773c5413d7fda415a6e2ee')
+    version('2.2.3',    sha256='6fa5d45eb089e29101190c645e986342a24a03a4ea3a936db0b120aafa45b1f0')
     version('2.2.2',    sha256='cd951dbda623fadc5b32ae149d8cc41f9462eac4d718d089340911b1a7c20714')
     version('2.1.4',    sha256='eb72d292e76e200f02cf162a477eecea2559ef3ac2edf50ee95b3fe3983d033e')
     version('2.1.3',    sha256='281283133498e7e5999ed5c6557542c22408bc9eb51ecbcf7696160616782a41')
@@ -49,6 +50,10 @@ class Pmix(AutotoolsPackage):
     depends_on('libevent@2.0.20:2.0.22,2.1.8')
     depends_on('hwloc@1.11.0:1.11.99,2.0.1:', when='@3.0.0:')
 
+    variant('pmi_backwards_compatibility',
+            default=True,
+            description="Toggle pmi backwards compatibility")
+
     def configure_args(self):
 
         spec = self.spec
@@ -56,6 +61,11 @@ class Pmix(AutotoolsPackage):
             '--enable-shared',
             '--enable-static'
         ]
+
+        if '+pmi_backwards_compatibility' in self.spec:
+            config_args.append('--enable-pmi-backward-compatibility')
+        else:
+            config_args.append('--disable-pmi-backward-compatibility')
 
         # libevent support
         config_args.append(

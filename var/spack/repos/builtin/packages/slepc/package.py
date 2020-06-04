@@ -17,7 +17,12 @@ class Slepc(Package):
 
     maintainers = ['joseeroman', 'balay']
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('3.13.2', sha256='04cb8306cb5d4d990509710d7f8ae949bdc2c7eb850930b8d0b0b5ca99f6c70d')
+    version('3.13.1', sha256='f4a5ede4ebdee5e15153ce31c1421209c7b794bd94be1430018615fb0838b879')
+    version('3.13.0', sha256='f1f3c2d13a1a6914e7bf4746d38761e107ea866f50927b639e4ad5918dd1e53b')
+    version('3.12.2', sha256='a586ce572a928ed87f04961850992a9b8e741677397cbaa3fb028323eddf4598')
+    version('3.12.1', sha256='a1cc2e93a81c9f6b86abd81022c9d64b0dc2161e77fb54b987f963bc292e286d')
     version('3.12.0', sha256='872831d961cf76389fafb7553231ae1a6676555850c98ea0e893c06f596b2e9e')
     version('3.11.2', sha256='cd6a73ac0c9f689c12f2987000a7a28fa7df53fdc069fb59a2bb148699e741dd')
     version('3.11.1', sha256='4816070d4ecfeea6212c6944cee22dc7b4763df1eaf6ab7847cc5ac5132608fb')
@@ -45,6 +50,7 @@ class Slepc(Package):
 
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on('petsc@develop', when='@develop')
+    depends_on('petsc@3.13:3.13.99', when='@3.13:3.13.99')
     depends_on('petsc@3.12:3.12.99', when='@3.12:3.12.99')
     depends_on('petsc@3.11:3.11.99', when='@3.11:3.11.99')
     depends_on('petsc@3.10:3.10.99', when='@3.10:3.10.99')
@@ -58,14 +64,22 @@ class Slepc(Package):
     patch('install_name_371.patch', when='@3.7.1')
 
     # Arpack can not be used with 64bit integers.
-    conflicts('+arpack', when='^petsc+int64')
+    conflicts('+arpack', when='@:3.12.99 ^petsc+int64')
+    conflicts('+blopex', when='^petsc+int64')
 
     resource(name='blopex',
              url='http://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
              sha256='0081ee4c4242e635a8113b32f655910ada057c59043f29af4b613508a762f3ac',
              destination=join_path('installed-arch-' + sys.platform + '-c-opt',
                                    'externalpackages'),
-             when='+blopex')
+             when='@:3.12.99+blopex')
+
+    resource(name='blopex',
+             git='https://github.com/lobpcg/blopex',
+             commit='6eba31f0e071f134a6e4be8eccfb8d9d7bdd5ac7',
+             destination=join_path('installed-arch-' + sys.platform + '-c-opt',
+                                   'externalpackages'),
+             when='@3.13.0:+blopex')
 
     def install(self, spec, prefix):
         # set SLEPC_DIR for installation
@@ -79,13 +93,18 @@ class Slepc(Package):
             options.extend([
                 '--with-arpack-dir=%s' % spec['arpack-ng'].prefix.lib,
             ])
+            if spec.satisfies('@:3.12.99'):
+                arpackopt = '--with-arpack-flags'
+            else:
+                arpackopt = '--with-arpack-lib'
+
             if 'arpack-ng~mpi' in spec:
                 options.extend([
-                    '--with-arpack-flags=-larpack'
+                    arpackopt + '=-larpack'
                 ])
             else:
                 options.extend([
-                    '--with-arpack-flags=-lparpack,-larpack'
+                    arpackopt + '=-lparpack,-larpack'
                 ])
 
         # It isn't possible to install BLOPEX separately and link to it;

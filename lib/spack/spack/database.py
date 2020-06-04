@@ -26,6 +26,12 @@ import os
 import socket
 import sys
 import time
+try:
+    import uuid
+    _use_uuid = True
+except ImportError:
+    _use_uuid = False
+    pass
 
 import llnl.util.tty as tty
 import six
@@ -294,6 +300,7 @@ class Database(object):
 
         # Set up layout of database files within the db dir
         self._index_path = os.path.join(self._db_dir, 'index.json')
+        self._verifier_path = os.path.join(self._db_dir, 'index_verifier')
         self._lock_path = os.path.join(self._db_dir, 'lock')
 
         # This is for other classes to use to lock prefix directories.
@@ -311,10 +318,11 @@ class Database(object):
         if not os.path.exists(self._db_dir):
             mkdirp(self._db_dir)
 
-        if not os.path.exists(self._failure_dir):
+        if not os.path.exists(self._failure_dir) and not is_upstream:
             mkdirp(self._failure_dir)
 
         self.is_upstream = is_upstream
+        self.last_seen_verifier = ''
 
         # initialize rest of state.
         self.db_lock_timeout = (
@@ -913,6 +921,11 @@ class Database(object):
             with open(temp_file, 'w') as f:
                 self._write_to_file(f)
             os.rename(temp_file, self._index_path)
+            if _use_uuid:
+                with open(self._verifier_path, 'w') as f:
+                    new_verifier = str(uuid.uuid4())
+                    f.write(new_verifier)
+                    self.last_seen_verifier = new_verifier
         except BaseException as e:
             tty.debug(e)
             # Clean up temp file if something goes wrong.
@@ -928,8 +941,18 @@ class Database(object):
         write lock.
         """
         if os.path.isfile(self._index_path):
-            # Read from file if a database exists
-            self._read_from_file(self._index_path)
+            current_verifier = ''
+            if _use_uuid:
+                try:
+                    with open(self._verifier_path, 'r') as f:
+                        current_verifier = f.read()
+                except BaseException:
+                    pass
+            if ((current_verifier != self.last_seen_verifier) or
+                    (current_verifier == '')):
+                self.last_seen_verifier = current_verifier
+                # Read from file if a database exists
+                self._read_from_file(self._index_path)
             return
         elif self.is_upstream:
             raise UpstreamDatabaseLockingError(
@@ -1105,6 +1128,12 @@ class Database(object):
 
         del self._data[key]
         for dep in rec.spec.dependencies(_tracked_deps):
+            # FIXME: the two lines below needs to be updated once #11983 is
+            # FIXME: fixed. The "if" statement should be deleted and specs are
+            # FIXME: to be removed from dependents by hash and not by name.
+            # FIXME: See https://github.com/spack/spack/pull/15777#issuecomment-607818955
+            if dep._dependents.get(spec.name):
+                del dep._dependents[spec.name]
             self._decrement_ref_count(dep)
 
         if rec.deprecated_for:
@@ -1339,7 +1368,7 @@ class Database(object):
             # TODO: handling of hashes restriction is not particularly elegant.
             hash_key = query_spec.dag_hash()
             if (hash_key in self._data and
-                (not hashes or hash_key in hashes)):
+                    (not hashes or hash_key in hashes)):
                 return [self._data[hash_key].spec]
             else:
                 return []

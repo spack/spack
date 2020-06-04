@@ -6,13 +6,13 @@
 from spack import *
 
 
-class RdpClassifier(Package):
+class RdpClassifier(Package, SourceforgePackage):
     """The RDP Classifier is a naive Bayesian classifier that can rapidly and
        accurately provides taxonomic assignments from domain to genus, with
        confidence estimates for each assignment. """
 
     homepage = "http://rdp.cme.msu.edu/"
-    url      = "https://downloads.sourceforge.net/project/rdp-classifier/rdp-classifier/rdp_classifier_2.12.zip"
+    sourceforge_mirror_path = "rdp-classifier/rdp_classifier_2.12.zip"
 
     version('2.12', sha256='977896248189a1ce2146dd3a61d203c3c6bc9aa3982c60332d463832922f7d0a')
 

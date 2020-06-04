@@ -13,7 +13,7 @@ class Hpccg(MakefilePackage):
     """
 
     homepage = "https://mantevo.org/about/applications/"
-    url      = "https://github.com/Mantevo/mantevo.github.io/raw/master/download_files/HPCCG-1.0.tar.gz"
+    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/HPCCG/HPCCG-1.0.tar.gz"
 
     tags = ['proxy-app']
 

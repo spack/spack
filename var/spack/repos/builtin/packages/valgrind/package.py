@@ -8,7 +8,7 @@ import glob
 import sys
 
 
-class Valgrind(AutotoolsPackage):
+class Valgrind(AutotoolsPackage, SourcewarePackage):
     """An instrumentation framework for building dynamic analysis.
 
     There are Valgrind tools that can automatically detect many memory
@@ -19,11 +19,8 @@ class Valgrind(AutotoolsPackage):
     under the GNU General Public License, version 2.
     """
     homepage = "http://valgrind.org/"
-    url      = "https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2"
+    sourceware_mirror_path = "valgrind/valgrind-3.13.0.tar.bz2"
     git      = "git://sourceware.org/git/valgrind.git"
-
-    # The server is sometimes a bit slow to respond
-    fetch_options = {'timeout': 60}
 
     version('develop', branch='master')
     version('3.15.0', sha256='417c7a9da8f60dd05698b3a7bc6002e4ef996f14c13f0ff96679a16873e78ab1')
@@ -59,6 +56,9 @@ clang: error: unknown argument: '-static-libubsan'
     # Apply the patch suggested here:
     # http://valgrind.10908.n7.nabble.com/Unable-to-compile-on-Mac-OS-X-10-11-td57237.html
     patch('valgrind_3_12_0_osx.patch', when='@3.12.0 platform=darwin')
+
+    for os in ('mojave', 'catalina'):
+        conflicts("os=" + os, when='@:3.15')
 
     def configure_args(self):
         spec = self.spec

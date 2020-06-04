@@ -20,6 +20,7 @@ class Paraview(CMakePackage, CudaPackage):
     maintainers = ['chuckatkins', 'danlipsa']
 
     version('develop', branch='master', submodules=True)
+    version('5.8.0', sha256='219e4107abf40317ce054408e9c3b22fb935d464238c1c00c0161f1c8697a3f9')
     version('5.7.0', sha256='e41e597e1be462974a03031380d9e5ba9a7efcdb22e4ca2f3fec50361f310874')
     version('5.6.2', sha256='1f3710b77c58a46891808dbe23dc59a1259d9c6b7bb123aaaeaa6ddf2be882ea')
     version('5.6.0', sha256='cb8c4d752ad9805c74b4a08f8ae6e83402c3f11e38b274dba171b99bb6ac2460')
@@ -46,11 +47,16 @@ class Paraview(CMakePackage, CudaPackage):
     variant('hdf5', default=False, description="Use external HDF5")
     variant('shared', default=True,
             description='Builds a shared version of the library')
+    variant('kits', default=True,
+            description='Use module kits')
 
     conflicts('+python', when='+python3')
     conflicts('+python', when='@5.6:')
     conflicts('+python3', when='@:5.5')
     conflicts('+shared', when='+cuda')
+    # Legacy rendering dropped in 5.5
+    # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
+    conflicts('~opengl2', when='@5.5:')
 
     # Workaround for
     # adding the following to your packages.yaml
@@ -269,6 +275,17 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DVTK_USE_X:BOOL=OFF',
                 '-DPARAVIEW_DO_UNIX_STYLE_INSTALLS:BOOL=ON',
             ])
+
+        if '+kits' in spec:
+            if spec.satisfies('@5.0:5.6'):
+                cmake_args.append(
+                    '-DVTK_ENABLE_KITS:BOOL=ON')
+            elif spec.satisfies('@5.7'):
+                cmake_args.append(
+                    '-DPARAVIEW_ENABLE_KITS:BOOL=ON')
+            else:
+                cmake_args.append(
+                    '-DPARAVIEW_BUILD_WITH_KITS:BOOL=ON')
 
         # Hide git from Paraview so it will not use `git describe`
         # to find its own version number

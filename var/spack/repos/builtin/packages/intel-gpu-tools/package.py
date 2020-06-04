@@ -7,7 +7,7 @@ from spack import *
 import sys
 
 
-class IntelGpuTools(AutotoolsPackage):
+class IntelGpuTools(AutotoolsPackage, XorgPackage):
     """Intel GPU Tools is a collection of tools for development and testing of
     the Intel DRM driver. There are many macro-level test suites that get used
     against the driver, including xtest, rendercheck, piglit, and oglconform,
@@ -18,7 +18,7 @@ class IntelGpuTools(AutotoolsPackage):
     Intel DRM Driver."""
 
     homepage = "https://cgit.freedesktop.org/xorg/app/intel-gpu-tools/"
-    url      = "https://www.x.org/archive/individual/app/intel-gpu-tools-1.16.tar.gz"
+    xorg_mirror_path = "app/intel-gpu-tools-1.16.tar.gz"
 
     version('1.16', sha256='4874e6e7704c8d315deaf5b44cc9467ea5e502c7f816470a4a28827fcb34643f')
 

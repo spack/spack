@@ -3,10 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import fnmatch
-import os
-
 
 class PyHorovod(PythonPackage):
     """Horovod is a distributed deep learning training framework for
@@ -14,47 +10,125 @@ class PyHorovod(PythonPackage):
 
     homepage = "https://github.com/horovod"
     git      = "https://github.com/horovod/horovod.git"
-    url      = "https://github.com/horovod/horovod/archive/v0.19.0.tar.gz"
 
-    version('master', branch='master', submodules='True')
-    version('0.19.0',       sha256='0e9fec11cd7f5f39a09f0785d1097cb51c44537ae14c9b4b2578b5cdd21efb9b')
-    version('0.18.2',       sha256='a073e08cec65474afdb2d011486b4cb6c7ac8fcb1eca3e02b169e1e7b4a66da6')
-    version('0.18.1',       sha256='26e236d1f60955e9dd12b9f0a836f0691296a010fcd1ac72295970a780f4e4fb')
-    version('0.18.0',       sha256='94f13e7110c5f3fd1aa194b9d886b5bb91c9bc02ade31bcb84fc6e7f9c043455')
-    version('0.17.1',       sha256='14eea5744eda9c62988ffa278a9a5472cebbc6a287eca9ed48cacfcd177e8978')
-    version('0.17.0.post1', sha256='220b230611e22dc69777f1be4d9788a07e73a0722e511091fa156cdf68ca798b')
-    version('0.17.0',       sha256='4bb121dda6cdaa1677535470adc1836493a9c4930ab19f6b491254ea47a12a4f')
-    version('0.16.4',       sha256='c0168dfeb31a56ede52eae115f43fa2d06a5db55a37201064ef901c8000d708d')
-    version('0.16.3',       sha256='1857cf1b335723366cc71e4bcd0583f2dde0c821212cda0e1b6bddfe4ba1ea0d')
-    version('0.16.2',       sha256='baa9754e59ab0ee72d3b5769cf77e06a2c7b0a2d9626e0e14ca2ab131934ce74')
+    maintainers = ['adamjstewart']
 
-    variant('pytorch', default=True, description='Enables PyTorch')
-    variant('mxnet', default=False, description='Enables mxnet')
-    variant('mpi', default=True, description='Enables MPI build')
-    variant('gloo', default=False, description='Enables features related to distributed support')
-    variant('cuda', default=True, description='Enables CUDA build')
+    version('master', branch='master', submodules=True)
+    version('0.19.4', tag='v0.19.4', submodules=True)
+    version('0.19.3', tag='v0.19.3', submodules=True)
+    version('0.19.2', tag='v0.19.2', submodules=True)
+    version('0.19.1', tag='v0.19.1', submodules=True)
+    version('0.19.0', tag='v0.19.0', submodules=True)
+    version('0.18.2', tag='v0.18.2', submodules=True)
+    version('0.18.1', tag='v0.18.1', submodules=True)
+    version('0.18.0', tag='v0.18.0', submodules=True)
+    version('0.17.1', tag='v0.17.1', submodules=True)
+    version('0.17.0', tag='v0.17.0', submodules=True)
+    version('0.16.4', tag='v0.16.4', submodules=True)
+    version('0.16.3', tag='v0.16.3', submodules=True)
+    version('0.16.2', tag='v0.16.2', submodules=True)
 
-    depends_on('python', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    # https://github.com/horovod/horovod/blob/master/docs/install.rst
+    variant('frameworks', default='pytorch',
+            description='Deep learning frameworks to build support for',
+            values=('tensorflow', 'pytorch', 'mxnet', 'keras', 'spark'),
+            multi=True)
+    variant('controllers', default='mpi',
+            description='Controllers to coordinate work between processes',
+            values=('mpi', 'gloo'), multi=True)
+    variant('tensor_ops', default='nccl',
+            description='Framework to use for GPU/CPU operations',
+            values=('nccl', 'mpi', 'gloo', 'ccl'), multi=False)
+
+    # Required dependencies
+    depends_on('py-setuptools',  type='build')
     depends_on('py-cloudpickle', type=('build', 'run'))
-    depends_on('py-psutil', type=('build', 'run'))
-    depends_on('py-pyyaml', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
-    depends_on('py-torch', type=('build', 'run'))
-    depends_on('py-pip', type=('build'))
+    depends_on('py-psutil',      type=('build', 'run'))
+    depends_on('py-pyyaml',      type=('build', 'run'))
+    depends_on('py-six',         type=('build', 'run'))
 
-    # Optional dependencies
-    depends_on('cuda', when='+cuda')
-    depends_on('nccl', when='+nccl')
-    depends_on('gloo', when='+gloo')
-    depends_on('mpi', when='+mpi')
-    depends_on('py-torch', type=('build', 'run'), when='+pytorch')
-    depends_on('mxnet', when='+mxnet')
+    # Framework dependencies
+    depends_on('py-tensorflow@1.1.0:',  type=('build', 'link', 'run'), when='frameworks=tensorflow')
+    depends_on('py-torch@0.4.0:',       type=('build', 'link', 'run'), when='frameworks=pytorch')
+    depends_on('py-torchvision',        type=('build', 'run'),         when='frameworks=pytorch @:0.19.1')
+    depends_on('py-cffi@1.4.0:',        type=('build', 'run'),         when='frameworks=pytorch')
+    depends_on('mxnet@1.4.1:+python',   type=('build', 'link', 'run'), when='frameworks=mxnet')
+    depends_on('py-keras@2.0.8,2.1.2:', type=('build', 'run'),         when='frameworks=keras')
+    depends_on('py-h5py@2.9:',          type=('build', 'run'),         when='frameworks=spark')
+    depends_on('py-numpy',              type=('build', 'run'),         when='frameworks=spark')
+    depends_on('py-petastorm@0.8.2',    type=('build', 'run'),         when='frameworks=spark @:0.19.1')
+    depends_on('py-petastorm@0.9.0:',   type=('build', 'run'),         when='frameworks=spark @0.19.2:')
+    depends_on('py-pyarrow@0.15.0:',    type=('build', 'run'),         when='frameworks=spark')
+    depends_on('py-pyspark@2.3.2:',     type=('build', 'run'),         when='frameworks=spark')
 
-    phases = ['clean', 'sdist', 'install']
+    # Controller dependencies
+    depends_on('mpi', when='controllers=mpi')
+    # There does not appear to be a way to use an external Gloo installation
+    depends_on('cmake', type='build', when='controllers=gloo')
 
-    def install(self, spec, prefix):
-        pip = which('pip')
-        for file in os.listdir(prefix):
-            if fnmatch.fnmatch(file, 'horovod-*.tar.gz'):
-                pip('install', file, '--prefix={0}'.format(prefix))
+    # Tensor Operations dependencies
+    depends_on('nccl@2:', when='tensor_ops=nccl')
+    depends_on('mpi', when='tensor_ops=mpi')
+    # There does not appear to be a way to use an external Gloo installation
+    depends_on('cmake', type='build', when='tensor_ops=gloo')
+
+    # Test dependencies
+    depends_on('py-mock', type='test')
+    depends_on('py-pytest', type='test')
+    depends_on('py-pytest-forked', type='test')
+
+    conflicts('controllers=gloo', when='platform=darwin', msg='Gloo cannot be compiled on MacOS')
+
+    # https://github.com/horovod/horovod/pull/1835
+    patch('fma.patch', when='@0.19.0:0.19.1')
+
+    def setup_build_environment(self, env):
+        # Frameworks
+        if 'frameworks=tensorflow' in self.spec:
+            env.set('HOROVOD_WITH_TENSORFLOW', 1)
+        else:
+            env.set('HOROVOD_WITHOUT_TENSORFLOW', 1)
+        if 'frameworks=pytorch' in self.spec:
+            env.set('HOROVOD_WITH_PYTORCH', 1)
+        else:
+            env.set('HOROVOD_WITHOUT_PYTORCH', 1)
+        if 'frameworks=mxnet' in self.spec:
+            env.set('HOROVOD_WITH_MXNET', 1)
+        else:
+            env.set('HOROVOD_WITHOUT_MXNET', 1)
+
+        # Controllers
+        if 'controllers=mpi' in self.spec:
+            env.set('HOROVOD_WITH_MPI', 1)
+        else:
+            env.set('HOROVOD_WITHOUT_MPI', 1)
+        if 'controllers=gloo' in self.spec:
+            env.set('HOROVOD_WITH_GLOO', 1)
+        else:
+            env.set('HOROVOD_WITHOUT_GLOO', 1)
+
+        # Tensor Operations
+        if 'tensor_ops=nccl' in self.spec:
+            env.set('HOROVOD_GPU', 'CUDA')
+
+            env.set('HOROVOD_CUDA_HOME', self.spec['cuda'].prefix)
+            env.set('HOROVOD_CUDA_INCLUDE',
+                    self.spec['cuda'].headers.directories[0])
+            env.set('HOROVOD_CUDA_LIB', self.spec['cuda'].libs.directories[0])
+
+            env.set('HOROVOD_NCCL_HOME', self.spec['nccl'].prefix)
+            env.set('HOROVOD_NCCL_INCLUDE',
+                    self.spec['nccl'].headers.directories[0])
+            env.set('HOROVOD_NCCL_LIB', self.spec['nccl'].libs.directories[0])
+
+            env.set('HOROVOD_GPU_ALLREDUCE', 'NCCL')
+            env.set('HOROVOD_GPU_BROADCAST', 'NCCL')
+        else:
+            env.set('HOROVOD_CPU_OPERATIONS',
+                    self.spec.variants['tensor_ops'].value.upper())
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def install_test(self):
+        horovodrun = Executable(self.prefix.bin.horovodrun)
+        horovodrun('--check-build')
