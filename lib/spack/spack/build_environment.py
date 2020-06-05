@@ -1072,11 +1072,11 @@ def _make_child_error(msg, module, name, traceback, build_log, context):
     return ChildError(msg, module, name, traceback, build_log, context)
 
 
-class StopPhase(Exception):
+class StopPhase(spack.error.SpackError):
     """Pickle-able exception to control stopped builds."""
     def __reduce__(self):
-        return _make_stop_phase, (self.message,)
+        return _make_stop_phase, (self.message, self.long_message)
 
 
-def _make_stop_phase(msg):
-    return StopPhase(msg)
+def _make_stop_phase(msg, long_msg):
+    return StopPhase(msg, long_msg)
