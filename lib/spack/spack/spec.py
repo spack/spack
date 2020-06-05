@@ -4097,7 +4097,7 @@ class SpecParser(spack.parse.Parser):
         path = self.token.value
 
         # don't treat builtin.yaml, builtin.yaml-cpp, etc. as filenames
-        if re.match(spec_id_re + '$', path):
+        if re.match(spec_id_re +"[w@%-]*"+ '$', path):
             self.push_tokens([spack.parse.Token(ID, self.token.value)])
             return None
 
