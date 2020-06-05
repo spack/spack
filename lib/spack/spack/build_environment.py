@@ -812,12 +812,11 @@ def fork(pkg, function, dirty, fake):
                 setup_package(pkg, dirty=dirty)
             return_value = function()
             child_pipe.send(return_value)
-        except StopIteration as e:
-            # StopIteration is used to stop installations
-            # before the final stage, mainly for debug purposes
-            tty.msg(e)
-            child_pipe.send(None)
 
+        except StopPhase as e:
+            # Do not create a full ChildError from this, it's not an error
+            # it's a control statement.
+            child_pipe.send(e)
         except BaseException:
             # catch ANYTHING that goes wrong in the child process
             exc_type, exc, tb = sys.exc_info()
@@ -869,15 +868,20 @@ def fork(pkg, function, dirty, fake):
     child_result = parent_pipe.recv()
     p.join()
 
+    # If returns a StopPhase, raise it
+    if isinstance(child_result, StopPhase):
+        # do not print
+        raise child_result
+
     # let the caller know which package went wrong.
     if isinstance(child_result, InstallError):
         child_result.pkg = pkg
 
-    # If the child process raised an error, print its output here rather
-    # than waiting until the call to SpackError.die() in main(). This
-    # allows exception handling output to be logged from within Spack.
-    # see spack.main.SpackCommand.
     if isinstance(child_result, ChildError):
+        # If the child process raised an error, print its output here rather
+        # than waiting until the call to SpackError.die() in main(). This
+        # allows exception handling output to be logged from within Spack.
+        # see spack.main.SpackCommand.
         child_result.print_context()
         raise child_result
 
@@ -1066,3 +1070,13 @@ class ChildError(InstallError):
 def _make_child_error(msg, module, name, traceback, build_log, context):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
     return ChildError(msg, module, name, traceback, build_log, context)
+
+
+class StopPhase(spack.error.SpackError):
+    """Pickle-able exception to control stopped builds."""
+    def __reduce__(self):
+        return _make_stop_phase, (self.message, self.long_message)
+
+
+def _make_stop_phase(msg, long_msg):
+    return StopPhase(msg, long_msg)
