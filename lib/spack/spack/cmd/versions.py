@@ -21,6 +21,10 @@ level = "long"
 def setup_parser(subparser):
     subparser.add_argument('-s', '--safe-only', action='store_true',
                            help='only list safe versions of the package')
+    subparser.add_argument(
+        '-c', '--concurrency', default=32, type=int,
+        help='number of concurrent requests'
+    )
     arguments.add_common_arguments(subparser, ['package'])
 
 
@@ -45,7 +49,7 @@ def versions(parser, args):
     if sys.stdout.isatty():
         tty.msg('Remote versions (not yet checksummed):')
 
-    fetched_versions = pkg.fetch_remote_versions()
+    fetched_versions = pkg.fetch_remote_versions(args.concurrency)
     remote_versions = set(fetched_versions).difference(safe_versions)
 
     if not remote_versions:
