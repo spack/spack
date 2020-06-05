@@ -146,8 +146,8 @@ class IntelTbb(Package):
         # Deactivate use of RTM with GCC when on an OS with a very old
         # assembler.
         if (spec.satisfies('%gcc@4.8.0: os=rhel6')
-            or spec.satisfies('%gcc@4.8.0: os=centos6')
-            or spec.satisfies('%gcc@4.8.0: os=scientific6')):
+                or spec.satisfies('%gcc@4.8.0: os=centos6')
+                or spec.satisfies('%gcc@4.8.0: os=scientific6')):
             filter_file(r'RTM_KEY.*=.*rtm.*', 'RTM_KEY =',
                         join_path('build', 'linux.gcc.inc'))
 
@@ -224,3 +224,9 @@ class IntelTbb(Package):
         # Replace @rpath in ids with full path
         if sys.platform == 'darwin':
             fix_darwin_install_name(self.prefix.lib)
+
+    @property
+    def libs(self):
+        shared = True if '+shared' in self.spec else False
+        return find_libraries(
+            'libtbb*', root=self.prefix, shared=shared, recursive=True)
