@@ -59,10 +59,11 @@ class PyFlake8(PythonPackage):
     depends_on('py-mccabe@0.2.1:0.4',                 when='@2.5.0:2.5.999', type=('build', 'run'))
 
     # Python version-specific backports
-    depends_on('py-enum34',       when='@3.0.0: ^python@:3.3', type=('build', 'run'))
-    depends_on('py-typing',       when='@3.7.0: ^python@:3.4', type=('build', 'run'))
-    depends_on('py-configparser', when='@3.0.0: ^python@:3.1', type=('build', 'run'))
-    depends_on('py-functools32',  when='@3.7.4: ^python@:3.1', type=('build', 'run'))
+    depends_on('py-importlib-metadata', when='@3.8.0: ^python@:3.7', type=('build', 'run'))
+    depends_on('py-enum34',             when='@3.0.0: ^python@:3.3', type=('build', 'run'))
+    depends_on('py-typing',             when='@3.7.0: ^python@:3.4', type=('build', 'run'))
+    depends_on('py-configparser',       when='@3.0.0: ^python@:3.1', type=('build', 'run'))
+    depends_on('py-functools32',        when='@3.7.4: ^python@:3.1', type=('build', 'run'))
 
     def patch(self):
         """Filter pytest-runner requirement out of setup.py."""
