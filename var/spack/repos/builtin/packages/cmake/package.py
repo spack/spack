@@ -142,6 +142,10 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4681
     patch('ignore_crayxc_warnings.patch', when='@3.7:3.17.2')
 
+    # The Fujitsu compiler requires the '--linkfortran' option
+    # to combine C++ and Fortran programs.
+    patch('fujitsu_add_linker_option.patch', when='%fj')
+
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
     # https://gitlab.kitware.com/cmake/cmake/issues/18166
