@@ -9,7 +9,6 @@ from spack import *
 class Wcs(CMakePackage):
     """Simulates whole cell models using discrete event simulation."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/LLNL/wcs.git"
     git      = "https://github.com/LLNL/wcs.git"
     maintainers = ['rblake-llnl']
