@@ -573,7 +573,7 @@ class Concretizer(object):
                            'binaries for "{1}". Using best target possible: '
                            '"{2}"')
                     msg = msg.format(spec.compiler, current_target, candidate)
-                    tty.warn(msg)
+                    tty.debug(msg)
                     spec.architecture.target = candidate
                     return True
             else:
