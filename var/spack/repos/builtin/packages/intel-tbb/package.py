@@ -132,15 +132,15 @@ class IntelTbb(Package):
             for f in fs:
                 lines = open(f).readlines()
                 of = open(f, "w")
-                for l in lines:
-                    if l.strip().startswith("CPLUS ="):
+                for lin in lines:
+                    if lin.strip().startswith("CPLUS ="):
                         of.write("# coerced to spack\n")
                         of.write("CPLUS = $(CXX)\n")
-                    elif l.strip().startswith("CONLY ="):
+                    elif lin.strip().startswith("CONLY ="):
                         of.write("# coerced to spack\n")
                         of.write("CONLY = $(CC)\n")
                     else:
-                        of.write(l)
+                        of.write(lin)
 
     def install(self, spec, prefix):
         # Deactivate use of RTM with GCC when on an OS with a very old
