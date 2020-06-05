@@ -33,15 +33,15 @@ class PyFlake8(PythonPackage):
     # http://flake8.pycqa.org/en/latest/internal/releases.html#releasing-flake8
 
     # Flake8 3.8.X
-    depends_on('py-pycodestyle@2.6:2.7', when='@3.8:', type=('build', 'run'))
-    depends_on('py-pyflakes@2.2:2.3',    when='@3.8:', type=('build', 'run'))
+    depends_on('py-pycodestyle@2.6.0:2.6.999', when='@3.8.0:3.8.999', type=('build', 'run'))
+    depends_on('py-pyflakes@2.2.0:2.2.999',    when='@3.8.0:3.8.999', type=('build', 'run'))
 
     # Flake8 3.7.X
     # FIXME @0.3.0:0.3.999 causes concretization to hang
-    depends_on('py-entrypoints@0.3',     when='@3.7:', type=('build', 'run'))
-    depends_on('py-pyflakes@2.1:2.2',    when='@3.7:3.8', type=('build', 'run'))
-    depends_on('py-pycodestyle@2.5:2.6', when='@3.7:3.8', type=('build', 'run'))
-    depends_on('py-mccabe@0.6:0.7',      when='@3.7:', type=('build', 'run'))
+    depends_on('py-entrypoints@0.3',           when='@3.7.0:3.8.999', type=('build', 'run'))
+    depends_on('py-pyflakes@2.1.0:2.1.999',    when='@3.7.0:3.7.999', type=('build', 'run'))
+    depends_on('py-pycodestyle@2.5.0:2.5.999', when='@3.7.0:3.7.999', type=('build', 'run'))
+    depends_on('py-mccabe@0.6.0:0.6.999',      when='@3.7.0:3.8.999', type=('build', 'run'))
 
     # Flake8 3.5.X
     depends_on('py-pyflakes@1.5:1.6',     when='@3.5.0:3.5.999', type=('build', 'run'))
