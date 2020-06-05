@@ -525,6 +525,13 @@ class PyTensorflow(Package, CudaPackage):
     @run_after('configure')
     def post_configure_fixes(self):
         spec = self.spec
+
+        # make sure xla is actually turned off
+        if spec.satisfies('~xla'):
+            filter_file(r'--define with_xla_support=true',
+                        r'--define with_xla_support=false',
+                        '.tf_configure.bazelrc')
+
         if spec.satisfies('@1.5.0: ~android'):
             # env variable is somehow ignored -> brute force
             # TODO: find a better solution
