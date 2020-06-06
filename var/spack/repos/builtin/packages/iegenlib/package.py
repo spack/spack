@@ -23,6 +23,8 @@ class Iegenlib(CMakePackage):
 
     depends_on('cmake@2.6:', type='build')
     depends_on('autoconf',   type='build')
+    depends_on('automake',   type='build')
+    depends_on('libtool',    type='build')
     depends_on('texinfo',    type='build')
     depends_on('isl')
 
