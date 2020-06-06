@@ -8,12 +8,11 @@ from spack import *
 import spack.util.web
 
 
-class Protobuf(CMakePackage):
+class Protobuf(Package):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
     url      = "https://github.com/protocolbuffers/protobuf/archive/v3.10.1.tar.gz"
-    root_cmakelists_dir = "cmake"
 
     version('3.11.2',  sha256='e8c7601439dbd4489fe5069c33d374804990a56c2f710e00227ee5d8fd650e67')
     version('3.11.1',  sha256='4f8e805825c53bbc3c9f6b6abc009b5b5679e4702bccfca1121c42ff5ec801c7')
@@ -36,6 +35,7 @@ class Protobuf(CMakePackage):
     version('3.2.0',   sha256='a839d3f1519ff9d68ab908de5a0f269650ef1fc501c10f6eefd4cae51d29b86f')
     version('3.1.0',   sha256='fb2a314f4be897491bb2446697be693d489af645cb0e165a85e7e64e07eb134d')
     version('3.0.2',   sha256='a0a265bcc9d4e98c87416e59c33afc37cede9fb277292523739417e449b18c1e')
+    version('2.5.0',   sha256='c2665a7aa2ac1a206e61b28e014486e3de59009ea2be2bde9182e0847f38b62f')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -43,18 +43,25 @@ class Protobuf(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release'))
 
+    depends_on('cmake', when='@3.0.2:', type='build')
     depends_on('zlib')
+    depends_on('autoconf', type='build', when='@2.5.0')
+    depends_on('automake', type='build', when='@2.5.0')
+    depends_on('libtool',  type='build', when='@2.5.0')
+    depends_on('m4',       type='build', when='@2.5.0')
 
     conflicts('%gcc@:4.6', when='@3.6.0:')  # Requires c++11
     conflicts('%gcc@:4.6', when='@3.2.0:3.3.0')  # Breaks
 
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
-    patch('pkgconfig.patch', when='@:3.3.2')
+    patch('pkgconfig.patch', when='@3.0.2:3.3.2')
 
     patch('intel-v1.patch', when='@3.2:@3.6 %intel')
 
     # See https://github.com/protocolbuffers/protobuf/pull/7197
     patch('intel-v2.patch', when='@3.7:@3.11.4 %intel')
+
+    patch('protoc2.5.0_aarch64.patch', sha256='7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451', when='@2.5.0 target=aarch64:')
 
     def fetch_remote_versions(self):
         """Ignore additional source artifacts uploaded with releases,
@@ -75,3 +82,29 @@ class Protobuf(CMakePackage):
         if sys.platform == 'darwin':
             args.extend(['-DCMAKE_MACOSX_RPATH=ON'])
         return args
+
+    @when('@3.0.2:')
+    def install(self, spec, prefix):
+        args = self.cmake_args()
+        args.extend(std_cmake_args)
+
+        source_directory = join_path(self.stage.source_path, 'cmake')
+        build_directory = join_path(source_directory, 'build')
+
+        with working_dir(build_directory, create=True):
+            cmake(source_directory, *args)
+            make()
+            make('install')
+
+    def configure_args(self):
+        args = []
+        args.append('--prefix=%s' % self.prefix)
+        return args
+
+    @when('@2.5.0')
+    def install(self, spec, prefix):
+        args = self.configure_args()
+        autoreconf('-ifv')
+        configure(*args)
+        make()
+        make('install')
