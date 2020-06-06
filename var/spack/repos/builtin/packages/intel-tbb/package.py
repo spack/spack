@@ -132,22 +132,22 @@ class IntelTbb(Package):
             for f in fs:
                 lines = open(f).readlines()
                 of = open(f, "w")
-                for l in lines:
-                    if l.strip().startswith("CPLUS ="):
+                for lin in lines:
+                    if lin.strip().startswith("CPLUS ="):
                         of.write("# coerced to spack\n")
                         of.write("CPLUS = $(CXX)\n")
-                    elif l.strip().startswith("CONLY ="):
+                    elif lin.strip().startswith("CONLY ="):
                         of.write("# coerced to spack\n")
                         of.write("CONLY = $(CC)\n")
                     else:
-                        of.write(l)
+                        of.write(lin)
 
     def install(self, spec, prefix):
         # Deactivate use of RTM with GCC when on an OS with a very old
         # assembler.
         if (spec.satisfies('%gcc@4.8.0: os=rhel6')
-            or spec.satisfies('%gcc@4.8.0: os=centos6')
-            or spec.satisfies('%gcc@4.8.0: os=scientific6')):
+                or spec.satisfies('%gcc@4.8.0: os=centos6')
+                or spec.satisfies('%gcc@4.8.0: os=scientific6')):
             filter_file(r'RTM_KEY.*=.*rtm.*', 'RTM_KEY =',
                         join_path('build', 'linux.gcc.inc'))
 
@@ -224,3 +224,9 @@ class IntelTbb(Package):
         # Replace @rpath in ids with full path
         if sys.platform == 'darwin':
             fix_darwin_install_name(self.prefix.lib)
+
+    @property
+    def libs(self):
+        shared = True if '+shared' in self.spec else False
+        return find_libraries(
+            'libtbb*', root=self.prefix, shared=shared, recursive=True)
