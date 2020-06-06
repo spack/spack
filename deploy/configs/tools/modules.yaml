@@ -36,6 +36,7 @@ modules:
       - darshan-util
       - doxygen
       - emacs
+      - environment-modules
       - ffmpeg
       - git
       - graphviz

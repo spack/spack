@@ -27,7 +27,7 @@ packages:
       - darshan-util
       - doxygen@1.8.15
       - emacs@26.1
-      - environment-modules@3.2.10
+      - environment-modules@4.5.1
       - ffmpeg
       - flex@2.6.3
       - gdb~python@8.2

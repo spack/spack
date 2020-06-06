@@ -12,10 +12,11 @@ class EnvironmentModules(Package):
     """
 
     homepage = 'https://cea-hpc.github.io/modules/'
-    url = 'https://github.com/cea-hpc/modules/releases/download/v4.3.1/modules-4.3.1.tar.gz'
+    url = 'https://github.com/cea-hpc/modules/releases/download/v4.5.1/modules-4.5.1.tar.gz'
 
     maintainers = ['xdelaruelle']
 
+    version('4.5.1', sha256='7d4bcc8559e7fbbc52e526fc86a15b161ff4422aa49eee37897ee7a48eb64ac2')
     version('4.3.1', sha256='979efb5b3d3c8df2c3c364aaba61f97a459456fc5bbc092dfc02677da63e5654')
     version('4.3.0', sha256='231f059c4109a2d3028c771f483f6c92f1f3689eb0033648ce00060dad00e103')
     version('4.2.5', sha256='3375b454568e7bbec7748cd6173516ef9f30a3d8e13c3e99c02794a6a3bc3c8c')
