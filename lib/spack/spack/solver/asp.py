@@ -189,7 +189,7 @@ def check_packages_exist(specs):
     repo = spack.repo.path
     for spec in specs:
         for s in spec.traverse():
-            if not (repo.exists(s.name) or repo.is_virtual(s)):
+            if not (repo.exists(s.name) or repo.is_virtual(s.name)):
                 raise spack.repo.UnknownPackageError(s.name)
 
 
