@@ -18,3 +18,4 @@ class PyGast(PythonPackage):
     version('0.2.0', sha256='7068908321ecd2774f145193c4b34a11305bd104b4551b09273dfd1d6a374930')
 
     depends_on('py-setuptools', type='build')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
