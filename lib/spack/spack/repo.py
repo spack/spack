@@ -681,6 +681,9 @@ class RepoPath(object):
 
     def is_virtual(self, pkg_name):
         """True if the package with this name is virtual, False otherwise."""
+        if not isinstance(pkg_name, str):
+            raise ValueError(
+                "is_virtual(): expected package name, got %s" % type(pkg_name))
         return pkg_name in self.provider_index
 
     def __contains__(self, pkg_name):
