@@ -6,7 +6,9 @@
 from __future__ import print_function
 
 import collections
+import os
 import pkgutil
+import pprint
 import re
 import sys
 import tempfile
@@ -14,7 +16,13 @@ import time
 import types
 from six import string_types
 
+try:
+    import clingo
+except ImportError:
+    clingo = None
+
 import llnl.util.cpu
+import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 
@@ -23,6 +31,7 @@ import spack.architecture
 import spack.cmd
 import spack.config
 import spack.dependency
+import spack.error
 import spack.spec
 import spack.package
 import spack.package_prefs
@@ -105,6 +114,17 @@ class AspFunction(AspObject):
     def __call__(self, *args):
         return AspFunction(self.name, args)
 
+    def symbol(self, positive=True):
+        def argify(arg):
+            if isinstance(arg, bool):
+                return str(arg)
+            elif isinstance(arg, int):
+                return arg
+            else:
+                return str(arg)
+        return clingo.Function(
+            self.name, [argify(arg) for arg in self.args], positive=positive)
+
     def __getitem___(self, *args):
         self.args[:] = args
         return self
@@ -125,14 +145,6 @@ class AspAnd(AspObject):
     def __str__(self):
         s = ", ".join(str(arg) for arg in self.args)
         return s
-
-
-class AspNot(AspObject):
-    def __init__(self, arg):
-        self.arg = arg
-
-    def __str__(self):
-        return "not %s" % self.arg
 
 
 class AspOneOf(AspObject):
@@ -195,14 +207,16 @@ def check_packages_exist(specs):
 
 class Result(object):
     """Result of an ASP solve."""
-    def __init__(self, asp):
+    def __init__(self, asp=None):
         self.asp = asp
         self.satisfiable = None
         self.optimal = None
         self.warnings = None
+        self.nmodels = 0
 
         # specs ordered by optimization level
         self.answers = []
+        self.cores = []
 
 
 class ClingoDriver(object):
@@ -233,9 +247,6 @@ class ClingoDriver(object):
     def _and(self, *args):
         return AspAnd(*args)
 
-    def _not(self, arg):
-        return AspNot(arg)
-
     def fact(self, head):
         """ASP fact (a rule without a body)."""
         self.out.write("%s.\n" % head)
@@ -250,15 +261,9 @@ class ClingoDriver(object):
     def before_setup(self):
         """Must be called before program is generated."""
         # read the main ASP program from concrtize.lp
-        concretize_lp = pkgutil.get_data('spack.solver', 'concretize.lp')
-        self.out.write(concretize_lp.decode("utf-8"))
-        return self
 
     def after_setup(self):
         """Must be called after program is generated."""
-        self.out.write('\n')
-        display_lp = pkgutil.get_data('spack.solver', 'display.lp')
-        self.out.write(display_lp.decode("utf-8"))
 
     def parse_model_functions(self, function_strings):
         function_re = re.compile(r'(\w+)\(([^)]*)\)')
@@ -301,7 +306,8 @@ class ClingoDriver(object):
 
                 result.answers.append((opt, best_model_number, specs))
 
-    def solve(self, solver_setup, specs, dump=None, models=0, timers=False):
+    def solve(self, solver_setup, specs, dump=None, models=0,
+              timers=False, stats=False):
         def colorize(string):
             color.cprint(highlight(color.cescape(string)))
 
@@ -309,12 +315,16 @@ class ClingoDriver(object):
         with tempfile.TemporaryFile("w+") as program:
             self.out = program
 
-            self.before_setup()
-            solver_setup.setup(self, specs)
-            self.after_setup()
-            timer.phase("generate")
+            concretize_lp = pkgutil.get_data('spack.solver', 'concretize.lp')
+            program.write(concretize_lp.decode("utf-8"))
 
-            program.seek(0)
+            solver_setup.setup(self, specs)
+
+            program.write('\n')
+            display_lp = pkgutil.get_data('spack.solver', 'display.lp')
+            program.write(display_lp.decode("utf-8"))
+
+            timer.phase("generate")
 
             result = Result(program.read())
             program.seek(0)
@@ -385,6 +395,172 @@ class ClingoDriver(object):
         return result
 
 
+class PyclingoDriver(object):
+    def __init__(self, cores=True, asp=None):
+        """Driver for the Python clingo interface.
+
+        Arguments:
+            cores (bool): whether to generate unsatisfiable cores for better
+                error reporting.
+            asp (file-like): optional stream to write a text-based ASP program
+                for debugging or verification.
+        """
+        assert clingo, "PyclingoDriver requires clingo with Python support"
+        self.out = asp or llnl.util.lang.Devnull()
+        self.cores = cores
+
+    def title(self, name, char):
+        self.out.write('\n')
+        self.out.write("%" + (char * 76))
+        self.out.write('\n')
+        self.out.write("%% %s\n" % name)
+        self.out.write("%" + (char * 76))
+        self.out.write('\n')
+
+    def h1(self, name):
+        self.title(name, "=")
+
+    def h2(self, name):
+        self.title(name, "-")
+
+    def newline(self):
+        self.out.write('\n')
+
+    def one_of(self, *args):
+        return AspOneOf(*args)
+
+    def _and(self, *args):
+        return AspAnd(*args)
+
+    def fact(self, head):
+        """ASP fact (a rule without a body)."""
+        sym = head.symbol()
+        self.out.write("%s.\n" % sym)
+
+        atom = self.backend.add_atom(sym)
+        self.backend.add_rule([atom], [], choice=self.cores)
+        if self.cores:
+            self.assumptions.append(atom)
+
+    def rule(self, head, body):
+        """ASP rule (an implication)."""
+        if isinstance(body, AspAnd):
+            args = [f.symbol() for f in body.args]
+        elif isinstance(body, clingo.Symbol):
+            args = [body]
+        else:
+            raise TypeError("Invalid typee for rule body: ", type(body))
+
+        symbols = [head.symbol()] + args
+        atoms = {}
+        for s in symbols:
+            atoms[s] = self.backend.add_atom(s)
+
+        # Special assumption atom to allow rules to be in unsat cores
+        rule_str = "%s :- %s." % (
+            head.symbol(), ",".join(str(a) for a in args))
+
+        # rule atoms need to be choices before we can assume them
+        if self.cores:
+            rule_sym = clingo.Function("rule", [rule_str])
+            rule_atom = self.backend.add_atom(rule_sym)
+            self.backend.add_rule([rule_atom], [], choice=True)
+            self.assumptions.append(rule_atom)
+            rule_atoms = [rule_atom]
+        else:
+            rule_atoms = []
+
+        # print rule before adding
+        self.out.write("%s\n" % rule_str)
+        self.backend.add_rule(
+            [atoms[head.symbol()]],
+            [atoms[s] for s in args] + rule_atoms
+        )
+
+    def solve(self, solver_setup, specs, dump=None, nmodels=0,
+              timers=False, stats=False):
+        calls = [0]
+        class Context(object):
+            def version_satisfies(self, a, b):
+                calls[0] += 1
+                return bool(ver(a.string).satisfies(ver(b.string)))
+
+        timer = Timer()
+
+        # Initialize the control object for the solver
+        self.control = clingo.Control()
+        self.control.configuration.solve.models = nmodels
+        self.control.configuration.configuration = 'tweety'
+        self.control.configuration.solver.opt_strategy = "bb,dec"
+
+        # set up the problem -- this generates facts and rules
+        self.assumptions = []
+        with self.control.backend() as backend:
+            self.backend = backend
+            solver_setup.setup(self, specs)
+        timer.phase("setup")
+
+        # read in the main ASP program and display logic -- these are
+        # handwritten, not generated, so we load them as resources
+        parent_dir = os.path.dirname(__file__)
+        self.control.load(os.path.join(parent_dir, 'concretize.lp'))
+        self.control.load(os.path.join(parent_dir, "display.lp"))
+        timer.phase("load")
+
+        # Grounding is the first step in the solve -- it turns our facts
+        # and first-order logic rules into propositional logic.
+        self.control.ground([("base", [])], context=Context())
+        timer.phase("ground")
+
+        # With a grounded program, we can run the solve.
+        result = Result()
+        models = []  # stable moodels if things go well
+        cores = []   # unsatisfiable cores if they do not
+        def on_model(model):
+            models.append((model.cost, model.symbols(shown=True)))
+
+        solve_result = self.control.solve(
+            assumptions=self.assumptions,
+            on_model=on_model,
+            on_core=cores.append
+        )
+        timer.phase("solve")
+
+        # once done, construct the solve result
+        result.satisfiable = solve_result.satisfiable
+        if result.satisfiable:
+            builder = SpecBuilder(specs)
+            min_cost, best_model = min(models)
+            tuples = [
+                (sym.name, [a.string for a in sym.arguments])
+                for sym in best_model
+            ]
+            answers = builder.build_specs(tuples)
+            result.answers.append((list(min_cost), 0, answers))
+
+        elif cores:
+            symbols = dict(
+                (a.literal, a.symbol)
+                for a in self.control.symbolic_atoms
+            )
+            for core in cores:
+                core_symbols = []
+                for atom in core:
+                    sym = symbols[atom]
+                    if sym.name == "rule":
+                        sym = sym.arguments[0].string
+                result.cores.append(core_symbols)
+
+        if timers:
+            timer.write()
+            print()
+        if stats:
+            print("Statistics:")
+            pprint.pprint(self.control.statistics)
+
+        return result
+
+
 class SpackSolverSetup(object):
     """Class to set up and run a Spack concretization solve."""
 
@@ -393,6 +569,11 @@ class SpackSolverSetup(object):
         self.possible_versions = {}
         self.possible_virtuals = None
         self.possible_compilers = []
+        self.version_constraints = set()
+        self.post_facts = []
+
+        # id for dummy variables
+        self.card = 0
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -419,7 +600,7 @@ class SpackSolverSetup(object):
             -priority.get(v, 0),
 
             # The preferred=True flag (packages or packages.yaml or both?)
-            pkg.versions.get(v).get('preferred', False),
+            pkg.versions.get(v, {}).get('preferred', False),
 
             # ------- Regular case: use latest non-develop version by default.
             # Avoid @develop version, which would otherwise be the "largest"
@@ -448,22 +629,29 @@ class SpackSolverSetup(object):
         if spec.concrete:
             return [fn.version(spec.name, spec.version)]
 
-        # version must be *one* of the ones the spec allows.
-        allowed_versions = [
-            v for v in sorted(self.possible_versions[spec.name])
-            if v.satisfies(spec.versions)
-        ]
-
-        # don't bother restricting anything if all versions are allowed
-        if len(allowed_versions) == len(self.possible_versions[spec.name]):
+        if spec.versions == ver(":"):
             return []
 
-        predicates = [fn.version(spec.name, v) for v in allowed_versions]
+        # record all version constraints for later
+        self.version_constraints.add((spec.name, spec.versions))
+        return [fn.version_satisfies(spec.name, spec.versions)]
 
-        # conflict with any versions that do not satisfy the spec
-        if predicates:
-            return [self.gen.one_of(*predicates)]
-        return []
+        # # version must be *one* of the ones the spec allows.
+        # allowed_versions = [
+        #     v for v in sorted(self.possible_versions[spec.name])
+        #     if v.satisfies(spec.versions)
+        # ]
+
+        # # don't bother restricting anything if all versions are allowed
+        # if len(allowed_versions) == len(self.possible_versions[spec.name]):
+        #     return []
+
+        # predicates = [fn.version(spec.name, v) for v in allowed_versions]
+
+        # # conflict with any versions that do not satisfy the spec
+        # if predicates:
+        #     return [self.gen.one_of(*predicates)]
+        # return []
 
     def available_compilers(self):
         """Facts about available compilers."""
@@ -526,13 +714,11 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.variant(pkg.name, name))
 
             single_value = not variant.multi
-            single = fn.variant_single_value(pkg.name, name)
             if single_value:
-                self.gen.fact(single)
+                self.gen.fact(fn.variant_single_value(pkg.name, name))
                 self.gen.fact(
                     fn.variant_default_value(pkg.name, name, variant.default))
             else:
-                self.gen.fact(self.gen._not(single))
                 defaults = variant.default.split(',')
                 for val in sorted(defaults):
                     self.gen.fact(
@@ -585,7 +771,10 @@ class SpackSolverSetup(object):
                         )
 
                 # add constraints on the dependency from dep spec.
-                for clause in self.spec_clauses(dep.spec):
+                clauses = self.spec_clauses(dep.spec)
+                if spack.repo.path.is_virtual(dep.spec.name):
+                    clauses = []
+                for clause in clauses:
                     self.gen.rule(
                         clause,
                         self.gen._and(
@@ -708,6 +897,9 @@ class SpackSolverSetup(object):
                     spec.name, spec.compiler.name, spec.compiler.version))
 
             elif spec.compiler.versions:
+                f.node_compiler_version_satisfies(
+                    spec.name, spec.compiler.namd, spec.compiler.version)
+
                 compiler_list = spack.compilers.all_compiler_specs()
                 possible_compiler_versions = [
                     f.node_compiler_version(
@@ -716,6 +908,8 @@ class SpackSolverSetup(object):
                     for compiler in compiler_list
                     if compiler.satisfies(spec.compiler)
                 ]
+
+
                 clauses.append(self.gen.one_of(*possible_compiler_versions))
                 for version in possible_compiler_versions:
                     clauses.append(
@@ -818,7 +1012,7 @@ class SpackSolverSetup(object):
         # many targets can make things slow.
         # TODO: investigate this.
         best_targets = set([uarch.family.name])
-        for compiler in compilers:
+        for compiler in sorted(compilers):
             supported = self._supported_targets(compiler, compatible_targets)
             if not supported:
                 continue
@@ -893,7 +1087,7 @@ class SpackSolverSetup(object):
         return cspecs
 
     def setup(self, driver, specs):
-        """Generate an ASP program with relevant constarints for specs.
+        """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
         facts and rules from all possible dependencies of the input
@@ -955,6 +1149,10 @@ class SpackSolverSetup(object):
                     for clause in self.spec_clauses(dep):
                         self.gen.fact(clause)
 
+        self.gen.h1("Version Constraints")
+        for name, versions in sorted(self.version_constraints):
+            self.gen.fact(fn.version_constraint(name, versions))
+        self.gen.newline()
 
 class SpecBuilder(object):
     """Class with actions to rebuild a spec from ASP results."""
@@ -1086,6 +1284,8 @@ class SpecBuilder(object):
         self._specs = {}
         for name, args in function_tuples:
             action = getattr(self, name, None)
+
+            # print out unknown actions so we can display them for debugging
             if not action:
                 print("%s(%s)" % (name, ", ".join(str(a) for a in args)))
                 continue
@@ -1144,7 +1344,7 @@ def highlight(string):
 #
 # These are handwritten parts for the Spack ASP model.
 #
-def solve(specs, dump=None, models=0, timers=False):
+def solve(specs, dump=None, models=0, timers=False, stats=False):
     """Solve for a stable model of specs.
 
     Arguments:
@@ -1152,6 +1352,9 @@ def solve(specs, dump=None, models=0, timers=False):
         dump (tuple): what to dump
         models (int): number of models to search (default: 0)
     """
-    driver = ClingoDriver()
+    driver = PyclingoDriver()
+    if "asp" in dump:
+        driver.out = sys.stdout
+
     setup = SpackSolverSetup()
-    return driver.solve(setup, specs, dump, models, timers)
+    return driver.solve(setup, specs, dump, models, timers, stats)

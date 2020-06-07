@@ -59,6 +59,9 @@ def setup_parser(subparser):
         '--timers', action='store_true', default=False,
         help='print out timers for different solve phases')
     subparser.add_argument(
+        '--stats', action='store_true', default=False,
+        help='print out statistics from clingo')
+    subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
 
@@ -93,7 +96,9 @@ def solve(parser, args):
     specs = spack.cmd.parse_specs(args.specs)
 
     # dump generated ASP program
-    result = asp.solve(specs, dump=dump, models=models, timers=args.timers)
+    result = asp.solve(
+        specs, dump=dump, models=models, timers=args.timers, stats=args.stats
+    )
     if 'solutions' not in dump:
         return
 
@@ -105,11 +110,10 @@ def solve(parser, args):
     # dump the solutions as concretized specs
     if 'solutions' in dump:
         best = min(result.answers)
-        assert best[1] == result.answers[-1][1]
 
-        opt, i, answer = best
+        opt, _, answer = best
         if not args.format:
-            tty.msg("Best of %d answers." % (i + 1))
+            tty.msg("Best of %d answers." % result.nmodels)
             tty.msg("Optimization: %s" % opt)
 
         # iterate over roots from command line

@@ -671,3 +671,12 @@ def uniq(sequence):
             uniq_list.append(element)
             last = element
     return uniq_list
+
+
+class Devnull(object):
+    """Null stream with less overhead than ``os.devnull``.
+
+    See https://stackoverflow.com/a/2929954.
+    """
+    def write(self, *_):
+        pass
