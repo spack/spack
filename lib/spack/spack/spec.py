@@ -97,12 +97,14 @@ import spack.paths
 import spack.architecture
 import spack.compiler
 import spack.compilers as compilers
+import spack.config
 import spack.dependency as dp
 import spack.error
 import spack.hash_types as ht
 import spack.parse
 import spack.provider_index
 import spack.repo
+import spack.solver
 import spack.store
 import spack.util.crypto
 import spack.util.executable
@@ -2244,7 +2246,7 @@ class Spec(object):
 
         return changed
 
-    def concretize(self, tests=False):
+    def _old_concretize(self, tests=False):
         """A spec is concrete if it describes one build of a package uniquely.
         This will ensure that this spec is concrete.
 
@@ -2416,6 +2418,33 @@ class Spec(object):
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
         self.architecture.target.optimization_flags(self.compiler)
+
+    def _new_concretize(self, tests=False):
+        import spack.solver.asp
+
+        if not self.name:
+            raise spack.error.SpecError(
+                "Spec has no name; cannot concretize an anonymous spec")
+
+        result = spack.solver.asp.solve([self])
+        if not result.satisfiable:
+            raise spack.error.UnsatisfiableSpecError(
+                self, "unknown", "Unsatisfiable!")
+
+        # take the best answer
+        opt, i, answer = min(result.answers)
+        assert self.name in answer
+
+        concretized = answer[self.name]
+        self._dup(concretized)
+        self._mark_concrete()
+
+    #: choose your concretizer here.
+    def concretize(self, tests=False):
+        if spack.config.get('config:concretizer') == "original":
+            self._old_concretize(tests)
+        else:
+            self._new_concretize(tests)
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
