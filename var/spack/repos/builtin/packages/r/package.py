@@ -83,7 +83,7 @@ class R(AutotoolsPackage):
     depends_on('libxmu', when='+X')
     depends_on('curl')
     depends_on('pcre2', when='@4:')
-    depends_on('pcre')
+    depends_on('pcre', when='@:3.6.3')
     depends_on('java')
 
     patch('zlib.patch', when='@:3.3.2')
