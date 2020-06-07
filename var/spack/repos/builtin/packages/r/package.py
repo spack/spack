@@ -54,6 +54,8 @@ class R(AutotoolsPackage):
             description='Enable memory profiling')
     variant('rmath', default=False,
             description='Build standalone Rmath library')
+    variant('recommended_packages', default=True,
+            description='Recommended packages getting installed')
 
     # Virtual dependencies
     depends_on('blas', when='+external-lapack')
@@ -160,6 +162,9 @@ class R(AutotoolsPackage):
 
         if '+memory_profiling' in spec:
             config_args.append('--enable-memory-profiling')
+
+        if '~recommended_packages' in spec:
+            config_args.append('--without-recommended-packages')
 
         # Set FPICFLAGS for compilers except 'gcc'.
         if self.compiler.name != 'gcc':
