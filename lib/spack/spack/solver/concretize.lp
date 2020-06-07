@@ -10,18 +10,26 @@
 version_declared(Package, Version) :- version_declared(Package, Version, _).
 
 % If something is a package, it has only one version and that must be a
-% possible version.
-1 { version(Package, Version) : version_possible(Package, Version) } 1
+% declared version.
+1 { version(Package, Version) : version_declared(Package, Version) } 1
  :- node(Package).
 
-% If a version is declared but conflicted, it's not possible.
-version_possible(Package, Version)
- :- version_declared(Package, Version), not version_conflict(Package, Version).
+% no conflicting versions can be assigned
+:- version(Package, Version),
+   version_satisfies(Package, Constraint),
+   0 = @version_satisfies(Version, Constraint).
 
-version_weight(Package, Version, Weight)
+version_satisfies(Package, Constraint)
+  :- node(Package),
+     version(Package, Version),
+     version_constraint(Package, Constraint),
+     1 = @version_satisfies(Version, Constraint).
+
+version_weight(Package, Weight)
  :- version(Package, Version), version_declared(Package, Version, Weight).
 
 #defined version_conflict/2.
+#defined version_constraint/2.
 
 %-----------------------------------------------------------------------------
 % Dependency semantics
@@ -47,9 +55,11 @@ depends_on(Package, Dependency, Type)
 1 { node(Package) : provides_virtual(Package, Virtual) } 1
  :- virtual_node(Virtual).
 
-% for any virtual, there can be at most one provider in the DAG
+% a node that provides a virtual is a provider
 provider(Package, Virtual)
- :- node(Package), provides_virtual(Package, Virtual).
+  :- node(Package), provides_virtual(Package, Virtual).
+
+% for any virtual, there can be at most one provider in the DAG
 0 { provider(Package, Virtual) : node(Package) } 1 :- virtual(Virtual).
 
 % give dependents the virtuals they want
@@ -73,10 +83,9 @@ provider_weight(Dependency, 100)
     not default_provider_preference(Virtual, Dependency, _).
 
 % all nodes must be reachable from some root
-needed(Package) :- root(Package), node(Package).
-needed(Dependency) :- root(Package), depends_on(Package, Dependency).
-needed(Dependency)
- :- needed(Package), depends_on(Package, Dependency), node(Package).
+node(Package) :- root(Package).
+needed(Package) :- root(Package).
+needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
 :- node(Package), not needed(Package).
 
 % real dependencies imply new nodes.
@@ -231,6 +240,16 @@ node_target_match(Package, 1)
 1 { compiler_weight(Package, Weight) : compiler_weight(Package, Weight) } 1
  :- node(Package).
 
+% no conflicting compiler versions
+:- node_compiler_version(Package, Compiler, Version),
+   node_compiler_version_satisfies(Package, Compiler, Constraint),
+   0 = @version_satisfies(Version, Constraint).
+
+node_compiler_version_satisfies(Package, Constraint)
+  :- node_compiler_version(Package, Compiler, Version),
+     node_compiler_version_constraint(Package, Compiler, Constraint),
+     1 = @version_satisfies(Version, Constraint).
+
 % dependencies imply we should try to match hard compiler constraints
 % todo: look at what to do about intersecting constraints here. we'd
 % ideally go with the "lowest" pref in the DAG
@@ -256,6 +275,8 @@ compiler_version_match(Package, 1)
 
 #defined node_compiler_hard/2.
 #defined node_compiler_version_hard/3.
+#defined node_compiler_version_constraint/3.
+#defined node_compiler_version_satisfies/3.
 
 % compilers weighted by preference acccording to packages.yaml
 compiler_weight(Package, Weight)
@@ -359,7 +380,7 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 
 % prefer more recent versions.
 #minimize{
-    Weight@8,Package,Version : version_weight(Package, Version, Weight)
+    Weight@8,Package : version_weight(Package, Weight)
 }.
 
 % compiler preferences
