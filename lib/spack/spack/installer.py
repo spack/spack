@@ -400,8 +400,8 @@ def dump_packages(spec, path):
 
             # There's no provenance installed for the source package.  Skip it.
             # User can always get something current from the builtin repo.
-            # If it's external, treat it as current because we cannot guarantee
-            # we have the repo that it came from.
+            # If it's external, skip it because it either is using the builtin
+            # repo or the provenance is already in place.
             # The provenance could exist if the external was installed by a
             # separate Spack instance not configured as an upstream.
             if node.external or not os.path.isdir(source_repo_root):
