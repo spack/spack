@@ -23,7 +23,7 @@ class PyDevlib(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-python-dateutil', type=('build', 'run'))
-    depends_on('py-pexpect', type=('build', 'run'))
+    depends_on('py-pexpect@3.3:', type=('build', 'run'))
     depends_on('py-pyserial', type=('build', 'run'))
     depends_on('py-wrapt', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
