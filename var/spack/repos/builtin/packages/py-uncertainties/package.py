@@ -7,8 +7,8 @@ from spack import *
 
 
 class PyUncertainties(PythonPackage):
-    """Transparent calculations with uncertainties on the quantities involved (aka error propagation);
-    fast calculation of derivatives
+    """Transparent calculations with uncertainties on the quantities involved
+    (aka error propagation); fast calculation of derivatives
     """
 
     homepage = "https://uncertainties-python-package.readthedocs.io/en/latest/"
