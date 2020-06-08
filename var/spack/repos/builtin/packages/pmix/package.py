@@ -71,6 +71,15 @@ class Pmix(AutotoolsPackage):
             default=True,
             description="Toggle pmi backwards compatibility")
 
+    variant('restful',
+            default=False,
+            description="allow a PMIx server to request services from "
+            "a system-level REST server")
+    depends_on('curl', when="+restful")
+    depends_on('jansson@2.11:', when="+restful")
+
+    conflicts('@:3.9.9', when='+restful')
+
     def configure_args(self):
 
         spec = self.spec
