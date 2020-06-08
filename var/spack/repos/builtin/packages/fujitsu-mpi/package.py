@@ -34,7 +34,7 @@ class FujitsuMpi(Package):
         self.spec.mpifc = self.prefix.bin.mpifrt
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env):
+        self.setup_run_environment(env)
 
     def setup_run_environment(self, env):
         # Because MPI are both compilers and runtimes, we set up the compilers
