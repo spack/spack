@@ -19,6 +19,6 @@ class PyUncertainties(PythonPackage):
 
     depends_on('python@2.7:',   type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-future',     type=('build', 'run'))
+    depends_on('py-future',     type=('build', 'run'), when='python@:2')
     depends_on('py-numpy',      type=('build', 'run'), when='+numpy')
     depends_on('py-sphinx',     type=('build', 'run'), when='+docs')
