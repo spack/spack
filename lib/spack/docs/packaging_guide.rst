@@ -4079,7 +4079,9 @@ decorate the package being defined and specify a package level
 
 This attribute must be a list of strings. Each string is treated as a regular
 expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3', 'my-weird-gcc', etc.) to
-determine a set of system executables that might be part or this package.
+determine a set of system executables that might be part or this package. Note
+that to match only executables named 'gcc' the regular expression ``r'^gcc$'``
+must be used.
 
 Finally to determine the version of each executable the ``determine_version``
 method must be implemented:
