@@ -9,27 +9,16 @@ from spack import *
 class PyHealpy(PythonPackage):
     """healpy is a Python package to handle pixelated data on the sphere."""
 
-    homepage = "https://github.com/healpy/healpy"
-    url      = "https://github.com/healpy/healpy/archive/1.12.10.tar.gz"
+    homepage = "https://healpy.readthedocs.io/"
+    url      = "https://pypi.python.org/packages/source/h/healpy/healpy-1.13.0.tar.gz"
 
-    version('1.12.10', sha256='8576cc3240f1da3ba8428699c3231d8e24dd86a754c36b0a12cb087ac5793d69')
+    version('1.13.0', sha256='d0ae02791c2404002a09c643e9e50bc58e3d258f702c736dc1f39ce1e6526f73')
+    version('1.7.4', sha256='3cca7ed7786ffcca70e2f39f58844667ffb8521180ac890d4da651b459f51442')
 
-    # FIXME: Add dependencies if required. Only add the python dependency
-    # if you need specific versions. A generic python dependency is
-    # added implicity by the PythonPackage class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('python@2.6:2.7.99', type=('build', 'run'))
+    depends_on('py-setuptools@:45.0', type='build')
+    depends_on('py-numpy@:1.16')
+    depends_on('py-matplotlib@:2')
+    depends_on('py-pillow@:6')
     depends_on('py-pip')
     depends_on('py-wheel')
-    depends_on('py-numpy')
-    depends_on('py-matplotlib')
-    depends_on('py-astropy')
-    depends_on('cfitsio')
-    depends_on('healpix-cxx')
-
-    # def build_args(self, spec, prefix):
-    #     # FIXME: Add arguments other than --prefix
-    #     # FIXME: If not needed delete this function
-    #     args = []
-    #     return args
