@@ -14,7 +14,8 @@ class PyUncertainties(PythonPackage):
 
     version('3.1.4', sha256='63548a94899f2a51eeb89b640f6ac311f481a8016b37dce157186e44619bc968')
 
-    varaint('extras')
+    varaint('numpy', default=False, description='Enable extra features requiring numpy')
+    varaint('docs',  default=False, description='Build with documentation')
 
     depends_on('python@2.7:',   type=('build', 'run'))
     depends_on('py-setuptools', type='build')
