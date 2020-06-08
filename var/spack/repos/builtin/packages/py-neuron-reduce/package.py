@@ -14,8 +14,9 @@ class PyNeuronReduce(PythonPackage):
     git = "git@github.com:orena1/neuron_reduce.git"
 
     version('develop', branch='master')
-    version('0.0.6', sha256='e75ce138ae049f550d72ec86c5cae4afcada577a2805d9dc50cbe80eff1f2256')
+    version('0.0.8', commit='3aada2ad3606723a6ebbaf39581153e38de24733')
     version('0.0.7', commit='1bad597f2faa5ff6aa8c94b6f326f86a02e656d7')
+    version('0.0.6', sha256='e75ce138ae049f550d72ec86c5cae4afcada577a2805d9dc50cbe80eff1f2256')
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy@1.14:', type='run')
