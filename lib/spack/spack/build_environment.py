@@ -148,9 +148,9 @@ def clean_environment():
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
 
-    # Test the host architecture because old cray systems (i.e. Blue Waters)
-    # do not work when we clean aspects of the cray environment.
-    # Cleaning these is necessary on cray "cluster" systems.
+    # On Cray systems newer than CNL5, unset CRAY_LD_LIBRARY_PATH to avoid
+    # interference with Spack dependencies. CNL5 (e.g. Blue Waters) requires
+    # these variables to be set.
     hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
     if str(hostarch.platform) == 'cray' and str(hostarch.os) != 'cnl5':
         env.unset('CRAY_LD_LIBRARY_PATH')
