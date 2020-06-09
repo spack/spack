@@ -26,8 +26,10 @@ class Brion(CMakePackage):
     depends_on('ninja', type='build')
     depends_on('doxygen', type='build')
 
+    depends_on('bbptestdata', type=('build', 'test'))
+
     depends_on('python@3.4:', type=('build', 'run'), when='+python')
-    depends_on('py-numpy', type=('build', 'run'), when='+python')
+    depends_on('py-numpy', type=('build', 'run', 'test'), when='+python')
 
     depends_on('boost +shared', when='~python')
     depends_on('boost +shared +python', when='+python')
@@ -45,19 +47,19 @@ class Brion(CMakePackage):
     depends_on('mvdtool ~mpi')
 
     def patch(self):
-        choose_python_path = 'CMake/common/ChoosePython.cmake' \
-            if self.spec.version == Version('3.1.0') \
-            else 'CMake/ChoosePython.cmake'
-        filter_file(r'-py36', r'36 -py36', choose_python_path)
+        if self.spec.version == Version('3.1.0'):
+            filter_file(r'-py36', r'36 -py36',
+                        'CMake/common/ChoosePython.cmake')
 
     def cmake_args(self):
         return ['-DBRION_SKIP_LIBSONATA_SUBMODULE=ON',
-                '-DDISABLE_SUBPROJECTS=0N']
+                '-DDISABLE_SUBPROJECTS=0N',
+                '-DBRION_REQUIRE_PYTHON=%s' % ("ON" if "+python" in self.spec
+                                               else "OFF")]
 
     @when('+python')
     def setup_run_environment(self, env):
-        site_dir = (self.spec['python']
-                    .package.site_packages_dir.split(os.sep)[1:])
+        site_dir = self._get_site_dir()
         for target in (self.prefix.lib, self.prefix.lib64):
             pathname = os.path.join(target, *site_dir)
             if os.path.isdir(pathname):
@@ -68,3 +70,17 @@ class Brion(CMakePackage):
             ninja()
             if '+doc' in self.spec:
                 ninja('doxygen', 'doxycopy')
+
+    @when('+python')
+    @run_after('install')
+    def test(self):
+        site_dir = self._get_site_dir()
+        for target in (self.prefix.lib, self.prefix.lib64):
+            pathname = os.path.join(target, *site_dir)
+            if os.path.isdir(pathname):
+                with working_dir(pathname):
+                    python('-c', 'import brain; print(brain)')
+
+    def _get_site_dir(self):
+        return (self.spec['python']
+                    .package.site_packages_dir.split(os.sep)[1:])
