@@ -11,7 +11,7 @@ class PyPygelf(PythonPackage):
     support."""
 
     homepage = "https://github.com/keeprocking/pygelf"
-    url      = "https://files.pythonhosted.org/packages/5e/4f/a6224902db19be061ffb090a247014c4716d45e5c97ae4d143321e818092/pygelf-0.3.6.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pygelf/pygelf-0.3.6.tar.gz"
 
     # notify when the package is updated.
     maintainers = ['victorusu', 'vkarak']
