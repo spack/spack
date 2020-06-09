@@ -58,4 +58,4 @@ class Reframe(Package):
         install_tree(self.stage.source_path, self.prefix)
 
     def setup_run_environment(self, env):
-        env.prepend_path('MANPATH',  join_path(prefix, 'docs', 'man'))
+        env.prepend_path('MANPATH',  self.prefix.docs.man)
