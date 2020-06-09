@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import pdb
+
 
 class Alps(CMakePackage):
     """Algorithms for Physics Simulations
@@ -37,6 +37,6 @@ class Alps(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append('Boost_ROOT_DIR='+self.spec['boost'].prefix)
+        args.append('Boost_ROOT_DIR=' + self.spec['boost'].prefix)
         args.append("-DCMAKE_CXX_FLAGS=-std=c++03 ")
         return args
