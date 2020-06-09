@@ -34,12 +34,13 @@ class VtkH(Package, CudaPackage):
     and DIY2 to provide a toolkit with hybrid parallel capabilities."""
 
     homepage = "https://github.com/Alpine-DAV/vtk-h"
-    url      = "https://github.com/Alpine-DAV/vtk-h/releases/download/v0.5.3/vtkh-v0.5.3.tar.gz"
+    url      = "https://github.com/Alpine-DAV/vtk-h/releases/download/v0.5.8/vtkh-v0.5.8.tar.gz"
     git      = "https://github.com/Alpine-DAV/vtk-h.git"
 
     maintainers = ['cyrush']
 
     version('develop', branch='develop', submodules=True)
+    version('0.5.8', sha256="203b337f4280a24a2b75722384f77e0e2f5965058b541efc153db76b7ab98133")
     version('0.5.7', sha256="e8c1925dc34ee6be17cec734121e43002e3c02b54ef8dac341b51a455b95e402")
     version('0.5.6', sha256="c78c0fa71a9687c2951a06d2112b52aa81fdcdcfbc9464d1578326d03fbb205e")
     version('0.5.4', sha256="92bf3741df7a15e36ff41a9a783f3b88eecc86e55cad1defba76f141baa2610b")
@@ -63,17 +64,17 @@ class VtkH(Package, CudaPackage):
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
 
-    depends_on("vtk-m@1.5.2~tbb+openmp", when="+openmp")
-    depends_on("vtk-m@1.5.2~tbb~openmp", when="~openmp")
+    depends_on("vtk-m@1.5.3~tbb+openmp", when="+openmp")
+    depends_on("vtk-m@1.5.3~tbb~openmp", when="~openmp")
 
-    depends_on("vtk-m@1.5.2+cuda~tbb+openmp", when="+cuda+openmp")
-    depends_on("vtk-m@1.5.2+cuda~tbb~openmp", when="+cuda~openmp")
+    depends_on("vtk-m@1.5.3+cuda~tbb+openmp", when="+cuda+openmp")
+    depends_on("vtk-m@1.5.3+cuda~tbb~openmp", when="+cuda~openmp")
 
-    depends_on("vtk-m@1.5.2~tbb+openmp~shared", when="+openmp~shared")
-    depends_on("vtk-m@1.5.2~tbb~openmp~shared", when="~openmp~shared")
+    depends_on("vtk-m@1.5.3~tbb+openmp~shared", when="+openmp~shared")
+    depends_on("vtk-m@1.5.3~tbb~openmp~shared", when="~openmp~shared")
 
-    depends_on("vtk-m@1.5.2+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
-    depends_on("vtk-m@1.5.2+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
+    depends_on("vtk-m@1.5.3+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
+    depends_on("vtk-m@1.5.3+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
