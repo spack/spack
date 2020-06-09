@@ -38,6 +38,7 @@ modules:
       - emacs
       - environment-modules
       - ffmpeg
+      - gdb
       - git
       - graphviz
       - hpctoolkit
