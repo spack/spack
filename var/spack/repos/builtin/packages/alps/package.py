@@ -35,6 +35,8 @@ class Alps(CMakePackage):
     # remove a problematic build variable
     patch('mpi.patch')
 
+    extends('python')
+
     root_cmakelists_dir = 'alps'
 
     def cmake_args(self):
