@@ -115,8 +115,8 @@ def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
     install(pkg_name)
     with tmpdir.as_cwd():
         spack_test('run',
-            '--log-format=junit', '--log-file=test.xml',
-            pkg_name)
+                   '--log-format=junit', '--log-file=test.xml',
+                   pkg_name)
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -141,9 +141,9 @@ def test_cdash_output_test_error(
     install('test-error')
     with tmpdir.as_cwd():
         spack_test('run',
-            '--log-format=cdash',
-            '--log-file=cdash_reports',
-            'test-error')
+                   '--log-format=cdash',
+                   '--log-file=cdash_reports',
+                   'test-error')
         report_dir = tmpdir.join('cdash_reports')
         print(tmpdir.listdir())
         assert report_dir in tmpdir.listdir()
@@ -159,9 +159,9 @@ def test_cdash_upload_clean_test(
     install('printing-package')
     with tmpdir.as_cwd():
         spack_test('run',
-            '--log-file=cdash_reports',
-            '--log-format=cdash',
-            'printing-package')
+                   '--log-file=cdash_reports',
+                   '--log-format=cdash',
+                   'printing-package')
         report_dir = tmpdir.join('cdash_reports')
         assert report_dir in tmpdir.listdir()
         report_file = report_dir.join('printing-package_Test.xml')
