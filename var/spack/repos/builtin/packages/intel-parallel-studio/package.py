@@ -230,4 +230,4 @@ class IntelParallelStudio(IntelPackage):
         super(self, IntelParallelStudio).setup_run_environment(*args)
         # We can fake the dependent spec because it isn't used
         # This allows us to setup mpi compilers in run env
-        self.setup_dependent_build_environment(*args, None)
+        self.setup_dependent_build_environment(*args, dependent_spec=None)
