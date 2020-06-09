@@ -25,6 +25,8 @@ class Alps(CMakePackage):
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
 
+    conflicts('%gcc@7:')
+
     root_cmakelists_dir = 'alps'
 
     patch('mpi.patch')
@@ -32,4 +34,5 @@ class Alps(CMakePackage):
     def cmake_args(self):
         args = []
         args.append('Boost_ROOT_DIR='+self.spec['boost'].prefix)
+        args.append("-DCMAKE_CXX_FLAGS=-std=c++03 ")
         return args
