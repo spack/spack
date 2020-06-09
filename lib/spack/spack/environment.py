@@ -37,6 +37,7 @@ from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
 import spack.util.lock as lk
+from spack.util.path import substitute_path_variables
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -780,8 +781,8 @@ class Environment(object):
         # highest-precedence scopes are last.
         includes = config_dict(self.yaml).get('include', [])
         for i, config_path in enumerate(reversed(includes)):
-            # allow paths to contain environment variables
-            config_path = config_path.format(**os.environ)
+            # allow paths to contain spack config/environment variables, etc.
+            config_path = substitute_path_variables(config_path)
 
             # treat relative paths as relative to the environment
             if not os.path.isabs(config_path):
