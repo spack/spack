@@ -30,7 +30,7 @@ def mock_test_stage(mutable_config, tmpdir):
 
 def test_test_package_not_installed(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery):
+        install_mockery_mutable_config):
 
     output = spack_test('run', 'libdwarf')
 
@@ -49,8 +49,8 @@ def test_test_dirty_flag(arguments, expected):
     assert args.dirty == expected
 
 
-def test_test_output(install_mockery, mock_archive, mock_fetch,
-                     mock_test_stage):
+def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
+                     install_mockery_mutable_config):
     """Ensure output printed from pkgs is captured by output redirection."""
     install('printing-package')
     spack_test('run', 'printing-package')
@@ -72,8 +72,10 @@ def test_test_output(install_mockery, mock_archive, mock_fetch,
     assert "FAILED" not in output
 
 
-def test_test_output_on_error(mock_packages, mock_archive, mock_fetch,
-                              install_mockery, capfd, mock_test_stage):
+def test_test_output_on_error(
+    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
+    capfd, mock_test_stage
+):
     install('test-error')
     # capfd interferes with Spack's capturing
     with capfd.disabled():
@@ -83,18 +85,22 @@ def test_test_output_on_error(mock_packages, mock_archive, mock_fetch,
     assert "FAILED: Command exited with status 1" in out
 
 
-def test_test_output_on_failure(mock_packages, mock_archive, mock_fetch,
-                                install_mockery, capfd, mock_test_stage):
+def test_test_output_on_failure(
+    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
+    capfd, mock_test_stage
+):
     install('test-fail')
     with capfd.disabled():
         out = spack_test('run', 'test-fail', fail_on_error=False)
 
-    assert "Expected 'not in the output' in output of `true`" in out
+    assert "Expected 'not in the output' to match output of `true`" in out
     assert "TestFailure" in out
 
 
-def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
-                           install_mockery, capfd, mock_test_stage):
+def test_show_log_on_error(
+    mock_packages, mock_archive, mock_fetch,
+    install_mockery_mutable_config, capfd, mock_test_stage
+):
     """Make sure spack prints location of test log on failure."""
     install('test-error')
     with capfd.disabled():
@@ -105,7 +111,8 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
 
 
 @pytest.mark.usefixtures(
-    'mock_packages', 'mock_archive', 'mock_fetch', 'install_mockery'
+    'mock_packages', 'mock_archive', 'mock_fetch',
+    'install_mockery_mutable_config'
 )
 @pytest.mark.parametrize('pkg_name,msgs', [
     ('test-error', ['FAILED: Command exited', 'TestFailure']),
@@ -136,8 +143,8 @@ def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
 
 
 def test_cdash_output_test_error(
-        tmpdir, mock_fetch, install_mockery, mock_packages, mock_archive,
-        mock_test_stage, capfd):
+        tmpdir, mock_fetch, install_mockery_mutable_config, mock_packages,
+        mock_archive, mock_test_stage, capfd):
     install('test-error')
     with tmpdir.as_cwd():
         spack_test('run',
@@ -154,8 +161,8 @@ def test_cdash_output_test_error(
 
 
 def test_cdash_upload_clean_test(
-        tmpdir, mock_fetch, install_mockery, mock_packages, mock_archive,
-        mock_test_stage):
+        tmpdir, mock_fetch, install_mockery_mutable_config, mock_packages,
+        mock_archive, mock_test_stage):
     install('printing-package')
     with tmpdir.as_cwd():
         spack_test('run',
