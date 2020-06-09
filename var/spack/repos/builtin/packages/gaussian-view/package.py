@@ -38,4 +38,4 @@ class GaussianView(Package):
         env.prepend_path('GV_LIB_PATH', self.prefix.lib.MesaGL)
         env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib.MesaGL)
         env.set('ALLOWINDIRECT', '1')
-        env.set('QT_PLUGIN_PATH', self.prefix.plugins)
+        env.prepend_path('QT_PLUGIN_PATH', self.prefix.plugins)
