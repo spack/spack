@@ -127,7 +127,7 @@ def get_path_args_from_module_line(line):
         # OPERATION VAR_NAME PATH_ARG
         words = line.split()
         if len(words) > 2:
-            path_arg = line.split()[2]
+            path_arg = words[2]
         else:
             return []
 

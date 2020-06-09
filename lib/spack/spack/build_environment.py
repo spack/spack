@@ -32,6 +32,7 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
+import re
 import inspect
 import multiprocessing
 import os
@@ -148,11 +149,14 @@ def clean_environment():
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
 
-    # On Cray systems newer than CNL5, unset CRAY_LD_LIBRARY_PATH to avoid
-    # interference with Spack dependencies. CNL5 (e.g. Blue Waters) requires
-    # these variables to be set.
+    # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
+    # interference with Spack dependencies.
+    # CNL requires these variables to be set (or at least some of them,
+    # depending on the CNL version).
     hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
-    if str(hostarch.platform) == 'cray' and str(hostarch.os) != 'cnl5':
+    on_cray = str(hostarch.platform) == 'cray'
+    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    if on_cray and not using_cnl:
         env.unset('CRAY_LD_LIBRARY_PATH')
         for varname in os.environ.keys():
             if 'PKGCONF' in varname:
