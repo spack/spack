@@ -17,6 +17,8 @@ class Alps(CMakePackage):
 
     version('2.3.0', sha256='e64208d1e5acdd6f569277413c4867e1fa366cf4a224570eacbf1e9939fca2d2')
 
+    # http://alps.comp-phys.org/mediawiki/index.php/Building_ALPS_from_source
+    # https://github.com/easybuilders/easybuild-easyconfigs/tree/master/easybuild/easyconfigs/a/ALPS
     depends_on('boost@1.63.0 +mpi +numpy +python')
     depends_on('fftw')
     depends_on('hdf5@1.8.17~mpi+hl')
