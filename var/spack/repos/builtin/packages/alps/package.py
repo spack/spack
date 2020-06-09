@@ -29,10 +29,12 @@ class Alps(CMakePackage):
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
 
+    # build fails with gcc@7:
     conflicts('%gcc@7:')
 
     root_cmakelists_dir = 'alps'
 
+    # remove a problematic build variable
     patch('mpi.patch')
 
     def cmake_args(self):
