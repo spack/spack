@@ -17,6 +17,7 @@ class Caliper(CMakePackage):
     """
 
     homepage = "https://github.com/LLNL/Caliper"
+    url      = "https://github.com/LLNL/Caliper/archive/v2.0.1.tar.gz"
     git      = "https://github.com/LLNL/Caliper.git"
 
     version('master')
@@ -102,3 +103,8 @@ class Caliper(CMakePackage):
             args.append('-DMPI_CXX_COMPILER=%s' % spec['mpi'].mpicxx)
 
         return args
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libcaliper', 'libcaliper-mpi'], root=self.prefix, recursive=True)
