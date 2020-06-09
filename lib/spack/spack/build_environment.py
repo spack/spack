@@ -53,6 +53,7 @@ import spack.main
 import spack.paths
 import spack.schema.environment
 import spack.store
+import spack.architecture as arch
 from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
@@ -141,17 +142,21 @@ def clean_environment():
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
     env.unset('LD_LIBRARY_PATH')
-    env.unset('CRAY_LD_LIBRARY_PATH')
     env.unset('LIBRARY_PATH')
     env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
 
-    # Remove all pkgconfig stuff from craype
-    for varname in os.environ.keys():
-        if 'PKGCONF' in varname:
-            env.unset(varname)
+    # On Cray systems newer than CNL5, unset CRAY_LD_LIBRARY_PATH to avoid
+    # interference with Spack dependencies. CNL5 (e.g. Blue Waters) requires
+    # these variables to be set.
+    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
+    if str(hostarch.platform) == 'cray' and str(hostarch.os) != 'cnl5':
+        env.unset('CRAY_LD_LIBRARY_PATH')
+        for varname in os.environ.keys():
+            if 'PKGCONF' in varname:
+                env.unset(varname)
 
     build_lang = spack.config.get('config:build_language')
     if build_lang:
@@ -354,10 +359,6 @@ def set_build_environment_variables(pkg, env, dirty):
     if compiler.extra_rpaths:
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
-
-    implicit_rpaths = compiler.implicit_rpaths()
-    if implicit_rpaths:
-        env.set('SPACK_COMPILER_IMPLICIT_RPATHS', ':'.join(implicit_rpaths))
 
     # Add bin directories from dependencies to the PATH for the build.
     for prefix in build_prefixes:
@@ -733,6 +734,11 @@ def setup_package(pkg, dirty):
 
         load_external_modules(pkg)
 
+    implicit_rpaths = pkg.compiler.implicit_rpaths()
+    if implicit_rpaths:
+        build_env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
+                      ':'.join(implicit_rpaths))
+
     # Make sure nothing's strange about the Spack environment.
     validate(build_env, tty.warn)
     build_env.apply_modifications()
@@ -812,12 +818,11 @@ def fork(pkg, function, dirty, fake):
                 setup_package(pkg, dirty=dirty)
             return_value = function()
             child_pipe.send(return_value)
-        except StopIteration as e:
-            # StopIteration is used to stop installations
-            # before the final stage, mainly for debug purposes
-            tty.msg(e)
-            child_pipe.send(None)
 
+        except StopPhase as e:
+            # Do not create a full ChildError from this, it's not an error
+            # it's a control statement.
+            child_pipe.send(e)
         except BaseException:
             # catch ANYTHING that goes wrong in the child process
             exc_type, exc, tb = sys.exc_info()
@@ -869,15 +874,20 @@ def fork(pkg, function, dirty, fake):
     child_result = parent_pipe.recv()
     p.join()
 
+    # If returns a StopPhase, raise it
+    if isinstance(child_result, StopPhase):
+        # do not print
+        raise child_result
+
     # let the caller know which package went wrong.
     if isinstance(child_result, InstallError):
         child_result.pkg = pkg
 
-    # If the child process raised an error, print its output here rather
-    # than waiting until the call to SpackError.die() in main(). This
-    # allows exception handling output to be logged from within Spack.
-    # see spack.main.SpackCommand.
     if isinstance(child_result, ChildError):
+        # If the child process raised an error, print its output here rather
+        # than waiting until the call to SpackError.die() in main(). This
+        # allows exception handling output to be logged from within Spack.
+        # see spack.main.SpackCommand.
         child_result.print_context()
         raise child_result
 
@@ -1066,3 +1076,13 @@ class ChildError(InstallError):
 def _make_child_error(msg, module, name, traceback, build_log, context):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
     return ChildError(msg, module, name, traceback, build_log, context)
+
+
+class StopPhase(spack.error.SpackError):
+    """Pickle-able exception to control stopped builds."""
+    def __reduce__(self):
+        return _make_stop_phase, (self.message, self.long_message)
+
+
+def _make_stop_phase(msg, long_msg):
+    return StopPhase(msg, long_msg)

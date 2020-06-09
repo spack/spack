@@ -173,3 +173,11 @@ class TestSpecList(object):
         assert speclist.specs_as_yaml_list == self.default_expansion
         assert speclist.specs_as_constraints == self.default_constraints
         assert speclist.specs == self.default_specs
+
+    def test_spec_list_matrix_exclude(self, mock_packages):
+        # Test on non-boolean variants for regression for #16841
+        matrix = [{'matrix': [['multivalue-variant'], ['foo=bar', 'foo=baz']],
+                   'exclude': ['foo=bar']}]
+        speclist = SpecList('specs', matrix)
+        assert len(speclist.specs) == 1
+

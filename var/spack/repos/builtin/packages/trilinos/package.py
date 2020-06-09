@@ -179,6 +179,8 @@ class Trilinos(CMakePackage):
             description='Compile with Shards')
     variant('shylu',        default=False,
             description='Compile with ShyLU')
+    variant('stratimikos',  default=False,
+            description='Compile with Stratimikos')
     variant('teko',         default=False,
             description='Compile with Teko')
     variant('tempus',       default=False,
@@ -468,6 +470,7 @@ class Trilinos(CMakePackage):
             define_trilinos_enable('Shards'),
             define_trilinos_enable('ShyLU'),
             define_trilinos_enable('STK'),
+            define_trilinos_enable('Stratimikos'),
             define_trilinos_enable('Teko'),
             define_trilinos_enable('Tempus'),
             define_trilinos_enable('Teuchos'),
@@ -512,6 +515,12 @@ class Trilinos(CMakePackage):
                 define('Trilinos_ENABLE_SEACASChaco', False),
                 define('Trilinos_ENABLE_SEACASNemslice', False)
             ])
+
+        if '+stratimikos' in spec:
+            # Add thyra adapters based on package enables
+            options.extend(
+                define_trilinos_enable('Thyra' + pkg + 'Adapters', pkg.lower())
+                for pkg in ['Epetra', 'EpetraExt', 'Tpetra'])
 
         # ######################### TPLs #############################
 

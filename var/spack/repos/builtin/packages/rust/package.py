@@ -85,6 +85,7 @@ class Rust(Package):
     # The `x.py` bootstrapping script did not exist prior to Rust 1.17. It
     # would be possible to support both, but for simplicitly, we only support
     # Rust 1.17 and newer
+    version('1.44.0', sha256='bf2df62317e533e84167c5bc7d4351a99fdab1f9cd6e6ba09f51996ad8561100')
     version('1.43.1', sha256='cde177b4a8c687da96f20de27630a1eb55c9d146a15e4c900d5c31cd3c3ac41d')
     version('1.43.0', sha256='75f6ac6c9da9f897f4634d5a07be4084692f7ccc2d2bb89337be86cfc18453a1')
     version('1.42.0', sha256='d2e8f931d16a0539faaaacd801e0d92c58df190269014b2360c6ab2a90ee3475')
@@ -126,6 +127,12 @@ class Rust(Package):
     # This dictionary contains a version: hash dictionary for each supported
     # Rust target.
     rust_releases = {
+        '1.44.0': {
+            'x86_64-unknown-linux-gnu':      'eaa34271b4ac4d2c281831117d4d335eed0b37fe7a34477d9855a6f1d930a624',
+            'powerpc64le-unknown-linux-gnu': '97038ea935c7a5b21f5aaaaad409c514e2b2ae8ea55994ba39645f453e98bc9f',
+            'aarch64-unknown-linux-gnu':     'bcc916003cb9c7ff44f5f9af348020b422dbc5bd4fe49bdbda2de6ce0a1bb745',
+            'x86_64-apple-darwin':           'f20388b80b2b0a8b122d89058f785a2cf3b14e93bcac53471d60fdb4106ffa35'
+        },
         '1.43.1': {
             'x86_64-unknown-linux-gnu':      '25cd71b95bba0daef56bad8c943a87368c4185b90983f4412f46e3e2418c0505',
             'powerpc64le-unknown-linux-gnu': '1670f00b00cc1bed38d523a25dba7420de3c06986c15a0248e06299f80ce6124',
@@ -370,11 +377,11 @@ class Rust(Package):
                     sha256='0000000000000000000000000000000000000000000000000000000000000000',
                     destination='spack_bootstrap_stage',
                     when='@{version} platform={platform} target={target}'\
-                        .format(
-                            version=prerelease_version,
-                            platform=rust_arch['platform'],
-                            target=rust_arch['target']
-                        )
+                    .format(
+                        version=prerelease_version,
+                        platform=rust_arch['platform'],
+                        target=rust_arch['target']
+                    )
                 )
 
     # This loop generates resources for each binary distribution, and maps
@@ -401,11 +408,11 @@ class Rust(Package):
                     sha256=rust_sha256,
                     destination='spack_bootstrap_stage',
                     when='@{version} platform={platform} target={target}'\
-                        .format(
-                            version=rust_version,
-                            platform=rust_arch['platform'],
-                            target=rust_arch['target']
-                        )
+                    .format(
+                        version=rust_version,
+                        platform=rust_arch['platform'],
+                        target=rust_arch['target']
+                    )
                 )
 
     # This routine returns the target architecture we intend to build for.

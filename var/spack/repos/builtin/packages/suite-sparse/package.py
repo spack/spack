@@ -102,7 +102,7 @@ class SuiteSparse(Package):
         # GraphBLAS/Demo/Program/wildtype_demo.c. For many compilers this is
         # not an issue because c11 or newer is their default. However, for some
         # compilers (e.g. xlc) the c11 flag is necessary.
-        if spec.satisfies('@5.4:'):
+        if spec.satisfies('@5.4:5.7.1') and ('%xl' in spec or '%xl_r' in spec):
             make_args += ['CFLAGS+=%s' % self.compiler.c11_flag]
 
         # 64bit blas in UMFPACK:
