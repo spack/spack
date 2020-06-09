@@ -38,7 +38,7 @@ class Reframe(Package):
 
     depends_on('python@3.5:', when='@2.0:2.999', type='run')
     depends_on('python@3.6:', when='@3.0:', type='run')
-    depends_on('py-jsonschema', type=('build', 'run'))
+    depends_on('py-jsonschema', type='run')
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on("py-pygelf", when="+gelf", type="run")
     depends_on("py-sphinx", when="+docs", type="build")
