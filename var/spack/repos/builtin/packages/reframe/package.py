@@ -36,9 +36,9 @@ class Reframe(Package):
     variant("gelf", default=False,
             description="Add graylog handler support")
 
-    depends_on('python@3.5:', when=('@2.0:2.999'), type=('run'))
-    depends_on('python@3.6:', when=('@3.0:'), type=('run'))
-    depends_on('py-jsonschema', type=('build', 'run'))
+    depends_on('python@3.5:', when='@2.0:2.999', type='run')
+    depends_on('python@3.6:', when='@3.0:', type='run')
+    depends_on('py-jsonschema', type='run')
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on("py-pygelf", when="+gelf", type="run")
     depends_on("py-sphinx", when="+docs", type="build")
@@ -47,15 +47,15 @@ class Reframe(Package):
     def install(self, spec, prefix):
         if spec.version >= Version('3.0'):
             if "+docs" in spec:
-                os.chdir("docs")
-                make("man")
-                make("html")
-                os.chdir("man")
-                os.mkdir('man1')
-                shutil.move('reframe.1', 'man1')
-                os.mkdir('man8')
-                shutil.move('reframe.settings.8', 'man8')
+                with working_dir("docs"):
+                    make("man")
+                    make("html")
+                    with working_dir("man"):
+                        mkdir('man1')
+                        shutil.move('reframe.1', 'man1')
+                        mkdir('man8')
+                        shutil.move('reframe.settings.8', 'man8')
         install_tree(self.stage.source_path, self.prefix)
 
     def setup_run_environment(self, env):
-        env.prepend_path('MANPATH',  join_path(prefix, 'docs', 'man'))
+        env.prepend_path('MANPATH',  self.prefix.docs.man)
