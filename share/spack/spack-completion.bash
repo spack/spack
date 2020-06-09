@@ -1476,7 +1476,7 @@ _spack_test() {
 _spack_test_run() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --name --keep-stage --log-format --log-file --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp --help-cdash --smoke --capability --clean --dirty"
+        SPACK_COMPREPLY="-h --help -n --name --fail-fast --fail-first --keep-stage --log-format --log-file --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp --help-cdash --smoke --capability --clean --dirty"
     else
         _installed_packages
     fi
