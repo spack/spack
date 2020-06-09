@@ -97,7 +97,7 @@ def check_mirror():
                         # tarball
                         assert not dcmp.right_only
                         # and that all original files are present.
-                        assert all(l in exclude for l in dcmp.left_only)
+                        assert all(left in exclude for left in dcmp.left_only)
 
 
 def test_url_mirror(mock_archive):
