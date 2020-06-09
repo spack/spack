@@ -32,10 +32,10 @@ class Alps(CMakePackage):
     # build fails with gcc@7:
     conflicts('%gcc@7:')
 
-    root_cmakelists_dir = 'alps'
-
     # remove a problematic build variable
     patch('mpi.patch')
+
+    root_cmakelists_dir = 'alps'
 
     def cmake_args(self):
         args = []
