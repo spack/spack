@@ -21,7 +21,8 @@ class Alps(CMakePackage):
     depends_on('fftw')
     depends_on('hdf5@1.8.17~mpi+hl')
     depends_on('openblas')
-    depends_on('python', type=('build', 'link', 'run'))
+    # build fails for latest python@3.7
+    depends_on('python@:3.6.99', type=('build', 'link', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
