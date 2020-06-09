@@ -136,17 +136,6 @@ class PyMatplotlib(PythonPackage):
     # Patch to pick up correct freetype headers
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')
 
-    def setup_build_environment(self, env):
-        # NOTE: The build procedure for 'py-matplotlib' compiles C++ files,
-        # but Python uses the C compiler by default. Some compilers (e.g.
-        # non-Apple clang) will notice that C++ files are being compiled and
-        # will complain about incompatibility when any C-flags are used
-        # (e.g. -std=gnu11). To avoid this scenario, we set the build
-        # compiler in these circumstances to the current C++ compiler instead.
-        if not self.spec.satisfies('platform=darwin'):
-            if self.spec.satisfies('%clang'):
-                env.set('CC', spack_cxx)
-
     @run_before('build')
     def set_backend(self):
         """Set build options with regards to backend GUI libraries."""

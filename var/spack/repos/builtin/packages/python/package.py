@@ -157,6 +157,12 @@ class Python(AutotoolsPackage):
         # a Mac.
         depends_on('libuuid', when='+uuid')
 
+    # Python needs to be patched to build extensions w/ mixed C/C++ code:
+    # https://github.com/NixOS/nixpkgs/pull/19585/files
+    # https://bugs.python.org/issue1222585
+    patch('python-2.7-distutils-C++.patch', when='@2.7')
+    # patch('python-3.x-distutils-C++.patch', when='@3.3:3.8')
+
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
