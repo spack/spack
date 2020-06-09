@@ -14,7 +14,7 @@ class Wcs(CMakePackage):
     maintainers = ['rblake-llnl']
 
     version('master', branch='master')
-    version('devel', branch='devel')
+    version('develop', branch='devel')
 
     depends_on('boost+graph+filesystem+regex+system')
     depends_on('sbml@5.18.0:+cpp')
