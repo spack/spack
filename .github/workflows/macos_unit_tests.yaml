@@ -38,7 +38,7 @@ jobs:
         git --version
         git fetch -u origin develop:develop
         . share/spack/setup-env.sh
-        coverage run $(which spack) test
+        coverage run $(which spack) unit-test
         coverage combine
         coverage xml
     - name: Upload to codecov.io
