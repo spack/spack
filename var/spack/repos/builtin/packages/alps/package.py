@@ -22,7 +22,7 @@ class Alps(CMakePackage):
     # https://github.com/easybuilders/easybuild-easyconfigs/tree/master/easybuild/easyconfigs/a/ALPS
     # https://github.com/conda-forge/alps-feedstock/tree/master/recipe
 
-    # Package failed to build with boost version 1.66
+    # Package failed to build with boost version >= 1.64
     # TODO: Consider patching ALPS so that it builds with newer Boost
     # It might be as simple as patching a *.cmake file under source directory
     depends_on('boost@:1.63.0 +mpi +numpy +python')
