@@ -1606,7 +1606,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             self.spec.format('{name}-{version}-{hash}'))
 
     def cache_extra_test_sources(self, srcs):
-        """Copy relative source path(s) to the corresponding install test subdir
+        """Copy relative source paths to the corresponding install test subdir
 
         This method is intended as an optional install test setup helper for
         grabbing source files/directories during the installation process and
@@ -1764,8 +1764,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # stack instead of from traceback.
                     # The traceback is truncated here, so we can't use it to
                     # traverse the stack.
-                    m = '\n'.join(spack.build_environment.get_package_context(
-                        traceback.extract_stack()))
+                    m = '\n'.join(
+                        spack.build_environment.get_package_context(
+                            traceback.extract_stack())
+                    )
 
                 exc = e  # e is deleted after this block
 

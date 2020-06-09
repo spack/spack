@@ -9,14 +9,12 @@ import shutil
 import collections
 
 import llnl.util.tty as tty
-import llnl.util.filesystem as fs
 
 import spack.caches
 import spack.cmd.test
 import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.stage
-import spack.util.path as sup
 import spack.config
 from spack.paths import lib_path, var_path
 
