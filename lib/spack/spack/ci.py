@@ -345,18 +345,18 @@ def compute_spec_deps(spec_list):
            ],
            "specs": [
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "readline@7.0%clang@9.1.0-apple arch=darwin-highs...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-highs...",
                  "label": "readline/ip6aiun"
                },
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "ncurses@6.1%clang@9.1.0-apple arch=darwin-highsi...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "ncurses@6.1%apple-clang@9.1.0 arch=darwin-highsi...",
                  "label": "ncurses/y43rifz"
                },
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "pkgconf@1.5.4%clang@9.1.0-apple arch=darwin-high...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "pkgconf@1.5.4%apple-clang@9.1.0 arch=darwin-high...",
                  "label": "pkgconf/eg355zb"
                }
            ]

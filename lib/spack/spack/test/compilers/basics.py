@@ -130,7 +130,7 @@ def test_compiler_flags_from_config_are_grouped():
 
 # Utility function to test most flags.
 default_compiler_entry = {
-    'spec': 'clang@2.0.0-apple',
+    'spec': 'apple-clang@2.0.0',
     'operating_system': 'foo-os',
     'paths': {
         'cc': 'cc-path',
@@ -370,26 +370,27 @@ def test_cce_flags():
                         'cce@1.0')
 
 
-def test_clang_flags():
-    # Apple Clang.
+def test_apple_clang_flags():
     supported_flag_test(
-        "openmp_flag", "-Xpreprocessor -fopenmp", "clang@2.0.0-apple")
-    unsupported_flag_test("cxx11_flag", "clang@2.0.0-apple")
-    supported_flag_test("cxx11_flag", "-std=c++11", "clang@4.0.0-apple")
-    unsupported_flag_test("cxx14_flag", "clang@5.0.0-apple")
-    supported_flag_test("cxx14_flag", "-std=c++1y", "clang@5.1.0-apple")
-    supported_flag_test("cxx14_flag", "-std=c++14", "clang@6.1.0-apple")
-    unsupported_flag_test("cxx17_flag", "clang@6.0.0-apple")
-    supported_flag_test("cxx17_flag", "-std=c++1z", "clang@6.1.0-apple")
-    supported_flag_test("c99_flag", "-std=c99", "clang@6.1.0-apple")
-    unsupported_flag_test("c11_flag", "clang@6.0.0-apple")
-    supported_flag_test("c11_flag", "-std=c11", "clang@6.1.0-apple")
-    supported_flag_test("cc_pic_flag",  "-fPIC", "clang@2.0.0-apple")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "clang@2.0.0-apple")
-    supported_flag_test("f77_pic_flag", "-fPIC", "clang@2.0.0-apple")
-    supported_flag_test("fc_pic_flag",  "-fPIC", "clang@2.0.0-apple")
+        "openmp_flag", "-Xpreprocessor -fopenmp", "apple-clang@2.0.0"
+    )
+    unsupported_flag_test("cxx11_flag", "apple-clang@2.0.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "apple-clang@4.0.0")
+    unsupported_flag_test("cxx14_flag", "apple-clang@5.0.0")
+    supported_flag_test("cxx14_flag", "-std=c++1y", "apple-clang@5.1.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "apple-clang@6.1.0")
+    unsupported_flag_test("cxx17_flag", "apple-clang@6.0.0")
+    supported_flag_test("cxx17_flag", "-std=c++1z", "apple-clang@6.1.0")
+    supported_flag_test("c99_flag", "-std=c99", "apple-clang@6.1.0")
+    unsupported_flag_test("c11_flag", "apple-clang@6.0.0")
+    supported_flag_test("c11_flag", "-std=c11", "apple-clang@6.1.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "apple-clang@2.0.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "apple-clang@2.0.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "apple-clang@2.0.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "apple-clang@2.0.0")
 
-    # non-Apple Clang.
+
+def test_clang_flags():
     supported_flag_test("version_argument", "--version", "clang@foo.bar")
     supported_flag_test("openmp_flag", "-fopenmp", "clang@3.3")
     unsupported_flag_test("cxx11_flag", "clang@3.2")

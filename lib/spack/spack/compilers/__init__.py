@@ -662,7 +662,7 @@ def make_compiler_list(detected_versions):
         operating_system, compiler_name, version = cmp_id
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-        paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
+        paths = [paths.get(x, None) for x in ('cc', 'cxx', 'f77', 'fc')]
         target = cpu.host()
         compiler = compiler_cls(
             spec, operating_system, str(target.family), paths
@@ -716,6 +716,8 @@ def is_mixed_toolchain(compiler):
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
+        if toolchains == set(['Clang', 'AppleClang']):
+            return False
         tty.debug("[TOOLCHAINS] {0}".format(toolchains))
         return True
 
