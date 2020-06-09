@@ -17,10 +17,11 @@ class Alps(CMakePackage):
 
     version('2.3.0', sha256='e64208d1e5acdd6f569277413c4867e1fa366cf4a224570eacbf1e9939fca2d2')
 
-    depends_on('cmake@3.6.2')
-    depends_on('python@3.5.2', type=('build', 'link', 'run'))
     depends_on('boost@1.63.0 +mpi +numpy +python')
-    depends_on('hdf5@1.8.17~mpi')
+    depends_on('fftw')
+    depends_on('hdf5@1.8.17~mpi+hl')
+    depends_on('openblas')
+    depends_on('python', type=('build', 'link', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
