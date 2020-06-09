@@ -7,6 +7,7 @@ from spack import *
 import os
 import shutil
 
+
 class Reframe(Package):
     """ReFrame is a framework for writing regression tests for HPC systems.
     The goal of this framework is to abstract away the complexity of the
