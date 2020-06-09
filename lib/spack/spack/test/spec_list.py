@@ -180,4 +180,3 @@ class TestSpecList(object):
                    'exclude': ['foo=bar']}]
         speclist = SpecList('specs', matrix)
         assert len(speclist.specs) == 1
-
