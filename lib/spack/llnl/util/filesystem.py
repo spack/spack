@@ -380,17 +380,17 @@ def install(src, dest):
     copy(src, dest, _permissions=True)
 
 
-def resolve_link_target_relative_to_the_link(l):
+def resolve_link_target_relative_to_the_link(link):
     """
     os.path.isdir uses os.path.exists, which for links will check
     the existence of the link target. If the link target is relative to
     the link, we need to construct a pathname that is valid from
     our cwd (which may not be the same as the link's directory)
     """
-    target = os.readlink(l)
+    target = os.readlink(link)
     if os.path.isabs(target):
         return target
-    link_dir = os.path.dirname(os.path.abspath(l))
+    link_dir = os.path.dirname(os.path.abspath(link))
     return os.path.join(link_dir, target)
 
 
