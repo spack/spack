@@ -25,6 +25,7 @@ packages:
       - asciitoh5@1.0
       - brainbuilder@0.11.7
       - brion@3.1.0 +python
+      - brion@3.2.0 +python
       - connectome-tools@0.3.2
       - spatial-index@0.2.1
       - spykfunc@0.15.6
