@@ -512,3 +512,6 @@ class Boost(Package):
         # on Darwin; correct this
         if (sys.platform == 'darwin') and ('+shared' in spec):
             fix_darwin_install_name(prefix.lib)
+
+    def setup_run_environment(self, env):
+        env.set('BOOST_ROOT', self.prefix)
