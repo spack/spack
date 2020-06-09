@@ -7,7 +7,7 @@ import os
 from spack import *
 
 
-class Ffb(Package):
+class Ffb(MakefilePackage):
     """Computational Fluid Dynamics Software for aeroacoustics"""
 
     homepage = "http://www.ciss.iis.u-tokyo.ac.jp/dl/index.php"
@@ -22,59 +22,30 @@ class Ffb(Package):
 
     parallel = False
 
-    def install(self, spec, prefix):
-        d = find('.', 'make', recursive=True)
-        workdir = os.path.dirname(d[0])
-        popt = ['-P -traditional-cpp -Dcputime']
-        copt = ['-O3 ']
-        fopt = ['']
-        cflags = ['-O']
-        cxxflags = ['-O',  self.compiler.cxx_pic_flag]
-        fflags = ['']
-        ldshared = ['']
-        libs = ['-lstdc++']
-        incdir = spec['mpi'].headers.directories[0]
-        libdir = spec['mpi'].libs.directories[0]
-        if spec.satisfies('%gcc'):
-            fopt = ['-C ']
-            ldshared = ['g++ -shared -s']
-            fopt.append('-mcmodel=large')
-        if spec.satisfies('%intel'):
-            copt = ['']
-            fopt.append('-convert big_endian -mcmodel=large -shared-intel')
-            cflags = ['-O2']
-            cxxflags = ['-O2',  self.compiler.cxx_pic_flag]
-            fflags = ['-O2']
+    def edit(self, spec, prefix):
+        workdir = os.getcwd()
+        cflags = '-O3'
+        cxxflags = ['-O2', self.compiler.cxx_pic_flag]
+        fflags = '-O3 -mcmodel=large'
 
-        make = join_path(workdir, 'make', 'makefile')
+        make = join_path('make', 'makefile')
         m = FileFilter(make)
         m.filter(
             r'#LES3DHOME   =', 'LES3DHOME= {0}\n'.format(workdir))
-        m.filter(r'OPTION\n', 'OPTION.spack')
-        with open(join_path(workdir, 'make', 'OPTION.spack'), 'w') as m:
-            m.write('CPP = /lib/cpp\n')
-            m.write('CCOM = {0}\n'.format(spack_cc))
-            m.write('POPT = {0}\n'.format(' '.join(popt)))
-            m.write('COPT = {0}\n'.format(' '.join(copt)))
-            m.write('FCOM = {0}\n'.format(spack_fc))
-            m.write('FOPT = {0}\n'.format(' '.join(fopt)))
-            m.write('INCDIR = {0}\n'.format(incdir))
-            m.write('LIBDIR = {0}\n'.format(libdir))
+        make = join_path('make', 'OPTION')
+        m = FileFilter(make)
+        m.filter(r'CCOM\s*=.*$', 'CCOM = {0}'.format(spack_cc))
+        m.filter(r'COPT\s*=.*$', 'COPT = {0}'.format(cflags))
+        m.filter(r'FCOM\s*=.*$', 'FCOM = {0}\n'.format(spack_fc))
+        m.filter(r'FOPT\s*=.*$', 'FOPT = {0}\n'.format(fflags))
+        m.filter(r'INCDIR\s*=.*$', 'INCDIR = {0}\n'
+                 .format(spec['mpi'].headers.directories[0]))
+        m.filter(r'LIBDIR\s*=.*$', 'LIBDIR = {0}\n'
+                 .format(spec['mpi'].libs.directories[0]))
 
-        # for MPI
-        with open(join_path(workdir, 'make', 'OPTION'), 'w') as m:
-            m.write('CPP = /lib/cpp\n')
-            m.write('CCOM = {0}\n'.format(spec['mpi'].mpicc))
-            m.write('POPT = {0}\n'.format(' '.join(popt)))
-            m.write('COPT = {0}\n'.format(' '.join(copt)))
-            m.write('FCOM = {0}\n'.format(spec['mpi'].mpifc))
-            m.write('FOPT = {0}\n'.format(' '.join(fopt)))
-            m.write('INCDIR = {0}\n'.format(incdir))
-            m.write('LIBDIR = {0}\n'.format(libdir))
-
-        srcdir = join_path(workdir, 'lib', 'src')
+        srcdir = join_path('lib', 'src')
         utildir = join_path(workdir, 'util')
-        with open(join_path(workdir, 'make', 'Makeall'), 'w') as m:
+        with open(join_path('make', 'Makeall'), 'w') as m:
             m.write('#!/bin/csh -f\n')
             m.write('setenv LES3DHOME {0}\n'.format(workdir))
             m.write('cd {0}\n'.format(srcdir))
@@ -82,82 +53,81 @@ class Ffb(Package):
             m.write('cd {0}\n'.format(utildir))
             m.write('./Makeall\n')
 
-        makeall = join_path(workdir, 'lib', 'src', 'dd_mpi', 'Makeall')
-        dd_mpi_dir = join_path(workdir, 'lib', 'src', 'dd_mpi')
+        makeall = join_path('lib', 'src', 'dd_mpi', 'Makeall')
+        dd_mpi_dir = join_path('lib', 'src', 'dd_mpi')
         with open(makeall, 'w') as m:
             m.write('#!/bin/csh -f\n')
-            m.write('setenv LES3DHOME {0}\n'.format(''.join(workdir)))
+            m.write('setenv LES3DHOME {0}\n'.format(workdir))
             m.write('cd {0}\n'.format(dd_mpi_dir))
             m.write('make lib\n')
         os.chmod(makeall, 0o755)
 
-        makeall = join_path(workdir, 'util',  'makeall')
-        les3d_dir = join_path(workdir, 'util', 'les3d.mpi')
-        les3c_dir = join_path(workdir, 'util', 'les3c.mpi')
-        les3ct_dir = join_path(workdir, 'util', 'les3ct.mpi')
-        les3x_dir = join_path(workdir, 'util', 'les3x.mpi')
+        makeall = join_path('.',  'Makeall.les')
+        les3d_dir = join_path('util', 'les3d.mpi')
+        les3c_dir = join_path('util', 'les3c.mpi')
+        les3ct_dir = join_path('util', 'les3ct.mpi')
+        les3x_dir = join_path('util', 'les3x.mpi')
         with open(makeall, 'w') as m:
             m.write('#!/bin/csh -f\n')
-            m.write('setenv LES3DHOME {0}\n'.format(''.join(workdir)))
-            m.write('cd {0}\n'.format(les3d_dir))
-            m.write('make\n')
-            m.write('cd {0}\n'.format(les3c_dir))
-            m.write('make\n')
-            m.write('cd {0}\n'.format(les3ct_dir))
-            m.write('make\n')
-            m.write('cd {0}\n'.format(les3x_dir))
-            m.write('make\n')
+            m.write('setenv LES3DHOME {0}\n'.format(workdir))
+            m.write('cd {0}\n'.format(join_path(workdir, les3d_dir)))
+            m.write('make CCOM={0}'.format(spec['mpi'].mpicc))
+            m.write(' FCOM={0}\n'.format(spec['mpi'].mpifc))
+            m.write('cd {0}\n'.format(join_path(workdir, les3c_dir)))
+            m.write('make CCOM={0}'.format(spec['mpi'].mpicc))
+            m.write(' FCOM={0}\n'.format(spec['mpi'].mpifc))
+            m.write('cd {0}\n'.format(join_path(workdir, les3ct_dir)))
+            m.write('make CCOM={0}'.format(spec['mpi'].mpicc))
+            m.write(' FCOM={0}\n'.format(spec['mpi'].mpifc))
+            m.write('cd {0}\n'.format(join_path(workdir, les3x_dir)))
+            m.write('make CCOM={0}'.format(spec['mpi'].mpicc))
+            m.write(' FCOM={0}\n'.format(spec['mpi'].mpifc))
+
             for d in [les3c_dir, les3ct_dir, les3d_dir]:
                 editfile = join_path(d, 'FILES')
                 m = FileFilter(editfile)
                 m.filter(r'-lmpi_f77', '')
         os.chmod(makeall, 0o755)
 
-        editfile = join_path(workdir, 'lib', 'src',
-                             'REVOCAP_Refiner-0.4.3', 'OPTIONS')
+        editfile = join_path('lib', 'src', 'REVOCAP_Refiner-0.4.3', 'OPTIONS')
         m = FileFilter(editfile)
-        m.filter(r'ARCH\s*=.*$', 'ARCH=`arch`-linux')
+        m.filter(r'ARCH\s*=.*$', 'ARCH= $(shell arch)-linux')
         m.filter(r'CC\s*=.*$', 'CC={0}'.format(spack_cc))
-        m.filter(r'CFLAGS\s*=.*$', 'CFLAGS={0}'.format(' '.join(cflags)))
+        m.filter(r'CFLAGS\s*=.*$', 'CFLAGS={0}'.format(cflags))
         m.filter(r'CXX\s*=.*$',  'CXX={0}'.format(spack_cxx))
         m.filter(r'CXXFLAGS\s*=.*$',
                  'CXXFLAGS={0}'.format(' '.join(cxxflags)))
         m.filter(r'F90\s*=.*$', 'CC={0}'.format(spack_fc))
-        m.filter(r'FFLAGS\s*=.*$', 'FFLAGS={0}'.format(' '.join(cflags)))
         m.filter(r'LD\s*=.*$', 'LD={0}'.format(spack_fc))
-        m.filter(r'LDFLAGS\s*=.*$',
-                 'LDFLAGS={0}'.format(' '.join(fflags)))
-        m.filter(r'LDSHARED\s*=.*$',
-                 'LDSHARED={0}'.format(' '.join(ldshared)))
-        m.filter(r'LIBS\s*=.*$', 'LIBS={0}'.format(' '.join(libs)))
         m.filter(r'LIBPATH\s*=.*$', 'LIBPATH= ')
+        m.filter(r'FFLAGS\s*=.*$', 'FFLAGS={0}'.format(fflags))
+        m.filter(r'LDFLAGS\s*=.*$', 'LDFLAGS={0}'.format(fflags))
 
-        editfile = join_path(workdir, 'util', 'xvx2gf', 'Makefile')
+        editfile = join_path('lib', 'src', 'ParMetis-3.1', 'Makefile.in')
+        m = FileFilter(editfile)
+        m.filter(r'CC \s*=.*$', 'CC ={0}'.format(spack_cc))
+        m.filter(r'INCDIR\s*=.*$', 'INCDIR = \n')
+
+        editfile = join_path('util', 'xvx2gf', 'Makefile')
         m = FileFilter(editfile)
         m.filter(
             r'#LES3DHOME   =', 'LES3DHOME= {0}\n'.format(workdir))
         m.filter(r'g\+\+', (spack_cxx))
 
-        editfile = join_path(workdir, 'util', 'les3x.mpi', 'FILES')
+        editfile = join_path('util', 'les3x.mpi', 'FILES')
         m = FileFilter(editfile)
         m.filter(r'LIBS = -lfort -lgf2 -ldd_mpi -lmpi_f77',
                  'LIBS = -lfort -lgf2  -ldd_mpi')
 
-        makeall = Executable(join_path(workdir, 'make',  'Makeall'))
-        makeall()
+    def build(self, spec, prefix):
+        for m in [join_path('make',  'Makeall'),
+                  join_path('lib', 'src', 'dd_mpi', 'Makeall'),
+                  join_path('.', 'Makeall.les')]:
+            Executable(m)()
 
-        make = join_path(workdir, 'make', 'makefile')
-        m = FileFilter(make)
-        m.filter(r'OPTION.spack', 'OPTION\n')
-        makeall = Executable(join_path(workdir,
-                             'lib',  'src', 'dd_mpi', 'Makeall'))
-        makeall()
-
-        makeall = Executable(join_path(workdir, 'util', 'makeall'))
-        makeall()
-
-        install_tree(join_path(workdir, 'bin'), prefix.bin)
-        install_tree(join_path(workdir, 'macro'), prefix.macro)
+    def install(self, spec, prefix):
+        install_tree('bin', prefix.bin)
+        install_tree('macro', prefix.macro)
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', prefix.macro)
