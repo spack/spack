@@ -19,4 +19,4 @@ class PyPygelf(PythonPackage):
     version('0.3.6', sha256='3e5bc59e3b5a754556a76ff2c69fcf2003218ad7b5ff8417482fa1f6a7eba5f9')
 
     depends_on('python@3:', type=('run'))
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
