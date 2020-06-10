@@ -25,7 +25,7 @@ from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import relocate_text, relocate_links
-from spack.relocate import macho_make_paths_relative
+from spack.relocate import _macho_relative_paths
 from spack.relocate import macho_make_paths_normal
 from spack.relocate import _placeholder, macho_find_paths
 from spack.relocate import file_is_relocatable
@@ -470,15 +470,15 @@ def test_replace_paths(tmpdir):
 
 
 def test_macho_make_paths():
-    out = macho_make_paths_relative('/Users/Shared/spack/pkgC/lib/libC.dylib',
-                                    '/Users/Shared/spack',
-                                    ('/Users/Shared/spack/pkgA/lib',
-                                     '/Users/Shared/spack/pkgB/lib',
-                                     '/usr/local/lib'),
-                                    ('/Users/Shared/spack/pkgA/libA.dylib',
-                                     '/Users/Shared/spack/pkgB/libB.dylib',
-                                     '/usr/local/lib/libloco.dylib'),
-                                    '/Users/Shared/spack/pkgC/lib/libC.dylib')
+    out = _macho_relative_paths('/Users/Shared/spack/pkgC/lib/libC.dylib',
+                                '/Users/Shared/spack',
+                                ('/Users/Shared/spack/pkgA/lib',
+                                 '/Users/Shared/spack/pkgB/lib',
+                                 '/usr/local/lib'),
+                                ('/Users/Shared/spack/pkgA/libA.dylib',
+                                 '/Users/Shared/spack/pkgB/libB.dylib',
+                                 '/usr/local/lib/libloco.dylib'),
+                                '/Users/Shared/spack/pkgC/lib/libC.dylib')
     assert out == {'/Users/Shared/spack/pkgA/lib':
                    '@loader_path/../../pkgA/lib',
                    '/Users/Shared/spack/pkgB/lib':
@@ -517,14 +517,14 @@ def test_macho_make_paths():
                    '/usr/local/lib/libloco.dylib'
                    }
 
-    out = macho_make_paths_relative('/Users/Shared/spack/pkgC/bin/exeC',
-                                    '/Users/Shared/spack',
-                                    ('/Users/Shared/spack/pkgA/lib',
-                                     '/Users/Shared/spack/pkgB/lib',
-                                     '/usr/local/lib'),
-                                    ('/Users/Shared/spack/pkgA/libA.dylib',
-                                     '/Users/Shared/spack/pkgB/libB.dylib',
-                                     '/usr/local/lib/libloco.dylib'), None)
+    out = _macho_relative_paths('/Users/Shared/spack/pkgC/bin/exeC',
+                                '/Users/Shared/spack',
+                                ('/Users/Shared/spack/pkgA/lib',
+                                 '/Users/Shared/spack/pkgB/lib',
+                                 '/usr/local/lib'),
+                                ('/Users/Shared/spack/pkgA/libA.dylib',
+                                 '/Users/Shared/spack/pkgB/libB.dylib',
+                                 '/usr/local/lib/libloco.dylib'), None)
 
     assert out == {'/Users/Shared/spack/pkgA/lib':
                    '@loader_path/../../pkgA/lib',
