@@ -8,7 +8,8 @@ from spack import *
 
 
 class Clinfo(MakefilePackage):
-    """Print all known information about all available OpenCL platforms and devices in the system."""
+    """Print all known information about all available OpenCL platforms and
+    devices in the system."""
 
     homepage = "https://github.com/Oblomov/clinfo"
     url      = "https://github.com/Oblomov/clinfo/archive/2.2.18.04.06.tar.gz"
