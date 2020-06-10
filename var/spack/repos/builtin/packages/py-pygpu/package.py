@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-
 import os
+
 
 class PyPygpu(PythonPackage):
     """Python packge for the libgpuarray C library."""
@@ -35,8 +35,9 @@ class PyPygpu(PythonPackage):
     depends_on('check')
 
     phases = ['build_ext', 'install']
+
     def build_ext_args(self, spec, prefix):
-        
+    
         _ = self.spec['libgpuarray'].prefix
         include_flags = '-I{0}'.format(os.path.join(_, 'include'))
         library_flags = '-L{0}'.format(os.path.join(_, 'lib'))
