@@ -77,7 +77,7 @@ class Adios2(CMakePackage):
     # DataMan needs dlopen
     conflicts('+dataman', when='~shared')
 
-    depends_on('cmake@3.6.0:', type='build')
+    depends_on('cmake@3.12.0:', type='build')
     depends_on('pkgconfig', type='build')
 
     depends_on('libffi', when='+sst')            # optional in DILL
@@ -178,6 +178,9 @@ class Adios2(CMakePackage):
         if spec.version >= Version('2.5.0'):
             args.append('-DADIOS2_USE_DataSpaces={0}'.format(
                 'ON' if '+dataspaces' in spec else 'OFF'))
+
+        if spec.version >= Version('2.6.0'):
+            args.append('-DADIOS2_USE_IME=OFF')
 
         if '+sst' in spec:
             args.extend([
