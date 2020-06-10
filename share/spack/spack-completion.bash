@@ -1510,7 +1510,7 @@ _spack_verify() {
 _spack_versions() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --safe-only"
+        SPACK_COMPREPLY="-h --help -s --safe-only -c --concurrency"
     else
         _all_packages
     fi

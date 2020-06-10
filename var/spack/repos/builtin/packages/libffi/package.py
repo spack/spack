@@ -17,6 +17,8 @@ class Libffi(AutotoolsPackage, SourcewarePackage):
     version('3.3',   sha256='72fba7922703ddfa7a028d513ac15a85c8d54c8d67f55fa5a4802885dc652056')
     version('3.2.1', sha256='d06ebb8e1d9a22d19e38d63fdb83954253f39bedc5d46232a05645685722ca37')
 
+    patch('clang-powerpc-3.2.1.patch', when='@3.2.1%clang platform=linux')
+
     @property
     def headers(self):
         # The headers are probably in self.prefix.lib but we search everywhere
