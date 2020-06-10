@@ -61,8 +61,9 @@ def setup_parser(subparser):
 
     add_parser = sp.add_parser('add', help='add configuration parameters')
     add_parser.add_argument(
-        'value', nargs='?',
-        help='config value to set. Nested values separated by colons (:)')
+        'path', nargs='?',
+        help="colon-separated path to config that should be added,"
+        " e.g. 'config:default:true'")
     add_parser.add_argument(
         '-f', '--file',
         help="file from which to set all config values"
@@ -70,9 +71,10 @@ def setup_parser(subparser):
 
     remove_parser = sp.add_parser('remove', aliases=['rm'],
                                   help='remove configuration parameters')
-    remove_parser.add_argument('value',
-                               help='configuration value to remove. Nested '
-                               'values separated by colons (:).')
+    remove_parser.add_argument(
+        'path',
+        help="colon-separated path to config that should be removed,"
+        " e.g. 'config:default:true'")
 
     # Make the add parser available later
     setup_parser.add_parser = add_parser
@@ -81,7 +83,8 @@ def setup_parser(subparser):
 def _get_scope_and_section(args):
     """Extract config scope and section from arguments."""
     scope = args.scope
-    section = getattr(args, 'section', '')
+    section = getattr(args, 'section', None)
+    path = getattr(args, 'path', None)
 
     # w/no args and an active environment, point to env manifest
     if not section:
@@ -97,9 +100,8 @@ def _get_scope_and_section(args):
             scope = spack.config.default_modify_scope(subscopes=False)
 
     # special handling for commands that take value instead of section
-    if getattr(args, 'value', None):
-        value = args.value
-        section = value[:value.find(':')] if ':' in value else value
+    if path:
+        section = path[:path.find(':')] if ':' in path else path
         if not scope:
             if section == 'compilers':
                 scope = spack.config.default_modify_scope
@@ -167,8 +169,8 @@ def config_list(args):
 def config_add(args):
     """Add the given configuration to the specified config scope
 
-    This is a stateful operation that edits the config files under the hood"""
-    if not (args.file or args.value):
+    This is a stateful operation that edits the config files."""
+    if not (args.file or args.path):
         tty.error("No changes requested. Specify a file or value.")
         setup_parser.add_parser.print_help()
         exit(1)
@@ -215,8 +217,8 @@ def config_add(args):
                 else:
                     spack.config.set(section, new, scope=scope)
 
-    if args.value:
-        components = spack.config.process_config_path(args.value)
+    if args.path:
+        components = spack.config.process_config_path(args.path)
 
         has_existing_value = True
         path = ''
@@ -247,7 +249,7 @@ def config_add(args):
                 break
 
         if has_existing_value:
-            path, _, value = args.value.rpartition(':')
+            path, _, value = args.path.rpartition(':')
             value = syaml.load_config(value)
             existing = spack.config.get(path, scope=scope)
 
@@ -276,7 +278,7 @@ def config_remove(args):
         import ruamel.yaml as yaml
         tty.msg(str(getattr(e.yaml, yaml.comments.Comment.attrib, None)))
 
-    path, _, value = args.value.rpartition(':')
+    path, _, value = args.path.rpartition(':')
     existing = spack.config.get(path, scope=scope)
 
     if not isinstance(existing, (list, dict)):
