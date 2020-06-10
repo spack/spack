@@ -223,33 +223,34 @@ def _macho_relative_paths(binary, orig_layout_root, rpaths, deps, idpath):
     return orig_to_rel
 
 
-def macho_make_paths_normal(orig_path_name, rpaths, deps, idpath):
-    """
-    Return a dictionary mapping the relativized rpaths to the original rpaths.
-    This dictionary is used to replace paths in mach-o binaries.
-    Replace '@loader_path' with the dirname of the origname path name
-    in rpaths and deps; idpath is replaced with the original path name
-    """
-    rel_to_orig = dict()
-    if idpath:
-        rel_to_orig[idpath] = orig_path_name
+def _macho_normalized_paths(binary, rpaths, deps, idpath):
+    """Return a dictionary mapping the relativized RPATHs to the
+    original RPATHs.
 
-    for rpath in rpaths:
-        if re.match('@loader_path', rpath):
-            norm = os.path.normpath(re.sub(re.escape('@loader_path'),
-                                           os.path.dirname(orig_path_name),
-                                           rpath))
-            rel_to_orig[rpath] = norm
-        else:
-            rel_to_orig[rpath] = rpath
-    for dep in deps:
-        if re.match('@loader_path', dep):
-            norm = os.path.normpath(re.sub(re.escape('@loader_path'),
-                                           os.path.dirname(orig_path_name),
-                                           dep))
-            rel_to_orig[dep] = norm
-        else:
-            rel_to_orig[dep] = dep
+    This dictionary is used to replace paths in Mach-O binaries.
+
+    Replace '@loader_path' with the directory of the binary in RPATHs
+    and deps; idpath is replaced with the binary
+
+    Args:
+        binary (str): Mach-O binary under consideration
+        rpaths (str): RPATHs to be normalized
+        deps (str): dependency paths to be normalized
+        idpath (str): path to be substituted with the binary
+    """
+    rel_to_orig, loader_path_regex = {}, re.compile('@loader_path')
+    binary_dir = os.path.dirname(binary)
+    if idpath:
+        rel_to_orig[idpath] = binary
+
+    for rpath_or_dep in rpaths + deps:
+        rel_to_orig[rpath_or_dep] = rpath_or_dep
+        if loader_path_regex.match(rpath_or_dep):
+            normalized_path = os.path.normpath(
+                re.sub(re.escape('@loader_path'), binary_dir, rpath_or_dep)
+            )
+            rel_to_orig[rpath_or_dep] = normalized_path
+
     return rel_to_orig
 
 
@@ -542,7 +543,7 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                                     path_name)
             # get the mapping of the relativized paths to the original
             # normalized paths
-            rel_to_orig = macho_make_paths_normal(orig_path_name,
+            rel_to_orig = _macho_normalized_paths(orig_path_name,
                                                   rpaths, deps,
                                                   idpath)
             # replace the relativized paths with normalized paths
