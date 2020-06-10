@@ -474,7 +474,7 @@ _spack_ci() {
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref"
+    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref --optimize"
 }
 
 _spack_ci_rebuild() {
