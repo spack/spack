@@ -161,6 +161,14 @@ def config_list(args):
     print(' '.join(list(spack.config.section_schemas)))
 
 
+def set_config(args, section, new, scope):
+    if re.match(r'env.*', scope):
+        e = ev.get_env(args, 'config add')
+        e.set_config(section, new)
+    else:
+        spack.config.set(section, new, scope=scope)
+
+
 def config_add(args):
     """Add the given configuration to the specified config scope
 
@@ -192,11 +200,7 @@ def config_add(args):
                 existing = spack.config.get(section, scope=scope)
                 new = spack.config.merge_yaml(existing, value)
 
-                if re.match(r'env.*', scope or ''):
-                    e = ev.get_env(args, 'config add')
-                    e.set_config(section, new)
-                else:
-                    spack.config.set(section, new, scope=scope)
+                set_config(args, section, new, scope)
 
     if args.path:
         components = spack.config.process_config_path(args.path)
@@ -234,18 +238,13 @@ def config_add(args):
             value = syaml.load_config(value)
             existing = spack.config.get(path, scope=scope)
 
-        # append values to lists appropriately
+        # append values to lists
         if isinstance(existing, list) and not isinstance(value, list):
             value = [value]
 
         # merge value into existing
         new = spack.config.merge_yaml(existing, value)
-
-        if re.match(r'env.*', scope or ''):
-            e = ev.get_env(args, 'config add')
-            e.set_config(path, new)
-        else:
-            spack.config.set(path, new, scope=scope)
+        set_config(args, path, new, scope)
 
 
 def config_remove(args):
@@ -253,11 +252,6 @@ def config_remove(args):
 
     This is a stateful operation that edits the config files."""
     scope, _ = _get_scope_and_section(args)
-
-    e = ev.get_env(args, 'config remove')
-    if e:
-        import ruamel.yaml as yaml
-        tty.msg(str(getattr(e.yaml, yaml.comments.Comment.attrib, None)))
 
     path, _, value = args.path.rpartition(':')
     existing = spack.config.get(path, scope=scope)
@@ -278,11 +272,7 @@ def config_remove(args):
         # This should be impossible to reach
         raise spack.config.ConfigError('Config has nested non-dict values')
 
-    if re.match(r'env.*', scope or ''):
-        e = ev.get_env(args, 'config remove')
-        e.set_config(path, existing)
-    else:
-        spack.config.set(path, existing, scope=scope)
+    set_config(args, path, existing, scope)
 
 
 def config(parser, args):
