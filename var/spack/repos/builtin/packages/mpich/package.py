@@ -176,14 +176,14 @@ spack package at this time.''',
             env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
             env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
         env.set('MPICH_CC', spack_cc)
         env.set('MPICH_CXX', spack_cxx)
         env.set('MPICH_F77', spack_f77)
         env.set('MPICH_F90', spack_fc)
         env.set('MPICH_FC', spack_fc)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
 
     def setup_dependent_package(self, module, dependent_spec):
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.

@@ -226,8 +226,8 @@ class IntelParallelStudio(IntelPackage):
             'FC':   spack_fc,
         })
 
-    def setup_run_environment(self, *args):
-        super(self, IntelParallelStudio).setup_run_environment(*args)
-        # We can fake the dependent spec because it isn't used
-        # This allows us to setup mpi compilers in run env
-        self.setup_dependent_build_environment(*args, dependent_spec=None)
+    def setup_run_environment(self, env):
+        super(self, IntelParallelStudio).setup_run_environment(env)
+
+        for name, value in self.mpi_compiler_wrappers.items():
+            env.set(name, value)
