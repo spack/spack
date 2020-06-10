@@ -79,9 +79,6 @@ valid_environment_name_re = r'^\w[\w-]*$'
 #: version of the lockfile format. Must increase monotonically.
 lockfile_format_version = 2
 
-#: legal first keys in the spack.yaml manifest file
-env_schema_keys = ('spack', 'env')
-
 # Magic names
 # The name of the standalone spec list in the manifest yaml
 user_speclist_name = 'specs'
@@ -365,7 +362,7 @@ def create(name, init_file=None, with_view=None):
 
 def config_dict(yaml_data):
     """Get the configuration scope section out of an spack.yaml"""
-    key = spack.config.first_existing(yaml_data, env_schema_keys)
+    key = spack.config.first_existing(yaml_data, spack.schema.env.keys)
     return yaml_data[key]
 
 
@@ -791,7 +788,7 @@ class Environment(object):
         return spack.config.SingleFileScope(config_name,
                                             self.manifest_path,
                                             spack.schema.env.schema,
-                                            [env_schema_keys])
+                                            [spack.schema.env.keys])
 
     def config_scopes(self):
         """A list of all configuration scopes for this environment."""

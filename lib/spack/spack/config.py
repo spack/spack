@@ -56,11 +56,11 @@ import spack.schema.packages
 import spack.schema.modules
 import spack.schema.config
 import spack.schema.upstreams
+import spack.schema.env
 from spack.error import SpackError
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
-
 
 #: Dict from section names -> schema for that section
 section_schemas = {
@@ -953,7 +953,7 @@ def process_config_path(path):
 #
 # Settings for commands that modify configuration
 #
-def default_modify_scope(section):
+def default_modify_scope(section='config'):
     """Return the config scope that commands should modify by default.
 
     Commands that modify configuration by default modify the *highest*

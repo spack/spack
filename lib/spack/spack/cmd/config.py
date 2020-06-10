@@ -10,6 +10,7 @@ import re
 import llnl.util.tty as tty
 
 import spack.config
+import spack.schema.env
 import spack.environment as ev
 import spack.util.spack_yaml as syaml
 from spack.util.editor import editor
@@ -174,31 +175,20 @@ def config_add(args):
     # Updates from file
     if args.file:
         # Get file as config dict
-        with open(args.file, 'r') as f:
-            data = syaml.load_config(f)
+        data = spack.config.read_config_file(args.file)
+        if any(k in data for k in spack.schema.env.keys):
+            data = ev.config_dict(data)
 
-        if 'env' in data or 'spack' in data:
-            # Validate as an environment
-            # use config_dict to remove top-level key
-            spack.config.validate(data, spack.schema.env.schema, args.file)
-            config_dict = spack.environment.config_dict(data)
-        else:
-            # Separate config file
-            # Use schema according to first key (they each only accept one key)
-            # Do not remove top key
-            spack.config.validate(
-                data, spack.config.section_schemas[next(iter(data))])
-            config_dict = data
         # update all sections from config dict
         # We have to iterate on keys to keep overrides from the file
-        for section in config_dict.keys():
+        for section in data.keys():
             if section in spack.config.section_schemas.keys():
                 # Special handling for compiler scope difference
                 # Has to be handled after we choose a section
                 if scope is None:
                     scope = spack.config.default_modify_scope(section)
 
-                value = config_dict[section]
+                value = data[section]
                 existing = spack.config.get(section, scope=scope)
                 new = spack.config.merge_yaml(existing, value)
 
