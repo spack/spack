@@ -11,16 +11,6 @@ combinations: !include packages/toolchains.yaml
 
 packages:
 
-  gnu-stable-serial-python:
-    target_matrix:
-      - gnu-stable
-    requires:
-      - architecture
-      - compiler
-      - python
-    specs:
-      - arrow+parquet+python@0.15.0
-
   gnu-stable-serial-python3:
     target_matrix:
       - gnu-stable
@@ -51,6 +41,7 @@ packages:
     specs:
       - assimp
       - boost
+      - catch ~single_header
       - deflect
       - eigen
       - fmt
@@ -61,10 +52,13 @@ packages:
       - morphio
       - morpho-kit
       - openscenegraph build_type=Release
+      - nlohmann-json +single_header
       - pugixml
+      - random123
       - range-v3
       - rockets
       - rocksdb~static
+      - spark@2.4.5+hadoop ^jdk@1.8.0_131-b11
 
   # gnu-stable-serial-python3:
   #   target_matrix:

@@ -31,6 +31,12 @@ packages:
       - compiler
       - python
     specs:
+      # for Spykfunc
+      - py-morpho-kit
+      - py-py4j
+      - py-pyarrow+parquet@0.12.1
+      - py-pyspark
+      # Others
       - py-aspy-yaml
       - py-argcomplete
       - py-argparse
@@ -96,10 +102,7 @@ packages:
       - py-ply
       - py-pre-commit
       - py-progress
-      - py-py4j
-      - py-pyarrow+parquet
       - py-pylru
-      - py-pyspark
       - py-pytest
       - py-pyyaml
       - py-regex

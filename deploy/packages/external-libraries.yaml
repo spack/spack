@@ -19,6 +19,7 @@ packages:
       - compiler
     specs:
       - arrow+parquet~python@0.15.0
+      - arrow+parquet~python@0.12.1
       - boost~mpi@1.70.0
       - bzip2@1.0.6
       - cgal
@@ -47,7 +48,6 @@ packages:
       - qt@5.11.2 ^libjpeg-turbo
       - readline
       - snakemake
-      - spark@2.4.0+hadoop
       - sqlite
       - symengine@0.3.0
       - timemory+mpi+cuda+cupti+caliper~gperftools~python@3.0.1

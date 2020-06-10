@@ -37,7 +37,8 @@ packages:
       - gmp@6.1.2
       - graphviz@2.42.2
       - help2man@1.47.4
-      - hpctoolkit
+      - hpctoolkit@2019.08.14
+      - hpcviewer@2020.05
       - hpe-mpi@2.21
       - intel-mpi@2018.1.163
       - isl@0.18

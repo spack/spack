@@ -21,6 +21,7 @@ class Spark(Package):
     depends_on('java@8', type=('build', 'run'))
     depends_on('hadoop', when='+hadoop', type=('build', 'run'))
 
+    version('2.4.5', sha256='40f58f117efa83a1d0e66030d3561a8d7678f5473d1f3bb53e05c40d8d6e6781')
     version('2.4.0', sha256='b1d6d6cb49d8253b36df8372a722292bb323bd16315d83f0b0bafb66a4154ef2')
     version('2.3.0', sha256='a7e29e78bd43aa6d137f0bb0afd54a3017865d471456c6d436ae79475bbeb161')
     version('2.1.0', sha256='3ca4ecb0eb9a00de5099cc2564ed957433a2d15d9d645a60470324621853c5ae')
@@ -34,6 +35,7 @@ class Spark(Package):
         url = "http://archive.apache.org/dist/spark/spark-{0}/spark-{0}-bin-{1}.tgz"
         if self.spec.satisfies('@2.4.0: +hadoop'):
             checksums = {
+                Version('2.4.5'): '020be52524e4df366eb974d41a6e18fcb6efcaba9a51632169e917c74267dd81',
                 Version('2.4.0'): 'c93c096c8d64062345b26b34c85127a6848cff95a4bb829333a06b83222a5cfa'
             }
             self.versions[version] = {'checksum': checksums[version]}
@@ -57,7 +59,7 @@ class Spark(Package):
         install('RELEASE', prefix)
 
     @when('+hadoop')
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         hadoop = self.spec['hadoop'].command
         hadoop.add_default_env('JAVA_HOME', self.spec['java'].home)
         hadoop_classpath = hadoop('classpath', output=str)
@@ -66,4 +68,4 @@ class Spark(Package):
         # module files
         hadoop_classpath = re.sub(r'[\s+]', '', hadoop_classpath)
 
-        run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)
+        env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)
