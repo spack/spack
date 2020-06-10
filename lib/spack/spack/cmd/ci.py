@@ -57,8 +57,8 @@ def setup_parser(subparser):
     generate.add_argument(
         '--optimize', action='store_true',
         help="(Experimental) run the generated document through a series of "
-             "optimization passes designed to reduce the size of the generated "
-             "file.")
+             "optimization passes designed to reduce the size of the "
+             "generated file.")
     generate.set_defaults(func=ci_generate)
 
     # Check a spec against mirror. Rebuild, create buildcache and push to
