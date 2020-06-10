@@ -9,7 +9,7 @@ from spack import *
 class Alps(CMakePackage):
     """Algorithms for Physics Simulations
 
-    Keywords: Condensed Matter Physics, Computational Physics
+    Tags: Condensed Matter Physics, Computational Physics
     """
 
     homepage = "https://alps.comp-phys.org"
