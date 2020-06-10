@@ -791,8 +791,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
     # TODO(opadron): remove this or refactor
     if run_optimizer:
-        import spack.ci_optimization.optimizer as optimizer
-        sorted_output = optimizer(sorted_output)
+        import spack.ci_optimization as ci_opt
+        sorted_output = ci_opt.optimizer(sorted_output)
 
     with open(output_file, 'w') as outf:
         outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
