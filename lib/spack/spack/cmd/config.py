@@ -94,19 +94,13 @@ def _get_scope_and_section(args):
 
     # set scope defaults
     elif not scope:
-        if section == 'compilers':
-            scope = spack.config.default_modify_scope()
-        else:
-            scope = spack.config.default_modify_scope(subscopes=False)
+        scope = spack.config.default_modify_scope(section)
 
     # special handling for commands that take value instead of section
     if path:
         section = path[:path.find(':')] if ':' in path else path
         if not scope:
-            if section == 'compilers':
-                scope = spack.config.default_modify_scope
-            else:
-                scope = spack.config.default_modify_scope(False)
+            scope = spack.config.default_modify_scope(section)
 
     return scope, section
 
@@ -202,10 +196,7 @@ def config_add(args):
                 # Special handling for compiler scope difference
                 # Has to be handled after we choose a section
                 if scope is None:
-                    if section == 'compilers':
-                        scope = spack.config.default_modify_scope()
-                    else:
-                        scope = spack.config.default_modify_scope(False)
+                    scope = spack.config.default_modify_scope(section)
 
                 value = config_dict[section]
                 existing = spack.config.get(section, scope=scope)
@@ -270,7 +261,7 @@ def config_add(args):
 def config_remove(args):
     """Remove the given configuration from the specified config scope
 
-    This is a stateful operation that edits the config files under the hood"""
+    This is a stateful operation that edits the config files."""
     scope, _ = _get_scope_and_section(args)
 
     e = ev.get_env(args, 'config remove')

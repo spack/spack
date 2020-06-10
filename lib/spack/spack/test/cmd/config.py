@@ -47,7 +47,7 @@ repos:
 
 def test_config_edit():
     """Ensure `spack config edit` edits the right paths."""
-    dms = spack.config.default_modify_scope()
+    dms = spack.config.default_modify_scope('compilers')
     dms_path = spack.config.config.scopes[dms].path
     user_path = spack.config.config.scopes['user'].path
 

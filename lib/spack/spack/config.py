@@ -378,8 +378,10 @@ class Configuration(object):
         """Non-internal scope with highest precedence."""
         return next(reversed(self.file_scopes), None)
 
-    def highest_precedence_non_subscope(self):
-        """Non-internal scope with highest precedence that is not a subscope"""
+    def highest_precedence_non_platform_scope(self):
+        """Non-internal non-platform scope with highest precedence
+
+        Platform-specific scopes are of the form scope/platform"""
         generator = reversed(self.file_scopes)
         highest = next(generator, None)
         while highest and '/' in highest.name:
@@ -935,19 +937,20 @@ def process_config_path(path):
 #
 # Settings for commands that modify configuration
 #
-def default_modify_scope(subscopes=True):
+def default_modify_scope(section):
     """Return the config scope that commands should modify by default.
 
     Commands that modify configuration by default modify the *highest*
     priority scope.
 
     Arguments:
-        subscopes (boolean): allow scopes that are subscopes. (Defaultv True)
+        section (boolean): Section for which to get the default scope.
+            If this is not 'compilers', a general (non-platform) scope is used.
     """
-    if subscopes:
+    if section == 'compilers':
         return spack.config.config.highest_precedence_scope().name
     else:
-        return spack.config.config.highest_precedence_non_subscope().name
+        return spack.config.config.highest_precedence_non_platform_scope().name
 
 
 def default_list_scope():
