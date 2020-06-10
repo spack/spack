@@ -1,17 +1,17 @@
 compilers:
 - compiler:
+    spec: gcc@7.3.0
+    paths:
+      cc: /cineca/prod/opt/compilers/gnu/7.3.0/none/bin/gcc
+      cxx: /cineca/prod/opt/compilers/gnu/7.3.0/none/bin/g++
+      f77: /cineca/prod/opt/compilers/gnu/7.3.0/none/bin/gfortran
+      fc: /cineca/prod/opt/compilers/gnu/7.3.0/none/bin/gfortran
+    flags: {}
+    operating_system: centos7
+    target: x86_64
+    modules: ['gnu/7.3.0']
     environment: {}
     extra_rpaths: []
-    flags: {}
-    modules: []
-    operating_system: centos7
-    paths:
-      cc: /usr/bin/gcc
-      cxx: /usr/bin/g++
-      f77: /usr/bin/gfortran
-      fc: /usr/bin/gfortran
-    spec: gcc@4.8.5
-    target: x86_64
 - compiler:
     environment: {}
     extra_rpaths:
@@ -19,7 +19,7 @@ compilers:
     - /cineca/prod/opt/compilers/intel/pe-xe-2018/binary/inspector/lib64
     - /cineca/prod/opt/compilers/intel/pe-xe-2018/binary/itac_2018/lib
     flags: {}
-    modules: {}
+    modules: ['intel/pe-xe-2018--binary']
     operating_system: centos7
     paths:
       cc: /marconi/prod/opt/compilers/intel/pe-xe-2018/binary/bin/icc

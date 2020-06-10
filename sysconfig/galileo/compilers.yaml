@@ -1,0 +1,41 @@
+compilers:
+- compiler:
+    spec: gcc@6.1.0
+    paths:
+      cc: /cineca/prod/opt/compilers/gnu/6.1.0/none/bin/gcc
+      cxx: /cineca/prod/opt/compilers/gnu/6.1.0/none/bin/g++
+      f77: /cineca/prod/opt/compilers/gnu/6.1.0/none/bin/gfortran
+      fc: /cineca/prod/opt/compilers/gnu/6.1.0/none/bin/gfortran
+    flags: {}
+    operating_system: centos7
+    target: x86_64
+    modules: ['gnu/6.1.0']
+    environment: {}
+    extra_rpaths: []
+- compiler:
+    spec: gcc@7.3.0
+    paths:
+      cc: /cineca/prod/opt/compilers/gnu/7.3.0/none/bin/gcc
+      cxx: /cineca/prod/opt/compilers/gnu/7.3.0/none/bin/g++
+      f77: /cineca/prod/opt/compilers/gnu/7.3.0/none/bin/gfortran
+      fc: /cineca/prod/opt/compilers/gnu/7.3.0/none/bin/gfortran
+    flags: {}
+    operating_system: centos7
+    target: x86_64
+    modules: ['gnu/7.3.0']
+    environment: {}
+    extra_rpaths: []
+
+- compiler:
+    spec: intel@18.0.5
+    paths:
+      cc: /cineca/prod/opt/compilers/intel/pe-xe-2018/binary/bin/icc
+      cxx: /cineca/prod/opt/compilers/intel/pe-xe-2018/binary/bin/icpc
+      f77: /cineca/prod/opt/compilers/intel/pe-xe-2018/binary/bin/ifort
+      fc: /cineca/prod/opt/compilers/intel/pe-xe-2018/binary/bin/ifort
+    flags: {}
+    operating_system: centos7
+    target: x86_64
+    modules: []
+    environment: {}
+    extra_rpaths: []

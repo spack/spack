@@ -23,22 +23,20 @@ modules:
   tcl:
     all:
       autoload: 'all'
-      filter:
-        environment_blacklist: ['CPATH', 'LIBRARY_PATH']
       suffixes:
           '^python@2.7.12': 'python2'
           'neuron~mpi': 'serial'
+      filter:
+        environment_blacklist: ['CPATH', 'LIBRARY_PATH']
     naming_scheme: '${PACKAGE}/${VERSION}'
     hash_length: 0
     whitelist:
-      - 'brion+python'
       - 'neurodamus-hippocampus'
       - 'neuron'
       - 'py-bluepy'
       - 'py-bluepyopt'
       - 'py-matplotlib'
-      - 'py-pandas'
-      - 'zlib%gcc'
+      - 'brion+python'
     blacklist:
       - '%gcc'
       - '%intel'
