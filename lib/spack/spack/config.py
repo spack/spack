@@ -798,8 +798,16 @@ def read_config_file(filename, schema=None):
             data = syaml.load_config(f)
 
         if data:
+            if not schema:
+                key = next(iter(data))
+                schema = all_schemas[key]
+            print(filename)
             validate(data, schema)
         return data
+
+    except StopIteration:
+        raise ConfigFileError(
+            "Config file is empty or is not a valid YAML dict: %s" % filename)
 
     except MarkedYAMLError as e:
         raise ConfigFileError(
@@ -999,17 +1007,17 @@ class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
 
     def __init__(self, validation_error, data, filename=None, line=None):
+        # spack yaml has its own file/line marks -- try to find them
+        # we prioritize these over the inputs
+        mark = self._get_mark(validation_error, data)
+        if mark:
+            filename = mark.name
+            line = mark.line + 1
+
         self.filename = filename  # record this for ruamel.yaml
 
+        # construct location
         location = '<unknown file>'
-
-        # spack yaml has its own file/line marks -- try to find them
-        if not filename and not line:
-            mark = self._get_mark(validation_error, data)
-            if mark:
-                filename = mark.name
-                line = mark.line + 1
-
         if filename:
             location = '%s' % filename
         if line is not None:
