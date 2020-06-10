@@ -70,8 +70,14 @@ section_schemas = {
     'packages': spack.schema.packages.schema,
     'modules': spack.schema.modules.schema,
     'config': spack.schema.config.schema,
-    'upstreams': spack.schema.upstreams.schema
+    'upstreams': spack.schema.upstreams.schema,
 }
+
+# Same as above, but including keys for environments
+# this allows us to unify config reading between configs and environments
+all_schemas = copy.deepcopy(section_schemas)
+all_schemas.update(dict((key, spack.schema.env.schema)
+                        for key in spack.schema.env.keys))
 
 #: Builtin paths to configuration files in Spack
 configuration_paths = (
