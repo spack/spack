@@ -1,7 +1,9 @@
-# SpackD: Deploying Software Stacks with Spack
+# Conceptual Deployment of Software Stacks with Spack
 
-This is work-in-progress instructions for deploying software stack with
-Spack.
+These instructions were compiled in preparation for our continuous
+deployment with Jenkins.
+While the concepts presented here still hold true, the details of the
+implementation may have evolved over time.
 
 ## Contents
 
@@ -18,16 +20,16 @@ Spack.
 Clone repository:
 
 ```
-git clone https://github.com/pramodk/spack-deploy.git
-cd spack-deploy
+git clone https://github.com/BlueBrain/spack.git
+cd spack/deploy
 ```
 
 Setup virtual environment:
 
 ```
-DEPLOYMENT_VIRTUALENV=`pwd`/spackd-venv
-virtualenv -p $(which python) ${DEPLOYMENT_VIRTUALENV} --clear
-. ${DEPLOYMENT_VIRTUALENV}/bin/activate
+DEPLOYMENT_VIRTUALENV="${PWD}/venv"
+virtualenv -p "$(which python)" "${DEPLOYMENT_VIRTUALENV}" --clear
+. "${DEPLOYMENT_VIRTUALENV}/bin/activate"
 pip install --force-reinstall -U .
 ```
 
@@ -184,7 +186,7 @@ Here is list of all packages (in order) that we will be installing :
 
 ```
 spackd --input packages/compilers.yaml packages x86_64 --output compilers.txt
-spackd --input packages/system-tools.yaml packages x86_64 --output system-tools.txt
+spackd --input packages/tools.yaml packages x86_64 --output tools.txt
 spackd --input packages/serial-libraries.yaml packages x86_64 --output serial-libraries.txt
 spackd --input packages/python-packages.yaml packages x86_64 --output python-packages.txt
 spackd --input packages/parallel-libraries.yaml packages x86_64 --output parallel-libraries.txt
@@ -195,7 +197,7 @@ spackd --input packages/bbp-packages.yaml packages x86_64 --output bbp-packages.
 
 Here is how deployment workflow should look like :
 
-![alt text](drawings/workflow.png "Deployment Workflow")
+![Flowchart of the deployment](images/workflow.png "Deployment Workflow")
 
 There are five stages:
 
@@ -224,13 +226,13 @@ The definitions of software can be found in the `packages` directory:
     ├── parallel-libraries.yaml
     ├── python-packages.yaml
     ├── serial-libraries.yaml
-    ├── system-tools.yaml
-    └── toolchains.yaml
+    ├── toolchains.yaml
+    └── tools.yaml
 
 Files used for the stages:
 
 1. compilers: `compilers.yaml`
-2. tools: `system-tools.yaml`
+2. tools: `tools.yaml`
 3. external-libraries: `external-libraries.yaml`
 4. libraries: `parallel-libraries.yaml`,
               `python-packages.yaml`,
@@ -249,31 +251,46 @@ The basic Spack configuration should be in the folder `configs`:
     └── packages.yaml
 
 If a folder named after a deployment stage is present, the configuration
-files in said folder override the more generic ones within `configs`.
+files in said folder override the more generic ones within `configs`:
 
-All but the compilers stage also copy a `compilers.yaml` and
-`packages.yaml` from the previous stage.
+* first the configurations present in `configs` are copied
+* if the previous stage produced `packages.yaml` or `compilers.yaml`, those
+  files are copied over
+* if there is a folder `configs/stage`, then these configurations overwrite
+  all previous ones
+
+See the `copy_configuration` function in [`deploy.lib`](deploy.lib) for
+details.
 
 The generation/population of `packages.yaml` and chaining of Spack
-instances are defined at the top of `deploy.lib`.
-En bref: within our workflow, we want to see the modules from previous
+instances are defined at the top of [`deploy.lib`](deploy.lib) in the
+variable `export_packages`.
+
+Similarly, the variable `include_in_chain` determines which stages will be
+configured as upstream installations in `.spack/upstreams.yaml` by the
+function `update_chain_config`, which runs after the configurations are
+copied.
+This allows the later stages of the deployment to reuse the database and
+full dependency graphs of previous stages as described in the
+[upstream documentation](https://spack.readthedocs.io/en/latest/chain.html).
+Please note that stages should only be set to `yes` in *at most one* of
+`export_packages` and `include_in_chain` to avoid conflicts.
+
+Within our workflow, we want to see the modules from previous
 stages, and thus set the `MODULEPATH` to all but the current stage.
 Compilers are only visible through `compilers.yaml`, and tools and
 serial libraries should be at least in part found in `packages.yaml` to
 truncate the dependency DAG and remove duplication with different
 compilers.
 
-The final stages, the applications stage will use Spack chains to see the
-package databases of all libraries.
-
 ### Preparing the deployment
 
 The deployment will need a checkout of Spack and licenses for proprietary
-software already present in the directory structure. 
+software already present in the directory structure.
 
-    $ export DEPLOYMENT_ROOT=${PWD}/test
-    $ git clone git@github.com:BlueBrain/spack.git ${DEPLOYMENT_ROOT}/deploy/spack
-    $ git clone ssh://bbpcode.epfl.ch/user/kumbhar/spack-licenses ${DEPLOYMENT_ROOT}/deploy/spack/etc/spack/licenses
+    $ export DEPLOYMENT_ROOT="${PWD}/test"
+    $ git clone git@github.com:BlueBrain/spack.git "${DEPLOYMENT_ROOT}/deploy/spack"
+    $ git clone ssh://bbpcode.epfl.ch/user/kumbhar/spack-licenses "${DEPLOYMENT_ROOT}/deploy/spack/etc/spack/licenses"
 
 ### Generating all specs
 
@@ -281,13 +298,13 @@ The deployment script can be found in the root of this repository as
 `deploy.sh`.
 To generate and install the specs to be installed for all stages, use:
 
-    $ export DEPLOYMENT_ROOT=${PWD}/test
+    $ export DEPLOYMENT_ROOT="${PWD}/test"
     $ ./deploy.sh -g all
     ### updating the deployment virtualenv
     ### generating specs for compilers
     ### ...using compilers.yaml
     ### generating specs for tools
-    ### ...using system-tools.yaml
+    ### ...using tools.yaml
     ### generating specs for external-libraries
     ### ...using external-libraries.yaml
     ### generating specs for libraries

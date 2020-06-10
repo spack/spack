@@ -1,8 +1,10 @@
 # The BlueBrain Spack Deployment
 
 Official documentation [below](#-spack).
-For the development documentation of the deployment stack, see
-[`deploy/README.md`](deploy/README.md).
+
+The concepts of our deployment are described in [Deployment
+Concepts](deploy/Concepts.md), and deployment duties in [Deployment
+Workflows](deploy/Workflows.md).
 
 For some common issues, please see the [FAQ](FAQ.md).
 
