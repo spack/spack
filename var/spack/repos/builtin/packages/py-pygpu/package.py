@@ -37,7 +37,7 @@ class PyPygpu(PythonPackage):
     phases = ['build_ext', 'install']
 
     def build_ext_args(self, spec, prefix):
-    
+
         _ = self.spec['libgpuarray'].prefix
         include_flags = '-I{0}'.format(os.path.join(_, 'include'))
         library_flags = '-L{0}'.format(os.path.join(_, 'lib'))
