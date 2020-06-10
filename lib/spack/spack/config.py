@@ -736,25 +736,41 @@ def _validate_section_name(section):
             % (section, " ".join(section_schemas.keys())))
 
 
-def validate(data, schema, set_defaults=True):
+def validate(data, schema, filename=None):
     """Validate data read in from a Spack YAML file.
 
     Arguments:
         data (dict or list): data read from a Spack YAML file
         schema (dict or list): jsonschema to validate data
-        set_defaults (bool): whether to set defaults based on the schema
 
     This leverages the line information (start_mark, end_mark) stored
     on Spack YAML structures.
     """
     import jsonschema
+    # validate a copy to avoid adding defaults
+    # This allows us to round-trip data without adding to it.
+    test_data = copy.deepcopy(data)
+
+    if isinstance(test_data, yaml.comments.CommentedMap):
+        # HACK to fully copy ruamel CommentedMap that doesn't provide copy method
+        # necessary for environments
+        setattr(
+            test_data,
+            yaml.comments.Comment.attrib,
+            getattr(data, yaml.comments.Comment.attrib, yaml.comments.Comment())
+        )
+
     try:
-        # validate a copy to avoid adding defaults
-        # This allows us to round-trip data without adding to it.
-        test_data = copy.deepcopy(data)
         spack.schema.Validator(schema).validate(test_data)
     except jsonschema.ValidationError as e:
-        raise ConfigFormatError(e, data)
+        if hasattr(e.instance, 'lc'):
+            line_number = e.instance.lc.line + 1
+        else:
+            line_number = None
+        raise ConfigFormatError(e, data, filename, line_number)
+    # return the validated data so that we can access the raw data
+    # mostly relevant for environments
+    return test_data
 
 
 def _read_config_file(filename, schema):

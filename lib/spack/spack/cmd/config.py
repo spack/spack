@@ -180,7 +180,7 @@ def config_add(args):
         if 'env' in data or 'spack' in data:
             # Validate as an environment
             # use config_dict to remove top-level key
-            spack.environment.validate(data, 'spack.yaml')
+            spack.config.validate(data, spack.schema.env.schema, args.file)
             config_dict = spack.environment.config_dict(data)
         else:
             # Separate config file

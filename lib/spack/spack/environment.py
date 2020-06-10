@@ -391,42 +391,19 @@ def all_environments():
         yield read(name)
 
 
-def validate(data, filename=None):
-    # validating changes data by adding defaults. Return validated data
-    validate_data = copy.deepcopy(data)
-    # HACK to fully copy ruamel CommentedMap that doesn't provide copy method
-    import ruamel.yaml as yaml
-    setattr(
-        validate_data,
-        yaml.comments.Comment.attrib,
-        getattr(data, yaml.comments.Comment.attrib, yaml.comments.Comment())
-    )
-
-    import jsonschema
-    try:
-        spack.schema.Validator(spack.schema.env.schema).validate(validate_data)
-    except jsonschema.ValidationError as e:
-        if hasattr(e.instance, 'lc'):
-            line_number = e.instance.lc.line + 1
-        else:
-            line_number = None
-        raise spack.config.ConfigFormatError(
-            e, data, filename, line_number)
-    return validate_data
-
-
 def _read_yaml(str_or_file):
     """Read YAML from a file for round-trip parsing."""
     data = syaml.load_config(str_or_file)
     filename = getattr(str_or_file, 'name', None)
-    default_data = validate(data, filename)
+    default_data = spack.config.validate(
+        data, spack.schema.env.schema, filename)
     return (data, default_data)
 
 
 def _write_yaml(data, str_or_file):
     """Write YAML to a file preserving comments and dict order."""
     filename = getattr(str_or_file, 'name', None)
-    validate(data, filename)
+    spack.config.validate(data, spack.schema.env.schema, filename)
     syaml.dump_config(data, str_or_file, default_flow_style=False)
 
 
