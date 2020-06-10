@@ -801,7 +801,6 @@ def read_config_file(filename, schema=None):
             if not schema:
                 key = next(iter(data))
                 schema = all_schemas[key]
-            print(filename)
             validate(data, schema)
         return data
 
