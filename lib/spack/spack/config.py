@@ -142,7 +142,7 @@ class ConfigScope(object):
         if section not in self.sections:
             path   = self.get_section_filename(section)
             schema = section_schemas[section]
-            data   = _read_config_file(path, schema)
+            data   = read_config_file(path, schema)
             self.sections[section] = data
         return self.sections[section]
 
@@ -219,7 +219,7 @@ class SingleFileScope(ConfigScope):
         #   }
         # }
         if self._raw_data is None:
-            self._raw_data = _read_config_file(self.path, self.schema)
+            self._raw_data = read_config_file(self.path, self.schema)
             if self._raw_data is None:
                 return None
 
@@ -773,7 +773,7 @@ def validate(data, schema, filename=None):
     return test_data
 
 
-def _read_config_file(filename, schema):
+def read_config_file(filename, schema=None):
     """Read a YAML configuration file."""
     # Ignore nonexisting files.
     if not os.path.exists(filename):
