@@ -127,15 +127,21 @@ def test_possible_dependencies_with_multiple_classes(
 
 
 def setup_install_test(source_paths, install_test_root):
-    """Set up the install test by creating sources and install test roots."""
+    """
+    Set up the install test by creating sources and install test roots.
+
+    The convention used here is to create an empty file if the path name
+    ends with an extension otherwise, a directory is created.
+    """
     fs.mkdirp(install_test_root)
     for path in source_paths:
-        fs.mkdirp(os.path.dirname(path))
         if os.path.splitext(path)[1]:
-            fs.touch(path)
+            fs.touchp(path)
+        else:
+            fs.mkdirp(path)
 
 
-@pytest.mark.parametrize('spec,sources,extras,exists', [
+@pytest.mark.parametrize('spec,sources,extras,expect', [
     ('a',
      ['example/a.c'],   # Source(s)
      ['example/a.c'],   # Extra test source
@@ -149,7 +155,7 @@ def setup_install_test(source_paths, install_test_root):
      ['examples/b.py', 'tests'],
      ['examples/b.py', 'tests/d.py']),
 ])
-def test_cache_extra_sources(install_mockery, spec, sources, extras, exists):
+def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     """Test the package's cache extra test sources helper function."""
 
     pkg = spack.repo.get(spec)
@@ -158,18 +164,30 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, exists):
 
     srcs = [fs.join_path(source_path, s) for s in sources]
     setup_install_test(srcs, pkg.install_test_root)
+
+    emsg_dir = 'Expected {0} to be a directory'
+    emsg_file = 'Expected {0} to be a file'
     for s in srcs:
         assert os.path.exists(s), 'Expected {0} to exist'.format(s)
+        if os.path.splitext(s)[1]:
+            assert os.path.isfile(s), emsg_file.format(s)
+        else:
+            assert os.path.isdir(s), emsg_dir.format(s)
 
     pkg.cache_extra_test_sources(extras)
 
-    poss_dests = [fs.join_path(pkg.install_test_root, s) for s in sources]
-    expected = [fs.join_path(pkg.install_test_root, e) for e in exists]
+    src_dests = [fs.join_path(pkg.install_test_root, s) for s in sources]
+    exp_dests = [fs.join_path(pkg.install_test_root, e) for e in expect]
+    poss_dests = set(src_dests) | set(exp_dests)
 
     msg = 'Expected {0} to{1} exist'
     for pd in poss_dests:
-        if pd in expected:
+        if pd in exp_dests:
             assert os.path.exists(pd), msg.format(pd, '')
+            if os.path.splitext(pd)[1]:
+                assert os.path.isfile(pd), emsg_file.format(pd)
+            else:
+                assert os.path.isdir(pd), emsg_dir.format(pd)
         else:
             assert not os.path.exists(pd), msg.format(pd, ' not')
 
