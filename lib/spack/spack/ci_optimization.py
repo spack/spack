@@ -216,9 +216,11 @@ def try_optimization_pass(name, yaml, optimization_pass, *args, **kwargs):
 
     "optimization_pass" is the function implementing the pass to be applied.
 
-    "*args" and "**kwargs" are the additional arguments to pass to optimization
+    "args" and "kwargs" are the additional arguments to pass to optimization
     pass. The pass is applied as
+    ~~~~
     (new_yaml, *other_results) = optimization_pass(yaml, *args, **kwargs)
+    ~~~~
 
     The pass's results are greedily rejected if it does not modify the original
     yaml document, or if it produces a yaml document that serializes to a
