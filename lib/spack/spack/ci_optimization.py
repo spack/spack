@@ -6,7 +6,8 @@
 import collections
 
 try:
-    import collections.abc as collections_abc
+    # dynamically import to keep vermin from complaining
+    collections_abc = __import__('collections.abc')
 except ImportError:
     collections_abc = collections
 
@@ -362,7 +363,7 @@ def optimizer(yaml):
         counter += 1
 
         yaml, other, applied, rest = try_optimization_pass(
-            'SPACK_ROOT_SPEC factorization ({})'.format(counter),
+            'SPACK_ROOT_SPEC factorization ({count})'.format(count=counter),
             yaml,
             common_subobject,
             {'variables': {'SPACK_ROOT_SPEC': spec}})
