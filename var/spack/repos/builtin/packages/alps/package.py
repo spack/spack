@@ -46,5 +46,5 @@ class Alps(CMakePackage):
     def cmake_args(self):
         args = []
         args.append('Boost_ROOT_DIR=' + self.spec['boost'].prefix)
-        args.append("-DCMAKE_CXX_FLAGS=-std=c++03 ")
+        args.append("-DCMAKE_CXX_FLAGS={0}".format(self.compiler.cxx98_flag))
         return args
