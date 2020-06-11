@@ -14,22 +14,10 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 1 { version(Package, Version) : version_declared(Package, Version) } 1
  :- node(Package).
 
-% no conflicting versions can be assigned
-:- version(Package, Version),
-   version_satisfies(Package, Constraint),
-   0 = @version_satisfies(Version, Constraint).
-
-version_satisfies(Package, Constraint)
-  :- node(Package),
-     version(Package, Version),
-     version_constraint(Package, Constraint),
-     1 = @version_satisfies(Version, Constraint).
-
 version_weight(Package, Weight)
  :- version(Package, Version), version_declared(Package, Version, Weight).
 
 #defined version_conflict/2.
-#defined version_constraint/2.
 
 %-----------------------------------------------------------------------------
 % Dependency semantics
