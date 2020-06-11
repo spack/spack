@@ -8,16 +8,19 @@ from spack import *
 
 
 class Frontistr(CMakePackage):
-    """Large-Scale Parallel FEM Program for Nonlinear Structural Analysis : FrontISTR"""
+    """Large-Scale Parallel FEM Program for Nonlinear Structural Analysis 
+       : FrontISTR"""
 
     homepage = "https://www.frontistr.com"
     url      = "https://gitlab.com/FrontISTR-Commons/FrontISTR/-/archive/v5.0/FrontISTR-v5.0.tar.gz"
     git      = "https://gitlab.com/FrontISTR-Commons/FrontISTR.git"
 
-    version('5.0', sha256='b60e77146da0b46d0b094416bab01298a44c33bbcf705763473be294a78c8993')
+    version('5.0', \
+        sha256='b60e77146da0b46d0b094416bab01298a44c33bbcf705763473be294a78c8993')
     version('master', branch='master')
 
-    variant('build_type', default='RELEASE', description='CMake build type', values=('DEBUG', 'RELEASE'))
+    variant('build_type', default='RELEASE', \
+            description='CMake build type', values=('DEBUG', 'RELEASE'))
 
     depends_on('cmake~openssl~ncurses', type='build')
     depends_on('mpi', type=('link', 'run'))
