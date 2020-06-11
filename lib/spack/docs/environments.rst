@@ -647,7 +647,7 @@ named list ``compilers`` is ``['%gcc', '%clang', '%intel']`` on
    spack:
      definitions:
        - compilers: ['%gcc', '%clang']
-       - when: target == 'x86_64'
+       - when: arch.satisfies('x86_64:')
          compilers: ['%intel']
 
 .. note::
@@ -666,8 +666,12 @@ The valid variables for a ``when`` clause are:
 #. ``target``. The target string of the default Spack
    architecture on the system.
 
-#. ``architecture`` or ``arch``. The full string of the
-   default Spack architecture on the system.
+#. ``architecture`` or ``arch``. A Spack spec satisfying the default Spack
+   architecture on the system. This supports querying via the ``satisfies``
+   method, as shown above.
+
+#. ``arch_str``. The architecture string of the default Spack architecture
+   on the system.
 
 #. ``re``. The standard regex module in Python.
 
