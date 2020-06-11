@@ -8,26 +8,32 @@ from spack import *
 
 
 class Frontistr(CMakePackage):
-    """Open-Source Large-Scale Parallel FEM Program for
-        Nonlinear Structural Analysis"""
+    """Large-Scale Parallel FEM Program for Nonlinear Structural Analysis
+       : FrontISTR"""
 
-    homepage = "https://github.com/FrontISTR/FrontISTR"
-    git      = "https://github.com/FrontISTR/FrontISTR.git"
+    homepage = "https://www.frontistr.com"
+    url      = "https://gitlab.com/FrontISTR-Commons/FrontISTR/-/archive/v5.0/FrontISTR-v5.0.tar.gz"
+    git      = "https://gitlab.com/FrontISTR-Commons/FrontISTR.git"
 
-    version('5.0', tag='v5.0')
+    version('5.0',
+            sha256='b60e77146da0b46d0b094416bab01298a44c33bbcf705763473be294a78c8993')
+    version('master', branch='master')
 
-    depends_on('mpi')
-    depends_on('revocap-refiner')
-    depends_on('revocap-coupler')
-    depends_on('blas')
-    depends_on('metis')
-    depends_on('scalapack')
-    depends_on('mumps +mpi')
-    depends_on('trilinos')
+    variant('build_type', default='RELEASE',
+            description='CMake build type', values=('DEBUG', 'RELEASE'))
+
+    depends_on('cmake~openssl~ncurses', type='build')
+    depends_on('mpi', type=('link', 'run'))
+    depends_on('lapack', type='link')
+    depends_on('blas', type='link')
+    depends_on('mumps+metis+parmetis~scotch', type='link')
+    depends_on('metis', type='link')
+    depends_on('trilinos+openmp~zoltan2~tpetra~teuchos~suite-sparse~sacado\
+                ~muelu~kokkos~ifpack2~ifpack~hypre~hdf5~gtest\
+                ~explicit_template_instantiation~exodus~epetraext\
+                ~epetra~boost~belos~aztec~anasazi~amesos2~amesos\
+                ~matio~glm~netcdf', type='link')
 
     def cmake_args(self):
-        define = CMakePackage.define
-        cmake_args = [
-            define('WITH_ML', True),
-        ]
-        return cmake_args
+        args = []
+        return args
