@@ -25,5 +25,5 @@ class SraTools(Package):
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
-        install_tree('example', join_path(self.prefix, 'example'))
-        install_tree('schema', join_path(self.prefix, 'schema'))
+        install_tree('example', prefix.example)
+        install_tree('schema', prefix.schema)
