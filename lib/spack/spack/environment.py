@@ -1538,7 +1538,7 @@ def _equiv_list(first, second):
     """
     if len(first) != len(second):
         return False
-    return  all(yaml_equivalent(f, s) for f, s in zip(first, second))
+    return all(yaml_equivalent(f, s) for f, s in zip(first, second))
 
 
 def _equiv_dict(first, second):
