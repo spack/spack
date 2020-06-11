@@ -50,6 +50,7 @@ class Mercury(CMakePackage):
     depends_on('openpa@1.0.3:', when='%gcc@:4.8')
     depends_on('boost@1.48:', when='+boostsys')
     depends_on('boost', when='@:0.9')  # internal boost headers were added in 1.0.0
+    depends_on('libuuid') # TODO: add when='@2.0.0:' when Mercury 2.0.0 is out
 
     conflicts('+ofi', when='@:0.9')    # libfabric support was added in 1.0.0
     conflicts('~ofi', when='+udreg')   # udreg option is specific to OFI
