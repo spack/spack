@@ -218,6 +218,12 @@ class Result(object):
         self.answers = []
         self.cores = []
 
+    def print_cores(self):
+        for core in self.cores:
+            tty.msg(
+                "The following constraints are unsatisfiable:",
+                *sorted(str(symbol) for symbol in core))
+
 
 class ClingoDriver(object):
     def __init__(self):
@@ -477,14 +483,30 @@ class PyclingoDriver(object):
             [atoms[s] for s in args] + rule_atoms
         )
 
+    def one_of_iff(self, head, versions):
+        self.out.write("%s :- %s.\n" % (head, AspOneOf(*versions)))
+        self.out.write("%s :- %s.\n" % (AspOneOf(*versions), head))
+
+        at_least_1_sym = fn.at_least_1(*head.args).symbol()
+        at_least_1 = self.backend.add_atom(at_least_1_sym)
+
+        more_than_1_sym = fn.more_than_1(*head.args).symbol()
+        more_than_1 = self.backend.add_atom(more_than_1_sym)
+
+        version_atoms = [self.backend.add_atom(f.symbol()) for f in versions]
+        self.backend.add_weight_rule(
+            [at_least_1], 1, [(v, 1) for v in version_atoms])
+        self.backend.add_weight_rule(
+            [more_than_1], 2, [(v, 1) for v in version_atoms])
+
+        head_atom = self.backend.add_atom(head.symbol())
+        self.backend.add_rule([head_atom], [at_least_1, -more_than_1])
+
+        self.backend.add_rule([], [head_atom, more_than_1])
+        self.backend.add_rule([], [head_atom, -at_least_1])
+
     def solve(self, solver_setup, specs, dump=None, nmodels=0,
               timers=False, stats=False):
-        calls = [0]
-        class Context(object):
-            def version_satisfies(self, a, b):
-                calls[0] += 1
-                return bool(ver(a.string).satisfies(ver(b.string)))
-
         timer = Timer()
 
         # Initialize the control object for the solver
@@ -509,13 +531,14 @@ class PyclingoDriver(object):
 
         # Grounding is the first step in the solve -- it turns our facts
         # and first-order logic rules into propositional logic.
-        self.control.ground([("base", [])], context=Context())
+        self.control.ground([("base", [])])
         timer.phase("ground")
 
         # With a grounded program, we can run the solve.
         result = Result()
         models = []  # stable moodels if things go well
         cores = []   # unsatisfiable cores if they do not
+
         def on_model(model):
             models.append((model.cost, model.symbols(shown=True)))
 
@@ -549,6 +572,7 @@ class PyclingoDriver(object):
                     sym = symbols[atom]
                     if sym.name == "rule":
                         sym = sym.arguments[0].string
+                    core_symbols.append(sym)
                 result.cores.append(core_symbols)
 
         if timers:
@@ -635,23 +659,6 @@ class SpackSolverSetup(object):
         # record all version constraints for later
         self.version_constraints.add((spec.name, spec.versions))
         return [fn.version_satisfies(spec.name, spec.versions)]
-
-        # # version must be *one* of the ones the spec allows.
-        # allowed_versions = [
-        #     v for v in sorted(self.possible_versions[spec.name])
-        #     if v.satisfies(spec.versions)
-        # ]
-
-        # # don't bother restricting anything if all versions are allowed
-        # if len(allowed_versions) == len(self.possible_versions[spec.name]):
-        #     return []
-
-        # predicates = [fn.version(spec.name, v) for v in allowed_versions]
-
-        # # conflict with any versions that do not satisfy the spec
-        # if predicates:
-        #     return [self.gen.one_of(*predicates)]
-        # return []
 
     def available_compilers(self):
         """Facts about available compilers."""
@@ -909,7 +916,6 @@ class SpackSolverSetup(object):
                     if compiler.satisfies(spec.compiler)
                 ]
 
-
                 clauses.append(self.gen.one_of(*possible_compiler_versions))
                 for version in possible_compiler_versions:
                     clauses.append(
@@ -984,8 +990,8 @@ class SpackSolverSetup(object):
                 possible.add(spec.architecture.os)
 
         # make directives for possible OS's
-        for os in sorted(possible):
-            self.gen.fact(fn.os(os))
+        for possible_os in sorted(possible):
+            self.gen.fact(fn.os(possible_os))
 
         # mark this one as default
         self.gen.fact(fn.node_os_default(platform.default_os))
@@ -1086,6 +1092,29 @@ class SpackSolverSetup(object):
 
         return cspecs
 
+    def define_version_constraints(self):
+        """Define what version_satisfies(...) means in ASP logic."""
+        for pkg_name, versions in sorted(self.version_constraints):
+            # version must be *one* of the ones the spec allows.
+            allowed_versions = [
+                v for v in sorted(self.possible_versions[pkg_name])
+                if v.satisfies(versions)
+            ]
+
+            # don't bother restricting anything if all versions are allowed
+            if len(allowed_versions) == len(self.possible_versions[pkg_name]):
+                continue
+
+            predicates = [fn.version(pkg_name, v) for v in allowed_versions]
+
+            # version_satisfies(pkg, constraint) is true if and only if a
+            # satisfying version is set for the package
+            self.gen.one_of_iff(
+                fn.version_satisfies(pkg_name, versions),
+                predicates,
+            )
+            self.gen.newline()
+
     def setup(self, driver, specs):
         """Generate an ASP program with relevant constraints for specs.
 
@@ -1150,9 +1179,8 @@ class SpackSolverSetup(object):
                         self.gen.fact(clause)
 
         self.gen.h1("Version Constraints")
-        for name, versions in sorted(self.version_constraints):
-            self.gen.fact(fn.version_constraint(name, versions))
-        self.gen.newline()
+        self.define_version_constraints()
+
 
 class SpecBuilder(object):
     """Class with actions to rebuild a spec from ASP results."""
