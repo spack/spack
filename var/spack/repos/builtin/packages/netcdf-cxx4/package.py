@@ -56,6 +56,12 @@ class NetcdfCxx4(AutotoolsPackage):
     def configure_args(self):
         config_args = []
 
+        if self.spec.satisfies('^mpi'):
+            config_args.extend([
+                'CC={0}'.format(self.spec['mpi'].mpicc),
+                'CXX={0}'.format(self.spec['mpi'].mpicxx)
+            ])
+
         if '+static' in self.spec:
             config_args.append('--enable-static')
         else:
