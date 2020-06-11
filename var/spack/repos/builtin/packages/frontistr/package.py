@@ -25,7 +25,11 @@ class Frontistr(CMakePackage):
     depends_on('blas', type='link')
     depends_on('mumps+metis+parmetis~scotch', type='link')
     depends_on('metis', type='link')
-    depends_on('trilinos+openmp~zoltan2~tpetra~teuchos~suite-sparse~sacado~muelu~kokkos~ifpack2~ifpack~hypre~hdf5~gtest~explicit_template_instantiation~exodus~epetraext~epetra~boost~belos~aztec~anasazi~amesos2~amesos~matio~glm~netcdf', type='link')
+    depends_on('trilinos+openmp~zoltan2~tpetra~teuchos~suite-sparse~sacado\
+                ~muelu~kokkos~ifpack2~ifpack~hypre~hdf5~gtest\
+                ~explicit_template_instantiation~exodus~epetraext\
+                ~epetra~boost~belos~aztec~anasazi~amesos2~amesos\
+                ~matio~glm~netcdf', type='link')
 
     def cmake_args(self):
         args = []
