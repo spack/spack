@@ -1495,9 +1495,12 @@ class Environment(object):
         # thing that changed is the "override" attribute on a config dict,
         # which would not show up in even a string comparison between the two
         # keys).
-        self.raw_yaml = copy.deepcopy(self.yaml)
-        with fs.write_tmp_and_move(self.manifest_path) as f:
-            _write_yaml(self.yaml, f)
+        changed = not yaml_equivalent(self.yaml, self.raw_yaml)
+        written = os.path.exists(self.manifest_path)
+        if changed or not written:
+            self.raw_yaml = copy.deepcopy(self.yaml)
+            with fs.write_tmp_and_move(self.manifest_path) as f:
+                _write_yaml(self.yaml, f)
 
         # TODO: rethink where this needs to happen along with
         # writing. For some of the commands (like install, which write
@@ -1517,6 +1520,38 @@ class Environment(object):
         deactivate()
         if self._previous_active:
             activate(self._previous_active)
+
+
+def yaml_equivalent(first, second):
+    """Returns whether two spack yaml items are equivalent, including overrides
+    """
+    if isinstance(first, dict):
+        return isinstance(second, dict) and _equiv_dict(first, second)
+    elif isinstance(first, list):
+        return isinstance(second, list) and _equiv_list(first, second)
+    else:  # it's a string
+        return isinstance(second, six.string_types) and first == second
+
+
+def _equiv_list(first, second):
+    """Returns whether two spack yaml lists are equivalent, including overrides
+    """
+    if len(first) != len(second):
+        return False
+    return  all(yaml_equivalent(f, s) for f, s in zip(first, second))
+
+
+def _equiv_dict(first, second):
+    """Returns whether two spack yaml dicts are equivalent, including overrides
+    """
+    if len(first) != len(second):
+        return False
+    same_values = all(yaml_equivalent(fv, sv)
+                      for fv, sv in zip(first.values(), second.values()))
+    same_keys_with_same_overrides = all(
+        fk == sk and getattr(fk, 'override', False) == getattr(sk, 'override', False)
+        for fk, sk in zip(first.keys(), second.keys()))
+    return same_values and same_keys_with_same_overrides
 
 
 def display_specs(concretized_specs):
