@@ -758,13 +758,13 @@ def validate(data, schema, filename=None):
     test_data = copy.deepcopy(data)
 
     if isinstance(test_data, yaml.comments.CommentedMap):
-        # HACK to fully copy ruamel CommentedMap that doesn't provide copy method
-        # necessary for environments
-        setattr(
-            test_data,
-            yaml.comments.Comment.attrib,
-            getattr(data, yaml.comments.Comment.attrib, yaml.comments.Comment())
-        )
+        # HACK to fully copy ruamel CommentedMap that doesn't provide copy
+        # method. Especially necessary for environments
+        setattr(test_data,
+                yaml.comments.Comment.attrib,
+                getattr(data,
+                        yaml.comments.Comment.attrib,
+                        yaml.comments.Comment()))
 
     try:
         spack.schema.Validator(schema).validate(test_data)

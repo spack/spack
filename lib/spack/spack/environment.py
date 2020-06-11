@@ -1549,7 +1549,8 @@ def _equiv_dict(first, second):
     same_values = all(yaml_equivalent(fv, sv)
                       for fv, sv in zip(first.values(), second.values()))
     same_keys_with_same_overrides = all(
-        fk == sk and getattr(fk, 'override', False) == getattr(sk, 'override', False)
+        fk == sk and getattr(fk, 'override', False) == getattr(sk, 'override',
+                                                               False)
         for fk, sk in zip(first.keys(), second.keys()))
     return same_values and same_keys_with_same_overrides
 
