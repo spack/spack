@@ -31,6 +31,7 @@ class NeurodamusModel(SimModel):
     depends_on('neurodamus-core@develop', type='build', when='@develop')
     depends_on("hdf5+mpi")
     depends_on('reportinglib')
+    depends_on('libsonata-report')
     depends_on('reportinglib+profile', when='+profile')
     depends_on('synapsetool+mpi', when='+synapsetool')
     depends_on('py-mvdtool+mpi', type='run', when='+mvdtool')
