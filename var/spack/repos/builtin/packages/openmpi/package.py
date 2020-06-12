@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import itertools
 import os
 import sys
 import llnl.util.tty as tty
@@ -157,12 +158,26 @@ class Openmpi(AutotoolsPackage):
     patch('btl_vader.patch', when='@3.0.1:3.0.2')
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
-    # Reported upstream: https://github.com/open-mpi/ompi/pull/6378
+    # Make NAG compiler pass the -pthread option to the linker:
+    # https://github.com/open-mpi/ompi/pull/6378
     # We support only versions based on Libtool 2.4.6.
-    patch('nag_ltmain_1.patch', when='@2.1.4:2.1.999,3.0.1:4%nag')
-    patch('nag_ltmain_2.patch', when='@2.1.2:2.1.3,3.0.0%nag')
-    patch('nag_ltmain_3.patch', when='@2.0.0:2.1.1%nag')
-    patch('nag_ltmain_4.patch', when='@1.10.4:1.10.999%nag')
+    patch('nag_pthread/2.1.4_2.1.999_3.0.1_4.patch', when='@2.1.4:2.1.999,3.0.1:4%nag')
+    patch('nag_pthread/2.1.2_2.1.3_3.0.0.patch', when='@2.1.2:2.1.3,3.0.0%nag')
+    patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
+    patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10.999%nag')
+
+    # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
+    # support "IGNORE TKR" functionality (e.g. NAG).
+    # The issue has been resolved upstream in two steps:
+    #   1) https://github.com/open-mpi/ompi/pull/2294
+    #   2) https://github.com/open-mpi/ompi/pull/5099
+    # The first one was applied starting version v3.0.0 and backported to
+    # v1.10. A subset with relevant modifications is applicable starting
+    # version 1.8.4.
+    patch('use_mpi_tkr_sizeof/step_1.patch', when='@1.8.4:1.10.6,2:2.999')
+    # The second patch was applied starting version v4.0.0 and backported to
+    # v2.x, v3.0.x, and v3.1.x.
+    patch('use_mpi_tkr_sizeof/step_2.patch', when='@1.8.4:2.1.3,3:3.0.1')
 
     variant(
         'fabrics',
@@ -363,9 +378,14 @@ class Openmpi(AutotoolsPackage):
             '--disable-silent-rules'
         ]
 
-        # Add extra_rpaths dirs from compilers.yaml into link wrapper
+        # Add extra_rpaths and implicit_rpaths into the wrappers (in the
+        # designated order, i.e. the order, in which the Spack wrapper sets
+        # them). Here we use self.compiler.cc_rpath_arg. Later, we might need
+        # to update share/openmpi/mpic++-wrapper-data.txt and
+        # mpifort-wrapper-data.txt (see method 'filter_rpaths').
         rpaths = [self.compiler.cc_rpath_arg + path
-                  for path in self.compiler.extra_rpaths]
+                  for path in itertools.chain(self.compiler.extra_rpaths,
+                                              self.compiler.implicit_rpaths())]
         config_args.extend([
             '--with-wrapper-ldflags={0}'.format(' '.join(rpaths))
         ])
@@ -512,6 +532,35 @@ class Openmpi(AutotoolsPackage):
                 config_args.append('--disable-cxx-exceptions')
 
         return config_args
+
+    @run_after('install')
+    def filter_rpaths(self):
+
+        def filter_lang_rpaths(lang_tokens, lang_rpath_arg,
+                               cc_rpath_arg=self.compiler.cc_rpath_arg):
+            if self.compiler.cc_rpath_arg == lang_rpath_arg:
+                return
+
+            files = set()
+            for token in lang_tokens:
+                for file in find(self.spec.prefix.share.openmpi,
+                                 '*{0}-wrapper-data*'.format(token)):
+                    files.add(os.path.realpath(file))
+                for file in find(self.spec.prefix.lib.pkgconfig,
+                                 'ompi-{0}.pc'.format(token)):
+                    files.add(os.path.realpath(file))
+
+            filter_file(' ' + cc_rpath_arg,
+                        ' ' + lang_rpath_arg,
+                        *files, string=True, ignore_absent=True, backup=False)
+
+        filter_lang_rpaths(['c++', 'CC', 'cxx'], self.compiler.cxx_rpath_arg)
+        filter_lang_rpaths(['fort', 'f77', 'f90'], self.compiler.fc_rpath_arg)
+
+        if self.spec.satisfies('@:1.10.3,2:2.1.1%nag'):
+            filter_lang_rpaths(['fort', 'f77', 'f90'],
+                               self.compiler.fc_rpath_arg,
+                               '-Wl,-rpath -Wl,')
 
     @run_after('install')
     def delete_mpirun_mpiexec(self):
