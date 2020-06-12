@@ -850,7 +850,7 @@ def relocate_text_bin(
 
     # Note: Replacement of spack directory should not be done. This causes
     # an incorrect replacement path in the case where the install root is a
-    # subdirectory of the spack.
+    # subdirectory of the spack directory.
 
 
 def is_relocatable(spec):
