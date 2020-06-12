@@ -848,9 +848,9 @@ def relocate_text_bin(
                 _replace_prefix_bin(binary, old_dep_prefix, new_dep_prefix)
         _replace_prefix_bin(binary, orig_install_prefix, new_install_prefix)
 
-    # Note: Replacement of spack directory should not be done. This prevent
-    # adding duplicate padding in the case where the install root is a
-    # subdirectory of the spack
+    # Note: Replacement of spack directory should not be done. This causes
+    # an incorrect replacement path in the case where the install root is a
+    # subdirectory of the spack.
 
 
 def is_relocatable(spec):
