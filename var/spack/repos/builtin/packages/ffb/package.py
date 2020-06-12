@@ -22,11 +22,29 @@ class Ffb(MakefilePackage):
 
     parallel = False
 
+    def flag_handler(self, name, flags):
+        opt_flag_found = any(f in self.compiler.opt_flags for f in flags)
+        if name == 'cflags':
+            if not opt_flag_found:
+                flags.append('-O3')
+        elif name == 'cxxflags':
+            if not opt_flag_found:
+                flags.append('-O2')
+            flags.append(self.compiler.cxx_pic_flag)
+        if name == 'fflags':
+            if not opt_flag_found:
+                flags.append('-O3')
+            flags.append('-mcmodel=large')
+        if name in ('cflags', 'cxxflags', 'fflags'):
+            return (None, flags, None)
+        else:
+            return (flags, None, flags)
+
     def edit(self, spec, prefix):
         workdir = os.getcwd()
-        cflags = '-O3'
-        cxxflags = ['-O2', self.compiler.cxx_pic_flag]
-        fflags = '-O3 -mcmodel=large'
+        cflags = env['CFLAGS']
+        cxxflags = env['CXXFLAGS']
+        fflags = env['FFLAGS']
 
         make = join_path('make', 'makefile')
         m = FileFilter(make)
