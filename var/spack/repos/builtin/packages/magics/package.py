@@ -14,12 +14,13 @@ class Magics(CMakePackage):
        to be as backwards-compatible as possible with the Fortran interface."""
 
     homepage = "https://software.ecmwf.int/wiki/display/MAGP/Magics"
-    url      = "https://confluence.ecmwf.int/download/attachments/3473464/Magics-4.1.0-Source.tar.gz?api=v2"
+    url      = "https://confluence.ecmwf.int/download/attachments/3473464/Magics-4.2.4-Source.tar.gz?api=v2"
     list_url = "https://software.ecmwf.int/wiki/display/MAGP/Releases"
 
     # The policy on which minor releases remain available and which get deleted
     # after a newer version becomes available is unclear.
-    version('4.1.0', sha256='e56fb1bf82d57957a61a76284ad22024f4a7c3c989f6f796e57dfd45d88400c0')
+    version('4.2.4', sha256='920c7dbb1aaabe65a31c6c18010829210f8b2f8d614b6c405dc5a4530e346f07') 
+    version('4.1.0', sha256='da626c31f53716990754dd72ab7b2f3902a8ad924b23ef3309bd14900d170541')
     version('2.34.3', sha256='38487562e83c0470f94d9c7fb9418cbadf92f1e643033237baba2abdc77e6238')
     version('2.34.1', sha256='8df27f8f262ebc32a61f8696df15a7b4a6e4203b2a8e53fe7aa13caa1c4e3fa4')
     version('2.33.0', sha256='32d3079749f89988715a8c3df01b712d9b989b7fd242828ec09563e47c5a3e82')
@@ -92,6 +93,10 @@ class Magics(CMakePackage):
     depends_on('python', when='+python', type=('link', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python', type='build')
+    # Versions @4: supports python 2.7 and 3.x, and require python
+    # and py-jinja2 for build (even though does not build python interface)
+    depends_on('python', when='@4.0.0:', type=('build'))
+    depends_on('py-jinja2', when='@4.0.0:', type=('build'))
 
     conflicts('grib=eccodes', when='@:2.29.0',
               msg='Eccodes is supported starting version 2.29.1')
