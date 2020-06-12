@@ -846,7 +846,11 @@ def relocate_text_bin(
         for old_dep_prefix, new_dep_prefix in new_prefixes.items():
             if len(new_dep_prefix) <= len(old_dep_prefix):
                 _replace_prefix_bin(binary, old_dep_prefix, new_dep_prefix)
-        _replace_prefix_bin(binary, orig_spack, new_spack)
+        _replace_prefix_bin(binary, orig_install_prefix, new_install_prefix)
+
+    # Note: Replacement of spack directory should not be done. This prevent
+    # adding duplicate padding in the case where the install root is a
+    # subdirectory of the spack
 
 
 def is_relocatable(spec):
