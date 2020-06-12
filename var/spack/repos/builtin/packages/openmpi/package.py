@@ -297,12 +297,18 @@ class Openmpi(AutotoolsPackage):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_run_environment(self, env):
+        # Because MPI is both a runtime and a compiler, we have to setup the
+        # compiler components as part of the run environment.
         env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
         env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
         env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
         env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+        # Use the spack compiler wrappers under MPI
         env.set('OMPI_CC', spack_cc)
         env.set('OMPI_CXX', spack_cxx)
         env.set('OMPI_FC', spack_fc)
