@@ -12,6 +12,7 @@ class PyDask(PythonPackage):
     homepage = "https://github.com/dask/dask/"
     url      = "https://pypi.io/packages/source/d/dask/dask-1.1.0.tar.gz"
 
+    version('2.15.0', sha256='911efab5679f26ae53dd20604bb57235fbd33444e59d153d727ccfdcf2516c9d')
     version('1.1.2', sha256='93b355b9a9c9a3ddbb39fab99d5759aad5cfd346f4520b87788970e80cf97256')
     version('1.1.0', sha256='e76088e8931b326c05a92d2658e07b94a6852b42c13a7560505a8b2354871454')
     version('0.17.4', sha256='c111475a3d1f8cba41c8094e1fb1831c65015390dcef0308042a11a9606a2f6d')
@@ -21,6 +22,7 @@ class PyDask(PythonPackage):
     variant('bag',         default=True, description='Install requirements for dask.bag')
     variant('dataframe',   default=True, description='Install requirements for dask.dataframe')
     variant('delayed',     default=True, description='Install requirements for dask.delayed')
+    variant('distributed', default=True, description='Install requirements for dask.distributed')
 
     depends_on('py-setuptools',         type='build')
     depends_on('py-pytest@3.1.0:',      type='test')

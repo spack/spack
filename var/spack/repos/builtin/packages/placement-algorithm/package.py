@@ -13,6 +13,7 @@ class PlacementAlgorithm(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/building/placementAlgorithm"
 
     version('develop', branch='master')
+    version('2.1.0', tag='placement-algorithm-v2.1.0')
     version('2.0.10', tag='placement-algorithm-v2.0.10')
     version('2.0.8', tag='placement-algorithm-v2.0.8')
 
@@ -29,6 +30,8 @@ class PlacementAlgorithm(PythonPackage):
     depends_on('py-morph-tool@0.1.3:', type='run')
     depends_on('py-mpi4py@2.0:', type='run')
     depends_on('py-tqdm@4.0:', type='run')
-    depends_on('py-voxcell@2.5:', type='run')
+    depends_on('py-voxcell@2.5:2.6.99', when='@:2.0.99', type='run')
+    depends_on('py-voxcell@2.7:', when='@2.1.0:', type='run')
+    depends_on('py-dask@2.15:', when='@2.0.12:', type='run')
 
     depends_on('py-region-grower@0.1.5:', type='run')
