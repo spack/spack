@@ -114,7 +114,7 @@ class Ffb(MakefilePackage):
         m.filter(r'CFLAGS\s*=.*$', 'CFLAGS={0}'.format(cflags))
         m.filter(r'CXX\s*=.*$',  'CXX={0}'.format(spack_cxx))
         m.filter(r'CXXFLAGS\s*=.*$',
-                 'CXXFLAGS={0}'.format(' '.join(cxxflags)))
+                 'CXXFLAGS={0}'.format(cxxflags))
         m.filter(r'F90\s*=.*$', 'CC={0}'.format(spack_fc))
         m.filter(r'LD\s*=.*$', 'LD={0}'.format(spack_fc))
         m.filter(r'LIBPATH\s*=.*$', 'LIBPATH= ')
