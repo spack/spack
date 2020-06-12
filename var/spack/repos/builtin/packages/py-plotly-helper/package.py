@@ -18,4 +18,4 @@ class PyPlotlyHelper(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('py-neurom@mut_morphio+plotly', type='run')
+    depends_on('py-neurom+plotly', type='run')

@@ -13,6 +13,7 @@ class PyBluepyopt(PythonPackage):
     url = "https://pypi.io/packages/source/b/bluepyopt/bluepyopt-1.9.27.tar.gz"
 
     # NOTE : while adding new release check pmi_rank.patch compatibility
+    version('1.9.37', sha256='4399af71de48b288832e92f0de73c431bf88d6e76e2c4ea250c3b38fb38a45a8')
     version('1.9.27', sha256='4cce15b92b32311c808cae5e005b664deb6e8dc5df4ca13ea7b59252ae346522')
     version('1.8.68', sha256='b9d432840aab89d4863c935d3dc604816441eba02d731422b92056cee751ca9c')
     version('1.6.56', sha256='1c57c91465ca4b947fe157692e7004a3e6df02e4151e3dc77a8831382a8f1ab9')

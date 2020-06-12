@@ -23,7 +23,7 @@ packages:
     specs:
       - archngv@0.0.0
       - asciitoh5@1.0
-      - brainbuilder@0.11.7
+      - brainbuilder@0.12.0
       - brion@3.1.0 +python
       - brion@3.2.0 +python
       - connectome-tools@0.3.2
@@ -37,7 +37,7 @@ packages:
       - py-bbp-analysis-framework@1.6.42
       - py-morphology-repair-workflow@1.0.4
       - py-simwriter@1.0.1
-      - py-morph-tool@0.1.14
+      - py-morph-tool@0.2.5
       - py-morphio@2.3.4
       - py-neurodamus
       - py-sonata-network-reduction@0.0.8 ^neuron%intel@19.0.4^py-ipython%gcc
