@@ -31,6 +31,9 @@ class Slate(Package, CudaPackage):
 
     conflicts('%gcc@:5')
 
+    # cuda_arch value must be specified
+    conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")
+
     def setup_build_environment(self, env):
         if('+cuda' in self.spec):
             env.prepend_path('CPATH', self.spec['cuda'].prefix.include)
