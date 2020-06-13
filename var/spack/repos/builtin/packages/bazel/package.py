@@ -94,6 +94,8 @@ class Bazel(Package):
     version('0.3.1',  sha256='218d0e28b4d1ee34585f2ac6b18d169c81404d93958815e73e60cc0368efcbb7')
     version('0.3.0',  sha256='357fd8bdf86034b93902616f0844bd52e9304cccca22971ab7007588bf9d5fb3')
 
+    variant('nodepfail', default=True, description='Disable failing dependency checks due to injected absolute paths - required for most builds using bazel with spack')
+
     # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-bazel
     # Until https://github.com/spack/spack/issues/14058 is fixed, use jdk to build bazel
     # Strict dependency on java@8 as per
@@ -127,6 +129,9 @@ class Bazel(Package):
     patch('compile-0.6.patch',  when='@0.6:0.8')
     patch('compile-0.4.patch',  when='@0.4:0.5')
     patch('compile-0.3.patch',  when='@:0.3')
+
+    patch('disabledepcheck.patch', when='@0.3.2:+nodepfail')
+    patch('disabledepcheck_old.patch', when='@0.3.0:0.3.1+nodepfail')
 
     phases = ['bootstrap', 'install']
 

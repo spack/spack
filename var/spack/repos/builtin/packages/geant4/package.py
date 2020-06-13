@@ -56,6 +56,7 @@ class Geant4(CMakePackage):
 
     # Python, with boost requirement dealt with in cxxstd section
     depends_on('python@3:', when='+python')
+    extends('python', when='+python')
     conflicts('+python', when='@:10.6.1',
               msg='Geant4 <= 10.6.1 cannont be built with Python bindings')
 
