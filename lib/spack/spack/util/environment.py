@@ -240,6 +240,8 @@ class SetPath(NameValueModifier):
 
     def execute(self, env):
         string_path = concatenate_paths(self.value, separator=self.separator)
+        if self.name == 'MANPATH' and not string_path.endswith(self.separator):
+            string_path += self.separator
         env[self.name] = string_path
 
 
@@ -250,7 +252,10 @@ class AppendPath(NameValueModifier):
         directories = environment_value.split(
             self.separator) if environment_value else []
         directories.append(os.path.normpath(self.value))
-        env[self.name] = self.separator.join(directories)
+        string_path = self.separator.join(directories)
+        if self.name == 'MANPATH' and not string_path.endswith(self.separator):
+            string_path += self.separator
+        env[self.name] = string_path
 
 
 class PrependPath(NameValueModifier):
@@ -260,7 +265,10 @@ class PrependPath(NameValueModifier):
         directories = environment_value.split(
             self.separator) if environment_value else []
         directories = [os.path.normpath(self.value)] + directories
-        env[self.name] = self.separator.join(directories)
+        string_path = self.separator.join(directories)
+        if self.name == 'MANPATH' and not string_path.endswith(self.separator):
+            string_path += self.separator
+        env[self.name] = string_path
 
 
 class RemovePath(NameValueModifier):
@@ -270,8 +278,9 @@ class RemovePath(NameValueModifier):
         directories = environment_value.split(
             self.separator) if environment_value else []
         directories = [os.path.normpath(x) for x in directories
-                       if x != os.path.normpath(self.value)]
-        env[self.name] = self.separator.join(directories)
+                       if x and x != os.path.normpath(self.value)]
+        string_path = self.separator.join(directories)
+        env[self.name] = string_path
 
 
 class DeprioritizeSystemPaths(NameModifier):
@@ -282,7 +291,10 @@ class DeprioritizeSystemPaths(NameModifier):
             self.separator) if environment_value else []
         directories = deprioritize_system_paths([os.path.normpath(x)
                                                  for x in directories])
-        env[self.name] = self.separator.join(directories)
+        string_path = self.separator.join(directories)
+        if self.name == 'MANPATH' and not string_path.endswith(self.separator):
+            string_path += self.separator
+        env[self.name] = string_path
 
 
 class PruneDuplicatePaths(NameModifier):
@@ -293,7 +305,10 @@ class PruneDuplicatePaths(NameModifier):
             self.separator) if environment_value else []
         directories = prune_duplicate_paths([os.path.normpath(x)
                                              for x in directories])
-        env[self.name] = self.separator.join(directories)
+        string_path = self.separator.join(directories)
+        if self.name == 'MANPATH' and not string_path.endswith(self.separator):
+            string_path += self.separator
+        env[self.name] = string_path
 
 
 class EnvironmentModifications(object):
