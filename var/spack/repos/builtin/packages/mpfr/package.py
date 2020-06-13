@@ -37,7 +37,7 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     # Check the Bugs section of old release pages for patches.
     # https://www.mpfr.org/mpfr-X.Y.Z/#bugs
     patches = {
-        '4.0.2': '8f15fd27ab65341a60d724d594897d32f4597ddf642d0dc121995e2150181b0c',
+        '4.0.2': '3f80b836948aa96f8d1cb9cc7f3f55973f19285482a96f9a4e1623d460bcccf0',
         '4.0.1': '5230aab653fa8675fc05b5bdd3890e071e8df49a92a9d58c4284024affd27739',
         '3.1.6': '7a6dd71bcda4803d6b89612706a17b8816e1acd5dd9bf1bec29cf748f3b60008',
         '3.1.5': '1ae14fb3a54ae8e0faed20801970255b279eee9e5ac624891ab5d29727f0bc04',

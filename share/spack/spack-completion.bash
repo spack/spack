@@ -1042,7 +1042,7 @@ _spack_mirror() {
 _spack_mirror_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file --skip-unstable-versions -D --dependencies -n --versions-per-spec"
+        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file --exclude-file --exclude-specs --skip-unstable-versions -D --dependencies -n --versions-per-spec"
     else
         _all_packages
     fi
@@ -1510,7 +1510,7 @@ _spack_verify() {
 _spack_versions() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --safe-only"
+        SPACK_COMPREPLY="-h --help -s --safe-only -c --concurrency"
     else
         _all_packages
     fi
@@ -1521,7 +1521,7 @@ _spack_view() {
     then
         SPACK_COMPREPLY="-h --help -v --verbose -e --exclude -d --dependencies"
     else
-        SPACK_COMPREPLY="symlink add soft hardlink hard remove rm statlink status check"
+        SPACK_COMPREPLY="symlink add soft hardlink hard copy relocate remove rm statlink status check"
     fi
 }
 
@@ -1562,6 +1562,24 @@ _spack_view_hardlink() {
 }
 
 _spack_view_hard() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --projection-file -i --ignore-conflicts"
+    else
+        _all_packages
+    fi
+}
+
+_spack_view_copy() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --projection-file -i --ignore-conflicts"
+    else
+        _all_packages
+    fi
+}
+
+_spack_view_relocate() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --projection-file -i --ignore-conflicts"

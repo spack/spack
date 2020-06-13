@@ -107,16 +107,9 @@ def expected_patchelf_path(request, mutable_database, monkeypatch):
 
 
 @pytest.fixture()
-def mock_patchelf(tmpdir):
-    import jinja2
-
+def mock_patchelf(tmpdir, mock_executable):
     def _factory(output):
-        f = tmpdir.mkdir('bin').join('patchelf')
-        t = jinja2.Template('#!/bin/bash\n{{ output }}\n')
-        f.write(t.render(output=output))
-        f.chmod(0o755)
-        return str(f)
-
+        return mock_executable('patchelf', output=output)
     return _factory
 
 

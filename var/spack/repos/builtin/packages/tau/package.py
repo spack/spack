@@ -107,6 +107,8 @@ class Tau(Package):
     conflicts('+adios2', when='@:2.29.1')
     conflicts('+sqlite', when='@:2.29.1')
 
+    patch('unwind.patch', when="@2.29")
+
     def set_compiler_options(self, spec):
 
         useropt = ["-O2 -g", self.rpath_args]
@@ -144,6 +146,7 @@ class Tau(Package):
 
     def setup_build_environment(self, env):
         env.prepend_path('LIBRARY_PATH', self.spec['zlib'].prefix.lib)
+        env.prepend_path('LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
 
     def install(self, spec, prefix):
         # TAU isn't happy with directories that have '@' in the path.  Sigh.

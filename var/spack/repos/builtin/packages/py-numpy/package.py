@@ -16,7 +16,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "https://numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.18.4.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.18.5.zip"
     git      = "https://github.com/numpy/numpy.git"
 
     maintainers = ['adamjstewart']
@@ -30,6 +30,7 @@ class PyNumpy(PythonPackage):
     ]
 
     version('master', branch='master')
+    version('1.18.5', sha256='34e96e9dae65c4839bd80012023aadd6ee2ccb73ce7fdf3074c62f301e63120b')
     version('1.18.4', sha256='bbcc85aaf4cd84ba057decaead058f43191cc0e30d6bc5d44fe336dc3d3f4509')
     version('1.18.3', sha256='e46e2384209c91996d5ec16744234d1c906ab79a701ce1a26155c9ec890b8dc8')
     version('1.18.2', sha256='e7894793e6e8540dbeac77c87b489e331947813511108ae097f1715c018b8f3d')

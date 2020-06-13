@@ -6,7 +6,7 @@
 from spack import *
 
 
-class MongoCDriver(AutotoolsPackage):
+class MongoCDriver(Package):
     """libmongoc is a client library written in C for MongoDB."""
 
     homepage = "https://github.com/mongodb/mongo-c-driver"
@@ -14,6 +14,7 @@ class MongoCDriver(AutotoolsPackage):
 
     maintainers = ['michaelkuhn']
 
+    version('1.16.2', sha256='0a722180e5b5c86c415b9256d753b2d5552901dc5d95c9f022072c3cd336887e')
     version('1.9.5', sha256='4a4bd0b0375450250a3da50c050b84b9ba8950ce32e16555714e75ebae0b8019')
     version('1.9.4', sha256='910c2f1b2e3df4d0ea39c2f242160028f90fcb8201f05339a730ec4ba70811fb')
     version('1.9.3', sha256='c2c94ef63aaa09efabcbadc4ac3c8740faa102266bdd2559d550f1955b824398')
@@ -28,20 +29,73 @@ class MongoCDriver(AutotoolsPackage):
     variant('ssl', default=True, description='Enable SSL support.')
     variant('snappy', default=True, description='Enable Snappy support.')
     variant('zlib', default=True, description='Enable zlib support.')
+    variant('zstd', default=True, description='Enable zstd support.')
 
     patch('https://github.com/mongodb/mongo-c-driver/pull/466.patch', sha256='713a872217d11aba04a774785a2824d26b566543c270a1fa386114f5200fda20', when='@1.8.1')
+
+    depends_on('cmake@3.1:', type='build', when='@1.10.0:')
 
     depends_on('autoconf', type='build', when='@1.8.1')
     depends_on('automake', type='build', when='@1.8.1')
     depends_on('libtool', type='build', when='@1.8.1')
     depends_on('m4', type='build', when='@1.8.1')
+
     depends_on('pkgconfig', type='build')
 
-    depends_on('libbson')
+    # When updating mongo-c-driver, libbson has to be kept in sync.
+    depends_on('libbson@1.16.0:1.16.99', when='@1.16')
+    depends_on('libbson@1.9.0:1.9.99', when='@1.9')
+    depends_on('libbson@1.8.0:1.8.99', when='@1.8')
+    depends_on('libbson@1.7.0:1.7.99', when='@1.7')
+    depends_on('libbson@1.6.0:1.6.99', when='@1.6')
 
     depends_on('openssl', when='+ssl')
     depends_on('snappy', when='+snappy')
     depends_on('zlib', when='+zlib')
+    depends_on('zstd', when='+zstd')
+
+    def cmake_args(self):
+        spec = self.spec
+
+        args = [
+            '-DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF',
+            '-DENABLE_BSON=SYSTEM'
+        ]
+
+        if '+ssl' in spec:
+            args.append('-DENABLE_SSL=OPENSSL')
+        else:
+            args.append('-DENABLE_SSL=OFF')
+
+        if '+snappy' in spec:
+            args.append('-DENABLE_SNAPPY=ON')
+        else:
+            args.append('-DENABLE_SNAPPY=OFF')
+
+        if '+zlib' in spec:
+            args.append('-DENABLE_ZLIB=SYSTEM')
+        else:
+            args.append('-DENABLE_ZLIB=OFF')
+
+        if '+zstd' in spec:
+            args.append('-DENABLE_ZSTD=ON')
+        else:
+            args.append('-DENABLE_ZSTD=OFF')
+
+        return args
+
+    def install(self, spec, prefix):
+        with working_dir('spack-build', create=True):
+            # We cannot simply do
+            #   cmake('..', *std_cmake_args, *self.cmake_args())
+            # because that is not Python 2 compatible. Instead, collect
+            # arguments into a temporary buffer first.
+            args = []
+            args.extend(std_cmake_args)
+            args.extend(self.cmake_args())
+            cmake('..', *args)
+            make()
+            make('install')
 
     @property
     def force_autoreconf(self):
@@ -52,7 +106,8 @@ class MongoCDriver(AutotoolsPackage):
         spec = self.spec
 
         args = [
-            '--disable-automatic-init-and-cleanup'
+            '--disable-automatic-init-and-cleanup',
+            '--with-libbson=system'
         ]
 
         if '+ssl' in spec:
@@ -72,8 +127,14 @@ class MongoCDriver(AutotoolsPackage):
             elif spec.satisfies('@1.8.1:'):
                 args.append('--with-zlib=system')
 
-        if spec.satisfies('@1.9.3:'):
-            args.append('--with-libbson=auto')
-        else:
-            args.append('--with-libbson=system')
         return args
+
+    @when('@:1.9.99')
+    def install(self, spec, prefix):
+        configure('--prefix={0}'.format(prefix), *self.configure_args())
+        make()
+        if self.run_tests:
+            make('check')
+        make('install')
+        if self.run_tests:
+            make('installcheck')

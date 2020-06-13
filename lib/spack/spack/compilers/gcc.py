@@ -27,7 +27,7 @@ class Gcc(Compiler):
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     # Homebrew and Linuxbrew may build gcc with -X, -X.Y suffixes.
     # Old compatibility versions may contain XY suffixes.
-    suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d', r'\d\d']
+    suffixes = [r'-mp-\d+\.\d+', r'-\d+\.\d+', r'-\d+', r'\d\d']
 
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'gcc/gcc',
