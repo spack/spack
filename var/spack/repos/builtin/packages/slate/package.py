@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Slate(Package):
+class Slate(Package, CudaPackage):
     """The Software for Linear Algebra Targeting Exascale (SLATE) project is
     to provide fundamental dense linear algebra capabilities to the US
     Department of Energy and to the high-performance computing (HPC) community
@@ -25,7 +25,6 @@ class Slate(Package):
     variant('mpi',    default=True, description='Build with MPI support.')
     variant('openmp', default=True, description='Build with OpenMP support.')
 
-    depends_on('cuda@9:', when='+cuda')
     depends_on('intel-mkl')
     depends_on('mercurial', type='build')
     depends_on('mpi', when='+mpi')
@@ -43,8 +42,17 @@ class Slate(Package):
         f_openmp = "1" if spec.variants['openmp'].value else "0"
 
         compiler = 'mpicxx' if spec.variants['mpi'].value else ''
+        cuda_arch_list = spec.variants['cuda_arch'].value
+        cuda_arch = cuda_arch_list[0]
+        if len(cuda_arch_list) > 1:
+            raise InstallError(
+                'SLATE only supports compilation for a single '
+                'GPU architecture at a time'
+            )
 
-        make('mpi=' + f_mpi, 'mkl=1', 'cuda=' + f_cuda, 'openmp=' + f_openmp,
+        make('mpi=' + f_mpi, 'mkl=1', 'cuda=' + f_cuda,
+             'cuda_arch=sm_' + cuda_arch,
+             'openmp=' + f_openmp,
              'CXX=' + compiler)
         install_tree('lib', prefix.lib)
         install_tree('test', prefix.test)
