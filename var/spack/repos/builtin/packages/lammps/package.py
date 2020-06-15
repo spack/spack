@@ -57,7 +57,7 @@ class Lammps(CMakePackage, CudaPackage):
 
     supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
                           'coreshell', 'dipole', 'granular', 'kspace',
-                          'kokkos', 'latte', 'manybody', 'mc', 'meam', 'misc',
+                          'kokkos', 'latte', 'manybody', 'mc', 'meam', 'user-meamc', 'misc',
                           'molecule', 'mpiio', 'peri', 'poems', 'python',
                           'qeq', 'replica', 'rigid', 'shock', 'snap', 'spin',
                           'srd', 'user-atc', 'user-h5md', 'user-lb',
@@ -120,6 +120,8 @@ class Lammps(CMakePackage, CudaPackage):
     conflicts('+user-misc', when='~manybody')
     conflicts('%gcc@9:', when='@:20200303+openmp')
     conflicts('+kokkos', when='@:20200227')
+    conflicts('+meamc', when='@20181212:')
+    conflicts('+user-meamc', when='@:20181212')
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
