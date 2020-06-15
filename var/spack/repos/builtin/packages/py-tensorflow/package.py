@@ -255,6 +255,8 @@ class PyTensorflow(Package, CudaPackage):
     # Allows 2.0.* releases to build with '--config=nogcp'
     patch('0001-Remove-contrib-cloud-bigtable-and-storage-ops-kernel.patch',
           when='@2.0.0:2.0.1')
+    # for fcc
+    patch('1-1_fcc_tf_patch.patch', when='@2.1.0:2.1.99%fj')
 
     phases = ['configure', 'build', 'install']
 
@@ -625,6 +627,14 @@ class PyTensorflow(Package, CudaPackage):
             filter_file('build --action_env TF_NEED_OPENCL_SYCL="0"',
                         'build --action_env TF_NEED_OPENCL_SYCL="0"\n'
                         'build --action_env LD_LIBRARY_PATH="' + slibs + '"',
+                        '.tf_configure.bazelrc')
+        # for fcc
+        if spec.satisfies('@2.1.0:2.1.99%fj'):
+            filter_file('build:opt --copt=-march=native',
+                        'build:opt --copt=-march=armv8.2-a+sve',
+                        '.tf_configure.bazelrc')
+            filter_file('build:opt --host_copt=-march=native',
+                        'build:opt --host_copt=-march=armv8.2-a+sve',
                         '.tf_configure.bazelrc')
 
     def build(self, spec, prefix):
