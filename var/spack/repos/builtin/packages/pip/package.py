@@ -19,7 +19,7 @@ class Pip(Package):
     # for PiP-gdb
     depends_on('texinfo', type='build')
 
-    #resource(name='PiP-glibc', git='https://github.com/RIKEN-SysSoft/PiP-glibc.git', branch='centos/glibc-2.17-260.el7.pip.branch', destination='PiP-glibc')
+    resource(name='PiP-glibc', git='https://github.com/RIKEN-SysSoft/PiP-glibc.git', branch='centos/glibc-2.17-260.el7.pip.branch', destination='PiP-glibc')
     resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos7', destination='PiP-gdb')
 
     @run_after('install')
@@ -30,18 +30,20 @@ class Pip(Package):
     def install(self, spec, prefix):
         bash = which('bash')
 
-        #glibc_dir = prefix
-        #with working_dir('PiP-glibc/PiP-glibc.build', create=True):
-        #    bash('../PIP-glibc/build.sh', glibc_dir)
+        prefix_glibc = prefix + '/glibc'
+        prefix_pip   = prefix + '/pip'
+        prefix_gdb   = prefix + '/gdb'
+        with working_dir('PiP-glibc/PiP-glibc.build', create=True):
+            bash('../PiP-glibc/build.sh', '%s' % prefix_glibc)
 
-        configure('--prefix=%s' % prefix)
-                  #'--with-glibc-libdir=%s/lib' % glibc_dir)
+        configure('--prefix=%s' % prefix_pip,
+                  '--with-glibc-libdir=%s/lib' % prefix_glibc)
         make()
         make('install')
-        bash('%s/bin/piplnlibs' % prefix)
+        bash('%s/bin/piplnlibs' % prefix_pip)
 
         with working_dir('PiP-gdb/PiP-gdb'):
             bash('build.sh',
-                 '--prefix=%s' % prefix,
-                 #'--with-glibc-libdir=%s/lib' % glibc_dir,
-                 '--with-pip=%s' % prefix)
+                 '--prefix=%s' % prefix_gdb,
+                 '--with-glibc-libdir=%s/lib' % prefix_glibc,
+                 '--with-pip=%s' % prefix_pip)
