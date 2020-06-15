@@ -43,4 +43,4 @@ class PyTorchvision(PythonPackage):
     # These can be installed after the fact.
     depends_on('py-scipy', type='test')
 
-    depends_on('ffmpeg@3.1:')
+    depends_on('ffmpeg@3.1:', when='@0.4.2:')
