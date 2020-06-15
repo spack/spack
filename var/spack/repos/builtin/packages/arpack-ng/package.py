@@ -59,6 +59,13 @@ class ArpackNg(Package):
     patch('make_install.patch', when='@3.4.0')
     patch('parpack_cmake.patch', when='@3.4.0')
 
+    # The current release (3.7.0) is not compatible with gcc 10, but this is
+    # already fixed upstream.
+    # Patch is based on these two upstream commits:
+    #  - https://github.com/opencollab/arpack-ng/commit/9418632214acf6d387896ab29a8f5bdff2d4e38a
+    #  - https://github.com/opencollab/arpack-ng/commit/ad82dcbc0beeed5616e2d5a28a089d9785f8b8b8
+    patch('gcc10.patch', when='@3.6.2:3.7.0 %gcc@10:')
+
     # Fujitsu compiler does not support 'isnan' function.
     # isnan: function that determines whether it is NaN.
     patch('incompatible_isnan_fix.patch', when='%fj')
@@ -71,6 +78,8 @@ class ArpackNg(Package):
     depends_on('cmake@2.8.6:', when='@3.4.0:', type='build')
 
     depends_on('mpi', when='+mpi')
+
+    conflicts('%gcc@10:', when='@:3.6.1', msg="Patch for gcc@10: does not apply for version prior to 3.6.2")
 
     @property
     def libs(self):

@@ -1,0 +1,4338 @@
+diff --git a/PARPACK/SRC/BLACS/pcgetv0.f b/PARPACK/SRC/BLACS/pcgetv0.f
+index 0325fda..191d70f 100644
+--- a/PARPACK/SRC/BLACS/pcgetv0.f
++++ b/PARPACK/SRC/BLACS/pcgetv0.f
+@@ -406,9 +406,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call psvout (comm, logfil, 1, rnorm0, ndigit,
++          call psvout (comm, logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call psvout (comm, logfil, 1, rnorm, ndigit,
++          call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+diff --git a/PARPACK/SRC/BLACS/pcnaitr.f b/PARPACK/SRC/BLACS/pcnaitr.f
+index a9f17ed..04fa1cb 100644
+--- a/PARPACK/SRC/BLACS/pcnaitr.f
++++ b/PARPACK/SRC/BLACS/pcnaitr.f
+@@ -401,9 +401,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call pcvout (comm, logfil, 1, rnorm, ndigit,
++            call pcvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -423,7 +423,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -757,7 +757,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0 ) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 rtemp(1) = rnorm
+diff --git a/PARPACK/SRC/BLACS/pcnapps.f b/PARPACK/SRC/BLACS/pcnapps.f
+index 47fb7e7..e40793c 100644
+--- a/PARPACK/SRC/BLACS/pcnapps.f
++++ b/PARPACK/SRC/BLACS/pcnapps.f
+@@ -284,9 +284,9 @@ c
+          sigma = shift(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call pivout (comm, logfil, 1, jj, ndigit,
++            call pivout (comm, logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call pcvout (comm, logfil, 1, sigma, ndigit,
++            call pcvout (comm, logfil, 1, [sigma], ndigit,
+      &               '_napps: Value of the shift ')
+          end if
+ c
+@@ -307,9 +307,9 @@ c
+             if ( abs(real(h(i+1,i)))
+      &           .le. max(ulp*tst1, smlnum) )  then
+                if (msglvl .gt. 0) then
+-                  call pivout (comm, logfil, 1, i, ndigit,
++                  call pivout (comm, logfil, 1, [i], ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call pcvout (comm, logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -323,9 +323,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call pivout (comm, logfil, 1, istart, ndigit,
++             call pivout (comm, logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call pivout (comm, logfil, 1, iend, ndigit,
++             call pivout (comm, logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -501,7 +501,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call pcvout (comm, logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call pivout (comm, logfil, 1, kev, ndigit,
++         call pivout (comm, logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call pcmout (comm, logfil, kev, kev, h, ldh, ndigit,
+diff --git a/PARPACK/SRC/BLACS/pcnaup2.f b/PARPACK/SRC/BLACS/pcnaup2.f
+index 5586806..757b12c 100644
+--- a/PARPACK/SRC/BLACS/pcnaup2.f
++++ b/PARPACK/SRC/BLACS/pcnaup2.f
+@@ -398,7 +398,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -411,9 +411,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -440,7 +440,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -671,7 +671,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -711,7 +711,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call pcvout (comm, logfil, np, ritz, ndigit,
+      &                  '_naup2: values of the shifts')
+@@ -776,7 +776,7 @@ c
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call pcmout (comm, logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/PARPACK/SRC/BLACS/pcnaupd.f b/PARPACK/SRC/BLACS/pcnaupd.f
+index b350199..55bb655 100644
+--- a/PARPACK/SRC/BLACS/pcnaupd.f
++++ b/PARPACK/SRC/BLACS/pcnaupd.f
+@@ -618,9 +618,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call pcvout (comm, logfil, np, workl(ritz), ndigit,
+      &               '_naupd: The final Ritz values')
+diff --git a/PARPACK/SRC/BLACS/pcneupd.f b/PARPACK/SRC/BLACS/pcneupd.f
+index 53cf2d2..da4a9ec 100644
+--- a/PARPACK/SRC/BLACS/pcneupd.f
++++ b/PARPACK/SRC/BLACS/pcneupd.f
+@@ -558,9 +558,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/BLACS/pcngets.f b/PARPACK/SRC/BLACS/pcngets.f
+index f9cca35..89cd67a 100644
+--- a/PARPACK/SRC/BLACS/pcngets.f
++++ b/PARPACK/SRC/BLACS/pcngets.f
+@@ -177,8 +177,8 @@ c
+       tcgets = tcgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_ngets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_ngets: NP is')
+          call pcvout (comm, logfil, kev+np, ritz, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix ')
+          call pcvout (comm, logfil, kev+np, bounds, ndigit,
+diff --git a/PARPACK/SRC/BLACS/pdgetv0.f b/PARPACK/SRC/BLACS/pdgetv0.f
+index 9c3a1d9..237443d 100644
+--- a/PARPACK/SRC/BLACS/pdgetv0.f
++++ b/PARPACK/SRC/BLACS/pdgetv0.f
+@@ -385,9 +385,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call pdvout (comm, logfil, 1, rnorm0, ndigit,
++          call pdvout (comm, logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call pdvout (comm, logfil, 1, rnorm, ndigit,
++          call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+@@ -418,7 +418,7 @@ c
+    50 continue
+ c
+       if (msglvl .gt. 0) then
+-         call pdvout (comm, logfil, 1, rnorm, ndigit,
++         call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &        '_getv0: B-norm of initial / restarted starting vector')
+       end if
+       if (msglvl .gt. 2) then
+diff --git a/PARPACK/SRC/BLACS/pdnaitr.f b/PARPACK/SRC/BLACS/pdnaitr.f
+index f655756..fb46494 100644
+--- a/PARPACK/SRC/BLACS/pdnaitr.f
++++ b/PARPACK/SRC/BLACS/pdnaitr.f
+@@ -390,9 +390,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -412,7 +412,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -745,7 +745,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/PARPACK/SRC/BLACS/pdnapps.f b/PARPACK/SRC/BLACS/pdnapps.f
+index 56e3414..eadca32 100644
+--- a/PARPACK/SRC/BLACS/pdnapps.f
++++ b/PARPACK/SRC/BLACS/pdnapps.f
+@@ -276,11 +276,11 @@ c
+          sigmai = shifti(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call pivout (comm, logfil, 1, jj, ndigit,
++            call pivout (comm, logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call pdvout (comm, logfil, 1, sigmar, ndigit,
++            call pdvout (comm, logfil, 1, [sigmar], ndigit,
+      &               '_napps: The real part of the shift ')
+-            call pdvout (comm, logfil, 1, sigmai, ndigit,
++            call pdvout (comm, logfil, 1, [sigmai], ndigit,
+      &               '_napps: The imaginary part of the shift ')
+          end if
+ c
+@@ -347,7 +347,7 @@ c
+                if (msglvl .gt. 0) then
+                   call pivout (comm, logfil, 1, i, ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call pdvout (comm, logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -361,9 +361,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call pivout (comm, logfil, 1, istart, ndigit,
++             call pivout (comm, logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call pivout (comm, logfil, 1, iend, ndigit,
++             call pivout (comm, logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -635,7 +635,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call pdvout (comm, logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call pivout (comm, logfil, 1, kev, ndigit,
++         call pivout (comm, logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call pdmout (comm, logfil, kev, kev, h, ldh, ndigit,
+diff --git a/PARPACK/SRC/BLACS/pdnaup2.f b/PARPACK/SRC/BLACS/pdnaup2.f
+index becea72..a295dbb 100644
+--- a/PARPACK/SRC/BLACS/pdnaup2.f
++++ b/PARPACK/SRC/BLACS/pdnaup2.f
+@@ -405,7 +405,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -418,9 +418,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -452,7 +452,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call pdvout  (comm, logfil, 1, rnorm, ndigit,
++            call pdvout  (comm, logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -696,7 +696,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -748,7 +748,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call pdvout  (comm, logfil, np, ritzr, ndigit,
+      &                  '_naup2: Real part of the shifts')
+@@ -815,7 +815,7 @@ c
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call pdvout  (comm, logfil, 1, rnorm, ndigit,
++            call pdvout  (comm, logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call pdmout  (comm, logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/PARPACK/SRC/BLACS/pdnaupd.f b/PARPACK/SRC/BLACS/pdnaupd.f
+index d947755..ed0fa20 100644
+--- a/PARPACK/SRC/BLACS/pdnaupd.f
++++ b/PARPACK/SRC/BLACS/pdnaupd.f
+@@ -642,9 +642,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call pdvout  (comm, logfil, np, workl(ritzr), ndigit,
+      &               '_naupd: Real part of the final Ritz values')
+diff --git a/PARPACK/SRC/BLACS/pdneupd.f b/PARPACK/SRC/BLACS/pdneupd.f
+index 0ff911f..321202f 100644
+--- a/PARPACK/SRC/BLACS/pdneupd.f
++++ b/PARPACK/SRC/BLACS/pdneupd.f
+@@ -617,9 +617,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/BLACS/pdngets.f b/PARPACK/SRC/BLACS/pdngets.f
+index 71ed6a7..12a691f 100644
+--- a/PARPACK/SRC/BLACS/pdngets.f
++++ b/PARPACK/SRC/BLACS/pdngets.f
+@@ -226,8 +226,8 @@ c
+       tngets = tngets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_ngets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_ngets: NP is')
+          call pdvout (comm, logfil, kev+np, ritzr, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix -- real part')
+          call pdvout (comm, logfil, kev+np, ritzi, ndigit,
+diff --git a/PARPACK/SRC/BLACS/pdsaitr.f b/PARPACK/SRC/BLACS/pdsaitr.f
+index 37ca61e..9a2cdfc 100644
+--- a/PARPACK/SRC/BLACS/pdsaitr.f
++++ b/PARPACK/SRC/BLACS/pdsaitr.f
+@@ -389,9 +389,9 @@ c
+  1000 continue
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_saitr: generating Arnoldi vector no.')
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_saitr: B-norm of the current residual =')
+          end if
+ c
+@@ -409,7 +409,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_saitr: ****** restart at step ******')
+             end if
+ c
+@@ -767,7 +767,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/PARPACK/SRC/BLACS/pdsapps.f b/PARPACK/SRC/BLACS/pdsapps.f
+index b3a05cf..4e2c076 100644
+--- a/PARPACK/SRC/BLACS/pdsapps.f
++++ b/PARPACK/SRC/BLACS/pdsapps.f
+@@ -272,9 +272,9 @@ c
+             big   = abs(h(i,2)) + abs(h(i+1,2))
+             if (h(i+1,1) .le. epsmch*big) then
+                if (msglvl .gt. 0) then
+-                  call pivout (comm, logfil, 1, i, ndigit,
++                  call pivout (comm, logfil, 1, [i], ndigit,
+      &                 '_sapps: deflation at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_sapps: occurred before shift number.')
+                   call pdvout (comm, logfil, 1, h(i+1,1), ndigit,
+      &                 '_sapps: the corresponding off diagonal element')
+@@ -443,7 +443,7 @@ c
+          big   = abs(h(i,2)) + abs(h(i+1,2))
+          if (h(i+1,1) .le. epsmch*big) then
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, i, ndigit,
++               call pivout (comm, logfil, 1, [i], ndigit,
+      &              '_sapps: deflation at row/column no.')
+                call pdvout (comm, logfil, 1, h(i+1,1), ndigit,
+      &              '_sapps: the corresponding off diagonal element')
+diff --git a/PARPACK/SRC/BLACS/pdsaup2.f b/PARPACK/SRC/BLACS/pdsaup2.f
+index cf93401..599aad6 100644
+--- a/PARPACK/SRC/BLACS/pdsaup2.f
++++ b/PARPACK/SRC/BLACS/pdsaup2.f
+@@ -421,13 +421,13 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_saup2: **** Start of major iteration number ****')
+          end if
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_saup2: The length of the current Lanczos factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_saup2: Extend the Lanczos factorization by')
+          end if
+ c
+@@ -466,7 +466,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &           '_saup2: Current B-norm of residual for factorization')
+          end if
+ c
+@@ -716,7 +716,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_saup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -763,7 +763,7 @@ c
+          if (ishift .eq. 0) call dcopy (np, workl, 1, ritz, 1)
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_saup2: The number of shifts to apply ')
+             call pdvout (comm, logfil, np, workl, ndigit,
+      &                  '_saup2: shifts selected')
+@@ -831,7 +831,7 @@ c
+   130    continue
+ c
+          if (msglvl .gt. 2) then
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &      '_saup2: B-norm of residual for NEV factorization')
+             call pdvout (comm, logfil, nev, h(1,2), ndigit,
+      &           '_saup2: main diagonal of compressed H matrix')
+diff --git a/PARPACK/SRC/BLACS/pdsaupd.f b/PARPACK/SRC/BLACS/pdsaupd.f
+index 5f606d5..cb02112 100644
+--- a/PARPACK/SRC/BLACS/pdsaupd.f
++++ b/PARPACK/SRC/BLACS/pdsaupd.f
+@@ -644,9 +644,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_saupd: number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_saupd: number of "converged" Ritz values')
+          call pdvout  (comm, logfil, np, workl(Ritz), ndigit,
+      &               '_saupd: final Ritz values')
+diff --git a/PARPACK/SRC/BLACS/pdseupd.f b/PARPACK/SRC/BLACS/pdseupd.f
+index 956891c..074b195 100644
+--- a/PARPACK/SRC/BLACS/pdseupd.f
++++ b/PARPACK/SRC/BLACS/pdseupd.f
+@@ -523,9 +523,9 @@ c        | caused by incorrect passing of the _saupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/BLACS/pdsgets.f b/PARPACK/SRC/BLACS/pdsgets.f
+index aa549a2..d0f703b 100644
+--- a/PARPACK/SRC/BLACS/pdsgets.f
++++ b/PARPACK/SRC/BLACS/pdsgets.f
+@@ -216,8 +216,8 @@ c
+       tsgets = tsgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_sgets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_sgets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_sgets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_sgets: NP is')
+          call pdvout (comm, logfil, kev+np, ritz, ndigit,
+      &        '_sgets: Eigenvalues of current H matrix')
+          call pdvout (comm, logfil, kev+np, bounds, ndigit,
+diff --git a/PARPACK/SRC/BLACS/psgetv0.f b/PARPACK/SRC/BLACS/psgetv0.f
+index 9862d05..d48cb6d 100644
+--- a/PARPACK/SRC/BLACS/psgetv0.f
++++ b/PARPACK/SRC/BLACS/psgetv0.f
+@@ -385,9 +385,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call psvout (comm, logfil, 1, rnorm0, ndigit,
++          call psvout (comm, logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call psvout (comm, logfil, 1, rnorm, ndigit,
++          call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+@@ -418,7 +418,7 @@ c
+    50 continue
+ c
+       if (msglvl .gt. 0) then
+-         call psvout (comm, logfil, 1, rnorm, ndigit,
++         call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &        '_getv0: B-norm of initial / restarted starting vector')
+       end if
+       if (msglvl .gt. 2) then
+diff --git a/PARPACK/SRC/BLACS/psnaitr.f b/PARPACK/SRC/BLACS/psnaitr.f
+index 07aa052..bbd2809 100644
+--- a/PARPACK/SRC/BLACS/psnaitr.f
++++ b/PARPACK/SRC/BLACS/psnaitr.f
+@@ -390,9 +390,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -412,7 +412,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -745,7 +745,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/PARPACK/SRC/BLACS/psnapps.f b/PARPACK/SRC/BLACS/psnapps.f
+index a515d0c..ba668bb 100644
+--- a/PARPACK/SRC/BLACS/psnapps.f
++++ b/PARPACK/SRC/BLACS/psnapps.f
+@@ -276,11 +276,11 @@ c
+          sigmai = shifti(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call pivout (comm, logfil, 1, jj, ndigit,
++            call pivout (comm, logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call psvout (comm, logfil, 1, sigmar, ndigit,
++            call psvout (comm, logfil, 1, [sigmar], ndigit,
+      &               '_napps: The real part of the shift ')
+-            call psvout (comm, logfil, 1, sigmai, ndigit,
++            call psvout (comm, logfil, 1, [sigmai], ndigit,
+      &               '_napps: The imaginary part of the shift ')
+          end if
+ c
+@@ -347,7 +347,7 @@ c
+                if (msglvl .gt. 0) then
+                   call pivout (comm, logfil, 1, i, ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call psvout (comm, logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -361,9 +361,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call pivout (comm, logfil, 1, istart, ndigit,
++             call pivout (comm, logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call pivout (comm, logfil, 1, iend, ndigit,
++             call pivout (comm, logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -635,7 +635,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call psvout (comm, logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call pivout (comm, logfil, 1, kev, ndigit,
++         call pivout (comm, logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call psmout (comm, logfil, kev, kev, h, ldh, ndigit,
+diff --git a/PARPACK/SRC/BLACS/psnaup2.f b/PARPACK/SRC/BLACS/psnaup2.f
+index eff2a13..e460327 100644
+--- a/PARPACK/SRC/BLACS/psnaup2.f
++++ b/PARPACK/SRC/BLACS/psnaup2.f
+@@ -405,7 +405,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -418,9 +418,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -452,7 +452,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -696,7 +696,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -748,7 +748,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call psvout (comm, logfil, np, ritzr, ndigit,
+      &                  '_naup2: Real part of the shifts')
+@@ -815,7 +815,7 @@ c
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call psmout (comm, logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/PARPACK/SRC/BLACS/psnaupd.f b/PARPACK/SRC/BLACS/psnaupd.f
+index 55f34ce..4f2484f 100644
+--- a/PARPACK/SRC/BLACS/psnaupd.f
++++ b/PARPACK/SRC/BLACS/psnaupd.f
+@@ -642,9 +642,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call psvout (comm, logfil, np, workl(ritzr), ndigit,
+      &               '_naupd: Real part of the final Ritz values')
+diff --git a/PARPACK/SRC/BLACS/psneupd.f b/PARPACK/SRC/BLACS/psneupd.f
+index 49847ff..cbdaba2 100644
+--- a/PARPACK/SRC/BLACS/psneupd.f
++++ b/PARPACK/SRC/BLACS/psneupd.f
+@@ -617,9 +617,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/BLACS/psngets.f b/PARPACK/SRC/BLACS/psngets.f
+index c0e3088..33d85df 100644
+--- a/PARPACK/SRC/BLACS/psngets.f
++++ b/PARPACK/SRC/BLACS/psngets.f
+@@ -226,8 +226,8 @@ c
+       tngets = tngets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_ngets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_ngets: NP is')
+          call psvout (comm, logfil, kev+np, ritzr, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix -- real part')
+          call psvout (comm, logfil, kev+np, ritzi, ndigit,
+diff --git a/PARPACK/SRC/BLACS/pssaitr.f b/PARPACK/SRC/BLACS/pssaitr.f
+index 50816c4..e57864a 100644
+--- a/PARPACK/SRC/BLACS/pssaitr.f
++++ b/PARPACK/SRC/BLACS/pssaitr.f
+@@ -389,9 +389,9 @@ c
+  1000 continue
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_saitr: generating Arnoldi vector no.')
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_saitr: B-norm of the current residual =')
+          end if
+ c
+@@ -409,7 +409,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_saitr: ****** restart at step ******')
+             end if
+ c
+@@ -767,7 +767,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/PARPACK/SRC/BLACS/pssapps.f b/PARPACK/SRC/BLACS/pssapps.f
+index 7c8465b..5198a73 100644
+--- a/PARPACK/SRC/BLACS/pssapps.f
++++ b/PARPACK/SRC/BLACS/pssapps.f
+@@ -272,9 +272,9 @@ c
+             big   = abs(h(i,2)) + abs(h(i+1,2))
+             if (h(i+1,1) .le. epsmch*big) then
+                if (msglvl .gt. 0) then
+-                  call pivout (comm, logfil, 1, i, ndigit,
++                  call pivout (comm, logfil, 1, [i], ndigit,
+      &                 '_sapps: deflation at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_sapps: occurred before shift number.')
+                   call psvout (comm, logfil, 1, h(i+1,1), ndigit,
+      &                 '_sapps: the corresponding off diagonal element')
+@@ -443,7 +443,7 @@ c
+          big   = abs(h(i,2)) + abs(h(i+1,2))
+          if (h(i+1,1) .le. epsmch*big) then
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, i, ndigit,
++               call pivout (comm, logfil, 1, [i], ndigit,
+      &              '_sapps: deflation at row/column no.')
+                call psvout (comm, logfil, 1, h(i+1,1), ndigit,
+      &              '_sapps: the corresponding off diagonal element')
+diff --git a/PARPACK/SRC/BLACS/pssaup2.f b/PARPACK/SRC/BLACS/pssaup2.f
+index 57ab391..87cc3a8 100644
+--- a/PARPACK/SRC/BLACS/pssaup2.f
++++ b/PARPACK/SRC/BLACS/pssaup2.f
+@@ -421,13 +421,13 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_saup2: **** Start of major iteration number ****')
+          end if
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_saup2: The length of the current Lanczos factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_saup2: Extend the Lanczos factorization by')
+          end if
+ c
+@@ -466,7 +466,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &           '_saup2: Current B-norm of residual for factorization')
+          end if
+ c
+@@ -716,7 +716,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_saup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -763,7 +763,7 @@ c
+          if (ishift .eq. 0) call scopy (np, workl, 1, ritz, 1)
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_saup2: The number of shifts to apply ')
+             call psvout (comm, logfil, np, workl, ndigit,
+      &                  '_saup2: shifts selected')
+@@ -831,7 +831,7 @@ c
+   130    continue
+ c
+          if (msglvl .gt. 2) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &      '_saup2: B-norm of residual for NEV factorization')
+             call psvout (comm, logfil, nev, h(1,2), ndigit,
+      &           '_saup2: main diagonal of compressed H matrix')
+diff --git a/PARPACK/SRC/BLACS/pssaupd.f b/PARPACK/SRC/BLACS/pssaupd.f
+index 1b276e8..9d6061c 100644
+--- a/PARPACK/SRC/BLACS/pssaupd.f
++++ b/PARPACK/SRC/BLACS/pssaupd.f
+@@ -644,9 +644,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_saupd: number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_saupd: number of "converged" Ritz values')
+          call psvout (comm, logfil, np, workl(Ritz), ndigit,
+      &               '_saupd: final Ritz values')
+diff --git a/PARPACK/SRC/BLACS/psseupd.f b/PARPACK/SRC/BLACS/psseupd.f
+index 68edab1..e8c910e 100644
+--- a/PARPACK/SRC/BLACS/psseupd.f
++++ b/PARPACK/SRC/BLACS/psseupd.f
+@@ -523,9 +523,9 @@ c        | caused by incorrect passing of the _saupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/BLACS/pssgets.f b/PARPACK/SRC/BLACS/pssgets.f
+index d138282..660c274 100644
+--- a/PARPACK/SRC/BLACS/pssgets.f
++++ b/PARPACK/SRC/BLACS/pssgets.f
+@@ -216,8 +216,8 @@ c
+       tsgets = tsgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_sgets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_sgets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_sgets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_sgets: NP is')
+          call psvout (comm, logfil, kev+np, ritz, ndigit,
+      &        '_sgets: Eigenvalues of current H matrix')
+          call psvout (comm, logfil, kev+np, bounds, ndigit,
+diff --git a/PARPACK/SRC/BLACS/pzgetv0.f b/PARPACK/SRC/BLACS/pzgetv0.f
+index 0972331..c1d173f 100644
+--- a/PARPACK/SRC/BLACS/pzgetv0.f
++++ b/PARPACK/SRC/BLACS/pzgetv0.f
+@@ -406,9 +406,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call pdvout  (comm, logfil, 1, rnorm0, ndigit,
++          call pdvout  (comm, logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call pdvout  (comm, logfil, 1, rnorm, ndigit,
++          call pdvout  (comm, logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+@@ -440,7 +440,7 @@ c
+ c
+       if (msglvl .gt. 0) then
+          cnorm2 = dcmplx (rnorm,rzero)
+-         call pzvout  (comm, logfil, 1, cnorm2, ndigit,
++         call pzvout  (comm, logfil, 1, [cnorm2], ndigit,
+      &        '_getv0: B-norm of initial / restarted starting vector')
+       end if
+       if (msglvl .gt. 2) then
+diff --git a/PARPACK/SRC/BLACS/pznaitr.f b/PARPACK/SRC/BLACS/pznaitr.f
+index 61f467a..92db7fe 100644
+--- a/PARPACK/SRC/BLACS/pznaitr.f
++++ b/PARPACK/SRC/BLACS/pznaitr.f
+@@ -401,9 +401,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call pzvout (comm, logfil, 1, rnorm, ndigit,
++            call pzvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -423,7 +423,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -757,7 +757,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0 ) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 rtemp(1) = rnorm
+diff --git a/PARPACK/SRC/BLACS/pznapps.f b/PARPACK/SRC/BLACS/pznapps.f
+index 796f4de..155038d 100644
+--- a/PARPACK/SRC/BLACS/pznapps.f
++++ b/PARPACK/SRC/BLACS/pznapps.f
+@@ -284,9 +284,9 @@ c
+          sigma = shift(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call pivout (comm, logfil, 1, jj, ndigit,
++            call pivout (comm, logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call pzvout (comm, logfil, 1, sigma, ndigit,
++            call pzvout (comm, logfil, 1, [sigma], ndigit,
+      &               '_napps: Value of the shift ')
+          end if
+ c
+@@ -307,9 +307,9 @@ c
+             if ( abs(dble(h(i+1,i)))
+      &           .le. max(ulp*tst1, smlnum) )  then
+                if (msglvl .gt. 0) then
+-                  call pivout (comm, logfil, 1, i, ndigit,
++                  call pivout (comm, logfil, 1, [i], ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call pzvout (comm, logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -323,9 +323,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call pivout (comm, logfil, 1, istart, ndigit,
++             call pivout (comm, logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call pivout (comm, logfil, 1, iend, ndigit,
++             call pivout (comm, logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -501,7 +501,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call pzvout (comm, logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call pivout (comm, logfil, 1, kev, ndigit,
++         call pivout (comm, logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call pzmout (comm, logfil, kev, kev, h, ldh, ndigit,
+diff --git a/PARPACK/SRC/BLACS/pznaup2.f b/PARPACK/SRC/BLACS/pznaup2.f
+index 22b46dd..1610a58 100644
+--- a/PARPACK/SRC/BLACS/pznaup2.f
++++ b/PARPACK/SRC/BLACS/pznaup2.f
+@@ -398,7 +398,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -411,9 +411,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -440,7 +440,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -671,7 +671,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -711,7 +711,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call pzvout (comm, logfil, np, ritz, ndigit,
+      &                  '_naup2: values of the shifts')
+@@ -776,7 +776,7 @@ c
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call pzmout (comm, logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/PARPACK/SRC/BLACS/pznaupd.f b/PARPACK/SRC/BLACS/pznaupd.f
+index 0bf616f..b46679a 100644
+--- a/PARPACK/SRC/BLACS/pznaupd.f
++++ b/PARPACK/SRC/BLACS/pznaupd.f
+@@ -618,9 +618,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call pzvout  (comm, logfil, np, workl(ritz), ndigit,
+      &               '_naupd: The final Ritz values')
+diff --git a/PARPACK/SRC/BLACS/pzneupd.f b/PARPACK/SRC/BLACS/pzneupd.f
+index 1970e48..c2f508f 100644
+--- a/PARPACK/SRC/BLACS/pzneupd.f
++++ b/PARPACK/SRC/BLACS/pzneupd.f
+@@ -558,9 +558,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/BLACS/pzngets.f b/PARPACK/SRC/BLACS/pzngets.f
+index 18e1518..d880b4c 100644
+--- a/PARPACK/SRC/BLACS/pzngets.f
++++ b/PARPACK/SRC/BLACS/pzngets.f
+@@ -177,8 +177,8 @@ c
+       tcgets = tcgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_ngets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_ngets: NP is')
+          call pzvout (comm, logfil, kev+np, ritz, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix ')
+          call pzvout (comm, logfil, kev+np, bounds, ndigit,
+diff --git a/PARPACK/SRC/MPI/pcgetv0.f b/PARPACK/SRC/MPI/pcgetv0.f
+index aacfd04..72677a5 100644
+--- a/PARPACK/SRC/MPI/pcgetv0.f
++++ b/PARPACK/SRC/MPI/pcgetv0.f
+@@ -185,7 +185,7 @@ c
+       save       first, iseed, inits, iter, msglvl, orth, rnorm0
+ c
+       Complex
+-     &           cnorm_buf
++     &           cnorm_buf, buf2(1)
+ c
+ c     %----------------------%
+ c     | External Subroutines |
+@@ -332,8 +332,9 @@ c
+       first = .FALSE.
+       if (bmat .eq. 'G') then
+           cnorm_buf = cdotc (n, resid, 1, workd, 1)
+-          call MPI_ALLREDUCE( cnorm_buf, cnorm, 1,
++          call MPI_ALLREDUCE( [cnorm_buf], buf2, 1,
+      &          MPI_COMPLEX, MPI_SUM, comm, ierr )
++          cnorm = buf2(1)
+           rnorm0 = sqrt(slapy2(real (cnorm),aimag(cnorm)))
+       else if (bmat .eq. 'I') then
+            rnorm0 = pscnorm2( comm, n, resid, 1)
+@@ -393,8 +394,9 @@ c
+ c
+       if (bmat .eq. 'G') then
+          cnorm_buf = cdotc (n, resid, 1, workd, 1)
+-         call MPI_ALLREDUCE( cnorm_buf, cnorm, 1,
++         call MPI_ALLREDUCE( [cnorm_buf], buf2, 1,
+      &            MPI_COMPLEX, MPI_SUM, comm, ierr )
++         cnorm = buf2(1)
+          rnorm = sqrt(slapy2(real (cnorm),aimag(cnorm)))
+       else if (bmat .eq. 'I') then
+          rnorm = pscnorm2(comm, n, resid, 1)
+@@ -405,9 +407,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call psvout (comm, logfil, 1, rnorm0, ndigit,
++          call psvout (comm, logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call psvout (comm, logfil, 1, rnorm, ndigit,
++          call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+@@ -439,7 +441,7 @@ c
+ c
+       if (msglvl .gt. 0) then
+          cnorm2 = cmplx(rnorm,rzero)
+-         call pcvout (comm, logfil, 1, cnorm2, ndigit,
++         call pcvout (comm, logfil, 1, [cnorm2], ndigit,
+      &        '_getv0: B-norm of initial / restarted starting vector')
+       end if
+       if (msglvl .gt. 2) then
+diff --git a/PARPACK/SRC/MPI/pcnaitr.f b/PARPACK/SRC/MPI/pcnaitr.f
+index 4a27960..fe246ea 100644
+--- a/PARPACK/SRC/MPI/pcnaitr.f
++++ b/PARPACK/SRC/MPI/pcnaitr.f
+@@ -293,7 +293,7 @@ c
+      &           betaj, rnorm1, smlnum, ulp, unfl, wnorm
+ c
+       Complex
+-     &           cnorm_buf
++     &           cnorm_buf, buf2(1)
+ c
+ c     %----------------------%
+ c     | External Subroutines |
+@@ -404,9 +404,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call pcvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -426,7 +426,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -577,8 +577,9 @@ c        %-------------------------------------%
+ c
+          if (bmat .eq. 'G') then
+              cnorm_buf = cdotc (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( cnorm_buf, cnorm, 1,
++            call MPI_ALLREDUCE( [cnorm_buf], buf2, 1,
+      &           MPI_COMPLEX, MPI_SUM, comm, ierr )
++             cnorm = buf2(1)
+              wnorm = sqrt( slapy2(real(cnorm),aimag(cnorm)) )
+          else if (bmat .eq. 'I') then
+              wnorm = pscnorm2(comm, n, resid, 1)
+@@ -653,8 +654,9 @@ c        %------------------------------%
+ c
+          if (bmat .eq. 'G') then
+             cnorm_buf = cdotc (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( cnorm_buf, cnorm, 1,
++            call MPI_ALLREDUCE( [cnorm_buf], buf2, 1,
+      &           MPI_COMPLEX, MPI_SUM, comm, ierr )
++            cnorm = buf2(1)
+             rnorm = sqrt( slapy2(real(cnorm),aimag(cnorm)) )
+          else if (bmat .eq. 'I') then
+             rnorm = pscnorm2(comm, n, resid, 1)
+@@ -757,15 +759,16 @@ c        %-----------------------------------------------------%
+ c
+          if (bmat .eq. 'G') then
+              cnorm_buf = cdotc (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( cnorm_buf, cnorm, 1,
++            call MPI_ALLREDUCE( [cnorm_buf], buf2, 1,
+      &           MPI_COMPLEX, MPI_SUM, comm, ierr )
++             cnorm = buf2(1)
+              rnorm1 = sqrt( slapy2(real(cnorm),aimag(cnorm)) )
+          else if (bmat .eq. 'I') then
+              rnorm1 = pscnorm2(comm, n, resid, 1)
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0 ) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 rtemp(1) = rnorm
+diff --git a/PARPACK/SRC/MPI/pcnapps.f b/PARPACK/SRC/MPI/pcnapps.f
+index 76077b9..f17686d 100644
+--- a/PARPACK/SRC/MPI/pcnapps.f
++++ b/PARPACK/SRC/MPI/pcnapps.f
+@@ -283,9 +283,9 @@ c
+          sigma = shift(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call pivout (comm, logfil, 1, jj, ndigit,
++            call pivout (comm, logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call pcvout (comm, logfil, 1, sigma, ndigit,
++            call pcvout (comm, logfil, 1, [sigma], ndigit,
+      &               '_napps: Value of the shift ')
+          end if
+ c
+@@ -306,9 +306,9 @@ c
+             if ( abs(real(h(i+1,i)))
+      &           .le. max(ulp*tst1, smlnum) )  then
+                if (msglvl .gt. 0) then
+-                  call pivout (comm, logfil, 1, i, ndigit,
++                  call pivout (comm, logfil, 1, [i], ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call pcvout (comm, logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -322,9 +322,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call pivout (comm, logfil, 1, istart, ndigit,
++             call pivout (comm, logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call pivout (comm, logfil, 1, iend, ndigit,
++             call pivout (comm, logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -500,7 +500,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call pcvout (comm, logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call pivout (comm, logfil, 1, kev, ndigit,
++         call pivout (comm, logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call pcmout (comm, logfil, kev, kev, h, ldh, ndigit,
+diff --git a/PARPACK/SRC/MPI/pcnaup2.f b/PARPACK/SRC/MPI/pcnaup2.f
+index 91fe929..4b0d6ce 100644
+--- a/PARPACK/SRC/MPI/pcnaup2.f
++++ b/PARPACK/SRC/MPI/pcnaup2.f
+@@ -237,7 +237,7 @@ c
+      &           nevbef, nev0 , np0,    eps23
+ c
+       Real
+-     &           cmpnorm_buf
++     &           cmpnorm_buf, buf2(1)
+ c
+ c     %-----------------------%
+ c     | Local array arguments |
+@@ -401,7 +401,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -414,9 +414,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -443,7 +443,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -674,7 +674,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -714,7 +714,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call pcvout (comm, logfil, np, ritz, ndigit,
+      &                  '_naup2: values of the shifts')
+@@ -771,8 +771,9 @@ c
+ c
+          if (bmat .eq. 'G') then
+             cmpnorm_buf = cdotc (n, resid, 1, workd, 1)
+-            call MPI_ALLREDUCE( cmpnorm_buf, cmpnorm, 1,
++            call MPI_ALLREDUCE( [cmpnorm_buf], buf2, 1,
+      &               MPI_COMPLEX, MPI_SUM, comm, ierr )
++            cmpnorm = buf2(1)
+             rnorm = sqrt(slapy2(real(cmpnorm),aimag(cmpnorm)))
+          else if (bmat .eq. 'I') then
+             rnorm = pscnorm2(comm, n, resid, 1)
+@@ -780,7 +781,7 @@ c
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call pcmout (comm, logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/PARPACK/SRC/MPI/pcnaupd.f b/PARPACK/SRC/MPI/pcnaupd.f
+index 5b8e1f5..0bd6eb6 100644
+--- a/PARPACK/SRC/MPI/pcnaupd.f
++++ b/PARPACK/SRC/MPI/pcnaupd.f
+@@ -626,9 +626,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call pcvout (comm, logfil, np, workl(ritz), ndigit,
+      &               '_naupd: The final Ritz values')
+diff --git a/PARPACK/SRC/MPI/pcneupd.f b/PARPACK/SRC/MPI/pcneupd.f
+index 2566f8a..8ced1df 100644
+--- a/PARPACK/SRC/MPI/pcneupd.f
++++ b/PARPACK/SRC/MPI/pcneupd.f
+@@ -558,9 +558,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/MPI/pcngets.f b/PARPACK/SRC/MPI/pcngets.f
+index 34b9b04..5f67214 100644
+--- a/PARPACK/SRC/MPI/pcngets.f
++++ b/PARPACK/SRC/MPI/pcngets.f
+@@ -177,8 +177,8 @@ c
+       tcgets = tcgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_ngets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_ngets: NP is')
+          call pcvout (comm, logfil, kev+np, ritz, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix ')
+          call pcvout (comm, logfil, kev+np, bounds, ndigit,
+diff --git a/PARPACK/SRC/MPI/pdgetv0.f b/PARPACK/SRC/MPI/pdgetv0.f
+index 3dc71c6..54ed850 100644
+--- a/PARPACK/SRC/MPI/pdgetv0.f
++++ b/PARPACK/SRC/MPI/pdgetv0.f
+@@ -180,7 +180,7 @@ c
+       logical    first, inits, orth
+       integer    idist, iseed(4), iter, msglvl, jj
+       Double precision
+-     &           rnorm0
++     &           rnorm0, buf2(1)
+       save       first, iseed, inits, iter, msglvl, orth, rnorm0
+ c
+       Double precision
+@@ -318,9 +318,9 @@ c
+       first = .FALSE.
+       if (bmat .eq. 'G') then
+           rnorm_buf = ddot (n, resid, 1, workd, 1)
+-          call MPI_ALLREDUCE( rnorm_buf, rnorm0, 1,
++          call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &          MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+-          rnorm0 = sqrt(abs(rnorm0))
++          rnorm0 = sqrt(abs(buf2(1)))
+       else if (bmat .eq. 'I') then
+           rnorm0 = pdnorm2( comm, n, resid, 1 )
+       end if
+@@ -379,9 +379,9 @@ c
+ c
+       if (bmat .eq. 'G') then
+          rnorm_buf = ddot (n, resid, 1, workd, 1)
+-         call MPI_ALLREDUCE( rnorm_buf, rnorm, 1,
++         call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &            MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+-         rnorm = sqrt(abs(rnorm))
++         rnorm = sqrt(abs(buf2(1)))
+       else if (bmat .eq. 'I') then
+          rnorm = pdnorm2( comm, n, resid, 1 )
+       end if
+@@ -391,9 +391,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call pdvout (comm, logfil, 1, rnorm0, ndigit,
++          call pdvout (comm, logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call pdvout (comm, logfil, 1, rnorm, ndigit,
++          call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+@@ -424,7 +424,7 @@ c
+    50 continue
+ c
+       if (msglvl .gt. 0) then
+-         call pdvout (comm, logfil, 1, rnorm, ndigit,
++         call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &        '_getv0: B-norm of initial / restarted starting vector')
+       end if
+       if (msglvl .gt. 2) then
+diff --git a/PARPACK/SRC/MPI/pdlamch10.f b/PARPACK/SRC/MPI/pdlamch10.f
+index fabfcbd..64cd666 100644
+--- a/PARPACK/SRC/MPI/pdlamch10.f
++++ b/PARPACK/SRC/MPI/pdlamch10.f
+@@ -57,7 +57,7 @@
+ *
+ *     .. Local Scalars ..
+       INTEGER            IDUMM
+-      DOUBLE PRECISION   TEMP, TEMP1
++      DOUBLE PRECISION   TEMP, TEMP1, buf2(1)
+ *     ..
+ *     .. External Subroutines ..
+ *      EXTERNAL           DGAMN2D, DGAMX2D
+@@ -73,19 +73,20 @@
+ *
+       IF( LSAME( CMACH, 'E' ).OR.LSAME( CMACH, 'S' ).OR.
+      $    LSAME( CMACH, 'M' ).OR.LSAME( CMACH, 'U' ) ) THEN
+-          CALL MPI_ALLREDUCE( TEMP1, TEMP, 1, MPI_DOUBLE_PRECISION,
++          CALL MPI_ALLREDUCE( [TEMP1], buf2, 1, MPI_DOUBLE_PRECISION,
+      $                        MPI_MAX, ICTXT, IDUMM )
+-*         CALL DGAMX2D( ICTXT, 'All', ' ', 1, 1, TEMP, 1, IDUMM,
++*         CALL DGAMX2D( ICTXT, 'All', ' ', 1, 1, buf2(1), 1, IDUMM,
+ *     $                 IDUMM, 1, -1, IDUMM )
+       ELSE IF( LSAME( CMACH, 'L' ).OR.LSAME( CMACH, 'O' ) ) THEN
+-          CALL MPI_ALLREDUCE( TEMP1, TEMP, 1, MPI_DOUBLE_PRECISION,
++          CALL MPI_ALLREDUCE( [TEMP1], buf2, 1, MPI_DOUBLE_PRECISION,
+      $                        MPI_MIN, ICTXT, IDUMM )
+-*         CALL DGAMN2D( ICTXT, 'All', ' ', 1, 1, TEMP, 1, IDUMM,
++*         CALL DGAMN2D( ICTXT, 'All', ' ', 1, 1, buf2(1), 1, IDUMM,
+ *     $                 IDUMM, 1, -1, IDUMM )
+       ELSE
+-          TEMP = TEMP1
++          buf2(1) = TEMP1
+       END IF
+ *
++      TEMP = buf2(1)
+       PDLAMCH10 = TEMP
+ *
+ *     End of PDLAMCH10
+diff --git a/PARPACK/SRC/MPI/pdnaitr.f b/PARPACK/SRC/MPI/pdnaitr.f
+index f531fe1..3c71ff9 100644
+--- a/PARPACK/SRC/MPI/pdnaitr.f
++++ b/PARPACK/SRC/MPI/pdnaitr.f
+@@ -276,7 +276,7 @@ c
+      &           betaj, rnorm1, smlnum, ulp, unfl, wnorm
+ c
+       Double precision
+-     &           rnorm_buf
++     &           rnorm_buf, buf2(1)
+ c
+ c
+ c     %-----------------------%
+@@ -393,9 +393,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -415,7 +415,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -566,9 +566,9 @@ c        %-------------------------------------%
+ c
+          if (bmat .eq. 'G') then
+             rnorm_buf = ddot (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( rnorm_buf, wnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &           MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+-            wnorm = sqrt(abs(wnorm))
++            wnorm = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+             wnorm = pdnorm2( comm, n, resid, 1 )
+          end if
+@@ -642,9 +642,9 @@ c        %------------------------------%
+ c
+          if (bmat .eq. 'G') then
+             rnorm_buf = ddot (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( rnorm_buf, rnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &           MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+-            rnorm = sqrt(abs(rnorm))
++            rnorm = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+             rnorm = pdnorm2( comm, n, resid, 1 )
+          end if
+@@ -745,15 +745,15 @@ c        %-----------------------------------------------------%
+ c
+          if (bmat .eq. 'G') then
+            rnorm_buf = ddot (n, resid, 1, workd(ipj), 1)
+-           call MPI_ALLREDUCE( rnorm_buf, rnorm1, 1,
++           call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &          MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+-           rnorm1 = sqrt(abs(rnorm1))
++           rnorm1 = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+            rnorm1 = pdnorm2( comm, n, resid, 1 )
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/PARPACK/SRC/MPI/pdnapps.f b/PARPACK/SRC/MPI/pdnapps.f
+index fb6f153..b6ac350 100644
+--- a/PARPACK/SRC/MPI/pdnapps.f
++++ b/PARPACK/SRC/MPI/pdnapps.f
+@@ -276,11 +276,11 @@ c
+          sigmai = shifti(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call pivout (comm, logfil, 1, jj, ndigit,
++            call pivout (comm, logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call pdvout (comm, logfil, 1, sigmar, ndigit,
++            call pdvout (comm, logfil, 1, [sigmar], ndigit,
+      &               '_napps: The real part of the shift ')
+-            call pdvout (comm, logfil, 1, sigmai, ndigit,
++            call pdvout (comm, logfil, 1, [sigmai], ndigit,
+      &               '_napps: The imaginary part of the shift ')
+          end if
+ c
+@@ -345,9 +345,9 @@ c
+      &         tst1 = dlanhs( '1', kplusp-jj+1, h, ldh, workl )
+             if( abs( h( i+1,i ) ).le.max( ulp*tst1, smlnum ) ) then
+                if (msglvl .gt. 0) then
+-                  call pivout (comm, logfil, 1, i, ndigit,
++                  call pivout (comm, logfil, 1, [i], ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call pdvout (comm, logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -361,9 +361,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call pivout (comm, logfil, 1, istart, ndigit,
++             call pivout (comm, logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call pivout (comm, logfil, 1, iend, ndigit,
++             call pivout (comm, logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -635,7 +635,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call pdvout (comm, logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call pivout (comm, logfil, 1, kev, ndigit,
++         call pivout (comm, logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call pdmout (comm, logfil, kev, kev, h, ldh, ndigit,
+diff --git a/PARPACK/SRC/MPI/pdnaup2.f b/PARPACK/SRC/MPI/pdnaup2.f
+index d0f7373..c265380 100644
+--- a/PARPACK/SRC/MPI/pdnaup2.f
++++ b/PARPACK/SRC/MPI/pdnaup2.f
+@@ -234,7 +234,7 @@ c
+      &           nevbef, nev0 , np0   , nptemp, numcnv,
+      &           j
+       Double precision
+-     &           rnorm , temp , eps23
++     &           rnorm , temp , eps23, buf2(1)
+       save       cnorm , getv0, initv , update, ushift,
+      &           rnorm , iter , kplusp, msglvl, nconv,
+      &           nevbef, nev0 , np0   , eps23 , numcnv
+@@ -408,7 +408,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -421,9 +421,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -455,7 +455,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call pdvout  (comm, logfil, 1, rnorm, ndigit,
++            call pdvout  (comm, logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -699,7 +699,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -751,7 +751,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call pdvout  (comm, logfil, np, ritzr, ndigit,
+      &                  '_naup2: Real part of the shifts')
+@@ -810,16 +810,16 @@ c
+ c
+          if (bmat .eq. 'G') then
+             rnorm_buf = ddot  (n, resid, 1, workd, 1)
+-            call MPI_ALLREDUCE( rnorm_buf, rnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &                MPI_DOUBLE_PRECISION , MPI_SUM, comm, ierr )
+-            rnorm = sqrt(abs(rnorm))
++            rnorm = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+             rnorm = pdnorm2 ( comm, n, resid, 1 )
+          end if
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call pdvout  (comm, logfil, 1, rnorm, ndigit,
++            call pdvout  (comm, logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call pdmout  (comm, logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/PARPACK/SRC/MPI/pdnaupd.f b/PARPACK/SRC/MPI/pdnaupd.f
+index 1bf0fc1..231f9ca 100644
+--- a/PARPACK/SRC/MPI/pdnaupd.f
++++ b/PARPACK/SRC/MPI/pdnaupd.f
+@@ -650,9 +650,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call pdvout  (comm, logfil, np, workl(ritzr), ndigit,
+      &               '_naupd: Real part of the final Ritz values')
+diff --git a/PARPACK/SRC/MPI/pdneupd.f b/PARPACK/SRC/MPI/pdneupd.f
+index f80651e..d574195 100644
+--- a/PARPACK/SRC/MPI/pdneupd.f
++++ b/PARPACK/SRC/MPI/pdneupd.f
+@@ -617,9 +617,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/MPI/pdngets.f b/PARPACK/SRC/MPI/pdngets.f
+index 4ff3516..c4294b8 100644
+--- a/PARPACK/SRC/MPI/pdngets.f
++++ b/PARPACK/SRC/MPI/pdngets.f
+@@ -226,8 +226,8 @@ c
+       tngets = tngets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_ngets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_ngets: NP is')
+          call pdvout (comm, logfil, kev+np, ritzr, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix -- real part')
+          call pdvout (comm, logfil, kev+np, ritzi, ndigit,
+diff --git a/PARPACK/SRC/MPI/pdnorm2.f b/PARPACK/SRC/MPI/pdnorm2.f
+index 0e14958..5061d3d 100644
+--- a/PARPACK/SRC/MPI/pdnorm2.f
++++ b/PARPACK/SRC/MPI/pdnorm2.f
+@@ -45,7 +45,7 @@ c     | Local Scalars |
+ c     %---------------%
+ c
+       Double precision
+-     &             max, buf, zero
++     &             max, buf, zero, buf2(1)
+       parameter    ( zero = 0.0 )
+ c
+ c     %---------------------%
+@@ -69,15 +69,16 @@ c
+       pdnorm2 = dnrm2( n, x, inc)
+ c
+       buf = pdnorm2
+-      call MPI_ALLREDUCE( buf, max, 1, MPI_DOUBLE_PRECISION,
++      call MPI_ALLREDUCE( [buf], buf2, 1, MPI_DOUBLE_PRECISION,
+      &                    MPI_MAX, comm, ierr )
++      max = buf2(1)
+       if ( max .eq. zero ) then
+          pdnorm2 = zero
+       else
+          buf = (pdnorm2/max)**2.0
+-         call MPI_ALLREDUCE( buf, pdnorm2, 1, MPI_DOUBLE_PRECISION,
++         call MPI_ALLREDUCE( [buf], buf2, 1, MPI_DOUBLE_PRECISION,
+      &                       MPI_SUM, comm, ierr )
+-         pdnorm2 = max * sqrt(abs(pdnorm2))
++         pdnorm2 = max * sqrt(abs(buf2(1)))
+       endif
+ c
+ c     %----------------%
+diff --git a/PARPACK/SRC/MPI/pdsaitr.f b/PARPACK/SRC/MPI/pdsaitr.f
+index 5fe84b8..42396c1 100644
+--- a/PARPACK/SRC/MPI/pdsaitr.f
++++ b/PARPACK/SRC/MPI/pdsaitr.f
+@@ -264,7 +264,7 @@ c
+       integer    i, ierr, ipj, irj, ivj, iter, itry, j, msglvl, infol,
+      &           jj
+       Double precision
+-     &           rnorm1, wnorm, safmin, temp1
++     &           rnorm1, wnorm, safmin, temp1, buf2(1)
+       save       orth1, orth2, rstart, step3, step4,
+      &           ierr, ipj, irj, ivj, iter, itry, j, msglvl,
+      &           rnorm1, safmin, wnorm
+@@ -392,9 +392,9 @@ c
+  1000 continue
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_saitr: generating Arnoldi vector no.')
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_saitr: B-norm of the current residual =')
+          end if
+ c
+@@ -412,7 +412,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_saitr: ****** restart at step ******')
+             end if
+ c
+@@ -572,14 +572,14 @@ c           | is the inv(B)-norm of A*v_{j}.   |
+ c           %----------------------------------%
+ c
+             rnorm_buf = ddot (n, resid, 1, workd(ivj), 1)
+-            call MPI_ALLREDUCE( rnorm_buf, wnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &           MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+-            wnorm = sqrt(abs(wnorm))
++            wnorm = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'G') then
+             rnorm_buf = ddot (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( rnorm_buf, wnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &           MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+-            wnorm = sqrt(abs(wnorm))
++            wnorm = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+             wnorm = pdnorm2( comm, n, resid, 1 )
+          end if
+@@ -669,9 +669,9 @@ c        %------------------------------%
+ c
+          if (bmat .eq. 'G') then
+             rnorm_buf = ddot (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( rnorm_buf, rnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &           MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+-            rnorm = sqrt(abs(rnorm))
++            rnorm = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+             rnorm = pdnorm2( comm, n, resid, 1 )
+          end if
+@@ -769,15 +769,15 @@ c        %-----------------------------------------------------%
+ c
+          if (bmat .eq. 'G') then
+            rnorm_buf = ddot (n, resid, 1, workd(ipj), 1)
+-           call MPI_ALLREDUCE( rnorm_buf, rnorm1, 1,
++           call MPI_ALLREDUCE( [rnorm_buf], buf2(1), 1,
+      &          MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+-           rnorm1 = sqrt(abs(rnorm1))
++           rnorm1 = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+            rnorm1 = pdnorm2( comm, n, resid, 1 )
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/PARPACK/SRC/MPI/pdsapps.f b/PARPACK/SRC/MPI/pdsapps.f
+index e79db4e..3feb8da 100644
+--- a/PARPACK/SRC/MPI/pdsapps.f
++++ b/PARPACK/SRC/MPI/pdsapps.f
+@@ -272,9 +272,9 @@ c
+             big   = abs(h(i,2)) + abs(h(i+1,2))
+             if (h(i+1,1) .le. epsmch*big) then
+                if (msglvl .gt. 0) then
+-                  call pivout (comm, logfil, 1, i, ndigit,
++                  call pivout (comm, logfil, 1, [i], ndigit,
+      &                 '_sapps: deflation at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_sapps: occurred before shift number.')
+                   call pdvout (comm, logfil, 1, h(i+1,1), ndigit,
+      &                 '_sapps: the corresponding off diagonal element')
+@@ -443,7 +443,7 @@ c
+          big   = abs(h(i,2)) + abs(h(i+1,2))
+          if (h(i+1,1) .le. epsmch*big) then
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, i, ndigit,
++               call pivout (comm, logfil, 1, [i], ndigit,
+      &              '_sapps: deflation at row/column no.')
+                call pdvout (comm, logfil, 1, h(i+1,1), ndigit,
+      &              '_sapps: the corresponding off diagonal element')
+diff --git a/PARPACK/SRC/MPI/pdsaup2.f b/PARPACK/SRC/MPI/pdsaup2.f
+index 820459b..a575b33 100644
+--- a/PARPACK/SRC/MPI/pdsaup2.f
++++ b/PARPACK/SRC/MPI/pdsaup2.f
+@@ -212,7 +212,7 @@ c
+       integer    ido, info, ishift, iupd, ldh, ldq, ldv, mxiter,
+      &           n, mode, nev, np
+       Double precision
+-     &           tol
++     &           tol, buf2(1)
+ c
+ c     %-----------------%
+ c     | Array Arguments |
+@@ -424,13 +424,13 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_saup2: **** Start of major iteration number ****')
+          end if
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_saup2: The length of the current Lanczos factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_saup2: Extend the Lanczos factorization by')
+          end if
+ c
+@@ -469,7 +469,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &           '_saup2: Current B-norm of residual for factorization')
+          end if
+ c
+@@ -719,7 +719,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_saup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -766,7 +766,7 @@ c
+          if (ishift .eq. 0) call dcopy (np, workl, 1, ritz, 1)
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_saup2: The number of shifts to apply ')
+             call pdvout (comm, logfil, np, workl, ndigit,
+      &                  '_saup2: shifts selected')
+@@ -825,9 +825,9 @@ c
+ c
+          if (bmat .eq. 'G') then
+             rnorm_buf = ddot (n, resid, 1, workd, 1)
+-            call MPI_ALLREDUCE( rnorm_buf, rnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &                MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+-            rnorm = sqrt(abs(rnorm))
++            rnorm = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+             rnorm = pdnorm2( comm, n, resid, 1 )
+          end if
+@@ -835,7 +835,7 @@ c
+   130    continue
+ c
+          if (msglvl .gt. 2) then
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &      '_saup2: B-norm of residual for NEV factorization')
+             call pdvout (comm, logfil, nev, h(1,2), ndigit,
+      &           '_saup2: main diagonal of compressed H matrix')
+diff --git a/PARPACK/SRC/MPI/pdsaupd.f b/PARPACK/SRC/MPI/pdsaupd.f
+index 47d0522..f505dc9 100644
+--- a/PARPACK/SRC/MPI/pdsaupd.f
++++ b/PARPACK/SRC/MPI/pdsaupd.f
+@@ -652,9 +652,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_saupd: number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_saupd: number of "converged" Ritz values')
+          call pdvout  (comm, logfil, np, workl(Ritz), ndigit,
+      &               '_saupd: final Ritz values')
+diff --git a/PARPACK/SRC/MPI/pdseupd.f b/PARPACK/SRC/MPI/pdseupd.f
+index 9e866ab..66e8599 100644
+--- a/PARPACK/SRC/MPI/pdseupd.f
++++ b/PARPACK/SRC/MPI/pdseupd.f
+@@ -523,9 +523,9 @@ c        | caused by incorrect passing of the _saupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/MPI/pdsgets.f b/PARPACK/SRC/MPI/pdsgets.f
+index 01b5239..c71421b 100644
+--- a/PARPACK/SRC/MPI/pdsgets.f
++++ b/PARPACK/SRC/MPI/pdsgets.f
+@@ -216,8 +216,8 @@ c
+       tsgets = tsgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_sgets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_sgets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_sgets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_sgets: NP is')
+          call pdvout (comm, logfil, kev+np, ritz, ndigit,
+      &        '_sgets: Eigenvalues of current H matrix')
+          call pdvout (comm, logfil, kev+np, bounds, ndigit,
+diff --git a/PARPACK/SRC/MPI/pdznorm2.f b/PARPACK/SRC/MPI/pdznorm2.f
+index 7a7173f..4651679 100644
+--- a/PARPACK/SRC/MPI/pdznorm2.f
++++ b/PARPACK/SRC/MPI/pdznorm2.f
+@@ -45,7 +45,7 @@ c     | Local Scalars |
+ c     %---------------%
+ c
+       Double precision
+-     &             max, buf, zero
++     &             max(1), buf, zero
+       parameter    ( zero = 0.0 )
+ c
+ c     %---------------------%
+@@ -59,7 +59,7 @@ c     | External Functions |
+ c     %--------------------%
+ c
+       Double precision
+-     &             dznrm2
++     &             dznrm2, buf2(1)
+       External     dznrm2
+ c
+ c     %-----------------------%
+@@ -69,15 +69,15 @@ c
+       pdznorm2 = dznrm2( n, x, inc)
+ c
+       buf = pdznorm2
+-      call MPI_ALLREDUCE( buf, max, 1, MPI_DOUBLE_PRECISION,
++      call MPI_ALLREDUCE( [buf], max, 1, MPI_DOUBLE_PRECISION,
+      &                    MPI_MAX, comm, ierr )
+-      if ( max .eq. zero ) then
++      if ( max(1) .eq. zero ) then
+          pdznorm2 = zero
+       else
+-         buf = (pdznorm2/max)**2.0
+-         call MPI_ALLREDUCE( buf, pdznorm2, 1, MPI_DOUBLE_PRECISION,
++         buf = (pdznorm2/max(1))**2.0
++         call MPI_ALLREDUCE( [buf], buf2, 1, MPI_DOUBLE_PRECISION,
+      &                       MPI_SUM, comm, ierr )
+-         pdznorm2 = max * sqrt(abs(pdznorm2))
++         pdznorm2 = max(1) * sqrt(abs(buf2(1)))
+       endif
+ c
+ c     %-----------------%
+diff --git a/PARPACK/SRC/MPI/pscnorm2.f b/PARPACK/SRC/MPI/pscnorm2.f
+index 2c64831..50dea8b 100644
+--- a/PARPACK/SRC/MPI/pscnorm2.f
++++ b/PARPACK/SRC/MPI/pscnorm2.f
+@@ -45,7 +45,7 @@ c     | Local Scalars |
+ c     %---------------%
+ c
+       Real
+-     &             max, buf, zero
++     &             max(1), buf, zero
+       parameter    ( zero = 0.0 )
+ c
+ c     %---------------------%
+@@ -61,6 +61,7 @@ c
+       Real
+      &             scnrm2
+       External     scnrm2
++      Real         buf2(1)
+ c
+ c     %-----------------------%
+ c     | Executable Statements |
+@@ -69,15 +70,15 @@ c
+       pscnorm2 = scnrm2( n, x, inc)
+ c
+       buf = pscnorm2
+-      call MPI_ALLREDUCE( buf, max, 1, MPI_REAL,
++      call MPI_ALLREDUCE( [buf], max, 1, MPI_REAL,
+      &                    MPI_MAX, comm, ierr )
+-      if ( max .eq. zero ) then
++      if ( max(1) .eq. zero ) then
+          pscnorm2 = zero
+       else
+-         buf = (pscnorm2/max)**2.0
+-         call MPI_ALLREDUCE( buf, pscnorm2, 1, MPI_REAL,
++         buf = (pscnorm2/max(1))**2.0
++         call MPI_ALLREDUCE( [buf], buf2, 1, MPI_REAL,
+      &                       MPI_SUM, comm, ierr )
+-         pscnorm2 = max * sqrt(abs(pscnorm2))
++         pscnorm2 = max(1) * sqrt(abs(buf2(1)))
+       endif
+ c
+ c     %-----------------%
+diff --git a/PARPACK/SRC/MPI/psgetv0.f b/PARPACK/SRC/MPI/psgetv0.f
+index a721c9b..597212b 100644
+--- a/PARPACK/SRC/MPI/psgetv0.f
++++ b/PARPACK/SRC/MPI/psgetv0.f
+@@ -163,7 +163,7 @@ c     %-----------------%
+ c
+       integer    ipntr(3)
+       Real
+-     &           resid(n), v(ldv,j), workd(2*n), workl(2*j)
++     &           resid(n), v(ldv,j), workd(2*n), workl(2*j), buf2(1)
+ c
+ c     %------------%
+ c     | Parameters |
+@@ -318,9 +318,9 @@ c
+       first = .FALSE.
+       if (bmat .eq. 'G') then
+           rnorm_buf = sdot (n, resid, 1, workd, 1)
+-          call MPI_ALLREDUCE( rnorm_buf, rnorm0, 1,
++          call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &          MPI_REAL, MPI_SUM, comm, ierr )
+-          rnorm0 = sqrt(abs(rnorm0))
++          rnorm0 = sqrt(abs(buf2(1)))
+       else if (bmat .eq. 'I') then
+           rnorm0 = psnorm2( comm, n, resid, 1 )
+       end if
+@@ -379,9 +379,9 @@ c
+ c
+       if (bmat .eq. 'G') then
+          rnorm_buf = sdot (n, resid, 1, workd, 1)
+-         call MPI_ALLREDUCE( rnorm_buf, rnorm, 1,
++         call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &            MPI_REAL, MPI_SUM, comm, ierr )
+-         rnorm = sqrt(abs(rnorm))
++         rnorm = sqrt(abs(buf2(1)))
+       else if (bmat .eq. 'I') then
+          rnorm = psnorm2( comm, n, resid, 1 )
+       end if
+@@ -391,9 +391,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call psvout (comm, logfil, 1, rnorm0, ndigit,
++          call psvout (comm, logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call psvout (comm, logfil, 1, rnorm, ndigit,
++          call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+@@ -424,7 +424,7 @@ c
+    50 continue
+ c
+       if (msglvl .gt. 0) then
+-         call psvout (comm, logfil, 1, rnorm, ndigit,
++         call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &        '_getv0: B-norm of initial / restarted starting vector')
+       end if
+       if (msglvl .gt. 2) then
+diff --git a/PARPACK/SRC/MPI/pslamch10.f b/PARPACK/SRC/MPI/pslamch10.f
+index cd7215c..c3c13b8 100644
+--- a/PARPACK/SRC/MPI/pslamch10.f
++++ b/PARPACK/SRC/MPI/pslamch10.f
+@@ -53,7 +53,7 @@
+ *
+ *     .. Local Scalars ..
+       INTEGER            IDUMM
+-      REAL               TEMP, TEMP1
++      REAL               TEMP, TEMP1, buf2(1)
+ *     ..
+ *     .. External Subroutines ..
+ *      EXTERNAL           SGAMN2D, SGAMX2D
+@@ -69,14 +69,16 @@
+ *
+       IF( LSAME( CMACH, 'E' ).OR.LSAME( CMACH, 'S' ).OR.
+      $    LSAME( CMACH, 'M' ).OR.LSAME( CMACH, 'U' ) ) THEN
+-          CALL MPI_ALLREDUCE( TEMP1, TEMP, 1, MPI_REAL,
++          CALL MPI_ALLREDUCE( [TEMP1], buf2, 1, MPI_REAL,
+      $                        MPI_MAX, ICTXT, IDUMM )
+-*         CALL SGAMX2D( ICTXT, 'All', ' ', 1, 1, TEMP, 1, IDUMM,
++          TEMP = buf2(1)
++*     CALL SGAMX2D( ICTXT, 'All', ' ', 1, 1, TEMP, 1, IDUMM,
+ *     $                 IDUMM, 1, -1, IDUMM )
+       ELSE IF( LSAME( CMACH, 'L' ).OR.LSAME( CMACH, 'O' ) ) THEN
+-          CALL MPI_ALLREDUCE( TEMP1, TEMP, 1, MPI_REAL,
++          CALL MPI_ALLREDUCE( [TEMP1], buf2, 1, MPI_REAL,
+      $                        MPI_MIN, ICTXT, IDUMM )
+-*         CALL SGAMN2D( ICTXT, 'All', ' ', 1, 1, TEMP, 1, IDUMM,
++          TEMP = buf2(1)
++*     CALL SGAMN2D( ICTXT, 'All', ' ', 1, 1, TEMP, 1, IDUMM,
+ *     $                 IDUMM, 1, -1, IDUMM )
+       ELSE
+           TEMP = TEMP1
+diff --git a/PARPACK/SRC/MPI/psnaitr.f b/PARPACK/SRC/MPI/psnaitr.f
+index ab63f99..8b5f635 100644
+--- a/PARPACK/SRC/MPI/psnaitr.f
++++ b/PARPACK/SRC/MPI/psnaitr.f
+@@ -276,7 +276,7 @@ c
+      &           betaj, rnorm1, smlnum, ulp, unfl, wnorm
+ c
+       Real
+-     &           rnorm_buf
++     &           rnorm_buf, buf2(1)
+ c
+ c
+ c     %-----------------------%
+@@ -393,9 +393,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -415,7 +415,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -566,9 +566,9 @@ c        %-------------------------------------%
+ c
+          if (bmat .eq. 'G') then
+             rnorm_buf = sdot (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( rnorm_buf, wnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &           MPI_REAL, MPI_SUM, comm, ierr )
+-            wnorm = sqrt(abs(wnorm))
++            wnorm = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+             wnorm = psnorm2( comm, n, resid, 1 )
+          end if
+@@ -642,9 +642,9 @@ c        %------------------------------%
+ c
+          if (bmat .eq. 'G') then
+             rnorm_buf = sdot (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( rnorm_buf, rnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &           MPI_REAL, MPI_SUM, comm, ierr )
+-            rnorm = sqrt(abs(rnorm))
++            rnorm = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+             rnorm = psnorm2( comm, n, resid, 1 )
+          end if
+@@ -745,15 +745,15 @@ c        %-----------------------------------------------------%
+ c
+          if (bmat .eq. 'G') then
+            rnorm_buf = sdot (n, resid, 1, workd(ipj), 1)
+-           call MPI_ALLREDUCE( rnorm_buf, rnorm1, 1,
++           call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &          MPI_REAL, MPI_SUM, comm, ierr )
+-           rnorm1 = sqrt(abs(rnorm1))
++           rnorm1 = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+            rnorm1 = psnorm2( comm, n, resid, 1 )
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/PARPACK/SRC/MPI/psnapps.f b/PARPACK/SRC/MPI/psnapps.f
+index c06fba5..b6f8645 100644
+--- a/PARPACK/SRC/MPI/psnapps.f
++++ b/PARPACK/SRC/MPI/psnapps.f
+@@ -276,11 +276,11 @@ c
+          sigmai = shifti(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call pivout (comm, logfil, 1, jj, ndigit,
++            call pivout (comm, logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call psvout (comm, logfil, 1, sigmar, ndigit,
++            call psvout (comm, logfil, 1, [sigmar], ndigit,
+      &               '_napps: The real part of the shift ')
+-            call psvout (comm, logfil, 1, sigmai, ndigit,
++            call psvout (comm, logfil, 1, [sigmai], ndigit,
+      &               '_napps: The imaginary part of the shift ')
+          end if
+ c
+@@ -345,9 +345,9 @@ c
+      &         tst1 = slanhs( '1', kplusp-jj+1, h, ldh, workl )
+             if( abs( h( i+1,i ) ).le.max( ulp*tst1, smlnum ) ) then
+                if (msglvl .gt. 0) then
+-                  call pivout (comm, logfil, 1, i, ndigit,
++                  call pivout (comm, logfil, 1, [i], ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call psvout (comm, logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -361,9 +361,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call pivout (comm, logfil, 1, istart, ndigit,
++             call pivout (comm, logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call pivout (comm, logfil, 1, iend, ndigit,
++             call pivout (comm, logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -635,7 +635,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call psvout (comm, logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call pivout (comm, logfil, 1, kev, ndigit,
++         call pivout (comm, logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call psmout (comm, logfil, kev, kev, h, ldh, ndigit,
+diff --git a/PARPACK/SRC/MPI/psnaup2.f b/PARPACK/SRC/MPI/psnaup2.f
+index 6195d4b..bfca7fb 100644
+--- a/PARPACK/SRC/MPI/psnaup2.f
++++ b/PARPACK/SRC/MPI/psnaup2.f
+@@ -241,7 +241,7 @@ c
+ c
+ 
+       Real
+-     &           rnorm_buf
++     &           rnorm_buf, buf2(1)
+ c
+ c     %-----------------------%
+ c     | Local array arguments |
+@@ -408,7 +408,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -421,9 +421,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -455,7 +455,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -699,7 +699,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -751,7 +751,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call psvout (comm, logfil, np, ritzr, ndigit,
+      &                  '_naup2: Real part of the shifts')
+@@ -810,16 +810,16 @@ c
+ c
+          if (bmat .eq. 'G') then
+             rnorm_buf = sdot (n, resid, 1, workd, 1)
+-            call MPI_ALLREDUCE( rnorm_buf, rnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &                MPI_REAL, MPI_SUM, comm, ierr )
+-            rnorm = sqrt(abs(rnorm))
++            rnorm = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+             rnorm = psnorm2( comm, n, resid, 1 )
+          end if
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call psmout (comm, logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/PARPACK/SRC/MPI/psnaupd.f b/PARPACK/SRC/MPI/psnaupd.f
+index a55f5fb..35e85b7 100644
+--- a/PARPACK/SRC/MPI/psnaupd.f
++++ b/PARPACK/SRC/MPI/psnaupd.f
+@@ -650,9 +650,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call psvout (comm, logfil, np, workl(ritzr), ndigit,
+      &               '_naupd: Real part of the final Ritz values')
+diff --git a/PARPACK/SRC/MPI/psneupd.f b/PARPACK/SRC/MPI/psneupd.f
+index c7f939a..d4090b6 100644
+--- a/PARPACK/SRC/MPI/psneupd.f
++++ b/PARPACK/SRC/MPI/psneupd.f
+@@ -617,9 +617,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/MPI/psngets.f b/PARPACK/SRC/MPI/psngets.f
+index c4bf9ac..91a6d73 100644
+--- a/PARPACK/SRC/MPI/psngets.f
++++ b/PARPACK/SRC/MPI/psngets.f
+@@ -226,8 +226,8 @@ c
+       tngets = tngets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_ngets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_ngets: NP is')
+          call psvout (comm, logfil, kev+np, ritzr, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix -- real part')
+          call psvout (comm, logfil, kev+np, ritzi, ndigit,
+diff --git a/PARPACK/SRC/MPI/psnorm2.f b/PARPACK/SRC/MPI/psnorm2.f
+index b5fbcd1..8e487b3 100644
+--- a/PARPACK/SRC/MPI/psnorm2.f
++++ b/PARPACK/SRC/MPI/psnorm2.f
+@@ -45,7 +45,7 @@ c     | Local Scalars |
+ c     %---------------%
+ c
+       Real
+-     &             max, buf, zero
++     &             max, buf, zero, buf2(1)
+       parameter    ( zero = 0.0 )
+ c
+ c     %---------------------%
+@@ -69,15 +69,16 @@ c
+       psnorm2 = snrm2( n, x, inc)
+ c
+       buf = psnorm2
+-      call MPI_ALLREDUCE( buf, max, 1, MPI_REAL,
++      call MPI_ALLREDUCE( [buf], buf2, 1, MPI_REAL,
+      &                    MPI_MAX, comm, ierr )
++      max = buf2(1)
+       if ( max .eq. zero ) then
+          psnorm2 = zero
+       else
+          buf = (psnorm2/max)**2.0
+-         call MPI_ALLREDUCE( buf, psnorm2, 1, MPI_REAL,
++         call MPI_ALLREDUCE( [buf], buf2, 1, MPI_REAL,
+      &                       MPI_SUM, comm, ierr )
+-         psnorm2 = max * sqrt(abs(psnorm2))
++         psnorm2 = max * sqrt(abs(buf2(1)))
+       endif
+ c
+ c     %----------------%
+diff --git a/PARPACK/SRC/MPI/pssaitr.f b/PARPACK/SRC/MPI/pssaitr.f
+index a0fde73..8ceaebe 100644
+--- a/PARPACK/SRC/MPI/pssaitr.f
++++ b/PARPACK/SRC/MPI/pssaitr.f
+@@ -264,7 +264,7 @@ c
+       integer    i, ierr, ipj, irj, ivj, iter, itry, j, msglvl, infol,
+      &           jj
+       Real
+-     &           rnorm1, wnorm, safmin, temp1
++     &           rnorm1, wnorm(1), safmin, temp1, temp2(1)
+       save       orth1, orth2, rstart, step3, step4,
+      &           ierr, ipj, irj, ivj, iter, itry, j, msglvl,
+      &           rnorm1, safmin, wnorm
+@@ -392,9 +392,9 @@ c
+  1000 continue
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_saitr: generating Arnoldi vector no.')
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_saitr: B-norm of the current residual =')
+          end if
+ c
+@@ -412,7 +412,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_saitr: ****** restart at step ******')
+             end if
+ c
+@@ -572,16 +572,16 @@ c           | is the inv(B)-norm of A*v_{j}.   |
+ c           %----------------------------------%
+ c
+             rnorm_buf = sdot (n, resid, 1, workd(ivj), 1)
+-            call MPI_ALLREDUCE( rnorm_buf, wnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], wnorm, 1,
+      &           MPI_REAL, MPI_SUM, comm, ierr )
+-            wnorm = sqrt(abs(wnorm))
++            wnorm(1) = sqrt(abs(wnorm(1)))
+          else if (bmat .eq. 'G') then
+             rnorm_buf = sdot (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( rnorm_buf, wnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], wnorm, 1,
+      &           MPI_REAL, MPI_SUM, comm, ierr )
+             wnorm = sqrt(abs(wnorm))
+          else if (bmat .eq. 'I') then
+-            wnorm = psnorm2( comm, n, resid, 1 )
++            wnorm(1) = psnorm2( comm, n, resid, 1 )
+          end if
+ c
+ c        %-----------------------------------------%
+@@ -669,9 +669,9 @@ c        %------------------------------%
+ c
+          if (bmat .eq. 'G') then
+             rnorm_buf = sdot (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( rnorm_buf, rnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], temp2, 1,
+      &           MPI_REAL, MPI_SUM, comm, ierr )
+-            rnorm = sqrt(abs(rnorm))
++            rnorm = sqrt(abs(temp2(1)))
+          else if (bmat .eq. 'I') then
+             rnorm = psnorm2( comm, n, resid, 1 )
+          end if
+@@ -691,7 +691,7 @@ c        | Determine if we need to correct the residual. The goal is |
+ c        | to enforce ||v(:,1:j)^T * r_{j}|| .le. eps * || r_{j} ||  |
+ c        %-----------------------------------------------------------%
+ c
+-         if (rnorm .gt. 0.717*wnorm) go to 100
++         if (rnorm .gt. 0.717*wnorm(1)) go to 100
+          nrorth = nrorth + 1
+ c
+ c        %---------------------------------------------------%
+@@ -704,7 +704,7 @@ c
+    80    continue
+ c
+          if (msglvl .gt. 2) then
+-            xtemp(1) = wnorm
++            xtemp(1) = wnorm(1)
+             xtemp(2) = rnorm
+             call psvout (comm, logfil, 2, xtemp, ndigit,
+      &           '_naitr: re-orthonalization ; wnorm and rnorm are')
+@@ -769,15 +769,15 @@ c        %-----------------------------------------------------%
+ c
+          if (bmat .eq. 'G') then
+            rnorm_buf = sdot (n, resid, 1, workd(ipj), 1)
+-           call MPI_ALLREDUCE( rnorm_buf, rnorm1, 1,
++           call MPI_ALLREDUCE( [rnorm_buf], temp2, 1,
+      &          MPI_REAL, MPI_SUM, comm, ierr )
+-           rnorm1 = sqrt(abs(rnorm1))
++           rnorm1 = sqrt(abs(temp2(1)))
+          else if (bmat .eq. 'I') then
+            rnorm1 = psnorm2( comm, n, resid, 1 )
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/PARPACK/SRC/MPI/pssapps.f b/PARPACK/SRC/MPI/pssapps.f
+index 481cc35..07f9645 100644
+--- a/PARPACK/SRC/MPI/pssapps.f
++++ b/PARPACK/SRC/MPI/pssapps.f
+@@ -271,9 +271,9 @@ c
+             big   = abs(h(i,2)) + abs(h(i+1,2))
+             if (h(i+1,1) .le. epsmch*big) then
+                if (msglvl .gt. 0) then
+-                  call pivout (comm, logfil, 1, i, ndigit,
++                  call pivout (comm, logfil, 1, [i], ndigit,
+      &                 '_sapps: deflation at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_sapps: occurred before shift number.')
+                   call psvout (comm, logfil, 1, h(i+1,1), ndigit,
+      &                 '_sapps: the corresponding off diagonal element')
+@@ -442,7 +442,7 @@ c
+          big   = abs(h(i,2)) + abs(h(i+1,2))
+          if (h(i+1,1) .le. epsmch*big) then
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, i, ndigit,
++               call pivout (comm, logfil, 1, [i], ndigit,
+      &              '_sapps: deflation at row/column no.')
+                call psvout (comm, logfil, 1, h(i+1,1), ndigit,
+      &              '_sapps: the corresponding off diagonal element')
+diff --git a/PARPACK/SRC/MPI/pssaup2.f b/PARPACK/SRC/MPI/pssaup2.f
+index ab00ec7..25af8b7 100644
+--- a/PARPACK/SRC/MPI/pssaup2.f
++++ b/PARPACK/SRC/MPI/pssaup2.f
+@@ -241,7 +241,7 @@ c
+       integer    ierr, iter, j, kplusp, msglvl, nconv, nevbef, nev0,
+      &           np0, nptemp, nevd2, nevm2, kp(3)
+       Real
+-     &           rnorm, temp, eps23
++     &           rnorm, temp, eps23, buf2(1)
+       save       cnorm, getv0, initv, update, ushift,
+      &           iter, kplusp, msglvl, nconv, nev0, np0,
+      &           rnorm, eps23
+@@ -424,13 +424,13 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_saup2: **** Start of major iteration number ****')
+          end if
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_saup2: The length of the current Lanczos factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_saup2: Extend the Lanczos factorization by')
+          end if
+ c
+@@ -469,7 +469,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &           '_saup2: Current B-norm of residual for factorization')
+          end if
+ c
+@@ -719,7 +719,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_saup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -766,7 +766,7 @@ c
+          if (ishift .eq. 0) call scopy (np, workl, 1, ritz, 1)
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_saup2: The number of shifts to apply ')
+             call psvout (comm, logfil, np, workl, ndigit,
+      &                  '_saup2: shifts selected')
+@@ -825,9 +825,9 @@ c
+ c
+          if (bmat .eq. 'G') then
+             rnorm_buf = sdot (n, resid, 1, workd, 1)
+-            call MPI_ALLREDUCE( rnorm_buf, rnorm, 1,
++            call MPI_ALLREDUCE( [rnorm_buf], buf2, 1,
+      &                MPI_REAL, MPI_SUM, comm, ierr )
+-            rnorm = sqrt(abs(rnorm))
++            rnorm = sqrt(abs(buf2(1)))
+          else if (bmat .eq. 'I') then
+             rnorm = psnorm2( comm, n, resid, 1 )
+          end if
+@@ -835,7 +835,7 @@ c
+   130    continue
+ c
+          if (msglvl .gt. 2) then
+-            call psvout (comm, logfil, 1, rnorm, ndigit,
++            call psvout (comm, logfil, 1, [rnorm], ndigit,
+      &      '_saup2: B-norm of residual for NEV factorization')
+             call psvout (comm, logfil, nev, h(1,2), ndigit,
+      &           '_saup2: main diagonal of compressed H matrix')
+diff --git a/PARPACK/SRC/MPI/pssaupd.f b/PARPACK/SRC/MPI/pssaupd.f
+index 7f61600..3077ff5 100644
+--- a/PARPACK/SRC/MPI/pssaupd.f
++++ b/PARPACK/SRC/MPI/pssaupd.f
+@@ -652,9 +652,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_saupd: number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_saupd: number of "converged" Ritz values')
+          call psvout (comm, logfil, np, workl(Ritz), ndigit,
+      &               '_saupd: final Ritz values')
+diff --git a/PARPACK/SRC/MPI/psseupd.f b/PARPACK/SRC/MPI/psseupd.f
+index 23e2caa..8517587 100644
+--- a/PARPACK/SRC/MPI/psseupd.f
++++ b/PARPACK/SRC/MPI/psseupd.f
+@@ -523,9 +523,9 @@ c        | caused by incorrect passing of the _saupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/MPI/pssgets.f b/PARPACK/SRC/MPI/pssgets.f
+index 487689b..dcc08bc 100644
+--- a/PARPACK/SRC/MPI/pssgets.f
++++ b/PARPACK/SRC/MPI/pssgets.f
+@@ -216,8 +216,8 @@ c
+       tsgets = tsgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_sgets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_sgets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_sgets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_sgets: NP is')
+          call psvout (comm, logfil, kev+np, ritz, ndigit,
+      &        '_sgets: Eigenvalues of current H matrix')
+          call psvout (comm, logfil, kev+np, bounds, ndigit,
+diff --git a/PARPACK/SRC/MPI/pzgetv0.f b/PARPACK/SRC/MPI/pzgetv0.f
+index 42cd086..29f18f5 100644
+--- a/PARPACK/SRC/MPI/pzgetv0.f
++++ b/PARPACK/SRC/MPI/pzgetv0.f
+@@ -185,7 +185,7 @@ c
+       save       first, iseed, inits, iter, msglvl, orth, rnorm0
+ c
+       Complex*16
+-     &           cnorm_buf
++     &           cnorm_buf, buf2(1)
+ c
+ c     %----------------------%
+ c     | External Subroutines |
+@@ -332,8 +332,9 @@ c
+       first = .FALSE.
+       if (bmat .eq. 'G') then
+           cnorm_buf = zdotc  (n, resid, 1, workd, 1)
+-          call MPI_ALLREDUCE( cnorm_buf, cnorm, 1,
++          call MPI_ALLREDUCE( [cnorm_buf], buf2, 1,
+      &          MPI_DOUBLE_COMPLEX , MPI_SUM, comm, ierr )
++          cnorm = buf2(1)
+           rnorm0 = sqrt(dlapy2 (dble (cnorm),dimag (cnorm)))
+       else if (bmat .eq. 'I') then
+            rnorm0 = pdznorm2 ( comm, n, resid, 1)
+@@ -393,8 +394,9 @@ c
+ c
+       if (bmat .eq. 'G') then
+          cnorm_buf = zdotc  (n, resid, 1, workd, 1)
+-         call MPI_ALLREDUCE( cnorm_buf, cnorm, 1,
++         call MPI_ALLREDUCE( [cnorm_buf], buf2, 1,
+      &            MPI_DOUBLE_COMPLEX , MPI_SUM, comm, ierr )
++         cnorm = buf2(1)
+          rnorm = sqrt(dlapy2 (dble (cnorm),dimag (cnorm)))
+       else if (bmat .eq. 'I') then
+          rnorm = pdznorm2 (comm, n, resid, 1)
+@@ -405,9 +407,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call pdvout  (comm, logfil, 1, rnorm0, ndigit,
++          call pdvout  (comm, logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call pdvout  (comm, logfil, 1, rnorm, ndigit,
++          call pdvout  (comm, logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+@@ -439,7 +441,7 @@ c
+ c
+       if (msglvl .gt. 0) then
+          cnorm2 = dcmplx (rnorm,rzero)
+-         call pzvout  (comm, logfil, 1, cnorm2, ndigit,
++         call pzvout  (comm, logfil, 1, [cnorm2], ndigit,
+      &        '_getv0: B-norm of initial / restarted starting vector')
+       end if
+       if (msglvl .gt. 2) then
+diff --git a/PARPACK/SRC/MPI/pznaitr.f b/PARPACK/SRC/MPI/pznaitr.f
+index 0b8af18..4ec77e4 100644
+--- a/PARPACK/SRC/MPI/pznaitr.f
++++ b/PARPACK/SRC/MPI/pznaitr.f
+@@ -293,7 +293,7 @@ c
+      &           betaj, rnorm1, smlnum, ulp, unfl, wnorm
+ c
+       Complex*16
+-     &           cnorm_buf
++     &           cnorm_buf, buf2(1)
+ c
+ c     %----------------------%
+ c     | External Subroutines |
+@@ -404,9 +404,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call pzvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -426,7 +426,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call pivout (comm, logfil, 1, j, ndigit,
++               call pivout (comm, logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -577,9 +577,10 @@ c        %-------------------------------------%
+ c
+          if (bmat .eq. 'G') then
+              cnorm_buf = zdotc (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( cnorm_buf, cnorm, 1,
++            call MPI_ALLREDUCE( [cnorm_buf], buf2, 1,
+      &           MPI_DOUBLE_COMPLEX, MPI_SUM, comm, ierr )
+-             wnorm = sqrt( dlapy2(dble(cnorm),dimag(cnorm)) )
++            cnorm = buf2(1)
++            wnorm = sqrt( dlapy2(dble(cnorm),dimag(cnorm)) )
+          else if (bmat .eq. 'I') then
+              wnorm = pdznorm2(comm, n, resid, 1)
+          end if
+@@ -653,8 +654,9 @@ c        %------------------------------%
+ c
+          if (bmat .eq. 'G') then
+             cnorm_buf = zdotc (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( cnorm_buf, cnorm, 1,
++            call MPI_ALLREDUCE( [cnorm_buf], buf2, 1,
+      &           MPI_DOUBLE_COMPLEX, MPI_SUM, comm, ierr )
++            cnorm = buf2(1)
+             rnorm = sqrt( dlapy2(dble(cnorm),dimag(cnorm)) )
+          else if (bmat .eq. 'I') then
+             rnorm = pdznorm2(comm, n, resid, 1)
+@@ -757,15 +759,16 @@ c        %-----------------------------------------------------%
+ c
+          if (bmat .eq. 'G') then
+              cnorm_buf = zdotc (n, resid, 1, workd(ipj), 1)
+-            call MPI_ALLREDUCE( cnorm_buf, cnorm, 1,
++            call MPI_ALLREDUCE( [cnorm_buf], buf2, 1,
+      &           MPI_DOUBLE_COMPLEX, MPI_SUM, comm, ierr )
+-             rnorm1 = sqrt( dlapy2(dble(cnorm),dimag(cnorm)) )
++            cnorm = buf2(1)
++            rnorm1 = sqrt( dlapy2(dble(cnorm),dimag(cnorm)) )
+          else if (bmat .eq. 'I') then
+              rnorm1 = pdznorm2(comm, n, resid, 1)
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0 ) then
+-            call pivout (comm, logfil, 1, j, ndigit,
++            call pivout (comm, logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 rtemp(1) = rnorm
+diff --git a/PARPACK/SRC/MPI/pznapps.f b/PARPACK/SRC/MPI/pznapps.f
+index 3e00c90..4952544 100644
+--- a/PARPACK/SRC/MPI/pznapps.f
++++ b/PARPACK/SRC/MPI/pznapps.f
+@@ -283,9 +283,9 @@ c
+          sigma = shift(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call pivout (comm, logfil, 1, jj, ndigit,
++            call pivout (comm, logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call pzvout (comm, logfil, 1, sigma, ndigit,
++            call pzvout (comm, logfil, 1, [sigma], ndigit,
+      &               '_napps: Value of the shift ')
+          end if
+ c
+@@ -306,9 +306,9 @@ c
+             if ( abs(dble(h(i+1,i)))
+      &           .le. max(ulp*tst1, smlnum) )  then
+                if (msglvl .gt. 0) then
+-                  call pivout (comm, logfil, 1, i, ndigit,
++                  call pivout (comm, logfil, 1, [i], ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call pivout (comm, logfil, 1, jj, ndigit,
++                  call pivout (comm, logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call pzvout (comm, logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -322,9 +322,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call pivout (comm, logfil, 1, istart, ndigit,
++             call pivout (comm, logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call pivout (comm, logfil, 1, iend, ndigit,
++             call pivout (comm, logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -500,7 +500,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call pzvout (comm, logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call pivout (comm, logfil, 1, kev, ndigit,
++         call pivout (comm, logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call pzmout (comm, logfil, kev, kev, h, ldh, ndigit,
+diff --git a/PARPACK/SRC/MPI/pznaup2.f b/PARPACK/SRC/MPI/pznaup2.f
+index bf3c201..7852197 100644
+--- a/PARPACK/SRC/MPI/pznaup2.f
++++ b/PARPACK/SRC/MPI/pznaup2.f
+@@ -237,7 +237,7 @@ c
+      &           nevbef, nev0 , np0,    eps23
+ c
+       Double precision
+-     &           cmpnorm_buf
++     &           cmpnorm_buf, buf2(1)
+ c
+ c     %-----------------------%
+ c     | Local array arguments |
+@@ -401,7 +401,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, iter, ndigit,
++            call pivout (comm, logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -414,9 +414,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call pivout (comm, logfil, 1, nev, ndigit,
++            call pivout (comm, logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -443,7 +443,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -674,7 +674,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call pivout (comm, logfil, 1, nconv, ndigit,
++            call pivout (comm, logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -714,7 +714,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call pivout (comm, logfil, 1, np, ndigit,
++            call pivout (comm, logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call pzvout (comm, logfil, np, ritz, ndigit,
+      &                  '_naup2: values of the shifts')
+@@ -771,8 +771,9 @@ c
+ c
+          if (bmat .eq. 'G') then
+             cmpnorm_buf = zdotc (n, resid, 1, workd, 1)
+-            call MPI_ALLREDUCE( cmpnorm_buf, cmpnorm, 1,
++            call MPI_ALLREDUCE( [cmpnorm_buf], buf2, 1,
+      &               MPI_DOUBLE_COMPLEX, MPI_SUM, comm, ierr )
++            cmpnorm = buf2(1)
+             rnorm = sqrt(dlapy2(dble(cmpnorm),dimag(cmpnorm)))
+          else if (bmat .eq. 'I') then
+             rnorm = pdznorm2(comm, n, resid, 1)
+@@ -780,7 +781,7 @@ c
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call pdvout (comm, logfil, 1, rnorm, ndigit,
++            call pdvout (comm, logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call pzmout (comm, logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/PARPACK/SRC/MPI/pznaupd.f b/PARPACK/SRC/MPI/pznaupd.f
+index 979402b..7d6ea4c 100644
+--- a/PARPACK/SRC/MPI/pznaupd.f
++++ b/PARPACK/SRC/MPI/pznaupd.f
+@@ -626,9 +626,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, mxiter, ndigit,
++         call pivout (comm, logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call pivout (comm, logfil, 1, np, ndigit,
++         call pivout (comm, logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call pzvout  (comm, logfil, np, workl(ritz), ndigit,
+      &               '_naupd: The final Ritz values')
+diff --git a/PARPACK/SRC/MPI/pzneupd.f b/PARPACK/SRC/MPI/pzneupd.f
+index 4bb1173..7b6e7fe 100644
+--- a/PARPACK/SRC/MPI/pzneupd.f
++++ b/PARPACK/SRC/MPI/pzneupd.f
+@@ -558,9 +558,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call pivout(comm, logfil, 1, numcnv, ndigit,
++             call pivout(comm, logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call pivout(comm, logfil, 1, nconv, ndigit,
++             call pivout(comm, logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/PARPACK/SRC/MPI/pzngets.f b/PARPACK/SRC/MPI/pzngets.f
+index 97bc407..cb58f5c 100644
+--- a/PARPACK/SRC/MPI/pzngets.f
++++ b/PARPACK/SRC/MPI/pzngets.f
+@@ -177,8 +177,8 @@ c
+       tcgets = tcgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call pivout (comm, logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call pivout (comm, logfil, 1, np, ndigit, '_ngets: NP is')
++         call pivout (comm, logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call pivout (comm, logfil, 1, [np], ndigit, '_ngets: NP is')
+          call pzvout (comm, logfil, kev+np, ritz, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix ')
+          call pzvout (comm, logfil, kev+np, bounds, ndigit,
+diff --git a/SRC/cgetv0.f b/SRC/cgetv0.f
+index 322b35c..a91ef92 100644
+--- a/SRC/cgetv0.f
++++ b/SRC/cgetv0.f
+@@ -361,9 +361,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call svout (logfil, 1, rnorm0, ndigit,
++          call svout (logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call svout (logfil, 1, rnorm, ndigit,
++          call svout (logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+@@ -394,7 +394,7 @@ c
+    50 continue
+ c
+       if (msglvl .gt. 0) then
+-         call svout (logfil, 1, rnorm, ndigit,
++         call svout (logfil, 1, [rnorm], ndigit,
+      &        '_getv0: B-norm of initial / restarted starting vector')
+       end if
+       if (msglvl .gt. 2) then
+diff --git a/SRC/cnaitr.f b/SRC/cnaitr.f
+index 2bb93ff..bebd823 100644
+--- a/SRC/cnaitr.f
++++ b/SRC/cnaitr.f
+@@ -378,9 +378,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call svout (logfil, 1, rnorm, ndigit,
++            call svout (logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -400,7 +400,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call ivout (logfil, 1, j, ndigit,
++               call ivout (logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -729,7 +729,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0 ) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 rtemp(1) = rnorm
+diff --git a/SRC/cnapps.f b/SRC/cnapps.f
+index fdf878d..c3a5562 100644
+--- a/SRC/cnapps.f
++++ b/SRC/cnapps.f
+@@ -268,9 +268,9 @@ c
+          sigma = shift(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call ivout (logfil, 1, jj, ndigit,
++            call ivout (logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call cvout (logfil, 1, sigma, ndigit,
++            call cvout (logfil, 1, [sigma], ndigit,
+      &               '_napps: Value of the shift ')
+          end if
+ c
+@@ -291,9 +291,9 @@ c
+             if ( abs(real(h(i+1,i)))
+      &           .le. max(ulp*tst1, smlnum) )  then
+                if (msglvl .gt. 0) then
+-                  call ivout (logfil, 1, i, ndigit,
++                  call ivout (logfil, 1, [i], ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call ivout (logfil, 1, jj, ndigit,
++                  call ivout (logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call cvout (logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -307,9 +307,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call ivout (logfil, 1, istart, ndigit,
++             call ivout (logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call ivout (logfil, 1, iend, ndigit,
++             call ivout (logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -485,7 +485,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call cvout (logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call ivout (logfil, 1, kev, ndigit,
++         call ivout (logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call cmout (logfil, kev, kev, h, ldh, ndigit,
+diff --git a/SRC/cnaup2.f b/SRC/cnaup2.f
+index e528a89..3f106f0 100644
+--- a/SRC/cnaup2.f
++++ b/SRC/cnaup2.f
+@@ -389,7 +389,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, iter, ndigit,
++            call ivout (logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -402,9 +402,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call ivout (logfil, 1, nev, ndigit,
++            call ivout (logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -430,7 +430,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call svout (logfil, 1, rnorm, ndigit,
++            call svout (logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -658,7 +658,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, nconv, ndigit,
++            call ivout (logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -698,7 +698,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call cvout (logfil, np, ritz, ndigit,
+      &                  '_naup2: values of the shifts')
+@@ -762,7 +762,7 @@ c
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call svout (logfil, 1, rnorm, ndigit,
++            call svout (logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call cmout (logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/SRC/cnaupd.f b/SRC/cnaupd.f
+index 7bf37fd..57be328 100644
+--- a/SRC/cnaupd.f
++++ b/SRC/cnaupd.f
+@@ -601,9 +601,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, mxiter, ndigit,
++         call ivout (logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call ivout (logfil, 1, np, ndigit,
++         call ivout (logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call cvout (logfil, np, workl(ritz), ndigit,
+      &               '_naupd: The final Ritz values')
+diff --git a/SRC/cneupd.f b/SRC/cneupd.f
+index c557fa0..34a78f7 100644
+--- a/SRC/cneupd.f
++++ b/SRC/cneupd.f
+@@ -536,9 +536,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call ivout(logfil, 1, numcnv, ndigit,
++             call ivout(logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call ivout(logfil, 1, nconv, ndigit,
++             call ivout(logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/SRC/cngets.f b/SRC/cngets.f
+index 7686e13..20626a2 100644
+--- a/SRC/cngets.f
++++ b/SRC/cngets.f
+@@ -161,8 +161,8 @@ c
+       tcgets = tcgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call ivout (logfil, 1, np, ndigit, '_ngets: NP is')
++         call ivout (logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call ivout (logfil, 1, [np], ndigit, '_ngets: NP is')
+          call cvout (logfil, kev+np, ritz, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix ')
+          call cvout (logfil, kev+np, bounds, ndigit,
+diff --git a/SRC/dgetv0.f b/SRC/dgetv0.f
+index fbb4fe2..1d6dc01 100644
+--- a/SRC/dgetv0.f
++++ b/SRC/dgetv0.f
+@@ -366,9 +366,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call dvout (logfil, 1, rnorm0, ndigit,
++          call dvout (logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call dvout (logfil, 1, rnorm, ndigit,
++          call dvout (logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+@@ -399,7 +399,7 @@ c
+    50 continue
+ c
+       if (msglvl .gt. 0) then
+-         call dvout (logfil, 1, rnorm, ndigit,
++         call dvout (logfil, 1, [rnorm], ndigit,
+      &        '_getv0: B-norm of initial / restarted starting vector')
+       end if
+       if (msglvl .gt. 3) then
+diff --git a/SRC/dnaitr.f b/SRC/dnaitr.f
+index baaec03..c02cd39 100644
+--- a/SRC/dnaitr.f
++++ b/SRC/dnaitr.f
+@@ -371,9 +371,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call dvout (logfil, 1, rnorm, ndigit,
++            call dvout (logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -393,7 +393,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call ivout (logfil, 1, j, ndigit,
++               call ivout (logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -721,7 +721,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/SRC/dnapps.f b/SRC/dnapps.f
+index 872d35a..7fb37d8 100644
+--- a/SRC/dnapps.f
++++ b/SRC/dnapps.f
+@@ -266,11 +266,11 @@ c
+          sigmai = shifti(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call ivout (logfil, 1, jj, ndigit,
++            call ivout (logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call dvout (logfil, 1, sigmar, ndigit,
++            call dvout (logfil, 1, [sigmar], ndigit,
+      &               '_napps: The real part of the shift ')
+-            call dvout (logfil, 1, sigmai, ndigit,
++            call dvout (logfil, 1, [sigmai], ndigit,
+      &               '_napps: The imaginary part of the shift ')
+          end if
+ c
+@@ -335,9 +335,9 @@ c
+      &         tst1 = dlanhs( '1', kplusp-jj+1, h, ldh, workl )
+             if( abs( h( i+1,i ) ).le.max( ulp*tst1, smlnum ) ) then
+                if (msglvl .gt. 0) then
+-                  call ivout (logfil, 1, i, ndigit,
++                  call ivout (logfil, 1, [i], ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call ivout (logfil, 1, jj, ndigit,
++                  call ivout (logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call dvout (logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -351,9 +351,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call ivout (logfil, 1, istart, ndigit,
++             call ivout (logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call ivout (logfil, 1, iend, ndigit,
++             call ivout (logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -627,7 +627,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call dvout (logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call ivout (logfil, 1, kev, ndigit,
++         call ivout (logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call dmout (logfil, kev, kev, h, ldh, ndigit,
+diff --git a/SRC/dnaup2.f b/SRC/dnaup2.f
+index 4c9948d..18ad20a 100644
+--- a/SRC/dnaup2.f
++++ b/SRC/dnaup2.f
+@@ -388,7 +388,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, iter, ndigit,
++            call ivout (logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -401,9 +401,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call ivout (logfil, 1, nev, ndigit,
++            call ivout (logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -435,7 +435,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call dvout  (logfil, 1, rnorm, ndigit,
++            call dvout  (logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -689,7 +689,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, nconv, ndigit,
++            call ivout (logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -741,7 +741,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call dvout  (logfil, np, ritzr, ndigit,
+      &                  '_naup2: Real part of the shifts')
+@@ -807,7 +807,7 @@ c
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call dvout  (logfil, 1, rnorm, ndigit,
++            call dvout  (logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call dmout  (logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/SRC/dnaupd.f b/SRC/dnaupd.f
+index 51d3018..dcf1f77 100644
+--- a/SRC/dnaupd.f
++++ b/SRC/dnaupd.f
+@@ -628,9 +628,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, mxiter, ndigit,
++         call ivout (logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call ivout (logfil, 1, np, ndigit,
++         call ivout (logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call dvout  (logfil, np, workl(ritzr), ndigit,
+      &               '_naupd: Real part of the final Ritz values')
+diff --git a/SRC/dneupd.f b/SRC/dneupd.f
+index 424ad2b..9c2ece0 100644
+--- a/SRC/dneupd.f
++++ b/SRC/dneupd.f
+@@ -601,9 +601,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call ivout(logfil, 1, numcnv, ndigit,
++             call ivout(logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call ivout(logfil, 1, nconv, ndigit,
++             call ivout(logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/SRC/dngets.f b/SRC/dngets.f
+index a314550..47d3ac2 100644
+--- a/SRC/dngets.f
++++ b/SRC/dngets.f
+@@ -212,8 +212,8 @@ c
+       tngets = tngets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call ivout (logfil, 1, np, ndigit, '_ngets: NP is')
++         call ivout (logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call ivout (logfil, 1, [np], ndigit, '_ngets: NP is')
+          call dvout (logfil, kev+np, ritzr, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix -- real part')
+          call dvout (logfil, kev+np, ritzi, ndigit,
+diff --git a/SRC/dsaitr.f b/SRC/dsaitr.f
+index 00dabfd..3460d99 100644
+--- a/SRC/dsaitr.f
++++ b/SRC/dsaitr.f
+@@ -364,9 +364,9 @@ c
+  1000 continue
+ c
+          if (msglvl .gt. 2) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &                  '_saitr: generating Arnoldi vector no.')
+-            call dvout (logfil, 1, rnorm, ndigit,
++            call dvout (logfil, 1, [rnorm], ndigit,
+      &                  '_saitr: B-norm of the current residual =')
+          end if
+ c
+@@ -384,7 +384,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call ivout (logfil, 1, j, ndigit,
++               call ivout (logfil, 1, [j], ndigit,
+      &                     '_saitr: ****** restart at step ******')
+             end if
+ c
+@@ -735,7 +735,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &           '_saitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/SRC/dsapps.f b/SRC/dsapps.f
+index 12108d0..f84ef83 100644
+--- a/SRC/dsapps.f
++++ b/SRC/dsapps.f
+@@ -261,9 +261,9 @@ c
+             big   = abs(h(i,2)) + abs(h(i+1,2))
+             if (h(i+1,1) .le. epsmch*big) then
+                if (msglvl .gt. 0) then
+-                  call ivout (logfil, 1, i, ndigit,
++                  call ivout (logfil, 1, [i], ndigit,
+      &                 '_sapps: deflation at row/column no.')
+-                  call ivout (logfil, 1, jj, ndigit,
++                  call ivout (logfil, 1, [jj], ndigit,
+      &                 '_sapps: occurred before shift number.')
+                   call dvout (logfil, 1, h(i+1,1), ndigit,
+      &                 '_sapps: the corresponding off diagonal element')
+@@ -432,7 +432,7 @@ c
+          big   = abs(h(i,2)) + abs(h(i+1,2))
+          if (h(i+1,1) .le. epsmch*big) then
+             if (msglvl .gt. 0) then
+-               call ivout (logfil, 1, i, ndigit,
++               call ivout (logfil, 1, [i], ndigit,
+      &              '_sapps: deflation at row/column no.')
+                call dvout (logfil, 1, h(i+1,1), ndigit,
+      &              '_sapps: the corresponding off diagonal element')
+diff --git a/SRC/dsaup2.f b/SRC/dsaup2.f
+index f4c5f90..f7d4a11 100644
+--- a/SRC/dsaup2.f
++++ b/SRC/dsaup2.f
+@@ -402,13 +402,13 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, iter, ndigit,
++            call ivout (logfil, 1, [iter], ndigit,
+      &           '_saup2: **** Start of major iteration number ****')
+          end if
+          if (msglvl .gt. 1) then
+-            call ivout (logfil, 1, nev, ndigit,
++            call ivout (logfil, 1, [nev], ndigit,
+      &     '_saup2: The length of the current Lanczos factorization')
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &           '_saup2: Extend the Lanczos factorization by')
+          end if
+ c
+@@ -446,7 +446,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call dvout (logfil, 1, rnorm, ndigit,
++            call dvout (logfil, 1, [rnorm], ndigit,
+      &           '_saup2: Current B-norm of residual for factorization')
+          end if
+ c
+@@ -695,7 +695,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, nconv, ndigit,
++            call ivout (logfil, 1, [nconv], ndigit,
+      &           '_saup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -743,7 +743,7 @@ c
+          if (ishift .eq. 0) call dcopy (np, workl, 1, ritz, 1)
+ c
+          if (msglvl .gt. 2) then
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &                  '_saup2: The number of shifts to apply ')
+             call dvout (logfil, np, workl, ndigit,
+      &                  '_saup2: shifts selected')
+@@ -810,7 +810,7 @@ c
+   130    continue
+ c
+          if (msglvl .gt. 2) then
+-            call dvout (logfil, 1, rnorm, ndigit,
++            call dvout (logfil, 1, [rnorm], ndigit,
+      &      '_saup2: B-norm of residual for NEV factorization')
+             call dvout (logfil, nev, h(1,2), ndigit,
+      &           '_saup2: main diagonal of compressed H matrix')
+diff --git a/SRC/dsaupd.f b/SRC/dsaupd.f
+index bd4afc2..c5b08d6 100644
+--- a/SRC/dsaupd.f
++++ b/SRC/dsaupd.f
+@@ -628,9 +628,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, mxiter, ndigit,
++         call ivout (logfil, 1, [mxiter], ndigit,
+      &               '_saupd: number of update iterations taken')
+-         call ivout (logfil, 1, np, ndigit,
++         call ivout (logfil, 1, [np], ndigit,
+      &               '_saupd: number of "converged" Ritz values')
+          call dvout  (logfil, np, workl(Ritz), ndigit,
+      &               '_saupd: final Ritz values')
+diff --git a/SRC/dseupd.f b/SRC/dseupd.f
+index e89fdcc..ae123a2 100644
+--- a/SRC/dseupd.f
++++ b/SRC/dseupd.f
+@@ -513,9 +513,9 @@ c        | caused by incorrect passing of the _saupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call ivout(logfil, 1, numcnv, ndigit,
++             call ivout(logfil, 1, [numcnv], ndigit,
+      &            '_seupd: Number of specified eigenvalues')
+-             call ivout(logfil, 1, nconv, ndigit,
++             call ivout(logfil, 1, [nconv], ndigit,
+      &            '_seupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/SRC/dsgets.f b/SRC/dsgets.f
+index 800a02f..436a4fe 100644
+--- a/SRC/dsgets.f
++++ b/SRC/dsgets.f
+@@ -202,8 +202,8 @@ c
+       tsgets = tsgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, kev, ndigit, '_sgets: KEV is')
+-         call ivout (logfil, 1, np, ndigit, '_sgets: NP is')
++         call ivout (logfil, 1, [kev], ndigit, '_sgets: KEV is')
++         call ivout (logfil, 1, [np], ndigit, '_sgets: NP is')
+          call dvout (logfil, kev+np, ritz, ndigit,
+      &        '_sgets: Eigenvalues of current H matrix')
+          call dvout (logfil, kev+np, bounds, ndigit,
+diff --git a/SRC/sgetv0.f b/SRC/sgetv0.f
+index c768daa..d861b2d 100644
+--- a/SRC/sgetv0.f
++++ b/SRC/sgetv0.f
+@@ -366,9 +366,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call svout (logfil, 1, rnorm0, ndigit,
++          call svout (logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call svout (logfil, 1, rnorm, ndigit,
++          call svout (logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+@@ -399,7 +399,7 @@ c
+    50 continue
+ c
+       if (msglvl .gt. 0) then
+-         call svout (logfil, 1, rnorm, ndigit,
++         call svout (logfil, 1, [rnorm], ndigit,
+      &        '_getv0: B-norm of initial / restarted starting vector')
+       end if
+       if (msglvl .gt. 3) then
+diff --git a/SRC/snaitr.f b/SRC/snaitr.f
+index 5ecdebb..8a5d795 100644
+--- a/SRC/snaitr.f
++++ b/SRC/snaitr.f
+@@ -371,9 +371,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call svout (logfil, 1, rnorm, ndigit,
++            call svout (logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -393,7 +393,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call ivout (logfil, 1, j, ndigit,
++               call ivout (logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -721,7 +721,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/SRC/snapps.f b/SRC/snapps.f
+index 914c9b8..9b76728 100644
+--- a/SRC/snapps.f
++++ b/SRC/snapps.f
+@@ -266,11 +266,11 @@ c
+          sigmai = shifti(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call ivout (logfil, 1, jj, ndigit,
++            call ivout (logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call svout (logfil, 1, sigmar, ndigit,
++            call svout (logfil, 1, [sigmar], ndigit,
+      &               '_napps: The real part of the shift ')
+-            call svout (logfil, 1, sigmai, ndigit,
++            call svout (logfil, 1, [sigmai], ndigit,
+      &               '_napps: The imaginary part of the shift ')
+          end if
+ c
+@@ -335,9 +335,9 @@ c
+      &         tst1 = slanhs( '1', kplusp-jj+1, h, ldh, workl )
+             if( abs( h( i+1,i ) ).le.max( ulp*tst1, smlnum ) ) then
+                if (msglvl .gt. 0) then
+-                  call ivout (logfil, 1, i, ndigit,
++                  call ivout (logfil, 1, [i], ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call ivout (logfil, 1, jj, ndigit,
++                  call ivout (logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call svout (logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -351,9 +351,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call ivout (logfil, 1, istart, ndigit,
++             call ivout (logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call ivout (logfil, 1, iend, ndigit,
++             call ivout (logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -625,7 +625,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call svout (logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call ivout (logfil, 1, kev, ndigit,
++         call ivout (logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call smout (logfil, kev, kev, h, ldh, ndigit,
+diff --git a/SRC/snaup2.f b/SRC/snaup2.f
+index 53e3946..12b2cfe 100644
+--- a/SRC/snaup2.f
++++ b/SRC/snaup2.f
+@@ -388,7 +388,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, iter, ndigit,
++            call ivout (logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -401,9 +401,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call ivout (logfil, 1, nev, ndigit,
++            call ivout (logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -435,7 +435,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call svout (logfil, 1, rnorm, ndigit,
++            call svout (logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -690,7 +690,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, nconv, ndigit,
++            call ivout (logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -742,7 +742,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call svout (logfil, np, ritzr, ndigit,
+      &                  '_naup2: Real part of the shifts')
+@@ -808,7 +808,7 @@ c
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call svout (logfil, 1, rnorm, ndigit,
++            call svout (logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call smout (logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/SRC/snaupd.f b/SRC/snaupd.f
+index 19284d0..e0be1bf 100644
+--- a/SRC/snaupd.f
++++ b/SRC/snaupd.f
+@@ -628,9 +628,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, mxiter, ndigit,
++         call ivout (logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call ivout (logfil, 1, np, ndigit,
++         call ivout (logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call svout (logfil, np, workl(ritzr), ndigit,
+      &               '_naupd: Real part of the final Ritz values')
+diff --git a/SRC/sneupd.f b/SRC/sneupd.f
+index ecd8f16..4c472fe 100644
+--- a/SRC/sneupd.f
++++ b/SRC/sneupd.f
+@@ -601,9 +601,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call ivout(logfil, 1, numcnv, ndigit,
++             call ivout(logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call ivout(logfil, 1, nconv, ndigit,
++             call ivout(logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/SRC/sngets.f b/SRC/sngets.f
+index 800282f..7e48c0b 100644
+--- a/SRC/sngets.f
++++ b/SRC/sngets.f
+@@ -212,8 +212,8 @@ c
+       tngets = tngets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call ivout (logfil, 1, np, ndigit, '_ngets: NP is')
++         call ivout (logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call ivout (logfil, 1, [np], ndigit, '_ngets: NP is')
+          call svout (logfil, kev+np, ritzr, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix -- real part')
+          call svout (logfil, kev+np, ritzi, ndigit,
+diff --git a/SRC/ssaitr.f b/SRC/ssaitr.f
+index 721bdb5..a5df2c2 100644
+--- a/SRC/ssaitr.f
++++ b/SRC/ssaitr.f
+@@ -364,9 +364,9 @@ c
+  1000 continue
+ c
+          if (msglvl .gt. 2) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &                  '_saitr: generating Arnoldi vector no.')
+-            call svout (logfil, 1, rnorm, ndigit,
++            call svout (logfil, 1, [rnorm], ndigit,
+      &                  '_saitr: B-norm of the current residual =')
+          end if
+ c
+@@ -384,7 +384,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call ivout (logfil, 1, j, ndigit,
++               call ivout (logfil, 1, [j], ndigit,
+      &                     '_saitr: ****** restart at step ******')
+             end if
+ c
+@@ -735,7 +735,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &           '_saitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 xtemp(1) = rnorm
+diff --git a/SRC/ssapps.f b/SRC/ssapps.f
+index c814311..77bd9d5 100644
+--- a/SRC/ssapps.f
++++ b/SRC/ssapps.f
+@@ -261,9 +261,9 @@ c
+             big   = abs(h(i,2)) + abs(h(i+1,2))
+             if (h(i+1,1) .le. epsmch*big) then
+                if (msglvl .gt. 0) then
+-                  call ivout (logfil, 1, i, ndigit,
++                  call ivout (logfil, 1, [i], ndigit,
+      &                 '_sapps: deflation at row/column no.')
+-                  call ivout (logfil, 1, jj, ndigit,
++                  call ivout (logfil, 1, [jj], ndigit,
+      &                 '_sapps: occurred before shift number.')
+                   call svout (logfil, 1, h(i+1,1), ndigit,
+      &                 '_sapps: the corresponding off diagonal element')
+@@ -432,7 +432,7 @@ c
+          big   = abs(h(i,2)) + abs(h(i+1,2))
+          if (h(i+1,1) .le. epsmch*big) then
+             if (msglvl .gt. 0) then
+-               call ivout (logfil, 1, i, ndigit,
++               call ivout (logfil, 1, [i], ndigit,
+      &              '_sapps: deflation at row/column no.')
+                call svout (logfil, 1, h(i+1,1), ndigit,
+      &              '_sapps: the corresponding off diagonal element')
+diff --git a/SRC/ssaup2.f b/SRC/ssaup2.f
+index a73c9a5..8cc0463 100644
+--- a/SRC/ssaup2.f
++++ b/SRC/ssaup2.f
+@@ -402,13 +402,13 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, iter, ndigit,
++            call ivout (logfil, 1, [iter], ndigit,
+      &           '_saup2: **** Start of major iteration number ****')
+          end if
+          if (msglvl .gt. 1) then
+-            call ivout (logfil, 1, nev, ndigit,
++            call ivout (logfil, 1, [nev], ndigit,
+      &     '_saup2: The length of the current Lanczos factorization')
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &           '_saup2: Extend the Lanczos factorization by')
+          end if
+ c
+@@ -446,7 +446,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call svout (logfil, 1, rnorm, ndigit,
++            call svout (logfil, 1, [rnorm], ndigit,
+      &           '_saup2: Current B-norm of residual for factorization')
+          end if
+ c
+@@ -694,7 +694,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, nconv, ndigit,
++            call ivout (logfil, 1, [nconv], ndigit,
+      &           '_saup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -742,7 +742,7 @@ c
+          if (ishift .eq. 0) call scopy (np, workl, 1, ritz, 1)
+ c
+          if (msglvl .gt. 2) then
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &                  '_saup2: The number of shifts to apply ')
+             call svout (logfil, np, workl, ndigit,
+      &                  '_saup2: shifts selected')
+@@ -809,7 +809,7 @@ c
+   130    continue
+ c
+          if (msglvl .gt. 2) then
+-            call svout (logfil, 1, rnorm, ndigit,
++            call svout (logfil, 1, [rnorm], ndigit,
+      &      '_saup2: B-norm of residual for NEV factorization')
+             call svout (logfil, nev, h(1,2), ndigit,
+      &           '_saup2: main diagonal of compressed H matrix')
+diff --git a/SRC/ssaupd.f b/SRC/ssaupd.f
+index d139ac5..a8d2f2d 100644
+--- a/SRC/ssaupd.f
++++ b/SRC/ssaupd.f
+@@ -628,9 +628,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, mxiter, ndigit,
++         call ivout (logfil, 1, [mxiter], ndigit,
+      &               '_saupd: number of update iterations taken')
+-         call ivout (logfil, 1, np, ndigit,
++         call ivout (logfil, 1, [np], ndigit,
+      &               '_saupd: number of "converged" Ritz values')
+          call svout (logfil, np, workl(Ritz), ndigit,
+      &               '_saupd: final Ritz values')
+diff --git a/SRC/sseupd.f b/SRC/sseupd.f
+index 9b94ed7..03ba7ac 100644
+--- a/SRC/sseupd.f
++++ b/SRC/sseupd.f
+@@ -513,9 +513,9 @@ c        | caused by incorrect passing of the _saupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call ivout(logfil, 1, numcnv, ndigit,
++             call ivout(logfil, 1, [numcnv], ndigit,
+      &            '_seupd: Number of specified eigenvalues')
+-             call ivout(logfil, 1, nconv, ndigit,
++             call ivout(logfil, 1, [nconv], ndigit,
+      &            '_seupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/SRC/ssgets.f b/SRC/ssgets.f
+index ce84d67..f40ca76 100644
+--- a/SRC/ssgets.f
++++ b/SRC/ssgets.f
+@@ -202,8 +202,8 @@ c
+       tsgets = tsgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, kev, ndigit, '_sgets: KEV is')
+-         call ivout (logfil, 1, np, ndigit, '_sgets: NP is')
++         call ivout (logfil, 1, [kev], ndigit, '_sgets: KEV is')
++         call ivout (logfil, 1, [np], ndigit, '_sgets: NP is')
+          call svout (logfil, kev+np, ritz, ndigit,
+      &        '_sgets: Eigenvalues of current H matrix')
+          call svout (logfil, kev+np, bounds, ndigit,
+diff --git a/SRC/zgetv0.f b/SRC/zgetv0.f
+index d71f3c0..ff5c2b1 100644
+--- a/SRC/zgetv0.f
++++ b/SRC/zgetv0.f
+@@ -361,9 +361,9 @@ c     | Check for further orthogonalization. |
+ c     %--------------------------------------%
+ c
+       if (msglvl .gt. 2) then
+-          call dvout (logfil, 1, rnorm0, ndigit,
++          call dvout (logfil, 1, [rnorm0], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm0 is')
+-          call dvout (logfil, 1, rnorm, ndigit,
++          call dvout (logfil, 1, [rnorm], ndigit,
+      &                '_getv0: re-orthonalization ; rnorm is')
+       end if
+ c
+@@ -394,7 +394,7 @@ c
+    50 continue
+ c
+       if (msglvl .gt. 0) then
+-         call dvout (logfil, 1, rnorm, ndigit,
++         call dvout (logfil, 1, [rnorm], ndigit,
+      &        '_getv0: B-norm of initial / restarted starting vector')
+       end if
+       if (msglvl .gt. 2) then
+diff --git a/SRC/znaitr.f b/SRC/znaitr.f
+index b8331c0..1c5aa57 100644
+--- a/SRC/znaitr.f
++++ b/SRC/znaitr.f
+@@ -378,9 +378,9 @@ c     %--------------------------------------------------------------%
+  1000 continue
+ c
+          if (msglvl .gt. 1) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &                  '_naitr: generating Arnoldi vector number')
+-            call dvout (logfil, 1, rnorm, ndigit,
++            call dvout (logfil, 1, [rnorm], ndigit,
+      &                  '_naitr: B-norm of the current residual is')
+          end if
+ c
+@@ -400,7 +400,7 @@ c           | basis and continue the iteration.                 |
+ c           %---------------------------------------------------%
+ c
+             if (msglvl .gt. 0) then
+-               call ivout (logfil, 1, j, ndigit,
++               call ivout (logfil, 1, [j], ndigit,
+      &                     '_naitr: ****** RESTART AT STEP ******')
+             end if
+ c
+@@ -729,7 +729,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0 .and. iter .gt. 0 ) then
+-            call ivout (logfil, 1, j, ndigit,
++            call ivout (logfil, 1, [j], ndigit,
+      &           '_naitr: Iterative refinement for Arnoldi residual')
+             if (msglvl .gt. 2) then
+                 rtemp(1) = rnorm
+diff --git a/SRC/znapps.f b/SRC/znapps.f
+index a1f116d..6d8d12a 100644
+--- a/SRC/znapps.f
++++ b/SRC/znapps.f
+@@ -268,9 +268,9 @@ c
+          sigma = shift(jj)
+ c
+          if (msglvl .gt. 2 ) then
+-            call ivout (logfil, 1, jj, ndigit,
++            call ivout (logfil, 1, [jj], ndigit,
+      &               '_napps: shift number.')
+-            call zvout (logfil, 1, sigma, ndigit,
++            call zvout (logfil, 1, [sigma], ndigit,
+      &               '_napps: Value of the shift ')
+          end if
+ c
+@@ -291,9 +291,9 @@ c
+             if ( abs(dble(h(i+1,i)))
+      &           .le. max(ulp*tst1, smlnum) )  then
+                if (msglvl .gt. 0) then
+-                  call ivout (logfil, 1, i, ndigit,
++                  call ivout (logfil, 1, [i], ndigit,
+      &                 '_napps: matrix splitting at row/column no.')
+-                  call ivout (logfil, 1, jj, ndigit,
++                  call ivout (logfil, 1, [jj], ndigit,
+      &                 '_napps: matrix splitting with shift number.')
+                   call zvout (logfil, 1, h(i+1,i), ndigit,
+      &                 '_napps: off diagonal element.')
+@@ -307,9 +307,9 @@ c
+    40    continue
+ c
+          if (msglvl .gt. 2) then
+-             call ivout (logfil, 1, istart, ndigit,
++             call ivout (logfil, 1, [istart], ndigit,
+      &                   '_napps: Start of current block ')
+-             call ivout (logfil, 1, iend, ndigit,
++             call ivout (logfil, 1, [iend], ndigit,
+      &                   '_napps: End of current block ')
+          end if
+ c
+@@ -485,7 +485,7 @@ c
+      &        '_napps: sigmak = (e_{kev+p}^T*Q)*e_{kev}')
+          call zvout (logfil, 1, h(kev+1,kev), ndigit,
+      &        '_napps: betak = e_{kev+1}^T*H*e_{kev}')
+-         call ivout (logfil, 1, kev, ndigit,
++         call ivout (logfil, 1, [kev], ndigit,
+      &               '_napps: Order of the final Hessenberg matrix ')
+          if (msglvl .gt. 2) then
+             call zmout (logfil, kev, kev, h, ldh, ndigit,
+diff --git a/SRC/znaup2.f b/SRC/znaup2.f
+index 469aafb..b814cf1 100644
+--- a/SRC/znaup2.f
++++ b/SRC/znaup2.f
+@@ -389,7 +389,7 @@ c
+          iter = iter + 1
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, iter, ndigit,
++            call ivout (logfil, 1, [iter], ndigit,
+      &           '_naup2: **** Start of major iteration number ****')
+          end if
+ c
+@@ -402,9 +402,9 @@ c
+          np  = kplusp - nev
+ c
+          if (msglvl .gt. 1) then
+-            call ivout (logfil, 1, nev, ndigit,
++            call ivout (logfil, 1, [nev], ndigit,
+      &     '_naup2: The length of the current Arnoldi factorization')
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &           '_naup2: Extend the Arnoldi factorization by')
+          end if
+ c
+@@ -430,7 +430,7 @@ c
+          update = .false.
+ c
+          if (msglvl .gt. 1) then
+-            call dvout  (logfil, 1, rnorm, ndigit,
++            call dvout  (logfil, 1, [rnorm], ndigit,
+      &           '_naup2: Corresponding B-norm of the residual')
+          end if
+ c
+@@ -658,7 +658,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 0) then
+-            call ivout (logfil, 1, nconv, ndigit,
++            call ivout (logfil, 1, [nconv], ndigit,
+      &           '_naup2: no. of "converged" Ritz values at this iter.')
+             if (msglvl .gt. 1) then
+                kp(1) = nev
+@@ -698,7 +698,7 @@ c
+          end if
+ c
+          if (msglvl .gt. 2) then
+-            call ivout (logfil, 1, np, ndigit,
++            call ivout (logfil, 1, [np], ndigit,
+      &                  '_naup2: The number of shifts to apply ')
+             call zvout  (logfil, np, ritz, ndigit,
+      &                  '_naup2: values of the shifts')
+@@ -762,7 +762,7 @@ c
+          cnorm = .false.
+ c
+          if (msglvl .gt. 2) then
+-            call dvout  (logfil, 1, rnorm, ndigit,
++            call dvout  (logfil, 1, [rnorm], ndigit,
+      &      '_naup2: B-norm of residual for compressed factorization')
+             call zmout  (logfil, nev, nev, h, ldh, ndigit,
+      &        '_naup2: Compressed upper Hessenberg matrix H')
+diff --git a/SRC/znaupd.f b/SRC/znaupd.f
+index 779eb2b..c7d58aa 100644
+--- a/SRC/znaupd.f
++++ b/SRC/znaupd.f
+@@ -601,9 +601,9 @@ c
+       if (info .eq. 2) info = 3
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, mxiter, ndigit,
++         call ivout (logfil, 1, [mxiter], ndigit,
+      &               '_naupd: Number of update iterations taken')
+-         call ivout (logfil, 1, np, ndigit,
++         call ivout (logfil, 1, [np], ndigit,
+      &               '_naupd: Number of wanted "converged" Ritz values')
+          call zvout  (logfil, np, workl(ritz), ndigit,
+      &               '_naupd: The final Ritz values')
+diff --git a/SRC/zneupd.f b/SRC/zneupd.f
+index f1eb68a..9889e30 100644
+--- a/SRC/zneupd.f
++++ b/SRC/zneupd.f
+@@ -536,9 +536,9 @@ c        | caused by incorrect passing of the dnaupd data.           |
+ c        %-----------------------------------------------------------%
+ c
+          if (msglvl .gt. 2) then
+-             call ivout(logfil, 1, numcnv, ndigit,
++             call ivout(logfil, 1, [numcnv], ndigit,
+      &            '_neupd: Number of specified eigenvalues')
+-             call ivout(logfil, 1, nconv, ndigit,
++             call ivout(logfil, 1, [nconv], ndigit,
+      &            '_neupd: Number of "converged" eigenvalues')
+          end if
+ c
+diff --git a/SRC/zngets.f b/SRC/zngets.f
+index 27f2580..e7d2433 100644
+--- a/SRC/zngets.f
++++ b/SRC/zngets.f
+@@ -161,8 +161,8 @@ c
+       tcgets = tcgets + (t1 - t0)
+ c
+       if (msglvl .gt. 0) then
+-         call ivout (logfil, 1, kev, ndigit, '_ngets: KEV is')
+-         call ivout (logfil, 1, np, ndigit, '_ngets: NP is')
++         call ivout (logfil, 1, [kev], ndigit, '_ngets: KEV is')
++         call ivout (logfil, 1, [np], ndigit, '_ngets: NP is')
+          call zvout (logfil, kev+np, ritz, ndigit,
+      &        '_ngets: Eigenvalues of current H matrix ')
+          call zvout (logfil, kev+np, bounds, ndigit,
