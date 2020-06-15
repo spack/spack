@@ -3945,7 +3945,7 @@ class SpecLexer(spack.parse.Lexer):
 
             # Filenames match before identifiers, so no initial filename
             # component is parsed as a spec (e.g., in subdir/spec.yaml)
-            (r'[/\w.-]+\.yaml[^\b]*', lambda scanner, v: self.token(FILE, v)),
+            (r'[/\w.-]+\.yaml$', lambda scanner, v: self.token(FILE, v)),
 
             # Hash match after filename. No valid filename can be a hash
             # (files end w/.yaml), but a hash can match a filename prefix.
@@ -4094,10 +4094,10 @@ class SpecParser(spack.parse.Parser):
            we backtrack from spec_from_file() and treat them as spec names.
 
         """
-        path = self.token.value.split(" ")[0]
+        path = self.token.value
 
         # don't treat builtin.yaml, builtin.yaml-cpp, etc. as filenames
-        if re.match(r'\w[\w.%@-]*$', path):
+        if re.match(spec_id_re, path):
             self.push_tokens([spack.parse.Token(ID, self.token.value)])
             return None
 

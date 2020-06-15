@@ -649,13 +649,6 @@ class TestSpecSyntax(object):
             'mvapich_foo ./libelf.yaml',
         ])
 
-    def test_nice_error_for_no_space_after_spec_filename(self):
-        """Ensure that omitted spaces don't give weird errors about hashes."""
-        self._check_raises(SpecFilenameError, [
-            '/bogus/path/libdwarf.yamlfoobar',
-            'libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml',
-        ])
-
     @pytest.mark.usefixtures('config')
     def test_yaml_spec_not_filename(self, mock_packages, tmpdir):
         with pytest.raises(spack.repo.UnknownPackageError):
