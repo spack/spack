@@ -188,6 +188,32 @@ class TestSpecSyntax(object):
             " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2"
             " ^stackwalker@8.1_1e arch=test-redhat6-x86")
 
+    def test_yaml_specs(self):
+        self.check_parse(
+            "yaml-cpp@0.1.8%intel@12.1"
+            " ^boost@3.1.4")
+        tempSpec = r"builtin.yaml-cpp%gcc"
+        self.check_parse(
+            tempSpec.strip("builtin."),
+            spec=tempSpec)
+        tempSpec = r"testrepo.yaml-cpp%gcc"
+        self.check_parse(
+            tempSpec.strip("testrepo."),
+            spec=tempSpec)
+        tempSpec = r"builtin.yaml-cpp@0.1.8%gcc"
+        self.check_parse(
+            tempSpec.strip("testrepo."),
+            spec=tempSpec)
+        tempSpec = r"builtin.yaml-cpp@0.1.8%gcc@7.2.0"
+        self.check_parse(
+            tempSpec.strip("builtin."),
+            spec=tempSpec)
+        tempSpec = r"builtin.yaml-cpp@0.1.8%gcc@7.2.0" \
+            r" ^boost@3.1.4"
+        self.check_parse(
+            tempSpec.strip("builtin."),
+            spec=tempSpec)
+
     def test_canonicalize(self):
         self.check_parse(
             "mvapich_foo"

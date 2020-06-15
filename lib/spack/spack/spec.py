@@ -4094,10 +4094,10 @@ class SpecParser(spack.parse.Parser):
            we backtrack from spec_from_file() and treat them as spec names.
 
         """
-        path = self.token.value
+        path = self.token.value.split(" ")[0]
 
         # don't treat builtin.yaml, builtin.yaml-cpp, etc. as filenames
-        if re.match(spec_id_re +"[w@%-]*"+ '$', path):
+        if re.match(r'\w[\w.%@-]*$', path):
             self.push_tokens([spack.parse.Token(ID, self.token.value)])
             return None
 
