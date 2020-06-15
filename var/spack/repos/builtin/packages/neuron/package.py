@@ -28,6 +28,7 @@ class Neuron(CMakePackage):
     patch("revert_Import3d_numerical_format.patch", when="@7.8.0:7.8.0b")
     # Patch which reverts d9605cb for not hanging on ExperimentalMechComplex
     patch("apply_79a4d2af_load_balance_fix.patch", when="@7.8.0b")
+    patch("fix_brew_py_18e97a2d.patch", when="@7.8.0c")
 
     version("develop", branch="master")
     version("7.8.0c",  commit="e529b4f", preferred=True)

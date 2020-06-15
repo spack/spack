@@ -1,0 +1,12 @@
+--- a/cmake/BuildOptionDefaults.cmake
++++ b/cmake/BuildOptionDefaults.cmake
+@@ -24,7 +24,8 @@ set(NRN_ENABLE_MOD_COMPATIBILITY_DEFAULT OFF)
+ set(NRN_ENABLE_REL_RPATH_DEFAULT OFF)
+ set(NRN_ENABLE_INTERNAL_READLINE_DEFAULT OFF)
+ 
+-set(NRN_MODULE_INSTALL_OPTIONS_DEFAULT "--home=${CMAKE_INSTALL_PREFIX}")
++# Some distributions may set the prefix. To avoid errors, unset it
++set(NRN_MODULE_INSTALL_OPTIONS_DEFAULT "--prefix= --home=${CMAKE_INSTALL_PREFIX}")
+ set(NRN_PYTHON_DYNAMIC_DEFAULT "")
+ set(NRN_MPI_DYNAMIC_DEFAULT "")
+ set(NRN_RX3D_OPT_LEVEL_DEFAULT "0")
