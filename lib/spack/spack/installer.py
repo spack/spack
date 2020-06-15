@@ -784,6 +784,9 @@ class PackageInstaller(object):
         The ``stop_before`` or ``stop_at`` arguments are removed from the
         installation arguments.
 
+        The last phase is also set to None if it is the last phase of the
+        package already
+
         Args:
             kwargs:
               ``stop_before``': stop before execution of this phase (or None)
@@ -800,6 +803,10 @@ class PackageInstaller(object):
                 self.pkg.last_phase not in self.pkg.phases:
             tty.die('\'{0}\' is not an allowed phase for package {1}'
                     .format(self.pkg.last_phase, self.pkg.name))
+        # If we got a last_phase, make sure it's not already last
+        if self.pkg.last_phase and \
+                self.pkg.last_phase == self.pkg.phases[-1]:
+            self.pkg.last_phase = None
 
     def _cleanup_all_tasks(self):
         """Cleanup all build tasks to include releasing their locks."""
@@ -1164,13 +1171,12 @@ class PackageInstaller(object):
             if task.compiler:
                 spack.compilers.add_compilers_to_config(
                     spack.compilers.find_compilers([pkg.spec.prefix]))
-
-        except StopIteration as e:
-            # A StopIteration exception means that do_install was asked to
-            # stop early from clients.
-            tty.msg('{0} {1}'.format(self.pid, str(e)))
-            tty.msg('Package stage directory : {0}'
-                    .format(pkg.stage.source_path))
+        except spack.build_environment.StopPhase as e:
+            # A StopPhase exception means that do_install was asked to
+            # stop early from clients, and is not an error at this point
+            tty.debug('{0} {1}'.format(self.pid, str(e)))
+            tty.debug('Package stage directory : {0}'
+                      .format(pkg.stage.source_path))
 
     _install_task.__doc__ += install_args_docstring
 

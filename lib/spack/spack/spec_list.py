@@ -121,38 +121,42 @@ class SpecList(object):
         self._constraints = None
         self._specs = None
 
+    def _parse_reference(self, name):
+        sigil = ''
+        name = name[1:]
+
+        # Parse specs as constraints
+        if name.startswith('^') or name.startswith('%'):
+            sigil = name[0]
+            name = name[1:]
+
+        # Make sure the reference is valid
+        if name not in self._reference:
+            msg = 'SpecList %s refers to ' % self.name
+            msg += 'named list %s ' % name
+            msg += 'which does not appear in its reference dict'
+            raise UndefinedReferenceError(msg)
+
+        return (name, sigil)
+
     def _expand_references(self, yaml):
         if isinstance(yaml, list):
-            for idx, item in enumerate(yaml):
-                if isinstance(item, string_types) and item.startswith('$'):
-                    # Reference type can add a constraint to items
-                    if item[1] in ('^', '%'):
-                        name = item[2:]
-                        sigil = item[1]
-                    else:
-                        name = item[1:]
-                        sigil = ''
-                    if name in self._reference:
-                        ret = [self._expand_references(i) for i in yaml[:idx]]
-                        ret += self._reference[name].specs_as_yaml_list
-                        ret += self._expand_references(yaml[idx + 1:])
+            ret = []
 
-                        # Add the sigil if we're mapping a sigil to a ref
-                        def sigilify(arg):
-                            if isinstance(arg, dict):
-                                if sigil:
-                                    arg['sigil'] = sigil
-                                return arg
-                            else:
-                                return sigil + arg
-                        return list(map(sigilify, ret))
-                    else:
-                        msg = 'SpecList %s refers to ' % self.name
-                        msg += 'named list %s ' % name
-                        msg += 'which does not appear in its reference dict'
-                        raise UndefinedReferenceError(msg)
-            # No references in this
-            return [self._expand_references(item) for item in yaml]
+            for item in yaml:
+                # if it's a reference, expand it
+                if isinstance(item, string_types) and item.startswith('$'):
+                    # replace the reference and apply the sigil if needed
+                    name, sigil = self._parse_reference(item)
+                    referent = [
+                        _sigilify(item, sigil)
+                        for item in self._reference[name].specs_as_yaml_list
+                    ]
+                    ret.extend(referent)
+                else:
+                    # else just recurse
+                    ret.append(self._expand_references(item))
+            return ret
         elif isinstance(yaml, dict):
             # There can't be expansions in dicts
             return dict((name, self._expand_references(val))
@@ -214,6 +218,15 @@ def _expand_matrix_constraints(object, specify=True):
         else:
             results.append(ordered_combo)
     return results
+
+
+def _sigilify(item, sigil):
+    if isinstance(item, dict):
+        if sigil:
+            item['sigil'] = sigil
+        return item
+    else:
+        return sigil + item
 
 
 class SpecListError(SpackError):

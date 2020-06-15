@@ -59,6 +59,9 @@ class Sbml(CMakePackage):
             description='Build with mono support')
     depends_on('mono', when="+mono")
 
+    variant('cpp', default=False,
+            description="All c++ includes should be under a namespace")
+
     depends_on('swig@2:', type='build')
     depends_on('cmake', type='build')
     depends_on('zlib')
@@ -76,7 +79,6 @@ class Sbml(CMakePackage):
             "-DENABLE_RENDER:BOOL=ON",
             "-DWITH_BZIP2:BOOL=ON",
             "-DWITH_CHECK:BOOL=OFF",
-            "-DWITH_CPP_NAMESPACE:BOOL=OFF",
             "-DWITH_DOXYGEN:BOOL=OFF",
             "-DWITH_EXAMPLES:BOOL=OFF",
             "-DWITH_EXPAT:BOOL=OFF",
@@ -86,6 +88,7 @@ class Sbml(CMakePackage):
             "-DWITH_XERCES:BOOL=OFF",
             "-DWITH_ZLIB:BOOL=ON",
         ]
+        args.append(self.define_from_variant('WITH_CPP_NAMESPACE', 'cpp'))
         if '+python' in spec:
             args.extend([
                 "-DWITH_PYTHON:BOOL=ON",
