@@ -628,14 +628,11 @@ class PyTensorflow(Package, CudaPackage):
                         'build --action_env TF_NEED_OPENCL_SYCL="0"\n'
                         'build --action_env LD_LIBRARY_PATH="' + slibs + '"',
                         '.tf_configure.bazelrc')
-        # for fcc
-        if spec.satisfies('@2.1.0:2.1.99%fj'):
-            filter_file('build:opt --copt=-march=native',
-                        'build:opt --copt=-march=armv8.2-a+sve',
-                        '.tf_configure.bazelrc')
-            filter_file('build:opt --host_copt=-march=native',
-                        'build:opt --host_copt=-march=armv8.2-a+sve',
-                        '.tf_configure.bazelrc')
+
+        filter_file('build:opt --copt=-march=native','',
+                    '.tf_configure.bazelrc')
+        filter_file('build:opt --host_copt=-march=native','',
+                    '.tf_configure.bazelrc')
 
     def build(self, spec, prefix):
         tmp_path = env['TEST_TMPDIR']
