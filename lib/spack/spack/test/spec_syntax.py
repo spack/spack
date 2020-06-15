@@ -202,7 +202,7 @@ class TestSpecSyntax(object):
             spec=tempSpec)
         tempSpec = r"builtin.yaml-cpp@0.1.8%gcc"
         self.check_parse(
-            tempSpec.strip("testrepo."),
+            tempSpec.strip("builtin."),
             spec=tempSpec)
         tempSpec = r"builtin.yaml-cpp@0.1.8%gcc@7.2.0"
         self.check_parse(
