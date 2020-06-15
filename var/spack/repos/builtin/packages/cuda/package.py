@@ -89,7 +89,7 @@ class Cuda(Package):
         if os.path.exists('/tmp/cuda-installer.log'):
             try:
                 os.remove('/tmp/cuda-installer.log')
-            except Exception:
+            except OSError:
                 if spec.satisfies('@10.1:'):
                     tty.die("The cuda installer will segfault due to the "
                             "presence of /tmp/cuda-installer.log "
@@ -121,7 +121,7 @@ class Cuda(Package):
         runfile(*arguments)
         try:
             os.remove('/tmp/cuda-installer.log')
-        except Exception:
+        except OSError:
             pass
 
     @property
