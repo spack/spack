@@ -131,6 +131,9 @@ class Bazel(Package):
     # for fcc
     patch('patch_for_fcc.patch', when='@0.29.1:%fj')
     patch('patch_for_fcc2.patch', when='@0.25:%fj')
+    conflicts('%fj', when='@:0.24.1',
+          msg='Fujitsu Compiler cannot build 0.24.1 or less, '
+              'please use a newer release.')
 
     phases = ['bootstrap', 'install']
 
