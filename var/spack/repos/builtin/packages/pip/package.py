@@ -31,8 +31,8 @@ class Pip(Package):
         bash = which('bash')
 
         prefix_glibc = prefix + '/glibc'
-        prefix_pip   = prefix + '/pip'
-        prefix_gdb   = prefix + '/gdb'
+        prefix_pip   = prefix
+        prefix_gdb   = prefix
         with working_dir('PiP-glibc/PiP-glibc.build', create=True):
             bash('../PiP-glibc/build.sh', '%s' % prefix_glibc)
 
