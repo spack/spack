@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack import *
 
 
@@ -30,10 +28,8 @@ class Lhapdf(AutotoolsPackage):
 
     def configure_args(self):
         args = ['--with-boost=' + self.spec['boost'].prefix,
-                'FCFLAGS=-O3','CFLAGS=-O3', 'CXXFLAGS=-O3']
+                'FCFLAGS=-O3', 'CFLAGS=-O3', 'CXXFLAGS=-O3']
 
         if self.spec.satisfies('@:6.1.5'):
             args.append('--with-yaml-cpp=' + self.spec['yaml-cpp'].prefix)
-
         return args
-
