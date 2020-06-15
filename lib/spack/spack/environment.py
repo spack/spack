@@ -37,6 +37,7 @@ from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
 import spack.util.lock as lk
+from spack.util.path import substitute_path_variables
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -780,8 +781,8 @@ class Environment(object):
         # highest-precedence scopes are last.
         includes = config_dict(self.yaml).get('include', [])
         for i, config_path in enumerate(reversed(includes)):
-            # allow paths to contain environment variables
-            config_path = config_path.format(**os.environ)
+            # allow paths to contain spack config/environment variables, etc.
+            config_path = substitute_path_variables(config_path)
 
             # treat relative paths as relative to the environment
             if not os.path.isabs(config_path):
@@ -1232,26 +1233,19 @@ class Environment(object):
 
             self._install(spec, **kwargs)
 
-    def all_specs_by_hash(self):
-        """Map of hashes to spec for all specs in this environment."""
-        # Note this uses dag-hashes calculated without build deps as keys,
-        # whereas the environment tracks specs based on dag-hashes calculated
-        # with all dependencies. This function should not be used by an
-        # Environment object for management of its own data structures
-        hashes = {}
-        for h in self.concretized_order:
-            specs = self.specs_by_hash[h].traverse(deptype=('link', 'run'))
-            for spec in specs:
-                hashes[spec.dag_hash()] = spec
-        return hashes
-
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""
-        return sorted(self.all_specs_by_hash().values())
+        all_specs = set()
+        for h in self.concretized_order:
+            all_specs.update(self.specs_by_hash[h].traverse())
+
+        return sorted(all_specs)
 
     def all_hashes(self):
-        """Return all specs, even those a user spec would shadow."""
-        return list(self.all_specs_by_hash().keys())
+        """Return hashes of all specs.
+
+        Note these hashes exclude build dependencies."""
+        return list(set(s.dag_hash() for s in self.all_specs()))
 
     def roots(self):
         """Specs explicitly requested by the user *in this environment*.

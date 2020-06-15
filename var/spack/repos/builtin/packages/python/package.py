@@ -962,7 +962,7 @@ class Python(AutotoolsPackage):
         bin_dir = self.spec.prefix.bin
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
-                view.link(src, dst)
+                view.link(src, dst, spec=self.spec)
             elif not os.path.islink(src):
                 copy(src, dst)
                 if 'script' in get_filetype(src):
@@ -988,7 +988,7 @@ class Python(AutotoolsPackage):
                 orig_link_target = os.path.join(self.spec.prefix, realpath_rel)
 
                 new_link_target = os.path.abspath(merge_map[orig_link_target])
-                view.link(new_link_target, dst)
+                view.link(new_link_target, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin

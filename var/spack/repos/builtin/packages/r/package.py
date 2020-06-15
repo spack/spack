@@ -21,6 +21,7 @@ class R(AutotoolsPackage):
 
     extendable = True
 
+    version('4.0.0', sha256='06beb0291b569978484eb0dcb5d2339665ec745737bdfb4e873e7a5a75492940')
     version('3.6.3', sha256='89302990d8e8add536e12125ec591d6951022cf8475861b3690bc8bf1cefaa8f')
     version('3.6.2', sha256='bd65a45cddfb88f37370fbcee4ac8dd3f1aebeebe47c2f968fd9770ba2bbc954')
     version('3.6.1', sha256='5baa9ebd3e71acecdcc3da31d9042fb174d55a42829f8315f2457080978b1389')
@@ -81,7 +82,8 @@ class R(AutotoolsPackage):
     depends_on('libxt', when='+X')
     depends_on('libxmu', when='+X')
     depends_on('curl')
-    depends_on('pcre')
+    depends_on('pcre2', when='@4:')
+    depends_on('pcre', when='@:3.6.3')
     depends_on('java')
 
     patch('zlib.patch', when='@:3.3.2')
@@ -91,6 +93,12 @@ class R(AutotoolsPackage):
     # Until the Fujitsu compiler resolves this problem,
     # temporary fix to lower the optimization level.
     patch('change_optflags_tmp.patch', when='%fj@4.1.0')
+
+    # R custom URL version
+    def url_for_version(self, version):
+        """Handle R's customed URL versions"""
+        url = 'https://cloud.r-project.org/src/base'
+        return url + '/R-%s/R-%s.tar.gz' % (version.up_to(1), version)
 
     filter_compiler_wrappers(
         'Makeconf', relative_root=os.path.join('rlib', 'R', 'etc')

@@ -14,6 +14,7 @@ class PyHorovod(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master', submodules=True)
+    version('0.19.4', tag='v0.19.4', submodules=True)
     version('0.19.3', tag='v0.19.3', submodules=True)
     version('0.19.2', tag='v0.19.2', submodules=True)
     version('0.19.1', tag='v0.19.1', submodules=True)

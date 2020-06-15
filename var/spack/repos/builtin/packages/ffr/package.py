@@ -42,7 +42,8 @@ class Ffr(MakefilePackage):
         elif spec.satisfies('%fj'):
             fflags.append('-Fwide')
         d = find('.', 'src_main', recursive=True)
-        root_dir  = os.path.dirname(d[0])
+        src_main = d[0]
+        root_dir  = os.path.dirname(src_main)
         make = join_path(root_dir, 'src_pre', 'src', 'Makefile')
         os.chmod(make, 0o644)
         filter_file('#CSRCS =.*$', 'CSRCS = kmetis_main.c io.c', make)
@@ -51,9 +52,17 @@ class Ffr(MakefilePackage):
             'LIBPRE = ' + spec['metis'].libs.ld_flags,
             make
         )
+
+        make = join_path(src_main, 'src', 'Makefile')
+        os.chmod(make, 0o644)
+        with open(make, 'a') as m:
+            m.write('module_hpc.o: module_hpc.f\n')
+            m.write('\t$(MPI_F90) $(FFLAGS) -c $<\n')
+            m.write('\n')
+            m.write('hpc.o: hpc.f\n')
+            m.write('\t$(MPI_F90) $(FFLAGS) -c $<\n')
+
         if spec.satisfies('@3.0_000'):
-            d = find('.', 'src_main', recursive=True)
-            root_dir  = os.path.dirname(d[0])
             for d in ['src_pre', 'FFR2VIZ']:
                 workdir = join_path(root_dir, d, 'src')
                 make = join_path(workdir, 'Makefile')

@@ -247,6 +247,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('ucx +thread_multiple', when='fabrics=ucx +thread_multiple')
     depends_on('ucx +thread_multiple', when='@3.0.0: fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
+    depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('mxm', when='fabrics=mxm')
     depends_on('binutils+libiberty', when='fabrics=mxm')
     depends_on('rdma-core', when='fabrics=verbs')
@@ -296,12 +297,18 @@ class Openmpi(AutotoolsPackage):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_run_environment(self, env):
+        # Because MPI is both a runtime and a compiler, we have to setup the
+        # compiler components as part of the run environment.
         env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
         env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
         env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
         env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+        # Use the spack compiler wrappers under MPI
         env.set('OMPI_CC', spack_cc)
         env.set('OMPI_CXX', spack_cxx)
         env.set('OMPI_FC', spack_fc)
@@ -329,6 +336,11 @@ class Openmpi(AutotoolsPackage):
         if not activated:
             return '--without-tm'
         return '--with-tm={0}'.format(self.spec['openpbs'].prefix)
+
+    def with_or_without_psm2(self, activated):
+        if not activated:
+            return '--without-psm2'
+        return '--with-psm2={0}'.format(self.spec['opa-psm2'].prefix)
 
     @run_before('autoreconf')
     def die_without_fortran(self):

@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+"""Test basic behavior of compilers in Spack"""
 import pytest
 
 import sys
@@ -16,17 +16,6 @@ import llnl.util.filesystem as fs
 import spack.spec
 import spack.compiler
 import spack.compilers as compilers
-
-import spack.compilers.arm
-import spack.compilers.cce
-import spack.compilers.clang
-import spack.compilers.fj
-import spack.compilers.gcc
-import spack.compilers.intel
-import spack.compilers.nag
-import spack.compilers.pgi
-import spack.compilers.xl
-import spack.compilers.xl_r
 
 from spack.compiler import Compiler
 
@@ -157,13 +146,14 @@ default_compiler_entry = {
 class MockCompiler(Compiler):
     def __init__(self):
         super(MockCompiler, self).__init__(
-            "badcompiler@1.0.0",
-            default_compiler_entry['operating_system'],
-            None,
-            [default_compiler_entry['paths']['cc'],
-             default_compiler_entry['paths']['cxx'],
-             default_compiler_entry['paths']['fc'],
-             default_compiler_entry['paths']['f77']])
+            cspec="badcompiler@1.0.0",
+            operating_system=default_compiler_entry['operating_system'],
+            target=None,
+            paths=[default_compiler_entry['paths']['cc'],
+                   default_compiler_entry['paths']['cxx'],
+                   default_compiler_entry['paths']['fc'],
+                   default_compiler_entry['paths']['f77']],
+            environment={})
 
     _get_compiler_link_paths = Compiler._get_compiler_link_paths
 
@@ -267,6 +257,32 @@ def test_get_compiler_link_paths_no_verbose_flag():
     assert dirs == []
 
 
+def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
+    gcc = str(tmpdir.join('gcc'))
+    with open(gcc, 'w') as f:
+        f.write("""#!/bin/bash
+if [[ $ENV_SET == "1" && $MODULE_LOADED == "1" ]]; then
+  echo '""" + no_flag_output + """'
+fi
+""")
+    fs.set_executable(gcc)
+
+    # Set module load to turn compiler on
+    def module(*args):
+        if args[0] == 'show':
+            return ''
+        elif args[0] == 'load':
+            os.environ['MODULE_LOADED'] = "1"
+    monkeypatch.setattr(spack.util.module_cmd, 'module', module)
+
+    compiler = MockCompiler()
+    compiler.environment = {'set': {'ENV_SET': '1'}}
+    compiler.modules = ['turn_on']
+
+    dirs = compiler._get_compiler_link_paths([gcc])
+    assert dirs == no_flag_dirs
+
+
 # Get the desired flag from the specified compiler spec.
 def flag_value(flag, spec):
     compiler = None
@@ -316,6 +332,8 @@ def test_default_flags():
     supported_flag_test("cxx_pic_flag", "-fPIC")
     supported_flag_test("f77_pic_flag", "-fPIC")
     supported_flag_test("fc_pic_flag",  "-fPIC")
+    supported_flag_test("debug_flags", ["-g"])
+    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3"])
 
 
 # Verify behavior of particular compiler definitions.
@@ -330,6 +348,9 @@ def test_arm_flags():
     supported_flag_test("cxx_pic_flag", "-fPIC", "arm@1.0")
     supported_flag_test("f77_pic_flag", "-fPIC", "arm@1.0")
     supported_flag_test("fc_pic_flag",  "-fPIC", "arm@1.0")
+    supported_flag_test("opt_flags",
+                        ['-O', '-O0', '-O1', '-O2', '-O3', '-Ofast'],
+                        'arm@1.0')
 
 
 def test_cce_flags():
@@ -344,6 +365,8 @@ def test_cce_flags():
     supported_flag_test("cxx_pic_flag", "-h PIC", "cce@1.0")
     supported_flag_test("f77_pic_flag", "-h PIC", "cce@1.0")
     supported_flag_test("fc_pic_flag",  "-h PIC", "cce@1.0")
+    supported_flag_test("debug_flags", ['-g', '-G0', '-G1', '-G2', '-Gfast'],
+                        'cce@1.0')
 
 
 def test_clang_flags():
@@ -366,6 +389,7 @@ def test_clang_flags():
     supported_flag_test("fc_pic_flag",  "-fPIC", "clang@2.0.0-apple")
 
     # non-Apple Clang.
+    supported_flag_test("version_argument", "--version", "clang@foo.bar")
     supported_flag_test("openmp_flag", "-fopenmp", "clang@3.3")
     unsupported_flag_test("cxx11_flag", "clang@3.2")
     supported_flag_test("cxx11_flag", "-std=c++11", "clang@3.3")
@@ -382,6 +406,15 @@ def test_clang_flags():
     supported_flag_test("cxx_pic_flag", "-fPIC", "clang@3.3")
     supported_flag_test("f77_pic_flag", "-fPIC", "clang@3.3")
     supported_flag_test("fc_pic_flag",  "-fPIC", "clang@3.3")
+    supported_flag_test("debug_flags",
+                        ['-gcodeview', '-gdwarf-2', '-gdwarf-3', '-gdwarf-4',
+                         '-gdwarf-5', '-gline-tables-only', '-gmodules', '-gz',
+                         '-g'],
+                        'clang@3.3')
+    supported_flag_test("opt_flags",
+                        ['-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Oz',
+                         '-Og', '-O', '-O4'],
+                        'clang@3.3')
 
 
 def test_fj_flags():
@@ -395,6 +428,8 @@ def test_fj_flags():
     supported_flag_test("cxx_pic_flag", "-KPIC", "fj@4.0.0")
     supported_flag_test("f77_pic_flag", "-KPIC", "fj@4.0.0")
     supported_flag_test("fc_pic_flag",  "-KPIC", "fj@4.0.0")
+    supported_flag_test("opt_flags", ['-O', '-O0', '-O1', '-O2', '-O3', '-O4'],
+                        'fj@4.0.0')
 
 
 def test_gcc_flags():
@@ -420,6 +455,14 @@ def test_gcc_flags():
     supported_flag_test("f77_pic_flag", "-fPIC", "gcc@4.0")
     supported_flag_test("fc_pic_flag",  "-fPIC", "gcc@4.0")
     supported_flag_test("stdcxx_libs", ("-lstdc++",), "gcc@4.1")
+    supported_flag_test("debug_flags",
+                        ['-g', '-gstabs+', '-gstabs', '-gxcoff+', '-gxcoff',
+                         '-gvms'],
+                        'gcc@4.0')
+    supported_flag_test("opt_flags",
+                        ['-O', '-O0', '-O1', '-O2', '-O3', '-Os', '-Ofast',
+                         '-Og'],
+                        'gcc@4.0')
 
 
 def test_intel_flags():
@@ -440,6 +483,12 @@ def test_intel_flags():
     supported_flag_test("f77_pic_flag", "-fPIC", "intel@1.0")
     supported_flag_test("fc_pic_flag",  "-fPIC", "intel@1.0")
     supported_flag_test("stdcxx_libs", ("-cxxlib",), "intel@1.0")
+    supported_flag_test("debug_flags",
+                        ['-debug', '-g', '-g0', '-g1', '-g2', '-g3'],
+                        'intel@1.0')
+    supported_flag_test("opt_flags",
+                        ['-O', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os'],
+                        'intel@1.0')
 
 
 def test_nag_flags():
@@ -454,6 +503,9 @@ def test_nag_flags():
     supported_flag_test("f77_rpath_arg", "-Wl,-Wl,,-rpath,,", "nag@1.0")
     supported_flag_test("fc_rpath_arg",  "-Wl,-Wl,,-rpath,,", "nag@1.0")
     supported_flag_test("linker_arg", "-Wl,-Wl,,", "nag@1.0")
+    supported_flag_test("debug_flags", ['-g', '-gline', '-g90'], 'nag@1.0')
+    supported_flag_test("opt_flags", ['-O', '-O0', '-O1', '-O2', '-O3', '-O4'],
+                        'nag@1.0')
 
 
 def test_pgi_flags():
@@ -467,6 +519,9 @@ def test_pgi_flags():
     supported_flag_test("cxx_pic_flag", "-fpic", "pgi@1.0")
     supported_flag_test("f77_pic_flag", "-fpic", "pgi@1.0")
     supported_flag_test("fc_pic_flag",  "-fpic", "pgi@1.0")
+    supported_flag_test("debug_flags", ['-g', '-gopt'], 'pgi@1.0')
+    supported_flag_test("opt_flags", ['-O', '-O0', '-O1', '-O2', '-O3', '-O4'],
+                        'pgi@1.0')
 
 
 def test_xl_flags():
@@ -484,6 +539,13 @@ def test_xl_flags():
     supported_flag_test("f77_pic_flag", "-qpic", "xl@1.0")
     supported_flag_test("fc_pic_flag",  "-qpic", "xl@1.0")
     supported_flag_test("fflags", "-qzerosize", "xl@1.0")
+    supported_flag_test("debug_flags",
+                        ['-g', '-g0', '-g1', '-g2', '-g8', '-g9'],
+                        'xl@1.0')
+    supported_flag_test("opt_flags",
+                        ['-O', '-O0', '-O1', '-O2', '-O3', '-O4', '-O5',
+                         '-Ofast'],
+                        'xl@1.0')
 
 
 def test_xl_r_flags():
@@ -501,165 +563,13 @@ def test_xl_r_flags():
     supported_flag_test("f77_pic_flag", "-qpic", "xl_r@1.0")
     supported_flag_test("fc_pic_flag",  "-qpic", "xl_r@1.0")
     supported_flag_test("fflags", "-qzerosize", "xl_r@1.0")
-
-
-@pytest.mark.parametrize('version_str,expected_version', [
-    ('Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2)\n' # NOQA
-     'Target: aarch64--linux-gnu\n'
-     'Thread model: posix\n'
-     'InstalledDir:\n'
-     '/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n', # NOQA
-     '19.0.0.73'),
-    ('Arm C/C++/Fortran Compiler version 19.3.1 (build number 75) (based on LLVM 7.0.2)\n' # NOQA
-     'Target: aarch64--linux-gnu\n'
-     'Thread model: posix\n'
-     'InstalledDir:\n'
-     '/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n', # NOQA
-     '19.3.1.75')
-])
-def test_arm_version_detection(version_str, expected_version):
-    version = spack.compilers.arm.Arm.extract_version_from_output(version_str)
-    assert version == expected_version
-
-
-@pytest.mark.parametrize('version_str,expected_version', [
-    ('Cray C : Version 8.4.6  Mon Apr 15, 2019  12:13:39\n', '8.4.6'),
-    ('Cray C++ : Version 8.4.6  Mon Apr 15, 2019  12:13:45\n', '8.4.6'),
-    ('Cray Fortran : Version 8.4.6  Mon Apr 15, 2019  12:13:55\n', '8.4.6')
-])
-def test_cce_version_detection(version_str, expected_version):
-    version = spack.compilers.cce.Cce.extract_version_from_output(version_str)
-    assert version == expected_version
-
-
-@pytest.mark.regression('10191')
-@pytest.mark.parametrize('version_str,expected_version', [
-    # macOS clang
-    ('Apple clang version 11.0.0 (clang-1100.0.33.8)\n'
-     'Target: x86_64-apple-darwin18.7.0\n'
-     'Thread model: posix\n'
-     'InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n',  # noqa
-     '11.0.0-apple'),
-    ('Apple LLVM version 7.0.2 (clang-700.1.81)\n'
-     'Target: x86_64-apple-darwin15.2.0\n'
-     'Thread model: posix\n', '7.0.2-apple'),
-    # Other platforms
-    ('clang version 6.0.1-svn334776-1~exp1~20181018152737.116 (branches/release_60)\n'  # noqa
-     'Target: x86_64-pc-linux-gnu\n'
-     'Thread model: posix\n'
-     'InstalledDir: /usr/bin\n', '6.0.1'),
-    ('clang version 3.1 (trunk 149096)\n'
-     'Target: x86_64-unknown-linux-gnu\n'
-     'Thread model: posix\n', '3.1'),
-    ('clang version 8.0.0-3~ubuntu18.04.1 (tags/RELEASE_800/final)\n'
-     'Target: x86_64-pc-linux-gnu\n'
-     'Thread model: posix\n'
-     'InstalledDir: /usr/bin\n', '8.0.0'),
-    ('clang version 9.0.1-+201911131414230800840845a1eea-1~exp1~20191113231141.78\n' # noqa
-     'Target: x86_64-pc-linux-gnu\n'
-     'Thread model: posix\n'
-     'InstalledDir: /usr/bin\n', '9.0.1'),
-    ('clang version 8.0.0-3 (tags/RELEASE_800/final)\n'
-     'Target: aarch64-unknown-linux-gnu\n'
-     'Thread model: posix\n'
-     'InstalledDir: /usr/bin\n', '8.0.0')
-])
-def test_clang_version_detection(version_str, expected_version):
-    version = compilers.clang.Clang.extract_version_from_output(version_str)
-    assert version == expected_version
-
-
-@pytest.mark.parametrize('version_str,expected_version', [
-    # C compiler
-    ('fcc (FCC) 4.0.0 20190314\n'
-     'simulating gcc version 6.1\n'
-     'Copyright FUJITSU LIMITED 2019',
-     '4.0.0'),
-    # C++ compiler
-    ('FCC (FCC) 4.0.0 20190314\n'
-     'simulating gcc version 6.1\n'
-     'Copyright FUJITSU LIMITED 2019',
-     '4.0.0'),
-    # Fortran compiler
-    ('frt (FRT) 4.0.0 20190314\n'
-     'Copyright FUJITSU LIMITED 2019',
-     '4.0.0')
-])
-def test_fj_version_detection(version_str, expected_version):
-    version = spack.compilers.fj.Fj.extract_version_from_output(version_str)
-    assert version == expected_version
-
-
-@pytest.mark.parametrize('version_str,expected_version', [
-    # Output of -dumpversion changed to return only major from GCC 7
-    ('4.4.7\n', '4.4.7'),
-    ('7\n', '7')
-])
-def test_gcc_version_detection(version_str, expected_version):
-    version = spack.compilers.gcc.Gcc.extract_version_from_output(version_str)
-    assert version == expected_version
-
-
-@pytest.mark.parametrize('version_str,expected_version', [
-    ('icpc (ICC) 12.1.5 20120612\n'
-     'Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.\n',
-     '12.1.5'),
-    ('ifort (IFORT) 12.1.5 20120612\n'
-     'Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.\n',
-     '12.1.5')
-])
-def test_intel_version_detection(version_str, expected_version):
-    version = compilers.intel.Intel.extract_version_from_output(version_str)
-    assert version == expected_version
-
-
-@pytest.mark.parametrize('version_str,expected_version', [
-    ('NAG Fortran Compiler Release 6.0(Hibiya) Build 1037\n'
-     'Product NPL6A60NA for x86-64 Linux\n', '6.0')
-])
-def test_nag_version_detection(version_str, expected_version):
-    version = spack.compilers.nag.Nag.extract_version_from_output(version_str)
-    assert version == expected_version
-
-
-@pytest.mark.parametrize('version_str,expected_version', [
-    # Output on x86-64
-    ('pgcc 15.10-0 64-bit target on x86-64 Linux -tp sandybridge\n'
-     'The Portland Group - PGI Compilers and Tools\n'
-     'Copyright (c) 2015, NVIDIA CORPORATION.  All rights reserved.\n',
-     '15.10'),
-    # Output on PowerPC
-    ('pgcc 17.4-0 linuxpower target on Linuxpower\n'
-     'PGI Compilers and Tools\n'
-     'Copyright (c) 2017, NVIDIA CORPORATION.  All rights reserved.\n',
-     '17.4'),
-    # Output when LLVM-enabled
-    ('pgcc-llvm 18.4-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
-     'PGI Compilers and Tools\n'
-     'Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.\n',
-     '18.4')
-])
-def test_pgi_version_detection(version_str, expected_version):
-    version = spack.compilers.pgi.Pgi.extract_version_from_output(version_str)
-    assert version == expected_version
-
-
-@pytest.mark.parametrize('version_str,expected_version', [
-    ('IBM XL C/C++ for Linux, V11.1 (5724-X14)\n'
-     'Version: 11.01.0000.0000\n', '11.1'),
-    ('IBM XL Fortran for Linux, V13.1 (5724-X16)\n'
-     'Version: 13.01.0000.0000\n', '13.1'),
-    ('IBM XL C/C++ for AIX, V11.1 (5724-X13)\n'
-     'Version: 11.01.0000.0009\n', '11.1'),
-    ('IBM XL C/C++ Advanced Edition for Blue Gene/P, V9.0\n'
-     'Version: 09.00.0000.0017\n', '9.0')
-])
-def test_xl_version_detection(version_str, expected_version):
-    version = spack.compilers.xl.Xl.extract_version_from_output(version_str)
-    assert version == expected_version
-
-    version = spack.compilers.xl_r.XlR.extract_version_from_output(version_str)
-    assert version == expected_version
+    supported_flag_test("debug_flags",
+                        ['-g', '-g0', '-g1', '-g2', '-g8', '-g9'],
+                        'xl@1.0')
+    supported_flag_test("opt_flags",
+                        ['-O', '-O0', '-O1', '-O2', '-O3', '-O4', '-O5',
+                         '-Ofast'],
+                        'xl@1.0')
 
 
 @pytest.mark.parametrize('compiler_spec,expected_result', [
