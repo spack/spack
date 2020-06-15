@@ -142,7 +142,7 @@ class SuiteSparse(Package):
         # not possible, mainly because of GraphBLAS.  Thus compile first and
         # install in a second run.
         if '@5.4.0:' in self.spec:
-            make('default', *make_args)
+            make('library', *make_args)
 
         make_args.append('INSTALL=%s' % prefix)
         make('install', *make_args)

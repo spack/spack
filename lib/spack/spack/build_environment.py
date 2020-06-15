@@ -53,6 +53,7 @@ import spack.main
 import spack.paths
 import spack.schema.environment
 import spack.store
+import spack.architecture as arch
 from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
@@ -141,17 +142,21 @@ def clean_environment():
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
     env.unset('LD_LIBRARY_PATH')
-    env.unset('CRAY_LD_LIBRARY_PATH')
     env.unset('LIBRARY_PATH')
     env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
 
-    # Remove all pkgconfig stuff from craype
-    for varname in os.environ.keys():
-        if 'PKGCONF' in varname:
-            env.unset(varname)
+    # On Cray systems newer than CNL5, unset CRAY_LD_LIBRARY_PATH to avoid
+    # interference with Spack dependencies. CNL5 (e.g. Blue Waters) requires
+    # these variables to be set.
+    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
+    if str(hostarch.platform) == 'cray' and str(hostarch.os) != 'cnl5':
+        env.unset('CRAY_LD_LIBRARY_PATH')
+        for varname in os.environ.keys():
+            if 'PKGCONF' in varname:
+                env.unset(varname)
 
     build_lang = spack.config.get('config:build_language')
     if build_lang:
@@ -354,10 +359,6 @@ def set_build_environment_variables(pkg, env, dirty):
     if compiler.extra_rpaths:
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
-
-    implicit_rpaths = compiler.implicit_rpaths()
-    if implicit_rpaths:
-        env.set('SPACK_COMPILER_IMPLICIT_RPATHS', ':'.join(implicit_rpaths))
 
     # Add bin directories from dependencies to the PATH for the build.
     for prefix in build_prefixes:
@@ -732,6 +733,11 @@ def setup_package(pkg, dirty):
             load_module(pkg.architecture.target.module_name)
 
         load_external_modules(pkg)
+
+    implicit_rpaths = pkg.compiler.implicit_rpaths()
+    if implicit_rpaths:
+        build_env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
+                      ':'.join(implicit_rpaths))
 
     # Make sure nothing's strange about the Spack environment.
     validate(build_env, tty.warn)

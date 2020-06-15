@@ -208,9 +208,24 @@ class Mvapich2(AutotoolsPackage):
         if 'process_managers=slurm' in self.spec:
             env.set('SLURM_MPI_TYPE', 'pmi2')
 
+        # Because MPI functions as a compiler, we need to treat it as one and
+        # add its compiler paths to the run environment.
+        self.setup_compiler_environment(env)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
-        # On Cray, the regular compiler wrappers *are* the MPI wrappers.
-        if 'platform=cray' in self.spec:
+        self.setup_compiler_environment(env)
+
+        # use the Spack compiler wrappers under MPI
+        env.set('MPICH_CC', spack_cc)
+        env.set('MPICH_CXX', spack_cxx)
+        env.set('MPICH_F77', spack_f77)
+        env.set('MPICH_F90', spack_fc)
+        env.set('MPICH_FC', spack_fc)
+
+    def setup_compiler_environment(self, env):
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
+        if self.spec.external_module and 'cray' in self.spec.external_module:
             env.set('MPICC',  spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
@@ -221,14 +236,10 @@ class Mvapich2(AutotoolsPackage):
             env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
             env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
-        env.set('MPICH_CC', spack_cc)
-        env.set('MPICH_CXX', spack_cxx)
-        env.set('MPICH_F77', spack_f77)
-        env.set('MPICH_F90', spack_fc)
-        env.set('MPICH_FC', spack_fc)
-
     def setup_dependent_package(self, module, dependent_spec):
-        if 'platform=cray' in self.spec:
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
+        if self.spec.external_module and 'cray' in self.spec.external_module:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx
             self.spec.mpifc = spack_fc

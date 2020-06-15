@@ -110,9 +110,10 @@ def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
         pass
     monkeypatch.setattr(spack.build_environment, 'module', module)
 
-    output = dev_build('-b', 'edit', '--drop-in', 'sh',
-                       'dev-build-test-install@0.0.0')
-    assert "lib/spack/env" in output
+    with tmpdir.as_cwd():
+        output = dev_build('-b', 'edit', '--drop-in', 'sh',
+                           'dev-build-test-install@0.0.0')
+        assert "lib/spack/env" in output
 
 
 def test_dev_build_fails_already_installed(tmpdir, mock_packages,
