@@ -1585,7 +1585,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def test(self):
         pass
 
-    def run_test(self, exe, options=[], expected=[], status=None,
+    def run_test(self, exe, options=[], expected=[], status=0,
                  installed=False, purpose='', skip_missing=False,
                  work_dir=None):
         """Run the test and confirm the expected results are obtained
@@ -1597,8 +1597,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             options (list of str): list of options to pass to the runner
             expected (list of str): list of expected output strings. Each
                 string is a regex expected to match part of the output.
-            status (int, list of int, or None): possible passing status values
-                with 0 and None meaning the test is expected to succeed
+            status (int or list of int): possible passing status values
+                with 0 meaning the test is expected to succeed
             installed (bool): the executable must be in the install prefix
             purpose (str): message to display before running test
             skip_missing (bool): skip the test if the executable is not
@@ -1615,6 +1615,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 self._run_test_helper(
                     runner, options, expected, status, installed, purpose)
                 print("PASSED")
+                return True
             except BaseException as e:
                 # print a summary of the error to the log file
                 # so that cdash and junit reporters know about it
@@ -1664,6 +1665,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     raise TestFailure([(exc, m)])
                 else:
                     self.test_failures.append((exc, m))
+                return False
 
     def _run_test_helper(self, runner, options, expected, status, installed,
                          purpose):
