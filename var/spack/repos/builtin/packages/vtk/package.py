@@ -48,15 +48,15 @@ class Vtk(CMakePackage):
 
     extends('python', when='+python')
 
-    #Acceptable python versions depend on vtk version
-    #We need vtk at least 8.0.1 for python@3,
-    #and at least 9.0 for python@3.8
+    # Acceptable python versions depend on vtk version
+    # We need vtk at least 8.0.1 for python@3,
+    # and at least 9.0 for python@3.8
     depends_on('python@2.7:2.9', when='@:8.0 +python', type=('build', 'run'))
     depends_on('python@2.7:3.7.9', when='@8.0.1:8.9 +python',
                type=('build', 'run'))
     depends_on('python@2.7:', when='@9.0: +python', type=('build', 'run'))
 
-    #We need mpi4py if buidling python wrappers and using MPI
+    # We need mpi4py if buidling python wrappers and using MPI
     depends_on('py-mpi4py', when='+python+mpi', type='run')
 
     # python3.7 compatibility patch backported from upstream
