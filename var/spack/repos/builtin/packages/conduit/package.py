@@ -350,6 +350,29 @@ class Conduit(Package):
         else:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
 
+        # use global spack compiler flags
+        cflags = ' '.join(spec.compiler_flags['cflags'])
+        if cflags:
+            cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
+        cxxflags = ' '.join(spec.compiler_flags['cxxflags'])
+        if cxxflags:
+            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
+        fflags = ' '.join(spec.compiler_flags['fflags'])
+        if fflags:
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
+
+        if ("gfortran" in f_compiler) and ("clang" in cpp_compiler):
+            libdir = os.path.join(os.path.dirname(
+                                  os.path.dirname(f_compiler)), "lib")
+            flags = ""
+            for _libpath in [libdir, libdir + "64"]:
+                if os.path.exists(_libpath):
+                    flags += " -Wl,-rpath,{0}".format(_libpath)
+            description = ("Adds a missing libstdc++ rpath")
+            if flags:
+                cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
+                                            description))
+
         #######################
         # Unit Tests
         #######################
@@ -380,7 +403,8 @@ class Conduit(Package):
                     # Grab lib directory for the current fortran compiler
                     libdir = os.path.join(os.path.dirname(
                                           os.path.dirname(f_compiler)), "lib")
-                    flags = "-lstdc++ -Wl,-rpath," + libdir
+                    flags  = "${BLT_EXE_LINKER_FLAGS} "
+                    flags += "-lstdc++ -Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
                     cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS",
                                                 flags))
 
