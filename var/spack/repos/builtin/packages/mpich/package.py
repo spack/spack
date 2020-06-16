@@ -97,7 +97,7 @@ spack package at this time.''',
     depends_on('findutils', type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('hwloc @1.0.0:', when='+hwloc')
+    depends_on('hwloc@2.0.0:', when='@3.3: +hwloc')
 
     depends_on('libfabric', when='netmod=ofi')
     # The ch3 ofi netmod results in crashes with libfabric 1.7
