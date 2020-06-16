@@ -69,33 +69,50 @@ class Intel(IntelPackage):
     # all remaining Spack actions are handled in the package class.
 
     def test(self):
+        def test_compiler_for_source(filename):
+            # all fortran files are *.f* or *.F*
+            if '.f' in filename or '.F' in filename:
+                return 'ifort'
+            # all C files are *.c
+            elif filename[-2:] == '.c':
+                return 'icc'
+            # all other formats must be C++ by elimination
+            else:
+                return 'icpc'
+
         # Get compiler tests
         compiler_test_dir = self.test_stage.join('compiler_tests')
         shutil.copytree(os.path.join(spack.paths.tests_path, 'compilers'),
                         compiler_test_dir)
 
+        # compile and run each test
         for test in os.listdir(compiler_test_dir):
             full_path = os.path.join(compiler_test_dir, test)
+            exe_name = '%s.exe' % test
 
             # Get the right compiler for this test
-            if '.f' in test or '.F' in test:
-                exe = 'ifort'
-            elif test == 'hello.c':
-                exe = 'icc'
-            else:
-                exe = 'icpc'
+            compiler = test_compiler_for_source(test)
 
+            ###
             # Compile the test
-            print(os.environ['LD_LIBRARY_PATH'])
-
+            ###
+            # once we reconcile compilers and dependencies this should
+            # query package for appropriate cxx11 flag
+            # only the hello_cxx11 test requires c++11
             options = ['-std=c++11'] if 'c++11' in test else []
-            options.extend(['-o', '%s.exe' % test])
+
+            # standard options
+            options.extend(['-o', exe_name])
+
+            # ifort requires '-Tf' flag immediately precede any *.f95 file
             if '.f95' in test:
                 options.append('-Tf')
+
+            # We can finally append the filename
             options.append(full_path)
-            compiled =  self.run_test(exe, options=options, installed=True)
+            compiled = self.run_test(compiler, options=options, installed=True)
 
             # run the test to ensure it works
             # only run it if the compile step worked
             if compiled:
-                self.run_test('%s.exe' % test, expected=["Hello world", "YES!"])
+                self.run_test(exe_name, expected=["Hello world", "YES!"])
