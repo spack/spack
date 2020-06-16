@@ -32,6 +32,7 @@ class NetcdfCxx4(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
+    depends_on('doxygen', when='+doxygen', type='build')
 
     conflicts('~shared', when='~static')
 

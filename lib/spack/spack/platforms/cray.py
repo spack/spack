@@ -22,7 +22,9 @@ _craype_name_to_target_name = {
     'x86-naples': 'zen',
     'x86-rome': 'zen',  # Cheating because we have the wrong modules on rzcrayz
     'x86-skylake': 'skylake_avx512',
-    'mic-knl': 'mic_knl'
+    'mic-knl': 'mic_knl',
+    'interlagos': 'bulldozer',
+    'abudhabi': 'piledriver',
 }
 
 
@@ -176,7 +178,7 @@ class Cray(Platform):
             craype_default_path = '/opt/cray/pe/craype/default/modulefiles'
             if os.path.isdir(craype_default_path):
                 return os.listdir(craype_default_path)
-            return None
+            return []
 
         if getattr(self, '_craype_targets', None) is None:
             strategies = [

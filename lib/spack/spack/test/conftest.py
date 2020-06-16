@@ -1099,3 +1099,20 @@ def clear_directive_functions():
     # proceeding with subsequent tests that may depend on the original
     # functions.
     spack.directives.DirectiveMeta._directives_to_be_executed = []
+
+
+@pytest.fixture
+def mock_executable(tmpdir):
+    """Factory to create a mock executable in a temporary directory that
+    output a custom string when run.
+    """
+    import jinja2
+
+    def _factory(name, output, subdir=('bin',)):
+        f = tmpdir.mkdir(*subdir).join(name)
+        t = jinja2.Template('#!/bin/bash\n{{ output }}\n')
+        f.write(t.render(output=output))
+        f.chmod(0o755)
+        return str(f)
+
+    return _factory

@@ -69,7 +69,7 @@ def test_concrete_spec(config, mock_packages):
 
 
 def test_yaml_multivalue(config, mock_packages):
-    spec = Spec('multivalue_variant foo="bar,baz"')
+    spec = Spec('multivalue-variant foo="bar,baz"')
     spec.concretize()
     check_yaml_round_trip(spec)
 

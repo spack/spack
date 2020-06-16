@@ -12,7 +12,7 @@ class PyPandas(PythonPackage):
     programming language."""
 
     homepage = "https://pandas.pydata.org/"
-    url = "https://pypi.io/packages/source/p/pandas/pandas-1.0.3.tar.gz"
+    url = "https://pypi.io/packages/source/p/pandas/pandas-1.0.4.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = [
@@ -29,6 +29,7 @@ class PyPandas(PythonPackage):
         'pandas.api.extensions'
     ]
 
+    version('1.0.4',  sha256='b35d625282baa7b51e82e52622c300a1ca9f786711b2af7cbe64f1e6831f4126')
     version('1.0.3',  sha256='32f42e322fb903d0e189a4c10b75ba70d90958cc4f66a1781ed027f1a1d14586')
     version('1.0.2',  sha256='76334ba36aa42f93b6b47b79cbc32187d3a178a4ab1c3a478c8f4198bcd93a73')
     version('1.0.1',  sha256='3c07765308f091d81b6735d4f2242bb43c332cc3461cae60543df6b10967fe27')

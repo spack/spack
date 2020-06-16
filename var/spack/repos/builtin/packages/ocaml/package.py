@@ -29,12 +29,22 @@ class Ocaml(Package):
 
     sanity_check_file = ['bin/ocaml']
 
+    variant(
+        'force-safe-string', default=True,
+        description='Enforce safe (immutable) strings'
+    )
+
     def url_for_version(self, version):
         url = "http://caml.inria.fr/pub/distrib/ocaml-{0}/ocaml-{1}.tar.gz"
         return url.format(str(version)[:-2], version)
 
     def install(self, spec, prefix):
-        configure('-prefix', '{0}'.format(prefix))
+        base_args = ['-prefix', '{0}'.format(prefix)]
+
+        if self.spec.satisfies('~force-safe-string'):
+            base_args += ['--disable-force-safe-string']
+
+        configure(*(base_args))
 
         make('world.opt')
         make('install', 'PREFIX={0}'.format(prefix))
