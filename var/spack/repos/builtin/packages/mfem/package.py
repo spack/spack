@@ -371,12 +371,12 @@ class Mfem(Package):
             debug_flag_found = any(f in self.compiler.debug_flags for f in cxxflags)
 
             if '+debug' in spec:
-                if debug_flag_found:
+                if not debug_flag_found:
                     cxxflags.append('-g')
-                if opt_flag_found:
+                if not opt_flag_found:
                     cxxflags.append('-O0')
             else:
-                if opt_flag_found:
+                if not opt_flag_found:
                     cxxflags.append('-O2')
 
             cxxflags = [(xcompiler + flag) for flag in cxxflags]
