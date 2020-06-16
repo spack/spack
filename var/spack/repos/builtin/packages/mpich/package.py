@@ -199,7 +199,7 @@ spack package at this time.''',
         config_args = [
             '--enable-shared',
             '--with-hwloc-prefix={0}'.format(
-                spec['hwloc'].prefix if '+hwloc' else 'embedded'),
+                spec['hwloc'].prefix if '^hwloc' in spec else 'embedded'),
             '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without'),
