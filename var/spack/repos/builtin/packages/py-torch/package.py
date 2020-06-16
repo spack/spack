@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-
+import os
 
 class PyTorch(PythonPackage, CudaPackage):
     """Tensors and Dynamic neural networks in Python
@@ -66,6 +66,7 @@ class PyTorch(PythonPackage, CudaPackage):
     version('0.3.1', tag='v0.3.1', submodules=True)
 
     variant('cuda', default=True, description='Build with CUDA')
+    variant('rocm', default=False, description='Build with ROCM')
     variant('cudnn', default=True, description='Enables the cuDNN build')
     variant('magma', default=False, description='Enables the MAGMA build')
     variant('fbgemm', default=False, description='Enables the FBGEMM build')
@@ -243,6 +244,10 @@ class PyTorch(PythonPackage, CudaPackage):
 
         enable_or_disable('fbgemm')
         enable_or_disable('test', keyword='BUILD')
+        
+        enable_or_disable('rocm')
+        if '+rocm' in self.spec:
+            env.set('USE_MKLDNN', 0)
 
         if '+miopen' in self.spec:
             env.set('MIOPEN_LIB_DIR', self.spec['miopen'].libs.directories[0])
@@ -295,6 +300,11 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('redis', newer=True)
         enable_or_disable('zstd', newer=True)
         enable_or_disable('tbb', newer=True)
+    
+    def install(self, spec , prefix):
+        with working_dir(self.stage.source_path):
+            python(os.path.join(self.stage.source_path,'tools/amd_build/build_amd.py'))
+            super(PyTorch, self).install(spec , prefix)
 
     def install_test(self):
         with working_dir('test'):
