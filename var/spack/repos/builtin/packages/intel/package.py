@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import shutil
+import os
 from spack import *
 
 
@@ -65,3 +67,35 @@ class Intel(IntelPackage):
 
     # Since the current package is a subset of 'intel-parallel-studio',
     # all remaining Spack actions are handled in the package class.
+
+    def test(self):
+        # Get compiler tests
+        compiler_test_dir = self.test_stage.join('compiler_tests')
+        shutil.copytree(os.path.join(spack.paths.tests_path, 'compilers'),
+                        compiler_test_dir)
+
+        for test in os.listdir(compiler_test_dir):
+            full_path = os.path.join(compiler_test_dir, test)
+
+            # Get the right compiler for this test
+            if '.f' in test or '.F' in test:
+                exe = 'ifort'
+            elif test == 'hello.c':
+                exe = 'icc'
+            else:
+                exe = 'icpc'
+
+            # Compile the test
+            print(os.environ['LD_LIBRARY_PATH'])
+
+            options = ['-std=c++11'] if 'c++11' in test else []
+            options.extend(['-o', '%s.exe' % test])
+            if '.f95' in test:
+                options.append('-Tf')
+            options.append(full_path)
+            compiled =  self.run_test(exe, options=options, installed=True)
+
+            # run the test to ensure it works
+            # only run it if the compile step worked
+            if compiled:
+                self.run_test('%s.exe' % test, expected=["Hello world", "YES!"])
