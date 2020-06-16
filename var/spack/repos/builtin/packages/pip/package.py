@@ -16,7 +16,7 @@ class Pip(Package):
     version('2', branch='pip-2-blt')
     version('1', branch='pip-1')
 
-    # for PiP-gdb
+    # packages required for building PiP-gdb
     depends_on('texinfo', type='build')
 
     resource(name='PiP-glibc', git='https://github.com/RIKEN-SysSoft/PiP-glibc.git', branch='centos/glibc-2.17-260.el7.pip.branch', destination='PiP-glibc')
@@ -40,6 +40,7 @@ class Pip(Package):
                   '--with-glibc-libdir=%s/lib' % prefix_glibc)
         make()
         make('install')
+        make('doxygen-install') # installing already-doxygen-ed man pages
         bash('%s/bin/piplnlibs' % prefix_pip)
 
         with working_dir('PiP-gdb/PiP-gdb'):
