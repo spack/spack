@@ -240,8 +240,6 @@ class Axom(CMakePackage, CudaPackage):
                 cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
                                             description))
 
-
-
         # TPL locations
         cfg.write("#------------------{0}\n".format("-" * 60))
         cfg.write("# TPLs\n")
@@ -465,9 +463,9 @@ class Axom(CMakePackage, CudaPackage):
                                       os.path.dirname(f_compiler)), "lib")
                 description = ("Adds a missing rpath for libraries "
                                "associated with the fortran compiler")
+                linker_flags = "${BLT_EXE_LINKER_FLAGS} -Wl,-rpath," + libdir
                 cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS",
-                                            "${BLT_EXE_LINKER_FLAGS} -Wl,-rpath," + libdir,
-                                            description))
+                                            linker_flags, description))
 
             if "+cuda" in spec:
                 cfg.write("#------------------{0}\n".format("-" * 60))

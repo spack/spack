@@ -148,10 +148,10 @@ class Conduit(Package):
     phases = ["configure", "build", "install"]
 
     def flag_handler(self, name, flags):
-            if name in ('cflags', 'cxxflags', 'fflags'):
-                # the package manages these flags in another way
-                return (None, None, None)
-            return (flags, None, None)
+        if name in ('cflags', 'cxxflags', 'fflags'):
+            # the package manages these flags in another way
+            return (None, None, None)
+        return (flags, None, None)
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
@@ -410,8 +410,8 @@ class Conduit(Package):
                     # Grab lib directory for the current fortran compiler
                     libdir = os.path.join(os.path.dirname(
                                           os.path.dirname(f_compiler)), "lib")
-                    flags  = "${BLT_EXE_LINKER_FLAGS} "
-                    flags += "-lstdc++ -Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
+                    flags  = "${BLT_EXE_LINKER_FLAGS} -lstdc++ "
+                    flags += "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
                     cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS",
                                                 flags))
 
