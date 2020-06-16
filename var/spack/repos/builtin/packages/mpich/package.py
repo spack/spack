@@ -76,9 +76,9 @@ spack package at this time.''',
     # Fix using an external hwloc
     # See https://github.com/pmodels/mpich/issues/4038
     # and https://github.com/pmodels/mpich/pull/3540
-    patch('https://github.com/pmodels/mpich/commit/86ee1097d4507154cd18f8d8f5fcc0c53f106e11.patch',
-          sha256='27a339d9a879440cc37e1a89680a289d2c06797953fa226045b32d9247b8a1ea',
-          when='+hwloc')
+    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
+          sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
+          when='@3.3 +hwloc')
 
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
