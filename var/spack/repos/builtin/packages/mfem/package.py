@@ -367,8 +367,10 @@ class Mfem(Package):
 
         if cxxflags:
             # Add opt/debug flags if they are not present in global cxx flags
-            opt_flag_found = any(f in self.compiler.opt_flags for f in cxxflags)
-            debug_flag_found = any(f in self.compiler.debug_flags for f in cxxflags)
+            opt_flag_found = any(f in self.compiler.opt_flags
+                                 for f in cxxflags)
+            debug_flag_found = any(f in self.compiler.debug_flags
+                                   for f in cxxflags)
 
             if '+debug' in spec:
                 if not debug_flag_found:
