@@ -3945,7 +3945,8 @@ class SpecLexer(spack.parse.Lexer):
 
             # Filenames match before identifiers, so no initial filename
             # component is parsed as a spec (e.g., in subdir/spec.yaml)
-            (r'[/\w.-]+\.yaml[^\b]*', lambda scanner, v: self.token(FILE, v)),
+            (r'[/\w.-]*/[/\w/-]+\.yaml[^\b]*',
+             lambda scanner, v: self.token(FILE, v)),
 
             # Hash match after filename. No valid filename can be a hash
             # (files end w/.yaml), but a hash can match a filename prefix.
@@ -4096,11 +4097,6 @@ class SpecParser(spack.parse.Parser):
         """
         path = self.token.value
 
-        # don't treat builtin.yaml, builtin.yaml-cpp, etc. as filenames
-        if re.match(spec_id_re + '$', path):
-            self.push_tokens([spack.parse.Token(ID, self.token.value)])
-            return None
-
         # Special case where someone omits a space after a filename. Consider:
         #
         #     libdwarf^/some/path/to/libelf.yamllibdwarf ^../../libelf.yaml
@@ -4112,7 +4108,6 @@ class SpecParser(spack.parse.Parser):
             raise SpecFilenameError(
                 "Spec filename must end in .yaml: '{0}'".format(path))
 
-        # if we get here, we're *finally* interpreting path as a filename
         if not os.path.exists(path):
             raise NoSuchSpecFileError("No such spec file: '{0}'".format(path))
 
