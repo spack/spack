@@ -121,10 +121,10 @@ spack package at this time.''',
     depends_on("autoconf@2.67:", when='@develop', type=("build"))
 
     # building with "+hwloc' also requires regenerating autotools files
-    depends_on('automake@1.15:', when='+hwloc', type=("build"))
-    depends_on('libtool@2.4.4:', when='+hwloc', type=("build"))
-    depends_on("m4", when="+hwloc", type=("build")),
-    depends_on("autoconf@2.67:", when='+hwloc', type=("build"))
+    depends_on('automake@1.15:', when='+hwloc', type="build")
+    depends_on('libtool@2.4.4:', when='+hwloc', type="build")
+    depends_on("m4", when="+hwloc", type="build"),
+    depends_on("autoconf@2.67:", when='+hwloc', type="build")
 
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
