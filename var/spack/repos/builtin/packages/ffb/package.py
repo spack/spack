@@ -109,7 +109,7 @@ class Ffb(MakefilePackage):
 
         editfile = join_path('lib', 'src', 'Makeall')
         m = FileFilter(editfile)
-        m.filter(r'x86_64-linux', '`arch`-linux')
+        m.filter(r'x86_64-linux', '{0}-linux'.format(spec.target.family))
 
         editfile = join_path('lib', 'src', 'REVOCAP_Refiner-0.4.3', 'OPTIONS')
         m = FileFilter(editfile)
