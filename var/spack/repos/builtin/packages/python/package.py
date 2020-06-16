@@ -157,6 +157,20 @@ class Python(AutotoolsPackage):
         # a Mac.
         depends_on('libuuid', when='+uuid')
 
+    # Python needs to be patched to build extensions w/ mixed C/C++ code:
+    # https://github.com/NixOS/nixpkgs/pull/19585/files
+    # https://bugs.python.org/issue1222585
+    #
+    # NOTE: This patch puts Spack's default Python installation out of
+    # sync with standard Python installs. If you're using such an
+    # installation as an external and encountering build issues with mixed
+    # C/C++ modules, consider installing a Spack-managed Python with
+    # this patch instead. For more information, see:
+    # https://github.com/spack/spack/pull/16856
+    patch('python-2.7-distutils-C++.patch', when='@2.7')
+    patch('python-3.6-distutils-C++.patch', when='@3.6')
+    patch('python-3.7+-distutils-C++.patch', when='@3.7:3.8')
+
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
