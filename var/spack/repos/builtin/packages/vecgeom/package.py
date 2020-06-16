@@ -46,6 +46,11 @@ class Vecgeom(CMakePackage, CudaPackage):
 
     conflicts('+cuda', when='@:1.1.5')
 
+    # Fix missing CMAKE_CUDA_STANDARD
+    patch('https://gitlab.cern.ch/VecGeom/VecGeom/-/commit/7094dd180ef694f2abb7463cafcedfb8b8ed30a1.diff',
+      sha256='34f1a6899616e40bce33d80a38a9b409f819cbaab07b2e3be7f4ec4bedb52b29',
+      when='@1.1.7 +cuda')
+
     for std in _cxxstd_values:
         depends_on('geant4 cxxstd=' + std, when='+geant4 cxxstd=' + std)
         depends_on('root cxxstd=' + std, when='+root cxxstd=' + std)
