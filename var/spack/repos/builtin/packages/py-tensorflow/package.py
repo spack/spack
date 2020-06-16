@@ -629,9 +629,9 @@ class PyTensorflow(Package, CudaPackage):
                         'build --action_env LD_LIBRARY_PATH="' + slibs + '"',
                         '.tf_configure.bazelrc')
 
-        filter_file('build:opt --copt=-march=native','',
+        filter_file('build:opt --copt=-march=native', '',
                     '.tf_configure.bazelrc')
-        filter_file('build:opt --host_copt=-march=native','',
+        filter_file('build:opt --host_copt=-march=native', '',
                     '.tf_configure.bazelrc')
 
     def build(self, spec, prefix):
