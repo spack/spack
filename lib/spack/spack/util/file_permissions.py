@@ -33,6 +33,11 @@ def set_permissions(path, perms, group=None):
         if perms & st.S_IWGRP:
             raise InvalidPermissionsError(
                 "Attempting to set suid with group writable")
+    # Or world writable sgid binaries
+    if perms & st.S_ISGID:
+        if perms & st.S_IWOTH:
+            raise InvalidPermissionsError(
+                "Attempting to set sgid with world writable")
 
     fs.chmod_x(path, perms)
 

@@ -45,3 +45,14 @@ def test_chmod_rejects_world_writable_suid(tmpdir):
     perms = stat.S_IWOTH
     with pytest.raises(InvalidPermissionsError):
         set_permissions(path, perms)
+
+
+def test_chmod_rejects_world_writable_sgid(tmpdir):
+    path = str(tmpdir.join('file').ensure())
+    print(type(tmpdir))
+    mode = stat.S_ISGID
+    fs.chmod_x(path, mode)
+
+    perms = stat.S_IWOTH
+    with pytest.raises(InvalidPermissionsError):
+        set_permissions(path, perms)
