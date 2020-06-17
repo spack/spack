@@ -358,10 +358,13 @@ class Conduit(Package):
 
         # use global spack compiler flags
         cppflags = ' '.join(spec.compiler_flags['cppflags'])
-        cflags = cppflags + ' ' + ' '.join(spec.compiler_flags['cflags'])
+        if cppflags:
+            # avoid always ending up with ' ' with no flags defined
+            cppflags += ' '
+        cflags = cppflags + ' '.join(spec.compiler_flags['cflags'])
         if cflags:
             cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
-        cxxflags = cppflags + ' ' + ' '.join(spec.compiler_flags['cxxflags'])
+        cxxflags = cppflags + ' '.join(spec.compiler_flags['cxxflags'])
         if cxxflags:
             cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
         fflags = ' '.join(spec.compiler_flags['fflags'])
