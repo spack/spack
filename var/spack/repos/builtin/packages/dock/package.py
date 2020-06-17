@@ -8,6 +8,11 @@ import os
 
 
 class Dock(Package):
+    """DOCK is a molecular docking program used in drug discovery. This
+       program, given a protein binding site and a small molecule, tries
+       to predict the correct binding mode of the small molecule in the binding
+       site, and the associated binding energy."""
+
     homepage = "http://dock.compbio.ucsf.edu/DOCK_6/index.htm"
     url      = "file://{0}/dock.6.9_source.tar.gz".format(os.getcwd())
 
