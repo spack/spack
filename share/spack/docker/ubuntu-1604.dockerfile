@@ -41,6 +41,7 @@ RUN apt-get -yqq update \
         make \
         python3 \
         python3-pip \
+        python3-setuptools \
         tcl \
         unzip \
  && locale-gen en_US.UTF-8 \
