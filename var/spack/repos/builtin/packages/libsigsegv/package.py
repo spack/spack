@@ -2,6 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
+import llnl.util.tty as tty
+
 from spack import *
 
 
@@ -22,8 +26,16 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
     def configure_args(self):
         return ['--enable-shared']
 
-    def test(self):
-        # Start by compiling and linking the simple program
+    extra_install_tests = 'tests/.libs'
+
+    @run_after('install')
+    def setup_build_tests(self):
+        """Copy the build test files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources(self.extra_install_tests)
+
+    def _run_smoke_tests(self):
+        """Build and run the added smoke (install) test."""
         prog = 'data/smoke_test'
 
         options = [
@@ -42,3 +54,40 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
             expected = fd.read()
         reason = 'test ability to use the library'
         self.run_test(prog, [], expected, None, False, purpose=reason)
+
+    def _run_build_tests(self):
+        """Build and run selected tests pulled from the build."""
+        work_dir = os.path.join(self.install_test_root,
+                                self.extra_install_tests)
+
+        # Run the build tests to confirm the expected output
+        passed = 'Test passed'
+        checks = {
+            'sigsegv1': ([passed], None),
+            'sigsegv2': ([passed], None),
+            'sigsegv3': (['caught', passed], None),
+            'stackoverflow1': (['recursion', 'Stack overflow', passed], None),
+            'stackoverflow2': (['recursion', 'overflow', 'violation', passed],
+                               None),
+        }
+
+        for exe in checks:
+            expected, status = checks[exe]
+            reason = 'test {0} output'.format(exe)
+            self.run_test(exe, [], expected, status, installed=False,
+                          purpose=reason, skip_missing=True, work_dir=work_dir)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        tty.warn('Expected results currently based on simple {0} builds'
+                 .format(self.name))
+
+        if not self.spec.satisfies('@2.10:2.12'):
+            tty.warn('Expected results have not been confirmed for {0} {1}'
+                     .format(self.name, self.spec.versin))
+
+        # Run the simple built-in smoke test
+        self._run_smoke_tests()
+
+        # Run test programs pulled from the build
+        self._run_build_tests()
