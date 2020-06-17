@@ -207,7 +207,8 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
-    variant('runpath', default=True, description='Enable wrapper runpath')
+    variant('wrapper-rpath', default=True,
+            description='Enable rpath support in the wrappers')
     variant('cxx', default=False, description='Enable C++ MPI bindings')
     variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
     variant('gpfs', default=True, description='Enable GPFS support (if present)')
@@ -288,6 +289,9 @@ class Openmpi(AutotoolsPackage):
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
     # It may be worth considering making libfabric an exclusive fabrics choice
+
+    # RPATH support in the wrappers was added in 1.7.4
+    conflicts('+wrapper-rpath', when='@:1.7.3')
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -378,17 +382,10 @@ class Openmpi(AutotoolsPackage):
             '--disable-silent-rules'
         ]
 
-        # Add extra_rpaths and implicit_rpaths into the wrappers (in the
-        # designated order, i.e. the order, in which the Spack wrapper sets
-        # them). Here we use self.compiler.cc_rpath_arg. Later, we might need
-        # to update share/openmpi/mpic++-wrapper-data.txt and
-        # mpifort-wrapper-data.txt (see method 'filter_rpaths').
-        rpaths = [self.compiler.cc_rpath_arg + path
-                  for path in itertools.chain(self.compiler.extra_rpaths,
-                                              self.compiler.implicit_rpaths())]
-        config_args.extend([
-            '--with-wrapper-ldflags={0}'.format(' '.join(rpaths))
-        ])
+        # All rpath flags should be appended with self.compiler.cc_rpath_arg.
+        # Later, we might need to update share/openmpi/mpic++-wrapper-data.txt
+        # and mpifort-wrapper-data.txt (see filter_rpaths()).
+        wrapper_ldflags = []
 
         if '+atomics' in spec:
             config_args.append('--enable-builtin-atomics')
@@ -432,12 +429,6 @@ class Openmpi(AutotoolsPackage):
         if 'fabrics=auto' not in spec:
             config_args.extend(self.with_or_without('fabrics',
                                                     activation_value='prefix'))
-        # The wrappers fail to automatically link libfabric. This will cause
-        # undefined references unless we add the appropriate flags.
-        if 'fabrics=libfabric' in spec:
-            config_args.append('--with-wrapper-ldflags=-L{0} -Wl,-rpath={0}'
-                               .format(spec['libfabric'].prefix.lib))
-            config_args.append('--with-wrapper-libs=-lfabric')
 
         # Schedulers
         if 'schedulers=auto' not in spec:
@@ -513,12 +504,24 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
-        if '+runpath' in spec:
+        if '+wrapper-rpath' in spec:
             config_args.append('--enable-wrapper-rpath')
-            config_args.append('--enable-wrapper-runpath')
+
+            # Disable new dynamic tags in the wrapper (--disable-new-dtags)
+            # In the newer versions this can be done with a configure option
+            # (for older versions, we rely on filter_compiler_wrappers() and
+            # filter_pc_files()):
+            if spec.satisfies('@3.0.5:'):
+                config_args.append('--disable-wrapper-runpath')
+
+            # Add extra_rpaths and implicit_rpaths into the wrappers.
+            wrapper_ldflags.extend([
+                self.compiler.cc_rpath_arg + path
+                for path in itertools.chain(
+                    self.compiler.extra_rpaths,
+                    self.compiler.implicit_rpaths())])
         else:
             config_args.append('--disable-wrapper-rpath')
-            config_args.append('--disable-wrapper-runpath')
 
         if spec.satisfies('@:4'):
             if '+cxx' in spec:
@@ -531,36 +534,57 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--disable-cxx-exceptions')
 
+        if wrapper_ldflags:
+            config_args.append(
+                '--with-wrapper-ldflags={0}'.format(' '.join(wrapper_ldflags)))
+
         return config_args
 
+    @when('+wrapper-rpath')
     @run_after('install')
     def filter_rpaths(self):
 
-        def filter_lang_rpaths(lang_tokens, lang_rpath_arg,
-                               cc_rpath_arg=self.compiler.cc_rpath_arg):
-            if self.compiler.cc_rpath_arg == lang_rpath_arg:
+        def filter_lang_rpaths(lang_tokens, rpath_arg):
+            if self.compiler.cc_rpath_arg == rpath_arg:
                 return
 
-            files = set()
-            for token in lang_tokens:
-                for file in find(self.spec.prefix.share.openmpi,
-                                 '*{0}-wrapper-data*'.format(token)):
-                    files.add(os.path.realpath(file))
-                for file in find(self.spec.prefix.lib.pkgconfig,
-                                 'ompi-{0}.pc'.format(token)):
-                    files.add(os.path.realpath(file))
+            files = find(self.spec.prefix.share.openmpi,
+                         ['*{0}-wrapper-data*'.format(t) for t in lang_tokens])
+            files.extend(find(self.spec.prefix.lib.pkgconfig,
+                              ['ompi-{0}.pc'.format(t) for t in lang_tokens]))
 
-            filter_file(' ' + cc_rpath_arg,
-                        ' ' + lang_rpath_arg,
-                        *files, string=True, ignore_absent=True, backup=False)
+            x = FileFilter(*[f for f in files if not os.path.islink(f)])
+
+            # Replace self.compiler.cc_rpath_arg, which have been added as
+            # '--with-wrapper-ldflags', with rpath_arg in the respective
+            # language-specific wrappers and pkg-config files.
+            x.filter(self.compiler.cc_rpath_arg, rpath_arg,
+                     string=True, backup=False)
+
+            if self.spec.satisfies('@:1.10.3,2:2.1.1'):
+                # Replace Libtool-style RPATH prefixes '-Wl,-rpath -Wl,' with
+                # rpath_arg for old version of OpenMPI, which assumed that CXX
+                # and FC had the same prefixes as CC.
+                x.filter('-Wl,-rpath -Wl,', rpath_arg,
+                         string=True, backup=False)
 
         filter_lang_rpaths(['c++', 'CC', 'cxx'], self.compiler.cxx_rpath_arg)
         filter_lang_rpaths(['fort', 'f77', 'f90'], self.compiler.fc_rpath_arg)
 
-        if self.spec.satisfies('@:1.10.3,2:2.1.1%nag'):
-            filter_lang_rpaths(['fort', 'f77', 'f90'],
-                               self.compiler.fc_rpath_arg,
-                               '-Wl,-rpath -Wl,')
+    @when('@:3.0.4+wrapper-rpath')
+    @run_after('install')
+    def filter_pc_files(self):
+        files = find(self.spec.prefix.lib.pkgconfig, '*.pc')
+        x = FileFilter(*[f for f in files if not os.path.islink(f)])
+
+        # Remove this linking flag if present (it turns RPATH into RUNPATH)
+        x.filter('{0}--enable-new-dtags'.format(self.compiler.linker_arg), '',
+                 string=True, backup=False)
+
+        # NAG compiler is usually mixed with GCC, which has a different
+        # prefix for linker arguments.
+        if self.compiler.name == 'nag':
+            x.filter('-Wl,--enable-new-dtags', '', string=True, backup=False)
 
     @run_after('install')
     def delete_mpirun_mpiexec(self):
