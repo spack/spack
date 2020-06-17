@@ -15,6 +15,7 @@ class Ffb(MakefilePackage):
     version('8.1', sha256='1ad008c909152b6c27668bafbad820da3e6ec3309c7e858ddb785f0a3d6e43ae')
 
     patch('revocap_refiner.patch')
+    patch('fj_compiler.patch', when='%fj')
 
     depends_on('mpi')
     depends_on('blas')
@@ -52,6 +53,7 @@ class Ffb(MakefilePackage):
             r'#LES3DHOME   =', 'LES3DHOME= {0}\n'.format(workdir))
         make = join_path('make', 'OPTION')
         m = FileFilter(make)
+        m.filter(r'CPP\s*=.*$', 'CPP = /usr/bin/cpp')
         m.filter(r'CCOM\s*=.*$', 'CCOM = {0}'.format(spack_cc))
         m.filter(r'COPT\s*=.*$', 'COPT = {0}'.format(cflags))
         m.filter(r'FCOM\s*=.*$', 'FCOM = {0}\n'.format(spack_fc))
@@ -140,6 +142,17 @@ class Ffb(MakefilePackage):
         m = FileFilter(editfile)
         m.filter(r'LIBS = -lfort -lgf2 -ldd_mpi -lmpi_f77',
                  'LIBS = -lfort -lgf2  -ldd_mpi')
+
+        if spec.satisfies('%gcc'):
+            editfile = join_path('util', 'xvx2gf', 'FILES')
+            m = FileFilter(editfile)
+            m.filter(r'LIBS = -lgf2 -lz -lifcore -limf -ldl',
+                     'LIBS = -lgf2 -lz -ldl')
+        elif spec.satisfies('%fj'):
+            editfile = join_path('util', 'xvx2gf', 'FILES')
+            m = FileFilter(editfile)
+            m.filter(r'LIBS = -lgf2 -lz -lifcore -limf -ldl',
+                     'LIBS = -lgf2 -lz -ldl -linkfortran')
 
     def build(self, spec, prefix):
         for m in [join_path('make',  'Makeall'),
