@@ -29,7 +29,7 @@ class Evtgen(AutotoolsPackage):
     depends_on("tauola", when="+tauola")
     depends_on("photos", when="+photos")
 
-    conflicts("pythia8+evtgen", when="+pythia8",
+    conflicts("^pythia8+evtgen", when="+pythia8",
               msg="""Building pythia with evtgen bindings and
               evtgen with pythia bindings results in a circular dependency
               that cannot be resolved at the moment!
