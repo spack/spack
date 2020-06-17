@@ -13,8 +13,7 @@ class Frontistr(CMakePackage):
 
     homepage = "https://www.frontistr.com/"
     git      = "https://github.com/FrontISTR/FrontISTR.git"
-    maintainers = ['kazuya-goto', 'nqmorita', 'kinagaki', \
-                   'sakurano','michioga']
+    maintainers = ['kazuya-goto', 'nqmorita', 'kinagaki', 'michioga']
 
     version('5.0', tag='v5.0')
     version('master', tag='master')
