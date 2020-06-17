@@ -24,7 +24,7 @@ class Pythia8(AutotoolsPackage):
 
     variant('shared', default=True, description='Build shared library')
     variant('hepmc', default=True, description='Build HepMC2 extensions')
-    variant('evtgen', default=False, description='Build EvtGen extensions')
+    variant('evtgen', default=True, description='Build EvtGen extensions')
     variant('root', default=False, description='Build ROOT extensions')
     variant('fastjet', default=False, description='Build fastjet extensions')
 
@@ -35,10 +35,10 @@ class Pythia8(AutotoolsPackage):
     depends_on("fastjet@3.0.0:", when="+fastjet")
 
     conflicts("^evtgen+pythia8", when="+evtgen",
-              msg="""Building pythia with evtgen bindings and
-              evtgen with pythia bindings results in a circular dependency
-              that cannot be resolved at the moment!
-              Use pythia8+evtgen^evtgen~pythia8""")
+              msg="Building pythia with evtgen bindings and "
+              "evtgen with pythia bindings results in a circular dependency "
+              "that cannot be resolved at the moment! "
+              "Use pythia8+evtgen^evtgen~pythia8")
 
     def configure_args(self):
         args = []
