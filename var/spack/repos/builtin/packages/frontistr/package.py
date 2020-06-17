@@ -13,7 +13,7 @@ class Frontistr(CMakePackage):
 
     homepage = "https://www.frontistr.com/"
     git      = "https://github.com/FrontISTR/FrontISTR.git"
-    maintainers = ['kazuya-goto', 'nqmorita', 'kinagaki', 'sakurano', 'michioga']
+    maintainers = ['kazuya-goto','nqmorita','kinagaki','sakurano','michioga']
 
     version('5.0', tag='v5.0')
     version('master', tag='master')
@@ -27,7 +27,7 @@ class Frontistr(CMakePackage):
     depends_on('lapack')
     depends_on('scalapack')
     depends_on('revocap-refiner')
-    #depends_on('revocap-coupler')
+    # depends_on('revocap-coupler')
     depends_on('metis')
     depends_on('mumps')
     depends_on('trilinos')
