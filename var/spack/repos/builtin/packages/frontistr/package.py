@@ -27,7 +27,7 @@ class Frontistr(CMakePackage):
     depends_on('lapack')
     depends_on('scalapack')
     depends_on('revocap-refiner')
-    depends_on('revocap-coupler')
+    #depends_on('revocap-coupler')
     depends_on('metis')
     depends_on('mumps')
     depends_on('trilinos')
