@@ -15,8 +15,10 @@ import ruamel.yaml as yaml
 from llnl.util.filesystem import mkdirp
 
 import spack.config
+import spack.error
 import spack.spec
-from spack.error import SpackError
+
+import spack.package_perms as spp
 
 
 def _check_concrete(spec):
@@ -82,7 +84,7 @@ class DirectoryLayout(object):
             upstream, record = spack.store.db.query_by_spec_hash(
                 spec.dag_hash())
             if upstream:
-                raise SpackError(
+                raise spack.error.SpackError(
                     "Internal error: attempted to call path_for_spec on"
                     " upstream-installed package.")
 
@@ -286,16 +288,11 @@ class YamlDirectoryLayout(DirectoryLayout):
         if prefix:
             raise InstallDirectoryAlreadyExistsError(prefix)
 
-        # Create install directory with properly configured permissions
-        # Cannot import at top of file
-        from spack.package_prefs import get_package_dir_permissions
-        from spack.package_prefs import get_package_group
-
         # Each package folder can have its own specific permissions, while
         # intermediate folders (arch/compiler) are set with access permissions
         # equivalent to the root permissions of the layout.
-        group = get_package_group(spec)
-        perms = get_package_dir_permissions(spec)
+        group = spp.get_package_group(spec)
+        perms = spp.get_package_dir_permissions(spec)
 
         mkdirp(spec.prefix, mode=perms, group=group, default_perms='parents')
         mkdirp(self.metadata_path(spec), mode=perms, group=group)  # in prefix
@@ -506,7 +503,7 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
         os.rename(tmp.name, path)
 
 
-class DirectoryLayoutError(SpackError):
+class DirectoryLayoutError(spack.error.SpackError):
     """Superclass for directory layout errors."""
 
     def __init__(self, message, long_msg=None):

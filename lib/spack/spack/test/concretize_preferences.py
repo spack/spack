@@ -6,12 +6,13 @@
 import pytest
 import stat
 
-import spack.package_prefs
 import spack.repo
+import spack.spec
+import spack.version
+
+import spack.config as scon
+import spack.package_perms as spp
 import spack.util.spack_yaml as syaml
-from spack.config import ConfigScope, ConfigError
-from spack.spec import Spec
-from spack.version import Version
 
 
 @pytest.fixture()
@@ -19,7 +20,7 @@ def concretize_scope(mutable_config, tmpdir):
     """Adds a scope for concretization preferences"""
     tmpdir.ensure_dir('concretize')
     mutable_config.push_scope(
-        ConfigScope('concretize', str(tmpdir.join('concretize'))))
+        scon.ConfigScope('concretize', str(tmpdir.join('concretize'))))
 
     yield
 
@@ -53,7 +54,7 @@ callpath:
 
 
 def concretize(abstract_spec):
-    return Spec(abstract_spec).concretized()
+    return spack.spec.Spec(abstract_spec).concretized()
 
 
 def update_packages(pkgname, section, value):
@@ -128,16 +129,16 @@ class TestConcretizePreferences(object):
         """
         update_packages('mpileaks', 'version', ['2.3'])
         spec = concretize('mpileaks')
-        assert spec.version == Version('2.3')
+        assert spec.version == spack.version.Version('2.3')
 
         update_packages('mpileaks', 'version', ['2.2'])
         spec = concretize('mpileaks')
-        assert spec.version == Version('2.2')
+        assert spec.version == spack.version.Version('2.2')
 
     def test_preferred_versions_mixed_version_types(self):
         update_packages('mixedversions', 'version', ['2.0'])
         spec = concretize('mixedversions')
-        assert spec.version == Version('2.0')
+        assert spec.version == spack.version.Version('2.0')
 
     def test_preferred_providers(self):
         """Test preferred providers of virtual packages are
@@ -153,41 +154,41 @@ class TestConcretizePreferences(object):
 
     def test_preferred(self):
         """"Test packages with some version marked as preferred=True"""
-        spec = Spec('preferred-test')
+        spec = spack.spec.Spec('preferred-test')
         spec.concretize()
-        assert spec.version == Version('0.2.15')
+        assert spec.version == spack.version.Version('0.2.15')
 
         # now add packages.yaml with versions other than preferred
         # ensure that once config is in place, non-preferred version is used
         update_packages('preferred-test', 'version', ['0.2.16'])
-        spec = Spec('preferred-test')
+        spec = spack.spec.Spec('preferred-test')
         spec.concretize()
-        assert spec.version == Version('0.2.16')
+        assert spec.version == spack.version.Version('0.2.16')
 
     def test_develop(self):
         """Test concretization with develop-like versions"""
-        spec = Spec('develop-test')
+        spec = spack.spec.Spec('develop-test')
         spec.concretize()
-        assert spec.version == Version('0.2.15')
-        spec = Spec('develop-test2')
+        assert spec.version == spack.version.Version('0.2.15')
+        spec = spack.spec.Spec('develop-test2')
         spec.concretize()
-        assert spec.version == Version('0.2.15')
+        assert spec.version == spack.version.Version('0.2.15')
 
         # now add packages.yaml with develop-like versions
         # ensure that once config is in place, develop-like version is used
         update_packages('develop-test', 'version', ['develop'])
-        spec = Spec('develop-test')
+        spec = spack.spec.Spec('develop-test')
         spec.concretize()
-        assert spec.version == Version('develop')
+        assert spec.version == spack.version.Version('develop')
 
         update_packages('develop-test2', 'version', ['0.2.15.develop'])
-        spec = Spec('develop-test2')
+        spec = spack.spec.Spec('develop-test2')
         spec.concretize()
-        assert spec.version == Version('0.2.15.develop')
+        assert spec.version == spack.version.Version('0.2.15.develop')
 
     def test_external_mpi(self):
         # make sure this doesn't give us an external first.
-        spec = Spec('mpi')
+        spec = spack.spec.Spec('mpi')
         spec.concretize()
         assert not spec['mpi'].external
 
@@ -204,7 +205,7 @@ mpich:
         spack.config.set('packages', conf, scope='concretize')
 
         # ensure that once config is in place, external is used
-        spec = Spec('mpi')
+        spec = spack.spec.Spec('mpi')
         spec.concretize()
         assert spec['mpich'].external_path == '/dummy/path'
 
@@ -218,7 +219,7 @@ mpich:
             return 'prepend-path PATH /dummy/path'
         monkeypatch.setattr(spack.util.module_cmd, 'module', mock_module)
 
-        spec = Spec('mpi')
+        spec = spack.spec.Spec('mpi')
         spec.concretize()
         assert not spec['mpi'].external
 
@@ -235,7 +236,7 @@ mpi:
         spack.config.set('packages', conf, scope='concretize')
 
         # ensure that once config is in place, external is used
-        spec = Spec('mpi')
+        spec = spack.spec.Spec('mpi')
         spec.concretize()
         assert spec['mpich'].external_path == '/dummy/path'
 
@@ -309,43 +310,55 @@ mpi:
         # Make sure we can configure readable and writable
 
         # Test inheriting from 'all'
-        spec = Spec('zmpi')
-        perms = spack.package_prefs.get_package_permissions(spec)
+        spec = spack.spec.Spec('zmpi')
+        perms = spp.get_package_permissions(spec)
         assert perms == stat.S_IRWXU | stat.S_IRWXG
 
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        dir_perms = spp.get_package_dir_permissions(spec)
         assert dir_perms == stat.S_IRWXU | stat.S_IRWXG | stat.S_ISGID
 
-        group = spack.package_prefs.get_package_group(spec)
+        group = spp.get_package_group(spec)
         assert group == 'all'
 
     def test_config_permissions_from_package(self, configure_permissions):
         # Test overriding 'all'
-        spec = Spec('mpich')
-        perms = spack.package_prefs.get_package_permissions(spec)
+        spec = spack.spec.Spec('mpich')
+        perms = spp.get_package_permissions(spec)
         assert perms == stat.S_IRWXU
 
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        dir_perms = spp.get_package_dir_permissions(spec)
         assert dir_perms == stat.S_IRWXU
 
-        group = spack.package_prefs.get_package_group(spec)
+        group = spp.get_package_group(spec)
         assert group == 'all'
 
     def test_config_permissions_differ_read_write(self, configure_permissions):
         # Test overriding group from 'all' and different readable/writable
-        spec = Spec('mpileaks')
-        perms = spack.package_prefs.get_package_permissions(spec)
+        spec = spack.spec.Spec('mpileaks')
+        perms = spp.get_package_permissions(spec)
         assert perms == stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP
 
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        dir_perms = spp.get_package_dir_permissions(spec)
         expected = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_ISGID
         assert dir_perms == expected
 
-        group = spack.package_prefs.get_package_group(spec)
+        group = spp.get_package_group(spec)
         assert group == 'mpileaks'
 
     def test_config_perms_fail_write_gt_read(self, configure_permissions):
         # Test failure for writable more permissive than readable
-        spec = Spec('callpath')
-        with pytest.raises(ConfigError):
-            spack.package_prefs.get_package_permissions(spec)
+        spec = spack.spec.Spec('callpath')
+        with pytest.raises(scon.ConfigError):
+            spp.get_package_permissions(spec)
+
+    def test_config_all_perms(self, configure_permissions):
+        # Test all permissions only
+        group = spp.get_package_group(None)
+        assert group == 'all'
+
+        ug_rwx = stat.S_IRWXU | stat.S_IRWXG
+        perms = spp.get_package_permissions(None)
+        assert perms == ug_rwx
+
+        dir_perms = spp.get_package_dir_permissions(None)
+        assert dir_perms == ug_rwx | stat.S_ISGID

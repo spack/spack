@@ -44,7 +44,7 @@ import spack.compilers
 import spack.error
 import spack.hooks
 import spack.package
-import spack.package_prefs as prefs
+import spack.package_perms as spp
 import spack.repo
 import spack.store
 
@@ -1303,7 +1303,7 @@ class PackageInstaller(object):
             spack.store.layout.create_install_directory(pkg.spec)
         else:
             # Set the proper group for the prefix
-            group = prefs.get_package_group(pkg.spec)
+            group = spp.get_package_group(pkg.spec)
             if group:
                 fs.chgrp(pkg.spec.prefix, group)
 
@@ -1311,7 +1311,7 @@ class PackageInstaller(object):
             # This has to be done after group because changing groups blows
             # away the sticky group bit on the directory
             mode = os.stat(pkg.spec.prefix).st_mode
-            perms = prefs.get_package_dir_permissions(pkg.spec)
+            perms = spp.get_package_dir_permissions(pkg.spec)
             if mode != perms:
                 os.chmod(pkg.spec.prefix, perms)
 
