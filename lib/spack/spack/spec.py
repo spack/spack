@@ -959,7 +959,7 @@ class Spec(object):
 
     def __init__(self, spec_like=None,
                  normal=False, concrete=False, external_path=None,
-                 external_module=None, full_hash=None):
+                 external_modules=None, full_hash=None):
         """Create a new Spec.
 
         Arguments:
@@ -989,7 +989,7 @@ class Spec(object):
         self.architecture = None
         self.compiler = None
         self.external_path = None
-        self.external_module = None
+        self.external_modules = None
         self.compiler_flags = FlagMap(self)
         self._dependents = DependencyMap()
         self._dependencies = DependencyMap()
@@ -1010,7 +1010,7 @@ class Spec(object):
         self._normal = normal
         self._concrete = concrete
         self.external_path = external_path
-        self.external_module = external_module
+        self.external_modules = external_modules
         self._full_hash = full_hash
 
         # This attribute is used to store custom information for
@@ -1029,7 +1029,7 @@ class Spec(object):
 
     @property
     def external(self):
-        return bool(self.external_path) or bool(self.external_module)
+        return bool(self.external_path) or bool(self.external_modules)
 
     def get_dependency(self, name):
         dep = self._dependencies.get(name)
@@ -1530,7 +1530,7 @@ class Spec(object):
         if self.external:
             d['external'] = syaml.syaml_dict([
                 ('path', self.external_path),
-                ('module', self.external_module),
+                ('module', self.external_modules),
                 ('extra_attributes', self.extra_attributes)
             ])
 
@@ -1701,7 +1701,7 @@ class Spec(object):
                 spec.compiler_flags[name] = []
 
         spec.external_path = None
-        spec.external_module = None
+        spec.external_modules = None
         if 'external' in node:
             # This conditional is needed because sometimes this function is
             # called with a node already constructed that contains a 'versions'
@@ -1709,9 +1709,9 @@ class Spec(object):
             # indexes.
             if node['external']:
                 spec.external_path = node['external']['path']
-                spec.external_module = node['external']['module']
-                if spec.external_module is False:
-                    spec.external_module = None
+                spec.external_modules = node['external']['module']
+                if spec.external_modules is False:
+                    spec.external_modules = None
                 spec.extra_attributes = node['external'].get(
                     'extra_attributes', syaml.syaml_dict()
                 )
@@ -2158,8 +2158,8 @@ class Spec(object):
                         feq(replacement.variants, spec.variants) and
                         feq(replacement.external_path,
                             spec.external_path) and
-                        feq(replacement.external_module,
-                            spec.external_module)):
+                        feq(replacement.external_modules,
+                            spec.external_modules)):
                     continue
                 # Refine this spec to the candidate. This uses
                 # replace_with AND dup so that it can work in
@@ -2293,7 +2293,7 @@ class Spec(object):
                 t[-1] for t in ordered_hashes)
 
         for s in self.traverse():
-            if s.external_module and not s.external_path:
+            if s.external_modules and not s.external_path:
                 compiler = spack.compilers.compiler_for_spec(
                     s.compiler, s.architecture)
                 for mod in compiler.modules:
@@ -2302,8 +2302,8 @@ class Spec(object):
                 # get the path from the module
                 # the package can override the default
                 s.external_path = getattr(s.package, 'external_prefix',
-                                          md.get_path_from_module(
-                                              s.external_module))
+                                          md.path_from_modules(
+                                              s.external_modules))
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
@@ -3089,7 +3089,7 @@ class Spec(object):
                        self._normal != other._normal and
                        self.concrete != other.concrete and
                        self.external_path != other.external_path and
-                       self.external_module != other.external_module and
+                       self.external_modules != other.external_modules and
                        self.compiler_flags != other.compiler_flags)
 
         self._package = None
@@ -3117,7 +3117,7 @@ class Spec(object):
 
         self.variants.spec = self
         self.external_path = other.external_path
-        self.external_module = other.external_module
+        self.external_modules = other.external_modules
         self.extra_attributes = other.extra_attributes
         self.namespace = other.namespace
 

@@ -420,9 +420,11 @@ Adapt the following example. Be sure to maintain the indentation:
      intel-mkl:
        externals:
        - spec: "intel-mkl@2018.2.199  arch=linux-centos6-x86_64"
-         module:  intel-mkl/18/18.0.2
+         modules:
+         -  intel-mkl/18/18.0.2
        - spec: "intel-mkl@2018.3.222  arch=linux-centos6-x86_64"
-         module:  intel-mkl/18/18.0.3
+         modules:
+         -  intel-mkl/18/18.0.3
 
 The version numbers for the ``intel-mkl`` specs defined here correspond to file
 and directory names that Intel uses for its products because they were adopted
@@ -455,9 +457,11 @@ mechanism.
      intel-parallel-studio:
        externals:
        - spec: "intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64"
-         module:  intel/18/18.0.2
+         modules:
+         -  intel/18/18.0.2
        - spec: "intel-parallel-studio@cluster.2018.3.222 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64"
-         module:  intel/18/18.0.3
+         modules:
+         -  intel/18/18.0.3
        buildable: False
 
 One additional example illustrates the use of ``prefix:`` instead of

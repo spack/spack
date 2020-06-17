@@ -158,7 +158,7 @@ def spec_externals(spec):
     """Return a list of external specs (w/external directory path filled in),
        one for each known external installation."""
     # break circular import.
-    from spack.util.module_cmd import get_path_from_module # NOQA: ignore=F401
+    from spack.util.module_cmd import path_from_modules # NOQA: ignore=F401
 
     allpkgs = spack.config.get('packages')
     names = set([spec.name])
@@ -176,12 +176,12 @@ def spec_externals(spec):
             external_path = entry.pop('prefix', None)
             if external_path:
                 external_path = canonicalize_path(external_path)
-            external_module = entry.pop('module', None)
+            external_modules = entry.pop('modules', None)
             external_spec = spack.spec.Spec.from_detection(
                 spack.spec.Spec(
                     spec_str,
                     external_path=external_path,
-                    external_module=external_module
+                    external_modules=external_modules
                 ), extra_attributes=entry
             )
             if external_spec.satisfies(spec):

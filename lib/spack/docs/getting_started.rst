@@ -1186,9 +1186,11 @@ Here's an example of an external configuration for cray modules:
      mpich:
        externals:
        - spec: "mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10"
-         module: cray-mpich
+         modules:
+         - cray-mpich
        - spec: "mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10"
-         module: cray-mpich
+         modules:
+         - cray-mpich
      all:
        providers:
          mpi: [mpich]
@@ -1218,23 +1220,29 @@ Here is an example of a full packages.yaml used at NERSC
      mpich:
        externals:
        - spec: "mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
-         module: cray-mpich
+         modules:
+         - cray-mpich
        - spec: "mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge"
-         module: cray-mpich
+         modules:
+         - cray-mpich
        buildable: False
      netcdf:
        externals:
        - spec: "netcdf@4.3.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
-         module: cray-netcdf
+         modules:
+         - cray-netcdf
        - spec: "netcdf@4.3.3.1%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge"
-         module: cray-netcdf
+         modules:
+         - cray-netcdf
        buildable: False
      hdf5:
        externals:
        - spec: "hdf5@1.8.14%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
-         module: cray-hdf5
+         modules:
+         - cray-hdf5
        - spec: "hdf5@1.8.14%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge"
-         module: cray-hdf5
+         modules:
+         - cray-hdf5
        buildable: False
      all:
        compiler: [gcc@5.2.0, intel@16.0.0.109]

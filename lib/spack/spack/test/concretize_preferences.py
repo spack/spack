@@ -232,7 +232,7 @@ mpi:
     buildable: false
     externals:
     - spec: mpich@3.0.4
-      module: dummy
+      modules: [dummy]
 """)
         spack.config.set('packages', conf, scope='concretize')
 

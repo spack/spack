@@ -20,4 +20,5 @@ packages:
     buildable: False
     externals:
     - spec: externalmodule@1.0%gcc@4.5.0
-      module: external-module
+      modules:
+      - external-module

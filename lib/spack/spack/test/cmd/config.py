@@ -437,7 +437,7 @@ def test_config_update_packages(old_format_packages_yaml):
     assert {'spec': 'cmake@3.14.0', 'prefix': '/usr'} in externals
     assert 'externals' in data['gcc']
     externals = data['gcc']['externals']
-    assert {'spec': 'gcc@8.3.0', 'module': 'gcc-8'} in externals
+    assert {'spec': 'gcc@8.3.0', 'modules': ['gcc-8']} in externals
 
 
 def test_config_update_not_needed(mutable_config):

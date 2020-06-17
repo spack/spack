@@ -81,12 +81,13 @@ of the installation prefixes.  The following example says that module
    cmake:
      externals:
      - spec: cmake@3.7.2
-       module: CMake/3.7.2
+       modules:
+       - CMake/3.7.2
 
-Each ``packages.yaml`` begins with a ``packages:`` token, followed
-by a list of package names.  To specify externals, add a ``paths`` or ``modules``
-token under the package name, which lists externals in a
-``spec: /path`` or ``spec: module-name`` format.  Each spec should be as
+Each ``packages.yaml`` begins with a ``packages:`` attribute, followed
+by a list of package names.  To specify externals, add an ``externals``
+attribute under the package name, which lists externals.
+Each external should specify a ``spec:`` string that should be as
 well-defined as reasonably possible.  If a
 package lacks a spec component, such as missing a compiler or
 package version, then Spack will guess the missing component based

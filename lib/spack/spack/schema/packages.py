@@ -79,6 +79,9 @@ properties = {
                             'type': 'object',
                             'properties': {
                                 'spec': {'type': 'string'},
+                                'prefix': {'type': 'string'},
+                                'modules': {'type': 'array',
+                                            'items': {'type': 'string'}}
                             },
                             'additionalProperties': True,
                             'required': ['spec']
@@ -135,7 +138,7 @@ def update(data):
         for spec, module in modules.items():
             externals.append({
                 'spec': str(spec),
-                'module': str(module)
+                'modules': [str(module)]
             })
         if externals:
             changed = True
