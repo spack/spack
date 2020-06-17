@@ -35,7 +35,7 @@ class Dock(Package):
             'sgi': 'sgi',
         }
 
-        if not self.compiler.name in compiler_targets:
+        if self.compiler.name not in compiler_targets:
             template = 'Unsupported compiler {0}! Supported compilers: {1}'
             err = template.format(self.compiler.name,
                                   ', '.join(list(compiler_targets.keys())))
