@@ -501,46 +501,34 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 break
 
     def test(self):
-        def test_compiler_for_source(filename):
-            # all fortran files are *.f* or *.F*
-            if '.f' in filename or '.F' in filename:
-                return 'gfortran'
-            # all C files are *.c
-            elif filename[-2:] == '.c':
-                return 'gcc'
-            # all other formats must be C++ by elimination
-            else:
-                return 'g++'
-
         # Get compiler tests
         compiler_test_dir = self.test_dir.join('compiler_tests')
         shutil.copytree(os.path.join(spack.paths.tests_path, 'compilers'),
                         compiler_test_dir)
 
-        # compile and run each test
-        for test in os.listdir(compiler_test_dir):
-            full_path = os.path.join(compiler_test_dir, test)
-            exe_name = '%s.exe' % test
+        # get tests for each language and associate executable
+        langs = ('c', 'cxx', 'fortran')
+        compilers = ('gcc', 'g++', 'gfortran')
+        for lang, compiler in zip(langs, compilers):
+            # Only test the languages this spec supports
+            lang_variant = 'c++' if lang == 'cxx' else lang
+            if self.spec.satisfies('languages=%s' % lang_variant):
+                # compile and run each test to ensure it works
+                lang_dir = os.path.join(compiler_test_dir, lang)
+                for test in os.listdir(lang_dir):
+                    full_path = os.path.join(lang_dir, test)
+                    exe_name = '%s.exe' % test
 
-            # Get the right compiler for this test
-            compiler = test_compiler_for_source(test)
+                    options = ['-std=c++11'] if 'c++11' in test else []
 
-            ###
-            # Compile the test
-            ###
-            # once we reconcile compilers and dependencies this should
-            # query package for appropriate cxx11 flag
-            # only the hello_cxx11 test requires c++11
-            options = ['-std=c++11'] if 'c++11' in test else []
+                    # standard options
+                    options.extend(['-o', exe_name])
 
-            # standard options
-            options.extend(['-o', exe_name])
+                    # We can finally append the filename
+                    options.append(full_path)
+                    compiled = self.run_test(compiler, options=options, installed=True)
 
-            # We can finally append the filename
-            options.append(full_path)
-            compiled = self.run_test(compiler, options=options, installed=True)
-
-            # run the test to ensure it works
-            # only run it if the compile step worked
-            if compiled:
-                self.run_test(exe_name, expected=["Hello world", "YES!"])
+                    # run the test to ensure it works
+                    # only run it if the compile step worked
+                    if compiled:
+                        self.run_test(exe_name, expected=["Hello world", "YES!"])
