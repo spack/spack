@@ -81,7 +81,7 @@ class Intel(IntelPackage):
                 return 'icpc'
 
         # Get compiler tests
-        compiler_test_dir = self.test_stage.join('compiler_tests')
+        compiler_test_dir = self.test_dir.join('compiler_tests')
         shutil.copytree(os.path.join(spack.paths.tests_path, 'compilers'),
                         compiler_test_dir)
 

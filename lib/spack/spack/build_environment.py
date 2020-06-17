@@ -746,7 +746,7 @@ def setup_package(pkg, dirty, context='build'):
         # one command encapsulates all of the above for run environments
         import spack.user_environment as uenv  # avoid circular import
         env.extend(uenv.environment_modifications_for_spec(pkg.spec))
-
+        env.prepend_path('PATH', '.')
     # Loading modules, in particular if they are meant to be used outside
     # of Spack, can change environment variables that are relevant to the
     # build of packages. To avoid a polluted environment, preserve the
