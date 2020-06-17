@@ -148,7 +148,8 @@ class Glib(Package):
                 else:
                     args.append('--disable-' + value)
         else:
-            if 'tracing=dtrace' in self.spec or 'tracing=systemtap' in self.spec:
+            if ('tracing=dtrace' in self.spec
+                    or 'tracing=systemtap' in self.spec):
                 args.append('--enable-tracing')
             else:
                 args.append('--disable-tracing')
