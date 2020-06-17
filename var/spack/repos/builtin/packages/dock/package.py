@@ -41,11 +41,12 @@ class Dock(Package):
             raise InstallError('Parallel output is not supported with pgi.')
 
         with working_dir('install'):
-            if '+mpi' in spec:
-                which('sh')('./configure', compiler_targets[self.compiler.name], 'parallel')
-            else:
-                which('sh')('./configure', compiler_targets[self.compiler.name])
+            sh_args = ['./configure', compiler_targets[self.compiler.name]]
 
+            if '+mpi' in spec:
+                sh_args.append('parallel')
+
+            which('sh')(*sh_args)
             which('make')('YACC=bison -o y.tab.c')
 
         mkdirp(prefix.bin)
