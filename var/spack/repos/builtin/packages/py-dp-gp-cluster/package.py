@@ -15,7 +15,7 @@ class PyDpGpCluster(PythonPackage):
     homepage = "https://github.com/PrincetonUniversity/DP_GP_cluster"
     git      = "https://github.com/PrincetonUniversity/DP_GP_cluster.git"
 
-    version('master', branch='master')
+    version('2019-09-22', commit='eec12e74219f916aa86e253783905f7b5e30f6f4')
 
     depends_on('py-cython', type=('build', 'run'))
     depends_on('py-gpy', type=('build', 'run'))
