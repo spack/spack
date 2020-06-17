@@ -12,8 +12,8 @@ class Frontistr(CMakePackage):
         Nonlinear Structural Analysis"""
 
     homepage = "https://www.frontistr.com/"
-    git      = "https://github.com/FrontISTR/FrontISTR.git"
-    maintainers = ['kazuya-goto', 'nqmorita', 'kinagaki', 'michioga']
+    git      = "https://gitlab.com/FrontISTR-Commons/FrontISTR.git"
+    maintainers = ['hiroshi.okuda', 'kgoto', 'morita', 'inagaki', 'michioga']
 
     version('5.0', tag='v5.0')
     version('master', tag='master')
