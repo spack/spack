@@ -390,6 +390,88 @@ spack:
             assert(filecmp.cmp(orig_file, copy_to_file) is True)
 
 
+def test_ci_generate_with_script_and_variables(tmpdir, mutable_mock_env_path,
+                                               env_deactivate, install_mockery,
+                                               mock_packages):
+    """Make sure we it doesn't break if we configure cdash"""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    mappings:
+      - match:
+          - archive-files
+        runner-attributes:
+          tags:
+            - donotcare
+          variables:
+            ONE: $env:INTERP_ON_GENERATE
+            TWO: ${INTERP_ON_BUILD}
+          before_script:
+            - mkdir /some/path
+            - pushd /some/path
+            - git clone ${SPACK_REPO}
+            - cd spack
+            - git checkout ${SPACK_REF}
+            - popd
+          script:
+            - spack -d ci rebuild
+          after_script:
+            - rm -rf /some/path/spack
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            os.environ['INTERP_ON_GENERATE'] = 'success'
+            ci_cmd('generate', '--output-file', outputfile)
+
+            with open(outputfile) as f:
+                contents = f.read()
+                yaml_contents = syaml.load(contents)
+
+                found_it = False
+
+                for ci_key in yaml_contents.keys():
+                    ci_obj = yaml_contents[ci_key]
+                    if 'archive-files' in ci_key:
+                        # Ensure we have variables, possibly interpolated
+                        assert('variables' in ci_obj)
+                        var_d = ci_obj['variables']
+                        assert('ONE' in var_d)
+                        assert(var_d['ONE'] == 'success')
+                        assert('TWO' in var_d)
+                        assert(var_d['TWO'] == '${INTERP_ON_BUILD}')
+
+                        # Ensure we have scripts verbatim
+                        assert('before_script' in ci_obj)
+                        before_script = ci_obj['before_script']
+                        assert(before_script[0] == 'mkdir /some/path')
+                        assert(before_script[1] == 'pushd /some/path')
+                        assert(before_script[2] == 'git clone ${SPACK_REPO}')
+                        assert(before_script[3] == 'cd spack')
+                        assert(before_script[4] == 'git checkout ${SPACK_REF}')
+                        assert(before_script[5] == 'popd')
+
+                        assert('script' in ci_obj)
+                        assert(ci_obj['script'][0] == 'spack -d ci rebuild')
+
+                        assert('after_script' in ci_obj)
+                        after_script = ci_obj['after_script'][0]
+                        assert(after_script == 'rm -rf /some/path/spack')
+
+                        found_it = True
+
+            assert(found_it)
+
+
 def test_ci_generate_pkg_with_deps(tmpdir, mutable_mock_env_path,
                                    env_deactivate, install_mockery,
                                    mock_packages):
