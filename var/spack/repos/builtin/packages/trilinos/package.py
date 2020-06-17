@@ -288,6 +288,7 @@ class Trilinos(CMakePackage):
     conflicts('+zoltan2', when='~xpetra')
     conflicts('+zoltan2', when='~zoltan')
 
+    conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
     conflicts('+dtk', when='~kokkos')
     conflicts('+dtk', when='~teuchos')
@@ -330,9 +331,9 @@ class Trilinos(CMakePackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('boost', when='+boost')
-    depends_on('boost', when='+dtk')
-    depends_on('matio', when='+matio')
     depends_on('glm', when='+glm')
+    depends_on('hdf5+hl', when='+hdf5')
+    depends_on('matio', when='+matio')
     depends_on('metis@5:', when='+metis')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('zlib', when="+zlib")
@@ -364,14 +365,12 @@ class Trilinos(CMakePackage):
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
     depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
-    # We need hdf5+hl to match with netcdf during concretization
-    depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
     # Dependencies/conflicts when MPI is disabled
-    depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
+    depends_on('hdf5~mpi', when='+hdf5~mpi')
     conflicts('+parmetis', when='~mpi')
     conflicts('+pnetcdf', when='~mpi')
 
