@@ -130,6 +130,16 @@ class Bazel(Package):
     patch('compile-0.4.patch',  when='@0.4:0.5')
     patch('compile-0.3.patch',  when='@:0.3')
 
+    # for fcc
+    patch('patch_for_fcc.patch', when='@0.29.1:%fj')
+    patch('patch_for_fcc2.patch', when='@0.25:%fj')
+    conflicts(
+        '%fj',
+        when='@:0.24.1',
+        msg='Fujitsu Compiler cannot build 0.24.1 or less, '
+        'please use a newer release.'
+    )
+
     patch('disabledepcheck.patch', when='@0.3.2:+nodepfail')
     patch('disabledepcheck_old.patch', when='@0.3.0:0.3.1+nodepfail')
 
@@ -201,3 +211,7 @@ java_binary(
 
     def setup_dependent_package(self, module, dependent_spec):
         module.bazel = Executable('bazel')
+
+    @property
+    def parallel(self):
+        return not self.spec.satisfies('%fj')
