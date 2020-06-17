@@ -91,16 +91,27 @@ properties = {
                                         },
                                     },
                                 },
+                                'before_script': {
+                                    'type': 'array',
+                                    'default': [],
+                                    'items': {'type': 'string'}
+                                },
+                                'script': {
+                                    'type': 'array',
+                                    'default': [],
+                                    'items': {'type': 'string'}
+                                },
+                                'after_script': {
+                                    'type': 'array',
+                                    'default': [],
+                                    'items': {'type': 'string'}
+                                },
                             },
                         },
                     },
                 },
             },
             'enable-artifacts-buildcache': {
-                'type': 'boolean',
-                'default': False,
-            },
-            'enable-debug-messages': {
                 'type': 'boolean',
                 'default': False,
             },

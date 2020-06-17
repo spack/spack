@@ -449,7 +449,6 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
 
 
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
-                            custom_spack_repo=None, custom_spack_ref=None,
                             run_optimizer=False, use_dependencies=False):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
@@ -487,22 +486,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     is_pr_pipeline = (
         os.environ.get('SPACK_IS_PR_PIPELINE', '').lower() == 'true'
     )
-
-    # Make sure we use a custom spack if necessary
-    before_script = None
-    after_script = None
-    if custom_spack_repo:
-        if not custom_spack_ref:
-            custom_spack_ref = 'develop'
-        before_script = [
-            ('git clone "{0}"'.format(custom_spack_repo)),
-            'pushd ./spack && git checkout "{0}" && popd'.format(
-                custom_spack_ref),
-            '. "./spack/share/spack/setup-env.sh"',
-        ]
-        after_script = [
-            'rm -rf "./spack"'
-        ]
 
     ci_mirrors = yaml_root['mirrors']
     mirror_urls = [url for url in ci_mirrors.values()]
@@ -604,18 +587,26 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     except AttributeError:
                         image_name = build_image
 
+                job_script = [
+                    'spack env activate --without-view .',
+                    'spack ci rebuild',
+                ]
+                if 'script' in runner_attribs:
+                    job_script = [s for s in runner_attribs['script']]
+
+                before_script = None
+                if 'before_script' in runner_attribs:
+                    before_script = [
+                        s for s in runner_attribs['before_script']
+                    ]
+
+                after_script = None
+                if 'after_script' in runner_attribs:
+                    after_script = [s for s in runner_attribs['after_script']]
+
                 osname = str(release_spec.architecture)
                 job_name = get_job_name(phase_name, strip_compilers,
                                         release_spec, osname, build_group)
-
-                debug_flag = ''
-                if 'enable-debug-messages' in gitlab_ci:
-                    debug_flag = '-d '
-
-                job_scripts = [
-                    'spack env activate --without-view .',
-                    'spack {0}ci rebuild'.format(debug_flag),
-                ]
 
                 compiler_action = 'NONE'
                 if len(phases) > 1:
@@ -717,7 +708,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 job_object = {
                     'stage': stage_name,
                     'variables': variables,
-                    'script': job_scripts,
+                    'script': job_script,
                     'tags': tags,
                     'artifacts': {
                         'paths': artifact_paths,
