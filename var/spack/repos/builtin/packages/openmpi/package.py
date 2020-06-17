@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import itertools
 import os
 import sys
 import llnl.util.tty as tty
@@ -157,12 +158,26 @@ class Openmpi(AutotoolsPackage):
     patch('btl_vader.patch', when='@3.0.1:3.0.2')
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
-    # Reported upstream: https://github.com/open-mpi/ompi/pull/6378
+    # Make NAG compiler pass the -pthread option to the linker:
+    # https://github.com/open-mpi/ompi/pull/6378
     # We support only versions based on Libtool 2.4.6.
-    patch('nag_ltmain_1.patch', when='@2.1.4:2.1.999,3.0.1:4%nag')
-    patch('nag_ltmain_2.patch', when='@2.1.2:2.1.3,3.0.0%nag')
-    patch('nag_ltmain_3.patch', when='@2.0.0:2.1.1%nag')
-    patch('nag_ltmain_4.patch', when='@1.10.4:1.10.999%nag')
+    patch('nag_pthread/2.1.4_2.1.999_3.0.1_4.patch', when='@2.1.4:2.1.999,3.0.1:4%nag')
+    patch('nag_pthread/2.1.2_2.1.3_3.0.0.patch', when='@2.1.2:2.1.3,3.0.0%nag')
+    patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
+    patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10.999%nag')
+
+    # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
+    # support "IGNORE TKR" functionality (e.g. NAG).
+    # The issue has been resolved upstream in two steps:
+    #   1) https://github.com/open-mpi/ompi/pull/2294
+    #   2) https://github.com/open-mpi/ompi/pull/5099
+    # The first one was applied starting version v3.0.0 and backported to
+    # v1.10. A subset with relevant modifications is applicable starting
+    # version 1.8.4.
+    patch('use_mpi_tkr_sizeof/step_1.patch', when='@1.8.4:1.10.6,2:2.999')
+    # The second patch was applied starting version v4.0.0 and backported to
+    # v2.x, v3.0.x, and v3.1.x.
+    patch('use_mpi_tkr_sizeof/step_2.patch', when='@1.8.4:2.1.3,3:3.0.1')
 
     variant(
         'fabrics',
@@ -192,7 +207,8 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
-    variant('runpath', default=True, description='Enable wrapper runpath')
+    variant('wrapper-rpath', default=True,
+            description='Enable rpath support in the wrappers')
     variant('cxx', default=False, description='Enable C++ MPI bindings')
     variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
     variant('gpfs', default=True, description='Enable GPFS support (if present)')
@@ -273,6 +289,9 @@ class Openmpi(AutotoolsPackage):
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
     # It may be worth considering making libfabric an exclusive fabrics choice
+
+    # RPATH support in the wrappers was added in 1.7.4
+    conflicts('+wrapper-rpath', when='@:1.7.3')
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -369,12 +388,10 @@ class Openmpi(AutotoolsPackage):
             '--disable-silent-rules'
         ]
 
-        # Add extra_rpaths dirs from compilers.yaml into link wrapper
-        rpaths = [self.compiler.cc_rpath_arg + path
-                  for path in self.compiler.extra_rpaths]
-        config_args.extend([
-            '--with-wrapper-ldflags={0}'.format(' '.join(rpaths))
-        ])
+        # All rpath flags should be appended with self.compiler.cc_rpath_arg.
+        # Later, we might need to update share/openmpi/mpic++-wrapper-data.txt
+        # and mpifort-wrapper-data.txt (see filter_rpaths()).
+        wrapper_ldflags = []
 
         if '+atomics' in spec:
             config_args.append('--enable-builtin-atomics')
@@ -418,12 +435,6 @@ class Openmpi(AutotoolsPackage):
         if 'fabrics=auto' not in spec:
             config_args.extend(self.with_or_without('fabrics',
                                                     activation_value='prefix'))
-        # The wrappers fail to automatically link libfabric. This will cause
-        # undefined references unless we add the appropriate flags.
-        if 'fabrics=libfabric' in spec:
-            config_args.append('--with-wrapper-ldflags=-L{0} -Wl,-rpath={0}'
-                               .format(spec['libfabric'].prefix.lib))
-            config_args.append('--with-wrapper-libs=-lfabric')
 
         # Schedulers
         if 'schedulers=auto' not in spec:
@@ -499,12 +510,24 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
-        if '+runpath' in spec:
+        if '+wrapper-rpath' in spec:
             config_args.append('--enable-wrapper-rpath')
-            config_args.append('--enable-wrapper-runpath')
+
+            # Disable new dynamic tags in the wrapper (--disable-new-dtags)
+            # In the newer versions this can be done with a configure option
+            # (for older versions, we rely on filter_compiler_wrappers() and
+            # filter_pc_files()):
+            if spec.satisfies('@3.0.5:'):
+                config_args.append('--disable-wrapper-runpath')
+
+            # Add extra_rpaths and implicit_rpaths into the wrappers.
+            wrapper_ldflags.extend([
+                self.compiler.cc_rpath_arg + path
+                for path in itertools.chain(
+                    self.compiler.extra_rpaths,
+                    self.compiler.implicit_rpaths())])
         else:
             config_args.append('--disable-wrapper-rpath')
-            config_args.append('--disable-wrapper-runpath')
 
         if spec.satisfies('@:4'):
             if '+cxx' in spec:
@@ -517,7 +540,57 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--disable-cxx-exceptions')
 
+        if wrapper_ldflags:
+            config_args.append(
+                '--with-wrapper-ldflags={0}'.format(' '.join(wrapper_ldflags)))
+
         return config_args
+
+    @when('+wrapper-rpath')
+    @run_after('install')
+    def filter_rpaths(self):
+
+        def filter_lang_rpaths(lang_tokens, rpath_arg):
+            if self.compiler.cc_rpath_arg == rpath_arg:
+                return
+
+            files = find(self.spec.prefix.share.openmpi,
+                         ['*{0}-wrapper-data*'.format(t) for t in lang_tokens])
+            files.extend(find(self.spec.prefix.lib.pkgconfig,
+                              ['ompi-{0}.pc'.format(t) for t in lang_tokens]))
+
+            x = FileFilter(*[f for f in files if not os.path.islink(f)])
+
+            # Replace self.compiler.cc_rpath_arg, which have been added as
+            # '--with-wrapper-ldflags', with rpath_arg in the respective
+            # language-specific wrappers and pkg-config files.
+            x.filter(self.compiler.cc_rpath_arg, rpath_arg,
+                     string=True, backup=False)
+
+            if self.spec.satisfies('@:1.10.3,2:2.1.1'):
+                # Replace Libtool-style RPATH prefixes '-Wl,-rpath -Wl,' with
+                # rpath_arg for old version of OpenMPI, which assumed that CXX
+                # and FC had the same prefixes as CC.
+                x.filter('-Wl,-rpath -Wl,', rpath_arg,
+                         string=True, backup=False)
+
+        filter_lang_rpaths(['c++', 'CC', 'cxx'], self.compiler.cxx_rpath_arg)
+        filter_lang_rpaths(['fort', 'f77', 'f90'], self.compiler.fc_rpath_arg)
+
+    @when('@:3.0.4+wrapper-rpath')
+    @run_after('install')
+    def filter_pc_files(self):
+        files = find(self.spec.prefix.lib.pkgconfig, '*.pc')
+        x = FileFilter(*[f for f in files if not os.path.islink(f)])
+
+        # Remove this linking flag if present (it turns RPATH into RUNPATH)
+        x.filter('{0}--enable-new-dtags'.format(self.compiler.linker_arg), '',
+                 string=True, backup=False)
+
+        # NAG compiler is usually mixed with GCC, which has a different
+        # prefix for linker arguments.
+        if self.compiler.name == 'nag':
+            x.filter('-Wl,--enable-new-dtags', '', string=True, backup=False)
 
     @run_after('install')
     def delete_mpirun_mpiexec(self):
