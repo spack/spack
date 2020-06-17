@@ -7,6 +7,7 @@ import base64
 import datetime
 import json
 import os
+import re
 import shutil
 import tempfile
 import zlib
@@ -39,6 +40,8 @@ JOB_RETRY_CONDITIONS = [
 
 spack_gpg = SpackCommand('gpg')
 spack_compiler = SpackCommand('compiler')
+
+runner_var_regex = re.compile('\\$env:(.+)$')
 
 
 class TemporaryDirectory(object):
@@ -575,6 +578,13 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 variables = {}
                 if 'variables' in runner_attribs:
                     variables.update(runner_attribs['variables'])
+                    for name, value in variables.items():
+                        m = runner_var_regex.search(value)
+                        if m:
+                            env_var = m.group(1)
+                            interp_value = os.environ.get(env_var, None)
+                            if interp_value:
+                                variables[name] = interp_value
 
                 image_name = None
                 image_entry = None
