@@ -169,7 +169,7 @@ class Python(AutotoolsPackage):
     # https://github.com/spack/spack/pull/16856
     patch('python-2.7.8-distutils-C++.patch', when='@2.7.8:2.7.16')
     patch('python-2.7.17+-distutils-C++.patch', when='@2.7.17:2.7.18')
-    patch('python-3.6.8-distutils-C++.patch', when='@3.6.8:3.7.2')
+    patch('python-3.6.8-distutils-C++.patch', when='@3.6.8,3.7.2')
     patch('python-3.7.3-distutils-C++.patch', when='@3.7.3')
     patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:3.8')
 
@@ -273,7 +273,7 @@ class Python(AutotoolsPackage):
         # C/C++ source, and patches are required to enable building for these
         # modules. All Python versions without a viable patch are installed
         # with a warning message about this potentially erroneous behavior.
-        if not spec.satisfies('@2.7.8:2.7.18,3.6.8:3.8.3'):
+        if not spec.satisfies('@2.7.8:2.7.18,3.6.8,3.7.2:3.8.3'):
             tty.warn(('Python v{0} does not have the C++ "distutils" patch; '
                       'errors may occur when installing Python modules w/ '
                       'mixed C/C++ source files.').format(self.version))
