@@ -21,8 +21,6 @@ class Hepmc(CMakePackage):
     version('2.06.06', sha256='8cdff26c10783ed4248220a84a43b7e1f9b59cc2c9a29bd634d024ca469db125')
     version('2.06.05', sha256='4c411077cc97522c03b74f973264b8d9fd2b6ccec0efc7ceced2645371c73618')
 
-    variant('python', default=False, description='Enable Python bindings')
-
     depends_on('cmake@2.8.9:', type='build')
 
     def cmake_args(self):
