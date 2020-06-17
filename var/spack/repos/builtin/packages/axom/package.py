@@ -65,10 +65,10 @@ class Axom(CMakePackage, CudaPackage):
     # -----------------------------------------------------------------------
     # Variants
     # -----------------------------------------------------------------------
-    variant('debug', default=False,
+    variant('debug',    default=False,
             description='Build debug instead of optimized version')
 
-    variant('fortran', default=True, description="Build with Fortran support")
+    variant('fortran',  default=True, description="Build with Fortran support")
 
     variant("python",   default=False, description="Build python support")
 
@@ -77,16 +77,16 @@ class Axom(CMakePackage, CudaPackage):
 
     variant("mfem",     default=False, description="Build with mfem")
     variant("hdf5",     default=True, description="Build with hdf5")
-    variant("lua",      default=False, description="Build with Lua")
+    variant("lua",      default=True, description="Build with Lua")
     variant("scr",      default=False, description="Build with SCR")
     variant("umpire",   default=True, description="Build with umpire")
 
     variant("raja",     default=True, description="Build with raja")
-    variant("cub",     default=True,
+    variant("cub",      default=True,
             description="Build with RAJA's internal CUB support")
 
     varmsg = "Build development tools (such as Sphinx, Uncrustify, etc...)"
-    variant("devtools",  default=False, description=varmsg)
+    variant("devtools", default=False, description=varmsg)
 
     # -----------------------------------------------------------------------
     # Dependencies
@@ -124,7 +124,7 @@ class Axom(CMakePackage, CudaPackage):
         depends_on('umpire cuda_arch={0}'.format(sm_),
                    when='+umpire cuda_arch={0}'.format(sm_))
 
-    depends_on("mfem~mpi~hypre~metis~gzstream", when="+mfem")
+    depends_on("mfem~mpi~hypre~metis~zlib", when="+mfem")
 
     depends_on("python", when="+python")
 
@@ -136,6 +136,12 @@ class Axom(CMakePackage, CudaPackage):
     depends_on("py-sphinx", when="+devtools")
     depends_on("py-shroud", when="+devtools")
     depends_on("uncrustify@0.61", when="+devtools")
+
+    def flag_handler(self, name, flags):
+        if name in ('cflags', 'cxxflags', 'fflags'):
+            # the package manages these flags in another way
+            return (None, None, None)
+        return (flags, None, None)
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
@@ -209,6 +215,33 @@ class Axom(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER", f_compiler))
         else:
             cfg.write(cmake_cache_option("ENABLE_FORTRAN", False))
+
+        # use global spack compiler flags
+        cppflags = ' '.join(spec.compiler_flags['cppflags'])
+        if cppflags:
+            # avoid always ending up with ' ' with no flags defined
+            cppflags += ' '
+        cflags = cppflags + ' '.join(spec.compiler_flags['cflags'])
+        if cflags:
+            cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
+        cxxflags = cppflags + ' '.join(spec.compiler_flags['cxxflags'])
+        if cxxflags:
+            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
+        fflags = ' '.join(spec.compiler_flags['fflags'])
+        if fflags:
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
+
+        if ("gfortran" in f_compiler) and ("clang" in cpp_compiler):
+            libdir = pjoin(os.path.dirname(
+                           os.path.dirname(cpp_compiler)), "lib")
+            flags = ""
+            for _libpath in [libdir, libdir + "64"]:
+                if os.path.exists(_libpath):
+                    flags += " -Wl,-rpath,{0}".format(_libpath)
+            description = ("Adds a missing libstdc++ rpath")
+            if flags:
+                cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
+                                            description))
 
         # TPL locations
         cfg.write("#------------------{0}\n".format("-" * 60))
@@ -433,9 +466,9 @@ class Axom(CMakePackage, CudaPackage):
                                       os.path.dirname(f_compiler)), "lib")
                 description = ("Adds a missing rpath for libraries "
                                "associated with the fortran compiler")
+                linker_flags = "${BLT_EXE_LINKER_FLAGS} -Wl,-rpath," + libdir
                 cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS",
-                                            "-Wl,-rpath," + libdir,
-                                            description))
+                                            linker_flags, description))
 
             if "+cuda" in spec:
                 cfg.write("#------------------{0}\n".format("-" * 60))
@@ -484,15 +517,6 @@ class Axom(CMakePackage, CudaPackage):
 
                 cfg.write("# nvcc does not like gtest's 'pthreads' flag\n")
                 cfg.write(cmake_cache_option("gtest_disable_pthreads", True))
-
-        if ("gfortran" in f_compiler) and ("clang" in cpp_compiler):
-            clanglibdir = pjoin(os.path.dirname(
-                                os.path.dirname(cpp_compiler)), "lib")
-            flags = "-Wl,-rpath,{0}".format(clanglibdir)
-            description = ("Adds a missing rpath for libraries "
-                           "associated with the fortran compiler")
-            cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
-                                        description))
 
         cfg.write("\n")
         cfg.close()
