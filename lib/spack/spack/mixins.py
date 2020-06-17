@@ -187,7 +187,13 @@ def filter_compiler_wrappers(*files, **kwargs):
                 x.filter(os.environ[env_var], compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
-        x.filter('-Wl,--enable-new-dtags', '', **filter_kwargs)
+        x.filter('{0}--enable-new-dtags'.format(self.compiler.linker_arg), '',
+                 **filter_kwargs)
+
+        # NAG compiler is usually mixed with GCC, which has a different
+        # prefix for linker arguments.
+        if self.compiler.name == 'nag':
+            x.filter('-Wl,--enable-new-dtags', '', **filter_kwargs)
 
     PackageMixinsMeta.register_method_after(
         _filter_compiler_wrappers_impl, after
