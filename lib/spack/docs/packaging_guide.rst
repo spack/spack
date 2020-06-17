@@ -4094,8 +4094,8 @@ method must be implemented:
        or ``None`` if the version cannot be determined
        """
 
-This method receives as input a single executable and must return as output
-its version as a string, or ``None`` is the version cannot be determined.
+This method receives as input the path to a single executable and must return
+as output its version as a string, or ``None`` is the version cannot be determined.
 Implementing the three steps above is mandatory, and gives the package the
 basic ability to detect if a spec is present on the system at a given version.
 
@@ -4236,7 +4236,7 @@ the definition of the ``executables`` attribute is still required):
 
 This method takes as input a set of discovered executables (which match
 those specified by the user) as well as a common prefix shared by all
-of those executables. The function must return one or more Specs associated
+of those executables. The function must return one or more :py:class:`spack.spec.Spec` associated
 with the executables (it can also return ``None`` to indicate that no
 provided executables are associated with the package).
 

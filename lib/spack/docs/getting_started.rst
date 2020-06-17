@@ -1200,7 +1200,7 @@ via module load.
 
 .. note::
 
-    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:``
+    For Cray-provided packages, it is best to use ``modules:`` instead of ``prefix:``
     in ``packages.yaml``, because the Cray Programming Environment heavily relies on
     modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the
     compiler wrapper link line).

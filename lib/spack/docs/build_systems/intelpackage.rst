@@ -460,7 +460,7 @@ mechanism.
          module:  intel/18/18.0.3
        buildable: False
 
-One additional example illustrates the use of ``paths:`` instead of
+One additional example illustrates the use of ``prefix:`` instead of
 ``modules:``, useful when external modulefiles are not available or not
 suitable:
 
@@ -476,7 +476,7 @@ suitable:
        buildable: False
 
 Note that for the Intel packages discussed here, the directory values in the
-``paths:`` entries must be the high-level and typically version-less
+``prefix:`` entries must be the high-level and typically version-less
 "installation directory" that has been used by Intel's product installer.
 Such a directory will typically accumulate various product versions.  Amongst
 them, Spack will select the correct version-specific product directory based on
