@@ -302,9 +302,11 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('tbb', newer=True)
     
     def install(self, spec , prefix):
-        with working_dir(self.stage.source_path):
-            python(os.path.join(self.stage.source_path,'tools/amd_build/build_amd.py'))
-            super(PyTorch, self).install(spec , prefix)
+        spec = self.spec
+        if '+rocm' in self.spec:
+            with working_dir(self.stage.source_path):
+                python(os.path.join(self.stage.source_path,'tools/amd_build/build_amd.py'))
+                super(PyTorch, self).install(spec , prefix)
 
     def install_test(self):
         with working_dir('test'):
