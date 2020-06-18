@@ -15,8 +15,8 @@ class Test(Platform):
         binary_formats = ['macho']
 
     front_end   = 'x86_64'
-    back_end    = 'core2'
-    default     = 'core2'
+    back_end    = 'broadwell'
+    default     = 'broadwell'
 
     front_os = 'redhat6'
     back_os = 'debian6'

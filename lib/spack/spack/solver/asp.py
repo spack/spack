@@ -540,7 +540,7 @@ class PyclingoDriver(object):
         cores = []   # unsatisfiable cores if they do not
 
         def on_model(model):
-            models.append((model.cost, model.symbols(shown=True)))
+            models.append((model.cost, model.symbols(shown=True, terms=True)))
 
         solve_result = self.control.solve(
             assumptions=self.assumptions,
@@ -594,6 +594,7 @@ class SpackSolverSetup(object):
         self.possible_virtuals = None
         self.possible_compilers = []
         self.version_constraints = set()
+        self.compiler_version_constraints = set()
         self.post_facts = []
 
         # id for dummy variables
@@ -904,23 +905,11 @@ class SpackSolverSetup(object):
                     spec.name, spec.compiler.name, spec.compiler.version))
 
             elif spec.compiler.versions:
-                f.node_compiler_version_satisfies(
-                    spec.name, spec.compiler.namd, spec.compiler.version)
-
-                compiler_list = spack.compilers.all_compiler_specs()
-                possible_compiler_versions = [
-                    f.node_compiler_version(
-                        spec.name, spec.compiler.name, compiler.version
-                    )
-                    for compiler in compiler_list
-                    if compiler.satisfies(spec.compiler)
-                ]
-
-                clauses.append(self.gen.one_of(*possible_compiler_versions))
-                for version in possible_compiler_versions:
-                    clauses.append(
-                        fn.node_compiler_version_hard(
-                            spec.name, spec.compiler.name, version))
+                clauses.append(
+                    fn.node_compiler_version_satisfies(
+                        spec.name, spec.compiler.name, spec.compiler.versions))
+                self.compiler_version_constraints.add(
+                    (spec.name, spec.compiler))
 
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
@@ -956,27 +945,18 @@ class SpackSolverSetup(object):
         supported = []
 
         for target in targets:
-            compiler_info = target.compilers.get(compiler.name)
-            if not compiler_info:
-                # if we don't know, we assume it's supported and leave it
-                # to the user to debug
+            try:
+                target.optimization_flags(compiler.name, compiler.version)
                 supported.append(target)
+            except llnl.util.cpu.UnsupportedMicroarchitecture as e:
                 continue
-
-            if not isinstance(compiler_info, list):
-                compiler_info = [compiler_info]
-
-            for info in compiler_info:
-                version = ver(info['versions'])
-                if compiler.version.satisfies(version):
-                    supported.append(target)
 
         return sorted(supported, reverse=True)
 
     def platform_defaults(self):
         self.gen.h2('Default platform')
-        default = default_arch()
-        self.gen.fact(fn.node_platform_default(default.platform))
+        platform = spack.architecture.platform()
+        self.gen.fact(fn.node_platform_default(platform))
 
     def os_defaults(self, specs):
         self.gen.h2('Possible operating systems')
@@ -999,17 +979,12 @@ class SpackSolverSetup(object):
     def target_defaults(self, specs):
         """Add facts about targets and target compatibility."""
         self.gen.h2('Default target')
-        default = default_arch()
-        self.gen.fact(fn.node_target_default(default_arch().target))
 
-        uarch = default.target.microarchitecture
+        platform = spack.architecture.platform()
+        uarch = llnl.util.cpu.targets.get(platform.default)
 
         self.gen.h2('Target compatibility')
 
-        # listing too many targets can be slow, at least with our current
-        # encoding. To reduce the number of options to consider, only
-        # consider the *best* target that each compiler supports, along
-        # with the family.
         compatible_targets = [uarch] + uarch.ancestors
         compilers = self.possible_compilers
 
@@ -1020,6 +995,9 @@ class SpackSolverSetup(object):
         best_targets = set([uarch.family.name])
         for compiler in sorted(compilers):
             supported = self._supported_targets(compiler, compatible_targets)
+
+#            print("   ", compiler, "supports", [t.name for t in supported])
+
             if not supported:
                 continue
 
@@ -1035,6 +1013,7 @@ class SpackSolverSetup(object):
             if not spec.architecture or not spec.architecture.target:
                 continue
 
+            print("TTYPE:", type(platform.target(spec.target.name)))
             target = llnl.util.cpu.targets.get(spec.target.name)
             if not target:
                 raise ValueError("Invalid target: ", spec.target.name)
@@ -1070,8 +1049,7 @@ class SpackSolverSetup(object):
                 self.gen.fact(fn.provides_virtual(provider.name, vspec))
 
     def generate_possible_compilers(self, specs):
-        default_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
-        compilers = spack.compilers.compilers_for_arch(default_arch)
+        compilers = compilers_for_default_arch()
         cspecs = set([c.spec for c in compilers])
 
         # add compiler specs from the input line to possibilities if we
@@ -1112,6 +1090,24 @@ class SpackSolverSetup(object):
             self.gen.one_of_iff(
                 fn.version_satisfies(pkg_name, versions),
                 predicates,
+            )
+            self.gen.newline()
+
+    def define_compiler_version_constraints(self):
+        compiler_list = spack.compilers.all_compiler_specs()
+
+        for pkg_name, cspec in self.compiler_version_constraints:
+            possible_compiler_versions = [
+                fn.node_compiler_version(
+                    pkg_name, compiler.name, compiler.version)
+                for compiler in compiler_list
+                if compiler.satisfies(cspec)
+            ]
+
+            self.gen.one_of_iff(
+                fn.node_compiler_version_satisfies(
+                    pkg_name, cspec.name, cspec.versions),
+                possible_compiler_versions,
             )
             self.gen.newline()
 
@@ -1180,6 +1176,9 @@ class SpackSolverSetup(object):
 
         self.gen.h1("Version Constraints")
         self.define_version_constraints()
+
+        self.gen.h1("Compiler Version Constraints")
+        self.define_compiler_version_constraints()
 
 
 class SpecBuilder(object):
@@ -1316,6 +1315,7 @@ class SpecBuilder(object):
             # print out unknown actions so we can display them for debugging
             if not action:
                 print("%s(%s)" % (name, ", ".join(str(a) for a in args)))
+                print("    ", args)
                 continue
 
             assert action and callable(action)
@@ -1372,7 +1372,7 @@ def highlight(string):
 #
 # These are handwritten parts for the Spack ASP model.
 #
-def solve(specs, dump=None, models=0, timers=False, stats=False):
+def solve(specs, dump=(), models=0, timers=False, stats=False):
     """Solve for a stable model of specs.
 
     Arguments:

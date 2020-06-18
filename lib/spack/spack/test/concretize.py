@@ -619,7 +619,7 @@ class TestConcretize(object):
     ])
     @pytest.mark.regression('13361')
     def test_adjusting_default_target_based_on_compiler(
-            self, spec, best_achievable, current_host
+            self, spec, best_achievable, current_host, mock_targets
     ):
         best_achievable = archspec.cpu.TARGETS[best_achievable]
         expected = best_achievable if best_achievable < current_host \
