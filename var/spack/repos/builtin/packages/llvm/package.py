@@ -5,6 +5,8 @@
 
 from spack import *
 import sys
+import shutil
+import os
 
 
 class Llvm(CMakePackage, CudaPackage):
@@ -437,3 +439,37 @@ class Llvm(CMakePackage, CudaPackage):
 
         with working_dir(self.build_directory):
             install_tree("bin", join_path(self.prefix, "libexec", "llvm"))
+
+    def test(self):
+        if self.spec.satisfies('+clang'):
+            self.test_compilers()
+
+    def test_compilers(self):
+        # Get compiler tests
+        compiler_test_dir = self.test_dir.join('compiler_tests')
+        shutil.copytree(os.path.join(spack.paths.tests_path, 'compilers'),
+                        compiler_test_dir)
+
+        # get tests for each language and associate executable
+        langs = ('c', 'cxx')
+        compilers = ('clang', 'clang++')
+        for lang, compiler in zip(langs, compilers):
+            # compile and run each test to ensure it works
+            lang_dir = os.path.join(compiler_test_dir, lang)
+            for test in os.listdir(lang_dir):
+                full_path = os.path.join(lang_dir, test)
+                exe_name = '%s.exe' % test
+
+                options = ['-std=c++11'] if 'c++11' in test else []
+
+                # standard options
+                options.extend(['-o', exe_name])
+
+                # We can finally append the filename
+                options.append(full_path)
+                compiled = self.run_test(compiler, options=options, installed=True)
+
+                # run the test to ensure it works
+                # only run it if the compile step worked
+                if compiled:
+                    self.run_test(exe_name, expected=["Hello world", "YES!"])
