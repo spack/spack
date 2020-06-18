@@ -122,6 +122,10 @@ pipeline jobs.
 Concretizes the specs in the active environment, stages them (as described in
 :ref:`staging_algorithm`), and writes the resulting ``.gitlab-ci.yml`` to disk.
 
+This sub-command takes two arguments, but the most useful is ``--output-file``,
+which should be an absolute path (including file name) to the generated
+pipeline, if the default (``./.gitlab-ci.yml``) is not desired.
+
 .. _cmd-spack-ci-rebuild:
 
 ^^^^^^^^^^^^^^^^^^^^
@@ -131,6 +135,10 @@ Concretizes the specs in the active environment, stages them (as described in
 This sub-command is responsible for ensuring a single spec from the release
 environment is up to date on the remote mirror configured in the environment,
 and as such, corresponds to a single job in the ``.gitlab-ci.yml`` file.
+
+Rather than taking command-line arguments, this sub-command expects information
+to be communicated via environment variables, which will typically come via the
+``.gitlab-ci.yml`` job as ``variables``.
 
 ------------------------------------
 A pipeline-enabled spack environment
@@ -245,7 +253,21 @@ runners known to the gitlab instance.  For Docker executor type runners, the
 as well as an ``entrypoint`` to override whatever the default for that image is).
 For other types of runners the ``variables`` key will be useful to pass any
 information on to the runner that it needs to do its work (e.g. scheduler
-parameters, etc.).
+parameters, etc.).  Any ``variables`` provided here will be added, verbatim, to
+each job, unless the value takes on a special form.  If the value has the form
+``$env:<var_value>``, then that variable will be inserted with ``var_value``
+first sampled from the environment during job generation.  This can be useful
+for propagating generation-time variables which normally would not be available
+child build jobs.
+
+The ``runner-attributes`` section also allows users to supply custom ``script``,
+``before_script``, and ``after_script`` sections to be applied to every job
+scheduled on that runner.  This allows users to do any custom preparation or
+cleanup tasks that fit their particular workflow, as well as completely
+customize the rebuilding of a spec if they so choose.  We will never generate
+a ``before_script`` or ``after_script`` for jobs, but if you do not provide
+a custom ``script``, we will generate one for you that invokes
+``spack ci rebuild``.
 
 .. _staging_algorithm:
 
@@ -368,13 +390,15 @@ Using a custom spack in your pipeline
 
 If your runners will not have a version of spack ready to invoke, or if for some
 other reason you want to use a custom version of spack to run your pipelines,
-this can be accomplished fairly simply.  First, create CI environment variables
-containing the url and branch/tag you want to clone (calling them, for example,
-``SPACK_REPO`` and ``SPACK_REF``), use them to clone spack in your pre-ci
-``before_script``, and finally pass those same values along to the workload
-generation process via the ``spack-repo`` and ``spack-ref`` cli args.  Here's
-the ``generate-pipeline`` job from the top of this document, updated to clone
-a custom spack and make sure the generated rebuild jobs will clone it too:
+this section provides an example of how you could take advantage of
+user-provided pipeline scripts to accomplish this fairly simply.  First, you
+could use the GitLab user interface to create CI environment variables
+containing the url and branch/tag/SHA you want to clone (calling them, for
+example, ``SPACK_REPO`` and ``SPACK_REF``), then use those in a custom shell
+script invoked both from your pipeline generation job, as well in your rebuild
+jobs.  Here's the ``generate-pipeline`` job from the top of this document,
+updated to invoke a custom shell script that will clone and source a custom
+spack:
 
 .. code-block:: yaml
 
@@ -382,12 +406,10 @@ a custom spack and make sure the generated rebuild jobs will clone it too:
      tags:
        - <some-other-tag>
    before_script:
-     - git clone ${SPACK_REPO} --branch ${SPACK_REF}
-     - . ./spack/share/spack/setup-env.sh
+     - ./cloneSpack.sh
    script:
      - spack env activate .
      - spack ci generate
-       --spack-repo ${SPACK_REPO} --spack-ref ${SPACK_REF}
        --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
    after_script:
      - rm -rf ./spack
@@ -395,13 +417,47 @@ a custom spack and make sure the generated rebuild jobs will clone it too:
      paths:
        - "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
 
+And that script could contain:
 
-If the ``spack ci generate`` command receives those extra command line arguments,
-then it adds similar ``before_script`` and ``after_script`` sections for each of
-the ``spack ci rebuild`` jobs it generates (cloning and sourcing a custom
-spack in the ``before_script`` and removing it again in the ``after_script``).
-This gives you control over the version of spack used when the rebuild jobs
-are actually run on the gitlab runner.
+.. code-block:: bash
+
+   #!/bin/bash
+
+   git clone ${SPACK_REPO}
+   pushd ./spack
+   git checkout ${SPACK_REF}
+   popd
+
+   . "./spack/share/spack/setup-env.sh"
+
+   spack --version
+
+Finally, you would also want your generated rebuild jobs to clone that version
+of spack, so you would update your ``spack.yaml`` from above as follows:
+
+.. code-block:: yaml
+
+   spack:
+     ...
+     gitlab-ci:
+       mappings:
+         - match:
+             - os=ubuntu18.04
+           runner-attributes:
+             tags:
+               - spack-kube
+             image: spack/ubuntu-bionic
+             before_script:
+               - ./cloneSpack.sh
+             script:
+               - spack -d ci rebuild
+             after_script:
+               - rm -rf ./spack
+
+Now all the generated rebuild jobs will use the same shell script to clone
+spack before running their actual workload.  Here we have also provided a
+custom ``script`` because we want to run ``spack ci rebuild`` in debug mode
+to get more information when builds fail.
 
 .. _ci_environment_variables:
 
