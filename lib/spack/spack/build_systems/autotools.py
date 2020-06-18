@@ -96,14 +96,23 @@ class AutotoolsPackage(PackageBase):
 
         if not self.patch_config_files or (
                 not self.spec.satisfies('target=ppc64le:') and
-                not self.spec.satisfies('target=aarch64:') and
-                not self.spec.satisfies('target=power9le:')
+                not self.spec.satisfies('target=aarch64:')
         ):
             return
 
+        # TODO: Expand this to select the 'config.sub'-compatible architecture
+        # for each platform (e.g. 'config.sub' doesn't accept 'power9le', but
+        # does accept 'ppc64le').
+        if self.spec.satisfies('target=ppc64le:'):
+            config_arch = 'ppc64le'
+        elif self.spec.satisfies('target=aarch64:'):
+            config_arch = 'aarch64'
+        else:
+            config_arch = 'local'
+
         my_config_files = {'guess': None, 'sub': None}
         config_files = {'guess': None, 'sub': None}
-        config_args = {'guess': [], 'sub': ['local']}
+        config_args = {'guess': [], 'sub': [config_arch]}
 
         for config_name in config_files.keys():
             config_file = 'config.{0}'.format(config_name)
@@ -114,11 +123,10 @@ class AutotoolsPackage(PackageBase):
                 # Then search in all sub directories recursively.
                 # We would like to use AC_CONFIG_AUX_DIR, but not all packages
                 # ship with their configure.in or configure.ac.
-                for root, subdirs, subfiles in os.walk('.'):
-                    for subfile in subfiles:
-                        if subfile == config_file:
-                            path = os.path.join(root, subfile)
-                            my_config_files[config_name] = path
+                config_path = next((os.path.join(r, f)
+                                    for r, ds, fs in os.walk('.') for f in fs
+                                    if f == config_file), None)
+                my_config_files[config_name] = config_path
 
             if my_config_files[config_name] is not None:
                 try:

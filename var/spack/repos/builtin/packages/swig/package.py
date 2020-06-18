@@ -44,7 +44,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         depends_on('automake', type='build', when=_version)
         depends_on('libtool', type='build', when=_version)
     # Need newer 'automake' to support newer platforms
-    for _target in ['ppc64le', 'aarch64', 'power9le']:
+    for _target in ['ppc64le', 'aarch64']:
         depends_on('automake@1.15:', type='build', when='target={0}:'.format(_target))
     depends_on('pkgconfig', type='build')
 
