@@ -307,6 +307,8 @@ class PyTorch(PythonPackage, CudaPackage):
             with working_dir(self.stage.source_path):
                 python(os.path.join(self.stage.source_path,'tools/amd_build/build_amd.py'))
                 super(PyTorch, self).install(spec , prefix)
+        else:
+            super(PyTorch, self).install(spec , prefix)
 
     def install_test(self):
         with working_dir('test'):
