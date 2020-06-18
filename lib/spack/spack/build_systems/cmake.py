@@ -157,7 +157,7 @@ class CMakePackage(PackageBase):
         # Spack does not need to consider multilib environments due to each
         # package getting its own prefix, so avoid usage of CMake's
         # GNUInstallDirs module detecting multilib platform directories.
-        args.append(define('CMAKE_INSTALL_LIBDIR','lib'))
+        args.append(define('CMAKE_INSTALL_LIBDIR', 'lib'))
 
         if primary_generator == 'Unix Makefiles':
             args.append(define('CMAKE_VERBOSE_MAKEFILE', True))
