@@ -10,7 +10,7 @@ class Datatransferkit(CMakePackage):
     """DataTransferKit is an open-source software library of
     parallel solution transfer services for multiphysics simulations"""
 
-    homepage = "datatransferkit.readthedoc.io"
+    homepage = "https://datatransferkit.readthedoc.io"
     url      = "https://github.com/ORNL-CEES/DataTransferKit/archive/3.1-rc1.tar.gz"
     git      = "https://github.com/ORNL-CEES/DataTransferKit.git"
 
@@ -18,17 +18,19 @@ class Datatransferkit(CMakePackage):
 
     variant('openmp', default=False, description='enable OpenMP backend')
     variant('serial', default=True, description='enable Serial backend (default)')
+    variant('shared', default=True,
+            description='enable the build of shared lib')
 
     depends_on('cmake', type='build')
-    depends_on('trilinos@develop:+intrepid2+shards', when='+serial')
-    depends_on('trilinos@develop:+intrepid2+shards+openmp', when='+openmp')
+    depends_on('trilinos@develop+intrepid2+shards~dtk', when='+serial')
+    depends_on('trilinos@develop+intrepid2+shards+openmp~dtk', when='+openmp')
 
     def cmake_args(self):
         spec = self.spec
 
         options = [
-            '-DBUILD_SHARED_LIBS=ON',
-            '-DCMAKE_BUILD_TYPE=Release',
+            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
+                'ON' if '+shared' in spec else 'OFF'),
             '-DDataTransferKit_ENABLE_DataTransferKit=ON',
             '-DDataTransferKit_ENABLE_TESTS=OFF',
             '-DDataTransferKit_ENABLE_EXAMPLES=OFF',
