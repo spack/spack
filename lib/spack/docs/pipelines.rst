@@ -103,7 +103,7 @@ needed for pipeline operation that should not be visible in a spack environment
 file.  These environment variables are described in more detail
 :ref:`ci_environment_variables`.
 
-.. _cmd_spack_ci:
+.. _cmd-spack-ci:
 
 ^^^^^^^^^^^^^^^^^^
 ``spack ci``
@@ -112,7 +112,7 @@ file.  These environment variables are described in more detail
 Super-command for functionality related to generating pipelines and executing
 pipeline jobs.
 
-.. _cmd_spack_ci_generate:
+.. _cmd-spack-ci-generate:
 
 ^^^^^^^^^^^^^^^^^^^^^
 ``spack ci generate``
@@ -121,7 +121,7 @@ pipeline jobs.
 Concretizes the specs in the active environment, stages them (as described in
 :ref:`staging_algorithm`), and writes the resulting ``.gitlab-ci.yml`` to disk.
 
-.. _cmd_spack_ci_rebuild:
+.. _cmd-spack-ci-rebuild:
 
 ^^^^^^^^^^^^^^^^^^^^
 ``spack ci rebuild``
