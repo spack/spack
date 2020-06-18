@@ -20,6 +20,9 @@ class Atop(Package):
     depends_on('zlib')
     depends_on('ncurses')
 
+    def setup_build_environment(self, env):
+        env.append_flags('LDFLAGS', '-ltinfo')
+
     def install(self, spec, prefix):
         make()
         mkdirp(prefix.bin)
