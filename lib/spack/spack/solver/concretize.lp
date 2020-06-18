@@ -228,16 +228,6 @@ node_target_match(Package, 1)
 1 { compiler_weight(Package, Weight) : compiler_weight(Package, Weight) } 1
  :- node(Package).
 
-% no conflicting compiler versions
-:- node_compiler_version(Package, Compiler, Version),
-   node_compiler_version_satisfies(Package, Compiler, Constraint),
-   0 = @version_satisfies(Version, Constraint).
-
-node_compiler_version_satisfies(Package, Constraint)
-  :- node_compiler_version(Package, Compiler, Version),
-     node_compiler_version_constraint(Package, Compiler, Constraint),
-     1 = @version_satisfies(Version, Constraint).
-
 % dependencies imply we should try to match hard compiler constraints
 % todo: look at what to do about intersecting constraints here. we'd
 % ideally go with the "lowest" pref in the DAG
@@ -252,19 +242,17 @@ compiler_match(Package, 1)
     node_compiler_match_pref(Package, Compiler).
 
 node_compiler_version_match_pref(Package, Compiler, V)
- :- node_compiler_version_hard(Package, Compiler, V).
+ :- node_compiler_hard(Package, Compiler),
+    node_compiler_version(Package, Compiler, V).
 node_compiler_version_match_pref(Dependency, Compiler, V)
  :- depends_on(Package, Dependency),
     node_compiler_version_match_pref(Package, Compiler, V),
-    not node_compiler_version_hard(Dependency, Compiler, _).
+    not node_compiler_hard(Dependency, Compiler).
 compiler_version_match(Package, 1)
  :- node_compiler_version(Package, Compiler, V),
     node_compiler_version_match_pref(Package, Compiler, V).
 
 #defined node_compiler_hard/2.
-#defined node_compiler_version_hard/3.
-#defined node_compiler_version_constraint/3.
-#defined node_compiler_version_satisfies/3.
 
 % compilers weighted by preference acccording to packages.yaml
 compiler_weight(Package, Weight)
