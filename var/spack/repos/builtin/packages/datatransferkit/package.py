@@ -7,7 +7,8 @@ from spack import *
 
 
 class Datatransferkit(CMakePackage):
-    """DataTransferKit is an open-source software library of parallel solution transfer services for multiphysics simulations"""
+    """DataTransferKit is an open-source software library of
+    parallel solution transfer services for multiphysics simulations"""
 
     homepage = "datatransferkit.readthedoc.io"
     url      = "https://github.com/ORNL-CEES/DataTransferKit/archive/3.1-rc1.tar.gz"
@@ -25,7 +26,7 @@ class Datatransferkit(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        options = [ 
+        options = [
             '-DBUILD_SHARED_LIBS=ON',
             '-DCMAKE_BUILD_TYPE=Release',
             '-DDataTransferKit_ENABLE_DataTransferKit=ON',
