@@ -42,6 +42,7 @@ RUN yum update -y \
         patch \
         python \
         python-pip \
+        python-setuptools \
         tcl \
         unzip \
         which \
