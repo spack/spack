@@ -31,6 +31,7 @@ class VtkM(CMakePackage, CudaPackage):
     version('1.2.0', sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763")
     version('1.1.0', sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18")
 
+    patch('vtkmdiy_fpic.patch', when='@1.5.3')
     # use release, instead of release with debug symbols b/c vtkm libs
     # can overwhelm compilers with too many symbols
     variant('build_type', default='Release', description='CMake build type',
