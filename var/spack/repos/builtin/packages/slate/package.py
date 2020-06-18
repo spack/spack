@@ -16,7 +16,7 @@ class Slate(Package):
     solvers."""
 
     homepage = "https://icl.utk.edu/slate/"
-    url      = "https://bitbucket.org/icl/slate_git"
+    url      = "https://bitbucket.org/icl/slate"
     maintainers = ['G-Ragghianti', 'mgates3']
 
     version('develop', git=url, submodules=True)
