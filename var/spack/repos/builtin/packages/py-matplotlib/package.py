@@ -13,7 +13,7 @@ class PyMatplotlib(PythonPackage):
     and interactive visualizations in Python."""
 
     homepage = "https://matplotlib.org/"
-    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.2.1.tar.gz"
+    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.2.2.tar.gz"
 
     maintainers = ['adamjstewart']
 
@@ -27,6 +27,7 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units'
     ]
 
+    version('3.2.2', sha256='3d77a6630d093d74cbbfebaa0571d00790966be1ed204e4a8239f5cbd6835c5d')
     version('3.2.1', sha256='ffe2f9cdcea1086fc414e82f42271ecf1976700b8edd16ca9d376189c6d93aee')
     version('3.2.0', sha256='651d76daf9168250370d4befb09f79875daa2224a9096d97dfc3ed764c842be4')
     version('3.1.3', sha256='db3121f12fb9b99f105d1413aebaeb3d943f269f3d262b45586d12765866f0c6')
@@ -127,7 +128,10 @@ class PyMatplotlib(PythonPackage):
     depends_on('pkgconfig', type='build')
 
     # Testing dependencies
-    depends_on('py-pytest', type='test')
+    # https://matplotlib.org/devel/testing.html#requirements
+    depends_on('py-pytest@3.6:', type='test')
+    depends_on('ghostscript@9.0:', type='test')
+    # depends_on('inkscape@:0.999', type='test')
 
     msg = 'MacOSX backend requires the Cocoa headers included with XCode'
     conflicts('platform=linux', when='backend=macosx', msg=msg)
