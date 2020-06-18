@@ -75,7 +75,6 @@ class Qt(Package):
             description="Build with OpenSSL support.")
     variant('freetype', default='spack', description='Freetype2 support',
             values=('spack', 'qt', 'none'), multi=False)
-    variant('xcb', default=True, description="enable qt-xcb")
     variant('webengine', default=False, description="Enable webengine")
 
     conflicts('+webengine', when='~opengl')
@@ -177,27 +176,24 @@ class Qt(Package):
     if MACOS_VERSION is None:
         depends_on("fontconfig", when='freetype=spack')
         depends_on("libx11")
-        depends_on("libxcb", when="~xcb")
+        depends_on("libxcb")
         depends_on("libxkbcommon")
         conflicts('+webengine', when='~dbus')
-        conflicts('+webengine', when='+xcb')
         depends_on("fontconfig", when="+webengine")
-        depends_on("xcb-util-image", when="~xcb")
-        depends_on("xcb-util-keysyms", when="~xcb")
-        depends_on("xcb-util-renderutil", when="~xcb")
-        depends_on("xcb-util-wm", when="~xcb")
-        depends_on("libdrm", when='+webengine~xcb')
-        depends_on("libxcomposite", when='+webengine~xcb')
-        depends_on("libxcursor", when='+webengine~xcb')
-        depends_on("libxi", when='+webengine~xcb')
-        depends_on("libxrandr", when='+webengine~xcb')
-        depends_on("libxscrnsaver", when='+webengine~xcb')
-        depends_on("libxtst", when='+webengine~xcb')
+        depends_on("xcb-util-image")
+        depends_on("xcb-util-keysyms")
+        depends_on("xcb-util-renderutil")
+        depends_on("xcb-util-wm")
+        depends_on("libdrm", when='+webengine')
+        depends_on("libxcomposite", when='+webengine')
+        depends_on("libxcursor", when='+webengine')
+        depends_on("libxi", when='+webengine')
+        depends_on("libxrandr", when='+webengine')
+        depends_on("libxscrnsaver", when='+webengine')
+        depends_on("libxtst", when='+webengine')
         depends_on("libxext", when='@3:4.99')
-        depends_on("libxdamage", when='+webengine~xcb')
-#        depends_on("libicu", when="+webengine")
-#        depends_on("libcap", when='+webengine')
-        depends_on("python@2.:2.99", type=('build',), when='+webengine')
+        depends_on("libxdamage", when='+webengine')
+        depends_on("python@2.7.5:2.99", type=('build',), when='+webengine')
         conflicts('+framework',
                   msg="QT cannot be built as a framework except on macOS.")
     else:
@@ -443,11 +439,6 @@ class Qt(Package):
         else:
             config_args.append('-static')
 
-        if '+xcb' in self.spec:
-            config_args.append('-qt-xcb')
-        else:
-            config_args.append('-system-xcb')
-
         if self.spec.satisfies('@5:'):
             pcre = self.spec['pcre'] if self.spec.satisfies('@5.0:5.8') \
                 else self.spec['pcre2']
@@ -596,8 +587,7 @@ class Qt(Package):
                 config_args.append('-no-xinput2')
         else:
             # Linux-only QT5 dependencies
-            if '+xcb' in spec:
-                config_args.append('-system-xcb')
+            config_args.append('-system-xcb')
 
         # if '~webkit' in spec:
         #     config_args.extend([
