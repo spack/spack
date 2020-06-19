@@ -467,7 +467,7 @@ class Stage(object):
                 # Don't bother reporting when something is not cached.
                 continue
             except spack.error.SpackError as e:
-                tty.msg("Fetching from %s failed." % fetcher)
+                tty.debug("Fetching from %s failed." % fetcher)
                 tty.debug(e)
                 continue
         else:
