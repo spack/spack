@@ -23,11 +23,24 @@ class Exa(CargoPackage):
         description='Link Rust standard library dynamically'
     )
 
+    variant(
+        'git',
+        default=True,
+        description='Enable git features in exa'
+    )
+
     depends_on('pkgconfig', type='build')
-    depends_on('libgit2')
+    depends_on('libgit2', when='+git')
+
+    def cargo_features(self):
+        if '+git' in self.spec:
+            return ['git']
+        else:
+            return []
 
     def setup_build_environment(self, env):
-        env.append_flags('LIBGIT2_SYS_USE_PKG_CONFIG', '1')
+        if '+git' in self.spec:
+            env.append_flags('LIBGIT2_SYS_USE_PKG_CONFIG', '1')
 
     version('master', branch='master')
     version('0.9.0', sha256='0463ccb5038bd6a0ee042e0a8ff5cd9792906e19a29f0ce631217c7a5f1720e9')

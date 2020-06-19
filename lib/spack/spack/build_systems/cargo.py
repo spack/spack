@@ -102,9 +102,13 @@ class CargoPackage(PackageBase):
         """Returns the metadata description of the crate.
 
         Used to determine the installable targets in the crate"""
+
+        feature_args = self._feature_args()
+
         return json.loads(inspect.getmodule(self).cargo(
             'metadata', '--manifest-path', self.manifest_path,
             '--format-version', '1',
+            *feature_args,
             output=str))
 
     @property
@@ -161,6 +165,23 @@ lto = "{lto}"
                     for t in p["targets"]:
                         yield t
 
+    def cargo_features(self):
+        """Features to build cargo project with. Overridable by package."""
+        return None
+
+    def _feature_args(self):
+        """Returns the args associated with cargo_features"""
+        features = self.cargo_features()
+        if features == None:
+            return []
+
+        args = ["--no-default-features"]
+
+        for feature in features:
+            args += ["--features", feature]
+
+        return args
+
     def build(self, spec, prefix):
         """cargo build"""
         jobs = spack.config.get('config:build_jobs') if self.parallel else 1
@@ -174,6 +195,8 @@ lto = "{lto}"
 
             if 'build_type=release' in self.spec:
                 args += ["--release"]
+
+            args += self._feature_args()
 
             if "bin" in t["kind"]:
                 args += ["--bin"]

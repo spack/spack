@@ -24,7 +24,35 @@ class Tokei(CargoPackage):
         description='Link Rust standard library dynamically'
     )
 
+    variant(
+        'json',
+        default=False,
+        description='Support JSON output'
+    )
+
+    variant(
+        'yaml',
+        default=False,
+        description='Support YAML output'
+    )
+
+    variant(
+        'cbor',
+        default=False,
+        description='Support CBOR output'
+    )
+
+    def cargo_features(self):
+        features = []
+
+        for feature in ["json", "yaml", "cbor"]:
+            if '+{0}'.format(feature) in self.spec:
+                features += [feature]
+                
+        return features
+
     version('master', branch='master')
+    version('11.2.1', sha256='e3ef140433084bf29e91d95bf003ba4f73809728f315e81bba63f7928a8f8547')
     version('11.2.0', sha256='88b739d6420e03fb1b4fc881c457c9e2f6d6c0c3634200e6e53a1eeadad72d33')
     version('11.1.1', sha256='e28e6c319fa1fd848ecb764220c632232ab76872cbf2f70f59f86bf1128d64bf')
     version('11.1.0', sha256='6e8e8cd2f56cd31fc97766f07e2b989c4d774174de804503f53789e689988fe6')
