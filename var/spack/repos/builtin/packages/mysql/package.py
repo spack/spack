@@ -130,6 +130,8 @@ class Mysql(CMakePackage):
             options.append('-DBOOST_ROOT={0}'.format(spec['boost'].prefix))
         if '+client_only' in self.spec:
             options.append('-DWITHOUT_SERVER:BOOL=ON')
+        if spec.platform == 'darwin':
+            options.append('-DWITH_EDITLINE=system')
         return options
 
     def _fix_dtrace_shebang(self, env):
