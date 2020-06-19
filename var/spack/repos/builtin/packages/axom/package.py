@@ -231,7 +231,9 @@ class Axom(CMakePackage, CudaPackage):
         if fflags:
             cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
 
-        if ("gfortran" in f_compiler) and ("clang" in cpp_compiler):
+        if ((f_compiler is not None)
+           and ("gfortran" in f_compiler)
+           and ("clang" in cpp_compiler)):
             libdir = pjoin(os.path.dirname(
                            os.path.dirname(cpp_compiler)), "lib")
             flags = ""
