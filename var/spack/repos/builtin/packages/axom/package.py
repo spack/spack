@@ -446,7 +446,7 @@ class Axom(CMakePackage, CudaPackage):
 
         # Override XL compiler family
         familymsg = ("Override to proper compiler family for XL")
-        if "xlf" in f_compiler:
+        if (f_compiler is not None) and ("xlf" in f_compiler):
             cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID", "XL",
                                         familymsg))
         if "xlc" in c_compiler:
@@ -457,7 +457,7 @@ class Axom(CMakePackage, CudaPackage):
                                         familymsg))
 
         if spec.satisfies('target=ppc64le:'):
-            if "xlf" in f_compiler:
+            if (f_compiler is not None) and ("xlf" in f_compiler):
                 description = ("Converts C-style comments to Fortran style "
                                "in preprocessed files")
                 cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS",
