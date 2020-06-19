@@ -23,7 +23,7 @@ class Reframe(Package):
     maintainers = ['victorusu', 'vkarak']
 
     version('master',   branch='master')
-    version('3.0',       sha256='c4fe84a92d961546e4d0e33ca3476ba0d4cebc908eb4e33897f646bd1fd5205b')
+    version('3.0',       sha256='fb76b4513c03b84f5b3bbbc988f7747e5b58f04c983b3935bab1f2e81adccb82')
     version('2.21',      sha256='f35d4fda2f9672c87d3ef664d9a2d6eb0c01c88218a31772a6645c32c8934c4d')
     version('2.20',      sha256='310c18d705858bbe6bd9a2dc4d382b254c1f093b0671d72363f2111e8c162ba4')
     version('2.17.3',    sha256='dc8dfb2ccb9a966303879b7cdcd188c47063e9b7999cbd5d6255223b066bf357')
@@ -57,6 +57,6 @@ class Reframe(Package):
         install_tree(self.stage.source_path, self.prefix)
 
     def setup_run_environment(self, env):
-        if spec.version >= Version('3.0'):
-            if "+docs" in spec:
+        if self.spec.version >= Version('3.0'):
+            if "+docs" in self.spec:
                 env.prepend_path('MANPATH',  self.prefix.docs.man)

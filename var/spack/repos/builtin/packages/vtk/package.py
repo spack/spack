@@ -15,11 +15,12 @@ class Vtk(CMakePackage):
     processing and visualization. """
 
     homepage = "http://www.vtk.org"
-    url      = "http://www.vtk.org/files/release/8.0/VTK-8.0.1.tar.gz"
+    url      = "https://www.vtk.org/files/release/9.0/VTK-9.0.0.tar.gz"
     list_url = "http://www.vtk.org/download/"
 
     maintainers = ['chuckatkins', 'danlipsa']
 
+    version('9.0.0', sha256='15def4e6f84d72f82386617fe595ec124dda3cbd13ea19a0dcd91583197d8715')
     version('8.2.0', sha256='34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb')
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
@@ -44,11 +45,18 @@ class Vtk(CMakePackage):
     # At the moment, we cannot build with both osmesa and qt, but as of
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
-    conflicts('^python@3:', when='@:8.0')
 
     extends('python', when='+python')
 
-    depends_on('python@2.7:', when='+python', type=('build', 'run'))
+    # Acceptable python versions depend on vtk version
+    # We need vtk at least 8.0.1 for python@3,
+    # and at least 9.0 for python@3.8
+    depends_on('python@2.7:2.9', when='@:8.0 +python', type=('build', 'run'))
+    depends_on('python@2.7:3.7.9', when='@8.0.1:8.9 +python',
+               type=('build', 'run'))
+    depends_on('python@2.7:', when='@9.0: +python', type=('build', 'run'))
+
+    # We need mpi4py if buidling python wrappers and using MPI
     depends_on('py-mpi4py', when='+python+mpi', type='run')
 
     # python3.7 compatibility patch backported from upstream
@@ -164,6 +172,8 @@ class Vtk(CMakePackage):
             ])
             if '+mpi' in spec:
                 cmake_args.append('-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON')
+            if spec.satisfies('@9.0.0: ^python@3:'):
+                cmake_args.append('-DVTK_PYTHON_VERSION=3')
         else:
             cmake_args.append('-DVTK_WRAP_PYTHON=OFF')
 
@@ -273,8 +283,8 @@ class Vtk(CMakePackage):
             # in March 2014 (see
             # https://public.kitware.com/pipermail/vtkusers/2014-March/083368.html)
             if (self.spec.satisfies('%clang') and
-                self.compiler.is_apple and
-                self.compiler.version >= Version('5.1.0')):
+                    self.compiler.is_apple and
+                    self.compiler.version >= Version('5.1.0')):
                 cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS='])
 
             # A bug in tao pegtl causes build failures with intel compilers
