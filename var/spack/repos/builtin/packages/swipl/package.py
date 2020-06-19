@@ -33,13 +33,13 @@ class Swipl(CMakePackage):
     variant('zlib', default=True, description='Compressed streams support')
     variant('odbc', default=True, description='ODBC database access')
     variant('unwind', default=True, description='Build with stack traces in crash reports')
-    variant('man', default=True, description='Install the HTML documentation')
+    variant('html', default=True, description='Install the HTML documentation')
     variant('pdfdoc', default=False, description='Build the PDF documentation')
 
     depends_on('uuid')
     depends_on('readline')
 
-    depends_on('libarchive', when='+man')
+    depends_on('libarchive', when='+html')
 
     depends_on('gmp', when='+gmp')
     depends_on('unwind', when='+unwind')
@@ -70,7 +70,7 @@ class Swipl(CMakePackage):
         append_switch('+gmp', 'USE_GMP')
         append_switch('+xpce', 'SWIPL_PACKAGES_X')
         append_switch('+odbc', 'SWIPL_PACKAGES_ODBC')
-        append_switch('+man', 'INSTALL_DOCUMENTATION')
+        append_switch('+html', 'INSTALL_DOCUMENTATION')
         append_switch('+pdfdoc', 'BUILD_PDF_DOCUMENTATION')
 
         # The variants ssl and zlib are implicitly set up by CMake
