@@ -6,12 +6,10 @@
 
 import inspect
 import json
-import re
 import spack
 
 from llnl.util.filesystem import join_path, copy, mkdirp
 from spack.directives import cargo_manifest, conflicts, depends_on, variant
-from spack.version import Version
 from spack.package import PackageBase
 from spack.util.executable import Executable
 from spack.util.rust import target_triple_for_spec, RustQuery
@@ -172,7 +170,7 @@ lto = "{lto}"
     def _feature_args(self):
         """Returns the args associated with cargo_features"""
         features = self.cargo_features()
-        if features == None:
+        if features is None:
             return []
 
         args = ["--no-default-features"]

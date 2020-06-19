@@ -47,6 +47,7 @@ def target_triple_for_spec(spec):
 
     return None
 
+
 class RustQuery(object):
     def __init__(self, rustc):
         self.rustc = rustc
@@ -70,4 +71,3 @@ class RustQuery(object):
             return name
         else:
             return None
-

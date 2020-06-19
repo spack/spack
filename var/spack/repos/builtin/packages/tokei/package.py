@@ -48,7 +48,7 @@ class Tokei(CargoPackage):
         for feature in ["json", "yaml", "cbor"]:
             if '+{0}'.format(feature) in self.spec:
                 features += [feature]
-                
+
         return features
 
     version('master', branch='master')
