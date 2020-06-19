@@ -874,55 +874,60 @@ class Python(AutotoolsPackage):
         pythonpath = ':'.join(python_paths)
         env.set('PYTHONPATH', pythonpath)
 
-        # We want to make sure that the extensions are compiled and linked with
-        # Spack's wrappers. Paths to the executables that are used for these
-        # operations are normally taken from sysconfigdata file, which we
-        # modify after the installation (see method filter_compilers). The
-        # modified file contains paths to the real compilers, not the wrappers.
-        # Therefore, we back up the original sysconfigdata file before
-        # introducing any changes to it (see method backup_sysconfigdata) and
-        # prepend its path to PYTHONPATH of the dependent package.
+        if self.spec in dependent_spec.dependencies(deptype='link'):
+            # We want to make sure that the extensions are compiled and linked
+            # with Spack wrapper. Paths to the executables that are used for
+            # these operations are normally taken from sysconfigdata file,
+            # which we modify after the installation (see method filter
+            # compilers). The modified file contains paths to the real
+            # compilers, not the wrappers. Therefore, we back up the original
+            # sysconfigdata file before introducing any changes to it (see
+            # method backup_sysconfigdata) and prepend its path to PYTHONPATH
+            # of the dependent package.
 
-        # In several cases (see below), we need to set LDSHARED, which is used
-        # for linking, and CC, which is used for compilation, will be set by
-        # Spack automatically. Note that there are two more variables in the
-        # sysconfigdata file that are similar to LDSHARED: BLDSHARED and
-        # LDCXXSHARED. However, it looks like distutils does not check the
-        # respective environment variables. Therefore, we ignore them for now.
-        set_ldshared = True
+            # In several cases (see below), we need to set LDSHARED, which is
+            # used for linking, and CC, which is used for compilation, will be
+            # set by Spack automatically. Note that there are two more
+            # variables in the sysconfigdata file that are similar to LDSHARED:
+            # BLDSHARED and LDCXXSHARED. However, it looks like distutils does
+            # not check the respective environment variables. Therefore, we
+            # ignore them for now.
+            set_ldshared = True
 
-        sysconfig_dir = self.get_spack_sysconfig_dirname()
-        if os.path.isdir(sysconfig_dir):
-            env.prepend_path('PYTHONPATH', sysconfig_dir)
-            if self.spec.satisfies('@2.7.5:2.7.999,3.6.0:'):
-                # In this case, both sysconfig and distutils.sysconfig read
-                # data from sysconfigdata file and we do not have to do
-                # anything else.
-                set_ldshared = False
+            sysconfig_dir = self.get_spack_sysconfig_dirname()
+            if os.path.isdir(sysconfig_dir):
+                env.prepend_path('PYTHONPATH', sysconfig_dir)
+                if self.spec.satisfies('@2.7.5:2.7.999,3.6.0:'):
+                    # In this case, both sysconfig and distutils.sysconfig read
+                    # data from sysconfigdata file and we do not have to do
+                    # anything else.
+                    set_ldshared = False
 
-        if set_ldshared:
-            # We need to set LDSHARED because we are dealing with:
-            #   A) installation that relies on the old logic with a JSON file;
-            #   B) old version of python, in which distutils.sysconfig does not
-            #      use sysconfigdata file;
-            #   C) externally installed python.
-            # However, to avoid significant inconsistency, we set LDSHARED only
-            # when the respective value returned by distutils.sysconfig starts
-            # with the path to the real compiler that will be used for the
-            # compilation of the dependent package. This should sufficiently
-            # cover cases A and B, as well as case C in some rare cases.
-            ldshared = self.get_config_var('LDSHARED')
-            dep_compiler = dependent_spec.package.compiler
-            dep_real_cc = dep_compiler.cc
-            dep_spack_cc = join_path(spack.paths.build_env_path,
-                                     dep_compiler.link_paths['cc'])
-            if ldshared.startswith(dep_real_cc):
-                env.set('LDSHARED',
-                        dep_spack_cc + ldshared[len(dep_real_cc):])
-            elif not ldshared.startswith(dep_spack_cc):
-                tty.warn("Failed to set LDSHARED environment variable: Python "
-                         "compiled extensions might be linked without Spack "
-                         "compiler wrappers.")
+            if set_ldshared:
+                # We need to set LDSHARED because we are dealing with:
+                #   A) installation that relies on the old logic with a JSON
+                #      file;
+                #   B) old version of python, in which distutils.sysconfig does
+                #      not use sysconfigdata file;
+                #   C) externally installed python.
+                # However, to avoid significant inconsistency, we set LDSHARED
+                # only when the respective value returned by
+                # distutils.sysconfig starts with the path to the real compiler
+                # that will be used for the compilation of the dependent
+                # package. This should sufficiently cover cases A and B, as
+                # well as case C in some rare cases.
+                ldshared = self.get_config_var('LDSHARED')
+                dep_compiler = dependent_spec.package.compiler
+                dep_real_cc = dep_compiler.cc
+                dep_spack_cc = join_path(spack.paths.build_env_path,
+                                         dep_compiler.link_paths['cc'])
+                if ldshared.startswith(dep_real_cc):
+                    env.set('LDSHARED',
+                            dep_spack_cc + ldshared[len(dep_real_cc):])
+                elif not ldshared.startswith(dep_spack_cc):
+                    tty.warn("Failed to set LDSHARED environment variable: "
+                             "Python compiled extensions might be linked "
+                             "without Spack compiler wrappers.")
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         python_paths = []
