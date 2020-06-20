@@ -15,7 +15,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
 
     steps:
     - uses: actions/checkout@v2
@@ -38,7 +38,7 @@ jobs:
         git --version
         git fetch -u origin develop:develop
         . share/spack/setup-env.sh
-        coverage run $(which spack) -L test
+        coverage run $(which spack) test
         coverage combine
         coverage xml
     - name: Upload to codecov.io
