@@ -32,6 +32,8 @@ class Hepmc3(CMakePackage):
     depends_on('root', when='+rootio')
     depends_on('python', when="+python")
 
+    patch('ba38f14d8f56c16cc4105d98f6d4540c928c6150.patch', when="@:3.2.1 %gcc@9.3.0")
+
     def cmake_args(self):
         spec = self.spec
         args = [
