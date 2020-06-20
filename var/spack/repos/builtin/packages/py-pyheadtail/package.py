@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyPyheadtail(PythonPackage):
-    """CERN PyHEADTAIL numerical n-body simulation code for simulating 
+    """CERN PyHEADTAIL numerical n-body simulation code for simulating
     macro-particle beam dynamics with collective effects."""
 
     homepage = "https://github.com/PyCOMPLETE/PyHEADTAIL"
