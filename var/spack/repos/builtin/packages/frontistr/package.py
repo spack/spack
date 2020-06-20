@@ -11,18 +11,25 @@ class Frontistr(CMakePackage):
     """Open-Source Large-Scale Parallel FEM Program for
         Nonlinear Structural Analysis"""
 
-    homepage = "https://github.com/FrontISTR/FrontISTR"
-    git      = "https://github.com/FrontISTR/FrontISTR.git"
+    homepage = "https://www.frontistr.com/"
+    git      = "https://gitlab.com/FrontISTR-Commons/FrontISTR.git"
+    maintainers = ['hiroshi.okuda', 'kgoto', 'morita', 'inagaki', 'michioga']
 
     version('5.0', tag='v5.0')
+    version('master', tag='master')
+
+    variant('build_type', default='RELEASE',
+            description='CMake build type',
+            values=('DEBUG', 'RELEASE'))
 
     depends_on('mpi')
-    depends_on('revocap-refiner')
-    depends_on('revocap-coupler')
     depends_on('blas')
-    depends_on('metis')
+    depends_on('lapack')
     depends_on('scalapack')
-    depends_on('mumps +mpi')
+    depends_on('revocap-refiner')
+    # depends_on('revocap-coupler')
+    depends_on('metis')
+    depends_on('mumps')
     depends_on('trilinos')
 
     def cmake_args(self):

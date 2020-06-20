@@ -20,7 +20,7 @@ class Wxpropgrid(Package, SourceforgePackage):
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix, "--with-wxdir=%s" %
-                  spec['wx'].prefix.bin, "--enable-unicode")
+                  spec['wxwidgets'].prefix.bin, "--enable-unicode")
 
         make()
         make("install")

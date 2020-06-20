@@ -22,6 +22,7 @@ from spack.stage import stage_prefix
 from spack.spec_list import SpecListError
 from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.spack_json as sjson
+from spack.util.path import substitute_path_variables
 
 
 # everything here uses the mock_env_path
@@ -526,6 +527,35 @@ env:
 
     fs.mkdirp(config_scope_path)
     with open(os.path.join(config_scope_path, 'packages.yaml'), 'w') as f:
+        f.write("""\
+packages:
+  mpileaks:
+    version: [2.2]
+""")
+
+    with e:
+        e.concretize()
+
+    assert any(x.satisfies('mpileaks@2.2')
+               for x in e._get_environment_specs())
+
+
+def test_env_with_included_config_var_path():
+    config_var_path = os.path.join('$tempdir', 'included-config.yaml')
+    test_config = """\
+env:
+  include:
+  - %s
+  specs:
+  - mpileaks
+""" % config_var_path
+
+    _env_create('test', StringIO(test_config))
+    e = ev.read('test')
+
+    config_real_path = substitute_path_variables(config_var_path)
+    fs.mkdirp(os.path.dirname(config_real_path))
+    with open(config_real_path, 'w') as f:
         f.write("""\
 packages:
   mpileaks:

@@ -179,6 +179,8 @@ class Trilinos(CMakePackage):
             description='Compile with Shards')
     variant('shylu',        default=False,
             description='Compile with ShyLU')
+    variant('stratimikos',  default=False,
+            description='Compile with Stratimikos')
     variant('teko',         default=False,
             description='Compile with Teko')
     variant('tempus',       default=False,
@@ -286,6 +288,7 @@ class Trilinos(CMakePackage):
     conflicts('+zoltan2', when='~xpetra')
     conflicts('+zoltan2', when='~zoltan')
 
+    conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
     conflicts('+dtk', when='~kokkos')
     conflicts('+dtk', when='~teuchos')
@@ -328,9 +331,9 @@ class Trilinos(CMakePackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('boost', when='+boost')
-    depends_on('boost', when='+dtk')
-    depends_on('matio', when='+matio')
     depends_on('glm', when='+glm')
+    depends_on('hdf5+hl', when='+hdf5')
+    depends_on('matio', when='+matio')
     depends_on('metis@5:', when='+metis')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('zlib', when="+zlib")
@@ -362,14 +365,12 @@ class Trilinos(CMakePackage):
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
     depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
-    # We need hdf5+hl to match with netcdf during concretization
-    depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
 
     # Dependencies/conflicts when MPI is disabled
-    depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
+    depends_on('hdf5~mpi', when='+hdf5~mpi')
     conflicts('+parmetis', when='~mpi')
     conflicts('+pnetcdf', when='~mpi')
 
@@ -468,6 +469,7 @@ class Trilinos(CMakePackage):
             define_trilinos_enable('Shards'),
             define_trilinos_enable('ShyLU'),
             define_trilinos_enable('STK'),
+            define_trilinos_enable('Stratimikos'),
             define_trilinos_enable('Teko'),
             define_trilinos_enable('Tempus'),
             define_trilinos_enable('Teuchos'),
@@ -512,6 +514,12 @@ class Trilinos(CMakePackage):
                 define('Trilinos_ENABLE_SEACASChaco', False),
                 define('Trilinos_ENABLE_SEACASNemslice', False)
             ])
+
+        if '+stratimikos' in spec:
+            # Add thyra adapters based on package enables
+            options.extend(
+                define_trilinos_enable('Thyra' + pkg + 'Adapters', pkg.lower())
+                for pkg in ['Epetra', 'EpetraExt', 'Tpetra'])
 
         # ######################### TPLs #############################
 

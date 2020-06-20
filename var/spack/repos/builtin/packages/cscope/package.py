@@ -21,7 +21,7 @@ class Cscope(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('pkgconfig', type='build')
 
-    build_targets = ['CURSES_LIBS=-lncursesw -ltinfo']
+    build_targets = ['CURSES_LIBS=-lncursesw -ltinfow']
 
     def url_for_version(self, version):
         url = "https://sourceforge.net/projects/cscope/files/cscope/{0}{1}/cscope-{1}.tar.gz"

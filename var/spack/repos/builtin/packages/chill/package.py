@@ -19,15 +19,16 @@ class Chill(AutotoolsPackage):
     version('0.3', sha256='574b622368a6bfaadbe9c1fa02fabefdc6c006069246f67d299f943b7e1d8aa3')
 
     depends_on('boost@1.66.0 cxxstd=11', type='build')
-    depends_on('rose@0.9.10.0 +cxx11', type='build')
+    depends_on('rose@0.9.13.0: +cxx11', type=('build', 'run'))
     depends_on('autoconf', type='build')
     depends_on('automake@1.14:',  type='build')
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
-    depends_on('iegenlib', type='build')
-    depends_on('bison@3.4', type='build')
+    depends_on('iegenlib', type=('build', 'run'))
+    depends_on('bison@3.4.2:', type='build')
     depends_on('flex', type='build')
-    depends_on('python')
+    # Does not currrently work with Python3
+    depends_on('python@2.7:2.8')
 
     build_directory = 'spack-build'
 
