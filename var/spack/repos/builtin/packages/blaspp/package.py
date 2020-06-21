@@ -7,8 +7,8 @@ from spack import *
 
 
 class Blaspp(CMakePackage):
-    """C++ API for the Basic Linear Algebra Subroutines. Developed by the 
-       Innovative Computing Laboratory at the University of Tennessee, 
+    """C++ API for the Basic Linear Algebra Subroutines. Developed by the
+       Innovative Computing Laboratory at the University of Tennessee,
        Knoxville."""
 
     homepage = "https://bitbucket.org/icl/blaspp"
