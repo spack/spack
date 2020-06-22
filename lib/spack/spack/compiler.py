@@ -567,7 +567,7 @@ class Compiler(object):
 
             yield
         except BaseException:
-            pass
+            raise
         finally:
             # Restore environment regardless of whether inner code succeeded
             os.environ.clear()
