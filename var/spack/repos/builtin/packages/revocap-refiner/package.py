@@ -14,7 +14,7 @@ class RevocapRefiner(Package):
     url      = "https://www.frontistr.com/download/link.php?REVOCAP_Refiner-1.1.04.tar.gz"
     # git      = "https://gitlab.com/FrontISTR-Commons/REVOCAP_Refiner.git"
 
-    maintainers = ['k-tokunaga', 'kgoto', 'tuna' 'inagaki.kazuhisa', 'michioga']
+    maintainers = ['k-tokunaga', 'kgoto', 'tuna' 'inagaki.kazuhisa']
 
     version('1.1.04', sha256='bf3d959f4c1ab08a7e99cd7e02e710c758af28d71500f4814eed8b4eb3fb2d13')
 
@@ -31,7 +31,6 @@ class RevocapRefiner(Package):
         fflags = ['']
         ldshare = ['']
         libs = ['']
-        
         m = FileFilter('MakefileConfig.in')
         m.filter(r'CC\s=.*$', 'CC={0}')
         m.filter(r'CFLAGS\s=.$', 'CFLAGS={0}'.format(' '.join(cflags)))
@@ -55,4 +54,3 @@ class RevocapRefiner(Package):
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)
         install_tree('Refiner', prefix.include.refine)
-
