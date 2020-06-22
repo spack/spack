@@ -20,7 +20,7 @@ class PyMacs2(PythonPackage):
 
     depends_on('python@3.5:',    when='@2.2:', type=('build', 'run'))
     depends_on('python@2.7:2.8', when='@:2.1', type=('build', 'run'))
-    depends_on('py-cython')
+    depends_on('py-cython', type='build')
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-macs2 requires py-setuptools during runtime as well.
