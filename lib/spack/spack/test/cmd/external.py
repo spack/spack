@@ -10,9 +10,10 @@ import stat
 import pytest
 
 import spack
+import spack.detection.path
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec
-from spack.cmd.external import ExternalPackageEntry
+from spack.detection.common import ExternalPackageEntry
 from spack.main import SpackCommand
 
 
@@ -22,7 +23,7 @@ def test_find_external_single_package(mock_executable):
     cmake_path = mock_executable("cmake", output='echo "cmake version 1.foo"')
     system_path_to_exe = {cmake_path: 'cmake'}
 
-    pkg_to_entries = spack.cmd.external._get_external_packages(
+    pkg_to_entries = spack.detection.path.detect(
         pkgs_to_check, system_path_to_exe)
 
     pkg, entries = next(iter(pkg_to_entries.items()))
@@ -45,15 +46,16 @@ def test_find_external_two_instances_same_package(mock_executable):
         cmake_path1: 'cmake',
         cmake_path2: 'cmake'}
 
-    pkg_to_entries = spack.cmd.external._get_external_packages(
-        pkgs_to_check, system_path_to_exe)
+    pkg_to_entries = spack.detection.path.detect(
+        pkgs_to_check, system_path_to_exe
+    )
 
     pkg, entries = next(iter(pkg_to_entries.items()))
     spec_to_path = dict((e.spec, e.base_dir) for e in entries)
     assert spec_to_path[Spec('cmake@1.foo')] == (
-        spack.cmd.external._determine_base_dir(os.path.dirname(cmake_path1)))
+        spack.detection.path._determine_base_dir(os.path.dirname(cmake_path1)))
     assert spec_to_path[Spec('cmake@3.17.2')] == (
-        spack.cmd.external._determine_base_dir(os.path.dirname(cmake_path2)))
+        spack.detection.path._determine_base_dir(os.path.dirname(cmake_path2)))
 
 
 def test_find_external_update_config(mutable_config):
@@ -81,7 +83,7 @@ def test_get_executables(working_env, mock_executable):
     cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
 
     os.environ['PATH'] = ':'.join([os.path.dirname(cmake_path1)])
-    path_to_exe = spack.cmd.external._get_system_executables()
+    path_to_exe = spack.detection.path.system_executables()
     assert path_to_exe[cmake_path1] == 'cmake'
 
 
@@ -301,7 +303,7 @@ def test_package_detection(mock_executable, package_name):
         # Setup the mock layout for detection. The context manager will
         # remove mock files when it's finished.
         with setup_test_layout(test['layout']) as abs_path_to_exe:
-            entries = spack.cmd.external._get_external_packages(
+            entries = spack.detection.path.detect(
                 [spack.repo.get(package_name)], abs_path_to_exe
             )
             specs = set(x.spec for x in entries[package_name])
@@ -322,6 +324,7 @@ def test_package_detection(mock_executable, package_name):
 @pytest.mark.detection
 @pytest.mark.parametrize('package_name', candidate_packages())
 def test_package_detection_on_cray(mock_executable, package_name):
+    import spack.detection.craype
     import spack.util.executable
     import spack.util.module_cmd
     import functools
@@ -362,7 +365,7 @@ def test_package_detection_on_cray(mock_executable, package_name):
         # Setup the mock layout for detection. The context manager will
         # remove mock files when it's finished.
         with setup_module_command(test['module']):
-            entries = spack.cmd.external._get_external_from_modules(
+            entries = spack.detection.craype._detect_from_craype_modules(
                 [spack.repo.get(package_name)]
             )
             # TODO: this part of the test is the same as above

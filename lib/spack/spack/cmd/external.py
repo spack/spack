@@ -5,21 +5,18 @@
 from __future__ import print_function
 
 import argparse
-import os
-import re
 import sys
-from collections import defaultdict, namedtuple
 
-import llnl.util.filesystem
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
-import six
 import spack
 import spack.architecture
 import spack.compilers
 import spack.cmd
+import spack.detection.common
+import spack.detection.craype
+import spack.detection.path
 import spack.error
-import spack.operating_systems.cray_frontend as cray_frontend
 import spack.util.environment
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
@@ -47,41 +44,6 @@ def setup_parser(subparser):
     sp.add_parser(
         'list', help='list detectable packages, by repository and name'
     )
-
-
-def is_executable(path):
-    return os.path.isfile(path) and os.access(path, os.X_OK)
-
-
-def _get_system_executables():
-    """Get the paths of all executables available from the current PATH.
-
-    For convenience, this is constructed as a dictionary where the keys are
-    the executable paths and the values are the names of the executables
-    (i.e. the basename of the executable path).
-
-    There may be multiple paths with the same basename. In this case it is
-    assumed there are two different instances of the executable.
-    """
-    path_hints = spack.util.environment.get_path('PATH')
-    search_paths = llnl.util.filesystem.search_paths_for_executables(
-        *path_hints)
-
-    path_to_exe = {}
-    # Reverse order of search directories so that an exe in the first PATH
-    # entry overrides later entries
-    for search_path in reversed(search_paths):
-        for exe in os.listdir(search_path):
-            exe_path = os.path.join(search_path, exe)
-            if is_executable(exe_path):
-                path_to_exe[exe_path] = exe
-    return path_to_exe
-
-
-ExternalPackageEntry = namedtuple(
-    'ExternalPackageEntry',
-    ['spec', 'base_dir', 'modules']
-)
 
 
 def _generate_pkg_config(external_pkg_entries):
@@ -115,6 +77,7 @@ def _generate_pkg_config(external_pkg_entries):
         if e.modules:
             external_items.append(('modules', e.modules))
 
+        # FIXME: check how to add external modules
         if e.spec.external_modules:
             external_items.append(('modules', e.spec.external_modules))
 
@@ -164,9 +127,9 @@ def external_find(args):
     if args.craype:
         # Search Cray programming environment + frontend
         tty.debug("Detecting Cray")
-        pkg_to_entries = _get_external_packages_on_cray(packages_to_check)
+        pkg_to_entries = spack.detection.craype.detect(packages_to_check)
     else:
-        pkg_to_entries = _get_external_packages(packages_to_check)
+        pkg_to_entries = spack.detection.path.detect(packages_to_check)
 
     new_entries, write_scope = _update_pkg_config(
         pkg_to_entries, args.not_buildable
@@ -179,43 +142,6 @@ def external_find(args):
         spack.cmd.display_specs(new_entries)
     else:
         tty.msg('No new external packages detected')
-
-
-def _group_by_prefix(paths):
-    groups = defaultdict(set)
-    for p in paths:
-        groups[os.path.dirname(p)].add(p)
-    return groups.items()
-
-
-def _convert_to_iterable(single_val_or_multiple):
-    x = single_val_or_multiple
-    if x is None:
-        return []
-    elif isinstance(x, six.string_types):
-        return [x]
-    elif isinstance(x, spack.spec.Spec):
-        # Specs are iterable, but a single spec should be converted to a list
-        return [x]
-
-    try:
-        iter(x)
-        return x
-    except TypeError:
-        return [x]
-
-
-def _determine_base_dir(prefix):
-    # Given a prefix where an executable is found, assuming that prefix
-    # contains /bin/, strip off the 'bin' directory to get a Spack-compatible
-    # prefix
-    assert os.path.isdir(prefix)
-
-    components = prefix.split(os.sep)
-    if 'bin' not in components:
-        return None
-    idx = components.index('bin')
-    return os.sep.join(components[:idx])
 
 
 def _get_predefined_externals():
@@ -253,162 +179,6 @@ def _update_pkg_config(pkg_to_entries, not_buildable):
     spack.config.set('packages', pkgs_cfg, scope=cfg_scope)
 
     return all_new_specs, cfg_scope
-
-
-def _get_external_packages(packages_to_check, system_path_to_exe=None):
-    if not system_path_to_exe:
-        system_path_to_exe = _get_system_executables()
-
-    exe_pattern_to_pkgs = defaultdict(list)
-    for pkg in packages_to_check:
-        if hasattr(pkg, 'executables'):
-            for exe in pkg.executables:
-                exe_pattern_to_pkgs[exe].append(pkg)
-
-    pkg_to_found_exes = defaultdict(set)
-    for exe_pattern, pkgs in exe_pattern_to_pkgs.items():
-        compiled_re = re.compile(exe_pattern)
-        for path, exe in system_path_to_exe.items():
-            if compiled_re.search(exe):
-                for pkg in pkgs:
-                    pkg_to_found_exes[pkg].add(path)
-
-    pkg_to_entries = defaultdict(list)
-    resolved_specs = {}  # spec -> exe found for the spec
-
-    for pkg, exes in pkg_to_found_exes.items():
-        if not hasattr(pkg, 'determine_spec_details'):
-            tty.warn("{0} must define 'determine_spec_details' in order"
-                     " for Spack to detect externally-provided instances"
-                     " of the package.".format(pkg.name))
-            continue
-
-        # TODO: iterate through this in a predetermined order (e.g. by package
-        # name) to get repeatable results when there are conflicts. Note that
-        # if we take the prefixes returned by _group_by_prefix, then consider
-        # them in the order that they appear in PATH, this should be sufficient
-        # to get repeatable results.
-        for prefix, exes_in_prefix in _group_by_prefix(exes):
-            # TODO: multiple instances of a package can live in the same
-            # prefix, and a package implementation can return multiple specs
-            # for one prefix, but without additional details (e.g. about the
-            # naming scheme which differentiates them), the spec won't be
-            # usable.
-            specs = _convert_to_iterable(
-                pkg.determine_spec_details(prefix, exes_in_prefix)
-            )
-
-            if not specs:
-                tty.debug(
-                    'The following executables in {0} were decidedly not '
-                    'part of the package {1}: {2}'
-                    .format(prefix, pkg.name, ', '.join(exes_in_prefix))
-                )
-
-            for spec in specs:
-                pkg_prefix = _determine_base_dir(prefix)
-
-                if not pkg_prefix:
-                    tty.debug("{0} does not end with a 'bin/' directory: it"
-                              " cannot be added as a Spack package"
-                              .format(prefix))
-                    continue
-
-                if spec in resolved_specs:
-                    prior_prefix = resolved_specs[spec]
-
-                    tty.debug(
-                        "Executables in {0} and {1} are both associated"
-                        " with the same spec {2}"
-                        .format(prefix, prior_prefix, str(spec)))
-                    continue
-                else:
-                    resolved_specs[spec] = prefix
-
-                try:
-                    spec.validate_detection()
-                except Exception as e:
-                    msg = ('"{0}" has been detected on the system but will '
-                           'not be added to packages.yaml [reason={1}]')
-                    tty.warn(msg.format(spec, str(e)))
-                    continue
-
-                if spec.external_path:
-                    pkg_prefix = spec.external_path
-
-                pkg_to_entries[pkg.name].append(ExternalPackageEntry(
-                    spec=spec, base_dir=pkg_prefix, modules=[]
-                ))
-
-    return pkg_to_entries
-
-
-def _get_external_packages_on_cray(packages_to_check, system_path_to_exe=None):
-    # Assert the system is a Cray
-    p = spack.architecture.platform()
-    error_message = "the --craype option can be used only on Cray platforms"
-    assert str(p) == 'cray', error_message
-
-    # Front-end goes through the usual detection mechanism, but before that
-    # we need to temporarily unload module files
-    tty.debug("[CRAY] Detecting front-end software")
-    with cray_frontend.unload_programming_environment():
-        pkg_to_entries = _get_external_packages(
-            packages_to_check, system_path_to_exe
-        )
-
-    # Annotate the OS in the extra attributes for later reuse
-    for pkg, entries in pkg_to_entries.items():
-        for entry in entries:
-            entry.spec.extra_attributes['cray'] = {
-                'os': str(p.front_os)
-            }
-
-    # Back-end uses module detection
-    tty.debug("[CRAY] Detecting back-end software")
-    be_pkg_to_entries = _get_external_from_modules(packages_to_check)
-    # Add the modules just detected to the list of entries
-    for pkg, entries in be_pkg_to_entries.items():
-        pkg_to_entries[pkg.name].extend(entries)
-
-    return pkg_to_entries
-
-
-def _get_external_from_modules(packages_to_check):
-    module = spack.util.module_cmd.module
-    p = spack.architecture.platform()
-    spec_os, pkg_to_entries = p.back_os, defaultdict(list)
-    for pkg in packages_to_check:
-        # The PrgEnv module needs to be loaded before the compiler module
-        if not hasattr(pkg, 'cray_prgenv'):
-            continue
-        # Compiler module to be loaded
-        if not hasattr(pkg, 'cray_module_name'):
-            continue
-
-        # Inspect the output of module avail and extract version
-        # information from there
-        output = module('avail', pkg.cray_module_name)
-        version_regex = r'({0})/([\d\.]+[\d][-]?[\w]*)'.format(
-            pkg.cray_module_name
-        )
-        matches = re.findall(version_regex, output)
-        for _, version in matches:
-            extra_attributes = getattr(pkg, 'cray_extra_attributes', {})
-            extra_attributes.update({'cray': {'os': spec_os}})
-            spec_str_format = '{0}@{1}'
-            spec = spack.spec.Spec.from_detection(
-                spec_str=spec_str_format.format(pkg.name, version),
-                extra_attributes=extra_attributes
-            )
-            pkg_to_entries[pkg.name].append(ExternalPackageEntry(
-                spec=spec, base_dir=None, modules=[
-                    pkg.cray_prgenv,
-                    '{0}/{1}'.format(pkg.cray_module_name, version)
-                ]
-            ))
-
-    return pkg_to_entries
 
 
 def external_list(args):
