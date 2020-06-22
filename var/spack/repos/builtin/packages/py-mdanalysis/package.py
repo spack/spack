@@ -33,7 +33,7 @@ class PyMdanalysis(PythonPackage):
             description='Support AMBER netcdf format.')
 
     depends_on('python@2.7:', type=('build', 'run'))
-    
+
     depends_on('py-setuptools',   type='build')
     depends_on('py-cython@0.16:', type='build')
 
@@ -48,13 +48,13 @@ class PyMdanalysis(PythonPackage):
     depends_on('py-numpy@1.5.0:',  when='@:0.15.0',       type=('build', 'run'))
     depends_on('py-numpy@1.10.4:', when='@0.16.0:0.19.2', type=('build', 'run'))
     depends_on('py-numpy@1.13.3:', when='@0.20.1:',       type=('build', 'run'))
-    
+
     depends_on('py-biopython@1.59:', when='@:0.17.0', type=('build', 'run'))
     depends_on('py-biopython@1.71:', when='@0.18.0:', type=('build', 'run'))
-    
+
     depends_on('py-griddataformats@0.3.2:', when='@:0.16.2', type=('build', 'run'))
     depends_on('py-griddataformats@0.4:',   when='@0.17.0:', type=('build', 'run'))
-    
+
     depends_on('py-matplotlib',       when='@:0.15.0+analysis',       type=('build', 'run'))
     depends_on('py-matplotlib@1.5.1', when='@0.16.0:0.16.1+analysis', type=('build', 'run'))
     depends_on('py-matplotlib@1.5.1', when='@0.16.2:',                type=('build', 'run'))
@@ -62,7 +62,7 @@ class PyMdanalysis(PythonPackage):
     depends_on('py-scipy',       when='@:0.16.1+analysis', type=('build', 'run'))
     depends_on('py-scipy',       when='@0.16.2:0.17.0',    type=('build', 'run'))
     depends_on('py-scipy@1.0.0', when='@0.18.0:',          type=('build', 'run'))
-    
+
     depends_on('py-scikit-learn', when='@0.16.0:+analysis', type=('build', 'run'))
     depends_on('py-seaborn',      when='+analysis',         type=('build', 'run'))
 
