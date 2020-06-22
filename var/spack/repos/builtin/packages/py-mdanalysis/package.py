@@ -51,7 +51,7 @@ class PyMdanalysis(PythonPackage):
     depends_on('py-griddataformats@0.4:',   when='@0.17.0:', type=('build', 'run'))
     
     depends_on('py-gsd@1.4.0', when='@1.17.0:', type=('build', 'run'))
-    depends_on('py-mmtf-python', type=('build', 'run'))
+    depends_on('py-mmtf-python@1.0.0', when='@0.16.0:', type=('build', 'run'))
     depends_on('py-scikit-learn', type=('build', 'run'))
 
     depends_on('py-matplotlib', when='+analysis', type=('build', 'run'))
