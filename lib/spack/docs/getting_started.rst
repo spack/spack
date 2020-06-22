@@ -71,10 +71,6 @@ This automatically adds Spack to your ``PATH`` and allows the ``spack``
 command to be used to execute spack :ref:`commands <shell-support>` and
 :ref:`useful packaging commands <packaging-shell-support>`.
 
-If :ref:`environment-modules <InstallEnvironmentModules>` is
-installed and available, the ``spack`` command can also load and unload
-:ref:`modules <modules>`.
-
 ^^^^^^^^^^^^^^^^^
 Clean Environment
 ^^^^^^^^^^^^^^^^^
@@ -851,7 +847,7 @@ from websites and from git.
 
 .. warning::
 
-   This workaround should be used ONLY as a last resort!  Wihout SSL
+   This workaround should be used ONLY as a last resort!  Without SSL
    certificate verification, spack and git will download from sites you
    wouldn't normally trust.  The code you download and run may then be
    compromised!  While this is not a major issue for archives that will
@@ -900,19 +896,14 @@ Core Spack Utilities
 ^^^^^^^^^^^^^^^^^^^^
 
 Core Spack uses the following packages, mainly to download and unpack
-source code, and to load generated environment modules: ``curl``,
-``env``, ``git``, ``go``, ``hg``, ``svn``, ``tar``, ``unzip``,
-``patch``, ``environment-modules``.
+source code: ``curl``, ``env``, ``git``, ``go``, ``hg``, ``svn``,
+``tar``, ``unzip``, ``patch``
 
 As long as the user's environment is set up to successfully run these
 programs from outside of Spack, they should work inside of Spack as
 well.  They can generally be activated as in the ``curl`` example above;
 or some systems might already have an appropriate hand-built
 environment module that may be loaded.  Either way works.
-
-If you find that you are missing some of these programs, ``spack`` can
-build some of them for you with ``spack bootstrap``. Currently supported
-programs are ``environment-modules``.
 
 A few notes on specific programs in this list:
 
@@ -939,45 +930,6 @@ Some packages use source code control systems as their download method:
 a new ``curl``, then chances are the system-supplied version of these
 other programs will also not work, because they also rely on OpenSSL.
 Once ``curl`` has been installed, you can similarly install the others.
-
-
-.. _InstallEnvironmentModules:
-
-"""""""""""""""""""
-Environment Modules
-"""""""""""""""""""
-
-In order to use Spack's generated module files, you must have
-installed ``environment-modules`` or ``lmod``. The simplest way
-to get the latest version of either of these tools is installing
-it as part of Spack's bootstrap procedure:
-
-.. code-block:: console
-
-   $ spack bootstrap
-
-.. warning::
-   At the moment ``spack bootstrap`` is only able to install ``environment-modules``.
-   Extending its capabilities to prefer ``lmod`` where possible is in the roadmap,
-   and likely to happen before the next release.
-
-Alternatively, on many Linux distributions, you can install a pre-built binary
-from the vendor's repository. On Fedora/RHEL/CentOS, for example, this can be
-done with the command:
-
-.. code-block:: console
-
-   $ yum install environment-modules
-
-Once you have the tool installed and available in your path, you can source
-Spack's setup file:
-
-.. code-block:: console
-
-   $ source share/spack/setup-env.sh
-
-This activates :ref:`shell support <shell-support>` and makes commands like
-``spack load`` available for use.
 
 
 ^^^^^^^^^^^^^^^^^

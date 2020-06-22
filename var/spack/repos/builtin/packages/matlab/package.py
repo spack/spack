@@ -25,8 +25,12 @@ class Matlab(Package):
     homepage = "https://www.mathworks.com/products/matlab.html"
     manual_download = True
 
+    version('R2019b', sha256='d60787263afb810283b7820c4c8d9cb1f854c7cb80f47e136643fd95bf5fbd59')
     version('R2018b', sha256='8cfcddd3878d3a69371c4e838773bcabf12aaf0362cc2e1ae7e8820845635cac')
-    version('R2016b', 'b0e0b688894282139fa787b5a86a5cf7')
+    version('R2016b', sha256='a3121057b1905b132e5741de9f7f8350378592d84c5525faf3ec571620a336f2')
+    version('R2015b', sha256='dead402960f4ab8f22debe8b28a402069166cd967d9dcca443f6c2940b00a783')
+
+    phases = ['configure', 'install']
 
     variant(
         'mode',
@@ -59,7 +63,8 @@ class Matlab(Package):
             'destinationFolder':   prefix,
             'mode':                spec.variants['mode'].value,
             'fileInstallationKey': spec.variants['key'].value,
-            'licensePath':         self.global_license_file
+            'licensePath':         self.global_license_file,
+            'agreeToLicense':      'yes'
         }
 
         # Store values requested by the installer in a file
@@ -68,10 +73,21 @@ class Matlab(Package):
                 input_file.write('{0}={1}\n'.format(key, config[key]))
 
     def install(self, spec, prefix):
-        self.configure(spec, prefix)
-
         # Run silent installation script
         # Full path required
         input_file = join_path(
             self.stage.source_path, 'spack_installer_input.txt')
         subprocess.call(['./install', '-inputFile', input_file])
+
+    @run_after('install')
+    def post_install(self):
+        # Fix broken link
+        with working_dir(self.spec.prefix.bin.glnxa64):
+            os.unlink('libSDL2.so')
+            os.symlink('libSDL2-2.0.so.0.2.1', 'libSDL2.so')
+
+        # Fix to random exceptions when changing display settings
+        # https://www.mathworks.com/matlabcentral/answers/373897-external-monitor-throws-java-exception
+        java_opts = os.path.join(self.spec.prefix.bin.glnxa64, 'java.opts')
+        with open(java_opts, 'w') as out:
+            out.write('-Dsun.java2d.xrender=false\n')

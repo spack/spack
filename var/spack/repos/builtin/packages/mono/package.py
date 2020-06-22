@@ -25,7 +25,7 @@ class Mono(AutotoolsPackage):
     # Spack's openssl interacts badly with mono's vendored
     # "boringssl", don't drag it in w/ cmake
     depends_on('cmake~openssl', type=('build'))
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('perl', type=('build'))
 
     version('6.8.0.105', sha256='578799c44c3c86a9eb5daf6dec6c60a24341940fd376371956d4a46cf8612178',
@@ -50,6 +50,6 @@ class Mono(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        li = self.spec['libiconv'].prefix
+        li = self.spec['iconv'].prefix
         args.append('--with-libiconv-prefix={p}'.format(p=li))
         return args

@@ -18,9 +18,11 @@ class Vecgeom(CMakePackage, CudaPackage):
     maintainers = ['drbenmorgan', 'sethrj']
 
     version('master', branch='master')
+    version('1.1.7', sha256='cc79a0baa783b21ecc399c4e7cca925ca340e6aeb96e3b2cad45c141557519bf')
     version('1.1.6', sha256='c4806a6b67d01b40074b8cc6865d78574a6a1c573be51696f2ecdf98b9cb954a')
     version('1.1.5', sha256='da674f3bbc75c30f56c1a2d251fa8930c899f27fa64b03a36569924030d87b95')
     version('1.1.3', sha256='ada09e8b6b2fa6c058290302b2cb5a6c2e644192aab1623c31d18c6a2f4c01c8')
+    version('1.1.0', sha256='e9d1ef83ff591fe4f9ef744a4d3155a3dc7e90ddb6735b24f3afe4c2dc3f7064')
     version('1.0.1', sha256='1eae7ac9014c608e8d8db5568058b8c0fea1a1dc7a8f54157a3a1c997b6fd9eb')
     version('0.5.2', tag='v00.05.02',
             commit='a7e0828c915ff936a79e672d1dd84b087a323b51')
@@ -43,6 +45,11 @@ class Vecgeom(CMakePackage, CudaPackage):
     depends_on('veccore+cuda', type=('build', 'link'), when='+cuda')
 
     conflicts('+cuda', when='@:1.1.5')
+
+    # Fix missing CMAKE_CUDA_STANDARD
+    patch('https://gitlab.cern.ch/VecGeom/VecGeom/-/commit/7094dd180ef694f2abb7463cafcedfb8b8ed30a1.diff',
+          sha256='34f1a6899616e40bce33d80a38a9b409f819cbaab07b2e3be7f4ec4bedb52b29',
+          when='@1.1.7 +cuda')
 
     for std in _cxxstd_values:
         depends_on('geant4 cxxstd=' + std, when='+geant4 cxxstd=' + std)

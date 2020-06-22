@@ -14,6 +14,7 @@ class RRlang(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/rlang_0.2.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rlang"
 
+    version('0.4.6', sha256='3a81b107765fd6ac0ad716c428d01878775ded9208ba125d43c890c73d2533ca')
     version('0.4.0', sha256='9748a4a217548bbe5631c18fd88c94811950446f798ff21fb327703aebaa150d')
     version('0.3.4', sha256='4e467f7b0dcbde91b60c292137d2c69cecaa713a6e4c9b7157ef6fd5453b7ade')
     version('0.3.1', sha256='30427b2be2288e88acd30c4ea348ee06043a649fd73623a63148b1ad96317151')

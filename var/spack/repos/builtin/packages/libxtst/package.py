@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libxtst(AutotoolsPackage):
+class Libxtst(AutotoolsPackage, XorgPackage):
     """libXtst provides the Xlib-based client API for the XTEST & RECORD
     extensions.
 
@@ -19,7 +19,7 @@ class Libxtst(AutotoolsPackage):
     core X protocol and arbitrary X extension protocol."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXtst"
-    url      = "https://www.x.org/archive/individual/lib/libXtst-1.2.2.tar.gz"
+    xorg_mirror_path = "lib/libXtst-1.2.2.tar.gz"
 
     version('1.2.2', sha256='221838960c7b9058cd6795c1c3ee8e25bae1c68106be314bc3036a4f26be0e6c')
 

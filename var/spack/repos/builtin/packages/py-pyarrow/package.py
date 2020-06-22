@@ -13,7 +13,7 @@ class PyPyarrow(PythonPackage):
     """
 
     homepage = "http://arrow.apache.org"
-    url = 'https://pypi.org/packages/source/p/pyarrow/pyarrow-0.15.1.tar.gz'
+    url = 'https://pypi.io/packages/source/p/pyarrow/pyarrow-0.15.1.tar.gz'
 
     version('0.15.1', sha256='7ad074690ba38313067bf3bbda1258966d38e2037c035d08b9ffe3cce07747a5')
     version('0.12.1', sha256='10db6e486c918c3af999d0114a22d92770687e3a6607ea3f14e6748854824c2a')

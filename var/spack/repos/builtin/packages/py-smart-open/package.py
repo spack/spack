@@ -13,9 +13,13 @@ class PySmartOpen(PythonPackage):
        different formats."""
 
     homepage = "https://github.com/piskvorky/smart_open"
-    url      = "https://github.com/RaRe-Technologies/smart_open/archive/1.8.4.tar.gz"
+    url      = "https://pypi.io/packages/source/s/smart_open/smart_open-1.10.0.tar.gz"
 
-    version('1.8.4', sha256='788e07f035defcbb62e3c1e313329a70b0976f4f65406ee767db73ad5d2d04f9')
+    version('1.10.0', sha256='bea5624c0c2e49987c227bdf3596573157eccd96fd1d53198856c8d53948fa2c')
+    version('1.8.4',  sha256='788e07f035defcbb62e3c1e313329a70b0976f4f65406ee767db73ad5d2d04f9')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-requests', type=('build', 'run'))
     depends_on('py-boto3', type=('build', 'run'))
+    depends_on('py-google-cloud-storage', type=('build', 'run'))
+    depends_on('py-bz2file', when='^python@:2', type=('build', 'run'))

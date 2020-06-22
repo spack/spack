@@ -13,9 +13,9 @@ class NetcdfFortran(AutotoolsPackage):
     distribution."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
-    url      = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-fortran-4.5.2.tar.gz"
+    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-fortran-4.5.2.tar.gz"
 
-    maintainers = ['skosukhin']
+    maintainers = ['skosukhin', 'WardF']
 
     version('4.5.2', sha256='b959937d7d9045184e9d2040a915d94a7f4d0185f4a9dceb8f08c94b0c3304aa')
     version('4.4.5', sha256='2467536ce29daea348c736476aa8e684c075d2f6cab12f3361885cb6905717b8')
@@ -27,13 +27,15 @@ class NetcdfFortran(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
+    variant('doc', default=False, description='Enable building docs')
 
     # We need to build with MPI wrappers if parallel I/O features is enabled:
     # https://www.unidata.ucar.edu/software/netcdf/docs/building_netcdf_fortran.html
     depends_on('mpi', when='+mpi')
 
-    depends_on('netcdf-c~mpi', when='~mpi')
+    depends_on('netcdf-c~mpi~parallel-netcdf', when='~mpi')
     depends_on('netcdf-c+mpi', when='+mpi')
+    depends_on('doxygen', when='+doc', type='build')
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
     # https://github.com/Unidata/netcdf-fortran/issues/94
@@ -64,12 +66,16 @@ class NetcdfFortran(AutotoolsPackage):
     def flag_handler(self, name, flags):
         config_flags = None
 
-        if name in ['cflags', 'fflags'] and '+pic' in self.spec:
+        if '+pic' in self.spec:
             # Unlike NetCDF-C, we add PIC flag only when +pic. Adding the
             # flags also when ~shared would make it impossible to build a
             # static-only version of the library with NAG.
-            config_flags = [self.compiler.pic_flag]
-        elif name == 'cppflags':
+            if name == 'cflags':
+                config_flags = [self.compiler.cc_pic_flag]
+            elif name == 'fflags':
+                config_flags = [self.compiler.f77_pic_flag]
+
+        if name == 'cppflags':
             config_flags = [self.spec['netcdf-c'].headers.cpp_flags]
         elif name == 'ldflags':
             # We need to specify LDFLAGS to get correct dependency_libs
@@ -78,6 +84,11 @@ class NetcdfFortran(AutotoolsPackage):
             # building takes place outside of Spack environment, i.e.
             # without Spack's compiler wrappers.
             config_flags = [self.spec['netcdf-c'].libs.search_flags]
+        elif name == 'fflags' and self.spec.satisfies('%gcc@10:'):
+            # https://github.com/Unidata/netcdf-fortran/issues/212
+            if config_flags is None:
+                config_flags = []
+            config_flags.append('-fallow-argument-mismatch')
 
         return flags, None, config_flags
 
@@ -115,6 +126,11 @@ class NetcdfFortran(AutotoolsPackage):
             config_args.append('CC=%s' % self.spec['mpi'].mpicc)
             config_args.append('FC=%s' % self.spec['mpi'].mpifc)
             config_args.append('F77=%s' % self.spec['mpi'].mpif77)
+
+        if '+doc' in self.spec:
+            config_args.append('--enable-doxygen')
+        else:
+            config_args.append('--disable-doxygen')
 
         return config_args
 

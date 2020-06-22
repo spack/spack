@@ -2169,13 +2169,17 @@ Adding the following to a package:
 
 .. code-block:: python
 
-    conflicts('%intel', when='@1.2')
+    conflicts('%intel', when='@:1.2',
+              msg='<myNicePackage> <= v1.2 cannot be built with Intel ICC, '
+                  'please use a newer release.')
 
 we express the fact that the current package *cannot be built* with the Intel
-compiler when we are trying to install version "1.2". The ``when`` argument can
-be omitted, in which case the conflict will always be active.
+compiler when we are trying to install a version "<=1.2". The ``when`` argument
+can be omitted, in which case the conflict will always be active.
 Conflicts are always evaluated after the concretization step has been performed,
 and if any match is found a detailed error message is shown to the user.
+You can add an additional message via the ``msg=`` parameter to a conflict that
+provideds more specific instructions for users.
 
 .. _packaging_extensions:
 
@@ -2197,7 +2201,7 @@ property to ``True``, e.g.:
        extendable = True
        ...
 
-To make a package into an extension, simply add simply add an
+To make a package into an extension, simply add an
 ``extends`` call in the package definition, and pass it the name of an
 extendable package:
 
@@ -2211,6 +2215,10 @@ extendable package:
 Now, the ``py-numpy`` package can be used as an argument to ``spack
 activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding additional constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Some packages produce a Python extension, but are only compatible with
 Python 3, or with Python 2.  In those cases, a ``depends_on()``
@@ -2231,8 +2239,7 @@ variant(s) are selected.  This may be accomplished with conditional
 .. code-block:: python
 
    class FooLib(Package):
-       variant('python', default=True, description= \
-           'Build the Python extension Module')
+       variant('python', default=True, description='Build the Python extension Module')
        extends('python', when='+python')
        ...
 
@@ -3607,7 +3614,7 @@ the command line.
     For most compilers, ``$rpath_flag`` is ``-Wl,-rpath,``. However, NAG
     passes its flags to GCC instead of passing them directly to the linker.
     Therefore, its ``$rpath_flag`` is doubly wrapped: ``-Wl,-Wl,,-rpath,``.
-    ``$rpath_flag`` can be overriden on a compiler specific basis in
+    ``$rpath_flag`` can be overridden on a compiler specific basis in
     ``lib/spack/spack/compilers/$compiler.py``.
 
 The compiler wrappers also pass the compiler flags specified by the user from
@@ -4040,6 +4047,70 @@ File functions
 
 :py:func:`touch(path) <spack.touch>`
   Create an empty file at ``path``.
+
+.. _make-package-findable:
+
+----------------------------------------------------------
+Making a package discoverable with ``spack external find``
+----------------------------------------------------------
+
+To make a package discoverable with
+:ref:`spack external find <cmd-spack-external-find>` you must
+define one or more executables associated with the package and must
+implement a method to generate a Spec when given an executable.
+
+The executables are specified as a package level ``executables``
+attribute which is a list of strings (see example below); each string
+is treated as a regular expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3',
+'my-weird-gcc', etc.).
+
+The method ``determine_spec_details`` has the following signature:
+
+.. code-block:: python
+
+   def determine_spec_details(prefix, exes_in_prefix):
+       # exes_in_prefix = a set of paths, each path is an executable
+       # prefix = a prefix that is common to each path in exes_in_prefix
+
+       # return None or [] if none of the exes represent an instance of
+       # the package. Return one or more Specs for each instance of the
+       # package which is thought to be installed in the provided prefix
+
+``determine_spec_details`` takes as parameters a set of discovered
+executables (which match those specified by the user) as well as a
+common prefix shared by all of those executables. The function must
+return one or more Specs associated with the executables (it can also
+return ``None`` to indicate that no provided executables are associated
+with the package).
+
+Say for example we have a package called ``foo-package`` which
+builds an executable called ``foo``. ``FooPackage`` would appear as
+follows:
+
+.. code-block:: python
+
+   class FooPackage(Package):
+       homepage = "..."
+       url = "..."
+
+       version(...)
+
+       # Each string provided here is treated as a regular expression, and
+       # would match for example 'foo', 'foobar', and 'bazfoo'.
+       executables = ['foo']
+
+       @classmethod
+       def determine_spec_details(cls, prefix, exes_in_prefix):
+           candidates = list(x for x in exes_in_prefix
+                             if os.path.basename(x) == 'foo')
+           if not candidates:
+               return
+           # This implementation is lazy and only checks the first candidate
+           exe_path = candidates[0]
+           exe = spack.util.executable.Executable(exe_path)
+           output = exe('--version')
+           version_str = ...  # parse output for version string
+           return Spec('foo-package@{0}'.format(version_str))
 
 .. _package-lifecycle:
 

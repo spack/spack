@@ -21,6 +21,7 @@ class Pgi(Package):
     homepage = "http://www.pgroup.com/"
 
     version('19.10', sha256='ac9db73ba80a66fe3bc875f63aaa9e16f54674a4e88b25416432430ba8cf203d')
+    version('19.7',  sha256='439692aeb51eff464b968c3bfed4536ed7bd3ba6f8174bc0ebe2219a78fe62ae')
     version('19.4',  sha256='23eee0d4da751dd6f247d624b68b03538ebd172e63a053c41bb67013f07cf68e')
     version('19.1',  sha256='3e05a6db2bf80b5d15f6ff83188f20cb89dc23e233417921e5c0822e7e57d34f')
     version('18.10', sha256='4b3ff83d2a13de6001bed599246eff8e63ef711b8952d4a9ee12efd666b3e326')
@@ -98,3 +99,13 @@ class Pgi(Package):
         env.set('CXX', join_path(prefix.bin, 'pgc++'))
         env.set('F77', join_path(prefix.bin, 'pgfortran'))
         env.set('FC',  join_path(prefix.bin, 'pgfortran'))
+
+        if '+mpi' in self.spec:
+            ompi_dir = os.listdir(prefix.mpi)[0]
+            env.prepend_path('PATH', join_path(prefix.mpi, ompi_dir, 'bin'))
+            env.prepend_path('LD_LIBRARY_PATH', join_path(prefix.mpi, ompi_dir,
+                                                          'lib'))
+            env.prepend_path('C_INCLUDE_PATH', join_path(prefix.mpi, ompi_dir,
+                                                         'include'))
+            env.prepend_path('MANPATH', join_path(prefix.mpi, ompi_dir,
+                                                  'share/man'))

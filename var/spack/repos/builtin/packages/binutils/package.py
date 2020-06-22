@@ -35,6 +35,9 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     variant('libiberty', default=False, description='Also install libiberty.')
     variant('nls', default=True, description='Enable Native Language Support')
     variant('headers', default=False, description='Install extra headers (e.g. ELF)')
+    variant('lto', default=False, description='Enable lto.')
+    variant('ld', default=False, description='Enable ld.')
+    variant('interwork', default=False, description='Enable interwork.')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
@@ -67,6 +70,15 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             '--with-system-zlib',
             '--with-sysroot=/',
         ]
+
+        if '+lto' in spec:
+            configure_args.append('--enable-lto')
+
+        if '+ld' in spec:
+            configure_args.append('--enable-ld')
+
+        if '+interwork' in spec:
+            configure_args.append('--enable-interwork')
 
         if '+gold' in spec:
             configure_args.append('--enable-gold')
@@ -112,4 +124,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
            and (self.compiler.name == 'fj' or self.compiler.name == 'clang')\
            and self.version <= ver('2.31.1'):
             flags.append('-Wno-narrowing')
+        elif name == 'cflags':
+            if self.spec.satisfies('@:2.34 %gcc@10:'):
+                flags.append('-fcommon')
         return (flags, None, None)

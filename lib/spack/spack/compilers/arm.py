@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.compiler
+import re
 
 
 class Arm(spack.compiler.Compiler):
@@ -35,11 +36,28 @@ class Arm(spack.compiler.Compiler):
     # InstalledDir:
     # /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin
     version_argument = '--version'
-    version_regex = r'Arm C\/C\+\+\/Fortran Compiler version ([^ )]+)'
+    version_regex = r'Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) '\
+                    r'\(build number (\d+)\) '
 
     @classmethod
-    def verbose_flag(cls):
+    def extract_version_from_output(cls, output):
+        """Extracts the version from compiler's output."""
+        match = re.search(cls.version_regex, output)
+        temp = 'unknown'
+        if match:
+            if match.group(1).count('.') == 1:
+                temp = match.group(1) + ".0." + match.group(2)
+            else:
+                temp = match.group(1) + "." + match.group(2)
+        return temp
+
+    @property
+    def verbose_flag(self):
         return "-v"
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-Ofast']
 
     @property
     def openmp_flag(self):
@@ -66,7 +84,19 @@ class Arm(spack.compiler.Compiler):
         return "-std=c11"
 
     @property
-    def pic_flag(self):
+    def cc_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def f77_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def fc_pic_flag(self):
         return "-fPIC"
 
     required_libs = ['libclang', 'libflang']

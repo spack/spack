@@ -55,7 +55,7 @@ class Gnuplot(AutotoolsPackage):
     depends_on('readline')
     depends_on('pkgconfig', type='build')
     depends_on('libxpm')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     # optional dependencies:
     depends_on('libcerf', when='+libcerf')
@@ -122,7 +122,7 @@ class Gnuplot(AutotoolsPackage):
             options.append('--with-qt=no')
 
         if '+wx' in spec:
-            options.append('--with-wx=%s' % spec['wx'].prefix)
+            options.append('--with-wx=%s' % spec['wxwidgets'].prefix)
         else:
             options.append('--disable-wxwidgets')
 
