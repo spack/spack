@@ -35,7 +35,11 @@ class PyMdanalysis(PythonPackage):
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.16:', type='build')
-    depends_on('py-numpy@1.5.0:', type=('build', 'run'))
+
+    depends_on('py-numpy@1.5.0:',  when='@:0.15.0',       type=('build', 'run'))
+    depends_on('py-numpy@1.10.4:', when='@0.16.0:0.19.2', type=('build', 'run'))
+    depends_on('py-numpy@1.13.3:', when='@0.20.1:',       type=('build', 'run'))
+    
     depends_on('py-six@1.4.0:', type=('build', 'run'))
     depends_on('py-biopython@1.59:', type=('build', 'run'))
     depends_on('py-networkx@1.0:', type=('build', 'run'))
