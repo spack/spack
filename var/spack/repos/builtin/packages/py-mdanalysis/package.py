@@ -41,7 +41,10 @@ class PyMdanalysis(PythonPackage):
     depends_on('py-numpy@1.13.3:', when='@0.20.1:',       type=('build', 'run'))
     
     depends_on('py-six@1.4.0:', type=('build', 'run'))
-    depends_on('py-biopython@1.59:', type=('build', 'run'))
+    
+    depends_on('py-biopython@1.59:', when='@:0.17.0', type=('build', 'run'))
+    depends_on('py-biopython@1.71:', when='@0.18.0:', type=('build', 'run'))
+    
     depends_on('py-networkx@1.0:', type=('build', 'run'))
     depends_on('py-griddataformats@0.4:', type=('build', 'run'))
     depends_on('py-gsd', type=('build', 'run'))
