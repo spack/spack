@@ -112,7 +112,7 @@ class Mysql(CMakePackage):
     depends_on('rpcsvc-proto')
     depends_on('ncurses')
     depends_on('openssl')
-    depends_on('libtirpc', when='@5.7.0:')
+    depends_on('libtirpc', when='@5.7.0: platform=linux')
     depends_on('perl', type=['build', 'test'], when='@:7.99.99')
     depends_on('bison@2.1:', type='build')
     depends_on('m4', type='build', when='@develop platform=solaris')
