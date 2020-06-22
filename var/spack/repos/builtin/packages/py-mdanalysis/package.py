@@ -32,7 +32,7 @@ class PyMdanalysis(PythonPackage):
     variant('amber', default=False,
             description='Support AMBER netcdf format.')
 
-    depends_on('python@2.7:')
+    depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.16:', type='build')
     depends_on('py-numpy@1.5.0:', type=('build', 'run'))
