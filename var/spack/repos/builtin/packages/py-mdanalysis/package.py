@@ -55,7 +55,9 @@ class PyMdanalysis(PythonPackage):
     depends_on('py-joblib', when='@0.16.0:', type=('build', 'run'))
     depends_on('py-scikit-learn', type=('build', 'run'))
 
-    depends_on('py-matplotlib', when='+analysis', type=('build', 'run'))
+    depends_on('py-matplotlib',       when='@:0.15.0+analysis',       type=('build', 'run'))
+    depends_on('py-matplotlib@1.5.1', when='@0.16.0:0.16.1+analysis', type=('build', 'run'))
+    depends_on('py-matplotlib@1.5.1', when='@0.16.2:',                type=('build', 'run'))
 
     depends_on('py-scipy',       when='@:0.16.1+analysis', type=('build', 'run'))
     depends_on('py-scipy',       when='@0.16.2:0.17.0',    type=('build', 'run'))
