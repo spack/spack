@@ -6,19 +6,17 @@
 from spack import *
 
 
-class RevocapRefiner(MakefilePackage):
+class RevocapRefiner(Package):
     """The University of Tokyo, CISS Project:
-        Geometric processing, mesh processing, mesh generation"""
+        Library for refining of model meshes"""
 
-    homepage = "https://github.com/FrontISTR/REVOCAP_Refiner"
-    git      = "https://github.com/FrontISTR/REVOCAP_Refiner.git"
+    homepage = "https://www.frontistr.com"
+    url      = "https://www.frontistr.com/download/link.php?REVOCAP_Refiner-1.1.04.tar.gz"
+    # git      = "https://gitlab.com/FrontISTR-Commons/REVOCAP_Refiner.git"
 
-    version('master', branch='master')
+    maintainers = ['k-tokunaga', 'kgoto', 'tuna' 'inagaki.kazuhisa', 'michioga']
 
-    depends_on('ruby', type='build')
-    depends_on('mpi')
-    depends_on('doxygen', type='build')
-    depends_on('swig', type='build')
+    version('1.1.04', sha256='bf3d959f4c1ab08a7e99cd7e02e710c758af28d71500f4814eed8b4eb3fb2d13')
 
     parallel = False
 
@@ -28,21 +26,19 @@ class RevocapRefiner(MakefilePackage):
     patch('delete_getIndices.patch')
 
     def edit(self, spec, prefix):
-        cflags = ['-O']
-        cxxflags = ['-O',  self.compiler.cxx_pic_flag]
+        cflags = ['-O2']
+        cxxflags = ['-O2', self.compiler.cxx_pic_flag]
         fflags = ['']
         ldshare = ['']
-        libs = ['-lstdc++']
-        if spec.satisfies('%gcc'):
-            ldshare.append('g++ -shared -s')
-
+        libs = ['']
+        
         m = FileFilter('MakefileConfig.in')
-        m.filter(r'CC\s=.*$', 'CC={0}'.format(spec['mpi'].mpicc))
-        m.filter(r'CFLAGS\s=.*$', 'CFLAGS={0}'.format(' '.join(cflags)))
-        m.filter(r'CXX\s*=.*$',  'CXX={0}'.format(spec['mpi'].mpicxx))
+        m.filter(r'CC\s=.*$', 'CC={0}')
+        m.filter(r'CFLAGS\s=.$', 'CFLAGS={0}'.format(' '.join(cflags)))
+        m.filter(r'CXX\s=.$', 'CXX={0}')
         m.filter(r'CXXFLAGS\s*=.*$',
                  'CXXFLAGS={0}'.format(' '.join(cxxflags)))
-        m.filter(r'AR\s*=.*$', 'AR=ar')
+        m.filter(r'AR\s=.*$', 'AR=ar')
         m.filter(r'ARFLAGS\s*=.*$', 'ARFLAGS=rsv')
         m.filter(r'LD\s*=.*$', 'LD={0}'.format(spack_fc))
         m.filter(r'LDFLAGS\s*=.*$',
@@ -52,11 +48,11 @@ class RevocapRefiner(MakefilePackage):
         m.filter(r'LIBS\s*=.*$', 'LIBS={0}'.format(' '.join(libs)))
         m.filter(r'LIBPATH\s*=.*$', 'LIBPATH= ')
         m.filter(r'RM\s*=.*$', 'RM=rm -f')
-        m.filter(r'DOXYGEN\s*=.*$', 'DOXYGEN=doxygen')
         m.filter(r'TAR\s*=.*$', 'TAR=tar')
-        m.filter(r'SWIG\s*=.*$', 'SWIG=swig')
 
     def install(self, spec, prefix):
+        make()
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)
-        install_tree('Refiner',  prefix.include.refine)
+        install_tree('Refiner', prefix.include.refine)
+
