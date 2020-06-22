@@ -115,7 +115,7 @@ class Ruby(AutotoolsPackage):
                                             'ssl_certs')
             install(rubygems_updated_cert_path, rubygems_certs_path)
 
-        rbconfig = '{0}/lib/ruby/{1}.0/x86_64-linux/rbconfig.rb'.format(self.spec.prefix, self.spec.version.up_to(2))
+        rbconfig = '{0}/lib/ruby/{1}.0/x86_64-linux/rbconfig.rb'.format(self.spec.prefix, self.spec.version.up_to(2))  # noqa: E501
         filter_file(r'^(\s*CONFIG\["CXX"\]\s*=\s*).*',
                     '\\1"{0}"'.format(self.compiler.cxx),
                     rbconfig)
