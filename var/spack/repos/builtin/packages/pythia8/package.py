@@ -24,7 +24,7 @@ class Pythia8(AutotoolsPackage):
 
     variant('shared', default=True, description='Build shared library')
     variant('hepmc', default=True, description='Build HepMC2 extensions')
-    variant('evtgen', default=True, description='Build EvtGen extensions')
+    variant('evtgen', default=False, description='Build EvtGen extensions')
     variant('root', default=False, description='Build ROOT extensions')
     variant('fastjet', default=False, description='Build fastjet extensions')
 
