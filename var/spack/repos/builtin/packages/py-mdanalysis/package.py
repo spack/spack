@@ -16,6 +16,7 @@ class PyMdanalysis(PythonPackage):
     homepage = "http://www.mdanalysis.org"
     url      = "https://pypi.io/packages/source/M/MDAnalysis/MDAnalysis-0.19.2.tar.gz"
 
+    version('1.0.0',  sha256='f45a024aca45e390ff1c45ca90beb2180b78881be377e2a1aa9cd6c109bcfa81')
     version('0.20.1', sha256='d04b71b193b9716d2597ffb9938b93f43487fa535da1bb5c1f2baccf356d7df9')
     version('0.19.2', sha256='c5395bbafa5efca2e1aee4715d26129844140c47cb8301da0293106cb969de7d')
     version('0.19.1', sha256='ff1d694f8598c0833ec340de6a6adb3b5e62b92d0fa94ee6401718ba972db3cc')
@@ -42,8 +43,11 @@ class PyMdanalysis(PythonPackage):
 
     depends_on('py-gsd@1.4.0',         when='@1.17.0:', type=('build', 'run'))
     depends_on('py-mmtf-python@1.0.0', when='@0.16.0:', type=('build', 'run'))
-    depends_on('py-joblib',            when='@0.16.0:', type=('build', 'run'))
     depends_on('py-mock',              when='@0.18.0:', type=('build', 'run'))
+    depends_on('py-tqdm@4.43.0:',      when='@1.0.0:',  type=('build', 'run'))
+
+    depends_on('py-joblib',       when='@0.16.0:0.20.1', type=('build', 'run'))
+    depends_on('py-joblib@0.12:', when='@1.0.0:',        type=('build', 'run'))
 
     depends_on('py-numpy@1.5.0:',  when='@:0.15.0',       type=('build', 'run'))
     depends_on('py-numpy@1.10.4:', when='@0.16.0:0.19.2', type=('build', 'run'))
