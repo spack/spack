@@ -32,12 +32,12 @@ class RevocapRefiner(Package):
         ldshare = ['']
         libs = ['']
         m = FileFilter('MakefileConfig.in')
-        m.filter(r'CC\s=.*$', 'CC={0}')
-        m.filter(r'CFLAGS\s=.$', 'CFLAGS={0}'.format(' '.join(cflags)))
-        m.filter(r'CXX\s=.$', 'CXX={0}')
+        m.filter(r'CC\s*=.*$', 'CC={0}')
+        m.filter(r'CFLAGS\s*=.*$', 'CFLAGS={0}'.format(' '.join(cflags)))
+        m.filter(r'CXX\s*=.*$', 'CXX={0}')
         m.filter(r'CXXFLAGS\s*=.*$',
                  'CXXFLAGS={0}'.format(' '.join(cxxflags)))
-        m.filter(r'AR\s=.*$', 'AR=ar')
+        m.filter(r'AR\s*=.*$', 'AR=ar')
         m.filter(r'ARFLAGS\s*=.*$', 'ARFLAGS=rsv')
         m.filter(r'LD\s*=.*$', 'LD={0}'.format(spack_fc))
         m.filter(r'LDFLAGS\s*=.*$',
