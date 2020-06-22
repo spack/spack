@@ -478,7 +478,7 @@ def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
     err_msg = 'Mock os remove'
 
     def _raise_except(path):
-        raise RuntimeError(err_msg)
+        raise OSError(err_msg)
 
     # Set up a fake failure mark (or file)
     fs.touch(os.path.join(spack.store.db._failure_dir, 'test'))

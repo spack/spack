@@ -367,28 +367,19 @@ class Database(object):
                             '{0}-{1}'.format(spec.name, spec.full_hash()))
 
     def clear_all_failures(self):
-        """Force remove all install failure tracking locks and files."""
+        """Force remove install failure tracking files."""
         tty.debug('Releasing prefix failure locks')
         for pkg_id in list(self._prefix_failures.keys()):
             lock = self._prefix_failures.pop(pkg_id, None)
             if lock:
                 lock.release_write()
 
-        tty.debug('Removing the prefix failure lock file')
-        try:
-            os.remove(self.prefix_fail_path)
-        except Exception:
-            pass
-
-        tty.debug('Ensure have an (unlocked) prefix failure lock file')
-        fs.touch(self.prefix_fail_path)
-
         # Remove all failure markings (aka files)
         tty.debug('Removing prefix failure tracking files')
         for fail_mark in os.listdir(self._failure_dir):
             try:
                 os.remove(os.path.join(self._failure_dir, fail_mark))
-            except Exception as exc:
+            except OSError as exc:
                 tty.warn('Unable to remove failure marking file {0}: {1}'
                          .format(fail_mark, str(exc)))
 
