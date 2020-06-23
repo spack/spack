@@ -34,7 +34,6 @@ class QuantumEspresso(Package):
     version('5.4',   sha256='e3993fccae9cea04a5c6492e8b961a053a63727051cb5c4eb6008f62cda8f335')
     version('5.3',   sha256='3b26038efb9e3f8ac7a2b950c31d8c29169a3556c0b68c299eb88a4be8dc9048')
 
-    variant('crosscompile', default=False, description='Support for cross-compile')
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
     variant('scalapack', default=True, description='Enables scalapack support')
@@ -224,11 +223,6 @@ class QuantumEspresso(Package):
 
         prefix_path = prefix.bin if '@:5.4.0' in spec else prefix
         options = ['-prefix={0}'.format(prefix_path)]
-
-        # Needed anytime target architecture flags leads to a binary
-        # that cannot be executed on the host architecture
-        if '+crosscompile' in spec:
-            options.append('--host')
 
         # QE autoconf compiler variables has some limitations:
         # 1. There is no explicit MPICC variable so we must re-purpose
