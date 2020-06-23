@@ -132,8 +132,10 @@ class Mysql(CMakePackage):
         if '+client_only' in self.spec:
             options.append('-DWITHOUT_SERVER:BOOL=ON')
         options.append('-DWITH_EDITLINE=system')
-        options.append('-Dlibedit_INCLUDE_DIR={0}'.format(spec['libedit'].prefix.include))
-        options.append('-Dlibedit_LIBRARY={0}'.format(spec['libedit'].libs.directories[0]))
+        options.append('-Dlibedit_INCLUDE_DIR={0}'.format(
+            spec['libedit'].prefix.include))
+        options.append('-Dlibedit_LIBRARY={0}'.format(
+            spec['libedit'].libs.directories[0]))
         return options
 
     def _fix_dtrace_shebang(self, env):
