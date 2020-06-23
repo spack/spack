@@ -883,7 +883,7 @@ class PackageInstaller(object):
             .format(lock_type)
 
         pkg_id = package_id(pkg)
-        ltype, lpkg, lock = self.locks.get(pkg_id, (lock_type, None, None))
+        ltype, _, lock = self.locks.get(pkg_id, (lock_type, None, None))
         if lock and ltype == lock_type:
             return ltype, lock
 
@@ -961,9 +961,6 @@ class PackageInstaller(object):
         tty.debug('Initializing the build queue for {0}'.format(self.pkg.name))
         install_compilers = spack.config.get(
             'config:install_missing_compilers', False)
-
-        if keep_failures:
-            tty.debug('Keeping previous failure markings as requested')
 
         if install_deps:
             for dep in self.spec.traverse(order='post', root=False):
@@ -1245,13 +1242,12 @@ class PackageInstaller(object):
                 except Exception as exc:
                     tty.warn(err.format(exc.__class__.__name__, ltype,
                                         pkg_id, str(exc)))
-            if lpkg:
+
                 prefix = lpkg.spec.prefix
-                if prefix:
-                    lock = spack.store.db._prefix_locks.pop(prefix, None)
-                    if lock:
-                        tty.debug('Removed cached prefix lock for {0}'
-                                  .format(prefix))
+                lock = spack.store.db._prefix_locks.pop(prefix, None)
+                if lock:
+                    tty.debug('Removed cached prefix lock for {0}'
+                              .format(prefix))
 
     def _remove_task(self, pkg_id):
         """
