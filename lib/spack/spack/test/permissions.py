@@ -27,7 +27,6 @@ def test_chmod_real_entries_ignores_suid_sgid(tmpdir):
 
 def test_chmod_rejects_group_writable_suid(tmpdir):
     path = str(tmpdir.join('file').ensure())
-    print(type(tmpdir))
     mode = stat.S_ISUID
     fs.chmod_x(path, mode)
 
@@ -38,7 +37,6 @@ def test_chmod_rejects_group_writable_suid(tmpdir):
 
 def test_chmod_rejects_world_writable_suid(tmpdir):
     path = str(tmpdir.join('file').ensure())
-    print(type(tmpdir))
     mode = stat.S_ISUID
     fs.chmod_x(path, mode)
 
@@ -49,7 +47,6 @@ def test_chmod_rejects_world_writable_suid(tmpdir):
 
 def test_chmod_rejects_world_writable_sgid(tmpdir):
     path = str(tmpdir.join('file').ensure())
-    print(type(tmpdir))
     mode = stat.S_ISGID
     fs.chmod_x(path, mode)
 
