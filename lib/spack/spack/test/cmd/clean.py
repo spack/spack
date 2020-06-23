@@ -58,7 +58,5 @@ def test_function_calls(command_line, counters):
     assert spack.installer.clear_failures.call_count == counters[4]
 
 
-def test_clean_default(capfd):
+def test_clean_default():
     clean()
-    out = capfd.readouterr()[0]
-    assert 'Removing all temporary build stages' in out
