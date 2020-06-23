@@ -6,7 +6,7 @@
 from spack import *
 
 
-class RevocapRefiner(Package):
+class RevocapRefiner(MakefilePackage):
     """The University of Tokyo, CISS Project:
         Library for refining of model meshes"""
 
