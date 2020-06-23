@@ -1,0 +1,52 @@
+--- a/m4/pbs_systemd_unitdir.m4
++++ b/m4/pbs_systemd_unitdir.m4
+@@ -39,14 +39,19 @@
+ AC_DEFUN([PBS_AC_SYSTEMD_UNITDIR],
+ [
+   AC_MSG_CHECKING([system/machine type for systemd unit dir])
+-  systemd_dir="/usr/lib/systemd/system"
+-  AS_IF([test -r "/etc/os-release"],
+-    [system_type=$( cat /etc/os-release | awk -F'=' '/^ID=/' | cut -d "=" -f 2 )
+-      AS_IF([test "x$system_type" = "xubuntu" -o "x$system_type" = "xdebian"],
+-      [systemd_dir="/lib/systemd/system"])
+-    ]
+-  )
+-  _unitdir=$systemd_dir
++dnl  systemd_dir="/usr/lib/systemd/system"
++dnl  AS_IF([test -r "/etc/os-release"],
++dnl    [system_type=$( cat /etc/os-release | awk -F'=' '/^ID=/' | cut -d "=" -f 2 )
++dnl      AS_IF([test "x$system_type" = "xubuntu" -o "x$system_type" = "xdebian"],
++dnl      [systemd_dir="/lib/systemd/system"])
++dnl    ]
++dnl  )
++dnl  _unitdir=$systemd_dir
++  _save_prefix=$prefix; _save_exec_prefix=$exec_prefix
++  test "x$prefix" = xNONE && prefix=$ac_default_prefix
++  test "x$exec_prefix" = xNONE && exec_prefix=$prefix
++  eval "_unitdir=$libdir/systemd/system"
++  prefix=$_save_prefix; exec_prefix=$_save_exec_prefix
+   AC_MSG_RESULT([$_unitdir])
+   AC_SUBST([_unitdir])
+ ])
+--- a/src/cmds/scripts/Makefile.am
++++ b/src/cmds/scripts/Makefile.am
+@@ -67,7 +67,7 @@ dist_pythonlib_PYTHON = \
+ 	pbs_bootcheck.py \
+ 	pbs_topologyinfo.py
+ 
+-sysprofiledir = /etc/profile.d
++sysprofiledir = $(sysconfdir)
+ 
+ dist_sysprofile_DATA = \
+ 	pbs.csh \
+--- a/test/fw/Makefile.am
++++ b/test/fw/Makefile.am
+@@ -59,7 +59,7 @@ ptlpkg_pylib_pluginsdir = $(ptlpkg_pylib_utilsdir)/plugins
+ 
+ dist_ptlpkg_pylib_plugins_PYTHON = $(wildcard $(srcdir)/ptl/utils/plugins/*.py)
+ 
+-sysprofiledir = /etc/profile.d
++sysprofiledir = $(sysconfdir)
+ 
+ dist_sysprofile_DATA = \
+ 	ptl.csh \

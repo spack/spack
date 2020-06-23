@@ -6,6 +6,7 @@
 import os
 import llnl.util.tty as tty
 from spack import *
+import platform
 
 # - vanilla CentOS 7, and possibly other systems, fail a test:
 #   TestCloneNEWUSERAndRemapRootDisableSetgroups
@@ -35,9 +36,13 @@ class Go(Package):
 
     extendable = True
 
+    version('1.14.4', sha256='7011af3bbc2ac108d1b82ea8abb87b2e63f78844f0259be20cde4d42c5c40584')
+    version('1.14.3', sha256='93023778d4d1797b7bc6a53e86c3a9b150c923953225f8a48a2d5fabc971af56')
     version('1.14.2', sha256='98de84e69726a66da7b4e58eac41b99cbe274d7e8906eeb8a5b7eb0aadee7f7c')
     version('1.14.1', sha256='2ad2572115b0d1b4cb4c138e6b3a31cee6294cb48af75ee86bec3dca04507676')
     version('1.14',   sha256='6d643e46ad565058c7a39dac01144172ef9bd476521f42148be59249e4b74389')
+    version('1.13.12', sha256='17ba2c4de4d78793a21cc659d9907f4356cd9c8de8b7d0899cdedcef712eba34')
+    version('1.13.11', sha256='89ed1abce25ad003521c125d6583c93c1280de200ad221f961085200a6c00679')
     version('1.13.10', sha256='eb9ccc8bf59ed068e7eff73e154e4f5ee7eec0a47a610fb864e3332a2fdc8b8c')
     version('1.13.9', sha256='34bb19d806e0bc4ad8f508ae24bade5e9fedfa53d09be63b488a9314d2d4f31d')
     version('1.13.8', sha256='b13bf04633d4d8cf53226ebeaace8d4d2fd07ae6fa676d0844a688339debec34')
@@ -87,7 +92,10 @@ class Go(Package):
     depends_on('git', type=('build', 'link', 'run'))
     # TODO: Make non-c self-hosting compilers feasible without backflips
     # should be a dep on external go compiler
-    depends_on('go-bootstrap', type='build')
+    if platform.machine() == 'aarch64':
+        depends_on('gcc languages=go', type='build')
+    else:
+        depends_on('go-bootstrap', type='build')
 
     # https://github.com/golang/go/issues/17545
     patch('time_test.patch', when='@1.6.4:1.7.4')

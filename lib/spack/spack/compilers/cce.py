@@ -32,26 +32,41 @@ class Cce(Compiler):
                   'f77': 'cce/ftn',
                   'fc': 'cce/ftn'}
 
-    version_argument = '-V'
+    @property
+    def version_argument(self):
+        if self.version >= ver('9.0'):
+            return '--version'
+        return '-V'
+
     version_regex = r'[Vv]ersion.*?(\d+(\.\d+)+)'
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
 
     @property
+    def debug_flags(self):
+        return ['-g', '-G0', '-G1', '-G2', '-Gfast']
+
+    @property
     def openmp_flag(self):
+        if self.version >= ver('9.0'):
+            return '-fopenmp'
         return "-h omp"
 
     @property
     def cxx11_flag(self):
+        if self.version >= ver('9.0'):
+            return '-std=c++11'
         return "-h std=c++11"
 
     @property
     def c99_flag(self):
-        if self.version >= ver('8.4'):
-            return '-h stc=c99,noconform,gnu'
-        if self.version >= ver('8.1'):
+        if self.version >= ver('9.0'):
+            return '-std=c99'
+        elif self.version >= ver('8.4'):
+            return '-h std=c99,noconform,gnu'
+        elif self.version >= ver('8.1'):
             return '-h c99,noconform,gnu'
         raise UnsupportedCompilerFlag(self,
                                       'the C99 standard',
@@ -60,7 +75,9 @@ class Cce(Compiler):
 
     @property
     def c11_flag(self):
-        if self.version >= ver('8.5'):
+        if self.version >= ver('9.0'):
+            return '-std=c11'
+        elif self.version >= ver('8.5'):
             return '-h std=c11,noconform,gnu'
         raise UnsupportedCompilerFlag(self,
                                       'the C11 standard',

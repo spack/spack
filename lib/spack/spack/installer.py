@@ -562,6 +562,8 @@ install_args_docstring = """
                 even with exceptions.
             restage (bool): Force spack to restage the package source.
             skip_patch (bool): Skip patch stage of build if True.
+            stop_before (InstallPhase): stop execution before this
+                installation phase (or None)
             stop_at (InstallPhase): last installation phase to be executed
                 (or None)
             tests (bool or list or set): False to run no tests, True to test
@@ -779,17 +781,32 @@ class PackageInstaller(object):
         Ensures the package being installed has a valid last phase before
         proceeding with the installation.
 
-        The ``stop_at`` argument is removed from the installation arguments.
+        The ``stop_before`` or ``stop_at`` arguments are removed from the
+        installation arguments.
+
+        The last phase is also set to None if it is the last phase of the
+        package already
 
         Args:
             kwargs:
+              ``stop_before``': stop before execution of this phase (or None)
               ``stop_at``': last installation phase to be executed (or None)
         """
+        self.pkg.stop_before_phase = kwargs.pop('stop_before', None)
+        if self.pkg.stop_before_phase is not None and \
+           self.pkg.stop_before_phase not in self.pkg.phases:
+            tty.die('\'{0}\' is not an allowed phase for package {1}'
+                    .format(self.pkg.stop_before_phase, self.pkg.name))
+
         self.pkg.last_phase = kwargs.pop('stop_at', None)
         if self.pkg.last_phase is not None and \
                 self.pkg.last_phase not in self.pkg.phases:
             tty.die('\'{0}\' is not an allowed phase for package {1}'
                     .format(self.pkg.last_phase, self.pkg.name))
+        # If we got a last_phase, make sure it's not already last
+        if self.pkg.last_phase and \
+                self.pkg.last_phase == self.pkg.phases[-1]:
+            self.pkg.last_phase = None
 
     def _cleanup_all_tasks(self):
         """Cleanup all build tasks to include releasing their locks."""
@@ -1154,13 +1171,12 @@ class PackageInstaller(object):
             if task.compiler:
                 spack.compilers.add_compilers_to_config(
                     spack.compilers.find_compilers([pkg.spec.prefix]))
-
-        except StopIteration as e:
-            # A StopIteration exception means that do_install was asked to
-            # stop early from clients.
-            tty.msg('{0} {1}'.format(self.pid, str(e)))
-            tty.msg('Package stage directory : {0}'
-                    .format(pkg.stage.source_path))
+        except spack.build_environment.StopPhase as e:
+            # A StopPhase exception means that do_install was asked to
+            # stop early from clients, and is not an error at this point
+            tty.debug('{0} {1}'.format(self.pid, str(e)))
+            tty.debug('Package stage directory : {0}'
+                      .format(pkg.stage.source_path))
 
     _install_task.__doc__ += install_args_docstring
 
@@ -1466,6 +1482,12 @@ class PackageInstaller(object):
                 if lock is not None:
                     self._update_installed(task)
                     _print_installed_pkg(pkg.prefix)
+
+                    # It's an already installed compiler, add it to the config
+                    if task.compiler:
+                        spack.compilers.add_compilers_to_config(
+                            spack.compilers.find_compilers([pkg.spec.prefix]))
+
                 else:
                     # At this point we've failed to get a write or a read
                     # lock, which means another process has taken a write
@@ -1498,8 +1520,10 @@ class PackageInstaller(object):
                 self._update_installed(task)
 
                 # If we installed then we should keep the prefix
+                stop_before_phase = getattr(pkg, 'stop_before_phase', None)
                 last_phase = getattr(pkg, 'last_phase', None)
-                keep_prefix = last_phase is None or keep_prefix
+                keep_prefix = keep_prefix or \
+                    (stop_before_phase is None and last_phase is None)
 
             except spack.directory_layout.InstallDirectoryAlreadyExistsError:
                 tty.debug("Keeping existing install prefix in place.")

@@ -2134,6 +2134,8 @@ class Spec(object):
         consistent with requirements of its packages. See flatten() and
         normalize() for more details on this.
         """
+        import spack.concretize
+
         if not self.name:
             raise spack.error.SpecError(
                 "Attempting to concretize anonymous spec")
@@ -2145,7 +2147,6 @@ class Spec(object):
         force = False
 
         user_spec_deps = self.flat_dependencies(copy=False)
-        import spack.concretize
         concretizer = spack.concretize.Concretizer(self.copy())
         while changed:
             changes = (self.normalize(force, tests=tests,
@@ -2239,7 +2240,11 @@ class Spec(object):
                 for mod in compiler.modules:
                     md.load_module(mod)
 
-                s.external_path = md.get_path_from_module(s.external_module)
+                # get the path from the module
+                # the package can override the default
+                s.external_path = getattr(s.package, 'external_prefix',
+                                          md.get_path_from_module(
+                                              s.external_module))
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
@@ -3940,7 +3945,8 @@ class SpecLexer(spack.parse.Lexer):
 
             # Filenames match before identifiers, so no initial filename
             # component is parsed as a spec (e.g., in subdir/spec.yaml)
-            (r'[/\w.-]+\.yaml[^\b]*', lambda scanner, v: self.token(FILE, v)),
+            (r'[/\w.-]*/[/\w/-]+\.yaml[^\b]*',
+             lambda scanner, v: self.token(FILE, v)),
 
             # Hash match after filename. No valid filename can be a hash
             # (files end w/.yaml), but a hash can match a filename prefix.
@@ -4091,11 +4097,6 @@ class SpecParser(spack.parse.Parser):
         """
         path = self.token.value
 
-        # don't treat builtin.yaml, builtin.yaml-cpp, etc. as filenames
-        if re.match(spec_id_re + '$', path):
-            self.push_tokens([spack.parse.Token(ID, self.token.value)])
-            return None
-
         # Special case where someone omits a space after a filename. Consider:
         #
         #     libdwarf^/some/path/to/libelf.yamllibdwarf ^../../libelf.yaml
@@ -4107,7 +4108,6 @@ class SpecParser(spack.parse.Parser):
             raise SpecFilenameError(
                 "Spec filename must end in .yaml: '{0}'".format(path))
 
-        # if we get here, we're *finally* interpreting path as a filename
         if not os.path.exists(path):
             raise NoSuchSpecFileError("No such spec file: '{0}'".format(path))
 

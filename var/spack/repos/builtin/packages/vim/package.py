@@ -58,6 +58,7 @@ class Vim(AutotoolsPackage):
 
     depends_on('ncurses', when="@7.4:")
     depends_on('findutils', type='build')
+    depends_on('fontconfig', when="+gui")
 
     def configure_args(self):
         spec = self.spec

@@ -16,13 +16,14 @@ class Petsc(Package):
     """
 
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
-    url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.13.0.tar.gz"
+    url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.13.1.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.13.1', sha256='74a895e44e2ff1146838aaccb7613e7626d99e0eed64ca032c87c72d084efac3')
     version('3.13.0', sha256='f0ea543a54145c5d1387e25b121c3fd1b1ca834032c5a33f6f1d929e95bdf0e5')
     version('3.12.5', sha256='d676eb67e79314d6cca6422d7c477d2b192c830b89d5edc6b46934f7453bcfc0')
     version('3.12.4', sha256='56a941130da93bbacb3cfa74dcacea1e3cd8e36a0341f9ced09977b1457084c3')
@@ -176,8 +177,8 @@ class Petsc(Package):
     depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.2+superlu-dist+mpi+int64')
     depends_on('superlu-dist@6.1:6.1.99~int64', when='@3.10.3:3.12.99+superlu-dist+mpi~int64')
     depends_on('superlu-dist@6.1:6.1.99+int64', when='@3.10.3:3.12.99+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@6.1:6.3.99~int64', when='@3.13.0:3.13.99+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@6.1:6.3.99+int64', when='@3.13.0:3.13.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@6.1:6.3.0~int64', when='@3.13.0:3.13.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@6.1:6.3.0+int64', when='@3.13.0:3.13.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
@@ -215,7 +216,7 @@ class Petsc(Package):
             # enabled. This generates a list of any such errors.
             errors = [
                 error_message_fmt.format(library=x)
-                for x in ('hdf5', 'hypre', 'parmetis', 'mumps', 'superlu-dist')
+                for x in ('hdf5', 'hypre', 'mumps', 'superlu-dist')
                 if ('+' + x) in self.spec]
             if errors:
                 errors = ['incompatible variants given'] + errors
@@ -295,18 +296,23 @@ class Petsc(Package):
                 '--with-scalapack=0'
             ])
 
-        # Activates library support if needed
-        for library in ('cuda', 'metis', 'hdf5', 'hypre', 'parmetis',
+        # Activates library support if needed (i.e. direct dependency)
+        for library in ('cuda', 'metis', 'hypre', 'parmetis',
                         'mumps', 'trilinos', 'fftw', 'valgrind'):
+            # Cannot check `library in spec` because of transitive deps
+            # Cannot check variants because parmetis keys on +metis
+            library_requested = library in spec.dependencies_dict()
             options.append(
                 '--with-{library}={value}'.format(
-                    library=library, value=('1' if library in spec else '0'))
+                    library=library,
+                    value=('1' if library_requested else '0'))
             )
-            if library in spec:
+            if library_requested:
                 options.append(
                     '--with-{library}-dir={path}'.format(
                         library=library, path=spec[library].prefix)
                 )
+
         # PETSc does not pick up SuperluDist from the dir as they look for
         # superlu_dist_4.1.a
         if 'superlu-dist' in spec:
@@ -336,6 +342,16 @@ class Petsc(Package):
             ])
         else:
             options.append('--with-suitesparse=0')
+
+        # hdf5: configure detection is convoluted for pflotran
+        if '+hdf5' in spec:
+            options.extend([
+                '--with-hdf5-include=%s' % spec['hdf5'].prefix.include,
+                '--with-hdf5-lib=%s' % spec['hdf5:hl,fortran'].libs.joined(),
+                '--with-hdf5=1'
+            ])
+        else:
+            options.append('--with-hdf5=0')
 
         # zlib: configuring using '--with-zlib-dir=...' has some issues with
         # SuiteSparse so specify directly the include path and the libraries.

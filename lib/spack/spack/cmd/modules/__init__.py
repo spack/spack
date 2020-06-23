@@ -119,8 +119,9 @@ _missing_modules_warning = (
     " this command with debug output enabled for more details.")
 
 
-def loads(module_type, specs, args, out=sys.stdout):
+def loads(module_type, specs, args, out=None):
     """Prompt the list of modules associated with a list of specs"""
+    out = sys.stdout if out is None else out
 
     # Get a comprehensive list of specs
     if args.recurse_dependencies:

@@ -25,6 +25,7 @@ class Boost(Package):
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.73.0', sha256='4eb3b8d442b426dc35346235c8733b5ae35ba431690e38c6a8263dce9fcbb402')
     version('1.72.0', sha256='59c9b274bc451cf91a9ba1dd2c7fdcaf5d60b1b3aa83f2c9fa143417cc660722')
     version('1.71.0', sha256='d73a8da01e8bf8c7eda40b4c84915071a8c8a0df4a6734537ddde4a8580524ee')
     version('1.70.0', sha256='430ae8354789de4fd19ee52f3b1f739e1fba576f0aded0897c3c2bc00fb38778')
@@ -125,7 +126,7 @@ class Boost(Package):
 
     variant('cxxstd',
             default='98',
-            values=('98', '11', '14', '17'),
+            values=('98', '11', '14', '17', '2a'),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant('debug', default=False,
@@ -172,6 +173,9 @@ class Boost(Package):
     conflicts('cxxstd=98', when='+fiber')  # Fiber requires >=C++11.
     conflicts('~context', when='+fiber')  # Fiber requires Context.
 
+    # C++20/2a is not support by Boost < 1.73.0
+    conflicts('cxxstd=2a', when='@:1.72.99')
+
     # C++17 is not supported by Boost<1.63.0.
     conflicts('cxxstd=17', when='@:1.62.99')
 
@@ -209,6 +213,11 @@ class Boost(Package):
     patch('darwin_clang_version.patch', level=0,
           when='@1.56.0:1.72.0 platform=darwin')
 
+    # Fix: "Unable to compile code using boost/process.hpp"
+    # See: https://github.com/boostorg/process/issues/116
+    # Patch: https://github.com/boostorg/process/commit/6a4d2ff72114ef47c7afaf92e1042aca3dfa41b0.patch
+    patch('1.72_boost_process.patch', level=2, when='@1.72.0')
+
     # Fix the bootstrap/bjam build for Cray
     patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
 
@@ -225,6 +234,18 @@ class Boost(Package):
     # Add option to C/C++ compile commands in clang-linux.jam
     patch('clang-linux_add_option.patch', when='@1.56.0:1.63.0')
     patch('clang-linux_add_option2.patch', when='@1.47.0:1.55.0')
+
+    # C++20 concepts fix for Beast
+    # See https://github.com/boostorg/beast/pull/1927 for details
+    patch('https://www.boost.org/patches/1_73_0/0002-beast-coroutines.patch',
+          sha256='4dd507e1f5a29e3b87b15321a4d8c74afdc8331433edabf7aeab89b3c405d556',
+          when='@1.73.0')
+
+    # Cloning a status_code with indirecting_domain leads to segmentation fault
+    # See https://github.com/ned14/outcome/issues/223 for details
+    patch('https://www.boost.org/patches/1_73_0/0001-outcome-assert.patch',
+          sha256='246508e052c44b6f4e8c2542a71c06cacaa72cd1447ab8d2a542b987bc35ace9',
+          when='@1.73.0')
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
@@ -377,7 +398,7 @@ class Boost(Package):
         # and at least in clang 3.9 still fails to build
         #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
         #   https://svn.boost.org/trac/boost/ticket/12496
-        if spec.satisfies('%clang'):
+        if spec.satisfies('%clang') or spec.satisfies('%fj'):
             options.extend(['pch=off'])
             if '+clanglibcpp' in spec:
                 cxxflags.append('-stdlib=libc++')
@@ -491,3 +512,6 @@ class Boost(Package):
         # on Darwin; correct this
         if (sys.platform == 'darwin') and ('+shared' in spec):
             fix_darwin_install_name(prefix.lib)
+
+    def setup_run_environment(self, env):
+        env.set('BOOST_ROOT', self.prefix)

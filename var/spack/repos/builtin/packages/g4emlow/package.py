@@ -15,6 +15,7 @@ class G4emlow(Package):
     maintainers = ['drbenmorgan']
 
     # Only versions relevant to Geant4 releases built by spack are added
+    version('7.9.1', sha256='820c106e501c64c617df6c9e33a0f0a3822ffad059871930f74b8cc37f043ccb')
     version('7.9', sha256='4abf9aa6cda91e4612676ce4d2d8a73b91184533aa66f9aad19a53a8c4dc3aff')
     version('7.7', sha256='16dec6adda6477a97424d749688d73e9bd7d0b84d0137a67cf341f1960984663')
     version('7.3', sha256='583aa7f34f67b09db7d566f904c54b21e95a9ac05b60e2bfb794efb569dba14e')

@@ -37,6 +37,7 @@ from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
 import spack.util.lock as lk
+from spack.util.path import substitute_path_variables
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -406,8 +407,12 @@ def validate(data, filename=None):
     try:
         spack.schema.Validator(spack.schema.env.schema).validate(validate_data)
     except jsonschema.ValidationError as e:
+        if hasattr(e.instance, 'lc'):
+            line_number = e.instance.lc.line + 1
+        else:
+            line_number = None
         raise spack.config.ConfigFormatError(
-            e, data, filename, e.instance.lc.line + 1)
+            e, data, filename, line_number)
     return validate_data
 
 
@@ -776,8 +781,8 @@ class Environment(object):
         # highest-precedence scopes are last.
         includes = config_dict(self.yaml).get('include', [])
         for i, config_path in enumerate(reversed(includes)):
-            # allow paths to contain environment variables
-            config_path = config_path.format(**os.environ)
+            # allow paths to contain spack config/environment variables, etc.
+            config_path = substitute_path_variables(config_path)
 
             # treat relative paths as relative to the environment
             if not os.path.isabs(config_path):
@@ -1091,6 +1096,25 @@ class Environment(object):
         for view in self.views.values():
             view.regenerate(specs, self.roots())
 
+    def _env_modifications_for_default_view(self, reverse=False):
+        all_mods = spack.util.environment.EnvironmentModifications()
+
+        errors = []
+        for _, spec in self.concretized_specs():
+            if spec in self.default_view and spec.package.installed:
+                try:
+                    mods = uenv.environment_modifications_for_spec(
+                        spec, self.default_view)
+                except Exception as e:
+                    msg = ("couldn't get environment settings for %s"
+                           % spec.format("{name}@{version} /{hash:7}"))
+                    errors.append((msg, str(e)))
+                    continue
+
+                all_mods.extend(mods.reversed() if reverse else mods)
+
+        return all_mods, errors
+
     def add_default_view_to_shell(self, shell):
         env_mod = spack.util.environment.EnvironmentModifications()
 
@@ -1101,10 +1125,11 @@ class Environment(object):
         env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view))
 
-        for _, spec in self.concretized_specs():
-            if spec in self.default_view and spec.package.installed:
-                env_mod.extend(uenv.environment_modifications_for_spec(
-                    spec, self.default_view))
+        mods, errors = self._env_modifications_for_default_view()
+        env_mod.extend(mods)
+        if errors:
+            for err in errors:
+                tty.warn(*err)
 
         # deduplicate paths from specs mapped to the same location
         for env_var in env_mod.group_by_name():
@@ -1122,11 +1147,9 @@ class Environment(object):
         env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view).reversed())
 
-        for _, spec in self.concretized_specs():
-            if spec in self.default_view and spec.package.installed:
-                env_mod.extend(
-                    uenv.environment_modifications_for_spec(
-                        spec, self.default_view).reversed())
+        mods, _ = self._env_modifications_for_default_view(reverse=True)
+        env_mod.extend(mods)
+
         return env_mod.shell_modifications(shell)
 
     def _add_concrete_spec(self, spec, concrete, new=True):
@@ -1210,26 +1233,19 @@ class Environment(object):
 
             self._install(spec, **kwargs)
 
-    def all_specs_by_hash(self):
-        """Map of hashes to spec for all specs in this environment."""
-        # Note this uses dag-hashes calculated without build deps as keys,
-        # whereas the environment tracks specs based on dag-hashes calculated
-        # with all dependencies. This function should not be used by an
-        # Environment object for management of its own data structures
-        hashes = {}
-        for h in self.concretized_order:
-            specs = self.specs_by_hash[h].traverse(deptype=('link', 'run'))
-            for spec in specs:
-                hashes[spec.dag_hash()] = spec
-        return hashes
-
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""
-        return sorted(self.all_specs_by_hash().values())
+        all_specs = set()
+        for h in self.concretized_order:
+            all_specs.update(self.specs_by_hash[h].traverse())
+
+        return sorted(all_specs)
 
     def all_hashes(self):
-        """Return all specs, even those a user spec would shadow."""
-        return list(self.all_specs_by_hash().keys())
+        """Return hashes of all specs.
+
+        Note these hashes exclude build dependencies."""
+        return list(set(s.dag_hash() for s in self.all_specs()))
 
     def roots(self):
         """Specs explicitly requested by the user *in this environment*.
@@ -1427,9 +1443,9 @@ class Environment(object):
                 # The primary list is handled differently
                 continue
 
-            active_yaml_lists = [l for l in yaml_dict.get('definitions', [])
-                                 if name in l and
-                                 _eval_conditional(l.get('when', 'True'))]
+            active_yaml_lists = [x for x in yaml_dict.get('definitions', [])
+                                 if name in x and
+                                 _eval_conditional(x.get('when', 'True'))]
 
             # Remove any specs in yaml that are not in internal representation
             for ayl in active_yaml_lists:

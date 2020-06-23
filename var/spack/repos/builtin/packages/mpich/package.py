@@ -144,6 +144,7 @@ spack package at this time.''',
     conflicts('netmod=tcp', when='device=ch4')
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
+    conflicts('pmi=pmix', when='+hydra')
 
     # MPICH does not require libxml2 and libpciaccess for versions before 3.3
     # when ~hydra is set: prevent users from setting +libxml2 and +pci in this
@@ -155,9 +156,16 @@ spack package at this time.''',
         env.unset('F90')
         env.unset('F90FLAGS')
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        # On Cray, the regular compiler wrappers *are* the MPI wrappers.
-        if 'platform=cray' in self.spec:
+        # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
+        if self.spec.satisfies('%gcc@10:'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
+
+    def setup_run_environment(self, env):
+        # Because MPI implementations provide compilers, they have to add to
+        # their run environments the code to make the compilers available.
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
+        if self.spec.external_module and 'cray' in self.spec.external_module:
             env.set('MPICC', spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
@@ -168,6 +176,9 @@ spack package at this time.''',
             env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
             env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
         env.set('MPICH_CC', spack_cc)
         env.set('MPICH_CXX', spack_cxx)
         env.set('MPICH_F77', spack_f77)
@@ -175,7 +186,9 @@ spack package at this time.''',
         env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
-        if 'platform=cray' in self.spec:
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
+        if self.spec.external_module and 'cray' in self.spec.external_module:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx
             self.spec.mpifc = spack_fc

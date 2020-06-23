@@ -14,7 +14,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Package information
     homepage = "http://www.qmcpack.org/"
     git      = "https://github.com/QMCPACK/qmcpack.git"
-
+    maintainers = ['naromero77']
     tags = ['ecp', 'ecp-apps']
 
     # This download method is untrusted, and is not recommended by the
@@ -22,6 +22,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('develop')
+    version('3.9.2', tag='v3.9.2')
     version('3.9.1', tag='v3.9.1')
     version('3.9.0', tag='v3.9.0')
     version('3.8.0', tag='v3.8.0')
@@ -54,8 +55,6 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='Install with support for basic data analysis tools')
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
-    variant('qe', default=False,
-            description='Install with patched Quantum Espresso 6.4.1')
     variant('afqmc', default=False,
             description='Install with AFQMC support. NOTE that if used in '
                         'combination with CUDA, only AFQMC will have CUDA.')
@@ -84,12 +83,6 @@ class Qmcpack(CMakePackage, CudaPackage):
         '+soa',
         when='+cuda@:3.4.0',
         msg='QMCPACK CUDA+SOA variant does not exist prior to v. 3.5.0.')
-
-    conflicts(
-        '+qe',
-        when='~mpi',
-        msg='Serial QMCPACK with serial QE converter not supported. '
-        'Configure in serial QE + serial HDF5 will not run correctly.')
 
     conflicts('^openblas+ilp64',
               msg='QMCPACK does not support OpenBLAS 64-bit integer variant')
@@ -140,8 +133,6 @@ class Qmcpack(CMakePackage, CudaPackage):
     # HDF5
     depends_on('hdf5~mpi', when='~phdf5')
     depends_on('hdf5+mpi', when='+phdf5')
-    depends_on('hdf5+hl+fortran~mpi', when='+qe~phdf5')
-    depends_on('hdf5+hl+fortran+mpi', when='+qe+phdf5')
 
     # Math libraries
     depends_on('blas')
@@ -158,18 +149,6 @@ class Qmcpack(CMakePackage, CudaPackage):
     # GUI is optional for data anlysis
     # py-matplotlib leads to a long complex DAG for dependencies
     depends_on('py-matplotlib', when='+gui', type='run')
-
-    # B-spline basis calculation require a patched version of
-    # Quantum Espresso 6.4.1 (see QMCPACK manual)
-    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
-    patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
-    depends_on('quantum-espresso~patch@6.4.1+mpi hdf5=parallel',
-               patches=patch(patch_url, sha256=patch_checksum),
-               when='+qe+phdf5', type='run')
-
-    depends_on('quantum-espresso~patch@6.4.1+mpi hdf5=serial',
-               patches=patch(patch_url, sha256=patch_checksum),
-               when='+qe~phdf5', type='run')
 
     # Backport several patches from recent versions of QMCPACK
     # The test_numerics unit test is broken prior to QMCPACK 3.3.0

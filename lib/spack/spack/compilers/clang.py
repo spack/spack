@@ -50,6 +50,18 @@ class Clang(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['flang', 'gfortran', 'xlf90_r']
 
+    version_argument = '--version'
+
+    @property
+    def debug_flags(self):
+        return ['-gcodeview', '-gdwarf-2', '-gdwarf-3', '-gdwarf-4',
+                '-gdwarf-5', '-gline-tables-only', '-gmodules', '-gz', '-g']
+
+    @property
+    def opt_flags(self):
+        return ['-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Oz', '-Og',
+                '-O', '-O4']
+
     # Clang has support for using different fortran compilers with the
     # clang executable.
     @property
@@ -81,8 +93,8 @@ class Clang(Compiler):
         ver_string = str(self.version)
         return ver_string.endswith('-apple')
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
 
     @property
@@ -190,26 +202,6 @@ class Clang(Compiler):
         return "-fPIC"
 
     required_libs = ['libclang']
-
-    @classmethod
-    @llnl.util.lang.memoized
-    def default_version(cls, comp):
-        """The ``--version`` option works for clang compilers.
-        On most platforms, output looks like this::
-
-            clang version 3.1 (trunk 149096)
-            Target: x86_64-unknown-linux-gnu
-            Thread model: posix
-
-        On macOS, it looks like this::
-
-            Apple LLVM version 7.0.2 (clang-700.1.81)
-            Target: x86_64-apple-darwin15.2.0
-            Thread model: posix
-        """
-        compiler = Executable(comp)
-        output = compiler('--version', output=str, error=str)
-        return cls.extract_version_from_output(output)
 
     @classmethod
     @llnl.util.lang.memoized

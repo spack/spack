@@ -12,10 +12,11 @@ class Onednn(CMakePackage):
     Formerly known as Intel MKL-DNN and DNNL."""
 
     homepage = "https://01.org/dnnl"
-    url      = "https://github.com/oneapi-src/oneDNN/archive/v1.4.tar.gz"
+    url      = "https://github.com/oneapi-src/oneDNN/archive/v1.5.tar.gz"
 
     maintainers = ['adamjstewart']
 
+    version('1.5',    sha256='2aacc00129418185e0bc1269d3ef82f93f08de2c336932989c0c360279129edb')
     version('1.4',    sha256='54737bcb4dc1961d32ee75da3ecc529fa48198f8b2ca863a079e19a9c4adb70f')
     version('1.3',    sha256='b87c23b40a93ef5e479c81028db71c4847225b1a170f82af5e79f1cda826d3bf')
     version('1.2.2',  sha256='251dd17643cff285f38b020fc4ac9245d8d596f3e2140b98982ffc32eae3943c')
@@ -30,6 +31,7 @@ class Onednn(CMakePackage):
     version('1.0.2',  sha256='9281715436adb7b9eef63fad419a581f397218824bc1271e557c134725c03916')
     version('1.0.1',  sha256='8fee2324267811204c1f877a1dea70b23ab3d5f4c3ea0198d81f0921aa70d76e')
     version('1.0',    sha256='7bfe11cac1d1f5dc1b60c1258e79d8cc84944d459e3758d50c1f7feba05bc6d7')
+    version('0.21.5', sha256='ebb146cadda1c14767251ded54219c8215daee84aa1ac773cf43b5c2ae53160b')
     version('0.21.4', sha256='00ace1ce08cab3408bc83e6b9d55ccba661761e044c03175d58caccedddf93b3')
     version('0.21.3', sha256='a0211aeb5e7dad50b97fa5dffc1a2fe2fe732572d4164e1ee8750a2ede43fbec')
     version('0.21.2', sha256='5897bfd0e321a761de0c57ba1dfe0ebc753cc0d8a18bda2056af48022706a297')

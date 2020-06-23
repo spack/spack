@@ -100,7 +100,7 @@ class TestConcretizePreferences(object):
         # Try the last available compiler
         compiler = str(compiler_list[-1])
         update_packages('mpileaks', 'compiler', [compiler])
-        spec = concretize('mpileaks')
+        spec = concretize('mpileaks os=redhat6 target=x86')
         assert spec.compiler == spack.spec.CompilerSpec(compiler)
 
     def test_preferred_target(self, mutable_mock_repo):
@@ -238,6 +238,70 @@ mpi:
         spec = Spec('mpi')
         spec.concretize()
         assert spec['mpich'].external_path == '/dummy/path'
+
+    def test_buildable_false(self):
+        conf = syaml.load_config("""\
+libelf:
+  buildable: false
+""")
+        spack.config.set('packages', conf, scope='concretize')
+        spec = Spec('libelf')
+        assert not spack.package_prefs.is_spec_buildable(spec)
+
+        spec = Spec('mpich')
+        assert spack.package_prefs.is_spec_buildable(spec)
+
+    def test_buildable_false_virtual(self):
+        conf = syaml.load_config("""\
+mpi:
+  buildable: false
+""")
+        spack.config.set('packages', conf, scope='concretize')
+        spec = Spec('libelf')
+        assert spack.package_prefs.is_spec_buildable(spec)
+
+        spec = Spec('mpich')
+        assert not spack.package_prefs.is_spec_buildable(spec)
+
+    def test_buildable_false_all(self):
+        conf = syaml.load_config("""\
+all:
+  buildable: false
+""")
+        spack.config.set('packages', conf, scope='concretize')
+        spec = Spec('libelf')
+        assert not spack.package_prefs.is_spec_buildable(spec)
+
+        spec = Spec('mpich')
+        assert not spack.package_prefs.is_spec_buildable(spec)
+
+    def test_buildable_false_all_true_package(self):
+        conf = syaml.load_config("""\
+all:
+  buildable: false
+libelf:
+  buildable: true
+""")
+        spack.config.set('packages', conf, scope='concretize')
+        spec = Spec('libelf')
+        assert spack.package_prefs.is_spec_buildable(spec)
+
+        spec = Spec('mpich')
+        assert not spack.package_prefs.is_spec_buildable(spec)
+
+    def test_buildable_false_all_true_virtual(self):
+        conf = syaml.load_config("""\
+all:
+  buildable: false
+mpi:
+  buildable: true
+""")
+        spack.config.set('packages', conf, scope='concretize')
+        spec = Spec('libelf')
+        assert not spack.package_prefs.is_spec_buildable(spec)
+
+        spec = Spec('mpich')
+        assert spack.package_prefs.is_spec_buildable(spec)
 
     def test_config_permissions_from_all(self, configure_permissions):
         # Although these aren't strictly about concretization, they are

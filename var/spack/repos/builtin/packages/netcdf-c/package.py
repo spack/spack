@@ -61,6 +61,7 @@ class NetcdfC(AutotoolsPackage):
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
     variant('dap', default=False, description='Enable DAP support')
+    variant('jna', default=False, description='Enable JNA support')
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
@@ -74,7 +75,7 @@ class NetcdfC(AutotoolsPackage):
     depends_on('libtool', type='build', when='@4.7.0')
 
     depends_on("m4", type='build')
-    depends_on("hdf", when='+hdf4')
+    depends_on("hdf~netcdf", when='+hdf4')
 
     # curl 7.18.0 or later is required:
     # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
@@ -181,6 +182,9 @@ class NetcdfC(AutotoolsPackage):
             else:
                 config_args.append('--disable-parallel4')
 
+        if self.spec.satisfies('@4.3.2:'):
+            config_args += self.enable_or_disable('jna')
+
         # Starting version 4.1.3, --with-hdf5= and other such configure options
         # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
         # used instead.
@@ -215,6 +219,8 @@ class NetcdfC(AutotoolsPackage):
             if '+szip' in hdf4:
                 # This should also come from hdf4.libs
                 libs.append('-lsz')
+            if '+external-xdr' in hdf4 and hdf4['rpc'].name != 'libc':
+                libs.append(hdf4['rpc'].libs.link_flags)
 
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.

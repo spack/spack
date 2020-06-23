@@ -15,6 +15,7 @@ class Ruby(AutotoolsPackage):
     list_url = "http://cache.ruby-lang.org/pub/ruby/"
     list_depth = 1
 
+    version('2.7.1', sha256='d418483bdd0000576c1370571121a6eb24582116db0b7bb2005e90e250eae418')
     version('2.6.2', sha256='a0405d2bf2c2d2f332033b70dff354d224a864ab0edd462b7a413420453b49ab')
     version('2.5.3', sha256='9828d03852c37c20fa333a0264f2490f07338576734d910ee3fd538c9520846c')
     version('2.2.0', sha256='7671e394abfb5d262fbcd3b27a71bf78737c7e9347fa21c39e58b0bb9c4840fc')
@@ -33,6 +34,10 @@ class Ruby(AutotoolsPackage):
     depends_on('openssl@:1.0', when='@:2.3+openssl')
     depends_on('openssl', when='+openssl')
     depends_on('readline', when='+readline')
+
+    # Known build issues when Avira antivirus software is running:
+    # https://github.com/rvm/rvm/issues/4313#issuecomment-374020379
+    # TODO: add check for this and warn user
 
     # gcc-7-based build requires patches (cf. https://bugs.ruby-lang.org/issues/13150)
     patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2.999 %gcc@7:')
@@ -61,6 +66,8 @@ class Ruby(AutotoolsPackage):
             args.append("--with-readline-dir=%s"
                         % self.spec['readline'].prefix)
         args.append('--with-tk=%s' % self.spec['tk'].prefix)
+        if self.spec.satisfies("%fj"):
+            args.append('--disable-dtrace')
         return args
 
     def setup_dependent_build_environment(self, env, dependent_spec):

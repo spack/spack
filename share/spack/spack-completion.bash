@@ -304,6 +304,13 @@ _pretty_print() {
 
 complete -o bashdefault -o default -F _bash_completion_spack spack
 
+# Completion for spacktivate
+complete -o bashdefault -o default -F _bash_completion_spack spacktivate
+
+_spacktivate() {
+  _spack_env_activate
+}
+
 # Spack commands
 #
 # Everything below here is auto-generated.
@@ -313,7 +320,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame bootstrap build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
     fi
 }
 
@@ -346,10 +353,6 @@ _spack_blame() {
     else
         _all_packages
     fi
-}
-
-_spack_bootstrap() {
-    SPACK_COMPREPLY="-h --help -j --jobs --keep-prefix --keep-stage -n --no-checksum -v --verbose --use-cache --no-cache --cache-only --clean --dirty"
 }
 
 _spack_build() {
@@ -455,7 +458,7 @@ _spack_cd() {
 _spack_checksum() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage"
+        SPACK_COMPREPLY="-h --help --keep-stage -b --batch"
     else
         _all_packages
     fi
@@ -466,20 +469,12 @@ _spack_ci() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="start generate pushyaml rebuild"
+        SPACK_COMPREPLY="generate rebuild"
     fi
 }
 
-_spack_ci_start() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref --downstream-repo --branch-name --commit-sha"
-}
-
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref"
-}
-
-_spack_ci_pushyaml() {
-    SPACK_COMPREPLY="-h --help --downstream-repo --branch-name --commit-sha"
+    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref --optimize"
 }
 
 _spack_ci_rebuild() {
@@ -697,7 +692,7 @@ _spack_deprecate() {
 _spack_dev_build() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet -u --until --clean --dirty"
+        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet --drop-in -b --before -u --until --clean --dirty"
     else
         _all_packages
     fi
@@ -706,7 +701,7 @@ _spack_dev_build() {
 _spack_diy() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet -u --until --clean --dirty"
+        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet --drop-in -b --before -u --until --clean --dirty"
     else
         _all_packages
     fi
@@ -814,6 +809,24 @@ _spack_extensions() {
         SPACK_COMPREPLY="-h --help -l --long -L --very-long -d --deps -p --paths -s --show -v --view"
     else
         _extensions
+    fi
+}
+
+_spack_external() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY="find"
+    fi
+}
+
+_spack_external_find() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --not-buildable"
+    else
+        _all_packages
     fi
 }
 
@@ -1029,7 +1042,7 @@ _spack_mirror() {
 _spack_mirror_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file --skip-unstable-versions -D --dependencies -n --versions-per-spec"
+        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file --exclude-file --exclude-specs --skip-unstable-versions -D --dependencies -n --versions-per-spec"
     else
         _all_packages
     fi
@@ -1497,7 +1510,7 @@ _spack_verify() {
 _spack_versions() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --safe-only"
+        SPACK_COMPREPLY="-h --help -s --safe-only -c --concurrency"
     else
         _all_packages
     fi
@@ -1508,7 +1521,7 @@ _spack_view() {
     then
         SPACK_COMPREPLY="-h --help -v --verbose -e --exclude -d --dependencies"
     else
-        SPACK_COMPREPLY="symlink add soft hardlink hard remove rm statlink status check"
+        SPACK_COMPREPLY="symlink add soft hardlink hard copy relocate remove rm statlink status check"
     fi
 }
 
@@ -1549,6 +1562,24 @@ _spack_view_hardlink() {
 }
 
 _spack_view_hard() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --projection-file -i --ignore-conflicts"
+    else
+        _all_packages
+    fi
+}
+
+_spack_view_copy() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --projection-file -i --ignore-conflicts"
+    else
+        _all_packages
+    fi
+}
+
+_spack_view_relocate() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --projection-file -i --ignore-conflicts"

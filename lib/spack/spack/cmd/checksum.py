@@ -26,6 +26,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--keep-stage', action='store_true',
         help="don't clean up staging area when command completes")
+    subparser.add_argument(
+        '-b', '--batch', action='store_true',
+        help="don't ask which versions to checksum")
     arguments.add_common_arguments(subparser, ['package'])
     subparser.add_argument(
         'versions', nargs=argparse.REMAINDER,
@@ -33,6 +36,11 @@ def setup_parser(subparser):
 
 
 def checksum(parser, args):
+    # Did the user pass 'package@version' string?
+    if len(args.versions) == 0 and '@' in args.package:
+        args.versions = [args.package.split('@')[1]]
+        args.package = args.package.split('@')[0]
+
     # Make sure the user provided a package and not a URL
     if not valid_fully_qualified_module_name(args.package):
         tty.die("`spack checksum` accepts package names, not URLs.")
@@ -57,6 +65,7 @@ def checksum(parser, args):
 
     version_lines = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage,
+        batch=(args.batch or len(args.versions) > 0),
         fetch_options=pkg.fetch_options)
 
     print()

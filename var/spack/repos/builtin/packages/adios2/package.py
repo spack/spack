@@ -11,12 +11,13 @@ class Adios2(CMakePackage):
     developed in the Exascale Computing Program"""
 
     homepage = "https://csmd.ornl.gov/software/adios2"
-    url = "https://github.com/ornladios/ADIOS2/archive/v2.5.0.tar.gz"
+    url = "https://github.com/ornladios/ADIOS2/archive/v2.6.0.tar.gz"
     git = "https://github.com/ornladios/ADIOS2.git"
 
     maintainers = ['ax3l', 'chuckatkins', 'williamfgc']
 
     version('master', branch='master')
+    version('2.6.0', sha256='45b41889065f8b840725928db092848b8a8b8d1bfae1b92e72f8868d1c76216c')
     version('2.5.0', sha256='7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329')
     version('2.4.0', sha256='50ecea04b1e41c88835b4b3fd4e7bf0a0a2a3129855c9cc4ba6cf6a1575106e2')
     version('2.3.1', sha256='3bf81ccc20a7f2715935349336a76ba4c8402355e1dc3848fcd6f4c3c5931893')
@@ -76,7 +77,7 @@ class Adios2(CMakePackage):
     # DataMan needs dlopen
     conflicts('+dataman', when='~shared')
 
-    depends_on('cmake@3.6.0:', type='build')
+    depends_on('cmake@3.12.0:', type='build')
     depends_on('pkgconfig', type='build')
 
     depends_on('libffi', when='+sst')            # optional in DILL
@@ -117,6 +118,21 @@ class Adios2(CMakePackage):
     # third-party dill library.
     # See https://github.com/ornladios/ADIOS2/pull/1899
     patch('2.5-fix-clear_cache.patch', when='@2.5.0')
+
+    @when('%fj')
+    def patch(self):
+        """ add fujitsu mpi commands #16864 """
+        f = join_path('cmake', 'upstream', 'FindMPI.cmake')
+        filter_file('mpcc_r)', 'mpcc_r mpifcc)', f, string=True)
+        filter_file('mpc++_r)', 'mpcc_r mpiFCC)', f, string=True)
+        filter_file('mpf77_r', 'mpf77_r mpifrt', f, string=True)
+
+    def setup_build_environment(self, env):
+        # https://github.com/ornladios/ADIOS2/issues/2228
+        if self.spec.satisfies('%gcc@10: +fortran'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
+        elif self.spec.satisfies('%fj +fortran'):
+            env.set('FFLAGS', '-Ccpp')
 
     def cmake_args(self):
         spec = self.spec
@@ -163,6 +179,9 @@ class Adios2(CMakePackage):
             args.append('-DADIOS2_USE_DataSpaces={0}'.format(
                 'ON' if '+dataspaces' in spec else 'OFF'))
 
+        if spec.version >= Version('2.6.0'):
+            args.append('-DADIOS2_USE_IME=OFF')
+
         if '+sst' in spec:
             args.extend([
                 # Broken dependency package
@@ -178,6 +197,12 @@ class Adios2(CMakePackage):
         if spec.satisfies('~shared'):
             args.append('-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL={0}'.format(
                 'ON' if '+pic' in spec else 'OFF'))
+
+        if spec.satisfies('%fj'):
+            args.extend([
+                '-DCMAKE_Fortran_SUBMODULE_EXT=.smod',
+                '-DCMAKE_Fortran_SUBMODULE_SEP=.'
+            ])
 
         if spec.satisfies('+python') or self.run_tests:
             args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'

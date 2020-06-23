@@ -32,6 +32,7 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
+import re
 import inspect
 import multiprocessing
 import os
@@ -53,6 +54,7 @@ import spack.main
 import spack.paths
 import spack.schema.environment
 import spack.store
+import spack.architecture as arch
 from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
@@ -60,7 +62,7 @@ from spack.util.environment import (
 from spack.util.environment import system_dirs
 from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
-from spack.util.module_cmd import load_module, get_path_from_module
+from spack.util.module_cmd import load_module, get_path_from_module, module
 from spack.util.log_parse import parse_log_events, make_log_context
 
 
@@ -146,6 +148,19 @@ def clean_environment():
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
+
+    # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
+    # interference with Spack dependencies.
+    # CNL requires these variables to be set (or at least some of them,
+    # depending on the CNL version).
+    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
+    on_cray = str(hostarch.platform) == 'cray'
+    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    if on_cray and not using_cnl:
+        env.unset('CRAY_LD_LIBRARY_PATH')
+        for varname in os.environ.keys():
+            if 'PKGCONF' in varname:
+                env.unset(varname)
 
     build_lang = spack.config.get('config:build_language')
     if build_lang:
@@ -349,10 +364,6 @@ def set_build_environment_variables(pkg, env, dirty):
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
-    implicit_rpaths = compiler.implicit_rpaths()
-    if implicit_rpaths:
-        env.set('SPACK_COMPILER_IMPLICIT_RPATHS', ':'.join(implicit_rpaths))
-
     # Add bin directories from dependencies to the PATH for the build.
     for prefix in build_prefixes:
         for dirname in ['bin', 'bin64']:
@@ -415,7 +426,7 @@ def _set_variables_for_single_module(pkg, module):
     if getattr(module, marker, False):
         return
 
-    jobs = spack.config.get('config:build_jobs') if pkg.parallel else 1
+    jobs = spack.config.get('config:build_jobs', 16) if pkg.parallel else 1
     jobs = min(jobs, multiprocessing.cpu_count())
     assert jobs is not None, "no default set for config:build_jobs"
 
@@ -532,7 +543,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
 
     # TODO: Compiler arguments should not be hardcoded but provided by
     #       the different compiler classes.
-    if 'linux' in arch:
+    if 'linux' in arch or 'cray' in arch:
         soname = os.path.basename(shared_lib)
 
         if compat_version:
@@ -609,7 +620,7 @@ def get_rpaths(pkg):
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
-    return rpaths
+    return list(dedupe(filter_system_paths(rpaths)))
 
 
 def get_std_cmake_args(pkg):
@@ -717,10 +728,20 @@ def setup_package(pkg, dirty):
                 load_module("cce")
             load_module(mod)
 
+        # kludge to handle cray libsci being automatically loaded by PrgEnv
+        # modules on cray platform. Module unload does no damage when
+        # unnecessary
+        module('unload', 'cray-libsci')
+
         if pkg.architecture.target.module_name:
             load_module(pkg.architecture.target.module_name)
 
         load_external_modules(pkg)
+
+    implicit_rpaths = pkg.compiler.implicit_rpaths()
+    if implicit_rpaths:
+        build_env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
+                      ':'.join(implicit_rpaths))
 
     # Make sure nothing's strange about the Spack environment.
     validate(build_env, tty.warn)
@@ -801,12 +822,11 @@ def fork(pkg, function, dirty, fake):
                 setup_package(pkg, dirty=dirty)
             return_value = function()
             child_pipe.send(return_value)
-        except StopIteration as e:
-            # StopIteration is used to stop installations
-            # before the final stage, mainly for debug purposes
-            tty.msg(e)
-            child_pipe.send(None)
 
+        except StopPhase as e:
+            # Do not create a full ChildError from this, it's not an error
+            # it's a control statement.
+            child_pipe.send(e)
         except BaseException:
             # catch ANYTHING that goes wrong in the child process
             exc_type, exc, tb = sys.exc_info()
@@ -858,15 +878,20 @@ def fork(pkg, function, dirty, fake):
     child_result = parent_pipe.recv()
     p.join()
 
+    # If returns a StopPhase, raise it
+    if isinstance(child_result, StopPhase):
+        # do not print
+        raise child_result
+
     # let the caller know which package went wrong.
     if isinstance(child_result, InstallError):
         child_result.pkg = pkg
 
-    # If the child process raised an error, print its output here rather
-    # than waiting until the call to SpackError.die() in main(). This
-    # allows exception handling output to be logged from within Spack.
-    # see spack.main.SpackCommand.
     if isinstance(child_result, ChildError):
+        # If the child process raised an error, print its output here rather
+        # than waiting until the call to SpackError.die() in main(). This
+        # allows exception handling output to be logged from within Spack.
+        # see spack.main.SpackCommand.
         child_result.print_context()
         raise child_result
 
@@ -1055,3 +1080,13 @@ class ChildError(InstallError):
 def _make_child_error(msg, module, name, traceback, build_log, context):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
     return ChildError(msg, module, name, traceback, build_log, context)
+
+
+class StopPhase(spack.error.SpackError):
+    """Pickle-able exception to control stopped builds."""
+    def __reduce__(self):
+        return _make_stop_phase, (self.message, self.long_message)
+
+
+def _make_stop_phase(msg, long_msg):
+    return StopPhase(msg, long_msg)

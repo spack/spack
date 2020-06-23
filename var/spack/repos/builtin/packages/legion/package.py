@@ -27,6 +27,7 @@ class Legion(CMakePackage):
 
     version('master', branch='master')
     version('ctrl-rep', branch='control_replication')
+    version('20.03.0', sha256='ae5feedb5ed9f357b56424b9d73cea4f224a61e291e022556f796d1ff24d1244')
     version('19.12.0', sha256='ea517638de7256723bb9c119796d4d9d4ef662c52d0151ad24af5288e5a72e7d')
     version('19.09.1', sha256='c507133fb9dce16b7fcccd7eb2933d13cce96ecf835da60a27c0f66840cabf51')
     version('19.09.0', sha256='a01c3e3c6698cafb64b77a66341cc06d039faed4fa31b764159f021b94ce13e8')

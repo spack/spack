@@ -1358,6 +1358,14 @@ The main points that are implemented below:
    the spack builds in the config.
    (The Travis yaml parser is a bit buggy on the echo command.)
 
+#. Without control for the user, Travis jobs will run on various
+   ``x86_64`` microarchitectures. If you plan to cache build results,
+   e.g. to accelerate dependency builds, consider building for the
+   generic ``x86_64`` target only.
+   Limiting the microarchitecture will also find more packages when
+   working with the
+   `E4S Spack build cache <https://oaciss.uoregon.edu/e4s/e4s_buildcache_inventory.html>`_.
+
 #. Builds over 10 minutes need to be prefixed with ``travis_wait``.
    Alternatively, generate output once with ``spack install -v``.
 
@@ -1400,7 +1408,9 @@ The main points that are implemented below:
      - if ! which spack >/dev/null; then
          mkdir -p $SPACK_ROOT &&
          git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
-         echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml;
+         echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml **
+         echo -e "packages:""\n  all:""\n    target:"" ['x86_64']"
+                 > $SPACK_ROOT/etc/spack/packages.yaml;
        fi
      - travis_wait spack install cmake@3.7.2~openssl~ncurses
      - travis_wait spack install boost@1.62.0~graph~iostream~locale~log~wave
@@ -1432,8 +1442,7 @@ The following functionality is prepared:
 
 #. Base image: the example starts from a minimal ubuntu.
 
-#. Pre-install the spack dependencies, including modules from the packages.
-   This avoids needing to build those from scratch via ``spack bootstrap``.
+#. Pre-install the spack dependencies.
    Package installs are followed by a clean-up of the system package index,
    to avoid outdated information and it saves space.
 

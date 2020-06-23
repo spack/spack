@@ -13,6 +13,7 @@ class Mesa(AutotoolsPackage):
      - a system for rendering interactive 3D graphics."""
 
     homepage = "http://www.mesa3d.org"
+    maintainers = ['v-dobrev']
 
     # Note that we always want to build from the git repo instead of a
     # tarball since the tarball has pre-generated files for certain versions
@@ -180,7 +181,8 @@ class Mesa(AutotoolsPackage):
     @property
     def libs(self):
         for dir in ['lib64', 'lib']:
-            libs = find_libraries('libGL', join_path(self.prefix, dir),
+            libs = find_libraries(['libGL', 'libOSMesa'],
+                                  join_path(self.prefix, dir),
                                   shared=True, recursive=False)
             if libs:
                 return libs
