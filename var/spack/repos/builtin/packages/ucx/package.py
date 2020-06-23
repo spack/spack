@@ -50,63 +50,50 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description='Builds with Java bindings')
     variant('gdrcopy', default=False,
             description='Enable gdrcopy support')
+    variant('knem', default=False,
+            description='Enable KNEM support')
+    variant('xpmem', default=False,
+            description='Enable XPMEM support')
 
     depends_on('numactl')
     depends_on('rdma-core')
+    depends_on('pkgconfig', type='build')
     depends_on('java@8', when='+java')
     depends_on('maven', when='+java')
     depends_on('gdrcopy@1.3', when='+gdrcopy')
     conflicts('+gdrcopy', when='~cuda',
               msg='gdrcopy currently requires cuda support')
+    depends_on('xpmem', when='+xpmem')
+    depends_on('knem', when='+knem')
 
     def configure_args(self):
         spec = self.spec
         config_args = []
+
         if '+thread_multiple' in spec:
             config_args.append('--enable-mt')
         else:
             config_args.append('--disable-mt')
-
-        if '+optimizations' in spec:
-            config_args.append('--enable-optimizations')
-        else:
-            config_args.append('--disable-optimizations')
-
-        if '+logging' in spec:
-            config_args.append('--enable-logging')
-        else:
-            config_args.append('--disable-logging')
-
-        if '+assertions' in spec:
-            config_args.append('--enable-assertions')
-        else:
-            config_args.append('--disable-assertions')
 
         if '+paramter_checking' in spec:
             config_args.append('--enable-params-check')
         else:
             config_args.append('--disable-params-check')
 
-        if '+pic' in spec:
-            config_args.append('--with-pic')
-        else:
-            config_args.append('--without-pic')
+        config_args.extend(self.enable_or_disable('optimizations'))
+        config_args.extend(self.enable_or_disable('assertions'))
+        config_args.extend(self.enable_or_disable('logging'))
 
-        if '+java' in spec:
-            config_args.append('--with-java=%s' % spec['java'].prefix)
-        else:
-            config_args.append('--without-java')
-
-        if '+cuda' in spec:
-            config_args.append('--with-cuda={0}'.format(
-                self.spec['cuda'].prefix))
-        else:
-            config_args.append('--without-cuda')
-
-        if '+gdrcopy' in spec:
-            config_args.append('--with-gdrcopy={0}'.format(
-                self.spec['gdrcopy'].prefix))
-        else:
-            config_args.append('--without-gdrcopy')
+        config_args.extend(self.with_or_without('pic'))
+        config_args.extend(self.with_or_without('java',
+                                                activation_value='prefix'))
+        config_args.extend(self.with_or_without('cuda',
+                                                activation_value='prefix'))
+        config_args.extend(self.with_or_without('gdrcopy',
+                                                activation_value='prefix'))
+        config_args.extend(self.with_or_without('knem',
+                                                activation_value='prefix'))
+        config_args.extend(self.with_or_without('xpmem',
+                                                activation_value='prefix'))
 
         return config_args
