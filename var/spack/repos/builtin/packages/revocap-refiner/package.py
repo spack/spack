@@ -26,22 +26,23 @@ class RevocapRefiner(MakefilePackage):
     patch('delete_getIndices.patch')
 
     def edit(self, spec, prefix):
-        cflags = ['-O2']
-        cxxflags = ['-O2', self.compiler.cxx_pic_flag]
-        fflags = ['']
+        cflags = ['-O3']
+        cxxflags = ['-O3', self.compiler.cxx_pic_flag]
+        ldflags = ['']
         ldshare = ['']
         libs = ['']
         m = FileFilter('MakefileConfig.in')
-        m.filter(r'CC\s*=.*$', 'CC={0}')
+        m.filter(r'ARCH\s*=.*$', 'ARCH=')
+        m.filter(r'CC\s*=.*$', 'CC={0}'.format(spack_cc))
         m.filter(r'CFLAGS\s*=.*$', 'CFLAGS={0}'.format(' '.join(cflags)))
-        m.filter(r'CXX\s*=.*$', 'CXX={0}')
+        m.filter(r'CXX\s*=.*$', 'CXX={0}'.format(spack_cxx))
         m.filter(r'CXXFLAGS\s*=.*$',
                  'CXXFLAGS={0}'.format(' '.join(cxxflags)))
         m.filter(r'AR\s*=.*$', 'AR=ar')
         m.filter(r'ARFLAGS\s*=.*$', 'ARFLAGS=rsv')
         m.filter(r'LD\s*=.*$', 'LD={0}'.format(spack_fc))
         m.filter(r'LDFLAGS\s*=.*$',
-                 'LDFLAGS={0}'.format(' '.join(fflags)))
+                 'LDFLAGS={0}'.format(' '.join(ldflags)))
         m.filter(r'LDSHARE\s*=.*$',
                  'LDSHARE={0}'.format(' '.join(ldshare)))
         m.filter(r'LIBS\s*=.*$', 'LIBS={0}'.format(' '.join(libs)))
@@ -53,4 +54,4 @@ class RevocapRefiner(MakefilePackage):
         make()
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)
-        install_tree('Refiner', prefix.include.refine)
+        install_tree('Refiner', prefix.include)
