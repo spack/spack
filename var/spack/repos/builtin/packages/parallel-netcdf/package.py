@@ -50,6 +50,8 @@ class ParallelNetcdf(AutotoolsPackage):
     depends_on('automake', when='@master', type='build')
     depends_on('libtool', when='@master', type='build')
 
+    depends_on('perl', type='build')
+
     conflicts('+shared', when='@:1.9%nag+fortran')
     conflicts('+shared', when='@:1.8')
 
