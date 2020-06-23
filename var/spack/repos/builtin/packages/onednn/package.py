@@ -64,7 +64,7 @@ class Onednn(CMakePackage):
     # https://github.com/oneapi-src/oneDNN#requirements-for-building-from-source
     depends_on('cmake@2.8.11:', type='build')
     depends_on('tbb@2017:', when='cpu_runtime=tbb')
-    depends_on('llvm-openmp', when='%clang platform=darwin cpu_runtime=omp')
+    depends_on('llvm-openmp', when='%apple-clang cpu_runtime=omp')
     depends_on('opencl@1.2:', when='gpu_runtime=ocl')
 
     def cmake_args(self):
@@ -81,7 +81,7 @@ class Onednn(CMakePackage):
             args.append('-DDNNL_BUILD_TESTS=OFF')
 
         # https://github.com/oneapi-src/oneDNN/issues/591
-        if self.spec.satisfies('%clang platform=darwin cpu_runtime=omp'):
+        if self.spec.satisfies('%apple-clang cpu_runtime=omp'):
             args.extend([
                 '-DOpenMP_CXX_FLAGS={0}'.format(self.compiler.openmp_flag),
                 '-DOpenMP_C_FLAGS={0}'.format(self.compiler.openmp_flag),

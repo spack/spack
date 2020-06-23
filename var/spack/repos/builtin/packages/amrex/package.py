@@ -65,6 +65,7 @@ class Amrex(CMakePackage):
     depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
     depends_on('cmake@3.13:', type='build', when='@18.11:')
     depends_on('cmake@3.14:', type='build', when='@19.04:')
+    conflicts('%apple-clang')
     conflicts('%clang')
 
     def url_for_version(self, version):

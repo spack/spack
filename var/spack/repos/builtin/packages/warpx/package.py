@@ -68,7 +68,8 @@ class Warpx(MakefilePackage):
 
     def edit(self, spec, prefix):
         comp = 'gcc'
-        vendors = {'%gcc': 'gcc', '%intel': 'intel', '%clang': 'llvm'}
+        vendors = {'%gcc': 'gcc', '%intel': 'intel',
+                   '%apple-clang': 'llvm', '%clang': 'llvm'}
         for key, value in vendors.items():
             if self.spec.satisfies(key):
                 comp = value

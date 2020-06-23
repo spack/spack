@@ -95,7 +95,7 @@ class Openblas(MakefilePackage):
     patch('openblas-0.3.8-darwin.patch', when='@0.3.8 platform=darwin')
     # Fix ICE in LLVM 9.0.0 https://github.com/xianyi/OpenBLAS/pull/2329
     # Patch as in https://github.com/xianyi/OpenBLAS/pull/2597
-    patch('openblas_appleclang11.patch', when='@0.3.8:0.3.9 %clang@11.0.3-apple')
+    patch('openblas_appleclang11.patch', when='@0.3.8:0.3.9 %apple-clang@11.0.3')
 
     # Add conditions to f_check to determine the Fujitsu compiler
     patch('openblas_fujitsu.patch', when='%fj')
@@ -104,6 +104,9 @@ class Openblas(MakefilePackage):
     conflicts('%intel@16', when='@0.2.15:0.2.19')
     conflicts('+consistent_fpcsr', when='threads=none',
               msg='FPCSR consistency only applies to multithreading')
+
+    conflicts('threads=openmp', when='%apple-clang', msg="Apple's clang does not support OpenMP")
+    conflicts('threads=openmp @:0.2.19', when='%clang', msg='OpenBLAS @:0.2.19 does not support OpenMP with clang!')
 
     @property
     def parallel(self):
@@ -119,18 +122,6 @@ class Openblas(MakefilePackage):
             raise InstallError(
                 'OpenBLAS requires both C and Fortran compilers!'
             )
-
-        # Add support for OpenMP
-        if (self.spec.satisfies('threads=openmp') and
-            self.spec.satisfies('%clang')):
-            if str(self.spec.compiler.version).endswith('-apple'):
-                raise InstallError("Apple's clang does not support OpenMP")
-            if '@:0.2.19' in self.spec:
-                # Openblas (as of 0.2.19) hardcoded that OpenMP cannot
-                # be used with any (!) compiler named clang, bummer.
-                raise InstallError(
-                    'OpenBLAS @:0.2.19 does not support OpenMP with clang!'
-                )
 
     @staticmethod
     def _read_targets(target_file):

@@ -30,6 +30,7 @@ class F18(CMakePackage):
 
     # Conflicts
     compiler_warning = 'F18 requires a compiler with support for C++17'
+    conflicts('%apple-clang@:6', msg=compiler_warning)
     conflicts('%clang@:6', msg=compiler_warning)
     conflicts('%gcc@:7.1', msg=compiler_warning)
     conflicts('%intel', msg=compiler_warning)

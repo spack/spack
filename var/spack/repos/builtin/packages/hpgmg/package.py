@@ -64,8 +64,6 @@ class Hpgmg(Package):
 
         if '+debug' in self.spec:
             cflags.append('-g')
-        elif any(map(self.spec.satisfies, ['%gcc', '%clang', '%intel'])):
-            cflags.append('-O3')
         else:
             cflags.append('-O3')
 

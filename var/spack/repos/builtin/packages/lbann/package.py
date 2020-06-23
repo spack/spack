@@ -188,8 +188,8 @@ class Lbann(CMakePackage):
                 '-DConduit_DIR={0}'.format(spec['conduit'].prefix)])
 
         # Add support for OpenMP
-        if (self.spec.satisfies('%clang')):
-            if (sys.platform == 'darwin'):
+        if self.spec.satisfies('%clang'):
+            if sys.platform == 'darwin':
                 clang = self.compiler.cc
                 clang_bin = os.path.dirname(clang)
                 clang_root = os.path.dirname(clang_bin)
