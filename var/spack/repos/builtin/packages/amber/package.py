@@ -104,6 +104,8 @@ class Amber(Package, CudaPackage):
               msg='x11 amber applications not available for cray')
     conflicts('+openmp', when='%clang',
               msg='openmp optimizations not available for the clang compiler')
+    conflicts('+openmp', when='%apple-clang',
+              msg='openmp optimizations not available for the Apple clang compiler')
     conflicts('+openmp', when='%pgi',
               msg='openmp optimizations not available for the pgi compiler')
 
