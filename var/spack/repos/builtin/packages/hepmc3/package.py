@@ -16,6 +16,7 @@ class Hepmc3(CMakePackage):
 
     maintainers = ['vvolkl']
 
+    version('3.2.2', sha256='0e8cb4f78f804e38f7d29875db66f65e4c77896749d723548cc70fb7965e2d41')
     version('3.2.1', sha256='6e4e4bb5708af105d4bf74efc2745e6efe704e942d46a8042f7dcae37a4739fe')
     version('3.2.0', sha256='f132387763d170f25a7cc9f0bd586b83373c09acf0c3daa5504063ba460f89fc')
     version('3.1.2', sha256='4133074b3928252877982f3d4b4c6c750bb7a324eb6c7bb2afc6fa256da3ecc7')
@@ -31,6 +32,9 @@ class Hepmc3(CMakePackage):
     depends_on('cmake@2.8.9:', type='build')
     depends_on('root', when='+rootio')
     depends_on('python', when="+python")
+
+    conflicts('%gcc@9.3.0', when="@:3.1.1")
+    patch('ba38f14d8f56c16cc4105d98f6d4540c928c6150.patch', when="@3.1.2:3.2.1 %gcc@9.3.0")
 
     def cmake_args(self):
         spec = self.spec

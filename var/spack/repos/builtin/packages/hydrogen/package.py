@@ -117,9 +117,6 @@ class Hydrogen(CMakePackage):
 
         args = [
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+hybrid' in spec),
             '-DHydrogen_ENABLE_QUADMATH:BOOL=%s'     % ('+quad' in spec),
