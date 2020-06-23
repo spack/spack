@@ -49,6 +49,7 @@ class Whizard(AutotoolsPackage):
     depends_on('lhapdf', when="+lhapdf")
     depends_on('fastjet', when="+fastjet")
     depends_on('texlive', when="+latex")
+    depends_on('zlib')
 
     def configure_args(self):
         spec = self.spec
