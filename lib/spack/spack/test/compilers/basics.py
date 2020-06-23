@@ -20,6 +20,7 @@ import spack.compilers as compilers
 from spack.compiler import Compiler
 from spack.util.executable import ProcessError
 
+
 @pytest.fixture()
 def make_args_for_version(monkeypatch):
 
@@ -707,7 +708,7 @@ fi
     assert len(compilers) == 1
     compiler = compilers[0]
     try:
-        version = compiler.get_real_version()
+        _ = compiler.get_real_version()
         assert False
     except ProcessError:
         # Confirm environment does not change after failed call
