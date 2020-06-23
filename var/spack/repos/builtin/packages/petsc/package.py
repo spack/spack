@@ -105,6 +105,44 @@ class Petsc(Package):
             description='Enable when mpiexec is not available to run binaries')
     variant('valgrind', default=False,
             description='Enable Valgrind Client Request mechanism')
+    variant('gmp', default=False,
+            description='Enable GMP support')
+    variant('jpeg', default=False,
+            description='Enable JPEG support')
+    variant('libpng', default=False,
+            description='Enable PNG support')
+    variant('giflib', default=False,
+            description='Enable GIF support')
+    variant('mpfr', default=False,
+            description='Enable MPFR support')
+    variant('netcdf', default=False,
+            description='Enable NetCDF support')
+    variant('pnetcdf', default=False,
+            description='Enable Parallel NetCDF support')
+    variant('moab', default=False,
+            description='Enable MOAB support')
+    variant('eigen', default=False,
+            description='Enable EIGEN support')
+    variant('random123', default=False,
+            description='Enable Random123 support')
+    variant('exodusii', default=False,
+            description='Enable ExodusII support')
+    variant('mstk', default=False,
+            description='Enable MSTK support')
+    variant('cgns', default=False,
+            description='Enable CGNS support')
+    variant('memkind', default=False,
+            description='Enable Memkind support')
+    variant('muparser', default=False,
+            description='Enable Muparser support')
+    variant('p4est', default=False,
+            description='Enable P4Est support')
+    variant('saws', default=False,
+            description='Enable Saws support')
+    variant('libyaml', default=False,
+            description='Enable YAML support')
+    variant('zstd', default=False,
+            description='Enable ZSTD support')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -140,6 +178,7 @@ class Petsc(Package):
     # Build dependencies
     depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
     depends_on('python@2.6:2.8,3.4:', type='build', when='@3.11:')
+    depends_on('eigen', type='build', when='+eigen')
 
     # Other dependencies
     depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')
@@ -191,6 +230,23 @@ class Petsc(Package):
     depends_on('fftw+mpi', when='+fftw+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('libx11', when='+X')
+    depends_on('gmp', when='+gmp')
+    depends_on('jpeg', when='+jpeg')
+    depends_on('libpng', when='+libpng')
+    depends_on('giflib', when='+giflib')
+    depends_on('mpfr', when='+mpfr')
+    depends_on('netcdf-c', when='+netcdf')
+    depends_on('parallel-netcdf', when='+pnetcdf')
+    depends_on('random123', when='+random123')
+    depends_on('exodusii', when='+exodusii')
+    depends_on('mstk', when='+mstk')
+    depends_on('cgns', when='+cgns')
+    depends_on('memkind', when='+memkind')
+    depends_on('muparser', when='+muparser')
+    depends_on('p4est', when='+p4est')
+    depends_on('saws', when='+saws')
+    depends_on('libyaml', when='+libyaml')
+    depends_on('zstd', when='+zstd')
 
     def url_for_version(self, version):
         if version >= Version('3.13.0'):
@@ -297,20 +353,37 @@ class Petsc(Package):
             ])
 
         # Activates library support if needed (i.e. direct dependency)
-        for library in ('cuda', 'metis', 'hypre', 'parmetis',
-                        'mumps', 'trilinos', 'fftw', 'valgrind'):
+        if '^libjpeg-turbo' in spec:
+            jpeg_library = 'libjpeg-turbo'
+        else:
+            jpeg_library = 'libjpeg'
+
+        for library in ('cuda', 'metis', 'hypre', 'parmetis', 'mumps',
+                        'trilinos', 'fftw', 'valgrind', 'gmp', 'libpng',
+                        'giflib', 'mpfr', 'netcdf-c', 'parallel-netcdf',
+                        'moab', 'eigen', 'random123', 'exodusii', 'mstk',
+                        'cgns', 'memkind', 'muparser', 'p4est', 'saws',
+                        'libyaml', 'zstd', jpeg_library):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
             library_requested = library in spec.dependencies_dict()
             options.append(
                 '--with-{library}={value}'.format(
-                    library=library,
+                    library=('libjpeg' if library=='libjpeg-turbo'
+                             else 'netcdf' if library=='netcdf-c'
+                             else 'pnetcdf' if library=='parallel-netcdf'
+                             else 'yaml' if library=='libyaml'
+                             else library),
                     value=('1' if library_requested else '0'))
             )
             if library_requested:
                 options.append(
                     '--with-{library}-dir={path}'.format(
-                        library=library, path=spec[library].prefix)
+                        library=('libjpeg' if library=='libjpeg-turbo'
+                                 else 'netcdf' if library=='netcdf-c'
+                                 else 'pnetcdf' if library=='parallel-netcdf'
+                                 else 'yaml' if library=='libyaml'
+                                 else library), path=spec[library].prefix)
                 )
 
         # PETSc does not pick up SuperluDist from the dir as they look for
