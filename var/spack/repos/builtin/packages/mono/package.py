@@ -27,6 +27,7 @@ class Mono(AutotoolsPackage):
     depends_on('cmake~openssl', type=('build'))
     depends_on('iconv')
     depends_on('perl', type=('build'))
+    depends_on('python', type=('build'))
 
     version('6.8.0.105', sha256='578799c44c3c86a9eb5daf6dec6c60a24341940fd376371956d4a46cf8612178',
             url='https://download.mono-project.com/sources/mono/mono-6.8.0.105.tar.xz')
