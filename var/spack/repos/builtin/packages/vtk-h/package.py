@@ -40,6 +40,7 @@ class VtkH(Package, CudaPackage):
     maintainers = ['cyrush']
 
     version('develop', branch='develop', submodules=True)
+    version('0.6.1', sha256="ca30b5ff1a48fa247cd20b3f19452f7744eb744465e0b64205135aece42d274f")
     version('0.6.0', sha256="2fc054f88ae253fb1bfcae22a156bcced08eca963ba90384dcd5b5791e6dfbf4")
     version('0.5.8', sha256="203b337f4280a24a2b75722384f77e0e2f5965058b541efc153db76b7ab98133")
     version('0.5.7', sha256="e8c1925dc34ee6be17cec734121e43002e3c02b54ef8dac341b51a455b95e402")
@@ -57,6 +58,7 @@ class VtkH(Package, CudaPackage):
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
     variant("logging", default=False, description="Build vtk-h with logging enabled")
+    variant("contourtree", default=False, description="Enable contour tree support")
 
     # use cmake 3.14, newest that provides proper cuda support
     # and we have seen errors with cuda in 3.15
@@ -111,6 +113,9 @@ class VtkH(Package, CudaPackage):
             # build with logging
             if "+logging" in spec:
                 cmake_args.append("-DENABLE_LOGGING=ON")
+
+            if "+contourtree" in spec:
+                cmake_args.append("-DENABLE_FILTER_CONTOUR_TREE=ON")
 
             # cuda support
             if "+cuda" in spec:
