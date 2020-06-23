@@ -337,7 +337,8 @@ def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
         [str(new_binary)], [str(orig_binary)], str(orig_binary.dirpath())
     )
 
-    assert rpaths_for(new_binary) == '$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib'
+    # Some compilers add rpaths so ensure changes included in final result
+    assert '$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib' in rpaths_for(new_binary)
 
 
 def test_raise_if_not_relocatable(monkeypatch):
