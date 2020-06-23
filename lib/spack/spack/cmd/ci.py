@@ -59,6 +59,9 @@ def setup_parser(subparser):
         help="(Experimental) run the generated document through a series of "
              "optimization passes designed to reduce the size of the "
              "generated file.")
+    generate.add_argument(
+        '--dependencies', action='store_true',
+        help="(Experimental) disable DAG scheduling; use \"plain\" dependencies.")
     generate.set_defaults(func=ci_generate)
 
     # Check a spec against mirror. Rebuild, create buildcache and push to
@@ -81,6 +84,7 @@ def ci_generate(args):
     spack_repo = args.spack_repo
     spack_ref = args.spack_ref
     run_optimizer = args.optimize
+    use_dependencies = args.dependencies
 
     if not output_file:
         gen_ci_dir = os.getcwd()
@@ -93,7 +97,8 @@ def ci_generate(args):
     # Generate the jobs
     spack_ci.generate_gitlab_ci_yaml(
         env, True, output_file, spack_repo, spack_ref,
-        run_optimizer=run_optimizer)
+        run_optimizer=run_optimizer,
+        use_dependencies=use_dependencies)
 
     if copy_yaml_to:
         copy_to_dir = os.path.dirname(copy_yaml_to)
