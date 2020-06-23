@@ -120,7 +120,7 @@ class Lammps(CMakePackage, CudaPackage):
     conflicts('+user-misc', when='~manybody')
     conflicts('%gcc@9:', when='@:20200303+openmp')
     conflicts('+kokkos', when='@:20200227')
-    conflicts('+meamc', when='@20181212:')
+    conflicts('+meam', when='@20181212:')
     conflicts('+user-meamc', when='@:20181212')
 
     patch("lib.patch", when="@20170901")
