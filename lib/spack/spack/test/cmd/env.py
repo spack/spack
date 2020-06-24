@@ -19,7 +19,6 @@ from spack.spec import Spec
 from spack.main import SpackCommand
 from spack.stage import stage_prefix
 
-from spack.spec_list import SpecListError
 from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.spack_json as sjson
 from spack.util.path import substitute_path_variables
