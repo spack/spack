@@ -883,6 +883,7 @@ def get_valid_type(path):
             pass
     raise ConfigError("Cannot determine valid type for path '%s'." % path)
 
+
 def merge_yaml(dest, source):
     """Merges source into dest; entries in source take precedence over dest.
 
