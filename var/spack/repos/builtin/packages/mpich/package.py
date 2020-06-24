@@ -121,10 +121,10 @@ spack package at this time.''',
     depends_on("autoconf@2.67:", when='@develop', type=("build"))
 
     # building with "+hwloc' also requires regenerating autotools files
-    depends_on('automake@1.15:', when='+hwloc', type="build")
-    depends_on('libtool@2.4.4:', when='+hwloc', type="build")
-    depends_on("m4", when="+hwloc", type="build"),
-    depends_on("autoconf@2.67:", when='+hwloc', type="build")
+    depends_on('automake@1.15:', when='@3.3 +hwloc', type="build")
+    depends_on('libtool@2.4.4:', when='@3.3 +hwloc', type="build")
+    depends_on("m4", when="@3.3 +hwloc", type="build"),
+    depends_on("autoconf@2.67:", when='@3.3 +hwloc', type="build")
 
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
@@ -179,10 +179,8 @@ spack package at this time.''',
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
         
-        hwloc_patch_sha256 = \
-            'eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774'
         if (os.path.exists(self.configure_abs_path) and
-            ('patches=' + hwloc_patch_sha256) not in spec):
+            not spec.satisfies('@3.3 +hwloc'):
             return
         # Else bootstrap with autotools
         bash = which('bash')
