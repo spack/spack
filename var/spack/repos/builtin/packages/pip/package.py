@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Pip(AutotoolsPackage):
+class Pip(Package):
     """Process-in-Process"""
 
     homepage = "https://github.com/RIKEN-SysSoft/PiP"
@@ -14,18 +14,21 @@ class Pip(AutotoolsPackage):
 
     version('1', branch='pip-1')
 
-    depends_on('pip-glibc', type=('build', 'link', 'run'))
+    depends_on('pip-glibc', type=('build'))
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check(self):
         make('check')  # TODO: replace with 'install-test'
 
-    def configure_args(self):
-        args = ['--with-glibc-libdir=%s/lib' % prefix_glibc]
+        args = []
         return args
 
     def install(self, spec, prefix):
+        bash = which('bash')
+        configure('--prefix=%s' % prefix,
+                  '--with-glibc-libdir=%s' % spec['pip-glibc'].prefix.lib)
+        make()
         make('install')
         make('doxygen-install')  # installing already-doxygen-ed man pages
         bash('%s/bin/piplnlibs' % prefix)

@@ -21,5 +21,5 @@ class PipGdb(Package):
         bash = which('bash')
         bash('build.sh',
              '--prefix=%s' % prefix,
-             '--with-glibc-libdir=%s/lib' % prefix_glibc,
-             '--with-pip=%s' % prefix_pip)
+             '--with-glibc-libdir=%s' % spec['pip-glibc'].prefix.lib,
+             '--with-pip=%s' % spec['pip'].prefix)
