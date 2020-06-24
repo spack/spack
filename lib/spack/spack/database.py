@@ -292,7 +292,8 @@ class Database(object):
     _prefix_failures = {}
 
     def __init__(self, root, db_dir=None, upstream_dbs=None,
-                 is_upstream=False):
+                 is_upstream=False, enable_transaction_locking=True,
+                 record_fields=default_install_record_fields):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -310,6 +311,12 @@ class Database(object):
         Caller may optionally provide a custom ``db_dir`` parameter
         where data will be stored. This is intended to be used for
         testing the Database class.
+
+        This class supports writing buildcache index files, in which case
+        certain fields are not needed in each install record, and no
+        transaction locking is required.  To use this feature, provide
+        ``enable_transaction_locking=False``, and specify a list of needed
+        fields in ``record_fields``.
         """
         self.root = root
 
@@ -373,23 +380,23 @@ class Database(object):
         # message)
         self._fail_when_missing_deps = False
 
-        self._write_transaction_builder = lk.WriteTransaction
-        self._read_transaction_builder = lk.ReadTransaction
-        self._record_fields = default_install_record_fields
+        if enable_transaction_locking:
+            self._write_transaction_impl = lk.WriteTransaction
+            self._read_transaction_impl = lk.ReadTransaction
+        else:
+            self._write_transaction_impl = nullcontext
+            self._read_transaction_impl = nullcontext
 
-    def enable_buildcache_index_mode(self):
-        self._write_transaction_builder = nullcontext
-        self._read_transaction_builder = nullcontext
-        self._record_fields = ['spec', 'ref_count']
+        self._record_fields = record_fields
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
-        return self._write_transaction_builder(
+        return self._write_transaction_impl(
             self.lock, acquire=self._read, release=self._write)
 
     def read_transaction(self):
         """Get a read lock context manager for use in a `with` block."""
-        return self._read_transaction_builder(self.lock, acquire=self._read)
+        return self._read_transaction_impl(self.lock, acquire=self._read)
 
     def _failed_spec_path(self, spec):
         """Return the path to the spec's failure file, which may not exist."""

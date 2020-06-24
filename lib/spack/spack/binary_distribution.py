@@ -288,8 +288,9 @@ def generate_package_index(cache_prefix):
     """
     tmpdir = tempfile.mkdtemp()
     db_root_dir = os.path.join(tmpdir, 'db_root')
-    db = spack_db.Database(None, db_dir=db_root_dir)
-    db.enable_buildcache_index_mode()
+    db = spack_db.Database(None, db_dir=db_root_dir,
+                           enable_transaction_locking=False,
+                           record_fields=['spec', 'ref_count'])
 
     file_list = (
         entry
