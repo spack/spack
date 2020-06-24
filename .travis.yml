@@ -41,27 +41,6 @@ jobs:
             - realpath
             - zsh
       env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=unit, COVERAGE=true, KCOV_VERSION=34 ]
-    - python: '3.5'
-      os: linux
-      dist: xenial
-      language: python
-      env: TEST_SUITE=unit
-    - python: '3.6'
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
-    - python: '3.7'
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=unit, COVERAGE=true, KCOV_VERSION=34 ]
     - python: '3.8'
       os: linux
       language: python

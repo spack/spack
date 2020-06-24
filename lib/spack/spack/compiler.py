@@ -355,11 +355,13 @@ class Compiler(object):
             for flag_type in flags:
                 for flag in self.flags.get(flag_type, []):
                     compiler_exe.add_default_arg(flag)
+
+            output = ''
             with self._compiler_environment():
                 output = str(compiler_exe(
                     self.verbose_flag, fin, '-o', fout,
                     output=str, error=str))  # str for py2
-                return _parse_non_system_link_dirs(output)
+            return _parse_non_system_link_dirs(output)
         except spack.util.executable.ProcessError as pe:
             tty.debug('ProcessError: Command exited with non-zero status: ' +
                       pe.long_message)
@@ -549,24 +551,27 @@ class Compiler(object):
         # store environment to replace later
         backup_env = os.environ.copy()
 
-        # load modules and set env variables
-        for module in self.modules:
-            # On cray, mic-knl module cannot be loaded without cce module
-            # See: https://github.com/spack/spack/issues/3153
-            if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
-                spack.util.module_cmd.load_module('cce')
-            spack.util.module_cmd.load_module(module)
+        try:
+            # load modules and set env variables
+            for module in self.modules:
+                # On cray, mic-knl module cannot be loaded without cce module
+                # See: https://github.com/spack/spack/issues/3153
+                if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
+                    spack.util.module_cmd.load_module('cce')
+                spack.util.module_cmd.load_module(module)
 
-        # apply other compiler environment changes
-        env = spack.util.environment.EnvironmentModifications()
-        env.extend(spack.schema.environment.parse(self.environment))
-        env.apply_modifications()
+            # apply other compiler environment changes
+            env = spack.util.environment.EnvironmentModifications()
+            env.extend(spack.schema.environment.parse(self.environment))
+            env.apply_modifications()
 
-        yield
-
-        # Restore environment
-        os.environ.clear()
-        os.environ.update(backup_env)
+            yield
+        except BaseException:
+            raise
+        finally:
+            # Restore environment regardless of whether inner code succeeded
+            os.environ.clear()
+            os.environ.update(backup_env)
 
 
 class CompilerAccessError(spack.error.SpackError):

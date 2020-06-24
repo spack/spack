@@ -221,8 +221,15 @@ def root_path(name):
     return spack.util.path.canonicalize_path(path)
 
 
-def generate_module_index(root, modules):
-    entries = syaml.syaml_dict()
+def generate_module_index(root, modules, overwrite=False):
+    index_path = os.path.join(root, 'module-index.yaml')
+    if overwrite or not os.path.exists(index_path):
+        entries = syaml.syaml_dict()
+    else:
+        with open(index_path) as index_file:
+            yaml_content = syaml.load(index_file)
+            entries = yaml_content['module_index']
+
     for m in modules:
         entry = {
             'path': m.layout.filename,
@@ -230,7 +237,6 @@ def generate_module_index(root, modules):
         }
         entries[m.spec.dag_hash()] = entry
     index = {'module_index': entries}
-    index_path = os.path.join(root, 'module-index.yaml')
     llnl.util.filesystem.mkdirp(root)
     with open(index_path, 'w') as index_file:
         syaml.dump(index, default_flow_style=False, stream=index_file)

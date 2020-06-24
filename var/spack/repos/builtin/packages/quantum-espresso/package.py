@@ -224,6 +224,19 @@ class QuantumEspresso(Package):
         prefix_path = prefix.bin if '@:5.4.0' in spec else prefix
         options = ['-prefix={0}'.format(prefix_path)]
 
+        # This additional flag is needed anytime the target architecture
+        # does not match the host architecture, which results in a binary that
+        # configure cannot execute on the login node. This is how we detect
+        # cross compilation: If the platform is NOT either Linux or Darwin
+        # and the target=backend, that we are in the cross-compile scenario
+        # scenario. This should cover Cray, BG/Q, and other custom platforms.
+        # The other option is to list out all the platform where you would be
+        # cross compiling explicitly.
+        if not (spec.satisfies('platform=linux') or
+                spec.satisfies('platform=darwin')):
+            if spec.satisfies('target=backend'):
+                options.append('--host')
+
         # QE autoconf compiler variables has some limitations:
         # 1. There is no explicit MPICC variable so we must re-purpose
         #    CC for the case of MPI.
@@ -294,7 +307,13 @@ class QuantumEspresso(Package):
             options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
 
         if '+scalapack' in spec:
-            scalapack_option = 'intel' if '^mkl' in spec else 'yes'
+            if '^mkl' in spec:
+                if '^openmpi' in spec:
+                    scalapack_option = 'yes'
+                else:  # mpich, intel-mpi
+                    scalapack_option = 'intel'
+            else:
+                scalapack_option = 'yes'
             options.append('--with-scalapack={0}'.format(scalapack_option))
 
         if '+elpa' in spec:
