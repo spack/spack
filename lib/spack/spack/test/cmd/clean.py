@@ -56,7 +56,3 @@ def test_function_calls(command_line, counters):
     assert spack.caches.fetch_cache.destroy.call_count == counters[2]
     assert spack.caches.misc_cache.destroy.call_count == counters[3]
     assert spack.installer.clear_failures.call_count == counters[4]
-
-
-def test_clean_default():
-    clean()
