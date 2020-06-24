@@ -162,6 +162,18 @@ def clean_environment():
             if 'PKGCONF' in varname:
                 env.unset(varname)
 
+    # Unset the following variables because they can affect installation of
+    # Autotools and CMake packages.
+    build_system_vars = [
+        'CC', 'CFLAGS', 'CPP', 'CPPFLAGS',  # C variables
+        'CXX', 'CCC', 'CXXFLAGS', 'CXXCPP',  # C++ variables
+        'F77', 'FFLAGS', 'FLIBS',  # Fortran77 variables
+        'FC', 'FCFLAGS', 'FCLIBS',  # Fortran variables
+        'LDFLAGS', 'LIBS'  # linker variables
+    ]
+    for v in build_system_vars:
+        env.unset(v)
+
     build_lang = spack.config.get('config:build_language')
     if build_lang:
         # Override language-related variables. This can be used to force
