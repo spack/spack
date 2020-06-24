@@ -4167,16 +4167,23 @@ want to clean up the temporary directory, or if the package isn't
 downloading properly, you might want to run *only* the ``fetch`` stage
 of the build.
 
+Spack performs best-effort installation of package dependencies by default,
+which means it will continue to install as many dependencies as possible
+after detecting failures.  If you are trying to install a package with a
+lot of dependencies where one or more may fail to build, you might want to
+try the ``--fail-fast`` option to stop the installation process on the first
+failure.
+
 A typical package workflow might look like this:
 
 .. code-block:: console
 
    $ spack edit mypackage
-   $ spack install mypackage
+   $ spack install --fail-fast mypackage
    ... build breaks! ...
    $ spack clean mypackage
    $ spack edit mypackage
-   $ spack install mypackage
+   $ spack install --fail-fast mypackage
    ... repeat clean/install until install works ...
 
 Below are some commands that will allow you some finer-grained

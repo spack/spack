@@ -18,6 +18,7 @@ import spack.compiler
 import spack.compilers as compilers
 
 from spack.compiler import Compiler
+from spack.util.executable import ProcessError
 
 
 @pytest.fixture()
@@ -653,3 +654,62 @@ fi
     compiler = compilers[0]
     version = compiler.get_real_version()
     assert version == test_version
+
+
+def test_compiler_get_real_version_fails(working_env, monkeypatch, tmpdir):
+    # Test variables
+    test_version = '2.2.2'
+
+    # Create compiler
+    gcc = str(tmpdir.join('gcc'))
+    with open(gcc, 'w') as f:
+        f.write("""#!/bin/bash
+if [[ $CMP_ON == "1" ]]; then
+    echo "$CMP_VER"
+fi
+""")
+    fs.set_executable(gcc)
+
+    # Add compiler to config
+    compiler_info = {
+        'spec': 'gcc@foo',
+        'paths': {
+            'cc': gcc,
+            'cxx': None,
+            'f77': None,
+            'fc': None,
+        },
+        'flags': {},
+        'operating_system': 'fake',
+        'target': 'fake',
+        'modules': ['turn_on'],
+        'environment': {
+            'set': {'CMP_VER': test_version},
+        },
+        'extra_rpaths': [],
+    }
+    compiler_dict = {'compiler': compiler_info}
+
+    # Set module load to turn compiler on
+    def module(*args):
+        if args[0] == 'show':
+            return ''
+        elif args[0] == 'load':
+            os.environ['SPACK_TEST_CMP_ON'] = "1"
+    monkeypatch.setattr(spack.util.module_cmd, 'module', module)
+
+    # Make compiler fail when getting implicit rpaths
+    def _call(*args, **kwargs):
+        raise ProcessError("Failed intentionally")
+    monkeypatch.setattr(spack.util.executable.Executable, '__call__', _call)
+
+    # Run and no change to environment
+    compilers = spack.compilers.get_compilers([compiler_dict])
+    assert len(compilers) == 1
+    compiler = compilers[0]
+    try:
+        _ = compiler.get_real_version()
+        assert False
+    except ProcessError:
+        # Confirm environment does not change after failed call
+        assert 'SPACK_TEST_CMP_ON' not in os.environ
