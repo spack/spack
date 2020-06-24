@@ -35,9 +35,6 @@ def convert_job(job_entry):
     new_job = {}
     new_job.update(job_entry)
     del new_job['needs']
-    for n in needs:
-        print(n)
-        print(get_job_name(n))
 
     new_job['dependencies'] = filter((lambda x: x is not None), [
         get_job_name(needs_entry) for needs_entry in needs])
@@ -46,4 +43,4 @@ def convert_job(job_entry):
 
 
 def needs_to_dependencies(yaml):
-    return { k: convert_job(v) for k, v in yaml.items() }
+    return {k: convert_job(v) for k, v in yaml.items()}

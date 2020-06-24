@@ -55,13 +55,14 @@ def setup_parser(subparser):
              "should be checked out as a step in each generated job.  " +
              "This argument is ignored if no --spack-repo is provided.")
     generate.add_argument(
-        '--optimize', action='store_true',
+        '--optimize', action='store_true', default=False,
         help="(Experimental) run the generated document through a series of "
              "optimization passes designed to reduce the size of the "
              "generated file.")
     generate.add_argument(
-        '--dependencies', action='store_true',
-        help="(Experimental) disable DAG scheduling; use \"plain\" dependencies.")
+        '--dependencies', action='store_true', default=False,
+        help="(Experimental) disable DAG scheduling; use "
+             ' "plain" dependencies.')
     generate.set_defaults(func=ci_generate)
 
     # Check a spec against mirror. Rebuild, create buildcache and push to
