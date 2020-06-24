@@ -76,11 +76,8 @@ spack package at this time.''',
     # Fix using an external hwloc
     # See https://github.com/pmodels/mpich/issues/4038
     # and https://github.com/pmodels/mpich/pull/3540
-    @staticmethod
-    def _hwloc_patch_sha256():
-        return 'eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774'
     patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
-          sha256=_hwloc_patch_sha256(),
+          sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
           when='@3.3 +hwloc')
 
     # fix MPI_Barrier segmentation fault
@@ -182,8 +179,10 @@ spack package at this time.''',
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
         
+        hwloc_patch_sha = \
+            'eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774'
         if (os.path.exists(self.configure_abs_path) and
-            ('patches=' + _hwloc_patch_sha256()) not in spec):
+            ('patches=' + hwloc_patch_sha256) not in spec):
             return
         # Else bootstrap with autotools
         bash = which('bash')
