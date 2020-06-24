@@ -933,7 +933,6 @@ class Environment(object):
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
 
-
     def concretize(self, force=False):
         """Concretize user_specs in this environment.
 
