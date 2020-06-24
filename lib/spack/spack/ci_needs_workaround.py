@@ -44,4 +44,4 @@ def convert_job(job_entry):
 
 
 def needs_to_dependencies(yaml):
-    return {k: convert_job(v) for k, v in yaml.items()}
+    return dict((k, convert_job(v)) for k, v in yaml.items())
