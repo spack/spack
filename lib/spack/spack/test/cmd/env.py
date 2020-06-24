@@ -189,17 +189,25 @@ def test_env_install_all_fails(install_mockery, mock_fetch, monkeypatch,
 
 
 def test_env_install_all_seq(install_mockery, mock_fetch, monkeypatch):
-    """Test install_all when a successfully installed package is repeatedly
-    installed.
+    """Test install_all when a successfully installed package is a dependent
+    of multiple specs the earlier of which fails to install.
 
     This test uses the environment installation process to exercise the
     distributed build multiple times with overlapping dependencies in the
     same process to ensure proper management of package installation statuses.
+    This test requires the environment perform a "best effort" installation of
+    packages in the environment (i.e., proceed with subsequent packages after
+    a package fails to install).
 
-    A key part of this test addresses a problem that occurred when attempting
-    to install a package dependent on another successfully installed, multiply
-    referenced package.  An infinite loop would arise after an earlier package
-    fails to install.
+    For example, given two packages added in order, A and Depb, both depending
+    on B.  If the first (A) fails to install, then installation of the second
+    (Depb) should still succeed.  That is,
+
+        A       Depb
+        |  and    |
+        B         B
+
+    should result Depb being installed after A failed to install.
     """
     err_msg = 'Mock _install_task error'
 
@@ -209,7 +217,7 @@ def test_env_install_all_seq(install_mockery, mock_fetch, monkeypatch):
 
     def _inst_task(inst, task, **kwargs):
         spec = task.pkg.spec
-        if spec.name == 'dt-diamond-left':
+        if spec.name == 'a':
             raise spack.installer.InstallError(err_msg)
 
         orig_fn(inst, task, **kwargs)
@@ -218,15 +226,14 @@ def test_env_install_all_seq(install_mockery, mock_fetch, monkeypatch):
                         _inst_task)
 
     e = ev.create('test-seq')
-    e.add('dt-diamond-bottom')
-    e.add('dt-diamond-left')
-    e.add('dt-diamond')
+    e.add('a')
+    e.add('depb')
     e.concretize()
     e.install_all()
 
     env_specs = e._get_environment_specs()
     for spec in env_specs:
-        if spec.name in ['dt-diamond-bottom', 'dt-diamond-right']:
+        if spec.name in ['b', 'depb']:
             assert spec.package.installed
         else:
             assert not spec.package.installed
