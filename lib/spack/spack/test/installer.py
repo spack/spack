@@ -444,6 +444,23 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     # the try-except block
     monkeypatch.setattr(spack.store.layout, 'build_packages_path', bpp_path)
 
+    spec = spack.spec.Spec('simple-inheritance').concretized()
+    path = str(tmpdir)
+
+    # The call to install_tree will raise the exception since not mocking
+    # creation of dependency package files within *install* directories.
+    with pytest.raises(IOError, match=path):
+        inst.dump_packages(spec, path)
+
+    # Now try the error path, which requires the mock directory structure
+    # above
+    monkeypatch.setattr(spack.repo.Repo, 'dirname_for_package_name', _repoerr)
+    with pytest.raises(spack.repo.RepoError, match=repo_err_msg):
+        inst.dump_packages(spec, path)
+
+    out = str(capsys.readouterr()[1])
+    assert "Couldn't copy in provenance for cmake" in out
+
 
 def test_clear_failures_success(install_mockery):
     """Test the clear_failures happy path."""
