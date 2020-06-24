@@ -15,7 +15,7 @@ class PipGdb(Package):
     version('1', branch='pip-centos7')
 
     depends_on('texinfo', type='build')
-    depends_on('pip', type=('build', 'link', 'run'))
+    depends_on('pip', type='build')
 
     def install(self, spec, prefix):
         bash = which('bash')

@@ -21,9 +21,6 @@ class Pip(Package):
     def check(self):
         make('check')  # TODO: replace with 'install-test'
 
-        args = []
-        return args
-
     def install(self, spec, prefix):
         bash = which('bash')
         configure('--prefix=%s' % prefix,
