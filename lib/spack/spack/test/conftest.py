@@ -450,7 +450,7 @@ def mutable_config(tmpdir_factory, configuration_dir):
 
 @pytest.fixture(scope='function')
 def mutable_empty_config(tmpdir_factory, configuration_dir):
-    """Like config, but tests can modify the configuration."""
+    """Empty configuration that can be modified by the tests."""
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
 
     cfg = spack.config.Configuration(
