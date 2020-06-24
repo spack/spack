@@ -6,7 +6,6 @@
 # ----------------------------------------------------------------------------
 
 from spack import *
-from sys import platform
 
 
 class Timemory(CMakePackage):
