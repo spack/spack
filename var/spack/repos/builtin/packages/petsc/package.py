@@ -369,20 +369,20 @@ class Petsc(Package):
             library_requested = library in spec.dependencies_dict()
             options.append(
                 '--with-{library}={value}'.format(
-                    library=('libjpeg' if library=='libjpeg-turbo'
-                             else 'netcdf' if library=='netcdf-c'
-                             else 'pnetcdf' if library=='parallel-netcdf'
-                             else 'yaml' if library=='libyaml'
+                    library=('libjpeg' if library == 'libjpeg-turbo'
+                             else 'netcdf' if library == 'netcdf-c'
+                             else 'pnetcdf' if library == 'parallel-netcdf'
+                             else 'yaml' if library == 'libyaml'
                              else library),
                     value=('1' if library_requested else '0'))
             )
             if library_requested:
                 options.append(
                     '--with-{library}-dir={path}'.format(
-                        library=('libjpeg' if library=='libjpeg-turbo'
-                                 else 'netcdf' if library=='netcdf-c'
-                                 else 'pnetcdf' if library=='parallel-netcdf'
-                                 else 'yaml' if library=='libyaml'
+                        library=('libjpeg' if library == 'libjpeg-turbo'
+                                 else 'netcdf' if library == 'netcdf-c'
+                                 else 'pnetcdf' if library == 'parallel-netcdf'
+                                 else 'yaml' if library == 'libyaml'
                                  else library), path=spec[library].prefix)
                 )
 
