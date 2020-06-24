@@ -179,7 +179,7 @@ spack package at this time.''',
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
         
-        hwloc_patch_sha = \
+        hwloc_patch_sha256 = \
             'eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774'
         if (os.path.exists(self.configure_abs_path) and
             ('patches=' + hwloc_patch_sha256) not in spec):
