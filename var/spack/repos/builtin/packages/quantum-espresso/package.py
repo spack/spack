@@ -307,7 +307,13 @@ class QuantumEspresso(Package):
             options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
 
         if '+scalapack' in spec:
-            scalapack_option = 'intel' if '^mkl' in spec else 'yes'
+            if '^mkl' in spec:
+                if '^openmpi' in spec:
+                    scalapack_option = 'yes'
+                else:  # mpich, intel-mpi
+                    scalapack_option = 'intel'
+            else:
+                scalapack_option = 'yes'
             options.append('--with-scalapack={0}'.format(scalapack_option))
 
         if '+elpa' in spec:
