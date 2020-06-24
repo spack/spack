@@ -375,6 +375,18 @@ def linux_os():
 
 
 @pytest.fixture(scope='session')
+def default_config():
+    """Isolates the default configuration from the user configs.
+
+    This ensures we can test the real default configuration without having
+    tests fail when the user overrides the defaults that we test against."""
+    default_paths = os.path.join(spack.paths.etc_path, 'spack', 'defaults')
+    default_config = spack.config.Configuration(('defaults', default_path))
+    with use_configuration(default_config):
+        yield default_config
+
+
+@pytest.fixture(scope='session')
 def configuration_dir(tmpdir_factory, linux_os):
     """Copies mock configuration files in a temporary directory. Returns the
     directory path.

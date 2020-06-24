@@ -9,7 +9,7 @@ import spack.main
 containerize = spack.main.SpackCommand('containerize')
 
 
-def test_command(config, container_config_dir, capsys):
+def test_command(default_config, container_config_dir, capsys):
     with capsys.disabled():
         with fs.working_dir(container_config_dir):
             output = containerize()
