@@ -781,7 +781,15 @@ def validate(data, schema, filename=None):
 
 
 def read_config_file(filename, schema=None):
-    """Read a YAML configuration file."""
+    """Read a YAML configuration file.
+
+    User can provide a schema for validation. If no schema is provided,
+    we will infer the schema from the top-level key."""
+    # Dev: Inferring schema and allowing it to be provided directly allows us
+    # to preserve flexibility in calling convention (don't need to provide
+    # schema when it's not necessary) while allowing us to validate against a
+    # known schema when the top-level key could be incorrect.
+
     # Ignore nonexisting files.
     if not os.path.exists(filename):
         return None
