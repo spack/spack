@@ -38,7 +38,7 @@ class Musl(Package):
         if self.compiler.name == 'gcc':
             config.filter("WRAPCC_GCC = .*'", "WRAPCC_GCC = {0}'".
                           format(self.compiler.cc))
-        elif self.compiler.name == in ('clang', 'apple-clang'):
+        elif self.compiler.name in ('clang', 'apple-clang'):
             config.filter("WRAPCC_CLANG = .*'", "WRAPCC_CLANG = {0}'".
                           format(self.compiler.cc))
 
