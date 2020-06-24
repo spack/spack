@@ -22,18 +22,14 @@ class Nss(MakefilePackage):
 
     version(
         '3.46.1',
-        url=
-        "https://ftp.Mozilla.org/pub/security/nss/releases/NSS_3_46_1_RTM/src/nss-3.46.1.tar.gz",
-        sha256=
-        '3bf7e0ed7db98803f134c527c436cc68415ff17257d34bd75de14e9a09d13651',
+        url="https://ftp.Mozilla.org/pub/security/nss/releases/NSS_3_46_1_RTM/src/nss-3.46.1.tar.gz",
+        sha256='3bf7e0ed7db98803f134c527c436cc68415ff17257d34bd75de14e9a09d13651',
         when='~nspr')
 
     version(
         '3.46.1',
-        url=
-        "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_46_1_RTM/src/nss-3.46.1-with-nspr-4.21.tar.gz",
-        sha256=
-        '5ec5a4e4247eb60b8c15d5151e5b5ce6c14a751e4f2158c9435f498bd5c547f4',
+        url="https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_46_1_RTM/src/nss-3.46.1-with-nspr-4.21.tar.gz",
+        sha256='5ec5a4e4247eb60b8c15d5151e5b5ce6c14a751e4f2158c9435f498bd5c547f4',
         when='+nspr')
 
     variant("nspr", default=True, description="Enable internal nspr")
