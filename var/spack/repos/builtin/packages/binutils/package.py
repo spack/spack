@@ -121,7 +121,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         # To ignore the errors of narrowing conversions for
         # the Fujitsu compiler
         if name == 'cxxflags' and (
-            self.spec.satisfies('@2.31.1') and
+            self.spec.satisfies('@:2.31.1') and
             self.compiler.name in ('fj', 'clang', 'apple-clang')
         ):
             flags.append('-Wno-narrowing')
