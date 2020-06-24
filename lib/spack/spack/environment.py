@@ -914,8 +914,8 @@ class Environment(object):
                 except spack.spec_list.SpecListError:
                     # define new specs list
                     new_specs = set(self.user_specs)
-                    msg = "Spec '%s' is part of a spec matrix and" % spec
-                    msg += " cannot be removed as a root of the environment."
+                    msg = "Spec '%s' is part of a spec matrix and " % spec
+                    msg += "cannot be removed from list '%s'." % list_to_change
                     if force:
                         msg += " It will be removed from the concrete specs."
                         # Mock new specs so we can remove this spec from
