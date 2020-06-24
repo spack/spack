@@ -29,9 +29,9 @@ class Pciutils(MakefilePackage):
 
     def make_options(self):
         spec = self.spec
-        return ['PREFIX={}'.format(self.prefix),
-                'ZLIB={}'.format(makefile_onoff("+zlib" in spec)),
-                'SHARED={}'.format(makefile_onoff("+shared" in spec))]
+        return ['PREFIX='+self.prefix,
+                'ZLIB='+makefile_onoff('+zlib' in spec),
+                'SHARED='+makefile_onoff('+shared' in spec)]
 
     @property
     def build_targets(self):
