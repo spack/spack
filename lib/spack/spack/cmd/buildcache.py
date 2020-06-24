@@ -68,9 +68,9 @@ def setup_parser(subparser):
                         type=str,
                         help="URL of the mirror where " +
                              "buildcaches will be written.")
-    create.add_argument('--no-rebuild-index', action='store_true',
-                        default=False, help="skip rebuilding index after " +
-                                            "building package(s)")
+    create.add_argument('--rebuild-index', action='store_true',
+                        default=False, help="Regenerate buildcache index " +
+                                            "after building package(s)")
     create.add_argument('-y', '--spec-yaml', default=None,
                         help='Create buildcache entry for spec from yaml file')
     create.add_argument('--only', default='package,dependencies',
@@ -323,9 +323,10 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     return specs_from_cli
 
 
-def _createtarball(env, spec_yaml, packages, add_spec, add_deps,
-                   output_location, key, force, rel, unsigned, allow_root,
-                   no_rebuild_index):
+def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
+                   add_deps=True, output_location=os.getcwd(),
+                   signing_key=None, force=False, make_relative=False,
+                   unsigned=False, allow_root=False, rebuild_index=False):
     if spec_yaml:
         packages = set()
         with open(spec_yaml, 'r') as fd:
@@ -354,10 +355,6 @@ def _createtarball(env, spec_yaml, packages, add_spec, add_deps,
 
     msg = 'Buildcache files will be output to %s/build_cache' % outdir
     tty.msg(msg)
-
-    signkey = None
-    if key:
-        signkey = key
 
     matches = find_matching_specs(pkgs, env=env)
 
@@ -398,9 +395,9 @@ def _createtarball(env, spec_yaml, packages, add_spec, add_deps,
 
     for spec in specs:
         tty.debug('creating binary cache file for package %s ' % spec.format())
-        bindist.build_tarball(spec, outdir, force, rel,
-                              unsigned, allow_root, signkey,
-                              not no_rebuild_index)
+        bindist.build_tarball(spec, outdir, force, make_relative,
+                              unsigned, allow_root, signing_key,
+                              rebuild_index)
 
 
 def createtarball(args):
@@ -447,9 +444,12 @@ def createtarball(args):
     add_spec = ('package' in args.things_to_install)
     add_deps = ('dependencies' in args.things_to_install)
 
-    _createtarball(env, args.spec_yaml, args.specs, add_spec, add_deps,
-                   output_location, args.key, args.force, args.rel,
-                   args.unsigned, args.allow_root, args.no_rebuild_index)
+    _createtarball(env, spec_yaml=args.spec_yaml, packages=args.specs,
+                   add_spec=add_spec, add_deps=add_deps,
+                   output_location=output_location, signing_key=args.key,
+                   force=args.force, make_relative=args.rel,
+                   unsigned=args.unsigned, allow_root=args.allow_root,
+                   rebuild_index=args.rebuild_index)
 
 
 def installtarball(args):
