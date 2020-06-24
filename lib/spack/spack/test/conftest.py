@@ -380,10 +380,11 @@ def default_config():
 
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
-    default_paths = os.path.join(spack.paths.etc_path, 'spack', 'defaults')
-    default_config = spack.config.Configuration(('defaults', default_path))
-    with use_configuration(default_config):
-        yield default_config
+    defaults_path = os.path.join(spack.paths.etc_path, 'spack', 'defaults')
+    defaults_scope = spack.config.ConfigScope('defaults', defaults_path)
+    defaults_config = spack.config.Configuration(defaults_scope)
+    with use_configuration(defaults_config):
+        yield defaults_config
 
 
 @pytest.fixture(scope='session')

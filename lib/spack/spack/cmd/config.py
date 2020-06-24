@@ -225,7 +225,7 @@ def config_add(args):
                 # We've nested further than existing config, so we need the
                 # type information for validation to know how to handle bare
                 # values appended to lists.
-                existing = spack.config.type_of(path)
+                existing = spack.config.get_valid_type(path)
 
                 # construct value from this point down
                 value = syaml.load_config(components[-1])

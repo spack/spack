@@ -857,7 +857,7 @@ def _mark_internal(data, name):
     return d
 
 
-def type_of(path):
+def get_valid_type(path):
     """Returns an instance of a type that will pass validation for path.
 
     The instance is created by calling the constructor with no arguments.
@@ -874,15 +874,14 @@ def type_of(path):
             for component in reversed(components):
                 test_data = {component: test_data}
             validate(test_data, section_schemas[section])
-            break
+            return ret
         except (ConfigFormatError, AttributeError):
             # This type won't validate, try the next one
             # Except AttributeError because undefined behavior of dict ordering
             # in python 3.5 can cause the validator to raise an AttributeError
             # instead of a ConfigFormatError.
             pass
-    return ret
-
+    raise ConfigError("Cannot determine valid type for path '%s'." % path)
 
 def merge_yaml(dest, source):
     """Merges source into dest; entries in source take precedence over dest.
