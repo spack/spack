@@ -36,8 +36,9 @@ def convert_job(job_entry):
     new_job.update(job_entry)
     del new_job['needs']
 
-    new_job['dependencies'] = filter((lambda x: x is not None), [
-        get_job_name(needs_entry) for needs_entry in needs])
+    new_job['dependencies'] = list(filter(
+        (lambda x: x is not None),
+        (get_job_name(needs_entry) for needs_entry in needs)))
 
     return new_job
 
