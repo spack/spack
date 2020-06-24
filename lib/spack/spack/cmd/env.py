@@ -353,7 +353,8 @@ def env_status(args):
 # env loads
 #
 def env_loads_setup_parser(subparser):
-    """list modules for an installed environment '(see spack module loads)'"""
+    """list modules for an installed environment
+'(see spack module tcl loads)'"""
     subparser.add_argument(
         'env', nargs='?', help='name of env to generate loads file for')
     subparser.add_argument(
