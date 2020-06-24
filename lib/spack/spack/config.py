@@ -454,15 +454,16 @@ class Configuration(object):
         scope = self._validate_scope(scope)  # get ConfigScope object
 
         # manually preserve comments
-        cp = section in scope.sections and scope.sections[section] is not None
-        if cp:
+        need_comment_copy = (section in scope.sections and
+                             scope.sections[section] is not None)
+        if need_comment_copy:
             comments = getattr(scope.sections[section][section],
                                yaml.comments.Comment.attrib,
                                None)
 
         # read only the requested section's data.
         scope.sections[section] = syaml.syaml_dict({section: update_data})
-        if cp and comments:
+        if need_comment_copy and comments:
             setattr(scope.sections[section][section],
                     yaml.comments.Comment.attrib,
                     comments)
