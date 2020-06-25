@@ -223,8 +223,11 @@ class InstallRecord(object):
         d.pop('spec', None)
 
         # Old databases may have "None" for path for externals
-        if d['path'] == 'None':
+        if 'path' not in d or d['path'] == 'None':
             d['path'] = None
+
+        if 'installed' not in d:
+            d['installed'] = False
 
         return InstallRecord(spec, **d)
 

@@ -108,8 +108,6 @@ def setup_parser(subparser):
                            action='store_true',
                            dest='variants',
                            help='show variants in output (can be long)')
-    listcache.add_argument('-f', '--force', action='store_true',
-                           help="force new download of specs")
     listcache.add_argument('-a', '--allarch', action='store_true',
                            help="list specs for all available architectures" +
                                  " instead of default platform and OS")
@@ -291,7 +289,7 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     specs_from_cli = []
     has_errors = False
     allarch = other_arch
-    specs = bindist.get_specs(force, allarch)
+    specs = bindist.get_specs(allarch)
     for pkg in pkgs:
         matches = []
         tty.msg("buildcache spec(s) matching %s \n" % pkg)
@@ -458,8 +456,7 @@ def installtarball(args):
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.specs)
-    matches = match_downloaded_specs(pkgs, args.multiple, args.force,
-                                     args.otherarch)
+    matches = match_downloaded_specs(pkgs, args.multiple, args.otherarch)
 
     for match in matches:
         install_tarball(match, args)
@@ -491,7 +488,7 @@ def install_tarball(spec, args):
 
 def listspecs(args):
     """list binary packages available from mirrors"""
-    specs = bindist.get_specs(args.force, args.allarch)
+    specs = bindist.get_specs(args.allarch)
     if args.specs:
         constraints = set(args.specs)
         specs = [s for s in specs if any(s.satisfies(c) for c in constraints)]

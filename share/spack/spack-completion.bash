@@ -403,7 +403,7 @@ _spack_buildcache_install() {
 _spack_buildcache_list() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -v --variants -f --force -a --allarch"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -v --variants -a --allarch"
     else
         _all_packages
     fi

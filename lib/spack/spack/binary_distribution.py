@@ -841,49 +841,55 @@ def get_spec(spec=None, force=False):
     return try_download_specs(urls=urls, force=force)
 
 
-def get_specs(force=False, allarch=False):
+def get_specs(allarch=False):
     """
     Get spec.yaml's for build caches available on mirror
     """
+    global _cached_specs
     arch = architecture.Arch(architecture.platform(),
                              'default_os', 'default_target')
-    arch_pattern = ('([^-]*-[^-]*-[^-]*)')
-    if not allarch:
-        arch_pattern = '(%s-%s-[^-]*)' % (arch.platform, arch.os)
-
-    regex_pattern = '%s(.*)(spec.yaml$)' % (arch_pattern)
-    arch_re = re.compile(regex_pattern)
 
     if not spack.mirror.MirrorCollection():
         tty.debug("No Spack mirrors are currently configured")
         return {}
 
-    urls = set()
     for mirror in spack.mirror.MirrorCollection().values():
         fetch_url_build_cache = url_util.join(
             mirror.fetch_url, _build_cache_relative_path)
 
-        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
-        if mirror_dir:
-            tty.msg("Finding buildcaches in %s" % mirror_dir)
-            if os.path.exists(mirror_dir):
-                files = os.listdir(mirror_dir)
-                for file in files:
-                    m = arch_re.search(file)
-                    if m:
-                        link = url_util.join(fetch_url_build_cache, file)
-                        urls.add(link)
-        else:
-            tty.msg("Finding buildcaches at %s" %
-                    url_util.format(fetch_url_build_cache))
-            p, links = web_util.spider(
-                url_util.join(fetch_url_build_cache, 'index.html'))
-            for link in links:
-                m = arch_re.search(link)
-                if m:
-                    urls.add(link)
+        tty.msg("Finding buildcaches at %s" %
+                url_util.format(fetch_url_build_cache))
 
-    return try_download_specs(urls=urls, force=force)
+        index_url = url_util.join(fetch_url_build_cache, 'index.json')
+
+        try:
+            _, _, file_stream = web_util.read_from_url(
+                index_url, 'application/json')
+            index_object = codecs.getreader('utf-8')(file_stream).read()
+        except (URLError, web_util.SpackWebError) as url_err:
+            tty.error('Failed to read index {0}'.format(index_url))
+            tty.debug(url_err)
+            # Just return whatever specs we may already have cached
+            return _cached_specs
+
+        tmpdir = tempfile.mkdtemp()
+        index_file_path = os.path.join(tmpdir, 'index.json')
+        with open(index_file_path, 'w') as fd:
+            fd.write(index_object)
+
+        db_root_dir = os.path.join(tmpdir, 'db_root')
+        db = spack_db.Database(None, db_dir=db_root_dir,
+                               enable_transaction_locking=False)
+
+        db._read_from_file(index_file_path)
+        spec_list = db.query_local(installed=False)
+
+        for indexed_spec in spec_list:
+            spec_arch = architecture.arch_for_spec(indexed_spec.architecture)
+            if (allarch is True or spec_arch == arch):
+                _cached_specs.add(indexed_spec)
+
+    return _cached_specs
 
 
 def get_keys(install=False, trust=False, force=False):

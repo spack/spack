@@ -721,10 +721,6 @@ spack:
             ci.push_mirror_contents(
                 env, concrete_spec, yaml_path, mirror_url, '42')
 
-            buildcache_list_output = buildcache_cmd('list', output=str)
-
-            assert('patchelf' in buildcache_list_output)
-
             buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
 
             # Test generating buildcache index while we have bin mirror
@@ -733,6 +729,10 @@ spack:
             with open(index_path) as idx_fd:
                 index_object = json.load(idx_fd)
                 validate(index_object, db_idx_schema)
+
+            # Now that index is regenerated, validate "buildcache list" output
+            buildcache_list_output = buildcache_cmd('list', output=str)
+            assert('patchelf' in buildcache_list_output)
 
             # Also test buildcache_spec schema
             bc_files_list = os.listdir(buildcache_path)

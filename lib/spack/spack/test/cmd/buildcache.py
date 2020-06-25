@@ -24,7 +24,7 @@ add = spack.main.SpackCommand('add')
 def mock_get_specs(database, monkeypatch):
     specs = database.query_local()
     monkeypatch.setattr(
-        spack.binary_distribution, 'get_specs', lambda x, y: specs
+        spack.binary_distribution, 'get_specs', lambda x: specs
     )
 
 
