@@ -266,9 +266,9 @@ class Mumps(Package):
         letters_variants = [
             ['s', '+float'], ['c', '+complex+float'],
             ['d', '+double'], ['z', '+complex+double']]
-        for l, v in letters_variants:
+        for ltr, v in letters_variants:
             if v in spec:
-                make(l + 'examples')
+                make(ltr + 'examples')
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
