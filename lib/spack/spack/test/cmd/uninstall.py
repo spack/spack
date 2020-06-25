@@ -138,12 +138,12 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
         specs = spack.store.db.get_by_hash(dag_hash[:7], installed=any)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
-        # specs = spack.store.db.get_by_hash(dag_hash, installed=not installed)
-        # assert specs is None
+        specs = spack.store.db.get_by_hash(dag_hash, installed=not installed)
+        assert specs is None
 
-        # specs = spack.store.db.get_by_hash(dag_hash[:7],
-        #                                    installed=not installed)
-        # assert specs is None
+        specs = spack.store.db.get_by_hash(dag_hash[:7],
+                                           installed=not installed)
+        assert specs is None
 
         mpileaks_spec = spack.store.db.query_one('mpileaks ^mpich')
         assert callpath_spec in mpileaks_spec
