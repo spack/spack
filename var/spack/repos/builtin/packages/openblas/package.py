@@ -62,7 +62,7 @@ class Openblas(MakefilePackage):
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
     # See https://github.com/spack/spack/issues/15385
-    patch('lapack-0.3.9-xerbl.patch', when='@0.3.8: %intel')
+    patch('lapack-0.3.9-xerbl.patch', when='@0.3.8:0.3.9 %intel')
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/xianyi/OpenBLAS/pull/1098
