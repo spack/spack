@@ -409,12 +409,14 @@ def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
     arch = architecture.Arch(
         architecture.platform(), 'default_os', 'default_target')
+    arch_spec = spack.spec.Spec('arch=%s' % arch)
     valid_variables = {
         'target': str(arch.target),
         'os': str(arch.os),
         'platform': str(arch.platform),
-        'arch': str(arch),
-        'architecture': str(arch),
+        'arch': arch_spec,
+        'architecture': arch_spec,
+        'arch_str': str(arch),
         're': re,
         'env': os.environ,
         'hostname': socket.gethostname()

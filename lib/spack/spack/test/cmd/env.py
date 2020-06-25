@@ -1429,6 +1429,29 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+def test_stack_definition_conditional_with_satisfaction(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+      when: arch.satisfies('platform=foo')  # will be "test" when testing
+    - packages: [callpath]
+      when: arch.satisfies('platform=test')
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+
+        test = ev.read('test')
+
+        assert Spec('libelf') not in test.user_specs
+        assert Spec('mpileaks') not in test.user_specs
+        assert Spec('callpath') in test.user_specs
+
+
 def test_stack_definition_complex_conditional(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
