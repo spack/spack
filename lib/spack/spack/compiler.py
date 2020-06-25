@@ -27,12 +27,6 @@ from spack.util.environment import filter_system_paths
 __all__ = ['Compiler']
 
 
-def _verify_executables(*paths):
-    for path in paths:
-        if not os.path.isfile(path) and os.access(path, os.X_OK):
-            raise CompilerAccessError(path)
-
-
 @llnl.util.lang.memoized
 def get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
     """Invokes the compiler at a given path passing a single
@@ -274,11 +268,12 @@ class Compiler(object):
         def check(exe):
             if exe is None:
                 return None
-            _verify_executables(exe)
             return exe
 
         self.cc  = check(paths[0])
         self.cxx = check(paths[1])
+        self.f77 = None
+        self.fc = None
         if len(paths) > 2:
             self.f77 = check(paths[2])
             if len(paths) == 3:
@@ -297,6 +292,13 @@ class Compiler(object):
             value = kwargs.get(flag, None)
             if value is not None:
                 self.flags[flag] = tokenize_flags(value)
+
+    def verify_executables(self):
+        missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
+                   if cmp and not (os.path.isfile(cmp) and
+                                   os.access(cmp, os.X_OK))]
+        if missing:
+            raise CompilerAccessError(self, missing)
 
     @property
     def version(self):
@@ -575,10 +577,10 @@ class Compiler(object):
 
 
 class CompilerAccessError(spack.error.SpackError):
-
-    def __init__(self, path):
-        super(CompilerAccessError, self).__init__(
-            "'%s' is not a valid compiler." % path)
+    def __init__(self, compiler, paths):
+        msg = "Compiler '%s' has executables that are missing" % compiler.spec
+        msg += " or are not executable: %s" % paths
+        super(CompilerAccessError, self).__init__(msg)
 
 
 class InvalidCompilerError(spack.error.SpackError):
