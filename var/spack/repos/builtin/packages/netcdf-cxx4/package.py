@@ -56,7 +56,8 @@ class NetcdfCxx4(AutotoolsPackage):
     def configure_args(self):
         config_args = []
 
-        if self.spec.satisfies('^mpi'):
+        netcdfc_spec = self.spec['netcdf-c']
+        if '+mpi' in netcdfc_spec or '+parallel-netcdf' in netcdfc_spec:
             config_args.extend([
                 'CC={0}'.format(self.spec['mpi'].mpicc),
                 'CXX={0}'.format(self.spec['mpi'].mpicxx)
