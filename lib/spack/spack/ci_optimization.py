@@ -190,10 +190,10 @@ def print_delta(name, old, new, applied=None):
         applied = (new <= old)
 
     print('\n'.join((
-        '{} {}:',
-        '  before: {: 10d}',
-        '  after : {: 10d}',
-        '  delta : {:+10d} ({:=+3d}.{}%)',
+        '{0} {1}:',
+        '  before: {2: 10d}',
+        '  after : {3: 10d}',
+        '  delta : {4:+10d} ({5:=+3d}.{6}%)',
     )).format(
         name,
         ('+' if applied else 'x'),
