@@ -14,6 +14,8 @@ class PipGdb(Package):
 
     version('1', branch='pip-centos7')
 
+    patch('disable-werror.patch')
+
     depends_on('texinfo', type='build')
     depends_on('pip', type='build')
 

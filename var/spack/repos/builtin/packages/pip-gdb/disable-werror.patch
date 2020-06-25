@@ -1,0 +1,12 @@
+diff -uprN PIP-gdb/build.sh PIP-gdb-fixed/build.sh
+--- PIP-gdb/build.sh	2020-06-06 17:51:46.778723191 +0900
++++ PIP-gdb-fixed/build.sh	2020-06-25 11:26:26.368175689 +0900
+@@ -62,7 +62,7 @@ aarch64)
+ 	host=aarch64-redhat-linux-gnu
+ 	;;
+ x86_64)
+-	opt_werror=--enable-werror
++	opt_werror=--disable-werror
+ 	opt_with_rpm=--with-rpm
+ 	opt_inprocess_agent=-enable-inprocess-agent
+ 	opt_host_arch='-m64 -mtune=generic'

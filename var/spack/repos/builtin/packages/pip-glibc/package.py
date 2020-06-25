@@ -14,6 +14,8 @@ class PipGlibc(Package):
 
     version('1', branch='centos/glibc-2.17-260.el7.pip.branch')
 
+    patch('disable-werror.patch')
+
     def install(self, spec, prefix):
         bash = which('bash')
         with working_dir('PiP-glibc.build', create=True):
