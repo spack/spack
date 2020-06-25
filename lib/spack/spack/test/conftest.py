@@ -375,6 +375,19 @@ def linux_os():
 
 
 @pytest.fixture(scope='session')
+def default_config():
+    """Isolates the default configuration from the user configs.
+
+    This ensures we can test the real default configuration without having
+    tests fail when the user overrides the defaults that we test against."""
+    defaults_path = os.path.join(spack.paths.etc_path, 'spack', 'defaults')
+    defaults_scope = spack.config.ConfigScope('defaults', defaults_path)
+    defaults_config = spack.config.Configuration(defaults_scope)
+    with use_configuration(defaults_config):
+        yield defaults_config
+
+
+@pytest.fixture(scope='session')
 def configuration_dir(tmpdir_factory, linux_os):
     """Copies mock configuration files in a temporary directory. Returns the
     directory path.
@@ -427,6 +440,19 @@ def mutable_config(tmpdir_factory, configuration_dir):
     """Like config, but tests can modify the configuration."""
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     configuration_dir.copy(mutable_dir)
+
+    cfg = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(mutable_dir.join(name)))
+          for name in ['site', 'system', 'user']])
+
+    with use_configuration(cfg):
+        yield cfg
+
+
+@pytest.fixture(scope='function')
+def mutable_empty_config(tmpdir_factory, configuration_dir):
+    """Empty configuration that can be modified by the tests."""
+    mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
 
     cfg = spack.config.Configuration(
         *[spack.config.ConfigScope(name, str(mutable_dir.join(name)))

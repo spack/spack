@@ -579,7 +579,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit list"
+        SPACK_COMPREPLY="get blame edit list add remove rm"
     fi
 }
 
@@ -612,6 +612,33 @@ _spack_config_edit() {
 
 _spack_config_list() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_config_add() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -f --file"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_config_remove() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_config_rm() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_configure() {
