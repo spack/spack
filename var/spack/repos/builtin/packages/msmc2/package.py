@@ -33,7 +33,7 @@ class Msmc2(MakefilePackage):
                     join_path(self.spec['dmd'].prefix.linux.bin64, 'dmd'),
                     'Makefile', string=True)
 
-        gsllibdir = self.spec['gsl'].prefix.lib
+        gsllibdir = spec['gsl'].libs.directories[0]
 
         # Set GSLDIR
         filter_file('GSLDIR=/usr/local/lib',
