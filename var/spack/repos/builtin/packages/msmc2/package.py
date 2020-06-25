@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-# @author:>-----Robert QIAO (DRS, Flinders University, Australia)
 
 from spack import *
 
@@ -41,5 +40,4 @@ class Msmc2(MakefilePackage):
                     'Makefile', string=True)
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
         install_tree('build/release', prefix.bin)
