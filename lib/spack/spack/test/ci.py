@@ -292,13 +292,14 @@ def test_ci_workarounds():
     def sort_yaml_obj(obj):
         if isinstance(obj, collections_abc.Mapping):
             result = syaml.syaml_dict()
-            for k in sorted(obj.keys()):
+            for k in sorted(obj.keys(), key=str):
                 result[k] = sort_yaml_obj(obj[k])
             return result
 
         if (isinstance(obj, collections_abc.Sequence) and
                 not isinstance(obj, str)):
-            return syaml.syaml_list(sort_yaml_obj(x) for x in sorted(obj))
+            return syaml.syaml_list(sorted(
+                (sort_yaml_obj(x) for x in obj), key=str))
 
         return obj
 
