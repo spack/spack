@@ -14,6 +14,8 @@ class Datatransferkit(CMakePackage):
     url      = "https://github.com/ORNL-CEES/DataTransferKit/archive/3.1-rc1.tar.gz"
     git      = "https://github.com/ORNL-CEES/DataTransferKit.git"
 
+    maintainers = ['Rombur']
+
     version('master', branch='master', submodules=True)
 
     variant('openmp', default=False, description='enable OpenMP backend')
