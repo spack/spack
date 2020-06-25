@@ -1448,8 +1448,8 @@ class Spec(object):
                         'target': 'x86_64',
                     },
                     'compiler': {
-                        'name': 'clang',
-                        'version': '10.0.0-apple',
+                        'name': 'apple-clang',
+                        'version': '10.0.0',
                     },
                     'namespace': 'builtin',
                     'parameters': {
@@ -1554,8 +1554,8 @@ class Spec(object):
                                 'target': 'x86_64',
                             },
                             'compiler': {
-                                'name': 'clang',
-                                'version': '10.0.0-apple',
+                                'name': 'apple-clang',
+                                'version': '10.0.0',
                             },
                             'namespace': 'builtin',
                             'parameters': {

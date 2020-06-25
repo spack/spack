@@ -176,8 +176,8 @@ def test_arch_spec_container_semantic(item, architecture_str):
     # Check mixed toolchains
     ('clang@8.0.0', 'broadwell', ''),
     ('clang@3.5', 'x86_64', '-march=x86-64 -mtune=generic'),
-    # Check clang compilers with 'apple' suffix
-    ('clang@9.1.0-apple', 'x86_64', '-march=x86-64')
+    # Check Apple's Clang compilers
+    ('apple-clang@9.1.0', 'x86_64', '-march=x86-64')
 ])
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
 def test_optimization_flags(
@@ -200,7 +200,7 @@ def test_optimization_flags(
      '-march=icelake-client -mtune=icelake-client'),
     # Check that the special case for Apple's clang is treated correctly
     # i.e. it won't try to detect the version again
-    (spack.spec.CompilerSpec('clang@9.1.0-apple'), None, 'x86_64',
+    (spack.spec.CompilerSpec('apple-clang@9.1.0'), None, 'x86_64',
      '-march=x86-64'),
 ])
 def test_optimization_flags_with_custom_versions(

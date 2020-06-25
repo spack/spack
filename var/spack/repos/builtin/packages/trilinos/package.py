@@ -683,7 +683,9 @@ class Trilinos(CMakePackage):
 
         # Fortran lib (assumes clang is built with gfortran!)
         if '+fortran' in spec and (
-                spec.satisfies('%gcc') or spec.satisfies('%clang')):
+                spec.satisfies('%gcc') or spec.satisfies('%clang') or
+                spec.satisfies('%apple-clang')
+        ):
             options.append(define('Trilinos_ENABLE_Fortran', True))
             if '+mpi' in spec:
                 libgfortran = os.path.dirname(os.popen(

@@ -69,6 +69,8 @@ class IntelTbb(Package):
     #
     #    See https://github.com/intel/tbb/pull/147 for details.
     #
+    conflicts('%apple-clang', when='@:2019.6',
+              msg='2019.7 or later required for clang')
     conflicts('%clang', when='@:2019.6',
               msg='2019.7 or later required for clang')
 
@@ -163,7 +165,7 @@ class IntelTbb(Package):
         #
         self.coerce_to_spack("build")
 
-        if spec.satisfies('%clang'):
+        if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
             tbb_compiler = "clang"
         elif spec.satisfies('%intel'):
             tbb_compiler = "icc"

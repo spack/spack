@@ -79,6 +79,7 @@ spack package at this time.''',
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
     patch('mpich32_clang.patch', when='@3.2:3.2.0%clang')
+    patch('mpich32_clang.patch', when='@3.2:3.2.0%apple-clang')
 
     # Fix SLURM node list parsing
     # See https://github.com/pmodels/mpich/issues/3572
