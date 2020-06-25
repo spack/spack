@@ -7,6 +7,7 @@ import pytest
 
 import sys
 import os
+import shutil
 
 from copy import copy
 from six import iteritems
@@ -16,6 +17,8 @@ import llnl.util.filesystem as fs
 import spack.spec
 import spack.compiler
 import spack.compilers as compilers
+import spack.spec
+import spack.util.environment
 
 from spack.compiler import Compiler
 from spack.util.executable import ProcessError
@@ -714,3 +717,98 @@ fi
     except ProcessError:
         # Confirm environment does not change after failed call
         assert 'SPACK_TEST_CMP_ON' not in os.environ
+
+
+def test_apple_clang_setup_environment(mock_executable, monkeypatch):
+    """Test a code path that is taken only if the package uses
+    Xcode on MacOS.
+    """
+    apple_clang_cls = spack.compilers.class_for_compiler_name('apple-clang')
+    compiler = apple_clang_cls(
+        spack.spec.CompilerSpec('apple-clang@11.0.0'), 'catalina', 'x86_64', [
+            '/usr/bin/clang', '/usr/bin/clang++', None, None
+        ]
+    )
+    env = spack.util.environment.EnvironmentModifications()
+    # Check a package that doesn't use xcode and ensure we don't add changes
+    # to the environment
+    s = spack.spec.Spec('zlib')
+    s.concretize()
+    compiler.setup_custom_environment(s.package, env)
+    assert not env
+
+    # Prepare mock executables to fake the Xcode environment
+    xcrun = mock_executable('xcrun', """
+if [[ "$2" == "clang" ]] ; then
+  echo "/Library/Developer/CommandLineTools/usr/bin/clang"
+fi
+if [[ "$2" == "clang++" ]] ; then
+  echo "/Library/Developer/CommandLineTools/usr/bin/clang++"
+fi
+""")
+    mock_executable('xcode-select', """
+echo "/Library/Developer"
+""")
+    bin_dir = os.path.dirname(xcrun)
+    monkeypatch.setenv('PATH', bin_dir, prepend=os.pathsep)
+
+    def noop(*args, **kwargs):
+        pass
+
+    real_listdir = os.listdir
+
+    def _listdir(path):
+        if not os.path.exists(path):
+            return []
+        return real_listdir(path)
+
+    # Set a few operations to noop
+    monkeypatch.setattr(shutil, 'copytree', noop)
+    monkeypatch.setattr(os, 'unlink', noop)
+    monkeypatch.setattr(os, 'symlink', noop)
+    monkeypatch.setattr(os, 'listdir', _listdir)
+
+    # This is so far the only package that uses this code path, change
+    # introduced in https://github.com/spack/spack/pull/1832
+    s = spack.spec.Spec('qt')
+    s.concretize()
+    compiler.setup_custom_environment(s.package, env)
+    assert len(env) == 3
+    assert env.env_modifications[0].name == 'SPACK_CC'
+    assert env.env_modifications[1].name == 'SPACK_CXX'
+    assert env.env_modifications[2].name == 'DEVELOPER_DIR'
+
+
+@pytest.mark.parametrize('xcode_select_output', [
+    '', '/Library/Developer/CommandLineTools'
+])
+def test_xcode_not_available(
+        xcode_select_output, mock_executable, monkeypatch
+):
+    # Prepare mock executables to fake the Xcode environment
+    xcrun = mock_executable('xcrun', """
+    if [[ "$2" == "clang" ]] ; then
+      echo "/Library/Developer/CommandLineTools/usr/bin/clang"
+    fi
+    if [[ "$2" == "clang++" ]] ; then
+      echo "/Library/Developer/CommandLineTools/usr/bin/clang++"
+    fi
+    """)
+    mock_executable('xcode-select', """
+    echo "{0}"
+    """.format(xcode_select_output))
+    bin_dir = os.path.dirname(xcrun)
+    monkeypatch.setenv('PATH', bin_dir, prepend=os.pathsep)
+    # Prepare compiler
+    apple_clang_cls = spack.compilers.class_for_compiler_name('apple-clang')
+    compiler = apple_clang_cls(
+        spack.spec.CompilerSpec('apple-clang@11.0.0'), 'catalina', 'x86_64', [
+            '/usr/bin/clang', '/usr/bin/clang++', None, None
+        ]
+    )
+    env = spack.util.environment.EnvironmentModifications()
+
+    s = spack.spec.Spec('qt')
+    s.concretize()
+    with pytest.raises(OSError):
+        compiler.setup_custom_environment(s.package, env)
