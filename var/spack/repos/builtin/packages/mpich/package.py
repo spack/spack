@@ -178,9 +178,8 @@ spack package at this time.''',
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
-        
         if (os.path.exists(self.configure_abs_path) and
-            not spec.satisfies('@3.3 +hwloc'):
+            not spec.satisfies('@3.3 +hwloc')):
             return
         # Else bootstrap with autotools
         bash = which('bash')
