@@ -33,8 +33,13 @@ class Cce(Compiler):
                   'fc': 'cce/ftn'}
 
     @property
+    def is_clang_based(self):
+        version = self.version
+        return version >= ver('9.0') and 'classic' not in str(version)
+
+    @property
     def version_argument(self):
-        if self.version >= ver('9.0'):
+        if self.is_clang_based:
             return '--version'
         return '-V'
 
@@ -50,19 +55,19 @@ class Cce(Compiler):
 
     @property
     def openmp_flag(self):
-        if self.version >= ver('9.0'):
+        if self.is_clang_based:
             return '-fopenmp'
         return "-h omp"
 
     @property
     def cxx11_flag(self):
-        if self.version >= ver('9.0'):
+        if self.is_clang_based:
             return '-std=c++11'
         return "-h std=c++11"
 
     @property
     def c99_flag(self):
-        if self.version >= ver('9.0'):
+        if self.is_clang_based:
             return '-std=c99'
         elif self.version >= ver('8.4'):
             return '-h std=c99,noconform,gnu'
@@ -75,7 +80,7 @@ class Cce(Compiler):
 
     @property
     def c11_flag(self):
-        if self.version >= ver('9.0'):
+        if self.is_clang_based:
             return '-std=c11'
         elif self.version >= ver('8.5'):
             return '-h std=c11,noconform,gnu'
