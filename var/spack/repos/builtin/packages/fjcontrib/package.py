@@ -67,7 +67,8 @@ class Fjcontrib(AutotoolsPackage):
     install_targets = ['install', 'fragile-shared-install']
 
     def configure_args(self):
-        args = ['--fastjet-config=' + self.spec['fastjet'].prefix.bin + '/fastjet-config', "CXXFLAGS=-O3 -Wall -g -fPIC"]
+        args = ['--fastjet-config=' + self.spec['fastjet'].prefix.bin + '/fastjet-config', 
+                "CXXFLAGS=-O3 -Wall -g -fPIC"]
         return args
 
     def build(self, spec, prefix):
@@ -79,4 +80,3 @@ class Fjcontrib(AutotoolsPackage):
         with working_dir(self.build_directory):
             for target in self.install_targets:
                 inspect.getmodule(self).make(target)
-  
