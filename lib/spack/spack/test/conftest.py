@@ -632,6 +632,7 @@ def disable_compiler_execution(monkeypatch):
         noop
     )
 
+
 @pytest.fixture(scope='function')
 def install_mockery(tmpdir, config, mock_packages, monkeypatch):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
