@@ -56,10 +56,10 @@ class Protobuf(Package):
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
     patch('pkgconfig.patch', when='@3.0.2:3.3.2')
 
-    patch('intel-v1.patch', when='@3.2:@3.6 %intel')
+    patch('intel-v1.patch', when='@3.2:3.6 %intel')
 
     # See https://github.com/protocolbuffers/protobuf/pull/7197
-    patch('intel-v2.patch', when='@3.7:@3.11.4 %intel')
+    patch('intel-v2.patch', when='@3.7:3.11.4 %intel')
 
     patch('protoc2.5.0_aarch64.patch', sha256='7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451', when='@2.5.0 target=aarch64:')
 

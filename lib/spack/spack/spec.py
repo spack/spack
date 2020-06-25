@@ -511,8 +511,17 @@ class CompilerSpec(object):
             raise TypeError(
                 "__init__ takes 1 or 2 arguments. (%d given)" % nargs)
 
-    def _add_version(self, version):
-        self.versions.add(version)
+    def _add_versions(self, version_list):
+        # If it already has a non-trivial version list, this is an error
+        if self.versions and self.versions != vn.VersionList(':'):
+            # Note: This may be impossible to reach by the current parser
+            # Keeping it in case the implementation changes.
+            raise MultipleVersionError(
+                'A spec cannot contain multiple version signifiers.'
+                ' Use a version list instead.')
+        self.versions = vn.VersionList()
+        for version in version_list:
+            self.versions.add(version)
 
     def _autospec(self, compiler_spec_like):
         if isinstance(compiler_spec_like, CompilerSpec):
@@ -1050,9 +1059,16 @@ class Spec(object):
     #
     # Private routines here are called by the parser when building a spec.
     #
-    def _add_version(self, version):
+    def _add_versions(self, version_list):
         """Called by the parser to add an allowable version."""
-        self.versions.add(version)
+        # If it already has a non-trivial version list, this is an error
+        if self.versions and self.versions != vn.VersionList(':'):
+            raise MultipleVersionError(
+                'A spec cannot contain multiple version signifiers.'
+                ' Use a version list instead.')
+        self.versions = vn.VersionList()
+        for version in version_list:
+            self.versions.add(version)
 
     def _add_flag(self, name, value):
         """Called by the parser to add a known flag.
@@ -4157,9 +4173,7 @@ class SpecParser(spack.parse.Parser):
         while self.next:
             if self.accept(AT):
                 vlist = self.version_list()
-                spec.versions = vn.VersionList()
-                for version in vlist:
-                    spec._add_version(version)
+                spec._add_versions(vlist)
 
             elif self.accept(ON):
                 name = self.variant()
@@ -4251,8 +4265,7 @@ class SpecParser(spack.parse.Parser):
         compiler.versions = vn.VersionList()
         if self.accept(AT):
             vlist = self.version_list()
-            for version in vlist:
-                compiler._add_version(version)
+            compiler._add_versions(vlist)
         else:
             compiler.versions = vn.VersionList(':')
         return compiler
@@ -4323,6 +4336,10 @@ class SpecParseError(spack.error.SpecError):
 
 class DuplicateDependencyError(spack.error.SpecError):
     """Raised when the same dependency occurs in a spec twice."""
+
+
+class MultipleVersionError(spack.error.SpecError):
+    """Raised when version constraints occur in a spec twice."""
 
 
 class DuplicateCompilerSpecError(spack.error.SpecError):

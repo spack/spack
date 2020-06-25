@@ -41,11 +41,11 @@ class NetlibScalapack(CMakePackage):
     depends_on('cmake', when='@2.0.0:', type='build')
 
     # See: https://github.com/Reference-ScaLAPACK/scalapack/issues/9
-    patch("cmake_fortran_mangle.patch", when='@2.0.2:@2.0.99')
+    patch("cmake_fortran_mangle.patch", when='@2.0.2:2.0.99')
     # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/10
-    patch("mpi2-compatibility.patch", when='@2.0.2:@2.0.99')
+    patch("mpi2-compatibility.patch", when='@2.0.2:2.0.99')
     # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/16
-    patch("int_overflow.patch", when='@2.0.0:@2.1.0')
+    patch("int_overflow.patch", when='@2.0.0:2.1.0')
 
     @property
     def libs(self):

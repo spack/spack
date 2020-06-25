@@ -20,6 +20,7 @@ from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
 from spack.spec import DuplicateArchitectureError
 from spack.spec import DuplicateDependencyError, DuplicateCompilerSpecError
 from spack.spec import SpecFilenameError, NoSuchSpecFileError
+from spack.spec import MultipleVersionError
 from spack.variant import DuplicateVariantError
 
 
@@ -148,6 +149,9 @@ class TestSpecSyntax(object):
         self.check_parse("openmpi ^hwloc ^libunwind")
         self.check_parse("openmpi ^hwloc ^libunwind",
                          "openmpi^hwloc^libunwind")
+
+    def test_version_after_compiler(self):
+        self.check_parse('foo@2.0%bar@1.0', 'foo %bar@1.0 @2.0')
 
     def test_dependencies_with_versions(self):
         self.check_parse("openmpi ^hwloc@1.2e6")
@@ -431,6 +435,17 @@ class TestSpecSyntax(object):
             'x ^y@1.2 debug=false ~debug'
         ]
         self._check_raises(DuplicateVariantError, duplicates)
+
+    def test_multiple_versions(self):
+        multiples = [
+            'x@1.2@2.3',
+            'x@1.2:2.3@1.4',
+            'x@1.2@2.3:2.4',
+            'x@1.2@2.3,2.4',
+            'x@1.2 +foo~bar @2.3',
+            'x@1.2%y@1.2@2.3:2.4',
+        ]
+        self._check_raises(MultipleVersionError, multiples)
 
     def test_duplicate_dependency(self):
         self._check_raises(DuplicateDependencyError, ["x ^y ^y"])
