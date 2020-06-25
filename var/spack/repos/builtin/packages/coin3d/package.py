@@ -4,11 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import sys
 
 
 class Coin3d(AutotoolsPackage):
-    """Coin is an OpenGL-based, 3D graphics library that has its roots in the 
+    """Coin is an OpenGL-based, 3D graphics library that has its roots in the
        Open Inventor 2.1 API, which Coin still is compatible with."""
 
     homepage = "https://github.com/coin3d/coin"
@@ -30,7 +29,7 @@ class Coin3d(AutotoolsPackage):
     variant('shared', default=True, description='Build shared library (off: build static library)')
     variant('debug', default=False, description='Make debug build')
     variant('symbols', default=False, description='Enable debug symbols')
-    
+
     def configure_args(self):
         args = []
         args += self.enable_or_disable('framework')
