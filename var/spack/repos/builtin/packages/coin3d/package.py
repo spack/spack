@@ -31,8 +31,6 @@ class Coin3d(AutotoolsPackage):
     variant('debug', default=False, description='Make debug build')
     variant('symbols', default=False, description='Enable debug symbols')
     
-#    patch('coin3d_lcg.patch', when='@3.1.0')
-
     def configure_args(self):
         args = []
         args += self.enable_or_disable('framework')
