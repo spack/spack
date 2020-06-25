@@ -4252,23 +4252,29 @@ Does this in one of two ways:
 ``spack clean``
 ^^^^^^^^^^^^^^^
 
-Cleans up all of Spack's temporary and cached files.  This can be used to
+Cleans up Spack's temporary and cached files.  This command can be used to
 recover disk space if temporary files from interrupted or failed installs
-accumulate in the staging area.
+accumulate.
 
 When called with ``--stage`` or without arguments this removes all staged
 files.
 
-When called with ``--downloads`` this will clear all resources
-:ref:`cached <caching>` during installs.
+The ``--downloads`` option removes cached :ref:`cached <caching>` downloads.
 
-When called with ``--user-cache`` this will remove caches in the user home
-directory, including cached virtual indices.
+You can force the removal of all install failure tracking markers using the
+``--failures`` option.  Note that ``spack install`` will automatically clear
+relevant failure markings prior to performing the requested installation(s).
+
+Long-lived caches, like the virtual package index, are removed using the
+``--misc-cache`` option.
+
+The ``--python-cache`` option removes `.pyc`, `.pyo`, and `__pycache__`
+folders.
 
 To remove all of the above, the command can be called with ``--all``.
 
-When called with positional arguments, cleans up temporary files only
-for a particular package. If ``fetch``, ``stage``, or ``install``
+When called with positional arguments, this command cleans up temporary files
+only for a particular package. If ``fetch``, ``stage``, or ``install``
 are run again after this, Spack's build process will start from scratch.
 
 

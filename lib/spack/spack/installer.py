@@ -373,6 +373,13 @@ def _update_explicit_entry_in_db(pkg, rec, explicit):
             rec.explicit = True
 
 
+def clear_failures():
+    """
+    Remove all failure tracking markers for the Spack instance.
+    """
+    spack.store.db.clear_all_failures()
+
+
 def dump_packages(spec, path):
     """
     Dump all package information for a spec and its dependencies.
@@ -835,7 +842,7 @@ class PackageInstaller(object):
         """
         lock = self.failed.get(pkg_id, None)
         if lock is not None:
-            err = "{0} exception when removing failure mark for {1}: {2}"
+            err = "{0} exception when removing failure tracking for {1}: {2}"
             msg = 'Removing failure mark on {0}'
             try:
                 tty.verbose(msg.format(pkg_id))

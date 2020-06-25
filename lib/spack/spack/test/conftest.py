@@ -601,6 +601,16 @@ def install_mockery(tmpdir, config, mock_packages, monkeypatch):
     tmpdir.join('opt').remove()
     spack.store.store = real_store
 
+    # Also wipe out any cached prefix failure locks (associated with
+    # the session-scoped mock archive).
+    for pkg_id in list(spack.store.db._prefix_failures.keys()):
+        lock = spack.store.db._prefix_failures.pop(pkg_id, None)
+        if lock:
+            try:
+                lock.release_write()
+            except Exception:
+                pass
+
 
 @pytest.fixture(scope='function')
 def install_mockery_mutable_config(
