@@ -103,6 +103,9 @@ class Vtk(CMakePackage):
     depends_on('double-conversion', when='@8.2.0:')
     depends_on('sqlite', when='@8.2.0:')
 
+    # For finding Fujitsu-MPI wrapper commands
+    patch('find_fujitsu_mpi.patch', when='%fj')
+
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
         return url.format(version.up_to(2), version)
