@@ -723,6 +723,9 @@ def test_apple_clang_setup_environment(mock_executable, monkeypatch):
     """Test a code path that is taken only if the package uses
     Xcode on MacOS.
     """
+    class MockPackage(object):
+        use_xcode = False
+
     apple_clang_cls = spack.compilers.class_for_compiler_name('apple-clang')
     compiler = apple_clang_cls(
         spack.spec.CompilerSpec('apple-clang@11.0.0'), 'catalina', 'x86_64', [
@@ -732,9 +735,8 @@ def test_apple_clang_setup_environment(mock_executable, monkeypatch):
     env = spack.util.environment.EnvironmentModifications()
     # Check a package that doesn't use xcode and ensure we don't add changes
     # to the environment
-    s = spack.spec.Spec('zlib')
-    s.concretize()
-    compiler.setup_custom_environment(s.package, env)
+    pkg = MockPackage()
+    compiler.setup_custom_environment(pkg, env)
     assert not env
 
     # Prepare mock executables to fake the Xcode environment
@@ -768,11 +770,10 @@ echo "/Library/Developer"
     monkeypatch.setattr(os, 'symlink', noop)
     monkeypatch.setattr(os, 'listdir', _listdir)
 
-    # This is so far the only package that uses this code path, change
+    # Qt is so far the only package that uses this code path, change
     # introduced in https://github.com/spack/spack/pull/1832
-    s = spack.spec.Spec('qt')
-    s.concretize()
-    compiler.setup_custom_environment(s.package, env)
+    pkg.use_xcode = True
+    compiler.setup_custom_environment(pkg, env)
     assert len(env) == 3
     assert env.env_modifications[0].name == 'SPACK_CC'
     assert env.env_modifications[1].name == 'SPACK_CXX'
@@ -808,7 +809,9 @@ def test_xcode_not_available(
     )
     env = spack.util.environment.EnvironmentModifications()
 
-    s = spack.spec.Spec('qt')
-    s.concretize()
+    class MockPackage(object):
+        use_xcode = True
+
+    pkg = MockPackage()
     with pytest.raises(OSError):
-        compiler.setup_custom_environment(s.package, env)
+        compiler.setup_custom_environment(pkg, env)
