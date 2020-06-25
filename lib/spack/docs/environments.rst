@@ -167,15 +167,6 @@ Any directory can be treated as an environment if it contains a file
 
    $ spack env activate -d /path/to/directory
 
-Spack commands that are environment sensitive will also act on the
-environment any time the current working directory contains a
-``spack.yaml`` file. Changing working directory to a directory
-containing a ``spack.yaml`` file is equivalent to the command:
-
-.. code-block:: console
-
-   $ spack env activate -d /path/to/dir --without-view
-
 Anonymous specs can be created in place using the command:
 
 .. code-block:: console
