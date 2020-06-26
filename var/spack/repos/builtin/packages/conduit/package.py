@@ -54,10 +54,10 @@ class Conduit(Package):
     ###########################################################################
 
     variant("shared", default=True, description="Build Conduit as shared libs")
-    variant('test', default=True, description='Enable Conduit unit tests')
+    variant("test", default=True, description='Enable Conduit unit tests')
 
     # variants for python support
-    variant("python", default=True, description="Build Conduit Python support")
+    variant("python", default=False, description="Build Conduit Python support")
     variant("fortran", default=True, description="Build Conduit Fortran support")
 
     # variants for comm and i/o
