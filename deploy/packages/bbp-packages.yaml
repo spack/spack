@@ -122,7 +122,7 @@ packages:
       - py-efel@3.0.80
       - py-bglibpy@4.2.23 ^neuron%intel@19.0.4
       - py-bluepy@0.14.8
-      - py-bluepymm@0.6.38 ^neuron%intel@19.0.4
+      - py-bluepymm@0.7.15 ^neuron%intel@19.0.4
       - py-bluepyopt@1.9.27 ^neuron%intel@19.0.4
 
   #### cellular ####

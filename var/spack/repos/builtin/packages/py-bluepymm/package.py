@@ -10,9 +10,9 @@ class PyBluepymm(PythonPackage):
     """Blue Brain Model Management Python Library"""
 
     homepage = "https://github.com/BlueBrain/BluePyMM"
-    url = "https://pypi.io/packages/source/b/bluepymm/bluepymm-0.6.35.tar.gz"
+    url = "https://pypi.io/packages/source/b/bluepymm/bluepymm-0.7.15.tar.gz"
 
-    version('0.6.38', sha256='3bba40c3553429b29a1567e5f443a0fae8b477872ea9e400b68d9f19404acc34')
+    version('0.7.15', sha256='2da2fceed4e3329516f66e522622ab74486ee450b88ecdc107ad0d14d9ff2b21')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-bluepyopt', type='run')
@@ -27,6 +27,6 @@ class PyBluepymm(PythonPackage):
     depends_on('py-sh', type='run')
     depends_on('neuron', type='run')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.unset('PMI_RANK')
-        run_env.set('NEURON_INIT_MPI', "0")
+    def setup_run_environment(self, env):
+        env.unset('PMI_RANK')
+        env.set('NEURON_INIT_MPI', "0")
