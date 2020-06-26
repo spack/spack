@@ -60,3 +60,24 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         flags: unittests,linux
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install Python packages
+      run: |
+        pip install --upgrade pip six setuptools flake8
+    - name: Setup git configuration
+      run: |
+        # Need this for the git tests to succeed.
+        git --version
+        git config --global user.email "spack@example.com"
+        git config --global user.name "Test User"
+        git fetch -u origin develop:develop
+    - name: Run unit tests
+      run: |
+          share/spack/qa/run-flake8-tests
