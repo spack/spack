@@ -92,12 +92,18 @@ class CrayFrontend(LinuxDistro):
             msg = "[CRAY FE] Detected FE compiler [name={0}, versions={1}]"
             tty.debug(msg.format(compiler_module, versions))
             for v in versions:
-                current_module = compiler_module + '/' + v
-                with unload_programming_environment():
-                    load_module(prg_env)
-                    load_module(current_module)
-                    search_paths += fs.search_paths_for_executables(
-                        *get_path('PATH')
-                    )
+                try:
+                    current_module = compiler_module + '/' + v
+                    with unload_programming_environment():
+                        load_module(prg_env)
+                        load_module(current_module)
+                        search_paths += fs.search_paths_for_executables(
+                            *get_path('PATH')
+                        )
+                except Exception as e:
+                    msg = ("[CRAY FE] An unexpected error occurred while "
+                           "detecting FE compiler [compiler={0}, "
+                           " version={1}, error={2}]")
+                    tty.warn(msg.format(compiler_cls.name, v, str(e)))
 
         return llnl.util.lang.dedupe(search_paths)
