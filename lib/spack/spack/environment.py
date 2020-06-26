@@ -80,9 +80,6 @@ valid_environment_name_re = r'^\w[\w-]*$'
 #: version of the lockfile format. Must increase monotonically.
 lockfile_format_version = 2
 
-#: legal first keys in the spack.yaml manifest file
-env_schema_keys = ('spack', 'env')
-
 # Magic names
 # The name of the standalone spec list in the manifest yaml
 user_speclist_name = 'specs'
@@ -366,7 +363,7 @@ def create(name, init_file=None, with_view=None):
 
 def config_dict(yaml_data):
     """Get the configuration scope section out of an spack.yaml"""
-    key = spack.config.first_existing(yaml_data, env_schema_keys)
+    key = spack.config.first_existing(yaml_data, spack.schema.env.keys)
     return yaml_data[key]
 
 
@@ -392,42 +389,19 @@ def all_environments():
         yield read(name)
 
 
-def validate(data, filename=None):
-    # validating changes data by adding defaults. Return validated data
-    validate_data = copy.deepcopy(data)
-    # HACK to fully copy ruamel CommentedMap that doesn't provide copy method
-    import ruamel.yaml as yaml
-    setattr(
-        validate_data,
-        yaml.comments.Comment.attrib,
-        getattr(data, yaml.comments.Comment.attrib, yaml.comments.Comment())
-    )
-
-    import jsonschema
-    try:
-        spack.schema.Validator(spack.schema.env.schema).validate(validate_data)
-    except jsonschema.ValidationError as e:
-        if hasattr(e.instance, 'lc'):
-            line_number = e.instance.lc.line + 1
-        else:
-            line_number = None
-        raise spack.config.ConfigFormatError(
-            e, data, filename, line_number)
-    return validate_data
-
-
 def _read_yaml(str_or_file):
     """Read YAML from a file for round-trip parsing."""
     data = syaml.load_config(str_or_file)
     filename = getattr(str_or_file, 'name', None)
-    default_data = validate(data, filename)
+    default_data = spack.config.validate(
+        data, spack.schema.env.schema, filename)
     return (data, default_data)
 
 
 def _write_yaml(data, str_or_file):
     """Write YAML to a file preserving comments and dict order."""
     filename = getattr(str_or_file, 'name', None)
-    validate(data, filename)
+    spack.config.validate(data, spack.schema.env.schema, filename)
     syaml.dump_config(data, str_or_file, default_flow_style=False)
 
 
@@ -435,12 +409,14 @@ def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
     arch = architecture.Arch(
         architecture.platform(), 'default_os', 'default_target')
+    arch_spec = spack.spec.Spec('arch=%s' % arch)
     valid_variables = {
         'target': str(arch.target),
         'os': str(arch.os),
         'platform': str(arch.platform),
-        'arch': str(arch),
-        'architecture': str(arch),
+        'arch': arch_spec,
+        'architecture': arch_spec,
+        'arch_str': str(arch),
         're': re,
         'env': os.environ,
         'hostname': socket.gethostname()
@@ -815,11 +791,20 @@ class Environment(object):
         return spack.config.SingleFileScope(config_name,
                                             self.manifest_path,
                                             spack.schema.env.schema,
-                                            [env_schema_keys])
+                                            [spack.schema.env.keys])
 
     def config_scopes(self):
         """A list of all configuration scopes for this environment."""
         return self.included_config_scopes() + [self.env_file_config_scope()]
+
+    def set_config(self, path, value):
+        """Set configuration for this environment"""
+        yaml = config_dict(self.yaml)
+        keys = spack.config.process_config_path(path)
+        for key in keys[:-1]:
+            yaml = yaml[key]
+        yaml[keys[-1]] = value
+        self.write()
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
@@ -907,13 +892,23 @@ class Environment(object):
         old_specs = set(self.user_specs)
         for spec in matches:
             if spec in list_to_change:
-                list_to_change.remove(spec)
-
-        self.update_stale_references(list_name)
+                try:
+                    list_to_change.remove(spec)
+                    self.update_stale_references(list_name)
+                    new_specs = set(self.user_specs)
+                except spack.spec_list.SpecListError:
+                    # define new specs list
+                    new_specs = set(self.user_specs)
+                    msg = "Spec '%s' is part of a spec matrix and " % spec
+                    msg += "cannot be removed from list '%s'." % list_to_change
+                    if force:
+                        msg += " It will be removed from the concrete specs."
+                        # Mock new specs so we can remove this spec from
+                        # concrete spec lists
+                        new_specs.remove(spec)
+                    tty.warn(msg)
 
         # If force, update stale concretized specs
-        # Only check specs removed by this operation
-        new_specs = set(self.user_specs)
         for spec in old_specs - new_specs:
             if force and spec in self.concretized_user_specs:
                 i = self.concretized_user_specs.index(spec)
@@ -1501,8 +1496,12 @@ class Environment(object):
                         del yaml_dict[key]
 
         # if all that worked, write out the manifest file at the top level
-        # Only actually write if it has changed or was never written
-        changed = self.yaml != self.raw_yaml
+        # (we used to check whether the yaml had changed and not write it out
+        # if it hadn't. We can't do that anymore because it could be the only
+        # thing that changed is the "override" attribute on a config dict,
+        # which would not show up in even a string comparison between the two
+        # keys).
+        changed = not yaml_equivalent(self.yaml, self.raw_yaml)
         written = os.path.exists(self.manifest_path)
         if changed or not written:
             self.raw_yaml = copy.deepcopy(self.yaml)
@@ -1527,6 +1526,39 @@ class Environment(object):
         deactivate()
         if self._previous_active:
             activate(self._previous_active)
+
+
+def yaml_equivalent(first, second):
+    """Returns whether two spack yaml items are equivalent, including overrides
+    """
+    if isinstance(first, dict):
+        return isinstance(second, dict) and _equiv_dict(first, second)
+    elif isinstance(first, list):
+        return isinstance(second, list) and _equiv_list(first, second)
+    else:  # it's a string
+        return isinstance(second, six.string_types) and first == second
+
+
+def _equiv_list(first, second):
+    """Returns whether two spack yaml lists are equivalent, including overrides
+    """
+    if len(first) != len(second):
+        return False
+    return all(yaml_equivalent(f, s) for f, s in zip(first, second))
+
+
+def _equiv_dict(first, second):
+    """Returns whether two spack yaml dicts are equivalent, including overrides
+    """
+    if len(first) != len(second):
+        return False
+    same_values = all(yaml_equivalent(fv, sv)
+                      for fv, sv in zip(first.values(), second.values()))
+    same_keys_with_same_overrides = all(
+        fk == sk and getattr(fk, 'override', False) == getattr(sk, 'override',
+                                                               False)
+        for fk, sk in zip(first.keys(), second.keys()))
+    return same_values and same_keys_with_same_overrides
 
 
 def display_specs(concretized_specs):

@@ -120,9 +120,10 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     def flag_handler(self, name, flags):
         # To ignore the errors of narrowing conversions for
         # the Fujitsu compiler
-        if name == 'cxxflags'\
-           and (self.compiler.name == 'fj' or self.compiler.name == 'clang')\
-           and self.version <= ver('2.31.1'):
+        if name == 'cxxflags' and (
+            self.spec.satisfies('@:2.31.1') and
+            self.compiler.name in ('fj', 'clang', 'apple-clang')
+        ):
             flags.append('-Wno-narrowing')
         elif name == 'cflags':
             if self.spec.satisfies('@:2.34 %gcc@10:'):

@@ -338,10 +338,14 @@ def _createtarball(env, spec_yaml, packages, add_spec, add_deps,
     elif packages:
         packages = packages
 
+    elif env:
+        packages = env.concretized_user_specs
+
     else:
         tty.die("build cache file creation requires at least one" +
-                " installed package argument or else path to a" +
-                " yaml file containing a spec to install")
+                " installed package spec, an activate environment," +
+                " or else a path to a yaml file containing a spec" +
+                " to install")
     pkgs = set(packages)
     specs = set()
 

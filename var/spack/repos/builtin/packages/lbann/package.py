@@ -164,16 +164,16 @@ class Lbann(CMakePackage):
             # protobuf is included by py-protobuf+cpp
             '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix)])
 
-        if self.spec.satisfies('@:0.90') or self.spec.satisfies('@0.95:'):
+        if spec.satisfies('@:0.90') or spec.satisfies('@0.95:'):
             args.extend([
                 '-DHydrogen_DIR={0}/CMake/hydrogen'.format(
                     spec['hydrogen'].prefix)])
-        elif self.spec.satisfies('@0.94'):
+        elif spec.satisfies('@0.94'):
             args.extend([
                 '-DElemental_DIR={0}/CMake/elemental'.format(
                     spec['elemental'].prefix)])
 
-        if self.spec.satisfies('@0.94:0.98.2'):
+        if spec.satisfies('@0.94:0.98.2'):
             args.extend(['-DLBANN_WITH_NCCL:BOOL=%s' % ('+gpu +nccl' in spec)])
 
         if '+vtune' in spec:
@@ -188,8 +188,8 @@ class Lbann(CMakePackage):
                 '-DConduit_DIR={0}'.format(spec['conduit'].prefix)])
 
         # Add support for OpenMP
-        if (self.spec.satisfies('%clang')):
-            if (sys.platform == 'darwin'):
+        if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
+            if sys.platform == 'darwin':
                 clang = self.compiler.cc
                 clang_bin = os.path.dirname(clang)
                 clang_root = os.path.dirname(clang_bin)
@@ -210,7 +210,7 @@ class Lbann(CMakePackage):
             args.extend([
                 '-DcuDNN_DIR={0}'.format(
                     spec['cudnn'].prefix)])
-            if self.spec.satisfies('@0.94:0.98.2'):
+            if spec.satisfies('@0.94:0.98.2'):
                 args.extend(['-DCUB_DIR={0}'.format(
                     spec['cub'].prefix)])
                 if '+nccl' in spec:

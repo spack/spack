@@ -31,6 +31,7 @@ class Mpich(AutotoolsPackage):
     version('3.1',   sha256='fcf96dbddb504a64d33833dc455be3dda1e71c7b3df411dfcf9df066d7c32c39')
     version('3.0.4', sha256='cf638c85660300af48b6f776e5ecd35b5378d5905ec5d34c3da7a27da0acf0b3')
 
+    variant('hwloc', default=True,  description='Use external hwloc package')
     variant('hydra', default=True,  description='Build the hydra process manager')
     variant('romio', default=True,  description='Enable ROMIO MPI I/O implementation')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
@@ -75,10 +76,18 @@ spack package at this time.''',
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
     )
 
+    # Fix using an external hwloc
+    # See https://github.com/pmodels/mpich/issues/4038
+    # and https://github.com/pmodels/mpich/pull/3540
+    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
+          sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
+          when='@3.3 +hwloc')
+
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
     patch('mpich32_clang.patch', when='@3.2:3.2.0%clang')
+    patch('mpich32_clang.patch', when='@3.2:3.2.0%apple-clang')
 
     # Fix SLURM node list parsing
     # See https://github.com/pmodels/mpich/issues/3572
@@ -109,6 +118,8 @@ spack package at this time.''',
     depends_on('findutils', type='build')
     depends_on('pkgconfig', type='build')
 
+    depends_on('hwloc@2.0.0:', when='@3.3: +hwloc')
+
     depends_on('libfabric', when='netmod=ofi')
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
@@ -135,6 +146,12 @@ spack package at this time.''',
     depends_on('libtool@2.4.4:', when='@develop', type=("build"))
     depends_on("m4", when="@develop", type=("build")),
     depends_on("autoconf@2.67:", when='@develop', type=("build"))
+
+    # building with "+hwloc' also requires regenerating autotools files
+    depends_on('automake@1.15:', when='@3.3 +hwloc', type="build")
+    depends_on('libtool@2.4.4:', when='@3.3 +hwloc', type="build")
+    depends_on("m4", when="@3.3 +hwloc", type="build"),
+    depends_on("autoconf@2.67:", when='@3.3 +hwloc', type="build")
 
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
@@ -207,7 +224,8 @@ spack package at this time.''',
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path):
+        if (os.path.exists(self.configure_abs_path) and
+            not spec.satisfies('@3.3 +hwloc')):
             return
         # Else bootstrap with autotools
         bash = which('bash')
@@ -228,6 +246,8 @@ spack package at this time.''',
         config_args = [
             '--disable-silent-rules',
             '--enable-shared',
+            '--with-hwloc-prefix={0}'.format(
+                spec['hwloc'].prefix if '^hwloc' in spec else 'embedded'),
             '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without'),

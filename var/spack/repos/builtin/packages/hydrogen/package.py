@@ -131,8 +131,8 @@ class Hydrogen(CMakePackage):
             '-DHydrogen_ENABLE_HALF=%s' % ('+half' in spec),
         ]
 
-        # Add support for OS X to find OpenMP
-        if (self.spec.satisfies('%clang platform=darwin')):
+        # Add support for OS X to find OpenMP (LLVM installed via brew)
+        if self.spec.satisfies('%clang platform=darwin'):
             clang = self.compiler.cc
             clang_bin = os.path.dirname(clang)
             clang_root = os.path.dirname(clang_bin)

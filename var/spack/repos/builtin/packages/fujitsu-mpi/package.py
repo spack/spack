@@ -13,6 +13,7 @@ class FujitsuMpi(Package):
 
     conflicts('%arm')
     conflicts('%cce')
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%gcc')
     conflicts('%intel')

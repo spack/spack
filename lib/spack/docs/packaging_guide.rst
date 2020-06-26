@@ -1675,15 +1675,15 @@ can see the patches that would be applied to ``m4``::
 
   Concretized
   --------------------------------
-  m4@1.4.18%clang@9.0.0-apple patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
-      ^libsigsegv@2.11%clang@9.0.0-apple arch=darwin-highsierra-x86_64
+  m4@1.4.18%apple-clang@9.0.0 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
+      ^libsigsegv@2.11%apple-clang@9.0.0 arch=darwin-highsierra-x86_64
 
 You can also see patches that have been applied to installed packages
 with ``spack find -v``::
 
   $ spack find -v m4
   ==> 1 installed package
-  -- darwin-highsierra-x86_64 / clang@9.0.0-apple -----------------
+  -- darwin-highsierra-x86_64 / apple-clang@9.0.0 -----------------
   m4@1.4.18 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv
 
 .. _cmd-spack-resource:
@@ -1713,7 +1713,7 @@ wonder where the extra boost patches are coming from::
 
   $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep '\^boost'
       ^boost@1.68.0
-          ^boost@1.68.0%clang@9.0.0-apple+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
+          ^boost@1.68.0%apple-clang@9.0.0+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
   $ spack resource show b37164268
   b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f
       path:       /home/spackuser/src/spack/var/spack/repos/builtin/packages/dealii/boost_1.68.0.patch
@@ -4252,23 +4252,29 @@ Does this in one of two ways:
 ``spack clean``
 ^^^^^^^^^^^^^^^
 
-Cleans up all of Spack's temporary and cached files.  This can be used to
+Cleans up Spack's temporary and cached files.  This command can be used to
 recover disk space if temporary files from interrupted or failed installs
-accumulate in the staging area.
+accumulate.
 
 When called with ``--stage`` or without arguments this removes all staged
 files.
 
-When called with ``--downloads`` this will clear all resources
-:ref:`cached <caching>` during installs.
+The ``--downloads`` option removes cached :ref:`cached <caching>` downloads.
 
-When called with ``--user-cache`` this will remove caches in the user home
-directory, including cached virtual indices.
+You can force the removal of all install failure tracking markers using the
+``--failures`` option.  Note that ``spack install`` will automatically clear
+relevant failure markings prior to performing the requested installation(s).
+
+Long-lived caches, like the virtual package index, are removed using the
+``--misc-cache`` option.
+
+The ``--python-cache`` option removes `.pyc`, `.pyo`, and `__pycache__`
+folders.
 
 To remove all of the above, the command can be called with ``--all``.
 
-When called with positional arguments, cleans up temporary files only
-for a particular package. If ``fetch``, ``stage``, or ``install``
+When called with positional arguments, this command cleans up temporary files
+only for a particular package. If ``fetch``, ``stage``, or ``install``
 are run again after this, Spack's build process will start from scratch.
 
 

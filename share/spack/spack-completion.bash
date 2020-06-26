@@ -474,7 +474,7 @@ _spack_ci() {
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref --optimize"
+    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref --optimize --dependencies"
 }
 
 _spack_ci_rebuild() {
@@ -484,7 +484,7 @@ _spack_ci_rebuild() {
 _spack_clean() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --stage -d --downloads -m --misc-cache -p --python-cache -a --all"
+        SPACK_COMPREPLY="-h --help -s --stage -d --downloads -f --failures -m --misc-cache -p --python-cache -a --all"
     else
         _all_packages
     fi
@@ -579,7 +579,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit list"
+        SPACK_COMPREPLY="get blame edit list add remove rm"
     fi
 }
 
@@ -612,6 +612,33 @@ _spack_config_edit() {
 
 _spack_config_list() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_config_add() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -f --file"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_config_remove() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_config_rm() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_configure() {

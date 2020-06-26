@@ -345,18 +345,18 @@ def compute_spec_deps(spec_list):
            ],
            "specs": [
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "readline@7.0%clang@9.1.0-apple arch=darwin-highs...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-highs...",
                  "label": "readline/ip6aiun"
                },
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "ncurses@6.1%clang@9.1.0-apple arch=darwin-highsi...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "ncurses@6.1%apple-clang@9.1.0 arch=darwin-highsi...",
                  "label": "ncurses/y43rifz"
                },
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "pkgconf@1.5.4%clang@9.1.0-apple arch=darwin-high...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "pkgconf@1.5.4%apple-clang@9.1.0 arch=darwin-high...",
                  "label": "pkgconf/eg355zb"
                }
            ]
@@ -450,7 +450,7 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
 
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             custom_spack_repo=None, custom_spack_ref=None,
-                            run_optimizer=False):
+                            run_optimizer=False, use_dependencies=False):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
     with spack.concretize.disable_compiler_existence_check():
@@ -793,6 +793,11 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     if run_optimizer:
         import spack.ci_optimization as ci_opt
         sorted_output = ci_opt.optimizer(sorted_output)
+
+    # TODO(opadron): remove this or refactor
+    if use_dependencies:
+        import spack.ci_needs_workaround as cinw
+        sorted_output = cinw.needs_to_dependencies(sorted_output)
 
     with open(output_file, 'w') as outf:
         outf.write(syaml.dump_config(sorted_output, default_flow_style=True))

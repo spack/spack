@@ -7,6 +7,7 @@ import pytest
 
 import sys
 import os
+import shutil
 
 from copy import copy
 from six import iteritems
@@ -16,6 +17,8 @@ import llnl.util.filesystem as fs
 import spack.spec
 import spack.compiler
 import spack.compilers as compilers
+import spack.spec
+import spack.util.environment
 
 from spack.compiler import Compiler
 from spack.util.executable import ProcessError
@@ -130,7 +133,7 @@ def test_compiler_flags_from_config_are_grouped():
 
 # Utility function to test most flags.
 default_compiler_entry = {
-    'spec': 'clang@2.0.0-apple',
+    'spec': 'apple-clang@2.0.0',
     'operating_system': 'foo-os',
     'paths': {
         'cc': 'cc-path',
@@ -355,12 +358,20 @@ def test_arm_flags():
 
 
 def test_cce_flags():
+    supported_flag_test("version_argument", "--version", "cce@9.0.1")
+    supported_flag_test("version_argument", "-V", "cce@9.0.1-classic")
+    supported_flag_test("openmp_flag", "-fopenmp", "cce@9.0.1")
+    supported_flag_test("openmp_flag", "-h omp", "cce@9.0.1-classic")
     supported_flag_test("openmp_flag", "-h omp", "cce@1.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "cce@9.0.1")
+    supported_flag_test("cxx11_flag", "-h std=c++11", "cce@9.0.1-classic")
     supported_flag_test("cxx11_flag", "-h std=c++11", "cce@1.0")
     unsupported_flag_test("c99_flag", "cce@8.0")
+    supported_flag_test("c99_flag", "-std=c99", "cce@9.0.1")
     supported_flag_test("c99_flag", "-h c99,noconform,gnu", "cce@8.1")
     supported_flag_test("c99_flag", "-h std=c99,noconform,gnu", "cce@8.4")
     unsupported_flag_test("c11_flag", "cce@8.4")
+    supported_flag_test("c11_flag", "-std=c11", "cce@9.0.1")
     supported_flag_test("c11_flag", "-h std=c11,noconform,gnu", "cce@8.5")
     supported_flag_test("cc_pic_flag",  "-h PIC", "cce@1.0")
     supported_flag_test("cxx_pic_flag", "-h PIC", "cce@1.0")
@@ -370,26 +381,27 @@ def test_cce_flags():
                         'cce@1.0')
 
 
-def test_clang_flags():
-    # Apple Clang.
+def test_apple_clang_flags():
     supported_flag_test(
-        "openmp_flag", "-Xpreprocessor -fopenmp", "clang@2.0.0-apple")
-    unsupported_flag_test("cxx11_flag", "clang@2.0.0-apple")
-    supported_flag_test("cxx11_flag", "-std=c++11", "clang@4.0.0-apple")
-    unsupported_flag_test("cxx14_flag", "clang@5.0.0-apple")
-    supported_flag_test("cxx14_flag", "-std=c++1y", "clang@5.1.0-apple")
-    supported_flag_test("cxx14_flag", "-std=c++14", "clang@6.1.0-apple")
-    unsupported_flag_test("cxx17_flag", "clang@6.0.0-apple")
-    supported_flag_test("cxx17_flag", "-std=c++1z", "clang@6.1.0-apple")
-    supported_flag_test("c99_flag", "-std=c99", "clang@6.1.0-apple")
-    unsupported_flag_test("c11_flag", "clang@6.0.0-apple")
-    supported_flag_test("c11_flag", "-std=c11", "clang@6.1.0-apple")
-    supported_flag_test("cc_pic_flag",  "-fPIC", "clang@2.0.0-apple")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "clang@2.0.0-apple")
-    supported_flag_test("f77_pic_flag", "-fPIC", "clang@2.0.0-apple")
-    supported_flag_test("fc_pic_flag",  "-fPIC", "clang@2.0.0-apple")
+        "openmp_flag", "-Xpreprocessor -fopenmp", "apple-clang@2.0.0"
+    )
+    unsupported_flag_test("cxx11_flag", "apple-clang@2.0.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "apple-clang@4.0.0")
+    unsupported_flag_test("cxx14_flag", "apple-clang@5.0.0")
+    supported_flag_test("cxx14_flag", "-std=c++1y", "apple-clang@5.1.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "apple-clang@6.1.0")
+    unsupported_flag_test("cxx17_flag", "apple-clang@6.0.0")
+    supported_flag_test("cxx17_flag", "-std=c++1z", "apple-clang@6.1.0")
+    supported_flag_test("c99_flag", "-std=c99", "apple-clang@6.1.0")
+    unsupported_flag_test("c11_flag", "apple-clang@6.0.0")
+    supported_flag_test("c11_flag", "-std=c11", "apple-clang@6.1.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "apple-clang@2.0.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "apple-clang@2.0.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "apple-clang@2.0.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "apple-clang@2.0.0")
 
-    # non-Apple Clang.
+
+def test_clang_flags():
     supported_flag_test("version_argument", "--version", "clang@foo.bar")
     supported_flag_test("openmp_flag", "-fopenmp", "clang@3.3")
     unsupported_flag_test("cxx11_flag", "clang@3.2")
@@ -713,3 +725,101 @@ fi
     except ProcessError:
         # Confirm environment does not change after failed call
         assert 'SPACK_TEST_CMP_ON' not in os.environ
+
+
+def test_apple_clang_setup_environment(mock_executable, monkeypatch):
+    """Test a code path that is taken only if the package uses
+    Xcode on MacOS.
+    """
+    class MockPackage(object):
+        use_xcode = False
+
+    apple_clang_cls = spack.compilers.class_for_compiler_name('apple-clang')
+    compiler = apple_clang_cls(
+        spack.spec.CompilerSpec('apple-clang@11.0.0'), 'catalina', 'x86_64', [
+            '/usr/bin/clang', '/usr/bin/clang++', None, None
+        ]
+    )
+    env = spack.util.environment.EnvironmentModifications()
+    # Check a package that doesn't use xcode and ensure we don't add changes
+    # to the environment
+    pkg = MockPackage()
+    compiler.setup_custom_environment(pkg, env)
+    assert not env
+
+    # Prepare mock executables to fake the Xcode environment
+    xcrun = mock_executable('xcrun', """
+if [[ "$2" == "clang" ]] ; then
+  echo "/Library/Developer/CommandLineTools/usr/bin/clang"
+fi
+if [[ "$2" == "clang++" ]] ; then
+  echo "/Library/Developer/CommandLineTools/usr/bin/clang++"
+fi
+""")
+    mock_executable('xcode-select', """
+echo "/Library/Developer"
+""")
+    bin_dir = os.path.dirname(xcrun)
+    monkeypatch.setenv('PATH', bin_dir, prepend=os.pathsep)
+
+    def noop(*args, **kwargs):
+        pass
+
+    real_listdir = os.listdir
+
+    def _listdir(path):
+        if not os.path.exists(path):
+            return []
+        return real_listdir(path)
+
+    # Set a few operations to noop
+    monkeypatch.setattr(shutil, 'copytree', noop)
+    monkeypatch.setattr(os, 'unlink', noop)
+    monkeypatch.setattr(os, 'symlink', noop)
+    monkeypatch.setattr(os, 'listdir', _listdir)
+
+    # Qt is so far the only package that uses this code path, change
+    # introduced in https://github.com/spack/spack/pull/1832
+    pkg.use_xcode = True
+    compiler.setup_custom_environment(pkg, env)
+    assert len(env) == 3
+    assert env.env_modifications[0].name == 'SPACK_CC'
+    assert env.env_modifications[1].name == 'SPACK_CXX'
+    assert env.env_modifications[2].name == 'DEVELOPER_DIR'
+
+
+@pytest.mark.parametrize('xcode_select_output', [
+    '', '/Library/Developer/CommandLineTools'
+])
+def test_xcode_not_available(
+        xcode_select_output, mock_executable, monkeypatch
+):
+    # Prepare mock executables to fake the Xcode environment
+    xcrun = mock_executable('xcrun', """
+    if [[ "$2" == "clang" ]] ; then
+      echo "/Library/Developer/CommandLineTools/usr/bin/clang"
+    fi
+    if [[ "$2" == "clang++" ]] ; then
+      echo "/Library/Developer/CommandLineTools/usr/bin/clang++"
+    fi
+    """)
+    mock_executable('xcode-select', """
+    echo "{0}"
+    """.format(xcode_select_output))
+    bin_dir = os.path.dirname(xcrun)
+    monkeypatch.setenv('PATH', bin_dir, prepend=os.pathsep)
+    # Prepare compiler
+    apple_clang_cls = spack.compilers.class_for_compiler_name('apple-clang')
+    compiler = apple_clang_cls(
+        spack.spec.CompilerSpec('apple-clang@11.0.0'), 'catalina', 'x86_64', [
+            '/usr/bin/clang', '/usr/bin/clang++', None, None
+        ]
+    )
+    env = spack.util.environment.EnvironmentModifications()
+
+    class MockPackage(object):
+        use_xcode = True
+
+    pkg = MockPackage()
+    with pytest.raises(OSError):
+        compiler.setup_custom_environment(pkg, env)

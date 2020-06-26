@@ -56,6 +56,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     # in gcc, but not in clang. C code compiled with gcc is
     # binary-compatible with clang, so it should be possible to build
     # elfutils with gcc, and then link it to clang-built libraries.
+    conflicts('%apple-clang')
     conflicts('%clang')
 
     # Elfutils uses -Wall and we don't want to fail the build over a
