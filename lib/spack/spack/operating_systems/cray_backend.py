@@ -142,7 +142,9 @@ class CrayBackend(LinuxDistro):
         compiler_name = detect_version_args.id.compiler_name
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         output = modulecmd('avail', compiler_cls.PrgEnv_compiler)
-        version_regex = r'(%s)/([\d\.]+[\d])' % compiler_cls.PrgEnv_compiler
+        version_regex = r'({0})/([\d\.]+[\d]-?[\w]*)'.format(
+            compiler_cls.PrgEnv_compiler
+        )
         matches = re.findall(version_regex, output)
         version = tuple(version for _, version in matches)
         compiler_id = detect_version_args.id
