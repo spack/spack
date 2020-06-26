@@ -13,7 +13,7 @@ import llnl.util.tty as tty
 
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.util.environment import get_path
-from spack.util.module_cmd import module, load_module
+from spack.util.module_cmd import module
 
 
 @contextlib.contextmanager
