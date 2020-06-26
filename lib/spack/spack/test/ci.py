@@ -188,8 +188,6 @@ def test_ci_workarounds():
         'SPACK_IS_PR_PIPELINE': 'False',
     }
 
-    common_script = ['spack ci rebuild']
-
     common_before_script = [
         'git clone "https://github.com/spack/spack"',
         ' && '.join((
@@ -219,14 +217,14 @@ def test_ci_workarounds():
             },
             'retry': {'max': 2, 'when': ['always']},
             'after_script': ['rm -rf "./spack"'],
-            'image': {'name': 'spack/centos7', 'entrypoint': ['']},
+            'script': ['spack ci rebuild'],
+            'image': {'name': 'spack/centos7', 'entrypoint': ['']}
         }
 
         if optimize:
-            result['extends'] = ['.c0', '.c1', '.c2']
+            result['extends'] = ['.c0', '.c1']
         else:
             variables['SPACK_ROOT_SPEC'] = fake_root_spec
-            result['script'] = common_script
             result['before_script'] = common_before_script
 
         result['variables'] = variables
@@ -254,7 +252,7 @@ def test_ci_workarounds():
         }
 
         if optimize:
-            result['extends'] = '.c1'
+            result['extends'] = '.c0'
         else:
             result['before_script'] = common_before_script
 
@@ -262,10 +260,15 @@ def test_ci_workarounds():
 
     def make_factored_jobs(optimize):
         return {
-            '.c0': {'script': common_script},
-            '.c1': {'before_script': common_before_script},
-            '.c2': {'variables': {'SPACK_ROOT_SPEC': fake_root_spec}}
+            '.c0': {'before_script': common_before_script},
+            '.c1': {'variables': {'SPACK_ROOT_SPEC': fake_root_spec}}
         } if optimize else {}
+
+    def make_stage_list(num_build_stages):
+        return {
+            'stages': (
+                ['-'.join(('stage', str(i))) for i in range(num_build_stages)]
+                + ['stage-rebuild-index'])}
 
     def make_yaml_obj(use_artifact_buildcache, optimize, use_dependencies):
         result = {}
@@ -287,21 +290,9 @@ def test_ci_workarounds():
 
         result.update(make_factored_jobs(optimize))
 
+        result.update(make_stage_list(3))
+
         return result
-
-    def sort_yaml_obj(obj):
-        if isinstance(obj, collections_abc.Mapping):
-            result = syaml.syaml_dict()
-            for k in sorted(obj.keys(), key=str):
-                result[k] = sort_yaml_obj(obj[k])
-            return result
-
-        if (isinstance(obj, collections_abc.Sequence) and
-                not isinstance(obj, str)):
-            return syaml.syaml_list(sorted(
-                (sort_yaml_obj(x) for x in obj), key=str))
-
-        return obj
 
     # test every combination of:
     #     use artifact buildcache: true or false
@@ -331,8 +322,8 @@ def test_ci_workarounds():
                 actual = cinw.needs_to_dependencies(actual)
 
             predicted = syaml.dump_config(
-                sort_yaml_obj(predicted), default_flow_style=True)
+                ci_opt.sort_yaml_obj(predicted), default_flow_style=True)
             actual = syaml.dump_config(
-                sort_yaml_obj(actual), default_flow_style=True)
+                ci_opt.sort_yaml_obj(actual), default_flow_style=True)
 
             assert(predicted == actual)
