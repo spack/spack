@@ -53,6 +53,7 @@ class RocmHip(CMakePackage):
                     'bin/hipcc')
 
     def cmake_args(self):
+        spec = self.spec
         cmake_args = [
             "-DHSA_PATH={0}".format(spec['rocm-roct-thunk-interface'].prefix),
             "-DHIP_CLANG_PATH={0}".format(spec['rocm-hip-clang'].prefix.bin),
