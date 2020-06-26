@@ -5,12 +5,15 @@
 
 import contextlib
 import os
+import re
 
 import llnl.util.filesystem as fs
+import llnl.util.lang
+import llnl.util.tty as tty
 
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.util.environment import get_path
-from spack.util.module_cmd import module
+from spack.util.module_cmd import module, load_module
 
 
 @contextlib.contextmanager
@@ -60,6 +63,41 @@ class CrayFrontend(LinuxDistro):
         This prevents from detecting Cray compiler wrappers and avoids
         possible false detections.
         """
+        import spack.compilers
+
         with unload_programming_environment():
             search_paths = fs.search_paths_for_executables(*get_path('PATH'))
-        return search_paths
+
+        for compiler_cls in spack.compilers.all_compiler_types():
+            # This is sub-optimal, but skip cce to avoid detecting cc, CC etc.
+            # as valid compilers on the front-end
+            if compiler_cls.name == 'cce':
+                continue
+
+            # Check if the compiler class is supported on Cray
+            prg_env = getattr(compiler_cls, 'PrgEnv', None)
+            compiler_module = getattr(compiler_cls, 'PrgEnv_compiler', None)
+            if not (prg_env and compiler_module):
+                continue
+
+            # It is supported, check which versions are available
+            output = module('avail', compiler_cls.PrgEnv_compiler)
+            version_regex = r'({0})/([\d\.]+[\d]-?[\w]*)'.format(
+                compiler_cls.PrgEnv_compiler
+            )
+            matches = re.findall(version_regex, output)
+            versions = tuple(version for _, version in matches)
+
+            # Now load the modules and add to paths
+            msg = "[CRAY FE] Detected FE compiler [name={0}, versions={1}]"
+            tty.debug(msg.format(compiler_module, versions))
+            for v in versions:
+                current_module = compiler_module + '/' + v
+                with unload_programming_environment():
+                    load_module(prg_env)
+                    load_module(current_module)
+                    search_paths += fs.search_paths_for_executables(
+                        *get_path('PATH')
+                    )
+
+        return llnl.util.lang.dedupe(search_paths)
