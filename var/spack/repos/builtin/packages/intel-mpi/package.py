@@ -65,7 +65,7 @@ class IntelMpi(IntelPackage):
         })
 
     def setup_run_environment(self, env):
-        super(self, IntelMpi).setup_run_environment(env)
+        super(IntelMPI, self).setup_run_environment(env)
 
         for name, value in self.mpi_compiler.wrappers.items():
             env.set(name, value)
