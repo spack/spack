@@ -320,7 +320,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers metrics mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
     fi
 }
 
@@ -989,11 +989,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-<<<<<<< HEAD
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --upstream -g --global --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
-=======
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
->>>>>>> develop
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --upstream -g --global --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
     else
         _all_packages
     fi
