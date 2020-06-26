@@ -892,13 +892,23 @@ class Environment(object):
         old_specs = set(self.user_specs)
         for spec in matches:
             if spec in list_to_change:
-                list_to_change.remove(spec)
-
-        self.update_stale_references(list_name)
+                try:
+                    list_to_change.remove(spec)
+                    self.update_stale_references(list_name)
+                    new_specs = set(self.user_specs)
+                except spack.spec_list.SpecListError:
+                    # define new specs list
+                    new_specs = set(self.user_specs)
+                    msg = "Spec '%s' is part of a spec matrix and " % spec
+                    msg += "cannot be removed from list '%s'." % list_to_change
+                    if force:
+                        msg += " It will be removed from the concrete specs."
+                        # Mock new specs so we can remove this spec from
+                        # concrete spec lists
+                        new_specs.remove(spec)
+                    tty.warn(msg)
 
         # If force, update stale concretized specs
-        # Only check specs removed by this operation
-        new_specs = set(self.user_specs)
         for spec in old_specs - new_specs:
             if force and spec in self.concretized_user_specs:
                 i = self.concretized_user_specs.index(spec)
