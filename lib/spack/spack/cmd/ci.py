@@ -38,7 +38,7 @@ def setup_parser(subparser):
     generate = subparsers.add_parser('generate', help=ci_generate.__doc__)
     generate.add_argument(
         '--output-file', default=None,
-        help="Absolute path to file where generated jobs file should be " +
+        help="Path to file where generated jobs file should be " +
              "written.  The default is .gitlab-ci.yml in the root of the " +
              "repository.")
     generate.add_argument(
@@ -88,10 +88,10 @@ def ci_generate(args):
     use_dependencies = args.dependencies
 
     if not output_file:
-        gen_ci_dir = os.getcwd()
-        output_file = os.path.join(gen_ci_dir, '.gitlab-ci.yml')
+        output_file = os.path.abspath(".gitlab-ci.yml")
     else:
-        gen_ci_dir = os.path.dirname(output_file)
+        output_file_path = os.path.abspath(output_file)
+        gen_ci_dir = os.path.dirname(output_file_path)
         if not os.path.exists(gen_ci_dir):
             os.makedirs(gen_ci_dir)
 
