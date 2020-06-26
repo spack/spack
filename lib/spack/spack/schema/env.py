@@ -13,6 +13,8 @@ from llnl.util.lang import union_dicts
 import spack.schema.merged
 import spack.schema.projections
 
+#: legal first keys in the schema
+keys = ('spack', 'env')
 
 spec_list_schema = {
     'type': 'array',

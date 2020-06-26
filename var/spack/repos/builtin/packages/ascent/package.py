@@ -50,13 +50,13 @@ class Ascent(Package, CudaPackage):
     ###########################################################################
 
     variant("shared", default=True, description="Build Ascent as shared libs")
-    variant('test', default=True, description='Enable Ascent unit tests')
+    variant("test", default=True, description='Enable Ascent unit tests')
 
     variant("mpi", default=True, description="Build Ascent MPI Support")
     variant("serial", default=True, description="build serial (non-mpi) libraries")
 
     # variants for language support
-    variant("python", default=True, description="Build Ascent Python support")
+    variant("python", default=False, description="Build Ascent Python support")
     variant("fortran", default=True, description="Build Ascent Fortran support")
 
     # variants for runtime features

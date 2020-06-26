@@ -242,9 +242,8 @@ def test_relocate_links(tmpdir):
         os.utime(new_binname, None)
         os.symlink(old_binname, new_linkname)
         os.symlink('/usr/lib/libc.so', new_linkname2)
-        relocate_links(filenames, old_layout_root, new_layout_root,
-                       old_install_prefix, new_install_prefix,
-                       {old_install_prefix: new_install_prefix})
+        relocate_links(filenames, old_layout_root,
+                       old_install_prefix, new_install_prefix)
         assert os.readlink(new_linkname) == new_binname
         assert os.readlink(new_linkname2) == '/usr/lib/libc.so'
 

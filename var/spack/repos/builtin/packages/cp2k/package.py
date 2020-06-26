@@ -141,6 +141,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('wannier90', when='@3.0+mpi', type='build')
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%nag')
 

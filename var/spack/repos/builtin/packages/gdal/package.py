@@ -297,8 +297,8 @@ class Gdal(AutotoolsPackage):
         if '+hdf4' in spec:
             args.append('--with-hdf4={0}'.format(spec['hdf'].prefix))
             hdf4 = self.spec['hdf']
-            if '+libtirpc' in hdf4:
-                libs.append('-ltirpc')
+            if '+external-xdr' in hdf4 and hdf4['rpc'].name != 'libc':
+                libs.append(hdf4['rpc'].libs.link_flags)
         else:
             args.append('--with-hdf4=no')
 

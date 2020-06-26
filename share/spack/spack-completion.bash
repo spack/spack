@@ -474,7 +474,7 @@ _spack_ci() {
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref"
+    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref --optimize --dependencies"
 }
 
 _spack_ci_rebuild() {
@@ -484,7 +484,7 @@ _spack_ci_rebuild() {
 _spack_clean() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --stage -d --downloads -m --misc-cache -p --python-cache -a --all"
+        SPACK_COMPREPLY="-h --help -s --stage -d --downloads -f --failures -m --misc-cache -p --python-cache -a --all"
     else
         _all_packages
     fi
@@ -579,7 +579,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit list"
+        SPACK_COMPREPLY="get blame edit list add remove rm"
     fi
 }
 
@@ -612,6 +612,33 @@ _spack_config_edit() {
 
 _spack_config_list() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_config_add() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -f --file"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_config_remove() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_config_rm() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_configure() {
@@ -962,7 +989,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
     else
         _all_packages
     fi
@@ -1042,7 +1069,7 @@ _spack_mirror() {
 _spack_mirror_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file --skip-unstable-versions -D --dependencies -n --versions-per-spec"
+        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file --exclude-file --exclude-specs --skip-unstable-versions -D --dependencies -n --versions-per-spec"
     else
         _all_packages
     fi
@@ -1510,7 +1537,7 @@ _spack_verify() {
 _spack_versions() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --safe-only"
+        SPACK_COMPREPLY="-h --help -s --safe-only -c --concurrency"
     else
         _all_packages
     fi
@@ -1521,7 +1548,7 @@ _spack_view() {
     then
         SPACK_COMPREPLY="-h --help -v --verbose -e --exclude -d --dependencies"
     else
-        SPACK_COMPREPLY="symlink add soft hardlink hard remove rm statlink status check"
+        SPACK_COMPREPLY="symlink add soft hardlink hard copy relocate remove rm statlink status check"
     fi
 }
 
@@ -1562,6 +1589,24 @@ _spack_view_hardlink() {
 }
 
 _spack_view_hard() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --projection-file -i --ignore-conflicts"
+    else
+        _all_packages
+    fi
+}
+
+_spack_view_copy() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --projection-file -i --ignore-conflicts"
+    else
+        _all_packages
+    fi
+}
+
+_spack_view_relocate() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --projection-file -i --ignore-conflicts"

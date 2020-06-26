@@ -40,6 +40,9 @@ class Charmpp(Package):
     # Patch is no longer needed in versions 6.8.0+
     patch("mpi.patch", when="@:6.7.1")
 
+    # support Fujitsu compiler
+    patch("fj.patch", when="%fj")
+
     # Ignore compiler warnings while configuring
     patch("strictpass.patch", when="@:6.8.2")
 

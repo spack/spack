@@ -60,6 +60,7 @@ class Precice(CMakePackage):
     # We require C++11 compiler support as well as
     # library support for time manipulators (N2071, N2072)
     conflicts('%gcc@:4')
+    conflicts('%apple-clang@:4')
     conflicts('%clang@:3.7')
     conflicts('%intel@:14')
     conflicts('%pgi@:14')

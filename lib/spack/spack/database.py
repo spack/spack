@@ -23,6 +23,7 @@ filesystem.
 import contextlib
 import datetime
 import os
+import six
 import socket
 import sys
 import time
@@ -33,14 +34,14 @@ except ImportError:
     _use_uuid = False
     pass
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-import six
+
 import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
-from llnl.util.filesystem import mkdirp
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.filesystem_view import YamlFilesystemView
@@ -316,10 +317,10 @@ class Database(object):
 
         # Create needed directories and files
         if not os.path.exists(self._db_dir):
-            mkdirp(self._db_dir)
+            fs.mkdirp(self._db_dir)
 
         if not os.path.exists(self._failure_dir) and not is_upstream:
-            mkdirp(self._failure_dir)
+            fs.mkdirp(self._failure_dir)
 
         self.is_upstream = is_upstream
         self.last_seen_verifier = ''
@@ -372,6 +373,23 @@ class Database(object):
 
         return os.path.join(self._failure_dir,
                             '{0}-{1}'.format(spec.name, spec.full_hash()))
+
+    def clear_all_failures(self):
+        """Force remove install failure tracking files."""
+        tty.debug('Releasing prefix failure locks')
+        for pkg_id in list(self._prefix_failures.keys()):
+            lock = self._prefix_failures.pop(pkg_id, None)
+            if lock:
+                lock.release_write()
+
+        # Remove all failure markings (aka files)
+        tty.debug('Removing prefix failure tracking files')
+        for fail_mark in os.listdir(self._failure_dir):
+            try:
+                os.remove(os.path.join(self._failure_dir, fail_mark))
+            except OSError as exc:
+                tty.warn('Unable to remove failure marking file {0}: {1}'
+                         .format(fail_mark, str(exc)))
 
     def clear_failure(self, spec, force=False):
         """

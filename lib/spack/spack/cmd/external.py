@@ -186,7 +186,7 @@ def _update_pkg_config(pkg_to_entries, not_buildable):
     cfg_scope = spack.config.default_modify_scope()
     pkgs_cfg = spack.config.get('packages', scope=cfg_scope)
 
-    spack.config._merge_yaml(pkgs_cfg, pkg_to_cfg)
+    spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
     spack.config.set('packages', pkgs_cfg, scope=cfg_scope)
 
 

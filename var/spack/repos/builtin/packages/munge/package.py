@@ -9,7 +9,7 @@ import os
 
 class Munge(AutotoolsPackage):
     """ MUNGE Uid 'N' Gid Emporium """
-    homepage = "https://code.google.com/p/munge/"
+    homepage = "https://dun.github.io/munge/"
     url      = "https://github.com/dun/munge/releases/download/munge-0.5.14/munge-0.5.14.tar.xz"
     maintainers = ['ChristianTackeGSI']
 

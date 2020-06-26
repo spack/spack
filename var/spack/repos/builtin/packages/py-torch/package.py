@@ -50,6 +50,7 @@ class PyTorch(PythonPackage, CudaPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.5.1', tag='v1.5.1', submodules=True)
     version('1.5.0', tag='v1.5.0', submodules=True)
     version('1.4.1', tag='v1.4.1', submodules=True)
     version('1.4.0', tag='v1.4.0', submodules=True,
@@ -154,7 +155,7 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('nccl', when='+nccl')
     depends_on('gloo', when='+gloo')
     depends_on('opencv', when='+opencv')
-    depends_on('llvm-openmp', when='%clang platform=darwin +openmp')
+    depends_on('llvm-openmp', when='%apple-clang +openmp')
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('leveldb', when='+leveldb')
     depends_on('lmdb', when='+lmdb')
@@ -170,13 +171,17 @@ class PyTorch(PythonPackage, CudaPackage):
     # https://github.com/pytorch/pytorch/pull/35607
     # https://github.com/pytorch/pytorch/pull/37865
     # Fixes CMake configuration error when XNNPACK is disabled
-    patch('xnnpack.patch', when='@1.5.0')
+    patch('xnnpack.patch', when='@1.5.0:1.5.999')
 
     # https://github.com/pytorch/pytorch/pull/37086
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
     patch('https://github.com/pytorch/pytorch/commit/e921cd222a8fbeabf5a3e74e83e0d8dfb01aa8b5.patch',
-          sha256='7781c7ec0a661bf5a946a659f80e90df9dba116ad168762f15b10547113ae600',
+          sha256='17561b16cd2db22f10c0fe1fdcb428aecb0ac3964ba022a41343a6bb8cba7049',
           when='@1.1:1.5')
+
+    # Fix for 'FindOpenMP.cmake'
+    # to detect openmp settings used by Fujitsu compiler.
+    patch('detect_omp_of_fujitsu_compiler.patch', when='%fj')
 
     # Both build and install run cmake/make/make install
     # Only run once to speed up build times

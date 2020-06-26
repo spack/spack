@@ -151,6 +151,10 @@ class Qt(Package):
     depends_on("double-conversion", when='@5.7:')
     depends_on("pcre2+multibyte", when='@5.9:')
 
+    # gcc@4 is not supported as of Qt@5.14
+    # https://doc.qt.io/qt-5.14/supported-platforms.html
+    conflicts('%gcc@:4.99', when='@5.14:')
+
     # Non-macOS dependencies and special macOS constraints
     if MACOS_VERSION is None:
         depends_on("fontconfig", when='freetype=spack')
@@ -282,7 +286,7 @@ class Qt(Package):
             "qmake/qmake.pri",
             "src/tools/bootstrap/bootstrap.pro"
         ]
-        if '%clang' in self.spec:
+        if '%clang' in self.spec or '%apple-clang' in self.spec:
             files_to_filter += [
                 "mkspecs/unsupported/macx-clang-libc++/qmake.conf",
                 "mkspecs/common/clang.conf"

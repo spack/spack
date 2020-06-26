@@ -13,6 +13,8 @@ class Ffmpeg(AutotoolsPackage):
     homepage = "https://ffmpeg.org"
     url      = "http://ffmpeg.org/releases/ffmpeg-4.1.1.tar.bz2"
 
+    maintainers = ['xjrc']
+
     version('4.2.2',  sha256='b620d187c26f76ca19e74210a0336c3b8380b97730df5cdf45f3e69e89000e5c')
     version('4.1.1',  sha256='0cb40e3b8acaccd0ecb38aa863f66f0c6e02406246556c2992f67bf650fab058')
     version('4.1',    sha256='b684fb43244a5c4caae652af9022ed5d85ce15210835bce054a33fb26033a1a5')
@@ -108,7 +110,11 @@ class Ffmpeg(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = ['--enable-pic']
+        config_args = [
+            '--enable-pic',
+            '--cc={0}'.format(spack_cc),
+            '--cxx={0}'.format(spack_cxx)
+        ]
 
         # '+X' meta variant #
 
