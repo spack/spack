@@ -22,6 +22,7 @@ import spack.compilers.xl_r
 from spack.operating_systems.cray_frontend import CrayFrontend
 import spack.util.module_cmd
 
+
 @pytest.mark.parametrize('version_str,expected_version', [
     ('Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2)\n' # NOQA
      'Target: aarch64--linux-gnu\n'
