@@ -5,6 +5,7 @@
 
 
 import os
+import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 from spack import *
@@ -96,69 +97,24 @@ class Umpire(CMakePackage, CudaPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(self.extra_install_tests)
 
-    def _run_build_smoke_tests(self):
-        """Run the build tests pulled from the install process."""
-        work_dir = os.path.join(self.install_test_root,
-                                self.extra_install_tests)
+    @property
+    @lang.memoized
+    def _extra_tests_path(self):
+        return os.path.join(self.install_test_root, self.extra_install_tests)
 
-        allocator_benchmarks = (['Malloc/malloc', 'Malloc/free', 'ns',
-                                 'Host/allocate', 'Host/deallocate',
-                                 'FixedPoolHost/allocate',
-                                 'FixedPoolHost/deallocate'], None)
-        blt_openmp_smoke = (
-            ['My thread id is', 'Num threads is', 'Max threads is'], None)
-        copy_benchmarks = (['benchmark_copy/host_host', 'ns'], None)
-        debuglog_benchmarks = (['benchmark_DebugLogger', 'ns'], None)
-        malloc = (['99 should be 99'], None)
-        strategy_example = (['Available allocators', 'HOST'], None)
-        tut_copy = (['Copied source data'], None)
-        tut_introspection = (
-            ['Allocator used is HOST', 'size of the allocation'], None)
-        tut_memset = (['Set data from HOST'], None)
-        tut_move = (['Moved source data', 'HOST'], None)
-        tut_reallocate = (['Reallocated data'], None)
-        vector_allocator = ([''], None)
+    @property
+    @lang.memoized
+    def _has_bad_strategy(self):
+        return self.spec.satisfies('@0.2.0:0.2.3')
 
-        checks = {
-            # Versions 0.1.3:0.3.1 and 2.0.0:
-            'malloc': malloc,
-            'strategy_example': strategy_example,
-            'vector_allocator': vector_allocator,
+    def _run_checks(self, dirs, checks):
+        """Run the specified checks in the provided directories."""
 
-            # Versions 0.2.4:0.3.1 and 2.0.0:
-            'tut_copy': tut_copy,
-            'tut_introspection': tut_introspection,
-            'tut_memset': tut_memset,
-            'tut_move': tut_move,
-            'tut_reallocate': tut_reallocate,
+        if not dirs or not checks:
+            return
 
-            # Version 0.3.3:1.0.1
-            'benchmarks/allocator_benchmarks': allocator_benchmarks,
-            'benchmarks/copy_benchmarks': copy_benchmarks,
-            'benchmarks/debuglog_benchmarks': debuglog_benchmarks,
-            'benchmarks/blt_openmp_smoke': blt_openmp_smoke,
-
-            # Versions 0.3.3:1.1.0
-            'examples/malloc': malloc,
-            'examples/strategy_example': strategy_example,
-            'examples/vector_allocator': vector_allocator,
-
-            'examples/tutorial/tut_copy': tut_copy,
-            'examples/tutorial/tut_introspection': tut_introspection,
-            'examples/tutorial/tut_memset': tut_memset,
-            'examples/tutorial/tut_move': tut_move,
-            'examples/tutorial/tut_reallocate': tut_reallocate,
-
-            # Versions 1.1.0:
-            'allocator_benchmarks': allocator_benchmarks,
-            'copy_benchmarks': copy_benchmarks,
-            'debuglog_benchmarks': debuglog_benchmarks,
-            'blt_openmp_smoke': blt_openmp_smoke,
-        }
-
-        has_bad_strategy = self.spec.satisfies('@0.2.0:0.2.3')
         for exe in checks:
-            if exe == 'strategy_example' and has_bad_strategy:
+            if exe == 'strategy_example' and self._has_bad_strategy:
                 # Skip this test until install testing can properly capture
                 # the abort associated with this version.
                 # (An umpire::util::Exception is thrown; status value is -6.)
@@ -167,9 +123,138 @@ class Umpire(CMakePackage, CudaPackage):
                 continue
 
             expected, status = checks[exe]
-            reason = 'test {0} output'.format(exe)
-            self.run_test(exe, [], expected, status, installed=False,
-                          purpose=reason, skip_missing=True, work_dir=work_dir)
+            for work_dir in dirs:
+                src = 'from build ' if 'spack-build' in work_dir else ''
+                reason = 'test {0} {1}output'.format(exe, src)
+                self.run_test(exe, [], expected, status, installed=False,
+                              purpose=reason, skip_missing=True,
+                              work_dir=work_dir)
+
+    def _run_bench_checks(self):
+        """Run the benchmark smoke test checks."""
+        tty.info('Running benchmark checks')
+
+        dirs = []
+        if self.spec.satisfies('@0.3.3:1.0.1'):
+            dirs.append(os.path.join(self._extra_tests_path, 'benchmarks'))
+        elif self.spec.satisfies('@1.1.0:'):
+            dirs.append(self.prefix.bin)
+
+        checks = {
+            # Versions 0.3.3:1.0.1  (spack-build/bin/benchmarks)
+            # Versions 1.1.0:2.1.0  (spack-build/bin)
+            'allocator_benchmarks': (
+                ['Malloc/malloc', 'Malloc/free', 'ns',
+                 'Host/allocate', 'Host/deallocate',
+                 'FixedPoolHost/allocate',
+                 'FixedPoolHost/deallocate'], None),
+            'copy_benchmarks': (['benchmark_copy/host_host', 'ns'], None),
+            'debuglog_benchmarks': (['benchmark_DebugLogger', 'ns'], None),
+        }
+        self._run_checks(dirs, checks)
+
+    def _run_cookbook_checks(self):
+        """Run the cookbook smoke test checks."""
+        tty.info('Running cookbook checks')
+
+        dirs = []
+        cb_subdir = os.path.join('examples', 'cookbook')
+        if self.spec.satisfies('@0.3.3:1.0.1'):
+            dirs.append(os.path.join(self._extra_tests_path, cb_subdir))
+        elif self.spec.satisfies('@1.1.0'):
+            dirs.append(os.path.join(self.prefix.bin, cb_subdir))
+        elif self.spec.satisfies('@2.0.0:'):
+            dirs.append(self.prefix.bin)
+
+        checks = {
+            # Versions 0.3.3:1.0.1  (spack-build/bin/examples/cookbook)
+            # Versions 2.0.0:2.1.0  (spack-build/bin)
+            # Versions 1.1.0        (prefix.bin/examples/cookbook)
+            # Versions 2.0.0:2.1.0  (prefix.bin)
+            'recipe_dynamic_pool_heuristic': (['in the pool', 'releas'], None),
+            'recipe_no_introspection': (['has allocated', 'used'], None),
+        }
+        self._run_checks(dirs, checks)
+
+    def _run_example_checks(self):
+        """Run the example smoke test checks."""
+        tty.info('Running example checks')
+
+        dirs = []
+        if self.spec.satisfies('@0.1.3:0.3.1'):
+            dirs.append(self._extra_tests_path)
+        elif self.spec.satisfies('@0.3.3:1.0.1'):
+            dirs.append(os.path.join(self._extra_tests_path, 'examples'))
+        elif self.spec.satisfies('@1.1.0'):
+            dirs.append(os.path.join(self.prefix.bin, 'examples'))
+        elif self.spec.satisfies('@2.0.0:'):
+            dirs.append(self.prefix.bin)
+
+        # Check the results from a subset of the (potentially) available
+        # executables
+        checks = {
+            # Versions 0.1.3:0.3.1  (spack-build/bin)
+            # Versions 0.3.3:1.0.1  (spack-build/bin/examples)
+            # Versions 2.0.0:2.1.0  (spack-build/bin)
+            # Version  1.1.0        (prefix.bin/examples)
+            # Versions 2.0.0:2.1.0  (prefix.bin)
+            'malloc': (['99 should be 99'], None),
+            'strategy_example': (['Available allocators', 'HOST'], None),
+            'vector_allocator': ([''], None),
+        }
+        self._run_checks(dirs, checks)
+
+    def _run_plots_checks(self):
+        """Run the plots smoke test checks."""
+        tty.info('Running plots checks')
+
+        dirs = [self.prefix.bin] if self.spec.satisfies('@0.3.3:0.3.5') else []
+        checks = {
+            # Versions 0.3.3:0.3.5  (prefix.bin)
+            'plot_allocations': ([''], None),
+        }
+        self._run_checks(dirs, checks)
+
+    def _run_tools_checks(self):
+        """Run the tools smoke test checks."""
+        tty.info('Running tools checks')
+
+        dirs = [self.prefix.bin] if self.spec.satisfies('@0.3.3:0.3.5') else []
+        checks = {
+            # Versions 0.3.3:0.3.5  (spack-build/bin/tools)
+            'replay': (['No input file'], None),
+        }
+        self._run_checks(dirs, checks)
+
+    def _run_tut_checks(self):
+        """Run the tutorial smoke test checks."""
+        tty.info('Running tutorials checks')
+
+        dirs = []
+        tut_subdir = os.path.join('examples', 'tutorial')
+        if self.spec.satisfies('@0.2.4:0.3.1'):
+            dirs.append(self._extra_tests_path)
+        elif self.spec.satisfies('@0.3.3:1.0.1'):
+            dirs.append(os.path.join(self._extra_tests_path, tut_subdir))
+        elif self.spec.satisfies('@1.1.0'):
+            dirs.append(os.path.join(self.prefix.bin, tut_subdir))
+        elif self.spec.satisfies('@2.0.0:'):
+            dirs.append(self.prefix.bin)
+
+        checks = {
+            # Versions 0.2.4:0.3.1  (spack-build/bin)
+            # Versions 0.3.3:1.0.1  (spack-build/bin/examples/tutorial)
+            # Versions 2.0.0:2.1.0  (spack-build/bin)
+            # Version  1.1.0        (prefix.bin/examples/tutorial)
+            # Versions 2.0.0:2.1.0  (prefix.bin)
+            'tut_copy': (['Copied source data'], None),
+            'tut_introspection': (
+                ['Allocator used is HOST', 'size of the allocation'], None),
+            'tut_memset': (['Set data from HOST'], None),
+            'tut_move': (['Moved source data', 'HOST'], None),
+            'tut_reallocate': (['Reallocated data'], None),
+        }
+        self._run_checks(dirs, checks)
 
     def test(self):
         """Perform smoke tests on the installed package."""
@@ -180,5 +265,11 @@ class Umpire(CMakePackage, CudaPackage):
             tty.warn('Expected results have not been confirmed for {0} {1}'
                      .format(self.name, self.spec.version))
 
-        # Run tests pulled from the build
-        self._run_build_smoke_tests()
+        # Run smoke tests
+        self._run_bench_checks()
+        self._run_cookbook_checks()
+        self._run_example_checks()
+        self._run_plots_checks()
+        self._run_tools_checks()
+        self._run_tut_checks()
+
