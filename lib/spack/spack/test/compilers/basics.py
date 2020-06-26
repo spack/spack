@@ -823,3 +823,33 @@ def test_xcode_not_available(
     pkg = MockPackage()
     with pytest.raises(OSError):
         compiler.setup_custom_environment(pkg, env)
+
+
+@pytest.mark.enable_compiler_verification
+def test_compiler_executable_verification_raises(tmpdir):
+    compiler = MockCompiler()
+    compiler.cc = '/this/path/does/not/exist'
+
+    with pytest.raises(spack.compiler.CompilerAccessError):
+        compiler.verify_executables()
+
+
+@pytest.mark.enable_compiler_verification
+def test_compiler_executable_verification_success(tmpdir):
+    def prepare_executable(name):
+        real = str(tmpdir.join('cc').ensure())
+        fs.set_executable(real)
+        setattr(compiler, name, real)
+
+    # setup mock compiler with real paths
+    compiler = MockCompiler()
+    for name in ('cc', 'cxx', 'f77', 'fc'):
+        prepare_executable(name)
+
+    # testing that this doesn't raise an error because the paths exist and
+    # are executable
+    compiler.verify_executables()
+
+    # Test that null entries don't fail
+    compiler.cc = None
+    compiler.verify_executables()

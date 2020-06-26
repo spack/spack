@@ -70,6 +70,25 @@ def clean_user_environment():
         ev.activate(active)
 
 
+#
+# Disable checks on compiler executable existence
+#
+@pytest.fixture(scope='function', autouse=True)
+def mock_compiler_executable_verification(request, monkeypatch):
+    """Mock the compiler executable verification to allow missing executables.
+
+    This fixture can be disabled for tests of the compiler verification
+    functionality by::
+
+        @pytest.mark.enable_compiler_verification
+
+    If a test is marked in that way this is a no-op."""
+    if 'enable_compiler_verification' not in request.keywords:
+        monkeypatch.setattr(spack.compiler.Compiler,
+                            'verify_executables',
+                            lambda x: None)
+
+
 # Hooks to add command line options or set other custom behaviors.
 # They must be placed here to be found by pytest. See:
 #
