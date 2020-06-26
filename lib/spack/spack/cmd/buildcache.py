@@ -339,7 +339,7 @@ def _createtarball(env, spec_yaml, packages, add_spec, add_deps,
         packages = packages
 
     elif env:
-        packages = env.roots()
+        packages = env.concretized_user_specs
 
     else:
         tty.die("build cache file creation requires at least one" +
