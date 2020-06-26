@@ -19,6 +19,8 @@ class NetcdfCxx4(AutotoolsPackage):
     version('4.3.1', sha256='6a1189a181eed043b5859e15d5c080c30d0e107406fbb212c8fb9814e90f3445')
     version('4.3.0', sha256='e34fbc6aba243ec82c23e9ee99db2430555ada849c54c1f3ab081b0ddd0f5f30')
 
+    patch('libnetcdf_so.4.3.1.patch', when='@4.3.1')
+    patch('libnetcdf_so.4.3.0.patch', when='@4.3.0')
     # Usually the configure automatically inserts the pic flags, but we can
     # force its usage with this variant.
     variant('static', default=True, description='Enable building static libraries')
@@ -56,8 +58,7 @@ class NetcdfCxx4(AutotoolsPackage):
     def configure_args(self):
         config_args = []
 
-        netcdfc_spec = self.spec['netcdf-c']
-        if '+mpi' in netcdfc_spec or '+parallel-netcdf' in netcdfc_spec:
+        if self.spec.satisfies('^mpi'):
             config_args.extend([
                 'CC={0}'.format(self.spec['mpi'].mpicc),
                 'CXX={0}'.format(self.spec['mpi'].mpicxx)
