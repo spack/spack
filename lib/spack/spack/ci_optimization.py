@@ -17,17 +17,17 @@ import hashlib
 import spack.util.spack_yaml as syaml
 
 
-sort_yaml_obj = lambda obj: (
-    syaml.syaml_dict(
-        (k, sort_yaml_obj(v))
-        for k, v in
-        sorted(obj.items(), key=(lambda item: str(item[0]))))
-    if isinstance(obj, collections_abc.Mapping)
+def sort_yaml_obj(obj):
+    if isinstance(obj, collections_abc.Mapping):
+        return syaml.syaml_dict(
+            (k, sort_yaml_obj(v))
+            for k, v in
+            sorted(obj.items(), key=(lambda item: str(item[0]))))
 
-    else syaml.syaml_list(sort_yaml_obj(x) for x in obj)
-    if (isinstance(obj, collections_abc.Sequence) and not isinstance(obj, str))
+    if isinstance(obj, collections_abc.Sequence) and not isinstance(obj, str):
+        return syaml.syaml_list(sort_yaml_obj(x) for x in obj)
 
-    else obj)
+    return obj
 
 
 def matches(obj, proto):
