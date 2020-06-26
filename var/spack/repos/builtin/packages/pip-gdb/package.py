@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.operating_systems.linux_distro import LinuxDistro
+import platform
 
 
 class PipGdb(Package):
@@ -12,7 +14,12 @@ class PipGdb(Package):
     homepage = "https://github.com/RIKEN-SysSoft/PiP-gdb"
     git      = "https://github.com/RIKEN-SysSoft/PiP-gdb.git"
 
-    version('1', branch='pip-centos7')
+    if platform.system() == 'Linux':
+        distro_name = str(LinuxDistro())
+        if distro_name in ['centos8', 'rhel8']:
+            version('1', branch='pip-centos8')
+        elif distro_name in ['centos7', 'rhel7']:
+            version('1', branch='pip-centos7')
 
     patch('disable-werror.patch')
 
