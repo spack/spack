@@ -19,4 +19,4 @@ class PipGlibc(Package):
     def install(self, spec, prefix):
         bash = which('bash')
         with working_dir('PiP-glibc.build', create=True):
-            bash('../build.sh', '%s' % prefix)
+            bash('../build.sh', '%s' % join_path(prefix, 'pip-glibc'))

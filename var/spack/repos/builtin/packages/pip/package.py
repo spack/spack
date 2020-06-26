@@ -14,7 +14,7 @@ class Pip(AutotoolsPackage):
 
     version('1', branch='pip-1')
 
-    depends_on('pip-glibc', type=('build'))
+    depends_on('pip-glibc', type=('build', 'link', 'run'))
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
@@ -23,7 +23,9 @@ class Pip(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = ['--with-glibc-libdir=%s' % spec['pip-glibc'].prefix.lib]
+        glibc_prefix = spec['pip-glibc'].prefix
+        glibc_dir = join_path(join_path(glibc_prefix, 'pip-glibc'), 'lib')
+        args = ['--with-glibc-libdir=%s' % glibc_dir]
         return args
 
     def install(self, spec, prefix):
