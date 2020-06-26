@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 
-import argparse
 import copy
 import sys
 import itertools
@@ -70,11 +69,6 @@ def setup_parser(subparser):
         '-a', '--all', action='store_true', dest='all',
         help="remove ALL installed packages that match each supplied spec"
     )
-
-    subparser.add_argument(
-        'packages',
-        nargs=argparse.REMAINDER,
-        help="specs of packages to uninstall")
 
     subparser.add_argument(
         '-u', '--upstream', action='store', default=None,
