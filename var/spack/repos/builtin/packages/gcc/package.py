@@ -335,15 +335,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Binutils
         if spec.satisfies('+binutils'):
-            stage1_ldflags = str(self.rpath_args)
-            boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
-            if '%gcc' in spec:
-                stage1_ldflags = boot_ldflags
             binutils = spec['binutils'].prefix.bin
             options.extend([
                 '--with-sysroot=/',
-                '--with-stage1-ldflags=' + stage1_ldflags,
-                '--with-boot-ldflags=' + boot_ldflags,
                 '--with-gnu-ld',
                 '--with-ld=' + binutils.ld,
                 '--with-gnu-as',
@@ -375,6 +369,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 '--with-sysroot={0}'.format(macos_sdk_path()),
                 '--with-libiconv-prefix={0}'.format(spec['iconv'].prefix)
             ])
+
+        # enable appropriate bootstrapping flags
+        stage1_ldflags = str(self.rpath_args)
+        boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
+        if '%gcc' in spec:
+            stage1_ldflags = boot_ldflags
+        options.append('--with-stage1-ldflags=' + stage1_ldflags)
+        options.append('--with-boot-ldflags=' + boot_ldflags)
 
         return options
 
