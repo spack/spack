@@ -265,21 +265,16 @@ class Compiler(object):
         self.extra_rpaths = extra_rpaths
         self.enable_implicit_rpaths = enable_implicit_rpaths
 
-        def check(exe):
-            if exe is None:
-                return None
-            return exe
-
-        self.cc  = check(paths[0])
-        self.cxx = check(paths[1])
+        self.cc  = paths[0]
+        self.cxx = paths[1]
         self.f77 = None
         self.fc = None
         if len(paths) > 2:
-            self.f77 = check(paths[2])
+            self.f77 = paths[2]
             if len(paths) == 3:
                 self.fc = self.f77
             else:
-                self.fc  = check(paths[3])
+                self.fc  = paths[3]
 
         self.environment = environment
         self.extra_rpaths = extra_rpaths or []
