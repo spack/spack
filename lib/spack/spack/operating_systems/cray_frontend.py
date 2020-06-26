@@ -85,22 +85,20 @@ class CrayFrontend(LinuxDistro):
             matches = re.findall(version_regex, output)
             versions = tuple(version for _, version in matches)
 
-            # Now load the modules and add to paths
+            # Now inspect the modules and add to paths
             msg = "[CRAY FE] Detected FE compiler [name={0}, versions={1}]"
             tty.debug(msg.format(compiler_module, versions))
-            with unload_programming_environment():
-                load_module(prg_env)
-                for v in versions:
-                    try:
-                        current_module = compiler_module + '/' + v
-                        out = module('show', current_module)
-                        match = extract_path_re.search(out)
-                        search_paths += match.group(1).split(':')
-                    except Exception as e:
-                        msg = ("[CRAY FE] An unexpected error occurred while "
-                               "detecting FE compiler [compiler={0}, "
-                               " version={1}, error={2}]")
-                        tty.warn(msg.format(compiler_cls.name, v, str(e)))
+            for v in versions:
+                try:
+                    current_module = compiler_module + '/' + v
+                    out = module('show', current_module)
+                    match = extract_path_re.search(out)
+                    search_paths += match.group(1).split(':')
+                except Exception as e:
+                    msg = ("[CRAY FE] An unexpected error occurred while "
+                           "detecting FE compiler [compiler={0}, "
+                           " version={1}, error={2}]")
+                    tty.debug(msg.format(compiler_cls.name, v, str(e)))
 
         search_paths = list(llnl.util.lang.dedupe(search_paths))
         return fs.search_paths_for_executables(*search_paths)
