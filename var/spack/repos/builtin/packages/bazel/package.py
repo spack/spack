@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import platform
 
 
 class Bazel(Package):
@@ -14,10 +15,17 @@ class Bazel(Package):
     numbers of users."""
 
     homepage = "https://bazel.build/"
-    url      = "https://github.com/bazelbuild/bazel/releases/download/1.2.0/bazel-1.2.0-dist.zip"
+    url      = "https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-dist.zip"
 
     maintainers = ['adamjstewart']
 
+    version('3.1.0',  sha256='d7f40d0cac95a06cea6cb5b7f7769085257caebc3ee84269dd9298da760d5615')
+    version('3.0.0',  sha256='530f5132e0a50da7ebb0ed08d9b6f1ddfd0d7d9b5d0beb2df5d687a4c8daf6b3')
+    version('2.2.0',  sha256='9379878a834d105a47a87d3d7b981852dd9f64bc16620eacd564b48533e169a7')
+    version('2.1.1',  sha256='83f67f28f4e47ff69043307d1791c9bffe83949e84165d49058b84eded932647')
+    version('2.1.0',  sha256='3371cd9050989173a3b27364668328653a65653a50a85c320adc53953b4d5f46')
+    version('2.0.1',  sha256='a863ed9e6fc420fbd92e63a12fe1a5b9be1a7a36f11f61f1fdc582c813bbe543')
+    version('2.0.0',  sha256='724da3c656f68e787a86ebb9844773aa1c2e3a873cc39462a8f1b336153d6cbb')
     version('1.2.1',  sha256='255da49d0f012bc4f2c1d6d3ccdbe578e22fe97b8d124e1629a486fe2a09d3e1')
     version('1.2.0',  sha256='9cb46b0a18b9166730307a0e82bf4c02281a1cc6da0fb11239e6fe4147bdee6e')
     version('1.1.0',  sha256='4b66a8c93af7832ed32e7236cf454a05f3aa06d25a8576fc3f83114f142f95ab')
@@ -86,11 +94,16 @@ class Bazel(Package):
     version('0.3.1',  sha256='218d0e28b4d1ee34585f2ac6b18d169c81404d93958815e73e60cc0368efcbb7')
     version('0.3.0',  sha256='357fd8bdf86034b93902616f0844bd52e9304cccca22971ab7007588bf9d5fb3')
 
+    variant('nodepfail', default=True, description='Disable failing dependency checks due to injected absolute paths - required for most builds using bazel with spack')
+
     # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-bazel
     # Until https://github.com/spack/spack/issues/14058 is fixed, use jdk to build bazel
     # Strict dependency on java@8 as per
     # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-unix-prereq
-    depends_on('jdk@1.8.0:1.8.999', type=('build', 'run'))
+    if platform.machine() == 'aarch64':
+        depends_on('java@8:8.999', type=('build', 'run'))
+    else:
+        depends_on('jdk@1.8.0:1.8.999', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
     depends_on('zip', type=('build', 'run'))
 
@@ -100,7 +113,8 @@ class Bazel(Package):
     patch('bazelconfiguration-0.3.patch', when='@:0.13')
 
     # Inject include paths
-    patch('unix_cc_configure-0.15.patch',  when='@0.15:')
+    patch('unix_cc_configure-3.0.patch',   when='@3:')
+    patch('unix_cc_configure-0.15.patch',  when='@0.15:2')
     patch('unix_cc_configure-0.10.patch',  when='@0.10:0.14')
     patch('unix_cc_configure-0.5.3.patch', when='@0.5.3:0.9')
     patch('cc_configure-0.5.0.patch', when='@0.5.0:0.5.2')
@@ -115,6 +129,19 @@ class Bazel(Package):
     patch('compile-0.6.patch',  when='@0.6:0.8')
     patch('compile-0.4.patch',  when='@0.4:0.5')
     patch('compile-0.3.patch',  when='@:0.3')
+
+    # for fcc
+    patch('patch_for_fcc.patch', when='@0.29.1:%fj')
+    patch('patch_for_fcc2.patch', when='@0.25:%fj')
+    conflicts(
+        '%fj',
+        when='@:0.24.1',
+        msg='Fujitsu Compiler cannot build 0.24.1 or less, '
+        'please use a newer release.'
+    )
+
+    patch('disabledepcheck.patch', when='@0.3.2:+nodepfail')
+    patch('disabledepcheck_old.patch', when='@0.3.0:0.3.1+nodepfail')
 
     phases = ['bootstrap', 'install']
 
@@ -184,3 +211,7 @@ java_binary(
 
     def setup_dependent_package(self, module, dependent_spec):
         module.bazel = Executable('bazel')
+
+    @property
+    def parallel(self):
+        return not self.spec.satisfies('%fj')

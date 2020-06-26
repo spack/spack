@@ -1675,15 +1675,15 @@ can see the patches that would be applied to ``m4``::
 
   Concretized
   --------------------------------
-  m4@1.4.18%clang@9.0.0-apple patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
-      ^libsigsegv@2.11%clang@9.0.0-apple arch=darwin-highsierra-x86_64
+  m4@1.4.18%apple-clang@9.0.0 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
+      ^libsigsegv@2.11%apple-clang@9.0.0 arch=darwin-highsierra-x86_64
 
 You can also see patches that have been applied to installed packages
 with ``spack find -v``::
 
   $ spack find -v m4
   ==> 1 installed package
-  -- darwin-highsierra-x86_64 / clang@9.0.0-apple -----------------
+  -- darwin-highsierra-x86_64 / apple-clang@9.0.0 -----------------
   m4@1.4.18 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv
 
 .. _cmd-spack-resource:
@@ -1713,7 +1713,7 @@ wonder where the extra boost patches are coming from::
 
   $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep '\^boost'
       ^boost@1.68.0
-          ^boost@1.68.0%clang@9.0.0-apple+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
+          ^boost@1.68.0%apple-clang@9.0.0+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
   $ spack resource show b37164268
   b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f
       path:       /home/spackuser/src/spack/var/spack/repos/builtin/packages/dealii/boost_1.68.0.patch
@@ -4048,6 +4048,70 @@ File functions
 :py:func:`touch(path) <spack.touch>`
   Create an empty file at ``path``.
 
+.. _make-package-findable:
+
+----------------------------------------------------------
+Making a package discoverable with ``spack external find``
+----------------------------------------------------------
+
+To make a package discoverable with
+:ref:`spack external find <cmd-spack-external-find>` you must
+define one or more executables associated with the package and must
+implement a method to generate a Spec when given an executable.
+
+The executables are specified as a package level ``executables``
+attribute which is a list of strings (see example below); each string
+is treated as a regular expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3',
+'my-weird-gcc', etc.).
+
+The method ``determine_spec_details`` has the following signature:
+
+.. code-block:: python
+
+   def determine_spec_details(prefix, exes_in_prefix):
+       # exes_in_prefix = a set of paths, each path is an executable
+       # prefix = a prefix that is common to each path in exes_in_prefix
+
+       # return None or [] if none of the exes represent an instance of
+       # the package. Return one or more Specs for each instance of the
+       # package which is thought to be installed in the provided prefix
+
+``determine_spec_details`` takes as parameters a set of discovered
+executables (which match those specified by the user) as well as a
+common prefix shared by all of those executables. The function must
+return one or more Specs associated with the executables (it can also
+return ``None`` to indicate that no provided executables are associated
+with the package).
+
+Say for example we have a package called ``foo-package`` which
+builds an executable called ``foo``. ``FooPackage`` would appear as
+follows:
+
+.. code-block:: python
+
+   class FooPackage(Package):
+       homepage = "..."
+       url = "..."
+
+       version(...)
+
+       # Each string provided here is treated as a regular expression, and
+       # would match for example 'foo', 'foobar', and 'bazfoo'.
+       executables = ['foo']
+
+       @classmethod
+       def determine_spec_details(cls, prefix, exes_in_prefix):
+           candidates = list(x for x in exes_in_prefix
+                             if os.path.basename(x) == 'foo')
+           if not candidates:
+               return
+           # This implementation is lazy and only checks the first candidate
+           exe_path = candidates[0]
+           exe = spack.util.executable.Executable(exe_path)
+           output = exe('--version')
+           version_str = ...  # parse output for version string
+           return Spec('foo-package@{0}'.format(version_str))
+
 .. _package-lifecycle:
 
 -----------------------------
@@ -4103,16 +4167,23 @@ want to clean up the temporary directory, or if the package isn't
 downloading properly, you might want to run *only* the ``fetch`` stage
 of the build.
 
+Spack performs best-effort installation of package dependencies by default,
+which means it will continue to install as many dependencies as possible
+after detecting failures.  If you are trying to install a package with a
+lot of dependencies where one or more may fail to build, you might want to
+try the ``--fail-fast`` option to stop the installation process on the first
+failure.
+
 A typical package workflow might look like this:
 
 .. code-block:: console
 
    $ spack edit mypackage
-   $ spack install mypackage
+   $ spack install --fail-fast mypackage
    ... build breaks! ...
    $ spack clean mypackage
    $ spack edit mypackage
-   $ spack install mypackage
+   $ spack install --fail-fast mypackage
    ... repeat clean/install until install works ...
 
 Below are some commands that will allow you some finer-grained
@@ -4181,23 +4252,29 @@ Does this in one of two ways:
 ``spack clean``
 ^^^^^^^^^^^^^^^
 
-Cleans up all of Spack's temporary and cached files.  This can be used to
+Cleans up Spack's temporary and cached files.  This command can be used to
 recover disk space if temporary files from interrupted or failed installs
-accumulate in the staging area.
+accumulate.
 
 When called with ``--stage`` or without arguments this removes all staged
 files.
 
-When called with ``--downloads`` this will clear all resources
-:ref:`cached <caching>` during installs.
+The ``--downloads`` option removes cached :ref:`cached <caching>` downloads.
 
-When called with ``--user-cache`` this will remove caches in the user home
-directory, including cached virtual indices.
+You can force the removal of all install failure tracking markers using the
+``--failures`` option.  Note that ``spack install`` will automatically clear
+relevant failure markings prior to performing the requested installation(s).
+
+Long-lived caches, like the virtual package index, are removed using the
+``--misc-cache`` option.
+
+The ``--python-cache`` option removes `.pyc`, `.pyo`, and `__pycache__`
+folders.
 
 To remove all of the above, the command can be called with ``--all``.
 
-When called with positional arguments, cleans up temporary files only
-for a particular package. If ``fetch``, ``stage``, or ``install``
+When called with positional arguments, this command cleans up temporary files
+only for a particular package. If ``fetch``, ``stage``, or ``install``
 are run again after this, Spack's build process will start from scratch.
 
 

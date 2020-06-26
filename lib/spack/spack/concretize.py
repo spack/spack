@@ -727,7 +727,9 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
             )
 
         super(UnavailableCompilerVersionError, self).__init__(
-            err_msg, "Run 'spack compiler find' to add compilers.")
+            err_msg, "Run 'spack compiler find' to add compilers or "
+            "'spack compilers' to see which compilers are already recognized"
+            " by spack.")
 
 
 class NoValidVersionError(spack.error.SpackError):

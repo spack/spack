@@ -31,6 +31,7 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.8.3',  sha256='6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90')
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
@@ -84,8 +85,9 @@ class Python(AutotoolsPackage):
     )
 
     # --enable-shared is known to cause problems for some users on macOS
+    # This is a problem for Python 2.7 only, not Python3
     # See http://bugs.python.org/issue29846
-    variant('shared', default=sys.platform != 'darwin',
+    variant('shared', default=True,
             description='Enable shared libraries')
     # From https://docs.python.org/2/c-api/unicode.html: Python's default
     # builds use a 16-bit type for Py_UNICODE and store Unicode values
@@ -132,6 +134,9 @@ class Python(AutotoolsPackage):
     depends_on('readline', when='+readline')
     depends_on('ncurses', when='+readline')
     depends_on('openssl', when='+ssl')
+    # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
+    # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
+    depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
     depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
     depends_on('sqlite@3.0.8:', when='+sqlite3')
     depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
@@ -151,6 +156,22 @@ class Python(AutotoolsPackage):
         # the easy solution is to only depend on Spack's libuuid when *not* on
         # a Mac.
         depends_on('libuuid', when='+uuid')
+
+    # Python needs to be patched to build extensions w/ mixed C/C++ code:
+    # https://github.com/NixOS/nixpkgs/pull/19585/files
+    # https://bugs.python.org/issue1222585
+    #
+    # NOTE: This patch puts Spack's default Python installation out of
+    # sync with standard Python installs. If you're using such an
+    # installation as an external and encountering build issues with mixed
+    # C/C++ modules, consider installing a Spack-managed Python with
+    # this patch instead. For more information, see:
+    # https://github.com/spack/spack/pull/16856
+    patch('python-2.7.8-distutils-C++.patch', when='@2.7.8:2.7.16')
+    patch('python-2.7.17+-distutils-C++.patch', when='@2.7.17:2.7.18')
+    patch('python-3.6.8-distutils-C++.patch', when='@3.6.8,3.7.2')
+    patch('python-3.7.3-distutils-C++.patch', when='@3.7.3')
+    patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:3.8')
 
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
 
@@ -196,17 +217,46 @@ class Python(AutotoolsPackage):
         url = "https://www.python.org/ftp/python/{0}/Python-{1}.tgz"
         return url.format(re.split('[a-z]', str(version))[0], version)
 
-    @when('@2.7:2.8,3.4:')
+    # TODO: Ideally, these patches would be applied as separate '@run_before'
+    # functions enabled via '@when', but these two decorators don't work
+    # when used together. See: https://github.com/spack/spack/issues/12736
     def patch(self):
         # NOTE: Python's default installation procedure makes it possible for a
         # user's local configurations to change the Spack installation.  In
         # order to prevent this behavior for a full installation, we must
         # modify the installation script so that it ignores user files.
-        ff = FileFilter('Makefile.pre.in')
-        ff.filter(
-            r'^(.*)setup\.py(.*)((build)|(install))(.*)$',
-            r'\1setup.py\2 --no-user-cfg \3\6'
-        )
+        if self.spec.satisfies('@2.7:2.8,3.4:'):
+            ff = FileFilter('Makefile.pre.in')
+            ff.filter(
+                r'^(.*)setup\.py(.*)((build)|(install))(.*)$',
+                r'\1setup.py\2 --no-user-cfg \3\6'
+            )
+
+        # NOTE: Older versions of Python do not support the '--with-openssl'
+        # configuration option, so the installation's module setup file needs
+        # to be modified directly in order to point to the correct SSL path.
+        # See: https://stackoverflow.com/a/5939170
+        if self.spec.satisfies('@:3.6.999+ssl'):
+            ff = FileFilter(join_path('Modules', 'Setup.dist'))
+            ff.filter(r'^#(((SSL=)|(_ssl))(.*))$', r'\1')
+            ff.filter(r'^#((.*)(\$\(SSL\))(.*))$', r'\1')
+            ff.filter(
+                r'^SSL=(.*)$',
+                r'SSL={0}'.format(self.spec['openssl'].prefix)
+            )
+        # Because Python uses compiler system paths during install, it's
+        # possible to pick up a system OpenSSL when building 'python~ssl'.
+        # To avoid this scenario, we disable the 'ssl' module with patching.
+        elif self.spec.satisfies('@:3.6.999~ssl'):
+            ff = FileFilter('setup.py')
+            ff.filter(
+                r'^(\s+(ssl_((incs)|(libs)))\s+=\s+)(.*)$',
+                r'\1 None and \6'
+            )
+            ff.filter(
+                r'^(\s+(opensslv_h)\s+=\s+)(.*)$',
+                r'\1 None and \3'
+            )
 
     def setup_build_environment(self, env):
         spec = self.spec
@@ -219,11 +269,29 @@ class Python(AutotoolsPackage):
             tty.warn(('Python v{0} may not install properly if Python '
                       'user configurations are present.').format(self.version))
 
+        # TODO: Python has incomplete support for Python modules with mixed
+        # C/C++ source, and patches are required to enable building for these
+        # modules. All Python versions without a viable patch are installed
+        # with a warning message about this potentially erroneous behavior.
+        if not spec.satisfies('@2.7.8:2.7.18,3.6.8,3.7.2:3.8.3'):
+            tty.warn(('Python v{0} does not have the C++ "distutils" patch; '
+                      'errors may occur when installing Python modules w/ '
+                      'mixed C/C++ source files.').format(self.version))
+
         # Need this to allow python build to find the Python installation.
         env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
 
         env.unset('PYTHONPATH')
         env.unset('PYTHONHOME')
+
+    def flag_handler(self, name, flags):
+        # python 3.8 requires -fwrapv when compiled with intel
+        if self.spec.satisfies('@3.8: %intel'):
+            if name == 'cflags':
+                flags.append('-fwrapv')
+
+        # allow flags to be passed through compiler wrapper
+        return (flags, None, None)
 
     def configure_args(self):
         spec = self.spec
@@ -291,8 +359,8 @@ class Python(AutotoolsPackage):
         if '+pic' in spec:
             config_args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
 
-        if spec.satisfies('@3.7:'):
-            if '+ssl' in spec:
+        if '+ssl' in spec:
+            if spec.satisfies('@3.7:'):
                 config_args.append('--with-openssl={0}'.format(
                     spec['openssl'].prefix))
 
@@ -919,7 +987,7 @@ class Python(AutotoolsPackage):
         bin_dir = self.spec.prefix.bin
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
-                view.link(src, dst)
+                view.link(src, dst, spec=self.spec)
             elif not os.path.islink(src):
                 copy(src, dst)
                 if 'script' in get_filetype(src):
@@ -945,7 +1013,7 @@ class Python(AutotoolsPackage):
                 orig_link_target = os.path.join(self.spec.prefix, realpath_rel)
 
                 new_link_target = os.path.abspath(merge_map[orig_link_target])
-                view.link(new_link_target, dst)
+                view.link(new_link_target, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin

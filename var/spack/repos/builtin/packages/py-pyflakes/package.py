@@ -12,6 +12,7 @@ class PyPyflakes(PythonPackage):
     homepage = "https://github.com/PyCQA/pyflakes"
     url      = "https://github.com/PyCQA/pyflakes/archive/2.1.1.tar.gz"
 
+    version('2.2.0', sha256='4a6927b9ca7fc19817176d54b3ee2ee4202f064febdee8624ee8340303cfda7b')
     version('2.1.1', sha256='2c98f07a9dd57d9f33561f6b54a64a766cdf79a3c869bd8c07b7fe03094fb8c3')
     version('2.1.0', sha256='6cd8775b6430daad386c0de00dfbc27ce2c24468cdcc4d3da41e4aa39d8ce167')
     version('1.6.0', sha256='f9c72359e05bf8dc27eaaee8cdcae464497f2ccadae87ac6517605ba6040ec99')

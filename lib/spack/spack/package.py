@@ -115,13 +115,18 @@ class InstallPhase(object):
         return phase_wrapper
 
     def _on_phase_start(self, instance):
-        pass
+        # If a phase has a matching stop_before_phase attribute,
+        # stop the installation process raising a StopPhase
+        if getattr(instance, 'stop_before_phase', None) == self.name:
+            from spack.build_environment import StopPhase
+            raise StopPhase('Stopping before \'{0}\' phase'.format(self.name))
 
     def _on_phase_exit(self, instance):
         # If a phase has a matching last_phase attribute,
-        # stop the installation process raising a StopIteration
+        # stop the installation process raising a StopPhase
         if getattr(instance, 'last_phase', None) == self.name:
-            raise StopIteration('Stopping at \'{0}\' phase'.format(self.name))
+            from spack.build_environment import StopPhase
+            raise StopPhase('Stopping at \'{0}\' phase'.format(self.name))
 
     def copy(self):
         try:
@@ -328,7 +333,7 @@ class PackageViewMixin(object):
         """
         for src, dst in merge_map.items():
             if not os.path.exists(dst):
-                view.link(src, dst)
+                view.link(src, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
         """Given a map of package files to files currently linked in the view,
@@ -1022,6 +1027,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.is_extension:
             raise ValueError(
                 "is_activated called on package that is not an extension.")
+        if self.extendee_spec.package.installed_upstream:
+            # If this extends an upstream package, it cannot be activated for
+            # it. This bypasses construction of the extension map, which can
+            # can fail when run in the context of a downstream Spack instance
+            return False
         extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
@@ -2007,12 +2017,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if hasattr(self, 'url') and self.url:
             urls.append(self.url)
 
+        # fetch from first entry in urls to save time
+        if hasattr(self, 'urls') and self.urls:
+            urls.append(self.urls[0])
+
         for args in self.versions.values():
             if 'url' in args:
                 urls.append(args['url'])
         return urls
 
-    def fetch_remote_versions(self):
+    def fetch_remote_versions(self, concurrency=128):
         """Find remote versions of this package.
 
         Uses ``list_url`` and any other URLs listed in the package file.
@@ -2025,7 +2039,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         try:
             return spack.util.web.find_versions_of_archive(
-                self.all_urls, self.list_url, self.list_depth)
+                self.all_urls, self.list_url, self.list_depth, concurrency
+            )
         except spack.util.web.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url,
                     e.message)

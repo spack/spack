@@ -42,7 +42,7 @@ def test_packages(minimal_configuration):
     assert p.list == pkgs
 
 
-def test_ensure_render_works(minimal_configuration):
+def test_ensure_render_works(minimal_configuration, default_config):
     # Here we just want to ensure that nothing is raised
     writer = writers.create(minimal_configuration)
     writer()

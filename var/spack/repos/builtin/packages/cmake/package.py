@@ -5,6 +5,9 @@
 
 from spack import *
 
+import re
+import os
+
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
@@ -12,6 +15,8 @@ class Cmake(Package):
     homepage = 'https://www.cmake.org'
     url      = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
     maintainers = ['chuckatkins']
+
+    executables = ['cmake']
 
     version('3.17.1',   sha256='3aa9114485da39cbd9665a0bfe986894a282d5f0882b1dea960a739496620727')
     version('3.17.0',   sha256='b74c05b55115eacc4fa2b77a814981dbda05cdc95a53e279fe16b7b272f00847')
@@ -132,6 +137,15 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/issues/18232
     patch('nag-response-files.patch', when='@3.7:3.12')
 
+    # Cray libhugetlbfs and icpc warnings failing CXX tests
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4698
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4681
+    patch('ignore_crayxc_warnings.patch', when='@3.7:3.17.2')
+
+    # The Fujitsu compiler requires the '--linkfortran' option
+    # to combine C++ and Fortran programs.
+    patch('fujitsu_add_linker_option.patch', when='%fj')
+
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
     # https://gitlab.kitware.com/cmake/cmake/issues/18166
@@ -140,6 +154,22 @@ class Cmake(Package):
               msg="Intel 14 has immature C++11 support")
 
     phases = ['bootstrap', 'build', 'install']
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        exe_to_path = dict(
+            (os.path.basename(p), p) for p in exes_in_prefix
+        )
+        if 'cmake' not in exe_to_path:
+            return None
+
+        cmake = spack.util.executable.Executable(exe_to_path['cmake'])
+        output = cmake('--version', output=str)
+        if output:
+            match = re.search(r'cmake.*version\s+(\S+)', output)
+            if match:
+                version_str = match.group(1)
+                return Spec('cmake@{0}'.format(version_str))
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':
@@ -212,3 +242,9 @@ class Cmake(Package):
 
     def install(self, spec, prefix):
         make('install')
+
+        if spec.satisfies('%fj'):
+            for f in find(self.prefix, 'FindMPI.cmake', recursive=True):
+                filter_file('mpcc_r)', 'mpcc_r mpifcc)', f, string=True)
+                filter_file('mpc++_r)', 'mpc++_r mpiFCC)', f, string=True)
+                filter_file('mpifc)', 'mpifc mpifrt)', f, string=True)

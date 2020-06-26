@@ -83,6 +83,7 @@ properties = {
                     ]
                 }
             },
+            'allow_sgid': {'type': 'boolean'},
         },
     },
 }

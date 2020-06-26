@@ -89,7 +89,7 @@ class Tau(Package):
     depends_on('libdwarf', when='+libdwarf')
     depends_on('libelf', when='+libdwarf')
     # TAU requires the ELF header support, libiberty and demangle.
-    depends_on('binutils@:2.33.1+libiberty+headers~nls', when='+binutils')
+    depends_on('binutils@:2.33.1+libiberty+headers', when='+binutils')
     depends_on('python@2.7:', when='+python')
     depends_on('libunwind', when='+libunwind')
     depends_on('mpi', when='+mpi', type=('build', 'run', 'link'))
@@ -106,6 +106,8 @@ class Tau(Package):
     # ADIOS2, SQLite only available from 2.29.1 on
     conflicts('+adios2', when='@:2.29.1')
     conflicts('+sqlite', when='@:2.29.1')
+
+    patch('unwind.patch', when="@2.29")
 
     def set_compiler_options(self, spec):
 
@@ -144,6 +146,7 @@ class Tau(Package):
 
     def setup_build_environment(self, env):
         env.prepend_path('LIBRARY_PATH', self.spec['zlib'].prefix.lib)
+        env.prepend_path('LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
 
     def install(self, spec, prefix):
         # TAU isn't happy with directories that have '@' in the path.  Sigh.

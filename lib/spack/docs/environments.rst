@@ -602,7 +602,7 @@ files are identical.
    spack:
      definitions:
        - first: [libelf, libdwarf]
-       - compilers: ['%gcc', '^intel']
+       - compilers: ['%gcc', '%intel']
        - second:
            - $first
            - matrix:
@@ -647,7 +647,7 @@ named list ``compilers`` is ``['%gcc', '%clang', '%intel']`` on
    spack:
      definitions:
        - compilers: ['%gcc', '%clang']
-       - when: target == 'x86_64'
+       - when: arch.satisfies('x86_64:')
          compilers: ['%intel']
 
 .. note::
@@ -666,8 +666,12 @@ The valid variables for a ``when`` clause are:
 #. ``target``. The target string of the default Spack
    architecture on the system.
 
-#. ``architecture`` or ``arch``. The full string of the
-   default Spack architecture on the system.
+#. ``architecture`` or ``arch``. A Spack spec satisfying the default Spack
+   architecture on the system. This supports querying via the ``satisfies``
+   method, as shown above.
+
+#. ``arch_str``. The architecture string of the default Spack architecture
+   on the system.
 
 #. ``re``. The standard regex module in Python.
 
@@ -675,6 +679,40 @@ The valid variables for a ``when`` clause are:
 
 #. ``hostname``. The hostname of the system (if ``hostname`` is an
    executable in the user's PATH).
+
+""""""""""""""""""""""""
+SpecLists as Constraints
+""""""""""""""""""""""""
+
+Dependencies and compilers in Spack can be both packages in an
+environment and constraints on other packages. References to SpecLists
+allow a shorthand to treat packages in a list as either a compiler or
+a dependency using the ``$%`` or ``$^`` syntax respectively.
+
+For example, the following environment has three root packages:
+``gcc@8.1.0``, ``mvapich2@2.3.1 %gcc@8.1.0``, and ``hdf5+mpi
+%gcc@8.1.0 ^mvapich2@2.3.1``.
+
+.. code-block:: yaml
+
+   spack:
+     definitions:
+     - compilers: [gcc@8.1.0]
+     - mpis: [mvapich2@2.3.1]
+     - packages: [hdf5+mpi]
+
+     specs:
+     - $compilers
+     - matrix:
+       - [$mpis]
+       - [$%compilers]
+     - matrix:
+       - [$packages]
+       - [$^mpis]
+       - [$%compilers]
+
+This allows for a much-needed reduction in redundancy between packages
+and constraints.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Environment-managed Views

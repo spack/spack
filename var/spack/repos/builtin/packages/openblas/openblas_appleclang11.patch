@@ -1,0 +1,37 @@
+From 90dba9f71668c0de77b77f32462c78fbbd424db1 Mon Sep 17 00:00:00 2001
+From: Martin Kroeker <martin@ruby.chemie.uni-freiburg.de>
+Date: Tue, 5 May 2020 10:44:50 +0200
+Subject: [PATCH] Duplicate earlier Clang 9.0.0 workaround for corresponding
+ Apple Clang version
+
+As discussed on the original PR #2329, the "Apple Clang 11.0.3" that appears to be based the same LLVM release produces the same miscompilation of this file.
+---
+ kernel/x86_64/dsymv_L_microk_skylakex-2.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/x86_64/dsymv_L_microk_skylakex-2.c b/kernel/x86_64/dsymv_L_microk_skylakex-2.c
+index bdcd914fb..f0df5aaa8 100644
+--- a/kernel/x86_64/dsymv_L_microk_skylakex-2.c
++++ b/kernel/x86_64/dsymv_L_microk_skylakex-2.c
+@@ -36,7 +36,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #if defined(__clang_patchlevel__) && __clang_major__ == 9 && __clang_minor__ == 0 && __clang_patchlevel__ == 0
+ #pragma clang optimize off
+ #endif
+-
++#if defined(__apple_build_version__) && __clang_major__ == 11 && __clang_minor__ == 0 && __clang_patchlevel__ == 3
++#pragma clang optimize off
++#endif
+ static void dsymv_kernel_4x4(BLASLONG from, BLASLONG to, FLOAT **a, FLOAT *x, FLOAT *y, FLOAT *temp1, FLOAT *temp2)
+ {
+
+@@ -164,6 +166,9 @@ static void dsymv_kernel_4x4(BLASLONG from, BLASLONG to, FLOAT **a, FLOAT *x, FL
+ #if defined(__clang_patchlevel__) && __clang_major__ == 9 && __clang_minor__ == 0 && __clang_patchlevel__ == 0
+ #pragma clang optimize on
+ #endif
++#if defined(__apple_build_version__) && __clang_major__ == 11 && __clang_minor__ == 0 && __clang_patchlevel__ == 3
++#pragma clang optimize on
++#endif
+
+ #else
+ #include "dsymv_L_microk_haswell-2.c"
+

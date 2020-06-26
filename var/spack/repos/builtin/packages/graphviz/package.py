@@ -95,7 +95,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('ghostscript', when='+ghostscript')
     depends_on('gtkplus', when='+gtkplus')
     depends_on('gts', when='+gts')
-    depends_on('cairo', when='+pangocairo')
+    depends_on('cairo+pdf+png+svg', when='+pangocairo')
     depends_on('fontconfig', when='+pangocairo')
     depends_on('freetype', when='+pangocairo')
     depends_on('glib', when='+pangocairo')
@@ -131,6 +131,13 @@ class Graphviz(AutotoolsPackage):
             env.set('OBJC', self.compiler.cc)
 
     @when('%clang platform=darwin')
+    def patch(self):
+        # When using Clang, replace GCC's libstdc++ with LLVM's libc++
+        mkdirs = ['cmd/dot', 'cmd/edgepaint', 'cmd/mingle', 'plugin/gdiplus']
+        filter_file(r'-lstdc\+\+', '-lc++', 'configure.ac',
+                    *(d + '/Makefile.am' for d in mkdirs))
+
+    @when('%apple-clang')
     def patch(self):
         # When using Clang, replace GCC's libstdc++ with LLVM's libc++
         mkdirs = ['cmd/dot', 'cmd/edgepaint', 'cmd/mingle', 'plugin/gdiplus']

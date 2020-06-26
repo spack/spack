@@ -92,6 +92,7 @@ required_command_properties = ['level', 'section', 'description']
 
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None
+spack_ld_library_path = os.environ.get('LD_LIBRARY_PATH', '')
 
 
 def set_working_dir():
@@ -737,17 +738,11 @@ def main(argv=None):
         # ensure options on spack command come before everything
         setup_main_options(args)
 
-        # Try to load the particular command the caller asked for.  If there
-        # is no module for it, just die.
+        # Try to load the particular command the caller asked for.
         cmd_name = args.command[0]
         cmd_name = aliases.get(cmd_name, cmd_name)
 
-        try:
-            command = parser.add_command(cmd_name)
-        except ImportError:
-            if spack.config.get('config:debug'):
-                raise
-            tty.die("Unknown command: %s" % args.command[0])
+        command = parser.add_command(cmd_name)
 
         # Re-parse with the proper sub-parser added.
         args, unknown = parser.parse_known_args()

@@ -27,7 +27,7 @@ class Gcc(Compiler):
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     # Homebrew and Linuxbrew may build gcc with -X, -X.Y suffixes.
     # Old compatibility versions may contain XY suffixes.
-    suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d', r'\d\d']
+    suffixes = [r'-mp-\d+\.\d+', r'-\d+\.\d+', r'-\d+', r'\d\d']
 
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'gcc/gcc',
@@ -38,9 +38,17 @@ class Gcc(Compiler):
     PrgEnv = 'PrgEnv-gnu'
     PrgEnv_compiler = 'gcc'
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
+
+    @property
+    def debug_flags(self):
+        return ['-g', '-gstabs+', '-gstabs', '-gxcoff+', '-gxcoff', '-gvms']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-Os', '-Ofast', '-Og']
 
     @property
     def openmp_flag(self):

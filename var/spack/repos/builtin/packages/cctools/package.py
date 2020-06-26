@@ -12,9 +12,10 @@ class Cctools(AutotoolsPackage):
        machines from clusters, clouds, and grids.
     """
 
-    homepage = "https://github.com/cooperative-computing-lab/cctools"
-    url      = "https://github.com/cooperative-computing-lab/cctools/archive/release/7.1.3.tar.gz"
+    homepage = "https://cctools.readthedocs.io"
+    url      = "https://ccl.cse.nd.edu/software/files/cctools-7.1.5-source.tar.gz"
 
+    version('7.1.5', sha256='c01415fd47a1d9626b6c556e0dc0a6b0d3cd67224fa060cabd44ff78eede1d8a')
     version('7.1.3', sha256='b937878ab429dda31bc692e5d9ffb402b9eb44bb674c07a934bb769cee4165ba')
     version('7.1.2', sha256='ca871e9fe245d047d4c701271cf2b868e6e3a170e8834c1887157ed855985131')
     version('7.1.0', sha256='84748245db10ff26c0c0a7b9fd3ec20fbbb849dd4aadc5e8531fd1671abe7a81')
