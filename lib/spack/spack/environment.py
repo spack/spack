@@ -247,18 +247,13 @@ def find_environment(args):
         # at env_dir (env and env_dir are mutually exclusive)
         env = getattr(args, 'env_dir', None)
 
-        # if no argument, look for a manifest file
+        # if no argument, look for the environment variable
         if not env:
-            if os.path.exists(manifest_name):
-                env = os.getcwd()
+            env = os.environ.get(spack_env_var)
 
-            # if no env, env_dir, or manifest try the environment
+            # nothing was set; there's no active environment
             if not env:
-                env = os.environ.get(spack_env_var)
-
-                # nothing was set; there's no active environment
-                if not env:
-                    return None
+                return None
 
     # if we get here, env isn't the name of a spack environment; it has
     # to be a path to an environment, or there is something wrong.

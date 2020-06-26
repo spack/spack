@@ -612,7 +612,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 if 'enable-debug-messages' in gitlab_ci:
                     debug_flag = '-d '
 
-                job_scripts = ['spack {0}ci rebuild'.format(debug_flag)]
+                job_scripts = [
+                    'spack env activate .',
+                    'spack {0}ci rebuild'.format(debug_flag),
+                ]
 
                 compiler_action = 'NONE'
                 if len(phases) > 1:
