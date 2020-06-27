@@ -5,11 +5,12 @@
 
 from spack import *
 
+
 class Examl(MakefilePackage):
     """
-    Exascale Maximum Likelihood (ExaML) code for phylogenetic inference using MPI.
-    This code implements the popular RAxML search algorithm for maximum likelihood
-    based inference of phylogenetic trees.
+    Exascale Maximum Likelihood (ExaML) code for phylogenetic inference
+    using MPI. This code implements the popular RAxML search algorithm
+    for maximum likelihood based inference of phylogenetic trees.
     """
 
     homepage = "https://github.com/stamatak/ExaML"
@@ -31,14 +32,6 @@ class Examl(MakefilePackage):
     variant('mpi', default=True, description='Enable MPI parallel support')
 
     depends_on('mpi', when='+mpi')
-
-#    def edit(self, spec, prefix):
-#        for var in os.environ:
-#            if var.startswith('EXAML_'):
-#               os.environ.pop(var)
-#               print (var)
-
-#        os.environ['EXAML_BUILD_DIR'] = 'parser'
 
     def build(self, spec, prefix):
         #####################
