@@ -31,7 +31,7 @@ class Libnetworkit(CMakePackage):
     depends_on('libtlx')
     depends_on('py-sphinx', when='+doc', type='build')
 
-    patch('0001-Name-agnostic-import-of-tlx-library.patch', when='@6.1')
+    patch('0001-Name-agnostic-import-of-tlx-library.patch', when='@6.1:')
 
     def cmake_args(self):
         spec = self.spec
