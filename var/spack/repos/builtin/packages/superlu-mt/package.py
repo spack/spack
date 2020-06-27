@@ -105,10 +105,10 @@ class SuperluMt(Package):
 
         if '+pic' in spec:
             config.extend([
-                'CFLAGS     += {0}'.format(self.compiler.pic_flag),
-                'NOOPTS     += {0}'.format(self.compiler.pic_flag),
-                'FFLAGS     += {0}'.format(self.compiler.pic_flag),
-                'LOADOPTS   += {0}'.format(self.compiler.pic_flag)
+                'CFLAGS     += {0}'.format(self.compiler.cc_pic_flag),
+                'NOOPTS     += {0}'.format(self.compiler.cc_pic_flag),
+                'FFLAGS     += {0}'.format(self.compiler.f77_pic_flag),
+                'LOADOPTS   += {0}'.format(self.compiler.cc_pic_flag)
             ])
 
         # Write configuration options to include file
