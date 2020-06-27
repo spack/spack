@@ -16,6 +16,7 @@ class Gaudi(CMakePackage):
     version('master', branch='master')
     # major cmake config overhaul already in use by some
     version('develop', git='https://gitlab.cern.ch/clemenci/Gaudi.git', branch='cmake-modernisation')
+    version('33.2', sha256='26aaf9c4ff237a60ec79af9bd18ad249fc91c16e297ba77e28e4a256123db6e5')
     version('33.1', sha256='7eb6b2af64aeb965228d4b6ea66c7f9f57f832f93d5b8ad55c9105235af5b042')
     version('33.0', sha256='76a967c41f579acc432593d498875dd4dc1f8afd5061e692741a355a9cf233c8')
     version('32.2', sha256='e9ef3eb57fd9ac7b9d5647e278a84b2e6263f29f0b14dbe1321667d44d969d2e')
@@ -32,17 +33,20 @@ class Gaudi(CMakePackage):
             description='Build with Intel VTune profiler support')
 
     # only build subdirectory GaudiExamples when +optional
-    patch("build_testing.patch", when="@:33.1")
+    patch("build_testing.patch", when="@:33.2")
     # fix for the new cmake config, should be merged in branch
     patch('python2.patch', when="@develop")
     # fixes for the cmake config which could not find newer boost versions
-    patch("link_target_fixes.patch", when="@33.0:33.1")
+    patch("link_target_fixes.patch", when="@33.0:33.2")
     patch("link_target_fixes32.patch", when="@:32.2")
 
     # These dependencies are needed for a minimal Gaudi build
+    depends_on('aida')
     depends_on('boost@1.67.0: +python')
+    depends_on('clhep')
     depends_on('cmake', type='build')
     depends_on('cppgsl')
+    depends_on('fmt', when='@33.2:')
     depends_on('intel-tbb')
     depends_on('libuuid')
     # some bugs with python 3.8
@@ -60,8 +64,6 @@ class Gaudi(CMakePackage):
     depends_on('py-nose', when="@develop", type=('build', 'run'))
 
     # Adding these dependencies triggers the build of most optional components
-    depends_on('aida', when='+optional')
-    depends_on('clhep', when='+optional')
     depends_on('cppgsl', when='+optional')
     depends_on('cppunit', when='+optional')
     depends_on('doxygen +graphviz', when='+docs')
@@ -87,16 +89,6 @@ class Gaudi(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_TESTING", "optional"),
-            self.define_from_variant("GAUDI_USE_AIDA", "optional"),
-            self.define_from_variant("GAUDI_USE_XERCESC", "optional"),
-            self.define_from_variant("GAUDI_USE_CLHEP", "optional"),
-            self.define_from_variant("GAUDI_USE_HEPPDT", "optional"),
-            self.define_from_variant("GAUDI_USE_CPPUNIT", "optional"),
-            self.define_from_variant("GAUDI_USE_UNWIND", "optional"),
-            self.define_from_variant("GAUDI_USE_GPERFTOOLS", "optional"),
-            self.define_from_variant("GAUDI_USE_DOXYGEN", "docs"),
-            self.define_from_variant("GAUDI_USE_INTELAMPLIFIER", "optional"),
-            self.define_from_variant("GAUDI_USE_JEMALLOC", "optional"),
             # this is not really used in spack builds, but needs to be set
             "-DHOST_BINARY_TAG=x86_64-linux-gcc9-opt",
         ]
