@@ -19,8 +19,8 @@ class Coin3d(AutotoolsPackage):
     version('2.0.0', sha256='6d26435aa962d085b7accd306a0b478069a7de1bc5ca24e22344971852dd097c')
 
     depends_on('boost@1.45.0:', type='build')
-    depends_on('doxygen', when='+html')
-    depends_on('perl', when='+html')
+    depends_on('doxygen', when='+html', type='build')
+    depends_on('perl', when='+html', type='build')
 
     variant('html', default=False, description='Build and install Coin HTML documentation')
     variant('man', default=False, description='Build and install Coin man pages')
