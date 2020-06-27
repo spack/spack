@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,14 @@ It is recommended that the following be put in your ``.bashrc`` file:
 
     alias less='less -R'
 
+If you do not see colorized output when using ``less -R`` it is because color
+is being disabled in the piped output. In this case, tell spack to force
+colorized output.
+
+.. code-block:: console
+
+    $ spack --color always | less -R 
+
 --------------------------
 Listing available packages
 --------------------------
@@ -39,12 +47,15 @@ available.  You can see a list of available package names at the
 ``spack list``
 ^^^^^^^^^^^^^^
 
-The ``spack list`` command prints out a list of all of the packages
-Spack can install:
+The ``spack list`` command prints out a list of all of the packages Spack
+can install:
 
 .. command-output:: spack list
+   :ellipsis: 10
 
-The packages are listed by name in alphabetical order.
+There are thousands of them, so we've truncated the output above, but you
+can find a :ref:`full list here <package-list>`.
+Packages are listed by name in alphabetical order.
 A pattern to match with no wildcards, ``*`` or ``?``,
 will be treated as though it started and ended with
 ``*``, so ``util`` is equivalent to ``*util*``.  All patterns will be treated
@@ -229,6 +240,50 @@ remove dependent packages *before* removing their dependencies or use the
 
 .. _nondownloadable:
 
+^^^^^^^^^^^^^^^^^^
+Garbage collection
+^^^^^^^^^^^^^^^^^^
+
+When Spack builds software from sources, if often installs tools that are needed
+just to build or test other software. These are not necessary at runtime.
+To support cases where removing these tools can be a benefit Spack provides
+the ``spack gc`` ("garbage collector") command, which will uninstall all unneeded packages:
+
+.. code-block:: console
+
+   $ spack find
+   ==> 24 installed packages
+   -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
+   autoconf@2.69    findutils@4.6.0  libiconv@1.16        libszip@2.1.1  m4@1.4.18    openjpeg@2.3.1  pkgconf@1.6.3  util-macros@1.19.1
+   automake@1.16.1  gdbm@1.18.1      libpciaccess@0.13.5  libtool@2.4.6  mpich@3.3.2  openssl@1.1.1d  readline@8.0   xz@5.2.4
+   cmake@3.16.1     hdf5@1.10.5      libsigsegv@2.12      libxml2@2.9.9  ncurses@6.1  perl@5.30.0     texinfo@6.5    zlib@1.2.11
+
+   $ spack gc
+   ==> The following packages will be uninstalled:
+
+       -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
+       vn47edz autoconf@2.69    6m3f2qn findutils@4.6.0  ubl6bgk libtool@2.4.6  pksawhz openssl@1.1.1d  urdw22a readline@8.0
+       ki6nfw5 automake@1.16.1  fklde6b gdbm@1.18.1      b6pswuo m4@1.4.18      k3s2csy perl@5.30.0     lp5ya3t texinfo@6.5
+       ylvgsov cmake@3.16.1     5omotir libsigsegv@2.12  leuzbbh ncurses@6.1    5vmfbrq pkgconf@1.6.3   5bmv4tg util-macros@1.19.1
+
+   ==> Do you want to proceed? [y/N] y
+
+   [ ... ]
+
+   $ spack find
+   ==> 9 installed packages
+   -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
+   hdf5@1.10.5  libiconv@1.16  libpciaccess@0.13.5  libszip@2.1.1  libxml2@2.9.9  mpich@3.3.2  openjpeg@2.3.1  xz@5.2.4  zlib@1.2.11
+
+In the example above Spack went through all the packages in the package database
+and removed everything that is not either:
+
+1. A package installed upon explicit request of the user
+2. A ``link`` or ``run`` dependency, even transitive, of one of the packages at point 1.
+
+You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages
+or :ref:`dependency-types` for a more thorough treatment of dependency types.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-Downloadable Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -273,6 +328,86 @@ the tarballs in question to it (see :ref:`mirrors`):
    .. code-block:: console
 
        $ spack install galahad
+
+-----------------------------
+Deprecating insecure packages
+-----------------------------
+
+``spack deprecate`` allows for the removal of insecure packages with
+minimal impact to their dependents.
+
+.. warning::
+
+  The ``spack deprecate`` command is designed for use only in
+  extraordinary circumstances. This is a VERY big hammer to be used
+  with care.
+
+The ``spack deprecate`` command will remove one package and replace it
+with another by replacing the deprecated package's prefix with a link
+to the deprecator package's prefix.
+
+.. warning::
+
+  The ``spack deprecate`` command makes no promises about binary
+  compatibility. It is up to the user to ensure the deprecator is
+  suitable for the deprecated package.
+
+Spack tracks concrete deprecated specs and ensures that no future packages
+concretize to a deprecated spec.
+
+The first spec given to the ``spack deprecate`` command is the package
+to deprecate. It is an abstract spec that must describe a single
+installed package. The second spec argument is the deprecator
+spec. By default it must be an abstract spec that describes a single
+installed package, but with the ``-i/--install-deprecator`` it can be
+any abstract spec that Spack will install and then use as the
+deprecator. The ``-I/--no-install-deprecator`` option will ensure
+the default behavior.
+
+By default, ``spack deprecate`` will deprecate all dependencies of the
+deprecated spec, replacing each by the dependency of the same name in
+the deprecator spec. The ``-d/--dependencies`` option will ensure the
+default, while the ``-D/--no-dependencies`` option will deprecate only
+the root of the deprecate spec in favor of the root of the deprecator
+spec.
+
+``spack deprecate`` can use symbolic links or hard links. The default
+behavior is symbolic links, but the ``-l/--link-type`` flag can take
+options ``hard`` or ``soft``.
+
+-----------------------
+Verifying installations
+-----------------------
+
+The ``spack verify`` command can be used to verify the validity of
+Spack-installed packages any time after installation.
+
+At installation time, Spack creates a manifest of every file in the
+installation prefix. For links, Spack tracks the mode, ownership, and
+destination. For directories, Spack tracks the mode, and
+ownership. For files, Spack tracks the mode, ownership, modification
+time, hash, and size. The Spack verify command will check, for every
+file in each package, whether any of those attributes have changed. It
+will also check for newly added files or deleted files from the
+installation prefix. Spack can either check all installed packages
+using the `-a,--all` or accept specs listed on the command line to
+verify.
+
+The ``spack verify`` command can also verify for individual files that
+they haven't been altered since installation time. If the given file
+is not in a Spack installation prefix, Spack will report that it is
+not owned by any package. To check individual files instead of specs,
+use the ``-f,--files`` option.
+
+Spack installation manifests are part of the tarball signed by Spack
+for binary package distribution. When installed from a binary package,
+Spack uses the packaged installation manifest instead of creating one
+at install time.
+
+The ``spack verify`` command also accepts the ``-l,--local`` option to
+check only local packages (as opposed to those used transparently from
+``upstream`` spack instances) and the ``-j,--json`` option to output
+machine-readable json data for any errors.
 
 -------------------------
 Seeing installed packages
@@ -331,11 +466,19 @@ Packages are divided into groups according to their architecture and
 compiler.  Within each group, Spack tries to keep the view simple, and
 only shows the version of installed packages.
 
-``spack find`` can filter the package list based on the package name, spec, or
-a number of properties of their installation status.  For example, missing
-dependencies of a spec can be shown with ``--missing``, packages which were
-explicitly installed with ``spack install <package>`` can be singled out with
-``--explicit`` and those which have been pulled in only as dependencies with
+.. _cmd-spack-find-metadata:
+
+""""""""""""""""""""""""""""""""
+Viewing more metadata
+""""""""""""""""""""""""""""""""
+
+``spack find`` can filter the package list based on the package name,
+spec, or a number of properties of their installation status.  For
+example, missing dependencies of a spec can be shown with
+``--missing``, deprecated packages can be included with
+``--deprecated``, packages which were explicitly installed with
+``spack install <package>`` can be singled out with ``--explicit`` and
+those which have been pulled in only as dependencies with
 ``--implicit``.
 
 In some cases, there may be different configurations of the *same*
@@ -388,8 +531,8 @@ use ``spack find --paths``:
        callpath@1.0.2        ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/callpath@1.0.2-5dce4318
    ...
 
-And, finally, you can restrict your search to a particular package
-by supplying its name:
+You can restrict your search to a particular package by supplying its
+name:
 
 .. code-block:: console
 
@@ -398,6 +541,10 @@ by supplying its name:
        libelf@0.8.11  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.11
        libelf@0.8.12  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.12
        libelf@0.8.13  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.13
+
+""""""""""""""""""""""""""""""""
+Spec queries
+""""""""""""""""""""""""""""""""
 
 ``spack find`` actually does a lot more than this.  You can use
 *specs* to query for specific configurations and builds of each
@@ -425,6 +572,109 @@ We can also search for packages that have a certain attribute. For example,
 with the 'debug' compile-time option enabled.
 
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
+
+
+""""""""""""""""""""""""""""""""
+Machine-readable output
+""""""""""""""""""""""""""""""""
+
+If you only want to see very specific things about installed packages,
+Spack has some options for you.  ``spack find --format`` can be used to
+output only specific fields:
+
+.. code-block:: console
+
+   $ spack find --format "{name}-{version}-{hash}"
+   autoconf-2.69-icynozk7ti6h4ezzgonqe6jgw5f3ulx4
+   automake-1.16.1-o5v3tc77kesgonxjbmeqlwfmb5qzj7zy
+   bzip2-1.0.6-syohzw57v2jfag5du2x4bowziw3m5p67
+   bzip2-1.0.8-zjny4jwfyvzbx6vii3uuekoxmtu6eyuj
+   cmake-3.15.1-7cf6onn52gywnddbmgp7qkil4hdoxpcb
+   ...
+
+or:
+
+.. code-block:: console
+
+   $ spack find --format "{hash:7}"
+   icynozk
+   o5v3tc7
+   syohzw5
+   zjny4jw
+   7cf6onn
+   ...
+
+This uses the same syntax as described in documentation for
+:meth:`~spack.spec.Spec.format` -- you can use any of the options there.
+This is useful for passing metadata about packages to other command-line
+tools.
+
+Alternately, if you want something even more machine readable, you can
+output each spec as JSON records using ``spack find --json``.  This will
+output metadata on specs and all dependencies as json:
+
+.. code-block:: console
+
+    $ spack find --json sqlite@3.28.0
+    [
+     {
+      "name": "sqlite",
+      "hash": "3ws7bsihwbn44ghf6ep4s6h4y2o6eznv",
+      "version": "3.28.0",
+      "arch": {
+       "platform": "darwin",
+       "platform_os": "mojave",
+       "target": "x86_64"
+      },
+      "compiler": {
+       "name": "apple-clang",
+       "version": "10.0.0"
+      },
+      "namespace": "builtin",
+      "parameters": {
+       "fts": true,
+       "functions": false,
+       "cflags": [],
+       "cppflags": [],
+       "cxxflags": [],
+       "fflags": [],
+       "ldflags": [],
+       "ldlibs": []
+      },
+      "dependencies": {
+       "readline": {
+        "hash": "722dzmgymxyxd6ovjvh4742kcetkqtfs",
+        "type": [
+         "build",
+         "link"
+        ]
+       }
+      }
+     },
+     ...
+    ]
+
+You can use this with tools like `jq <https://stedolan.github.io/jq/>`_ to quickly create JSON records
+structured the way you want:
+
+.. code-block:: console
+
+    $ spack find --json sqlite@3.28.0 | jq -C '.[] | { name, version, hash }'
+    {
+      "name": "sqlite",
+      "version": "3.28.0",
+      "hash": "3ws7bsihwbn44ghf6ep4s6h4y2o6eznv"
+    }
+    {
+      "name": "readline",
+      "version": "7.0",
+      "hash": "722dzmgymxyxd6ovjvh4742kcetkqtfs"
+    }
+    {
+      "name": "ncurses",
+      "version": "6.1",
+      "hash": "zvaa4lhlhilypw5quj3akyd3apbq5gap"
+    }
 
 .. _sec-specs:
 
@@ -612,7 +862,7 @@ Variants are named options associated with a particular package. They are
 optional, as each package must provide default values for each variant it
 makes available. Variants can be specified using
 a flexible parameter syntax ``name=<value>``. For example,
-``spack install libelf debug=True`` will install libelf build with debug
+``spack install libelf debug=True`` will install libelf built with debug
 flags. The names of particular variants available for a package depend on
 what was provided by the package author. ``spack info <package>`` will
 provide information on what build variants are available.
@@ -675,7 +925,7 @@ contains any spaces. Any of ``cppflags=-O3``, ``cppflags="-O3"``,
 ``cppflags='-O3'``, and ``cppflags="-O3 -fPIC"`` are acceptable, but
 ``cppflags=-O3 -fPIC`` is not. Additionally, if the value of the
 compiler flags is not the last thing on the line, it must be followed
-by a space. The commmand ``spack install libelf cppflags="-O3"%intel``
+by a space. The command ``spack install libelf cppflags="-O3"%intel``
 will be interpreted as an attempt to set ``cppflags="-O3%intel"``.
 
 The six compiler flags are injected in the order of implicit make commands
@@ -687,11 +937,13 @@ in GNU Autotools. If all flags are set, the order is
 Compiler environment variables and additional RPATHs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the exceptional case a compiler requires setting special environment
-variables, like an explicit library load path. These can bet set in an
-extra section in the compiler configuration (the supported environment
-modification commands are: ``set``, ``unset``, ``append-path``, and
-``prepend-path``). The user can also specify additional ``RPATHs`` that the
+Sometimes compilers require setting special environment variables to
+operate correctly. Spack handles these cases by allowing custom environment
+modifications in the ``environment`` attribute of the compiler configuration
+section. See also the :ref:`configuration_environment_variables` section
+of the configuration files docs for more information.
+
+It is also possible to specify additional ``RPATHs`` that the
 compiler will add to all executables generated by that compiler.  This is
 useful for forcing certain compilers to RPATH their own runtime libraries, so
 that executables will run without the need to set ``LD_LIBRARY_PATH``.
@@ -708,44 +960,130 @@ that executables will run without the need to set ``LD_LIBRARY_PATH``.
           fc: /opt/gcc/bin/gfortran
         environment:
           unset:
-            BAD_VARIABLE: # The colon is required but the value must be empty
+            - BAD_VARIABLE
           set:
             GOOD_VARIABLE_NUM: 1
             GOOD_VARIABLE_STR: good
-          prepend-path:
+          prepend_path:
             PATH: /path/to/binutils
-          append-path:
+          append_path:
             LD_LIBRARY_PATH: /opt/gcc/lib
         extra_rpaths:
         - /path/to/some/compiler/runtime/directory
         - /path/to/some/other/compiler/runtime/directory
 
 
-.. note::
-
-   The section `environment` is interpreted as an ordered dictionary, which
-   means two things. First, environment modification are applied in the order
-   they are specified in the configuration file. Second, you cannot express
-   environment modifications that require mixing different commands, i.e. you
-   cannot `set` one variable, than `prepend-path` to another one, and than
-   again `set` a third one.
-
 ^^^^^^^^^^^^^^^^^^^^^^^
 Architecture specifiers
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The architecture can be specified by using the reserved
-words ``target`` and/or ``os`` (``target=x86-64 os=debian7``). You can also
-use the triplet form of platform, operating system and processor.
+Each node in the dependency graph of a spec has an architecture attribute.
+This attribute is a triplet of platform, operating system and processor.
+You can specify the elements either separately, by using
+the reserved keywords ``platform``, ``os`` and ``target``:
+
+.. code-block:: console
+
+   $ spack install libelf platform=linux
+   $ spack install libelf os=ubuntu18.04
+   $ spack install libelf target=broadwell
+
+or together by using the reserved keyword ``arch``:
 
 .. code-block:: console
 
    $ spack install libelf arch=cray-CNL10-haswell
 
-Users on non-Cray systems won't have to worry about specifying the architecture.
-Spack will autodetect what kind of operating system is on your machine as well
-as the processor. For more information on how the architecture can be
-used on Cray machines, see :ref:`cray-support`
+Normally users don't have to bother specifying the architecture if they
+are installing software for their current host, as in that case the
+values will be detected automatically.  If you need fine-grained control
+over which packages use which targets (or over *all* packages' default
+target), see :ref:`concretization-preferences`.
+
+.. admonition:: Cray machines
+
+  The situation is a little bit different for Cray machines and a detailed
+  explanation on how the architecture can be set on them can be found at :ref:`cray-support`
+
+.. _support-for-microarchitectures:
+
+"""""""""""""""""""""""""""""""""""""""
+Support for specific microarchitectures
+"""""""""""""""""""""""""""""""""""""""
+
+Spack knows how to detect and optimize for many specific microarchitectures
+(including recent Intel, AMD and IBM chips) and encodes this information in
+the ``target`` portion of the architecture specification. A complete list of
+the microarchitectures known to Spack can be obtained in the following way:
+
+.. command-output:: spack arch --known-targets
+
+When a spec is installed Spack matches the compiler being used with the
+microarchitecture being targeted to inject appropriate optimization flags
+at compile time. Giving a command such as the following:
+
+.. code-block:: console
+
+   $ spack install zlib%gcc@9.0.1 target=icelake
+
+will produce compilation lines similar to:
+
+.. code-block:: console
+
+   $ /usr/bin/gcc-9 -march=icelake-client -mtune=icelake-client -c ztest10532.c
+   $ /usr/bin/gcc-9 -march=icelake-client -mtune=icelake-client -c -fPIC -O2 ztest10532.
+   ...
+
+where the flags ``-march=icelake-client -mtune=icelake-client`` are injected
+by Spack based on the requested target and compiler.
+
+If Spack knows that the requested compiler can't optimize for the current target
+or can't build binaries for that target at all, it will exit with a meaningful error message:
+
+.. code-block:: console
+
+   $ spack install zlib%gcc@5.5.0 target=icelake
+   ==> Error: cannot produce optimized binary for micro-architecture "icelake" with gcc@5.5.0 [supported compiler versions are 8:]
+
+When instead an old compiler is selected on a recent enough microarchitecture but there is
+no explicit ``target`` specification, Spack will optimize for the best match it can find instead
+of failing:
+
+.. code-block:: console
+
+   $ spack arch
+   linux-ubuntu18.04-broadwell
+
+   $ spack spec zlib%gcc@4.8
+   Input spec
+   --------------------------------
+   zlib%gcc@4.8
+
+   Concretized
+   --------------------------------
+   zlib@1.2.11%gcc@4.8+optimize+pic+shared arch=linux-ubuntu18.04-haswell
+
+   $ spack spec zlib%gcc@9.0.1
+   Input spec
+   --------------------------------
+   zlib%gcc@9.0.1
+
+   Concretized
+   --------------------------------
+   zlib@1.2.11%gcc@9.0.1+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
+
+In the snippet above, for instance, the microarchitecture was demoted to ``haswell`` when
+compiling with ``gcc@4.8`` since support to optimize for ``broadwell`` starts from ``gcc@4.9:``.
+
+Finally, if Spack has no information to match compiler and target, it will
+proceed with the installation but avoid injecting any microarchitecture
+specific flags.
+
+.. warning::
+
+   Currently, Spack doesn't print any warning to the user if it has no information
+   on which optimization flags should be used for a given compiler. This behavior
+   might change in the future.
 
 .. _sec-virtual-dependencies:
 
@@ -753,7 +1091,7 @@ used on Cray machines, see :ref:`cray-support`
 Virtual dependencies
 --------------------
 
-The dependence graph for ``mpileaks`` we saw above wasn't *quite*
+The dependency graph for ``mpileaks`` we saw above wasn't *quite*
 accurate.  ``mpileaks`` uses MPI, which is an interface that has many
 different implementations.  Above, we showed ``mpileaks`` and
 ``callpath`` depending on ``mpich``, which is one *particular*
@@ -896,6 +1234,8 @@ add a version specifier to the spec:
 Notice that the package versions that provide insufficient MPI
 versions are now filtered out.
 
+.. _extensions:
+
 ---------------------------
 Extensions & Python support
 ---------------------------
@@ -903,8 +1243,7 @@ Extensions & Python support
 Spack's installation model assumes that each package will live in its
 own install prefix.  However, certain packages are typically installed
 *within* the directory hierarchy of other packages.  For example,
-modules in interpreted languages like `Python
-<https://www.python.org>`_ are typically installed in the
+`Python <https://www.python.org>`_ packages are typically installed in the
 ``$prefix/lib/python-2.7/site-packages`` directory.
 
 Spack has support for this type of installation as well.  In Spack,
@@ -980,33 +1319,41 @@ directly when you run ``python``:
 Using Extensions
 ^^^^^^^^^^^^^^^^
 
-There are three ways to get ``numpy`` working in Python.  The first is
-to use :ref:`shell-support`.  You can simply ``use`` or ``load`` the
-module for the extension, and it will be added to the ``PYTHONPATH``
-in your current shell.
-
-For tcl modules:
+There are four ways to get ``numpy`` working in Python.  The first is
+to use :ref:`shell-support`.  You can simply ``load`` the extension,
+and it will be added to the ``PYTHONPATH`` in your current shell:
 
 .. code-block:: console
 
    $ spack load python
    $ spack load py-numpy
 
-or, for dotkit:
+Now ``import numpy`` will succeed for as long as you keep your current
+session open.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Loading Extensions via Modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Instead of using Spack's environment modification capabilities through
+the ``spack load`` command, you can load numpy through your
+environment modules (using ``environment-modules`` or ``lmod``). This
+will also add the extension to the ``PYTHONPATH`` in your current
+shell.
 
 .. code-block:: console
 
-   $ spack use python
-   $ spack use py-numpy
+   $ module load <name of numpy module>
 
-Now ``import numpy`` will succeed for as long as you keep your current
-session open.
+If you do not know the name of the specific numpy module you wish to
+load, you can use the ``spack module tcl|lmod loads`` command to get
+the name of the module from the Spack spec.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating Extensions in a View
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The second way to use extensions is to create a view, which merges the
+Another way to use extensions is to create a view, which merges the
 python installation along with the extensions into a single prefix.
 See :ref:`filesystem-views` for a more in-depth description of views and
 :ref:`cmd-spack-view` for usage of the ``spack view`` command.
@@ -1072,12 +1419,12 @@ packages listed as activated:
    py-nose@1.3.4  py-numpy@1.9.1  py-setuptools@11.3.1
 
 Now, when a user runs python, ``numpy`` will be available for import
-*without* the user having to explicitly loaded.  ``python@2.7.8`` now
+*without* the user having to explicitly load it.  ``python@2.7.8`` now
 acts like a system Python installation with ``numpy`` installed inside
 of it.
 
 Spack accomplishes this by symbolically linking the *entire* prefix of
-the ``py-numpy`` into the prefix of the ``python`` package.  To the
+the ``py-numpy`` package into the prefix of the ``python`` package.  To the
 python interpreter, it looks like ``numpy`` is installed in the
 ``site-packages`` directory.
 

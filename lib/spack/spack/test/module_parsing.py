@@ -1,63 +1,62 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
-import subprocess
 import os
+import spack
+
 from spack.util.module_cmd import (
+    module,
     get_path_from_module,
-    get_path_from_module_contents,
-    get_path_arg_from_module_line,
-    get_module_cmd_from_bash,
-    get_module_cmd,
-    ModuleError)
+    get_path_args_from_module_line,
+    get_path_from_module_contents
+)
+
+test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
+                     'setenv MOD_DIR /path/to',
+                     'setenv LDFLAGS -Wl,-rpath/path/to/lib',
+                     'setenv LDFLAGS -L/path/to/lib',
+                     'prepend-path PATH /path/to/bin']
+
+_test_template = "'. %s 2>&1' % args[1]"
 
 
-env = os.environ.copy()
-env['LC_ALL'] = 'C'
-typeset_func = subprocess.Popen('module avail',
-                                env=env,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                shell=True)
-typeset_func.wait()
-typeset = typeset_func.stderr.read()
-MODULE_NOT_DEFINED = b'not found' in typeset
+def test_module_function_change_env(tmpdir, working_env, monkeypatch):
+    monkeypatch.setattr(spack.util.module_cmd, '_cmd_template', _test_template)
+    src_file = str(tmpdir.join('src_me'))
+    with open(src_file, 'w') as f:
+        f.write('export TEST_MODULE_ENV_VAR=TEST_SUCCESS\n')
+
+    os.environ['NOT_AFFECTED'] = "NOT_AFFECTED"
+    module('load', src_file)
+
+    assert os.environ['TEST_MODULE_ENV_VAR'] == 'TEST_SUCCESS'
+    assert os.environ['NOT_AFFECTED'] == "NOT_AFFECTED"
 
 
-@pytest.fixture
-def save_env():
-    old_path = os.environ.get('PATH', None)
-    old_bash_func = os.environ.get('BASH_FUNC_module()', None)
+def test_module_function_no_change(tmpdir, monkeypatch):
+    monkeypatch.setattr(spack.util.module_cmd, '_cmd_template', _test_template)
+    src_file = str(tmpdir.join('src_me'))
+    with open(src_file, 'w') as f:
+        f.write('echo TEST_MODULE_FUNCTION_PRINT')
 
-    yield
+    old_env = os.environ.copy()
+    text = module('show', src_file)
 
-    if old_path:
-        os.environ['PATH'] = old_path
-    if old_bash_func:
-        os.environ['BASH_FUNC_module()'] = old_bash_func
+    assert text == 'TEST_MODULE_FUNCTION_PRINT\n'
+    assert os.environ == old_env
 
 
-def test_get_path_from_module(save_env):
-    lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
-             'prepend-path CRAY_LD_LIBRARY_PATH /path/to/lib',
-             'setenv MOD_DIR /path/to',
-             'setenv LDFLAGS -Wl,-rpath/path/to/lib',
-             'setenv LDFLAGS -L/path/to/lib',
-             'prepend-path PATH /path/to/bin']
+def test_get_path_from_module_faked(monkeypatch):
+    for line in test_module_lines:
+        def fake_module(*args):
+            return line
+        monkeypatch.setattr(spack.util.module_cmd, 'module', fake_module)
 
-    for line in lines:
-        module_func = '() { eval `echo ' + line + ' bash filler`\n}'
-        os.environ['BASH_FUNC_module()'] = module_func
         path = get_path_from_module('mod')
         assert path == '/path/to'
-
-    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
-    path = get_path_from_module('mod')
-
-    assert path is None
 
 
 def test_get_path_from_module_contents():
@@ -74,12 +73,21 @@ whatis("Name: CMake")
 whatis("Version: 3.9.2")
 whatis("Category: Tools")
 whatis("URL: https://cmake.org/")
-prepend_path("PATH","/path/to/cmake-3.9.2/bin")
+prepend_path("LD_LIBRARY_PATH","/bad/path")
+prepend_path("PATH","/path/to/cmake-3.9.2/bin:/other/bad/path")
 prepend_path("MANPATH","/path/to/cmake/cmake-3.9.2/share/man")
+prepend_path("LD_LIBRARY_PATH","/path/to/cmake-3.9.2/lib64")
 """
     module_show_lines = module_show_output.split('\n')
+
+    # PATH and LD_LIBRARY_PATH outvote MANPATH and the other PATH and
+    # LD_LIBRARY_PATH entries
     assert (get_path_from_module_contents(module_show_lines, 'cmake-3.9.2') ==
             '/path/to/cmake-3.9.2')
+
+
+def test_get_path_from_empty_module():
+    assert get_path_from_module_contents('', 'test') is None
 
 
 def test_pkg_dir_from_module_name():
@@ -93,75 +101,25 @@ def test_pkg_dir_from_module_name():
 
 
 def test_get_argument_from_module_line():
-    lines = ['prepend-path LD_LIBRARY_PATH /lib/path',
-             'prepend-path  LD_LIBRARY_PATH  /lib/path',
-             "prepend_path('PATH' , '/lib/path')",
-             'prepend_path( "PATH" , "/lib/path" )',
-             'prepend_path("PATH",' + "'/lib/path')"]
+    simple_lines = ['prepend-path LD_LIBRARY_PATH /lib/path',
+                    'prepend-path  LD_LIBRARY_PATH  /lib/path',
+                    "prepend_path('PATH' , '/lib/path')",
+                    'prepend_path( "PATH" , "/lib/path" )',
+                    'prepend_path("PATH",' + "'/lib/path')"]
+
+    complex_lines = ['prepend-path LD_LIBRARY_PATH /lib/path:/pkg/path',
+                     'prepend-path  LD_LIBRARY_PATH  /lib/path:/pkg/path',
+                     "prepend_path('PATH' , '/lib/path:/pkg/path')",
+                     'prepend_path( "PATH" , "/lib/path:/pkg/path" )',
+                     'prepend_path("PATH",' + "'/lib/path:/pkg/path')"]
 
     bad_lines = ['prepend_path(PATH,/lib/path)',
                  'prepend-path (LD_LIBRARY_PATH) /lib/path']
 
-    assert all(get_path_arg_from_module_line(l) == '/lib/path' for l in lines)
+    assert all(get_path_args_from_module_line(l) == ['/lib/path']
+               for l in simple_lines)
+    assert all(get_path_args_from_module_line(l) == ['/lib/path', '/pkg/path']
+               for l in complex_lines)
     for bl in bad_lines:
         with pytest.raises(ValueError):
-            get_path_arg_from_module_line(bl)
-
-
-@pytest.mark.skipif(MODULE_NOT_DEFINED, reason='Depends on defined module fn')
-def test_get_module_cmd_from_bash_using_modules():
-    module_list_proc = subprocess.Popen(['module list'],
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        executable='/bin/bash',
-                                        shell=True)
-    module_list_proc.wait()
-    module_list = module_list_proc.stdout.read()
-
-    module_cmd = get_module_cmd_from_bash()
-    module_cmd_list = module_cmd('list', output=str, error=str)
-
-    # Lmod command reprints some env variables on every invocation.
-    # Test containment to avoid false failures on lmod systems.
-    assert module_list in module_cmd_list
-
-
-def test_get_module_cmd_from_bash_ticks(save_env):
-    os.environ['BASH_FUNC_module()'] = '() { eval `echo bash $*`\n}'
-
-    module_cmd = get_module_cmd()
-    module_cmd_list = module_cmd('list', output=str, error=str)
-
-    assert module_cmd_list == 'python list\n'
-
-
-def test_get_module_cmd_from_bash_parens(save_env):
-    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill sh $*)\n}'
-
-    module_cmd = get_module_cmd()
-    module_cmd_list = module_cmd('list', output=str, error=str)
-
-    assert module_cmd_list == 'fill python list\n'
-
-
-def test_get_module_cmd_fails(save_env):
-    os.environ.pop('BASH_FUNC_module()')
-    os.environ.pop('PATH')
-    with pytest.raises(ModuleError):
-        module_cmd = get_module_cmd(b'--norc')
-        module_cmd()  # Here to avoid Flake F841 on previous line
-
-
-def test_get_module_cmd_from_which(tmpdir, save_env):
-    f = tmpdir.mkdir('bin').join('modulecmd')
-    f.write('#!/bin/bash\n'
-            'echo $*')
-    f.chmod(0o770)
-
-    os.environ['PATH'] = str(tmpdir.join('bin')) + ':' + os.environ['PATH']
-    os.environ.pop('BASH_FUNC_module()')
-
-    module_cmd = get_module_cmd(b'--norc')
-    module_cmd_list = module_cmd('list', output=str, error=str)
-
-    assert module_cmd_list == 'python list\n'
+            get_path_args_from_module_line(bl)

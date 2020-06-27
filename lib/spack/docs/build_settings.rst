@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,16 +58,26 @@ directory. Here's an example of an external configuration:
    packages:
      openmpi:
        paths:
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7: /opt/openmpi-1.4.3
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7+debug: /opt/openmpi-1.4.3-debug
-         openmpi@1.6.5%intel@10.1 arch=linux-x86_64-debian7: /opt/openmpi-1.6.5-intel
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64: /opt/openmpi-1.4.3
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug: /opt/openmpi-1.4.3-debug
+         openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64: /opt/openmpi-1.6.5-intel
 
 This example lists three installations of OpenMPI, one built with GCC,
 one built with GCC and debug information, and another built with Intel.
 If Spack is asked to build a package that uses one of these MPIs as a
 dependency, it will use the pre-installed OpenMPI in
-the given directory. ``packages.yaml`` can also be used to specify modules
-to load instead of the installation prefixes.
+the given directory. Note that the specified path is the top-level
+install prefix, not the ``bin`` subdirectory.
+
+``packages.yaml`` can also be used to specify modules to load instead
+of the installation prefixes.  The following example says that module
+``CMake/3.7.2`` provides cmake version 3.7.2.
+
+.. code-block:: yaml
+
+   cmake:
+     modules:
+       cmake@3.7.2: CMake/3.7.2
 
 Each ``packages.yaml`` begins with a ``packages:`` token, followed
 by a list of package names.  To specify externals, add a ``paths`` or ``modules``
@@ -97,9 +107,9 @@ be:
    packages:
      openmpi:
        paths:
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7: /opt/openmpi-1.4.3
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7+debug: /opt/openmpi-1.4.3-debug
-         openmpi@1.6.5%intel@10.1 arch=linux-x86_64-debian7: /opt/openmpi-1.6.5-intel
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64: /opt/openmpi-1.4.3
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug: /opt/openmpi-1.4.3-debug
+         openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64: /opt/openmpi-1.6.5-intel
        buildable: False
 
 The addition of the ``buildable`` flag tells Spack that it should never build
@@ -114,6 +124,78 @@ The ``buildable`` does not need to be paired with external packages.
 It could also be used alone to forbid packages that may be
 buggy or otherwise undesirable.
 
+Virtual packages in Spack can also be specified as not buildable, and
+external implementations can be provided. In the example above,
+OpenMPI is configured as not buildable, but Spack will often prefer
+other MPI implementations over the externally available OpenMPI. Spack
+can be configured with every MPI provider not buildable individually,
+but more conveniently:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       buildable: False
+     openmpi:
+       paths:
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64: /opt/openmpi-1.4.3
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug: /opt/openmpi-1.4.3-debug
+         openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64: /opt/openmpi-1.6.5-intel
+
+Implementations can also be listed immediately under the virtual they provide:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       buildable: False
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64: /opt/openmpi-1.4.3
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug: /opt/openmpi-1.4.3-debug
+         openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64: /opt/openmpi-1.6.5-intel
+         mpich@3.3 %clang@9.0.0 arch=linux-debian7-x86_64: /opt/mpich-3.3-intel
+
+Spack can then use any of the listed external implementations of MPI
+to satisfy a dependency, and will choose depending on the compiler and
+architecture.
+
+.. _cmd-spack-external-find:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Automatically Find External Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can run the :ref:`spack external find <spack-external-find>` command
+to search for system-provided packages and add them to ``packages.yaml``.
+After running this command your ``packages.yaml`` may include new entries:
+
+.. code-block:: yaml
+
+   packages:
+     cmake:
+       paths:
+         cmake@3.17.2: /usr
+
+Generally this is useful for detecting a small set of commonly-used packages;
+for now this is generally limited to finding build-only dependencies.
+Specific limitations include:
+
+* Packages are not discoverable by default: For a package to be
+  discoverable with ``spack external find``, it needs to add special
+  logic. See :ref:`here <make-package-findable>` for more details.
+* The current implementation only collects and examines executable files,
+  so it is typically only useful for build/run dependencies (in some cases
+  if a library package also provides an executable, it may be possible to
+  extract a meaningful Spec by running the executable - for example the
+  compiler wrappers in MPI implementations).
+* The logic does not search through module files, it can only detect
+  packages with executables defined in ``PATH``; you can help Spack locate
+  externals which use module files by loading any associated modules for
+  packages that you want Spack to know about before running
+  ``spack external find``.
+* Spack does not overwrite existing entries in the package configuration:
+  If there is an external defined for a spec at any configuration scope,
+  then Spack will not add a new external entry (``spack config blame packages``
+  can help locate all external entries).
 
 .. _concretization-preferences:
 
@@ -138,7 +220,8 @@ Here's an example ``packages.yaml`` file that sets preferred packages:
      gperftools:
        version: [2.2, 2.4, 2.3]
      all:
-       compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
+       compiler: [gcc@4.4.7, 'gcc@4.6:', intel, clang, pgi]
+       target: [sandybridge]
        providers:
          mpi: [mvapich2, mpich, openmpi]
 
@@ -152,11 +235,11 @@ on the command line if explicitly requested.
 
 Each ``packages.yaml`` file begins with the string ``packages:`` and
 package names are specified on the next level. The special string ``all``
-applies settings to each package. Underneath each package name is
-one or more components: ``compiler``, ``variants``, ``version``,
-or ``providers``.  Each component has an ordered list of spec
-``constraints``, with earlier entries in the list being preferred over
-later entries.
+applies settings to *all* packages. Underneath each package name is one
+or more components: ``compiler``, ``variants``, ``version``,
+``providers``, and ``target``.  Each component has an ordered list of
+spec ``constraints``, with earlier entries in the list being preferred
+over later entries.
 
 Sometimes a package installation may have constraints that forbid
 the first concretization rule, in which case Spack will use the first

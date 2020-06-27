@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class PerlNetSsleay(PerlPackage):
     homepage = "http://search.cpan.org/~mikem/Net-SSLeay-1.82/lib/Net/SSLeay.pod"
     url      = "http://search.cpan.org/CPAN/authors/id/M/MI/MIKEM/Net-SSLeay-1.82.tar.gz"
 
-    version('1.85', '9d8188b9fb1cae3bd791979c20554925d5e94a138d00414f1a6814549927b0c8')
-    version('1.82', '2170469d929d5173bacffd0cb2d7fafa')
+    version('1.85', sha256='9d8188b9fb1cae3bd791979c20554925d5e94a138d00414f1a6814549927b0c8')
+    version('1.82', sha256='5895c519c9986a5e5af88e3b8884bbdc70e709ee829dc6abb9f53155c347c7e5')
 
     depends_on('openssl')
 

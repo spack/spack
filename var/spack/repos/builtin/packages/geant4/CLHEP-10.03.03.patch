@@ -1,0 +1,34 @@
+diff --git a/cmake/Modules/FindCLHEP.cmake b/cmake/Modules/FindCLHEP.cmake
+index 8b59f1c0a..f616d678e 100644
+--- a/cmake/Modules/FindCLHEP.cmake
++++ b/cmake/Modules/FindCLHEP.cmake
+@@ -180,7 +180,10 @@ if(UNIX)
+         execute_process(COMMAND ${CLHEP_CONFIG_EXECUTABLE} --prefix
+             OUTPUT_VARIABLE _clhep_config_prefix
+             OUTPUT_STRIP_TRAILING_WHITESPACE)
+-
++          if (_clhep_config_prefix)
++            # Remove wrapping double quotes.
++            string(REGEX REPLACE "\"(.*)\"" "\\1" _clhep_config_prefix "${_clhep_config_prefix}")
++          endif()
+         list(APPEND _clhep_root_hints ${_clhep_config_prefix})
+     endif()
+ elseif(WIN32 AND NOT UNIX)
+diff --git a/cmake/Templates/Geant4Config.cmake.in b/cmake/Templates/Geant4Config.cmake.in
+index d6fe408b3..f355be2af 100644
+--- a/cmake/Templates/Geant4Config.cmake.in
++++ b/cmake/Templates/Geant4Config.cmake.in
+@@ -268,13 +268,7 @@ set(Geant4_builtin_clhep_FOUND @GEANT4_USE_BUILTIN_CLHEP@)
+ if(NOT Geant4_builtin_clhep_FOUND)
+   set(Geant4_system_clhep_ISGRANULAR @GEANT4_USE_SYSTEM_CLHEP_GRANULAR@)
+ 
+-  set(CLHEP_ROOT_DIR "@CLHEP_ROOT_DIR@")
+-  set(__GEANT4_OLD_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
+-  set(CMAKE_MODULE_PATH "${_geant4_thisdir}/Modules" ${CMAKE_MODULE_PATH})
+   find_package(CLHEP @CLHEP_VERSION@ REQUIRED @__g4_clhep_components@)
+-  set(CMAKE_MODULE_PATH ${__GEANT4_OLD_CMAKE_MODULE_PATH})
+-  unset(CLHEP_ROOT_DIR)
+-  unset(__GEANT4_OLD_CMAKE_MODULE_PATH)
+   #CLHEP doesn't use target properties fully yet, so always include_directories
+   include_directories(${CLHEP_INCLUDE_DIRS})
+ endif()

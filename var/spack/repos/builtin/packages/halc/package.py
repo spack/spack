@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Halc(MakefilePackage):
     homepage = "https://github.com/lanl001/halc"
     url      = "https://github.com/lanl001/halc/archive/v1.1.tar.gz"
 
-    version('1.1', '4b289b366f6a5400ca481993aa68dd9c')
+    version('1.1', sha256='79675c3d6c40f567c2e1a5b5e7ec4fb150036582054f6ad079e06b73bd71c1ad')
 
     depends_on('blasr', type='run')
     depends_on('lordec', type='run')

@@ -1,0 +1,17 @@
+diff -Naur portage.orig/cinch/cmake/FindLAPACKE.cmake portage/cinch/cmake/FindLAPACKE.cmake
+--- portage.orig/cinch/cmake/FindLAPACKE.cmake   2018-07-27 14:38:17.894800000 -0600
++++ portage/cinch/cmake/FindLAPACKE.cmake        2018-08-01 10:14:59.880569000 -0600
+@@ -13,11 +13,12 @@
+ 
+ find_package(PkgConfig)
+ 
++set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH ON)
+ pkg_check_modules(PC_LAPACKE lapacke)
+ 
+ find_path(LAPACKE_INCLUDE_DIR lapacke.h HINTS ${PC_LAPACKE_NCLUDE_DIRS} PATH_SUFFIXES lapacke)
+ 
+-find_library(LAPACKE_LIBRARY NAMES lapacke ${PC_LAPACKE_LIBRARIES} HINTS ${PC_LAPACKE_LIBRARY_DIRS} )
++find_library(LAPACKE_LIBRARY NAMES lapacke openblas ${PC_LAPACKE_LIBRARIES} HINTS ${PC_LAPACKE_LIBRARY_DIRS} )
+ 
+ find_package(LAPACK)
+ 

@@ -1,0 +1,21 @@
+*** MountPointAttributes/src/MountPointAttr.h.orig	Wed Jul 31 10:08:33 2019
+--- MountPointAttributes/src/MountPointAttr.h	Wed Jul 31 10:09:55 2019
+***************
+*** 248,255 ****
+       */
+      struct FileSystemTypeInfo {
+          FileSystemType t;
+!         unsigned short speed;
+!         unsigned short scalability;
+          const char *fs_name;
+      };
+  
+--- 248,255 ----
+       */
+      struct FileSystemTypeInfo {
+          FileSystemType t;
+!         short speed;
+!         short scalability;
+          const char *fs_name;
+      };
+  

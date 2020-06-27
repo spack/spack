@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,12 +12,16 @@ import os
 import re
 import sys
 import os.path
-import subprocess
+
+import six
 
 import llnl.util.tty as tty
+import spack.util.executable as executable
 
 from llnl.util.lang import dedupe
 
+from six.moves import shlex_quote as cmd_quote
+from six.moves import cPickle
 
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
@@ -51,7 +55,20 @@ def is_system_path(path):
 
 
 def filter_system_paths(paths):
+    """Return only paths that are not system paths."""
     return [p for p in paths if not is_system_path(p)]
+
+
+def deprioritize_system_paths(paths):
+    """Put system paths at the end of paths, otherwise preserving order."""
+    filtered_paths = filter_system_paths(paths)
+    fp = set(filtered_paths)
+    return filtered_paths + [p for p in paths if p not in fp]
+
+
+def prune_duplicate_paths(paths):
+    """Returns the paths with duplicates removed, order preserved."""
+    return list(dedupe(paths))
 
 
 def get_path(name):
@@ -88,11 +105,36 @@ def path_put_first(var_name, directories):
     path_set(var_name, new_path)
 
 
-def dump_environment(path):
-    """Dump the current environment out to a file."""
+bash_function_finder = re.compile(r'BASH_FUNC_(.*?)\(\)')
+
+
+def env_var_to_source_line(var, val):
+    if var.startswith('BASH_FUNC'):
+        source_line = 'function {fname}{decl}; export -f {fname}'.\
+                      format(fname=bash_function_finder.sub(r'\1', var),
+                             decl=val)
+    else:
+        source_line = '{var}={val}; export {var}'.format(var=var,
+                                                         val=cmd_quote(val))
+    return source_line
+
+
+def dump_environment(path, environment=None):
+    """Dump an environment dictionary to a source-able file."""
+    use_env = environment or os.environ
+    hidden_vars = set(['PS1', 'PWD', 'OLDPWD', 'TERM_SESSION_ID'])
+
     with open(path, 'w') as env_file:
-        for key, val in sorted(os.environ.items()):
-            env_file.write('export %s="%s"\n' % (key, val))
+        for var, val in sorted(use_env.items()):
+            env_file.write(''.join(['#' if var in hidden_vars else '',
+                                    env_var_to_source_line(var, val),
+                                    '\n']))
+
+
+def pickle_environment(path, environment=None):
+    """Pickle an environment dictionary to a file."""
+    cPickle.dump(dict(environment if environment else os.environ),
+                 open(path, 'wb'), protocol=2)
 
 
 @contextlib.contextmanager
@@ -126,8 +168,15 @@ class NameModifier(object):
 
     def __init__(self, name, **kwargs):
         self.name = name
-        self.args = {'name': name}
+        self.separator = kwargs.get('separator', ':')
+        self.args = {'name': name, 'separator': self.separator}
+
         self.args.update(kwargs)
+
+    def __eq__(self, other):
+        if not isinstance(other, NameModifier):
+            return False
+        return self.name == other.name
 
     def update_args(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -142,6 +191,13 @@ class NameValueModifier(object):
         self.separator = kwargs.get('separator', ':')
         self.args = {'name': name, 'value': value, 'separator': self.separator}
         self.args.update(kwargs)
+
+    def __eq__(self, other):
+        if not isinstance(other, NameValueModifier):
+            return False
+        return self.name == other.name and \
+            self.value == other.value and \
+            self.separator == other.separator
 
     def update_args(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -168,6 +224,16 @@ class UnsetEnv(NameModifier):
     def execute(self, env):
         # Avoid throwing if the variable was not set
         env.pop(self.name, None)
+
+
+class RemoveFlagsEnv(NameValueModifier):
+
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
+        flags = environment_value.split(
+            self.separator) if environment_value else []
+        flags = [f for f in flags if f != self.value]
+        env[self.name] = self.separator.join(flags)
 
 
 class SetPath(NameValueModifier):
@@ -205,6 +271,28 @@ class RemovePath(NameValueModifier):
             self.separator) if environment_value else []
         directories = [os.path.normpath(x) for x in directories
                        if x != os.path.normpath(self.value)]
+        env[self.name] = self.separator.join(directories)
+
+
+class DeprioritizeSystemPaths(NameModifier):
+
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        directories = deprioritize_system_paths([os.path.normpath(x)
+                                                 for x in directories])
+        env[self.name] = self.separator.join(directories)
+
+
+class PruneDuplicatePaths(NameModifier):
+
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        directories = prune_duplicate_paths([os.path.normpath(x)
+                                             for x in directories])
         env[self.name] = self.separator.join(directories)
 
 
@@ -288,10 +376,25 @@ class EnvironmentModifications(object):
         """Stores a request to unset an environment variable.
 
         Args:
-            name: name of the environment variable to be set
+            name: name of the environment variable to be unset
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = UnsetEnv(name, **kwargs)
+        self.env_modifications.append(item)
+
+    def remove_flags(self, name, value, sep=' ', **kwargs):
+        """
+        Stores in the current object a request to remove flags from an
+        env variable
+
+        Args:
+            name: name of the environment variable to be removed from
+            value: value to remove to the environment variable
+            sep: separator to assume for environment variable
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        kwargs.update({'separator': sep})
+        item = RemoveFlagsEnv(name, value, **kwargs)
         self.env_modifications.append(item)
 
     def set_path(self, name, elements, **kwargs):
@@ -338,6 +441,28 @@ class EnvironmentModifications(object):
         item = RemovePath(name, path, **kwargs)
         self.env_modifications.append(item)
 
+    def deprioritize_system_paths(self, name, **kwargs):
+        """Stores a request to deprioritize system paths in a path list,
+        otherwise preserving the order.
+
+        Args:
+            name: name of the path list in the environment.
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        item = DeprioritizeSystemPaths(name, **kwargs)
+        self.env_modifications.append(item)
+
+    def prune_duplicate_paths(self, name, **kwargs):
+        """Stores a request to remove duplicates from a path list, otherwise
+        preserving the order.
+
+        Args:
+            name: name of the path list in the environment.
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        item = PruneDuplicatePaths(name, **kwargs)
+        self.env_modifications.append(item)
+
     def group_by_name(self):
         """Returns a dict of the modifications grouped by variable name.
 
@@ -367,6 +492,40 @@ class EnvironmentModifications(object):
         """
         self.env_modifications = []
 
+    def reversed(self):
+        """
+        Returns the EnvironmentModifications object that will reverse self
+
+        Only creates reversals for additions to the environment, as reversing
+        ``unset`` and ``remove_path`` modifications is impossible.
+
+        Reversable operations are set(), prepend_path(), append_path(),
+        set_path(), and append_flags().
+        """
+        rev = EnvironmentModifications()
+
+        for envmod in reversed(self.env_modifications):
+            if type(envmod) == SetEnv:
+                tty.warn("Reversing `Set` environment operation may lose "
+                         "original value")
+                rev.unset(envmod.name)
+            elif type(envmod) == AppendPath:
+                rev.remove_path(envmod.name, envmod.value)
+            elif type(envmod) == PrependPath:
+                rev.remove_path(envmod.name, envmod.value)
+            elif type(envmod) == SetPath:
+                tty.warn("Reversing `SetPath` environment operation may lose "
+                         "original value")
+                rev.unset(envmod.name)
+            elif type(envmod) == AppendFlagsEnv:
+                rev.remove_flags(envmod.name, envmod.value)
+            else:
+                # This is an un-reversable operation
+                tty.warn("Skipping reversal of unreversable operation"
+                         "%s %s" % (type(envmod), envmod.name))
+
+        return rev
+
     def apply_modifications(self):
         """Applies the modifications and clears the list."""
         modifications = self.group_by_name()
@@ -385,134 +544,102 @@ class EnvironmentModifications(object):
                 x.execute(new_env)
 
         cmds = ''
-        for name in set(new_env) & set(os.environ):
+
+        for name in set(new_env) | set(os.environ):
             new = new_env.get(name, None)
             old = os.environ.get(name, None)
             if new != old:
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
-                    cmds += _shell_set_strings[shell].format(name,
-                                                             new_env[name])
+                    cmds += _shell_set_strings[shell].format(
+                        name, cmd_quote(new_env[name]))
         return cmds
 
     @staticmethod
-    def from_sourcing_file(filename, *args, **kwargs):
-        """Returns modifications that would be made by sourcing a file.
+    def from_sourcing_file(filename, *arguments, **kwargs):
+        """Constructs an instance of a
+        :py:class:`spack.util.environment.EnvironmentModifications` object
+        that has the same effect as sourcing a file.
 
-        Parameters:
-            filename (str): The file to source
-            *args (list of str): Arguments to pass on the command line
+        Args:
+            filename (str): the file to be sourced
+            *arguments (list of str): arguments to pass on the command line
 
-        Keyword Arguments:
-            shell (str): The shell to use (default: ``bash``)
-            shell_options (str): Options passed to the shell (default: ``-c``)
-            source_command (str): The command to run (default: ``source``)
-            suppress_output (str): Redirect used to suppress output of command
+        Keyword Args:
+            shell (str): the shell to use (default: ``bash``)
+            shell_options (str): options passed to the shell (default: ``-c``)
+            source_command (str): the command to run (default: ``source``)
+            suppress_output (str): redirect used to suppress output of command
                 (default: ``&> /dev/null``)
-            concatenate_on_success (str): Operator used to execute a command
+            concatenate_on_success (str): operator used to execute a command
                 only when the previous command succeeds (default: ``&&``)
-            blacklist ([str or re]): Ignore any modifications of these
+            blacklist ([str or re]): ignore any modifications of these
                 variables (default: [])
-            whitelist ([str or re]): Always respect modifications of these
-                variables (default: []). Has precedence over blacklist.
-            clean (bool): In addition to removing empty entries,
+            whitelist ([str or re]): always respect modifications of these
+                variables (default: []). has precedence over blacklist.
+            clean (bool): in addition to removing empty entries,
                 also remove duplicate entries (default: False).
-
-        Returns:
-            EnvironmentModifications: an object that, if executed, has
-                the same effect on the environment as sourcing the file
         """
         # Check if the file actually exists
         if not os.path.isfile(filename):
             msg = 'Trying to source non-existing file: {0}'.format(filename)
             raise RuntimeError(msg)
 
-        # Kwargs parsing and default values
-        shell                  = kwargs.get('shell', '/bin/bash')
-        shell_options          = kwargs.get('shell_options', '-c')
-        source_command         = kwargs.get('source_command', 'source')
-        suppress_output        = kwargs.get('suppress_output', '&> /dev/null')
-        concatenate_on_success = kwargs.get('concatenate_on_success', '&&')
-        blacklist              = kwargs.get('blacklist', [])
-        whitelist              = kwargs.get('whitelist', [])
-        clean                  = kwargs.get('clean', False)
-
-        source_file = [source_command, filename]
-        source_file.extend(args)
-        source_file = ' '.join(source_file)
-
-        dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-        dump_environment = 'python -c "{0}"'.format(dump_cmd)
-
-        # Construct the command that will be executed
-        command = [
-            shell,
-            shell_options,
-            ' '.join([
-                source_file, suppress_output,
-                concatenate_on_success, dump_environment,
-            ]),
-        ]
-
-        # Try to source the file
-        proc = subprocess.Popen(
-            command, stdout=subprocess.PIPE, env=os.environ)
-        proc.wait()
-
-        if proc.returncode != 0:
-            msg = 'Sourcing file {0} returned a non-zero exit code'.format(
-                filename)
-            raise RuntimeError(msg)
-
-        output = ''.join([line.decode('utf-8') for line in proc.stdout])
-
-        # Construct dictionaries of the environment before and after
-        # sourcing the file, so that we can diff them.
-        env_before = dict(os.environ)
-        env_after = json.loads(output)
-
-        # If we're in python2, convert to str objects instead of unicode
-        # like json gives us.  We can't put unicode in os.environ anyway.
-        if sys.version_info[0] < 3:
-            env_after = dict((k.encode('utf-8'), v.encode('utf-8'))
-                             for k, v in env_after.items())
+        # Prepare a whitelist and a blacklist of environment variable names
+        blacklist = kwargs.get('blacklist', [])
+        whitelist = kwargs.get('whitelist', [])
+        clean = kwargs.get('clean', False)
 
         # Other variables unrelated to sourcing a file
-        blacklist.extend(['SHLVL', '_', 'PWD', 'OLDPWD', 'PS2'])
+        blacklist.extend([
+            # Bash internals
+            'SHLVL', '_', 'PWD', 'OLDPWD', 'PS1', 'PS2', 'ENV',
+            # Environment modules v4
+            'LOADEDMODULES', '_LMFILES_', 'BASH_FUNC_module()', 'MODULEPATH',
+            'MODULES_(.*)', r'(\w*)_mod(quar|share)',
+            # Lmod configuration
+            r'LMOD_(.*)', 'MODULERCFILE'
+        ])
 
-        def set_intersection(fullset, *args):
-            # A set intersection using string literals and regexs
-            meta = '[' + re.escape('[$()*?[]^{|}') + ']'
-            subset = fullset & set(args)   # As literal
-            for name in args:
-                if re.search(meta, name):
-                    pattern = re.compile(name)
-                    for k in fullset:
-                        if re.match(pattern, k):
-                            subset.add(k)
-            return subset
+        # Compute the environments before and after sourcing
+        before = sanitize(
+            environment_after_sourcing_files(os.devnull, **kwargs),
+            blacklist=blacklist, whitelist=whitelist
+        )
+        file_and_args = (filename,) + arguments
+        after = sanitize(
+            environment_after_sourcing_files(file_and_args, **kwargs),
+            blacklist=blacklist, whitelist=whitelist
+        )
 
-        for d in env_after, env_before:
-            # Retain (whitelist) has priority over prune (blacklist)
-            prune = set_intersection(set(d), *blacklist)
-            prune -= set_intersection(prune, *whitelist)
-            for k in prune:
-                d.pop(k, None)
+        # Delegate to the other factory
+        return EnvironmentModifications.from_environment_diff(
+            before, after, clean
+        )
 
+    @staticmethod
+    def from_environment_diff(before, after, clean=False):
+        """Constructs an instance of a
+        :py:class:`spack.util.environment.EnvironmentModifications` object
+        from the diff of two dictionaries.
+
+        Args:
+            before (dict): environment before the modifications are applied
+            after (dict): environment after the modifications are applied
+            clean (bool): in addition to removing empty entries, also remove
+                duplicate entries
+        """
         # Fill the EnvironmentModifications instance
         env = EnvironmentModifications()
-
         # New variables
-        new_variables = list(set(env_after) - set(env_before))
+        new_variables = list(set(after) - set(before))
         # Variables that have been unset
-        unset_variables = list(set(env_before) - set(env_after))
+        unset_variables = list(set(before) - set(after))
         # Variables that have been modified
-        common_variables = set(env_before).intersection(set(env_after))
-
+        common_variables = set(before).intersection(set(after))
         modified_variables = [x for x in common_variables
-                              if env_before[x] != env_after[x]]
-
+                              if before[x] != after[x]]
         # Consistent output order - looks nicer, easier comparison...
         new_variables.sort()
         unset_variables.sort()
@@ -530,25 +657,25 @@ class EnvironmentModifications(object):
         # Assume that variables with 'PATH' in the name or that contain
         # separators like ':' or ';' are more likely to be paths
         for x in new_variables:
-            sep = return_separator_if_any(env_after[x])
+            sep = return_separator_if_any(after[x])
             if sep:
-                env.prepend_path(x, env_after[x], separator=sep)
+                env.prepend_path(x, after[x], separator=sep)
             elif 'PATH' in x:
-                env.prepend_path(x, env_after[x])
+                env.prepend_path(x, after[x])
             else:
                 # We just need to set the variable to the new value
-                env.set(x, env_after[x])
+                env.set(x, after[x])
 
         for x in unset_variables:
             env.unset(x)
 
         for x in modified_variables:
-            before = env_before[x]
-            after = env_after[x]
-            sep = return_separator_if_any(before, after)
+            value_before = before[x]
+            value_after = after[x]
+            sep = return_separator_if_any(value_before, value_after)
             if sep:
-                before_list = before.split(sep)
-                after_list = after.split(sep)
+                before_list = value_before.split(sep)
+                after_list = value_after.split(sep)
 
                 # Filter out empty strings
                 before_list = list(filter(None, before_list))
@@ -559,8 +686,8 @@ class EnvironmentModifications(object):
                     before_list = list(dedupe(before_list))
                     after_list = list(dedupe(after_list))
                     # The reassembled cleaned entries
-                    before = sep.join(before_list)
-                    after = sep.join(after_list)
+                    value_before = sep.join(before_list)
+                    value_after = sep.join(after_list)
 
                 # Paths that have been removed
                 remove_list = [
@@ -574,12 +701,12 @@ class EnvironmentModifications(object):
                     end = after_list.index(remaining_list[-1])
                     search = sep.join(after_list[start:end + 1])
                 except IndexError:
-                    env.prepend_path(x, after)
+                    env.prepend_path(x, value_after)
                     continue
 
-                if search not in before:
+                if search not in value_before:
                     # We just need to set the variable to the new value
-                    env.prepend_path(x, after)
+                    env.prepend_path(x, value_after)
                 else:
                     try:
                         prepend_list = after_list[:start]
@@ -599,7 +726,7 @@ class EnvironmentModifications(object):
                         env.prepend_path(x, item)
             else:
                 # We just need to set the variable to the new value
-                env.set(x, after)
+                env.set(x, value_after)
 
         return env
 
@@ -758,3 +885,114 @@ def preserve_environment(*variables):
             msg += ' {0} was set to "{1}", will be unset'
             tty.debug(msg.format(var, os.environ[var]))
             del os.environ[var]
+
+
+def environment_after_sourcing_files(*files, **kwargs):
+    """Returns a dictionary with the environment that one would have
+    after sourcing the files passed as argument.
+
+    Args:
+        *files: each item can either be a string containing the path
+            of the file to be sourced or a sequence, where the first element
+            is the file to be sourced and the remaining are arguments to be
+            passed to the command line
+
+    Keyword Args:
+        env (dict): the initial environment (default: current environment)
+        shell (str): the shell to use (default: ``/bin/bash``)
+        shell_options (str): options passed to the shell (default: ``-c``)
+        source_command (str): the command to run (default: ``source``)
+        suppress_output (str): redirect used to suppress output of command
+            (default: ``&> /dev/null``)
+        concatenate_on_success (str): operator used to execute a command
+            only when the previous command succeeds (default: ``&&``)
+    """
+    # Set the shell executable that will be used to source files
+    shell_cmd = kwargs.get('shell', '/bin/bash')
+    shell_options = kwargs.get('shell_options', '-c')
+    source_command = kwargs.get('source_command', 'source')
+    suppress_output = kwargs.get('suppress_output', '&> /dev/null')
+    concatenate_on_success = kwargs.get('concatenate_on_success', '&&')
+
+    shell = executable.Executable(' '.join([shell_cmd, shell_options]))
+
+    def _source_single_file(file_and_args, environment):
+        source_file = [source_command]
+        source_file.extend(x for x in file_and_args)
+        source_file = ' '.join(source_file)
+
+        # If the environment contains 'python' use it, if not
+        # go with sys.executable. Below we just need a working
+        # Python interpreter, not necessarily sys.executable.
+        python_cmd = executable.which('python3', 'python', 'python2')
+        python_cmd = python_cmd.name if python_cmd else sys.executable
+
+        dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
+        dump_environment = python_cmd + ' -c "{0}"'.format(dump_cmd)
+
+        # Try to source the file
+        source_file_arguments = ' '.join([
+            source_file, suppress_output,
+            concatenate_on_success, dump_environment,
+        ])
+        output = shell(source_file_arguments, output=str, env=environment)
+        environment = json.loads(output)
+
+        # If we're in python2, convert to str objects instead of unicode
+        # like json gives us.  We can't put unicode in os.environ anyway.
+        if sys.version_info[0] < 3:
+            environment = dict(
+                (k.encode('utf-8'), v.encode('utf-8'))
+                for k, v in environment.items()
+            )
+
+        return environment
+
+    current_environment = kwargs.get('env', dict(os.environ))
+    for f in files:
+        # Normalize the input to the helper function
+        if isinstance(f, six.string_types):
+            f = [f]
+
+        current_environment = _source_single_file(
+            f, environment=current_environment
+        )
+
+    return current_environment
+
+
+def sanitize(environment, blacklist, whitelist):
+    """Returns a copy of the input dictionary where all the keys that
+    match a blacklist pattern and don't match a whitelist pattern are
+    removed.
+
+    Args:
+        environment (dict): input dictionary
+        blacklist (list of str): literals or regex patterns to be
+            blacklisted
+        whitelist (list of str): literals or regex patterns to be
+            whitelisted
+    """
+
+    def set_intersection(fullset, *args):
+        # A set intersection using string literals and regexs
+        meta = '[' + re.escape('[$()*?[]^{|}') + ']'
+        subset = fullset & set(args)  # As literal
+        for name in args:
+            if re.search(meta, name):
+                pattern = re.compile(name)
+                for k in fullset:
+                    if re.match(pattern, k):
+                        subset.add(k)
+        return subset
+
+    # Don't modify input, make a copy instead
+    environment = dict(environment)
+
+    # Retain (whitelist) has priority over prune (blacklist)
+    prune = set_intersection(set(environment), *blacklist)
+    prune -= set_intersection(prune, *whitelist)
+    for k in prune:
+        environment.pop(k, None)
+
+    return environment

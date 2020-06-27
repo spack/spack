@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,20 @@ class Intel(Compiler):
 
     version_argument = '--version'
     version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
+
+    @property
+    def verbose_flag(self):
+        return "-v"
+
+    required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng']
+
+    @property
+    def debug_flags(self):
+        return ['-debug', '-g', '-g0', '-g1', '-g2', '-g3']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os']
 
     @property
     def openmp_flag(self):
@@ -66,7 +80,39 @@ class Intel(Compiler):
             return "-std=c++14"
 
     @property
-    def pic_flag(self):
+    def c99_flag(self):
+        if self.version < ver('12'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C99 standard",
+                                          "c99_flag",
+                                          "< 12")
+        else:
+            return "-std=c99"
+
+    @property
+    def c11_flag(self):
+        if self.version < ver('16'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C11 standard",
+                                          "c11_flag",
+                                          "< 16")
+        else:
+            return "-std=c1x"
+
+    @property
+    def cc_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def f77_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def fc_pic_flag(self):
         return "-fPIC"
 
     @property

@@ -1,21 +1,24 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Schema for modules.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/modules.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/modules.py
    :lines: 13-
 """
+import spack.schema.environment
+import spack.schema.projections
 
 #: Matches a spec or a multi-valued variant but not another
 #: valid keyword.
 #:
 #: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
 #: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
-spec_regex = r'(?!hierarchy|verbose|hash_length|whitelist|' \
-             r'blacklist|naming_scheme|core_compilers|all)(^\w[\w-]*)'
+spec_regex = r'(?!hierarchy|core_specs|verbose|hash_length|whitelist|' \
+             r'blacklist|projections|naming_scheme|core_compilers|all)' \
+             r'(^\w[\w-]*)'
 
 #: Matches an anonymous spec, i.e. a spec without a root name
 anonymous_spec_regex = r'^[\^@%+~]'
@@ -66,19 +69,11 @@ module_file_configuration = {
                 }
             }
         },
-        'environment': {
-            'type': 'object',
-            'default': {},
-            'additionalProperties': False,
-            'properties': {
-                'set': dictionary_of_strings,
-                'unset': array_of_strings,
-                'prepend_path': dictionary_of_strings,
-                'append_path': dictionary_of_strings
-            }
-        }
+        'environment': spack.schema.environment.definition
     }
 }
+
+projections_scheme = spack.schema.projections.properties['projections']
 
 module_type_configuration = {
     'type': 'object',
@@ -103,6 +98,7 @@ module_type_configuration = {
             'naming_scheme': {
                 'type': 'string'  # Can we be more specific here?
             },
+            'projections': projections_scheme,
             'all': module_file_configuration,
         }
         },
@@ -135,7 +131,16 @@ properties = {
                 'default': [],
                 'items': {
                     'type': 'string',
-                    'enum': ['tcl', 'dotkit', 'lmod']}},
+                    'enum': ['tcl', 'dotkit', 'lmod']
+                },
+                'deprecatedProperties': {
+                    'properties': ['dotkit'],
+                    'message': 'cannot enable "{property}" in modules.yaml '
+                               '[support for {property} module files has been'
+                               ' dropped]',
+                    'error': False
+                },
+            },
             'lmod': {
                 'allOf': [
                     # Base configuration
@@ -144,7 +149,8 @@ properties = {
                         'type': 'object',
                         'properties': {
                             'core_compilers': array_of_strings,
-                            'hierarchy': array_of_strings
+                            'hierarchy': array_of_strings,
+                            'core_specs': array_of_strings,
                         },
                     }  # Specific lmod extensions
                 ]
@@ -163,6 +169,13 @@ properties = {
                     {}  # Specific dotkit extensions
                 ]
             },
+        },
+        'deprecatedProperties': {
+            'properties': ['dotkit'],
+            'message': 'the section "{property}" in modules.yaml has no effect'
+                       ' [support for {property} module files has been '
+                       'dropped]',
+            'error': False
         },
     },
 }

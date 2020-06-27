@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,9 +59,13 @@ The console can be reset later to plain text with '@.'.
 
 To output an @, use '@@'.  To output a } inside braces, use '}}'.
 """
+from __future__ import unicode_literals
 import re
 import sys
+
 from contextlib import contextmanager
+
+import six
 
 
 class ColorParseError(Exception):
@@ -211,20 +215,22 @@ def cextra(string):
     return len(''.join(re.findall(r'\033[^m]*m', string)))
 
 
-def cwrite(string, stream=sys.stdout, color=None):
+def cwrite(string, stream=None, color=None):
     """Replace all color expressions in string with ANSI control
        codes and write the result to the stream.  If color is
        False, this will write plain text with no color.  If True,
        then it will always write colored output.  If not supplied,
        then it will be set based on stream.isatty().
     """
+    stream = sys.stdout if stream is None else stream
     if color is None:
         color = get_color_when()
     stream.write(colorize(string, color=color))
 
 
-def cprint(string, stream=sys.stdout, color=None):
+def cprint(string, stream=None, color=None):
     """Same as cwrite, but writes a trailing newline to the stream."""
+    stream = sys.stdout if stream is None else stream
     cwrite(string + "\n", stream, color)
 
 
@@ -244,7 +250,7 @@ def cescape(string):
     Returns:
         (str): the string with color codes escaped
     """
-    string = str(string)
+    string = six.text_type(string)
     string = string.replace('@', '@@')
     string = string.replace('}', '}}')
     return string

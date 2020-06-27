@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,18 +18,18 @@ class Argobots(AutotoolsPackage):
     homepage = "http://www.argobots.org/"
     url      = "https://github.com/pmodels/argobots/releases/download/v1.0b1/argobots-1.0b1.tar.gz"
     git      = "https://github.com/pmodels/argobots.git"
+    maintainers = ['shintaro-iwasaki']
 
-    version("develop", branch="master")
-    version("1.0rc1", "729c018f3353976cb79c07ecaa13319d")
-    version("1.0b1", "5eeab7b2c639d08bbea22db3026cdf39")
-    version("1.0a1", "9d29d57d14d718f93b505178f6ba3e08")
+    version("main", branch="main")
+    version("1.0", sha256="36a0815f7bf99900a9c9c1eef61ef9b3b76aa2cfc4594a304f6c8c3296da8def")
 
     variant("valgrind", default=False, description="Enable Valgrind")
+    variant("debug", default=False, description="Compiled with debugging symbols")
 
-    depends_on("m4", type=("build"), when="@develop")
-    depends_on("autoconf", type=("build"), when="@develop")
-    depends_on("automake", type=("build"), when="@develop")
-    depends_on("libtool", type=("build"), when="@develop")
+    depends_on("m4", type=("build"), when="@main")
+    depends_on("autoconf", type=("build"), when="@main")
+    depends_on("automake", type=("build"), when="@main")
+    depends_on("libtool", type=("build"), when="@main")
     depends_on("valgrind", when="+valgrind")
 
     def configure_args(self):
@@ -38,5 +38,10 @@ class Argobots(AutotoolsPackage):
             args.append('--enable-valgrind')
         else:
             args.append('--disable-valgrind')
+
+        if '+debug' in self.spec:
+            args.append('--enable-debug=yes')
+        else:
+            args.append('--disable-debug')
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,8 +28,8 @@ class Dakota(CMakePackage):
     homepage = 'https://dakota.sandia.gov/'
     url = 'https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-6.3-public.src.tar.gz'
 
-    version('6.9', 'a3993709c7b2ef94b44da4544dc06275', url='https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-6.9-release-public-src.zip')
-    version('6.3', '05a58d209fae604af234c894c3f73f6d')
+    version('6.9', sha256='ede7149843707f4b07e76aae27e6a6826734131938da8a6c1b7ed11865c7ee84', url='https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-6.9-release-public-src.zip')
+    version('6.3', sha256='0fbc310105860d77bb5c96de0e8813d75441fca1a5e6dfaf732aa095c4488d52')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')

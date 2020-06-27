@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,12 @@ class Rsync(AutotoolsPackage):
     homepage = "https://rsync.samba.org"
     url      = "https://download.samba.org/pub/rsync/src/rsync-3.1.2.tar.gz"
 
-    version('3.1.3', '1581a588fde9d89f6bc6201e8129afaf')
-    version('3.1.2', '0f758d7e000c0f7f7d3792610fad70cb')
-    version('3.1.1', '43bd6676f0b404326eee2d63be3cdcfe')
+    version('3.1.3', sha256='55cc554efec5fdaad70de921cd5a5eeb6c29a95524c715f3bbf849235b0800c0')
+    version('3.1.2', sha256='ecfa62a7fa3c4c18b9eccd8c16eaddee4bd308a76ea50b5c02a5840f09c0a1c2')
+    version('3.1.1', sha256='7de4364fcf5fe42f3bdb514417f1c40d10bbca896abe7e7f2c581c6ea08a2621')
+
+    depends_on('zlib')
+    depends_on('popt')
+
+    def configure_args(self):
+        return ['--with-included-zlib=no']

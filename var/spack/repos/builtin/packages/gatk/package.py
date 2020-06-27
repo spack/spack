@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,13 +40,13 @@ class Gatk(Package):
     )
     version(
         "3.8-1",
-        "a0829534d2d0ca3ebfbd3b524a9b50427ff238e0db400d6e9e479242d98cbe5c",
+        sha256="a0829534d2d0ca3ebfbd3b524a9b50427ff238e0db400d6e9e479242d98cbe5c",
         extension="tar.bz2",
         url="https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-1-0-gf15c1c3ef",
     )
     version(
         "3.8-0",
-        "0581308d2a25f10d11d3dfd0d6e4d28e",
+        sha256="d1017b851f0cc6442b75ac88dd438e58203fa3ef1d1c38eb280071ae3803b9f1",
         extension="tar.gz",
         url="https://software.broadinstitute.org/gatk/download/auth?package=GATK",
     )
@@ -87,7 +87,7 @@ class Gatk(Package):
                 **kwargs
             )
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path(
-            "GATK", join_path(self.prefix, "bin", "GenomeAnalysisTK.jar")
+    def setup_run_environment(self, env):
+        env.prepend_path(
+            "GATK", join_path(self.prefix.bin, "GenomeAnalysisTK.jar")
         )

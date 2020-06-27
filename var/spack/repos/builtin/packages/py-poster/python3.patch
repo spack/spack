@@ -1,0 +1,441 @@
+diff -Naur a/poster/encode.py b/poster/encode.py
+--- a/poster/encode.py	2010-12-02 23:25:52.000000000 -0600
++++ b/poster/encode.py	2019-08-09 16:24:58.000000000 -0500
+@@ -21,7 +21,7 @@
+         bits = random.getrandbits(160)
+         return sha.new(str(bits)).hexdigest()
+ 
+-import urllib, re, os, mimetypes
++import urllib.request, urllib.parse, urllib.error, re, os, mimetypes
+ try:
+     from email.header import Header
+ except ImportError:
+@@ -34,16 +34,16 @@
+     if data is None:
+         return None
+ 
+-    if isinstance(data, unicode):
++    if isinstance(data, str):
+         data = data.encode("utf-8")
+-    return urllib.quote_plus(data)
++    return urllib.parse.quote_plus(data)
+ 
+ def _strify(s):
+     """If s is a unicode string, encode it to UTF-8 and return the results,
+     otherwise return str(s), or None if s is None"""
+     if s is None:
+         return None
+-    if isinstance(s, unicode):
++    if isinstance(s, str):
+         return s.encode("utf-8")
+     return str(s)
+ 
+@@ -86,7 +86,7 @@
+         if filename is None:
+             self.filename = None
+         else:
+-            if isinstance(filename, unicode):
++            if isinstance(filename, str):
+                 # Encode with XML entities
+                 self.filename = filename.encode("ascii", "xmlcharrefreplace")
+             else:
+@@ -153,7 +153,7 @@
+         MultipartParam object names must match the given names in the
+         name,value pairs or mapping, if applicable."""
+         if hasattr(params, 'items'):
+-            params = params.items()
++            params = list(params.items())
+ 
+         retval = []
+         for item in params:
+@@ -306,7 +306,7 @@
+     """Returns a dictionary with Content-Type and Content-Length headers
+     for the multipart/form-data encoding of ``params``."""
+     headers = {}
+-    boundary = urllib.quote_plus(boundary)
++    boundary = urllib.parse.quote_plus(boundary)
+     headers['Content-Type'] = "multipart/form-data; boundary=%s" % boundary
+     headers['Content-Length'] = str(get_body_size(params, boundary))
+     return headers
+@@ -326,12 +326,12 @@
+     def __iter__(self):
+         return self
+ 
+-    def next(self):
++    def __next__(self):
+         """generator function to yield multipart/form-data representation
+         of parameters"""
+         if self.param_iter is not None:
+             try:
+-                block = self.param_iter.next()
++                block = next(self.param_iter)
+                 self.current += len(block)
+                 if self.cb:
+                     self.cb(self.p, self.current, self.total)
+@@ -355,7 +355,7 @@
+         self.p = self.params[self.i]
+         self.param_iter = self.p.iter_encode(self.boundary)
+         self.i += 1
+-        return self.next()
++        return next(self)
+ 
+     def reset(self):
+         self.i = 0
+@@ -406,7 +406,7 @@
+     if boundary is None:
+         boundary = gen_boundary()
+     else:
+-        boundary = urllib.quote_plus(boundary)
++        boundary = urllib.parse.quote_plus(boundary)
+ 
+     headers = get_headers(params, boundary)
+     params = MultipartParam.from_params(params)
+diff -Naur a/poster/streaminghttp.py b/poster/streaminghttp.py
+--- a/poster/streaminghttp.py	2011-04-16 08:24:30.000000000 -0500
++++ b/poster/streaminghttp.py	2019-08-09 16:33:05.000000000 -0500
+@@ -1,6 +1,6 @@
+ """Streaming HTTP uploads module.
+ 
+-This module extends the standard httplib and urllib2 objects so that
++This module extends the standard http.client and urllib2 objects so that
+ iterable objects can be used in the body of HTTP requests.
+ 
+ In most cases all one should have to do is call :func:`register_openers()`
+@@ -26,13 +26,13 @@
+ ...                       {'Content-Length': str(len(s))})
+ """
+ 
+-import httplib, urllib2, socket
+-from httplib import NotConnected
++import http.client, urllib.request, urllib.error, urllib.parse, socket
++from http.client import NotConnected
+ 
+ __all__ = ['StreamingHTTPConnection', 'StreamingHTTPRedirectHandler',
+         'StreamingHTTPHandler', 'register_openers']
+ 
+-if hasattr(httplib, 'HTTPS'):
++if hasattr(http.client, 'HTTPS'):
+     __all__.extend(['StreamingHTTPSHandler', 'StreamingHTTPSConnection'])
+ 
+ class _StreamingHTTPMixin:
+@@ -45,7 +45,7 @@
+         a .read() method, or an iterable object that supports a .next()
+         method.
+         """
+-        # Based on python 2.6's httplib.HTTPConnection.send()
++        # Based on python 2.6's http.client.HTTPConnection.send()
+         if self.sock is None:
+             if self.auto_open:
+                 self.connect()
+@@ -58,14 +58,14 @@
+         # NOTE: we DO propagate the error, though, because we cannot simply
+         #       ignore the error... the caller will know if they can retry.
+         if self.debuglevel > 0:
+-            print "send:", repr(value)
++            print("send:", repr(value))
+         try:
+             blocksize = 8192
+             if hasattr(value, 'read') :
+                 if hasattr(value, 'seek'):
+                     value.seek(0)
+                 if self.debuglevel > 0:
+-                    print "sendIng a read()able"
++                    print("sendIng a read()able")
+                 data = value.read(blocksize)
+                 while data:
+                     self.sock.sendall(data)
+@@ -74,21 +74,21 @@
+                 if hasattr(value, 'reset'):
+                     value.reset()
+                 if self.debuglevel > 0:
+-                    print "sendIng an iterable"
++                    print("sendIng an iterable")
+                 for data in value:
+                     self.sock.sendall(data)
+             else:
+                 self.sock.sendall(value)
+-        except socket.error, v:
++        except socket.error as v:
+             if v[0] == 32:      # Broken pipe
+                 self.close()
+             raise
+ 
+-class StreamingHTTPConnection(_StreamingHTTPMixin, httplib.HTTPConnection):
+-    """Subclass of `httplib.HTTPConnection` that overrides the `send()` method
++class StreamingHTTPConnection(_StreamingHTTPMixin, http.client.HTTPConnection):
++    """Subclass of `http.client.HTTPConnection` that overrides the `send()` method
+     to support iterable body objects"""
+ 
+-class StreamingHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
++class StreamingHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
+     """Subclass of `urllib2.HTTPRedirectHandler` that overrides the
+     `redirect_request` method to properly handle redirected POST requests
+ 
+@@ -97,7 +97,7 @@
+     the new resource, but the body of the original request is not preserved.
+     """
+ 
+-    handler_order = urllib2.HTTPRedirectHandler.handler_order - 1
++    handler_order = urllib.request.HTTPRedirectHandler.handler_order - 1
+ 
+     # From python2.6 urllib2's HTTPRedirectHandler
+     def redirect_request(self, req, fp, code, msg, headers, newurl):
+@@ -120,22 +120,22 @@
+             # do the same.
+             # be conciliant with URIs containing a space
+             newurl = newurl.replace(' ', '%20')
+-            newheaders = dict((k, v) for k, v in req.headers.items()
++            newheaders = dict((k, v) for k, v in list(req.headers.items())
+                               if k.lower() not in (
+                                   "content-length", "content-type")
+                              )
+-            return urllib2.Request(newurl,
++            return urllib.request.Request(newurl,
+                            headers=newheaders,
+                            origin_req_host=req.get_origin_req_host(),
+                            unverifiable=True)
+         else:
+-            raise urllib2.HTTPError(req.get_full_url(), code, msg, headers, fp)
++            raise urllib.error.HTTPError(req.get_full_url(), code, msg, headers, fp)
+ 
+-class StreamingHTTPHandler(urllib2.HTTPHandler):
++class StreamingHTTPHandler(urllib.request.HTTPHandler):
+     """Subclass of `urllib2.HTTPHandler` that uses
+     StreamingHTTPConnection as its http connection class."""
+ 
+-    handler_order = urllib2.HTTPHandler.handler_order - 1
++    handler_order = urllib.request.HTTPHandler.handler_order - 1
+ 
+     def http_open(self, req):
+         """Open a StreamingHTTPConnection for the given request"""
+@@ -152,19 +152,19 @@
+                 if not req.has_header('Content-length'):
+                     raise ValueError(
+                             "No Content-Length specified for iterable body")
+-        return urllib2.HTTPHandler.do_request_(self, req)
++        return urllib.request.HTTPHandler.do_request_(self, req)
+ 
+-if hasattr(httplib, 'HTTPS'):
++if hasattr(http.client, 'HTTPS'):
+     class StreamingHTTPSConnection(_StreamingHTTPMixin,
+-            httplib.HTTPSConnection):
+-        """Subclass of `httplib.HTTSConnection` that overrides the `send()`
++            http.client.HTTPSConnection):
++        """Subclass of `http.client.HTTSConnection` that overrides the `send()`
+         method to support iterable body objects"""
+ 
+-    class StreamingHTTPSHandler(urllib2.HTTPSHandler):
++    class StreamingHTTPSHandler(urllib.request.HTTPSHandler):
+         """Subclass of `urllib2.HTTPSHandler` that uses
+         StreamingHTTPSConnection as its http connection class."""
+ 
+-        handler_order = urllib2.HTTPSHandler.handler_order - 1
++        handler_order = urllib.request.HTTPSHandler.handler_order - 1
+ 
+         def https_open(self, req):
+             return self.do_open(StreamingHTTPSConnection, req)
+@@ -178,22 +178,22 @@
+                     if not req.has_header('Content-length'):
+                         raise ValueError(
+                                 "No Content-Length specified for iterable body")
+-            return urllib2.HTTPSHandler.do_request_(self, req)
++            return urllib.request.HTTPSHandler.do_request_(self, req)
+ 
+ 
+ def get_handlers():
+     handlers = [StreamingHTTPHandler, StreamingHTTPRedirectHandler]
+-    if hasattr(httplib, "HTTPS"):
++    if hasattr(http.client, "HTTPS"):
+         handlers.append(StreamingHTTPSHandler)
+     return handlers
+-    
++
+ def register_openers():
+     """Register the streaming http handlers in the global urllib2 default
+     opener object.
+ 
+     Returns the created OpenerDirector object."""
+-    opener = urllib2.build_opener(*get_handlers())
++    opener = urllib.request.build_opener(*get_handlers())
+ 
+-    urllib2.install_opener(opener)
++    urllib.request.install_opener(opener)
+ 
+     return opener
+diff -Naur a/tests/test_encode.py b/tests/test_encode.py
+--- a/tests/test_encode.py	2010-12-02 23:35:48.000000000 -0600
++++ b/tests/test_encode.py	2019-08-09 16:24:59.000000000 -0500
+@@ -2,7 +2,7 @@
+ from unittest import TestCase
+ import mimetypes
+ import poster.encode
+-import StringIO
++import io
+ import sys
+ 
+ def unix2dos(s):
+@@ -47,7 +47,7 @@
+ bar
+ """)
+         self.assertEqual(expected,
+-                poster.encode.encode_string("XXXXXXXXX", u"\N{SNOWMAN}", "bar"))
++                poster.encode.encode_string("XXXXXXXXX", "\N{SNOWMAN}", "bar"))
+ 
+     def test_quote_value(self):
+         expected = unix2dos("""--XXXXXXXXX
+@@ -77,7 +77,7 @@
+ b\xc3\xa1r
+ """)
+         self.assertEqual(expected,
+-                poster.encode.encode_string("XXXXXXXXX", "foo", u"bár"))
++                poster.encode.encode_string("XXXXXXXXX", "foo", "bár"))
+ 
+ 
+ class TestEncode_File(TestCase):
+@@ -136,14 +136,14 @@
+ """)
+         self.assertEqual(expected,
+                 poster.encode.encode_file_header("XXXXXXXXX", "foo", 42,
+-                    u"\N{SNOWMAN}.txt"))
++                    "\N{SNOWMAN}.txt"))
+ 
+ class TestEncodeAndQuote(TestCase):
+     def test(self):
+         self.assertEqual("foo+bar", poster.encode.encode_and_quote("foo bar"))
+         self.assertEqual("foo%40bar", poster.encode.encode_and_quote("foo@bar"))
+         self.assertEqual("%28%C2%A9%29+2008",
+-                poster.encode.encode_and_quote(u"(©) 2008"))
++                poster.encode.encode_and_quote("(©) 2008"))
+ 
+ class TestMultiparam(TestCase):
+     def test_from_params(self):
+@@ -231,7 +231,7 @@
+ 
+ 
+     def test_stringio(self):
+-        fp = StringIO.StringIO("file data")
++        fp = io.StringIO("file data")
+         params = poster.encode.MultipartParam.from_params( [("foo", fp)] )
+         boundary = "XYZXYZXYZ"
+         datagen, headers = poster.encode.multipart_encode(params, boundary)
+@@ -289,7 +289,7 @@
+         self.assertEqual(encoded, expected)
+ 
+     def test_reset_file(self):
+-        fp = StringIO.StringIO("file data")
++        fp = io.StringIO("file data")
+         params = poster.encode.MultipartParam.from_params( [("foo", fp)] )
+         boundary = "XYZXYZXYZ"
+         datagen, headers = poster.encode.multipart_encode(params, boundary)
+diff -Naur a/tests/test_server.py b/tests/test_server.py
+--- a/tests/test_server.py	2010-10-23 09:59:01.000000000 -0500
++++ b/tests/test_server.py	2019-08-09 16:24:59.000000000 -0500
+@@ -19,7 +19,7 @@
+ 
+     start_response("200 OK", [("Content-Type", "text/plain")])
+     retval = ["Path: %s" % request.path]
+-    keys = request.params.keys()
++    keys = list(request.params.keys())
+     keys.sort()
+     for k in keys:
+         v = request.params[k]
+diff -Naur a/tests/test_streaming.py b/tests/test_streaming.py
+--- a/tests/test_streaming.py	2010-10-23 10:03:20.000000000 -0500
++++ b/tests/test_streaming.py	2019-08-09 16:33:39.000000000 -0500
+@@ -1,8 +1,8 @@
+ # -*- coding: utf-8 -*-
+ from unittest import TestCase
+-import httplib
++import http.client
+ import poster
+-import urllib2, urllib
++import urllib.request, urllib.error, urllib.parse, urllib
+ import threading, time, signal
+ import sys
+ import os
+@@ -18,9 +18,9 @@
+         if self.disable_https:
+             # Disable HTTPS support for these tests to excercise the non-https code
+             # HTTPS is tested in test_streaming_https.py
+-            if hasattr(httplib, "HTTPS"):
+-                self.https = getattr(httplib, "HTTPS")
+-                delattr(httplib, "HTTPS")
++            if hasattr(http.client, "HTTPS"):
++                self.https = getattr(http.client, "HTTPS")
++                delattr(http.client, "HTTPS")
+                 reload(poster.streaminghttp)
+             else:
+                 self.https = None
+@@ -39,9 +39,9 @@
+             for i in range(20):
+                 try:
+                     if self.disable_https:
+-                        urllib2.urlopen("http://localhost:%i/" % port).read()
++                        urllib.request.urlopen("http://localhost:%i/" % port).read()
+                     else:
+-                        urllib2.urlopen("https://localhost:%i/" % port).read()
++                        urllib.request.urlopen("https://localhost:%i/" % port).read()
+                     time.sleep(0.1)
+                     break
+                 except:
+@@ -50,7 +50,7 @@
+                     time.sleep(0.1)
+             else:
+                 self.server_output.seek(0)
+-                print self.server_output.read()
++                print(self.server_output.read())
+                 raise OSError("Error starting server")
+         except:
+             if self.server_proc:
+@@ -60,20 +60,20 @@
+ 
+     def tearDown(self):
+         if self.https:
+-            setattr(httplib, "HTTPS", self.https)
++            setattr(http.client, "HTTPS", self.https)
+ 
+         os.kill(self.server_proc.pid, signal.SIGINT)
+         self.server_proc.wait()
+         self.server_output.seek(0)
+-        print self.server_output.read()
++        print(self.server_output.read())
+ 
+     def _open(self, url, params=None, headers=None):
+         try:
+             if headers is None:
+                 headers = {}
+-            req = urllib2.Request("http://localhost:%i/%s" % (port, url), params,
++            req = urllib.request.Request("http://localhost:%i/%s" % (port, url), params,
+                     headers)
+-            return urllib2.urlopen(req).read()
++            return urllib.request.urlopen(req).read()
+         except:
+             self._opened = False
+             raise
+@@ -129,12 +129,12 @@
+         self.assertEqual(response, "Path: /foo")
+ 
+     def test_login(self):
+-        password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
++        password_manager = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+         password_manager.add_password(
+                 None, "http://localhost:%i/needs_auth" % port, 'john', 'secret'
+         )
+ 
+-        auth_handler = urllib2.HTTPBasicAuthHandler(password_manager)
++        auth_handler = urllib.request.HTTPBasicAuthHandler(password_manager)
+         auth_handler.handler_order = 0
+ 
+         self.opener.add_handler(auth_handler)
+@@ -151,9 +151,9 @@
+         try:
+             if headers is None:
+                 headers = {}
+-            req = urllib2.Request("https://localhost:%i/%s" % (port, url), params,
++            req = urllib.request.Request("https://localhost:%i/%s" % (port, url), params,
+                     headers)
+-            return urllib2.urlopen(req).read()
++            return urllib.request.urlopen(req).read()
+         except:
+             self._opened = False
+             raise

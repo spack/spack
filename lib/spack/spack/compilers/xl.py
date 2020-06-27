@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,18 @@ class Xl(Compiler):
     version_regex = r'([0-9]?[0-9]\.[0-9])'
 
     @property
+    def verbose_flag(self):
+        return "-V"
+
+    @property
+    def debug_flags(self):
+        return ['-g', '-g0', '-g1', '-g2', '-g8', '-g9']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4', '-O5', '-Ofast']
+
+    @property
     def openmp_flag(self):
         return "-qsmp=omp"
 
@@ -44,7 +56,41 @@ class Xl(Compiler):
             return "-qlanglvl=extended0x"
 
     @property
-    def pic_flag(self):
+    def c99_flag(self):
+        if self.version >= ver('13.1.1'):
+            return '-std=gnu99'
+        if self.version >= ver('10.1'):
+            return '-qlanglvl=extc99'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C99 standard',
+                                      'c99_flag',
+                                      '< 10.1')
+
+    @property
+    def c11_flag(self):
+        if self.version >= ver('13.1.2'):
+            return '-std=gnu11'
+        if self.version >= ver('12.1'):
+            return '-qlanglvl=extc1x'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C11 standard',
+                                      'c11_flag',
+                                      '< 12.1')
+
+    @property
+    def cc_pic_flag(self):
+        return "-qpic"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-qpic"
+
+    @property
+    def f77_pic_flag(self):
+        return "-qpic"
+
+    @property
+    def fc_pic_flag(self):
         return "-qpic"
 
     @property

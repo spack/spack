@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Impute2(Package):
     homepage = "https://mathgen.stats.ox.ac.uk/impute/impute_v2.html#home"
     url      = "https://mathgen.stats.ox.ac.uk/impute/impute_v2.3.2_x86_64_dynamic.tgz"
 
-    version('2.3.2', '0e1bafb8f63eb5cf9ae02ab761af58aa')
+    version('2.3.2', sha256='da4f64ec75aa2787b8f234e5a7ac4503d464e55ef436a9cd3f4867a10f0c2867')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

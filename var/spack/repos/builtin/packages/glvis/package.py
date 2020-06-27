@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,22 +36,22 @@ class Glvis(MakefilePackage):
     version('develop', branch='master')
 
     version('3.4',
-            '289fbd2e09d4456e5fee6162bdc3e0b4c8c8d54625f3547ad2a69fef319279e7',
+            sha256='289fbd2e09d4456e5fee6162bdc3e0b4c8c8d54625f3547ad2a69fef319279e7',
             url='https://bit.ly/glvis-3-4',
             extension='.tar.gz')
 
     version('3.3',
-            'e24d7c5cb53f208b691c872fe82ea898242cfdc0fd68dd0579c739e070dcd800',
+            sha256='e24d7c5cb53f208b691c872fe82ea898242cfdc0fd68dd0579c739e070dcd800',
             url='http://goo.gl/C0Oadw',
             extension='.tar.gz')
 
     version('3.2',
-            'c82cb110396e63b6436a770c55eb6d578441eaeaf3f9cc20436c242392e44e80',
+            sha256='c82cb110396e63b6436a770c55eb6d578441eaeaf3f9cc20436c242392e44e80',
             url='http://goo.gl/hzupg1',
             extension='.tar.gz')
 
     version('3.1',
-            '793e984ddfbf825dcd13dfe1ca00eccd686cd40ad30c8789ba80ee175a1b488c',
+            sha256='793e984ddfbf825dcd13dfe1ca00eccd686cd40ad30c8789ba80ee175a1b488c',
             url='http://goo.gl/gQZuu9',
             extension='tar.gz')
 

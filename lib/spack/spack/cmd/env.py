@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -157,7 +157,7 @@ def env_deactivate(args):
 def env_create_setup_parser(subparser):
     """create a new environment"""
     subparser.add_argument(
-        'create_env', metavar='ENV', help='name of environment to create')
+        'create_env', metavar='env', help='name of environment to create')
     subparser.add_argument(
         '-d', '--dir', action='store_true',
         help='create an environment in a specific directory')
@@ -208,10 +208,14 @@ def _env_create(name_or_path, init_file=None, dir=False, with_view=None):
         env = ev.Environment(name_or_path, init_file, with_view)
         env.write()
         tty.msg("Created environment in %s" % env.path)
+        tty.msg("You can activate this environment with:")
+        tty.msg("  spack env activate %s" % env.path)
     else:
         env = ev.create(name_or_path, init_file, with_view)
         env.write()
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
+        tty.msg("You can activate this environment with:")
+        tty.msg("  spack env activate %s" % (name_or_path))
     return env
 
 
@@ -221,7 +225,7 @@ def _env_create(name_or_path, init_file=None, dir=False, with_view=None):
 def env_remove_setup_parser(subparser):
     """remove an existing environment"""
     subparser.add_argument(
-        'rm_env', metavar='ENV', nargs='+',
+        'rm_env', metavar='env', nargs='+',
         help='environment(s) to remove')
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
@@ -249,7 +253,8 @@ def env_remove(args):
 
     for env in read_envs:
         if env.active:
-            tty.die("Environment %s can't be removed while activated.")
+            tty.die("Environment %s can't be removed while activated."
+                    % env.name)
 
         env.destroy()
         tty.msg("Successfully removed environment '%s'" % env.name)
@@ -310,16 +315,16 @@ def env_view(args):
 
     if env:
         if args.action == ViewAction.regenerate:
-            env.regenerate_view()
+            env.regenerate_views()
         elif args.action == ViewAction.enable:
             if args.view_path:
                 view_path = args.view_path
             else:
-                view_path = env.default_view_path
-            env.update_view(view_path)
+                view_path = env.view_path_default
+            env.update_default_view(view_path)
             env.write()
         elif args.action == ViewAction.disable:
-            env.update_view(None)
+            env.update_default_view(None)
             env.write()
     else:
         tty.msg("No active environment")

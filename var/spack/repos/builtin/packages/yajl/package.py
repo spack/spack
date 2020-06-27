@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,4 +14,4 @@ class Yajl(CMakePackage):
     git      = "https://github.com/lloyd/yajl.git"
 
     version('develop', branch='master')
-    version('2.1.0', '5eb9c16539bf354b937fcb20e263d1eb')
+    version('2.1.0', sha256='7458c4ed10ebe52c54f57e741bbfde69c73495e76e0f6a45d6d1986cf24794bc')

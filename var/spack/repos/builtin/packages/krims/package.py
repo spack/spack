@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Krims(CMakePackage):
     # Versions
     #
     version("develop", branch="master")
-    version("0.2.1", "bf219656fd81c342a4782bad7d7beed0")
+    version("0.2.1", sha256="baac8de392e6c2a73a535f71596f51d4a80a08d9c0ecbf9a2d72d1d70dd17999")
 
     #
     # Variants
@@ -58,8 +58,6 @@ class Krims(CMakePackage):
             "-DAUTOCHECKOUT_MISSING_REPOS=OFF",
             #
             "-DBUILD_SHARED_LIBS=" + str("+shared" in spec),
-            "-DDRB_MACHINE_SPECIFIC_OPTIM_Release=ON",  # Adds -march=native
-            #
             # TODO Hard-disable tests for now, since rapidcheck not in Spack
             "-DKRIMS_ENABLE_TESTS=OFF",
             "-DKRIMS_ENABLE_EXAMPLES=" + str("+examples" in spec),

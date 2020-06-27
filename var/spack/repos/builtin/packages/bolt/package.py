@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,13 +19,22 @@ class Bolt(CMakePackage):
 
     homepage = "http://www.bolt-omp.org/"
     url      = "https://github.com/pmodels/bolt/releases/download/v1.0b1/bolt-1.0b1.tar.gz"
+    git      = "https://github.com/pmodels/bolt.git"
+    maintainers = ['shintaro-iwasaki']
 
-    version("1.0b1", "df76beb3a7f13ae2dcaf9ab099eea87b")
+    version("main", branch="main")
+    version("1.0", sha256="1c0d2f75597485ca36335d313a73736594e75c8a36123c5a6f54d01b5ba5c384")
+
+    depends_on('argobots')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
 
     def cmake_args(self):
+        spec = self.spec
         options = [
-            '-DLIBOMP_USE_ITT_NOTIFY=off',
-            '-DLIBOMP_USE_ARGOBOTS=on'
+            '-DLIBOMP_USE_ARGOBOTS=on',
+            '-DLIBOMP_ARGOBOTS_INSTALL_DIR=' + spec['argobots'].prefix
         ]
 
         return options

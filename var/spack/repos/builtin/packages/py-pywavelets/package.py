@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyPywavelets(PythonPackage):
     homepage = "https://github.com/PyWavelets"
     url = "https://pypi.io/packages/source/P/PyWavelets/PyWavelets-0.5.2.tar.gz"
 
-    version('0.5.2', 'aedda732f064cf9395f03d37f1003d1a')
+    version('0.5.2', sha256='ce36e2f0648ea1781490b09515363f1f64446b0eac524603e5db5e180113bed9')
 
     import_modules = ['pywt', 'pywt.data']
 

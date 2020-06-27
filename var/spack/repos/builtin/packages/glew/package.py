@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Glew(Package):
     homepage = "http://glew.sourceforge.net/"
     url      = "https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.tgz/download"
 
-    version('2.0.0',  '2a2cd7c98f13854d2fcddae0d2b20411')
+    version('2.0.0',  sha256='c572c30a4e64689c342ba1624130ac98936d7af90c3103f9ce12b8a0c5736764')
 
     depends_on("cmake", type='build')
     depends_on("gl")

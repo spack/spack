@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Hstr(AutotoolsPackage):
     homepage = "https://github.com/dvorka/hstr"
     url      = "https://github.com/dvorka/hstr/archive/1.22.tar.gz"
 
-    version('1.22', '620dab922fadf2858938fbe36d9f99fd')
+    version('1.22', sha256='384fee04e4c80a1964dcf443131c1da4a20dd474fb48132a51d3de0a946ba996')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

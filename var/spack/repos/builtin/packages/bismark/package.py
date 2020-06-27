@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class Bismark(Package):
     homepage = "https://www.bioinformatics.babraham.ac.uk/projects/bismark"
     url      = "https://github.com/FelixKrueger/Bismark/archive/0.19.0.tar.gz"
 
-    version('0.19.0', 'f403654aded77bf0d1dac1203867ded1')
-    version('0.18.2', '42334b7e3ed53ba246f30f1f846b4af8')
+    version('0.19.0', sha256='91707737f96a0574956a282b635abad7560e7d90bee188a67a7807b2470deae2')
+    version('0.18.2', sha256='83391c5b5af33047178e7774ac25f5a69ce9315c13ae02f016baf7c50b73e702')
 
     depends_on('bowtie2', type='run')
     depends_on('perl', type='run')

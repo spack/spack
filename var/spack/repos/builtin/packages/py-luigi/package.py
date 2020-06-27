@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,6 @@ class PyLuigi(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-tornado@4.0:4.99', type=('build', 'run'))
     depends_on('py-python-daemon@:2.1', type=('build', 'run'))
-    depends_on('py-dateutil@2.7.5', when='@2.8.3:', type=('build', 'run'))
+    depends_on('py-python-dateutil@2.7.5', when='@2.8.3:', type=('build', 'run'))
 
-    depends_on('py-test@3.3.0:', type='test')
+    depends_on('py-pytest@3.3.0:', type='test')

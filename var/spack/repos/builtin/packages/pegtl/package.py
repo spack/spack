@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,9 @@ class Pegtl(CMakePackage):
     url      = "https://github.com/taocpp/PEGTL/tarball/2.1.4"
     git      = "https://github.com/taocpp/PEGTL.git"
 
-    version('develop', branch='master')
-    version('2.1.4', 'e5288b6968e6e910287fce93dc5557bf')
-    version('2.0.0', 'c772828e7188459338a920c21f9896db')
+    version('master', branch='master')
+    version('2.1.4', sha256='d990dccc07b4d9ba548326d11c5c5e34fa88b34fe113cb5377da03dda29f23f2')
+    version('2.0.0', sha256='5aae0505077e051cae4d855c38049cc6cf71103a6cc8d0ddef01a576e8a60cc0')
+
+    # Ref: https://github.com/taocpp/PEGTL/blob/master/src/example/pegtl/json_classes.hpp
+    patch('change_to_virtual_destructor.patch', when='@:2.4')

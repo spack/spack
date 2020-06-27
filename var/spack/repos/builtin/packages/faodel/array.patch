@@ -1,0 +1,11 @@
+diff --git a/src/common/Configuration.cpp b/src/common/Configuration.cpp
+index f844488..70186cc 100644
+--- a/src/common/Configuration.cpp
++++ b/src/common/Configuration.cpp
+@@ -1,4 +1,5 @@
+
++#include <array>
+ #include <vector>
+ #include <map>
+ #include <algorithm>
+

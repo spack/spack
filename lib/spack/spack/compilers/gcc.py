@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Gcc(Compiler):
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     # Homebrew and Linuxbrew may build gcc with -X, -X.Y suffixes.
     # Old compatibility versions may contain XY suffixes.
-    suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d', r'\d\d']
+    suffixes = [r'-mp-\d+\.\d+', r'-\d+\.\d+', r'-\d+', r'\d\d']
 
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'gcc/gcc',
@@ -37,6 +37,18 @@ class Gcc(Compiler):
 
     PrgEnv = 'PrgEnv-gnu'
     PrgEnv_compiler = 'gcc'
+
+    @property
+    def verbose_flag(self):
+        return "-v"
+
+    @property
+    def debug_flags(self):
+        return ['-g', '-gstabs+', '-gstabs', '-gxcoff+', '-gxcoff', '-gvms']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-Os', '-Ofast', '-Og']
 
     @property
     def openmp_flag(self):
@@ -88,8 +100,40 @@ class Gcc(Compiler):
             return "-std=c++17"
 
     @property
-    def pic_flag(self):
+    def c99_flag(self):
+        if self.version < ver('4.5'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C99 standard",
+                                          "c99_flag",
+                                          "< 4.5")
+        return "-std=c99"
+
+    @property
+    def c11_flag(self):
+        if self.version < ver('4.7'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C11 standard",
+                                          "c11_flag",
+                                          "< 4.7")
+        return "-std=c11"
+
+    @property
+    def cc_pic_flag(self):
         return "-fPIC"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def f77_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def fc_pic_flag(self):
+        return "-fPIC"
+
+    required_libs = ['libgcc', 'libgfortran']
 
     @classmethod
     def default_version(cls, cc):

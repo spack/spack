@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@
 # 1. It allows Spack to swap compilers into and out of builds easily.
 # 2. It adds several options to the compile line so that spack
 #    packages can find their dependencies at build time and run time:
-#      -I           arguments for dependency /include directories.
-#      -L           arguments for dependency /lib directories.
-#      -Wl,-rpath   arguments for dependency /lib directories.
+#      -I and/or -isystem arguments for dependency /include directories.
+#      -L                 arguments for dependency /lib directories.
+#      -Wl,-rpath         arguments for dependency /lib directories.
 #
 
 # This is an array of environment variables that need to be set before
@@ -32,6 +32,10 @@ parameters=(
     SPACK_CXX_RPATH_ARG
     SPACK_F77_RPATH_ARG
     SPACK_FC_RPATH_ARG
+    SPACK_TARGET_ARGS
+    SPACK_DTAGS_TO_ADD
+    SPACK_DTAGS_TO_STRIP
+    SPACK_LINKER_ARG
     SPACK_SHORT_SPEC
     SPACK_SYSTEM_DIRS
 )
@@ -39,7 +43,7 @@ parameters=(
 # The compiler input variables are checked for sanity later:
 #   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
 # The default compiler flags are passed from these variables:
-#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FCFLAGS, SPACK_FFLAGS,
+#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FFLAGS,
 #   SPACK_LDFLAGS, SPACK_LDLIBS
 # Debug env var is optional; set to "TRUE" for debug logging:
 #   SPACK_DEBUG
@@ -78,7 +82,7 @@ function system_dir {
 }
 
 for param in "${parameters[@]}"; do
-    if [[ -z ${!param} ]]; then
+    if [[ -z ${!param+x} ]]; then
         die "Spack compiler must be run from Spack! Input '$param' is missing."
     fi
 done
@@ -103,25 +107,25 @@ case "$command" in
     cpp)
         mode=cpp
         ;;
-    cc|c89|c99|gcc|clang|armclang|icc|pgcc|xlc|xlc_r)
+    cc|c89|c99|gcc|clang|armclang|icc|pgcc|xlc|xlc_r|fcc)
         command="$SPACK_CC"
         language="C"
         comp="CC"
         lang_flags=C
         ;;
-    c++|CC|g++|clang++|armclang++|icpc|pgc++|xlc++|xlc++_r)
+    c++|CC|g++|clang++|armclang++|icpc|pgc++|xlc++|xlc++_r|FCC)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
         lang_flags=CXX
         ;;
-    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|pgfortran|xlf90|xlf90_r|nagfor)
+    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|pgfortran|xlf90|xlf90_r|nagfor|frt)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
         lang_flags=F
         ;;
-    f77|xlf|xlf_r|pgf77)
+    f77|xlf|xlf_r|pgf77|frt)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
@@ -165,6 +169,25 @@ if [[ -z $mode ]]; then
         fi
     done
 fi
+
+# This is needed to ensure we set RPATH instead of RUNPATH
+# (or the opposite, depending on the configuration in config.yaml)
+#
+# Documentation on this mechanism is lacking at best. A few sources
+# of information are (note that some of them take explicitly the
+# opposite stance that Spack does):
+#
+# http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
+# https://wiki.debian.org/RpathIssue
+#
+# The only discussion I could find on enabling new dynamic tags by
+# default on ld is the following:
+#
+# https://sourceware.org/ml/binutils/2013-01/msg00307.html
+#
+dtags_to_add="${SPACK_DTAGS_TO_ADD}"
+dtags_to_strip="${SPACK_DTAGS_TO_STRIP}"
+linker_arg="${SPACK_LINKER_ARG}"
 
 # Set up rpath variable according to language.
 eval rpath=\$SPACK_${comp}_RPATH_ARG
@@ -228,10 +251,11 @@ input_command="$*"
 #
 # Parse the command line arguments.
 #
-# We extract -L, -I, and -Wl,-rpath arguments from the command line and
-# recombine them with Spack arguments later.  We parse these out so that
-# we can make sure that system paths come last, that package arguments
-# come first, and that Spack arguments are injected properly.
+# We extract -L, -I, -isystem and -Wl,-rpath arguments from the
+# command line and recombine them with Spack arguments later.  We
+# parse these out so that we can make sure that system paths come
+# last, that package arguments come first, and that Spack arguments
+# are injected properly.
 #
 # All other arguments, including -l arguments, are treated as
 # 'other_args' and left in their original order.  This ensures that
@@ -250,12 +274,24 @@ system_libdirs=()
 system_rpaths=()
 libs=()
 other_args=()
+isystem_system_includes=()
+isystem_includes=()
 
 while [ -n "$1" ]; do
     # an RPATH to be added after the case statement.
     rp=""
 
     case "$1" in
+        -isystem*)
+            arg="${1#-isystem}"
+	    isystem_was_used=true
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            if system_dir "$arg"; then
+                isystem_system_includes+=("$arg")
+            else
+                isystem_includes+=("$arg")
+            fi
+            ;;
         -I*)
             arg="${1#-I}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
@@ -292,6 +328,8 @@ while [ -n "$1" ]; do
                     die "-Wl,-rpath was not followed by -Wl,*"
                 fi
                 rp="${arg#-Wl,}"
+            elif [[ "$arg" = "$dtags_to_strip" ]] ; then
+                :  # We want to remove explicitly this flag
             else
                 other_args+=("-Wl,$arg")
             fi
@@ -318,12 +356,18 @@ while [ -n "$1" ]; do
                 fi
                 shift 3;
                 rp="$1"
+            elif [[ "$2" = "$dtags_to_strip" ]] ; then
+                shift  # We want to remove explicitly this flag
             else
                 other_args+=("$1")
             fi
             ;;
         *)
-            other_args+=("$1")
+            if [[ "$1" = "$dtags_to_strip" ]] ; then
+                :  # We want to remove explicitly this flag
+            else
+                other_args+=("$1")
+            fi
             ;;
     esac
 
@@ -373,6 +417,7 @@ case "$mode" in
             CXX)
                 flags=("${flags[@]}" "${SPACK_CXXFLAGS[@]}") ;;
         esac
+        flags=(${SPACK_TARGET_ARGS[@]} "${flags[@]}")
         ;;
 esac
 
@@ -382,10 +427,15 @@ case "$mode" in
         flags=("${flags[@]}" "${SPACK_LDFLAGS[@]}") ;;
 esac
 
-# Prepend include directories
-IFS=':' read -ra include_dirs <<< "$SPACK_INCLUDE_DIRS"
-if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
-    includes=("${includes[@]}" "${include_dirs[@]}")
+# On macOS insert headerpad_max_install_names linker flag
+if [[ ($mode == ld || $mode == ccld) && "$SPACK_SHORT_SPEC" =~ "darwin" ]];
+then
+    case "$mode" in
+        ld)
+            flags=("${flags[@]}" -headerpad_max_install_names) ;;
+        ccld)
+            flags=("${flags[@]}" -Wl,-headerpad_max_install_names) ;;
+    esac
 fi
 
 IFS=':' read -ra rpath_dirs <<< "$SPACK_RPATH_DIRS"
@@ -415,6 +465,12 @@ case "$mode" in
             rpaths+=("${extra_rpaths[@]}")
         fi
 
+        # Set implicit RPATHs
+        IFS=':' read -ra implicit_rpaths <<< "$SPACK_COMPILER_IMPLICIT_RPATHS"
+        if [[ "$add_rpaths" != "false" ]] ; then
+            rpaths+=("${implicit_rpaths[@]}")
+        fi
+
         # Add SPACK_LDLIBS to args
         for lib in "${SPACK_LDLIBS[@]}"; do
             libs+=("${lib#-l}")
@@ -432,9 +488,22 @@ args=()
 # flags assembled earlier
 args+=("${flags[@]}")
 
-# include directory search paths
+# Insert include directories just prior to any system include directories
+
 for dir in "${includes[@]}";         do args+=("-I$dir"); done
+for dir in "${isystem_includes[@]}";         do args+=("-isystem$dir"); done
+
+IFS=':' read -ra spack_include_dirs <<< "$SPACK_INCLUDE_DIRS"
+if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
+    if [[ "$isystem_was_used" == "true" ]] ; then
+	for dir in "${spack_include_dirs[@]}";  do args+=("-isystem$dir"); done
+    else
+	for dir in "${spack_include_dirs[@]}";  do args+=("-I$dir"); done
+    fi
+fi
+
 for dir in "${system_includes[@]}";  do args+=("-I$dir"); done
+for dir in "${isystem_system_includes[@]}";  do args+=("-isystem$dir"); done
 
 # Library search paths
 for dir in "${libdirs[@]}";          do args+=("-L$dir"); done
@@ -443,10 +512,12 @@ for dir in "${system_libdirs[@]}";   do args+=("-L$dir"); done
 # RPATHs arguments
 case "$mode" in
     ccld)
+        if [ ! -z "$dtags_to_add" ] ; then args+=("$linker_arg$dtags_to_add") ; fi
         for dir in "${rpaths[@]}";        do args+=("$rpath$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("$rpath$dir"); done
         ;;
     ld)
+        if [ ! -z "$dtags_to_add" ] ; then args+=("$dtags_to_add") ; fi
         for dir in "${rpaths[@]}";        do args+=("-rpath" "$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("-rpath" "$dir"); done
         ;;

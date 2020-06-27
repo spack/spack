@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Zip(MakefilePackage):
     homepage = 'http://www.info-zip.org/Zip.html'
     url      = 'http://downloads.sourceforge.net/infozip/zip30.tar.gz'
 
-    version('3.0', '7b74551e63f8ee6aab6fbc86676c0d37')
+    version('3.0', sha256='f0e8bb1f9b7eb0b01285495a2699df3a4b766784c1765a8f1aeedf63c0806369')
 
     depends_on('bzip2')
 

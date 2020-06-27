@@ -1,0 +1,34 @@
+#!/bin/bash
+# The openfoam providers must export 'FOAM_PROJECT_DIR'
+# The derived package is expected to supply an appropriate
+# <Allwmake> or <Allwmake-spack> file.
+
+[ -d "$FOAM_PROJECT_DIR" -a -f "$FOAM_PROJECT_DIR/etc/bashrc" ] || {
+    echo "Error: no PROJECT=$FOAM_PROJECT_DIR" 1>&2
+    echo "    or no etc/bashrc found" 1>&2
+    exit 1
+}
+
+export FOAM_INST_DIR=$(cd $FOAM_PROJECT_DIR/.. && pwd -L) # Needed by foam-extend
+. "$FOAM_PROJECT_DIR"/etc/bashrc ''  # No arguments
+
+# Package-specific adjustments
+[ -f spack-config.sh ] && . ./spack-config.sh ''  # No arguments
+
+echo "========================================"
+date "+%Y-%m-%d %H:%M:%S %z" 2>/dev/null || echo "date is unknown"
+echo "Build with ${WM_PROJECT}-${WM_PROJECT_VERSION}"
+echo "  WM_PROJECT_DIR = $WM_PROJECT_DIR"
+echo "  $WM_COMPILER $WM_COMPILER_TYPE compiler"
+echo "  $WM_OPTIONS - with $WM_MPLIB $FOAM_MPI"
+echo
+
+# Prefer spack-specific Allwmake if it exists
+if [ -f Allwmake-spack ]
+then
+    ./Allwmake-spack $@   # Pass arguments
+else
+    ./Allwmake $@         # Pass arguments
+fi
+
+# -----------------------------------------------------------------------------

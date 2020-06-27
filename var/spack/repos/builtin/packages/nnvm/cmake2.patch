@@ -1,0 +1,20 @@
+diff -ru spack-src/CMakeLists.txt spack-src.new/CMakeLists.txt
+--- spack-src/CMakeLists.txt	2019-07-24 10:51:47.679702195 +0900
++++ spack-src.new/CMakeLists.txt	2019-07-24 11:05:21.199748764 +0900
+@@ -38,7 +38,13 @@
+   check_cxx_compiler_flag("-std=c++0x"    SUPPORT_CXX0X)
+   check_cxx_compiler_flag("-msse2"        SUPPORT_MSSE2)
+   check_cxx_compiler_flag("-openmp"       SUPPORT_OPENMP)
+-  set(CMAKE_C_FLAGS "-O3 -Wall -msse2 -Wno-unknown-pragmas -std=c++0x -fPIC")
++  set(CMAKE_C_FLAGS "-O3 -Wall -Wno-unknown-pragmas -fPIC")
++  if(SUPPORT_MSSE2)
++    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
++  endif()
++  if(SUPPORT_CXX0X)
++    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c++0x")
++  endif()
+   if(SUPPORT_OPENMP)
+     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+   endif()
+Only in spack-src.new: CMakeLists.txt.org
+Only in spack-src: .git

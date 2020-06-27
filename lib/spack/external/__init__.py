@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,7 +55,9 @@ jsonschema
 * Usage: An implementation of JSON Schema for Python.
 * Version: 2.4.0 (last version before functools32 dependency was added)
 * Note: functools32 doesn't support Python 2.6 or 3.0, so jsonschema
-  cannot be upgraded any further
+  cannot be upgraded any further until we drop 2.6.
+  Also, jsonschema/validators.py has been modified NOT to try to import
+  requests (see 7a1dd517b8).
 
 markupsafe
 ----------
@@ -80,24 +82,17 @@ py
   ini-parsing, io, code, and log facilities.
 * Version: 1.4.34 (last version supporting Python 2.6)
 
-pyqver
-------
-
-* Homepage: https://github.com/ghewgill/pyqver
-* Usage: External script to query required python version of
-  python source code. Used for ensuring 2.6 compatibility.
-* Version: Unversioned
-
 pytest
 ------
 
 * Homepage: https://pypi.python.org/pypi/pytest
 * Usage: Testing framework used by Spack.
 * Version: 3.2.5 (last version supporting Python 2.6)
-* Note: This package has been slightly modified to improve
-  Python 2.6 compatibility. See the following commit if the
-  vendored copy ever needs to be updated again:
-  https://github.com/spack/spack/pull/6801/commits/ff513c39f2c67ff615de5cbc581dd69a8ec96526
+* Note: This package has been slightly modified:
+  * We improve Python 2.6 compatibility. See:
+    https://github.com/spack/spack/pull/6801.
+  * We have patched pytest not to depend on setuptools. See:
+    https://github.com/spack/spack/pull/15612
 
 ruamel.yaml
 ------
@@ -117,4 +112,19 @@ six
 * Homepage: https://pypi.python.org/pypi/six
 * Usage: Python 2 and 3 compatibility utilities.
 * Version: 1.11.0
+
+macholib
+--------
+
+* Homepage: https://macholib.readthedocs.io/en/latest/index.html#
+* Usage: Manipulation of Mach-o binaries for relocating macOS buildcaches on Linux
+* Version: 1.12
+
+altgraph
+--------
+
+* Homepage: https://altgraph.readthedocs.io/en/latest/index.html
+* Usage: dependency of macholib
+* Version: 0.16.1
+
 """

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,9 +8,11 @@ from __future__ import print_function
 import textwrap
 from six.moves import zip_longest
 
+import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
+import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.spec
 import spack.fetch_strategy as fs
@@ -36,8 +38,7 @@ def padder(str_list, extra=0):
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        'name', metavar='PACKAGE', help='name of package to get info for')
+    arguments.add_common_arguments(subparser, ['package'])
 
 
 def section_title(s):
@@ -53,11 +54,9 @@ def variant(s):
 
 
 class VariantFormatter(object):
-    def __init__(self, variants, max_widths=(30, 20, 30)):
+    def __init__(self, variants):
         self.variants = variants
         self.headers = ('Name [Default]', 'Allowed values', 'Description')
-        # Set max headers lengths
-        self.max_column_widths = max_widths
 
         # Formats
         fmt_name = '{0} [{1}]'
@@ -67,7 +66,7 @@ class VariantFormatter(object):
         # than that
         self.column_widths = [len(x) for x in self.headers]
 
-        # Update according to line lengths
+        # Expand columns based on max line lengths
         for k, v in variants.items():
             candidate_max_widths = (
                 len(fmt_name.format(k, self.default(v))),  # Name [Default]
@@ -81,12 +80,18 @@ class VariantFormatter(object):
                 max(self.column_widths[2], candidate_max_widths[2])
             )
 
-        # Reduce to at most the maximum allowed
-        self.column_widths = (
-            min(self.column_widths[0], self.max_column_widths[0]),
-            min(self.column_widths[1], self.max_column_widths[1]),
-            min(self.column_widths[2], self.max_column_widths[2])
+        # Don't let name or possible values be less than max widths
+        _, cols = tty.terminal_size()
+        max_name = min(self.column_widths[0], 30)
+        max_vals = min(self.column_widths[1], 20)
+
+        # allow the description column to extend as wide as the terminal.
+        max_description = min(
+            self.column_widths[2],
+            # min width 70 cols, 14 cols of margins and column spacing
+            max(cols, 70) - max_name - max_vals - 14,
         )
+        self.column_widths = (max_name, max_vals, max_description)
 
         # Compute the format
         self.fmt = "%%-%ss%%-%ss%%s" % (
@@ -106,16 +111,16 @@ class VariantFormatter(object):
             yield '    None'
         else:
             yield '    ' + self.fmt % self.headers
-            yield '\n'
+            underline = tuple([l * "=" for l in self.column_widths])
+            yield '    ' + self.fmt % underline
+            yield ''
             for k, v in sorted(self.variants.items()):
                 name = textwrap.wrap(
                     '{0} [{1}]'.format(k, self.default(v)),
                     width=self.column_widths[0]
                 )
-                allowed = textwrap.wrap(
-                    v.allowed_values,
-                    width=self.column_widths[1]
-                )
+                allowed = v.allowed_values.replace('True, False', 'on, off')
+                allowed = textwrap.wrap(allowed, width=self.column_widths[1])
                 description = textwrap.wrap(
                     v.description,
                     width=self.column_widths[2]
@@ -174,16 +179,19 @@ def print_text_info(pkg):
                             not v.isdevelop(),
                             v)
         preferred = sorted(pkg.versions, key=key_fn).pop()
+        url = ''
+        if pkg.has_code:
+            url = fs.for_package_version(pkg, preferred)
 
-        f = fs.for_package_version(pkg, preferred)
-        line = version('    {0}'.format(pad(preferred))) + color.cescape(f)
+        line = version('    {0}'.format(pad(preferred))) + color.cescape(url)
         color.cprint(line)
         color.cprint('')
         color.cprint(section_title('Safe versions:  '))
 
         for v in reversed(sorted(pkg.versions)):
-            f = fs.for_package_version(pkg, v)
-            line = version('    {0}'.format(pad(v))) + color.cescape(f)
+            if pkg.has_code:
+                url = fs.for_package_version(pkg, v)
+            line = version('    {0}'.format(pad(v))) + color.cescape(url)
             color.cprint(line)
 
     color.cprint('')
@@ -193,12 +201,13 @@ def print_text_info(pkg):
     for line in formatter.lines:
         color.cprint(line)
 
-    color.cprint('')
-    color.cprint(section_title('Installation Phases:'))
-    phase_str = ''
-    for phase in pkg.phases:
-        phase_str += "    {0}".format(phase)
-    color.cprint(phase_str)
+    if hasattr(pkg, 'phases') and pkg.phases:
+        color.cprint('')
+        color.cprint(section_title('Installation Phases:'))
+        phase_str = ''
+        for phase in pkg.phases:
+            phase_str += "    {0}".format(phase)
+        color.cprint(phase_str)
 
     for deptype in ('build', 'link', 'run'):
         color.cprint('')
@@ -231,5 +240,5 @@ def print_text_info(pkg):
 
 
 def info(parser, args):
-    pkg = spack.repo.get(args.name)
+    pkg = spack.repo.get(args.package)
     print_text_info(pkg)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,19 +24,32 @@ class Verrou(AutotoolsPackage):
     url      = "https://github.com/edf-hpc/verrou/archive/v2.0.0.tar.gz"
     git      = "https://github.com/edf-hpc/verrou.git"
 
-    version('develop', branch='master')
-    version('2.1.0', 'b1ba49f84aebab15b8ab5649946c9c31b53ad1499f6ffb681c98db41ed28566d')
-    version('2.0.0', '388d493df3f253c9b049ce0ceae55fd6')
-    version('1.1.0', '9752d776fb534890e5e29f9721ee6125')
+    maintainers = ['HadrienG2']
 
+    version('develop', branch='master')
+    version('2.2.0', sha256='d4ea3d19f0c61329723907b5b145d85776bb702643c1605a31f584484d2c5efc')
+    version('2.1.0', sha256='b1ba49f84aebab15b8ab5649946c9c31b53ad1499f6ffb681c98db41ed28566d')
+    version('2.0.0', sha256='798df6e426ec57646a2a626d756b72f0171647ae5b07c982952dae2d71e26045')
+    version('1.1.0', sha256='b5105f61c65680f31551199cd143b2e15f412c34c821537998a7165e315dde2d')
+
+    # The server is sometimes a bit slow to respond
+    timeout = {'timeout': 60}
+
+    resource(name='valgrind-3.15.0',
+             url='https://sourceware.org/pub/valgrind/valgrind-3.15.0.tar.bz2',
+             sha256='417c7a9da8f60dd05698b3a7bc6002e4ef996f14c13f0ff96679a16873e78ab1',
+             when='@2.2.0:',
+             fetch_options=timeout)
     resource(name='valgrind-3.14.0',
              url='https://sourceware.org/pub/valgrind/valgrind-3.14.0.tar.bz2',
              sha256='037c11bfefd477cc6e9ebe8f193bb237fe397f7ce791b4a4ce3fa1c6a520baa5',
-             when='@2.1.0:')
+             when='@2.1.0:2.1.99',
+             fetch_options=timeout)
     resource(name='valgrind-3.13.0',
              url='https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2',
              sha256='d76680ef03f00cd5e970bbdcd4e57fb1f6df7d2e2c071635ef2be74790190c3b',
-             when='@1.1.0:2.0.99')
+             when='@1.1.0:2.0.99',
+             fetch_options=timeout)
 
     variant('fma', default=True,
             description='Activates fused multiply-add support for Verrou')

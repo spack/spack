@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Dash(AutotoolsPackage):
     url      = "https://git.kernel.org/pub/scm/utils/dash/dash.git/snapshot/dash-0.5.9.1.tar.gz"
     list_url = homepage
 
-    version('0.5.9.1', '0d800da0b8ddbefa1468978d314b7d09')
+    version('0.5.9.1', sha256='3f747013a20a3a9d2932be1a6dd1b002ca5649849b649be0af8a8da80bd8a918')
 
     depends_on('libedit', type='link')
 

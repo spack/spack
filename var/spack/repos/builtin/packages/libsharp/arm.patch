@@ -1,0 +1,15 @@
+diff -ru spack-src/configure.ac spack-src.new/configure.ac
+--- spack-src/configure.ac	2019-07-19 11:40:41.000000000 +0900
++++ spack-src.new/configure.ac	2019-07-19 13:48:48.773238828 +0900
+@@ -56,8 +56,9 @@
+     changequote(,)
+     gcc43=`echo $GCCVERSION | grep -c '^4\.[3456789]'`
+     gcc44=`echo $GCCVERSION | grep -c '^4\.4'`
++    arch=`uname -m`
+     changequote([,])
+-    if test $gcc43 -gt 0; then
++    if test $gcc43 -gt 0 -a $arch != aarch64; then
+       CCFLAGS="$CCFLAGS -march=native"
+     fi
+     if test $gcc44 -gt 0; then
+Only in spack-src.new: configure.ac.new

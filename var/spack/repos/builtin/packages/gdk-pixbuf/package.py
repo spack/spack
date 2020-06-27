@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class GdkPixbuf(Package):
     list_depth = 1
 
     version('2.38.0', sha256='dd50973c7757bcde15de6bcd3a6d462a445efd552604ae6435a0532fbbadae47')
-    version('2.31.2', '6be6bbc4f356d4b79ab4226860ab8523')
+    version('2.31.2', sha256='9e467ed09894c802499fb2399cd9a89ed21c81700ce8f27f970a833efb1e47aa')
 
     depends_on('meson@0.46.0:', type='build', when='@2.37.92:')
     depends_on('meson@0.45.0:', type='build', when='@2.37.0:')
@@ -46,11 +46,11 @@ class GdkPixbuf(Package):
         url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/{0}/gdk-pixbuf-{1}.tar.xz"
         return url.format(version.up_to(2), version)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path("XDG_DATA_DIRS",
-                               self.prefix.share)
-        run_env.prepend_path("XDG_DATA_DIRS",
-                             self.prefix.share)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
@@ -81,7 +81,7 @@ class GdkPixbuf(Package):
         if self.run_tests:
             make('installcheck')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # The "post-install.sh" script uses gdk-pixbuf-query-loaders,
         # which was installed earlier.
-        spack_env.prepend_path('PATH', self.prefix.bin)
+        env.prepend_path('PATH', self.prefix.bin)

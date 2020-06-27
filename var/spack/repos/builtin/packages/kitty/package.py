@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,7 @@ class Kitty(PythonPackage):
     depends_on('zlib')
     depends_on('libpng')
     depends_on('gl', type=('build', 'link', 'run'))
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-sphinx', type='build')
     depends_on('freetype', when=sys.platform != 'darwin')

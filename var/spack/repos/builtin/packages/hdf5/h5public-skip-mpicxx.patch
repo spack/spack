@@ -1,0 +1,11 @@
+--- a/src/H5public.h	2019-08-28 18:51:39.393781356 -0400
++++ b/src/H5public.h	2019-08-28 20:59:50.315181711 -0400
+@@ -57,6 +57,8 @@
+ #   include <stddef.h>
+ #endif
+ #ifdef H5_HAVE_PARALLEL
++#   define MPICH_SKIP_MPICXX 1
++#   define OMPI_SKIP_MPICXX 1
+ #   include <mpi.h>
+ #ifndef MPI_FILE_NULL		/*MPIO may be defined in mpi.h already       */
+ #   include <mpio.h>

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,6 @@ class PerlSwissknife(PerlPackage):
     homepage = "http://swissknife.sourceforge.net"
     url      = "https://downloads.sourceforge.net/project/swissknife/swissknife/1.75/Swissknife_1.75.tar.gz"
 
-    version('1.75', '09d008cb1d1d211ae4eb9f087c213edf')
+    version('1.75', sha256='3d9af0d71366c90698488f6dae54118e6a4dba087b3c33d1bfa8245663cba53a')
 
     depends_on('perl-module-build', type='build')

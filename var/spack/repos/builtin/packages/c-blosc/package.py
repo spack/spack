@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class CBlosc(CMakePackage):
     homepage = "http://www.blosc.org"
     url      = "https://github.com/Blosc/c-blosc/archive/v1.11.1.tar.gz"
 
+    version('1.17.0', sha256='75d98c752b8cf0d4a6380a3089d56523f175b0afa2d0cf724a1bd0a1a8f975a4')
     version('1.16.3', sha256='bec56cb0956725beb93d50478e918aca09f489f1bfe543dbd3087827a7344396')
     version('1.15.0', sha256='dbbb01f9fedcdf2c2ff73296353a9253f44ce9de89c081cbd8146170dce2ba8f')
     version('1.12.1', sha256='e04535e816bb942bedc9a0ba209944d1eb34e26e2d9cca37f114e8ee292cb3c8')
@@ -32,6 +33,9 @@ class CBlosc(CMakePackage):
     depends_on('zstd')
     depends_on('lz4')
 
+    patch('gcc.patch', when="@1.12.1:1.17.0")
+    patch('test_forksafe.patch', when='@1.15.0:1.17.0%intel')
+
     def cmake_args(self):
         args = []
 
@@ -45,6 +49,13 @@ class CBlosc(CMakePackage):
             args.append('-DPREFER_EXTERNAL_ZLIB=ON')
             args.append('-DPREFER_EXTERNAL_ZSTD=ON')
             args.append('-DPREFER_EXTERNAL_LZ4=ON')
+
+            if self.run_tests:
+                args.append('-DBUILD_TESTS=ON')
+                args.append('-DBUILD_BENCHMARKS=ON')
+            else:
+                args.append('-DBUILD_TESTS=OFF')
+                args.append('-DBUILD_BENCHMARKS=OFF')
 
         return args
 

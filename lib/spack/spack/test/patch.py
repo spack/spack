@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import os
 import filecmp
 import pytest
+import collections
 
 from llnl.util.filesystem import working_dir, mkdirp
 
@@ -23,6 +24,7 @@ from spack.spec import Spec
 foo_sha256 = 'b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c'
 bar_sha256 = '7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730'
 baz_sha256 = 'bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c'
+biz_sha256 = 'a69b288d7393261e613c276c6d38a01461028291f6e381623acc58139d01f54d'
 
 # url patches
 url1_sha256 = 'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'
@@ -31,10 +33,10 @@ url2_archive_sha256 = 'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcda
 
 
 @pytest.fixture()
-def mock_stage(tmpdir, monkeypatch):
-    # don't disrupt the spack install directory with tests.
-    mock_path = str(tmpdir)
-    monkeypatch.setattr(spack.paths, 'stage_path', mock_path)
+def mock_patch_stage(tmpdir_factory, monkeypatch):
+    # Don't disrupt the spack install directory with tests.
+    mock_path = str(tmpdir_factory.mktemp('mock-patch-stage'))
+    monkeypatch.setattr(spack.stage, '_stage_root', mock_path)
     return mock_path
 
 
@@ -51,7 +53,7 @@ data_path = os.path.join(spack.paths.test_path, 'data', 'patch')
      '252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
      None)
 ])
-def test_url_patch(mock_stage, filename, sha256, archive_sha256):
+def test_url_patch(mock_patch_stage, filename, sha256, archive_sha256):
     # Make a patch object
     url = 'file://' + filename
     pkg = spack.repo.get('patch')
@@ -60,13 +62,9 @@ def test_url_patch(mock_stage, filename, sha256, archive_sha256):
 
     # make a stage
     with Stage(url) as stage:  # TODO: url isn't used; maybe refactor Stage
-        # TODO: there is probably a better way to mock this.
-        stage.mirror_path = mock_stage  # don't disrupt the spack install
+        stage.mirror_path = mock_patch_stage
 
-        # fake a source path
-        with working_dir(stage.path):
-            mkdirp('spack-expanded-archive')
-
+        mkdirp(stage.source_path)
         with working_dir(stage.source_path):
             # write a file to be patched
             with open('foo.txt', 'w') as f:
@@ -82,7 +80,7 @@ first line
 third line
 """)
         # apply the patch and compare files
-        patch.fetch(stage)
+        patch.fetch()
         patch.apply(stage)
         patch.clean()
 
@@ -106,6 +104,20 @@ def test_patch_in_spec(mock_packages, config):
 
     assert ((foo_sha256, bar_sha256, baz_sha256) ==
             tuple(spec.variants['patches']._patches_in_order_of_appearance))
+
+
+def test_patch_mixed_versions_subset_constraint(mock_packages, config):
+    """If we have a package with mixed x.y and x.y.z versions, make sure that
+       a patch applied to a version range of x.y.z versions is not applied to
+       an x.y version.
+    """
+    spec1 = Spec('patch@1.0.1')
+    spec1.concretize()
+    assert biz_sha256 in spec1.variants['patches'].value
+
+    spec2 = Spec('patch@1.0')
+    spec2.concretize()
+    assert biz_sha256 not in spec2.variants['patches'].value
 
 
 def test_patch_order(mock_packages, config):
@@ -143,16 +155,16 @@ def test_nested_directives(mock_packages):
     # to Dependency objects.
     libelf_dep = next(iter(patcher.dependencies['libelf'].values()))
     assert len(libelf_dep.patches) == 1
-    assert len(libelf_dep.patches[Spec('libelf')]) == 1
+    assert len(libelf_dep.patches[Spec()]) == 1
 
     libdwarf_dep = next(iter(patcher.dependencies['libdwarf'].values()))
     assert len(libdwarf_dep.patches) == 2
-    assert len(libdwarf_dep.patches[Spec('libdwarf')]) == 1
-    assert len(libdwarf_dep.patches[Spec('libdwarf@20111030')]) == 1
+    assert len(libdwarf_dep.patches[Spec()]) == 1
+    assert len(libdwarf_dep.patches[Spec('@20111030')]) == 1
 
     fake_dep = next(iter(patcher.dependencies['fake'].values()))
     assert len(fake_dep.patches) == 1
-    assert len(fake_dep.patches[Spec('fake')]) == 2
+    assert len(fake_dep.patches[Spec()]) == 2
 
 
 def test_patched_dependency(
@@ -314,3 +326,11 @@ def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
         libelf, libdwarf, fake,
         'builtin.mock.patch-several-dependencies',
         spec.package.package_dir)
+
+
+def test_file_patch_no_file():
+    # Give it the attributes we need to construct the error message
+    FakePackage = collections.namedtuple('FakePackage', ['name', 'namespace'])
+    fp = FakePackage('fake-package', 'test')
+    with pytest.raises(ValueError, match=r'FilePatch:.*'):
+        spack.patch.FilePatch(fp, 'nonexistent_file', 0, '')

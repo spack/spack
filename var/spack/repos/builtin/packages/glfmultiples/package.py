@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Glfmultiples(MakefilePackage):
     homepage = "https://genome.sph.umich.edu/wiki/GlfMultiples"
     url      = "http://www.sph.umich.edu/csg/abecasis/downloads/generic-glfMultiples-2010-06-16.tar.gz"
 
-    version('2010-06-16', '64bf6bb7c76543f4c8fabce015a3cb11')
+    version('2010-06-16', sha256='f7abef6f6b043e9052fb408bb2aae6d0d97d907aedc1b3e02dd0db08eb81b979')
 
     depends_on('zlib')
 

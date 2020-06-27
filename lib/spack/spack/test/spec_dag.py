@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ import spack.package
 
 from spack.spec import Spec
 from spack.dependency import all_deptypes, Dependency, canonical_deptype
-from spack.test.conftest import MockPackage, MockPackageMultiRepo
+from spack.util.mock_package import MockPackageMultiRepo
 
 
 def check_links(spec_to_check):
@@ -69,18 +69,86 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
     default = ('build', 'link')
     test_only = ('test',)
 
-    x = MockPackage('x', [], [])
-    z = MockPackage('z', [], [])
-    y = MockPackage('y', [z], [test_only])
-    w = MockPackage('w', [x, y], [test_only, default])
+    mock_repo = MockPackageMultiRepo()
+    x = mock_repo.add_package('x', [], [])
+    z = mock_repo.add_package('z', [], [])
+    y = mock_repo.add_package('y', [z], [test_only])
+    w = mock_repo.add_package('w', [x, y], [test_only, default])
 
-    mock_repo = MockPackageMultiRepo([w, x, y, z])
     with spack.repo.swap(mock_repo):
         spec = Spec('w')
         spec.concretize(tests=(w.name,))
 
         assert ('x' in spec)
         assert ('z' not in spec)
+
+
+@pytest.mark.usefixtures('config')
+def test_installed_deps():
+    """Preinstall a package P with a constrained build dependency D, then
+    concretize a dependent package which also depends on P and D, specifying
+    that the installed instance of P should be used. In this case, D should
+    not be constrained by P since P is already built.
+    """
+    default = ('build', 'link')
+    build_only = ('build',)
+
+    mock_repo = MockPackageMultiRepo()
+    e = mock_repo.add_package('e', [], [])
+    d = mock_repo.add_package('d', [], [])
+    c_conditions = {
+        d.name: {
+            'c': 'd@2'
+        },
+        e.name: {
+            'c': 'e@2'
+        }
+    }
+    c = mock_repo.add_package('c', [d, e], [build_only, default],
+                              conditions=c_conditions)
+    b = mock_repo.add_package('b', [d, e], [default, default])
+    mock_repo.add_package('a', [b, c], [default, default])
+
+    with spack.repo.swap(mock_repo):
+        c_spec = Spec('c')
+        c_spec.concretize()
+        assert c_spec['d'].version == spack.version.Version('2')
+
+        c_installed = spack.spec.Spec.from_dict(c_spec.to_dict())
+        for spec in c_installed.traverse():
+            setattr(spec.package, 'installed', True)
+
+        a_spec = Spec('a')
+        a_spec._add_dependency(c_installed, default)
+        a_spec.concretize()
+
+        assert a_spec['d'].version == spack.version.Version('3')
+        assert a_spec['e'].version == spack.version.Version('2')
+
+
+@pytest.mark.usefixtures('config')
+def test_specify_preinstalled_dep():
+    """Specify the use of a preinstalled package during concretization with a
+    transitive dependency that is only supplied by the preinstalled package.
+    """
+    default = ('build', 'link')
+
+    mock_repo = MockPackageMultiRepo()
+    c = mock_repo.add_package('c', [], [])
+    b = mock_repo.add_package('b', [c], [default])
+    mock_repo.add_package('a', [b], [default])
+
+    with spack.repo.swap(mock_repo):
+        b_spec = Spec('b')
+        b_spec.concretize()
+        for spec in b_spec.traverse():
+            setattr(spec.package, 'installed', True)
+
+        a_spec = Spec('a')
+        a_spec._add_dependency(b_spec, default)
+        a_spec.concretize()
+
+        assert set(x.name for x in a_spec.traverse()) == set(['a', 'b', 'c'])
 
 
 @pytest.mark.usefixtures('config')
@@ -93,15 +161,15 @@ def test_conditional_dep_with_user_constraints():
     """
     default = ('build', 'link')
 
-    y = MockPackage('y', [], [])
+    mock_repo = MockPackageMultiRepo()
+    y = mock_repo.add_package('y', [], [])
     x_on_y_conditions = {
         y.name: {
             'x@2:': 'y'
         }
     }
-    x = MockPackage('x', [y], [default], conditions=x_on_y_conditions)
+    mock_repo.add_package('x', [y], [default], conditions=x_on_y_conditions)
 
-    mock_repo = MockPackageMultiRepo([x, y])
     with spack.repo.swap(mock_repo):
         spec = Spec('x ^y@2')
         spec.concretize()
@@ -121,7 +189,7 @@ def test_conditional_dep_with_user_constraints():
         assert ('y@3' in spec)
 
 
-@pytest.mark.usefixtures('mutable_mock_packages')
+@pytest.mark.usefixtures('mutable_mock_repo', 'config')
 class TestSpecDag(object):
 
     def test_conflicting_package_constraints(self, set_dependency):
@@ -319,7 +387,6 @@ class TestSpecDag(object):
         with pytest.raises(spack.spec.UnsatisfiableArchitectureSpecError):
             spec.normalize()
 
-    @pytest.mark.usefixtures('config')
     def test_invalid_dep(self):
         spec = Spec('libelf ^mpich')
         with pytest.raises(spack.spec.InvalidDependencyError):
@@ -534,7 +601,6 @@ class TestSpecDag(object):
         copy_ids = set(id(s) for s in copy.traverse())
         assert not orig_ids.intersection(copy_ids)
 
-    @pytest.mark.usefixtures('config')
     def test_copy_concretized(self):
         orig = Spec('mpileaks')
         orig.concretize()
