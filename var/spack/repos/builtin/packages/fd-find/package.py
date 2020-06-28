@@ -13,5 +13,7 @@ class FdFind(CargoPackage):
     crates_io = "fd-find"
     git = "https://github.com/sharkdp/fd.git"
 
+    maintainers = ['AndrewGaspar']
+
     version('master', branch='master')
     version('8.1.1', sha256='5549a19f384243f65ed9ef644e88ef1e9146065c5e2224828657cc0b512e8a88')

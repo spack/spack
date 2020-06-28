@@ -17,5 +17,7 @@ class Lsd(CargoPackage):
     crates_io = "lsd"
     git = "https://github.com/peltoche/lsd.git"
 
+    maintainers = ['AndrewGaspar']
+
     version('master', branch='master')
     version('0.17.0', sha256='d1e376b5db9c01304b4545f03d642ac5fa480289f060d014b1cec3a0df2c3990')

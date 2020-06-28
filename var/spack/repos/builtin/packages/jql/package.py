@@ -13,6 +13,8 @@ class Jql(CargoPackage):
     crates_io = "jql"
     git = "https://github.com/yamafaktory/jql.git"
 
+    maintainers = ['AndrewGaspar']
+
     # jql doesn't build with prefer_dynamic at present, so switch default to
     # False
     variant(
