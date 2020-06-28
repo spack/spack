@@ -18,5 +18,24 @@ class Ripgrep(CargoPackage):
 
     maintainers = ["AndrewGaspar"]
 
+    variant(
+        "pcre2",
+        default=False,
+        description="Support for perl-style regex"
+    )
+
+    depends_on("pcre2", when="+pcre2")
+
+    def cargo_features(self):
+        features = []
+        if "+pcre2" in self.spec:
+            features += ["pcre2"]
+
+        return features
+
+    def setup_build_environment(self, env):
+        if '+pcre2' in self.spec:
+            env.append_flags('PCRE2_SYS_STATIC', '0')
+
     version('master', branch='master')
     version('12.1.1', sha256='b955557adc78324dbc2bc663ca85df54b48a579b340876e38dffb39f24882ebf')
