@@ -20,7 +20,7 @@ class Warpx(MakefilePackage):
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
 
-    version('development', tag='development')
+    version('develop', tag='development')
 
     variant('dims',
             default='3',
