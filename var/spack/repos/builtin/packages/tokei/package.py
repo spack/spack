@@ -16,6 +16,8 @@ class Tokei(CargoPackage):
     crates_io = "tokei"
     git = "https://github.com/xampprocky/tokei.git"
 
+    maintainers = ["AndrewGaspar"]
+
     # tokei doesn't build with prefer_dynamic at present, so switch default to
     # False
     variant(
@@ -46,4 +48,4 @@ class Tokei(CargoPackage):
         return features
 
     version('master', branch='master')
-    version('12.0.3', sha256='09795e8f067ab03d381aa8e35d2314a90063b7d1a541941c8dd105c5f3625069')
+    version('12.0.4', sha256='61fef2813bec8a83ec1c0f7e25a650cd57047b220e1ce8828b6cc752b9cf5ba8')
