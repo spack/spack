@@ -49,13 +49,14 @@ class Fastjet(AutotoolsPackage):
     # older version use .tar instead of .tar.gz extension, to be added
 
     variant('shared', default=True, description='Builds a shared version of the library')
-    plugins = disjoint_sets(("all",), ("siscone", "cdfcones", "pxcone", "d0runiicone", 
-                                       "nesteddefs", "trackjet", "atlascone", 
-                                       "cmsiterativecone", "eecambridge", 
+    plugins = disjoint_sets(("all",), ("siscone", "cdfcones", "pxcone",
+                                       "d0runiicone", "nesteddefs",
+                                       "trackjet", "atlascone",
+                                       "cmsiterativecone", "eecambridge",
                                        "jade", "d0runicone", "gridjet"))
     variant('plugins', values=plugins.with_non_feature_values('all', 'none')
                                      .prohibit_empty_set().with_default('all'))
-            
+
     variant('auto-ptr', default=False, description='Use auto_ptr')
 
     def configure_args(self):
@@ -65,7 +66,7 @@ class Fastjet(AutotoolsPackage):
             extra_args.append('--enable-allplugins')
         else:
             extra_args += self.enable_or_disable('plugins')
-            
+
         extra_args += self.enable_or_disable('auto-ptr')
 
         return extra_args
