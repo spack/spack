@@ -51,20 +51,26 @@ class Postgis(AutotoolsPackage):
             args.append('--with-gui')
         return args
 
-    # By default package installs under postgresql prefix. Apparently this is a known bug:
+    # By default package installs under postgresql prefix.
+    # Apparently this is a known bug:
     # https://postgis.net/docs/postgis_installation.html
-    # The following modifacations that fixed this issue are found in Guix recipe for postgis
+    # The following modifacations that fixed this issue are found in
+    # Guix recipe for postgis.
     # https://git.savannah.gnu.org/cgit/guix.git/tree/gnu/packages/geo.scm#n720
 
     def build(self, spec, prefix):
-        make('bindir='+prefix.bin, 'libdir='+prefix.lib, 'pkglibdir='+prefix.lib, 'datadir='+prefix.share, 'docdir='+prefix.share.doc)
+        make('bindir=' + prefix.bin, 'libdir=' + prefix.lib,
+             'pkglibdir=' + prefix.lib, 'datadir=' + prefix.share,
+             'docdir=' + prefix.share.doc)
 
     def install(self, spec, prefix):
-        make('install', 'bindir='+prefix.bin, 'libdir='+prefix.lib, 'pkglibdir='+prefix.lib, 'datadir='+prefix.share, 'docdir='+prefix.share.doc)
+        make('install', 'bindir=' + prefix.bin, 'libdir=' + prefix.lib,
+             'pkglibdir=' + prefix.lib, 'datadir=' + prefix.share,
+             'docdir=' + prefix.share.doc)
 
     @run_before('build')
     def fix_raster_bindir(self):
-        makefile=FileFilter('raster/loader/Makefile')
+        makefile = FileFilter('raster/loader/Makefile')
         makefile.filter(r'\$\(DESTDIR\)\$\(PGSQL_BINDIR\)', self.prefix.bin)
-        makefile=FileFilter('raster/scripts/Makefile')
+        makefile = FileFilter('raster/scripts/Makefile')
         makefile.filter(r'\$\(DESTDIR\)\$\(PGSQL_BINDIR\)', self.prefix.bin)
