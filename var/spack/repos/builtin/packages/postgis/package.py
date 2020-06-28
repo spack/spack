@@ -50,3 +50,16 @@ class Postgis(AutotoolsPackage):
         if '+gui' in self.spec:
             args.append('--with-gui')
         return args
+
+    def build(self, spec, prefix):
+        make('bindir='+prefix.bin, 'libdir='+prefix.lib, 'pkglibdir='+prefix.lib, 'datadir='+prefix.share, 'docdir='+prefix.share.doc)
+
+    def install(self, spec, prefix):
+        make('install', 'bindir='+prefix.bin, 'libdir='+prefix.lib, 'pkglibdir='+prefix.lib, 'datadir='+prefix.share, 'docdir='+prefix.share.doc)
+
+    @run_before('build')
+    def fix_raster_bindir(self):
+        makefile=FileFilter('raster/loader/Makefile')
+        makefile.filter(r'\$\(DESTDIR\)\$\(PGSQL_BINDIR\)', self.prefix.bin)
+        makefile=FileFilter('raster/scripts/Makefile')
+        makefile.filter(r'\$\(DESTDIR\)\$\(PGSQL_BINDIR\)', self.prefix.bin)
