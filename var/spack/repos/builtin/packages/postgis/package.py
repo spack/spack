@@ -51,9 +51,9 @@ class Postgis(AutotoolsPackage):
             args.append('--with-gui')
         return args
 
-    # By default package installs under postgresql prefix. Apparenatly this is a known bug:
+    # By default package installs under postgresql prefix. Apparently this is a known bug:
     # https://postgis.net/docs/postgis_installation.html
-    # The following modifacations that fixed this issue are found in Guix receipe for postgis
+    # The following modifacations that fixed this issue are found in Guix recipe for postgis
     # https://git.savannah.gnu.org/cgit/guix.git/tree/gnu/packages/geo.scm#n720
 
     def build(self, spec, prefix):
