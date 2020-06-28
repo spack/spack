@@ -35,7 +35,7 @@ class Postgis(AutotoolsPackage):
 
     depends_on('sfcgal')
     depends_on('pcre')
-    depends_on('perl')
+    depends_on('perl', type=('build', 'run'))
     depends_on('protobuf-c')
 
     depends_on('gtkplus@:2.24.32', when='+gui')
