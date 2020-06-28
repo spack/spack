@@ -20,7 +20,7 @@ class Ripgrep(CargoPackage):
 
     variant(
         "pcre2",
-        default=False,
+        default=True,
         description="Support for perl-style regex"
     )
 
