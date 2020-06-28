@@ -40,8 +40,11 @@ class Postgis(AutotoolsPackage):
 
     depends_on('gtkplus@:2.24.32', when='+gui')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('POSTGIS_GDAL_ENABLED_DRIVERS', 'ENABLE_ALL')
+    def setup_build_environment(self, env):
+        env.set('POSTGIS_GDAL_ENABLED_DRIVERS', 'ENABLE_ALL')
+
+    def setup_run_environment(self, env):
+        env.set('POSTGIS_GDAL_ENABLED_DRIVERS', 'ENABLE_ALL')
 
     def configure_args(self):
         args = []
