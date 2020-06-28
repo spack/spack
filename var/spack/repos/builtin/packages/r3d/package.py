@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,11 +11,11 @@ class R3d(MakefilePackage):
     conservative voxelization."""
 
     homepage = "https://github.com/devonmpowell/r3d"
-    url      = "https://github.com/devonmpowell/r3d.git"
+    git      = "https://github.com/devonmpowell/r3d.git"
 
-    version('2019-04-24', git=url, commit='86cea79c124c6a8edd8c8cdea61e3e923acb0b22')
-    version('2018-12-19', git=url, commit='47308f68c782ed3227d3dab1eff24d41f6421f21')
-    version('2018-01-07', git=url, commit='d6799a582256a120ef3bd7e18959e96cba0e5495')
+    version('2019-04-24', commit='86cea79c124c6a8edd8c8cdea61e3e923acb0b22')
+    version('2018-12-19', commit='47308f68c782ed3227d3dab1eff24d41f6421f21')
+    version('2018-01-07', commit='d6799a582256a120ef3bd7e18959e96cba0e5495')
 
     variant("test",  default=False, description="Build R3D regression tests")
 

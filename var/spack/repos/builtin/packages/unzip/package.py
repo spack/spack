@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Unzip(MakefilePackage):
     homepage = 'http://www.info-zip.org/Zip.html'
     url      = 'http://downloads.sourceforge.net/infozip/unzip60.tar.gz'
 
-    version('6.0', '62b490407489521db863b523a7f86375')
+    version('6.0', sha256='036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37')
 
     # The Cray cc wrapper doesn't handle the '-s' flag (strip) cleanly.
     @when('platform=cray')

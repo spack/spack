@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Varscan(Package):
     homepage = "http://dkoboldt.github.io/varscan/"
     url      = "https://github.com/dkoboldt/varscan/releases/download/2.4.2/VarScan.v2.4.2.jar"
 
-    version('2.4.2', '4b810741505a8145a7f8f9f6791bbacf', expand=False)
+    version('2.4.2', sha256='34ff6462f91fb6ed3f11e867ab4a179efae5dd8214b97fa261fc616f23d4d031', expand=False)
 
     depends_on('java', type=('build', 'run'))
 
@@ -35,6 +35,6 @@ class Varscan(Package):
         filter_file('varscan.jar', join_path(prefix.jar, jar_file),
                     script, **kwargs)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('VARSCAN_HOME', self.prefix.jar)
-        run_env.set('CLASSPATH', self.prefix.jar)
+    def setup_run_environment(self, env):
+        env.set('VARSCAN_HOME', self.prefix.jar)
+        env.set('CLASSPATH', self.prefix.jar)

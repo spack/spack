@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Cntk(Package):
     git      = "https://github.com/Microsoft/CNTK.git"
 
     version('master', branch='master')
-    version('2.0', '8038780f1169ceea578e5ef4d69e4c6f')
+    version('2.0', sha256='3adee17f166e2a682dfb551ca017ae5c3836ca9772c0af14215a7e76254f201c')
 
     variant('opencv', default=False, description="Enable OpenCV support.")
     variant('kaldi', default=False, description="Enable Kaldi support.")

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,10 @@ class Ncview(AutotoolsPackage):
     homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
     url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    version('2.1.7', sha256='a14c2dddac0fc78dad9e4e7e35e2119562589738f4ded55ff6e0eca04d682c82')
 
-    depends_on('netcdf')
-    depends_on('udunits2')
+    depends_on('netcdf-c')
+    depends_on('udunits')
     depends_on('libpng')
     depends_on('libxaw')
 
@@ -23,7 +23,7 @@ class Ncview(AutotoolsPackage):
 
         config_args = []
 
-        if spec.satisfies('^netcdf+mpi'):
+        if spec.satisfies('^netcdf-c+mpi'):
             config_args.append('CC={0}'.format(spec['mpi'].mpicc))
 
         return config_args

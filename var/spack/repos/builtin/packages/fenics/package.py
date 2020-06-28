@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -84,43 +84,33 @@ class Fenics(CMakePackage):
     releases = [
         {
             'version': '2016.1.0',
-            'md5': '92e8d00f6487a575987201f0b0d19173',
+            'sha256': '6228b4d641829a4cd32141bfcd217a1596a27d5969aa00ee64ebba2b1c0fb148',
             'resources': {
-                'ffc': '35457ae164e481ba5c9189ebae060a47',
-                'fiat': 'ac0c49942831ee434301228842bcc280',
-                'instant': '0e3dbb464c4d90d691f31f0fdd63d4f6',
-                'ufl': '37433336e5c9b58d1d5ab4acca9104a7',
+                'ffc': '52430ce4c7d57ce1b81eb5fb304992247c944bc6a6054c8b6f42bac81702578d',
+                'fiat': '851723126a71bc1ae2dc4ad6e9330bd9b54d52db390dcbbc1f3c759fb49c6aeb',
+                'instant': '7bf03c8a7b61fd1e432b8f3a0405410ae68892ebb1a62a9f8118e8846bbeb0c6',
+                'ufl': '8dccfe10d1251ba48a4d43a4c6c89abe076390223b500f4baf06f696294b8dd0',
             }
         },
         {
             'version': '1.6.0',
-            'md5': '35cb4baf7ab4152a40fb7310b34d5800',
+            'sha256': '67eaac5fece6e71da0559b4ca8423156f9e99a952f0620adae449ebebb6695d1',
             'resources': {
-                'ffc': '358faa3e9da62a1b1a717070217b793e',
-                'fiat': 'f4509d05c911fd93cea8d288a78a6c6f',
-                'instant': '5f2522eb032a5bebbad6597b6fe0732a',
-                'ufl': 'c40c5f04eaa847377ab2323122284016',
-            }
-        },
-        {
-            'version': '1.5.0',
-            'md5': '9b589a3534299a5e6d22c13c5eb30bb8',
-            'resources': {
-                'ffc': '343f6d30e7e77d329a400fd8e73e0b63',
-                'fiat': 'da3fa4dd8177bb251e7f68ec9c7cf6c5',
-                'instant': 'b744023ded27ee9df4a8d8c6698c0d58',
-                'ufl': '130d7829cf5a4bd5b52bf6d0955116fd',
+                'ffc': '382e7713fe759694e5f07506b144eeead681e169e5a34c164ef3da30eddcc1c6',
+                'fiat': '858ea3e936ad3b3558b474ffccae8a7b9dddbaafeac77e307115b23753cb1cac',
+                'instant': '2347e0229531969095911fdb1de30bd77bdd7f81521ba84d81b1b4a564fc906c',
+                'ufl': 'c75c4781e5104504f158cb42cd87aceffa9052e8e9db6e9764e6a5b6115d7f73',
             }
         },
     ]
 
     for release in releases:
-        version(release['version'], release['md5'], url=base_url.format(
+        version(release['version'], release['sha256'], url=base_url.format(
             pkg='dolfin', version=release['version']))
-        for rname, md5 in release['resources'].items():
+        for rname, sha256 in release['resources'].items():
             resource(name=rname,
                      url=base_url.format(pkg=rname, **release),
-                     md5=md5,
+                     sha256=sha256,
                      destination='depends',
                      when='@{version}'.format(**release),
                      placement=rname)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,17 @@ class Sniffles(CMakePackage):
     homepage = "https://github.com/fritzsedlazeck/Sniffles/wiki"
     url      = "https://github.com/fritzsedlazeck/Sniffles/archive/v1.0.5.tar.gz"
 
-    version('1.0.7', '83bd93c5ab5dad3a6dc776f11d3a880e')
-    version('1.0.5', 'c2f2350d00418ba4d82c074e7f0b1832')
+    version('1.0.7', sha256='03fa703873bdf9c32055c584448e1eece45f94b4bc68e60c9624cf3841e6d8a9')
+    version('1.0.5', sha256='386c6536bdaa4637579e235bac48444c08297337c490652d1e165accd34b258f')
+
+    depends_on('zlib', type='link')
+    depends_on('bamtools', type='link')
+
+    patch('unused_libs.patch')
+
+    def cmake_args(self):
+        i = self.spec['bamtools'].prefix.include.bamtools
+        return ['-DCMAKE_CXX_FLAGS=-I{0}'.format(i)]
 
     # the build process doesn't actually install anything, do it by hand
     def install(self, spec, prefix):

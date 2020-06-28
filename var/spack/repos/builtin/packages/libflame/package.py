@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,9 +30,9 @@ class Libflame(AutotoolsPackage):
             ' to their corresponding native C implementations'
             ' in libflame.')
 
-    variant('threads', default='no',
+    variant('threads', default='none',
             description='Multithreading support',
-            values=('pthreads', 'openmp', 'no'),
+            values=('pthreads', 'openmp', 'none'),
             multi=False)
 
     variant('static', default=True,
@@ -46,11 +46,23 @@ class Libflame(AutotoolsPackage):
 
     # TODO: Libflame prefers to defer to an external
     # LAPACK library for small problems. Is this to be
-    # implemented in spack ?
+    # implemented in spack?
 
-    # There is a known issue with the makefile :
+    # Libflame has a secondary dependency on BLAS:
+    # https://github.com/flame/libflame/issues/24
+    depends_on('blas')
+
+    # There is a known issue with the makefile:
     # https://groups.google.com/forum/#!topic/libflame-discuss/lQKEfjyudOY
     patch('Makefile_5.1.0.patch', when='@5.1.0')
+
+    # Problems with permissions on installed libraries:
+    # https://github.com/flame/libflame/issues/24
+    patch('Makefile_5.2.0.patch', when='@5.2.0')
+
+    # Problems building on macOS:
+    # https://github.com/flame/libflame/issues/23
+    patch('Makefile_5.2.0_darwin.patch', when='@5.2.0')
 
     def flag_handler(self, name, flags):
         # -std=gnu99 at least required, old versions of GCC default to -std=c90
@@ -58,8 +70,17 @@ class Libflame(AutotoolsPackage):
             flags.append('-std=gnu99')
         return (flags, None, None)
 
+    def enable_or_disable_threads(self, variant, options):
+        opt_val = self.spec.variants['threads'].value
+        if variant_val == 'none':
+            opt_val = 'no'
+        return ['--enable-multithreading={0}'.format(opt_val)]
+
     def configure_args(self):
-        config_args = []
+        # Libflame has a secondary dependency on BLAS,
+        # but doesn't know which library name to expect:
+        # https://github.com/flame/libflame/issues/24
+        config_args = ['LIBS=' + self.spec['blas'].libs.link_flags]
 
         if '+lapack2flame' in self.spec:
             config_args.append("--enable-lapack2flame")
@@ -81,10 +102,9 @@ class Libflame(AutotoolsPackage):
         else:
             config_args.append("--disable-debug")
 
-        config_args.append('--enable-multithreading='
-                           + self.spec.variants['threads'].value)
+        config_args.extend(self.enable_or_disable('threads'))
 
-        if 'no' != self.spec.variants['threads'].value:
+        if 'none' != self.spec.variants['threads'].value:
             config_args.append("--enable-supermatrix")
         else:
             config_args.append("--disable-supermatrix")
@@ -93,3 +113,9 @@ class Libflame(AutotoolsPackage):
         config_args.append("--enable-max-arg-list-hack")
 
         return config_args
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(self.prefix.lib)

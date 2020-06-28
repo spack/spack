@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@ class PyBackportsShutilGetTerminalSize(PythonPackage):
 
     py_namespace = 'backports'
 
-    version('1.0.0', '03267762480bd86b50580dc19dff3c66')
+    version('1.0.0', sha256='713e7a8228ae80341c70586d1cc0a8caa5207346927e23d09dcbcaf18eadec80')
 
     # newer setuptools version mess with "namespace" packages in an
     # incompatible way cf. https://github.com/pypa/setuptools/issues/900
-    depends_on('py-setuptools@:30.999.999', type='build')
+    depends_on('py-setuptools@:30.999.999,41:', type='build')
     depends_on('python@:3.2')

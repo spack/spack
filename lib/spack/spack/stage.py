@@ -1,7 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from __future__ import print_function
 
 import os
 import stat
@@ -12,20 +14,23 @@ import tempfile
 import getpass
 from six import string_types
 from six import iteritems
-from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
-from llnl.util.filesystem import remove_linked_tree
+from llnl.util.filesystem import partition_path, remove_linked_tree
 
 import spack.paths
 import spack.caches
+import spack.cmd
 import spack.config
 import spack.error
+import spack.mirror
 import spack.util.lock
 import spack.fetch_strategy as fs
 import spack.util.pattern as pattern
 import spack.util.path as sup
+import spack.util.url as url_util
+
 from spack.util.crypto import prefix_bits, bit_length
 
 
@@ -33,7 +38,63 @@ from spack.util.crypto import prefix_bits, bit_length
 _source_path_subdir = 'spack-src'
 
 # The temporary stage name prefix.
-_stage_prefix = 'spack-stage-'
+stage_prefix = 'spack-stage-'
+
+
+def _create_stage_root(path):
+    """Create the stage root directory and ensure appropriate access perms."""
+    assert path.startswith(os.path.sep) and len(path.strip()) > 1
+
+    err_msg = 'Cannot create stage root {0}: Access to {1} is denied'
+
+    user_uid = os.getuid()
+
+    # Obtain lists of ancestor and descendant paths of the $user node, if any.
+    group_paths, user_node, user_paths = partition_path(path,
+                                                        getpass.getuser())
+
+    for p in group_paths:
+        if not os.path.exists(p):
+            # Ensure access controls of subdirs created above `$user` inherit
+            # from the parent and share the group.
+            par_stat = os.stat(os.path.dirname(p))
+            mkdirp(p, group=par_stat.st_gid, mode=par_stat.st_mode)
+
+            p_stat = os.stat(p)
+            if par_stat.st_gid != p_stat.st_gid:
+                tty.warn("Expected {0} to have group {1}, but it is {2}"
+                         .format(p, par_stat.st_gid, p_stat.st_gid))
+
+            if par_stat.st_mode & p_stat.st_mode != par_stat.st_mode:
+                tty.warn("Expected {0} to support mode {1}, but it is {2}"
+                         .format(p, par_stat.st_mode, p_stat.st_mode))
+
+            if not can_access(p):
+                raise OSError(errno.EACCES, err_msg.format(path, p))
+
+    # Add the path ending with the $user node to the user paths to ensure paths
+    # from $user (on down) meet the ownership and permission requirements.
+    if user_node:
+        user_paths.insert(0, user_node)
+
+    for p in user_paths:
+        # Ensure access controls of subdirs from `$user` on down are
+        # restricted to the user.
+        if not os.path.exists(p):
+            mkdirp(p, mode=stat.S_IRWXU)
+
+            p_stat = os.stat(p)
+            if p_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU:
+                tty.error("Expected {0} to support mode {1}, but it is {2}"
+                          .format(p, stat.S_IRWXU, p_stat.st_mode))
+
+                raise OSError(errno.EACCES, err_msg.format(path, p))
+        else:
+            p_stat = os.stat(p)
+
+        if user_uid != p_stat.st_uid:
+            tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
+                     .format(user_uid, p, p_stat.st_uid))
 
 
 def _first_accessible_path(paths):
@@ -45,26 +106,43 @@ def _first_accessible_path(paths):
                 if can_access(path):
                     return path
             else:
-                # The path doesn't exist so create it and adjust permissions
-                # and group as needed (e.g., shared ``$tempdir``).
-                prefix = os.path.sep
-                parts = path.strip(os.path.sep).split(os.path.sep)
-                for part in parts:
-                    prefix = os.path.join(prefix, part)
-                    if not os.path.exists(prefix):
-                        break
-                parent = os.path.dirname(prefix)
-                gid = os.stat(parent).st_gid
-                mkdirp(path, group=gid, default_perms='parents')
-
-                if can_access(path):
-                    return path
+                # Now create the stage root with the proper group/perms.
+                _create_stage_root(path)
+                return path
 
         except OSError as e:
             tty.debug('OSError while checking stage path %s: %s' % (
                       path, str(e)))
 
     return None
+
+
+def _resolve_paths(candidates):
+    """
+    Resolve candidate paths and make user-related adjustments.
+
+    Adjustments involve removing extra $user from $tempdir if $tempdir includes
+    $user and appending $user if it is not present in the path.
+    """
+    temp_path = sup.canonicalize_path('$tempdir')
+    user = getpass.getuser()
+    tmp_has_usr = user in temp_path.split(os.path.sep)
+
+    paths = []
+    for path in candidates:
+        # Remove the extra `$user` node from a `$tempdir/$user` entry for
+        # hosts that automatically append `$user` to `$tempdir`.
+        if path.startswith(os.path.join('$tempdir', '$user')) and tmp_has_usr:
+            path = path.replace("/$user", "", 1)
+
+        # Ensure the path is unique per user.
+        can_path = sup.canonicalize_path(path)
+        if user not in can_path:
+            can_path = os.path.join(can_path, user)
+
+        paths.append(can_path)
+
+    return paths
 
 
 # Cached stage path root
@@ -79,22 +157,23 @@ def get_stage_root():
         if isinstance(candidates, string_types):
             candidates = [candidates]
 
-        resolved_candidates = [sup.canonicalize_path(x) for x in candidates]
+        resolved_candidates = _resolve_paths(candidates)
         path = _first_accessible_path(resolved_candidates)
         if not path:
             raise StageError("No accessible stage paths in:",
                              ' '.join(resolved_candidates))
 
-        # Ensure that any temp path is unique per user, so users don't
-        # fight over shared temporary space.
-        user = getpass.getuser()
-        if user not in path:
-            path = os.path.join(path, user)
-            mkdirp(path)
-
         _stage_root = path
 
     return _stage_root
+
+
+def _mirror_roots():
+    mirrors = spack.config.get('mirrors')
+    return [
+        sup.substitute_path_variables(root) if root.endswith(os.sep)
+        else sup.substitute_path_variables(root) + os.sep
+        for root in mirrors.values()]
 
 
 class Stage(object):
@@ -147,7 +226,7 @@ class Stage(object):
 
     def __init__(
             self, url_or_fetch_strategy,
-            name=None, mirror_path=None, keep=False, path=None, lock=True,
+            name=None, mirror_paths=None, keep=False, path=None, lock=True,
             search_fn=None):
         """Create a stage object.
            Parameters:
@@ -161,10 +240,10 @@ class Stage(object):
                  stage object later).  If name is not provided, then this
                  stage will be given a unique name automatically.
 
-             mirror_path
+             mirror_paths
                  If provided, Stage will search Spack's mirrors for
-                 this archive at the mirror_path, before using the
-                 default fetch strategy.
+                 this archive at each of the provided relative mirror paths
+                 before using the default fetch strategy.
 
              keep
                  By default, when used as a context manager, the Stage
@@ -186,13 +265,13 @@ class Stage(object):
         # TODO: fetch/stage coupling needs to be reworked -- the logic
         # TODO: here is convoluted and not modular enough.
         if isinstance(url_or_fetch_strategy, string_types):
-            self.fetcher = fs.from_url(url_or_fetch_strategy)
+            self.fetcher = fs.from_url_scheme(url_or_fetch_strategy)
         elif isinstance(url_or_fetch_strategy, fs.FetchStrategy):
             self.fetcher = url_or_fetch_strategy
         else:
             raise ValueError(
                 "Can't construct Stage without url or fetch strategy")
-        self.fetcher.set_stage(self)
+        self.fetcher.stage = self
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
         self.search_fn = search_fn
@@ -206,8 +285,8 @@ class Stage(object):
         # TODO: temporary stage area in _stage_root.
         self.name = name
         if name is None:
-            self.name = _stage_prefix + next(tempfile._get_candidate_names())
-        self.mirror_path = mirror_path
+            self.name = stage_prefix + next(tempfile._get_candidate_names())
+        self.mirror_paths = mirror_paths
 
         # Use the provided path or construct an optionally named stage path.
         if path is not None:
@@ -228,8 +307,9 @@ class Stage(object):
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
                 stage_lock_path = os.path.join(get_stage_root(), '.lock')
 
+                tty.debug("Creating stage lock {0}".format(self.name))
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
-                    stage_lock_path, lock_id, 1)
+                    stage_lock_path, lock_id, 1, desc=self.name)
 
             self._lock = Stage.stage_locks[self.name]
 
@@ -281,8 +361,8 @@ class Stage(object):
             expanded = self.default_fetcher.expand_archive
             fnames.append(os.path.basename(self.default_fetcher.url))
 
-        if self.mirror_path:
-            fnames.append(os.path.basename(self.mirror_path))
+        if self.mirror_paths:
+            fnames.extend(os.path.basename(x) for x in self.mirror_paths)
 
         paths.extend(os.path.join(self.path, f) for f in fnames)
         if not expanded:
@@ -330,17 +410,14 @@ class Stage(object):
         # TODO: Or @alalazo may have some ideas about how to use a
         # TODO: CompositeFetchStrategy here.
         self.skip_checksum_for_mirror = True
-        if self.mirror_path:
-            mirrors = spack.config.get('mirrors')
-
+        if self.mirror_paths:
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
-            mir_roots = [
-                sup.substitute_path_variables(root) if root.endswith(os.sep)
-                else sup.substitute_path_variables(root) + os.sep
-                for root in mirrors.values()]
-            urls = [urljoin(root, self.mirror_path) for root in mir_roots]
+            urls = []
+            for mirror in spack.mirror.MirrorCollection().values():
+                for rel_path in self.mirror_paths:
+                    urls.append(url_util.join(mirror.fetch_url, rel_path))
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -360,13 +437,15 @@ class Stage(object):
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
                 fetchers.insert(
-                    0, fs.URLFetchStrategy(
+                    0, fs.from_url_scheme(
                         url, digest, expand=expand, extension=extension))
+
             if self.default_fetcher.cachable:
-                fetchers.insert(
-                    0, spack.caches.fetch_cache.fetcher(
-                        self.mirror_path, digest, expand=expand,
-                        extension=extension))
+                for rel_path in reversed(list(self.mirror_paths)):
+                    cache_fetcher = spack.caches.fetch_cache.fetcher(
+                        rel_path, digest, expand=expand,
+                        extension=extension)
+                    fetchers.insert(0, cache_fetcher)
 
         def generate_fetchers():
             for fetcher in fetchers:
@@ -380,7 +459,7 @@ class Stage(object):
 
         for fetcher in generate_fetchers():
             try:
-                fetcher.set_stage(self)
+                fetcher.stage = self
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
@@ -411,10 +490,44 @@ class Stage(object):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.caches.fetch_cache.store(self.fetcher, self.mirror_path)
+        spack.caches.fetch_cache.store(
+            self.fetcher, self.mirror_paths.storage_path)
 
-        if spack.caches.mirror_cache:
-            spack.caches.mirror_cache.store(self.fetcher, self.mirror_path)
+    def cache_mirror(self, mirror, stats):
+        """Perform a fetch if the resource is not already cached
+
+        Arguments:
+            mirror (MirrorCache): the mirror to cache this Stage's resource in
+            stats (MirrorStats): this is updated depending on whether the
+                caching operation succeeded or failed
+        """
+        if isinstance(self.default_fetcher, fs.BundleFetchStrategy):
+            # BundleFetchStrategy has no source to fetch. The associated
+            # fetcher does nothing but the associated stage may still exist.
+            # There is currently no method available on the fetcher to
+            # distinguish this ('cachable' refers to whether the fetcher
+            # refers to a resource with a fixed ID, which is not the same
+            # concept as whether there is anything to fetch at all) so we
+            # must examine the type of the fetcher.
+            return
+
+        if (mirror.skip_unstable_versions and
+            not fs.stable_target(self.default_fetcher)):
+            return
+
+        absolute_storage_path = os.path.join(
+            mirror.root, self.mirror_paths.storage_path)
+
+        if os.path.exists(absolute_storage_path):
+            stats.already_existed(absolute_storage_path)
+        else:
+            self.fetch()
+            self.check()
+            mirror.store(
+                self.fetcher, self.mirror_paths.storage_path)
+            stats.added(absolute_storage_path)
+
+        mirror.symlink(self.mirror_paths)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -526,7 +639,7 @@ class ResourceStage(Stage):
 
 @pattern.composite(method_list=[
     'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
-    'destroy', 'cache_local', 'managed_by_spack'])
+    'destroy', 'cache_local', 'cache_mirror', 'managed_by_spack'])
 class StageComposite:
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
@@ -563,10 +676,6 @@ class StageComposite:
     @property
     def archive_file(self):
         return self[0].archive_file
-
-    @property
-    def mirror_path(self):
-        return self[0].mirror_path
 
 
 class DIYStage(object):
@@ -637,8 +746,107 @@ def purge():
     root = get_stage_root()
     if os.path.isdir(root):
         for stage_dir in os.listdir(root):
-            stage_path = os.path.join(root, stage_dir)
-            remove_linked_tree(stage_path)
+            if stage_dir.startswith(stage_prefix) or stage_dir == '.lock':
+                stage_path = os.path.join(root, stage_dir)
+                remove_linked_tree(stage_path)
+
+
+def get_checksums_for_versions(
+        url_dict, name, first_stage_function=None, keep_stage=False,
+        fetch_options=None, batch=False):
+    """Fetches and checksums archives from URLs.
+
+    This function is called by both ``spack checksum`` and ``spack
+    create``.  The ``first_stage_function`` argument allows the caller to
+    inspect the first downloaded archive, e.g., to determine the build
+    system.
+
+    Args:
+        url_dict (dict): A dictionary of the form: version -> URL
+        name (str): The name of the package
+        first_stage_function (callable): function that takes a Stage and a URL;
+            this is run on the stage of the first URL downloaded
+        keep_stage (bool): whether to keep staging area when command completes
+        batch (bool): whether to ask user how many versions to fetch (false)
+            or fetch all versions (true)
+        fetch_options (dict): Options used for the fetcher (such as timeout
+            or cookies)
+
+    Returns:
+        (str): A multi-line string containing versions and corresponding hashes
+
+    """
+    sorted_versions = sorted(url_dict.keys(), reverse=True)
+
+    # Find length of longest string in the list for padding
+    max_len = max(len(str(v)) for v in sorted_versions)
+    num_ver = len(sorted_versions)
+
+    tty.msg("Found {0} version{1} of {2}:".format(
+            num_ver, '' if num_ver == 1 else 's', name),
+            "",
+            *spack.cmd.elide_list(
+                ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v])
+                 for v in sorted_versions]))
+    print()
+
+    if batch:
+        archives_to_fetch = len(sorted_versions)
+    else:
+        archives_to_fetch = tty.get_number(
+            "How many would you like to checksum?", default=1, abort='q')
+
+    if not archives_to_fetch:
+        tty.die("Aborted.")
+
+    versions = sorted_versions[:archives_to_fetch]
+    urls = [url_dict[v] for v in versions]
+
+    tty.msg("Downloading...")
+    version_hashes = []
+    i = 0
+    for url, version in zip(urls, versions):
+        try:
+            if fetch_options:
+                url_or_fs = fs.URLFetchStrategy(
+                    url, fetch_options=fetch_options)
+            else:
+                url_or_fs = url
+            with Stage(url_or_fs, keep=keep_stage) as stage:
+                # Fetch the archive
+                stage.fetch()
+                if i == 0 and first_stage_function:
+                    # Only run first_stage_function the first time,
+                    # no need to run it every time
+                    first_stage_function(stage, url)
+
+                # Checksum the archive and add it to the list
+                version_hashes.append((version, spack.util.crypto.checksum(
+                    hashlib.sha256, stage.archive_file)))
+                i += 1
+        except FailedDownloadError:
+            tty.msg("Failed to fetch {0}".format(url))
+        except Exception as e:
+            tty.msg("Something failed on {0}, skipping.".format(url),
+                    "  ({0})".format(e))
+
+    if not version_hashes:
+        tty.die("Could not fetch any versions for {0}".format(name))
+
+    # Find length of longest string in the list for padding
+    max_len = max(len(str(v)) for v, h in version_hashes)
+
+    # Generate the version directives to put in a package.py
+    version_lines = "\n".join([
+        "    version('{0}', {1}sha256='{2}')".format(
+            v, ' ' * (max_len - len(str(v))), h) for v, h in version_hashes
+    ])
+
+    num_hash = len(version_hashes)
+    tty.msg("Checksummed {0} version{1} of {2}:".format(
+        num_hash, '' if num_hash == 1 else 's', name))
+
+    return version_lines
 
 
 class StageError(spack.error.SpackError):
@@ -651,6 +859,10 @@ class StagePathError(StageError):
 
 class RestageError(StageError):
     """"Error encountered during restaging."""
+
+
+class VersionFetchError(StageError):
+    """Raised when we can't determine a URL to fetch a package."""
 
 
 # Keep this in namespace for convenience

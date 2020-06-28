@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,8 @@ class Swiftsim(AutotoolsPackage):
     homepage = 'http://icc.dur.ac.uk/swift/'
     url = 'https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0'
 
-    version('0.7.0', '1c703d7e20a31a3896e1c291bddd71ab')
-    version('0.3.0', '162ec2bdfdf44a31a08b3fcee23a886a')
+    version('0.7.0', sha256='d570e83e1038eb31bc7ae95d1903a2371fffbca90d08f60b6b32bb0fd8a6f516')
+    version('0.3.0', sha256='dd26075315cb2754dc1292e8d838bbb83739cff7f068a98319b80b9c2b0f84bc')
 
     variant('mpi', default=True,
             description='Enable distributed memory parallelism')
@@ -33,14 +33,15 @@ class Swiftsim(AutotoolsPackage):
     depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+mpi', when='+mpi')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Needed to be able to download from the Durham gitlab repository
         tty.warn('Setting "GIT_SSL_NO_VERIFY=1"')
         tty.warn('This is needed to clone SWIFT repository')
-        spack_env.set('GIT_SSL_NO_VERIFY', 1)
+        env.set('GIT_SSL_NO_VERIFY', 1)
 
     def configure_args(self):
-        return ['--prefix=%s' % self.prefix,
-                '--enable-mpi' if '+mpi' in self.spec else '--disable-mpi',
-                '--with-metis={0}'.format(self.spec['metis'].prefix),
-                '--enable-optimization']
+        return [
+            '--enable-mpi' if '+mpi' in self.spec else '--disable-mpi',
+            '--with-metis={0}'.format(self.spec['metis'].prefix),
+            '--enable-optimization'
+        ]

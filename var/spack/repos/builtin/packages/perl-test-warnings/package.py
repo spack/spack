@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,4 +12,4 @@ class PerlTestWarnings(PerlPackage):
     homepage = "http://deps.cpantesters.org/?module=Test%3A%3ACleanNamespaces;perl=latest"
     url      = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Test-Warnings-0.026.tar.gz"
 
-    version('0.026', '1a379f7eac4c89155d98e652459593a7')
+    version('0.026', sha256='ae2b68b1b5616704598ce07f5118efe42dc4605834453b7b2be14e26f9cc9a08')

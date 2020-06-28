@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,6 +58,7 @@ class Plasma(CMakePackage):
     conflicts("%gcc@:5.99", when='@17.2:')
 
     conflicts("%cce")
+    conflicts('%apple-clang')
     conflicts("%clang")
     conflicts("%intel")
     conflicts("%nag")
@@ -66,6 +67,8 @@ class Plasma(CMakePackage):
     conflicts("%xl_r")
 
     patch("remove_absolute_mkl_include.patch", when="@17.1")
+    patch("protect_cmake_version.patch", when="@19.8.0:19.8.9")
+    patch("fix_cmake_include.patch", when="@19.8.0:19.8.9")
 
     @when("@18.9.0:")
     def cmake_args(self):

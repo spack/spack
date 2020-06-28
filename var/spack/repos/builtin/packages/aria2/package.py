@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,5 +19,5 @@ class Aria2(AutotoolsPackage):
     depends_on('libssh2')
     depends_on('libgcrypt')
     depends_on('zlib')
-    depends_on('cares')
+    depends_on('c-ares')
     depends_on('sqlite')

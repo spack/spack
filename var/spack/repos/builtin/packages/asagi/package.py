@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,8 +46,8 @@ class Asagi(CMakePackage):
 
     depends_on('mpi', when="+mpi")
     depends_on('mpi@3:', when="+mpi3")
-    depends_on('netcdf +mpi', when="+mpi")
-    depends_on('netcdf ~mpi', when="~mpi")
+    depends_on('netcdf-c +mpi', when="+mpi")
+    depends_on('netcdf-c ~mpi', when="~mpi")
     depends_on('numactl', when="+numa")
 
     conflicts('%gcc@5:', when='@:1.0.0')

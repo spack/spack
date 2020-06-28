@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,12 +10,12 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-import platform as py_platform
 import six
 
 import llnl.util.lang
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.cpu as cpu
 
 import spack.paths
 import spack.error
@@ -30,7 +30,7 @@ _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 _flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
 _other_instance_vars = ['modules', 'operating_system', 'environment',
-                        'extra_rpaths', 'implicit_rpaths']
+                        'implicit_rpaths', 'extra_rpaths']
 _cache_config_file = []
 
 # TODO: Caches at module level make it difficult to mock configurations in
@@ -73,7 +73,8 @@ def _to_dict(compiler):
     d['modules'] = compiler.modules or []
     d['environment'] = compiler.environment or {}
     d['extra_rpaths'] = compiler.extra_rpaths or []
-    d['implicit_rpaths'] = compiler.implicit_rpaths or []
+    if compiler.enable_implicit_rpaths is not None:
+        d['implicit_rpaths'] = compiler.enable_implicit_rpaths
 
     if compiler.alias:
         d['alias'] = compiler.alias
@@ -244,7 +245,9 @@ def supported_compilers():
        See available_compilers() to get a list of all the available
        versions of supported compilers.
     """
-    return sorted(name for name in
+    # Hack to be able to call the compiler `apple-clang` while still
+    # using a valid python name for the module
+    return sorted(name if name != 'apple_clang' else 'apple-clang' for name in
                   llnl.util.lang.list_modules(spack.paths.compilers_path))
 
 
@@ -350,10 +353,17 @@ def compiler_from_dict(items):
     compiler_flags = items.get('flags', {})
     environment = items.get('environment', {})
     extra_rpaths = items.get('extra_rpaths', [])
-    implicit_rpaths = items.get('implicit_rpaths')
+    implicit_rpaths = items.get('implicit_rpaths', None)
+
+    # Starting with c22a145, 'implicit_rpaths' was a list. Now it is a
+    # boolean which can be set by the user to disable all automatic
+    # RPATH insertion of compiler libraries
+    if implicit_rpaths is not None and not isinstance(implicit_rpaths, bool):
+        implicit_rpaths = None
 
     return cls(cspec, os, target, compiler_paths, mods, alias,
-               environment, extra_rpaths, implicit_rpaths,
+               environment, extra_rpaths,
+               enable_implicit_rpaths=implicit_rpaths,
                **compiler_flags)
 
 
@@ -393,8 +403,26 @@ def get_compilers(config, cspec=None, arch_spec=None):
         # any given arch spec. If the compiler has no assigned
         # target this is an old compiler config file, skip this logic.
         target = items.get('target', None)
-        if arch_spec and target and (target != arch_spec.target and
-                                     target != 'any'):
+
+        try:
+            current_target = llnl.util.cpu.targets[str(arch_spec.target)]
+            family = str(current_target.family)
+        except KeyError:
+            # TODO: Check if this exception handling makes sense, or if we
+            # TODO: need to change / refactor tests
+            family = arch_spec.target
+        except AttributeError:
+            assert arch_spec is None
+
+        if arch_spec and target and (target != family and target != 'any'):
+            # If the family of the target is the family we are seeking,
+            # there's an error in the underlying configuration
+            if llnl.util.cpu.targets[target].family == family:
+                msg = ('the "target" field in compilers.yaml accepts only '
+                       'target families [replace "{0}" with "{1}"'
+                       ' in "{2}" specification]')
+                msg = msg.format(str(target), family, items.get('spec', '??'))
+                raise ValueError(msg)
             continue
 
         compilers.append(_compiler_from_config_entry(items))
@@ -443,7 +471,13 @@ def class_for_compiler_name(compiler_name):
     """Given a compiler module name, get the corresponding Compiler class."""
     assert(supported(compiler_name))
 
-    file_path = os.path.join(spack.paths.compilers_path, compiler_name + ".py")
+    # Hack to be able to call the compiler `apple-clang` while still
+    # using a valid python name for the module
+    module_name = compiler_name
+    if compiler_name == 'apple-clang':
+        module_name = compiler_name.replace('-', '_')
+
+    file_path = os.path.join(spack.paths.compilers_path, module_name + ".py")
     compiler_mod = simp.load_source(_imported_compilers_module, file_path)
     cls = getattr(compiler_mod, mod_to_class(compiler_name))
 
@@ -636,11 +670,10 @@ def make_compiler_list(detected_versions):
         operating_system, compiler_name, version = cmp_id
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-        paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
-        implicit_rpaths = compiler_cls.determine_implicit_rpaths(paths)
+        paths = [paths.get(x, None) for x in ('cc', 'cxx', 'f77', 'fc')]
+        target = cpu.host()
         compiler = compiler_cls(
-            spec, operating_system, py_platform.machine(), paths,
-            implicit_rpaths=implicit_rpaths
+            spec, operating_system, str(target.family), paths
         )
         return [compiler]
 
@@ -657,6 +690,46 @@ def make_compiler_list(detected_versions):
         compilers.extend(make_compilers(compiler_id, selected))
 
     return compilers
+
+
+def is_mixed_toolchain(compiler):
+    """Returns True if the current compiler is a mixed toolchain,
+    False otherwise.
+
+    Args:
+        compiler (Compiler): a valid compiler object
+    """
+    cc = os.path.basename(compiler.cc or '')
+    cxx = os.path.basename(compiler.cxx or '')
+    f77 = os.path.basename(compiler.f77 or '')
+    fc = os.path.basename(compiler.fc or '')
+
+    toolchains = set()
+    for compiler_cls in all_compiler_types():
+        # Inspect all the compiler toolchain we know. If a compiler is the
+        # only compiler supported there it belongs to that toolchain.
+        def name_matches(name, name_list):
+            # This is such that 'gcc' matches variations
+            # like 'ggc-9' etc that are found in distros
+            name, _, _ = name.partition('-')
+            return len(name_list) == 1 and name and name in name_list
+
+        if any([
+            name_matches(cc, compiler_cls.cc_names),
+            name_matches(cxx, compiler_cls.cxx_names),
+            name_matches(f77, compiler_cls.f77_names),
+            name_matches(fc, compiler_cls.fc_names)
+        ]):
+            tty.debug("[TOOLCHAIN] MATCH {0}".format(compiler_cls.__name__))
+            toolchains.add(compiler_cls.__name__)
+
+    if len(toolchains) > 1:
+        if toolchains == set(['Clang', 'AppleClang']):
+            return False
+        tty.debug("[TOOLCHAINS] {0}".format(toolchains))
+        return True
+
+    return False
 
 
 class InvalidCompilerConfigurationError(spack.error.SpackError):

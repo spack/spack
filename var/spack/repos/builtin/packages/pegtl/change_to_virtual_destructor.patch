@@ -1,0 +1,13 @@
+--- spack-src/src/example/pegtl/json_classes.hpp.org	2020-02-14 11:07:25.117102793 +0900
++++ spack-src/src/example/pegtl/json_classes.hpp	2020-02-14 11:08:06.841397607 +0900
+@@ -35,9 +35,7 @@
+       {
+       }
+ 
+-      ~json_base()
+-      {
+-      }
++      virtual ~json_base() = default;
+    };
+ 
+    inline std::ostream& operator<<( std::ostream& o, const json_base& j )

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,8 @@ class Kvtree(CMakePackage):
     """KVTree provides a fully extensible C datastructure modeled after perl
     hashes."""
 
-    homepage = "https://github.com/ECP-VeloC/KVTree"
-    url      = "https://github.com/ECP-VeloC/KVTree/archive/v1.0.1.zip"
+    homepage = "https://github.com/ecp-veloc/KVTree"
+    url      = "https://github.com/ecp-veloc/KVTree/archive/v1.0.2.zip"
     git      = "https://github.com/ecp-veloc/kvtree.git"
 
     tags = ['ecp']

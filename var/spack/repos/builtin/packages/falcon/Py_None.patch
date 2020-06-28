@@ -1,0 +1,10 @@
+--- spack-src/src/c/ext_falcon.c.org	2020-01-15 17:40:41.279400137 +0900
++++ spack-src/src/c/ext_falcon.c	2020-01-15 17:44:47.785718088 +0900
+@@ -9,5 +9,6 @@
+ 
+     m = Py_InitModule("ext_falcon", SpamMethods);
+     if (m == NULL)
+-        return;
++        Py_INCREF(Py_None);
++        return Py_None;
+ }

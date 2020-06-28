@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,12 @@ class Poppler(CMakePackage):
     git      = "https://gitlab.freedesktop.org/poppler/poppler.git"
 
     version('master', branch='master')
+    version('0.87.0', sha256='6f602b9c24c2d05780be93e7306201012e41459f289b8279a27a79431ad4150e')
     version('0.79.0', sha256='f985a4608fe592d2546d9d37d4182e502ff6b4c42f8db4be0a021a1c369528c8')
     version('0.77.0', sha256='7267eb4cbccd64a58244b8211603c1c1b6bf32c7f6a4ced2642865346102f36b')
     version('0.72.0', sha256='c1747eb8f26e9e753c4001ed951db2896edc1021b6d0f547a0bd2a27c30ada51')
-    version('0.65.0', 'b9a0af02e43deb26265f130343e90d78')
-    version('0.64.0', 'f7f687ebb60004f8ad61994575018044')
+    version('0.65.0', sha256='89c8cf73f83efda78c5a9bd37c28f4593ad0e8a51556dbe39ed81e1ae2dd8f07')
+    version('0.64.0', sha256='b21df92ca99f78067785cf2dc8e06deb04726b62389c0ee1f5d8b103c77f64b1')
     version('0.61.1', sha256='1266096343f5163c1a585124e9a6d44474e1345de5cdfe55dc7b47357bcfcda9')
 
     variant('cms',      default=False, description='Use color management system')
@@ -48,8 +49,8 @@ class Poppler(CMakePackage):
     depends_on('openjpeg', when='+openjpeg')
     depends_on('qt@4.0:', when='+qt')
     depends_on('zlib', when='+zlib')
-    depends_on('cairo@1.10.0:', when='+glib')
-    depends_on('libiconv', when='+iconv')
+    depends_on('cairo+ft@1.10.0:', when='+glib')
+    depends_on('iconv', when='+iconv')
     depends_on('jpeg', when='+jpeg')
     depends_on('libpng', when='+png')
     depends_on('libtiff', when='+tiff')

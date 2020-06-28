@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,8 @@ from spack.util.executable import which
 
 
 pytestmark = pytest.mark.skipif(
-    not which('svn'), reason='requires subversion to be installed')
+    not which('svn') or not which('svnadmin'),
+    reason='requires subversion to be installed')
 
 
 @pytest.mark.parametrize("type_of_test", ['default', 'rev0'])
@@ -29,7 +30,7 @@ def test_fetch(
         secure,
         mock_svn_repository,
         config,
-        mutable_mock_packages
+        mutable_mock_repo
 ):
     """Tries to:
 

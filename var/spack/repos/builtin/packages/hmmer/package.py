@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,14 +12,15 @@ class Hmmer(Package):
     probabilistic models called profile hidden Markov models (profile HMMs).
     """
     homepage = 'http://www.hmmer.org'
-    url      = 'http://eddylab.org/software/hmmer/hmmer-3.2.1.tar.gz'
+    url      = 'http://eddylab.org/software/hmmer/hmmer-3.3.tar.gz'
 
-    version('3.2.1', '4e0ad5ed45462d4e36807d21e6d82b69')
-    version('3.1b2', 'c8c141018bc0ccd7fc37b33f2b945d5f')
-    version('3.0',   '4cf685f3bc524ba5b5cdaaa070a83588')
-    version('2.4i',  'dab234c87e026ac1de942450750acd20')
-    version('2.3.2', '5f073340c0cf761288f961a73821228a')
-    version('2.3.1', 'c724413e5761c630892506698a4716e2')
+    version('3.3', sha256='0186bf40af67032666014971ed8ddc3cf2834bebc2be5b3bc0304a93e763736c')
+    version('3.2.1', sha256='a56129f9d786ec25265774519fc4e736bbc16e4076946dcbd7f2c16efc8e2b9c')
+    version('3.1b2', sha256='dd16edf4385c1df072c9e2f58c16ee1872d855a018a2ee6894205277017b5536')
+    version('3.0',   sha256='6977e6473fcb554b1d5a86dc9edffffa53918c1bd88d7fd20d7499f1ba719e83')
+    version('2.4i',  sha256='73cb85c2197017fa7a25482556ed250bdeed256974b99b0c25e02854e710a886')
+    version('2.3.2', sha256='d20e1779fcdff34ab4e986ea74a6c4ac5c5f01da2993b14e92c94d2f076828b4')
+    version('2.3.1', sha256='3956d53af8de5bb99eec18cba0628e86924c6543639d290293b6677a9224ea3f')
 
     variant('mpi', default=True,  description='Compile with MPI')
     variant('gsl', default=False, description='Compile with GSL')

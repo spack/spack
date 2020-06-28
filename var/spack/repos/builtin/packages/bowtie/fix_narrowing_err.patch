@@ -1,0 +1,11 @@
+--- bowtie-1.2.3.org/alphabet.cpp	2019-09-26 12:14:35.508558749 +0900
++++ bowtie-1.2.3/alphabet.cpp	2019-09-26 14:15:56.960009461 +0900
+@@ -274,7 +274,7 @@
+ const char *iupacs = "!ACMGRSVTWYHKDBN!acmgrsvtwyhkdbn";
+ 
+ char mask2iupac[16] = {
+-	-1,
++	static_cast<char>(-1),
+ 	'A', // 0001
+ 	'C', // 0010
+ 	'M', // 0011

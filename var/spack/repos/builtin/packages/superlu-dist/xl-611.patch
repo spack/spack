@@ -1,0 +1,26 @@
+commit e51132dbd022139933678b3a751a9b3148fafd19
+Author: Satish Balay <balay@mcs.anl.gov>
+Date:   Tue Nov 12 16:07:08 2019 -0600
+
+    add ztrtri_ mapping for xlf
+
+diff --git a/SRC/Cnames.h b/SRC/Cnames.h
+index 792f514..ebef619 100644
+--- a/SRC/Cnames.h
++++ b/SRC/Cnames.h
+@@ -179,6 +179,7 @@ at the top-level directory.
+ #define zher2_    ZHER2
+ #define zgeru_    ZGERU
+ 
++#define ztrtri_   ZTRTRI
+ /*
+ #define mc64id_dist     MC64ID_DIST
+ #define mc64ad_dist     MC64AD_DIST
+@@ -307,6 +308,7 @@ at the top-level directory.
+ #define zher2_    zher2
+ #define zgeru_    zgeru
+ 
++#define ztrtri_   ztrtri
+ /*
+ #define mc64id_dist         mc64id_dist
+ #define mc64ad_dist         mc64ad_dist

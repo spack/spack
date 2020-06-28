@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,21 @@ to download packages directly from a mirror (e.g., on an intranet).
 """
 import sys
 import os
+import traceback
+import os.path
+import operator
+
+import six
+
+import ruamel.yaml.error as yaml_error
+
+from ordereddict_backport import OrderedDict
+
+try:
+    from collections.abc import Mapping  # novm
+except ImportError:
+    from collections import Mapping
+
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
@@ -20,32 +35,217 @@ import spack.config
 import spack.error
 import spack.url as url
 import spack.fetch_strategy as fs
-from spack.spec import Spec
+import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
+import spack.util.url as url_util
+import spack.spec
 from spack.version import VersionList
-from spack.util.compression import allowed_archive
+from spack.util.spack_yaml import syaml_dict
 
 
-def mirror_archive_filename(spec, fetcher, resource_id=None):
-    """Get the name of the spec's archive in the mirror."""
-    if not spec.version.concrete:
-        raise ValueError("mirror.path requires spec with concrete version.")
+def _display_mirror_entry(size, name, url, type_=None):
+    if type_:
+        type_ = "".join((" (", type_, ")"))
+    else:
+        type_ = ""
 
+    print("%-*s%s%s" % (size + 4, name, url, type_))
+
+
+class Mirror(object):
+    """Represents a named location for storing source tarballs and binary
+    packages.
+
+    Mirrors have a fetch_url that indicate where and how artifacts are fetched
+    from them, and a push_url that indicate where and how artifacts are pushed
+    to them.  These two URLs are usually the same.
+    """
+
+    def __init__(self, fetch_url, push_url=None, name=None):
+        self._fetch_url = fetch_url
+        self._push_url = push_url
+        self._name = name
+
+    def to_json(self, stream=None):
+        return sjson.dump(self.to_dict(), stream)
+
+    def to_yaml(self, stream=None):
+        return syaml.dump(self.to_dict(), stream)
+
+    @staticmethod
+    def from_yaml(stream, name=None):
+        try:
+            data = syaml.load(stream)
+            return Mirror.from_dict(data, name)
+        except yaml_error.MarkedYAMLError as e:
+            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+
+    @staticmethod
+    def from_json(stream, name=None):
+        d = sjson.load(stream)
+        return Mirror.from_dict(d, name)
+
+    def to_dict(self):
+        if self._push_url is None:
+            return self._fetch_url
+        else:
+            return syaml_dict([
+                ('fetch', self._fetch_url),
+                ('push', self._push_url)])
+
+    @staticmethod
+    def from_dict(d, name=None):
+        if isinstance(d, six.string_types):
+            return Mirror(d, name=name)
+        else:
+            return Mirror(d['fetch'], d['push'], name)
+
+    def display(self, max_len=0):
+        if self._push_url is None:
+            _display_mirror_entry(max_len, self._name, self._fetch_url)
+        else:
+            _display_mirror_entry(
+                max_len, self._name, self._fetch_url, "fetch")
+            _display_mirror_entry(
+                max_len, self._name, self._push_url, "push")
+
+    def __str__(self):
+        name = self._name
+        if name is None:
+            name = ''
+        else:
+            name = ' "%s"' % name
+
+        if self._push_url is None:
+            return "[Mirror%s (%s)]" % (name, self._fetch_url)
+
+        return "[Mirror%s (fetch: %s, push: %s)]" % (
+            name, self._fetch_url, self._push_url)
+
+    def __repr__(self):
+        return ''.join((
+            'Mirror(',
+            ', '.join(
+                '%s=%s' % (k, repr(v))
+                for k, v in (
+                    ('fetch_url', self._fetch_url),
+                    ('push_url', self._push_url),
+                    ('name', self._name))
+                if k == 'fetch_url' or v),
+            ')'
+        ))
+
+    @property
+    def name(self):
+        return self._name or "<unnamed>"
+
+    @property
+    def fetch_url(self):
+        return self._fetch_url
+
+    @fetch_url.setter
+    def fetch_url(self, url):
+        self._fetch_url = url
+        self._normalize()
+
+    @property
+    def push_url(self):
+        if self._push_url is None:
+            return self._fetch_url
+        return self._push_url
+
+    @push_url.setter
+    def push_url(self, url):
+        self._push_url = url
+        self._normalize()
+
+    def _normalize(self):
+        if self._push_url is not None and self._push_url == self._fetch_url:
+            self._push_url = None
+
+
+class MirrorCollection(Mapping):
+    """A mapping of mirror names to mirrors."""
+
+    def __init__(self, mirrors=None, scope=None):
+        self._mirrors = OrderedDict(
+            (name, Mirror.from_dict(mirror, name))
+            for name, mirror in (
+                mirrors.items() if mirrors is not None else
+                spack.config.get('mirrors', scope=scope).items()))
+
+    def to_json(self, stream=None):
+        return sjson.dump(self.to_dict(True), stream)
+
+    def to_yaml(self, stream=None):
+        return syaml.dump(self.to_dict(True), stream)
+
+    # TODO: this isn't called anywhere
+    @staticmethod
+    def from_yaml(stream, name=None):
+        try:
+            data = syaml.load(stream)
+            return MirrorCollection(data)
+        except yaml_error.MarkedYAMLError as e:
+            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+
+    @staticmethod
+    def from_json(stream, name=None):
+        d = sjson.load(stream)
+        return MirrorCollection(d)
+
+    def to_dict(self, recursive=False):
+        return syaml_dict(sorted(
+            (
+                (k, (v.to_dict() if recursive else v))
+                for (k, v) in self._mirrors.items()
+            ), key=operator.itemgetter(0)
+        ))
+
+    @staticmethod
+    def from_dict(d):
+        return MirrorCollection(d)
+
+    def __getitem__(self, item):
+        return self._mirrors[item]
+
+    def display(self):
+        max_len = max(len(mirror.name) for mirror in self._mirrors.values())
+        for mirror in self._mirrors.values():
+            mirror.display(max_len)
+
+    def lookup(self, name_or_url):
+        """Looks up and returns a Mirror.
+
+        If this MirrorCollection contains a named Mirror under the name
+        [name_or_url], then that mirror is returned.  Otherwise, [name_or_url]
+        is assumed to be a mirror URL, and an anonymous mirror with the given
+        URL is returned.
+        """
+        result = self.get(name_or_url)
+
+        if result is None:
+            result = Mirror(fetch_url=name_or_url)
+
+        return result
+
+    def __iter__(self):
+        return iter(self._mirrors)
+
+    def __len__(self):
+        return len(self._mirrors)
+
+
+def _determine_extension(fetcher):
     if isinstance(fetcher, fs.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
             ext = url.determine_url_file_extension(fetcher.url)
 
-            # If the filename does not end with a normal suffix,
-            # see if the package explicitly declares the extension
-            if not ext:
-                ext = spec.package.versions[spec.package.version].get(
-                    'extension', None)
-
             if ext:
                 # Remove any leading dots
                 ext = ext.lstrip('.')
-
-            if not ext:
+            else:
                 msg = """\
 Unable to parse extension from {0}.
 
@@ -68,21 +268,92 @@ Spack not to expand it with the following syntax:
         # Otherwise we'll make a .tar.gz ourselves
         ext = 'tar.gz'
 
-    if resource_id:
-        filename = "%s-%s" % (resource_id, spec.version) + ".%s" % ext
-    else:
-        filename = "%s-%s" % (spec.package.name, spec.version) + ".%s" % ext
-
-    return filename
+    return ext
 
 
-def mirror_archive_path(spec, fetcher, resource_id=None):
-    """Get the relative path to the spec's archive within a mirror."""
-    return os.path.join(
-        spec.name, mirror_archive_filename(spec, fetcher, resource_id))
+class MirrorReference(object):
+    """A ``MirrorReference`` stores the relative paths where you can store a
+    package/resource in a mirror directory.
+
+    The appropriate storage location is given by ``storage_path``. The
+    ``cosmetic_path`` property provides a reference that a human could generate
+    themselves based on reading the details of the package.
+
+    A user can iterate over a ``MirrorReference`` object to get all the
+    possible names that might be used to refer to the resource in a mirror;
+    this includes names generated by previous naming schemes that are no-longer
+    reported by ``storage_path`` or ``cosmetic_path``.
+    """
+    def __init__(self, cosmetic_path, global_path=None):
+        self.global_path = global_path
+        self.cosmetic_path = cosmetic_path
+
+    @property
+    def storage_path(self):
+        if self.global_path:
+            return self.global_path
+        else:
+            return self.cosmetic_path
+
+    def __iter__(self):
+        if self.global_path:
+            yield self.global_path
+        yield self.cosmetic_path
 
 
-def get_matching_versions(specs, **kwargs):
+def mirror_archive_paths(fetcher, per_package_ref, spec=None):
+    """Returns a ``MirrorReference`` object which keeps track of the relative
+    storage path of the resource associated with the specified ``fetcher``."""
+    ext = None
+    if spec:
+        versions = spec.package.versions.get(spec.package.version, {})
+        ext = versions.get('extension', None)
+    # If the spec does not explicitly specify an extension (the default case),
+    # then try to determine it automatically. An extension can only be
+    # specified for the primary source of the package (e.g. the source code
+    # identified in the 'version' declaration). Resources/patches don't have
+    # an option to specify an extension, so it must be inferred for those.
+    ext = ext or _determine_extension(fetcher)
+
+    if ext:
+        per_package_ref += ".%s" % ext
+
+    global_ref = fetcher.mirror_id()
+    if global_ref:
+        global_ref = os.path.join('_source-cache', global_ref)
+    if global_ref and ext:
+        global_ref += ".%s" % ext
+
+    return MirrorReference(per_package_ref, global_ref)
+
+
+def get_all_versions(specs):
+    """Given a set of initial specs, return a new set of specs that includes
+    each version of each package in the original set.
+
+    Note that if any spec in the original set specifies properties other than
+    version, this information will be omitted in the new set; for example; the
+    new set of specs will not include variant settings.
+    """
+
+    version_specs = []
+    for spec in specs:
+        pkg = spec.package
+
+        # Skip any package that has no known versions.
+        if not pkg.versions:
+            tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
+            continue
+
+        for version in pkg.versions:
+            version_spec = spack.spec.Spec(pkg.name)
+            version_spec.versions = VersionList([version])
+            version_specs.append(version_spec)
+
+    return version_specs
+
+
+def get_matching_versions(specs, num_versions=1):
     """Get a spec for EACH known version matching any spec in the list.
     For concrete specs, this retrieves the concrete version and, if more
     than one version per spec is requested, retrieves the latest versions
@@ -97,7 +368,7 @@ def get_matching_versions(specs, **kwargs):
             tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
             continue
 
-        pkg_versions = kwargs.get('num_versions', 1)
+        pkg_versions = num_versions
 
         version_order = list(reversed(sorted(pkg.versions)))
         matching_spec = []
@@ -114,7 +385,7 @@ def get_matching_versions(specs, **kwargs):
 
             # Generate only versions that satisfy the spec.
             if spec.concrete or v.satisfies(spec.versions):
-                s = Spec(pkg.name)
+                s = spack.spec.Spec(pkg.name)
                 s.versions = VersionList([v])
                 s.variants = spec.variants.copy()
                 # This is needed to avoid hanging references during the
@@ -130,19 +401,7 @@ def get_matching_versions(specs, **kwargs):
     return matching
 
 
-def suggest_archive_basename(resource):
-    """Return a tentative basename for an archive.
-
-    Raises:
-        RuntimeError: if the name is not an allowed archive type.
-    """
-    basename = os.path.basename(resource.fetcher.url)
-    if not allowed_archive(basename):
-        raise RuntimeError("%s is not an allowed archive tye" % basename)
-    return basename
-
-
-def create(path, specs, **kwargs):
+def create(path, specs, skip_unstable_versions=False):
     """Create a directory to be used as a spack mirror, and fill it with
     package archives.
 
@@ -150,10 +409,9 @@ def create(path, specs, **kwargs):
         path: Path to create a mirror directory hierarchy in.
         specs: Any package versions matching these specs will be added \
             to the mirror.
-
-    Keyword args:
-        num_versions: Max number of versions to fetch per spec, \
-            (default is 1 each spec)
+        skip_unstable_versions: if true, this skips adding resources when
+            they do not have a stable archive checksum (as determined by
+            ``fetch_strategy.stable_target``)
 
     Return Value:
         Returns a tuple of lists: (present, mirrored, error)
@@ -166,21 +424,18 @@ def create(path, specs, **kwargs):
     it creates specs for those versions.  If the version satisfies any spec
     in the specs list, it is downloaded and added to the mirror.
     """
-    # Make sure nothing is in the way.
-    if os.path.isfile(path):
-        raise MirrorError("%s already exists and is a file." % path)
+    parsed = url_util.parse(path)
+    mirror_root = url_util.local_file_path(parsed)
+    if not mirror_root:
+        raise spack.error.SpackError(
+            'MirrorCaches only work with file:// URLs')
 
     # automatically spec-ify anything in the specs array.
-    specs = [s if isinstance(s, Spec) else Spec(s) for s in specs]
-
-    # Get concrete specs for each matching version of these specs.
-    version_specs = get_matching_versions(
-        specs, num_versions=kwargs.get('num_versions', 1))
-    for s in version_specs:
-        s.concretize()
+    specs = [
+        s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s)
+        for s in specs]
 
     # Get the absolute path of the root before we start jumping around.
-    mirror_root = os.path.abspath(path)
     if not os.path.isdir(mirror_root):
         try:
             mkdirp(mirror_root)
@@ -188,45 +443,87 @@ def create(path, specs, **kwargs):
             raise MirrorError(
                 "Cannot create directory '%s':" % mirror_root, str(e))
 
-    # Things to keep track of while parsing specs.
-    categories = {
-        'present': [],
-        'mirrored': [],
-        'error': []
-    }
+    mirror_cache = spack.caches.MirrorCache(
+        mirror_root, skip_unstable_versions=skip_unstable_versions)
+    mirror_stats = MirrorStats()
 
-    mirror_cache = spack.caches.MirrorCache(mirror_root)
-    try:
-        spack.caches.mirror_cache = mirror_cache
-        # Iterate through packages and download all safe tarballs for each
-        for spec in version_specs:
-            add_single_spec(spec, mirror_root, categories, **kwargs)
-    finally:
-        spack.caches.mirror_cache = None
+    # Iterate through packages and download all safe tarballs for each
+    for spec in specs:
+        mirror_stats.next_spec(spec)
+        _add_single_spec(spec, mirror_cache, mirror_stats)
 
-    categories['mirrored'] = list(mirror_cache.new_resources)
-    categories['present'] = list(mirror_cache.existing_resources)
-
-    return categories['present'], categories['mirrored'], categories['error']
+    return mirror_stats.stats()
 
 
-def add_single_spec(spec, mirror_root, categories, **kwargs):
+class MirrorStats(object):
+    def __init__(self):
+        self.present = {}
+        self.new = {}
+        self.errors = set()
+
+        self.current_spec = None
+        self.added_resources = set()
+        self.existing_resources = set()
+
+    def next_spec(self, spec):
+        self._tally_current_spec()
+        self.current_spec = spec
+
+    def _tally_current_spec(self):
+        if self.current_spec:
+            if self.added_resources:
+                self.new[self.current_spec] = len(self.added_resources)
+            if self.existing_resources:
+                self.present[self.current_spec] = len(self.existing_resources)
+            self.added_resources = set()
+            self.existing_resources = set()
+        self.current_spec = None
+
+    def stats(self):
+        self._tally_current_spec()
+        return list(self.present), list(self.new), list(self.errors)
+
+    def already_existed(self, resource):
+        # If an error occurred after caching a subset of a spec's
+        # resources, a secondary attempt may consider them already added
+        if resource not in self.added_resources:
+            self.existing_resources.add(resource)
+
+    def added(self, resource):
+        self.added_resources.add(resource)
+
+    def error(self):
+        self.errors.add(self.current_spec)
+
+
+def _add_single_spec(spec, mirror, mirror_stats):
     tty.msg("Adding package {pkg} to mirror".format(
         pkg=spec.format("{name}{@version}")
     ))
-    try:
-        spec.package.do_fetch()
-        spec.package.do_clean()
+    num_retries = 3
+    while num_retries > 0:
+        try:
+            with spec.package.stage as pkg_stage:
+                pkg_stage.cache_mirror(mirror, mirror_stats)
+                for patch in spec.package.all_patches():
+                    if patch.stage:
+                        patch.stage.cache_mirror(mirror, mirror_stats)
+                    patch.clean()
+            exception = None
+            break
+        except Exception as e:
+            exc_tuple = sys.exc_info()
+            exception = e
+        num_retries -= 1
 
-    except Exception as e:
-        tty.debug(e)
+    if exception:
         if spack.config.get('config:debug'):
-            sys.excepthook(*sys.exc_info())
+            traceback.print_exception(file=sys.stderr, *exc_tuple)
         else:
             tty.warn(
                 "Error while fetching %s" % spec.cformat('{name}{@version}'),
-                e.message)
-        categories['error'].append(spec)
+                getattr(exception, 'message', exception))
+        mirror_stats.error()
 
 
 class MirrorError(spack.error.SpackError):

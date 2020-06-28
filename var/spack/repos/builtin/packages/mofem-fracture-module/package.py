@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class MofemFractureModule(CMakePackage):
     version('0.9.42', tag='v0.9.42')
 
     variant('copy_user_modules', default=True,
-        description='Copy user modules directory instead linking')
+            description='Copy user modules directory instead linking')
 
     extends('mofem-cephas')
     depends_on('mofem-users-modules@0.8.17', when='@0.9.50')

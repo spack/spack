@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class AutodockVina(MakefilePackage):
     homepage = "http://vina.scripps.edu/"
     url = "http://vina.scripps.edu/download/autodock_vina_1_1_2.tgz"
 
-    version('1_1_2', 'b467b71ee77dd155b65b1c5364e4220f')
+    version('1_1_2', sha256='b86412d316960b1e4e319401719daf57ff009229d91654d623c3cf09339f6776')
 
     depends_on('boost@1.65.0')
 

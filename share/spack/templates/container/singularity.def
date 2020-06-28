@@ -1,0 +1,90 @@
+Bootstrap: docker
+From: {{ build.image }}:{{ build.tag }}
+Stage: build
+
+%post
+  # Create the manifest file for the installation in /opt/spack-environment
+  mkdir {{ paths.environment }} && cd {{ paths.environment }}
+  cat << EOF > spack.yaml
+{{ manifest }}
+EOF
+
+  # Install all the required software
+  . /opt/spack/share/spack/setup-env.sh
+  spack install
+  spack gc -y
+  spack env activate --sh -d . >> {{ paths.environment }}/environment_modifications.sh
+{% if strip %}
+
+  # Strip the binaries to reduce the size of the image
+  find -L {{ paths.view }}/* -type f -exec readlink -f '{}' \; | \
+    xargs file -i | \
+    grep 'charset=binary' | \
+    grep 'x-executable\|x-archive\|x-sharedlib' | \
+    awk -F: '{print $1}' | xargs strip -s
+{% endif %}
+{% if extra_instructions.build %}
+{{ extra_instructions.build }}
+{% endif %}
+
+
+{% if apps %}
+{% for application, help_text in apps.items() %}
+
+%apprun {{ application }}
+    exec /opt/view/bin/{{ application }} "$@"
+
+%apphelp {{ application }}
+    {{help_text }}
+{% endfor %}
+{% endif %}
+
+Bootstrap: docker
+From: {{ run.image }}
+Stage: final
+
+%files from build
+  {{ paths.environment }} /opt
+  {{ paths.store }} /opt
+  {{ paths.view }} /opt
+  {{ paths.environment }}/environment_modifications.sh {{ paths.environment }}/environment_modifications.sh
+
+%post
+{% if os_packages.list %}
+  # Update, install and cleanup of system packages
+  {{ os_packages.update }}
+  {{ os_packages.install }} {{ os_packages.list | join | replace('\n', ' ') }}
+  {{ os_packages.clean }}
+{% endif %}
+  # Modify the environment without relying on sourcing shell specific files at startup
+  cat {{ paths.environment }}/environment_modifications.sh >> $SINGULARITY_ENVIRONMENT
+{% if extra_instructions.final %}
+{{ extra_instructions.final }}
+{% endif %}
+
+{% if runscript %}
+%runscript
+{{ runscript }}
+{% endif %}
+
+{% if startscript %}
+%startscript
+{{ startscript }}
+{% endif %}
+
+{% if test %}
+%test
+{{ test }}
+{% endif %}
+
+{% if help %}
+%help
+{{ help }}
+{% endif %}
+
+{% if labels %}
+%labels
+{% for label, value in labels.items() %}
+  {{ label }} {{ value }}
+{% endfor %}
+{% endif %}

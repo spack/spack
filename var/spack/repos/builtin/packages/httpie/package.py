@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class Httpie(PythonPackage):
     homepage = "https://httpie.org/"
     url      = "https://pypi.io/packages/source/h/httpie/httpie-0.9.8.tar.gz"
 
-    version('0.9.9', '13ed0b79b65e793eb288e563db38b2a2')
-    version('0.9.8', 'e0d1af07d0959a2e081e7954797ce260')
+    version('0.9.9', sha256='f1202e6fa60367e2265284a53f35bfa5917119592c2ab08277efc7fffd744fcb')
+    version('0.9.8', sha256='515870b15231530f56fe2164190581748e8799b66ef0fe36ec9da3396f0df6e1')
 
     variant('socks', default=True,
             description='Enable SOCKS proxy support')
@@ -26,4 +26,4 @@ class Httpie(PythonPackage):
     # https://github.com/spack/spack/issues/3628
     # depends_on('py-argparse@1.2.1:', type=('build', 'run'),
     #            when='^python@:2.6,3.0:3.1')
-    depends_on('py-argparse@1.2.1:', type=('build', 'run'))
+    depends_on('py-argparse@1.2.1:', type=('build', 'run'), when='^python@:2.6')

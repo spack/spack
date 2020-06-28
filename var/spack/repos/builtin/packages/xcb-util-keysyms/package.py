@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class XcbUtilKeysyms(AutotoolsPackage):
     homepage = "https://xcb.freedesktop.org/"
     url      = "https://xcb.freedesktop.org/dist/xcb-util-keysyms-0.4.0.tar.gz"
 
-    version('0.4.0', '2decde7b02b4b3bde99a02c17b64d5dc')
+    version('0.4.0', sha256='0807cf078fbe38489a41d755095c58239e1b67299f14460dec2ec811e96caa96')
 
     depends_on('libxcb@1.4:')
 

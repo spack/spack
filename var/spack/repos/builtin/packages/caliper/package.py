@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,16 +10,18 @@ import sys
 
 class Caliper(CMakePackage):
     """Caliper is a program instrumentation and performance measurement
-    framework. It provides data collection mechanisms and a source-code
-    annotation API for a variety of performance engineering use cases,
-    e.g., performance profiling, tracing, monitoring, and
-    auto-tuning.
+    framework. It is designed as a performance analysis toolbox in a
+    library, allowing one to bake performance analysis capabilities
+    directly into applications and activate them at runtime.
     """
 
     homepage = "https://github.com/LLNL/Caliper"
     git      = "https://github.com/LLNL/Caliper.git"
 
     version('master')
+    version('2.3.0', tag='v2.3.0')
+    version('2.2.0', tag='v2.2.0')
+    version('2.1.1', tag='v2.1.1')
     version('2.0.1', tag='v2.0.1')
     version('1.9.1', tag='v1.9.1')
     version('1.9.0', tag='v1.9.0')
@@ -29,6 +31,8 @@ class Caliper(CMakePackage):
     is_linux = sys.platform.startswith('linux')
     variant('shared', default=True,
             description='Build shared libraries')
+    variant('adiak', default=True,
+            description='Enable Adiak support')
     variant('mpi', default=True,
             description='Enable MPI wrappers')
     variant('dyninst', default=False,
@@ -49,6 +53,8 @@ class Caliper(CMakePackage):
     variant('sosflow', default=False,
             description='Enable SOSflow support')
 
+    depends_on('adiak@0.1:', when='@2.2: +adiak')
+
     depends_on('gotcha@1.0.2:1.0.99', when='+gotcha')
 
     depends_on('dyninst@9.3.0:9.99', when='@:1.99 +dyninst')
@@ -59,23 +65,27 @@ class Caliper(CMakePackage):
     depends_on('libpfm4@4.8:4.99', when='+libpfm')
 
     depends_on('mpi', when='+mpi')
-    depends_on('unwind@2018.10.12,1.2:1.99', when='+callpath')
+    depends_on('unwind@1.2:1.99', when='+callpath')
 
     depends_on('sosflow@spack', when='@1.0:1.99+sosflow')
 
     depends_on('cmake', type='build')
-    depends_on('python', type='build')
+    depends_on('python@3:', type='build')
 
     # sosflow support not yet in 2.0
-    conflicts('+sosflow', '@2.0.0:2.0.99')
+    conflicts('+sosflow', '@2.0.0:2.3.99')
+    conflicts('+adiak', '@:2.1.99')
 
     def cmake_args(self):
         spec = self.spec
 
         args = [
+            ('-DPYTHON_EXECUTABLE=%s' %
+                spec['python'].command.path),
             '-DBUILD_TESTING=Off',
             '-DBUILD_DOCS=Off',
             '-DBUILD_SHARED_LIBS=%s' % ('On' if '+shared'  in spec else 'Off'),
+            '-DWITH_ADIAK=%s'    % ('On' if '+adiak'    in spec else 'Off'),
             '-DWITH_DYNINST=%s'  % ('On' if '+dyninst'  in spec else 'Off'),
             '-DWITH_CALLPATH=%s' % ('On' if '+callpath' in spec else 'Off'),
             '-DWITH_GOTCHA=%s'   % ('On' if '+gotcha'   in spec else 'Off'),

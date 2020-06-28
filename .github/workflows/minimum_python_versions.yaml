@@ -1,0 +1,30 @@
+name: python version check
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+jobs:
+  validate:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install Python Packages
+      run: |
+        pip install --upgrade pip
+        pip install --upgrade vermin
+    - name: Minimum Version (Spack's Core)
+      run: vermin --backport argparse -t=2.6- -t=3.5- -v lib/spack/spack/ lib/spack/llnl/ bin/
+    - name: Minimum Version (Repositories)
+      run: vermin --backport argparse -t=2.6- -t=3.5- -v var/spack/repos
