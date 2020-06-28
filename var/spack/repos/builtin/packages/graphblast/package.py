@@ -18,17 +18,21 @@ class Graphblast(MakefilePackage, CudaPackage):
 
     depends_on('boost +program_options')
 
-    # This package confirmed to compile with gcc <= 4.9.4, boost@1.58
+    # This is package confirmed to compile with gcc <= 5.4.0,boost@1.58,cuda@9.2
     # TODO: the package doesn't compile as CMakePackage currently
     # once that is fixed it should be converted to a CMakePackage type.
+
+    conflicts('%gcc@5.5.0:')
 
     def install(self, spec, prefix):
         install_tree(self.build_directory, self.prefix)
 
     @run_before('build')
     def set_cudarch(self):
-        cuda_arch = self.spec.variants['cuda_arch'].value
-        if cuda_arch is not None:
-            makefile = filterFile('common.mk')
-            makefile.filter(r'CUDA_ARCH = 35', 'CUDA_ARCH = ' +
-                            spec.variants['cuda_arch'].value)
+        cuda_arch_list = self.spec.variants['cuda_arch'].value
+        if cuda_arch_list is not None:
+            arches='ARCH = '
+            for i in cuda_arch_list:
+                arches=arches + ' -gencode arch=compute_{0},code=compute_{0}'.format(i)
+            makefile = FileFilter('common.mk')
+            makefile.filter(r'^ARCH =.*', arches)
