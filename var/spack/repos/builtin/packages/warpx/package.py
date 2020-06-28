@@ -55,7 +55,7 @@ class Warpx(MakefilePackage):
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
-             when='@development',
+             when='@develop',
              tag='development')
 
     resource(name='picsar',
