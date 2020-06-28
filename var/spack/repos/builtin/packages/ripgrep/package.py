@@ -16,5 +16,7 @@ class Ripgrep(CargoPackage):
     crates_io = "ripgrep"
     git = "https://github.com/BurntSushi/ripgrep.git"
 
+    maintainers = ["AndrewGaspar"]
+
     version('master', branch='master')
     version('12.1.1', sha256='b955557adc78324dbc2bc663ca85df54b48a579b340876e38dffb39f24882ebf')
