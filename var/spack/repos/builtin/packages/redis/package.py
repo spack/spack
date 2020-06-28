@@ -34,7 +34,7 @@ class Redis(MakefilePackage):
             'install'
         ]
 
-    def install(self, spec, prefix):
-        make(*self.install_targets)
-        mkdirp(prefix.conf)
-        install('redis.conf', join_path(prefix.conf, 'redis.conf'))
+    @run_after('install')
+    def install_conf(self):
+        mkdirp(self.prefix.conf)
+        install('redis.conf', self.prefix.conf)
