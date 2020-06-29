@@ -7,35 +7,48 @@
 #################################################################################
 #
 # This file is part of Spack and sets up the spack environment for the friendly
-# interactive shell (fish). This includes dotkit support, module support, and it
-# also puts spack in your path. The script also checks that at least module
-# support exists, and provides suggestions if it doesn't. Source it like this:
+# interactive shell (fish). This includes module support, and it also puts spack
+# in your path. The script also checks that at least module support exists, and
+# provides suggestions if it doesn't. Source it like this:
 #
 #    source /path/to/spack/share/spack/setup-env.fish
 #
 #################################################################################
-# This is a wrapper around the spack command that forwards calls to 'spack use'
-# and 'spack unuse' to shell functions. This in turn allows them to be used to
-# invoke dotkit functions.
+# This is a wrapper around the spack command that forwards calls to 'spack load'
+# and 'spack unload' to shell functions. This in turn allows them to be used to
+# invoke environment modules functions.
 #
-# 'spack use' is smarter than just 'use' because it converts its arguments into
-# a unique spack spec that is then passed to dotkit commands. This allows the
-# user to use packages without knowing all their installation details.
+# 'spack load' is smarter than just 'load' because it converts its arguments into
+# a unique spack spec that is then passed to module commands. This allows the
+# user to load packages without knowing all their installation details.
 #
 # e.g., rather than requiring a full spec for libelf, the user can type:
 #
-#     spack use libelf
+#     spack load libelf
 #
-# This will first find the available libelf dotkits and use a matching one. If
+# This will first find the available libelf modules and load a matching one. If
 # there are two versions of libelf, the user would need to be more specific,
 # e.g.:
 #
-#     spack use libelf@0.8.13
+#     spack load libelf@0.8.13
 #
 # This is very similar to how regular spack commands work and it avoids the need
 # to come up with a user-friendly naming scheme for spack dotfiles.
 #################################################################################
 
+
+#
+# Test for STDERR-NOCARET feature: if this is off, fish will redirect stderr to
+# a file named in the string after `^`
+#
+
+
+if status test-feature stderr-nocaret
+else
+    echo "WARNING: you have not enabled the 'stderr-nocaret' feature."
+    echo "This means that you have to escape the caret (^) character when defining specs."
+    echo "Consider enabling stderr-nocaret: https://fishshell.com/docs/current/index.html#featureflags"
+end
 
 
 
@@ -285,12 +298,18 @@ end
 #     # skip if called with blank input. Notes: [1] (cf. EOF)
 #     if test -n "$_a"
 #         # looks for a single `-h` (possibly surrounded by spaces)
-#         if echo $_a | string match -r -q " *-h *"
+#         # this is a bit of a mess => [^\S] fails to match any non-space
+#         # character, so this regex looks either for a "-h" but fails if there is
+#         # _anything but_ a space in front of it, or it checks the entire string
+#         # permitting only "-h" surrounded by spaces. The second group (after the
+#         # | is necessary because the first group fails if there is no character
+#         # in front of "-h"
+#         if echo $_a | string match -r -q "([^\S]-h|^[\s]*-h[\s]*\$)"
 #             return 0
 #         end
 # 
 #         # looks for a single `--help` (possibly surrounded by spaces)
-#         if echo $_a | string match -r -q " *--help *"
+#         if echo $_a | string match -r -q  "([^\S]--help|^[\s]*--help[\s]*\$)"
 #             return 0
 #         end
 #     end
@@ -315,13 +334,11 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
             return 0
         end
 
-        # TODO: should this crash (we're clearly using fish, not bash, here)?
         # looks for a single `--sh` (possibly surrounded by spaces)
         if echo $_a | string match -r -q " *--sh *"
             return 0
         end
 
-        # TODO: should this crash (we're clearly using fish, not csh, here)?
         # looks for a single `--csh` (possibly surrounded by spaces)
         if echo $_a | string match -r -q " *--csh *"
             return 0
