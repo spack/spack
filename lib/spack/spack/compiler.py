@@ -298,11 +298,15 @@ class Compiler(object):
         compiler are not accessible.
         """
         def accessible_exe(exe):
-            # Cray compilers may not have absolute paths
-            exe = spack.util.executable.which_string(exe)
-            return exe and os.path.isfile(exe) and os.access(exe, os.X_OK)
+            # compilers may contain executable names (on Cray or user edited)
+            if not os.path.abspath(exe):
+                exe = spack.util.executable.which_string(exe)
+                if not exe:
+                    return False
+            return os.path.isfile(exe) and os.access(exe, os.X_OK)
 
-        # setup environment before verifying relative paths
+        # setup environment before verifying in case we have executable names
+        # instead of absolute paths
         with self._compiler_environment():
             missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
                        if cmp and not accessible_exe(cmp)]
