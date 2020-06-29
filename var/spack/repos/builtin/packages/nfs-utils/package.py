@@ -30,5 +30,11 @@ class NfsUtils(AutotoolsPackage):
         env.append_flags('LDFLAGS', '-lintl')
 
     def configure_args(self):
-        args = ['--disable-gss', '--with-rpcgen=internal']
-        return args
+        config_args = [
+            '--disable-gss',
+            '--with-rpcgen=internal',
+            '--with-tirpcinclude={0}'.format(
+                self.spec['libtirpc'].prefix.include.tirpc
+            )
+        ]
+        return config_args
