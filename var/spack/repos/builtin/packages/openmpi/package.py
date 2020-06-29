@@ -533,9 +533,10 @@ class Openmpi(AutotoolsPackage):
             ])
 
         # Singularity container support
-	if '+singularity' in spec:
-	    config_args.append(
-                '--with-singularity={0}'.format(spec['singularity'].prefix))
+        if spec.satisfies('@:4.9'):
+	    if '+singularity' in spec:
+	       config_args.append(
+                 '--with-singularity={0}'.format(spec['singularity'].prefix))
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
