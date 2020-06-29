@@ -115,15 +115,13 @@ class Ruby(AutotoolsPackage):
                                             'ssl_certs')
             install(rubygems_updated_cert_path, rubygems_certs_path)
 
-        if self.spec.target.family == 'x86_64' and self.spec.platform == 'linux':
-            rbconfig = '{0}/lib/ruby/{1}.0/x86_64-linux/rbconfig.rb'.format(
-                    self.spec.prefix, self.spec.version.up_to(2))
-            filter_file(r'^(\s*CONFIG\["CXX"\]\s*=\s*).*',
-                        r'\1"{0}"'.format(self.compiler.cxx),
-                        rbconfig)
-            filter_file(r'^(\s*CONFIG\["CC"\]\s*=\s*).*',
-                        r'\1"{0}"'.format(self.compiler.cc),
-                        rbconfig)
-            filter_file(r'^(\s*CONFIG\["MJIT_CC"\]\s*=\s*).*',
-                        r'\1"{0}"'.format(self.compiler.cc),
-                        rbconfig)
+        rbconfig = find(self.prefix, 'rbconfig.rb')[0]
+        filter_file(r'^(\s*CONFIG\["CXX"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cxx),
+                    rbconfig)
+        filter_file(r'^(\s*CONFIG\["CC"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cc),
+                    rbconfig)
+        filter_file(r'^(\s*CONFIG\["MJIT_CC"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cc),
+                    rbconfig)
