@@ -22,14 +22,15 @@ class Hepmcanalysis(MakefilePackage):
 
     variant('cxxstd',
             default='11',
-            values=('11', '14', '17'), 
+            values=('11', '14', '17'),
             multi=False,
-            description='Use the specified C++ standard when building.') 
+            description='Use the specified C++ standard when building.')
 
     patch('lcg.patch')
 
     def edit(self, spec, prefix):
-        filter_file(r"CXXFLAGS(.*)", r"CXXFLAGS\1 -std=c++"+self.spec.variants['cxxstd'].value, "config.mk")
+        filter_file(r"CXXFLAGS(.*)", r"CXXFLAGS\1 -std=c++" +
+                    self.spec.variants['cxxstd'].value, "config.mk")
 
     def setup_build_environment(self, env):
         env.set("HepMCdir", self.spec['hepmc'].prefix)
