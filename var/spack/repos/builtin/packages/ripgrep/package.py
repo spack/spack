@@ -26,10 +26,26 @@ class Ripgrep(CargoPackage):
 
     depends_on("pcre2", when="+pcre2")
 
+    variant(
+        "simd_accel",
+        default=False,
+        description="Enable simd acceleration for some dependencies"
+    )
+
+    conflicts(
+        "+simd_accel", when="^rust@1.0.0:1.999.999",
+        msg="The simd_accel feature requires nightly Rust")
+    conflicts(
+        "+simd_accel", when="^rust@beta",
+        msg="The simd_accel feature requires nightly Rust")
+
     def cargo_features(self):
         features = []
         if "+pcre2" in self.spec:
             features += ["pcre2"]
+
+        if "+simd_accel" in self.spec:
+            features += ["simd-accel"]
 
         return features
 
