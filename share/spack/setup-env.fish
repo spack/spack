@@ -529,8 +529,11 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                             set -l sp_env_cmd "command spack $sp_flags env deactivate --fish"
                             capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
                             eval $__sp_stdout
-                            if test -n "$__sp_stderr"
-                                echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
+                            if test $__sp_stat -ne 0
+                                if test -n "$__sp_stderr"
+                                    echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
+                                end
+                                return 1
                             end
                         end
 
@@ -564,8 +567,11 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                 set -l sp_env_cmd "command spack $sp_flags $sp_subcommand --fish $__sp_remaining_args"
                 capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
                 eval $__sp_stdout
-                if test -n "$__sp_stderr"
-                    echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
+                if test $__sp_stat -ne 0
+                    if test -n "$__sp_stderr"
+                        echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
+                    end
+                    return 1
                 end
             end
 

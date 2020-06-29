@@ -245,16 +245,16 @@ spt_succeeds which spack
 title "Setup"
 echo "Creating a mock package installation"
 spack -m install --fake a
-set a_install (spack location -i a)
-set a_module (spack -m module tcl find a)
-
-set b_install (spack location -i b)
-set b_module (spack -m module tcl find b)
+# set a_install (spack location -i a)
+# set a_module (spack -m module tcl find a)
+# 
+# set b_install (spack location -i b)
+# set b_module (spack -m module tcl find b)
 
 # create a test environment for testing environment commands
 echo "Creating a mock environment"
 spack env create spack_test_env
-set test_env_location (spack location -e spack_test_env)
+# set test_env_location (spack location -e spack_test_env)
 
 # ensure that we uninstall b on exit
 function spt_cleanup
@@ -321,20 +321,35 @@ spt_contains "usage: spack module " spack -m module --help
 spt_contains "usage: spack module " spack -m module
 
 title 'Testing `spack load`'
-spt_contains "module load $b_module" spack -m load b
-spt_fails spack -m load -l
-spt_contains "module load -l --arg $b_module" spack -m load -l --arg b
-spt_contains "module load $b_module $a_module" spack -m load -r a
-spt_contains "module load $b_module $a_module" spack -m load --dependencies a
+set _b_loc (spack -m location -i b)
+set _b_ld $_b_loc"/lib"
+set _a_loc (spack -m location -i a)
+set _a_ld $_a_loc"/lib"
+
+spt_contains "set -gx LD_LIBRARY_PATH $_b_ld" spack -m load --only package --fish b
+spt_succeeds spack -m load b
+# test a variable MacOS clears and one it doesn't for recursive loads
+spt_contains "set -gx LD_LIBRARY_PATH $_a_ld:$_b_ld" spack -m load --fish a
+spt_contains "set -gx LIBRARY_PATH $_a_ld:$_b_ld" spack -m load --fish a
+spt_succeeds spack -m load --only dependencies a
+spt_succeeds spack -m load --only package a
+# spt_fails spack -m load -l
+# spt_contains "module load -l --arg $b_module" spack -m load -l --arg b
+# spt_contains "module load $b_module $a_module" spack -m load -r a
+# spt_contains "module load $b_module $a_module" spack -m load --dependencies a
 spt_fails spack -m load d
 spt_contains "usage: spack load " spack -m load -h
 spt_contains "usage: spack load " spack -m load -h d
 spt_contains "usage: spack load " spack -m load --help
 
 title 'Testing `spack unload`'
-spt_contains "module unload $b_module" spack -m unload b
+spack -m load b a  # setup
+# spt_contains "module unload $b_module" spack -m unload b
+spt_succeeds spack -m unload b
+spt_succeeds spack -m unload --all
+spack -m unload --all # cleanup
 spt_fails spack -m unload -l
-spt_contains "module unload -l --arg $b_module" spack -m unload -l --arg b
+# spt_contains "module unload -l --arg $b_module" spack -m unload -l --arg b
 spt_fails spack -m unload d
 spt_contains "usage: spack unload " spack -m unload -h
 spt_contains "usage: spack unload " spack -m unload -h d
