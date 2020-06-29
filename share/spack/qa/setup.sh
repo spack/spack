@@ -74,6 +74,9 @@ check_dependencies() {
                     spack_package=mercurial
                     pip_package=mercurial
                     ;;
+                kcov)
+                    spack_package=kcov
+                    ;;
                 svn)
                     spack_package=subversion
                     ;;
