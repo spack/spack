@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class PyElephant(PythonPackage):
     homepage = "http://neuralensemble.org/elephant"
     url      = "https://pypi.io/packages/source/e/elephant/elephant-0.3.0.tar.gz"
 
-    version('0.4.1', '0e6214c96cae6ce777e4b3cf29bbdaa9')
-    version('0.3.0', '84e69e6628fd617af469780c30d2da6c')
+    version('0.4.1', sha256='86b21a44cbacdc09a6ba6f51738dcd5b42ecd553d73acb29f71a0be7c82eac81')
+    version('0.3.0', sha256='747251ccfb5820bdead6391411b5faf205b4ddf3ababaefe865f50b16540cfef')
 
     variant('doc', default=False, description='Build the documentation')
     variant('pandas', default=True, description='Build with pandas')

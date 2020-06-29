@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class RRgeos(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rgeos"
 
     version('0.5-1', sha256='8408973e7fe5648e39aa53f3d4bfe800638021a146a4e06f86496c0132e05488')
-    version('0.3-26', '7d10a28011b49f68c5817b6fbca132df')
+    version('0.3-26', sha256='98524a0b8113abe6c3d0ecc1f2f66e7ab6d40c783a76158cfc017e1ab1e3f433')
 
     depends_on('r@3.3.0:', type=('build', 'run'))
     depends_on('r-sp@1.1-0:', type=('build', 'run'))

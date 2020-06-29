@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import argparse
 
 import llnl.util.tty as tty
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.cmd.install as inst
 
 from spack.build_systems.autotools import AutotoolsPackage
@@ -18,7 +19,7 @@ from spack.build_systems.intel import IntelPackage
 from spack.build_systems.meson import MesonPackage
 from spack.build_systems.sip import SIPPackage
 
-description = 'stage and configure a package but do not install'
+description = 'DEPRECATED: stage and configure a package but do not install'
 section = "build"
 level = "long"
 
@@ -37,15 +38,11 @@ build_system_to_phase = {
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'package',
-        nargs=argparse.REMAINDER,
-        help="spec of the package to install"
-    )
-    subparser.add_argument(
         '-v', '--verbose',
         action='store_true',
         help="print additional output during builds"
     )
+    arguments.add_common_arguments(subparser, ['spec'])
 
 
 def _stop_at_phase_during_install(args, calling_fn, phase_mapping):
@@ -64,15 +61,15 @@ def _stop_at_phase_during_install(args, calling_fn, phase_mapping):
         # Install package dependencies if needed
         parser = argparse.ArgumentParser()
         inst.setup_parser(parser)
-        tty.msg('Checking dependencies for {0}'.format(args.package[0]))
+        tty.msg('Checking dependencies for {0}'.format(args.spec[0]))
         cli_args = ['-v'] if args.verbose else []
         install_args = parser.parse_args(cli_args + ['--only=dependencies'])
-        install_args.package = args.package
+        install_args.spec = args.spec
         inst.install(parser, install_args)
         # Install package and stop at the given phase
         cli_args = ['-v'] if args.verbose else []
         install_args = parser.parse_args(cli_args + ['--only=package'])
-        install_args.package = args.package
+        install_args.spec = args.spec
         inst.install(parser, install_args, stop_at=phase)
     except IndexError:
         tty.error(
@@ -82,4 +79,7 @@ def _stop_at_phase_during_install(args, calling_fn, phase_mapping):
 
 
 def configure(parser, args):
+    tty.warn("This command is deprecated. Use `spack install --until` to"
+             " select an end phase instead. The `spack configure` command will"
+             " be removed in a future version of Spack.")
     _stop_at_phase_during_install(args, configure, build_system_to_phase)

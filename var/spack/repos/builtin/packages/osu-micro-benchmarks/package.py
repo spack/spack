@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,12 +15,13 @@ class OsuMicroBenchmarks(AutotoolsPackage):
     and can be used for both traditional and GPU-enhanced nodes."""
 
     homepage = "http://mvapich.cse.ohio-state.edu/benchmarks/"
-    url      = "http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.3.tar.gz"
+    url      = "http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.6.2.tar.gz"
 
-    version('5.6.1', '0d2389d93ec2a0be60f21b0aecd14345')
-    version('5.5',   'bcb970d5a1f3424e2c7302ff60611008')
-    version('5.4',   '7e7551879b944d71b7cc60d476d5403b')
-    version('5.3',   '42e22b931d451e8bec31a7424e4adfc2')
+    version('5.6.2', sha256='2ecb90abd85398786823c0716d92448d7094657d3f017c65d270ffe39afc7b95')
+    version('5.6.1', sha256='943c426a653a6c56200193d747755efaa4c4e6f23b3571b0e3ef81ecd21b1063')
+    version('5.5',   sha256='1e5a4ae5ef2b03143a815b21fefc23373c1b079cc163c2fa1ed1e0c9b83c28ad')
+    version('5.4',   sha256='e1ca762e13a07205a59b59ad85e85ce0f826b70f76fd555ce5568efb1f2a8f33')
+    version('5.3',   sha256='d7b3ad4bee48ac32f5bef39650a88f8f2c23a3050b17130c63966283edced89b')
 
     variant('cuda', default=False, description="Enable CUDA support")
 
@@ -46,9 +47,9 @@ class OsuMicroBenchmarks(AutotoolsPackage):
 
         return config_args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         mpidir = join_path(self.prefix.libexec, 'osu-micro-benchmarks', 'mpi')
-        run_env.prepend_path('PATH', join_path(mpidir, 'startup'))
-        run_env.prepend_path('PATH', join_path(mpidir, 'pt2pt'))
-        run_env.prepend_path('PATH', join_path(mpidir, 'one-sided'))
-        run_env.prepend_path('PATH', join_path(mpidir, 'collective'))
+        env.prepend_path('PATH', join_path(mpidir, 'startup'))
+        env.prepend_path('PATH', join_path(mpidir, 'pt2pt'))
+        env.prepend_path('PATH', join_path(mpidir, 'one-sided'))
+        env.prepend_path('PATH', join_path(mpidir, 'collective'))

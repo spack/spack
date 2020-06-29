@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,13 +16,13 @@ class Globalarrays(AutotoolsPackage):
     homepage = "http://hpc.pnl.gov/globalarrays/"
     url = "https://github.com/GlobalArrays/ga/releases/download/v5.7/ga-5.7.tar.gz"
 
-    version('5.7',   'bb9a441a6b4fbb8b52b58c2d3f4cd07f')
-    version('5.6.5', '90da628dc72048deeda3f0cd095cb5b3')
-    version('5.6.4', '051901b316c9766b8ba54306bff7f6b3')
-    version('5.6.3', 'df3cf6cc8288d9f202b7fd0ea82f5491')
-    version('5.6.2', '901e4612203bac45059be524fc1abfb7')
-    version('5.6.1', '674c0ea9bf413840b1ff1e669de73fca')
-    version('5.6',   '49d7e997daed094eeb9565423879ba36')
+    version('5.7',   sha256='3ed1ab47adfda7bceb7beca12fc05a2e1631732f0e55bbaf9036dad4e3da4774')
+    version('5.6.5', sha256='17a7111dfe67d44cf0888c7b79abd48bf4968874f26b3f16cce9fd04e2c72bb9')
+    version('5.6.4', sha256='3daf742053502755c0b581041a56f8f7086af05980c7146d194b0fd6526ee14f')
+    version('5.6.3', sha256='e8818825d4f72c8433f416a9ae2bba203a521e9bc73d80f96c2250deaef4bc40')
+    version('5.6.2', sha256='3eb1c92d41235f3386e0215f04aaab1aae30a2bce191f9fb6436b2cd8b9544ba')
+    version('5.6.1', sha256='b324deed49f930f55203e1d18294ce07dd02680b9ac0728ebc54f94a12557ebc')
+    version('5.6',   sha256='a228dfbae9a6cfaae34694d7e56f589ac758e959b58f4bc49e6ef44058096767')
 
     variant('int64', default=False, description='Compile with 64 bit indices support')
     variant('blas', default=False, description='Enable BLAS')

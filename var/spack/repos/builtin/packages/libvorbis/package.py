@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Libvorbis(AutotoolsPackage):
     homepage = "https://xiph.org/vorbis/"
     url      = "http://downloads.xiph.org/releases/vorbis/libvorbis-1.3.5.tar.gz"
 
-    version('1.3.5', '7220e089f3be3412a2317d6fde9e3944')
+    version('1.3.5', sha256='6efbcecdd3e5dfbf090341b485da9d176eb250d893e3eb378c428a2db38301ce')
 
     depends_on('libogg')
 

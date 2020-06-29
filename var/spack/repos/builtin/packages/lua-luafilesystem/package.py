@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class LuaLuafilesystem(Package):
     url = 'https://github.com/keplerproject/luafilesystem/archive/v1_6_3.tar.gz'
 
     version('1_7_0_2', sha256='23b4883aeb4fb90b2d0f338659f33a631f9df7a7e67c54115775a77d4ac3cc59')
-    version('1_6_3', 'bed11874cfded8b4beed7dd054127b24')
+    version('1_6_3', sha256='11c7b1fc2e560c0a521246b84e6257138d97dddde5a19e405714dbabcb9436ca')
 
     # The version constraint here comes from this post:
     #

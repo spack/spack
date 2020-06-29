@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,8 @@ class BookleafCpp(CMakePackage):
     version('develop', branch='develop')
 
     version('2.0.2', sha256='787ade5045415d71d9bad55fe9f93598f3a0548d13e2ff80e752cc99f62fe6d3')
-    version('2.0.1', '34a5a9e7b2b5ffc98562656a4406ba5b')
-    version('2.0',   '69819ebcbae5eaa63d1a4de2c77cac85')
+    version('2.0.1', sha256='1286f916f59d1f3bf325041854e8c203894e293c5e26d5b19b9362ee02082983')
+    version('2.0',   sha256='3c14344c31385bec9e089f9babf815566c4fcf98a47822f663afa2cefb0e90e1')
 
     variant('typhon', default=True, description='Use Typhon')
     variant('parmetis', default=False, description='Use ParMETIS')

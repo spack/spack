@@ -1,0 +1,42 @@
+diff -ur bpp-core-2.2.0_org/src/Bpp/Numeric/Function/ThreePointsNumericalDerivative.cpp bpp-core-2.2.0/src/Bpp/Numeric/Function/ThreePointsNumericalDerivative.cpp
+--- bpp-core-2.2.0_org/src/Bpp/Numeric/Function/ThreePointsNumericalDerivative.cpp	2019-10-18 14:13:47.041015700 +0900
++++ bpp-core-2.2.0/src/Bpp/Numeric/Function/ThreePointsNumericalDerivative.cpp	2019-10-18 15:32:41.888978173 +0900
+@@ -53,7 +53,7 @@
+       function2_->enableSecondOrderDerivatives(false);
+     function_->setParameters(parameters);
+     f2_ = function_->getValue();
+-    if ((abs(f2_) >= NumConstants::VERY_BIG()) || isnan(f2_))
++    if ((abs(f2_) >= NumConstants::VERY_BIG()) || std::isnan(f2_))
+     {
+       for (size_t i = 0; i < variables_.size(); ++i)
+       {
+@@ -103,7 +103,7 @@
+ 
+           p = p.subList(0);
+           f1_ = function_->getValue();
+-          if ((abs(f1_) >= NumConstants::VERY_BIG()) || isnan(f1_))
++          if ((abs(f1_) >= NumConstants::VERY_BIG()) || std::isnan(f1_))
+             throw ConstraintException("f1_ too large", &p[0], f1_);
+           else
+             hf1 = h;
+@@ -137,7 +137,7 @@
+ 
+             p = p.subList(0);
+             f3_ = function_->getValue();
+-            if ((abs(f3_) >= NumConstants::VERY_BIG()) || isnan(f3_))
++            if ((abs(f3_) >= NumConstants::VERY_BIG()) || std::isnan(f3_))
+               throw ConstraintException("f3_ too large", &p[0], f3_);
+             else
+               hf3 = h;
+diff -ur bpp-core-2.2.0_org/src/Bpp/Numeric/Hmm/RescaledHmmLikelihood.cpp bpp-core-2.2.0/src/Bpp/Numeric/Hmm/RescaledHmmLikelihood.cpp
+--- bpp-core-2.2.0_org/src/Bpp/Numeric/Hmm/RescaledHmmLikelihood.cpp	2019-10-18 14:13:47.051016751 +0900
++++ bpp-core-2.2.0/src/Bpp/Numeric/Hmm/RescaledHmmLikelihood.cpp	2019-10-18 15:40:33.218550564 +0900
+@@ -124,7 +124,7 @@
+     size_t ii = i * nbStates_;
+     for (size_t j = 0; j < nbStates_; j++) {
+       trans[ii + j] = transitionMatrix_->Pij(j, i);
+-      if (isnan(trans[ii + j]))
++      if (std::isnan(trans[ii + j]))
+         throw Exception("RescaledHmmLikelihood::computeForward_. NaN transition probability");
+       if (trans[ii + j] < 0)
+         throw Exception("RescaledHmmLikelihood::computeForward_. Negative transition probability: " + TextTools::toString(trans[ii + j]));

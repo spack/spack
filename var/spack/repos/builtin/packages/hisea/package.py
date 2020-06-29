@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,8 @@ class Hisea(MakefilePackage):
        among others."""
 
     homepage = "https://doi.org/10.1186/s12859-017-1953-9"
-    url      = "https://github.com/lucian-ilie/HISEA"
 
-    version('2017.12.26', '54211bdc33b7ce52a8f1e76845935eb8',
+    version('2017.12.26', sha256='3c6ddfb8490a327cc5f9e45f64cd4312abc6ef5719661ce8892db8a20a1e9c5e',
             url='https://github.com/lucian-ilie/HISEA/tarball/39e01e98caa0f2101da806ca59306296effe789c')
 
     depends_on('boost')

@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Cxxopts(CMakePackage):
     """Lightweight C++ command line option parser"""
 
@@ -24,14 +25,14 @@ class Cxxopts(CMakePackage):
 
     variant('unicode', default=False,
             description='Enables unicode support using the ICU library.')
-    
+
     depends_on('cmake@3.1.0:', type='build')
     depends_on('icu4c', when='+unicode')
 
     def cmake_args(self):
-        args = [ '-DCXXOPTS_ENABLE_INSTALL=ON', 
-                 '-DCXXOPTS_BUILD_EXAMPLES=OFF',
-                 '-DCXXOPTS_BUILD_TESTS=OFF' ]
+        args = ['-DCXXOPTS_ENABLE_INSTALL=ON',
+                '-DCXXOPTS_BUILD_EXAMPLES=OFF',
+                '-DCXXOPTS_BUILD_TESTS=OFF']
 
         if '+unicode' in self.spec:
             args.append('-DCXXOPTS_USE_UNICODE_HELP=ON')

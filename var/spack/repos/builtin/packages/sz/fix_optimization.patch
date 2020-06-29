@@ -1,0 +1,11 @@
+--- spack-src/configure.org	2019-12-05 10:58:07.408584611 +0900
++++ spack-src/configure	2019-12-05 10:58:29.670909716 +0900
+@@ -3019,7 +3019,7 @@
+ 
+ 
+ # Checks for programs.
+-: ${CFLAGS=-O3 -std=c99 -Wall}
++: ${CFLAGS=-O2 -std=c99 -Wall}
+ ac_ext=c
+ ac_cpp='$CPP $CPPFLAGS'
+ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'

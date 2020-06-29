@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,11 @@ class Htop(AutotoolsPackage):
     list_url = "https://hisham.hm/htop/releases"
     list_depth = 1
 
-    version('2.2.0', '0d816b6beed31edc75babcfbf863ffa8')
-    version('2.0.2', '7d354d904bad591a931ad57e99fea84a')
+    version('2.2.0', sha256='d9d6826f10ce3887950d709b53ee1d8c1849a70fa38e91d5896ad8cbc6ba3c57')
+    version('2.0.2', sha256='179be9dccb80cee0c5e1a1f58c8f72ce7b2328ede30fb71dcdf336539be2f487')
 
     depends_on('ncurses')
+    depends_on('python+pythoncmd', type='build')
 
     def configure_args(self):
         return ['--enable-shared']

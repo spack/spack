@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Boxlib(CMakePackage):
     homepage = "https://ccse.lbl.gov/BoxLib/"
     url = "https://github.com/BoxLib-Codes/BoxLib/archive/16.12.2.tar.gz"
 
-    version('16.12.2', 'a28d92a5ff3fbbdbbd0a776a59f18526')
+    version('16.12.2', sha256='e87faeccfcb14b3436d36c45fcd9f46ea20f65298d35c6db2a80d6332b036dd2')
 
     depends_on('mpi')
 

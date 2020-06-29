@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,8 @@ class RPbkrtest(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pbkrtest"
 
     version('0.4-7', sha256='5cbb03ad2b2468720a5a610a0ebda48ac08119a34fca77810a85f554225c23ea')
-    version('0.4-6', '0a7d9ff83b8d131af9b2335f35781ef9')
-    version('0.4-4', '5e54b1b1b35413dd1d24ef15735ec645')
+    version('0.4-6', sha256='9d28b8916fea3ffec8d5958bb8c531279b1e273f21fdbeb2fcad6d7e300a9c01')
+    version('0.4-4', sha256='a685392ef3fca0ddc2254f6cc9bba6bc22b298fa823359fc4515e64e753abd31')
 
     depends_on('r@3.0.2:', when='@:0.4-5', type=('build', 'run'))
     depends_on('r@3.2.3:', when='@0.4-6:', type=('build', 'run'))

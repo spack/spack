@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Clapack(MakefilePackage):
     homepage = "http://www.netlib.org/clapack/"
     url      = "http://www.netlib.org/clapack/clapack.tgz"
 
-    version('3.2.1', '040da31f3a7d4fbc9ac376c748d18d1f')
+    version('3.2.1', sha256='6dc4c382164beec8aaed8fd2acc36ad24232c406eda6db462bd4c41d5e455fac')
 
     variant('external-blas', default=True,
             description='Build with external BLAS (ATLAS here).')

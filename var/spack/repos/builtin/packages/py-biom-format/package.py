@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyBiomFormat(PythonPackage):
     homepage = "https://pypi.python.org/pypi/biom-format/2.1.6"
     url      = "https://pypi.io/packages/source/b/biom-format/biom-format-2.1.6.tar.gz"
 
-    version('2.1.6', '1dd4925b74c56e8ee864d5e1973068de')
+    version('2.1.6', sha256='8eefc275a85cc937f6d6f408d91b7b45eae854cd5d1cbda411a3af51f5b49b0d')
 
     variant('h5py', default=True, description='For use with BIOM 2.0+ files')
 

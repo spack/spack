@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,11 @@ class Ferret(Package):
     homepage = "http://ferret.pmel.noaa.gov/Ferret/home"
     url      = "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v696.tar.gz"
 
-    version('7.2', '21c339b1bafa6939fc869428d906451f130f7e77e828c532ab9488d51cf43095')
-    version('6.96', '51722027c864369f41bab5751dfff8cc')
+    version('7.2', sha256='21c339b1bafa6939fc869428d906451f130f7e77e828c532ab9488d51cf43095')
+    version('6.96', sha256='7eb87156aa586cfe838ab83f08b2102598f9ab62062d540a5da8c9123816331a')
 
     depends_on("hdf5+hl")
-    depends_on("netcdf")
+    depends_on("netcdf-c")
     depends_on("netcdf-fortran")
     depends_on("readline")
     depends_on("zlib")
@@ -63,7 +63,7 @@ class Ferret(Package):
                     "-L%s -lnetcdff" % self.spec['netcdf-fortran'].prefix.lib,
                     'FERRET/platform_specific.mk.x86_64-linux')
         filter_file(r'\$\(NETCDF4_DIR\)/lib64/libnetcdf.a',
-                    "-L%s -lnetcdf" % self.spec['netcdf'].prefix.lib,
+                    "-L%s -lnetcdf" % self.spec['netcdf-c'].prefix.lib,
                     'FERRET/platform_specific.mk.x86_64-linux')
         filter_file(r'\$\(HDF5_DIR\)/lib64/libhdf5_hl.a',
                     "-L%s -lhdf5_hl" % self.spec['hdf5'].prefix.lib,

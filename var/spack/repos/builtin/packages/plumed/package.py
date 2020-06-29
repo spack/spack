@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,17 +21,25 @@ class Plumed(AutotoolsPackage):
     and C/C++ codes.
     """
     homepage = 'http://www.plumed.org/'
-    url = 'https://github.com/plumed/plumed2/archive/v2.5.0.tar.gz'
+    url = 'https://github.com/plumed/plumed2/archive/v2.5.3.tar.gz'
+    git = 'https://github.com/plumed/plumed2.git'
 
-    version('2.5.0', 'd1277d86a4aa766bfe97513d7969bfb7')
-    version('2.4.4', 'e8ef700fb4740b177cf660313c9805e6')
-    version('2.4.2', '0f66f24b4c763ae8b2f39574113e9935')
-    version('2.4.1', '6558e1fd02fc46e847ab6a3fb5ed5411')
-    version('2.3.5', '3cc5f025cb6f5d963f3c778f15c77d44')
-    version('2.3.3', '9f5729e406e79a06a16976fcb020e024')
-    version('2.3.0', 'a9b5728f115dca8f0519111f1f5a6fa5')
-    version('2.2.4', 'afb00da25a3fbd47acf377e53342059d')
-    version('2.2.3', 'a6e3863e40aac07eb8cf739cbd14ecf8')
+    version('master', branch='master')
+    version('2.6.0', sha256='3d57ae460607a49547ef38a52c4ac93493a3966857c352280a9c05f5dcdb1820')
+    version('2.5.4', preferred=True, sha256='a1647e598191f261e75d06351e607475d395af481315052a4c28563ac9989a7f')
+    version('2.5.3', sha256='543288be667dc4201fc461ecd2dd4878ddfbeac682d0c021c99ea8e501c7c9dc')
+    version('2.5.2', sha256='85d10cc46e2e37c7719cf51c0931278f56c2c8f8a9d86188b2bf97c2535a2ab4')
+    version('2.5.1', sha256='de309980dcfd6f6e0e70e138856f4bd9eb4d8a513906a5e6389f18a5af7f2eba')
+    version('2.5.0', sha256='53e08187ec9f8af2326fa84407e34644a7c51d2af93034309fb70675eee5e4f7')
+    version('2.4.6', sha256='c22ad19f5cd36ce9fe4ba0b53158fc2a3d985c48fc04606e3f3b3e835b994cb3')
+    version('2.4.4', sha256='1e5c24109314481fad404da97d61c7339b219e27e120c9c80bacc79c9f6a51a8')
+    version('2.4.2', sha256='528ce57f1f5330480bcd403140166a4580efd2acaea39c85dfeca5e2cd649321')
+    version('2.4.1', sha256='f00410ebdd739c2ddf55fcd714ff4bd88a1029e02d2fc9cea0b5fca34e0fc4eb')
+    version('2.3.5', sha256='a6a66ca4582c1aecc6138c96be015e13cd06a718e8446b2f13e610fe34602e4f')
+    version('2.3.3', sha256='ac058ff529f207d5b4169fb5a87bdb3c77307dfef1ac543ad8b6c74c5de7fc91')
+    version('2.3.0', sha256='b1c8a54a313a0569e27e36420770074f35406453f73de70e55c424652abeddf1')
+    version('2.2.4', sha256='d7a1dba34a7fe03f23e8d39ab6e15b230c4851373fdceb3602e2de26ea53ce37')
+    version('2.2.3', sha256='2db19c5f6a2918833941d0bf47b5431d0865529d786df797ccc966d763ed7b0c')
 
     # Variants. PLUMED by default builds a number of optional modules.
     # The ones listed here are not built by default for various reasons,
@@ -53,7 +61,7 @@ class Plumed(AutotoolsPackage):
     depends_on('lapack')
     # For libmatheval support through the 'function' module
     # which is enabled by default (or when optional_modules=all)
-    depends_on('libmatheval')
+    depends_on('libmatheval', when='@:2.4.99')
 
     depends_on('mpi', when='+mpi')
     depends_on('gsl', when='+gsl')
@@ -61,6 +69,7 @@ class Plumed(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
+    depends_on('py-cython', type='build', when='@2.5:')
 
     force_autoreconf = True
 

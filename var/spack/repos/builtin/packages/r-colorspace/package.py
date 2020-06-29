@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class RColorspace(RPackage):
 
     version('1.4-1', sha256='693d713a050f8bfecdb7322739f04b40d99b55aed168803686e43401d5f0d673')
     version('1.4-0', sha256='ce003c5958dd704697959e9dc8a108c8cb568f8d78ece113235732afc5dff556')
-    version('1.3-2', '63000bab81d995ff167df76fb97b2984')
-    version('1.2-6', 'a30191e9caf66f77ff4e99c062e9dce1')
+    version('1.3-2', sha256='dd9fd2342b650456901d014e7ff6d2e201f8bec0b555be63b1a878d2e1513e34')
+    version('1.2-6', sha256='ba3165c5b906edadcd1c37cad0ef58f780b0af651f3fdeb49fbb2dc825251679')
 
     depends_on('r@3.0.0:', type=('build', 'run'))

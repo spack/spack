@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class RPlyr(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/plyr_1.8.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/plyr"
 
-    version('1.8.4', 'ef455cf7fc06e34837692156b7b2587b')
+    version('1.8.4', sha256='60b522d75961007658c9806f8394db27989f1154727cb0bb970062c96ec9eac5')
 
     depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

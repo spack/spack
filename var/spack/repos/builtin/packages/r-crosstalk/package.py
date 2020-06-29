@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RCrosstalk(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/crosstalk_1.0.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/crosstalk"
 
-    version('1.0.0', 'c13c21b81af2154be3f08870fd3a7077')
+    version('1.0.0', sha256='b31eada24cac26f24c9763d9a8cbe0adfd87b264cf57f8725027fe0c7742ca51')
 
     depends_on('r-htmltools@0.3.5:', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))

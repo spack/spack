@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ class QmdProgress(CMakePackage):
     git      = "https://github.com/lanl/qmd-progress.git"
 
     version('develop', branch='master')
-    version('1.1.0', 'dda155134f0925629bf116e562c0a4bd')
-    version('1.0.0', 'c950bead2719a47a78864e3376ba143e')
+    version('1.1.0', sha256='2c5eac252067bfb55d715c9ce5de2e4306b20b4273979dda15b4a2f71f69bb0b')
+    version('1.0.0', sha256='28c99eb80d9a6b09e1d01d61538b3b924850d89c6a8bfb5d3e8b6490be822296')
 
     variant('graphlib', default=False, description='Build with Metis Suppport')
     variant('mpi', default=True, description='Build with MPI Support')

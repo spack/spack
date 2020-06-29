@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -136,6 +136,10 @@ generates a boilerplate template for your package, and opens up the new
        homepage = "http://www.example.com"
        url      = "https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2"
 
+       # FIXME: Add a list of GitHub accounts to
+       # notify when the package is updated.
+       # maintainers = ['github_user1', 'github_user2']
+
        version('6.1.2', '8ddbb26dc3bd4e2302984debba1406a5')
        version('6.1.1', '4c175f86e11eb32d8bf9872ca3a8e11d')
        version('6.1.0', '86ee6e54ebfc4a90b643a65e402c4048')
@@ -183,6 +187,17 @@ The rest of the tasks you need to do are as follows:
 
    The ``homepage`` is displayed when users run ``spack info`` so
    that they can learn more about your package.
+
+#. Add a comma-separated list of maintainers.
+
+   The ``maintainers`` field is a list of GitHub accounts of people
+   who want to be notified any time the package is modified. When a
+   pull request is submitted that updates the package, these people
+   will be requested to review the PR. This is useful for developers
+   who maintain a Spack package for their own software, as well as
+   users who rely on a piece of software and want to ensure that the
+   package doesn't break. It also gives users a list of people to
+   contact for help when someone reports a build error with the package.
 
 #. Add ``depends_on()`` calls for the package's dependencies.
 
@@ -538,6 +553,34 @@ version. This is useful for packages that have an easy to extrapolate URL, but
 keep changing their URL format every few releases. With this method, you only
 need to specify the ``url`` when the URL changes.
 
+"""""""""""""""""""""""
+Mirrors of the main URL
+"""""""""""""""""""""""
+
+Spack supports listing mirrors of the main URL in a package by defining
+the ``urls`` attribute:
+
+.. code-block:: python
+
+  class Foo(Package):
+
+    urls = [
+        'http://example.com/foo-1.0.tar.gz',
+        'http://mirror.com/foo-1.0.tar.gz'
+    ]
+
+instead of just a single ``url``. This attribute is a list of possible URLs that
+will be tried in order when fetching packages. Notice that either one of ``url``
+or ``urls`` can be present in a package, but not both at the same time.
+
+A well-known case of packages that can be fetched from multiple mirrors is that
+of GNU. For that, Spack goes a step further and defines a mixin class that
+takes care of all of the plumbing and requires packagers to just define a proper
+``gnu_mirror_path`` attribute:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/autoconf/package.py
+   :lines: 9-18
+
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Skipping the expand step
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -886,6 +929,9 @@ Git fetching supports the following parameters to ``version``:
 * ``tag``: Name of a tag to fetch.
 * ``commit``: SHA hash (or prefix) of a commit to fetch.
 * ``submodules``: Also fetch submodules recursively when checking out this repository.
+* ``submodules_delete``: A list of submodules to forcibly delete from the repository
+  after fetching. Useful if a version in the repository has submodules that
+  have disappeared/are no longer accessible.
 * ``get_full_repo``: Ensure the full git history is checked out with all remote
   branch information. Normally (``get_full_repo=False``, the default), the git
   option ``--depth 1`` will be used if the version of git and the specified
@@ -1464,8 +1510,8 @@ that the same package with different patches applied will have different
 hash identifiers.  To ensure that the hashing scheme is consistent, you
 must use a ``sha256`` checksum for the patch.  Patches will be fetched
 from their URLs, checked, and applied to your source code.  You can use
-the ``spack sha256`` command to generate a checksum for a patch file or
-URL.
+the GNU utils ``sha256sum`` or the macOS ``shasum -a 256`` commands to
+generate a checksum for a patch file.
 
 Spack can also handle compressed patches.  If you use these, Spack needs
 a little more help.  Specifically, it needs *two* checksums: the
@@ -1629,15 +1675,15 @@ can see the patches that would be applied to ``m4``::
 
   Concretized
   --------------------------------
-  m4@1.4.18%clang@9.0.0-apple patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
-      ^libsigsegv@2.11%clang@9.0.0-apple arch=darwin-highsierra-x86_64
+  m4@1.4.18%apple-clang@9.0.0 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
+      ^libsigsegv@2.11%apple-clang@9.0.0 arch=darwin-highsierra-x86_64
 
 You can also see patches that have been applied to installed packages
 with ``spack find -v``::
 
   $ spack find -v m4
   ==> 1 installed package
-  -- darwin-highsierra-x86_64 / clang@9.0.0-apple -----------------
+  -- darwin-highsierra-x86_64 / apple-clang@9.0.0 -----------------
   m4@1.4.18 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv
 
 .. _cmd-spack-resource:
@@ -1667,7 +1713,7 @@ wonder where the extra boost patches are coming from::
 
   $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep '\^boost'
       ^boost@1.68.0
-          ^boost@1.68.0%clang@9.0.0-apple+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
+          ^boost@1.68.0%apple-clang@9.0.0+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
   $ spack resource show b37164268
   b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f
       path:       /home/spackuser/src/spack/var/spack/repos/builtin/packages/dealii/boost_1.68.0.patch
@@ -1907,6 +1953,8 @@ issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
    depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:')
 
 
+.. _dependency-types:
+
 ^^^^^^^^^^^^^^^^
 Dependency types
 ^^^^^^^^^^^^^^^^
@@ -1943,6 +1991,28 @@ Non-compiled packages like Python modules commonly use
 inject the dependency's ``prefix/lib`` directory, but the package needs to
 be in ``PATH`` and ``PYTHONPATH`` during the build process and later when
 a user wants to run the package.
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Conditional dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+You may have a package that only requires a dependency under certain
+conditions. For example, you may have a package that has optional MPI support,
+- MPI is only a dependency when you want to enable MPI support for the
+package. In that case, you could say something like:
+
+.. code-block:: python
+
+   variant('mpi', default=False)
+   depends_on('mpi', when='+mpi')
+
+``when`` can include constraints on the variant, version, compiler, etc. and
+the :mod:`syntax<spack.spec>` is the same as for Specs written on the command
+line.
+
+If a dependency/feature of a package isn't typically used, you can save time
+by making it conditional (since Spack will not build the dependency unless it
+is required for the Spec).
 
 .. _dependency_dependency_patching:
 
@@ -2032,55 +2102,58 @@ appear in the package file (or in this case, in the list).
 
 .. _setup-dependent-environment:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-``setup_dependent_environment()``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Influence how dependents are built or run
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack provides a mechanism for dependencies to provide variables that
-can be used in their dependents' build.  Any package can declare a
-``setup_dependent_environment()`` function, and this function will be
-called before the ``install()`` method of any dependent packages.
-This allows dependencies to set up environment variables and other
-properties to be used by dependents.
-
-The function declaration should look like this:
+Spack provides a mechanism for dependencies to influence the
+environment of their dependents by overriding  the
+:meth:`setup_dependent_run_environment <spack.package.PackageBase.setup_dependent_run_environment>`
+or the
+:meth:`setup_dependent_build_environment <spack.package.PackageBase.setup_dependent_build_environment>`
+methods.
+The Qt package, for instance, uses this call:
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
-   :pyobject: Qt.setup_dependent_environment
+   :pyobject: Qt.setup_dependent_build_environment
    :linenos:
 
-Here, the Qt package sets the ``QTDIR`` environment variable so that
-packages that depend on a particular Qt installation will find it.
-
-The arguments to this function are:
-
-* **spack_env**: List of environment modifications to be applied when
-  the dependent package is built within Spack.
-* **run_env**: List of environment modifications to be applied when
-  the dependent package is run outside of Spack. These are added to the
-  resulting module file.
-* **dependent_spec**: The spec of the dependent package about to be
-  built. This allows the extendee (self) to query the dependent's state.
-  Note that *this* package's spec is available as ``self.spec``.
-
-A good example of using these is in the Python package:
+to set the ``QTDIR`` environment variable so that packages
+that depend on a particular Qt installation will find it.
+Another good example of how a dependency can influence
+the build environment of dependents is the Python package:
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.setup_dependent_environment
+   :pyobject: Python.setup_dependent_build_environment
    :linenos:
 
-The first thing that happens here is that the ``python`` command is
-inserted into module scope of the dependent.  This allows most python
-packages to have a very simple install method, like this:
+In the method above it is ensured that any package that depends on Python
+will have the ``PYTHONPATH``, ``PYTHONHOME`` and ``PATH`` environment
+variables set appropriately before starting the installation. To make things
+even simpler the ``python setup.py`` command is also inserted into the module
+scope of dependents by overriding a third method called
+:meth:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`
+:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
+   :pyobject: Python.setup_dependent_package
+   :linenos:
+
+This allows most python packages to have a very simple install procedure,
+like the following:
 
 .. code-block:: python
 
    def install(self, spec, prefix):
-       python('setup.py', 'install', '--prefix={0}'.format(prefix))
+       setup_py('install', '--prefix={0}'.format(prefix))
 
-Python's ``setup_dependent_environment`` method also sets up some
-other variables, creates a directory, and sets up the ``PYTHONPATH``
-so that dependent packages can find their dependencies at build time.
+Finally the Python package takes also care of the modifications to ``PYTHONPATH``
+to allow dependencies to run correctly:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
+    :pyobject: Python.setup_dependent_run_environment
+    :linenos:
+
 
 .. _packaging_conflicts:
 
@@ -2096,13 +2169,17 @@ Adding the following to a package:
 
 .. code-block:: python
 
-    conflicts('%intel', when='@1.2')
+    conflicts('%intel', when='@:1.2',
+              msg='<myNicePackage> <= v1.2 cannot be built with Intel ICC, '
+                  'please use a newer release.')
 
 we express the fact that the current package *cannot be built* with the Intel
-compiler when we are trying to install version "1.2". The ``when`` argument can
-be omitted, in which case the conflict will always be active.
+compiler when we are trying to install a version "<=1.2". The ``when`` argument
+can be omitted, in which case the conflict will always be active.
 Conflicts are always evaluated after the concretization step has been performed,
 and if any match is found a detailed error message is shown to the user.
+You can add an additional message via the ``msg=`` parameter to a conflict that
+provideds more specific instructions for users.
 
 .. _packaging_extensions:
 
@@ -2124,7 +2201,7 @@ property to ``True``, e.g.:
        extendable = True
        ...
 
-To make a package into an extension, simply add simply add an
+To make a package into an extension, simply add an
 ``extends`` call in the package definition, and pass it the name of an
 extendable package:
 
@@ -2138,6 +2215,10 @@ extendable package:
 Now, the ``py-numpy`` package can be used as an argument to ``spack
 activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding additional constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Some packages produce a Python extension, but are only compatible with
 Python 3, or with Python 2.  In those cases, a ``depends_on()``
@@ -2158,8 +2239,7 @@ variant(s) are selected.  This may be accomplished with conditional
 .. code-block:: python
 
    class FooLib(Package):
-       variant('python', default=True, description= \
-           'Build the Python extension Module')
+       variant('python', default=True, description='Build the Python extension Module')
        extends('python', when='+python')
        ...
 
@@ -2840,7 +2920,7 @@ discover its dependencies.
 
 If you want to see the environment that a package will build with, or
 if you want to run commands in that environment to test them out, you
-can use the :ref:`cmd-spack-env` command, documented
+can use the :ref:`cmd-spack-build-env` command, documented
 below.
 
 ^^^^^^^^^^^^^^^^^^^^^
@@ -3534,7 +3614,7 @@ the command line.
     For most compilers, ``$rpath_flag`` is ``-Wl,-rpath,``. However, NAG
     passes its flags to GCC instead of passing them directly to the linker.
     Therefore, its ``$rpath_flag`` is doubly wrapped: ``-Wl,-Wl,,-rpath,``.
-    ``$rpath_flag`` can be overriden on a compiler specific basis in
+    ``$rpath_flag`` can be overridden on a compiler specific basis in
     ``lib/spack/spack/compilers/$compiler.py``.
 
 The compiler wrappers also pass the compiler flags specified by the user from
@@ -3968,6 +4048,70 @@ File functions
 :py:func:`touch(path) <spack.touch>`
   Create an empty file at ``path``.
 
+.. _make-package-findable:
+
+----------------------------------------------------------
+Making a package discoverable with ``spack external find``
+----------------------------------------------------------
+
+To make a package discoverable with
+:ref:`spack external find <cmd-spack-external-find>` you must
+define one or more executables associated with the package and must
+implement a method to generate a Spec when given an executable.
+
+The executables are specified as a package level ``executables``
+attribute which is a list of strings (see example below); each string
+is treated as a regular expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3',
+'my-weird-gcc', etc.).
+
+The method ``determine_spec_details`` has the following signature:
+
+.. code-block:: python
+
+   def determine_spec_details(prefix, exes_in_prefix):
+       # exes_in_prefix = a set of paths, each path is an executable
+       # prefix = a prefix that is common to each path in exes_in_prefix
+
+       # return None or [] if none of the exes represent an instance of
+       # the package. Return one or more Specs for each instance of the
+       # package which is thought to be installed in the provided prefix
+
+``determine_spec_details`` takes as parameters a set of discovered
+executables (which match those specified by the user) as well as a
+common prefix shared by all of those executables. The function must
+return one or more Specs associated with the executables (it can also
+return ``None`` to indicate that no provided executables are associated
+with the package).
+
+Say for example we have a package called ``foo-package`` which
+builds an executable called ``foo``. ``FooPackage`` would appear as
+follows:
+
+.. code-block:: python
+
+   class FooPackage(Package):
+       homepage = "..."
+       url = "..."
+
+       version(...)
+
+       # Each string provided here is treated as a regular expression, and
+       # would match for example 'foo', 'foobar', and 'bazfoo'.
+       executables = ['foo']
+
+       @classmethod
+       def determine_spec_details(cls, prefix, exes_in_prefix):
+           candidates = list(x for x in exes_in_prefix
+                             if os.path.basename(x) == 'foo')
+           if not candidates:
+               return
+           # This implementation is lazy and only checks the first candidate
+           exe_path = candidates[0]
+           exe = spack.util.executable.Executable(exe_path)
+           output = exe('--version')
+           version_str = ...  # parse output for version string
+           return Spec('foo-package@{0}'.format(version_str))
+
 .. _package-lifecycle:
 
 -----------------------------
@@ -4023,16 +4167,23 @@ want to clean up the temporary directory, or if the package isn't
 downloading properly, you might want to run *only* the ``fetch`` stage
 of the build.
 
+Spack performs best-effort installation of package dependencies by default,
+which means it will continue to install as many dependencies as possible
+after detecting failures.  If you are trying to install a package with a
+lot of dependencies where one or more may fail to build, you might want to
+try the ``--fail-fast`` option to stop the installation process on the first
+failure.
+
 A typical package workflow might look like this:
 
 .. code-block:: console
 
    $ spack edit mypackage
-   $ spack install mypackage
+   $ spack install --fail-fast mypackage
    ... build breaks! ...
    $ spack clean mypackage
    $ spack edit mypackage
-   $ spack install mypackage
+   $ spack install --fail-fast mypackage
    ... repeat clean/install until install works ...
 
 Below are some commands that will allow you some finer-grained
@@ -4101,23 +4252,29 @@ Does this in one of two ways:
 ``spack clean``
 ^^^^^^^^^^^^^^^
 
-Cleans up all of Spack's temporary and cached files.  This can be used to
+Cleans up Spack's temporary and cached files.  This command can be used to
 recover disk space if temporary files from interrupted or failed installs
-accumulate in the staging area.
+accumulate.
 
 When called with ``--stage`` or without arguments this removes all staged
 files.
 
-When called with ``--downloads`` this will clear all resources
-:ref:`cached <caching>` during installs.
+The ``--downloads`` option removes cached :ref:`cached <caching>` downloads.
 
-When called with ``--user-cache`` this will remove caches in the user home
-directory, including cached virtual indices.
+You can force the removal of all install failure tracking markers using the
+``--failures`` option.  Note that ``spack install`` will automatically clear
+relevant failure markings prior to performing the requested installation(s).
+
+Long-lived caches, like the virtual package index, are removed using the
+``--misc-cache`` option.
+
+The ``--python-cache`` option removes `.pyc`, `.pyo`, and `__pycache__`
+folders.
 
 To remove all of the above, the command can be called with ``--all``.
 
-When called with positional arguments, cleans up temporary files only
-for a particular package. If ``fetch``, ``stage``, or ``install``
+When called with positional arguments, this command cleans up temporary files
+only for a particular package. If ``fetch``, ``stage``, or ``install``
 are run again after this, Spack's build process will start from scratch.
 
 
@@ -4259,31 +4416,31 @@ directory, install directory, package directory) and others change to
 core spack locations.  For example, ``spack cd --module-dir`` will take you to
 the main python source directory of your spack install.
 
-.. _cmd-spack-env:
+.. _cmd-spack-build-env:
 
-^^^^^^^^^^^^^
-``spack env``
-^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+``spack build-env``
+^^^^^^^^^^^^^^^^^^^
 
-``spack env`` functions much like the standard unix ``env`` command,
-but it takes a spec as an argument.  You can use it to see the
+``spack build-env`` functions much like the standard unix ``build-env``
+command, but it takes a spec as an argument.  You can use it to see the
 environment variables that will be set when a particular build runs,
 for example:
 
 .. code-block:: console
 
-   $ spack env mpileaks@1.1%intel
+   $ spack build-env mpileaks@1.1%intel
 
 This will display the entire environment that will be set when the
 ``mpileaks@1.1%intel`` build runs.
 
 To run commands in a package's build environment, you can simply
-provide them after the spec argument to ``spack env``:
+provide them after the spec argument to ``spack build-env``:
 
 .. code-block:: console
 
    $ spack cd mpileaks@1.1%intel
-   $ spack env mpileaks@1.1%intel ./configure
+   $ spack build-env mpileaks@1.1%intel ./configure
 
 This will cd to the build directory and then run ``configure`` in the
 package's build environment.
@@ -4381,7 +4538,7 @@ translate variant flags into CMake definitions.  For example:
 
 .. code-block:: python
 
-   def configure_args(self):
+   def cmake_args(self):
        spec = self.spec
        return [
            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,9 +19,9 @@ class Ncl(Package):
 
     url = "https://github.com/NCAR/ncl/archive/6.4.0.tar.gz"
 
-    version('6.6.2', 'cad4ee47fbb744269146e64298f9efa206bc03e7b86671e9729d8986bb4bc30e')
-    version('6.5.0', '133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591')
-    version('6.4.0', 'd891452cda7bb25afad9b6c876c73986')
+    version('6.6.2', sha256='cad4ee47fbb744269146e64298f9efa206bc03e7b86671e9729d8986bb4bc30e')
+    version('6.5.0', sha256='133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591')
+    version('6.4.0', sha256='0962ae1a1d716b182b3b27069b4afe66bf436c64c312ddfcf5f34d4ec60153c8')
 
     patch('spack_ncl.patch')
     # Make ncl compile with hdf5 1.10 (upstream as of 6.5.0)
@@ -30,6 +30,9 @@ class Ncl(Package):
     patch('ymake-filter.patch', when="@6.4.0")
     # ymake additional local library and includes will be filtered improperly
     patch('ymake.patch', when="@6.4.0:")
+    # ncl does not build with gcc@10:
+    # https://github.com/NCAR/ncl/issues/123
+    patch('https://src.fedoraproject.org/rpms/ncl/raw/12778c55142b5b1ccc26dfbd7857da37332940c2/f/ncl-boz.patch', when='%gcc@10:', sha256='64f3502c9deab48615a4cbc26073173081c0774faf75778b044d251e45d238f7')
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
@@ -42,13 +45,13 @@ class Ncl(Package):
 
     # Non-optional dependencies according to the manual:
     depends_on('jpeg')
-    depends_on('netcdf')
-    depends_on('cairo+X+pdf')
+    depends_on('netcdf-c')
+    depends_on('cairo+X+ft+pdf')
 
     # Extra dependencies that may be missing from build system:
     depends_on('bison', type='build')
     depends_on('flex+lex')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('tcsh')
 
     # Also, the manual says that ncl requires zlib, but that comes as a
@@ -57,15 +60,16 @@ class Ncl(Package):
     # The following dependencies are required, otherwise several components
     # fail to compile:
     depends_on('curl')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('libx11')
     depends_on('libxaw')
     depends_on('libxmu')
     depends_on('pixman')
     depends_on('bzip2')
     depends_on('freetype')
+    depends_on('fontconfig')
 
-    # In Spack, we do not have an option to compile netcdf without netcdf-4
+    # In Spack, we do not have an option to compile netcdf-c without netcdf-4
     # support, so we will tell the ncl configuration script that we want
     # support for netcdf-4, but the script assumes that hdf5 is compiled with
     # szip support. We introduce this restriction with the following dependency
@@ -76,20 +80,20 @@ class Ncl(Package):
     # ESMF is only required at runtime (for ESMF_regridding.ncl)
     depends_on('esmf', type='run')
 
-    # In Spack, we also do not have an option to compile netcdf without DAP
+    # In Spack, we also do not have an option to compile netcdf-c without DAP
     # support, so we will tell the ncl configuration script that we have it.
 
     # Some of the optional dependencies according to the manual:
     depends_on('hdf', when='+hdf4')
     depends_on('gdal+proj@:2.4', when='+gdal')
-    depends_on('udunits2', when='+udunits2')
+    depends_on('udunits', when='+udunits2')
 
     # We need src files of triangle to appear in ncl's src tree if we want
     # triangle's features.
     resource(
         name='triangle',
         url='http://www.netlib.org/voronoi/triangle.zip',
-        md5='10aff8d7950f5e0e2fb6dd2e340be2c9',
+        sha256='1766327add038495fa3499e9b7cc642179229750f7201b94f8e1b7bee76f8480',
         placement='triangle_src',
         when='+triangle')
 
@@ -123,8 +127,8 @@ class Ncl(Package):
         self.prepare_src_tree()
         make('Everything', parallel=False)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('NCARG_ROOT', self.spec.prefix)
+    def setup_run_environment(self, env):
+        env.set('NCARG_ROOT', self.spec.prefix)
 
     def prepare_site_config(self):
         fc_flags = []
@@ -142,6 +146,10 @@ class Ncl(Package):
             fc_flags.append('-fp-model precise')
             cc_flags.append('-fp-model precise')
             c2f_flags.extend(['-lifcore', '-lifport'])
+
+        if self.spec.satisfies('%gcc@10:'):
+            fc_flags.append('-fallow-argument-mismatch')
+            cc_flags.append('-fcommon')
 
         with open('./config/Spack', 'w') as f:
             f.writelines([
@@ -224,6 +232,7 @@ class Ncl(Package):
             # Build GRIB2 support (optional) into NCL?
             'n\n',
             # Enter local library search path(s) :
+            self.spec['fontconfig'].prefix.lib + ' ' +
             self.spec['pixman'].prefix.lib + ' ' +
             self.spec['bzip2'].prefix.lib + '\n',
             # Enter local include search path(s) :

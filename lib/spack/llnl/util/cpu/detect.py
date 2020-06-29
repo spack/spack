@@ -1,9 +1,10 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import functools
+import os
 import platform
 import re
 import subprocess
@@ -12,6 +13,7 @@ import warnings
 import six
 
 from .microarchitecture import generic_microarchitecture, targets
+from .schema import targets_json
 
 #: Mapping from operating systems to chain of commands
 #: to obtain a dictionary of raw info on the current cpu
@@ -75,42 +77,69 @@ def proc_cpuinfo():
     return info
 
 
-def check_output(args):
-    output = subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
+def check_output(args, env):
+    output = subprocess.Popen(
+        args, stdout=subprocess.PIPE, env=env
+    ).communicate()[0]
     return six.text_type(output.decode('utf-8'))
 
 
 @info_dict(operating_system='Darwin')
-def sysctl():
+def sysctl_info_dict():
     """Returns a raw info dictionary parsing the output of sysctl."""
+    # Make sure that /sbin and /usr/sbin are in PATH as sysctl is
+    # usually found there
+    child_environment = dict(os.environ.items())
+    search_paths = child_environment.get('PATH', '').split(os.pathsep)
+    for additional_path in ('/sbin', '/usr/sbin'):
+        if additional_path not in search_paths:
+            search_paths.append(additional_path)
+    child_environment['PATH'] = os.pathsep.join(search_paths)
 
-    info = {}
-    info['vendor_id'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.vendor']
-    ).strip()
-    info['flags'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.features']
-    ).strip().lower()
-    info['flags'] += ' ' + check_output(
-        ['sysctl', '-n', 'machdep.cpu.leaf7_features']
-    ).strip().lower()
-    info['model'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.model']
-    ).strip()
-    info['model name'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.brand_string']
-    ).strip()
+    def sysctl(*args):
+        return check_output(
+            ['sysctl'] + list(args), env=child_environment
+        ).strip()
 
-    # Super hacky way to deal with slight representation differences
-    # Would be better to somehow consider these "identical"
-    if 'sse4.1' in info['flags']:
-        info['flags'] += ' sse4_1'
-    if 'sse4.2' in info['flags']:
-        info['flags'] += ' sse4_2'
-    if 'avx1.0' in info['flags']:
-        info['flags'] += ' avx'
-
+    flags = (sysctl('-n', 'machdep.cpu.features').lower() + ' '
+             + sysctl('-n', 'machdep.cpu.leaf7_features').lower())
+    info = {
+        'vendor_id': sysctl('-n', 'machdep.cpu.vendor'),
+        'flags': flags,
+        'model': sysctl('-n', 'machdep.cpu.model'),
+        'model name': sysctl('-n', 'machdep.cpu.brand_string')
+    }
     return info
+
+
+def adjust_raw_flags(info):
+    """Adjust the flags detected on the system to homogenize
+    slightly different representations.
+    """
+    # Flags detected on Darwin turned to their linux counterpart
+    flags = info.get('flags', [])
+    d2l = targets_json['conversions']['darwin_flags']
+    for darwin_flag, linux_flag in d2l.items():
+        if darwin_flag in flags:
+            info['flags'] += ' ' + linux_flag
+
+
+def adjust_raw_vendor(info):
+    """Adjust the vendor field to make it human readable"""
+    if 'CPU implementer' not in info:
+        return
+
+    # Mapping numeric codes to vendor (ARM). This list is a merge from
+    # different sources:
+    #
+    # https://github.com/karelzak/util-linux/blob/master/sys-utils/lscpu-arm.c
+    # https://developer.arm.com/docs/ddi0487/latest/arm-architecture-reference-manual-armv8-for-armv8-a-architecture-profile
+    # https://github.com/gcc-mirror/gcc/blob/master/gcc/config/aarch64/aarch64-cores.def
+    # https://patchwork.kernel.org/patch/10524949/
+    arm_vendors = targets_json['conversions']['arm_vendors']
+    arm_code = info['CPU implementer']
+    if arm_code in arm_vendors:
+        info['CPU implementer'] = arm_vendors[arm_code]
 
 
 def raw_info_dictionary():
@@ -127,6 +156,8 @@ def raw_info_dictionary():
             warnings.warn(str(e))
 
         if info:
+            adjust_raw_flags(info)
+            adjust_raw_vendor(info)
             break
 
     return info
@@ -207,6 +238,18 @@ def compatibility_check_for_x86_64(info, target):
 
     # We can use a target if it descends from our machine type, is from our
     # vendor, and we have all of its features
+    arch_root = targets[basename]
+    return (target == arch_root or arch_root in target.ancestors) \
+        and (target.vendor == vendor or target.vendor == 'generic') \
+        and target.features.issubset(features)
+
+
+@compatibility_check(architecture_family='aarch64')
+def compatibility_check_for_aarch64(info, target):
+    basename = 'aarch64'
+    features = set(info.get('Features', '').split())
+    vendor = info.get('CPU implementer', 'generic')
+
     arch_root = targets[basename]
     return (target == arch_root or arch_root in target.ancestors) \
         and (target.vendor == vendor or target.vendor == 'generic') \

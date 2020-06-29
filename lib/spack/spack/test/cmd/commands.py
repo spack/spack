@@ -1,15 +1,20 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re
+import filecmp
+import os
+import shutil
+import subprocess
+
 import pytest
 
-from llnl.util.argparsewriter import ArgparseWriter
-
 import spack.cmd
+from spack.cmd.commands import _positional_to_subroutine
 import spack.main
+import spack.paths
+
 
 commands = spack.main.SpackCommand('commands')
 
@@ -17,38 +22,64 @@ parser = spack.main.make_argument_parser()
 spack.main.add_all_commands(parser)
 
 
-def test_commands_by_name():
+def test_names():
     """Test default output of spack commands."""
-    out = commands()
-    assert out.strip().split('\n') == sorted(spack.cmd.all_commands())
+    out1 = commands().strip().split('\n')
+    assert out1 == spack.cmd.all_commands()
+    assert 'rm' not in out1
+
+    out2 = commands('--aliases').strip().split('\n')
+    assert out1 != out2
+    assert 'rm' in out2
+
+    out3 = commands('--format=names').strip().split('\n')
+    assert out1 == out3
 
 
 def test_subcommands():
     """Test subcommand traversal."""
-    out = commands('--format=subcommands')
-    assert 'spack mirror create' in out
-    assert 'spack buildcache list' in out
-    assert 'spack repo add' in out
-    assert 'spack pkg diff' in out
-    assert 'spack url parse' in out
-    assert 'spack view symlink' in out
+    out1 = commands('--format=subcommands')
+    assert 'spack mirror create' in out1
+    assert 'spack buildcache list' in out1
+    assert 'spack repo add' in out1
+    assert 'spack pkg diff' in out1
+    assert 'spack url parse' in out1
+    assert 'spack view symlink' in out1
+    assert 'spack rm' not in out1
+    assert 'spack compiler add' not in out1
 
-    class Subcommands(ArgparseWriter):
-        def begin_command(self, prog):
-            assert prog in out
-
-    Subcommands().write(parser)
+    out2 = commands('--aliases', '--format=subcommands')
+    assert 'spack mirror create' in out2
+    assert 'spack buildcache list' in out2
+    assert 'spack repo add' in out2
+    assert 'spack pkg diff' in out2
+    assert 'spack url parse' in out2
+    assert 'spack view symlink' in out2
+    assert 'spack rm' in out2
+    assert 'spack compiler add' in out2
 
 
 def test_rst():
     """Do some simple sanity checks of the rst writer."""
-    out = commands('--format=rst')
+    out1 = commands('--format=rst')
+    assert 'spack mirror create' in out1
+    assert 'spack buildcache list' in out1
+    assert 'spack repo add' in out1
+    assert 'spack pkg diff' in out1
+    assert 'spack url parse' in out1
+    assert 'spack view symlink' in out1
+    assert 'spack rm' not in out1
+    assert 'spack compiler add' not in out1
 
-    class Subcommands(ArgparseWriter):
-        def begin_command(self, prog):
-            assert prog in out
-            assert re.sub(r' ', '-', prog) in out
-    Subcommands().write(parser)
+    out2 = commands('--aliases', '--format=rst')
+    assert 'spack mirror create' in out2
+    assert 'spack buildcache list' in out2
+    assert 'spack repo add' in out2
+    assert 'spack pkg diff' in out2
+    assert 'spack url parse' in out2
+    assert 'spack view symlink' in out2
+    assert 'spack rm' in out2
+    assert 'spack compiler add' in out2
 
 
 def test_rst_with_input_files(tmpdir):
@@ -109,3 +140,126 @@ def test_rst_update(tmpdir):
     assert update_file.exists()
     with update_file.open() as f:
         assert f.read() == 'empty\n'
+
+
+def test_update_with_header(tmpdir):
+    update_file = tmpdir.join('output')
+
+    # not yet created when commands is run
+    commands('--update', str(update_file))
+    assert update_file.exists()
+    with update_file.open() as f:
+        assert f.read()
+    fake_header = 'this is a header!\n\n'
+
+    filename = tmpdir.join('header.txt')
+    with filename.open('w') as f:
+        f.write(fake_header)
+
+    # created, newer than commands, but older than header
+    commands('--update', str(update_file), '--header', str(filename))
+
+    # newer than commands and header
+    commands('--update', str(update_file), '--header', str(filename))
+
+
+@pytest.mark.xfail
+def test_no_pipe_error():
+    """Make sure we don't see any pipe errors when piping output."""
+
+    proc = subprocess.Popen(
+        ['spack', 'commands', '--format=rst'],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    # Call close() on stdout to cause a broken pipe
+    proc.stdout.close()
+    proc.wait()
+    stderr = proc.stderr.read().decode('utf-8')
+
+    assert 'Broken pipe' not in stderr
+
+
+def test_bash_completion():
+    """Test the bash completion writer."""
+    out1 = commands('--format=bash')
+
+    # Make sure header not included
+    assert '_bash_completion_spack() {' not in out1
+    assert '_all_packages() {' not in out1
+
+    # Make sure subcommands appear
+    assert '_spack_remove() {' in out1
+    assert '_spack_compiler_find() {' in out1
+
+    # Make sure aliases don't appear
+    assert '_spack_rm() {' not in out1
+    assert '_spack_compiler_add() {' not in out1
+
+    # Make sure options appear
+    assert '-h --help' in out1
+
+    # Make sure subcommands are called
+    for function in _positional_to_subroutine.values():
+        assert function in out1
+
+    out2 = commands('--aliases', '--format=bash')
+
+    # Make sure aliases appear
+    assert '_spack_rm() {' in out2
+    assert '_spack_compiler_add() {' in out2
+
+
+def test_update_completion_arg(tmpdir, monkeypatch):
+    mock_infile = tmpdir.join("spack-completion.in")
+    mock_bashfile = tmpdir.join("spack-completion.bash")
+
+    mock_args = {
+        "bash":  {
+            "aliases": True,
+            "format": "bash",
+            "header": str(mock_infile),
+            "update": str(mock_bashfile),
+        },
+    }
+
+    # make a mock completion file missing the --update-completion argument
+    real_args = spack.cmd.commands.update_completion_args
+    shutil.copy(real_args['bash']['header'], mock_args['bash']['header'])
+    with open(real_args['bash']['update']) as old:
+        old_file = old.read()
+        with open(mock_args['bash']['update'], 'w') as mock:
+            mock.write(old_file.replace("--update-completion", ""))
+    mock_bashfile.setmtime(0)  # ensure mtime triggers update
+
+    monkeypatch.setattr(
+        spack.cmd.commands, 'update_completion_args', mock_args)
+
+    # ensure things fail if --update-completion isn't specified alone
+    with pytest.raises(spack.main.SpackCommandError):
+        commands("--update-completion", "-a")
+
+    # ensure arg is restored
+    assert "--update-completion" not in mock_bashfile.read()
+    commands("--update-completion")
+    assert "--update-completion" in mock_bashfile.read()
+
+
+def test_updated_completion_scripts(tmpdir):
+    """Make sure our shell tab completion scripts remain up-to-date."""
+
+    msg = ("It looks like Spack's command-line interface has been modified. "
+           "Please update Spack's shell tab completion scripts by running:\n\n"
+           "    spack commands --update-completion\n\n"
+           "and adding the changed files to your pull request.")
+
+    for shell in ['bash']:  # 'zsh', 'fish']:
+        header = os.path.join(
+            spack.paths.share_path, shell, 'spack-completion.in')
+        script = 'spack-completion.{0}'.format(shell)
+        old_script = os.path.join(spack.paths.share_path, script)
+        new_script = str(tmpdir.join(script))
+
+        commands('--aliases', '--format', shell,
+                 '--header', header, '--update', new_script)
+
+        assert filecmp.cmp(old_script, new_script), msg

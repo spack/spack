@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,7 @@ def setup_parser(subparser):
         help='show git blame output instead of summary')
 
     subparser.add_argument(
-        'package_name', help='name of package to show contributions for, '
+        'package_or_file', help='name of package to show contributions for, '
         'or path to a file in the spack repo')
 
 
@@ -47,13 +47,13 @@ def blame(parser, args):
 
     # Get name of file to blame
     blame_file = None
-    if os.path.isfile(args.package_name):
-        path = os.path.realpath(args.package_name)
+    if os.path.isfile(args.package_or_file):
+        path = os.path.realpath(args.package_or_file)
         if path.startswith(spack.paths.prefix):
             blame_file = path
 
     if not blame_file:
-        pkg = spack.repo.get(args.package_name)
+        pkg = spack.repo.get(args.package_or_file)
         blame_file = pkg.module.__file__.rstrip('c')  # .pyc -> .py
 
     # get git blame for the package

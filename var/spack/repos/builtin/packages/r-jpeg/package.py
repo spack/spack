@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RJpeg(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/jpeg_0.1-8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/jpeg"
 
-    version('0.1-8', '696007451d14395b1ed1d0e9af667a57')
+    version('0.1-8', sha256='d032befeb3a414cefdbf70ba29a6c01541c54387cc0a1a98a4022d86cbe60a16')
 
     depends_on('r@2.9.0:', type=('build', 'run'))
     depends_on('jpeg')

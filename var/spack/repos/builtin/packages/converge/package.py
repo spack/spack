@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,13 +27,13 @@ class Converge(Package):
     # In order to view available versions, you need to register for an account:
     # https://download.convergecfd.com/wp-login.php?action=register
 
-    version('2.4.10', '53f5bd4bfb39005bebae46b8d6ee3ce6')
-    version('2.3.23', '2913c3e440f82db069051f8822115e5e')
-    version('2.2.0',  'd949cfe338c83ee736ca0be8f77df6bf',
+    version('2.4.10', sha256='5d3c39894598d2395149cfcc653af13b8b1091177290edd62fcf22c7e830d410')
+    version('2.3.23', sha256='1217d16eaf9d263f917ee468778508bad9dacb7e4397a293cfa6467f39fb4c52')
+    version('2.2.0',  sha256='3885acbaf352c718ea69f0206c858a01be02f0928ffee738e4aceb1dd939a77a',
             url="https://download.convergecfd.com/download/CONVERGE_2.2/Full_Solver_Packages/converge_install_2.2.0_042916.tar.gz")
-    version('2.1.0',  '327a917d46aa3bc8dee9511375ce112c',
+    version('2.1.0',  sha256='6b8896d42cf7b9013cae5456f4dc118306a5bd271d4a15945ceb7dae913e825a',
             url="https://download.convergecfd.com/download/CONVERGE_2.1/Full_Solver_Packages/converge_install_2.1.0_111615.tar.gz")
-    version('2.0.0',  '06f017521c3abc1a922b136e83d606dd',
+    version('2.0.0',  sha256='f32c4824eb33724d85e283481d67ebd0630b1406011c528d775028bb2546f34e',
             url="https://download.convergecfd.com/download/CONVERGE_2.0/Full_Solver_Packages/converge_install_2.0.0_090214.tar.gz")
 
     variant('mpi', default=True, description='Build with MPI support')
@@ -215,7 +215,7 @@ class Converge(Package):
             if not os.path.exists('make_surface'):
                 os.symlink(make_surface, 'make_surface')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # CONVERGE searches for a valid license file in:
         #     $CONVERGE_ROOT/license/license.lic
-        run_env.set('CONVERGE_ROOT', self.prefix)
+        env.set('CONVERGE_ROOT', self.prefix)

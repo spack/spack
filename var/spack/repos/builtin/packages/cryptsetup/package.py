@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,11 @@ class Cryptsetup(AutotoolsPackage):
     list_url = "https://www.kernel.org/pub/linux/utils/cryptsetup/"
     list_depth = 1
 
+    # If you're adding newer versions, check whether the patch below
+    # still needs to be applied.
+    version('2.3.1', sha256='92aba4d559a2cf7043faed92e0f22c5addea36bd63f8c039ba5a8f3a159fe7d2')
+    version('2.2.3', sha256='2af0ec9551ab9c870074cae9d3f68d82cab004f4095fa89db0e4413713424a46')
+    version('2.2.2', sha256='2af0ec9551ab9c870074cae9d3f68d82cab004f4095fa89db0e4413713424a46')
     version('2.2.1', sha256='94e79a31ed38bdb0acd9af7ccca1605a2ac62ca850ed640202876b1ee11c1c61')
 
     depends_on('libuuid', type=('build', 'link'))
@@ -23,15 +28,20 @@ class Cryptsetup(AutotoolsPackage):
     depends_on('util-linux~libuuid', type=('build', 'link'))
     depends_on('gettext', type=('build', 'link'))
 
+    depends_on('pkgconfig', type='build')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
+    depends_on('automake@:1.16.1', when='@2.2.1', type='build')
+
     # Upstream includes support for discovering the location of the libintl
     # library but is missing the bit in the Makefile.ac that includes it in
     # the LDFLAGS. See https://gitlab.com/cryptsetup/cryptsetup/issues/479
-    patch('autotools-libintl.patch')
+    # This *should* be unnecessary starting with release 2.2.2, see
+    # https://gitlab.com/cryptsetup/cryptsetup/issues/479#note_227617031
+    patch('autotools-libintl.patch', when='@:2.2.1')
 
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/cryptsetup/v{0}/cryptsetup-{1}.tar.xz"
@@ -43,7 +53,10 @@ class Cryptsetup(AutotoolsPackage):
         ]
         return args
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Prepend the sbin directory to PATH."""
-        spack_env.prepend_path('PATH', self.prefix.sbin)
-        run_env.prepend_path('PATH', self.prefix.sbin)
+        env.prepend_path('PATH', self.prefix.sbin)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Prepend the sbin directory to PATH."""
+        env.prepend_path('PATH', self.prefix.sbin)

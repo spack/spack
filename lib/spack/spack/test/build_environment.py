@@ -1,20 +1,22 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
+
 import pytest
 
 import spack.build_environment
+import spack.config
 import spack.spec
 from spack.paths import build_env_path
 from spack.build_environment import dso_suffix, _static_to_shared_library
 from spack.util.executable import Executable
-from spack.util.spack_yaml import syaml_dict, syaml_str
 from spack.util.environment import EnvironmentModifications
 
-from llnl.util.filesystem import LibraryList
+from llnl.util.filesystem import LibraryList, HeaderList
 
 
 @pytest.fixture
@@ -42,6 +44,9 @@ def build_environment(working_env):
     os.environ['SPACK_CXX_RPATH_ARG'] = "-Wl,-rpath,"
     os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
     os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
+    os.environ['SPACK_LINKER_ARG'] = '-Wl,'
+    os.environ['SPACK_DTAGS_TO_ADD'] = '--disable-new-dtags'
+    os.environ['SPACK_DTAGS_TO_STRIP'] = '--enable-new-dtags'
     os.environ['SPACK_SYSTEM_DIRS'] = '/usr/include /usr/lib'
     os.environ['SPACK_TARGET_ARGS'] = ''
 
@@ -59,14 +64,28 @@ def build_environment(working_env):
         del os.environ[name]
 
 
+@pytest.fixture
+def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
+    """Returns a function that takes a dictionary and updates os.environ
+    for the test lifetime accordingly. Plugs-in mock config and repo.
+    """
+    def _ensure(env_mods):
+        for name, value in env_mods.items():
+            monkeypatch.setenv(name, value)
+
+    return _ensure
+
+
 def test_static_to_shared_library(build_environment):
     os.environ['SPACK_TEST_COMMAND'] = 'dump-args'
 
     expected = {
         'linux': ('/bin/mycc -shared'
+                  ' -Wl,--disable-new-dtags'
                   ' -Wl,-soname,{2} -Wl,--whole-archive {0}'
                   ' -Wl,--no-whole-archive -o {1}'),
         'darwin': ('/bin/mycc -dynamiclib'
+                   ' -Wl,--disable-new-dtags'
                    ' -install_name {1} -Wl,-force_load,{0} -o {1}')
     }
 
@@ -111,79 +130,58 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
     assert os.environ['ANOTHER_VAR'] == 'THIS_IS_SET'
 
 
-@pytest.mark.usefixtures('config', 'mock_packages')
-def test_compiler_config_modifications(monkeypatch, working_env):
-    s = spack.spec.Spec('cmake')
-    s.concretize()
-    pkg = s.package
+@pytest.mark.parametrize('initial,modifications,expected', [
+    # Set and unset variables
+    ({'SOME_VAR_STR': '', 'SOME_VAR_NUM': '0'},
+     {'set': {'SOME_VAR_STR': 'SOME_STR', 'SOME_VAR_NUM': 1}},
+     {'SOME_VAR_STR': 'SOME_STR', 'SOME_VAR_NUM': '1'}),
+    ({'SOME_VAR_STR': ''},
+     {'unset': ['SOME_VAR_STR']},
+     {'SOME_VAR_STR': None}),
+    ({},  # Set a variable that was not defined already
+     {'set': {'SOME_VAR_STR': 'SOME_STR'}},
+     {'SOME_VAR_STR': 'SOME_STR'}),
+    # Append and prepend to the same variable
+    ({'EMPTY_PATH_LIST': '/path/middle'},
+     {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
+      'append_path': {'EMPTY_PATH_LIST': '/path/last'}},
+     {'EMPTY_PATH_LIST': '/path/first:/path/middle:/path/last'}),
+    # Append and prepend from empty variables
+    ({'EMPTY_PATH_LIST': '', 'SOME_VAR_STR': ''},
+     {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
+      'append_path': {'SOME_VAR_STR': '/path/last'}},
+     {'EMPTY_PATH_LIST': '/path/first', 'SOME_VAR_STR': '/path/last'}),
+    ({},  # Same as before but on variables that were not defined
+     {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
+      'append_path': {'SOME_VAR_STR': '/path/last'}},
+     {'EMPTY_PATH_LIST': '/path/first', 'SOME_VAR_STR': '/path/last'}),
+    # Remove a path from a list
+    ({'EMPTY_PATH_LIST': '/path/first:/path/middle:/path/last'},
+     {'remove_path': {'EMPTY_PATH_LIST': '/path/middle'}},
+     {'EMPTY_PATH_LIST': '/path/first:/path/last'}),
+    ({'EMPTY_PATH_LIST': '/only/path'},
+     {'remove_path': {'EMPTY_PATH_LIST': '/only/path'}},
+     {'EMPTY_PATH_LIST': ''}),
+])
+def test_compiler_config_modifications(
+        initial, modifications, expected, ensure_env_variables, monkeypatch
+):
+    # Set the environment as per prerequisites
+    ensure_env_variables(initial)
 
-    os.environ['SOME_VAR_STR'] = ''
-    os.environ['SOME_VAR_NUM'] = '0'
-    os.environ['PATH_LIST'] = '/path/third:/path/forth'
-    os.environ['EMPTY_PATH_LIST'] = ''
-    os.environ.pop('NEW_PATH_LIST', None)
+    # Monkeypatch a pkg.compiler.environment with the required modifications
+    pkg = spack.spec.Spec('cmake').concretized().package
+    monkeypatch.setattr(pkg.compiler, 'environment', modifications)
 
-    env_mod = syaml_dict()
-    set_cmd = syaml_dict()
-    env_mod[syaml_str('set')] = set_cmd
-
-    set_cmd[syaml_str('SOME_VAR_STR')] = syaml_str('SOME_STR')
-    set_cmd[syaml_str('SOME_VAR_NUM')] = 1
-
-    monkeypatch.setattr(pkg.compiler, 'environment', env_mod)
+    # Trigger the modifications
     spack.build_environment.setup_package(pkg, False)
-    assert os.environ['SOME_VAR_STR'] == 'SOME_STR'
-    assert os.environ['SOME_VAR_NUM'] == str(1)
 
-    env_mod = syaml_dict()
-    unset_cmd = syaml_dict()
-    env_mod[syaml_str('unset')] = unset_cmd
-
-    unset_cmd[syaml_str('SOME_VAR_STR')] = None
-
-    monkeypatch.setattr(pkg.compiler, 'environment', env_mod)
-    assert 'SOME_VAR_STR' in os.environ
-    spack.build_environment.setup_package(pkg, False)
-    assert 'SOME_VAR_STR' not in os.environ
-
-    env_mod = syaml_dict()
-    set_cmd = syaml_dict()
-    env_mod[syaml_str('set')] = set_cmd
-    append_cmd = syaml_dict()
-    env_mod[syaml_str('append-path')] = append_cmd
-    unset_cmd = syaml_dict()
-    env_mod[syaml_str('unset')] = unset_cmd
-    prepend_cmd = syaml_dict()
-    env_mod[syaml_str('prepend-path')] = prepend_cmd
-
-    set_cmd[syaml_str('EMPTY_PATH_LIST')] = syaml_str('/path/middle')
-
-    append_cmd[syaml_str('PATH_LIST')] = syaml_str('/path/last')
-    append_cmd[syaml_str('EMPTY_PATH_LIST')] = syaml_str('/path/last')
-    append_cmd[syaml_str('NEW_PATH_LIST')] = syaml_str('/path/last')
-
-    unset_cmd[syaml_str('SOME_VAR_NUM')] = None
-
-    prepend_cmd[syaml_str('PATH_LIST')] = syaml_str('/path/first:/path/second')
-    prepend_cmd[syaml_str('EMPTY_PATH_LIST')] = syaml_str('/path/first')
-    prepend_cmd[syaml_str('NEW_PATH_LIST')] = syaml_str('/path/first')
-    prepend_cmd[syaml_str('SOME_VAR_NUM')] = syaml_str('/8')
-
-    assert 'SOME_VAR_NUM' in os.environ
-    monkeypatch.setattr(pkg.compiler, 'environment', env_mod)
-    spack.build_environment.setup_package(pkg, False)
-    # Check that the order of modifications is respected and the
-    # variable was unset before it was prepended.
-    assert os.environ['SOME_VAR_NUM'] == '/8'
-
-    expected = '/path/first:/path/second:/path/third:/path/forth:/path/last'
-    assert os.environ['PATH_LIST'] == expected
-
-    expected = '/path/first:/path/middle:/path/last'
-    assert os.environ['EMPTY_PATH_LIST'] == expected
-
-    expected = '/path/first:/path/last'
-    assert os.environ['NEW_PATH_LIST'] == expected
+    # Check they were applied
+    for name, value in expected.items():
+        if value is not None:
+            assert os.environ[name] == value
+            continue
+        assert name not in os.environ
 
 
 @pytest.mark.regression('9107')
@@ -234,6 +232,18 @@ def test_set_build_environment_variables(
     directories via the SPACK_LINK_DIRS and SPACK_INCLUDE_DIRS environment
     variables.
     """
+
+    # https://github.com/spack/spack/issues/13969
+    cuda_headers = HeaderList([
+        'prefix/include/cuda_runtime.h',
+        'prefix/include/cuda/atomic',
+        'prefix/include/cuda/std/detail/libcxx/include/ctype.h'])
+    cuda_include_dirs = cuda_headers.directories
+    assert(os.path.join('prefix', 'include')
+           in cuda_include_dirs)
+    assert(os.path.join('prefix', 'include', 'cuda', 'std', 'detail',
+                        'libcxx', 'include')
+           not in cuda_include_dirs)
 
     root = spack.spec.Spec('dt-diamond')
     root.concretize()
@@ -304,3 +314,28 @@ def test_parallel_false_is_not_propagating(config, mock_packages):
         m = AttributeHolder()
         spack.build_environment._set_variables_for_single_module(s.package, m)
         assert m.make_jobs == expected_jobs
+
+
+@pytest.mark.parametrize('config_setting,expected_flag', [
+    ('runpath', '' if platform.system() == 'Darwin' else '--enable-new-dtags'),
+    ('rpath', '' if platform.system() == 'Darwin' else '--disable-new-dtags'),
+])
+def test_setting_dtags_based_on_config(
+        config_setting, expected_flag, config, mock_packages
+):
+    # Pick a random package to be able to set compiler's variables
+    s = spack.spec.Spec('cmake')
+    s.concretize()
+    pkg = s.package
+
+    env = EnvironmentModifications()
+    with spack.config.override('config:shared_linking', config_setting):
+        spack.build_environment.set_compiler_environment_variables(pkg, env)
+        modifications = env.group_by_name()
+        assert 'SPACK_DTAGS_TO_STRIP' in modifications
+        assert 'SPACK_DTAGS_TO_ADD' in modifications
+        assert len(modifications['SPACK_DTAGS_TO_ADD']) == 1
+        assert len(modifications['SPACK_DTAGS_TO_STRIP']) == 1
+
+        dtags_to_add = modifications['SPACK_DTAGS_TO_ADD'][0]
+        assert dtags_to_add.value == expected_flag

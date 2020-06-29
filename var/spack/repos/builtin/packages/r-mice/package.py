@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class RMice(RPackage):
 
     version('3.6.0', sha256='7bc72bdb631bc9f67d8f76ffb48a7bb275228d861075e20c24c09c736bebec5d')
     version('3.5.0', sha256='4fccecdf9e8d8f9f63558597bfbbf054a873b2d0b0820ceefa7b6911066b9e45')
-    version('3.0.0', 'fb54a29679536c474c756cca4538d7e3')
+    version('3.0.0', sha256='98b6bb1c5f8fb099bd0024779da8c865146edb25219cc0c9542a8254152c0add')
 
     depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-broom', type=('build', 'run'))

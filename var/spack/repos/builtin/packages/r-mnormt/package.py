@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,6 @@ class RMnormt(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/mnormt_1.5-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/mnormt"
 
-    version('1.5-5', '19b5be2e9ed33b92d7a716bfcca6b2c7')
+    version('1.5-5', sha256='ff78d5f935278935f1814a69e5a913d93d6dd2ac1b5681ba86b30c6773ef64ac')
 
     depends_on('r@2.2.0:', type=('build', 'run'))

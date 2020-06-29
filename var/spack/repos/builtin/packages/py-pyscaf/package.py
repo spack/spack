@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyPyscaf(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pyScaf"
     url      = "https://pypi.io/packages/source/p/pyScaf/pyScaf-0.12a4.tar.gz"
 
-    version('0.12a4', 'c67526747eb04d1e28279ac310916d40')
+    version('0.12a4', sha256='3ce3f6fe80bd058831b6a38a56d464ef10f3ebbdd6bc3dcb0d7f127c0b2c1b36')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-fastaindex', type=('build', 'run'))

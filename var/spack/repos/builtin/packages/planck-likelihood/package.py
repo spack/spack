@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PlanckLikelihood(Package):
     homepage = "https://wiki.cosmos.esa.int/planckpla2015/index.php/CMB_spectrum_%26_Likelihood_Code"
     url      = "http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Code-v2.0.R2.00.tar.bz2"
 
-    version('2.00', '7a081679ff249dc4f94fb7177e16e818',
+    version('2.00', sha256='c1efa208175b2751e75b2ad1c026dae744a7dd279eb74baa5db3098bc9c971bb',
             url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Code-v2.0.R2.00.tar.bz2")
 
     variant('lensing-ext', default=False,
@@ -32,30 +32,30 @@ class PlanckLikelihood(Package):
     resource(
         name='baseline',
         url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-baseline_R2.00.tar.gz",
-        md5='7e784819cea65dbc290ea3619420295a',
+        sha256='7c62c5afc105bff28c2da3eddb870b8180536d30e31c4d419b307ad3996e17ab',
         destination='.')
     resource(
         name='lensing-ext',
         url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-lensing-ext.R2.00.tar.gz",
-        md5='091736f73b47a09162050bee27d68399',
+        sha256='0c017984bfd12315b94958f48f8e61e625361a84066838976f676fb5c2e76dbc',
         destination='.',
         when='+lensing-ext')
     resource(
         name='plik-DS',
         url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-DS.R2.00.tar.gz",
-        md5='76ac04f989025eecab3825aba7e41f36',
+        sha256='f6b5ec6b284ea71008f071503faf8319dac48c3ea7fb13f5e5cbd23fff3efd84',
         destination='.',
         when='+plik-DS')
     resource(
         name='plik-HM-ext',
         url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-HM-ext.R2.00.tar.gz",
-        md5='1c3bd8221f973b7bf7e76647451fd6e5',
+        sha256='b5b8ead297b31f9b2e4913b54b1d3bbe272075f85ce2ca9bf5d99dbbe1559f77',
         destination='.',
         when='+plik-HM-ext')
     resource(
         name='plik-unbinned',
         url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-unbinned.R2.00.tar.gz",
-        md5='c5869aa6b6581b6863d2a6e0ffd3826c',
+        sha256='69cdfee40d63a8b60b1f715d4e276d76693ec1a6f1b2658abac2b8d7dff4fa44',
         destination='.',
         when='+plik-unbinned')
 
@@ -107,17 +107,15 @@ class PlanckLikelihood(Package):
         for dir in dirs:
             install_tree(dir, join_path(prefix, 'share', 'clik', dir))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        prefix = self.prefix
-        spack_env.set('CLIK_PATH', prefix)
-        spack_env.set('CLIK_DATA', join_path(prefix, 'share', 'clik'))
-        spack_env.set('CLIK_PLUGIN', 'rel2015')
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('CLIK_PATH', self.prefix)
+        env.set('CLIK_DATA', self.prefix.share.clik)
+        env.set('CLIK_PLUGIN', 'rel2015')
 
-    def setup_environment(self, spack_env, run_env):
-        prefix = self.prefix
-        run_env.set('CLIK_PATH', prefix)
-        run_env.set('CLIK_DATA', join_path(prefix, 'share', 'clik'))
-        run_env.set('CLIK_PLUGIN', 'rel2015')
+    def setup_run_environment(self, env):
+        env.set('CLIK_PATH', self.prefix)
+        env.set('CLIK_DATA', self.prefix.share.clik)
+        env.set('CLIK_PLUGIN', 'rel2015')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyParamiko(PythonPackage):
     homepage = "http://www.paramiko.org/"
     url      = "https://pypi.io/packages/source/p/paramiko/paramiko-2.1.2.tar.gz"
 
-    version('2.1.2', '41a8ea0e8abb03a6bf59870670d4f46c')
+    version('2.1.2', sha256='5fae49bed35e2e3d45c4f7b0db2d38b9ca626312d91119b3991d0ecf8125e310')
 
     depends_on('py-setuptools',    type='build')
     depends_on('py-pyasn1@0.1.7:',        type=('build', 'run'))

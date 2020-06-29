@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,13 +12,14 @@
   default unorderd dict.
 
 """
+import ctypes
+
+
 from ordereddict_backport import OrderedDict
 from six import string_types, StringIO
 
 import ruamel.yaml as yaml
-from ruamel.yaml import Loader, Dumper
-from ruamel.yaml.nodes import MappingNode, SequenceNode, ScalarNode
-from ruamel.yaml.constructor import ConstructorError
+from ruamel.yaml import RoundTripLoader, RoundTripDumper
 
 from llnl.util.tty.color import colorize, clen, cextra
 
@@ -46,7 +47,7 @@ class syaml_str(str):
 
 
 class syaml_int(int):
-    __repr__ = str.__repr__
+    __repr__ = int.__repr__
 
 
 #: mapping from syaml type -> primitive type
@@ -56,6 +57,11 @@ syaml_types = {
     syaml_dict: dict,
     syaml_list: list,
 }
+
+
+markable_types = set(syaml_types) | set([
+    yaml.comments.CommentedSeq,
+    yaml.comments.CommentedMap])
 
 
 def syaml_type(obj):
@@ -72,19 +78,15 @@ def syaml_type(obj):
 
 def markable(obj):
     """Whether an object can be marked."""
-    return type(obj) in syaml_types
+    return type(obj) in markable_types
 
 
 def mark(obj, node):
     """Add start and end markers to an object."""
-    if not markable(obj):
-        return
-
     if hasattr(node, 'start_mark'):
         obj._start_mark = node.start_mark
     elif hasattr(node, '_start_mark'):
         obj._start_mark = node._start_mark
-
     if hasattr(node, 'end_mark'):
         obj._end_mark = node.end_mark
     elif hasattr(node, '_end_mark'):
@@ -97,8 +99,11 @@ def marked(obj):
             hasattr(obj, '_end_mark') and obj._end_mark)
 
 
-class OrderedLineLoader(Loader):
-    """YAML loader that preserves order and line numbers.
+class OrderedLineLoader(RoundTripLoader):
+    """YAML loader specifically intended for reading Spack configuration
+       files. It preserves order and line numbers. It also has special-purpose
+       logic for handling dictionary keys that indicate a Spack config
+       override: namely any key that contains an "extra" ':' character.
 
        Mappings read in by this loader behave like an ordered dict.
        Sequences, mappings, and strings also have new attributes,
@@ -107,74 +112,46 @@ class OrderedLineLoader(Loader):
 
     """
     #
-    # Override construct_yaml_* so that they build our derived types,
-    # which allows us to add new attributes to them.
+    # Override construct_yaml_* so that we can apply _start_mark/_end_mark to
+    # them. The superclass returns CommentedMap/CommentedSeq objects that we
+    # can add attributes to (and we depend on their behavior to preserve
+    # comments).
     #
-    # The standard YAML constructors return empty instances and fill
-    # in with mappings later.  We preserve this behavior.
+    # The inherited sequence/dictionary constructors return empty instances
+    # and fill in with mappings later.  We preserve this behavior.
     #
 
     def construct_yaml_str(self, node):
-        value = self.construct_scalar(node)
-        value = syaml_str(value)
+        value = super(OrderedLineLoader, self).construct_yaml_str(node)
+        # There is no specific marker to indicate that we are parsing a key,
+        # so this assumes we are talking about a Spack config override key if
+        # it ends with a ':' and does not contain a '@' (which can appear
+        # in config values that refer to Spack specs)
+        if value and value.endswith(':') and '@' not in value:
+            value = syaml_str(value[:-1])
+            value.override = True
+        else:
+            value = syaml_str(value)
         mark(value, node)
         return value
 
     def construct_yaml_seq(self, node):
-        data = syaml_list()
-        mark(data, node)
+        gen = super(OrderedLineLoader, self).construct_yaml_seq(node)
+        data = next(gen)
+        if markable(data):
+            mark(data, node)
         yield data
-        data.extend(self.construct_sequence(node))
+        for x in gen:
+            pass
 
     def construct_yaml_map(self, node):
-        data = syaml_dict()
-        mark(data, node)
+        gen = super(OrderedLineLoader, self).construct_yaml_map(node)
+        data = next(gen)
+        if markable(data):
+            mark(data, node)
         yield data
-        value = self.construct_mapping(node)
-        data.update(value)
-
-    #
-    # Override the ``construct_*`` routines. These fill in empty
-    # objects after yielded by the above ``construct_yaml_*`` methods.
-    #
-    def construct_sequence(self, node, deep=False):
-        if not isinstance(node, SequenceNode):
-            raise ConstructorError(
-                None, None,
-                "expected a sequence node, but found %s" % node.id,
-                node.start_mark)
-        value = syaml_list(self.construct_object(child, deep=deep)
-                           for child in node.value)
-        mark(value, node)
-        return value
-
-    def construct_mapping(self, node, deep=False):
-        """Store mappings as OrderedDicts instead of as regular python
-           dictionaries to preserve file ordering."""
-        if not isinstance(node, MappingNode):
-            raise ConstructorError(
-                None, None,
-                "expected a mapping node, but found %s" % node.id,
-                node.start_mark)
-
-        mapping = syaml_dict()
-        for key_node, value_node in node.value:
-            key = self.construct_object(key_node, deep=deep)
-            try:
-                hash(key)
-            except TypeError as exc:
-                raise ConstructorError(
-                    "while constructing a mapping", node.start_mark,
-                    "found unacceptable key (%s)" % exc, key_node.start_mark)
-            value = self.construct_object(value_node, deep=deep)
-            if key in mapping:
-                raise ConstructorError(
-                    "while constructing a mapping", node.start_mark,
-                    "found already in-use key (%s)" % key, key_node.start_mark)
-            mapping[key] = value
-
-        mark(mapping, node)
-        return mapping
+        for x in gen:
+            pass
 
 
 # register above new constructors
@@ -186,7 +163,7 @@ OrderedLineLoader.add_constructor(
     'tag:yaml.org,2002:str', OrderedLineLoader.construct_yaml_str)
 
 
-class OrderedLineDumper(Dumper):
+class OrderedLineDumper(RoundTripDumper):
     """Dumper that preserves ordering and formats ``syaml_*`` objects.
 
       This dumper preserves insertion ordering ``syaml_dict`` objects
@@ -196,36 +173,17 @@ class OrderedLineDumper(Dumper):
 
     """
 
-    def represent_mapping(self, tag, mapping, flow_style=None):
-        value = []
-        node = MappingNode(tag, value, flow_style=flow_style)
-        if self.alias_key is not None:
-            self.represented_objects[self.alias_key] = node
-        best_style = True
-        if hasattr(mapping, 'items'):
-            # if it's a syaml_dict, preserve OrderedDict order.
-            # Otherwise do the default thing.
-            sort = not isinstance(mapping, syaml_dict)
-            mapping = list(mapping.items())
-            if sort:
-                mapping.sort()
+    def ignore_aliases(self, _data):
+        """Make the dumper NEVER print YAML aliases."""
+        return True
 
-        for item_key, item_value in mapping:
-            node_key = self.represent_data(item_key)
-            node_value = self.represent_data(item_value)
-            if not (isinstance(node_key, ScalarNode) and not node_key.style):
-                best_style = False
-            if not (isinstance(node_value, ScalarNode) and
-                    not node_value.style):
-                best_style = False
-            value.append((node_key, node_value))
-        if flow_style is None:
-            if self.default_flow_style is not None:
-                node.flow_style = self.default_flow_style
-            else:
-                node.flow_style = best_style
+    def represent_str(self, data):
+        if hasattr(data, 'override') and data.override:
+            data = data + ':'
+        return super(OrderedLineDumper, self).represent_str(data)
 
-        return node
+
+class SafeDumper(RoundTripDumper):
 
     def ignore_aliases(self, _data):
         """Make the dumper NEVER print YAML aliases."""
@@ -233,10 +191,20 @@ class OrderedLineDumper(Dumper):
 
 
 # Make our special objects look like normal YAML ones.
-OrderedLineDumper.add_representer(syaml_dict, OrderedLineDumper.represent_dict)
-OrderedLineDumper.add_representer(syaml_list, OrderedLineDumper.represent_list)
+RoundTripDumper.add_representer(syaml_dict, RoundTripDumper.represent_dict)
+RoundTripDumper.add_representer(syaml_list, RoundTripDumper.represent_list)
+RoundTripDumper.add_representer(syaml_int, RoundTripDumper.represent_int)
+RoundTripDumper.add_representer(syaml_str, RoundTripDumper.represent_str)
 OrderedLineDumper.add_representer(syaml_str, OrderedLineDumper.represent_str)
-OrderedLineDumper.add_representer(syaml_int, OrderedLineDumper.represent_int)
+
+
+#: Max integer helps avoid passing too large a value to cyaml.
+maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
+
+
+def dump(obj, default_flow_style=False, stream=None):
+    return yaml.dump(obj, default_flow_style=default_flow_style, width=maxint,
+                     Dumper=SafeDumper, stream=stream)
 
 
 def file_line(mark):
@@ -288,7 +256,8 @@ class LineAnnotationDumper(OrderedLineDumper):
         result = super(LineAnnotationDumper, self).represent_data(data)
         if isinstance(result.value, string_types):
             result.value = syaml_str(data)
-        mark(result.value, data)
+        if markable(result.value):
+            mark(result.value, data)
         return result
 
     def write_stream_start(self):
@@ -319,14 +288,18 @@ class LineAnnotationDumper(OrderedLineDumper):
             _annotations.append('')
 
 
-def load(*args, **kwargs):
+def load_config(*args, **kwargs):
     """Load but modify the loader instance so that it will add __line__
-       atrributes to the returned object."""
+       attributes to the returned object."""
     kwargs['Loader'] = OrderedLineLoader
     return yaml.load(*args, **kwargs)
 
 
-def dump(*args, **kwargs):
+def load(*args, **kwargs):
+    return yaml.load(*args, **kwargs)
+
+
+def dump_config(*args, **kwargs):
     blame = kwargs.pop('blame', False)
 
     if blame:

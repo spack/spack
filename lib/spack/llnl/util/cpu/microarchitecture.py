@@ -1,13 +1,14 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
 import platform
+import re
 import warnings
 
 try:
-    from collections.abc import Sequence
+    from collections.abc import Sequence  # novm
 except ImportError:
     from collections import Sequence
 
@@ -203,9 +204,21 @@ class Microarchitecture(object):
             compiler (str): name of the compiler to be used
             version (str): version of the compiler to be used
         """
-        # If we don't have information on compiler return an empty string
-        if compiler not in self.compilers:
+        # If we don't have information on compiler at all
+        # return an empty string
+        if compiler not in self.family.compilers:
             return ''
+
+        # If we have information but it stops before this
+        # microarchitecture, fall back to the best known target
+        if compiler not in self.compilers:
+            best_target = [
+                x for x in self.ancestors if compiler in x.compilers
+            ][0]
+            msg = ("'{0}' compiler is known to optimize up to the '{1}'"
+                   " microarchitecture in the '{2}' architecture family")
+            msg = msg.format(compiler, best_target, best_target.family)
+            raise UnsupportedMicroarchitecture(msg)
 
         # If we have information on this compiler we need to check the
         # version being used
@@ -218,14 +231,10 @@ class Microarchitecture(object):
         def satisfies_constraint(entry, version):
             min_version, max_version = entry['versions'].split(':')
 
-            # Check version suffixes
-            min_version, _, min_suffix = min_version.partition('-')
-            max_version, _, max_suffix = max_version.partition('-')
-            version, _, suffix = version.partition('-')
-
-            # If the suffixes are not all equal there's no match
-            if suffix != min_suffix or suffix != max_suffix:
-                return False
+            # Extract numeric part of the version
+            min_version, _ = version_components(min_version)
+            max_version, _ = version_components(max_version)
+            version, _ = version_components(version)
 
             # Assume compiler versions fit into semver
             tuplify = lambda x: tuple(int(y) for y in x.split('.'))
@@ -274,6 +283,26 @@ def generic_microarchitecture(name):
     return Microarchitecture(
         name, parents=[], vendor='generic', features=[], compilers={}
     )
+
+
+def version_components(version):
+    """Decomposes the version passed as input in version number and
+    suffix and returns them.
+
+    If the version number of the suffix are not present, an empty
+    string is returned.
+
+    Args:
+        version (str): version to be decomposed into its components
+    """
+    match = re.match(r'([\d.]*)(-?)(.*)', str(version))
+    if not match:
+        return '', ''
+
+    version_number = match.group(1)
+    suffix = match.group(3)
+
+    return version_number, suffix
 
 
 def _known_microarchitectures():

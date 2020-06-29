@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Raxml(Package):
     homepage = "https://sco.h-its.org/exelixis/web/software/raxml"
     url = "https://github.com/stamatak/standard-RAxML/archive/v8.2.11.tar.gz"
 
-    version('8.2.11', '6bd5c4e1f93003ccf13c9b59a5d080ab')
+    version('8.2.11', sha256='08cda74bf61b90eb09c229e39b1121c6d95caf182708e8745bd69d02848574d7')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('pthreads', default=False, description='Enable pthreads version')
@@ -25,6 +25,7 @@ class Raxml(Package):
 
     # Compiles with either GCC or ICC.
     conflicts('%cce')
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%nag')
     conflicts('%pgi')

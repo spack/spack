@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RGridextra(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/gridExtra_2.2.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gridExtras"
 
-    version('2.3', '01e0ea88610756a0fd3b260e83c9bd43')
-    version('2.2.1', '7076c2122d387c7ef3add69a1c4fc1b2')
+    version('2.3', sha256='81b60ce6f237ec308555471ae0119158b115463df696d2eca9b177ded8988e3b')
+    version('2.2.1', sha256='44fe455a5bcdf48a4ece7a542f83e7749cf251dc1df6ae7634470240398c6818')
 
     depends_on('r-gtable', type=('build', 'run'))

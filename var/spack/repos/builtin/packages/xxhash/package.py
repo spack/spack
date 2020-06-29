@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,14 +17,14 @@ class Xxhash(MakefilePackage):
     homepage = "https://github.com/Cyan4973/xxHash"
     url      = "https://github.com/Cyan4973/xxHash/archive/v0.6.5.tar.gz"
 
-    version('0.6.5', '6af3a964f3c2accebce66e54b44b6446')
-    version('0.6.4', '3c071c95e31bd601cca149cc354e6f19')
-    version('0.6.3', 'f2ec1497317c0eb89addd7f333c83228')
-    version('0.6.2', 'b2d12d99094b824e0a5f3ab63abc6c58')
-    version('0.6.1', 'f4ced3767aad8384b1ecb73bd5f992ca')
-    version('0.6.0', 'e0fd163b07ab0038f389a180dc263cf2')
-    version('0.5.1', '9417fd8a4d88204b680e21a60f0ccada')
-    version('0.5.0', '42e9a31a2cfc2f626fde17e84a0b6bb7')
+    version('0.6.5', sha256='19030315f4fc1b4b2cdb9d7a317069a109f90e39d1fe4c9159b7aaa39030eb95')
+    version('0.6.4', sha256='4570ccd111df6b6386502791397906bf69b7371eb209af7d41debc2f074cdb22')
+    version('0.6.3', sha256='d8c739ec666ac2af983a61dc932aaa2a8873df974d333a9922d472a121f2106e')
+    version('0.6.2', sha256='e4da793acbe411e7572124f958fa53b280e5f1821a8bf78d79ace972950b8f82')
+    version('0.6.1', sha256='a940123baa6c71b75b6c02836bae2155cd2f74f7682e1a1d6f7b889f7bc9e7f8')
+    version('0.6.0', sha256='2adee77416e1bd53d1bf689d78947ff4e9a603aa319c84c9111ccf53f1a646e8')
+    version('0.5.1', sha256='0171af39eefa06be1e616bc43b250d13bba417e4741135ec85c1fe8dc391997d')
+    version('0.5.0', sha256='9605cd18d40d798eb1262bc0c2a154e1a3c138a6a9a0c4c792e855d0c08c23e1')
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")

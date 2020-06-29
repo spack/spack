@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,8 @@ class Salmon(CMakePackage):
 
     version('0.14.1', sha256='05289170e69b5f291a8403b40d6b9bff54cc38825e9f721c210192b51a19273e')
     version('0.12.0', sha256='91ebd1efc5b0b4c12ec6babecf3c0b79f7102e42b8895ca07c8c8fea869fefa3')
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+    version('0.9.1', sha256='3a32c28d217f8f0af411c77c04144b1fa4e6fd3c2f676661cc875123e4f53520')
+    version('0.8.2', sha256='299168e873e71e9b07d63a84ae0b0c41b0876d1ad1d434b326a5be2dce7c4b91')
 
     depends_on('tbb')
     depends_on('boost@:1.66.0')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,8 @@ class PyAstropy(PythonPackage):
 
     version('3.2.1', sha256='706c0457789c78285e5464a5a336f5f0b058d646d60f4e5f5ba1f7d5bf424b28')
     version('2.0.14', sha256='618807068609a4d8aeb403a07624e9984f566adc0dc0f5d6b477c3658f31aeb6')
-    version('1.1.2', 'cbe32023b5b1177d1e2498a0d00cda51')
-    version('1.1.post1', 'b52919f657a37d45cc45f5cb0f58c44d')
+    version('1.1.2', sha256='6f0d84cd7dfb304bb437dda666406a1d42208c16204043bc920308ff8ffdfad1')
+    version('1.1.post1', sha256='64427ec132620aeb038e4d8df94d6c30df4cc8b1c42a6d8c5b09907a31566a21')
 
     variant('extras', default=False, description='Enable extra functionality')
 
@@ -60,11 +60,15 @@ class PyAstropy(PythonPackage):
     depends_on('expat')
 
     def build_args(self, spec, prefix):
-        return [
-            '-j', str(make_jobs),
+        args = [
             '--use-system-libraries',
             '--use-system-erfa',
             '--use-system-wcslib',
             '--use-system-cfitsio',
             '--use-system-expat'
         ]
+
+        if spec.satisfies('^python@3:'):
+            args.extend(['-j', str(make_jobs)])
+
+        return args

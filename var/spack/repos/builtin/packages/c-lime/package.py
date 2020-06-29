@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,4 +15,4 @@ class CLime(AutotoolsPackage):
     homepage = "https://usqcd-software.github.io/c-lime/"
     url      = "https://github.com/usqcd-software/c-lime/archive/qio2-3-9.tar.gz"
 
-    version('2-3-9', '28257e7ae75dc68c7c920e3e16db0ec9')
+    version('2-3-9', sha256='7b9aeadd4dfec50e24da3e7e729f56abf95c9192612c41515fe27b2158773aac')

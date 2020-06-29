@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class DialignTx(MakefilePackage):
     homepage = "http://dialign-tx.gobics.de/"
     url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
+    version('1.0.2', sha256='fb3940a48a12875332752a298f619f0da62593189cd257d28932463c7cebcb8f')
 
     build_directory = 'source'
 

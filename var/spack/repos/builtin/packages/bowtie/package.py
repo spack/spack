@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ class Bowtie(MakefilePackage):
     version('1.2.0', sha256='dc4e7951b8eca56ce7714c47fd4e84f72badd5312ee9546c912af1963570f894')
     # Keeping the old 1.2 version around for reproducibility, it's not
     # clearly identical to 1.2.0.
-    version('1.2', md5='6d97f0ea1a65af11d17cc270cfac4af9', url='https://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.2.0/bowtie-1.2-source.zip')
+    version('1.2', sha256='b1052de4253007890f6436e6361d40148bc2a5a9dd01827bb9f34097747e65f8', url='https://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.2.0/bowtie-1.2-source.zip')
 
     # 1.2.2 and 1.2.2_p1 fail to build with %gcc@8.3.0
     # with and without issue-87 patch

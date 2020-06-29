@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,12 +12,16 @@ import string
 import llnl.util.tty as tty
 
 import spack.config
+import spack.projections as proj
 import spack.tengine as tengine
 from .common import BaseConfiguration, BaseFileLayout
 from .common import BaseContext, BaseModuleFileWriter
 
+
 #: TCL specific part of the configuration
-configuration = spack.config.get('modules:tcl', {})
+def configuration():
+    return spack.config.get('modules:tcl', {})
+
 
 #: Caches the configuration {spec_hash: configuration}
 configuration_registry = {}
@@ -69,12 +73,12 @@ class TclContext(BaseContext):
     def conflicts(self):
         """List of conflicts for the tcl module file."""
         fmts = []
-        naming_scheme = self.conf.naming_scheme
+        projection = proj.get_projection(self.conf.projections, self.spec)
         f = string.Formatter()
         for item in self.conf.conflicts:
             if len([x for x in f.parse(item)]) > 1:
                 for naming_dir, conflict_dir in zip(
-                        naming_scheme.split('/'), item.split('/')
+                        projection.split('/'), item.split('/')
                 ):
                     if naming_dir != conflict_dir:
                         message = 'conflict scheme does not match naming '
@@ -84,7 +88,7 @@ class TclContext(BaseContext):
                         message += '** You may want to check your '
                         message += '`modules.yaml` configuration file **\n'
                         tty.error(message.format(spec=self.spec,
-                                                 nformat=naming_scheme,
+                                                 nformat=projection,
                                                  cformat=item))
                         raise SystemExit('Module generation aborted.')
                 item = self.spec.format(item)

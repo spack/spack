@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,14 +18,14 @@ class Qorts(RPackage):
     homepage = "https://github.com/hartleys/QoRTs"
     url      = "https://github.com/hartleys/QoRTs/releases/download/v1.2.42/QoRTs_1.2.42.tar.gz"
 
-    version('1.2.42', '7d46162327b0da70bfe483fe2f2b7829')
+    version('1.2.42', sha256='c9f73ce8d5aac1036d13c50475458a61a24cbe5c0baf7ac65b87a7118c51ec08')
 
     depends_on('java', type='run')
 
     resource(
         name='QoRTs.jar',
         url='https://github.com/hartleys/QoRTs/releases/download/v1.2.42/QoRTs.jar',
-        md5='918df4291538218c12caa3ab98c535e9',
+        sha256='e808d2e05c67ee41eee605b7821aafa7ae894288ebb01d8b1bfb136970c801ce',
         placement='jarfile',
         expand=False
     )

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,8 @@ class PyFuncsigs(PythonPackage):
 
     import_modules = ['funcsigs']
 
-    version('1.0.2', '7e583285b1fb8a76305d6d68f4ccc14e')
-    version('0.4',   'fb1d031f284233e09701f6db1281c2a5')
+    version('1.0.2', sha256='a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50')
+    version('0.4',   sha256='d83ce6df0b0ea6618700fe1db353526391a8a3ada1b7aba52fed7a61da772033')
 
     depends_on('py-setuptools@17.1:', type='build')
     depends_on('py-unittest2', type='test')

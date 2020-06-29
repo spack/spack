@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,11 @@
 from __future__ import print_function
 
 import os
-import argparse
 import llnl.util.tty as tty
 
 import spack.environment as ev
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.environment
 import spack.paths
 import spack.repo
@@ -55,9 +55,7 @@ def setup_parser(subparser):
         '-e', '--env', action='store',
         help="location of an environment managed by spack")
 
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="spec of package to fetch directory for")
+    arguments.add_common_arguments(subparser, ['spec'])
 
 
 def location(parser, args):

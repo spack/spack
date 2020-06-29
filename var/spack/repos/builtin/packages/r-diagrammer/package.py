@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RDiagrammer(RPackage):
 
     version('1.0.1', sha256='ccee8acf608fc909e73c6de4374cef5a570cb62e5f454ac55dda736f22f3f013')
     version('1.0.0', sha256='2b186dae1b19018681b979e9444bf16559c42740d8382676fbaf3b0f8a44337e')
-    version('0.8.4', '9ee295c744f5d4ba9a84289ca7bdaf1a')
+    version('0.8.4', sha256='0503935fa120c7c7cdcfd4dce85558b23fd0bcb7e6b32fa6989087d3c88ec404')
 
     depends_on('r@3.2.0:', when='@0.9.2:', type=('build', 'run'))
     depends_on('r-htmlwidgets@1.0:', type=('build', 'run'))

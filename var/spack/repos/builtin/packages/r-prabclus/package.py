@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class RPrabclus(RPackage):
 
     version('2.3-1', sha256='ef3294767d43bc3f72478fdaf0d1f13c8de18881bf9040c9f1add68af808b3c0')
     version('2.2-7.1', sha256='2c5bf3bbb0d225e04c53bb0e11e9c2a6809f0e46d95b8f6dc14b9dd6a2452975')
-    version('2.2-6', '7f835dcc113243e1db74aad28ce93d11')
+    version('2.2-6', sha256='41792980e40ba18204fab92d85120dcd468860e2204e52fb42636c6f7aee5a62')
 
     depends_on('r@2.1.0:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

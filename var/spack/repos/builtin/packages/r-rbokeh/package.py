@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RRbokeh(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/rbokeh_0.5.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rbokeh"
 
-    version('0.5.0', '4e14778c3fbd9286460ca28c68f57d10')
+    version('0.5.0', sha256='499c3224a7dcaeb4bb60fd645b3ef528a20e59437747a073713941b80cbcebd2')
 
     depends_on('r-htmlwidgets@0.5:', type=('build', 'run'))
     depends_on('r-maps', type=('build', 'run'))

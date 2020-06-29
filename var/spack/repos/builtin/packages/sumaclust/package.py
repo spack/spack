@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Sumaclust(MakefilePackage):
 
     homepage = "https://git.metabarcoding.org/obitools/sumaclust"
 
-    version('1.0.20', '31c7583fbe2e3345d5fe3e9431d9b30c',
+    version('1.0.20', sha256='b697495f9a2b93fe069ecdb3bc6bba75b07ec3ef9f01ed66c4dd69587a40cfc1',
             url="https://git.metabarcoding.org/obitools/sumaclust/uploads/69f757c42f2cd45212c587e87c75a00f/sumaclust_v1.0.20.tar.gz")
 
     def build(self, spec, prefix):

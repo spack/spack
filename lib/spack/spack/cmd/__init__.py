@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import argparse
+import ruamel.yaml as yaml
 
 import six
 
@@ -16,15 +17,17 @@ import llnl.util.tty as tty
 from llnl.util.lang import attr_setdefault, index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
-from llnl.util.filesystem import working_dir
+from llnl.util.filesystem import join_path
 
 import spack.config
+import spack.error
 import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
-from spack.error import SpackError
+import spack.util.string
+from ruamel.yaml.error import MarkedYAMLError
 
 
 # cmd has a submodule called "list" so preserve the python list module
@@ -42,9 +45,26 @@ def python_name(cmd_name):
     return cmd_name.replace("-", "_")
 
 
+def require_python_name(pname):
+    """Require that the provided name is a valid python name (per
+    python_name()). Useful for checking parameters for function
+    prerequisites."""
+    if python_name(pname) != pname:
+        raise PythonNameError(pname)
+
+
 def cmd_name(python_name):
     """Convert module name (with ``_``) to command name (with ``-``)."""
     return python_name.replace('_', '-')
+
+
+def require_cmd_name(cname):
+    """Require that the provided name is a valid command name (per
+    cmd_name()). Useful for checking parameters for function
+    prerequisites.
+    """
+    if cmd_name(cname) != cname:
+        raise CommandNameError(cname)
 
 
 #: global, cached list of all commands -- access through all_commands()
@@ -90,6 +110,7 @@ def get_module(cmd_name):
         cmd_name (str): name of the command for which to get a module
             (contains ``-``, not ``_``).
     """
+    require_cmd_name(cmd_name)
     pname = python_name(cmd_name)
 
     try:
@@ -101,8 +122,6 @@ def get_module(cmd_name):
         tty.debug('Imported {0} from built-in commands'.format(pname))
     except ImportError:
         module = spack.extensions.get_module(cmd_name)
-        if not module:
-            raise
 
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
@@ -115,14 +134,16 @@ def get_module(cmd_name):
 
 
 def get_command(cmd_name):
-    """Imports the command's function from a module and returns it.
+    """Imports the command function associated with cmd_name.
+
+    The function's name is derived from cmd_name using python_name().
 
     Args:
-        cmd_name (str): name of the command for which to get a module
-            (contains ``-``, not ``_``).
+        cmd_name (str): name of the command (contains ``-``, not ``_``).
     """
+    require_cmd_name(cmd_name)
     pname = python_name(cmd_name)
-    return getattr(get_module(pname), pname)
+    return getattr(get_module(cmd_name), pname)
 
 
 def parse_specs(args, **kwargs):
@@ -134,7 +155,9 @@ def parse_specs(args, **kwargs):
     tests = kwargs.get('tests', False)
 
     try:
-        sargs = args if isinstance(args, six.string_types) else ' '.join(args)
+        sargs = args
+        if not isinstance(args, six.string_types):
+            sargs = ' '.join(spack.util.string.quote(args))
         specs = spack.spec.parse(sargs)
         for spec in specs:
             if concretize:
@@ -147,15 +170,15 @@ def parse_specs(args, **kwargs):
     except spack.spec.SpecParseError as e:
         msg = e.message + "\n" + str(e.string) + "\n"
         msg += (e.pos + 2) * " " + "^"
-        raise SpackError(msg)
+        raise spack.error.SpackError(msg)
 
-    except spack.spec.SpecError as e:
+    except spack.error.SpecError as e:
 
         msg = e.message
         if e.long_message:
             msg += e.long_message
 
-        raise SpackError(msg)
+        raise spack.error.SpackError(msg)
 
 
 def elide_list(line_list, max_num=10):
@@ -174,18 +197,45 @@ def elide_list(line_list, max_num=10):
         return line_list
 
 
-def disambiguate_spec(spec, env):
+def disambiguate_spec(spec, env, local=False, installed=True, first=False):
     """Given a spec, figure out which installed package it refers to.
 
     Arguments:
         spec (spack.spec.Spec): a spec to disambiguate
         env (spack.environment.Environment): a spack environment,
             if one is active, or None if no environment is active
+        local (boolean, default False): do not search chained spack instances
+        installed (boolean or any, or spack.database.InstallStatus or iterable
+            of spack.database.InstallStatus): install status argument passed to
+            database query. See ``spack.database.Database._query`` for details.
     """
     hashes = env.all_hashes() if env else None
-    matching_specs = spack.store.db.query(spec, hashes=hashes)
+    return disambiguate_spec_from_hashes(spec, hashes, local, installed, first)
+
+
+def disambiguate_spec_from_hashes(spec, hashes, local=False,
+                                  installed=True, first=False):
+    """Given a spec and a list of hashes, get concrete spec the spec refers to.
+
+    Arguments:
+        spec (spack.spec.Spec): a spec to disambiguate
+        hashes (iterable): a set of hashes of specs among which to disambiguate
+        local (boolean, default False): do not search chained spack instances
+        installed (boolean or any, or spack.database.InstallStatus or iterable
+            of spack.database.InstallStatus): install status argument passed to
+            database query. See ``spack.database.Database._query`` for details.
+    """
+    if local:
+        matching_specs = spack.store.db.query_local(spec, hashes=hashes,
+                                                    installed=installed)
+    else:
+        matching_specs = spack.store.db.query(spec, hashes=hashes,
+                                              installed=installed)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
+
+    elif first:
+        return matching_specs[0]
 
     elif len(matching_specs) > 1:
         format_string = '{name}{@version}{%compiler}{arch=architecture}'
@@ -200,6 +250,9 @@ def disambiguate_spec(spec, env):
 
 
 def gray_hash(spec, length):
+    if not length:
+        # default to maximum hash length
+        length = 32
     h = spec.dag_hash(length) if spec.concrete else '-' * length
     return colorize('@K{%s}' % h)
 
@@ -319,7 +372,7 @@ def display_specs(specs, args=None, **kwargs):
 
     format_string = get_arg('format', None)
     if format_string is None:
-        nfmt = '{namespace}.{name}' if namespace else '{name}'
+        nfmt = '{fullname}' if namespace else '{name}'
         ffmt = ''
         if full_compiler or flags:
             ffmt += '{%compiler.name}'
@@ -382,8 +435,39 @@ def display_specs(specs, args=None, **kwargs):
 
 def spack_is_git_repo():
     """Ensure that this instance of Spack is a git clone."""
-    with working_dir(spack.paths.prefix):
-        return os.path.isdir('.git')
+    return is_git_repo(spack.paths.prefix)
+
+
+def is_git_repo(path):
+    dotgit_path = join_path(path, '.git')
+    if os.path.isdir(dotgit_path):
+        # we are in a regular git repo
+        return True
+    if os.path.isfile(dotgit_path):
+        # we might be in a git worktree
+        try:
+            with open(dotgit_path, "rb") as f:
+                dotgit_content = yaml.load(f)
+            return os.path.isdir(dotgit_content.get("gitdir", dotgit_path))
+        except MarkedYAMLError:
+            pass
+    return False
+
+
+class PythonNameError(spack.error.SpackError):
+    """Exception class thrown for impermissible python names"""
+    def __init__(self, name):
+        self.name = name
+        super(PythonNameError, self).__init__(
+            '{0} is not a permissible Python name.'.format(name))
+
+
+class CommandNameError(spack.error.SpackError):
+    """Exception class thrown for impermissible command names"""
+    def __init__(self, name):
+        self.name = name
+        super(CommandNameError, self).__init__(
+            '{0} is not a permissible Spack command name.'.format(name))
 
 
 ########################################

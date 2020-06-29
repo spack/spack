@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class StarCcmPlus(Package):
 
     homepage = "http://mdx.plm.automation.siemens.com/star-ccm-plus"
     url      = "file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('11.06.010_02', 'd349c6ac8293d8e6e7a53533d695588f')
 

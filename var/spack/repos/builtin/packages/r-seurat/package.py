@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ class RSeurat(RPackage):
     version('3.1.0', sha256='d8d3fad2950a8f791376e3d20c72ea07c68bf8d82d800661cab5ce696db39d45')
     version('3.0.2', sha256='16df5dec6b41d49320c5bf5ce30eb3b7dedeea69b054b55b77528f2f2b7bce04')
     version('3.0.1', sha256='8c467bdbfdb9aff51bde6a897ff98a7389941f688639d8f1d36c71dde076a257')
-    version('2.1.0', '46427837bb739883f9b7addd08fccee5')
-    version('2.0.1', 'a77794891e93b9fa1ef41735fe8424ea')
+    version('2.1.0', sha256='7d20d231b979a4aa63cd7dae7e725405212e8975889f12b8d779c6c896c10ac3')
+    version('2.0.1', sha256='6aa33aa3afb29a8be364ab083c7071cfbc56ad042a019bcf6f939e0c8c7744f0')
 
     depends_on('r@3.2.0:', when='@:2.3.0', type=('build', 'run'))
     depends_on('r@3.4.0:', when='@2.3.1:', type=('build', 'run'))

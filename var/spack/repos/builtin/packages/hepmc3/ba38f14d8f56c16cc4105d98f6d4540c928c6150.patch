@@ -1,0 +1,12 @@
+diff --git a/search/include/HepMC3/Feature.h b/search/include/HepMC3/Feature.h
+index 0bd4f92b059d315c4a17ab03d49ba5b20af75d8e..e7717516a99c5c3d2553be2aca21378fb1ae7977 100644
+--- a/search/include/HepMC3/Feature.h
++++ b/search/include/HepMC3/Feature.h
+@@ -293,7 +293,7 @@ public:
+         EvaluatorPtr functor = m_internal;
+         return [value, functor](ConstGenParticlePtr input)->bool{
+             Feature_type local = (*functor)(input);
+-            return fabs(local - value) <= ((fabs(local) < fabs(value))? fabs(value) : fabs(local)) * std::numeric_limits<Feature_type>::epsilon();
++            return std::less_equal<Feature_type>{}(fabs(local - value) ,  std::numeric_limits<Feature_type>::epsilon());
+         };
+     } 

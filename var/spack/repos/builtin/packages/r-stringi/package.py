@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,10 +23,10 @@ class RStringi(RPackage):
 
     version('1.4.3', sha256='13cecb396b700f81af38746e97b550a1d9fda377ca70c78f6cdfc770d33379ed')
     version('1.3.1', sha256='32df663bb6e9527e1ac265eec2116d26f7b7e62ea5ae7cc5de217cbb8defc362')
-    version('1.1.5', '0d5ec30ae368ab1b87a36fee3e228e7b')
-    version('1.1.3', '3b89cee3b5ef7c031077cd7707718e07')
-    version('1.1.2', '0ec2faa62643e1900734c0eaf5096648')
-    version('1.1.1', '32b919ee3fa8474530c4942962a6d8d9')
+    version('1.1.5', sha256='651e85fc4ec6cf71ad8a4347f2bd4b00a490cf9eec20921a83bf5222740402f2')
+    version('1.1.3', sha256='9ef22062e4be797c1cb6c2c8822ad5c237edb08b0318a96be8bd1930191af389')
+    version('1.1.2', sha256='e50b7162ceb7ebae403475f6f8a76a39532a2abc82112db88661f48aa4b9218e')
+    version('1.1.1', sha256='243178a138fe68c86384feb85ead8eb605e8230113d638da5650bca01e24e165')
 
     depends_on('r@2.14:', type=('build', 'run'))
     depends_on('icu4c@52:')

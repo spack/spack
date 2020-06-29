@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class RFftwtools(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/fftwtools_0.9-8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/fftwtools"
 
-    version('0.9-8', '2d1258fbaf0940b57ed61c8d6cd6694d')
+    version('0.9-8', sha256='4641c8cd70938c2a8bde0b6da6cf7f83e96175ef52f1ca42ec3920a1dabf1bdb')
 
     depends_on('r@2.15.2:', type=('build', 'run'))
     depends_on('fftw@3.1.2:')

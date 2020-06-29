@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,11 @@ class Libemos(CMakePackage):
     url      = "https://software.ecmwf.int/wiki/download/attachments/3473472/libemos-4.4.2-Source.tar.gz"
     list_url = "https://software.ecmwf.int/wiki/display/EMOS/Releases"
 
-    version('4.5.1', 'eec1ef4de841df3c68c08fa94d7939ff')
-    version('4.5.0', '0ad8962a73e3ca90a8094561adc81276')
-    version('4.4.9', '24d098cd062d443a544fe17727726285')
-    version('4.4.7', '395dcf21cf06872f772fb6b73d8e67b9')
-    version('4.4.2', 'f15a9aff0f40861f3f046c9088197376')
+    version('4.5.1', sha256='c982d9fd7dcd15c3a4d1e1115b90430928b660e17f73f7d4e360dd9f87f68c46')
+    version('4.5.0', sha256='debe474603224c318f8ed4a1c209a4d1416807c594c3faa196059b2228824393')
+    version('4.4.9', sha256='61af7dfcd37875b4f834e2e4371922ec529a8c03879c52e8fb911b35e4c0d413')
+    version('4.4.7', sha256='669fb070c1ce655812882140a92b100233f065829868d9374bad2fcbb6b356e5')
+    version('4.4.2', sha256='e2d20ad71e3beb398916f98a35a3c56ee0141d5bc9b3adff15095ff3b6dccea8')
 
     variant('grib', default='eccodes', values=('eccodes', 'grib-api'),
             description='Specify GRIB backend')
@@ -28,7 +28,7 @@ class Libemos(CMakePackage):
 
     depends_on('eccodes', when='grib=eccodes')
     depends_on('grib-api', when='grib=grib-api')
-    depends_on('fftw+float+double')
+    depends_on('fftw precision=float,double')
     depends_on('cmake@2.8.11:', type='build')
     depends_on('pkgconfig', type='build')
 

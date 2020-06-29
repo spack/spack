@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class RSqldf(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/sqldf_0.4-11.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/sqldf"
 
-    version('0.4-11', '85def6fe2418569370c24e53522d2c2d')
+    version('0.4-11', sha256='cee979d4e8c67b4924655365d925a8d67104e62adf71741f645cdc5196de2260')
 
     depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-gsubfn@0.6:', type=('build', 'run'))

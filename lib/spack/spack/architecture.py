@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,6 +58,7 @@ will be responsible for compiler detection.
 """
 import functools
 import inspect
+import warnings
 
 import six
 
@@ -68,6 +69,7 @@ from llnl.util.lang import memoized, list_modules, key_ordering
 import spack.compiler
 import spack.paths
 import spack.error as serr
+import spack.util.executable
 import spack.version
 from spack.util.naming import mod_to_class
 from spack.util.spack_yaml import syaml_dict
@@ -184,8 +186,44 @@ class Target(object):
         return cpu_flag in self.microarchitecture
 
     def optimization_flags(self, compiler):
+        """Returns the flags needed to optimize for this target using
+        the compiler passed as argument.
+
+        Args:
+            compiler (CompilerSpec or Compiler): object that contains both the
+                name and the version of the compiler we want to use
+        """
+        # Mixed toolchains are not supported yet
+        import spack.compilers
+        if isinstance(compiler, spack.compiler.Compiler):
+            if spack.compilers.is_mixed_toolchain(compiler):
+                msg = ('microarchitecture specific optimizations are not '
+                       'supported yet on mixed compiler toolchains [check'
+                       ' {0.name}@{0.version} for further details]')
+                warnings.warn(msg.format(compiler))
+                return ''
+
+        # Try to check if the current compiler comes with a version number or
+        # has an unexpected suffix. If so, treat it as a compiler with a
+        # custom spec.
+        compiler_version = compiler.version
+        version_number, suffix = cpu.version_components(compiler.version)
+        if not version_number or suffix not in ('', 'apple'):
+            # Try to deduce the underlying version of the compiler, regardless
+            # of its name in compilers.yaml. Depending on where this function
+            # is called we might get either a CompilerSpec or a fully fledged
+            # compiler object.
+            import spack.spec
+            if isinstance(compiler, spack.spec.CompilerSpec):
+                compiler = spack.compilers.compilers_for_spec(compiler).pop()
+            try:
+                compiler_version = compiler.get_real_version()
+            except spack.util.executable.ProcessError as e:
+                # log this and just return compiler.version instead
+                tty.debug(str(e))
+
         return self.microarchitecture.optimization_flags(
-            compiler.name, str(compiler.version)
+            compiler.name, str(compiler_version)
         )
 
 
@@ -319,10 +357,10 @@ class OperatingSystem(object):
         return (self.name, self.version)
 
     def to_dict(self):
-        return {
-            'name': self.name,
-            'version': self.version
-        }
+        return syaml_dict([
+            ('name', self.name),
+            ('version', self.version)
+        ])
 
 
 @key_ordering
@@ -404,6 +442,7 @@ class Arch(object):
         return arch_for_spec(spec)
 
 
+@memoized
 def get_platform(platform_name):
     """Returns a platform object that corresponds to the given name."""
     platform_list = all_platforms()

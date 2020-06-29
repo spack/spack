@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,9 @@ class PyPygobject(PythonPackage):
 
     homepage = "https://pypi.python.org/pypi/pygobject"
 
-    version('3.28.3', '3bac63c86bb963aa401f97859464aa90')
-    version('2.28.6', '9415cb7f2b3a847f2310ccea258b101e')
-    version('2.28.3', 'aa64900b274c4661a5c32e52922977f9',
+    version('3.28.3', sha256='3dd3e21015d06e00482ea665fc1733b77e754a6ab656a5db5d7f7bfaf31ad0b0')
+    version('2.28.6', sha256='fb8a1d4f665130a125011659bd347c7339c944232163dbb9a34fd0686577adb8')
+    version('2.28.3', sha256='7da88c169a56efccc516cebd9237da3fe518a343095a664607b368fe21df95b6',
             url='http://ftp.gnome.org/pub/GNOME/sources/pygobject/2.28/pygobject-2.28.3.tar.bz2')
 
     extends('python')

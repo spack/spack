@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RHms(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/hms"
 
     version('0.5.0', sha256='a87872665c3bf3901f597d78c152e7805f7129e4dbe27397051de4cf1a76561b')
-    version('0.3', '92c4a0cf0c402a35145b5bb57212873e')
+    version('0.3', sha256='9368259cbc1094ce0e4cf61544875ec30088ef690d6667e6b0b564218ab3ff88')
 
     depends_on('r-pkgconfig', when='@0.5.0:', type=('build', 'run'))
     depends_on('r-rlang', when='@0.5.0:', type=('build', 'run'))

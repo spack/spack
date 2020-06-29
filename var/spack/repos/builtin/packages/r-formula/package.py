@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class RFormula(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Formula"
 
     version('1.2-3', sha256='1411349b20bd09611a9fd0ee6d15f780c758ad2b0e490e908facb49433823872')
-    version('1.2-2', 'c69bb0522811cf8eb9f1cc6c3d182b6e')
-    version('1.2-1', '2afb31e637cecd0c1106317aca1e4849')
+    version('1.2-2', sha256='8def4600fb7457d38db8083733477501b54528974aa216e4adf8871bff4aa429')
+    version('1.2-1', sha256='5db1ef55119b299c9d291e1c5c08e2d51b696303daf4e7295c38ff5fc428360a')
 
     depends_on('r@2.0.0:', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,8 @@ class Flint(Package):
     git      = "https://github.com/wbhart/flint2.git"
 
     version('develop', branch='trunk')
-    version('2.5.2', 'cda885309362150196aed66a5e0f0383')
-    version('2.4.5', '6504b9deabeafb9313e57153a1730b33')
+    version('2.5.2', sha256='cbf1fe0034533c53c5c41761017065f85207a1b770483e98b2392315f6575e87')
+    version('2.4.5', sha256='e489354df00f0d84976ccdd0477028693977c87ccd14f3924a89f848bb0e01e3')
 
     # Overlap in functionality between gmp and mpir
     # All other dependencies must also be built with

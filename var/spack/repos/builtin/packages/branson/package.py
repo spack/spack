@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,14 +18,11 @@ class Branson(CMakePackage):
     tags = ['proxy-app']
 
     version('develop', branch='develop')
-    # Version 1.01 is actually deprecated and older than any of the 0.8 series.
-    # However, its entry is left here to reflect older versions of this
-    # spackage.
-    version('1.01', 'cf7095a887a8dd7d417267615bd0452a')
-    version('0.82', '7d83d41d0c7ab9c1c906a902165af31182da4604dd0b69aec28d709fe4d7a6ec',
+
+    version('0.82', sha256='7d83d41d0c7ab9c1c906a902165af31182da4604dd0b69aec28d709fe4d7a6ec',
             preferred=True)
-    version('0.81', '493f720904791f06b49ff48c17a681532c6a4d9fa59636522cf3f9700e77efe4')
-    version('0.8',  '85ffee110f89be00c37798700508b66b0d15de1d98c54328b6d02a9eb2cf1cb8')
+    version('0.81', sha256='493f720904791f06b49ff48c17a681532c6a4d9fa59636522cf3f9700e77efe4')
+    version('0.8',  sha256='85ffee110f89be00c37798700508b66b0d15de1d98c54328b6d02a9eb2cf1cb8')
 
     depends_on('mpi@2:')
     depends_on('boost', when='@:0.81')

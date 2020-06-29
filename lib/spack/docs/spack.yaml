@@ -1,0 +1,19 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+#
+# These are requirements for building the documentation.  You can run
+# these commands in this directory to install Sphinx and its plugins,
+# then build the docs:
+#
+#     spack install
+#     spack env activate .
+#     make
+#
+spack:
+  specs:
+  - py-sphinx
+  - py-sphinxcontrib-programoutput
+  - py-sphinx-rtd-theme

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class RGistr(RPackage):
 
     version('0.4.2', sha256='43c00c7f565732125f45f6c067724771ba1b337d6dd3a6e301639fe16e11032e')
     version('0.4.0', sha256='51771a257379a17552d0c88ada72ca6263954bbe896997f8a66cde3bf0b83ce0')
-    version('0.3.6', '49d548cb3eca0e66711aece37757a2c0')
+    version('0.3.6', sha256='ab22523b79510ec03be336e1d4600ec8a3a65afe57c5843621a4cf8f966b52e5')
 
     depends_on('r-jsonlite@1.4:', type=('build', 'run'))
     depends_on('r-httr@1.2.0:', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Fsl(Package):
 
     homepage = "https://fsl.fmrib.ox.ac.uk"
     url      = "file://{0}/fsl-5.0.10-sources.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('5.0.10', '64823172a08aad679833240ba64c8e30')
 
@@ -50,33 +51,33 @@ class Fsl(Package):
 
         install_tree('.', prefix)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if not self.stage.source_path:
             self.stage.fetch()
             self.stage.expand_archive()
 
-        spack_env.set('FSLDIR', self.stage.source_path)
-
-        # Here, run-time environment variables are being set manually.
-        # Normally these would be added to the modulefile at build-time
-        # by sourcing fsl.sh, but incorrect paths were being set, pointing to
-        # the staging directory rather than the install directory.
-        run_env.set('FSLDIR', self.prefix)
-        run_env.set('FSLOUTPUTTYPE', 'NIFTI_GZ')
-        run_env.set('FSLMULTIFILEQUIT', 'TRUE')
-        run_env.set('FSLTCLSH', self.prefix.bin.fsltclsh)
-        run_env.set('FSLWISH', self.prefix.bin.fslwish)
-        run_env.set('FSLLOCKDIR', '')
-        run_env.set('FSLMACHINELIST', '')
-        run_env.set('FSLREMOTECALL', '')
-        run_env.set('FSLGECUDAQ', 'cuda.q')
-
-        run_env.prepend_path('PATH', self.prefix)
+        env.set('FSLDIR', self.stage.source_path)
 
         # Below is for sourcing purposes during building
         fslsetup = join_path(self.stage.source_path, 'etc', 'fslconf',
                              'fsl.sh')
 
         if os.path.isfile(fslsetup):
-            spack_env.extend(EnvironmentModifications.from_sourcing_file(
-                             fslsetup))
+            env.extend(EnvironmentModifications.from_sourcing_file(fslsetup))
+
+    def setup_run_environment(self, env):
+        # Here, run-time environment variables are being set manually.
+        # Normally these would be added to the modulefile at build-time
+        # by sourcing fsl.sh, but incorrect paths were being set, pointing to
+        # the staging directory rather than the install directory.
+        env.set('FSLDIR', self.prefix)
+        env.set('FSLOUTPUTTYPE', 'NIFTI_GZ')
+        env.set('FSLMULTIFILEQUIT', 'TRUE')
+        env.set('FSLTCLSH', self.prefix.bin.fsltclsh)
+        env.set('FSLWISH', self.prefix.bin.fslwish)
+        env.set('FSLLOCKDIR', '')
+        env.set('FSLMACHINELIST', '')
+        env.set('FSLREMOTECALL', '')
+        env.set('FSLGECUDAQ', 'cuda.q')
+
+        env.prepend_path('PATH', self.prefix)

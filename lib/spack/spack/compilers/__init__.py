@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -245,7 +245,9 @@ def supported_compilers():
        See available_compilers() to get a list of all the available
        versions of supported compilers.
     """
-    return sorted(name for name in
+    # Hack to be able to call the compiler `apple-clang` while still
+    # using a valid python name for the module
+    return sorted(name if name != 'apple_clang' else 'apple-clang' for name in
                   llnl.util.lang.list_modules(spack.paths.compilers_path))
 
 
@@ -413,6 +415,14 @@ def get_compilers(config, cspec=None, arch_spec=None):
             assert arch_spec is None
 
         if arch_spec and target and (target != family and target != 'any'):
+            # If the family of the target is the family we are seeking,
+            # there's an error in the underlying configuration
+            if llnl.util.cpu.targets[target].family == family:
+                msg = ('the "target" field in compilers.yaml accepts only '
+                       'target families [replace "{0}" with "{1}"'
+                       ' in "{2}" specification]')
+                msg = msg.format(str(target), family, items.get('spec', '??'))
+                raise ValueError(msg)
             continue
 
         compilers.append(_compiler_from_config_entry(items))
@@ -461,7 +471,13 @@ def class_for_compiler_name(compiler_name):
     """Given a compiler module name, get the corresponding Compiler class."""
     assert(supported(compiler_name))
 
-    file_path = os.path.join(spack.paths.compilers_path, compiler_name + ".py")
+    # Hack to be able to call the compiler `apple-clang` while still
+    # using a valid python name for the module
+    module_name = compiler_name
+    if compiler_name == 'apple-clang':
+        module_name = compiler_name.replace('-', '_')
+
+    file_path = os.path.join(spack.paths.compilers_path, module_name + ".py")
     compiler_mod = simp.load_source(_imported_compilers_module, file_path)
     cls = getattr(compiler_mod, mod_to_class(compiler_name))
 
@@ -654,7 +670,7 @@ def make_compiler_list(detected_versions):
         operating_system, compiler_name, version = cmp_id
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-        paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
+        paths = [paths.get(x, None) for x in ('cc', 'cxx', 'f77', 'fc')]
         target = cpu.host()
         compiler = compiler_cls(
             spec, operating_system, str(target.family), paths
@@ -674,6 +690,46 @@ def make_compiler_list(detected_versions):
         compilers.extend(make_compilers(compiler_id, selected))
 
     return compilers
+
+
+def is_mixed_toolchain(compiler):
+    """Returns True if the current compiler is a mixed toolchain,
+    False otherwise.
+
+    Args:
+        compiler (Compiler): a valid compiler object
+    """
+    cc = os.path.basename(compiler.cc or '')
+    cxx = os.path.basename(compiler.cxx or '')
+    f77 = os.path.basename(compiler.f77 or '')
+    fc = os.path.basename(compiler.fc or '')
+
+    toolchains = set()
+    for compiler_cls in all_compiler_types():
+        # Inspect all the compiler toolchain we know. If a compiler is the
+        # only compiler supported there it belongs to that toolchain.
+        def name_matches(name, name_list):
+            # This is such that 'gcc' matches variations
+            # like 'ggc-9' etc that are found in distros
+            name, _, _ = name.partition('-')
+            return len(name_list) == 1 and name and name in name_list
+
+        if any([
+            name_matches(cc, compiler_cls.cc_names),
+            name_matches(cxx, compiler_cls.cxx_names),
+            name_matches(f77, compiler_cls.f77_names),
+            name_matches(fc, compiler_cls.fc_names)
+        ]):
+            tty.debug("[TOOLCHAIN] MATCH {0}".format(compiler_cls.__name__))
+            toolchains.add(compiler_cls.__name__)
+
+    if len(toolchains) > 1:
+        if toolchains == set(['Clang', 'AppleClang']):
+            return False
+        tty.debug("[TOOLCHAINS] {0}".format(toolchains))
+        return True
+
+    return False
 
 
 class InvalidCompilerConfigurationError(spack.error.SpackError):

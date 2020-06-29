@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,8 +23,8 @@ class RRstan(RPackage):
 
     version('2.19.2', sha256='31e4ceb9c327cd62873225097ffa538c2ac4cb0547c52271e52e4c7652d508da')
     version('2.18.2', sha256='4d75dad95610d5a1d1c89a4ddbaf4326462e4ffe0ad28aed2129f2d9292e70ff')
-    version('2.17.2', '60f4a0284c58f5efc1b1cbf488d7edda')
-    version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')
+    version('2.17.2', sha256='a7b197e6e42f8f0c302da9205afc19a0261eaf6af1425854303d2ce6cbd36729')
+    version('2.10.1', sha256='4d2040742607f8675633c6b8c0a2e810f2fe3077f9242b1edfd42642613a8294')
 
     depends_on('r@3.0.2:', when='@:2.17.3', type=('build', 'run'))
     depends_on('r@3.4.0:', when='@2.18.1:', type=('build', 'run'))

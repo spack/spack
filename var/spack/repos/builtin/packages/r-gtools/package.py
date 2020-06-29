@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,4 +45,4 @@ class RGtools(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gtools"
 
     version('3.8.1', sha256='051484459bd8ad1b03425b8843d24f6828fea18f7357cfa1c192198cc3f4ba38')
-    version('3.5.0', '45f8800c0336d35046641fbacc56bdbb')
+    version('3.5.0', sha256='86b6a51a92ddb3c78095e0c5dc20414c67f6e28f915bf0ee11406adad3e476f6')

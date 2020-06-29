@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Uriparser(CMakePackage):
     variant('docs', default=False, description='Build API documentation')
 
     depends_on('cmake@3.3:', type='build')
-    depends_on('googletest@1.8.1:', type='link')
+    depends_on('googletest@1.8.1', type='link')
     depends_on('doxygen', when='+docs', type='build')
     depends_on('graphviz', when='+docs', type='build')
 

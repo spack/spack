@@ -1,0 +1,19 @@
+--- pmdk-1.8/Makefile	2020-01-31 06:42:27.000000000 -0500
++++ pmdk-1.8.nodocs/Makefile	2020-02-03 13:51:24.844691000 -0500
+@@ -79,7 +79,7 @@ rpm : override DESTDIR="$(CURDIR)/$(RPM_
+ dpkg: override DESTDIR="$(CURDIR)/$(DPKG_BUILDDIR)"
+ rpm dpkg: override prefix=/usr
+ 
+-all: doc
++all:
+ 	$(MAKE) -C src $@
+ 
+ doc:
+@@ -151,7 +151,6 @@ install: all
+ 
+ install uninstall:
+ 	$(MAKE) -C src $@
+-	$(MAKE) -C doc $@
+ 
+ .PHONY: all clean clobber test check cstyle check-license install uninstall\
+ 	source rpm dpkg pkg-clean pcheck check-remote format doc require-rpmem\

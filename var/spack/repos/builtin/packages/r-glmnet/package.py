@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,8 +19,8 @@ class RGlmnet(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/glmnet"
 
     version('2.0-18', sha256='e8dce9d7b8105f9cc18ba981d420de64a53b09abee219660d3612915d554256b')
-    version('2.0-13', '1dd5636388df5c3a29207d0bf1253343')
-    version('2.0-5', '049b18caa29529614cd684db3beaec2a')
+    version('2.0-13', sha256='f3288dcaddb2f7014d42b755bede6563f73c17bc87f8292c2ef7776cb9b9b8fd')
+    version('2.0-5', sha256='2ca95352c8fbd93aa7800f3d972ee6c1a5fcfeabc6be8c10deee0cb457fd77b1')
 
     depends_on('r-matrix@1.0-6:', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))

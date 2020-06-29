@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,6 @@ class PyBlessings(PythonPackage):
     homepage = "https://github.com/erikrose/blessings"
     url      = "https://pypi.io/packages/source/b/blessings/blessings-1.6.tar.gz"
 
-    version('1.6', '4f552a8ebcd4982693c92571beb99394')
+    version('1.6', sha256='edc5713061f10966048bf6b40d9a514b381e0ba849c64e034c4ef6c1847d3007')
 
     depends_on('py-setuptools', type='build')

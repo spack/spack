@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,8 +23,8 @@ class RCirclize(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/circlize"
 
     version('0.4.6', sha256='cec88cfc5e512a111cc37177552c25698ccc0e9bbecb0d6e60657e7b115a56fa')
-    version('0.4.1', '6818830654f485abbdc8c74ec9087377')
-    version('0.4.0', '0dbf1b481930a759d6f413d17f8ae1c4')
+    version('0.4.1', sha256='204a170ae3b982f09b652c4583189907cfa42a29bc7efaba02a1e0d79f1cf1f0')
+    version('0.4.0', sha256='abdc1bbe264be42c1d7b65869979da7cd131032fd6fd3f11f9744dae54e83f5c')
 
     depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-globaloptions@0.1.0:', type=('build', 'run'))

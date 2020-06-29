@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class RLatticeextra(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/latticeExtra_0.6-28.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/latticeExtra"
 
-    version('0.6-28', '771938f25d0983763369b48a1153b26c')
+    version('0.6-28', sha256='780695323dfadac108fb27000011c734e2927b1e0f069f247d65d27994c67ec2')
 
     depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
