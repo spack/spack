@@ -35,13 +35,16 @@ class Postgis(AutotoolsPackage):
 
     depends_on('sfcgal')
     depends_on('pcre')
-    depends_on('perl')
+    depends_on('perl', type=('build', 'run'))
     depends_on('protobuf-c')
 
     depends_on('gtkplus@:2.24.32', when='+gui')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('POSTGIS_GDAL_ENABLED_DRIVERS', 'ENABLE_ALL')
+    def setup_build_environment(self, env):
+        env.set('POSTGIS_GDAL_ENABLED_DRIVERS', 'ENABLE_ALL')
+
+    def setup_run_environment(self, env):
+        env.set('POSTGIS_GDAL_ENABLED_DRIVERS', 'ENABLE_ALL')
 
     def configure_args(self):
         args = []
@@ -50,3 +53,27 @@ class Postgis(AutotoolsPackage):
         if '+gui' in self.spec:
             args.append('--with-gui')
         return args
+
+    # By default package installs under postgresql prefix.
+    # Apparently this is a known bug:
+    # https://postgis.net/docs/postgis_installation.html
+    # The following modifacations that fixed this issue are found in
+    # Guix recipe for postgis.
+    # https://git.savannah.gnu.org/cgit/guix.git/tree/gnu/packages/geo.scm#n720
+
+    def build(self, spec, prefix):
+        make('bindir=' + prefix.bin, 'libdir=' + prefix.lib,
+             'pkglibdir=' + prefix.lib, 'datadir=' + prefix.share,
+             'docdir=' + prefix.share.doc)
+
+    def install(self, spec, prefix):
+        make('install', 'bindir=' + prefix.bin, 'libdir=' + prefix.lib,
+             'pkglibdir=' + prefix.lib, 'datadir=' + prefix.share,
+             'docdir=' + prefix.share.doc)
+
+    @run_before('build')
+    def fix_raster_bindir(self):
+        makefile = FileFilter('raster/loader/Makefile')
+        makefile.filter('$(DESTDIR)$(PGSQL_BINDIR)', self.prefix.bin, string=True)
+        makefile = FileFilter('raster/scripts/Makefile')
+        makefile.filter('$(DESTDIR)$(PGSQL_BINDIR)', self.prefix.bin)
