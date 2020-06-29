@@ -122,3 +122,21 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         flags: shelltests,linux
+  documentation:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install System packages
+      run: |
+        sudo apt-get -y update
+        sudo apt-get install -y coreutils ninja-build graphviz
+    - name: Install Python packages
+      run: |
+        pip install --upgrade pip six setuptools
+        pip install --upgrade -r lib/spack/docs/requirements.txt
+    - name: Build documentation
+      run: |
+          share/spack/qa/run-doc-tests
