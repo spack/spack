@@ -1024,7 +1024,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --dependencies --sh --csh --first --only"
+        SPACK_COMPREPLY="-h --help -r --dependencies --sh --csh --fish --first --only"
     else
         _installed_packages
     fi
@@ -1472,7 +1472,7 @@ _spack_uninstall() {
 _spack_unload() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh -a --all"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish -a --all"
     else
         _installed_packages
     fi
