@@ -36,6 +36,3 @@ class PatchSeveralDependencies(Package):
               archive_sha256='abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd',
               sha256='1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd')
     ])
-
-    def install(self, spec, prefix):
-        pass

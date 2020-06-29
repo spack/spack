@@ -5,6 +5,9 @@
 
 from spack import *
 
+import os
+import re
+
 
 class Automake(AutotoolsPackage, GNUMirrorPackage):
     """Automake -- make file builder part of autotools"""
@@ -12,6 +15,7 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
     homepage = 'http://www.gnu.org/software/automake/'
     gnu_mirror_path = 'automake/automake-1.15.tar.gz'
 
+    version('1.16.2', sha256='b2f361094b410b4acbf4efba7337bdb786335ca09eb2518635a09fb7319ca5c1')
     version('1.16.1', sha256='608a97523f97db32f1f5d5615c98ca69326ced2054c9f82e65bade7fc4c9dea8')
     version('1.15.1', sha256='988e32527abe052307d21c8ca000aa238b914df363a617e38f4fb89f5abf6260')
     version('1.15',   sha256='7946e945a96e28152ba5a6beb0625ca715c6e32ac55f2e353ef54def0c8ed924')
@@ -23,6 +27,24 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
     depends_on('perl', type=('build', 'run'))
 
     build_directory = 'spack-build'
+
+    executables = ['automake']
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        exe_to_path = dict(
+            (os.path.basename(p), p) for p in exes_in_prefix
+        )
+        if 'automake' not in exe_to_path:
+            return None
+
+        exe = spack.util.executable.Executable(exe_to_path['automake'])
+        output = exe('--version', output=str)
+        if output:
+            match = re.search(r'GNU automake\)\s+(\S+)', output)
+            if match:
+                version_str = match.group(1)
+                return Spec('automake@{0}'.format(version_str))
 
     def patch(self):
         # The full perl shebang might be too long

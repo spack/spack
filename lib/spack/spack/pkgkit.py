@@ -31,6 +31,9 @@ from spack.build_systems.intel import IntelPackage
 from spack.build_systems.meson import MesonPackage
 from spack.build_systems.sip import SIPPackage
 from spack.build_systems.gnu import GNUMirrorPackage
+from spack.build_systems.sourceforge import SourceforgePackage
+from spack.build_systems.sourceware import SourcewarePackage
+from spack.build_systems.xorg import XorgPackage
 
 from spack.mixins import filter_compiler_wrappers
 
@@ -50,7 +53,10 @@ from spack.util.executable import *
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \
-    DependencyConflictError, InstallError, ExternalPackageError
+    DependencyConflictError
+
+from spack.installer import \
+    ExternalPackageError, InstallError, InstallLockError, UpstreamPackageError
 
 from spack.variant import any_combination_of, auto_or_any_combination_of
 from spack.variant import disjoint_sets

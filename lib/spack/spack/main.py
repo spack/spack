@@ -22,6 +22,7 @@ import warnings
 from six import StringIO
 
 import llnl.util.cpu
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
@@ -91,6 +92,7 @@ required_command_properties = ['level', 'section', 'description']
 
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None
+spack_ld_library_path = os.environ.get('LD_LIBRARY_PATH', '')
 
 
 def set_working_dir():
@@ -125,8 +127,9 @@ def get_version():
     if os.path.exists(git_path):
         git = exe.which("git")
         if git:
-            desc = git("-C", spack.paths.prefix, "describe", "--tags",
-                       output=str, fail_on_error=False)
+            with fs.working_dir(spack.paths.prefix):
+                desc = git(
+                    "describe", "--tags", output=str, fail_on_error=False)
 
             if git.returncode == 0:
                 match = re.match(r"v([^-]+)-([^-]+)-g([a-f\d]+)", desc)
@@ -548,15 +551,24 @@ class SpackCommand(object):
             tty.debug(e)
             self.error = e
             if fail_on_error:
+                self._log_command_output(out)
                 raise
 
         if fail_on_error and self.returncode not in (None, 0):
+            self._log_command_output(out)
             raise SpackCommandError(
                 "Command exited with code %d: %s(%s)" % (
                     self.returncode, self.command_name,
                     ', '.join("'%s'" % a for a in argv)))
 
         return out.getvalue()
+
+    def _log_command_output(self, out):
+        if tty.is_verbose():
+            fmt = self.command_name + ': {0}'
+            for ln in out.getvalue().split('\n'):
+                if len(ln) > 0:
+                    tty.verbose(fmt.format(ln.replace('==> ', '')))
 
 
 def _profile_wrapper(command, parser, args, unknown_args):
@@ -681,7 +693,10 @@ def main(argv=None):
     # Spack clears these variables before building and installing packages,
     # but needs to know the prior state for commands like `spack load` and
     # `spack env activate that modify the user environment.
-    for var in ('LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH'):
+    recovered_vars = (
+        'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH', 'DYLD_FALLBACK_LIBRARY_PATH'
+    )
+    for var in recovered_vars:
         stored_var_name = 'SPACK_%s' % var
         if stored_var_name in os.environ:
             os.environ[var] = os.environ[stored_var_name]
@@ -722,17 +737,11 @@ def main(argv=None):
         # ensure options on spack command come before everything
         setup_main_options(args)
 
-        # Try to load the particular command the caller asked for.  If there
-        # is no module for it, just die.
+        # Try to load the particular command the caller asked for.
         cmd_name = args.command[0]
         cmd_name = aliases.get(cmd_name, cmd_name)
 
-        try:
-            command = parser.add_command(cmd_name)
-        except ImportError:
-            if spack.config.get('config:debug'):
-                raise
-            tty.die("Unknown command: %s" % args.command[0])
+        command = parser.add_command(cmd_name)
 
         # Re-parse with the proper sub-parser added.
         args, unknown = parser.parse_known_args()

@@ -19,6 +19,9 @@ class EclipseGcjParser(Package):
 
     maintainers = ['citibeth']
 
+    # The server is sometimes a bit slow to respond
+    fetch_options = {'timeout': 60}
+
     version('4.8', sha256='98fd128f1d374d9e42fd9d4836bdd249c6d511ebc6c0df17fbc1b9df96c3d781', expand=False)
 
     phases = ('build', 'install')

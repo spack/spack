@@ -378,7 +378,7 @@ class EnvironmentModifications(object):
         """Stores a request to unset an environment variable.
 
         Args:
-            name: name of the environment variable to be set
+            name: name of the environment variable to be unset
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = UnsetEnv(name, **kwargs)
@@ -599,12 +599,15 @@ class EnvironmentModifications(object):
             'SHLVL', '_', 'PWD', 'OLDPWD', 'PS1', 'PS2', 'ENV',
             # Environment modules v4
             'LOADEDMODULES', '_LMFILES_', 'BASH_FUNC_module()', 'MODULEPATH',
-            'MODULES_(.*)', r'(\w*)_mod(quar|share)'
+            'MODULES_(.*)', r'(\w*)_mod(quar|share)',
+            # Lmod configuration
+            r'LMOD_(.*)', 'MODULERCFILE'
         ])
 
         # Compute the environments before and after sourcing
         before = sanitize(
-            dict(os.environ), blacklist=blacklist, whitelist=whitelist
+            environment_after_sourcing_files(os.devnull, **kwargs),
+            blacklist=blacklist, whitelist=whitelist
         )
         file_and_args = (filename,) + arguments
         after = sanitize(

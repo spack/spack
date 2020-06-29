@@ -61,12 +61,14 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
-        "clang": [
+        "apple-clang": [
           {
-            "versions": "0.0.0-apple:",
+            "versions": ":",
             "name": "x86-64",
             "flags": "-march={name}"
-          },
+          }
+        ],
+        "clang": [
           {
             "versions": ":",
             "name": "x86-64",
@@ -1293,6 +1295,20 @@
     },
     "altivec": {
       "reason": "altivec is supported by Power PC architectures, but might not be listed in features",
+      "families": [
+        "ppc64le",
+        "ppc64"
+      ]
+    },
+    "vsx": {
+      "reason": "VSX alitvec extensions are supported by PowerISA from v2.06 (Power7+), but might not be listed in features",
+      "families": [
+        "ppc64le",
+        "ppc64"
+      ]
+    },
+    "fma": {
+      "reason": "FMA has been supported by PowerISA since Power1, but might not be listed in features",
       "families": [
         "ppc64le",
         "ppc64"

@@ -245,7 +245,9 @@ class PythonPackageTemplate(PackageTemplate):
     base_class_name = 'PythonPackage'
 
     dependencies = """\
-    # FIXME: Add dependencies if required.
+    # FIXME: Add dependencies if required. Only add the python dependency
+    # if you need specific versions. A generic python dependency is
+    # added implicity by the PythonPackage class.
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))"""
@@ -627,7 +629,7 @@ def get_versions(args, name):
 
         versions = spack.stage.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
-            keep_stage=args.keep_stage)
+            keep_stage=args.keep_stage, batch=True)
     else:
         versions = unhashed_versions
 

@@ -190,6 +190,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             "{architecture}/"
             "{compiler.name}-{compiler.version}/"
             "{name}-{version}-{hash}")
+        self.path_scheme = self.path_scheme.lower()
         if self.hash_len is not None:
             if re.search(r'{hash:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(

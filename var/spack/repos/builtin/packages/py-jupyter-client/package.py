@@ -13,6 +13,7 @@ class PyJupyterClient(PythonPackage):
     url      = "https://github.com/jupyter/jupyter_client/archive/4.4.0.tar.gz"
 
     version('5.3.4', sha256='2af6f0e0e4d88009b11103490bea0bfb405c1c470e226c2b7b17c10e5dda9734')
+    version('5.2.4', sha256='61ee1e02fd78b025f9720963e1fe96d8d29f44bc250ca7e7a46bc35a174eb7d6')
     version('4.4.0', sha256='2fda7fe1af35f0b4a77c4a2fd4ee38ac3666ed7f4d92a5b6ff8aaf764c38e199')
     version('4.3.0', sha256='90b6ea3ced910ed94c5d558373490a81b33c672d877c1ffdc76b281e3216f1f6')
     version('4.2.2', sha256='bf3e8ea4c44f07dbe2991e41031f6dab242734be424f4d40b72cc58a12c7d2ca')

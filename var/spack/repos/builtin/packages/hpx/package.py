@@ -15,6 +15,8 @@ class Hpx(CMakePackage, CudaPackage):
     maintainers = ['msimberg', 'albestro']
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
+    version('stable', git='https://github.com/STEllAR-GROUP/hpx.git', tag='stable')
+    version('1.4.1', sha256='965dabe44d17480e326d92da4eec56722d98b33943c53d2b0f8f4655cb208023')
     version('1.4.0', sha256='241a1c47fafba751848fac12446e7bf4ad3d342d5eb2fa1ef94dd904acc329ed')
     version('1.3.0', sha256='cd34da674064c4cc4a331402edbd65c5a1f8058fb46003314ca18fa08423c5ad')
     version('1.2.1', sha256='8cba9b48e919035176d3b7bbfc2c110df6f07803256626f1dad8d9dde16ab77a')
@@ -67,6 +69,7 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('boost cxxstd=11', when='cxxstd=11')
     depends_on('boost cxxstd=14', when='cxxstd=14')
     depends_on('boost cxxstd=17', when='cxxstd=17')
+    depends_on('boost cxxstd=17', when='@stable')
 
     # Malloc
     depends_on('gperftools', when='malloc=tcmalloc')
@@ -156,7 +159,8 @@ class Hpx(CMakePackage, CudaPackage):
             '-DBOOST_ROOT={0}'.format(spec['boost'].prefix),
             '-DHWLOC_ROOT={0}'.format(spec['hwloc'].prefix),
             '-DHPX_WITH_BOOST_ALL_DYNAMIC_LINK=ON',
-            '-DBUILD_SHARED_LIBS=ON'
+            '-DBUILD_SHARED_LIBS=ON',
+            '-DHPX_DATASTRUCTURES_WITH_ADAPT_STD_TUPLE=OFF'
         ])
 
         return args

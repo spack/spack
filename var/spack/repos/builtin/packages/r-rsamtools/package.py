@@ -18,6 +18,7 @@ class RRsamtools(RPackage):
     homepage = "https://bioconductor.org/packages/Rsamtools"
     git      = "https://git.bioconductor.org/packages/Rsamtools.git"
 
+    version('2.2.1', commit='f10084658b4c9744961fcacd79c0ae9a7a40cd30')
     version('2.0.3', commit='17d254cc026574d20db67474260944bf60befd70')
     version('1.34.1', commit='0ec1d45c7a14b51d019c3e20c4aa87c6bd2b0d0c')
     version('1.32.3', commit='0aa3f134143b045aa423894de81912becf64e4c2')
@@ -42,6 +43,7 @@ class RRsamtools(RPackage):
     depends_on('r-iranges@2.13.12:', when='@1.32.3:', type=('build', 'run'))
     depends_on('r-xvector@0.19.7:', when='@1.32.3:', type=('build', 'run'))
 
-    depends_on('r-rhtslib@1.16.3:', when='@2.0.3:', type=('build', 'run'))
+    depends_on('r-rhtslib@1.16.3', when='@2.0.3', type=('build', 'run'))
+    depends_on('r-rhtslib@1.17.7:', when='@2.2.1:', type=('build', 'run'))
 
     depends_on('gmake', type='build')

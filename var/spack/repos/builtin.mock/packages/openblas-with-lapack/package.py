@@ -15,6 +15,3 @@ class OpenblasWithLapack(Package):
 
     provides('lapack')
     provides('blas')
-
-    def install(self, spec, prefix):
-        pass

@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Rendercheck(AutotoolsPackage):
+class Rendercheck(AutotoolsPackage, XorgPackage):
     """rendercheck is a program to test a Render extension implementation
     against separate calculations of expected output."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/rendercheck"
-    url      = "https://www.x.org/archive/individual/app/rendercheck-1.5.tar.gz"
+    xorg_mirror_path = "app/rendercheck-1.5.tar.gz"
 
     version('1.5', sha256='1553fef61c30f2524b597c3758cc8d3f8dc1f52eb8137417fa0667b0adc8a604')
 

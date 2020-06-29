@@ -5,6 +5,8 @@
 
 from spack import *
 
+import os
+
 
 class Dealii(CMakePackage, CudaPackage):
     """C++ software library providing well-documented tools to build finite
@@ -14,13 +16,14 @@ class Dealii(CMakePackage, CudaPackage):
     url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
     git      = "https://github.com/dealii/dealii.git"
 
-    maintainers = ['davydden', 'jppelteret']
+    maintainers = ['davydden', 'jppelteret', 'luca-heltai']
 
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
     transitive_rpaths = False
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('9.2.0', sha256='d05a82fb40f1f1e24407451814b5a6004e39366a44c81208b1ae9d65f3efa43a')
     version('9.1.1', sha256='fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276')
     version('9.1.0', sha256='5b070112403f8afbb72345c1bb24d2a38d11ce58891217e353aab97957a04600')
     version('9.0.1', sha256='df2f0d666f2224be07e3741c0e8e02132fd67ea4579cd16a2429f7416146ee64')
@@ -137,7 +140,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('metis@5:+int64',   when='+metis+int64')
     depends_on('metis@5:~int64',   when='+metis~int64')
     depends_on('muparser', when='+muparser')
-    depends_on('nanoflann',        when='@9.0:+nanoflann')
+    # Nanoflann support has been removed after 9.2.0
+    depends_on('nanoflann',        when='@9.0:9.2+nanoflann')
     depends_on('netcdf-c+mpi',     when='+netcdf+mpi')
     depends_on('netcdf-cxx',       when='+netcdf+mpi')
     depends_on('oce',              when='+oce')
@@ -151,6 +155,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:+sundials')
+    depends_on('trilinos gotype=int', when='+trilinos')
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
     # headers when they are not compiled in the same mode.
@@ -206,6 +211,10 @@ class Dealii(CMakePackage, CudaPackage):
                   msg='The interface to {0} is supported from version 9.1.0 '
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
+
+    conflicts('+nanoflann', when='@9.3.0:',
+              msg='The interface to nanoflann was removed from version 9.3.0. '
+                  'Please explicitly disable this variant via ~nanoflann')
 
     conflicts('+slepc', when='~petsc',
               msg='It is not possible to enable slepc interfaces '
@@ -292,7 +301,7 @@ class Dealii(CMakePackage, CudaPackage):
             cxx_flags_release.extend(['-O3'])
         elif spec.satisfies('%intel'):
             cxx_flags_release.extend(['-O3'])
-        elif spec.satisfies('%clang'):
+        elif spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
             cxx_flags_release.extend(['-O3', '-ffp-contract=fast'])
 
         # Python bindings
@@ -457,6 +466,13 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DCMAKE_CXX_FLAGS:STRING=%s' % (
                     ' '.join(cxx_flags))
             ])
+
+        # Add flags for machine vectorization, used when tutorials
+        # and user code is built.
+        # See https://github.com/dealii/dealii/issues/9164
+        options.extend([
+            '-DDEAL_II_CXX_FLAGS=%s' % os.environ['SPACK_TARGET_ARGS']
+        ])
 
         return options
 

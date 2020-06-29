@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import sys
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -21,6 +22,8 @@ level = "long"
 
 
 def setup_parser(subparser):
+    subparser.epilog = 'If called without argument returns ' \
+                       'the list of all valid extendable packages'
     arguments.add_common_arguments(subparser, ['long', 'very_long'])
     subparser.add_argument('-d', '--deps', action='store_true',
                            help='output dependencies along with found specs')
@@ -42,7 +45,19 @@ def setup_parser(subparser):
 
 def extensions(parser, args):
     if not args.spec:
-        tty.die("extensions requires a package spec.")
+        # If called without arguments, list all the extendable packages
+        isatty = sys.stdout.isatty()
+        if isatty:
+            tty.info('Extendable packages:')
+
+        extendable_pkgs = []
+        for name in spack.repo.all_package_names():
+            pkg = spack.repo.get(name)
+            if pkg.extendable:
+                extendable_pkgs.append(name)
+
+        colify(extendable_pkgs, indent=4)
+        return
 
     # Checks
     spec = cmd.parse_specs(args.spec)

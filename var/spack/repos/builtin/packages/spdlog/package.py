@@ -12,6 +12,8 @@ class Spdlog(CMakePackage):
     homepage = "https://github.com/gabime/spdlog"
     url = "https://github.com/gabime/spdlog/archive/v0.9.0.tar.gz"
 
+    version('1.5.0', sha256='b38e0bbef7faac2b82fed550a0c19b0d4e7f6737d5321d4fd8f216b80f8aee8a')
+    version('1.4.2', sha256='821c85b120ad15d87ca2bc44185fa9091409777c756029125a02f81354072157')
     version('1.4.1', sha256='3291958eb54ed942d1bd3aef1b4f8ccf70566cbc04d34296ec61eb96ceb73cff')
     version('1.2.1', sha256='867a4b7cedf9805e6f76d3ca41889679054f7e5a3b67722fe6d0eae41852a767')
     version('1.2.0', sha256='0ba31b9e7f8e43a7be328ab0236d57810e5d4fc8a1a7842df665ae22d5cbd128')

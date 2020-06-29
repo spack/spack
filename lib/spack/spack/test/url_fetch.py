@@ -26,18 +26,19 @@ def checksum_type(request):
 @pytest.fixture
 def pkg_factory():
     Pkg = collections.namedtuple(
-        'Pkg', ['url_for_version', 'urls', 'url', 'versions']
+        'Pkg', ['url_for_version', 'urls', 'url', 'versions', 'fetch_options']
     )
 
-    def factory(url, urls):
+    def factory(url, urls, fetch_options={}):
 
         def fn(v):
-            main_url = url or urls.pop(0)
+            main_url = url or urls[0]
             return spack.url.substitute_version(main_url, v)
 
         return Pkg(
             url_for_version=fn, url=url, urls=urls,
-            versions=collections.defaultdict(dict)
+            versions=collections.defaultdict(dict),
+            fetch_options=fetch_options
         )
 
     return factory
@@ -130,6 +131,10 @@ def test_from_list_url(mock_packages, config, spec, url, digest):
     assert isinstance(fetch_strategy, fs.URLFetchStrategy)
     assert os.path.basename(fetch_strategy.url) == url
     assert fetch_strategy.digest == digest
+    assert fetch_strategy.extra_options == {}
+    pkg.fetch_options = {'timeout': 60}
+    fetch_strategy = fs.from_list_url(pkg)
+    assert fetch_strategy.extra_options == {'timeout': 60}
 
 
 def test_from_list_url_unspecified(mock_packages, config):
@@ -142,6 +147,10 @@ def test_from_list_url_unspecified(mock_packages, config):
     assert isinstance(fetch_strategy, fs.URLFetchStrategy)
     assert os.path.basename(fetch_strategy.url) == 'foo-2.0.0.tar.gz'
     assert fetch_strategy.digest is None
+    assert fetch_strategy.extra_options == {}
+    pkg.fetch_options = {'timeout': 60}
+    fetch_strategy = fs.from_list_url(pkg)
+    assert fetch_strategy.extra_options == {'timeout': 60}
 
 
 def test_nosource_from_list_url(mock_packages, config):
@@ -191,3 +200,7 @@ def test_candidate_urls(pkg_factory, url, urls, version, expected):
     pkg = pkg_factory(url, urls)
     f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
     assert f.candidate_urls == expected
+    assert f.extra_options == {}
+    pkg = pkg_factory(url, urls, fetch_options={'timeout': 60})
+    f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
+    assert f.extra_options == {'timeout': 60}

@@ -16,10 +16,10 @@ class Slate(Package):
     solvers."""
 
     homepage = "https://icl.utk.edu/slate/"
-    hg      = "https://bitbucket.org/icl/slate"
-    maintainers = ['G-Ragghianti']
+    git      = "https://bitbucket.org/icl/slate"
+    maintainers = ['G-Ragghianti', 'mgates3']
 
-    version('develop', hg=hg)
+    version('develop', submodules=True)
 
     variant('cuda',   default=True, description='Build with CUDA support.')
     variant('mpi',    default=True, description='Build with MPI support.')

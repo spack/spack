@@ -32,6 +32,7 @@ def update_kwargs_from_args(args, kwargs):
     that will be passed to Package.do_install API"""
 
     kwargs.update({
+        'fail_fast': args.fail_fast,
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
@@ -42,11 +43,12 @@ def update_kwargs_from_args(args, kwargs):
         'use_cache': args.use_cache,
         'cache_only': args.cache_only,
         'explicit': True,  # Always true for install command
-        'stop_at': args.until
+        'stop_at': args.until,
+        'unsigned': args.unsigned,
     })
 
     kwargs.update({
-        'install_dependencies': ('dependencies' in args.things_to_install),
+        'install_deps': ('dependencies' in args.things_to_install),
         'install_package': ('package' in args.things_to_install)
     })
 
@@ -78,6 +80,9 @@ the dependencies"""
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
     subparser.add_argument(
+        '--fail-fast', action='store_true',
+        help="stop all builds if any build fails (default is best effort)")
+    subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="don't remove the install prefix if installation fails")
     subparser.add_argument(
@@ -98,6 +103,10 @@ the dependencies"""
         '--cache-only', action='store_true', dest='cache_only', default=False,
         help="only install package from binary mirrors")
 
+    subparser.add_argument(
+        '--no-check-signature', action='store_true',
+        dest='unsigned', default=False,
+        help="do not check signatures of binary packages")
     subparser.add_argument(
         '--show-log-on-error', action='store_true',
         help="print full build log to stderr if build fails")

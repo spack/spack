@@ -456,7 +456,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
             if os.path.isdir(s):
                 mkdirp(d)
             else:
-                shutil.copyfile(s, d)
+                shutil.copy2(s, d)
 
         if _permissions:
             set_install_permissions(d)
@@ -624,9 +624,9 @@ def replace_directory_transaction(directory_name, tmp_root=None):
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
     assert os.path.isdir(directory_name), \
-        '"directory_name" must be a valid directory'
+        'Invalid directory: ' + directory_name
     assert os.path.isabs(directory_name), \
-        '"directory_name" must contain an absolute path'
+        '"directory_name" must contain an absolute path: ' + directory_name
 
     directory_basename = os.path.basename(directory_name)
 

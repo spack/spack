@@ -50,6 +50,13 @@ class CBlosc(CMakePackage):
             args.append('-DPREFER_EXTERNAL_ZSTD=ON')
             args.append('-DPREFER_EXTERNAL_LZ4=ON')
 
+            if self.run_tests:
+                args.append('-DBUILD_TESTS=ON')
+                args.append('-DBUILD_BENCHMARKS=ON')
+            else:
+                args.append('-DBUILD_TESTS=OFF')
+                args.append('-DBUILD_BENCHMARKS=OFF')
+
         return args
 
     @run_after('install')

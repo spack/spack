@@ -13,6 +13,3 @@ class DirectMpich(Package):
     version('1.0', 'foobarbaz')
 
     depends_on('mpich')
-
-    def install(self, spec, prefix):
-        pass

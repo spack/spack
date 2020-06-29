@@ -12,10 +12,9 @@ import spack.repo
 
 from spack.concretize import find_spec, NoValidVersionError
 from spack.error import SpecError
-from spack.package_prefs import PackagePrefs
 from spack.spec import Spec, CompilerSpec, ConflictsInSpecError
 from spack.version import ver
-from spack.test.conftest import MockPackage, MockPackageMultiRepo
+from spack.util.mock_package import MockPackageMultiRepo
 import spack.compilers
 import spack.platforms.test
 
@@ -103,8 +102,6 @@ def current_host(request, monkeypatch):
         monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
         yield target
     else:
-        # There's a cache that needs to be cleared for unit tests
-        PackagePrefs._packages_config_cache = None
         with spack.config.override('packages:all', {'target': [cpu]}):
             yield target
 
@@ -112,7 +109,10 @@ def current_host(request, monkeypatch):
     spack.architecture.get_platform.cache.clear()
 
 
-@pytest.mark.usefixtures('config', 'mock_packages')
+# This must use the mutable_config fixture because the test
+# adjusting_default_target_based_on_compiler uses the current_host fixture,
+# which changes the config.
+@pytest.mark.usefixtures('mutable_config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
         check_concretize(spec)
@@ -235,10 +235,10 @@ class TestConcretize(object):
         """
         default_dep = ('link', 'build')
 
-        bazpkg = MockPackage('bazpkg', [], [])
-        barpkg = MockPackage('barpkg', [bazpkg], [default_dep])
-        foopkg = MockPackage('foopkg', [barpkg], [default_dep])
-        mock_repo = MockPackageMultiRepo([foopkg, barpkg, bazpkg])
+        mock_repo = MockPackageMultiRepo()
+        bazpkg = mock_repo.add_package('bazpkg', [], [])
+        barpkg = mock_repo.add_package('barpkg', [bazpkg], [default_dep])
+        mock_repo.add_package('foopkg', [barpkg], [default_dep])
 
         with spack.repo.swap(mock_repo):
             spec = Spec('foopkg %clang@3.3 os=CNL target=footar' +
@@ -608,7 +608,7 @@ class TestConcretize(object):
         ('mpileaks%gcc@4.8', 'haswell'),
         ('mpileaks%gcc@5.3.0', 'broadwell'),
         # Apple's clang always falls back to x86-64 for now
-        ('mpileaks%clang@9.1.0-apple', 'x86_64')
+        ('mpileaks%apple-clang@9.1.0', 'x86_64')
     ])
     @pytest.mark.regression('13361')
     def test_adjusting_default_target_based_on_compiler(
@@ -620,3 +620,21 @@ class TestConcretize(object):
         with spack.concretize.disable_compiler_existence_check():
             s = Spec(spec).concretized()
             assert str(s.architecture.target) == str(expected)
+
+    @pytest.mark.regression('8735,14730')
+    def test_compiler_version_matches_any_entry_in_compilers_yaml(self):
+        # Ensure that a concrete compiler with different compiler version
+        # doesn't match (here it's 4.5 vs. 4.5.0)
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
+            s = Spec('mpileaks %gcc@4.5')
+            s.concretize()
+
+        # An abstract compiler with a version list could resolve to 4.5.0
+        s = Spec('mpileaks %gcc@4.5:')
+        s.concretize()
+        assert str(s.compiler.version) == '4.5.0'
+
+    def test_concretize_anonymous(self):
+        with pytest.raises(spack.error.SpecError):
+            s = Spec('+variant')
+            s.concretize()
