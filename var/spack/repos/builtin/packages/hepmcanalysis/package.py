@@ -35,9 +35,12 @@ class Hepmcanalysis(MakefilePackage):
         env.set("HepMCdir", self.spec['hepmc'].prefix)
         env.set("FastJetdir", self.spec['fastjet'].prefix)
         env.set("CLHEPdir", self.spec['clhep'].prefix)
-#        env.append_flags("CXXFLAGS", "-std=c++"+self.spec.variants['cxxstd'].value)
 
     def url_for_version(self, version):
         parts = [int(x) for x in str(version).split('.')]
         root = "https://hepmcanalysistool.desy.de/releases/HepMCAnalysis-00-"
         return root + "{0:02d}-{1:02d}-{2:02d}.tar.gz".format(*parts)
+
+    def install(self, spec, prefix):
+        install_tree('lib', prefix.lib)
+        install_tree('include', prefix.include)
