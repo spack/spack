@@ -13,7 +13,6 @@ class Coin3d(AutotoolsPackage):
     homepage = "https://github.com/coin3d/coin"
     url      = "https://github.com/coin3d/coin/archive/Coin-4.0.0.tar.gz"
 
-    version('4.0.0', sha256='b00d2a8e9d962397cf9bf0d9baa81bcecfbd16eef675a98c792f5cf49eb6e805')
     version('3.1.0', sha256='70dd5ef39406e1d9e05eeadd54a5b51884a143e127530876a97744ca54173dc3')
     version('3.0.0', sha256='d5c2eb0ecaa5c83d93daf0e9e275e58a6a8dfadc74c873d51b0c939011f81bfa')
     version('2.0.0', sha256='6d26435aa962d085b7accd306a0b478069a7de1bc5ca24e22344971852dd097c')
@@ -46,5 +45,7 @@ class Coin3d(AutotoolsPackage):
         args += self.enable_or_disable('man')
         args += self.enable_or_disable('symbols')
         args += self.enable_or_disable('debug')
+        args.append("--with-boost=" + self.spec['boost'].prefix)
+        args.append("--with-boost-libdir=" + self.spec['boost'].prefix.lib)
 
         return args
