@@ -197,50 +197,50 @@ function get_sp_flags -d "return leading flags"
 end
 
 
-function get_mod_args -d "return submodule flags"
-    #
-    # Accumulate subcommand and submodule arguments. These are accumulated into
-    # the external arrays `__sp_subcommand_args`, and `__sp_module_args`. NOTE:
-    # Sets the external array: `__sp_remaining_args` containing all unprocessed
-    # arguments.
-    #
-
-    set __sp_subcommand_args
-    set __sp_module_args
-
-    # initialize argument counter
-    set -l i 1
-
-    for elt in $argv
-
-        if echo $elt | string match -r -q "^-"
-
-            # Notes: [2] (cf. EOF)
-            if test "x$elt" = "x-r"
-                set __sp_subcommand_args $__sp_subcommand_args $elt
-            else if test "x$elt" = "x--dependencies"
-                set __sp_subcommand_args $__sp_subcommand_args $elt
-            else
-                set __sp_module_args $__sp_module_args $elt
-            end
-
-        else
-            # bash compatibility: stop when the match first fails. Upon failure,
-            # we pack the remainder of `argv` into a global `__sp_remaining_args`
-            # array (`i` tracks the index of the next element).
-            set __sp_remaining_args (stream_args $argv[$i..-1])
-            return
-        end
-
-        # increment argument counter: used in place of bash's `shift` command
-        set -l i (math $i+1)
-
-    end
-
-    # if all elements in `argv` are matched, make sure that `__sp_remaining_args`
-    # is deleted (this might be overkill...).
-    set -e __sp_remaining_args
-end
+# function get_mod_args -d "return submodule flags"
+#     #
+#     # Accumulate subcommand and submodule arguments. These are accumulated into
+#     # the external arrays `__sp_subcommand_args`, and `__sp_module_args`. NOTE:
+#     # Sets the external array: `__sp_remaining_args` containing all unprocessed
+#     # arguments.
+#     #
+# 
+#     set __sp_subcommand_args
+#     set __sp_module_args
+# 
+#     # initialize argument counter
+#     set -l i 1
+# 
+#     for elt in $argv
+# 
+#         if echo $elt | string match -r -q "^-"
+# 
+#             # Notes: [2] (cf. EOF)
+#             if test "x$elt" = "x-r"
+#                 set __sp_subcommand_args $__sp_subcommand_args $elt
+#             else if test "x$elt" = "x--dependencies"
+#                 set __sp_subcommand_args $__sp_subcommand_args $elt
+#             else
+#                 set __sp_module_args $__sp_module_args $elt
+#             end
+# 
+#         else
+#             # bash compatibility: stop when the match first fails. Upon failure,
+#             # we pack the remainder of `argv` into a global `__sp_remaining_args`
+#             # array (`i` tracks the index of the next element).
+#             set __sp_remaining_args (stream_args $argv[$i..-1])
+#             return
+#         end
+# 
+#         # increment argument counter: used in place of bash's `shift` command
+#         set -l i (math $i+1)
+# 
+#     end
+# 
+#     # if all elements in `argv` are matched, make sure that `__sp_remaining_args`
+#     # is deleted (this might be overkill...).
+#     set -e __sp_remaining_args
+# end
 
 
 
@@ -273,30 +273,30 @@ function check_sp_flags -d "check spack flags for h/V flags"
 end
 
 
-function contains_help_flags -d "checks for help (-h/--help) flags"
-    #
-    # Check if inputs contain -h or --help
-    #
-
-    # combine argument array into single string (space seperated), to be passed
-    # to regular expression matching (`string match -r`)
-    set -l _a "$argv"
-
-    # skip if called with blank input. Notes: [1] (cf. EOF)
-    if test -n "$_a"
-        # looks for a single `-h` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *-h *"
-            return 0
-        end
-
-        # looks for a single `--help` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--help *"
-            return 0
-        end
-    end
-
-    return 1
-end
+# function contains_help_flags -d "checks for help (-h/--help) flags"
+#     #
+#     # Check if inputs contain -h or --help
+#     #
+# 
+#     # combine argument array into single string (space seperated), to be passed
+#     # to regular expression matching (`string match -r`)
+#     set -l _a "$argv"
+# 
+#     # skip if called with blank input. Notes: [1] (cf. EOF)
+#     if test -n "$_a"
+#         # looks for a single `-h` (possibly surrounded by spaces)
+#         if echo $_a | string match -r -q " *-h *"
+#             return 0
+#         end
+# 
+#         # looks for a single `--help` (possibly surrounded by spaces)
+#         if echo $_a | string match -r -q " *--help *"
+#             return 0
+#         end
+#     end
+# 
+#     return 1
+# end
 
 
 function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, or --fish"
@@ -537,18 +537,33 @@ function spack_runner -d "Runner function for the `spack` wrapper"
 
         case "load" or "unload"
 
-            # Shift any other args for use off before parsing spec.
-            set __sp_subcommand_args          # sets: __sp_remaining_args
-            set __sp_module_args              #       __sp_subcommand_args
-            get_mod_args $__sp_remaining_args #       __sp_module_args
+            set -l _a (stream_args $__sp_remaining_args)
 
-            set -l sp_spec $__sp_remaining_args
-
-            # any -h flags would have "landed" in __sp_module_args
-            if contains_help_flags $__sp_module_args
-                command spack $sp_flags $sp_subcommand $__sp_subcommand_args $__sp_module_args $__sp_remaining_args
-                return 0
+            if check_env_activate_flags $_a
+                # no args or args contain -h/--help, --sh, or --csh: just execute
+                command spack $sp_flags $sp_subcommand $__sp_remaining_args
+            else
+                # actual call to activate: source the output
+                set -l sp_env_cmd "command spack $sp_flags $sp_subcommand --fish $__sp_remaining_args"
+                capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
+                eval $__sp_stdout
+                if test -n "$__sp_stderr"
+                    echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
+                end
             end
+
+            # # Shift any other args for use off before parsing spec.
+            # set __sp_subcommand_args          # sets: __sp_remaining_args
+            # set __sp_module_args              #       __sp_subcommand_args
+            # get_mod_args $__sp_remaining_args #       __sp_module_args
+
+            # set -l sp_spec $__sp_remaining_args
+
+            # # any -h flags would have "landed" in __sp_module_args
+            # if contains_help_flags $__sp_module_args
+            #     command spack $sp_flags $sp_subcommand $__sp_subcommand_args $__sp_module_args $__sp_remaining_args
+            #     return 0
+            # end
 
 
             # Here the user has run load or unload with a spec. Find a matching
@@ -556,44 +571,44 @@ function spack_runner -d "Runner function for the `spack` wrapper"
             # tool's commands to add/remove the result from the environment. If
             # spack module command comes back with an error, do nothing.
 
-            switch $sp_subcommand
+            # switch $sp_subcommand
 
-                case "load"
-                    set -l tcl_args $__sp_subcommand_args $sp_spec
-                    set -l sp_mod_cmd "command spack $sp_flags module tcl find $tcl_args"
-                    capture_all $sp_mod_cmd __sp_stat __sp_stdout __sp_stderr
+            #     case "load"
+            #         set -l tcl_args $__sp_subcommand_args $sp_spec
+            #         set -l sp_mod_cmd "command spack $sp_flags module tcl find $tcl_args"
+            #         capture_all $sp_mod_cmd __sp_stat __sp_stdout __sp_stderr
 
-                    if test $__sp_stat -eq 0
-                        set sp_full_spec $__sp_stdout
+            #         if test $__sp_stat -eq 0
+            #             set sp_full_spec $__sp_stdout
 
-                        # Notes: [3] (cf. EOF).
-                        set load_cmd (module load $__sp_module_args $sp_full_spec)
-                        eval $load_cmd
-                    else
-                        if test -n "$__sp_stderr"
-                            echo -s \n$__sp_stderr 1>&2
-                        end
-                        return 1
-                    end
+            #             # Notes: [3] (cf. EOF).
+            #             set load_cmd (module load $__sp_module_args $sp_full_spec)
+            #             eval $load_cmd
+            #         else
+            #             if test -n "$__sp_stderr"
+            #                 echo -s \n$__sp_stderr 1>&2
+            #             end
+            #             return 1
+            #         end
 
-                case "unload"
-                    set -l tcl_args $__sp_subcommand_args $sp_spec
-                    set -l sp_mod_cmd "command spack $sp_flags module tcl find $tcl_args"
-                    capture_all $sp_mod_cmd __sp_stat __sp_stdout __sp_stderr
+            #     case "unload"
+            #         set -l tcl_args $__sp_subcommand_args $sp_spec
+            #         set -l sp_mod_cmd "command spack $sp_flags module tcl find $tcl_args"
+            #         capture_all $sp_mod_cmd __sp_stat __sp_stdout __sp_stderr
 
-                    if test $__sp_stat -eq 0
-                        set sp_full_spec $__sp_stdout
+            #         if test $__sp_stat -eq 0
+            #             set sp_full_spec $__sp_stdout
 
-                        # Notes: [3] (cf. EOF).
-                        set unload_cmd (module unload $__sp_module_args $sp_full_spec)
-                        eval $unload_cmd
-                    else
-                        if test -n "$__sp_stderr"
-                            echo -s \n$__sp_stderr 1>&2
-                        end
-                        return 1
-                    end
-            end
+            #             # Notes: [3] (cf. EOF).
+            #             set unload_cmd (module unload $__sp_module_args $sp_full_spec)
+            #             eval $unload_cmd
+            #         else
+            #             if test -n "$__sp_stderr"
+            #                 echo -s \n$__sp_stderr 1>&2
+            #             end
+            #             return 1
+            #         end
+            # end
 
 
         # CASE: Catch-all
