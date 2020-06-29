@@ -40,6 +40,7 @@ jobs:
             - ninja-build
             - realpath
             - zsh
+            - fish
       env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '3.8'
       os: linux
@@ -73,6 +74,7 @@ addons:
       - ninja-build
       - patchelf
       - zsh
+      - fish
     update: true
 
 # ~/.ccache needs to be cached directly as Travis is not taking care of it
