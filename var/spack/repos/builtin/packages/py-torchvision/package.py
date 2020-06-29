@@ -11,7 +11,7 @@ class PyTorchvision(PythonPackage):
     architectures, and common image transformations for computer vision."""
 
     homepage = "https://github.com/pytorch/vision"
-    url      = "https://github.com/pytorch/vision/archive/v0.6.0.tar.gz"
+    url      = "https://github.com/pytorch/vision/archive/v0.6.1.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = [
@@ -21,6 +21,7 @@ class PyTorchvision(PythonPackage):
         'torchvision.models.detection'
     ]
 
+    version('0.6.1', sha256='8173680a976c833640ecbd0d7e6f0a11047bf8833433e2147180efc905e48656')
     version('0.6.0', sha256='02de11b3abe6882de4032ce86dab9c7794cbc84369b44d04e667486580f0f1f7')
     version('0.5.0', sha256='eb9afc93df3d174d975ee0914057a9522f5272310b4d56c150b955c287a4d74d')
     version('0.4.2', sha256='1184a27eab85c9e784bacc6f9d6fec99e168ab4eda6047ef9f709e7fdb22d8f9')

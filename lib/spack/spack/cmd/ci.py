@@ -38,7 +38,7 @@ def setup_parser(subparser):
     generate = subparsers.add_parser('generate', help=ci_generate.__doc__)
     generate.add_argument(
         '--output-file', default=None,
-        help="Absolute path to file where generated jobs file should be " +
+        help="Path to file where generated jobs file should be " +
              "written.  The default is .gitlab-ci.yml in the root of the " +
              "repository.")
     generate.add_argument(
@@ -54,6 +54,15 @@ def setup_parser(subparser):
         help="Provide a git branch or tag if a custom spack branch " +
              "should be checked out as a step in each generated job.  " +
              "This argument is ignored if no --spack-repo is provided.")
+    generate.add_argument(
+        '--optimize', action='store_true', default=False,
+        help="(Experimental) run the generated document through a series of "
+             "optimization passes designed to reduce the size of the "
+             "generated file.")
+    generate.add_argument(
+        '--dependencies', action='store_true', default=False,
+        help="(Experimental) disable DAG scheduling; use "
+             ' "plain" dependencies.')
     generate.set_defaults(func=ci_generate)
 
     # Check a spec against mirror. Rebuild, create buildcache and push to
@@ -75,18 +84,22 @@ def ci_generate(args):
     copy_yaml_to = args.copy_to
     spack_repo = args.spack_repo
     spack_ref = args.spack_ref
+    run_optimizer = args.optimize
+    use_dependencies = args.dependencies
 
     if not output_file:
-        gen_ci_dir = os.getcwd()
-        output_file = os.path.join(gen_ci_dir, '.gitlab-ci.yml')
+        output_file = os.path.abspath(".gitlab-ci.yml")
     else:
-        gen_ci_dir = os.path.dirname(output_file)
+        output_file_path = os.path.abspath(output_file)
+        gen_ci_dir = os.path.dirname(output_file_path)
         if not os.path.exists(gen_ci_dir):
             os.makedirs(gen_ci_dir)
 
     # Generate the jobs
     spack_ci.generate_gitlab_ci_yaml(
-        env, True, output_file, spack_repo, spack_ref)
+        env, True, output_file, spack_repo, spack_ref,
+        run_optimizer=run_optimizer,
+        use_dependencies=use_dependencies)
 
     if copy_yaml_to:
         copy_to_dir = os.path.dirname(copy_yaml_to)

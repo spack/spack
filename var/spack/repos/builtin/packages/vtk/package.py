@@ -103,6 +103,9 @@ class Vtk(CMakePackage):
     depends_on('double-conversion', when='@8.2.0:')
     depends_on('sqlite', when='@8.2.0:')
 
+    # For finding Fujitsu-MPI wrapper commands
+    patch('find_fujitsu_mpi.patch', when='%fj')
+
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
         return url.format(version.up_to(2), version)
@@ -282,9 +285,7 @@ class Vtk(CMakePackage):
             # string. This fix was recommended on the VTK mailing list
             # in March 2014 (see
             # https://public.kitware.com/pipermail/vtkusers/2014-March/083368.html)
-            if (self.spec.satisfies('%clang') and
-                    self.compiler.is_apple and
-                    self.compiler.version >= Version('5.1.0')):
+            if self.spec.satisfies('%apple-clang@5.1.0:'):
                 cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS='])
 
             # A bug in tao pegtl causes build failures with intel compilers

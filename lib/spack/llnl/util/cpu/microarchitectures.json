@@ -61,12 +61,14 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
-        "clang": [
+        "apple-clang": [
           {
-            "versions": "0.0.0-apple:",
+            "versions": ":",
             "name": "x86-64",
             "flags": "-march={name}"
-          },
+          }
+        ],
+        "clang": [
           {
             "versions": ":",
             "name": "x86-64",

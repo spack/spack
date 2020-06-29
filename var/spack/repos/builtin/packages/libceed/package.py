@@ -71,14 +71,14 @@ class Libceed(Package):
                 opt = '-O3 -g -ffp-contract=fast'
                 if compiler.version >= ver(4.9):
                     opt += ' -fopenmp-simd'
+            elif compiler.name == 'apple-clang':
+                opt = '-O3 -g -march=native -ffp-contract=fast'
+                if compiler.version >= ver(10):
+                    opt += ' -fopenmp-simd'
             elif compiler.name == 'clang':
                 opt = '-O3 -g -march=native -ffp-contract=fast'
-                if compiler.version.string.endswith('-apple'):
-                    if compiler.version >= ver(10):
-                        opt += ' -fopenmp-simd'
-                else:  # not apple clang
-                    if compiler.version >= ver(6):
-                        opt += ' -fopenmp-simd'
+                if compiler.version >= ver(6):
+                    opt += ' -fopenmp-simd'
             elif compiler.name in ['xl', 'xl_r']:
                 opt = '-O -g -qsimd=auto'
             else:

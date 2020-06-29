@@ -27,12 +27,6 @@ from spack.util.environment import filter_system_paths
 __all__ = ['Compiler']
 
 
-def _verify_executables(*paths):
-    for path in paths:
-        if not os.path.isfile(path) and os.access(path, os.X_OK):
-            raise CompilerAccessError(path)
-
-
 @llnl.util.lang.memoized
 def get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
     """Invokes the compiler at a given path passing a single
@@ -271,20 +265,16 @@ class Compiler(object):
         self.extra_rpaths = extra_rpaths
         self.enable_implicit_rpaths = enable_implicit_rpaths
 
-        def check(exe):
-            if exe is None:
-                return None
-            _verify_executables(exe)
-            return exe
-
-        self.cc  = check(paths[0])
-        self.cxx = check(paths[1])
+        self.cc  = paths[0]
+        self.cxx = paths[1]
+        self.f77 = None
+        self.fc = None
         if len(paths) > 2:
-            self.f77 = check(paths[2])
+            self.f77 = paths[2]
             if len(paths) == 3:
                 self.fc = self.f77
             else:
-                self.fc  = check(paths[3])
+                self.fc  = paths[3]
 
         self.environment = environment
         self.extra_rpaths = extra_rpaths or []
@@ -297,6 +287,21 @@ class Compiler(object):
             value = kwargs.get(flag, None)
             if value is not None:
                 self.flags[flag] = tokenize_flags(value)
+
+    def verify_executables(self):
+        """Raise an error if any of the compiler executables is not valid.
+
+        This method confirms that for all of the compilers (cc, cxx, f77, fc)
+        that have paths, those paths exist and are executable by the current
+        user.
+        Raises a CompilerAccessError if any of the non-null paths for the
+        compiler are not accessible.
+        """
+        missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
+                   if cmp and not (os.path.isfile(cmp) and
+                                   os.access(cmp, os.X_OK))]
+        if missing:
+            raise CompilerAccessError(self, missing)
 
     @property
     def version(self):
@@ -355,11 +360,13 @@ class Compiler(object):
             for flag_type in flags:
                 for flag in self.flags.get(flag_type, []):
                     compiler_exe.add_default_arg(flag)
+
+            output = ''
             with self._compiler_environment():
                 output = str(compiler_exe(
                     self.verbose_flag, fin, '-o', fout,
                     output=str, error=str))  # str for py2
-                return _parse_non_system_link_dirs(output)
+            return _parse_non_system_link_dirs(output)
         except spack.util.executable.ProcessError as pe:
             tty.debug('ProcessError: Command exited with non-zero status: ' +
                       pe.long_message)
@@ -549,31 +556,34 @@ class Compiler(object):
         # store environment to replace later
         backup_env = os.environ.copy()
 
-        # load modules and set env variables
-        for module in self.modules:
-            # On cray, mic-knl module cannot be loaded without cce module
-            # See: https://github.com/spack/spack/issues/3153
-            if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
-                spack.util.module_cmd.load_module('cce')
-            spack.util.module_cmd.load_module(module)
+        try:
+            # load modules and set env variables
+            for module in self.modules:
+                # On cray, mic-knl module cannot be loaded without cce module
+                # See: https://github.com/spack/spack/issues/3153
+                if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
+                    spack.util.module_cmd.load_module('cce')
+                spack.util.module_cmd.load_module(module)
 
-        # apply other compiler environment changes
-        env = spack.util.environment.EnvironmentModifications()
-        env.extend(spack.schema.environment.parse(self.environment))
-        env.apply_modifications()
+            # apply other compiler environment changes
+            env = spack.util.environment.EnvironmentModifications()
+            env.extend(spack.schema.environment.parse(self.environment))
+            env.apply_modifications()
 
-        yield
-
-        # Restore environment
-        os.environ.clear()
-        os.environ.update(backup_env)
+            yield
+        except BaseException:
+            raise
+        finally:
+            # Restore environment regardless of whether inner code succeeded
+            os.environ.clear()
+            os.environ.update(backup_env)
 
 
 class CompilerAccessError(spack.error.SpackError):
-
-    def __init__(self, path):
-        super(CompilerAccessError, self).__init__(
-            "'%s' is not a valid compiler." % path)
+    def __init__(self, compiler, paths):
+        msg = "Compiler '%s' has executables that are missing" % compiler.spec
+        msg += " or are not executable: %s" % paths
+        super(CompilerAccessError, self).__init__(msg)
 
 
 class InvalidCompilerError(spack.error.SpackError):

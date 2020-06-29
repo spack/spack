@@ -53,11 +53,22 @@ def test_cce_version_detection(version_str, expected_version):
      'Target: x86_64-apple-darwin18.7.0\n'
      'Thread model: posix\n'
      'InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n',  # noqa
-     '11.0.0-apple'),
+     '11.0.0'),
     ('Apple LLVM version 7.0.2 (clang-700.1.81)\n'
      'Target: x86_64-apple-darwin15.2.0\n'
-     'Thread model: posix\n', '7.0.2-apple'),
-    # Other platforms
+     'Thread model: posix\n', '7.0.2'),
+])
+def test_apple_clang_version_detection(
+        version_str, expected_version
+):
+    cls = spack.compilers.class_for_compiler_name('apple-clang')
+    version = cls.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.regression('10191')
+@pytest.mark.parametrize('version_str,expected_version', [
+    # LLVM Clang
     ('clang version 6.0.1-svn334776-1~exp1~20181018152737.116 (branches/release_60)\n'  # noqa
      'Target: x86_64-pc-linux-gnu\n'
      'Thread model: posix\n'

@@ -4,8 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import filecmp
+import json
 import os
 import pytest
+from jsonschema import validate
 
 import spack
 import spack.ci as ci
@@ -15,6 +17,8 @@ import spack.hash_types as ht
 from spack.main import SpackCommand
 import spack.paths as spack_paths
 import spack.repo as repo
+from spack.schema.buildcache_spec import schema as spec_yaml_schema
+from spack.schema.database_index import schema as db_idx_schema
 from spack.spec import Spec
 from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.executable as exe
@@ -717,9 +721,27 @@ spack:
             ci.push_mirror_contents(
                 env, concrete_spec, yaml_path, mirror_url, '42')
 
-            buildcache_list_output = buildcache_cmd('list', output=str)
+            buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
 
+            # Test generating buildcache index while we have bin mirror
+            buildcache_cmd('update-index', '--mirror-url', mirror_url)
+            index_path = os.path.join(buildcache_path, 'index.json')
+            with open(index_path) as idx_fd:
+                index_object = json.load(idx_fd)
+                validate(index_object, db_idx_schema)
+
+            # Now that index is regenerated, validate "buildcache list" output
+            buildcache_list_output = buildcache_cmd('list', output=str)
             assert('patchelf' in buildcache_list_output)
+
+            # Also test buildcache_spec schema
+            bc_files_list = os.listdir(buildcache_path)
+            for file_name in bc_files_list:
+                if file_name.endswith('.spec.yaml'):
+                    spec_yaml_path = os.path.join(buildcache_path, file_name)
+                    with open(spec_yaml_path) as yaml_fd:
+                        yaml_object = syaml.load(yaml_fd)
+                        validate(yaml_object, spec_yaml_schema)
 
             logs_dir = working_dir.join('logs_dir')
             if not os.path.exists(logs_dir.strpath):

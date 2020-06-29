@@ -1,0 +1,18 @@
+--- VTK-8.2.0/CMake/FindMPI.cmake.org	2020-06-11 14:50:51.000000000 +0900
++++ VTK-8.2.0/CMake/FindMPI.cmake	2020-06-11 14:51:21.000000000 +0900
+@@ -99,12 +99,12 @@
+ #
+ 
+ # Start out with the generic MPI compiler names, as these are most commonly used.
+-set(_MPI_C_COMPILER_NAMES                  mpicc    mpcc      mpicc_r mpcc_r)
++set(_MPI_C_COMPILER_NAMES                  mpicc    mpcc      mpicc_r mpcc_r, mpifcc)
+ set(_MPI_CXX_COMPILER_NAMES                mpicxx   mpiCC     mpcxx   mpCC    mpic++   mpc++
+-                                           mpicxx_r mpiCC_r   mpcxx_r mpCC_r  mpic++_r mpc++_r)
++                                           mpicxx_r mpiCC_r   mpcxx_r mpCC_r  mpic++_r mpc++_r, mpiFCC)
+ set(_MPI_Fortran_COMPILER_NAMES            mpif95   mpif95_r  mpf95   mpf95_r
+                                            mpif90   mpif90_r  mpf90   mpf90_r
+-                                           mpif77   mpif77_r  mpf77   mpf77_r)
++                                           mpif77   mpif77_r  mpf77   mpf77_r, mpifrt)
+ 
+ # GNU compiler names
+ set(_MPI_GNU_C_COMPILER_NAMES              mpigcc mpgcc mpigcc_r mpgcc_r)

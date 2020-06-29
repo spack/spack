@@ -478,7 +478,7 @@ Fortran.
           cxx: /usr/bin/clang++
           f77: /path/to/bin/gfortran
           fc: /path/to/bin/gfortran
-        spec: clang@11.0.0-apple
+        spec: apple-clang@11.0.0
 
 
    If you used Spack to install GCC, you can get the installation prefix by

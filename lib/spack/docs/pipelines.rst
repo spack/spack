@@ -45,6 +45,7 @@ for setting up a build pipeline are as follows:
         tags:
           - <custom-tag>
         script:
+          - spack env activate .
           - spack ci generate
             --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
         artifacts:
@@ -384,6 +385,7 @@ a custom spack and make sure the generated rebuild jobs will clone it too:
      - git clone ${SPACK_REPO} --branch ${SPACK_REF}
      - . ./spack/share/spack/setup-env.sh
    script:
+     - spack env activate .
      - spack ci generate
        --spack-repo ${SPACK_REPO} --spack-ref ${SPACK_REF}
        --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
