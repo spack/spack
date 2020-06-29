@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@ class NetcdfCxx(AutotoolsPackage):
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-cxx-4.2.tar.gz"
 
-    version('4.2', 'd32b20c00f144ae6565d9e98d9f6204c')
+    version('4.2', sha256='95ed6ab49a0ee001255eac4e44aacb5ca4ea96ba850c08337a3e4c9a0872ccd1')
 
-    depends_on('netcdf')
+    depends_on('netcdf-c')
 
     variant(
         'netcdf4', default=True, description='Compile with netCDF4 support')
@@ -38,7 +38,7 @@ class NetcdfCxx(AutotoolsPackage):
         # Add these to LDFLAGS explicitly, so the linker doesn't accidentally
         # use system versions
         ldflags = [
-            self.spec['netcdf'].libs.search_flags,
+            self.spec['netcdf-c'].libs.search_flags,
             self.spec['hdf5'].libs.search_flags,
         ]
         args.append('LDFLAGS=' + ' '.join(ldflags))

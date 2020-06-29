@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,11 +12,11 @@ class Vcsh(Package):
     homepage = "https://github.com/RichiH/vcsh"
     url      = "https://github.com/RichiH/vcsh/archive/v1.20151229.tar.gz"
 
-    version('1.20151229-1', '85c18fb15e5837d417b22980683e69ed')
-    version('1.20151229', '61edf032807bba98c41c62bb2bd3d497')
-    version('1.20150502', 'a6c75b5754e04bd74ae701967bb38e19')
-    version('1.20141026', 'e8f42a9dbb7460f641545bea5ca1cbc4')
-    version('1.20141025', '93c7fad67ab4300d76d753a32c300831')
+    version('1.20151229-1', sha256='7682a517eaf88a86ea5e38ad81707800e965375eaff8b5cfd882e210fe2fef71')
+    version('1.20151229', sha256='ae069506b0490287aefa582ab4e6af1c7ebc4dca743b17d91e0c8d0327d7a3fa')
+    version('1.20150502', sha256='127c7f35e9b097b722917d42f9652375033b12f14b6702a08621cb16205d253f')
+    version('1.20141026', sha256='63e65df01f35611b3dfca97317298fc2da6c33bfad6edb778ea44b23857e7c54')
+    version('1.20141025', sha256='2a9009b19289f60d5919d9e19d2a3f53dbe373dbc84e6d50ec0ee1b5ffb2f282')
 
     depends_on('git', type='run')
 

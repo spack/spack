@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Krb5(AutotoolsPackage):
     homepage = "https://kerberos.org"
     url      = "https://kerberos.org/dist/krb5/1.16/krb5-1.16.1.tar.gz"
 
-    version('1.16.1', '848e9b80d6aaaa798e3f3df24b83c407')
+    version('1.16.1', sha256='214ffe394e3ad0c730564074ec44f1da119159d94281bbec541dc29168d21117')
 
     depends_on('bison', type='build')
     depends_on('openssl')

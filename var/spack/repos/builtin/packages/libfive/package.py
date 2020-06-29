@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Libfive(CMakePackage):
     # https://libfive.com/download/ recommends working from the master branch
     version('master', branch='master')
 
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('cmake@3.3:', type='build')
     depends_on('boost@1.65:')
     depends_on('eigen@3.3.0:')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class Pdf2svg(AutotoolsPackage):
     homepage = "http://www.cityinthesky.co.uk/opensource/pdf2svg"
     url      = "https://github.com/dawbarton/pdf2svg/archive/v0.2.3.tar.gz"
 
-    version('0.2.3', 'd398b3b1c1979f554596238a44f12123')
-    version('0.2.2', 'f7e0d2213f9e1422cee9421e18f72553')
+    version('0.2.3', sha256='4fb186070b3e7d33a51821e3307dce57300a062570d028feccd4e628d50dea8a')
+    version('0.2.2', sha256='e5f1d9b78821e44cd85379fb07f38a42f00bb2bde3743b95301ff8c0a5ae229a')
 
     depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('cairo@1.2.6:')

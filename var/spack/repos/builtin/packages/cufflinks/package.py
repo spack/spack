@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Cufflinks(Package):
     homepage = "http://cole-trapnell-lab.github.io/cufflinks"
     url      = "http://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz"
 
-    version('2.2.1', '7e693d182dcfda8aeef8523219ea9ea7')
+    version('2.2.1', sha256='39f812452cae26462e5d2671d38104d9e8ef30aaf9ab6dea8ca57f50f46448e4')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

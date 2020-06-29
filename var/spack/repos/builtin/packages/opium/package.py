@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Opium(Package):
     homepage = "https://opium.sourceforge.net/index.html"
     url = "https://downloads.sourceforge.net/project/opium/opium/opium-v3.8/opium-v3.8-src.tgz"
 
-    version('3.8', 'f710c0f869e70352b4a510c31e13bf9f')
+    version('3.8', sha256='edee6606519330aecaee436ee8cfb0a33788b5677861d59e38aba936e87d5ad3')
 
     depends_on('blas')
     depends_on('lapack')

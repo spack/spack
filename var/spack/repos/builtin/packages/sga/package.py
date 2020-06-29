@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,15 +14,15 @@ class Sga(AutotoolsPackage):
     homepage = "https://www.msi.umn.edu/sw/sga"
     url      = "https://github.com/jts/sga/archive/v0.10.15.tar.gz"
 
-    version('0.10.15', '990aed1593f8072650c6366e5cf32519')
-    version('0.10.14', '211edb372898d6515dcde98d17078b7b')
-    version('0.10.13', 'd4f6aefc48c940dba96cc6513649ecdd')
-    version('0.10.12', '993bc165b4c77b75a5a2fe01c200c0da')
-    version('0.10.11', 'b649da5471209f50df2d53f0f2bfa0ed')
-    version('0.10.10', '494ff18d82b34cdaf8432b48b0356aae')
-    version('0.10.9',  'c2111bfd278d8faaab19732aec79fa78')
-    version('0.10.8',  '4d75f836eaae6018d993a0b75326014a')
-    version('0.10.3',  'b12d35b24ca8a63c4dcc9f5d7e7c4133')
+    version('0.10.15', sha256='1b18996e6ec47985bc4889a8cbc3cd4dd3a8c7d385ae9f450bd474e36342558b')
+    version('0.10.14', sha256='763c011b302e1085048c93d917f081ea9348a8470e222dfd369064548e8b3994')
+    version('0.10.13', sha256='77859ab233980594941aa4c4cb5c2cbe1f5c43f2519f329c3a88a97865dee599')
+    version('0.10.12', sha256='f27f13ce1e7c1a3f35f9f4eed6c1896f3b92471bc4acc7f2364a12ce098e9779')
+    version('0.10.11', sha256='4704ad74705931311ed66a0886453e57616798147d149e16e13ac5acd9b5b87c')
+    version('0.10.10', sha256='5a75a81d405d22d51f3b7388c42d5baced4388110d39e5d77249bf3eac76a83a')
+    version('0.10.9',  sha256='34573cb7423affd5e15c1175d9af69f7495b094b60ddfcbafd910fd703c25006')
+    version('0.10.8',  sha256='55c5e0e425e14902e83d68cfb8cee4c86ee186459e54113a484b2a1b06d223c8')
+    version('0.10.3',  sha256='c000823a58428d9db2979b30a571ad89aec78a8cb1af60bae1ce252dd4e8adac')
 
     depends_on('zlib')
     depends_on('sparsehash')

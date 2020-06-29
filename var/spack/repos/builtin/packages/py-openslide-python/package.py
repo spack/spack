@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyOpenslidePython(PythonPackage):
     homepage = "https://github.com/openslide/openslide-python"
     url      = "https://github.com/openslide/openslide-python/archive/v1.1.1.tar.gz"
 
-    version('1.1.1', '8c207e48069887b63ea1c7bc9eb7dfc0')
+    version('1.1.1', sha256='33c390fe43e3d7d443fafdd66969392d3e9efd2ecd5d4af73c3dbac374485ed5')
 
     import_modules = ['openslide']
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Libgeotiff(AutotoolsPackage):
     """
 
     homepage = "https://trac.osgeo.org/geotiff/"
-    url      = "http://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.5.1.tar.gz"
+    url      = "https://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.5.1.tar.gz"
 
     maintainers = ['adamjstewart']
 

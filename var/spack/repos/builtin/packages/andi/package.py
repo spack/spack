@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Andi(AutotoolsPackage):
     homepage = "https://github.com/EvolBioInf/andi"
     url      = "https://github.com/EvolBioInf/andi/archive/v0.10.tar.gz"
 
-    version('0.10',    '3aaba7961798bb4aaa546baa44e469d8')
+    version('0.10',    sha256='1ff371de0b6db4080e402ded2687947dc2d6913e28626edec21dcf5149489ee8')
 
     depends_on('m4', type='build')
     depends_on('autoconf', type='build')

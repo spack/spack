@@ -1,0 +1,11 @@
+--- gdbm-1.18.1/src/parseopt.c	2018-05-30 03:39:15.000000000 -0600
++++ gdbm-1.18.1_new/src/parseopt.c	2020-04-30 10:29:52.869582500 -0600
+@@ -255,8 +255,6 @@
+ }
+ 
+ char *parseopt_program_name;
+-char *parseopt_program_doc;
+-char *parseopt_program_args;
+ const char *program_bug_address = "<" PACKAGE_BUGREPORT ">";
+ void (*parseopt_help_hook) (FILE *stream);
+ 

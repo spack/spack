@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,9 +22,9 @@ class Wxwidgets(AutotoolsPackage):
     git      = "https://github.com/wxWidgets/wxWidgets.git"
 
     version('develop', branch='master')
-    version('3.1.0', '2170839cfa9d9322e8ee8368b21a15a2497b4f11')
-    version('3.0.2', '6461eab4428c0a8b9e41781b8787510484dea800')
-    version('3.0.1', '73e58521d6871c9f4d1e7974c6e3a81629fddcf8')
+    version('3.1.0', sha256='e082460fb6bf14b7dd6e8ac142598d1d3d0b08a7b5ba402fdbf8711da7e66da8')
+    version('3.0.2', sha256='346879dc554f3ab8d6da2704f651ecb504a22e9d31c17ef5449b129ed711585d')
+    version('3.0.1', sha256='bd671b79ec56af8fb3844e11cafceac1a4276fb02c79404d06b91b6c19d2c5f5')
 
     patch('math_include.patch', when='@3.0.1:3.0.2')
 

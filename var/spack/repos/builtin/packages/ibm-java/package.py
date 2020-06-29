@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,24 +10,38 @@ import os
 
 class IbmJava(Package):
     """Binary distribution of the IBM Java Software Development Kit
-    for big and little-endian powerpc (power7, 8 and 9)."""
+    for big and little-endian powerpc (power7, 8 and 9).  Note: IBM
+    is fairly aggressive about taking down old versions, so old
+    (and even current) versions may not be available."""
 
     homepage = "https://developer.ibm.com/javasdk/"
+    maintainers = ['mwkrentel']
+
+    # Note: IBM is fairly aggressive about taking down old versions,
+    # so we may need to update this frequently.  Also, old revs may
+    # not be available for download.
+
+    version_list = [
+        ('8.0.6.10', 'ppc64',   'ff5151ead88f891624eefe33d80d56c325ca0aa4b93bd96c135cad326993eda2'),
+        ('8.0.6.10', 'ppc64le', 'ea99ab28dd300b08940882d178247e99aafe5a998b1621cf288dfb247394e067'),
+        ('8.0.6.7',  'ppc64',   'a1accb461a039af4587ea86511e317fea1d423e7f781459a17ed3947afed2982'),
+        ('8.0.6.7',  'ppc64le', '9ede76a597af28c7f10c6f8a68788cc2dcd39fdab178c9bac56df8b3766ac717'),
+        ('8.0.6.0',  'ppc64',   'e142746a83e47ab91d71839d5776f112ed154ae180d0628e3f10886151dad710'),
+        ('8.0.6.0',  'ppc64le', '18c2eccf99225e6e7643141d8da4110cacc39f2fa00149fc26341d2272cc0102'),
+        ('8.0.5.30', 'ppc64',   'd39ce321bdadd2b2b829637cacf9c1c0d90235a83ff6e7dcfa7078faca2f212f'),
+        ('8.0.5.30', 'ppc64le', 'dec6434d926861366c135aac6234fc28b3e7685917015aa3a3089c06c3b3d8f0'),
+    ]
 
     # There are separate tar files for big and little-endian machine
-    # types.  When we add more versions, then turn this into a mapping
-    # from version and machine type to sha256sum.
-    mach = platform.machine() if platform.machine() == 'ppc64' else 'ppc64le'
-    if mach == 'ppc64le':
-        sha = 'dec6434d926861366c135aac6234fc28b3e7685917015aa3a3089c06c3b3d8f0'
-    else:
-        sha = 'd39ce321bdadd2b2b829637cacf9c1c0d90235a83ff6e7dcfa7078faca2f212f'
+    # types.  And no, this won't work cross platform.
 
-    version('8.0.5.30', sha256=sha, expand=False)
+    for (ver, mach, sha) in version_list:
+        if mach == platform.machine():
+            version(ver, sha256=sha, expand=False)
 
     provides('java@8')
 
-    conflicts('target=x86_64', msg='ibm-java is only available for ppc64 and ppc64le')
+    conflicts('target=x86_64:', msg='ibm-java is only available for ppc64 and ppc64le')
 
     # This assumes version numbers are 4-tuples: 8.0.5.30
     def url_for_version(self, version):
@@ -36,7 +50,7 @@ class IbmJava(Package):
 
         url = ('http://public.dhe.ibm.com/ibmdl/export/pub/systems/cloud'
                '/runtimes/java/{0}/linux/{1}/ibm-java-sdk-{2}-{1}'
-               '-archive.bin').format(version, self.mach, dash)
+               '-archive.bin').format(version, platform.machine(), dash)
 
         return url
 
@@ -48,11 +62,11 @@ class IbmJava(Package):
     def libs(self):
         return find_libraries(['libjvm'], root=self.home, recursive=True)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('JAVA_HOME', self.home)
+    def setup_run_environment(self, env):
+        env.set('JAVA_HOME', self.home)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('JAVA_HOME', self.home)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('JAVA_HOME', self.home)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.home = self.home

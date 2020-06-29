@@ -1,0 +1,161 @@
+spack:
+  definitions:
+  - compiler-pkgs:
+    - 'llvm+clang@6.0.1 os=centos7'
+    - 'gcc@6.5.0 os=centos7'
+    - 'llvm+clang@6.0.1 os=ubuntu18.04'
+    - 'gcc@6.5.0 os=ubuntu18.04'
+  - pkgs:
+    - readline@7.0
+    # - xsdk@0.4.0
+  - compilers:
+    - '%gcc@5.5.0'
+    - '%gcc@6.5.0'
+    - '%gcc@7.3.0'
+    - '%clang@6.0.0'
+    - '%clang@6.0.1'
+  - oses:
+    - os=ubuntu18.04
+    - os=centos7
+
+  specs:
+  - matrix:
+    - [$pkgs]
+    - [$compilers]
+    - [$oses]
+    exclude:
+      - '%gcc@7.3.0 os=centos7'
+      - '%gcc@5.5.0 os=ubuntu18.04'
+
+  mirrors:
+    cloud_gitlab: https://mirror.spack.io
+
+  compilers:
+    # The .gitlab-ci.yml for this project picks a Docker container which does
+    # not have any compilers pre-built and ready to use, so we need to fake the
+    # existence of those here.
+    - compiler:
+        operating_system: centos7
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: gcc@5.5.0
+        target: x86_64
+    - compiler:
+        operating_system: centos7
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: gcc@6.5.0
+        target: x86_64
+    - compiler:
+        operating_system: centos7
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: clang@6.0.0
+        target: x86_64
+    - compiler:
+        operating_system: centos7
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: clang@6.0.1
+        target: x86_64
+
+    - compiler:
+        operating_system: ubuntu18.04
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: clang@6.0.0
+        target: x86_64
+    - compiler:
+        operating_system: ubuntu18.04
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: clang@6.0.1
+        target: x86_64
+    - compiler:
+        operating_system: ubuntu18.04
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: gcc@6.5.0
+        target: x86_64
+    - compiler:
+        operating_system: ubuntu18.04
+        modules: []
+        paths:
+          cc: /not/used
+          cxx: /not/used
+          f77: /not/used
+          fc: /not/used
+        spec: gcc@7.3.0
+        target: x86_64
+
+  gitlab-ci:
+    bootstrap:
+      - name: compiler-pkgs
+        compiler-agnostic: true
+    mappings:
+      - # spack-cloud-ubuntu
+        match:
+          # these are specs, if *any* match the spec under consideration, this
+          # 'mapping' will be used to generate the CI job
+          - os=ubuntu18.04
+        runner-attributes:
+          # 'tags' and 'image' go directly onto the job, 'variables' will
+          # be added to what we already necessarily create for the job as
+          # a part of the CI workflow
+          tags:
+            - spack-k8s
+          image:
+            name: scottwittenburg/spack_builder_ubuntu_18.04
+            entrypoint: [""]
+      - # spack-cloud-centos
+        match:
+          # these are specs, if *any* match the spec under consideration, this
+          # 'mapping' will be used to generate the CI job
+          - 'os=centos7'
+        runner-attributes:
+          tags:
+            - spack-k8s
+          image:
+            name: scottwittenburg/spack_builder_centos_7
+            entrypoint: [""]
+
+  cdash:
+    build-group: Release Testing
+    url: http://cdash
+    project: Spack Testing
+    site: Spack Docker-Compose Workflow
+
+  repos: []
+  upstreams: {}
+  modules:
+    enable: []
+  packages: {}
+  config: {}

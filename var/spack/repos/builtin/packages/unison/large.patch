@@ -1,0 +1,49 @@
+diff -Nrua /usr/ports/net/unison/patches/patch-bytearray_stubs_c ./patches/patch-bytearray_stubs_c
+--- /usr/ports/net/unison/patches/patch-bytearray_stubs_c	Thu Jan  1 01:00:00 1970
++++ ./patches/patch-bytearray_stubs_c	Tue Jan 17 08:44:39 2017
+@@ -0,0 +1,45 @@
++Fix rare SIGSEGV when transferring large replicas.
++Fix a theoretical integer overflow. 
++
++Patches from here:
++https://caml.inria.fr/mantis/view.php?id=7431#c17026
++and here:
++https://caml.inria.fr/mantis/view.php?id=7431#c16962
++
++Related issue reports:
++https://github.com/bcpierce00/unison/issues/48
++https://caml.inria.fr/mantis/view.php?id=7431
++https://bugzilla.redhat.com/show_bug.cgi?id=1401759
++
++Thanks to Alex Markley and OCaml developers
++--- bytearray_stubs.c.orig	Tue Jan 17 08:41:00 2017
+++++ bytearray_stubs.c	Tue Jan 17 08:41:21 2017
++@@ -5,6 +5,7 @@
++ 
++ #include "caml/intext.h"
++ #include "caml/bigarray.h"
+++#include "caml/memory.h"
++ 
++ CAMLprim value ml_marshal_to_bigarray(value v, value flags)
++ {
++@@ -21,15 +22,18 @@ CAMLprim value ml_marshal_to_bigarray(value v, value f
++ 
++ CAMLprim value ml_unmarshal_from_bigarray(value b, value ofs)
++ {
+++  CAMLparam1(b); /* Holds [b] live until unmarshalling completes. */
+++  value result;
++   struct caml_bigarray *b_arr = Bigarray_val(b);
++-  return input_value_from_block (Array_data (b_arr, ofs),
+++  result = input_value_from_block (Array_data (b_arr, ofs),
++                                  b_arr->dim[0] - Long_val(ofs));
+++  CAMLreturn(result);
++ }
++ 
++ CAMLprim value ml_blit_string_to_bigarray
++ (value s, value i, value a, value j, value l)
++ {
++-  char *src = String_val(s) + Int_val(i);
+++  char *src = String_val(s) + Long_val(i);
++   char *dest = Array_data(Bigarray_val(a), j);
++   memcpy(dest, src, Long_val(l));
++   return Val_unit;

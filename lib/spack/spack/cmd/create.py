@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.util.web
 import spack.repo
+import spack.stage
 from spack.spec import Spec
 from spack.util.editor import editor
 from spack.util.executable import which, ProcessError
@@ -27,7 +28,7 @@ level = "short"
 
 
 package_template = '''\
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,8 +57,12 @@ class {class_name}({base_class_name}):
     """FIXME: Put a proper description of your package here."""
 
     # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://www.example.com"
 {url_def}
+
+    # FIXME: Add a list of GitHub accounts to
+    # notify when the package is updated.
+    # maintainers = ['github_user1', 'github_user2']
 
 {versions}
 
@@ -126,7 +131,7 @@ class AutotoolsPackageTemplate(PackageTemplate):
 
     base_class_name = 'AutotoolsPackage'
 
-    body = """\
+    body_def = """\
     def configure_args(self):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
@@ -149,7 +154,7 @@ class AutoreconfPackageTemplate(PackageTemplate):
     # FIXME: Add additional dependencies if required.
     # depends_on('foo')"""
 
-    body = """\
+    body_def = """\
     def autoreconf(self, spec, prefix):
         # FIXME: Modify the autoreconf method as necessary
         autoreconf('--install', '--verbose', '--force')
@@ -166,7 +171,7 @@ class CMakePackageTemplate(PackageTemplate):
 
     base_class_name = 'CMakePackage'
 
-    body = """\
+    body_def = """\
     def cmake_args(self):
         # FIXME: Add arguments other than
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
@@ -180,7 +185,7 @@ class MesonPackageTemplate(PackageTemplate):
 
     base_class_name = 'MesonPackage'
 
-    body = """\
+    body_def = """\
     def meson_args(self):
         # FIXME: If not needed delete this function
         args = []
@@ -192,7 +197,7 @@ class QMakePackageTemplate(PackageTemplate):
 
     base_class_name = 'QMakePackage'
 
-    body = """\
+    body_def = """\
     def qmake_args(self):
         # FIXME: If not needed delete this function
         args = []
@@ -204,7 +209,7 @@ class SconsPackageTemplate(PackageTemplate):
 
     base_class_name = 'SConsPackage'
 
-    body = """\
+    body_def = """\
     def build_args(self, spec, prefix):
         # FIXME: Add arguments to pass to build.
         # FIXME: If not needed delete this function
@@ -217,7 +222,7 @@ class WafPackageTemplate(PackageTemplate):
 
     base_class_name = 'WafPackage'
 
-    body = """\
+    body_def = """\
     # FIXME: Override configure_args(), build_args(),
     # or install_args() if necessary."""
 
@@ -229,7 +234,7 @@ class BazelPackageTemplate(PackageTemplate):
     # FIXME: Add additional dependencies if required.
     depends_on('bazel', type='build')"""
 
-    body = """\
+    body_def = """\
     def install(self, spec, prefix):
         # FIXME: Add logic to build and install here.
         bazel()"""
@@ -240,11 +245,14 @@ class PythonPackageTemplate(PackageTemplate):
     base_class_name = 'PythonPackage'
 
     dependencies = """\
-    # FIXME: Add dependencies if required.
+    # FIXME: Add dependencies if required. Only add the python dependency
+    # if you need specific versions. A generic python dependency is
+    # added implicity by the PythonPackage class.
+    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))"""
 
-    body = """\
+    body_def = """\
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
@@ -269,7 +277,7 @@ class RPackageTemplate(PackageTemplate):
     # FIXME: Add dependencies if required.
     # depends_on('r-foo', type=('build', 'run'))"""
 
-    body = """\
+    body_def = """\
     def configure_args(self, spec, prefix):
         # FIXME: Add arguments to pass to install via --configure-args
         # FIXME: If not needed delete this function
@@ -295,7 +303,7 @@ class PerlmakePackageTemplate(PackageTemplate):
     # FIXME: Add dependencies if required:
     # depends_on('perl-foo', type=('build', 'run'))"""
 
-    body = """\
+    body_def = """\
     def configure_args(self):
         # FIXME: Add non-standard arguments
         # FIXME: If not needed delete this function
@@ -349,7 +357,7 @@ class MakefilePackageTemplate(PackageTemplate):
 
     base_class_name = 'MakefilePackage'
 
-    body = """\
+    body_def = """\
     def edit(self, spec, prefix):
         # FIXME: Edit the Makefile if necessary
         # FIXME: If not needed delete this function
@@ -362,7 +370,7 @@ class IntelPackageTemplate(PackageTemplate):
 
     base_class_name = 'IntelPackage'
 
-    body = """\
+    body_def = """\
     # FIXME: Override `setup_environment` if necessary."""
 
 
@@ -371,7 +379,7 @@ class SIPPackageTemplate(PackageTemplate):
 
     base_class_name = 'SIPPackage'
 
-    body = """\
+    body_def = """\
     def configure_args(self, spec, prefix):
         # FIXME: Add arguments other than --bindir and --destdir
         # FIXME: If not needed delete this function
@@ -421,7 +429,8 @@ def setup_parser(subparser):
         '-n', '--name',
         help="name of the package to create")
     subparser.add_argument(
-        '-t', '--template', metavar='TEMPLATE', choices=templates.keys(),
+        '-t', '--template', metavar='TEMPLATE',
+        choices=sorted(templates.keys()),
         help="build system template to use. options: %(choices)s")
     subparser.add_argument(
         '-r', '--repo',
@@ -453,7 +462,7 @@ class BuildSystemGuesser:
         the contents of its archive or the URL it was downloaded from."""
 
         # Most octave extensions are hosted on Octave-Forge:
-        #     http://octave.sourceforge.net/index.html
+        #     https://octave.sourceforge.net/index.html
         # They all have the same base URL.
         if url is not None and 'downloads.sourceforge.net/octave/' in url:
             self.build_system = 'octave'
@@ -466,13 +475,13 @@ class BuildSystemGuesser:
         # build systems, we choose the first match in this list.
         clues = [
             (r'/CMakeLists\.txt$',    'cmake'),
+            (r'/NAMESPACE$',          'r'),
             (r'/configure$',          'autotools'),
             (r'/configure\.(in|ac)$', 'autoreconf'),
             (r'/Makefile\.am$',       'autoreconf'),
             (r'/SConstruct$',         'scons'),
             (r'/waf$',                'waf'),
             (r'/setup\.py$',          'python'),
-            (r'/NAMESPACE$',          'r'),
             (r'/WORKSPACE$',          'bazel'),
             (r'/Build\.PL$',          'perlbuild'),
             (r'/Makefile\.PL$',       'perlmake'),
@@ -566,7 +575,7 @@ def get_url(args):
     """
 
     # Default URL
-    url = 'http://www.example.com/example-1.2.3.tar.gz'
+    url = 'https://www.example.com/example-1.2.3.tar.gz'
 
     if args.url:
         # Use a user-supplied URL if one is present
@@ -618,9 +627,9 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        versions = spack.util.web.get_checksums_for_versions(
+        versions = spack.stage.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
-            keep_stage=args.keep_stage)
+            keep_stage=args.keep_stage, batch=True)
     else:
         versions = unhashed_versions
 

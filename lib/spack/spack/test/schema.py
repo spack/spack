@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -107,10 +107,35 @@ def test_module_suffixes(module_suffixes_schema):
     'repos'
 ])
 def test_schema_validation(meta_schema, config_name):
-    import importlib
+    import importlib  # novm
     module_name = 'spack.schema.{0}'.format(config_name)
     module = importlib.import_module(module_name)
     schema = getattr(module, 'schema')
 
     # If this validation throws the test won't pass
     jsonschema.validate(schema, meta_schema)
+
+
+def test_deprecated_properties(module_suffixes_schema):
+    # Test that an error is reported when 'error: True'
+    module_suffixes_schema['deprecatedProperties'] = {
+        'properties': ['tcl'],
+        'message': '{property} not allowed',
+        'error': True
+    }
+    v = spack.schema.Validator(module_suffixes_schema)
+    data = {'tcl': {'all': {'suffixes': {'^python': 'py'}}}}
+
+    with pytest.raises(jsonschema.ValidationError, match='tcl not allowed'):
+        v.validate(data)
+
+    # Test that just a warning is reported when 'error: False'
+    module_suffixes_schema['deprecatedProperties'] = {
+        'properties': ['tcl'],
+        'message': '{property} not allowed',
+        'error': False
+    }
+    v = spack.schema.Validator(module_suffixes_schema)
+    data = {'tcl': {'all': {'suffixes': {'^python': 'py'}}}}
+    # The next validation doesn't raise anymore
+    v.validate(data)

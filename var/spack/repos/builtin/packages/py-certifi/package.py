@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,10 @@ class PyCertifi(PythonPackage):
 
     import_modules = ['certifi']
 
+    version('2019.9.11', sha256='e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50')
     version('2019.6.16', sha256='945e3ba63a0b9f577b1395204e13c3a231f9bc0223888be653286534e5873695')
+    version('2019.3.9',  sha256='b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae')
     version('2017.4.17', sha256='f7527ebf7461582ce95f7a9e03dd141ce810d40590834f4ec20cddd54234c10a')
-    version('2017.1.23',  'b72521a8badff5e89a8eabea586d79ab')
-    version('2016.02.28', '5ccfc23bd5e931863f0b01ef3e9d2dbd3bef0e1b')
+    version('2017.1.23', sha256='81877fb7ac126e9215dfb15bfef7115fdc30e798e0013065158eed0707fd99ce')
 
     depends_on('py-setuptools', type='build')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ level = "long"
 git = which('git')
 
 #: SPDX license id must appear in the first <license_lines> lines of a file
-license_lines = 6
+license_lines = 7
 
 #: Spack's license identifier
 apache2_mit_spdx = "(Apache-2.0 OR MIT)"
@@ -124,7 +124,7 @@ def _check_license(lines, path):
         r'SPDX-License-Identifier: \(Apache-2\.0 OR MIT\)'
     ]
 
-    strict_date = r'Copyright 2013-2019'
+    strict_date = r'Copyright 2013-2020'
 
     found = []
 

@@ -1,35 +1,34 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import contextlib
 import os
+import platform
 import re
 import itertools
 import shutil
 import tempfile
 
-import llnl.util.filesystem
+import llnl.util.lang
+from llnl.util.filesystem import (
+    path_contains_subdirectory, paths_containing_libs)
 import llnl.util.tty as tty
 
 import spack.error
 import spack.spec
 import spack.architecture
 import spack.util.executable
+import spack.util.module_cmd
 import spack.compilers
 from spack.util.environment import filter_system_paths
 
 __all__ = ['Compiler']
 
 
-def _verify_executables(*paths):
-    for path in paths:
-        if not os.path.isfile(path) and os.access(path, os.X_OK):
-            raise CompilerAccessError(path)
-
-
 @llnl.util.lang.memoized
-def get_compiler_version_output(compiler_path, version_arg):
+def get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
     """Invokes the compiler at a given path passing a single
     version argument and returns the output.
 
@@ -38,7 +37,8 @@ def get_compiler_version_output(compiler_path, version_arg):
         version_arg (str): the argument used to extract version information
     """
     compiler = spack.util.executable.Executable(compiler_path)
-    output = compiler(version_arg, output=str, error=str)
+    output = compiler(
+        version_arg, output=str, error=str, ignore_errors=ignore_errors)
     return output
 
 
@@ -79,13 +79,7 @@ _LINK_DIR_ARG = re.compile(r'^-L(.:)?(?P<dir>[/\\].*)')
 _LIBPATH_ARG = re.compile(r'^[-/](LIBPATH|libpath):(?P<dir>.*)')
 
 
-def is_subdirectory(path, prefix):
-    path = os.path.abspath(path)
-    prefix = os.path.abspath(prefix) + os.path.sep
-    return path.startswith(prefix)
-
-
-def _parse_implicit_rpaths(string):
+def _parse_link_paths(string):
     """Parse implicit link paths from compiler debug output.
 
     This gives the compiler runtime library paths that we need to add to
@@ -142,16 +136,34 @@ def _parse_implicit_rpaths(string):
         if normalized_path not in visited:
             implicit_link_dirs.append(normalized_path)
             visited.add(normalized_path)
-    implicit_link_dirs = filter_system_paths(implicit_link_dirs)
-
-    # Additional filtering: we also want to exclude paths that are
-    # subdirectories of /usr/lib/ and /lib/
-    implicit_link_dirs = list(
-        path for path in implicit_link_dirs
-        if not any(is_subdirectory(path, d) for d in ['/lib/', '/usr/lib/']))
 
     tty.debug('found link dirs: %s' % ', '.join(implicit_link_dirs))
     return implicit_link_dirs
+
+
+def _parse_non_system_link_dirs(string):
+    """Parses link paths out of compiler debug output.
+
+    Args:
+        string (str): compiler debug output as a string
+
+    Returns:
+        (list of str): implicit link paths parsed from the compiler output
+    """
+    link_dirs = _parse_link_paths(string)
+
+    # Return set of directories containing needed compiler libs, minus
+    # system paths. Note that 'filter_system_paths' only checks for an
+    # exact match, while 'in_system_subdirectory' checks if a path contains
+    # a system directory as a subdirectory
+    link_dirs = filter_system_paths(link_dirs)
+    return list(p for p in link_dirs if not in_system_subdirectory(p))
+
+
+def in_system_subdirectory(path):
+    system_dirs = ['/lib/', '/lib64/', '/usr/lib/', '/usr/lib64/',
+                   '/usr/local/lib/', '/usr/local/lib64/']
+    return any(path_contains_subdirectory(path, x) for x in system_dirs)
 
 
 class Compiler(object):
@@ -184,8 +196,15 @@ class Compiler(object):
     #: Compiler argument that produces version information
     version_argument = '-dumpversion'
 
+    #: Return values to ignore when invoking the compiler to get its version
+    ignore_version_errors = ()
+
     #: Regex used to extract version from compiler's output
     version_regex = '(.*)'
+
+    # These libraries are anticipated to be required by all executables built
+    # by any compiler
+    _all_compiler_rpath_libraries = ['libc', 'libc++', 'libstdc++']
 
     # Default flags used by a compiler to set an rpath
     @property
@@ -203,37 +222,59 @@ class Compiler(object):
     @property
     def fc_rpath_arg(self):
         return '-Wl,-rpath,'
+
+    @property
+    def linker_arg(self):
+        """Flag that need to be used to pass an argument to the linker."""
+        return '-Wl,'
+
+    @property
+    def disable_new_dtags(self):
+        if platform.system() == 'Darwin':
+            return ''
+        return '--disable-new-dtags'
+
+    @property
+    def enable_new_dtags(self):
+        if platform.system() == 'Darwin':
+            return ''
+        return '--enable-new-dtags'
+
+    @property
+    def debug_flags(self):
+        return ['-g']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3']
+
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv = None
     # Name of module used to switch versions of this compiler
     PrgEnv_compiler = None
 
     def __init__(self, cspec, operating_system, target,
-                 paths, modules=[], alias=None, environment=None,
-                 extra_rpaths=None, implicit_rpaths=None,
+                 paths, modules=None, alias=None, environment=None,
+                 extra_rpaths=None, enable_implicit_rpaths=None,
                  **kwargs):
         self.spec = cspec
         self.operating_system = str(operating_system)
         self.target = target
-        self.modules = modules
+        self.modules = modules or []
         self.alias = alias
         self.extra_rpaths = extra_rpaths
-        self.implicit_rpaths = implicit_rpaths
+        self.enable_implicit_rpaths = enable_implicit_rpaths
 
-        def check(exe):
-            if exe is None:
-                return None
-            _verify_executables(exe)
-            return exe
-
-        self.cc  = check(paths[0])
-        self.cxx = check(paths[1])
+        self.cc  = paths[0]
+        self.cxx = paths[1]
+        self.f77 = None
+        self.fc = None
         if len(paths) > 2:
-            self.f77 = check(paths[2])
+            self.f77 = paths[2]
             if len(paths) == 3:
                 self.fc = self.f77
             else:
-                self.fc  = check(paths[3])
+                self.fc  = paths[3]
 
         self.environment = environment
         self.extra_rpaths = extra_rpaths or []
@@ -247,38 +288,64 @@ class Compiler(object):
             if value is not None:
                 self.flags[flag] = tokenize_flags(value)
 
+    def verify_executables(self):
+        """Raise an error if any of the compiler executables is not valid.
+
+        This method confirms that for all of the compilers (cc, cxx, f77, fc)
+        that have paths, those paths exist and are executable by the current
+        user.
+        Raises a CompilerAccessError if any of the non-null paths for the
+        compiler are not accessible.
+        """
+        missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
+                   if cmp and not (os.path.isfile(cmp) and
+                                   os.access(cmp, os.X_OK))]
+        if missing:
+            raise CompilerAccessError(self, missing)
+
     @property
     def version(self):
         return self.spec.version
 
-    @classmethod
-    def verbose_flag(cls):
+    def implicit_rpaths(self):
+        if self.enable_implicit_rpaths is False:
+            return []
+
+        # Put CXX first since it has the most linking issues
+        # And because it has flags that affect linking
+        exe_paths = [
+            x for x in [self.cxx, self.cc, self.fc, self.f77] if x]
+        link_dirs = self._get_compiler_link_paths(exe_paths)
+
+        all_required_libs = (
+            list(self.required_libs) + Compiler._all_compiler_rpath_libraries)
+        return list(paths_containing_libs(link_dirs, all_required_libs))
+
+    @property
+    def required_libs(self):
+        """For executables created with this compiler, the compiler libraries
+        that would be generally required to run it.
         """
-        This property should be overridden in the compiler subclass if a
-        verbose flag is available.
+        # By default every compiler returns the empty list
+        return []
 
-        If it is not overridden, it is assumed to not be supported.
-        """
-
-    @classmethod
-    def parse_implicit_rpaths(cls, string):
-        """Parses link paths out of compiler debug output.
-
-        Args:
-            string (str): compiler debug output as a string
-
-        Returns:
-            (list of str): implicit link paths parsed from the compiler output
-
-        Subclasses can override this to customize.
-        """
-        return _parse_implicit_rpaths(string)
-
-    @classmethod
-    def determine_implicit_rpaths(cls, paths):
+    def _get_compiler_link_paths(self, paths):
         first_compiler = next((c for c in paths if c), None)
         if not first_compiler:
             return []
+        if not self.verbose_flag:
+            # In this case there is no mechanism to learn what link directories
+            # are used by the compiler
+            return []
+
+        # What flag types apply to first_compiler, in what order
+        flags = ['cppflags', 'ldflags']
+        if first_compiler == self.cc:
+            flags = ['cflags'] + flags
+        elif first_compiler == self.cxx:
+            flags = ['cxxflags'] + flags
+        else:
+            flags.append('fflags')
 
         try:
             tmpdir = tempfile.mkdtemp(prefix='spack-implicit-link-info')
@@ -290,12 +357,31 @@ class Compiler(object):
                     'int main(int argc, char* argv[]) { '
                     '(void)argc; (void)argv; return 0; }\n')
             compiler_exe = spack.util.executable.Executable(first_compiler)
-            output = str(compiler_exe(cls.verbose_flag(), fin, '-o', fout,
-                                      output=str, error=str))  # str for py2
+            for flag_type in flags:
+                for flag in self.flags.get(flag_type, []):
+                    compiler_exe.add_default_arg(flag)
 
-            return cls.parse_implicit_rpaths(output)
+            output = ''
+            with self._compiler_environment():
+                output = str(compiler_exe(
+                    self.verbose_flag, fin, '-o', fout,
+                    output=str, error=str))  # str for py2
+            return _parse_non_system_link_dirs(output)
+        except spack.util.executable.ProcessError as pe:
+            tty.debug('ProcessError: Command exited with non-zero status: ' +
+                      pe.long_message)
+            return []
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
+
+    @property
+    def verbose_flag(self):
+        """
+        This property should be overridden in the compiler subclass if a
+        verbose flag is available.
+
+        If it is not overridden, it is assumed to not be supported.
+        """
 
     # This property should be overridden in the compiler subclass if
     # OpenMP is supported by that compiler
@@ -355,6 +441,49 @@ class Compiler(object):
                                       "the C11 standard",
                                       "c11_flag")
 
+    @property
+    def cc_pic_flag(self):
+        """Returns the flag used by the C compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
+    @property
+    def cxx_pic_flag(self):
+        """Returns the flag used by the C++ compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
+    @property
+    def f77_pic_flag(self):
+        """Returns the flag used by the F77 compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
+    @property
+    def fc_pic_flag(self):
+        """Returns the flag used by the FC compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
+    # Note: This is not a class method. The class methods are used to detect
+    # compilers on PATH based systems, and do not set up the run environment of
+    # the compiler. This method can be called on `module` based systems as well
+    def get_real_version(self):
+        """Query the compiler for its version.
+
+        This is the "real" compiler version, regardless of what is in the
+        compilers.yaml file, which the user can change to name their compiler.
+
+        Use the runtime environment of the compiler (modules and environment
+        modifications) to enable the compiler to run properly on any platform.
+        """
+        cc = spack.util.executable.Executable(self.cc)
+        with self._compiler_environment():
+            output = cc(self.version_argument,
+                        output=str, error=str,
+                        ignore_errors=tuple(self.ignore_version_errors))
+            return self.extract_version_from_output(output)
+
     #
     # Compiler classes have methods for querying the version of
     # specific compiler executables.  This is used when discovering compilers.
@@ -365,7 +494,8 @@ class Compiler(object):
     @classmethod
     def default_version(cls, cc):
         """Override just this to override all compiler version functions."""
-        output = get_compiler_version_output(cc, cls.version_argument)
+        output = get_compiler_version_output(
+            cc, cls.version_argument, tuple(cls.ignore_version_errors))
         return cls.extract_version_from_output(output)
 
     @classmethod
@@ -421,12 +551,39 @@ class Compiler(object):
                 self.cc, self.cxx, self.f77, self.fc, self.modules,
                 str(self.operating_system)))))
 
+    @contextlib.contextmanager
+    def _compiler_environment(self):
+        # store environment to replace later
+        backup_env = os.environ.copy()
+
+        try:
+            # load modules and set env variables
+            for module in self.modules:
+                # On cray, mic-knl module cannot be loaded without cce module
+                # See: https://github.com/spack/spack/issues/3153
+                if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
+                    spack.util.module_cmd.load_module('cce')
+                spack.util.module_cmd.load_module(module)
+
+            # apply other compiler environment changes
+            env = spack.util.environment.EnvironmentModifications()
+            env.extend(spack.schema.environment.parse(self.environment))
+            env.apply_modifications()
+
+            yield
+        except BaseException:
+            raise
+        finally:
+            # Restore environment regardless of whether inner code succeeded
+            os.environ.clear()
+            os.environ.update(backup_env)
+
 
 class CompilerAccessError(spack.error.SpackError):
-
-    def __init__(self, path):
-        super(CompilerAccessError, self).__init__(
-            "'%s' is not a valid compiler." % path)
+    def __init__(self, compiler, paths):
+        msg = "Compiler '%s' has executables that are missing" % compiler.spec
+        msg += " or are not executable: %s" % paths
+        super(CompilerAccessError, self).__init__(msg)
 
 
 class InvalidCompilerError(spack.error.SpackError):

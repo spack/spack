@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyPy2cairo(WafPackage):
     homepage = "https://www.cairographics.org/pycairo/"
     url      = "https://cairographics.org/releases/py2cairo-1.10.0.tar.bz2"
 
-    version('1.10.0', '20337132c4ab06c1146ad384d55372c5')
+    version('1.10.0', sha256='d30439f06c2ec1a39e27464c6c828b6eface3b22ee17b2de05dc409e429a7431')
 
     extends('python')
 

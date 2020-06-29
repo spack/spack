@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,6 @@ class PyWcwidth(PythonPackage):
     homepage = "https://pypi.python.org/pypi/wcwidth"
     url      = "https://pypi.io/packages/source/w/wcwidth/wcwidth-0.1.7.tar.gz"
 
-    version('0.1.7', 'b3b6a0a08f0c8a34d1de8cf44150a4ad')
+    version('0.1.7', sha256='3df37372226d6e63e1b1e1eda15c594bca98a22d33a23832a90998faa96bc65e')
 
     depends_on('py-setuptools', type='build')

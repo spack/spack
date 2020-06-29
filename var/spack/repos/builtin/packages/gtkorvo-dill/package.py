@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,12 @@ class GtkorvoDill(CMakePackage):
     git      = "https://github.com/GTkorvo/dill.git"
 
     version('develop', branch='master')
-    version('2.4', '6836673b24f395eaae044b8bb976511d')
-    version('2.1', '14c835e79b66c9acd2beee01d56e6200')
+    version('2.4', sha256='ed7745d13e8c6a556f324dcc0e48a807fc993bdd5bb1daa94c1df116cb7e81fa')
+    version('2.1', sha256='7671e1f3c25ac6a4ec2320cec2c342a2f668efb170e3dba186718ed17d2cf084')
+
+    # Ref: https://github.com/GTkorvo/dill/commit/dac6dfcc7fdaceeb4c157f9ecdf5ecc28f20477f
+    patch('2.4-fix-clear_cache.patch', when='@2.4')
+    patch('2.1-fix-clear_cache.patch', when='@2.1')
 
     def cmake_args(self):
         args = []

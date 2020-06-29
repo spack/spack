@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,12 +23,13 @@ class Kealib(CMakePackage):
     Development work on this project has been funded by Landcare Research.
     """
     homepage = "http://www.kealib.org/"
-    url      = "https://bitbucket.org/chchrsc/kealib/downloads/kealib-1.4.11.tar.gz"
-    hg       = "https://bitbucket.org/chchrsc/kealib"
+    url      = "https://github.com/ubarsc/kealib/releases/download/kealib-1.4.12/kealib-1.4.12.tar.gz"
+    git      = "https://github.com/ubarsc/kealib"
 
     maintainers = ['gillins']
 
-    version('develop', hg=hg)
+    version('develop', git=git)
+    version('1.4.12', sha256='0b100e36b3e25e57487aa197d7be47f22e1b30afb16a57fdaa5f877696ec321e')
     version('1.4.11', sha256='3d64cdec560c7a338ccb38e3a456db4e3b176ac62f945daa6e332e60fe4eca90')
     version('1.4.10', sha256='b1bd2d6834d2fe09ba456fce77f7a9452b406dbe302f7ef1aabe924e45e6bb5e')
     version('1.4.9',  sha256='1c80489f17114a229097c2e8c61d5e4c82ea63ae631c81a817fef95cfd527174')

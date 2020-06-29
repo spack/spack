@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,3 +16,9 @@ class Qtkeychain(CMakePackage):
 
     depends_on('qt+dbus')
     depends_on('libsecret')
+
+    def cmake_args(self):
+        args = []
+        if self.spec['qt'].version.up_to(1) == Version(4):
+            args.append('-DBUILD_WITH_QT4=ON')
+        return args

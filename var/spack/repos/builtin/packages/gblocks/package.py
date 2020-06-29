@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Gblocks(Package):
     homepage = "http://molevol.cmima.csic.es/castresana/Gblocks.html"
     url      = "http://molevol.cmima.csic.es/castresana/Gblocks/Gblocks_Linux64_0.91b.tar.Z"
 
-    version('0.91b', 'c2c752ae4cbfda0b8bf09e6662585252')
+    version('0.91b', sha256='563658f03cc5e76234a8aa705bdc149398defec813d3a0c172b5f94c06c880dc')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

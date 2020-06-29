@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,6 @@ class Sph2pipe(CMakePackage):
     homepage = "https://www.ldc.upenn.edu/language-resources/tools/sphere-conversion-tools"
     url      = "https://www.ldc.upenn.edu/sites/www.ldc.upenn.edu/files/ctools/sph2pipe_v2.5.tar.gz"
 
-    version('2.5', '771d9143e9aec0a22c6a14e138974be2')
+    version('2.5', sha256='5be236dc94ed0a301c5c8a369f849f76799ec7e70f25dfc0521068d9d1d4d3e3')
 
     patch('cmake.patch')

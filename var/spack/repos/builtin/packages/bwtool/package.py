@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,6 @@ class Bwtool(AutotoolsPackage):
     homepage = "https://github.com/CRG-Barcelona/bwtool"
     url      = "https://github.com/CRG-Barcelona/bwtool/archive/1.0.tar.gz"
 
-    version('1.0', 'cdd7a34ae457b587edfe7dc8a0bdbedd')
+    version('1.0', sha256='2e177573602c129e1d37e07288bdc04bef14d2c25c39636aea8c9a359400594a')
 
     depends_on('libbeato')

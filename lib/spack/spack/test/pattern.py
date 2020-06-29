@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,15 +27,14 @@ def interface():
 def implementation(interface):
     """Returns an implementation of the interface"""
     class Implementation(interface):
+        def __init__(self, value):
+            self.value = value
 
-            def __init__(self, value):
-                self.value = value
+        def add(self):
+            interface.counter += self.value
 
-            def add(self):
-                interface.counter += self.value
-
-            def subtract(self):
-                interface.counter -= self.value
+        def subtract(self):
+            interface.counter -= self.value
 
     return Implementation
 

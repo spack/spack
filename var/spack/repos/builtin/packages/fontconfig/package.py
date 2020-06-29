@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,15 +11,17 @@ class Fontconfig(AutotoolsPackage):
     homepage = "http://www.freedesktop.org/wiki/Software/fontconfig/"
     url      = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.12.3.tar.gz"
 
-    version('2.12.3', 'aca0c734c1a38eb3ba12b2447dd90ab0')
-    version('2.12.1', 'ce55e525c37147eee14cc2de6cc09f6c')
-    version('2.11.1', 'e75e303b4f7756c2b16203a57ac87eba')
+    version('2.13.1', sha256='9f0d852b39d75fc655f9f53850eb32555394f36104a044bb2b2fc9e66dbbfa7f')
+    version('2.12.3', sha256='ffc3cbf6dd9fcd516ee42f48306a715e66698b238933d6fa7cef02ea8b3b818e')
+    version('2.12.1', sha256='a9f42d03949f948a3a4f762287dbc16e53a927c91a07ee64207ebd90a9e5e292')
+    version('2.11.1', sha256='b6b066c7dce3f436fdc0dfbae9d36122b38094f4f53bd8dffd45e195b0540d8d')
 
     depends_on('freetype')
     depends_on('gperf', type='build', when='@2.12.2:')
     depends_on('libxml2')
     depends_on('pkgconfig', type='build')
     depends_on('font-util')
+    depends_on('libuuid', when='@2.13.1:')
 
     def configure_args(self):
         font_path = join_path(self.spec['font-util'].prefix, 'share', 'fonts')

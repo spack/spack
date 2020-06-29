@@ -1,0 +1,11 @@
+--- spack-src/plugins/macsio_silo.c.org	2020-02-04 10:48:08.031770849 +0900
++++ spack-src/plugins/macsio_silo.c	2020-02-04 10:48:48.175592435 +0900
+@@ -706,7 +706,7 @@
+     char fileName[256];
+     MACSIO_MIF_baton_t *bat;
+     MACSIO_MIF_ioFlags_t ioFlags = {MACSIO_MIF_WRITE,
+-        JsonGetInt(main_obj, "clargs/exercise_scr")&0x1};
++        (unsigned int)JsonGetInt(main_obj, "clargs/exercise_scr")&0x1};
+ 
+     /* Without this barrier, I get strange behavior with Silo's MACSIO_MIF interface */
+ //#warning CONFIRM THIS IS STILL NEEDED

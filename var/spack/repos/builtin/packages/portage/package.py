@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,12 @@ class Portage(CMakePackage):
     # part of https://github.com/laristra/cinch/commit/f87f848269fac25aa5b8d0bd5d9c9b2d2d6fb0ad
     # fixed in version above 1.2.2
     patch('p_lapacke_config.patch', when='@1.2.2')
+    # don't enable debug prints in RelWithDebInfo build
+    # fixed in version above 1.2.2
+    patch('rel-with-deb-info.patch', when='@1.2.2')
+
+    # intel/19.0.4 got an ICE (internal compiler error) compiling pairs.cc
+    patch('p_intel_ice.patch', when='@1.2.2')
 
     variant('mpi', default=True, description='Support MPI')
 
@@ -47,5 +53,13 @@ class Portage(CMakePackage):
             ])
         else:
             options.append('-DENABLE_MPI=OFF')
+
+        options.append('-DBLA_VENDOR=' + self.spec['blas'].name.upper())
+        options.append('-DBLAS_LIBRARIES=' + self.spec['blas'].libs.joined())
+        options.append('-DLAPACK_LIBRARIES=' +
+                       self.spec['lapack'].libs.joined())
+
+        options.append("-DLAPACKE_LIBRARY=" +
+                       self.spec["lapack:c"].libs.joined(";"))
 
         return options

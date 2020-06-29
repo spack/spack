@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyCdo(PythonPackage):
     homepage = "https://pypi.python.org/pypi/cdo"
     url      = "https://pypi.io/packages/source/c/cdo/cdo-1.3.2.tar.gz"
 
-    version('1.3.2', '4b3686ec1b9b891f166c1c466c6db745')
+    version('1.3.2', sha256='9f78879d90d14134f2320565016d0d371b7dfe7ec71110fd313868ec1db34aee')
 
     depends_on('cdo')
 

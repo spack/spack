@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Graph500(MakefilePackage):
     homepage = "https://graph500.org"
     url      = "https://github.com/graph500/graph500/archive/graph500-3.0.0.tar.gz"
 
-    version('3.0.0', 'a2ebb4783b21e2d86387a217776395e3')
+    version('3.0.0', sha256='887dcff56999987fba4953c1c5696d50e52265fe61b6ffa8bb14cc69ff27e8a0')
 
     depends_on('mpi@2.0:')
 

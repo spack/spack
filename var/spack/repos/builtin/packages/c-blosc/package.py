@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,6 +49,13 @@ class CBlosc(CMakePackage):
             args.append('-DPREFER_EXTERNAL_ZLIB=ON')
             args.append('-DPREFER_EXTERNAL_ZSTD=ON')
             args.append('-DPREFER_EXTERNAL_LZ4=ON')
+
+            if self.run_tests:
+                args.append('-DBUILD_TESTS=ON')
+                args.append('-DBUILD_BENCHMARKS=ON')
+            else:
+                args.append('-DBUILD_TESTS=OFF')
+                args.append('-DBUILD_BENCHMARKS=OFF')
 
         return args
 

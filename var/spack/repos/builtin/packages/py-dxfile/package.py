@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyDxfile(PythonPackage):
 
     import_modules = ['dxfile']
 
-    version('0.4', '0402cd38aefdfd5ce92feb43dda18947')
+    version('0.4', sha256='b7729eebdc7c99a66a8b339fc10019aa8565e02bd12708540fb3f47935f004c7')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-h5py', type=('build', 'run'))

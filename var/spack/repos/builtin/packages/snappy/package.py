@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Snappy(CMakePackage):
     homepage = "https://github.com/google/snappy"
     url      = "https://github.com/google/snappy/archive/1.1.7.tar.gz"
 
-    version('1.1.7', 'ee9086291c9ae8deb4dac5e0b85bf54a')
+    version('1.1.7', sha256='3dfa02e873ff51a11ee02b9ca391807f0c8ea0529a4924afa645fbf97163f9d4')
 
     variant('shared', default=True, description='Build shared libraries')
     variant('pic', default=True, description='Build position independent code')
@@ -37,8 +37,11 @@ class Snappy(CMakePackage):
 
     def flag_handler(self, name, flags):
         flags = list(flags)
-        if '+pic' in self.spec and name in ('cflags', 'cxxflags'):
-            flags.append(self.compiler.pic_flag)
+        if '+pic' in self.spec:
+            if name == 'cflags':
+                flags.append(self.compiler.cc_pic_flag)
+            elif name == 'cxxflags':
+                flags.append(self.compiler.cxx_pic_flag)
         return (None, None, flags)
 
     @run_after('install')

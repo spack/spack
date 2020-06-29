@@ -8,6 +8,7 @@
 {% if short_description %}
 whatis([[Name : {{ spec.name }}]])
 whatis([[Version : {{ spec.version }}]])
+whatis([[Target : {{ spec.target }}]])
 whatis([[Short description : {{ short_description }}]])
 {% endif %}
 {% if configure_options %}
