@@ -51,6 +51,16 @@ class Whizard(AutotoolsPackage):
     depends_on('texlive', when="+latex")
     depends_on('zlib')
 
+    def setup_build_environment(self, env):
+        # whizard uses the compiler during runtime,
+        # and seems incompatible with
+        # filter_compiler_wrappers, thus the 
+        # actual compilers need to be used to build
+        env.set('CC', self.compiler.cc)
+        env.set('CXX', self.compiler.cxx)
+        env.set('FC', self.compiler.fc)
+        env.set('F77', self.compiler.fc)
+
     def configure_args(self):
         spec = self.spec
         args = [
