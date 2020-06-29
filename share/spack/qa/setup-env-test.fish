@@ -245,16 +245,10 @@ spt_succeeds which spack
 title "Setup"
 echo "Creating a mock package installation"
 spack -m install --fake a
-# set a_install (spack location -i a)
-# set a_module (spack -m module tcl find a)
-# 
-# set b_install (spack location -i b)
-# set b_module (spack -m module tcl find b)
 
 # create a test environment for testing environment commands
 echo "Creating a mock environment"
 spack env create spack_test_env
-# set test_env_location (spack location -e spack_test_env)
 
 # ensure that we uninstall b on exit
 function spt_cleanup
@@ -333,10 +327,6 @@ spt_contains "set -gx LD_LIBRARY_PATH $_a_ld:$_b_ld" spack -m load --fish a
 spt_contains "set -gx LIBRARY_PATH $_a_ld:$_b_ld" spack -m load --fish a
 spt_succeeds spack -m load --only dependencies a
 spt_succeeds spack -m load --only package a
-# spt_fails spack -m load -l
-# spt_contains "module load -l --arg $b_module" spack -m load -l --arg b
-# spt_contains "module load $b_module $a_module" spack -m load -r a
-# spt_contains "module load $b_module $a_module" spack -m load --dependencies a
 spt_fails spack -m load d
 spt_contains "usage: spack load " spack -m load -h
 spt_contains "usage: spack load " spack -m load -h d

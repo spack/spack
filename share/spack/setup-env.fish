@@ -210,56 +210,9 @@ function get_sp_flags -d "return leading flags"
 end
 
 
-# function get_mod_args -d "return submodule flags"
-#     #
-#     # Accumulate subcommand and submodule arguments. These are accumulated into
-#     # the external arrays `__sp_subcommand_args`, and `__sp_module_args`. NOTE:
-#     # Sets the external array: `__sp_remaining_args` containing all unprocessed
-#     # arguments.
-#     #
-# 
-#     set __sp_subcommand_args
-#     set __sp_module_args
-# 
-#     # initialize argument counter
-#     set -l i 1
-# 
-#     for elt in $argv
-# 
-#         if echo $elt | string match -r -q "^-"
-# 
-#             # Notes: [2] (cf. EOF)
-#             if test "x$elt" = "x-r"
-#                 set __sp_subcommand_args $__sp_subcommand_args $elt
-#             else if test "x$elt" = "x--dependencies"
-#                 set __sp_subcommand_args $__sp_subcommand_args $elt
-#             else
-#                 set __sp_module_args $__sp_module_args $elt
-#             end
-# 
-#         else
-#             # bash compatibility: stop when the match first fails. Upon failure,
-#             # we pack the remainder of `argv` into a global `__sp_remaining_args`
-#             # array (`i` tracks the index of the next element).
-#             set __sp_remaining_args (stream_args $argv[$i..-1])
-#             return
-#         end
-# 
-#         # increment argument counter: used in place of bash's `shift` command
-#         set -l i (math $i+1)
-# 
-#     end
-# 
-#     # if all elements in `argv` are matched, make sure that `__sp_remaining_args`
-#     # is deleted (this might be overkill...).
-#     set -e __sp_remaining_args
-# end
-
-
-
 
 #
-# CHECK_SP_FLAGS, CONTAINS_HELP_FLAGS, CHECK_ENV_ACTIVATE_FLAGS, and 
+# CHECK_SP_FLAGS, CONTAINS_HELP_FLAGS, CHECK_ENV_ACTIVATE_FLAGS, and
 # CHECK_ENV_DEACTIVATE_FLAGS: support functions for checking arguments and flags.
 #
 
@@ -285,37 +238,6 @@ function check_sp_flags -d "check spack flags for h/V flags"
     return 1
 end
 
-
-# function contains_help_flags -d "checks for help (-h/--help) flags"
-#     #
-#     # Check if inputs contain -h or --help
-#     #
-# 
-#     # combine argument array into single string (space seperated), to be passed
-#     # to regular expression matching (`string match -r`)
-#     set -l _a "$argv"
-# 
-#     # skip if called with blank input. Notes: [1] (cf. EOF)
-#     if test -n "$_a"
-#         # looks for a single `-h` (possibly surrounded by spaces)
-#         # this is a bit of a mess => [^\S] fails to match any non-space
-#         # character, so this regex looks either for a "-h" but fails if there is
-#         # _anything but_ a space in front of it, or it checks the entire string
-#         # permitting only "-h" surrounded by spaces. The second group (after the
-#         # | is necessary because the first group fails if there is no character
-#         # in front of "-h"
-#         if echo $_a | string match -r -q "([^\S]-h|^[\s]*-h[\s]*\$)"
-#             return 0
-#         end
-# 
-#         # looks for a single `--help` (possibly surrounded by spaces)
-#         if echo $_a | string match -r -q  "([^\S]--help|^[\s]*--help[\s]*\$)"
-#             return 0
-#         end
-#     end
-# 
-#     return 1
-# end
 
 
 function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, or --fish"
@@ -575,64 +497,6 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                 end
             end
 
-            # # Shift any other args for use off before parsing spec.
-            # set __sp_subcommand_args          # sets: __sp_remaining_args
-            # set __sp_module_args              #       __sp_subcommand_args
-            # get_mod_args $__sp_remaining_args #       __sp_module_args
-
-            # set -l sp_spec $__sp_remaining_args
-
-            # # any -h flags would have "landed" in __sp_module_args
-            # if contains_help_flags $__sp_module_args
-            #     command spack $sp_flags $sp_subcommand $__sp_subcommand_args $__sp_module_args $__sp_remaining_args
-            #     return 0
-            # end
-
-
-            # Here the user has run load or unload with a spec. Find a matching
-            # spec using 'spack module find', then use the appropriate module
-            # tool's commands to add/remove the result from the environment. If
-            # spack module command comes back with an error, do nothing.
-
-            # switch $sp_subcommand
-
-            #     case "load"
-            #         set -l tcl_args $__sp_subcommand_args $sp_spec
-            #         set -l sp_mod_cmd "command spack $sp_flags module tcl find $tcl_args"
-            #         capture_all $sp_mod_cmd __sp_stat __sp_stdout __sp_stderr
-
-            #         if test $__sp_stat -eq 0
-            #             set sp_full_spec $__sp_stdout
-
-            #             # Notes: [3] (cf. EOF).
-            #             set load_cmd (module load $__sp_module_args $sp_full_spec)
-            #             eval $load_cmd
-            #         else
-            #             if test -n "$__sp_stderr"
-            #                 echo -s \n$__sp_stderr 1>&2
-            #             end
-            #             return 1
-            #         end
-
-            #     case "unload"
-            #         set -l tcl_args $__sp_subcommand_args $sp_spec
-            #         set -l sp_mod_cmd "command spack $sp_flags module tcl find $tcl_args"
-            #         capture_all $sp_mod_cmd __sp_stat __sp_stdout __sp_stderr
-
-            #         if test $__sp_stat -eq 0
-            #             set sp_full_spec $__sp_stdout
-
-            #             # Notes: [3] (cf. EOF).
-            #             set unload_cmd (module unload $__sp_module_args $sp_full_spec)
-            #             eval $unload_cmd
-            #         else
-            #             if test -n "$__sp_stderr"
-            #                 echo -s \n$__sp_stderr 1>&2
-            #             end
-            #             return 1
-            #         end
-            # end
-
 
         # CASE: Catch-all
 
@@ -704,7 +568,7 @@ function spack_pathadd -d "Add path to specified variable (defaults to fish_user
         set pa_varname $argv[1]
         set pa_new_path $argv[2]
     else
-        true # this is a bit of a strange hack! Notes: [4] (cf EOF).
+        true # this is a bit of a strange hack! Notes: [3] (cf EOF).
         set pa_varname fish_user_paths
         set pa_new_path $argv[1]
     end
@@ -726,7 +590,7 @@ function spack_pathadd -d "Add path to specified variable (defaults to fish_user
             if test -n "$pa_oldvalue"
                 set $pa_varname $pa_new_path $pa_oldvalue
             else
-                true # this is a bit of a strange hack! Notes: [4] (cf. EOF)
+                true # this is a bit of a strange hack! Notes: [3] (cf. EOF)
                 set $pa_varname $pa_new_path
             end
         end
@@ -854,11 +718,6 @@ sp_multi_pathadd MODULEPATH $_sp_tcl_roots
 #      as `test $a` can be interpreted as `test $a[1] $a[2..-1]`. Solution is to
 #      prepend a non-flag character, eg: `test "x$a" = "x$b"`.
 #
-# [3]: This is a strange behavior of `modulecmd fish load $args`. In fish,
-#      `unload` returns a list of `set` imperatives rather than applying them
-#      outright. So what we'll do is to dump them into a `load_cmd` array
-#      and then evaluate the contents.
-#
-# [4]: When the test in the if statement fails, the `status` flag is set to 1.
+# [3]: When the test in the if statement fails, the `status` flag is set to 1.
 #      `true` here manuallt resets the value of `status` to 0. Since `set`
 #      passes `status` along, we thus avoid the function returning 1 by mistake.
