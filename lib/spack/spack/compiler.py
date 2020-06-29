@@ -299,7 +299,7 @@ class Compiler(object):
         """
         def accessible_exe(exe):
             # compilers may contain executable names (on Cray or user edited)
-            if not os.path.abspath(exe):
+            if not os.path.isabs(exe):
                 exe = spack.util.executable.which_string(exe)
                 if not exe:
                     return False
