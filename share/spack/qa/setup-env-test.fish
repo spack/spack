@@ -6,10 +6,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 #
-# This script tests that Spack's setup-env.sh init script works.
-#
-# The tests are portable to bash, zsh, and bourne shell, and can be run
-# in any of these shells.
+# This script tests that Spack's setup-env.fish init script works.
 #
 
 
@@ -203,7 +200,8 @@ set -e SPACK_ENV
 true # ignore failing `set -e`
 
 # Source setup-env.sh before tests
-source share/spack/setup-env.fish
+set -gx QA_DIR (dirname (status --current-filename))
+source QA_DIR/../setup-env.fish
 
 
 
