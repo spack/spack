@@ -7,9 +7,13 @@ from spack import *
 
 
 class Hssp(AutotoolsPackage):
-    """The source code for building the mkhssp and hsspconv programs is bundled in the hssp 
-       project. The mkhssp executable creates stockholm files with hssp annotations in them.
-       The hsspconv executable converts stockholm to the original hssp format."""
+    """The source code for building the mkhssp and hsspconv programs is bundled
+       in the hssp project.
+
+       The mkhssp executable creates stockholm files with hssp annotations in
+       them. The hsspconv executable converts stockholm to the original hssp
+       format.
+    """
 
     homepage = "https://github.com/cmbi/hssp"
     url      = "https://github.com/cmbi/hssp/archive/3.0.10.tar.gz"
