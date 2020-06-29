@@ -52,7 +52,7 @@ class Fastjet(AutotoolsPackage):
     variant('auto-ptr', default=False, description='Use auto_ptr')
 
     def configure_args(self):
-        extra_args = [--enable-allplugins]
+        extra_args = ["--enable-allplugins"]
         extra_args += self.enable_or_disable('shared')
         extra_args += self.enable_or_disable('auto-ptr')
 
