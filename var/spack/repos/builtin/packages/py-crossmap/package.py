@@ -21,7 +21,7 @@ class PyCrossmap(PythonPackage, SourceforgePackage):
     depends_on('python@2.7:2.8', type=('build', 'run'), when='@:0.2.9')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type=('build', 'run'))
+    depends_on('py-cython@0.17:', type=('build', 'run'))
     depends_on('py-pysam', type=('build', 'run'))
     depends_on('py-bx-python', type=('build', 'run'))
 
