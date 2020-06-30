@@ -220,7 +220,7 @@ class Openmpi(AutotoolsPackage):
     variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
     variant('gpfs', default=True, description='Enable GPFS support (if present)')
     variant('singularity', default=False,
-            description="Build support for the Singularity containe")
+            description="Build support for the Singularity container")
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -321,6 +321,8 @@ class Openmpi(AutotoolsPackage):
     conflicts('schedulers=loadleveler', when='@3.0.0:',
               msg='The loadleveler scheduler is not supported with '
               'openmpi(>=3.0.0).')
+    conflicts('+singularity', when='@5:',
+              msg='singularity support has been dropped in OpenMPI 5')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
 
@@ -533,10 +535,9 @@ class Openmpi(AutotoolsPackage):
             ])
 
         # Singularity container support
-        if spec.satisfies('@:4.9'):
-	    if '+singularity' in spec:
-	       config_args.append(
-                 '--with-singularity={0}'.format(spec['singularity'].prefix))
+        if spec.satisfies('+singularity @:4.9'):
+            singularity_opt = '--with-singularity={0}'.format(spec['singularity'].prefix)
+            config_args.append(singularity_opt)
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
