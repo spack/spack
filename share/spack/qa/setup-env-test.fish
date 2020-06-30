@@ -201,7 +201,7 @@ true # ignore failing `set -e`
 
 # Source setup-env.sh before tests
 set -gx QA_DIR (dirname (status --current-filename))
-source QA_DIR/../setup-env.fish
+source $QA_DIR/../setup-env.fish
 
 
 

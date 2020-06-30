@@ -376,7 +376,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
             end
 
             # Notes: [2] (cf. EOF)
-            if test "x$sp_arg" = "x-h" || test "x$sp_arg" = "x--help"
+            if test "x$sp_arg" = "x-h"; or test "x$sp_arg" = "x--help"
                 # nothing more needs to be done for `-h` or `--help`
                 command spack cd -h
             else
@@ -411,7 +411,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
             end
 
             # Notes: [2] (cf. EOF)
-            if test "x$sp_arg" = "x-h" || test "x$sp_arg" = "x--help"
+            if test "x$sp_arg" = "x-h"; or test "x$sp_arg" = "x--help"
                 # nothing more needs to be done for `-h` or `--help`
                 command spack env -h
             else
@@ -643,7 +643,7 @@ set -xg _sp_shell "fish"
 # Check whether we need environment-variables (module) <= `use` is not available
 #
 set -l need_module "no"
-if not functions -q use && not functions -q module
+if not functions -q use; and not functions -q module
     set need_module "yes"
 end
 
