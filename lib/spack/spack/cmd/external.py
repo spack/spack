@@ -15,9 +15,13 @@ import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 import six
 import spack
+import spack.architecture
+import spack.compilers
 import spack.cmd
 import spack.error
+import spack.operating_systems.cray_frontend as cray_frontend
 import spack.util.environment
+import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 
 description = "manage external packages in Spack configuration"
@@ -35,6 +39,9 @@ def setup_parser(subparser):
     find_parser.add_argument(
         '--not-buildable', action='store_true', default=False,
         help="packages with detected externals won't be built with Spack")
+    find_parser.add_argument(
+        '--craype', action='store_true', default=False,
+        help="detect packages using modules from the Cray PE")
     find_parser.add_argument('packages', nargs=argparse.REMAINDER)
 
     sp.add_parser(
@@ -73,7 +80,8 @@ def _get_system_executables():
 
 ExternalPackageEntry = namedtuple(
     'ExternalPackageEntry',
-    ['spec', 'base_dir'])
+    ['spec', 'base_dir', 'modules']
+)
 
 
 def _generate_pkg_config(external_pkg_entries):
@@ -100,7 +108,13 @@ def _generate_pkg_config(external_pkg_entries):
         if not _spec_is_valid(e.spec):
             continue
 
-        external_items = [('spec', str(e.spec)), ('prefix', e.base_dir)]
+        external_items = [('spec', str(e.spec))]
+        if e.base_dir:
+            external_items.append(('prefix', e.base_dir))
+
+        if e.modules:
+            external_items.append(('modules', e.modules))
+
         if e.spec.external_modules:
             external_items.append(('modules', e.spec.external_modules))
 
@@ -141,12 +155,19 @@ def _spec_is_valid(spec):
 
 
 def external_find(args):
+    # Select the packages to be checked for detection
     if args.packages:
         packages_to_check = list(spack.repo.get(pkg) for pkg in args.packages)
     else:
         packages_to_check = spack.repo.path.all_packages()
 
-    pkg_to_entries = _get_external_packages(packages_to_check)
+    if args.craype:
+        # Search Cray programming environment + frontend
+        tty.debug("Detecting Cray")
+        pkg_to_entries = _get_external_packages_on_cray(packages_to_check)
+    else:
+        pkg_to_entries = _get_external_packages(packages_to_check)
+
     new_entries, write_scope = _update_pkg_config(
         pkg_to_entries, args.not_buildable
     )
@@ -274,7 +295,8 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
             # naming scheme which differentiates them), the spec won't be
             # usable.
             specs = _convert_to_iterable(
-                pkg.determine_spec_details(prefix, exes_in_prefix))
+                pkg.determine_spec_details(prefix, exes_in_prefix)
+            )
 
             if not specs:
                 tty.debug(
@@ -293,7 +315,7 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                     continue
 
                 if spec in resolved_specs:
-                    prior_prefix = ', '.join(resolved_specs[spec])
+                    prior_prefix = resolved_specs[spec]
 
                     tty.debug(
                         "Executables in {0} and {1} are both associated"
@@ -314,8 +336,77 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                 if spec.external_path:
                     pkg_prefix = spec.external_path
 
-                pkg_to_entries[pkg.name].append(
-                    ExternalPackageEntry(spec=spec, base_dir=pkg_prefix))
+                pkg_to_entries[pkg.name].append(ExternalPackageEntry(
+                    spec=spec, base_dir=pkg_prefix, modules=[]
+                ))
+
+    return pkg_to_entries
+
+
+def _get_external_packages_on_cray(packages_to_check, system_path_to_exe=None):
+    # Assert the system is a Cray
+    p = spack.architecture.platform()
+    error_message = "the --craype option can be used only on Cray platforms"
+    assert str(p) == 'cray', error_message
+
+    # Front-end goes through the usual detection mechanism, but before that
+    # we need to temporarily unload module files
+    tty.debug("[CRAY] Detecting front-end software")
+    with cray_frontend.unload_programming_environment():
+        pkg_to_entries = _get_external_packages(
+            packages_to_check, system_path_to_exe
+        )
+
+    # Annotate the OS in the extra attributes for later reuse
+    for pkg, entries in pkg_to_entries.items():
+        for entry in entries:
+            entry.spec.extra_attributes['cray'] = {
+                'os': str(p.front_os)
+            }
+
+    # Back-end uses module detection
+    tty.debug("[CRAY] Detecting back-end software")
+    be_pkg_to_entries = _get_external_from_modules(packages_to_check)
+    # Add the modules just detected to the list of entries
+    for pkg, entries in be_pkg_to_entries.items():
+        pkg_to_entries[pkg.name].extend(entries)
+
+    return pkg_to_entries
+
+
+def _get_external_from_modules(packages_to_check):
+    module = spack.util.module_cmd.module
+    p = spack.architecture.platform()
+    spec_os, pkg_to_entries = p.back_os, defaultdict(list)
+    for pkg in packages_to_check:
+        # The PrgEnv module needs to be loaded before the compiler module
+        if not hasattr(pkg, 'cray_prgenv'):
+            continue
+        # Compiler module to be loaded
+        if not hasattr(pkg, 'cray_module_name'):
+            continue
+
+        # Inspect the output of module avail and extract version
+        # information from there
+        output = module('avail', pkg.cray_module_name)
+        version_regex = r'({0})/([\d\.]+[\d][-]?[\w]*)'.format(
+            pkg.cray_module_name
+        )
+        matches = re.findall(version_regex, output)
+        for _, version in matches:
+            extra_attributes = getattr(pkg, 'cray_extra_attributes', {})
+            extra_attributes.update({'cray': {'os': spec_os}})
+            spec_str_format = '{0}@{1}'
+            spec = spack.spec.Spec.from_detection(
+                spec_str=spec_str_format.format(pkg.name, version),
+                extra_attributes=extra_attributes
+            )
+            pkg_to_entries[pkg.name].append(ExternalPackageEntry(
+                spec=spec, base_dir=None, modules=[
+                    pkg.cray_prgenv,
+                    '{0}/{1}'.format(pkg.cray_module_name, version)
+                ]
+            ))
 
     return pkg_to_entries
 

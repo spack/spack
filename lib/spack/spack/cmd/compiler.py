@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from __future__ import print_function
 
 import argparse
@@ -19,7 +18,7 @@ import spack.spec
 from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
-from spack.spec import CompilerSpec, ArchSpec
+from spack.spec import CompilerSpec
 
 description = "manage compilers"
 section = "system"
@@ -71,65 +70,25 @@ def setup_parser(subparser):
         help="configuration scope to read from")
 
 
-supported_compilers = [
-    'apple-clang', 'arm', 'fj', 'gcc', 'intel', 'llvm', 'nag', 'pgi', 'xl'
-]
-
-
-def _compilers_from(specs):
-    result = []
-    for spec in specs:
-        compiler_name = spec.name if spec.name not in ('llvm',) else 'clang'
-        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
-        cspec = spack.spec.CompilerSpec(compiler_cls.name, spec.version)
-        paths = [
-            spec.package.cc,
-            spec.package.cxx,
-            spec.package.fortran,
-            spec.package.fortran
-        ]
-        if not spec.concrete:
-            c = spack.concretize.Concretizer(str(spec))
-            c.concretize_architecture(spec)
-        result.append(compiler_cls(
-            cspec, spec.os, str(spec.target.family), paths
-        ))
-    return result
-
-
 def compiler_find(args):
     """Search either $PATH or a list of paths OR MODULES for compilers and
        add them to Spack's configuration.
 
     """
-    compilers = []
-
     # Look for system installed compilers, detected as externals
     external = spack.main.SpackCommand('external')
-    external('find', *supported_compilers)
-    for current_compiler in supported_compilers:
-        externals = spack.package_prefs.spec_externals(
-            spack.spec.Spec(current_compiler)
-        )
-        compilers.extend(_compilers_from(externals))
+    if str(spack.architecture.platform()) == 'cray':
+        external('find', '--craype', *spack.compilers.compiler_packages)
+    else:
+        external('find', *spack.compilers.compiler_packages)
+    external_compilers = spack.compilers.from_externals()
 
     # Look for whatever was Spack installed
-    for current_compiler in supported_compilers:
-        specs = spack.store.db.query(current_compiler)
-        compilers.extend(_compilers_from(specs))
+    spack_installed_compilers = spack.compilers.from_db()
+    compilers = external_compilers + spack_installed_compilers
 
     # Now we have a list of specs. Register them as compilers.
-    new_compilers = []
-    for current_compiler in compilers:
-        arch_spec = ArchSpec(
-            (None, current_compiler.operating_system, current_compiler.target)
-        )
-        same_specs = spack.compilers.compilers_for_spec(
-            current_compiler.spec, arch_spec
-        )
-
-        if not same_specs:
-            new_compilers.append(current_compiler)
+    new_compilers = spack.compilers.not_registered(compilers)
 
     if new_compilers:
         spack.compilers.add_compilers_to_config(

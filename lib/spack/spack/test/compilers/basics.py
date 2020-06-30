@@ -732,7 +732,7 @@ fi
     assert len(compilers) == 1
     compiler = compilers[0]
     try:
-        _ = compiler.get_real_version()
+        compiler.get_real_version()
         assert False
     except ProcessError:
         # Confirm environment does not change after failed call

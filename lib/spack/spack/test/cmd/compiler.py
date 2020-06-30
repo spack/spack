@@ -9,6 +9,7 @@ import sys
 import pytest
 
 import llnl.util.filesystem
+import spack.compilers
 import spack.main
 import spack.version
 
@@ -17,7 +18,7 @@ compiler = spack.main.SpackCommand('compiler')
 
 @pytest.fixture()
 def only_gcc_allowed(monkeypatch):
-    monkeypatch.setattr(spack.cmd.compiler, 'supported_compilers', ['gcc'])
+    monkeypatch.setattr(spack.compilers, 'compiler_packages', ['gcc'])
 
 
 @pytest.fixture

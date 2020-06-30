@@ -11,7 +11,6 @@ import spack.spec
 from spack.build_environment import dso_suffix
 from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
-from spack.compilers.clang import Clang
 
 
 class ABI(object):
@@ -50,12 +49,12 @@ class ABI(object):
             # Some gcc's are actually clang and don't respond properly to
             # --print-file-name (they just print the filename, not the
             # full path).  Ignore these and expect them to be handled as clang.
-            if Clang.default_version(rungcc.exe[0]) != 'unknown':
-                return None
-
             output = rungcc("--print-file-name=%s" % libname, output=str)
+            if not os.path.isabs(output.strip()):
+                return None
         except ProcessError:
             return None
+
         if not output:
             return None
         libpath = os.path.realpath(output.strip())
