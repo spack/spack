@@ -2,10 +2,15 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import contextlib
 import os
 import os.path
+import stat
+
+import pytest
 
 import spack
+import spack.util.spack_yaml as syaml
 from spack.spec import Spec
 from spack.cmd.external import ExternalPackageEntry
 from spack.main import SpackCommand
@@ -53,8 +58,12 @@ def test_find_external_two_instances_same_package(mock_executable):
 
 def test_find_external_update_config(mutable_config):
     entries = [
-        ExternalPackageEntry(Spec.from_detection('cmake@1.foo'), '/x/y1/'),
-        ExternalPackageEntry(Spec.from_detection('cmake@3.17.2'), '/x/y2/'),
+        ExternalPackageEntry(
+            Spec.from_detection('cmake@1.foo'), '/x/y1/', modules=None
+        ),
+        ExternalPackageEntry(
+            Spec.from_detection('cmake@3.17.2'), '/x/y2/', modules=None
+        ),
     ]
     pkg_to_entries = {'cmake': entries}
 
@@ -147,10 +156,10 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
     mutable_config.update_config('packages', pkgs_cfg_init)
     entries = [
         ExternalPackageEntry(
-            Spec.from_detection('find-externals1@1.1'), '/x/y1/'
+            Spec.from_detection('find-externals1@1.1'), '/x/y1/', modules=None
         ),
         ExternalPackageEntry(
-            Spec.from_detection('find-externals1@1.2'), '/x/y2/'
+            Spec.from_detection('find-externals1@1.2'), '/x/y2/', modules=None
         )
     ]
     pkg_to_entries = {'find-externals1': entries}
@@ -240,3 +249,133 @@ def test_new_entries_are_reported_correctly(
     # has been found
     output = external('find', 'gcc')
     assert 'No new external packages detected' in output
+
+
+def candidate_packages():
+    all_packages = spack.repo.path.all_packages()
+    to_be_tested = []
+    for pkg in all_packages:
+        pkg_dir = os.path.dirname(
+            spack.repo.path.filename_for_package_name(pkg.name)
+        )
+        detection_data = os.path.join(pkg_dir, 'detection_test.yaml')
+        if os.path.exists(detection_data):
+            to_be_tested.append(pkg.name)
+    return to_be_tested
+
+
+@pytest.mark.detection
+@pytest.mark.parametrize('package_name', candidate_packages())
+def test_package_detection(mock_executable, package_name):
+    def detection_tests_for(pkg):
+        pkg_dir = os.path.dirname(
+            spack.repo.path.filename_for_package_name(pkg)
+        )
+        detection_data = os.path.join(pkg_dir, 'detection_test.yaml')
+        with open(detection_data) as f:
+            return syaml.load(f)
+
+    @contextlib.contextmanager
+    def setup_test_layout(layout):
+        exes_by_path, to_be_removed = {}, []
+        for binary in layout:
+            exe = mock_executable(
+                binary['name'], binary['output'], subdir=binary['subdir']
+            )
+            to_be_removed.append(exe)
+            exes_by_path[str(exe)] = os.path.basename(str(exe))
+
+        yield exes_by_path
+
+        for exe in to_be_removed:
+            os.unlink(exe)
+
+    # Retrieve detection test data for this package and cycle over each
+    # of the scenarios that are encoded
+    detection_tests = detection_tests_for(package_name)
+    if 'paths' not in detection_tests:
+        msg = 'Package "{0}" has no detection tests based on PATH'
+        pytest.skip(msg.format(package_name))
+
+    for test in detection_tests['paths']:
+        # Setup the mock layout for detection. The context manager will
+        # remove mock files when it's finished.
+        with setup_test_layout(test['layout']) as abs_path_to_exe:
+            entries = spack.cmd.external._get_external_packages(
+                [spack.repo.get(package_name)], abs_path_to_exe
+            )
+            specs = set(x.spec for x in entries[package_name])
+            results = test['results']
+            # If no result was expected, check that nothing was detected
+            if not results:
+                msg = 'No spec was expected [detected={0}]'
+                assert not specs, msg.format(sorted(specs))
+                continue
+
+            # If we expected results check that all of the expected
+            # specs were detected.
+            for result in results:
+                spec, msg = result['spec'], 'Not able to detect "{0}"'
+                assert spack.spec.Spec(spec) in specs, msg.format(str(spec))
+
+
+@pytest.mark.detection
+@pytest.mark.parametrize('package_name', candidate_packages())
+def test_package_detection_on_cray(mock_executable, package_name):
+    import spack.util.executable
+    import spack.util.module_cmd
+    import functools
+
+    # TODO: factor common code with previous test
+    def detection_tests_for(pkg):
+        pkg_dir = os.path.dirname(
+            spack.repo.path.filename_for_package_name(pkg)
+        )
+        detection_data = os.path.join(pkg_dir, 'detection_test.yaml')
+        with open(detection_data) as f:
+            return syaml.load(f)
+
+    @contextlib.contextmanager
+    def setup_module_command(module_info):
+        # Monkey-patch the module function to return mock output
+        module = mock_executable('module', module_info['output'])
+        orig_module_cmd = spack.util.module_cmd.module
+        module_cmd = spack.util.executable.Executable(module)
+        spack.util.module_cmd.module = functools.partial(
+            module_cmd, output=str, error=str
+        )
+
+        yield
+
+        spack.util.module_cmd.module = orig_module_cmd
+        os.unlink(str(module))
+
+    # Retrieve detection test data for this package and cycle over each
+    # of the scenarios that are encoded
+    detection_tests = detection_tests_for(package_name)
+    if 'craype' not in detection_tests:
+        pytest.skip(
+            'Package "{0}" has no detection test for Cray'.format(package_name)
+        )
+
+    for test in detection_tests['craype']:
+        # Setup the mock layout for detection. The context manager will
+        # remove mock files when it's finished.
+        with setup_module_command(test['module']):
+            entries = spack.cmd.external._get_external_from_modules(
+                [spack.repo.get(package_name)]
+            )
+            # TODO: this part of the test is the same as above
+            specs = set(x.spec for x in entries[package_name])
+            results = test['results']
+            # If no result was expected, check that nothing was detected
+            if not results:
+                msg = 'No spec was expected [detected={0}]'
+                assert not specs, msg.format(sorted(specs))
+                continue
+
+            # If we expected results check that all of the expected
+            # specs were detected.
+            for result in results:
+                spec, msg = result['spec'], 'Not able to detect "{0}"'
+                assert spack.spec.Spec(spec) in specs, msg.format(str(spec))
