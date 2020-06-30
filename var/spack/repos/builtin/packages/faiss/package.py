@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class Faiss(AutotoolsPackage, PythonPackage):
+class Faiss(AutotoolsPackage, PythonPackage, CudaPackage):
     """Faiss is a library for efficient similarity search and clustering of
        dense vectors.
 
@@ -29,23 +29,21 @@ class Faiss(AutotoolsPackage, PythonPackage):
     version('1.6.3', sha256='e1a41c159f0b896975fbb133e0240a233af5c9286c09a28fde6aefff5336e542')
     version('1.5.3', sha256='b24d347b0285d01c2ed663ccc7596cd0ea95071f3dd5ebb573ccfc28f15f043b')
 
-    variant('cuda',   default=False, description='Build with CUDA')
     variant('python', default=False, description='Build Python bindings')
     variant('tests',  default=False, description='Build Tests')
 
-    #TODO: figure out how to do these --
-    # +tests cannot work with ~python
-    # tested only 1.5.3 and 1.6.3 (other versions likely have other issues)
+    conflicts('+tests', when='~python', msg='+tests must be accompanied by +python')
+
 
     depends_on('blas')
-    depends_on('cuda',          when='+cuda')
 
-    # we dont't want "extend" because we don't want to symlink to python prefix
+    # we don't want "extend" because we don't want to symlink to python prefix
     depends_on('python',        when='+python', type=('build', 'run'))
     depends_on('py-numpy',      when='+python', type=('build', 'run'))
-    depends_on('py-setuptools', when='+python', type=('build', 'run'))
-    depends_on('swig',          when='+python', type='build')
     depends_on('py-scipy',      when='+tests',  type=('build', 'run'))
+
+    depends_on('py-setuptools', when='+python', type='build')
+    depends_on('swig',          when='+python', type='build')
 
     # --- patch for v1.5.3 -----------------------------------------------
     # faiss assumes that the "source directory" will always
@@ -64,11 +62,6 @@ class Faiss(AutotoolsPackage, PythonPackage):
     phases = ['configure', 'build', 'install']
 
     def configure_args(self):
-
-        #TODO: ask spack team about the correct way to force this
-        if '+tests' in self.spec and '~python' in self.spec:
-            raise InstallError('Incorrect variants: +tests must be accompanied by +python')
-
         args = []
         if '+cuda' in self.spec:
             args.append('--with-cuda={}'.format(self.spec['cuda'].prefix))
@@ -80,21 +73,22 @@ class Faiss(AutotoolsPackage, PythonPackage):
     def build(self, spec, prefix):
 
         make()
+
         if '+python' in self.spec:
             make('-C', 'python')
 
         # CPU tests
         if '+tests' in self.spec:
-            os.chdir(os.path.join(self.stage.source_path, 'tests'))
-            make('tests', parallel=False)
+            with working_dir('tests'):
+                make('gtest')
+                make('tests')
 
         # GPU tests
         if '+tests' in self.spec and '+cuda' in self.spec:
-            os.chdir(os.path.join(self.stage.source_path, 'gpu', 'test'))
-            make('build', parallel=False)   # this target is added by the patch
-            make('demo_ivfpq_indexing_gpu', parallel=False)
-
-        os.chdir(self.stage.source_path)
+            with working_dir(os.path.join('gpu', 'test')):
+                make('gtest')
+                make('build')                       # target added by the patch
+                make('demo_ivfpq_indexing_gpu')
 
     # --------------------------------------------------------------------------
     def install(self, spec, prefix):
@@ -103,14 +97,26 @@ class Faiss(AutotoolsPackage, PythonPackage):
 
         if '+python' in self.spec:
 
+            with working_dir('python'):
+                setup_py('install', '--prefix=' + prefix,
+                         '--single-version-externally-managed', '--root=/')
+
+            '''
             # faiss's suggested installation (using makefile) puts the
             # python bindings in python prefix
             # but, instead, we want to keep these files in the faiss prefix
+
             # TODO: replace with make install once the PR is accepted
             # https://github.com/facebookresearch/faiss/pull/1271
+
             cmd = '{} setup.py install --prefix={}'
             os.chdir(os.path.join(self.stage.source_path, 'python'))
             os.system(cmd.format(self.spec['python'].command, self.prefix))
+            os.chdir(self.stage.source_path)
+            '''
+
+        if not os.path.isdir(self.prefix.bin):
+            os.makedirs(self.prefix.bin)
 
         def _prefix_and_install(file):
             os.system('mv {} faiss_{}'.format(file, file))
@@ -118,21 +124,21 @@ class Faiss(AutotoolsPackage, PythonPackage):
 
         # CPU tests
         if '+tests' in self.spec:
-            os.chdir(os.path.join(self.stage.source_path, 'tests'))
-            _prefix_and_install('tests')
+            with working_dir('tests'):
+                _prefix_and_install('tests')
 
         # GPU tests
         if '+tests' in self.spec and '+cuda' in self.spec:
-            os.chdir(os.path.join(self.stage.source_path, 'gpu', 'test'))
-            _prefix_and_install('TestGpuIndexFlat')
-            _prefix_and_install('TestGpuIndexBinaryFlat')
-            _prefix_and_install('TestGpuIndexIVFFlat')
-            _prefix_and_install('TestGpuIndexIVFPQ')
-            _prefix_and_install('TestGpuMemoryException')
-            _prefix_and_install('TestGpuSelect')
-            _prefix_and_install('demo_ivfpq_indexing_gpu')
+            with working_dir(os.path.join('gpu', 'test')):
+                _prefix_and_install('TestGpuIndexFlat')
+                _prefix_and_install('TestGpuIndexBinaryFlat')
+                _prefix_and_install('TestGpuIndexIVFFlat')
+                _prefix_and_install('TestGpuIndexIVFPQ')
+                _prefix_and_install('TestGpuMemoryException')
+                _prefix_and_install('TestGpuSelect')
+                _prefix_and_install('demo_ivfpq_indexing_gpu')
 
-        os.chdir(self.stage.source_path)
+        #os.chdir(self.stage.source_path)
 
     # --------------------------------------------------------------------------
     @run_after('configure')
@@ -152,6 +158,7 @@ class Faiss(AutotoolsPackage, PythonPackage):
                             '#CPUFLAGS     = -mavx2 -mf16c')
 
     # --------------------------------------------------------------------------
+    '''
     @run_after('install')
     def _fix_install(self):
 
@@ -174,4 +181,5 @@ class Faiss(AutotoolsPackage, PythonPackage):
                 os.system('unzip {} -d {}'.format(bname, fname))
 
             os.chdir(self.stage.source_path)
+    '''
     # --------------------------------------------------------------------------
