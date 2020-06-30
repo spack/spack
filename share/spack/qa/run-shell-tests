@@ -43,4 +43,5 @@ zsh  "$QA_DIR/setup-env-test.sh"
 dash "$QA_DIR/setup-env-test.sh"
 
 # Run fish tests
-fish "$QA_DIR/setup-env-test.fish"
+# fish tests do not run properly when run from a relative path
+fish "$SPACK_ROOT/share/spack/qa/setup-env-test.fish"
