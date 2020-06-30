@@ -619,18 +619,26 @@ def dirs_with_libfiles(tmpdir_factory):
 
 
 @pytest.fixture(scope='function', autouse=True)
-def disable_compiler_execution(monkeypatch):
-    def noop(*args):
-        return []
+def disable_compiler_execution(monkeypatch, request):
+    """
+    This fixture can be disabled for tests of the compiler link path
+    functionality by::
 
-    # Compiler.determine_implicit_rpaths actually runs the compiler. So this
-    # replaces that function with a noop that simulates finding no implicit
-    # RPATHs
-    monkeypatch.setattr(
-        spack.compiler.Compiler,
-        '_get_compiler_link_paths',
-        noop
-    )
+        @pytest.mark.enable_compiler_link_paths
+
+    If a test is marked in that way this is a no-op."""
+    if 'enable_compiler_link_paths' not in request.keywords:
+        def noop(*args):
+            return []
+
+        # Compiler.determine_implicit_rpaths actually runs the compiler. So
+        # replace that function with a noop that simulates finding no implicit
+        # RPATHs
+        monkeypatch.setattr(
+            spack.compiler.Compiler,
+            '_get_compiler_link_paths',
+            noop
+        )
 
 
 @pytest.fixture(scope='function')
