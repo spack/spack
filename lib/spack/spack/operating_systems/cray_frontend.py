@@ -83,7 +83,8 @@ class CrayFrontend(LinuxDistro):
                 compiler_cls.PrgEnv_compiler
             )
             matches = re.findall(version_regex, output)
-            versions = tuple(version for _, version in matches)
+            versions = tuple(version for _, version in matches
+                             if 'classic' not in version)
 
             # Now inspect the modules and add to paths
             msg = "[CRAY FE] Detected FE compiler [name={0}, versions={1}]"
