@@ -14,6 +14,7 @@ EOF
   spack env activate .
   spack install
   spack gc -y
+  spack env deactivate
   spack env activate --sh -d . >> {{ paths.environment }}/environment_modifications.sh
 {% if strip %}
 
