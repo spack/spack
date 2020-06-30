@@ -82,39 +82,13 @@ def _to_dict(compiler):
     return {'compiler': d}
 
 
-def get_compiler_config(scope=None, init_config=True):
-    """Return the compiler configuration for the specified architecture.
-    """
-    def init_compiler_config():
-        """Compiler search used when Spack has no compilers."""
-        compilers = find_compilers()
-        compilers_dict = []
-        for compiler in compilers:
-            compilers_dict.append(_to_dict(compiler))
-        spack.config.set('compilers', compilers_dict, scope=scope)
-
+def get_compiler_config(scope=None):
+    """Return the compiler configuration for the specified architecture."""
     config = spack.config.get('compilers', scope=scope)
-    # Update the configuration if there are currently no compilers
-    # configured.  Avoid updating automatically if there ARE site
-    # compilers configured but no user ones.
-    if not config and init_config:
-        if scope is None:
-            # We know no compilers were configured in any scope.
-            init_compiler_config()
-            config = spack.config.get('compilers', scope=scope)
-        elif scope == 'user':
-            # Check the site config and update the user config if
-            # nothing is configured at the site level.
-            site_config = spack.config.get('compilers', scope='site')
-            sys_config = spack.config.get('compilers', scope='system')
-            if not site_config and not sys_config:
-                init_compiler_config()
-                config = spack.config.get('compilers', scope=scope)
-        return config
-    elif config:
-        return config
-    else:
-        return []  # Return empty list which we will later append to.
+    # If there's no config, return an empty list which we will later append to
+    if not config:
+        return []
+    return config
 
 
 def compiler_config_files():
@@ -128,14 +102,14 @@ def compiler_config_files():
     return config_files
 
 
-def add_compilers_to_config(compilers, scope=None, init_config=True):
+def add_compilers_to_config(compilers, scope=None):
     """Add compilers to the config for the specified architecture.
 
     Arguments:
       - compilers: a list of Compiler objects.
       - scope:     configuration scope to modify.
     """
-    compiler_config = get_compiler_config(scope, init_config)
+    compiler_config = get_compiler_config(scope)
     for compiler in compilers:
         compiler_config.append(_to_dict(compiler))
     global _cache_config_file
@@ -168,7 +142,7 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     spack.config.set('compilers', filtered_compiler_config, scope=scope)
 
 
-def all_compilers_config(scope=None, init_config=True):
+def all_compilers_config(scope=None):
     """Return a set of specs for all the compiler versions currently
        available to build with.  These are instances of CompilerSpec.
     """
@@ -176,16 +150,16 @@ def all_compilers_config(scope=None, init_config=True):
     # Create a cache of the config file so we don't load all the time.
     global _cache_config_file
     if not _cache_config_file:
-        _cache_config_file = get_compiler_config(scope, init_config)
+        _cache_config_file = get_compiler_config(scope)
         return _cache_config_file
     else:
         return _cache_config_file
 
 
-def all_compiler_specs(scope=None, init_config=True):
+def all_compiler_specs(scope=None):
     # Return compiler specs from the merged config.
     return [spack.spec.CompilerSpec(s['compiler']['spec'])
-            for s in all_compilers_config(scope, init_config)]
+            for s in all_compilers_config(scope)]
 
 
 def find_compilers(path_hints=None):
@@ -258,22 +232,19 @@ def supported(compiler_spec):
 
 
 @_auto_compiler_spec
-def find(compiler_spec, scope=None, init_config=True):
+def find(compiler_spec, scope=None):
     """Return specs of available compilers that match the supplied
        compiler spec.  Return an empty list if nothing found."""
-    return [c for c in all_compiler_specs(scope, init_config)
-            if c.satisfies(compiler_spec)]
+    return [c for c in all_compiler_specs(scope) if c.satisfies(compiler_spec)]
 
 
 @_auto_compiler_spec
-def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
+def find_specs_by_arch(compiler_spec, arch_spec, scope=None):
     """Return specs of available compilers that match the supplied
        compiler spec.  Return an empty list if nothing found."""
-    return [c.spec for c in compilers_for_spec(compiler_spec,
-                                               arch_spec,
-                                               scope,
-                                               True,
-                                               init_config)]
+    return [c.spec for c in compilers_for_spec(
+        compiler_spec, arch_spec, scope=scope, use_cache=True
+    )]
 
 
 def all_compilers(scope=None):
@@ -286,17 +257,18 @@ def all_compilers(scope=None):
 
 
 @_auto_compiler_spec
-def compilers_for_spec(compiler_spec, arch_spec=None, scope=None,
-                       use_cache=True, init_config=True):
+def compilers_for_spec(
+        compiler_spec, arch_spec=None, scope=None, use_cache=True
+):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
     if use_cache:
-        config = all_compilers_config(scope, init_config)
+        config = all_compilers_config(scope)
     else:
-        config = get_compiler_config(scope, init_config)
+        config = get_compiler_config(scope)
 
-    matches = set(find(compiler_spec, scope, init_config))
+    matches = set(find(compiler_spec, scope))
     compilers = []
     for cspec in matches:
         compilers.extend(get_compilers(config, cspec, arch_spec))

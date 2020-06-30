@@ -10,8 +10,11 @@ import sys
 from six import iteritems
 
 import llnl.util.tty as tty
+import spack.cmd.external
 import spack.compilers
+import spack.concretize
 import spack.config
+import spack.main
 import spack.spec
 from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
@@ -68,32 +71,70 @@ def setup_parser(subparser):
         help="configuration scope to read from")
 
 
+supported_compilers = [
+    'apple-clang', 'arm', 'fj', 'gcc', 'intel', 'llvm', 'nag', 'pgi', 'xl'
+]
+
+
+def _compilers_from(specs):
+    result = []
+    for spec in specs:
+        compiler_name = spec.name if spec.name not in ('llvm',) else 'clang'
+        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
+        cspec = spack.spec.CompilerSpec(compiler_cls.name, spec.version)
+        paths = [
+            spec.package.cc,
+            spec.package.cxx,
+            spec.package.fortran,
+            spec.package.fortran
+        ]
+        if not spec.concrete:
+            c = spack.concretize.Concretizer(str(spec))
+            c.concretize_architecture(spec)
+        result.append(compiler_cls(
+            cspec, spec.os, str(spec.target.family), paths
+        ))
+    return result
+
+
 def compiler_find(args):
     """Search either $PATH or a list of paths OR MODULES for compilers and
        add them to Spack's configuration.
 
     """
-    # None signals spack.compiler.find_compilers to use its default logic
-    paths = args.add_paths or None
+    compilers = []
 
-    # Don't initialize compilers config via compilers.get_compiler_config.
-    # Just let compiler_find do the
-    # entire process and return an empty config from all_compilers
-    # Default for any other process is init_config=True
-    compilers = [c for c in spack.compilers.find_compilers(paths)]
+    # Look for system installed compilers, detected as externals
+    external = spack.main.SpackCommand('external')
+    external('find', *supported_compilers)
+    for current_compiler in supported_compilers:
+        externals = spack.package_prefs.spec_externals(
+            spack.spec.Spec(current_compiler)
+        )
+        compilers.extend(_compilers_from(externals))
+
+    # Look for whatever was Spack installed
+    for current_compiler in supported_compilers:
+        specs = spack.store.db.query(current_compiler)
+        compilers.extend(_compilers_from(specs))
+
+    # Now we have a list of specs. Register them as compilers.
     new_compilers = []
-    for c in compilers:
-        arch_spec = ArchSpec((None, c.operating_system, c.target))
+    for current_compiler in compilers:
+        arch_spec = ArchSpec(
+            (None, current_compiler.operating_system, current_compiler.target)
+        )
         same_specs = spack.compilers.compilers_for_spec(
-            c.spec, arch_spec, init_config=False)
+            current_compiler.spec, arch_spec
+        )
 
         if not same_specs:
-            new_compilers.append(c)
+            new_compilers.append(current_compiler)
 
     if new_compilers:
-        spack.compilers.add_compilers_to_config(new_compilers,
-                                                scope=args.scope,
-                                                init_config=False)
+        spack.compilers.add_compilers_to_config(
+            new_compilers, scope=args.scope
+        )
         n = len(new_compilers)
         s = 's' if n > 1 else ''
 
@@ -156,10 +197,18 @@ def compiler_info(args):
 
 
 def compiler_list(args):
-    tty.msg("Available compilers")
-    index = index_by(spack.compilers.all_compilers(scope=args.scope),
-                     lambda c: (c.spec.name, c.operating_system, c.target))
+    compilers = spack.compilers.all_compilers(scope=args.scope)
+    if not compilers:
+        msg = "No available compilers"
+        if args.scope:
+            msg += " [scope={0}]".format(args.scope)
+        tty.msg(msg)
+        return
 
+    tty.msg("Available compilers")
+    index = index_by(
+        compilers, lambda c: (c.spec.name, c.operating_system, c.target)
+    )
     # For a container, take each element which does not evaluate to false and
     # convert it to a string. For elements which evaluate to False (e.g. None)
     # convert them to '' (in which case it still evaluates to False but is a

@@ -15,6 +15,11 @@ import spack.version
 compiler = spack.main.SpackCommand('compiler')
 
 
+@pytest.fixture()
+def only_gcc_allowed(monkeypatch):
+    monkeypatch.setattr(spack.cmd.compiler, 'supported_compilers', ['gcc'])
+
+
 @pytest.fixture
 def no_compilers_yaml(mutable_config):
     """Creates a temporary configuration without compilers.yaml"""
@@ -61,19 +66,15 @@ done
     return str(tmpdir)
 
 
+pytestmark = pytest.mark.usefixtures('only_gcc_allowed')
+
+
 @pytest.mark.regression('11678,13138')
-def test_compiler_find_without_paths(no_compilers_yaml, working_env, tmpdir):
-    with tmpdir.as_cwd():
-        with open('gcc', 'w') as f:
-            f.write("""\
-#!/bin/sh
-echo "0.0.0"
-""")
-        os.chmod('gcc', 0o700)
-
-    os.environ['PATH'] = str(tmpdir)
+def test_compiler_find_without_paths(
+        no_compilers_yaml, working_env, mock_compiler_dir
+):
+    os.environ['PATH'] = mock_compiler_dir
     output = compiler('find', '--scope=site')
-
     assert 'gcc' in output
 
 
@@ -114,24 +115,15 @@ def test_compiler_remove(mutable_config, mock_packages):
 
 
 def test_compiler_add(
-        mutable_config, mock_packages, mock_compiler_dir, mock_compiler_version
+    no_compilers_yaml, working_env, mock_compiler_dir, mock_compiler_version
 ):
-    # Compilers available by default.
-    old_compilers = set(spack.compilers.all_compiler_specs())
-
-    args = spack.util.pattern.Bunch(
-        all=None,
-        compiler_spec=None,
-        add_paths=[mock_compiler_dir],
-        scope=None
-    )
-    spack.cmd.compiler.compiler_find(args)
+    os.environ['PATH'] = mock_compiler_dir
+    compiler('find', '--scope=site')
 
     # Ensure new compiler is in there
-    new_compilers = set(spack.compilers.all_compiler_specs())
-    new_compiler = new_compilers - old_compilers
-    assert any(c.version == spack.version.Version(mock_compiler_version)
-               for c in new_compiler)
+    compilers = set(spack.compilers.all_compiler_specs())
+    expected_version = spack.version.Version(mock_compiler_version)
+    assert any(c.version == expected_version for c in compilers)
 
 
 @pytest.fixture
