@@ -45,7 +45,6 @@ def setup_parser(subparser):
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
-    testing = subparser.add_mutually_exclusive_group()
     testing.add_argument(
         '--test', default=None,
         choices=['root', 'all'],
