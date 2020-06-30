@@ -20,7 +20,7 @@ class Graphblast(MakefilePackage, CudaPackage):
     depends_on('boost +program_options')
 
     # This package is confirmed to compile with:
-    #   gcc@:5.4.0,7.5.0 , boost@1.58.0: , cuda@9:
+    #   gcc@:5.4.0,7.5.0 , boost@1.58.0:1.60.0 , cuda@9:
 
     # TODO: the package doesn't compile as CMakePackage
     # once that is fixed it should be converted to a CMakePackage type.
