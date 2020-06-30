@@ -297,11 +297,21 @@ class Compiler(object):
         Raises a CompilerAccessError if any of the non-null paths for the
         compiler are not accessible.
         """
-        missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
-                   if cmp and not (os.path.isfile(cmp) and
-                                   os.access(cmp, os.X_OK))]
-        if missing:
-            raise CompilerAccessError(self, missing)
+        def accessible_exe(exe):
+            # compilers may contain executable names (on Cray or user edited)
+            if not os.path.isabs(exe):
+                exe = spack.util.executable.which_string(exe)
+                if not exe:
+                    return False
+            return os.path.isfile(exe) and os.access(exe, os.X_OK)
+
+        # setup environment before verifying in case we have executable names
+        # instead of absolute paths
+        with self._compiler_environment():
+            missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
+                       if cmp and not accessible_exe(cmp)]
+            if missing:
+                raise CompilerAccessError(self, missing)
 
     @property
     def version(self):
