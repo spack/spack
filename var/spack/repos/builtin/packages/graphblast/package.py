@@ -13,6 +13,7 @@ class Graphblast(MakefilePackage, CudaPackage):
     git         = "https://github.com/gunrock/graphblast.git"
 
     version('master', submodules=True)
+    version('2020-05-07', submodules=True, commit='1a052558a71f2cd67f5d6fe9db3b274c303ef8f6', preferred=True)
 
     variant('cuda', default=True, description="Build with Cuda support")
 
@@ -31,8 +32,7 @@ See "spack info graphblast"')
     def install(self, spec, prefix):
         install_tree(self.build_directory, self.prefix)
 
-    @run_before('build')
-    def set_cudarch(self):
+    def patch(self):
         cuda_arch_list = self.spec.variants['cuda_arch'].value
         arches = 'ARCH = '
         for i in cuda_arch_list:
