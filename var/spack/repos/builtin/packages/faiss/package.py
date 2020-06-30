@@ -125,7 +125,9 @@ class Faiss(AutotoolsPackage, PythonPackage, CudaPackage):
         # CPU tests
         if '+tests' in self.spec:
             with working_dir('tests'):
-                _prefix_and_install('tests')
+                # rename the exec to keep consistent with gpu tests
+                os.system('mv tests TestCpu')
+                _prefix_and_install('TestCpu')
 
         # GPU tests
         if '+tests' in self.spec and '+cuda' in self.spec:
