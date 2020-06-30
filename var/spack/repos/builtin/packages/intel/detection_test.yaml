@@ -1,0 +1,35 @@
+paths:
+  - layout:
+      - subdir: [bin, intel64]
+        name: icc
+        output: |
+          echo "icc (ICC) 18.0.5 20180823"
+          echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
+      - subdir: [bin, intel64]
+        name: icpc
+        output: |
+          echo "icpc (ICC) 18.0.5 20180823"
+          echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
+      - subdir: [bin, intel64]
+        name: ifort
+        output: |
+          echo "ifort (IFORT) 18.0.5 20180823"
+          echo "Copyright (C) 1985-2018 Intel Corporation.  All rights reserved."
+    results:
+      - spec: 'intel@18.0.5'
+craype:
+  - module:
+      # Piz Daint (CSCS) - June 16th, 2020
+      output: |
+        echo ""
+        echo "--------------------------------------------------------- /apps/daint/system/modulefiles ---------------------------------------------------------"
+        echo "intel-opencl/1.2(default)                    intel-opencl-sdk/1.2-sdk-6.3.0.1904(default)"
+        echo ""
+        echo "---------------------------------------------------------------- /opt/modulefiles ----------------------------------------------------------------"
+        echo "intel/17.0.4.196          intel/18.0.1.163          intel/18.0.2.199          intel/19.0.1.144(default)"
+
+    results:
+      - spec: 'intel@17.0.4.196'
+      - spec: 'intel@18.0.1.163'
+      - spec: 'intel@18.0.2.199'
+      - spec: 'intel@19.0.1.144'

@@ -1,0 +1,31 @@
+paths:
+
+  - layout:
+      - subdir: [bin]
+        name: xlc
+        output: |
+          echo "IBM XL C/C++ for Linux, V16.1.1 (5725-C73, 5765-J13)"
+          echo "Version: 16.01.0001.0006"
+      - subdir: [bin]
+        name: xlc++
+        output: |
+          echo "IBM XL C/C++ for Linux, V16.1.1 (5725-C73, 5765-J13)"
+          echo "Version: 16.01.0001.0006"
+      - subdir: [bin]
+        name: xlc_r
+        output: |
+          echo "IBM XL C/C++ for Linux, V16.1.1 (5725-C73, 5765-J13)"
+          echo "Version: 16.01.0001.0006"
+      - subdir: [bin]
+        name: xlc++_r
+        output: |
+          echo "IBM XL C/C++ for Linux, V16.1.1 (5725-C73, 5765-J13)"
+          echo "Version: 16.01.0001.0006"
+      - subdir: [bin]
+        name: xlcuf
+        output: |
+          echo "IBM XL Fortran for Linux, V16.1.1 (5725-C73, 5765-J13)"
+          echo "Version: 16.01.0001.0006"
+    results:
+      - spec: "xlc+r@16.1"
+      - spec: "xlc~r@16.1"

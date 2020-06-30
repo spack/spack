@@ -1,0 +1,13 @@
+craype:
+  - module:
+      # Piz Daint (CSCS) - June 15th, 2020
+      output: |
+        echo "-------------------------------------------------- /opt/cray/pe/modulefiles ---------------------------------------------------"
+        echo "cce/8.7.9          cce/9.0.1          cce/9.0.1-classic  cce/9.0.2(default) cce/9.0.2-classic"
+
+    results:
+      - spec: 'cce@8.7.9'
+      - spec: 'cce@9.0.1'
+      - spec: 'cce@9.0.1-classic'
+      - spec: 'cce@9.0.2'
+      - spec: 'cce@9.0.2-classic'
