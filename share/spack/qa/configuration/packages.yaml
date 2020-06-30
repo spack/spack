@@ -23,4 +23,8 @@ packages:
     buildable: False
     paths:
       libpciaccess@0.13.5: /usr
+  rust:
+    buildable: False
+    paths:
+      rust@1.44.1: /usr/share/rust/.rustup/toolchains/1.44.1-x86_64-unknown-linux-gnu
 
