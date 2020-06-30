@@ -385,6 +385,10 @@ def test_cce_flags():
     supported_flag_test("cxx_pic_flag", "-h PIC", "cce@1.0")
     supported_flag_test("f77_pic_flag", "-h PIC", "cce@1.0")
     supported_flag_test("fc_pic_flag",  "-h PIC", "cce@1.0")
+    supported_flag_test("cc_pic_flag",  "-fPIC", "cce@9.1.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "cce@9.1.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "cce@9.1.0")
+    supported_flag_test("fc_pic_flag",  "-fPIC", "cce@9.1.0")
     supported_flag_test("debug_flags", ['-g', '-G0', '-G1', '-G2', '-Gfast'],
                         'cce@1.0')
 
