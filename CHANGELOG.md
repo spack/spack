@@ -1,4 +1,98 @@
-# v0.14.2 (2019-04-15)
+# v0.15.0 (2020-06-28)
+
+`v0.15.0` is a major feature release.
+
+## Major Features in this release
+
+1. **Cray support** Spack will now work properly on Cray "Cluster"
+systems (non XC systems) and after a `module purge` command on Cray
+systems. See #12989
+
+2. **Virtual package configuration** Virtual packages are allowed in
+packages.yaml configuration. This allows users to specify a virtual
+package as non-buildable without needing to specify for each
+implementation. See #14934
+
+3. **New config subcommands** This release adds `spack config add` and
+`spack config remove` commands to add to and remove from yaml
+configuration files from the CLI. See #13920
+
+4. **Environment activation** Anonymous environments are **no longer**
+automatically activated in the current working directory. To activate
+an environment from a `spack.yaml` file in the current directory, use
+the `spack env activate .` command. This removes a concern that users
+were too easily polluting their anonymous environments with accidental
+installations. See #17258
+
+5. **Apple clang compiler** The clang compiler and the apple-clang
+compiler are now separate compilers in Spack. This allows Spack to
+improve support for the apple-clang compiler. See #17110
+
+6. **Finding external packages** Spack packages can now support an API
+for finding external installations. This allows the `spack external
+find` command to automatically add installations of those packages to
+the user's configuration. See #15158
+
+
+## Additional new features of note
+
+* support for using Spack with the fish shell (#9279)
+* `spack load --first` option to load first match (instead of prompting user) (#15622)
+* support the Cray cce compiler both new and classic versions (#17256, #12989)
+* `spack dev-build` command:
+  * supports stopping before a specified phase (#14699)
+  * supports automatically launching a shell in the build environment (#14887)
+* `spack install --fail-fast` allows builds to fail at the first error (rather than best-effort) (#15295)
+* environments: SpecList references can be dereferenced as compiler or dependency constraints (#15245)
+* `spack view` command: new support for a copy/relocate view type (#16480)
+* ci pipelines: see documentation for several improvements
+* `spack mirror -a` command now supports excluding packages (#14154)
+* `spack buildcache create` is now environment-aware (#16580)
+* module generation: more flexible format for specifying naming schemes (#16629)
+* lmod module generation: packages can be configured as core specs for lmod hierarchy (#16517)
+
+## Deprecations and Removals
+
+The following commands were deprecated in v0.13.0, and have now been removed:
+
+* `spack configure`
+* `spack build`
+* `spack diy`
+
+The following commands were deprecated in v0.14.0, and will be removed in the next major release:
+
+* `spack bootstrap`
+
+## Bugfixes
+
+Some of the most notable bugfixes in this release include:
+
+* Spack environments can now contain the string `-h` (#15429)
+* The `spack install` gracefully handles being backgrounded (#15723, #14682)
+* Spack uses `-isystem` instead of `-I` in cases that the underlying build system does as well (#16077)
+* Spack no longer prints any specs that cannot be safely copied into a Spack command (#16462)
+* Incomplete Spack environments containing python no longer cause problems (#16473)
+* Several improvements to binary package relocation
+
+## Package Improvements
+
+The Spack project is constantly engaged in routine maintenance,
+bugfixes, and improvements for the package ecosystem. Of particular
+note in this release are the following:
+
+* Spack now contains 4339 packages. There are 430 newly supported packages in v0.15.0
+* GCC now builds properly on ARM architectures (#17280)
+* Python: patched to support compiling mixed C/C++ python modules through distutils (#16856)
+* improvements to pytorch and py-tensorflow packages
+* improvements to major MPI implementations: mvapich2, mpich, openmpi, and others
+
+## Spack Project Management:
+
+* Much of the Spack CI infrastructure has moved from Travis to GitHub Actions (#16610, #14220, #16345)
+* All merges to the `develop` branch run E4S CI pipeline (#16338)
+* New `spack debug report` command makes reporting bugs easier (#15834)
+
+# v0.14.2 (2020-04-15)
 
 This is a minor release on the `0.14` series. It includes performance
 improvements and bug fixes:
@@ -13,7 +107,7 @@ improvements and bug fixes:
 * Avoid adding spurious `LMOD` env vars to Intel modules (#15778)
 * Don't output [+] for mock installs run during tests (#15609)
 
-# v0.14.1 (2019-03-20)
+# v0.14.1 (2020-03-20)
 
 This is a bugfix release on top of `v0.14.0`.  Specific fixes include:
 
