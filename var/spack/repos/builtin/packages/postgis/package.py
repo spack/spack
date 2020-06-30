@@ -74,6 +74,8 @@ class Postgis(AutotoolsPackage):
     @run_before('build')
     def fix_raster_bindir(self):
         makefile = FileFilter('raster/loader/Makefile')
-        makefile.filter('$(DESTDIR)$(PGSQL_BINDIR)', self.prefix.bin, string=True)
+        makefile.filter('$(DESTDIR)$(PGSQL_BINDIR)', self.prefix.bin,
+                        string=True)
         makefile = FileFilter('raster/scripts/Makefile')
-        makefile.filter('$(DESTDIR)$(PGSQL_BINDIR)', self.prefix.bin, string=True)
+        makefile.filter('$(DESTDIR)$(PGSQL_BINDIR)', self.prefix.bin,
+                        string=True)
