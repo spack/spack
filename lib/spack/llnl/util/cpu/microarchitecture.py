@@ -264,7 +264,7 @@ class Microarchitecture(object):
             version (str): version of the compiler to be used
         """
         # If we don't have information on compiler return an empty string
-        if compiler not in self.compilers:
+        if compiler not in self.family.compilers:
             return ''
 
         # Look up the compiler entry
