@@ -115,7 +115,7 @@ def activate(
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
         add_view (bool): generate commands to add view to path variables
-        shell (string): One of `sh`, `csh`.
+        shell (string): One of `sh`, `csh`, `fish`.
         prompt (string): string to add to the users prompt, or None
 
     Returns:
@@ -141,6 +141,19 @@ def activate(
             cmds += 'if (! $?SPACK_OLD_PROMPT ) '
             cmds += 'setenv SPACK_OLD_PROMPT "${prompt}";\n'
             cmds += 'set prompt="%s ${prompt}";\n' % prompt
+    elif shell == 'fish':
+        if os.getenv('TERM') and 'color' in os.getenv('TERM') and prompt:
+            prompt = colorize('@G{%s} ' % prompt, color=True)
+
+        cmds += 'set -gx SPACK_ENV %s;\n' % env.path
+        cmds += 'function despacktivate;\n'
+        cmds += '   spack env deactivate;\n'
+        cmds += 'end;\n'
+        #
+        # NOTE: We're not changing the fish_prompt function (which is fish's
+        # solution to the PS1 variable) here. This is a bit fiddly, and easy to
+        # screw up => spend time reasearching a solution. Feedback welcome.
+        #
     else:
         if os.getenv('TERM') and 'color' in os.getenv('TERM') and prompt:
             prompt = colorize('@G{%s} ' % prompt, color=True)
@@ -156,6 +169,12 @@ def activate(
             cmds += 'fi;\n'
             cmds += 'export PS1="%s ${PS1}";\n' % prompt
 
+    #
+    # NOTE in the fish-shell: Path variables are a special kind of variable
+    # used to support colon-delimited path lists including PATH, CDPATH,
+    # MANPATH, PYTHONPATH, etc. All variables that end in PATH (case-sensitive)
+    # become PATH variables.
+    #
     if add_view and default_view_name in env.views:
         with spack.store.db.read_transaction():
             cmds += env.add_default_view_to_shell(shell)
@@ -167,7 +186,7 @@ def deactivate(shell='sh'):
     """Undo any configuration or repo settings modified by ``activate()``.
 
     Arguments:
-        shell (string): One of `sh`, `csh`. Shell style to use.
+        shell (string): One of `sh`, `csh`, `fish`. Shell style to use.
 
     Returns:
         (string): shell commands for `shell` to undo environment variables
@@ -191,6 +210,12 @@ def deactivate(shell='sh'):
         cmds += 'set prompt="$SPACK_OLD_PROMPT" && '
         cmds += 'unsetenv SPACK_OLD_PROMPT;\n'
         cmds += 'unalias despacktivate;\n'
+    elif shell == 'fish':
+        cmds += 'set -e SPACK_ENV;\n'
+        cmds += 'functions -e despacktivate;\n'
+        #
+        # NOTE: Not changing fish_prompt (above) => no need to restore it here.
+        #
     else:
         cmds += 'if [ ! -z ${SPACK_ENV+x} ]; then\n'
         cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
