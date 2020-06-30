@@ -54,7 +54,7 @@ class Whizard(AutotoolsPackage):
     def setup_build_environment(self, env):
         # whizard uses the compiler during runtime,
         # and seems incompatible with
-        # filter_compiler_wrappers, thus the 
+        # filter_compiler_wrappers, thus the
         # actual compilers need to be used to build
         env.set('CC', self.compiler.cc)
         env.set('CXX', self.compiler.cxx)
