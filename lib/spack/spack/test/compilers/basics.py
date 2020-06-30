@@ -159,7 +159,13 @@ class MockCompiler(Compiler):
                    default_compiler_entry['paths']['f77']],
             environment={})
 
-    _get_compiler_link_paths = Compiler._get_compiler_link_paths
+    def _get_compiler_link_paths(self, paths):
+        # Mock os.path.isdir so the link paths don't have to exist
+        old_isdir = os.path.isdir
+        os.path.isdir = lambda x: True
+        ret = super(MockCompiler, self)._get_compiler_link_paths(paths)
+        os.path.isdir = old_isdir
+        return ret
 
     @property
     def name(self):
@@ -222,6 +228,7 @@ def call_compiler(exe, *args, **kwargs):
     ('f77', 'fflags'),
     ('f77', 'cppflags'),
 ])
+@pytest.mark.enable_compiler_link_paths
 def test_get_compiler_link_paths(monkeypatch, exe, flagname):
     # create fake compiler that emits mock verbose output
     compiler = MockCompiler()
@@ -261,6 +268,7 @@ def test_get_compiler_link_paths_no_verbose_flag():
     assert dirs == []
 
 
+@pytest.mark.enable_compiler_link_paths
 def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join('gcc'))
     with open(gcc, 'w') as f:
