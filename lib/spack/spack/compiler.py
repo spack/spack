@@ -152,6 +152,10 @@ def _parse_non_system_link_dirs(string):
     """
     link_dirs = _parse_link_paths(string)
 
+    # Remove directories that do not exist. Some versions of the Cray compiler
+    # report nonexistent directories
+    link_dirs = [d for d in link_dirs if os.path.isdir(d)]
+
     # Return set of directories containing needed compiler libs, minus
     # system paths. Note that 'filter_system_paths' only checks for an
     # exact match, while 'in_system_subdirectory' checks if a path contains
