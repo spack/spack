@@ -553,9 +553,9 @@ end
 #      pathadd /path/to/dir            # add to PATH
 # or   pathadd OTHERPATH /path/to/dir  # add to OTHERPATH
 #################################################################################
-function spack_pathadd -d "Add path to specified variable (defaults to fish_user_paths)"
+function spack_pathadd -d "Add path to specified variable (defaults to PATH)"
     #
-    # Adds (existing only) paths to specified (defaults to fish_user_paths)
+    # Adds (existing only) paths to specified (defaults to PATH)
     # variable. Does not warn attempting to add non-existing path. This is not a
     # bug because the MODULEPATH setup tries add all possible compatible systems
     # and therefore sp_multi_pathadd relies on this function failing silently.
@@ -569,7 +569,7 @@ function spack_pathadd -d "Add path to specified variable (defaults to fish_user
         set pa_new_path $argv[2]
     else
         true # this is a bit of a strange hack! Notes: [3] (cf EOF).
-        set pa_varname fish_user_paths
+        set pa_varname PATH
         set pa_new_path $argv[1]
     end
 
@@ -625,7 +625,7 @@ set -l sp_source_file (status -f)  # name of current file
 #
 set -l sp_share_dir (realpath (dirname $sp_source_file))
 set -l sp_prefix (realpath (dirname (dirname $sp_share_dir)))
-spack_pathadd fish_user_paths "$sp_prefix/bin"
+spack_pathadd PATH "$sp_prefix/bin"
 set -xg SPACK_ROOT $sp_prefix
 
 
@@ -673,7 +673,7 @@ if test "$need_module" = "yes"
     # _sp_module_prefix is set by spack --print-sh-vars
     if test "$_sp_module_prefix" != "not_installed"
         set -xg MODULE_PREFIX $_sp_module_prefix
-        spack_pathadd fish_user_paths "$MODULE_PREFIX/bin"
+        spack_pathadd PATH "$MODULE_PREFIX/bin"
     end
 
 else
