@@ -8,6 +8,8 @@ from spack import *
 class Grpc(CMakePackage):
     """A high performance, open-source universal RPC framework."""
 
+    maintainers = ['nazavode']
+
     homepage = "https://grpc.io"
     url      = "https://github.com/grpc/grpc/archive/v1.27.0.tar.gz"
 
@@ -17,6 +19,8 @@ class Grpc(CMakePackage):
     version('1.24.3', sha256='c84b3fa140fcd6cce79b3f9de6357c5733a0071e04ca4e65ba5f8d306f10f033')
     version('1.23.1', sha256='dd7da002b15641e4841f20a1f3eb1e359edb69d5ccf8ac64c362823b05f523d9')
 
+    variant('shared', default=False,
+            description='Build shared instead of static libraries')
     variant('codegen', default=True,
             description='Builds code generation plugins for protobuf '
                         'compiler (protoc)')
@@ -25,9 +29,12 @@ class Grpc(CMakePackage):
     depends_on('openssl')
     depends_on('zlib')
     depends_on('c-ares')
+    depends_on('abseil-cpp', when='@1.27.0:')
 
     def cmake_args(self):
         args = [
+            '-DBUILD_SHARED_LIBS:Bool={0}'.format(
+                'ON' if '+shared' in self.spec else 'OFF'),
             '-DgRPC_BUILD_CODEGEN:Bool={0}'.format(
                 'ON' if '+codegen' in self.spec else 'OFF'),
             '-DgRPC_BUILD_CSHARP_EXT:Bool=OFF',
@@ -44,4 +51,6 @@ class Grpc(CMakePackage):
             '-DgRPC_GFLAGS_PROVIDER:String=none',
             '-DgRPC_BENCHMARK_PROVIDER:String=none',
         ]
+        if self.spec.satisfies('@1.27.0:'):
+            args.append('-DgRPC_ABSL_PROVIDER:String=package')
         return args

@@ -75,6 +75,12 @@ config:
   misc_cache: ~/.spack/cache
 
 
+  # Timeout in seconds used for downloading sources etc. This only applies
+  # to the connection phase and can be increased for slow connections or
+  # servers. 0 means no timeout.
+  connect_timeout: 10
+
+
   # If this is false, tools like curl that use SSL will not verify
   # certifiates. (e.g., curl will use use the -k option)
   verify_ssl: true
@@ -151,3 +157,7 @@ config:
   # Has no effect on macOS. DO NOT MIX these within the same install tree.
   # See the Spack documentation for details.
   shared_linking: 'rpath'
+
+  # Set to 'false' to allow installation on filesystems that doesn't allow setgid bit
+  # manipulation by unprivileged user (e.g. AFS)
+  allow_sgid: true

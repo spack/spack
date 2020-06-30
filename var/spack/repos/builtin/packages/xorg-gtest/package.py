@@ -6,12 +6,12 @@
 from spack import *
 
 
-class XorgGtest(AutotoolsPackage):
+class XorgGtest(AutotoolsPackage, XorgPackage):
     """Provides a Google Test environment for starting and stopping
     a X server for testing purposes."""
 
     homepage = "https://people.freedesktop.org/~cndougla/xorg-gtest/"
-    url      = "https://www.x.org/archive/individual/test/xorg-gtest-0.7.1.tar.bz2"
+    xorg_mirror_path = "test/xorg-gtest-0.7.1.tar.bz2"
 
     version('0.7.1', sha256='6cedc7904c698472783203bd686e777db120b808bb4052e451a822e437b72682')
 

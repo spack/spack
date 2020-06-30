@@ -28,21 +28,42 @@ class Silo(AutotoolsPackage):
     variant('mpi', default=True,
             description='Compile with MPI Compatibility')
 
+    depends_on('hdf5@:1.10.999', when='@:4.10.2')
     depends_on('hdf5~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5+mpi', when='+mpi')
-    depends_on('qt', when='+silex')
+    depends_on('qt~framework@4.8:4.9', when='+silex')
+    depends_on('libx11', when='+silex')
+    depends_on('readline')
     depends_on('zlib')
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
 
     def flag_handler(self, name, flags):
-        if name == 'ldflags' and self.spec['hdf5'].satisfies('~shared'):
-            flags.append('-ldl')
+        spec = self.spec
+        if name == 'ldflags':
+            if spec['hdf5'].satisfies('~shared'):
+                flags.append('-ldl')
+            flags.append(spec['readline'].libs.search_flags)
+
+        if '+pic' in spec:
+            if name == 'cflags':
+                flags.append(self.compiler.cc_pic_flag)
+            elif name == 'cxxflags':
+                flags.append(self.compiler.cxx_pic_flag)
+            elif name == 'fcflags':
+                flags.append(self.compiler.fc_pic_flag)
         return (flags, None, None)
 
     @when('%clang@9:')
     def patch(self):
+        self.clang_9_patch()
+
+    @when('%apple-clang@11.0.3:')
+    def patch(self):
+        self.clang_9_patch()
+
+    def clang_9_patch(self):
         # Clang 9 and later include macro definitions in <math.h> that conflict
         # with typedefs DOMAIN and RANGE used in Silo plugins.
         # It looks like the upstream fpzip repo has been fixed, but that change
@@ -81,13 +102,13 @@ class Silo(AutotoolsPackage):
         ]
 
         if '+silex' in spec:
-            config_args.append('--with-Qt-dir=%s' % spec['qt'].prefix)
-
-        if '+pic' in spec:
-            config_args += [
-                'CFLAGS={0}'.format(self.compiler.pic_flag),
-                'CXXFLAGS={0}'.format(self.compiler.pic_flag),
-                'FCFLAGS={0}'.format(self.compiler.pic_flag)]
+            x = spec['libx11']
+            config_args.extend([
+                '--with-Qt-dir=' + spec['qt'].prefix,
+                '--with-Qt-lib=QtGui -lQtCore',
+                '--x-includes=' + x.prefix.include,
+                '--x-libraries=' + x.prefix.lib,
+            ])
 
         if '+mpi' in spec:
             config_args.append('CC=%s' % spec['mpi'].mpicc)

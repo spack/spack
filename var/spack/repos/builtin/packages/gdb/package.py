@@ -33,6 +33,11 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
     variant('python', default=True, description='Compile with Python support')
     variant('xz', default=True, description='Compile with lzma support')
+    variant('source-highlight', default=False, description='Compile with source-highlight support')
+    variant('lto', default=False, description='Enable lto')
+    variant('quad', default=False, description='Enable quad')
+    variant('gold', default=False, description='Enable gold linker')
+    variant('ld', default=False, description='Enable ld')
 
     # Required dependency
     depends_on('texinfo', type='build')
@@ -40,6 +45,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     # Optional dependencies
     depends_on('python', when='+python')
     depends_on('xz', when='+xz')
+    depends_on('source-highlight', when='+source-highlight')
 
     build_directory = 'spack-build'
 
@@ -49,4 +55,17 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
             args.append('--with-python')
             args.append('LDFLAGS={0}'.format(
                 self.spec['python'].libs.ld_flags))
+
+        if '+lto' in self.spec:
+            args.append('--enable-lto')
+
+        if '+quad' in self.spec:
+            args.append('--with-quad')
+
+        if '+gold' in self.spec:
+            args.append('--enable-gold')
+
+        if '+ld' in self.spec:
+            args.append('--enable-ld')
+
         return args

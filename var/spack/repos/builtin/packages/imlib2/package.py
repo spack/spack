@@ -5,14 +5,14 @@
 from spack import *
 
 
-class Imlib2(AutotoolsPackage):
+class Imlib2(AutotoolsPackage, SourceforgePackage):
     """
     Library that does image file loading and saving as well as rendering,
     manipulation, arbitrary polygon support
     """
 
     homepage = "http://sourceforge.net/projects/enlightenment/"
-    url      = "http://downloads.sourceforge.net/enlightenment/imlib2-1.5.1.tar.bz2"
+    sourceforge_mirror_path = "enlightenment/imlib2-1.5.1.tar.bz2"
 
     maintainers = ['TheQueasle']
 

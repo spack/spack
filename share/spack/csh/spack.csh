@@ -29,12 +29,15 @@
 ########################################################################
 # Store LD_LIBRARY_PATH variables from spack shell function
 # This is necessary because MacOS System Integrity Protection clears
-# (DY?)LD_LIBRARY_PATH variables on process start.
+# variables that affect dyld on process start.
 if ( ${?LD_LIBRARY_PATH} ) then
     setenv SPACK_LD_LIBRARY_PATH $LD_LIBRARY_PATH
 endif
 if ( ${?DYLD_LIBRARY_PATH} ) then
     setenv SPACK_DYLD_LIBRARY_PATH $DYLD_LIBRARY_PATH
+endif
+if ( ${?DYLD_FALLBACK_LIBRARY_PATH} ) then
+    setenv SPACK_DYLD_FALLBACK_LIBRARY_PATH $DYLD_FALLBACK_LIBRARY_PATH
 endif
 
 # accumulate initial flags for main spack command

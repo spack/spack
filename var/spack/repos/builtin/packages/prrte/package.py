@@ -18,6 +18,7 @@ class Prrte(AutotoolsPackage):
     homepage = "https://pmix.org"
     url      = "https://github.com/pmix/prrte/releases/download/v1.0.0/prrte-1.0.0.tar.bz2"
     git      = "https://github.com/pmix/prrte.git"
+    maintainers = ['rhc54']
 
     version('develop', branch='master')
     version('1.0.0', sha256='a9b3715e059c10ed091bd6e3a0d8896f7752e43ee731abcc95fb962e67132a2d')
@@ -50,7 +51,7 @@ class Prrte(AutotoolsPackage):
 
         # libevent
         config_args.append(
-            '--with-libev={0}'.format(spec['libevent'].prefix))
+            '--with-libevent={0}'.format(spec['libevent'].prefix))
         # hwloc
         config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
         # pmix

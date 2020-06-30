@@ -31,6 +31,7 @@ class Mpich(AutotoolsPackage):
     version('3.1',   sha256='fcf96dbddb504a64d33833dc455be3dda1e71c7b3df411dfcf9df066d7c32c39')
     version('3.0.4', sha256='cf638c85660300af48b6f776e5ecd35b5378d5905ec5d34c3da7a27da0acf0b3')
 
+    variant('hwloc', default=True,  description='Use external hwloc package')
     variant('hydra', default=True,  description='Build the hydra process manager')
     variant('romio', default=True,  description='Enable ROMIO MPI I/O implementation')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
@@ -63,6 +64,9 @@ spack package at this time.''',
     )
     variant('pci', default=(sys.platform != 'darwin'),
             description="Support analyzing devices on PCI bus")
+    variant('libxml2', default=True,
+            description='Use libxml2 for XML support instead of the custom '
+                        'minimalistic implementation')
 
     provides('mpi')
     provides('mpi@:3.0', when='@3:')
@@ -72,10 +76,18 @@ spack package at this time.''',
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
     )
 
+    # Fix using an external hwloc
+    # See https://github.com/pmodels/mpich/issues/4038
+    # and https://github.com/pmodels/mpich/pull/3540
+    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
+          sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
+          when='@3.3 +hwloc')
+
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
     patch('mpich32_clang.patch', when='@3.2:3.2.0%clang')
+    patch('mpich32_clang.patch', when='@3.2:3.2.0%apple-clang')
 
     # Fix SLURM node list parsing
     # See https://github.com/pmodels/mpich/issues/3572
@@ -86,8 +98,27 @@ spack package at this time.''',
           sha256='c7d4ecf865dccff5b764d9c66b6a470d11b0b1a5b4f7ad1ffa61079ad6b5dede',
           when='@3.3:3.3.0')
 
+    # This patch for Libtool 2.4.2 enables shared libraries for NAG and is
+    # applied by MPICH starting version 3.1.
+    patch('nag_libtool_2.4.2_0.patch', when='@:3.0%nag')
+
+    # This patch for Libtool 2.4.2 fixes the problem with '-pthread' flag and
+    # enables convenience libraries for NAG. Starting version 3.1, the order of
+    # checks for FC and F77 is changed, therefore we need to apply the patch in
+    # two steps (the patch files can be merged once the support for versions
+    # 3.1 and older is dropped).
+    patch('nag_libtool_2.4.2_1.patch', when='@:3.1.3%nag')
+    patch('nag_libtool_2.4.2_2.patch', when='@:3.1.3%nag')
+
+    # This patch for Libtool 2.4.6 does the same as the previous two. The
+    # problem is not fixed upstream yet and the upper version constraint is
+    # given just to avoid application of the patch to the develop version.
+    patch('nag_libtool_2.4.6.patch', when='@3.1.4:3.3%nag')
+
     depends_on('findutils', type='build')
     depends_on('pkgconfig', type='build')
+
+    depends_on('hwloc@2.0.0:', when='@3.3: +hwloc')
 
     depends_on('libfabric', when='netmod=ofi')
     # The ch3 ofi netmod results in crashes with libfabric 1.7
@@ -96,8 +127,14 @@ spack package at this time.''',
 
     depends_on('ucx', when='netmod=ucx')
 
-    depends_on('libpciaccess', when="+pci")
-    depends_on('libxml2')
+    # The dependencies on libpciaccess and libxml2 come from the embedded
+    # hwloc, which, before version 3.3, was used only for Hydra.
+    depends_on('libpciaccess', when="@:3.2+hydra+pci")
+    depends_on('libxml2', when='@:3.2+hydra+libxml2')
+
+    # Starting with version 3.3, MPICH uses hwloc directly.
+    depends_on('libpciaccess', when="@3.3:+pci")
+    depends_on('libxml2', when='@3.3:+libxml2')
 
     # Starting with version 3.3, Hydra can use libslurm for nodelist parsing
     depends_on('slurm', when='+slurm')
@@ -110,6 +147,12 @@ spack package at this time.''',
     depends_on("m4", when="@develop", type=("build")),
     depends_on("autoconf@2.67:", when='@develop', type=("build"))
 
+    # building with "+hwloc' also requires regenerating autotools files
+    depends_on('automake@1.15:', when='@3.3 +hwloc', type="build")
+    depends_on('libtool@2.4.4:', when='@3.3 +hwloc', type="build")
+    depends_on("m4", when="@3.3 +hwloc", type="build"),
+    depends_on("autoconf@2.67:", when='@3.3 +hwloc', type="build")
+
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
     conflicts('netmod=ucx', when='device=ch3')
@@ -118,14 +161,28 @@ spack package at this time.''',
     conflicts('netmod=tcp', when='device=ch4')
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
+    conflicts('pmi=pmix', when='+hydra')
+
+    # MPICH does not require libxml2 and libpciaccess for versions before 3.3
+    # when ~hydra is set: prevent users from setting +libxml2 and +pci in this
+    # case to avoid generating an identical MPICH installation.
+    conflicts('+pci', when='@:3.2~hydra')
+    conflicts('+libxml2', when='@:3.2~hydra')
 
     def setup_build_environment(self, env):
         env.unset('F90')
         env.unset('F90FLAGS')
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        # On Cray, the regular compiler wrappers *are* the MPI wrappers.
-        if 'platform=cray' in self.spec:
+        # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
+        if self.spec.satisfies('%gcc@10:'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
+
+    def setup_run_environment(self, env):
+        # Because MPI implementations provide compilers, they have to add to
+        # their run environments the code to make the compilers available.
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
+        if self.spec.external_module and 'cray' in self.spec.external_module:
             env.set('MPICC', spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
@@ -136,6 +193,9 @@ spack package at this time.''',
             env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
             env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
         env.set('MPICH_CC', spack_cc)
         env.set('MPICH_CXX', spack_cxx)
         env.set('MPICH_F77', spack_f77)
@@ -143,7 +203,9 @@ spack package at this time.''',
         env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
-        if 'platform=cray' in self.spec:
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
+        if self.spec.external_module and 'cray' in self.spec.external_module:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx
             self.spec.mpifc = spack_fc
@@ -162,7 +224,8 @@ spack package at this time.''',
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path):
+        if (os.path.exists(self.configure_abs_path) and
+            not spec.satisfies('@3.3 +hwloc')):
             return
         # Else bootstrap with autotools
         bash = which('bash')
@@ -181,7 +244,10 @@ spack package at this time.''',
     def configure_args(self):
         spec = self.spec
         config_args = [
+            '--disable-silent-rules',
             '--enable-shared',
+            '--with-hwloc-prefix={0}'.format(
+                spec['hwloc'].prefix if '^hwloc' in spec else 'embedded'),
             '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without'),
@@ -233,5 +299,12 @@ spack package at this time.''',
         if 'netmod=ucx' in spec:
             config_args.append('--with-ucx={0}'.format(
                 spec['ucx'].prefix))
+
+        # In other cases the argument is redundant.
+        if '@:3.2+hydra' in spec or '@3.3:' in spec:
+            # The root configure script passes the argument to the configure
+            # scripts of all instances of hwloc (there are three copies of it:
+            # for hydra, for hydra2, and for MPICH itself).
+            config_args += self.enable_or_disable('libxml2')
 
         return config_args

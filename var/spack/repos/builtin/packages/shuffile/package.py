@@ -9,8 +9,8 @@ from spack import *
 class Shuffile(CMakePackage):
     """Shuffle files between MPI ranks"""
 
-    homepage = "https://github.com/ECP-VeloC/shuffile"
-    url      = "https://github.com/ECP-VeloC/shuffile/archive/v0.0.3.zip"
+    homepage = "https://github.com/ecp-veloc/shuffile"
+    url      = "https://github.com/ecp-veloc/shuffile/archive/v0.0.3.zip"
     git      = "https://github.com/ecp-veloc/shuffile.git"
 
     tags = ['ecp']

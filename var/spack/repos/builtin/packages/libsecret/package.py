@@ -25,6 +25,8 @@ class Libsecret(AutotoolsPackage):
     # Optional Vala support is not implemented yet
     # variant('vala', default=False, descript='Build with Vala support')
 
+    depends_on('pkgconfig', type='build')
+#    depends_on('mesa')
     # https://gitlab.gnome.org/GNOME/libsecret/blob/master/meson.build
     depends_on('glib@2.44:')
     depends_on('libgcrypt@1.2.2:', when='+gcrypt')

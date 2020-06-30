@@ -25,6 +25,14 @@ It is recommended that the following be put in your ``.bashrc`` file:
 
     alias less='less -R'
 
+If you do not see colorized output when using ``less -R`` it is because color
+is being disabled in the piped output. In this case, tell spack to force
+colorized output.
+
+.. code-block:: console
+
+    $ spack --color always | less -R 
+
 --------------------------
 Listing available packages
 --------------------------
@@ -45,7 +53,7 @@ can install:
 .. command-output:: spack list
    :ellipsis: 10
 
-There are thosands of them, so we've truncated the output above, but you
+There are thousands of them, so we've truncated the output above, but you
 can find a :ref:`full list here <package-list>`.
 Packages are listed by name in alphabetical order.
 A pattern to match with no wildcards, ``*`` or ``?``,
@@ -267,7 +275,7 @@ the ``spack gc`` ("garbage collector") command, which will uninstall all unneede
    -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
    hdf5@1.10.5  libiconv@1.16  libpciaccess@0.13.5  libszip@2.1.1  libxml2@2.9.9  mpich@3.3.2  openjpeg@2.3.1  xz@5.2.4  zlib@1.2.11
 
-In the example above Spack went through all the packages in the DB
+In the example above Spack went through all the packages in the package database
 and removed everything that is not either:
 
 1. A package installed upon explicit request of the user
@@ -619,8 +627,8 @@ output metadata on specs and all dependencies as json:
        "target": "x86_64"
       },
       "compiler": {
-       "name": "clang",
-       "version": "10.0.0-apple"
+       "name": "apple-clang",
+       "version": "10.0.0"
       },
       "namespace": "builtin",
       "parameters": {
@@ -854,7 +862,7 @@ Variants are named options associated with a particular package. They are
 optional, as each package must provide default values for each variant it
 makes available. Variants can be specified using
 a flexible parameter syntax ``name=<value>``. For example,
-``spack install libelf debug=True`` will install libelf build with debug
+``spack install libelf debug=True`` will install libelf built with debug
 flags. The names of particular variants available for a package depend on
 what was provided by the package author. ``spack info <package>`` will
 provide information on what build variants are available.
@@ -917,7 +925,7 @@ contains any spaces. Any of ``cppflags=-O3``, ``cppflags="-O3"``,
 ``cppflags='-O3'``, and ``cppflags="-O3 -fPIC"`` are acceptable, but
 ``cppflags=-O3 -fPIC`` is not. Additionally, if the value of the
 compiler flags is not the last thing on the line, it must be followed
-by a space. The commmand ``spack install libelf cppflags="-O3"%intel``
+by a space. The command ``spack install libelf cppflags="-O3"%intel``
 will be interpreted as an attempt to set ``cppflags="-O3%intel"``.
 
 The six compiler flags are injected in the order of implicit make commands
@@ -1067,13 +1075,13 @@ of failing:
 In the snippet above, for instance, the microarchitecture was demoted to ``haswell`` when
 compiling with ``gcc@4.8`` since support to optimize for ``broadwell`` starts from ``gcc@4.9:``.
 
-Finally if Spack has no information to match compiler and target, it will
+Finally, if Spack has no information to match compiler and target, it will
 proceed with the installation but avoid injecting any microarchitecture
 specific flags.
 
 .. warning::
 
-   Currently Spack doesn't print any warning to the user if it has no information
+   Currently, Spack doesn't print any warning to the user if it has no information
    on which optimization flags should be used for a given compiler. This behavior
    might change in the future.
 
@@ -1083,7 +1091,7 @@ specific flags.
 Virtual dependencies
 --------------------
 
-The dependence graph for ``mpileaks`` we saw above wasn't *quite*
+The dependency graph for ``mpileaks`` we saw above wasn't *quite*
 accurate.  ``mpileaks`` uses MPI, which is an interface that has many
 different implementations.  Above, we showed ``mpileaks`` and
 ``callpath`` depending on ``mpich``, which is one *particular*
@@ -1226,6 +1234,8 @@ add a version specifier to the spec:
 Notice that the package versions that provide insufficient MPI
 versions are now filtered out.
 
+.. _extensions:
+
 ---------------------------
 Extensions & Python support
 ---------------------------
@@ -1233,8 +1243,7 @@ Extensions & Python support
 Spack's installation model assumes that each package will live in its
 own install prefix.  However, certain packages are typically installed
 *within* the directory hierarchy of other packages.  For example,
-modules in interpreted languages like `Python
-<https://www.python.org>`_ are typically installed in the
+`Python <https://www.python.org>`_ packages are typically installed in the
 ``$prefix/lib/python-2.7/site-packages`` directory.
 
 Spack has support for this type of installation as well.  In Spack,
@@ -1410,12 +1419,12 @@ packages listed as activated:
    py-nose@1.3.4  py-numpy@1.9.1  py-setuptools@11.3.1
 
 Now, when a user runs python, ``numpy`` will be available for import
-*without* the user having to explicitly loaded.  ``python@2.7.8`` now
+*without* the user having to explicitly load it.  ``python@2.7.8`` now
 acts like a system Python installation with ``numpy`` installed inside
 of it.
 
 Spack accomplishes this by symbolically linking the *entire* prefix of
-the ``py-numpy`` into the prefix of the ``python`` package.  To the
+the ``py-numpy`` package into the prefix of the ``python`` package.  To the
 python interpreter, it looks like ``numpy`` is installed in the
 ``site-packages`` directory.
 

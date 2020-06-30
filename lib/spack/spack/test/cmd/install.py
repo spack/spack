@@ -15,11 +15,12 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.config
+import spack.compilers as compilers
 import spack.hash_types as ht
 import spack.package
 import spack.cmd.install
 from spack.error import SpackError
-from spack.spec import Spec
+from spack.spec import Spec, CompilerSpec
 from spack.main import SpackCommand
 import spack.environment as ev
 
@@ -609,17 +610,17 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
         assert 'foo.c:89: warning: some weird warning!' in msg
 
 
-def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
-    msg = ''
-    with capfd.disabled():
-        try:
-            install('--cache-only', 'libdwarf')
-        except spack.installer.InstallError as e:
-            msg = str(e)
+def test_cache_only_fails(tmpdir, mock_fetch, install_mockery):
+    # libelf from cache fails to install, which automatically removes the
+    # the libdwarf build task and flags the package as failed to install.
+    err_msg = 'Installation of libdwarf failed'
+    with pytest.raises(spack.installer.InstallError, match=err_msg):
+        install('--cache-only', 'libdwarf')
 
-    # libelf from cache failed to install, which automatically removed the
-    # the libdwarf build task and flagged the package as failed to install.
-    assert 'Installation of libdwarf failed' in msg
+    # Check that failure prefix locks are still cached
+    failure_lock_prefixes = ','.join(spack.store.db._prefix_failures.keys())
+    assert 'libelf' in failure_lock_prefixes
+    assert 'libdwarf' in failure_lock_prefixes
 
 
 def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
@@ -718,3 +719,30 @@ def test_cdash_auth_token(tmpdir, install_mockery, capfd):
                 '--log-format=cdash',
                 'a')
             assert 'Using CDash auth token from environment' in out
+
+
+def test_compiler_bootstrap(
+        install_mockery_mutable_config, mock_packages, mock_fetch,
+        mock_archive, mutable_config, monkeypatch):
+    monkeypatch.setattr(spack.concretize.Concretizer,
+                        'check_for_compiler_existence', False)
+    spack.config.set('config:install_missing_compilers', True)
+    assert CompilerSpec('gcc@2.0') not in compilers.all_compiler_specs()
+
+    # Test succeeds if it does not raise an error
+    install('a%gcc@2.0')
+
+
+@pytest.mark.regression('16221')
+def test_compiler_bootstrap_already_installed(
+        install_mockery_mutable_config, mock_packages, mock_fetch,
+        mock_archive, mutable_config, monkeypatch):
+    monkeypatch.setattr(spack.concretize.Concretizer,
+                        'check_for_compiler_existence', False)
+    spack.config.set('config:install_missing_compilers', True)
+
+    assert CompilerSpec('gcc@2.0') not in compilers.all_compiler_specs()
+
+    # Test succeeds if it does not raise an error
+    install('gcc@2.0')
+    install('a%gcc@2.0')

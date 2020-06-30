@@ -1,0 +1,13 @@
+--- a/src/operator/random/shuffle_op.cc	2020-01-31 08:45:22.000000000 +0900
++++ b/src/operator/random/shuffle_op.cc	2020-06-15 11:34:32.000000000 +0900
+@@ -22,8 +22,8 @@
+  * \file shuffle_op.cc
+  * \brief Operator to shuffle elements of an NDArray
+  */
+-#if !defined (__ANDROID__) && ((__GNUC__ > 4 &&\
+-    !defined(__clang__major__)) || (__clang_major__ > 4 && __linux__))
++#if ((__GNUC__ > 4 && !defined(__clang__major__)) || (__clang_major__ > 4 && __linux__)) && \
++  defined(_OPENMP) && !defined(__ANDROID__)
+         #define USE_GNU_PARALLEL_SHUFFLE
+ #endif
+ 

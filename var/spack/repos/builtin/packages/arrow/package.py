@@ -15,6 +15,7 @@ class Arrow(CMakePackage):
     homepage = "http://arrow.apache.org"
     url      = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
 
+    version('0.17.1', sha256='ecb6da20f9288c0ca31f9b457ffdd460198765a8af27c1cac4b1382a8d130f86')
     version('0.15.1', sha256='ab1c0d371a10b615eccfcead71bb79832245d788f4834cc6b278c03c3872d593')
     version('0.15.0', sha256='d1072d8c4bf9166949f4b722a89350a88b7c8912f51642a5d52283448acdfd58')
     version('0.14.1', sha256='69d9de9ec60a3080543b28a5334dbaf892ca34235b8bd8f8c1c01a33253926c1')
@@ -32,6 +33,7 @@ class Arrow(CMakePackage):
     depends_on('snappy~shared')
     depends_on('zlib+pic')
     depends_on('zstd+pic')
+    depends_on('thrift+pic', when='+parquet')
 
     variant('build_type', default='Release',
             description='CMake build type',

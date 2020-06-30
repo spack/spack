@@ -553,7 +553,7 @@ follow `the next section <intel-install-libs_>`_ instead.
                f77:      stub
                fc:       stub
 
-      Replace ``18.0.3`` with the version that you determined in the preceeding
+      Replace ``18.0.3`` with the version that you determined in the preceding
       step. The contents under ``paths:`` do not matter yet.
 
    You are right to ask: "Why on earth is that necessary?" [fn8]_.
@@ -696,7 +696,7 @@ follow `the next section <intel-install-libs_>`_ instead.
              - /home/$user/spack-stage
 
         Do not duplicate the ``config:`` line if it already is present.
-        Adapt the location, which here is the same as in the preceeding example.
+        Adapt the location, which here is the same as in the preceding example.
 
    3. Retry installing the large package.
 
@@ -965,7 +965,7 @@ a *virtual* ``mkl`` package is declared in Spack.
 
   Likewise, in a
   :ref:`MakefilePackage <makefilepackage>`
-  or similiar package that does not use AutoTools you may need to provide include
+  or similar package that does not use AutoTools you may need to provide include
   and link options for use on command lines or in environment variables.
   For example, to generate an option string of the form ``-I<dir>``, use:
 
@@ -1055,6 +1055,6 @@ Footnotes
    2. Set the hash length in ``install-path-scheme``, also in ``config.yaml``
       (:ref:`q.v. <config-yaml>`).
    3. You will want to set the *same* hash length for
-      :ref:`tcl module files <modules-naming-scheme>`
-      if you have Spack produce them for you, under ``naming_scheme`` in
-      ``modules.yaml``.  Other module dialects cannot be altered in this manner.
+      :ref:`module files <modules-projections>`
+      if you have Spack produce them for you, under ``projections`` in
+      ``modules.yaml``.

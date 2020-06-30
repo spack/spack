@@ -17,6 +17,7 @@ class Atk(Package):
     list_url = "https://ftp.gnome.org/pub/gnome/sources/atk"
     list_depth = 1
 
+    version('2.36.0', sha256='fb76247e369402be23f1f5c65d38a9639c1164d934e40f6a9cf3c9e96b652788')
     version('2.30.0', sha256='dd4d90d4217f2a0c1fee708a555596c2c19d26fef0952e1ead1938ab632c027b')
     version('2.28.1', sha256='cd3a1ea6ecc268a2497f0cd018e970860de24a6d42086919d6bf6c8e8d53f4fc')
     version('2.20.0', sha256='493a50f6c4a025f588d380a551ec277e070b28a82e63ef8e3c06b3ee7c1238f0')

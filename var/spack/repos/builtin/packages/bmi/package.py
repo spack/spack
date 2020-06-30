@@ -12,6 +12,8 @@ class Bmi(AutotoolsPackage):
     homepage = 'https://xgitlab.cels.anl.gov/sds/bmi'
     git = 'https://xgitlab.cels.anl.gov/sds/bmi.git'
 
+    maintainers = ['carns']
+
     version('develop', branch='master')
 
     depends_on('autoconf', type='build')

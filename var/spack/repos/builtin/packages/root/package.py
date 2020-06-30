@@ -15,7 +15,7 @@ class Root(CMakePackage):
     homepage = "https://root.cern.ch"
     url      = "https://root.cern/download/root_v6.16.00.source.tar.gz"
 
-    maintainers = ['chissg', 'HadrienG2']
+    maintainers = ['chissg', 'HadrienG2', 'drbenmorgan']
 
     # ###################### Versions ##########################
 
@@ -26,6 +26,9 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version('6.20.04', sha256='1f8c76ccdb550e64e6ddb092b4a7e9d0a10655ef80044828cba12d5e7c874472')
+    version('6.20.02', sha256='0997586bf097c0afbc6f08edbffcebf5eb6a4237262216114ba3f5c8087dcba6')
+    version('6.20.00', sha256='68421eb0434b38b66346fa8ea6053a0fdc9a6d254e4a72019f4e3633ae118bf0')
     version('6.18.04', sha256='315a85fc8363f8eb1bffa0decbf126121258f79bd273513ed64795675485cfa4',
             preferred=True)
 
@@ -110,6 +113,9 @@ class Root(CMakePackage):
     # otherwise it crashes with the internal minuit library
     variant('minuit', default=True,
             description='Automatically search for support libraries')
+    variant('mlp', default=False,
+            description="Enable support for TMultilayerPerceptron "
+            "classes' federation")
     variant('mysql', default=False)
     variant('opengl', default=True,
             description='Enable OpenGL support')
@@ -143,7 +149,7 @@ class Root(CMakePackage):
             description='TBB multi-threading support')
     variant('threads', default=True,
             description='Enable using thread library')
-    variant('tmva', default=True,
+    variant('tmva', default=False,
             description='Build TMVA multi variate analysis library')
     variant('unuran', default=True,
             description='Use UNURAN for random number generation')
@@ -185,6 +191,7 @@ class Root(CMakePackage):
     depends_on('xxhash', when='@6.13.02:')  # See cmake_args, below.
     depends_on('xz')
     depends_on('zlib')
+    depends_on('zstd', when='@6.20:')
 
     # X-Graphics
     depends_on('libx11',  when="+x")
@@ -203,8 +210,14 @@ class Root(CMakePackage):
     # Qt4
     depends_on('qt@:4.999', when='+qt4')
 
-    # TMVA
-    depends_on('py-numpy', when='+tmva')
+    # Python
+    depends_on('python@2.7:', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'), when='+tmva')
+    # This numpy dependency was not intended and will hopefully
+    # be fixed in 6.20.06.
+    # See: https://sft.its.cern.ch/jira/browse/ROOT-10626
+    depends_on('py-numpy', type=('build', 'run'),
+               when='@6.20.00:6.20.05 +python')
 
     # Optional dependencies
     depends_on('davix @0.7.1:', when='+davix')
@@ -219,7 +232,6 @@ class Root(CMakePackage):
     depends_on('postgresql', when='+postgres')
     depends_on('pythia6+root', when='+pythia6')
     depends_on('pythia8',   when='+pythia8')
-    depends_on('python@2.7:', when='+python', type=('build', 'run'))
     depends_on('r',         when='+r', type=('build', 'run'))
     depends_on('r-rcpp',    when='+r', type=('build', 'run'))
     depends_on('r-rinside', when='+r', type=('build', 'run'))
@@ -255,6 +267,7 @@ class Root(CMakePackage):
     # Incompatible variants
     conflicts('+opengl', when='~x', msg='OpenGL requires X')
     conflicts('+tmva', when='~gsl', msg='TVMA requires GSL')
+    conflicts('+tmva', when='~mlp', msg='TVMA requires MLP')
     conflicts('cxxstd=11', when='+root7', msg='root7 requires at least C++14')
 
     # Feature removed in 6.18:
@@ -357,6 +370,7 @@ class Root(CMakePackage):
                 ['minimal'],
                 ['minuit'],
                 ['minuit2', 'minuit'],
+                ['mlp'],
                 ['monalisa', False],
                 ['mysql'],
                 ['odbc'],
@@ -365,7 +379,6 @@ class Root(CMakePackage):
                 ['pgsql', 'postgres'],
                 ['pythia6'],
                 ['pythia8'],
-                ['python'],
                 ['qt', 'qt4'],  # See conflicts
                 ['qtgsi', 'qt4'],  # See conflicts
                 ['r', 'R'],
@@ -395,6 +408,12 @@ class Root(CMakePackage):
             ]
 
         options = self._process_opts(control_opts, builtin_opts, feature_opts)
+
+        # Some special features
+        if self.spec.satisfies('@6.20:'):
+            options.append(self.define_from_variant('pyroot', 'python'))
+        else:
+            options.append(self.define_from_variant('python'))
 
         # #################### Compiler options ####################
 
@@ -473,12 +492,16 @@ class Root(CMakePackage):
         env.prepend_path('PATH', self.prefix.bin)
         env.append_path('CMAKE_MODULE_PATH', '{0}/cmake'
                         .format(self.prefix))
+        if "+rpath" not in self.spec:
+            env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.set('ROOTSYS', self.prefix)
         env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
         env.prepend_path('PYTHONPATH', self.prefix.lib)
         env.prepend_path('PATH', self.prefix.bin)
+        if "+rpath" not in self.spec:
+            env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
 
     def _process_opts(self, *opt_lists):
         """Process all provided boolean option lists into CMake arguments.

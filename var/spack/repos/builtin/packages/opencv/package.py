@@ -100,13 +100,35 @@ class Opencv(CMakePackage, CudaPackage):
     variant('vtk', default=True, description='Activates support for VTK')
     variant('zlib', default=True, description='Build zlib from source')
 
+    variant('contrib', default=False, description='Adds in code from opencv_contrib.')
+    contrib_vers = ['4.1.0', '4.1.1', '4.2.0']
+    for cv in contrib_vers:
+        resource(name="contrib",
+                 git='https://github.com/opencv/opencv_contrib.git',
+                 tag="{0}".format(cv),
+                 when='@{0}+contrib'.format(cv))
+        resource(name="contrib",
+                 git='https://github.com/opencv/opencv_contrib.git',
+                 tag="{0}".format(cv),
+                 when='@{0}+cuda'.format(cv))
+
+    depends_on('hdf5', when='+contrib')
+    depends_on('hdf5', when='+cuda')
+    depends_on('blas', when='+lapack')
+
     # Patch to fix conflict between CUDA and OpenCV (reproduced with 3.3.0
     # and 3.4.1) header file that have the same name.Problem is fixed in
     # the current development branch of OpenCV. See #8461 for more information.
     patch('dnn_cuda.patch', when='@3.3.0:3.4.1+cuda+dnn')
 
-    depends_on('eigen~mpfr', when='+eigen', type='build')
+    patch('opencv3.2_cmake.patch', when='@3.2')
+    patch('opencv3.2_vtk.patch', when='@3.2+vtk')
+    patch('opencv3.2_regacyvtk.patch', when='@3.2+vtk')
+    patch('opencv3.2_ffmpeg.patch', when='@3.2+videoio')
+    patch('opencv3.2_python3.7.patch', when='@3.2+python')
+    patch('opencv3.2_fj.patch', when='@3.2 %fj')
 
+    depends_on('eigen', when='+eigen')
     depends_on('zlib', when='+zlib')
     depends_on('libpng', when='+png')
     depends_on('jpeg', when='+jpeg')
@@ -118,8 +140,9 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on('vtk', when='+vtk')
     depends_on('qt', when='+qt')
     depends_on('java', when='+java')
+    depends_on('ant', when='+java', type='build')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
-    depends_on('protobuf@3.5.0', when='@3.4.1: +dnn')
+    depends_on('protobuf@3.5.0:', when='@3.4.1: +dnn')
     depends_on('protobuf@3.1.0', when='@3.3.0:3.4.0 +dnn')
 
     depends_on('ffmpeg', when='+videoio')
@@ -129,6 +152,10 @@ class Opencv(CMakePackage, CudaPackage):
     # exists, otherwise build will fail
     # See https://github.com/opencv/opencv_contrib/issues/1786
     conflicts('cuda@10:', when='+cudacodec')
+    conflicts('cuda', when='~contrib', msg='cuda support requires +contrib')
+
+    # IPP is provided x86_64 only
+    conflicts('+ipp', when="arch=aarch64:")
 
     extends('python', when='+python')
 
@@ -223,7 +250,18 @@ class Opencv(CMakePackage, CudaPackage):
             '-DWITH_PROTOBUF:BOOL={0}'.format((
                 'ON' if '@3.3.0: +dnn' in spec else 'OFF')),
             '-DBUILD_PROTOBUF:BOOL=OFF',
+            '-DPROTOBUF_UPDATE_FILES={0}'.format('ON')
         ])
+
+        if '+contrib' in spec or '+cuda' in spec:
+            args.append('-DOPENCV_EXTRA_MODULES_PATH={0}'.format(
+                join_path(self.stage.source_path, 'opencv_contrib/modules')))
+
+        if '+cuda' in spec:
+            if spec.variants['cuda_arch'].value[0] != 'none':
+                cuda_arch = [x for x in spec.variants['cuda_arch'].value if x]
+                args.append('-DCUDA_ARCH_BIN={0}'.format(
+                    ' '.join(cuda_arch)))
 
         # Media I/O
         if '+zlib' in spec:

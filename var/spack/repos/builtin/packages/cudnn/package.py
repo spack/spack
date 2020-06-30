@@ -22,6 +22,16 @@ class Cudnn(Package):
 
     maintainers = ['adamjstewart']
 
+    # cuDNN 8.0
+    version('8.0.0.180-11.0-linux-x64',
+            sha256='9e75ea70280a77de815e0bdc85d08b67e081bc99a708b574092142344d2ba07e')
+    version('8.0.0.180-11.0-linux-ppc64le',
+            sha256='1229e94731bbca63ee7f5a239f4e1838a51a301d896f3097fbf7377d74704060')
+    version('8.0.0.180-10.2-linux-x64',
+            sha256='0c87c12358ee2b99d57c2a8c7560e3bb93e54bb929f5f8bec4964a72a2bb261d')
+    version('8.0.0.180-10.2-linux-ppc64le',
+            sha256='59e4ad6db15fcc374976e8052fe39e3f30f34079710fb3c7751a64c853d9243f')
+
     # cuDNN 7.6.5
     version('7.6.5.32-10.2-linux-x64',
             sha256='600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20',
@@ -189,6 +199,11 @@ class Cudnn(Package):
             cuda = version[2:]
 
         return url.format(directory, cuda, ver)
+
+    def setup_run_environment(self, env):
+        if 'target=ppc64le: platform=linux' in self.spec:
+            env.set('cuDNN_ROOT', os.path.join(
+                self.prefix, 'targets', 'ppc64le-linux'))
 
     def install(self, spec, prefix):
         install_tree('.', prefix)

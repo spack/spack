@@ -1,0 +1,22 @@
+diff --git a/SConstruct b/SConstruct
+index 98c1a56ac..30baef5e5 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -293,7 +293,7 @@ Parameters are:
+            for line in vars.GenerateHelpText(env).splitlines()]))
+ 
+ # add trailing slashes were required and if not present
+-BUILD_DIR = Dir(os.path.join("lib", "sgpp"))
++BUILD_DIR = Dir(os.path.join("lib"))
+ Export("BUILD_DIR")
+ PYSGPP_PACKAGE_PATH = Dir(os.path.join("lib"))
+ Export("PYSGPP_PACKAGE_PATH")
+@@ -550,7 +550,7 @@ env.SideEffect("sideEffectFinalSteps", exampleTargetList)
+ #########################################################################
+ 
+ installLibSGpp = env.Alias("install-lib-sgpp",
+-                           env.Install(os.path.join(env.get("LIBDIR"), "sgpp"),
++                           env.Install(os.path.join(env.get("LIBDIR")),
+                                        libraryTargetList))
+ 
+ headerFinalDestList = []

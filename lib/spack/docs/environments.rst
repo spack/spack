@@ -130,7 +130,7 @@ To activate an environment, use the following command:
 By default, the ``spack env activate`` will load the view associated
 with the Environment into the user environment. The ``-v,
 --with-view`` argument ensures this behavior, and the ``-V,
---without-vew`` argument activates the environment without changing
+--without-view`` argument activates the environment without changing
 the user environment variables.
 
 The ``-p`` option to the ``spack env activate`` command modifies the
@@ -166,15 +166,6 @@ Any directory can be treated as an environment if it contains a file
 .. code-block:: console
 
    $ spack env activate -d /path/to/directory
-
-Spack commands that are environment sensitive will also act on the
-environment any time the current working directory contains a
-``spack.yaml`` file. Changing working directory to a directory
-containing a ``spack.yaml`` file is equivalent to the command:
-
-.. code-block:: console
-
-   $ spack env activate -d /path/to/dir --without-view
 
 Anonymous specs can be created in place using the command:
 
@@ -281,18 +272,18 @@ in the lockfile, nor does it install the spec.
 
 The ``spack add`` command is environment aware. It adds to the
 currently active environment. All environment aware commands can also
-be called using the ``spack -E`` flag to specify the environment.
+be called using the ``spack -e`` flag to specify the environment.
 
 .. code-block:: console
 
-   $ spack activate myenv
+   $ spack env activate myenv
    $ spack add mpileaks
 
 or
 
 .. code-block:: console
 
-   $ spack -E myenv add python
+   $ spack -e myenv add python
 
 .. _environments_concretization:
 
@@ -602,7 +593,7 @@ files are identical.
    spack:
      definitions:
        - first: [libelf, libdwarf]
-       - compilers: ['%gcc', '^intel']
+       - compilers: ['%gcc', '%intel']
        - second:
            - $first
            - matrix:
@@ -647,7 +638,7 @@ named list ``compilers`` is ``['%gcc', '%clang', '%intel']`` on
    spack:
      definitions:
        - compilers: ['%gcc', '%clang']
-       - when: target == 'x86_64'
+       - when: arch.satisfies('x86_64:')
          compilers: ['%intel']
 
 .. note::
@@ -666,8 +657,12 @@ The valid variables for a ``when`` clause are:
 #. ``target``. The target string of the default Spack
    architecture on the system.
 
-#. ``architecture`` or ``arch``. The full string of the
-   default Spack architecture on the system.
+#. ``architecture`` or ``arch``. A Spack spec satisfying the default Spack
+   architecture on the system. This supports querying via the ``satisfies``
+   method, as shown above.
+
+#. ``arch_str``. The architecture string of the default Spack architecture
+   on the system.
 
 #. ``re``. The standard regex module in Python.
 
@@ -675,6 +670,40 @@ The valid variables for a ``when`` clause are:
 
 #. ``hostname``. The hostname of the system (if ``hostname`` is an
    executable in the user's PATH).
+
+""""""""""""""""""""""""
+SpecLists as Constraints
+""""""""""""""""""""""""
+
+Dependencies and compilers in Spack can be both packages in an
+environment and constraints on other packages. References to SpecLists
+allow a shorthand to treat packages in a list as either a compiler or
+a dependency using the ``$%`` or ``$^`` syntax respectively.
+
+For example, the following environment has three root packages:
+``gcc@8.1.0``, ``mvapich2@2.3.1 %gcc@8.1.0``, and ``hdf5+mpi
+%gcc@8.1.0 ^mvapich2@2.3.1``.
+
+.. code-block:: yaml
+
+   spack:
+     definitions:
+     - compilers: [gcc@8.1.0]
+     - mpis: [mvapich2@2.3.1]
+     - packages: [hdf5+mpi]
+
+     specs:
+     - $compilers
+     - matrix:
+       - [$mpis]
+       - [$%compilers]
+     - matrix:
+       - [$packages]
+       - [$^mpis]
+       - [$%compilers]
+
+This allows for a much-needed reduction in redundancy between packages
+and constraints.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Environment-managed Views

@@ -19,9 +19,9 @@ from spack.spec import Spec
 from spack.main import SpackCommand
 from spack.stage import stage_prefix
 
-from spack.spec_list import SpecListError
-from spack.test.conftest import MockPackage, MockPackageMultiRepo
+from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.spack_json as sjson
+from spack.util.path import substitute_path_variables
 
 
 # everything here uses the mock_env_path
@@ -161,6 +161,28 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.user_specs[0].name == 'cmake-client'
     assert e.concretized_user_specs[0].name == 'cmake-client'
     assert e.specs_by_hash[e.concretized_order[0]].name == 'cmake-client'
+
+
+def test_env_modifications_error_on_activate(
+        install_mockery, mock_fetch, monkeypatch, capfd):
+    env('create', 'test')
+    install = SpackCommand('install')
+
+    e = ev.read('test')
+    with e:
+        install('cmake-client')
+
+    def setup_error(pkg, env):
+        raise RuntimeError("cmake-client had issues!")
+
+    pkg = spack.repo.path.get_pkg_class("cmake-client")
+    monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
+    with e:
+        pass
+
+    _, err = capfd.readouterr()
+    assert "cmake-client had issues!" in err
+    assert "Warning: couldn't get environment settings" in err
 
 
 def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
@@ -517,6 +539,35 @@ packages:
                for x in e._get_environment_specs())
 
 
+def test_env_with_included_config_var_path():
+    config_var_path = os.path.join('$tempdir', 'included-config.yaml')
+    test_config = """\
+env:
+  include:
+  - %s
+  specs:
+  - mpileaks
+""" % config_var_path
+
+    _env_create('test', StringIO(test_config))
+    e = ev.read('test')
+
+    config_real_path = substitute_path_variables(config_var_path)
+    fs.mkdirp(os.path.dirname(config_real_path))
+    with open(config_real_path, 'w') as f:
+        f.write("""\
+packages:
+  mpileaks:
+    version: [2.2]
+""")
+
+    with e:
+        e.concretize()
+
+    assert any(x.satisfies('mpileaks@2.2')
+               for x in e._get_environment_specs())
+
+
 def test_env_config_precedence():
     test_config = """\
 env:
@@ -733,10 +784,10 @@ def create_v1_lockfile_dict(roots, all_specs):
 def test_read_old_lock_and_write_new(tmpdir):
     build_only = ('build',)
 
-    y = MockPackage('y', [], [])
-    x = MockPackage('x', [y], [build_only])
+    mock_repo = MockPackageMultiRepo()
+    y = mock_repo.add_package('y', [], [])
+    mock_repo.add_package('x', [y], [build_only])
 
-    mock_repo = MockPackageMultiRepo([x, y])
     with spack.repo.swap(mock_repo):
         x = Spec('x')
         x.concretize()
@@ -765,9 +816,9 @@ def test_read_old_lock_creates_backup(tmpdir):
     """When reading a version-1 lockfile, make sure that a backup of that file
     is created.
     """
-    y = MockPackage('y', [], [])
+    mock_repo = MockPackageMultiRepo()
+    y = mock_repo.add_package('y', [], [])
 
-    mock_repo = MockPackageMultiRepo([y])
     with spack.repo.swap(mock_repo):
         y = Spec('y')
         y.concretize()
@@ -796,11 +847,10 @@ def test_indirect_build_dep():
     default = ('build', 'link')
     build_only = ('build',)
 
-    z = MockPackage('z', [], [])
-    y = MockPackage('y', [z], [build_only])
-    x = MockPackage('x', [y], [default])
-
-    mock_repo = MockPackageMultiRepo([x, y, z])
+    mock_repo = MockPackageMultiRepo()
+    z = mock_repo.add_package('z', [], [])
+    y = mock_repo.add_package('y', [z], [build_only])
+    mock_repo.add_package('x', [y], [default])
 
     def noop(*args):
         pass
@@ -838,11 +888,10 @@ def test_store_different_build_deps():
     default = ('build', 'link')
     build_only = ('build',)
 
-    z = MockPackage('z', [], [])
-    y = MockPackage('y', [z], [build_only])
-    x = MockPackage('x', [y, z], [default, build_only])
-
-    mock_repo = MockPackageMultiRepo([x, y, z])
+    mock_repo = MockPackageMultiRepo()
+    z = mock_repo.add_package('z', [], [])
+    y = mock_repo.add_package('y', [z], [build_only])
+    mock_repo.add_package('x', [y, z], [default, build_only])
 
     def noop(*args):
         pass
@@ -1042,6 +1091,55 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+def test_stack_yaml_definitions_as_constraints(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - mpis: [mpich, openmpi]
+  specs:
+    - matrix:
+      - [$packages]
+      - [$^mpis]
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        test = ev.read('test')
+
+        assert Spec('mpileaks^mpich') in test.user_specs
+        assert Spec('callpath^mpich') in test.user_specs
+        assert Spec('mpileaks^openmpi') in test.user_specs
+        assert Spec('callpath^openmpi') in test.user_specs
+
+
+def test_stack_yaml_definitions_as_constraints_on_matrix(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - mpis:
+      - matrix:
+        - [mpich]
+        - ['@3.0.4', '@3.0.3']
+  specs:
+    - matrix:
+      - [$packages]
+      - [$^mpis]
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        test = ev.read('test')
+
+        assert Spec('mpileaks^mpich@3.0.4') in test.user_specs
+        assert Spec('callpath^mpich@3.0.4') in test.user_specs
+        assert Spec('mpileaks^mpich@3.0.3') in test.user_specs
+        assert Spec('callpath^mpich@3.0.3') in test.user_specs
+
+
 @pytest.mark.regression('12095')
 def test_stack_yaml_definitions_write_reference(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
@@ -1135,7 +1233,7 @@ env:
         assert Spec('callpath ^mpich') in test.user_specs
 
 
-def test_stack_yaml_attempt_remove_from_matrix(tmpdir):
+def test_stack_yaml_remove_from_matrix_no_effect(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -1150,9 +1248,45 @@ env:
 """)
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
-        with pytest.raises(SpecListError):
-            with ev.read('test'):
-                remove('-l', 'packages', 'mpileaks')
+        with ev.read('test') as e:
+            before = e.user_specs.specs
+            remove('-l', 'packages', 'mpileaks')
+            after = e.user_specs.specs
+
+            assert before == after
+
+
+def test_stack_yaml_force_remove_from_matrix(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages:
+        - matrix:
+            - [mpileaks, callpath]
+            - [target=be]
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test') as e:
+            concretize()
+
+            before_user = e.user_specs.specs
+            before_conc = e.concretized_user_specs
+
+            remove('-f', '-l', 'packages', 'mpileaks')
+
+            after_user = e.user_specs.specs
+            after_conc = e.concretized_user_specs
+
+            assert before_user == after_user
+
+            mpileaks_spec = Spec('mpileaks target=be')
+            assert mpileaks_spec in before_conc
+            assert mpileaks_spec not in after_conc
 
 
 def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):
@@ -1327,6 +1461,29 @@ env:
 
         assert Spec('libelf') in test.user_specs
         assert Spec('mpileaks') in test.user_specs
+        assert Spec('callpath') in test.user_specs
+
+
+def test_stack_definition_conditional_with_satisfaction(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [libelf, mpileaks]
+      when: arch.satisfies('platform=foo')  # will be "test" when testing
+    - packages: [callpath]
+      when: arch.satisfies('platform=test')
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+
+        test = ev.read('test')
+
+        assert Spec('libelf') not in test.user_specs
+        assert Spec('mpileaks') not in test.user_specs
         assert Spec('callpath') in test.user_specs
 
 
