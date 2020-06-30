@@ -60,7 +60,7 @@ packages. If neither are chosen, don't run tests for any packages.""")
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
-    
+
 def dev_build(self, args):
     if not args.spec:
         tty.die("spack dev-build requires a package spec argument.")
