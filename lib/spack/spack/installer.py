@@ -679,13 +679,8 @@ class PackageInstaller(object):
             installed_in_db = False
         return rec, installed_in_db
 
-    def _check_deps_status(self, install_compilers):
-        """Check the install status of the explicit spec's dependencies
-
-        Args:
-            install_compilers (bool): ``True`` if compilers to be added to
-                the queue; otherwise ``False``
-        """
+    def _check_deps_status(self):
+        """Check the install status of the explicit spec's dependencies"""
 
         err = 'Cannot proceed with {0}: {1}'
         for dep in self.spec.traverse(order='post', root=False):
@@ -1029,7 +1024,7 @@ class PackageInstaller(object):
             # If not installing dependencies, then determine their
             # installation status before proceeding.
             if not install_deps:
-                self._check_deps_status(install_compilers)
+                self._check_deps_status()
                 return
 
         if install_deps:
@@ -1534,7 +1529,6 @@ class PackageInstaller(object):
                 continue
 
             # Determine state of installation artifacts and adjust accordingly.
-            # Possession of a read lock is required/assumed.
             self._prepare_for_install(task, keep_prefix, keep_stage, restage)
 
             # Flag an already installed package

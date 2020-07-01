@@ -469,7 +469,7 @@ def test_check_deps_status_install_failure(install_mockery, monkeypatch):
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
 
     with pytest.raises(inst.InstallError, match='install failure'):
-        installer._check_deps_status(False)
+        installer._check_deps_status()
 
 
 def test_check_deps_status_write_locked(install_mockery, monkeypatch):
@@ -479,7 +479,7 @@ def test_check_deps_status_write_locked(install_mockery, monkeypatch):
     monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked', _not_locked)
 
     with pytest.raises(inst.InstallError, match='write locked by another'):
-        installer._check_deps_status(False)
+        installer._check_deps_status()
 
 
 def test_check_deps_status_external(install_mockery, monkeypatch):
@@ -487,7 +487,7 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
 
     # Mock the known dependent, b, as external so assumed to be installed
     monkeypatch.setattr(spack.spec.Spec, 'external', True)
-    installer._check_deps_status(False)
+    installer._check_deps_status()
     assert 'b' in installer.installed
 
 
@@ -496,7 +496,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
 
     # Mock the known dependent, b, as installed upstream
     monkeypatch.setattr(spack.package.PackageBase, 'installed_upstream', True)
-    installer._check_deps_status(False)
+    installer._check_deps_status()
     assert 'b' in installer.installed
 
 
