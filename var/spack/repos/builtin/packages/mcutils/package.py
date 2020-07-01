@@ -29,7 +29,6 @@ class Mcutils(MakefilePackage):
     version('1.0.0', sha256='d08dea19fb42b1846e0a7134e2347648b037bf82b2d75086d018734bc2996b06')
 
     depends_on('heputils', when='@1.1.0:')
-    install_targets = ['install']
 
-    def build(self, spec, prefix):
-        return
+    def install(self, spec, prefix):
+        make('install', 'PREFIX={0}'.format(prefix))

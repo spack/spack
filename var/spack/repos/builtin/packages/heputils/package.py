@@ -29,8 +29,8 @@ class Heputils(MakefilePackage):
     version('1.0.1', sha256='4bfccc4f4380becb776343e546deb2474deeae79f053ba8ca22287827b8bd4b1')
     version('1.0.0', sha256='4f71c2bee6736ed87d0151e62546d2fc9ff639db58172c26dcf033e5bb1ea04c')
 
-    build_targets = []
-    install_targets = ['install']
-
     def build(self, spec, prefix):
         return
+
+    def install(self, spec, prefix):
+        make('install', 'PREFIX={0}'.format(prefix))
