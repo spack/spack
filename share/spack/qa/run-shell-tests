@@ -18,7 +18,7 @@
 ORIGINAL_PATH="$PATH"
 
 . "$(dirname $0)/setup.sh"
-check_dependencies $coverage git hg svn
+check_dependencies $coverage kcov git hg svn
 
 # Clean the environment by removing Spack from the path and getting rid of
 # the spack shell function
