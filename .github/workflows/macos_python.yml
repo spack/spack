@@ -32,7 +32,7 @@ jobs:
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
-        spack install -v py-jupyter %clang
+        spack install -v py-jupyter %apple-clang
 
   install_scipy_clang:
     name: scipy, mpl, pd
@@ -42,9 +42,9 @@ jobs:
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
-        spack install -v py-scipy %clang
-        spack install -v py-matplotlib %clang
-        spack install -v py-pandas %clang
+        spack install -v py-scipy %apple-clang
+        spack install -v py-matplotlib %apple-clang
+        spack install -v py-pandas %apple-clang
 
   install_mpi4py_clang:
     name: mpi4py, petsc4py
@@ -54,5 +54,5 @@ jobs:
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
-        spack install -v py-mpi4py %clang
-        spack install -v py-petsc4py %clang
+        spack install -v py-mpi4py %apple-clang
+        spack install -v py-petsc4py %apple-clang
