@@ -20,7 +20,7 @@ class Warpx(MakefilePackage):
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
 
-    version('master', tag='master')
+    version('develop', tag='development')
 
     variant('dims',
             default='3',
@@ -55,7 +55,7 @@ class Warpx(MakefilePackage):
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
-             when='@master',
+             when='@develop',
              tag='development')
 
     resource(name='picsar',

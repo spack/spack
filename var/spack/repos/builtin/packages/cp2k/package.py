@@ -68,7 +68,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('lmax',
             description='Maximum supported angular momentum (HFX and others)',
             default='5',
-            values=list(HFX_LMAX_RANGE),
+            values=map(str, HFX_LMAX_RANGE),
             multi=False)
 
     depends_on('python', type='build')

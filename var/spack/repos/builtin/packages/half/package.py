@@ -23,6 +23,8 @@ class Half(Package):
 
     version('2.1.0', sha256='ad1788afe0300fa2b02b0d1df128d857f021f92ccf7c8bddd07812685fa07a25')
 
+    patch('f16fix.patch')
+
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         install_tree('include', prefix.include)

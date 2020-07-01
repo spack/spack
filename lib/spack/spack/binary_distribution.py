@@ -25,6 +25,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.cmd
 import spack.config as config
+import spack.database as spack_db
 import spack.fetch_strategy as fs
 import spack.util.gpg
 import spack.relocate as relocate
@@ -32,7 +33,6 @@ import spack.util.spack_yaml as syaml
 import spack.mirror
 import spack.util.url as url_util
 import spack.util.web as web_util
-
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
@@ -282,31 +282,47 @@ def sign_tarball(key, force, specfile_path):
 def generate_package_index(cache_prefix):
     """Create the build cache index page.
 
-    Creates (or replaces) the "index.html" page at the location given in
+    Creates (or replaces) the "index.json" page at the location given in
     cache_prefix.  This page contains a link for each binary package (*.yaml)
     and public key (*.key) under cache_prefix.
     """
     tmpdir = tempfile.mkdtemp()
-    try:
-        index_html_path = os.path.join(tmpdir, 'index.html')
-        file_list = (
-            entry
-            for entry in web_util.list_url(cache_prefix)
-            if (entry.endswith('.yaml')
-                or entry.endswith('.key')))
+    db_root_dir = os.path.join(tmpdir, 'db_root')
+    db = spack_db.Database(None, db_dir=db_root_dir,
+                           enable_transaction_locking=False,
+                           record_fields=['spec', 'ref_count'])
 
-        with open(index_html_path, 'w') as f:
-            f.write(BUILD_CACHE_INDEX_TEMPLATE.format(
-                title='Spack Package Index',
-                path_list='\n'.join(
-                    BUILD_CACHE_INDEX_ENTRY_TEMPLATE.format(path=path)
-                    for path in file_list)))
+    file_list = (
+        entry
+        for entry in web_util.list_url(cache_prefix)
+        if entry.endswith('.yaml'))
+
+    tty.debug('Retrieving spec.yaml files from {0} to build index'.format(
+        cache_prefix))
+    for file_path in file_list:
+        try:
+            yaml_url = url_util.join(cache_prefix, file_path)
+            tty.debug('fetching {0}'.format(yaml_url))
+            _, _, yaml_file = web_util.read_from_url(yaml_url)
+            yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
+            # yaml_obj = syaml.load(yaml_contents)
+            # s = Spec.from_yaml(yaml_obj)
+            s = Spec.from_yaml(yaml_contents)
+            db.add(s, None)
+        except (URLError, web_util.SpackWebError) as url_err:
+            tty.error('Error reading spec.yaml: {0}'.format(file_path))
+            tty.error(url_err)
+
+    try:
+        index_json_path = os.path.join(db_root_dir, 'index.json')
+        with open(index_json_path, 'w') as f:
+            db._write_to_file(f)
 
         web_util.push_to_url(
-            index_html_path,
-            url_util.join(cache_prefix, 'index.html'),
+            index_json_path,
+            url_util.join(cache_prefix, 'index.json'),
             keep_original=False,
-            extra_args={'ContentType': 'text/html'})
+            extra_args={'ContentType': 'application/json'})
     finally:
         shutil.rmtree(tmpdir)
 
@@ -825,49 +841,55 @@ def get_spec(spec=None, force=False):
     return try_download_specs(urls=urls, force=force)
 
 
-def get_specs(force=False, allarch=False):
+def get_specs(allarch=False):
     """
     Get spec.yaml's for build caches available on mirror
     """
+    global _cached_specs
     arch = architecture.Arch(architecture.platform(),
                              'default_os', 'default_target')
-    arch_pattern = ('([^-]*-[^-]*-[^-]*)')
-    if not allarch:
-        arch_pattern = '(%s-%s-[^-]*)' % (arch.platform, arch.os)
-
-    regex_pattern = '%s(.*)(spec.yaml$)' % (arch_pattern)
-    arch_re = re.compile(regex_pattern)
 
     if not spack.mirror.MirrorCollection():
         tty.debug("No Spack mirrors are currently configured")
         return {}
 
-    urls = set()
     for mirror in spack.mirror.MirrorCollection().values():
         fetch_url_build_cache = url_util.join(
             mirror.fetch_url, _build_cache_relative_path)
 
-        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
-        if mirror_dir:
-            tty.msg("Finding buildcaches in %s" % mirror_dir)
-            if os.path.exists(mirror_dir):
-                files = os.listdir(mirror_dir)
-                for file in files:
-                    m = arch_re.search(file)
-                    if m:
-                        link = url_util.join(fetch_url_build_cache, file)
-                        urls.add(link)
-        else:
-            tty.msg("Finding buildcaches at %s" %
-                    url_util.format(fetch_url_build_cache))
-            p, links = web_util.spider(
-                url_util.join(fetch_url_build_cache, 'index.html'))
-            for link in links:
-                m = arch_re.search(link)
-                if m:
-                    urls.add(link)
+        tty.msg("Finding buildcaches at %s" %
+                url_util.format(fetch_url_build_cache))
 
-    return try_download_specs(urls=urls, force=force)
+        index_url = url_util.join(fetch_url_build_cache, 'index.json')
+
+        try:
+            _, _, file_stream = web_util.read_from_url(
+                index_url, 'application/json')
+            index_object = codecs.getreader('utf-8')(file_stream).read()
+        except (URLError, web_util.SpackWebError) as url_err:
+            tty.error('Failed to read index {0}'.format(index_url))
+            tty.debug(url_err)
+            # Just return whatever specs we may already have cached
+            return _cached_specs
+
+        tmpdir = tempfile.mkdtemp()
+        index_file_path = os.path.join(tmpdir, 'index.json')
+        with open(index_file_path, 'w') as fd:
+            fd.write(index_object)
+
+        db_root_dir = os.path.join(tmpdir, 'db_root')
+        db = spack_db.Database(None, db_dir=db_root_dir,
+                               enable_transaction_locking=False)
+
+        db._read_from_file(index_file_path)
+        spec_list = db.query_local(installed=False)
+
+        for indexed_spec in spec_list:
+            spec_arch = architecture.arch_for_spec(indexed_spec.architecture)
+            if (allarch is True or spec_arch == arch):
+                _cached_specs.add(indexed_spec)
+
+    return _cached_specs
 
 
 def get_keys(install=False, trust=False, force=False):

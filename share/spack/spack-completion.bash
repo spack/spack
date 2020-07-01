@@ -320,7 +320,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload url verify versions view"
     fi
 }
 
@@ -355,15 +355,6 @@ _spack_blame() {
     fi
 }
 
-_spack_build() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help -v --verbose"
-    else
-        _all_packages
-    fi
-}
-
 _spack_build_env() {
     if $list_options
     then
@@ -385,7 +376,7 @@ _spack_buildcache() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --no-rebuild-index -y --spec-yaml --only"
+        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --rebuild-index -y --spec-yaml --only"
     else
         _all_packages
     fi
@@ -403,7 +394,7 @@ _spack_buildcache_install() {
 _spack_buildcache_list() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -v --variants -f --force -a --allarch"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -v --variants -a --allarch"
     else
         _all_packages
     fi
@@ -641,15 +632,6 @@ _spack_config_rm() {
     fi
 }
 
-_spack_configure() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help -v --verbose"
-    else
-        _all_packages
-    fi
-}
-
 _spack_containerize() {
     SPACK_COMPREPLY="-h --help"
 }
@@ -725,15 +707,6 @@ _spack_dev_build() {
     fi
 }
 
-_spack_diy() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet --drop-in -b --before -u --until --clean --dirty"
-    else
-        _all_packages
-    fi
-}
-
 _spack_docs() {
     SPACK_COMPREPLY="-h --help"
 }
@@ -759,14 +732,14 @@ _spack_env() {
 _spack_env_activate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh -v --with-view -V --without-view -d --dir -p --prompt"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish -v --with-view -V --without-view -d --dir -p --prompt"
     else
         _environments
     fi
 }
 
 _spack_env_deactivate() {
-    SPACK_COMPREPLY="-h --help --sh --csh"
+    SPACK_COMPREPLY="-h --help --sh --csh --fish"
 }
 
 _spack_env_create() {
@@ -1024,7 +997,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --dependencies --sh --csh --first --only"
+        SPACK_COMPREPLY="-h --help -r --dependencies --sh --csh --fish --first --only"
     else
         _installed_packages
     fi
@@ -1472,27 +1445,10 @@ _spack_uninstall() {
 _spack_unload() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh -a --all"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish -a --all"
     else
         _installed_packages
     fi
-}
-
-_spack_upload_s3() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help"
-    else
-        SPACK_COMPREPLY="spec index"
-    fi
-}
-
-_spack_upload_s3_spec() {
-    SPACK_COMPREPLY="-h --help -s --spec -y --spec-yaml -b --base-dir -e --endpoint-url"
-}
-
-_spack_upload_s3_index() {
-    SPACK_COMPREPLY="-h --help -e --endpoint-url"
 }
 
 _spack_url() {

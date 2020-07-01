@@ -19,7 +19,6 @@ from spack.spec import Spec
 from spack.main import SpackCommand
 from spack.stage import stage_prefix
 
-from spack.spec_list import SpecListError
 from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.spack_json as sjson
 from spack.util.path import substitute_path_variables
@@ -1234,7 +1233,7 @@ env:
         assert Spec('callpath ^mpich') in test.user_specs
 
 
-def test_stack_yaml_attempt_remove_from_matrix(tmpdir):
+def test_stack_yaml_remove_from_matrix_no_effect(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -1249,9 +1248,45 @@ env:
 """)
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
-        with pytest.raises(SpecListError):
-            with ev.read('test'):
-                remove('-l', 'packages', 'mpileaks')
+        with ev.read('test') as e:
+            before = e.user_specs.specs
+            remove('-l', 'packages', 'mpileaks')
+            after = e.user_specs.specs
+
+            assert before == after
+
+
+def test_stack_yaml_force_remove_from_matrix(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages:
+        - matrix:
+            - [mpileaks, callpath]
+            - [target=be]
+  specs:
+    - $packages
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test') as e:
+            concretize()
+
+            before_user = e.user_specs.specs
+            before_conc = e.concretized_user_specs
+
+            remove('-f', '-l', 'packages', 'mpileaks')
+
+            after_user = e.user_specs.specs
+            after_conc = e.concretized_user_specs
+
+            assert before_user == after_user
+
+            mpileaks_spec = Spec('mpileaks target=be')
+            assert mpileaks_spec in before_conc
+            assert mpileaks_spec not in after_conc
 
 
 def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):

@@ -108,6 +108,8 @@ echo $PATH"""
     else:
         create_args.insert(create_args.index('-a'), '-u')
 
+    create_args.insert(create_args.index('-a'), '--rebuild-index')
+
     args = parser.parse_args(create_args)
     buildcache.buildcache(parser, args)
     # trigger overwrite warning
@@ -165,7 +167,7 @@ echo $PATH"""
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
 
-    args = parser.parse_args(['list', '-f'])
+    args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
 
     args = parser.parse_args(['list', 'trivial'])

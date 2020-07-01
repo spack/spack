@@ -159,7 +159,13 @@ class MockCompiler(Compiler):
                    default_compiler_entry['paths']['f77']],
             environment={})
 
-    _get_compiler_link_paths = Compiler._get_compiler_link_paths
+    def _get_compiler_link_paths(self, paths):
+        # Mock os.path.isdir so the link paths don't have to exist
+        old_isdir = os.path.isdir
+        os.path.isdir = lambda x: True
+        ret = super(MockCompiler, self)._get_compiler_link_paths(paths)
+        os.path.isdir = old_isdir
+        return ret
 
     @property
     def name(self):
@@ -222,6 +228,7 @@ def call_compiler(exe, *args, **kwargs):
     ('f77', 'fflags'),
     ('f77', 'cppflags'),
 ])
+@pytest.mark.enable_compiler_link_paths
 def test_get_compiler_link_paths(monkeypatch, exe, flagname):
     # create fake compiler that emits mock verbose output
     compiler = MockCompiler()
@@ -261,6 +268,7 @@ def test_get_compiler_link_paths_no_verbose_flag():
     assert dirs == []
 
 
+@pytest.mark.enable_compiler_link_paths
 def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join('gcc'))
     with open(gcc, 'w') as f:
@@ -377,6 +385,10 @@ def test_cce_flags():
     supported_flag_test("cxx_pic_flag", "-h PIC", "cce@1.0")
     supported_flag_test("f77_pic_flag", "-h PIC", "cce@1.0")
     supported_flag_test("fc_pic_flag",  "-h PIC", "cce@1.0")
+    supported_flag_test("cc_pic_flag",  "-fPIC", "cce@9.1.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "cce@9.1.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "cce@9.1.0")
+    supported_flag_test("fc_pic_flag",  "-fPIC", "cce@9.1.0")
     supported_flag_test("debug_flags", ['-g', '-G0', '-G1', '-G2', '-Gfast'],
                         'cce@1.0')
 
@@ -823,3 +835,33 @@ def test_xcode_not_available(
     pkg = MockPackage()
     with pytest.raises(OSError):
         compiler.setup_custom_environment(pkg, env)
+
+
+@pytest.mark.enable_compiler_verification
+def test_compiler_executable_verification_raises(tmpdir):
+    compiler = MockCompiler()
+    compiler.cc = '/this/path/does/not/exist'
+
+    with pytest.raises(spack.compiler.CompilerAccessError):
+        compiler.verify_executables()
+
+
+@pytest.mark.enable_compiler_verification
+def test_compiler_executable_verification_success(tmpdir):
+    def prepare_executable(name):
+        real = str(tmpdir.join('cc').ensure())
+        fs.set_executable(real)
+        setattr(compiler, name, real)
+
+    # setup mock compiler with real paths
+    compiler = MockCompiler()
+    for name in ('cc', 'cxx', 'f77', 'fc'):
+        prepare_executable(name)
+
+    # testing that this doesn't raise an error because the paths exist and
+    # are executable
+    compiler.verify_executables()
+
+    # Test that null entries don't fail
+    compiler.cc = None
+    compiler.verify_executables()
