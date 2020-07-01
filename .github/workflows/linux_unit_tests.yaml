@@ -77,7 +77,7 @@ jobs:
         git config --global user.email "spack@example.com"
         git config --global user.name "Test User"
         git fetch -u origin develop:develop
-    - name: Run unit tests
+    - name: Run flake8 tests
       run: |
           share/spack/qa/run-flake8-tests
   shell:
