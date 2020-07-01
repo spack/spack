@@ -14,8 +14,8 @@ class Hbase(Package):
     Bigtable-like capabilities on top of Apache Hadoop."""
 
     homepage = "https://archive.apache.org/"
-    url      = "http://archive.apache.org/dist/hbase/2.2.4/hbase-2.2.4-bin.tar.gz"
-    list_url = "http://archive.apache.org/dist/hbase"
+    url      = "https://archive.apache.org/dist/hbase/2.2.4/hbase-2.2.4-bin.tar.gz"
+    list_url = "https://archive.apache.org/dist/hbase"
     list_depth = 1
 
     version('2.2.5',  sha256='25d08f8f038d9de5beb43dfb0392e8a8b34eae7e0f2670d6c2c172abc3855194')
