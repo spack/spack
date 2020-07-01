@@ -19,5 +19,5 @@ class PyFortranLanguageServer(PythonPackage):
 
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'), when='^python@:2')
-    depends_on('py-argparse', type=('build', 'run'), when='^python@3.0:3.1.999')
+    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6,3.0:3.1')
     depends_on('py-setuptools', type='build')
