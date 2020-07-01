@@ -5,41 +5,30 @@ branches:
     - develop
     - /^releases\/.*$/
 
-jobs:
-  include:
-    - python: '2.6'
-      dist: trusty
-      os: linux
-      language: python
-      addons:
-        apt:
-          # Everything but patchelf, that is not available for trusty
-          packages:
-            - gfortran
-            - graphviz
-            - gnupg2
-            - kcov
-            - mercurial
-            - ninja-build
-            - realpath
-            - zsh
-            - fish
-      env: [ TEST_SUITE=unit, COVERAGE=true ]
-
-cache:
-  pip: true
+language: python
+python: '2.6'
+dist: trusty
+os: linux
+addons:
+  apt:
+    packages:
+      - gfortran
+      - graphviz
+      - gnupg2
+      - kcov
+      - mercurial
+      - ninja-build
+      - realpath
+      - zsh
+      - fish
 
 # Install various dependencies
 install:
   - pip install --upgrade pip
   - pip install --upgrade six
   - pip install --upgrade setuptools
-  - pip install --upgrade codecov coverage==4.5.4
   - pip install --upgrade flake8
   - pip install --upgrade pep8-naming
-  - if [[ "$TEST_SUITE" == "doc" ]]; then
-        pip install --upgrade -r lib/spack/docs/requirements.txt;
-    fi
 
 before_script:
   # Need this for the git tests to succeed.
@@ -50,18 +39,7 @@ before_script:
   - git fetch origin ${TRAVIS_BRANCH}:${TRAVIS_BRANCH}
 
 script:
-  - share/spack/qa/run-$TEST_SUITE-tests
-
-after_success:
-  - case "$TEST_SUITE" in
-        unit)
-            if [[ "$COVERAGE" == "true" ]]; then
-                codecov --env PYTHON_VERSION
-                        --required
-                        --flags "${TEST_SUITE}${TRAVIS_OS_NAME}";
-            fi
-            ;;
-    esac
+  - share/spack/qa/run-unit-tests
 
 notifications:
   email:
