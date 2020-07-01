@@ -48,6 +48,12 @@ from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
 from spack.version import Version
 
+
+@contextlib.contextmanager
+def nullcontext(*args, **kwargs):
+    yield
+
+
 # TODO: Provide an API automatically retyring a build after detecting and
 # TODO: clearing a failure.
 
@@ -86,6 +92,17 @@ _pkg_lock_timeout = None
 
 # Types of dependencies tracked by the database
 _tracked_deps = ('link', 'run')
+
+# Default list of fields written for each install record
+default_install_record_fields = [
+    'spec',
+    'ref_count',
+    'path',
+    'installed',
+    'explicit',
+    'installation_time',
+    'deprecated_for',
+]
 
 
 def _now():
@@ -187,17 +204,17 @@ class InstallRecord(object):
         else:
             return InstallStatuses.MISSING in installed
 
-    def to_dict(self):
-        rec_dict = {
-            'spec': self.spec.to_node_dict(),
-            'path': self.path,
-            'installed': self.installed,
-            'ref_count': self.ref_count,
-            'explicit': self.explicit,
-            'installation_time': self.installation_time,
-        }
-        if self.deprecated_for:
-            rec_dict.update({'deprecated_for': self.deprecated_for})
+    def to_dict(self, include_fields=default_install_record_fields):
+        rec_dict = {}
+
+        for field_name in include_fields:
+            if field_name == 'spec':
+                rec_dict.update({'spec': self.spec.to_node_dict()})
+            elif field_name == 'deprecated_for' and self.deprecated_for:
+                rec_dict.update({'deprecated_for': self.deprecated_for})
+            else:
+                rec_dict.update({field_name: getattr(self, field_name)})
+
         return rec_dict
 
     @classmethod
@@ -206,8 +223,11 @@ class InstallRecord(object):
         d.pop('spec', None)
 
         # Old databases may have "None" for path for externals
-        if d['path'] == 'None':
+        if 'path' not in d or d['path'] == 'None':
             d['path'] = None
+
+        if 'installed' not in d:
+            d['installed'] = False
 
         return InstallRecord(spec, **d)
 
@@ -275,7 +295,8 @@ class Database(object):
     _prefix_failures = {}
 
     def __init__(self, root, db_dir=None, upstream_dbs=None,
-                 is_upstream=False):
+                 is_upstream=False, enable_transaction_locking=True,
+                 record_fields=default_install_record_fields):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -293,6 +314,12 @@ class Database(object):
         Caller may optionally provide a custom ``db_dir`` parameter
         where data will be stored. This is intended to be used for
         testing the Database class.
+
+        This class supports writing buildcache index files, in which case
+        certain fields are not needed in each install record, and no
+        transaction locking is required.  To use this feature, provide
+        ``enable_transaction_locking=False``, and specify a list of needed
+        fields in ``record_fields``.
         """
         self.root = root
 
@@ -375,14 +402,23 @@ class Database(object):
         # message)
         self._fail_when_missing_deps = False
 
+        if enable_transaction_locking:
+            self._write_transaction_impl = lk.WriteTransaction
+            self._read_transaction_impl = lk.ReadTransaction
+        else:
+            self._write_transaction_impl = nullcontext
+            self._read_transaction_impl = nullcontext
+
+        self._record_fields = record_fields
+
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
-        return lk.WriteTransaction(
+        return self._write_transaction_impl(
             self.lock, acquire=self._read, release=self._write)
 
     def read_transaction(self):
         """Get a read lock context manager for use in a `with` block."""
-        return lk.ReadTransaction(self.lock, acquire=self._read)
+        return self._read_transaction_impl(self.lock, acquire=self._read)
 
     def _failed_spec_path(self, spec):
         """Return the path to the spec's failure file, which may not exist."""
@@ -592,7 +628,8 @@ class Database(object):
         This function does not do any locking or transactions.
         """
         # map from per-spec hash code to installation record.
-        installs = dict((k, v.to_dict()) for k, v in self._data.items())
+        installs = dict((k, v.to_dict(include_fields=self._record_fields))
+                        for k, v in self._data.items())
 
         # database includes installation list and version.
 
@@ -726,7 +763,8 @@ class Database(object):
 
                 self.reindex(spack.store.layout)
                 installs = dict(
-                    (k, v.to_dict()) for k, v in self._data.items()
+                    (k, v.to_dict(include_fields=self._record_fields))
+                    for k, v in self._data.items()
                 )
 
         def invalid_record(hash_key, error):

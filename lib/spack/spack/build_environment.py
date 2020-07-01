@@ -198,6 +198,9 @@ def set_compiler_environment_variables(pkg, env):
     compiler = pkg.compiler
     spec = pkg.spec
 
+    # Make sure the executables for this compiler exist
+    compiler.verify_executables()
+
     # Set compiler variables used by CMake and autotools
     assert all(key in compiler.link_paths for key in (
         'cc', 'cxx', 'f77', 'fc'))

@@ -88,7 +88,7 @@ class Geant4(CMakePackage):
     depends_on("libx11", when='+x11')
     depends_on("libxmu", when='+x11')
     depends_on("motif", when='+motif')
-    depends_on("qt@5:", when="+qt")
+    depends_on("qt@5: +opengl", when="+qt")
 
     # As released, 10.03.03 has issues with respect to using external
     # CLHEP.
