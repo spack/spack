@@ -19,14 +19,15 @@ class Miniaero(MakefilePackage):
 
     version('2016-11-11', commit='f46d135479a5be19ec5d146ccaf0e581aeff4596')
 
-    depends_on('kokkos')
+    depends_on('kokkos-legacy')
 
     @property
     def build_targets(self):
         targets = [
             '--directory=kokkos',
             'CXX=c++',
-            'KOKKOS_PATH={0}'.format(self.spec['kokkos'].prefix)
+            'KOKKOS_PATH={0}'.format(
+                self.spec['kokkos-legacy'].prefix)
         ]
 
         return targets

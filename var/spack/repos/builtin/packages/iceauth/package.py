@@ -6,13 +6,13 @@
 from spack import *
 
 
-class Iceauth(AutotoolsPackage):
+class Iceauth(AutotoolsPackage, XorgPackage):
     """The iceauth program is used to edit and display the authorization
     information used in connecting with ICE.   It operates very much
     like the xauth program for X11 connection authentication records."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/iceauth"
-    url      = "https://www.x.org/archive/individual/app/iceauth-1.0.7.tar.gz"
+    xorg_mirror_path = "app/iceauth-1.0.7.tar.gz"
 
     version('1.0.7', sha256='6c9706cce276609876e768759ed4ee3b447cd17af4a61f9b5a374c7dda9696d8')
 

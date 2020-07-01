@@ -14,7 +14,7 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     command lines, to recall and perhaps reedit those lines, and perform
     csh-like history expansion on previous commands."""
 
-    homepage = "http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html"
+    homepage = "https://tiswww.case.edu/php/chet/readline/rltop.html"
     # URL must remain http:// so Spack can bootstrap curl
     gnu_mirror_path = "readline/readline-8.0.tar.gz"
 
@@ -29,7 +29,8 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
 
     def build(self, spec, prefix):
         options = [
-            'SHLIB_LIBS=-L{0} -lncursesw'.format(spec['ncurses'].prefix.lib)
+            'SHLIB_LIBS=-L{0} -lncursesw -ltinfo'.format(
+                spec['ncurses'].prefix.lib)
         ]
 
         make(*options)

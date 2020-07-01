@@ -13,7 +13,7 @@ def singularity_configuration(minimal_configuration):
     return minimal_configuration
 
 
-def test_ensure_render_works(singularity_configuration):
+def test_ensure_render_works(default_config, singularity_configuration):
     container_config = singularity_configuration['spack']['container']
     assert container_config['format'] == 'singularity'
     # Here we just want to ensure that nothing is raised

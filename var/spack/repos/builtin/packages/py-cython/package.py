@@ -10,7 +10,7 @@ class PyCython(PythonPackage):
     """The Cython compiler for writing C extensions for the Python language."""
 
     homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.io/packages/source/c/cython/Cython-0.29.14.tar.gz"
+    url      = "https://pypi.io/packages/source/c/cython/Cython-0.29.16.tar.gz"
 
     import_modules = [
         'cython', 'Cython', 'Cython.Build', 'Cython.Compiler',
@@ -20,6 +20,8 @@ class PyCython(PythonPackage):
         'Cython.Tempita', 'pyximport',
     ]
 
+    version('0.29.16', sha256='232755284f942cbb3b43a06cd85974ef3c970a021aef19b5243c03ee2b08fa05')
+    version('0.29.15', sha256='60d859e1efa5cc80436d58aecd3718ff2e74b987db0518376046adedba97ac30')
     version('0.29.14', sha256='e4d6bb8703d0319eb04b7319b12ea41580df44fd84d83ccda13ea463c6801414')
     version('0.29.13', sha256='c29d069a4a30f472482343c866f7486731ad638ef9af92bfe5fca9c7323d638e')
     version('0.29.10', sha256='26229570d6787ff3caa932fe9d802960f51a89239b990d275ae845405ce43857')

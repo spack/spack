@@ -52,6 +52,9 @@ def env_activate_setup_parser(subparser):
     shells.add_argument(
         '--csh', action='store_const', dest='shell', const='csh',
         help="print csh commands to activate the environment")
+    shells.add_argument(
+        '--fish', action='store_const', dest='shell', const='fish',
+        help="print fish commands to activate the environment")
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
@@ -127,6 +130,9 @@ def env_deactivate_setup_parser(subparser):
     shells.add_argument(
         '--csh', action='store_const', dest='shell', const='csh',
         help="print csh commands to deactivate the environment")
+    shells.add_argument(
+        '--fish', action='store_const', dest='shell', const='fish',
+        help="print fish commands to activate the environment")
 
 
 def env_deactivate(args):
@@ -208,10 +214,14 @@ def _env_create(name_or_path, init_file=None, dir=False, with_view=None):
         env = ev.Environment(name_or_path, init_file, with_view)
         env.write()
         tty.msg("Created environment in %s" % env.path)
+        tty.msg("You can activate this environment with:")
+        tty.msg("  spack env activate %s" % env.path)
     else:
         env = ev.create(name_or_path, init_file, with_view)
         env.write()
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
+        tty.msg("You can activate this environment with:")
+        tty.msg("  spack env activate %s" % (name_or_path))
     return env
 
 

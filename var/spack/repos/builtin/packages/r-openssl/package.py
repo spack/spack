@@ -30,3 +30,8 @@ class ROpenssl(RPackage):
 
     depends_on('r-askpass', when='@1.2:', type=('build', 'run'))
     depends_on('openssl@1.0.1:')
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags':
+            flags.append(self.compiler.c99_flag)
+        return (flags, None, None)

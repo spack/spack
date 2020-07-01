@@ -304,6 +304,13 @@ _pretty_print() {
 
 complete -o bashdefault -o default -F _bash_completion_spack spack
 
+# Completion for spacktivate
+complete -o bashdefault -o default -F _bash_completion_spack spacktivate
+
+_spacktivate() {
+  _spack_env_activate
+}
+
 # Spack commands
 #
 # Everything below here is auto-generated.

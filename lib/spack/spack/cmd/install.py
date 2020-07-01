@@ -32,6 +32,7 @@ def update_kwargs_from_args(args, kwargs):
     that will be passed to Package.do_install API"""
 
     kwargs.update({
+        'fail_fast': args.fail_fast,
         'keep_failures': args.keep_failures,
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
@@ -79,6 +80,9 @@ the dependencies"""
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
+    subparser.add_argument(
+        '--fail-fast', action='store_true',
+        help="stop all builds if any build fails (default is best effort)")
     subparser.add_argument(
         '--keep-failures', action='store_true',
         help="don't remove previous install failure marks before installation")

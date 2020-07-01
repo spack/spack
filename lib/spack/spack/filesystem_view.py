@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import filecmp
 import functools as ft
 import os
 import re
@@ -18,11 +17,14 @@ from llnl.util.filesystem import (
     mkdirp, remove_dead_links, remove_empty_directories)
 
 import spack.util.spack_yaml as s_yaml
+import spack.util.spack_json as s_json
 
 import spack.spec
 import spack.store
 import spack.schema.projections
+import spack.projections
 import spack.config
+import spack.relocate
 from spack.error import SpackError
 from spack.directory_layout import ExtensionAlreadyInstalledError
 from spack.directory_layout import YamlViewExtensionsLayout
@@ -38,6 +40,58 @@ __all__ = ["FilesystemView", "YamlFilesystemView"]
 
 
 _projections_path = '.spack/projections.yaml'
+
+
+def view_symlink(src, dst, **kwargs):
+    # keyword arguments are irrelevant
+    # here to fit required call signature
+    os.symlink(src, dst)
+
+
+def view_hardlink(src, dst, **kwargs):
+    # keyword arguments are irrelevant
+    # here to fit required call signature
+    os.link(src, dst)
+
+
+def view_copy(src, dst, view, spec=None):
+    """
+    Copy a file from src to dst.
+
+    Use spec and view to generate relocations
+    """
+    shutil.copyfile(src, dst)
+    if spec:
+        # Not metadata, we have to relocate it
+
+        # Get information on where to relocate from/to
+        prefix_to_projection = dict(
+            (dep.prefix, view.get_projection_for_spec(dep))
+            for dep in spec.traverse()
+        )
+
+        if spack.relocate.is_binary(dst):
+            # relocate binaries
+            spack.relocate.relocate_text_bin(
+                binaries=[dst],
+                orig_install_prefix=spec.prefix,
+                new_install_prefix=view.get_projection_for_spec(spec),
+                orig_spack=spack.paths.spack_root,
+                new_spack=view._root,
+                new_prefixes=prefix_to_projection
+            )
+        else:
+            # relocate text
+            spack.relocate.relocate_text(
+                files=[dst],
+                orig_layout_root=spack.store.layout.root,
+                new_layout_root=view._root,
+                orig_install_prefix=spec.prefix,
+                new_install_prefix=view.get_projection_for_spec(spec),
+                orig_spack=spack.paths.spack_root,
+                new_spack=view._root,
+                new_prefixes=prefix_to_projection
+            )
 
 
 class FilesystemView(object):
@@ -66,8 +120,11 @@ class FilesystemView(object):
         self.projections = kwargs.get('projections', {})
 
         self.ignore_conflicts = kwargs.get("ignore_conflicts", False)
-        self.link = kwargs.get("link", os.symlink)
         self.verbose = kwargs.get("verbose", False)
+
+        # Setup link function to include view
+        link_func = kwargs.get("link", view_symlink)
+        self.link = ft.partial(link_func, view=self)
 
     def add_specs(self, *specs, **kwargs):
         """
@@ -354,12 +411,34 @@ class YamlFilesystemView(FilesystemView):
         if not os.path.lexists(dest):
             tty.warn("Tried to remove %s which does not exist" % dest)
             return
-        if not os.path.islink(dest):
-            raise ValueError("%s is not a link tree!" % dest)
-        # remove if dest is a hardlink/symlink to src; this will only
-        # be false if two packages are merged into a prefix and have a
-        # conflicting file
-        if filecmp.cmp(src, dest, shallow=True):
+
+        def needs_file(spec, file):
+            # convert the file we want to remove to a source in this spec
+            projection = self.get_projection_for_spec(spec)
+            relative_path = os.path.relpath(file, projection)
+            test_path = os.path.join(spec.prefix, relative_path)
+
+            # check if this spec owns a file of that name (through the
+            # manifest in the metadata dir, which we have in the view).
+            manifest_file = os.path.join(self.get_path_meta_folder(spec),
+                                         spack.store.layout.manifest_file_name)
+            try:
+                with open(manifest_file, 'r') as f:
+                    manifest = s_json.load(f)
+            except (OSError, IOError):
+                # if we can't load it, assume it doesn't know about the file.
+                manifest = {}
+            return test_path in manifest
+
+        # remove if dest is not owned by any other package in the view
+        # This will only be false if two packages are merged into a prefix
+        # and have a conflicting file
+
+        # check all specs for whether they own the file. That include the spec
+        # we are currently removing, as we remove files before unlinking the
+        # metadata directory.
+        if len([s for s in self.get_all_specs()
+                if needs_file(s, dest)]) <= 1:
             os.remove(dest)
 
     def check_added(self, spec):
@@ -470,14 +549,9 @@ class YamlFilesystemView(FilesystemView):
         if spec.package.extendee_spec:
             locator_spec = spec.package.extendee_spec
 
-        all_fmt_str = None
-        for spec_like, fmt_str in self.projections.items():
-            if locator_spec.satisfies(spec_like, strict=True):
-                return os.path.join(self._root, locator_spec.format(fmt_str))
-            elif spec_like == 'all':
-                all_fmt_str = fmt_str
-        if all_fmt_str:
-            return os.path.join(self._root, locator_spec.format(all_fmt_str))
+        proj = spack.projections.get_projection(self.projections, locator_spec)
+        if proj:
+            return os.path.join(self._root, locator_spec.format(proj))
         return self._root
 
     def get_all_specs(self):

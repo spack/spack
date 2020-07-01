@@ -17,9 +17,17 @@ class Qgis(CMakePackage):
 
     maintainers = ['adamjstewart', 'Sinan81']
 
+    version('3.14.0', sha256='1b76c5278def0c447c3d354149a2afe2562ac26cf0bcbe69b9e0528356d407b8')
+    version('3.12.3', sha256='c2b53815f9b994e1662995d1f25f90628156b996758f5471bffb74ab29a95220')
+    version('3.12.2', sha256='501f81715672205afd2c1a289ffc765aff96eaa8ecb49d079a58ef4d907467b8')
+    version('3.12.1', sha256='a7dc7af768b8960c08ce72a06c1f4ca4664f4197ce29c7fe238429e48b2881a8')
     version('3.12.0', sha256='19e9c185dfe88cad7ee6e0dcf5ab7b0bbfe1672307868a53bf771e0c8f9d5e9c')
     # Prefer latest long term release
-    version('3.10.3', sha256='0869704df9120dd642996ff1ed50213ac8247650aa0640b62f8c9c581c05d7a7', preferred=True)
+    version('3.10.7', sha256='f6c02489e065bae355d2f4374b84a1624379634c34a770b6d65bf38eb7e71564', preferred=True)
+    version('3.10.6', sha256='a96791bf6615e4f8ecdbbb9a90a8ef14a12459d8c5c374ab22eb5f776f864bb5')
+    version('3.10.5', sha256='f3e1cc362941ec69cc21062eeaea160354ef71382b21dc4b3191c315447b4ce1')
+    version('3.10.4', sha256='a032e2b8144c2fd825bc26766f586cfb1bd8574bc72efd1aa8ce18dfff8b6c9f')
+    version('3.10.3', sha256='0869704df9120dd642996ff1ed50213ac8247650aa0640b62f8c9c581c05d7a7')
     version('3.10.2', sha256='381cb01a8ac2f5379a915b124e9c830d727d2c67775ec49609c7153fe765a6f7')
     version('3.10.1', sha256='466ac9fad91f266cf3b9d148f58e2adebd5b9fcfc03e6730eb72251e6c34c8ab')
     version('3.10.0', sha256='25eb1c41d9fb922ffa337a720dfdceee43cf2d38409923f087c2010c9742f012')
@@ -63,28 +71,28 @@ class Qgis(CMakePackage):
     # Ref. for dependencies:
     # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
     # https://github.com/qgis/QGIS/blob/master/INSTALL
-    depends_on('qt+dbus')
-    depends_on('proj@4.4.0:')
-    depends_on('geos@3.4.0:')
-    depends_on('sqlite@3.0.0: +column_metadata')
-    depends_on('libspatialite@4.2.0:')
-    depends_on('libspatialindex')
+    depends_on('exiv2')
+    depends_on('expat@1.95:')
     depends_on('gdal@2.1.0: +python', type=('build', 'link', 'run'))
+    depends_on('geos@3.4.0:')
+    depends_on('libspatialindex')
+    depends_on('libspatialite@4.2.0:')
+    depends_on('libzip')
+    depends_on('proj@4.4.0:')
+    depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
+    depends_on('py-pyqt4', when='@2')
+    depends_on('py-pyqt5@5.3:', when='@3')
+    depends_on('py-requests', type=('build', 'run'))  # TODO: is build dependency necessary?
+    depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
+    depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
+    depends_on('qca@2.2.1')
+    depends_on('qjson')
+    depends_on('qscintilla +python')
+    depends_on('qt+dbus')
+    depends_on('qtkeychain@0.5:', when='@3:')
     depends_on('qwt@5:')
     depends_on('qwtpolar')
-    depends_on('expat@1.95:')
-    depends_on('qca@2.2.1')
-    depends_on('py-pyqt4 +qsci', when='@2')
-    depends_on('py-pyqt5@5.3: +qsci', when='@3')
-    depends_on('qscintilla')
-    depends_on('qjson')
-    depends_on('py-requests', type=('build', 'run'))  # TODO: is build dependency necessary?
-    depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
-    depends_on('qtkeychain@0.5:', when='@3:')
-    depends_on('libzip')
-    depends_on('exiv2')
-    depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
-    depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
+    depends_on('sqlite@3.0.0: +column_metadata')
 
     # Runtime python dependencies, not mentioned in install instructions
     depends_on('py-pyyaml', type='run')
@@ -105,7 +113,7 @@ class Qgis(CMakePackage):
     depends_on('cmake@3.0.0:', type='build')
     depends_on('flex@2.5.6:', type='build')
     depends_on('bison@2.4:', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     # Take care of conflicts using depends_on
     depends_on('proj@5:', when='@3.8.2:')
@@ -113,6 +121,8 @@ class Qgis(CMakePackage):
     depends_on('qt@5.9.0:', when='@3.10.0:')
     depends_on('qtkeychain@:1.5.99', when='^qt@4')
     depends_on('qt@:4', when='@2')
+
+    patch('pyqt5.patch', when='^qt@5')
 
     def cmake_args(self):
         spec = self.spec

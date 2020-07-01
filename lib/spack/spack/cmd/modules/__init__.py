@@ -119,8 +119,9 @@ _missing_modules_warning = (
     " this command with debug output enabled for more details.")
 
 
-def loads(module_type, specs, args, out=sys.stdout):
+def loads(module_type, specs, args, out=None):
     """Prompt the list of modules associated with a list of specs"""
+    out = sys.stdout if out is None else out
 
     # Get a comprehensive list of specs
     if args.recurse_dependencies:
@@ -288,15 +289,18 @@ def refresh(module_type, specs, args):
         msg = 'Nothing to be done for {0} module files.'
         tty.msg(msg.format(module_type))
         return
-
     # If we arrived here we have at least one writer
     module_type_root = writers[0].layout.dirname()
-    spack.modules.common.generate_module_index(module_type_root, writers)
+
     # Proceed regenerating module files
     tty.msg('Regenerating {name} module files'.format(name=module_type))
     if os.path.isdir(module_type_root) and args.delete_tree:
         shutil.rmtree(module_type_root, ignore_errors=False)
     filesystem.mkdirp(module_type_root)
+
+    # Dump module index after potentially removing module tree
+    spack.modules.common.generate_module_index(
+        module_type_root, writers, overwrite=args.delete_tree)
     for x in writers:
         try:
             x.write(overwrite=True)

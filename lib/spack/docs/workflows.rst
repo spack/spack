@@ -284,8 +284,10 @@ have some drawbacks:
    The ``spack load`` and ``spack module tcl loads`` commands, on the
    other hand, are not very smart: if the user-supplied spec matches
    more than one installed package, then ``spack module tcl loads`` will
-   fail. This may change in the future.  For now, the workaround is to
-   be more specific on any ``spack load`` commands that fail.
+   fail. This default behavior may change in the future.  For now,
+   the workaround is to either be more specific on any failing ``spack load``
+   commands or to use ``spack load --first`` to allow spack to load the
+   first matching spec.
 
 
 """"""""""""""""""""""
@@ -444,7 +446,7 @@ environment.
 
 A single-prefix filesystem view is a single directory tree that is the
 union of the directory hierarchies of a number of installed packages;
-it is similar to the directory hiearchy that might exist under
+it is similar to the directory hierarchy that might exist under
 ``/usr/local``.  The files of the view's installed packages are
 brought into the view by symbolic or hard links, referencing the
 original Spack installation.
@@ -1237,7 +1239,7 @@ you can also manually set them in your ``.bashrc``.
    2. Other package managers like Homebrew will try to install things to the
       same directory. If you plan on using Homebrew in conjunction with Spack,
       don't symlink things to ``/usr/local``.
-   3. If you are on a shared workstation, or don't have sudo priveleges, you
+   3. If you are on a shared workstation, or don't have sudo privileges, you
       can't do this.
 
    If you still want to do this anyway, there are several ways around SIP.
@@ -1356,6 +1358,14 @@ The main points that are implemented below:
    the spack builds in the config.
    (The Travis yaml parser is a bit buggy on the echo command.)
 
+#. Without control for the user, Travis jobs will run on various
+   ``x86_64`` microarchitectures. If you plan to cache build results,
+   e.g. to accelerate dependency builds, consider building for the
+   generic ``x86_64`` target only.
+   Limiting the microarchitecture will also find more packages when
+   working with the
+   `E4S Spack build cache <https://oaciss.uoregon.edu/e4s/e4s_buildcache_inventory.html>`_.
+
 #. Builds over 10 minutes need to be prefixed with ``travis_wait``.
    Alternatively, generate output once with ``spack install -v``.
 
@@ -1398,7 +1408,9 @@ The main points that are implemented below:
      - if ! which spack >/dev/null; then
          mkdir -p $SPACK_ROOT &&
          git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
-         echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml;
+         echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml **
+         echo -e "packages:""\n  all:""\n    target:"" ['x86_64']"
+                 > $SPACK_ROOT/etc/spack/packages.yaml;
        fi
      - travis_wait spack install cmake@3.7.2~openssl~ncurses
      - travis_wait spack install boost@1.62.0~graph~iostream~locale~log~wave
@@ -1430,12 +1442,7 @@ The following functionality is prepared:
 
 #. Base image: the example starts from a minimal ubuntu.
 
-#. Installing as root: docker images are usually set up as root.
-   Since some autotools scripts might complain about this being unsafe, we set
-   ``FORCE_UNSAFE_CONFIGURE=1`` to avoid configure errors.
-
-#. Pre-install the spack dependencies, including modules from the packages.
-   This avoids needing to build those from scratch via ``spack bootstrap``.
+#. Pre-install the spack dependencies.
    Package installs are followed by a clean-up of the system package index,
    to avoid outdated information and it saves space.
 
@@ -1464,10 +1471,9 @@ In order to build and run the image, execute:
 
    # general environment for docker
    ENV        DEBIAN_FRONTEND=noninteractive \
-              SPACK_ROOT=/usr/local \
-              FORCE_UNSAFE_CONFIGURE=1
+              SPACK_ROOT=/usr/local
 
-   # install minimal spack depedencies
+   # install minimal spack dependencies
    RUN        apt-get update \
               && apt-get install -y --no-install-recommends \
                  autoconf \

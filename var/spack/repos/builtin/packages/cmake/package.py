@@ -5,6 +5,9 @@
 
 from spack import *
 
+import re
+import os
+
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
@@ -13,6 +16,12 @@ class Cmake(Package):
     url      = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
     maintainers = ['chuckatkins']
 
+    executables = ['cmake']
+
+    version('3.17.3',   sha256='0bd60d512275dc9f6ef2a2865426a184642ceb3761794e6b65bff233b91d8c40')
+    version('3.17.1',   sha256='3aa9114485da39cbd9665a0bfe986894a282d5f0882b1dea960a739496620727')
+    version('3.17.0',   sha256='b74c05b55115eacc4fa2b77a814981dbda05cdc95a53e279fe16b7b272f00847')
+    version('3.16.5',   sha256='5f760b50b8ecc9c0c37135fae5fbf00a2fef617059aa9d61c1bb91653e5a8bfc')
     version('3.16.2',   sha256='8c09786ec60ca2be354c29829072c38113de9184f29928eb9da8446a5f2ce6a9')
     version('3.16.1',   sha256='a275b3168fa8626eca4465da7bb159ff07c8c6cb0fb7179be59e12cbdfa725fd')
     version('3.16.0',   sha256='6da56556c63cab6e9a3e1656e8763ed4a841ac9859fefb63cbe79472e67e8c5f')
@@ -49,6 +58,7 @@ class Cmake(Package):
     version('3.10.0',   sha256='b3345c17609ea0f039960ef470aa099de9942135990930a57c14575aae884987')
     version('3.9.6',    sha256='7410851a783a41b521214ad987bb534a7e4a65e059651a2514e6ebfc8f46b218')
     version('3.9.4',    sha256='b5d86f12ae0072db520fdbdad67405f799eb728b610ed66043c20a92b4906ca1')
+    version('3.9.2',    sha256='954a5801a456ee48e76f01107c9a4961677dd0f3e115275bbd18410dc22ba3c1')
     version('3.9.0',    sha256='167701525183dbb722b9ffe69fb525aa2b81798cf12f5ce1c020c93394dfae0f')
     version('3.8.2',    sha256='da3072794eb4c09f2d782fcee043847b99bb4cf8d4573978d9b2024214d6e92d')
     version('3.8.1',    sha256='ce5d9161396e06501b00e52933783150a87c33080d4bdcef461b5b7fd24ac228')
@@ -89,6 +99,13 @@ class Cmake(Package):
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
+    # Tries to build an Objective-C file from libuv with GCC's C frontend
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/20620
+    # https://github.com/libuv/libuv/issues/2805
+    conflicts('%gcc platform=darwin',
+              msg='CMake does not compile with GCC on macOS yet, use clang. '
+                  'See: https://gitlab.kitware.com/cmake/cmake/-/issues/20620')
+
     # Really this should conflict since it's enabling or disabling openssl for
     # CMake's internal copy of curl.  Ideally we'd want a way to have the
     # openssl variant disabled when ~ownlibs but there's not really a way to
@@ -121,6 +138,15 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/issues/18232
     patch('nag-response-files.patch', when='@3.7:3.12')
 
+    # Cray libhugetlbfs and icpc warnings failing CXX tests
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4698
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4681
+    patch('ignore_crayxc_warnings.patch', when='@3.7:3.17.2')
+
+    # The Fujitsu compiler requires the '--linkfortran' option
+    # to combine C++ and Fortran programs.
+    patch('fujitsu_add_linker_option.patch', when='%fj')
+
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
     # https://gitlab.kitware.com/cmake/cmake/issues/18166
@@ -129,6 +155,22 @@ class Cmake(Package):
               msg="Intel 14 has immature C++11 support")
 
     phases = ['bootstrap', 'build', 'install']
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        exe_to_path = dict(
+            (os.path.basename(p), p) for p in exes_in_prefix
+        )
+        if 'cmake' not in exe_to_path:
+            return None
+
+        cmake = spack.util.executable.Executable(exe_to_path['cmake'])
+        output = cmake('--version', output=str)
+        if output:
+            match = re.search(r'cmake.*version\s+(\S+)', output)
+            if match:
+                version_str = match.group(1)
+                return Spec('cmake@{0}'.format(version_str))
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':
@@ -201,3 +243,9 @@ class Cmake(Package):
 
     def install(self, spec, prefix):
         make('install')
+
+        if spec.satisfies('%fj'):
+            for f in find(self.prefix, 'FindMPI.cmake', recursive=True):
+                filter_file('mpcc_r)', 'mpcc_r mpifcc)', f, string=True)
+                filter_file('mpc++_r)', 'mpc++_r mpiFCC)', f, string=True)
+                filter_file('mpifc)', 'mpifc mpifrt)', f, string=True)

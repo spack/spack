@@ -511,8 +511,17 @@ class CompilerSpec(object):
             raise TypeError(
                 "__init__ takes 1 or 2 arguments. (%d given)" % nargs)
 
-    def _add_version(self, version):
-        self.versions.add(version)
+    def _add_versions(self, version_list):
+        # If it already has a non-trivial version list, this is an error
+        if self.versions and self.versions != vn.VersionList(':'):
+            # Note: This may be impossible to reach by the current parser
+            # Keeping it in case the implementation changes.
+            raise MultipleVersionError(
+                'A spec cannot contain multiple version signifiers.'
+                ' Use a version list instead.')
+        self.versions = vn.VersionList()
+        for version in version_list:
+            self.versions.add(version)
 
     def _autospec(self, compiler_spec_like):
         if isinstance(compiler_spec_like, CompilerSpec):
@@ -1050,9 +1059,16 @@ class Spec(object):
     #
     # Private routines here are called by the parser when building a spec.
     #
-    def _add_version(self, version):
+    def _add_versions(self, version_list):
         """Called by the parser to add an allowable version."""
-        self.versions.add(version)
+        # If it already has a non-trivial version list, this is an error
+        if self.versions and self.versions != vn.VersionList(':'):
+            raise MultipleVersionError(
+                'A spec cannot contain multiple version signifiers.'
+                ' Use a version list instead.')
+        self.versions = vn.VersionList()
+        for version in version_list:
+            self.versions.add(version)
 
     def _add_flag(self, name, value):
         """Called by the parser to add a known flag.
@@ -1448,8 +1464,8 @@ class Spec(object):
                         'target': 'x86_64',
                     },
                     'compiler': {
-                        'name': 'clang',
-                        'version': '10.0.0-apple',
+                        'name': 'apple-clang',
+                        'version': '10.0.0',
                     },
                     'namespace': 'builtin',
                     'parameters': {
@@ -1554,8 +1570,8 @@ class Spec(object):
                                 'target': 'x86_64',
                             },
                             'compiler': {
-                                'name': 'clang',
-                                'version': '10.0.0-apple',
+                                'name': 'apple-clang',
+                                'version': '10.0.0',
                             },
                             'namespace': 'builtin',
                             'parameters': {
@@ -2134,6 +2150,8 @@ class Spec(object):
         consistent with requirements of its packages. See flatten() and
         normalize() for more details on this.
         """
+        import spack.concretize
+
         if not self.name:
             raise spack.error.SpecError(
                 "Attempting to concretize anonymous spec")
@@ -2145,7 +2163,6 @@ class Spec(object):
         force = False
 
         user_spec_deps = self.flat_dependencies(copy=False)
-        import spack.concretize
         concretizer = spack.concretize.Concretizer(self.copy())
         while changed:
             changes = (self.normalize(force, tests=tests,
@@ -2239,7 +2256,11 @@ class Spec(object):
                 for mod in compiler.modules:
                     md.load_module(mod)
 
-                s.external_path = md.get_path_from_module(s.external_module)
+                # get the path from the module
+                # the package can override the default
+                s.external_path = getattr(s.package, 'external_prefix',
+                                          md.get_path_from_module(
+                                              s.external_module))
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
@@ -3120,7 +3141,7 @@ class Spec(object):
             A copy of this spec.
 
         Examples:
-            Deep copy with dependnecies::
+            Deep copy with dependencies::
 
                 spec.copy()
                 spec.copy(deps=True)
@@ -3940,7 +3961,8 @@ class SpecLexer(spack.parse.Lexer):
 
             # Filenames match before identifiers, so no initial filename
             # component is parsed as a spec (e.g., in subdir/spec.yaml)
-            (r'[/\w.-]+\.yaml[^\b]*', lambda scanner, v: self.token(FILE, v)),
+            (r'[/\w.-]*/[/\w/-]+\.yaml[^\b]*',
+             lambda scanner, v: self.token(FILE, v)),
 
             # Hash match after filename. No valid filename can be a hash
             # (files end w/.yaml), but a hash can match a filename prefix.
@@ -4091,11 +4113,6 @@ class SpecParser(spack.parse.Parser):
         """
         path = self.token.value
 
-        # don't treat builtin.yaml, builtin.yaml-cpp, etc. as filenames
-        if re.match(spec_id_re + '$', path):
-            self.push_tokens([spack.parse.Token(ID, self.token.value)])
-            return None
-
         # Special case where someone omits a space after a filename. Consider:
         #
         #     libdwarf^/some/path/to/libelf.yamllibdwarf ^../../libelf.yaml
@@ -4107,7 +4124,6 @@ class SpecParser(spack.parse.Parser):
             raise SpecFilenameError(
                 "Spec filename must end in .yaml: '{0}'".format(path))
 
-        # if we get here, we're *finally* interpreting path as a filename
         if not os.path.exists(path):
             raise NoSuchSpecFileError("No such spec file: '{0}'".format(path))
 
@@ -4157,9 +4173,7 @@ class SpecParser(spack.parse.Parser):
         while self.next:
             if self.accept(AT):
                 vlist = self.version_list()
-                spec.versions = vn.VersionList()
-                for version in vlist:
-                    spec._add_version(version)
+                spec._add_versions(vlist)
 
             elif self.accept(ON):
                 name = self.variant()
@@ -4251,8 +4265,7 @@ class SpecParser(spack.parse.Parser):
         compiler.versions = vn.VersionList()
         if self.accept(AT):
             vlist = self.version_list()
-            for version in vlist:
-                compiler._add_version(version)
+            compiler._add_versions(vlist)
         else:
             compiler.versions = vn.VersionList(':')
         return compiler
@@ -4323,6 +4336,10 @@ class SpecParseError(spack.error.SpecError):
 
 class DuplicateDependencyError(spack.error.SpecError):
     """Raised when the same dependency occurs in a spec twice."""
+
+
+class MultipleVersionError(spack.error.SpecError):
+    """Raised when version constraints occur in a spec twice."""
 
 
 class DuplicateCompilerSpecError(spack.error.SpecError):

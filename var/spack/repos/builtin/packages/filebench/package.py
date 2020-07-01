@@ -30,11 +30,3 @@ class Filebench(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('flex',     type='build')
     depends_on('bison',    type='build')
-
-    def autoreconf(self, spec, prefix):
-        sh = which('sh')
-        sh('libtoolize')
-        sh('aclocal')
-        sh('autoheader')
-        sh('automake', '--add-missing')
-        sh('autoconf')

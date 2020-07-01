@@ -10,11 +10,16 @@ class Nano(AutotoolsPackage):
     """Tiny little text editor"""
 
     homepage = "http://www.nano-editor.org"
-    url      = "https://www.nano-editor.org/dist/v4/nano-4.4.tar.xz"
+    url      = "https://www.nano-editor.org/dist/v4/nano-4.9.tar.xz"
     list_url = "https://www.nano-editor.org/dist/"
     list_depth = 1
 
     # 4.x
+    version('4.9', sha256='0e399729d105cb1a587b4140db5cf1b23215a0886a42b215efa98137164233a6')
+    version('4.8', sha256='c348f61c68ab1d573b308398212a09cd68c60fbee20f01a5bd4b50071a258e63')
+    version('4.7', sha256='58c0e197de5339ca3cad3ef42b65626d612ddb0b270e730f02e6ab3785c736f5')
+    version('4.6', sha256='9bac3a4153774fd921dd3eb291986d43985466b081165b5ac5262b37b79628e9')
+    version('4.5', sha256='ded5c38f5ecd9de2b624e0db8013a375c169d3fbbd49575967b868847df8f533')
     version('4.4', sha256='2af222e0354848ffaa3af31b5cd0a77917e9cb7742cd073d762f3c32f0f582c7')
     version('4.3', sha256='00d3ad1a287a85b4bf83e5f06cedd0a9f880413682bebd52b4b1e2af8cfc0d81')
     version('4.2', sha256='1143defce62e391b241252ffdb6e5c1ded56cfe26d46ee81b796abe0ccc45df9')

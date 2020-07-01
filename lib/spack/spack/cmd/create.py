@@ -629,7 +629,7 @@ def get_versions(args, name):
 
         versions = spack.stage.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
-            keep_stage=args.keep_stage)
+            keep_stage=args.keep_stage, batch=True)
     else:
         versions = unhashed_versions
 

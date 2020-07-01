@@ -8,6 +8,7 @@ from glob import glob
 from llnl.util.filesystem import LibraryList
 import os
 import platform
+import llnl.util.tty as tty
 
 # FIXME Remove hack for polymorphic versions
 # This package uses a ugly hack to be able to dispatch, given the same
@@ -76,6 +77,7 @@ class Cuda(Package):
     depends_on('libxml2', when='@10.1.243:')
 
     def setup_build_environment(self, env):
+        env.set('CUDAHOSTCXX', self.compiler.cxx)
         if self.spec.satisfies('@10.1.243:'):
             libxml2_home  = self.spec['libxml2'].prefix
             env.set('LIBXML2HOME', libxml2_home)
@@ -83,8 +85,17 @@ class Cuda(Package):
 
     def setup_run_environment(self, env):
         env.set('CUDA_HOME', self.prefix)
+        env.set('CUDAHOSTCXX', self.compiler.cxx)
 
     def install(self, spec, prefix):
+        if os.path.exists('/tmp/cuda-installer.log'):
+            try:
+                os.remove('/tmp/cuda-installer.log')
+            except OSError:
+                if spec.satisfies('@10.1:'):
+                    tty.die("The cuda installer will segfault due to the "
+                            "presence of /tmp/cuda-installer.log "
+                            "please remove the file and try again ")
         runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
         chmod = which('chmod')
         chmod('+x', runfile)
@@ -110,6 +121,10 @@ class Cuda(Package):
             arguments.append('--toolkitpath=%s' % prefix)   # Where to install
 
         runfile(*arguments)
+        try:
+            os.remove('/tmp/cuda-installer.log')
+        except OSError:
+            pass
 
     @property
     def libs(self):

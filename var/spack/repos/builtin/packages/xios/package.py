@@ -13,9 +13,13 @@ class Xios(Package):
 
     homepage = "https://forge.ipsl.jussieu.fr/ioserver/wiki"
 
+    version('develop', svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk')
+    version('2.5', revision=1860,
+            svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.5')
+    version('2.0', revision=1627,
+            svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.0')
     version('1.0', revision=910,
             svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-1.0')
-    version('develop', svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk')
 
     variant('mode', values=('debug', 'dev', 'prod'), default='dev',
             description='Build for debugging, development or production')
@@ -24,10 +28,10 @@ class Xios(Package):
     # Use spack versions of blitz and netcdf-c for compatibility
     # with recent compilers and optimised platform libraries:
     patch('bld_extern_1.0.patch', when='@:1.0')
-    patch('bld_extern_1.x.patch', when='@1.1:')
 
     # Workaround bug #17782 in llvm, where reading a double
     # followed by a character is broken (e.g. duration '1d'):
+    patch('llvm_bug_17782.patch', when='@1.1: %apple-clang')
     patch('llvm_bug_17782.patch', when='@1.1: %clang')
 
     depends_on('netcdf-c+mpi')
@@ -42,6 +46,13 @@ class Xios(Package):
 
     @when('%clang')
     def patch(self):
+        self.patch_llvm()
+
+    @when('%apple-clang')
+    def patch(self):
+        self.patch_llvm()
+
+    def patch_llvm(self):
         """Fix type references that are ambiguous for clang."""
         for dirpath, dirnames, filenames in os.walk('src'):
             for filename in filenames:
@@ -96,12 +107,13 @@ OASIS_LIB=""
         param['BOOST_LIB_DIR'] = spec['boost'].prefix.lib
         param['BLITZ_INC_DIR'] = spec['blitz'].prefix.include
         param['BLITZ_LIB_DIR'] = spec['blitz'].prefix.lib
-        if spec.satisfies('%clang platform=darwin'):
+        if spec.satisfies('%apple-clang'):
             param['LIBCXX'] = '-lc++'
         else:
             param['LIBCXX'] = '-lstdc++'
 
-        if any(map(spec.satisfies, ('%gcc', '%intel', '%clang'))):
+        if any(map(spec.satisfies,
+                   ('%gcc', '%intel', '%apple-clang', '%clang'))):
             text = r"""
 %CCOMPILER      {MPICXX}
 %FCOMPILER      {MPIFC}

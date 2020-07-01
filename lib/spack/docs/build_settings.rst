@@ -124,6 +124,78 @@ The ``buildable`` does not need to be paired with external packages.
 It could also be used alone to forbid packages that may be
 buggy or otherwise undesirable.
 
+Virtual packages in Spack can also be specified as not buildable, and
+external implementations can be provided. In the example above,
+OpenMPI is configured as not buildable, but Spack will often prefer
+other MPI implementations over the externally available OpenMPI. Spack
+can be configured with every MPI provider not buildable individually,
+but more conveniently:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       buildable: False
+     openmpi:
+       paths:
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64: /opt/openmpi-1.4.3
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug: /opt/openmpi-1.4.3-debug
+         openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64: /opt/openmpi-1.6.5-intel
+
+Implementations can also be listed immediately under the virtual they provide:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       buildable: False
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64: /opt/openmpi-1.4.3
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug: /opt/openmpi-1.4.3-debug
+         openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64: /opt/openmpi-1.6.5-intel
+         mpich@3.3 %clang@9.0.0 arch=linux-debian7-x86_64: /opt/mpich-3.3-intel
+
+Spack can then use any of the listed external implementations of MPI
+to satisfy a dependency, and will choose depending on the compiler and
+architecture.
+
+.. _cmd-spack-external-find:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Automatically Find External Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can run the :ref:`spack external find <spack-external-find>` command
+to search for system-provided packages and add them to ``packages.yaml``.
+After running this command your ``packages.yaml`` may include new entries:
+
+.. code-block:: yaml
+
+   packages:
+     cmake:
+       paths:
+         cmake@3.17.2: /usr
+
+Generally this is useful for detecting a small set of commonly-used packages;
+for now this is generally limited to finding build-only dependencies.
+Specific limitations include:
+
+* Packages are not discoverable by default: For a package to be
+  discoverable with ``spack external find``, it needs to add special
+  logic. See :ref:`here <make-package-findable>` for more details.
+* The current implementation only collects and examines executable files,
+  so it is typically only useful for build/run dependencies (in some cases
+  if a library package also provides an executable, it may be possible to
+  extract a meaningful Spec by running the executable - for example the
+  compiler wrappers in MPI implementations).
+* The logic does not search through module files, it can only detect
+  packages with executables defined in ``PATH``; you can help Spack locate
+  externals which use module files by loading any associated modules for
+  packages that you want Spack to know about before running
+  ``spack external find``.
+* Spack does not overwrite existing entries in the package configuration:
+  If there is an external defined for a spec at any configuration scope,
+  then Spack will not add a new external entry (``spack config blame packages``
+  can help locate all external entries).
 
 .. _concretization-preferences:
 

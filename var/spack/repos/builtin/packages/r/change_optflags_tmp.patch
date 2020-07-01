@@ -1,0 +1,67 @@
+diff -ur R-3.6.3.org/configure R-3.6.3/configure
+--- R-3.6.3.org/configure	2020-03-09 11:09:16.060825352 +0900
++++ R-3.6.3/configure	2020-03-09 11:10:47.011280195 +0900
+@@ -6470,13 +6470,13 @@
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-g -O1"
+   else
+     CFLAGS="-g"
+   fi
+ else
+   if test "$GCC" = yes; then
+-    CFLAGS="-O2"
++    CFLAGS="-O1"
+   else
+     CFLAGS=
+   fi
+@@ -7445,13 +7445,13 @@
+   FCFLAGS=$ac_save_FCFLAGS
+ elif test $ac_cv_prog_fc_g = yes; then
+   if test "x$ac_cv_fc_compiler_gnu" = xyes; then
+-    FCFLAGS="-g -O2"
++    FCFLAGS="-g -O1"
+   else
+     FCFLAGS="-g"
+   fi
+ else
+   if test "x$ac_cv_fc_compiler_gnu" = xyes; then
+-    FCFLAGS="-O2"
++    FCFLAGS="-O1"
+   else
+     FCFLAGS=
+   fi
+@@ -7717,13 +7717,13 @@
+   CXXFLAGS=$ac_save_CXXFLAGS
+ elif test $ac_cv_prog_cxx_g = yes; then
+   if test "$GXX" = yes; then
+-    CXXFLAGS="-g -O2"
++    CXXFLAGS="-g -O1"
+   else
+     CXXFLAGS="-g"
+   fi
+ else
+   if test "$GXX" = yes; then
+-    CXXFLAGS="-O2"
++    CXXFLAGS="-O1"
+   else
+     CXXFLAGS=
+   fi
+@@ -8336,13 +8336,13 @@
+   OBJCFLAGS=$ac_save_OBJCFLAGS
+ elif test $ac_cv_prog_objc_g = yes; then
+   if test "$GOBJC" = yes; then
+-    OBJCFLAGS="-g -O2"
++    OBJCFLAGS="-g -O1"
+   else
+     OBJCFLAGS="-g"
+   fi
+ else
+   if test "$GOBJC" = yes; then
+-    OBJCFLAGS="-O2"
++    OBJCFLAGS="-O1"
+   else
+     OBJCFLAGS=
+   fi

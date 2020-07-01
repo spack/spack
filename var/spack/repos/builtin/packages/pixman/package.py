@@ -15,6 +15,7 @@ class Pixman(AutotoolsPackage):
     homepage = "http://www.pixman.org"
     url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
 
+    version('0.40.0', sha256='6d200dec3740d9ec4ec8d1180e25779c00bc749f94278c8b9021f5534db223fc')
     version('0.38.4', sha256='da66d6fd6e40aee70f7bd02e4f8f76fc3f006ec879d346bae6a723025cfbdde7')
     version('0.38.0', sha256='a7592bef0156d7c27545487a52245669b00cf7e70054505381cff2136d890ca8')
     version('0.34.0', sha256='21b6b249b51c6800dc9553b65106e1e37d0e25df942c90531d4c3997aa20a88e')
@@ -28,7 +29,8 @@ class Pixman(AutotoolsPackage):
     # __builtin_shuffle was removed in clang 5.0.
     # From version 9.1 apple-clang is based on clang 5.0.
     # Patch is obtained from above link.
-    patch('clang.patch', when='@0.34%clang@9.1.0-apple:')
+    patch('clang.patch', when='@0.34%apple-clang@9.1.0:')
+    patch('clang.patch', when='@0.34%clang@5.0.0:')
 
     @run_before('build')
     def patch_config_h_for_intel(self):
