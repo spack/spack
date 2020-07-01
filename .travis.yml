@@ -39,7 +39,10 @@ before_script:
   - git fetch origin ${TRAVIS_BRANCH}:${TRAVIS_BRANCH}
 
 script:
-  - share/spack/qa/run-unit-tests
+  - python bin/spack -h
+  - python bin/spack help -a
+  - python bin/spack -p --lines 20 spec mpileaks%gcc ^elfutils@0.170
+  - python bin/spack test -x --verbose
 
 notifications:
   email:
