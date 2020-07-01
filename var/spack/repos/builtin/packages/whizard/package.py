@@ -13,9 +13,11 @@ class Whizard(AutotoolsPackage):
 
     homepage = "whizard.hepforge.org"
     url      = "https://whizard.hepforge.org/downloads/?f=whizard-2.8.2.tar.gz"
+    git      = "https://gitlab.tp.nt.uni-siegen.de/whizard/public.git"
 
     maintainers = ['vvolkl']
 
+    version('master', branch="master")
     version('3.0.0_alpha', sha256='4636e5a10350bb67ccc98cd105bc891ea04f3393c2420f81be3d21240be20009')
     version('2.8.2', sha256='32c9be342d01b3fc6f947fddce74bf2d81ece37fb39bca1f37778fb0c07e2568', prefered=True)
     version('2.8.1', sha256='0c759ce0598e25f38e04659f745c5963d238c4b5c12209f16449b6c0bc6dc64e')
@@ -50,6 +52,16 @@ class Whizard(AutotoolsPackage):
     depends_on('fastjet', when="+fastjet")
     depends_on('texlive', when="+latex")
     depends_on('zlib')
+
+    def setup_build_environment(self, env):
+        # whizard uses the compiler during runtime,
+        # and seems incompatible with
+        # filter_compiler_wrappers, thus the
+        # actual compilers need to be used to build
+        env.set('CC', self.compiler.cc)
+        env.set('CXX', self.compiler.cxx)
+        env.set('FC', self.compiler.fc)
+        env.set('F77', self.compiler.fc)
 
     def configure_args(self):
         spec = self.spec

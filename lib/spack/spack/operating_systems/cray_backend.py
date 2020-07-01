@@ -146,7 +146,8 @@ class CrayBackend(LinuxDistro):
             compiler_cls.PrgEnv_compiler
         )
         matches = re.findall(version_regex, output)
-        version = tuple(version for _, version in matches)
+        version = tuple(version for _, version in matches
+                        if 'classic' not in version)
         compiler_id = detect_version_args.id
         value = detect_version_args._replace(
             id=compiler_id._replace(version=version)
