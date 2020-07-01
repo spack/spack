@@ -58,6 +58,12 @@ class Amrex(CMakePackage):
             values=('Debug', 'Release'))
     variant('sundials', default=False,
             description='Build AMReX with SUNDIALS support')
+    variant('hdf5',  default=False,
+            description='Enable HDF5-based I/O')
+    variant('hypre', default=False,
+            description='Enable Hypre interfaces')
+    variant('petsc', default=False,
+            description='Enable PETSc interfaces')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
@@ -68,6 +74,24 @@ class Amrex(CMakePackage):
     depends_on('cmake@3.14:', type='build', when='@19.04:')
     conflicts('%apple-clang')
     conflicts('%clang')
+
+    # Check options compatibility
+    conflicts('+sundials', when='~fortran',
+              msg='AMReX SUNDIALS support requires AMReX Fortran API (+fortran)')
+    conflicts('+hdf5', when='@:20.06',
+              msg='AMReX HDF5 support needs AMReX newer than version 20.06')
+    conflicts('+hypre', when='@:20.06',
+              msg='AMReX Hypre support needs AMReX newer than version 20.06')
+    conflicts('+hypre', when='~fortran',
+              msg='AMReX Hypre support needs AMReX Fortran API (+fortran)')
+    conflicts('+hypre', when='~linear_solvers',
+              msg='AMReX Hypre support needs AMReX linear solvers (+linear_solvers)')
+    conflicts('+petsc', when='@:20.06',
+              msg='AMReX PETSc support needs AMReX newer than version 20.06')
+    conflicts('+petsc', when='~fortran',
+              msg='AMReX PETSc support needs AMReX Fortran API (+fortran)')
+    conflicts('+petsc', when='~linear_solvers',
+              msg='AMReX PETSc support needs AMReX linear solvers (+linear_solvers)')
 
     def url_for_version(self, version):
         if version >= Version('20.05'):
@@ -90,11 +114,15 @@ class Amrex(CMakePackage):
             self.spec.variants['precision'].value.upper(),
             '-DENABLE_EB:BOOL=%s' % self.cmake_is_on('+eb'),
             '-DXSDK_ENABLE_Fortran:BOOL=%s' % self.cmake_is_on('+fortran'),
+            '-DENABLE_FORTRAN_INTERFACES:BOOL=%s' % self.cmake_is_on('+fortran'),
             '-DENABLE_LINEAR_SOLVERS:BOOL=%s' %
             self.cmake_is_on('+linear_solvers'),
             '-DENABLE_AMRDATA:BOOL=%s' % self.cmake_is_on('+amrdata'),
             '-DENABLE_PARTICLES:BOOL=%s' % self.cmake_is_on('+particles'),
-            '-DENABLE_SUNDIALS:BOOL=%s' % self.cmake_is_on('+sundials')
+            '-DENABLE_SUNDIALS:BOOL=%s' % self.cmake_is_on('+sundials'),
+            '-DENABLE_HDF5:BOOL=%s' % self.cmake_is_on('+hdf5'),
+            '-DENABLE_HYPRE:BOOL=%s' % self.cmake_is_on('+hypre'),
+            '-DENABLE_PETSC:BOOL=%s' % self.cmake_is_on('+petsc'),
         ]
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
