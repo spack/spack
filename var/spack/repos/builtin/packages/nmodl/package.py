@@ -39,7 +39,13 @@ class Nmodl(CMakePackage):
         return options
 
     def setup_build_environment(self, env):
-        env.prepend_path('PYTHONPATH', self.prefix.lib.python)
+        if '@:0.3b' in spec:
+            env.prepend_path('PYTHONPATH', self.prefix.lib.python)
+        else:
+            env.prepend_path('PYTHONPATH', self.prefix.lib)
 
     def setup_run_environment(self, env):
-        env.prepend_path('PYTHONPATH', self.prefix.lib.python)
+        if '@:0.3b' in spec:
+            env.prepend_path('PYTHONPATH', self.prefix.lib.python)
+        else:
+            env.prepend_path('PYTHONPATH', self.prefix.lib)
