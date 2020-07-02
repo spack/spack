@@ -30,7 +30,6 @@ class Hpcg(AutotoolsPackage):
     build_targets = ['arch={0}'.format(arch)]
 
     def configure(self, spec, prefix):
-        
         CXXFLAGS = '-O3 -ffast-math -ftree-vectorize -ftree-vectorizer-verbose=0 '
         if '+openmp' in self.spec:
             CXXFLAGS += self.compiler.openmp_flag
