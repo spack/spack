@@ -9,13 +9,13 @@ import platform
 
 
 class Hpcg(AutotoolsPackage):
-    """HPCG is a software package that performs a fixed number of multigrid preconditioned
-    (using a symmetric Gauss-Seidel smoother) conjugate gradient (PCG) iterations
-    using double precision (64 bit) floating point values."""
+    """HPCG is a software package that performs a fixed number of multigrid
+    preconditioned (using a symmetric Gauss-Seidel smoother) conjugate gradient
+    (PCG) iterations using double precision (64 bit) floating point values."""
 
     homepage = "https://www.hpcg-benchmark.org"
-    url      = "http://www.hpcg-benchmark.org/downloads/hpcg-3.1.tar.gz"
-    git      = "https://github.com/hpcg-benchmark/hpcg.git"
+    url = "http://www.hpcg-benchmark.org/downloads/hpcg-3.1.tar.gz"
+    git = "https://github.com/hpcg-benchmark/hpcg.git"
 
     version('develop', branch='master')
     version('3.1', sha256='33a434e716b79e59e745f77ff72639c32623e7f928eeb7977655ffcaade0f4a4')
