@@ -44,8 +44,10 @@ class Gunrock(CMakePackage, CudaPackage):
     variant('app_wtf',      default=False, description, 'Only build WTF primitive')
     variant('app_topk',     default=False, description, 'Only build TOPK primitive')
 
-    depends_on('google-tests', when='+google_tests')
+    depends_on('googletest', when='+google_tests')
     depends_on('lcov', when='+code_coverage')
+    depends_on('boost', when='+boost')
+    depends_on('metis', when='+metis')
 
     def cmake_args(self):
         spec = self.spec
