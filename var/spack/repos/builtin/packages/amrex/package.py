@@ -91,7 +91,7 @@ class Amrex(CMakePackage):
     conflicts('+petsc', when='~fortran',
               msg='AMReX PETSc support needs AMReX Fortran API (+fortran)')
     conflicts('+petsc', when='~linear_solvers',
-              msg ='AMReX PETSc support needs variant +linear_solvers')
+              msg='AMReX PETSc support needs variant +linear_solvers')
 
     def url_for_version(self, version):
         if version >= Version('20.05'):
