@@ -32,6 +32,10 @@ class Opencascade(CMakePackage):
     depends_on('vtk', when='+vtk')
     depends_on('freeimage', when='+freeimage')
     depends_on('rapidjson', when='+rapidjson')
+    depends_on('freetype')
+    depends_on('tcl')
+    depends_on('tk')
+    depends_on('gl')
 
     def cmake_args(self):
         args = []
