@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.tty as tty
+
 from spack import *
 
 import re
@@ -249,3 +251,31 @@ class Cmake(Package):
                 filter_file('mpcc_r)', 'mpcc_r mpifcc)', f, string=True)
                 filter_file('mpc++_r)', 'mpc++_r mpiFCC)', f, string=True)
                 filter_file('mpifc)', 'mpifc mpifrt)', f, string=True)
+
+    def _test_check_versions(self):
+        """Perform version checks on installed package binaries."""
+        spec_vers_str = 'version {0}'.format(self.spec.version)
+
+        checks = {
+            'ccmake': ([spec_vers_str], None),
+            'cmake':  ([spec_vers_str], None),
+            'cpack':  ([spec_vers_str], None),
+            'ctest':  ([spec_vers_str], None),
+        }
+
+        for exe in checks:
+            expected, status = checks[exe]
+            reason = 'test version of {0} is {1}'.format(exe, expected[0])
+            self.run_test(exe, ['--version'], expected, status, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        tty.debug('Expected results currently based on simple cmake builds')
+
+        if not self.spec.satisfies('@3.8.2:3.17.1'):
+            tty.debug('Expected results have not been confirmed for {0} {1}'
+                      .format(self.name, self.spec.version))
+
+        # Simple version check tests on known binaries
+        self._test_check_versions()
