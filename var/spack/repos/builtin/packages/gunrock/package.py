@@ -117,7 +117,7 @@ Turn it off explicitly in order to build individual apps like: \n\
                     ])
 
         cuda_arch_list = self.spec.variants['cuda_arch'].value
-        if cuda_arch_list[0] is not 'none':
+        if cuda_arch_list[0] != 'none':
             for carch in cuda_arch_list:
                 args.append('-DGUNROCK_BUILD_GENCODE_SM' + carch + '=ON')
 
