@@ -49,6 +49,21 @@ class Gunrock(CMakePackage, CudaPackage):
     depends_on('boost', when='+boost')
     depends_on('metis', when='+metis')
 
+    msg='all_applications varaint is enabled by default. 
+Turn it off explicitly in order to build individual apps like:\n
+    spack install gunrock ~all_applicatins +app_bc'
+    conflicts('+all_applications', when='+app_bc', msg=msg)
+    conflicts('+all_applications', when='+app_bfs', msg=msg)
+    conflicts('+all_applications', when='+app_cc', msg=msg)
+    conflicts('+all_applications', when='+app_pr', msg=msg)
+    conflicts('+all_applications', when='+app_sssp', msg=msg)
+    conflicts('+all_applications', when='+app_dobfs', msg=msg)
+    conflicts('+all_applications', when='+app_hits', msg=msg)
+    conflicts('+all_applications', when='+app_salsa', msg=msg)
+    conflicts('+all_applications', when='+app_mst', msg=msg)
+    conflicts('+all_applications', when='+app_wtf', msg=msg)
+    conflicts('+all_applications', when='+app_topk', msg=msg)
+
     def cmake_args(self):
         spec = self.spec
         args = []
