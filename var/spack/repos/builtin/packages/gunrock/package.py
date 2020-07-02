@@ -44,6 +44,7 @@ class Gunrock(CMakePackage, CudaPackage):
     variant('app_wtf',      default=False, description='Only build WTF primitive')
     variant('app_topk',     default=False, description='Only build TOPK primitive')
 
+    depends_on('cuda')
     depends_on('googletest', when='+google_tests')
     depends_on('lcov', when='+code_coverage')
     depends_on('boost', when='+boost')
@@ -108,7 +109,8 @@ Turn it off explicitly in order to build individual apps like:\n\
                         'OFF' if '+app_wtf' in spec else 'OFF'),
                     '-DGUNROCK_APP_TOPK={0}'.format(
                         'OFF' if '+app_topk' in spec else 'OFF'),
-])
+        ])
+        return args
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
