@@ -32,7 +32,7 @@ class SdslLite(Package):
         tar('-xvf', self.stage.archive_file)
 
         with working_dir('sdsl-lite-{0}'.format(spec.version.dotted)):
-            if '%fj' in spec:
+            if self.spec.satisfies('%fj'):
                 filter_file(
                     'stdlib=libc',
                     'stdlib=libstdc',
