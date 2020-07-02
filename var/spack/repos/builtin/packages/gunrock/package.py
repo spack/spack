@@ -56,7 +56,7 @@ class Gunrock(CMakePackage, CudaPackage):
     depends_on('boost', when='+boost')
     depends_on('metis', when='+metis')
 
-    msg = 'all_applications varaint is enabled by default. \
+    msg = 'all_applications variant is enabled by default. \
 Turn it off explicitly in order to build individual apps like: \n\
     spack install gunrock ~all_applicatins +app_bc'
 
