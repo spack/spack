@@ -219,6 +219,8 @@ class Openmpi(AutotoolsPackage):
     variant('cxx', default=False, description='Enable C++ MPI bindings')
     variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
     variant('gpfs', default=True, description='Enable GPFS support (if present)')
+    variant('singularity', default=False,
+            description="Build support for the Singularity container")
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -265,6 +267,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('zlib', when='@3.0.0:')
     depends_on('valgrind~mpi', when='+memchecker')
+    # Singularity release 3 works better
+    depends_on('singularity@3.0.0:', when='+singularity')
 
     depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('rdma-core', when='fabrics=verbs')
@@ -317,6 +321,8 @@ class Openmpi(AutotoolsPackage):
     conflicts('schedulers=loadleveler', when='@3.0.0:',
               msg='The loadleveler scheduler is not supported with '
               'openmpi(>=3.0.0).')
+    conflicts('+singularity', when='@5:',
+              msg='singularity support has been dropped in OpenMPI 5')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
 
@@ -528,6 +534,10 @@ class Openmpi(AutotoolsPackage):
                 '--with-valgrind={0}'.format(spec['valgrind'].prefix),
             ])
 
+        # Singularity container support
+        if spec.satisfies('+singularity @:4.9'):
+            singularity_opt = '--with-singularity={0}'.format(spec['singularity'].prefix)
+            config_args.append(singularity_opt)
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
