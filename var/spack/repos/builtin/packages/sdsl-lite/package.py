@@ -33,6 +33,10 @@ class SdslLite(Package):
 
         with working_dir('sdsl-lite-{0}'.format(spec.version.dotted)):
             if '%fj' in spec:
-                filter_file('stdlib=libc', 'stdlib=libstdc', './CMakeLists.txt')
+                filter_file(
+                    'stdlib=libc',
+                    'stdlib=libstdc',
+                    './CMakeLists.txt'
+                )
             helper = Executable('./install.sh')
             helper(prefix)
