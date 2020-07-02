@@ -31,6 +31,18 @@ class Gunrock(CMakePackage, CudaPackage):
     variant('google_tests',         default=False, description='Build unit tests using googletest')
     variant('code_coverage',        default=False, description="run code coverage on Gunrock's source code")
     variant('all_applications',     default=True,  description='Build all applications')
+    # apps
+    variant('app_bc',       default=False, description, 'Only build BC primitive')
+    variant('app_bfs',      default=False, description, 'Only build BFS primitive')
+    variant('app_cc',       default=False, description, 'Only build CC primitive')
+    variant('app_pr',       default=False, description, 'Only build PR primitive')
+    variant('app_sssp',     default=False, description, 'Only build SSSP primitive')
+    variant('app_dobfs',    default=False, description, 'Only build DOBFS primitive')
+    variant('app_hits',     default=False, description, 'Only build HITS primitive')
+    variant('app_salsa',    default=False, description, 'Only build SALSA primitive')
+    variant('app_mst',      default=False, description, 'Only build MST primitive')
+    variant('app_wtf',      default=False, description, 'Only build WTF primitive')
+    variant('app_topk',     default=False, description, 'Only build TOPK primitive')
 
     depends_on('google-tests', when='+google_tests')
     depends_on('lcov', when='+code_coverage')
@@ -57,6 +69,28 @@ class Gunrock(CMakePackage, CudaPackage):
                         'ON' if '+code_coverage' in spec else 'OFF'),
                     '-DGUNROCK_BUILD_APPLICATIONS={0}'.format(
                         'ON' if '+all_applications' in spec else 'OFF'),
+                    '-DGUNROCK_APP_BC={0}'.format(
+                        'OFF' if '+app_bc' in spec else 'OFF'),
+                    '-DGUNROCK_APP_BFS={0}'.format(
+                        'OFF' if '+app_bfs' in spec else 'OFF'),
+                    '-DGUNROCK_APP_CC={0}'.format(
+                        'OFF' if '+app_cc' in spec else 'OFF'),
+                    '-DGUNROCK_APP_PR={0}'.format(
+                        'OFF' if '+app_pr' in spec else 'OFF'),
+                    '-DGUNROCK_APP_SSSP={0}'.format(
+                        'OFF' if '+app_sssp' in spec else 'OFF'),
+                    '-DGUNROCK_APP_DOBFS={0}'.format(
+                        'OFF' if '+app_dobfs' in spec else 'OFF'),
+                    '-DGUNROCK_APP_HITS={0}'.format(
+                        'OFF' if '+app_hits' in spec else 'OFF'),
+                    '-DGUNROCK_APP_SALSA={0}'.format(
+                        'OFF' if '+app_salsa' in spec else 'OFF'),
+                    '-DGUNROCK_APP_MST={0}'.format(
+                        'OFF' if '+app_mst' in spec else 'OFF'),
+                    '-DGUNROCK_APP_WTF={0}'.format(
+                        'OFF' if '+app_wtf' in spec else 'OFF'),
+                    '-DGUNROCK_APP_TOPK={0}'.format(
+                        'OFF' if '+app_topk' in spec else 'OFF'),
 ])
 
     def install(self, spec, prefix):
