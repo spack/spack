@@ -501,11 +501,7 @@ def _compilers_from(specs):
             c = spack.concretize.Concretizer(str(spec))
             c.concretize_architecture(spec)
 
-        # For external packages detected on Cray the OS is annotated
         spec_os = spec.os
-        if spec.extra_attributes and 'cray' in spec.extra_attributes:
-            spec_os = spec.extra_attributes['cray']['os']
-
         partial_results[(cspec, spec_os)].append(compiler_cls(
             cspec, spec_os, str(spec.target.family), paths,
             modules=spec.external_modules

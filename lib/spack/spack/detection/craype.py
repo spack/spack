@@ -45,9 +45,7 @@ def detect(packages_to_check, system_path_to_exe=None):
     # Annotate the OS in the extra attributes for later reuse
     for pkg, entries in pkg_to_entries.items():
         for entry in entries:
-            entry.spec.extra_attributes['cray'] = {
-                'os': str(p.front_os)
-            }
+            entry.spec.constrain('os={0}'.format(p.front_os))
 
     # Back-end uses module detection
     tty.debug("[CRAY] Detecting back-end software")
@@ -82,10 +80,9 @@ def _detect_from_craype_modules(packages_to_check):
         extract_path_re = re.compile(r'prepend-path[\s]*PATH[\s]*([/\w\.:-]*)')
         for _, version in matches:
             extra_attributes = getattr(pkg, 'cray_extra_attributes', {})
-            extra_attributes.update({'cray': {'os': spec_os}})
-            spec_str_format = '{0}@{1}'
+            spec_str_format = '{0}@{1} os={2}'
             spec = spack.spec.Spec.from_detection(
-                spec_str=spec_str_format.format(pkg.name, version),
+                spec_str=spec_str_format.format(pkg.name, version, spec_os),
                 extra_attributes=extra_attributes
             )
             # Add back-end compiler
@@ -123,9 +120,11 @@ def _detect_from_craype_modules(packages_to_check):
 
             for name, entries in fe_pkg_to_entries.items():
                 for entry in entries:
-                    entry.spec.extra_attributes['cray'] = {
-                        'os': str(p.front_os)
-                    }
+                    entry.spec.constrain('os={0}'.format(p.front_os))
+                    entry.modules.extend([
+                        pkg.cray_prgenv,
+                        '{0}/{1}'.format(pkg.cray_module_name, version)
+                    ])
 
                 pkg_to_entries[name].extend(entries)
 
