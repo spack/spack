@@ -1,0 +1,24 @@
+From e9e0b7e6cae23e1f30dd983c2ce2d3bd34d56f75 Mon Sep 17 00:00:00 2001
+From: Piotr Luszczek <luszczek@icl.utk.edu>
+Date: Mon, 17 Feb 2020 12:04:33 -0500
+Subject: [PATCH] Add missing variable designation, fixes issue #64
+
+Newer compilers (GCC 9.2) require loop's upper-bound variable to be
+explicitly designated as private/shared/firstprivate/lastprivate
+---
+ src/ComputeResidual.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/ComputeResidual.cpp b/src/ComputeResidual.cpp
+index afc57c6..2e9498b 100644
+--- a/src/ComputeResidual.cpp
++++ b/src/ComputeResidual.cpp
+@@ -53,7 +53,7 @@ int ComputeResidual(const local_int_t n, const Vector & v1, const Vector & v2, d
+   double local_residual = 0.0;
+
+ #ifndef HPCG_NO_OPENMP
+-  #pragma omp parallel default(none) shared(local_residual, v1v, v2v)
++  #pragma omp parallel default(none) shared(n, local_residual, v1v, v2v)
+   {
+     double threadlocal_residual = 0.0;
+     #pragma omp for
