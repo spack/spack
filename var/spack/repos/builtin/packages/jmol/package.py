@@ -1,10 +1,10 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-
+import os.path
 
 class Jmol(Package):
     """Jmol: an open-source Java viewer for chemical structures in 3D
@@ -17,16 +17,18 @@ class Jmol(Package):
     version('14.8.0' , sha256='8ec45e8d289aa0762194ca71848edc7d736121ddc72276031a253a3651e6d588')
 
     def url_for_version(self, version):
-        url='https://sourceforge.net/projects/jmol/files/Jmol/Version%20{0}/Jmol%20{1}/Jmol-{1}-full.tar.gz'
+        url='https://sourceforge.net/projects/jmol/files/Jmol/Version%20{0}/Jmol%20{1}/Jmol-{1}-binary.tar.gz'
         return url.format(version.up_to(2), version)
 
     depends_on('java', type='run')
 
     def install(self, spec, prefix):
-        if self.version >= Version('14.31.0'):
-            install_tree('./', prefix)
-        else:
+        if  os.path.exists('jmol-{0}'.format(self.version)):
+            # tar ball contains subdir with different versions
             install_tree('jmol-{0}'.format(self.version), prefix)
+        else:
+            # no subdirs - tarball was unpacked in spack-src
+            install_tree('./', prefix)
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', self.prefix)
