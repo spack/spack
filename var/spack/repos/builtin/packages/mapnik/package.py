@@ -19,8 +19,8 @@ class Mapnik(AutotoolsPackage):
     version('3.0.22', sha256='930612ad9e604b6a29b9cea1bc1de85cf7cf2b2b8211f57ec8b6b94463128ab9')
 
     depends_on('python', type=('build', 'run'))
-    # Build fails with boost@1.73.0
-    depends_on('boost@:1.72.0 +regex+filesystem+system+icu+program_options cxxstd=11')
+    depends_on('boost@:1.72.0 +regex+filesystem+system+icu+program_options cxxstd=11', when='@3.0.23')
+    depends_on('boost@:1.69.0 +regex+filesystem+system+icu+program_options cxxstd=11', when='@3.0.22')
     depends_on('icu4c')
     depends_on('zlib')
     depends_on('freetype')
