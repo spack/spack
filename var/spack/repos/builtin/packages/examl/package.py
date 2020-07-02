@@ -37,11 +37,10 @@ class Examl(MakefilePackage):
         #####################
         # Build Directories #
         #####################
-        cd('examl')
-        make('-f', 'Makefile.SSE3.gcc')
-        cd('../parser')
-        make('-f', 'Makefile.SSE3.gcc')
-        cd('..')
+        with working_dir('examl'):
+            make('-f', 'Makefile.SSE3.gcc')
+        with working_dir('parser'):
+            make('-f', 'Makefile.SSE3.gcc')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
