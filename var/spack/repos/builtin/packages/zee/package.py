@@ -47,7 +47,7 @@ class Zee(CMakePackage):
     depends_on('python@3:', type='build', when='+codechecks')
     depends_on('gmsh@4: +metis~mpi+oce+openmp+shared')
     depends_on('mpi')
-    depends_on('omega-h')
+    depends_on('omega-h+gmsh')
 
     depends_on('metis+int64')
     depends_on('petsc +int64', when='+petsc')

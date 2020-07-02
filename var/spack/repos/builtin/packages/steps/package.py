@@ -41,6 +41,7 @@ class Steps(CMakePackage):
     depends_on("python")
 
     depends_on("omega-h+gmsh+mpi", when="~bundle+distmesh")
+    depends_on("gmsh", when="+distmesh")
     depends_on("easyloggingpp", when="~bundle")
     depends_on("random123", when="~bundle")
     depends_on("sundials@:2.99.99+int64", when="~bundle")
