@@ -12,7 +12,10 @@ class Gunrock(CMakePackage, CudaPackage):
     homepage = "https://gunrock.github.io/docs/"
     git      = "https://github.com/gunrock/gunrock.git"
 
-    version('master',   submodules=True)
+    # tagged versions are broken. See
+    # https://github.com/gunrock/gunrock/issues/777
+    # Hence, prefer master version for now.
+    version('master',   submodules=True, preferred=True)
     version('1.1',      submodules=True, tag='v1.1')
     version('1.0',      submodules=True, tag='v1.0')
     version('0.5.1',    submodules=True, tag='v0.5.1')
