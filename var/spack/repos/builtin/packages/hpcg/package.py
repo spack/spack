@@ -30,12 +30,10 @@ class Hpcg(AutotoolsPackage):
     build_targets = ['arch={0}'.format(arch)]
 
     def configure(self, spec, prefix):
-
+        
+        CXXFLAGS = '-O3 -ffast-math -ftree-vectorize -ftree-vectorizer-verbose=0 '
         if '+openmp' in self.spec:
-            openmp = self.compiler.openmp_flag
-        else:
-            openmp = ''
-
+            CXXFLAGS += self.compiler.openmp_flag
         config = [
             # Shell
             'SHELL         = /bin/sh',
@@ -62,7 +60,7 @@ class Hpcg(AutotoolsPackage):
             'HPCG_DEFS     = $(HPCG_OPTS) $(HPCG_INCLUDES)',
             # Compilers / linkers - Optimization flags
             'CXX           = {0}'.format(spec['mpi'].mpicxx),
-            'CXXFLAGS      = $(HPCG_DEFS) -O3 -ffast-math -ftree-vectorize -ftree-vectorizer-verbose=0 {0}'.format(openmp),
+            'CXXFLAGS      = $(HPCG_DEFS) {0}'.format(CXXFLAGS),
             'LINKER        = $(CXX)',
             'LINKFLAGS     = $(CXXFLAGS)',
             'ARCHIVER      = ar',
