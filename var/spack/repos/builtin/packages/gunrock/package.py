@@ -47,6 +47,9 @@ class Gunrock(CMakePackage, CudaPackage):
     variant('app_wtf',      default=False, description='Only build WTF primitive')
     variant('app_topk',     default=False, description='Only build TOPK primitive')
 
+    variant('boost', default=False, description='Build with Boost')
+    variant('metis', default=False, description='Build with Metis support')
+
     depends_on('cuda')
     depends_on('googletest', when='+google_tests')
     depends_on('lcov', when='+code_coverage')
@@ -80,8 +83,6 @@ Turn it off explicitly in order to build individual apps like:\n\
                         'ON' if '+tests' in spec else 'OFF'),
                     '-DGUNROCK_BUILD_MGPU_TESTS={0}'.format(
                         'ON' if '+mgpu_tests' in spec else 'OFF'),
-#                    '-DGUNROCK_BUILD_GENCODE_SM={0}'.format(
-#                        'ON' if '+cuda' in spec else 'OFF'),
                     '-DCUDA_VERBOSE_PTXAS={0}'.format(
                         'ON' if '+cuda_verbose_ptxas' in spec else 'OFF'),
                     '-DGUNROCK_GOOGLE_TESTS={0}'.format(
@@ -113,6 +114,12 @@ Turn it off explicitly in order to build individual apps like:\n\
                     '-DGUNROCK_APP_TOPK={0}'.format(
                         'OFF' if '+app_topk' in spec else 'OFF'),
         ])
+
+        cuda_arch_list = self.spec.variants['cuda_arch'].value
+        if cuda_arch_list[0] is not 'none':
+            for carch in cuda_arch_list:
+                args.append('-DGUNROCK_BUILD_GENCODE_SM' + carch + '=ON')
+
         return args
 
     def install(self, spec, prefix):
