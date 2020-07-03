@@ -6,6 +6,6 @@ craype:
         echo "cce/8.7.9          cce/9.0.1          cce/9.0.1-classic  cce/9.0.2(default) cce/9.0.2-classic"
 
     results:
-      - spec: 'cce@9.0.1 os=cnl7'
-      - spec: 'cce@9.0.2 os=cnl7'
-
+      - spec: 'cce-classic@8.7.9 os=cnl7'
+      - spec: 'cce-classic@9.0.1 os=cnl7'
+      - spec: 'cce-classic@9.0.2 os=cnl7'

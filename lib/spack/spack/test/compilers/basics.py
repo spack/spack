@@ -326,30 +326,34 @@ def test_arm_flags():
 
 def test_cce_flags():
     supported_flag_test("version_argument", "--version", "cce@9.0.1")
-    supported_flag_test("version_argument", "-V", "cce@9.0.1-classic")
+    supported_flag_test("version_argument", "-V", "cce-classic@9.0.1")
     supported_flag_test("openmp_flag", "-fopenmp", "cce@9.0.1")
-    supported_flag_test("openmp_flag", "-h omp", "cce@9.0.1-classic")
-    supported_flag_test("openmp_flag", "-h omp", "cce@1.0")
+    supported_flag_test("openmp_flag", "-h omp", "cce-classic@9.0.1")
+    supported_flag_test("openmp_flag", "-h omp", "cce-classic@1.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "cce@9.0.1")
-    supported_flag_test("cxx11_flag", "-h std=c++11", "cce@9.0.1-classic")
-    supported_flag_test("cxx11_flag", "-h std=c++11", "cce@1.0")
-    unsupported_flag_test("c99_flag", "cce@8.0")
+    supported_flag_test("cxx11_flag", "-h std=c++11", "cce-classic@9.0.1")
+    supported_flag_test("cxx11_flag", "-h std=c++11", "cce-classic@1.0")
+    unsupported_flag_test("c99_flag", "cce-classic@8.0")
     supported_flag_test("c99_flag", "-std=c99", "cce@9.0.1")
-    supported_flag_test("c99_flag", "-h c99,noconform,gnu", "cce@8.1")
-    supported_flag_test("c99_flag", "-h std=c99,noconform,gnu", "cce@8.4")
-    unsupported_flag_test("c11_flag", "cce@8.4")
+    supported_flag_test("c99_flag", "-h c99,noconform,gnu", "cce-classic@8.1")
+    supported_flag_test(
+        "c99_flag", "-h std=c99,noconform,gnu", "cce-classic@8.4"
+    )
+    unsupported_flag_test("c11_flag", "cce-classic@8.4")
     supported_flag_test("c11_flag", "-std=c11", "cce@9.0.1")
-    supported_flag_test("c11_flag", "-h std=c11,noconform,gnu", "cce@8.5")
-    supported_flag_test("cc_pic_flag",  "-h PIC", "cce@1.0")
-    supported_flag_test("cxx_pic_flag", "-h PIC", "cce@1.0")
-    supported_flag_test("f77_pic_flag", "-h PIC", "cce@1.0")
-    supported_flag_test("fc_pic_flag",  "-h PIC", "cce@1.0")
+    supported_flag_test(
+        "c11_flag", "-h std=c11,noconform,gnu", "cce-classic@8.5"
+    )
+    supported_flag_test("cc_pic_flag",  "-h PIC", "cce-classic@1.0")
+    supported_flag_test("cxx_pic_flag", "-h PIC", "cce-classic@1.0")
+    supported_flag_test("f77_pic_flag", "-h PIC", "cce-classic@1.0")
+    supported_flag_test("fc_pic_flag",  "-h PIC", "cce-classic@1.0")
     supported_flag_test("cc_pic_flag",  "-fPIC", "cce@9.1.0")
     supported_flag_test("cxx_pic_flag", "-fPIC", "cce@9.1.0")
     supported_flag_test("f77_pic_flag", "-fPIC", "cce@9.1.0")
     supported_flag_test("fc_pic_flag",  "-fPIC", "cce@9.1.0")
     supported_flag_test("debug_flags", ['-g', '-G0', '-G1', '-G2', '-Gfast'],
-                        'cce@1.0')
+                        'cce-classic@1.0')
 
 
 def test_apple_clang_flags():

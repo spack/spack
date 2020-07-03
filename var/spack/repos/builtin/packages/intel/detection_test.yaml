@@ -29,7 +29,7 @@ craype:
         echo "intel/17.0.4.196          intel/18.0.1.163          intel/18.0.2.199          intel/19.0.1.144(default)"
 
     results:
-      - spec: 'intel@17.0.4.196'
-      - spec: 'intel@18.0.1.163'
-      - spec: 'intel@18.0.2.199'
-      - spec: 'intel@19.0.1.144'
+      - spec: 'intel@17.0.4.196 os=cnl7'
+      - spec: 'intel@18.0.1.163 os=cnl7'
+      - spec: 'intel@18.0.2.199 os=cnl7'
+      - spec: 'intel@19.0.1.144 os=cnl7'

@@ -53,8 +53,8 @@ craype:
         echo "gcc/6.1.0          gcc/7.3.0          gcc/8.1.0          gcc/8.2.0          gcc/8.3.0(default)"
 
     results:
-      - spec: 'gcc@6.1.0'
-      - spec: 'gcc@7.3.0'
-      - spec: 'gcc@8.1.0'
-      - spec: 'gcc@8.2.0'
-      - spec: 'gcc@8.3.0'
+      - spec: 'gcc@6.1.0 os=cnl7'
+      - spec: 'gcc@7.3.0 os=cnl7'
+      - spec: 'gcc@8.1.0 os=cnl7'
+      - spec: 'gcc@8.2.0 os=cnl7'
+      - spec: 'gcc@8.3.0 os=cnl7'

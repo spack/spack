@@ -5,7 +5,6 @@
 import contextlib
 import os
 import os.path
-import stat
 
 import pytest
 
@@ -323,11 +322,19 @@ def test_package_detection(mock_executable, package_name):
 
 @pytest.mark.detection
 @pytest.mark.parametrize('package_name', candidate_packages())
-def test_package_detection_on_cray(mock_executable, package_name):
+def test_package_detection_on_cray(monkeypatch, mock_executable, package_name):
+    import spack.architecture
+    import spack.platforms.test
     import spack.detection.craype
     import spack.util.executable
     import spack.util.module_cmd
     import functools
+
+    monkeypatch.setattr(spack.platforms.test.Test, 'front_os', 'sles15')
+    monkeypatch.setattr(spack.platforms.test.Test, 'back_os', 'cnl7')
+    monkeypatch.setattr(spack.platforms.test.Test, 'default_os', 'cnl7')
+    monkeypatch.setattr(spack.architecture, 'platform',
+                        lambda: spack.platforms.test.Test())
 
     # TODO: factor common code with previous test
     def detection_tests_for(pkg):

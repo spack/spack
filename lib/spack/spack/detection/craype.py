@@ -16,9 +16,10 @@ import spack.util.module_cmd
 def detect(packages_to_check, system_path_to_exe=None):
     """Detect software in a Cray Programming Environment.
 
-    This function will detect first software by path on the
+    This function will detect first the system software on the
     front-end and then it will look for modules in the Cray
-    Programming environment in the backend.
+    Programming environment to add software for both the frontend
+    and the backend.
 
     Args:
         packages_to_check (list): list of packages to be searched for
@@ -78,7 +79,15 @@ def _detect_from_craype_modules(packages_to_check):
         matches = re.findall(version_regex, output)
 
         extract_path_re = re.compile(r'prepend-path[\s]*PATH[\s]*([/\w\.:-]*)')
-        for _, version in matches:
+        module_versions = [version for _, version in matches]
+        version_fn = getattr(pkg, 'cray_spec_version', lambda x: x)
+        for module_version in module_versions:
+            # Check which spec version corresponds to a Cray module version.
+            # If this function returns None it means to discard this module.
+            version = version_fn(module_version)
+            if not version:
+                continue
+
             extra_attributes = getattr(pkg, 'cray_extra_attributes', {})
             spec_str_format = '{0}@{1} os={2}'
             spec = spack.spec.Spec.from_detection(
@@ -89,7 +98,7 @@ def _detect_from_craype_modules(packages_to_check):
             item = spack.detection.common.ExternalPackageEntry(
                 spec=spec, base_dir=None, modules=[
                     pkg.cray_prgenv,
-                    '{0}/{1}'.format(pkg.cray_module_name, version)
+                    '{0}/{1}'.format(pkg.cray_module_name, module_version)
                 ]
             )
             pkg_to_entries[pkg.name].append(item)
@@ -122,8 +131,7 @@ def _detect_from_craype_modules(packages_to_check):
                 for entry in entries:
                     entry.spec.constrain('os={0}'.format(p.front_os))
                     entry.modules.extend([
-                        pkg.cray_prgenv,
-                        '{0}/{1}'.format(pkg.cray_module_name, version)
+                        '{0}/{1}'.format(pkg.cray_module_name, module_version)
                     ])
 
                 pkg_to_entries[name].extend(entries)

@@ -2,14 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import re
-
-import llnl.util.tty as tty
-import spack.compiler
 
 
-class Cce(Package):
-    """The Cray Compiling Environment (Clang based frontend)"""
+class CceClassic(Package):
+    """The Cray Compiling Environment (Classic CRAY frontend)"""
 
     homepage = "https://pubs.cray.com"
 
@@ -30,26 +26,12 @@ class Cce(Package):
 
     @classmethod
     def cray_spec_version(cls, module_version):
-        if module_version >= '9' and not module_version.endswith('-classic'):
-            return module_version
-        return None
+        if module_version.endswith('-classic'):
+            return module_version.replace('-classic', '')
+        if module_version > '9':
+            return None
+        return module_version
 
     cc = 'cc'
     cxx = 'CC'
     fortran = 'ftn'
-
-    @classmethod
-    def determine_version(cls, exe):
-        version_regex = re.compile(r'[Vv]ersion.*?(\d+(\.\d+)+)')
-        for version_arg in ('--version', '-V'):
-            try:
-                output = spack.compiler.get_compiler_version_output(
-                    exe, version_arg
-                )
-                match = version_regex.search(output)
-                if match:
-                    return match.group(1)
-            except spack.util.executable.ProcessError:
-                pass
-            except Exception as e:
-                tty.debug(e)

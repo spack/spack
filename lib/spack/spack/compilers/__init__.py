@@ -40,7 +40,7 @@ _compiler_to_pkg = {
 # TODO: list of packages that support current compilers. This needs
 # TODO: to be removed when turning compilers to proper dependencies.
 compiler_packages = [
-    'apple-clang', 'arm', 'cce', 'fj', 'gcc', 'intel',
+    'apple-clang', 'arm', 'cce', 'cce-classic', 'fj', 'gcc', 'intel',
     'llvm', 'nag', 'pgi', 'xlc', 'xlf'
 ]
 
@@ -172,7 +172,10 @@ def supported_compilers():
     """
     # Hack to be able to call the compiler `apple-clang` while still
     # using a valid python name for the module
-    return sorted(name if name != 'apple_clang' else 'apple-clang' for name in
+    file_to_compiler = {
+        'apple_clang': 'apple-clang', 'cce_classic': 'cce-classic'
+    }
+    return sorted(file_to_compiler.get(name, name) for name in
                   llnl.util.lang.list_modules(spack.paths.compilers_path))
 
 
@@ -397,7 +400,7 @@ def class_for_compiler_name(compiler_name):
     # Hack to be able to call the compiler `apple-clang` while still
     # using a valid python name for the module
     module_name = compiler_name
-    if compiler_name == 'apple-clang':
+    if compiler_name in ('apple-clang', 'cce-classic'):
         module_name = compiler_name.replace('-', '_')
 
     file_path = os.path.join(spack.paths.compilers_path, module_name + ".py")

@@ -9,6 +9,6 @@ craype:
         echo "pgi/19.4.0          pgi/19.5.0          pgi/19.7.0(default)"
 
     results:
-      - spec: 'pgi@19.4.0'
-      - spec: 'pgi@19.5.0'
-      - spec: 'pgi@19.7.0'
+      - spec: 'pgi@19.4.0 os=cnl7'
+      - spec: 'pgi@19.5.0 os=cnl7'
+      - spec: 'pgi@19.7.0 os=cnl7'
