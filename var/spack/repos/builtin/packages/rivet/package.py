@@ -64,10 +64,10 @@ class Rivet(AutotoolsPackage):
     depends_on('hepmc', type=('build', 'run'))
     depends_on('boost', when='@:2.5.0,3:', type=('build', 'run'))
     depends_on('fastjet', type=('build', 'run'))
-    depends_on('libgsl', type=('build', 'run'), when='@:2.6.0,2.6.2:')
+    depends_on('gsl', type=('build', 'run'), when='@:2.6.0,2.6.2:')
     depends_on('python', type=('build', 'run'))
     depends_on('swig', type=('build', 'run'))
-    depends_on('yamlcpp', when='@2.0.0:2.1.2', type=('build', 'run'))
+    depends_on('yaml-cpp', when='@2.0.0:2.1.2', type=('build', 'run'))
 
     patch('rivet-1.8.2.patch', when='@1.8.2', level=0)
     patch('rivet-1.9.0.patch', when='@1.9.0', level=0)
