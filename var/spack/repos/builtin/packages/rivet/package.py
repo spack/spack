@@ -88,7 +88,7 @@ class Rivet(AutotoolsPackage):
     patch('rivet-3.0.1.patch', when='@3.0.1')
     patch('rivet-3.1.0.patch', when='@3.1.0')
     patch('rivet-3.1.1.patch', when='@3.1.1')
-   
+
     @run_before('configure')
     def copy_gsl_m4(self):
         if self.spec.satisfies('@2.6.2:'):
