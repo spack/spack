@@ -445,6 +445,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--skip-editor', action='store_true',
         help="skip the edit session for the package (e.g., automation)")
+    subparser.add_argument(
+        '-b', '--batch', action='store_true',
+        help="don't ask which versions to checksum")
 
 
 class BuildSystemGuesser:
@@ -629,7 +632,8 @@ def get_versions(args, name):
 
         versions = spack.stage.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
-            keep_stage=args.keep_stage, batch=True)
+            keep_stage=args.keep_stage,
+            batch=(args.batch or len(url_dict) == 1))
     else:
         versions = unhashed_versions
 
