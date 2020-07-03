@@ -38,17 +38,13 @@ class Gunrock(CMakePackage, CudaPackage):
     variant('code_coverage',        default=False, description="run code coverage on Gunrock's source code")
     variant('all_applications',     default=True,  description='Build all applications')
     # apps
-    variant('app_bc',       default=False, description='Only build BC primitive')
-    variant('app_bfs',      default=False, description='Only build BFS primitive')
-    variant('app_cc',       default=False, description='Only build CC primitive')
-    variant('app_pr',       default=False, description='Only build PR primitive')
-    variant('app_sssp',     default=False, description='Only build SSSP primitive')
-    variant('app_dobfs',    default=False, description='Only build DOBFS primitive')
-    variant('app_hits',     default=False, description='Only build HITS primitive')
-    variant('app_salsa',    default=False, description='Only build SALSA primitive')
-    variant('app_mst',      default=False, description='Only build MST primitive')
-    variant('app_wtf',      default=False, description='Only build WTF primitive')
-    variant('app_topk',     default=False, description='Only build TOPK primitive')
+    variant(
+        "applications",
+        values=disjoint_sets(
+            ('all',), ('bc', 'bfs', 'cc', 'pr', 'sssp', ...)
+        ).allow_empty_set().with_default('all').with_error(...),
+        description="Application to be built"
+    )
 
     variant('boost', default=False, description='Build with Boost')
     variant('metis', default=False, description='Build with Metis support')
