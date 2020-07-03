@@ -79,7 +79,7 @@ See "spack info gunrock"')
                     ])
 
         # turn off auto detect, which undoes custom cuda arch options
-        args.append('-dCUDA_AUTODETECT_GENCODE=OFF')
+        args.append('-DCUDA_AUTODETECT_GENCODE=OFF')
 
         cuda_arch_list = self.spec.variants['cuda_arch'].value
         if cuda_arch_list[0] != 'none':
