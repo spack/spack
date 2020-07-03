@@ -17,6 +17,12 @@ class Dftbplus(MakefilePackage):
 
     version('19.1', sha256='4d07f5c6102f06999d8cfdb1d17f5b59f9f2b804697f14b3bc562e3ea094b8a8')
 
+    resource(name='slakos',
+             url='https://github.com/dftbplus/testparams/archive/dftbplus-18.2.tar.gz',
+             sha256='bd191b3d240c1a81a8754a365e53a78b581fc92eb074dd5beb8b56a669a8d3d1',
+             destination='external/slakos',
+             when='@18.2:')
+
     variant('mpi', default=True,
             description="Build an MPI-paralelised version of the code.")
 
@@ -139,6 +145,3 @@ class Dftbplus(MakefilePackage):
                              spec['dftd3-lib'].prefix))
 
             mconfig.filter('WITH_DFTD3 := .*', 'WITH_DFTD3 := 1')
-
-        # Download some data needed for the tests
-        Executable('./utils/get_opt_externals')()
