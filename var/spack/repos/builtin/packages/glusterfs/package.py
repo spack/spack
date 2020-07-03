@@ -34,6 +34,7 @@ class Glusterfs(AutotoolsPackage):
     depends_on('libuuid')
     depends_on('libtirpc')
     depends_on('userspace-rcu')
+    depends_on('pkgconfig', type='build')
 
     def url_for_version(self, version):
         url = 'https://download.gluster.org/pub/gluster/glusterfs/{0}/{1}/glusterfs-{1}.tar.gz'
