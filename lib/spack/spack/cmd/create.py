@@ -514,7 +514,7 @@ class BuildSystemGuesser:
         # Determine the build system based on the files contained
         # in the archive.
         for pattern, bs in clues:
-            if any(re.search(pattern, l) for l in lines):
+            if any(re.search(pattern, line) for line in lines):
                 self.build_system = bs
                 break
 
