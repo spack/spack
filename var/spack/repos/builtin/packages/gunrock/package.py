@@ -78,6 +78,9 @@ See "spack info gunrock"')
                         'ON' if '+code_coverage' in spec else 'OFF'),
                     ])
 
+        # turn off auto detect, which undoes custom cuda arch options
+        args.append('-dCUDA_AUTODETECT_GENCODE=OFF')
+
         cuda_arch_list = self.spec.variants['cuda_arch'].value
         if cuda_arch_list[0] != 'none':
             for carch in cuda_arch_list:
@@ -111,6 +114,7 @@ See "spack info gunrock"')
                     '-DGUNROCK_APP_TOPK={0}'.format(
                         'ON' if '+app_topk'    in app_list else 'OFF'),
                     ])
+
         return args
 
     def install(self, spec, prefix):
