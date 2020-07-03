@@ -62,6 +62,16 @@ class Yoda(AutotoolsPackage):
     depends_on('py-cython', type='build')
     depends_on('py-matplotlib', when='@1.3.0:', type=('build', 'run'))
     depends_on('root', type=('build', 'run'), when='+root')
+    
+    patch('yoda-1.5.5.patch', level=0, when='@1.5.5')
+    patch('yoda-1.5.9.patch', level=0, when='@1.5.9')
+    patch('yoda-1.6.1.patch', level=0, when='@1.6.1')
+    patch('yoda-1.6.2.patch', level=0, when='@1.6.2')
+    patch('yoda-1.6.3.patch', level=0, when='@1.6.3')
+    patch('yoda-1.6.4.patch', level=0, when='@1.6.4')
+    patch('yoda-1.6.5.patch', level=0, when='@1.6.5')
+    patch('yoda-1.6.6.patch', level=0, when='@1.6.6')
+    patch('yoda-1.6.7.patch', level=0, when='@1.6.7')
 
     def configure_args(self):
         args = []
