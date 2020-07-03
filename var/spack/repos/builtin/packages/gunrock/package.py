@@ -35,7 +35,6 @@ class Gunrock(CMakePackage, CudaPackage):
     variant('cuda_verbose_ptxas',   default=False, description='Enable verbose output from the PTXAS assembler')
     variant('google_tests',         default=False, description='Build unit tests using googletest')
     variant('code_coverage',        default=False, description="run code coverage on Gunrock's source code")
-    variant('all_applications',     default=True,  description='Build all applications')
     # apps
     variant(
         "applications",
@@ -76,30 +75,6 @@ See "spack info gunrock"')
                         'ON' if '+google_tests' in spec else 'OFF'),
                     '-DGUNROCK_CODE_COVERAGE={0}'.format(
                         'ON' if '+code_coverage' in spec else 'OFF'),
-                    '-DGUNROCK_BUILD_APPLICATIONS={0}'.format(
-                        'ON' if '+all_applications' in spec else 'OFF'),
-                    '-DGUNROCK_APP_BC={0}'.format(
-                        'OFF' if '+app_bc' in spec else 'OFF'),
-                    '-DGUNROCK_APP_BFS={0}'.format(
-                        'OFF' if '+app_bfs' in spec else 'OFF'),
-                    '-DGUNROCK_APP_CC={0}'.format(
-                        'OFF' if '+app_cc' in spec else 'OFF'),
-                    '-DGUNROCK_APP_PR={0}'.format(
-                        'OFF' if '+app_pr' in spec else 'OFF'),
-                    '-DGUNROCK_APP_SSSP={0}'.format(
-                        'OFF' if '+app_sssp' in spec else 'OFF'),
-                    '-DGUNROCK_APP_DOBFS={0}'.format(
-                        'OFF' if '+app_dobfs' in spec else 'OFF'),
-                    '-DGUNROCK_APP_HITS={0}'.format(
-                        'OFF' if '+app_hits' in spec else 'OFF'),
-                    '-DGUNROCK_APP_SALSA={0}'.format(
-                        'OFF' if '+app_salsa' in spec else 'OFF'),
-                    '-DGUNROCK_APP_MST={0}'.format(
-                        'OFF' if '+app_mst' in spec else 'OFF'),
-                    '-DGUNROCK_APP_WTF={0}'.format(
-                        'OFF' if '+app_wtf' in spec else 'OFF'),
-                    '-DGUNROCK_APP_TOPK={0}'.format(
-                        'OFF' if '+app_topk' in spec else 'OFF'),
                     ])
 
         cuda_arch_list = self.spec.variants['cuda_arch'].value
@@ -107,6 +82,34 @@ See "spack info gunrock"')
             for carch in cuda_arch_list:
                 args.append('-DGUNROCK_BUILD_GENCODE_SM' + carch + '=ON')
 
+        app_list = self.spec.variants['applications'].value
+        if app_list[0] != 'none':
+                args.append([
+                    '-DGUNROCK_BUILD_APPLICATIONS={0}'.format(
+                        'ON' if 'all'           in app_list else 'OFF'),
+                    '-DGUNROCK_APP_BC={0}'.format(
+                        'OFF' if 'bc'           in app_list else 'OFF'),
+                    '-DGUNROCK_APP_BFS={0}'.format(
+                        'OFF' if 'bfs'          in app_list else 'OFF'),
+                    '-DGUNROCK_APP_CC={0}'.format(
+                        'OFF' if 'cc'           in app_list else 'OFF'),
+                    '-DGUNROCK_APP_PR={0}'.format(
+                        'OFF' if 'pr'           in app_list else 'OFF'),
+                    '-DGUNROCK_APP_SSSP={0}'.format(
+                        'OFF' if 'sssp'         in app_list else 'OFF'),
+                    '-DGUNROCK_APP_DOBFS={0}'.format(
+                        'OFF' if 'dobfs'        in app_list else 'OFF'),
+                    '-DGUNROCK_APP_HITS={0}'.format(
+                        'OFF' if 'hits'         in app_list else 'OFF'),
+                    '-DGUNROCK_APP_SALSA={0}'.format(
+                        'OFF' if 'salsa'        in app_list else 'OFF'),
+                    '-DGUNROCK_APP_MST={0}'.format(
+                        'OFF' if 'mst'          in app_list else 'OFF'),
+                    '-DGUNROCK_APP_WTF={0}'.format(
+                        'OFF' if '+app_wtf'     in app_list else 'OFF'),
+                    '-DGUNROCK_APP_TOPK={0}'.format(
+                        'OFF' if '+app_topk'    in app_list else 'OFF'),
+                    ])
         return args
 
     def install(self, spec, prefix):
