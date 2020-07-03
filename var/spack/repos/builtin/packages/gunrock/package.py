@@ -14,8 +14,9 @@ class Gunrock(CMakePackage, CudaPackage):
 
     # tagged versions are broken. See
     # https://github.com/gunrock/gunrock/issues/777
-    # Hence, prefer master version for now.
-    version('master',   submodules=True, preferred=True)
+    # Hence, prefer a specific commit.
+    version('master',   submodules=True)
+    version('2020-06-15',   submodules=True, commit='81f58d628463561969dafe65868e72251562e806', preferred=True)
     version('1.1',      submodules=True, tag='v1.1')
     version('1.0',      submodules=True, tag='v1.0')
     version('0.5.1',    submodules=True, tag='v0.5.1')
