@@ -73,8 +73,6 @@ class Hpcg(AutotoolsPackage):
             for var in config:
                 makefile.write('{0}\n'.format(var))
 
-        return
-
     def install(self, spec, prefix):
         # Manual installation
         install_tree('bin', prefix.bin)
