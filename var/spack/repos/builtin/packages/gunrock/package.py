@@ -27,6 +27,8 @@ class Gunrock(CMakePackage, CudaPackage):
     version('0.2',      submodules=True, tag='v0.2')
     version('0.1',      submodules=True, tag='v0.1')
 
+    variant('cuda', default=True, description="Build with Cuda support")
+
     variant('lib',                  default=True,  description='Build main gunrock library')
     variant('shared_libs',          default=True,  description='Turn off to build for static libraries')
     variant('tests',                default=True,  description='Build functional tests / examples')
@@ -51,7 +53,6 @@ class Gunrock(CMakePackage, CudaPackage):
     variant('boost', default=False, description='Build with Boost')
     variant('metis', default=False, description='Build with Metis support')
 
-    depends_on('cuda')
     depends_on('googletest', when='+google_tests')
     depends_on('lcov', when='+code_coverage')
     depends_on('boost', when='+boost')
@@ -72,6 +73,11 @@ Turn it off explicitly in order to build individual apps like: \n\
     conflicts('+all_applications', when='+app_mst',     msg=msg)
     conflicts('+all_applications', when='+app_wtf',     msg=msg)
     conflicts('+all_applications', when='+app_topk',    msg=msg)
+
+    conflicts('cuda_arch=none', when='+cuda',
+              msg='Must specify CUDA compute capabilities of your GPU. \
+See "spack info gunrock"')
+
 
     def cmake_args(self):
         spec = self.spec
