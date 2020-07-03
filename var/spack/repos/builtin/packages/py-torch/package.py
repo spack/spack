@@ -172,10 +172,8 @@ class PyTorch(PythonPackage, CudaPackage):
     # https://github.com/pytorch/pytorch/pull/37865
     # Fixes CMake configuration error when XNNPACK is disabled
     patch('xnnpack.patch', when='@1.5.0')
+    #Fix rocm for py-torch 1.5 rel https://github.com/pytorch/pytorch/commit/1093e26d7288e3795da8163ad2516206d4ce6b63
     patch('rocm.patch', when='@1.5.0+rocm')
-    #patch('https://github.com/pytorch/pytorch/commit/1093e26d7288e3795da8163ad2516206d4ce6b63.patch',
-    #      sha256='a8aa1aad4ae347c6dd0432da2d52edd576ab015f',
-    #      when='@1.5.0')
     # https://github.com/pytorch/pytorch/pull/37086
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
     patch('https://github.com/pytorch/pytorch/commit/e921cd222a8fbeabf5a3e74e83e0d8dfb01aa8b5.patch',
