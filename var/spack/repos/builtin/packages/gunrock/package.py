@@ -36,12 +36,13 @@ class Gunrock(CMakePackage, CudaPackage):
     variant('google_tests',         default=False, description='Build unit tests using googletest')
     variant('code_coverage',        default=False, description="run code coverage on Gunrock's source code")
     # apps
+    msg='select either all or individual applications'
     variant(
         "applications",
         values=disjoint_sets(
             ('all',), ('bc', 'bfs', 'cc', 'pr', 'sssp', 'dobfs', 'hits',
                        'salsa', 'mst', 'wtf', 'topk')
-        ).allow_empty_set().with_default('all').with_error(...),
+        ).allow_empty_set().with_default('all').with_error(msg),
         description="Application to be built"
     )
 
@@ -88,27 +89,27 @@ See "spack info gunrock"')
                     '-DGUNROCK_BUILD_APPLICATIONS={0}'.format(
                         'ON' if 'all'           in app_list else 'OFF'),
                     '-DGUNROCK_APP_BC={0}'.format(
-                        'OFF' if 'bc'           in app_list else 'OFF'),
+                        'ON' if 'bc'           in app_list else 'OFF'),
                     '-DGUNROCK_APP_BFS={0}'.format(
-                        'OFF' if 'bfs'          in app_list else 'OFF'),
+                        'ON' if 'bfs'          in app_list else 'OFF'),
                     '-DGUNROCK_APP_CC={0}'.format(
-                        'OFF' if 'cc'           in app_list else 'OFF'),
+                        'ON' if 'cc'           in app_list else 'OFF'),
                     '-DGUNROCK_APP_PR={0}'.format(
-                        'OFF' if 'pr'           in app_list else 'OFF'),
+                        'ON' if 'pr'           in app_list else 'OFF'),
                     '-DGUNROCK_APP_SSSP={0}'.format(
-                        'OFF' if 'sssp'         in app_list else 'OFF'),
+                        'ON' if 'sssp'         in app_list else 'OFF'),
                     '-DGUNROCK_APP_DOBFS={0}'.format(
-                        'OFF' if 'dobfs'        in app_list else 'OFF'),
+                        'ON' if 'dobfs'        in app_list else 'OFF'),
                     '-DGUNROCK_APP_HITS={0}'.format(
-                        'OFF' if 'hits'         in app_list else 'OFF'),
+                        'ON' if 'hits'         in app_list else 'OFF'),
                     '-DGUNROCK_APP_SALSA={0}'.format(
-                        'OFF' if 'salsa'        in app_list else 'OFF'),
+                        'ON' if 'salsa'        in app_list else 'OFF'),
                     '-DGUNROCK_APP_MST={0}'.format(
-                        'OFF' if 'mst'          in app_list else 'OFF'),
+                        'ON' if 'mst'          in app_list else 'OFF'),
                     '-DGUNROCK_APP_WTF={0}'.format(
-                        'OFF' if '+app_wtf'     in app_list else 'OFF'),
+                        'ON' if '+app_wtf'     in app_list else 'OFF'),
                     '-DGUNROCK_APP_TOPK={0}'.format(
-                        'OFF' if '+app_topk'    in app_list else 'OFF'),
+                        'ON' if '+app_topk'    in app_list else 'OFF'),
                     ])
         return args
 
