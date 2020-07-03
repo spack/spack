@@ -14,9 +14,8 @@ class Gunrock(CMakePackage, CudaPackage):
 
     # tagged versions are broken. See
     # https://github.com/gunrock/gunrock/issues/777
-    # Hence, prefer a specific commit.
-    version('master',   submodules=True)
-    version('2020-06-15',   submodules=True, commit='81f58d628463561969dafe65868e72251562e806', preferred=True)
+    # Hence, prefer master version.
+    version('master',   submodules=True, preferred=True)
     version('1.1',      submodules=True, tag='v1.1')
     version('1.0',      submodules=True, tag='v1.0')
     version('0.5.1',    submodules=True, tag='v0.5.1')
@@ -41,7 +40,8 @@ class Gunrock(CMakePackage, CudaPackage):
     variant(
         "applications",
         values=disjoint_sets(
-            ('all',), ('bc', 'bfs', 'cc', 'pr', 'sssp', ...)
+            ('all',), ('bc', 'bfs', 'cc', 'pr', 'sssp', 'dobfs', 'hits',
+                       'salsa', 'mst', 'wtf', 'topk')
         ).allow_empty_set().with_default('all').with_error(...),
         description="Application to be built"
     )
@@ -53,22 +53,6 @@ class Gunrock(CMakePackage, CudaPackage):
     depends_on('lcov', when='+code_coverage')
     depends_on('boost', when='+boost')
     depends_on('metis', when='+metis')
-
-    msg = 'all_applications variant is enabled by default. \
-Turn it off explicitly in order to build individual apps like: \n\
-    spack install gunrock ~all_applicatins +app_bc'
-
-    conflicts('+all_applications', when='+app_bc',      msg=msg)
-    conflicts('+all_applications', when='+app_bfs',     msg=msg)
-    conflicts('+all_applications', when='+app_cc',      msg=msg)
-    conflicts('+all_applications', when='+app_pr',      msg=msg)
-    conflicts('+all_applications', when='+app_sssp',    msg=msg)
-    conflicts('+all_applications', when='+app_dobfs',   msg=msg)
-    conflicts('+all_applications', when='+app_hits',    msg=msg)
-    conflicts('+all_applications', when='+app_salsa',   msg=msg)
-    conflicts('+all_applications', when='+app_mst',     msg=msg)
-    conflicts('+all_applications', when='+app_wtf',     msg=msg)
-    conflicts('+all_applications', when='+app_topk',    msg=msg)
 
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU. \
@@ -128,5 +112,6 @@ See "spack info gunrock"')
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             install_tree('lib', prefix.lib)
+            # bin dir is created only tests/examples are built
             if '+tests' in spec:
                 install_tree('bin', prefix.bin)
