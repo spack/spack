@@ -152,6 +152,10 @@ def _parse_non_system_link_dirs(string):
     """
     link_dirs = _parse_link_paths(string)
 
+    # Remove directories that do not exist. Some versions of the Cray compiler
+    # report nonexistent directories
+    link_dirs = [d for d in link_dirs if os.path.isdir(d)]
+
     # Return set of directories containing needed compiler libs, minus
     # system paths. Note that 'filter_system_paths' only checks for an
     # exact match, while 'in_system_subdirectory' checks if a path contains
@@ -297,11 +301,21 @@ class Compiler(object):
         Raises a CompilerAccessError if any of the non-null paths for the
         compiler are not accessible.
         """
-        missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
-                   if cmp and not (os.path.isfile(cmp) and
-                                   os.access(cmp, os.X_OK))]
-        if missing:
-            raise CompilerAccessError(self, missing)
+        def accessible_exe(exe):
+            # compilers may contain executable names (on Cray or user edited)
+            if not os.path.isabs(exe):
+                exe = spack.util.executable.which_string(exe)
+                if not exe:
+                    return False
+            return os.path.isfile(exe) and os.access(exe, os.X_OK)
+
+        # setup environment before verifying in case we have executable names
+        # instead of absolute paths
+        with self._compiler_environment():
+            missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
+                       if cmp and not accessible_exe(cmp)]
+            if missing:
+                raise CompilerAccessError(self, missing)
 
     @property
     def version(self):

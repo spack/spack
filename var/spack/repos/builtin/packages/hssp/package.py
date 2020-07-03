@@ -6,12 +6,17 @@
 from spack import *
 
 
-class Xssp(AutotoolsPackage):
-    """The source code for building the mkdssp, mkhssp, hsspconv, and hsspsoap
-       programs is bundled in the xssp project"""
+class Hssp(AutotoolsPackage):
+    """The source code for building the mkhssp and hsspconv programs is bundled
+       in the hssp project.
 
-    homepage = "https://github.com/cmbi/xssp"
-    url      = "https://github.com/cmbi/xssp/archive/3.0.10.tar.gz"
+       The mkhssp executable creates stockholm files with hssp annotations in
+       them. The hsspconv executable converts stockholm to the original hssp
+       format.
+    """
+
+    homepage = "https://github.com/cmbi/hssp"
+    url      = "https://github.com/cmbi/hssp/archive/3.0.10.tar.gz"
 
     version('3.0.10', sha256='b475d6fa62098df0e54c8dbdaa0b32de93bf5a393335f73f9b5a7e95f3090d2a')
     version('3.0.9',  sha256='42a9a93c48d22478212dcaf6ceb3feb64443e4cb2e8cccdd402b47a595d16658')

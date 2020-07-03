@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class FujitsuMpi(Package):
@@ -27,6 +28,24 @@ class FujitsuMpi(Package):
     def install(self, spec, prefix):
         raise InstallError(
             'Fujitsu MPI is not installable; it is vendor supplied')
+
+    @property
+    def headers(self):
+        hdrs = find_headers('mpi', self.prefix.include, recursive=True)
+        hdrs.directories = os.path.dirname(hdrs[0])
+        return hdrs or None
+
+    @property
+    def libs(self):
+        query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libmpi']
+
+        if 'cxx' in query_parameters:
+            libraries = ['libmpi_cxx'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=True, recursive=True
+        )
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = self.prefix.bin.mpifcc

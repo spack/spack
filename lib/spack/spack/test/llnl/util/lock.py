@@ -1143,8 +1143,6 @@ def test_nested_reads(lock_path):
                     assert vals['read'] == 1
 
 
-@pytest.mark.skipif('macos' in os.environ.get('GITHUB_WORKFLOW', ''),
-                    reason="Skip failing test for GA on MacOS")
 def test_lock_debug_output(lock_path):
     host = socket.getfqdn()
 
