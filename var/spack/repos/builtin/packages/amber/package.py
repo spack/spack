@@ -10,10 +10,10 @@ import shutil
 
 class Amber(Package, CudaPackage):
     """Amber is a suite of biomolecular simulation programs together
-       with Amber tools. 
+       with Amber tools.
 
-       Note: The version number is composed of the Amber version (major) 
-       and the tools version (minor). A manual download is required for 
+       Note: The version number is composed of the Amber version (major)
+       and the tools version (minor). A manual download is required for
        both Amber and Amber tools.
        Spack will search your current directory for the download files.
        Alternatively, add the files to a mirror so that Spack can find them.
@@ -116,11 +116,11 @@ class Amber(Package, CudaPackage):
     conflicts('+x11', when='platform=cray',
               msg='x11 amber applications not available for cray')
     conflicts('+openmp', when='%clang',
-              msg='OpenMP optimizations not available for the clang compiler')
+              msg='OpenMP not available for the clang compiler')
     conflicts('+openmp', when='%apple-clang',
-              msg='OpenMP optimizations not available for the Apple clang compiler')
+              msg='OpenMP not available for the Apple clang compiler')
     conflicts('+openmp', when='%pgi',
-              msg='OpenMP optimizations not available for the pgi compiler')
+              msg='OpenMP not available for the pgi compiler')
 
     def setup_build_environment(self, env):
         amber_src = self.stage.source_path
