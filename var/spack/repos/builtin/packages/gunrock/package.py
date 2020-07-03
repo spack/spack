@@ -78,7 +78,6 @@ Turn it off explicitly in order to build individual apps like: \n\
               msg='Must specify CUDA compute capabilities of your GPU. \
 See "spack info gunrock"')
 
-
     def cmake_args(self):
         spec = self.spec
         args = []
