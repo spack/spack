@@ -7,7 +7,7 @@ from spack import *
 
 
 class Yoda(AutotoolsPackage):
-    """YODA — Yet more Objects for Data Analysis"""
+    """YODA - Yet more Objects for Data Analysis"""
 
     homepage = "https://yoda.hepforge.org/"
     url      = "https://yoda.hepforge.org/downloads/?f=YODA-1.8.3.tar.bz2"
@@ -54,7 +54,7 @@ class Yoda(AutotoolsPackage):
     version('1.0.4', sha256='697fe397c69689feecb2a731e19b2ff85e19343b8198c4f18a7064c4f7123950')
     version('1.0.3', sha256='6a1d1d75d9d74da457726ea9463c1b0b6ba38d4b43ef54e1c33f885e70fdae4b')
 
-    variant("root", default=False, help="Enable ROOT interface")
+    variant("root", default=False, description="Enable ROOT interface")
 
     depends_on('python', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))

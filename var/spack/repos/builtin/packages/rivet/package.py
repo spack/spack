@@ -7,7 +7,7 @@ from spack import *
 
 
 class Rivet(AutotoolsPackage):
-    """Rivet — the particle-physics MC analysis toolkit"""
+    """Rivet - the particle-physics MC analysis toolkit"""
 
     homepage = "https://rivet.hepforge.org/"
     url      = "https://rivet.hepforge.org/downloads/?f=Rivet-3.1.2.tar.bz2"
