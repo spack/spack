@@ -85,7 +85,7 @@ See "spack info gunrock"')
 
         app_list = self.spec.variants['applications'].value
         if app_list[0] != 'none':
-                args.append([
+                args.extend([
                     '-DGUNROCK_BUILD_APPLICATIONS={0}'.format(
                         'ON' if 'all'           in app_list else 'OFF'),
                     '-DGUNROCK_APP_BC={0}'.format(
