@@ -27,11 +27,22 @@ correspond to one feature/bugfix/extension/etc. One can create PRs with
 changes relevant to different ideas, however reviewing such PRs becomes tedious
 and error prone. If possible, try to follow the **one-PR-one-package/feature** rule.
 
-Spack uses a rough approximation of the `Git Flow <http://nvie.com/posts/a-successful-git-branching-model/>`_
-branching model. The develop branch contains the latest contributions, and
-master is always tagged and points to the latest stable release. Therefore, when
-you send your request, make ``develop`` the destination branch on the
-`Spack repository <https://github.com/spack/spack>`_.
+--------
+Branches
+--------
+
+Spack's ``develop`` branch has the latest contributions. Nearly all pull
+requests should start from ``develop`` and target ``develop``.
+
+There is a branch for each major release series. Release branches
+originate from ``develop`` and have tags for each point release in the
+series. For example, ``releases/v0.14`` has tags for ``0.14.0``,
+``0.14.1``, ``0.14.2``, etc. versions of Spack. We backport important bug
+fixes to these branches, but we do not advance the package versions or
+make other changes that would change the way Spack concretizes
+dependencies. Currently, the maintainers manage these branches by
+cherry-picking from ``develop``. See :ref:`releases` for more
+information.
 
 ----------------------
 Continuous Integration

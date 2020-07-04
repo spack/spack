@@ -78,11 +78,27 @@ these guidelines with [Travis CI](https://travis-ci.org/spack/spack).  To
 run these tests locally, and for helpful tips on git, see our
 [Contribution Guide](http://spack.readthedocs.io/en/latest/contribution_guide.html).
 
-Spack uses a rough approximation of the
-[Git Flow](http://nvie.com/posts/a-successful-git-branching-model/)
-branching model.  The ``develop`` branch contains the latest
-contributions, and ``master`` is always tagged and points to the latest
-stable release.
+Spack's `develop` branch has the latest contributions. Pull requests
+should target `develop`, and users who want the latest package versions,
+features, etc. can use `develop`.
+
+Releases
+--------
+
+For multi-user site deployments or other use cases that need very stable
+software installations, we recommend using Spack's
+[stable releases](https://github.com/spack/spack/releases).
+
+Each Spack release series also has a corresponding branch, e.g.
+`releases/v0.14` has `0.14.x` versions of Spack, and `releases/v0.13` has
+`0.13.x` versions. We backport important bug fixes to these branches but
+we do not advance the package versions or make other changes that would
+change the way Spack concretizes dependencies within a release branch.
+So, you can base your Spack deployment on a release branch and `git pull`
+to get fixes, without the package churn that comes with `develop`.
+
+See the [docs on releases](https://spack.readthedocs.io/en/latest/developer_guide.html#releases)
+for more details.
 
 Code of Conduct
 ------------------------
