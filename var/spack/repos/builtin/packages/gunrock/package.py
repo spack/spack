@@ -120,6 +120,6 @@ See "spack info gunrock"')
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             install_tree('lib', prefix.lib)
-            # bin dir is created only tests/examples are built
+            # bin dir is created only if tests/examples are built
             if '+tests' in spec:
                 install_tree('bin', prefix.bin)
