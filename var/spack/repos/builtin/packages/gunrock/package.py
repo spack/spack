@@ -68,7 +68,7 @@ See "spack info gunrock"')
                         'ON' if '+shared_libs' in spec else 'OFF'),
                     '-DGUNROCK_BUILD_TESTS={0}'.format(
                         'ON' if '+tests' in spec else 'OFF'),
-                    '-DGUNROCK_BUILD_MGPU_TESTS={0}'.format(
+                    '-DGUNROCK_MGPU_TESTS={0}'.format(
                         'ON' if '+mgpu_tests' in spec else 'OFF'),
                     '-DCUDA_VERBOSE_PTXAS={0}'.format(
                         'ON' if '+cuda_verbose_ptxas' in spec else 'OFF'),
