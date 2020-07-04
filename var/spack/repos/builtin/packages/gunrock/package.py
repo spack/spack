@@ -88,32 +88,32 @@ See "spack info gunrock"')
 
         app_list = self.spec.variants['applications'].value
         if app_list[0] != 'none':
-                args.extend([
-                    '-DGUNROCK_BUILD_APPLICATIONS={0}'.format(
-                        'ON' if 'all'           in app_list else 'OFF'),
-                    '-DGUNROCK_APP_BC={0}'.format(
-                        'ON' if 'bc'           in app_list else 'OFF'),
-                    '-DGUNROCK_APP_BFS={0}'.format(
-                        'ON' if 'bfs'          in app_list else 'OFF'),
-                    '-DGUNROCK_APP_CC={0}'.format(
-                        'ON' if 'cc'           in app_list else 'OFF'),
-                    '-DGUNROCK_APP_PR={0}'.format(
-                        'ON' if 'pr'           in app_list else 'OFF'),
-                    '-DGUNROCK_APP_SSSP={0}'.format(
-                        'ON' if 'sssp'         in app_list else 'OFF'),
-                    '-DGUNROCK_APP_DOBFS={0}'.format(
-                        'ON' if 'dobfs'        in app_list else 'OFF'),
-                    '-DGUNROCK_APP_HITS={0}'.format(
-                        'ON' if 'hits'         in app_list else 'OFF'),
-                    '-DGUNROCK_APP_SALSA={0}'.format(
-                        'ON' if 'salsa'        in app_list else 'OFF'),
-                    '-DGUNROCK_APP_MST={0}'.format(
-                        'ON' if 'mst'          in app_list else 'OFF'),
-                    '-DGUNROCK_APP_WTF={0}'.format(
-                        'ON' if '+app_wtf'     in app_list else 'OFF'),
-                    '-DGUNROCK_APP_TOPK={0}'.format(
-                        'ON' if '+app_topk'    in app_list else 'OFF'),
-                ])
+            args.extend([
+                '-DGUNROCK_BUILD_APPLICATIONS={0}'.format(
+                    'ON' if 'all'           in app_list else 'OFF'),
+                '-DGUNROCK_APP_BC={0}'.format(
+                    'ON' if 'bc'           in app_list else 'OFF'),
+                '-DGUNROCK_APP_BFS={0}'.format(
+                    'ON' if 'bfs'          in app_list else 'OFF'),
+                '-DGUNROCK_APP_CC={0}'.format(
+                    'ON' if 'cc'           in app_list else 'OFF'),
+                '-DGUNROCK_APP_PR={0}'.format(
+                    'ON' if 'pr'           in app_list else 'OFF'),
+                '-DGUNROCK_APP_SSSP={0}'.format(
+                    'ON' if 'sssp'         in app_list else 'OFF'),
+                '-DGUNROCK_APP_DOBFS={0}'.format(
+                    'ON' if 'dobfs'        in app_list else 'OFF'),
+                '-DGUNROCK_APP_HITS={0}'.format(
+                    'ON' if 'hits'         in app_list else 'OFF'),
+                '-DGUNROCK_APP_SALSA={0}'.format(
+                    'ON' if 'salsa'        in app_list else 'OFF'),
+                '-DGUNROCK_APP_MST={0}'.format(
+                    'ON' if 'mst'          in app_list else 'OFF'),
+                '-DGUNROCK_APP_WTF={0}'.format(
+                    'ON' if '+app_wtf'     in app_list else 'OFF'),
+                '-DGUNROCK_APP_TOPK={0}'.format(
+                    'ON' if '+app_topk'    in app_list else 'OFF'),
+            ])
 
         return args
 
