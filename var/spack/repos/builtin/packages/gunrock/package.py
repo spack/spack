@@ -36,7 +36,7 @@ class Gunrock(CMakePackage, CudaPackage):
     variant('google_tests',         default=False, description='Build unit tests using googletest')
     variant('code_coverage',        default=False, description="run code coverage on Gunrock's source code")
     # apps
-    msg='select either all or individual applications'
+    msg = 'select either all or individual applications'
     variant(
         "applications",
         values=disjoint_sets(
@@ -113,7 +113,7 @@ See "spack info gunrock"')
                         'ON' if '+app_wtf'     in app_list else 'OFF'),
                     '-DGUNROCK_APP_TOPK={0}'.format(
                         'ON' if '+app_topk'    in app_list else 'OFF'),
-                    ])
+                ])
 
         return args
 
