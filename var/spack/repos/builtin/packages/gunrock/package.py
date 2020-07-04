@@ -84,7 +84,7 @@ See "spack info gunrock"')
         cuda_arch_list = self.spec.variants['cuda_arch'].value
         if cuda_arch_list[0] != 'none':
             for carch in cuda_arch_list:
-                args.append('-DGUNROCK_BUILD_GENCODE_SM' + carch + '=ON')
+                args.append('-DGUNROCK_GENCODE_SM' + carch + '=ON')
 
         app_list = self.spec.variants['applications'].value
         if app_list[0] != 'none':
