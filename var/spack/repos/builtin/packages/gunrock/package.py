@@ -46,12 +46,12 @@ class Gunrock(CMakePackage, CudaPackage):
         description="Application to be built"
     )
 
-    variant('boost@1.58.0:', default=True, description='Build with Boost')
+    variant('boost', default=True, description='Build with Boost')
     variant('metis', default=False, description='Build with Metis support')
 
     depends_on('googletest', when='+google_tests')
     depends_on('lcov', when='+code_coverage')
-    depends_on('boost', when='+boost')
+    depends_on('boost@1.58.0:', when='+boost')
     depends_on('metis', when='+metis')
 
     conflicts('cuda_arch=none', when='+cuda',
