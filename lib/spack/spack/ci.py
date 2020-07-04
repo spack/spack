@@ -493,7 +493,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     after_script = None
     if custom_spack_repo:
         if not custom_spack_ref:
-            custom_spack_ref = 'master'
+            custom_spack_ref = 'develop'
         before_script = [
             ('git clone "{0}"'.format(custom_spack_repo)),
             'pushd ./spack && git checkout "{0}" && popd'.format(

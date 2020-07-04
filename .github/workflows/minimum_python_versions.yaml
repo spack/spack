@@ -3,13 +3,12 @@ name: python version check
 on:
   push:
     branches:
-      - master
       - develop
       - releases/**
   pull_request:
     branches:
-      - master
       - develop
+      - releases/**
 jobs:
   validate:
 

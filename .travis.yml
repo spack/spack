@@ -1,7 +1,6 @@
-# Only build master and develop on push; do not build every branch.
+# Only build releases and develop on push; do not build every branch.
 branches:
   only:
-    - master
     - develop
     - /^releases\/.*$/
 
