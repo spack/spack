@@ -3,13 +3,12 @@ name: macos tests
 on:
   push:
     branches:
-      - master
       - develop
       - releases/**
   pull_request:
     branches:
-      - master
       - develop
+      - releases/**
 jobs:
   build:
 
