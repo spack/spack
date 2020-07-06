@@ -1,8 +1,14 @@
+commit cd9f909a3a1715377ae492ab8d05b77bbec42a3a
+Author: Toyohisa Kameyama <kameyama@riken.jp>
+Date:   Mon Jul 6 16:03:22 2020 +0900
+
+        Add LIBS to libnetcdf to use configure and nc-config.
+
 diff --git a/configure.ac b/configure.ac
-index ad17465..e020e96 100644
+index b454a5b..09dbe0a 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -198,11 +198,13 @@ AS_IF([test "x$ac_cv_path_NCCONF" != "x"],
+@@ -197,6 +197,8 @@ AS_IF([test "x$ac_cv_path_NCCONF" != "x"],
        nc_has_logging=`$ac_cv_path_NCCONF --has-logging`
        nc_has_dap=`$ac_cv_path_NCCONF --has-dap`
        nc_has_pnetcdf=`$ac_cv_path_NCCONF --has-pnetcdf`
@@ -11,9 +17,3 @@ index ad17465..e020e96 100644
      ],
      [
        # See if these functions are in the library.
-       AC_CHECK_HEADERS([netcdf.h], [], [AC_MSG_ERROR([netcdf.h could not be found. Please set CPPFLAGS.])])
--      AC_SEARCH_LIBS([nc_create], [netcdf], [], [])
-+      AC_CHECK_LIB([netcdf], [nc_create], [], [])
-       AC_CHECK_FUNCS([nc_def_opaque nccreate nc_set_log_level oc_open nc_use_parallel_enabled])
- 
-       # Whether we build/test some functionality depends on what we found in
