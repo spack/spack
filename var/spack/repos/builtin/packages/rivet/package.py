@@ -105,7 +105,7 @@ class Rivet(AutotoolsPackage):
         if self.spec.satisfies('@:1.999.999'):
             args += ['--with-boost-incpath=' + self.spec['boost'].includes]
         else:
-            if spec.satisfies('@:2.5.0,@3:'):
+            if spec.satisfies('@:2.5.0,3:'):
                 args += ['--with-boost=' + self.spec['boost'].prefix]
 
         args += ['--with-fastjet=' + self.spec['fastjet'].prefix]
