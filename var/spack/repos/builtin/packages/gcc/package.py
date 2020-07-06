@@ -103,7 +103,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('zlib', when='@6:')
     depends_on('libiconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
-    depends_on('binutils~libiberty', when='+binutils')
+    depends_on('binutils~libiberty', when='+binutils', type=('build', 'link', 'run'))
     depends_on('zip', type='build', when='languages=java')
     depends_on('cuda', when='+nvptx')
 
@@ -341,8 +341,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # enable appropriate bootstrapping flags
         stage1_ldflags = str(self.rpath_args)
         boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
-        if '%gcc' in spec:
-            stage1_ldflags = boot_ldflags
         options.append('--with-stage1-ldflags=' + stage1_ldflags)
         options.append('--with-boot-ldflags=' + boot_ldflags)
 
