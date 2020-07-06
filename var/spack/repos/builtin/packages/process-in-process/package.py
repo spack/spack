@@ -29,28 +29,28 @@ class ProcessInProcess(Package):
     def check(self):
         make('install-test')
 
-    def install(self, spec, prefix):
-        arch = spec.architecture
+    def flag_handler(self, name, flags):
+        arch = self.spec.architecture
         if arch.os not in ['centos7', 'rhel7', 'centos8', 'rhel8']:
             raise InstallError('Unsupported operating system.')
+        return (flags, None, None)
 
+    def install(self, spec, prefix):
         bash = which('bash')
 
-        prefix_glibc = prefix + '/glibc'
-        prefix_pip   = prefix
-        prefix_gdb   = prefix
-        with working_dir('PiP-glibc/PiP-glibc.build', create=True):
-            bash('../PiP-glibc/build.sh', '%s' % prefix_glibc)
+        glibc_builddir = join_path('PiP-glibc', 'PiP-glibc.build')
+        with working_dir(glibc_builddir, create=True):
+            bash(join_path('..', 'PiP-glibc', 'build.sh'), prefix.glibc)
 
-        configure('--prefix=%s' % prefix_pip,
-                  '--with-glibc-libdir=%s/lib' % prefix_glibc)
+        configure('--prefix=%s' % prefix,
+                  '--with-glibc-libdir=%s' % prefix.glibc.lib)
         make()
         make('install')
         make('doxygen-install')  # installing already-doxygen-ed man pages
-        bash('%s/bin/piplnlibs' % prefix_pip)
+        bash(prefix.bin.piplnlibs)
 
-        with working_dir('PiP-gdb/PiP-gdb'):
+        with working_dir(join_path('PiP-gdb', 'PiP-gdb')):
             bash('build.sh',
-                 '--prefix=%s' % prefix_gdb,
-                 '--with-glibc-libdir=%s/lib' % prefix_glibc,
-                 '--with-pip=%s' % prefix_pip)
+                 '--prefix=%s' % prefix,
+                 '--with-glibc-libdir=%s' % prefix.glibc.lib,
+                 '--with-pip=%s' % prefix)
