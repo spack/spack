@@ -30,7 +30,7 @@ class Mumax(MakefilePackage, CudaPackage):
     conflicts('~cuda', msg='mumax requires cuda')
 
     patch('https://github.com/mumax/3/commit/2cf5c9a6985c9eb16a124c6bd96aed75b4a30c24.patch',
-         sha256='a43b2ca6c9f9edfb1fd6d916a599f85a57c8bb3f9ee38148b1988fd82feec8ad')
+          sha256='a43b2ca6c9f9edfb1fd6d916a599f85a57c8bb3f9ee38148b1988fd82feec8ad')
 
     @property
     def gopath(self):
