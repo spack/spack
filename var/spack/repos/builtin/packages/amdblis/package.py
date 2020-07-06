@@ -17,8 +17,14 @@ class Amdblis(BlisBase):
 
     _name = 'amdblis'
     homepage = "https://developer.amd.com/amd-aocl/blas-library/"
-    url = "https://github.com/amd/blis/archive/2.1.tar.gz"
+    url = "https://github.com/amd/blis/archive/2.2.tar.gz"
     git = "https://github.com/amd/blis.git"
 
     version('2.2', sha256='e1feb60ac919cf6d233c43c424f6a8a11eab2c62c2c6e3f2652c15ee9063c0c9')
     version('2.1', sha256='3b1d611d46f0f13b3c0917e27012e0f789b23dbefdddcf877b20327552d72fb3')
+    version('2.0', sha256='7469680ce955f39d8d6bb7f70d2cc854222e5ef92a39488e77421300a65fad83')
+    version('1.3', sha256='6ce42054d63564f57a7276e7c63f3d01ed96a64908b484a99e68309acc968745')
+
+    @run_after('build')
+    def check(self):
+        make('check')
