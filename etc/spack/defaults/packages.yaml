@@ -47,6 +47,7 @@ packages:
       tbb: [intel-tbb]
       unwind: [libunwind]
       sycl: [hipsycl]
+      flame: [libflame]
     permissions:
       read: world
       write: user
