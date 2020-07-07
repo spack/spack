@@ -78,7 +78,7 @@ class Yoda(AutotoolsPackage):
         if self.spec.satisfies('@:1.6.0'):
             args += '--with-boost=' + self.spec['boost'].prefix
 
-        if '+root' in spec:
+        if '+root' in self.spec:
             args += '--enable-root'
 
         return args
