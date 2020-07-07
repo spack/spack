@@ -95,6 +95,10 @@ class CMakePackage(PackageBase):
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     depends_on('cmake', type='build')
+    if generator == 'Unix Makefiles':
+        depends_on('gmake', type='build')
+    elif generator == 'Ninja':
+        depends_on('ninja', type='build')
 
     @property
     def archive_files(self):
