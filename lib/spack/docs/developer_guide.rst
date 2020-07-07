@@ -557,8 +557,10 @@ packages. They should generally only contain fixes to the Spack core.
 
 Both major and minor releases are tagged. After each release, we merge
 the release branch back into ``develop`` so that the version bump and any
-other release-specific changes are visible in the mainline (see
-:ref:`merging-releases-to-develop`).
+other release-specific changes are visible in the mainline. As a
+convenience, we also tag the latest release as ``releases/latest``,
+so that users can easily check it out to get the latest
+stable version. See :ref:`merging-releases` for more details.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -641,7 +643,7 @@ for a major release, the steps to make the release are as follows:
 
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases-to-develop`.
+#. Follow the steps in :ref:`merging-releases`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
@@ -744,7 +746,7 @@ release:
 
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases-to-develop`.
+#. Follow the steps in :ref:`merging-releases`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
@@ -794,45 +796,70 @@ Publishing a release on GitHub
       for ``download_count`` to see this.
 
 
-.. _merging-releases-to-develop:
+.. _merging-releases:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Merging back into ``develop``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updating `develop` and `releases/latest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once each release is complete, make sure that it is merged back into
-``develop`` with a merge commit:
+We merge each release into ``develop``, we tag the latest release as
+``releases/latest``.
 
-.. code-block:: console
+#. Once each release is complete, make sure that it is merged back into
+   ``develop`` with a merge commit:
 
-   $ git checkout develop
-   $ git merge --no-ff releases/v0.15
-   $ git push
+   .. code-block:: console
 
-We merge back to ``develop`` because it:
+      $ git checkout develop
+      $ git merge --no-ff releases/vX.Y  # vX.Y is the new release's branch
+      $ git push
 
-  * updates the version and ``CHANGELOG.md`` on ``develop``.
-  * ensures that your release tag is reachable from the head of
-    ``develop``
+   We merge back to ``develop`` because it:
 
-We *must* use a real merge commit (via the ``--no-ff`` option) because it
-ensures that the release tag is reachable from the tip of ``develop``.
-This is necessary for ``spack -V`` to work properly -- it uses ``git
-describe --tags`` to find the last reachable tag in the repository and
-reports how far we are from it. For example:
+     * updates the version and ``CHANGELOG.md`` on ``develop``.
+     * ensures that your release tag is reachable from the head of
+       ``develop``
 
-.. code-block:: console
+   We *must* use a real merge commit (via the ``--no-ff`` option) because it
+   ensures that the release tag is reachable from the tip of ``develop``.
+   This is necessary for ``spack -V`` to work properly -- it uses ``git
+   describe --tags`` to find the last reachable tag in the repository and
+   reports how far we are from it. For example:
 
-   $ spack -V
-   0.14.2-1486-b80d5e74e5
+   .. code-block:: console
 
-This says that we are at commit ``b80d5e74e5``, which is 1,486 commits
-ahead of the ``0.14.2`` release.
+      $ spack -V
+      0.14.2-1486-b80d5e74e5
 
-We put this step last in the process because it's best to do it only once
-the release is complete and tagged. If you do it before you've tagged the
-release and later decide you want to tag some later commit, you'll need
-to merge again.
+   This says that we are at commit ``b80d5e74e5``, which is 1,486 commits
+   ahead of the ``0.14.2`` release.
+
+   We put this step last in the process because it's best to do it only once
+   the release is complete and tagged. If you do it before you've tagged the
+   release and later decide you want to tag some later commit, you'll need
+   to merge again.
+
+#. If the new release is the **highest** Spack release yet, you should
+   also tag it as ``releases/latest``. For example, suppose the highest
+   release is currently ``0.15.3``:
+
+     * If you are releasing ``0.15.4`` or ``0.16.0``, then you should tag
+       it with ``releases/latest``, as these are higher than ``0.15.3``.
+
+     * If you are making a new release of an **older** major version of
+       Spack, e.g. ``0.14.4``, then you should not tag it as
+       ``releases/latest`` (as there are newer major versions).
+
+   To tag ``releases/latest``, do this:
+
+   .. code-block:: console
+
+      $ git checkout releases/vX.Y     # vX.Y is the new release's branch
+      $ git tag --force releases/latest
+      $ git push --tags
+
+   The ``--force`` argument makes ``git`` overwrite the existing
+   ``releases/latest`` tag with the new one.
 
 
 .. _announcing-releases:
