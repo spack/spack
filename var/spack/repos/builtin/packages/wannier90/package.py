@@ -196,7 +196,7 @@ class Wannier90(MakefilePackage):
             join_path(self.prefix.bin, 'w90vdw.x')
         )
 
-        if '@:2.999.999' in spec:
+        if spec.satisfies('@:2.99')
             install(
                 join_path(self.stage.source_path,
                           'utility', 'w90pov', 'w90pov'),
