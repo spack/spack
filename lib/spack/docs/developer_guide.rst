@@ -558,8 +558,8 @@ packages. They should generally only contain fixes to the Spack core.
 Both major and minor releases are tagged. After each release, we merge
 the release branch back into ``develop`` so that the version bump and any
 other release-specific changes are visible in the mainline. As a
-convenience, we also merge the latest release into ``releases/latest``,
-so that users can easily check out a single branch to get the latest
+convenience, we also tag the latest release as ``releases/latest``,
+so that users can easily check it out to get the latest
 stable version. See :ref:`merging-releases` for more details.
 
 
