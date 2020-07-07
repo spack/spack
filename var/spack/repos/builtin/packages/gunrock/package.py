@@ -92,27 +92,27 @@ See "spack info gunrock"')
                 '-DGUNROCK_BUILD_APPLICATIONS={0}'.format(
                     'ON' if spec.satisfies('applications=all') else 'OFF'),
                 '-DGUNROCK_APP_BC={0}'.format(
-                    'ON' if 'bc'           in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=bc') else 'OFF'),
                 '-DGUNROCK_APP_BFS={0}'.format(
-                    'ON' if 'bfs'          in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=bfs') else 'OFF'),
                 '-DGUNROCK_APP_CC={0}'.format(
-                    'ON' if 'cc'           in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=cc') else 'OFF'),
                 '-DGUNROCK_APP_PR={0}'.format(
-                    'ON' if 'pr'           in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=pr') else 'OFF'),
                 '-DGUNROCK_APP_SSSP={0}'.format(
-                    'ON' if 'sssp'         in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=sssp') else 'OFF'),
                 '-DGUNROCK_APP_DOBFS={0}'.format(
-                    'ON' if 'dobfs'        in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=dobfs') else 'OFF'),
                 '-DGUNROCK_APP_HITS={0}'.format(
-                    'ON' if 'hits'         in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=hits') else 'OFF'),
                 '-DGUNROCK_APP_SALSA={0}'.format(
-                    'ON' if 'salsa'        in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=salsa') else 'OFF'),
                 '-DGUNROCK_APP_MST={0}'.format(
-                    'ON' if 'mst'          in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=mst') else 'OFF'),
                 '-DGUNROCK_APP_WTF={0}'.format(
-                    'ON' if '+app_wtf'     in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=wtf') else 'OFF'),
                 '-DGUNROCK_APP_TOPK={0}'.format(
-                    'ON' if '+app_topk'    in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=topk') else 'OFF'),
             ])
 
         return args
