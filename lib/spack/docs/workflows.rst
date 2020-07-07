@@ -1408,8 +1408,8 @@ The main points that are implemented below:
      - if ! which spack >/dev/null; then
          mkdir -p $SPACK_ROOT &&
          git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
-         echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml **
-         echo -e "packages:""\n  all:""\n    target:"" ['x86_64']"
+         printf "config:\n  build_jobs: 2\n" > $SPACK_ROOT/etc/spack/config.yaml &&
+         printf "packages:\n  all:\n    target: ['x86_64']\n" \
                  > $SPACK_ROOT/etc/spack/packages.yaml;
        fi
      - travis_wait spack install cmake@3.7.2~openssl~ncurses
