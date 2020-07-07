@@ -35,6 +35,7 @@ class Acts(CMakePackage, CudaPackage):
 
     # Supported Acts versions
     version('master', branch='master')
+    version('0.25.2', commit='76bf1f3e4be51d4d27126b473a2caa8d8a72b320')
     version('0.25.1', commit='6e8a1ea6d2c7385a78e3e190efb2a8a0c1fa957f')
     version('0.25.0', commit='0aca171951a214299e8ff573682b1c5ecec63d42')
     version('0.24.0', commit='ef4699c8500bfea59a5fe88bed67fde2f00f0adf')
