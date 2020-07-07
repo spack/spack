@@ -60,10 +60,12 @@ class Rivet(AutotoolsPackage):
     version('1.1.1',  sha256='bd87fefee6bb8368216755342dc80ab3f8f3c813732dd03c6f94135d45f7036b')
 
     # According to A. Buckley (main Rivet developer):
-    # "typically a given Rivet version will work with all YODA releases of that middle-digit
-    # version, and maybe oldertypically a given Rivet version will work with all YODA releases
-    # of that middle-digit version, and maybe older". The versions below are taken from LCG stack
-    # which, in most cases, is the definition of "latest" at the moment of release.
+    # "typically a given Rivet version will work with
+    # all YODA releases of that middle-digit version,
+    # and maybe older. Generally it's always a good idea
+    # to be using the latest versions of both.". The versions below
+    # are taken from LCG stack which, in most cases, is the definition
+    # of "latest" at the moment of release.
     depends_on('yoda@1.0.4', when='@2.0.0')
     depends_on('yoda@1.0.5', when='@2.1.0')
     depends_on('yoda@1.0.6', when='@2.1.1')
@@ -88,8 +90,8 @@ class Rivet(AutotoolsPackage):
     depends_on('yoda@1.8.2', when='@3.1.1')
     depends_on('yoda@1.8.3', when='@3.1.2')
 
-    # The following versions were not a part of LCG stack and thus the exact version
-    # of YODA is unknown
+    # The following versions were not a part of LCG stack
+    # and thus the exact version of YODA is unknown
     depends_on('yoda@1.7.0:1.7.999', when='@2.6.0,2.7.0,2.7.1,3.0.0,3.0.2,3.1.0')
     depends_on('yoda@1.5.0:1.5.999', when='@2.4.1')
 
