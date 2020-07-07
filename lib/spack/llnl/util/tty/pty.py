@@ -31,17 +31,17 @@ from spack.util.executable import which
 class ProcessController(object):
     """Wrapper around some fundamental process control operations.
 
-    This allows one process to drive another similar to the way a shell
-    would, by sending signals and I/O.
+    This allows one process (the controller) to drive another (the
+    minion) similar to the way a shell would, by sending signals and I/O.
 
     """
-    def __init__(self, pid, master_fd,
+    def __init__(self, pid, controller_fd,
                  timeout=1, sleep_time=1e-1, debug=False):
         """Create a controller to manipulate the process with id ``pid``
 
         Args:
             pid (int): id of process to control
-            master_fd (int): master file descriptor attached to pid's stdin
+            controller_fd (int): controller fd attached to pid's stdin
             timeout (int): time in seconds for wait operations to time out
                 (default 1 second)
             sleep_time (int): time to sleep after signals, to control the
@@ -58,7 +58,7 @@ class ProcessController(object):
         """
         self.pid = pid
         self.pgid = os.getpgid(pid)
-        self.master_fd = master_fd
+        self.controller_fd = controller_fd
         self.timeout = timeout
         self.sleep_time = sleep_time
         self.debug = debug
@@ -67,8 +67,8 @@ class ProcessController(object):
         self.ps = which("ps", required=True)
 
     def get_canon_echo_attrs(self):
-        """Get echo and canon attributes of the terminal of master_fd."""
-        cfg = termios.tcgetattr(self.master_fd)
+        """Get echo and canon attributes of the terminal of controller_fd."""
+        cfg = termios.tcgetattr(self.controller_fd)
         return (
             bool(cfg[3] & termios.ICANON),
             bool(cfg[3] & termios.ECHO),
@@ -82,7 +82,7 @@ class ProcessController(object):
             )
 
     def status(self):
-        """Print debug message with status info for the child."""
+        """Print debug message with status info for the minion."""
         if self.debug:
             canon, echo = self.get_canon_echo_attrs()
             sys.stderr.write("canon: %s, echo: %s\n" % (
@@ -94,12 +94,12 @@ class ProcessController(object):
             sys.stderr.write("\n")
 
     def input_on(self):
-        """True if keyboard input is enabled on the master_fd pty."""
+        """True if keyboard input is enabled on the controller_fd pty."""
         return self.get_canon_echo_attrs() == (False, False)
 
     def background(self):
-        """True if pgid is in a background pgroup of master_fd's terminal."""
-        return self.pgid != os.tcgetpgrp(self.master_fd)
+        """True if pgid is in a background pgroup of controller_fd's tty."""
+        return self.pgid != os.tcgetpgrp(self.controller_fd)
 
     def tstp(self):
         """Send SIGTSTP to the controlled process."""
@@ -115,18 +115,18 @@ class ProcessController(object):
     def fg(self):
         self.horizontal_line("fg")
         with log.ignore_signal(signal.SIGTTOU):
-            os.tcsetpgrp(self.master_fd, os.getpgid(self.pid))
+            os.tcsetpgrp(self.controller_fd, os.getpgid(self.pid))
         time.sleep(self.sleep_time)
 
     def bg(self):
         self.horizontal_line("bg")
         with log.ignore_signal(signal.SIGTTOU):
-            os.tcsetpgrp(self.master_fd, os.getpgrp())
+            os.tcsetpgrp(self.controller_fd, os.getpgrp())
         time.sleep(self.sleep_time)
 
     def write(self, byte_string):
         self.horizontal_line("write '%s'" % byte_string.decode("utf-8"))
-        os.write(self.master_fd, byte_string)
+        os.write(self.controller_fd, byte_string)
 
     def wait(self, condition):
         start = time.time()
@@ -156,50 +156,51 @@ class ProcessController(object):
 
 
 class PseudoShell(object):
-    """Sets up master and child processes with a PTY.
+    """Sets up controller and minion processes with a PTY.
 
     You can create a ``PseudoShell`` if you want to test how some
     function responds to terminal input.  This is a pseudo-shell from a
-    job control perspective; ``master_function`` and ``child_function``
-    are set up with a pseudoterminal (pty) so that the master can drive
-    the child through process control signals and I/O.
+    job control perspective; ``controller_function`` and ``minion_function``
+    are set up with a pseudoterminal (pty) so that the controller can drive
+    the minion through process control signals and I/O.
 
     The two functions should have signatures like this::
 
-        def master_function(proc, ctl, **kwargs)
-        def child_function(**kwargs)
+        def controller_function(proc, ctl, **kwargs)
+        def minion_function(**kwargs)
 
-    ``master_function`` is spawned in its own process and passed three
+    ``controller_function`` is spawned in its own process and passed three
     arguments:
 
     proc
-        the ``multiprocessing.Process`` object representing the child
+        the ``multiprocessing.Process`` object representing the minion
     ctl
-        a ``ProcessController`` object tied to the child
+        a ``ProcessController`` object tied to the minion
     kwargs
         keyword arguments passed from ``PseudoShell.start()``.
 
-    ``child_function`` is only passed ``kwargs`` delegated from
+    ``minion_function`` is only passed ``kwargs`` delegated from
     ``PseudoShell.start()``.
 
-    The ``ctl.master_fd`` will have its ``master_fd`` connected to
-    ``sys.stdin`` in the child process. Both processes will share the
+    The ``ctl.controller_fd`` will have its ``controller_fd`` connected to
+    ``sys.stdin`` in the minion process. Both processes will share the
     same ``sys.stdout`` and ``sys.stderr`` as the process instantiating
     ``PseudoShell``.
 
     Here are the relationships between processes created::
 
         ._________________________________________________________.
-        | Child Process                                           | pid     2
-        | - runs child_function                                   | pgroup  2
+        | Minion Process                                          | pid     2
+        | - runs minion_function                                  | pgroup  2
         |_________________________________________________________| session 1
             ^
-            | create process with master_fd connected to stdin
+            | create process with controller_fd connected to stdin
             | stdout, stderr are the same as caller
         ._________________________________________________________.
-        | Master Process                                          | pid     1
-        | - runs master_function                                  | pgroup  1
-        | - uses ProcessController and master_fd to control child | session 1
+        | Controller Process                                      | pid     1
+        | - runs controller_function                              | pgroup  1
+        | - uses ProcessController and controller_fd to           | session 1
+        |   control minion                                        |
         |_________________________________________________________|
             ^
             | create process
@@ -207,51 +208,51 @@ class PseudoShell(object):
         ._________________________________________________________.
         | Caller                                                  |  pid     0
         | - Constructs, starts, joins PseudoShell                 |  pgroup  0
-        | - provides master_function, child_function              |  session 0
+        | - provides controller_function, minion_function         |  session 0
         |_________________________________________________________|
 
     """
-    def __init__(self, master_function, child_function):
+    def __init__(self, controller_function, minion_function):
         self.proc = None
-        self.master_function = master_function
-        self.child_function = child_function
+        self.controller_function = controller_function
+        self.minion_function = minion_function
 
         # these can be optionally set to change defaults
         self.controller_timeout = 1
         self.sleep_time = 0
 
     def start(self, **kwargs):
-        """Start the master and child processes.
+        """Start the controller and minion processes.
 
         Arguments:
             kwargs (dict): arbitrary keyword arguments that will be
-                passed to master and child functions
+                passed to controller and minion functions
 
-        The master process will create the child, then call
-        ``master_function``.  The child process will call
-        ``child_function``.
+        The controller process will create the minion, then call
+        ``controller_function``.  The minion process will call
+        ``minion_function``.
 
         """
         self.proc = multiprocessing.Process(
-            target=PseudoShell._set_up_and_run_master_function,
-            args=(self.master_function, self.child_function,
+            target=PseudoShell._set_up_and_run_controller_function,
+            args=(self.controller_function, self.minion_function,
                   self.controller_timeout, self.sleep_time),
             kwargs=kwargs,
         )
         self.proc.start()
 
     def join(self):
-        """Wait for the child process to finish, and return its exit code."""
+        """Wait for the minion process to finish, and return its exit code."""
         self.proc.join()
         return self.proc.exitcode
 
     @staticmethod
-    def _set_up_and_run_child_function(
-            tty_name, stdout_fd, stderr_fd, ready, child_function, **kwargs):
-        """Child process wrapper for PseudoShell.
+    def _set_up_and_run_minion_function(
+            tty_name, stdout_fd, stderr_fd, ready, minion_function, **kwargs):
+        """Minion process wrapper for PseudoShell.
 
         Handles the mechanics of setting up a PTY, then calls
-        ``child_function``.
+        ``minion_function``.
 
         """
         # new process group, like a command or pipeline launched by a shell
@@ -266,45 +267,45 @@ class PseudoShell(object):
 
         if kwargs.get("debug"):
             sys.stderr.write(
-                "child: stdin.isatty(): %s\n" % sys.stdin.isatty())
+                "minion: stdin.isatty(): %s\n" % sys.stdin.isatty())
 
         # tell the parent that we're really running
         if kwargs.get("debug"):
-            sys.stderr.write("child: ready!\n")
+            sys.stderr.write("minion: ready!\n")
         ready.value = True
 
         try:
-            child_function(**kwargs)
+            minion_function(**kwargs)
         except BaseException:
             traceback.print_exc()
 
     @staticmethod
-    def _set_up_and_run_master_function(
-            master_function, child_function, controller_timeout, sleep_time,
-            **kwargs):
-        """Set up a pty, spawn a child process, and execute master_function.
+    def _set_up_and_run_controller_function(
+            controller_function, minion_function, controller_timeout,
+            sleep_time, **kwargs):
+        """Set up a pty, spawn a minion process, execute controller_function.
 
         Handles the mechanics of setting up a PTY, then calls
-        ``master_function``.
+        ``controller_function``.
 
         """
         os.setsid()   # new session; this process is the controller
 
-        master_fd, child_fd = os.openpty()
-        pty_name = os.ttyname(child_fd)
+        controller_fd, minion_fd = os.openpty()
+        pty_name = os.ttyname(minion_fd)
 
         # take controlling terminal
         pty_fd = os.open(pty_name, os.O_RDWR)
         os.close(pty_fd)
 
         ready = multiprocessing.Value('i', False)
-        child_process = multiprocessing.Process(
-            target=PseudoShell._set_up_and_run_child_function,
+        minion_process = multiprocessing.Process(
+            target=PseudoShell._set_up_and_run_minion_function,
             args=(pty_name, sys.stdout.fileno(), sys.stderr.fileno(),
-                  ready, child_function),
+                  ready, minion_function),
             kwargs=kwargs,
         )
-        child_process.start()
+        minion_process.start()
 
         # wait for subprocess to be running and connected.
         while not ready.value:
@@ -315,30 +316,31 @@ class PseudoShell(object):
             sys.stderr.write("pid:        %d\n" % os.getpid())
             sys.stderr.write("pgid:       %d\n" % os.getpgrp())
             sys.stderr.write("sid:        %d\n" % os.getsid(0))
-            sys.stderr.write("tcgetpgrp:  %d\n" % os.tcgetpgrp(master_fd))
+            sys.stderr.write("tcgetpgrp:  %d\n" % os.tcgetpgrp(controller_fd))
             sys.stderr.write("\n")
 
-            child_pgid = os.getpgid(child_process.pid)
-            sys.stderr.write("child pid:  %d\n" % child_process.pid)
-            sys.stderr.write("child pgid: %d\n" % child_pgid)
-            sys.stderr.write("child sid:  %d\n" % os.getsid(child_process.pid))
+            minion_pgid = os.getpgid(minion_process.pid)
+            sys.stderr.write("minion pid:  %d\n" % minion_process.pid)
+            sys.stderr.write("minion pgid: %d\n" % minion_pgid)
+            sys.stderr.write(
+                "minion sid:  %d\n" % os.getsid(minion_process.pid))
             sys.stderr.write("\n")
             sys.stderr.flush()
-        # set up master to ignore SIGTSTP, like a shell
+        # set up controller to ignore SIGTSTP, like a shell
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
-        # call the master function once the child is ready
+        # call the controller function once the minion is ready
         try:
             controller = ProcessController(
-                child_process.pid, master_fd, debug=kwargs.get("debug"))
+                minion_process.pid, controller_fd, debug=kwargs.get("debug"))
             controller.timeout = controller_timeout
             controller.sleep_time = sleep_time
-            error = master_function(child_process, controller, **kwargs)
+            error = controller_function(minion_process, controller, **kwargs)
         except BaseException:
             error = 1
             traceback.print_exc()
 
-        child_process.join()
+        minion_process.join()
 
-        # return whether either the parent or child failed
-        return error or child_process.exitcode
+        # return whether either the parent or minion failed
+        return error or minion_process.exitcode

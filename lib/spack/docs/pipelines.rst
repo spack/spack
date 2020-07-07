@@ -82,9 +82,9 @@ or Amazon Elastic Kubernetes Service (`EKS <https://aws.amazon.com/eks>`_), thou
 topics are outside the scope of this document.
 
 Spack's pipelines are now making use of the
-`trigger <https://docs.gitlab.com/12.9/ee/ci/yaml/README.html#trigger>` syntax to run
+`trigger <https://docs.gitlab.com/12.9/ee/ci/yaml/README.html#trigger>`_ syntax to run
 dynamically generated
-`child pipelines <https://docs.gitlab.com/12.9/ee/ci/parent_child_pipelines.html>`.
+`child pipelines <https://docs.gitlab.com/12.9/ee/ci/parent_child_pipelines.html>`_.
 Note that the use of dynamic child pipelines requires running Gitlab version
 ``>= 12.9``.
 

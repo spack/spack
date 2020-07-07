@@ -12,6 +12,13 @@
 #    setenv SPACK_ROOT /path/to/spack
 #    source $SPACK_ROOT/share/spack/setup-env.csh
 #
+
+# prevent infinite recursion when spack shells out (e.g., on cray for modules)
+if ($?_sp_initializing) then
+    exit 0
+endif
+setenv _sp_initializing true
+
 if ($?SPACK_ROOT) then
     set _spack_source_file = $SPACK_ROOT/share/spack/setup-env.csh
     set _spack_share_dir   = $SPACK_ROOT/share/spack
@@ -38,3 +45,6 @@ else
     echo "ERROR: Sourcing spack setup-env.csh requires setting SPACK_ROOT to "
     echo "       the root of your spack installation."
 endif
+
+# done: unset sentinel variable as we're no longer initializing
+unsetenv _sp_initializing
