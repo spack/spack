@@ -107,7 +107,7 @@ class Abinit(AutotoolsPackage):
                  .format(spec['wannier90'].prefix.modules))
             oapp('--with-wannier90-bins={0}'
                  .format(spec['wannier90'].prefix.bin))
-            oapp('MPIFC={}/mpifc'.format(spec['mpi'].prefix.bin))
+            oapp('MPIFC={0}/mpifc'.format(spec['mpi'].prefix.bin))
             oapp('--enable-connectors')
             oapp('--with-dft-flavor=wannier90')
 
