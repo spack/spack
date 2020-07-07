@@ -1405,7 +1405,8 @@ The main points that are implemented below:
      - export CXXFLAGS="-std=c++11"
 
    install:
-     - if ! which spack >/dev/null; then
+     - |
+       if ! which spack >/dev/null; then
          mkdir -p $SPACK_ROOT &&
          git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
          printf "config:\n  build_jobs: 2\n" > $SPACK_ROOT/etc/spack/config.yaml &&
