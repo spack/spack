@@ -600,6 +600,54 @@ flags to the ``icc`` command:
            spec: intel@15.0.24.4.9.3
 
 
+^^^^^^^^^^
+SYCL/DPC++
+^^^^^^^^^^
+
+The SYCL/DPC++ compiler is Intel and Codeplay's `staging area compiler <https://github.com/intel/llvm>`_ for upcoming Clang/LLVM SYCL support.
+This compiler is typically distributed with `oneAPI <https://software.intel.com/content/www/us/en/develop/articles/oneapi-repo-instructions.html>`_ and gets activated with ``source /opt/intel/inteloneapi/setvars.sh`` on Linux.
+
+One can record these activation steps by comparing set environment variables:
+
+.. code-block:: console
+
+   env > env.txt
+   set +e
+   source /opt/intel/inteloneapi/setvars.sh
+   env > env_extras.txt
+   diff env.txt env_extras.txt
+
+All newly set environment hints will then be shown in this diff.
+A typical entry in ``compilers.yaml`` looks like this:
+
+.. code-block:: yaml
+
+   # DPC++ 2021.1-beta07 (2020.5.0.0604)
+   - compiler:
+       spec: clang@11.0.0
+       paths:
+         cc: /opt/intel/inteloneapi/compiler/latest/linux/bin/clang
+         cxx: /opt/intel/inteloneapi/compiler/latest/linux/bin/dpcpp
+         f77:
+         fc:
+       flags: {}
+       operating_system: ubuntu18.04
+       target: x86_64
+       modules: []
+       environment:
+         set:
+           OCL_ICD_FILENAMES: "libintelocl_emu.so:libalteracl.so:/opt/intel/inteloneapi/compiler/latest/linux/lib/x64/libintelocl.so"
+           ACL_BOARD_VENDOR_PATH: "/opt/Intel/OpenCLFPGA/oneAPI/Boards"
+           INTELFPGAOCLSDKROOT: "/opt/intel/inteloneapi/compiler/2021.1-beta07/linux/lib/oclfpga"
+           DPCPP_ROOT: "/opt/intel/inteloneapi"
+           ONEAPI_ROOT: "/opt/intel/inteloneapi"
+         prepend_path:
+           LD_LIBRARY_PATH: "/opt/intel/inteloneapi/compiler/latest/linux/lib:/opt/intel/inteloneapi/compiler/latest/linux/lib/x64:/opt/intel/inteloneapi/compiler/2021.1-beta07/linux/lib/oclfpga/host/linux64/lib:/opt/intel/inteloneapi/compiler/2021.1-beta07/linux/lib/oclfpga/linux64/lib:/opt/intel/inteloneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/inteloneapi/compiler/latest/linux/compiler/lib"
+           CPATH: "/opt/intel/inteloneapi/dev-utilities/2021.1-beta07/include:/opt/intel/inteloneapi/compiler/latest/linux/include"
+           LIBRARY_PATH: "/opt/intel/inteloneapi/compiler/latest/linux/lib"
+           PATH: "/opt/intel/inteloneapi/dev-utilities/2021.1-beta07/bin:/opt/intel/inteloneapi/compiler/2021.1-beta07/linux/lib/oclfpga/bin:/opt/intel/inteloneapi/compiler/latest/linux/bin/intel64:/opt/intel/inteloneapi/compiler/latest/linux/bin:/opt/intel/inteloneapi/compiler/latest/linux/ioc/bin"
+
+
 ^^^
 PGI
 ^^^
