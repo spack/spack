@@ -90,7 +90,7 @@ See "spack info gunrock"')
         if app_list[0] != 'none':
             args.extend([
                 '-DGUNROCK_BUILD_APPLICATIONS={0}'.format(
-                    'ON' if 'all'           in app_list else 'OFF'),
+                    'ON' if spec.satisfies('applications=all') else 'OFF'),
                 '-DGUNROCK_APP_BC={0}'.format(
                     'ON' if 'bc'           in app_list else 'OFF'),
                 '-DGUNROCK_APP_BFS={0}'.format(
