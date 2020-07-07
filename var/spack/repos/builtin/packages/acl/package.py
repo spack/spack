@@ -24,6 +24,10 @@ class Acl(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('attr')
+    depends_on('gettext')
+
+    def setup_build_environment(self, env):
+        env.append_flags('LDFLAGS', '-lintl')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
