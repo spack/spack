@@ -13,6 +13,7 @@ class PySonataNetworkReduction(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/sonata-network-reduction"
 
     version('develop', branch='master')
+    version('0.0.9', tag='sonata-network-reduction-v0.0.9')
     version('0.0.8', tag='sonata-network-reduction-v0.0.8')
     version('0.0.6', tag='sonata-network-reduction-v0.0.6')
     version('0.0.5', tag='sonata-network-reduction-v0.0.5')
@@ -32,7 +33,7 @@ class PySonataNetworkReduction(PythonPackage):
     depends_on('py-morphio@2.3.9:', type='run')
     depends_on('neuron+python', type='run')
     depends_on('py-aibs-circuit-converter@0.0.3:', type='run')
-    depends_on('py-bluepysnap@0.4.1:', type='run')
+    depends_on('py-bluepysnap@0.5.1:', type='run')
     depends_on('py-neuron-reduce@0.0.8:', type='run')
 
     def setup_run_environment(self, env):

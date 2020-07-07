@@ -40,7 +40,7 @@ packages:
       - py-morph-tool@0.2.5
       - py-morphio@2.3.4
       - py-neurodamus
-      - py-sonata-network-reduction@0.0.8 ^neuron%intel@19.0.4^py-ipython%gcc
+      - py-sonata-network-reduction@0.0.9 ^neuron%intel@19.0.4^py-ipython%gcc
 
   gnu-stable-serial-ophiophob:
     target_matrix:
