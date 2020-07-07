@@ -18,6 +18,8 @@ class Ginkgo(CMakePackage, CudaPackage):
 
     version('develop', branch='develop')
     version('master', branch='master')
+    version('1.2.0', commit='b4be2be961fd5db45c3d02b5e004d73550722e31')  # v1.2.0
+    version('1.1.1', commit='08d2c5200d3c78015ac8a4fd488bafe1e4240cf5')  # v1.1.1
     version('1.1.0', commit='b9bec8225442b3eb2a85a870efa112ab767a17fb')  # v1.1.0
     version('1.0.0', commit='45244641e0c2b19ba33aecd25153c0bddbcbe1a0')  # v1.0.0
 
@@ -28,16 +30,24 @@ class Ginkgo(CMakePackage, CudaPackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
+    variant('hip', default=False, description="Compile Ginkgo with HIP support")
 
     depends_on('cmake@3.9:', type='build')
     depends_on('cuda@9:',    when='+cuda')
 
     conflicts('%gcc@:5.2.9')
 
+    # HIP support was added in version 1.2.0
+    conflicts("+hip", when="@1.0.0:1.1.1")
+
+    patch('CAS-HIP-NVCC-1.2.0.patch', when='@1.2.0 +hip')
+    patch('CAS-HIP-NVCC-1.2.0.patch', when='@master +hip')
+
     def cmake_args(self):
         spec = self.spec
         return [
             '-DGINKGO_BUILD_CUDA=%s' % ('ON' if '+cuda' in spec else 'OFF'),
+            '-DGINKGO_BUILD_HIP=%s' % ('ON' if '+hip' in spec else 'OFF'),
             '-DGINKGO_BUILD_OMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
             '-DBUILD_SHARED_LIBS=%s' % ('ON' if '+shared' in spec else 'OFF'),
             '-DGINKGO_JACOBI_FULL_OPTIMIZATIONS=%s' % (
