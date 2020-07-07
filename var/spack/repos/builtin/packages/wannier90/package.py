@@ -175,7 +175,7 @@ class Wannier90(MakefilePackage):
         )
 
         if '+shared' in spec:
-            if '@3:' in spec:
+            if spec.satisfies('@3:'):
                 inst = ['libwannier.a', 'libwannier.so']
             else:
                 inst = ['libwannier.so']
