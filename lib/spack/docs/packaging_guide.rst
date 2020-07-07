@@ -4077,7 +4077,7 @@ decorate the package being defined and specify a package level
        # would match for example 'foo', 'foobar', and 'bazfoo'.
        executables = ['foo']
 
-This attribute must be a list of strings. Each string is treated as a regular
+This attribute must be a list of strings. Each string is a regular
 expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3', 'my-weird-gcc', etc.) to
 determine a set of system executables that might be part or this package. Note
 that to match only executables named 'gcc' the regular expression ``r'^gcc$'``
