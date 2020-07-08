@@ -44,7 +44,7 @@ class Wannier90(MakefilePackage):
             targets = [
                 'wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw', 'w90pov'
             ]
-        if '@2.999.999:' in self.spec:
+        if '@2.999:' in self.spec:
             # 'wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw', 'dynlib'
             targets = ['wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw']
             if '+shared' in self.spec:
@@ -136,22 +136,22 @@ class Wannier90(MakefilePackage):
                     join_path(self.stage.source_path,
                               'src/Makefile.2'))
                 filter_file(
-                    r' '.join(['$(COMPILER) $(POSTDIR)postw90.F90',
-                               '$(POSTOPTS) $(LDOPTS)',
-                               '$(OBJS_POST)',
-                               '$(LIBS) -o ../../postw90.x']),
+                    ' '.join(['$(COMPILER) $(POSTDIR)postw90.F90',
+                              '$(POSTOPTS) $(LDOPTS)',
+                              '$(OBJS_POST)',
+                              '$(LIBS) -o ../../postw90.x']),
                     ' '.join(['$(COMPILER) -I../obj $(POSTDIR)postw90.F90',
                               '$(POSTOPTS) $(LDOPTS) $(OBJS_POST)',
                               '-L../.. -lwannier $(LIBS) -o ../../postw90.x']),
                     join_path(self.stage.source_path,
-                              'src/Makefile.2'))
+                              'src/Makefile.2'), string=True)
 
                 filter_file(
-                    r'$(AR) $(ARFLAGS)', '$(LIBRARY) $(OBJS2) $(OBJS)',
-                    ' '.join(['$(MPIF90) $(FCOPTS) -shared -o '
+                    '$(AR) $(ARFLAGS) $(LIBRARY) $(OBJS2) $(OBJS)',
+                    ' '.join(['$(MPIF90) $(FCOPTS) -shared -o'
                               '$(LIBRARY) $(OBJS2) $(OBJS) $(LIBS)']),
                     join_path(self.stage.source_path,
-                              'src/Makefile.2'))
+                              'src/Makefile.2'), string=True)
 
     def setup_build_environment(self, env):
         env.set('MPIFC', self.prefix.bin.mpifc)
