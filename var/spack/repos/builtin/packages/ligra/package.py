@@ -45,11 +45,12 @@ class Ligra(Package):
     def setup_build_environment(self, env):
         if '+openmp' in self.spec:
             env.set('OPENMP', '1')
-        # when +mkl, MKLROOT will be defined by intel-mkl package
+        # when +mkl, MKLROOT will be defined by intel-mkl package,
+        # triggering a build with mkl support
 
     def setup_run_environment(self, env):
-        env.append('PATH', self.prefix.apps)
-        env.append('PATH', self.prefix.utils)
+        env.prepend_path('PATH', self.prefix.apps)
+        env.prepend_path('PATH', self.prefix.utils)
 
     def install(self, spec, prefix):
         make('-C', 'apps')
