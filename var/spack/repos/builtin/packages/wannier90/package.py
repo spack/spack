@@ -50,8 +50,7 @@ class Wannier90(MakefilePackage):
         return targets
 
     def url_for_version(self, version):
-        maj_ver = version.up_to(1)
-        if (maj_ver > Version('2')):
+        if version > Version('2'):
             url = 'https://github.com/wannier-developers/wannier90/archive/v{0}.tar.gz'
         else:
             url = 'http://wannier.org/code/wannier90-{0}.tar.gz'
