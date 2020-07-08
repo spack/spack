@@ -4095,9 +4095,14 @@ method must be implemented:
        """
 
 This method receives as input the path to a single executable and must return
-as output its version as a string, or ``None`` is the version cannot be determined.
+as output its version as a string, or ``None`` if the version cannot be determined
+or the executable is not related to the package.
 Implementing the three steps above is mandatory, and gives the package the
 basic ability to detect if a spec is present on the system at a given version.
+
+.. note::
+   Any executable for which the ``determine_version`` method returns ``None``
+   will be discarded and won't appear in later stages of the workflow described below.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Additional functionality
