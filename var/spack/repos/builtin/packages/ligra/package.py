@@ -38,7 +38,7 @@ class Ligra(MakefilePackage):
     def build(self, spec, prefix):
         make('-C', 'apps')
         make('-C', 'utils')
-        
+
     def install(self, spec, prefix):
         install_tree('.', prefix)
         install_tree('ligra', prefix.include)
