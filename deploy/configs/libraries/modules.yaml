@@ -34,6 +34,7 @@ modules:
       - neuron+mpi~debug%intel
       - omega-h
       - petsc
+      - py-dask-mpi
       - py-flake8
       - py-mpi4py
       - python-dev

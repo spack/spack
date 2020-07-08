@@ -36,6 +36,7 @@ packages:
       - py-py4j
       - py-pyarrow+parquet@0.12.1
       - py-pyspark
+      - py-dask-mpi
       # Others
       - py-aspy-yaml
       - py-argcomplete
