@@ -60,4 +60,3 @@ class RDevtools(RPackage):
     depends_on('r-whisker', when='@:1.9.9', type=('build', 'run'))
     depends_on('r-withr', type=('build', 'run'))
     depends_on('r-withr@2.1.2:', when='@2.3.0:', type=('build', 'run'))
-
