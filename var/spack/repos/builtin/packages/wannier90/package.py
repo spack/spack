@@ -16,7 +16,9 @@ class Wannier90(MakefilePackage):
     Wannier90 is released under the GNU General Public License.
     """
     homepage = 'http://wannier.org'
-    url = 'https://github.com/wannier-developers/wannier90/archive/v3.1.0.tar.gz'
+    url = 'http://wannier.org/code/wannier90-2.0.1.tar.gz'
+    # Newer versions are here
+    new_url = 'https://github.com/wannier-developers/wannier90/archive/v3.1.0.tar.gz'
 
     version('3.1.0', sha256='40651a9832eb93dec20a8360dd535262c261c34e13c41b6755fa6915c936b254')
     version('3.0.0', sha256='f196e441dcd7b67159a1d09d2d7de2893b011a9f03aab6b30c4703ecbf20fe5b')
@@ -38,11 +40,12 @@ class Wannier90(MakefilePackage):
     @property
     def build_targets(self):
         targets = []
-        if '@:2' in self.spec:
+        if '@:3.0.0' in self.spec:
             targets = [
                 'wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw', 'w90pov'
             ]
-        else:
+        if '@2.999.999:' in self.spec:
+            # 'wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw', 'dynlib'
             targets = ['wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw']
             if '+shared' in self.spec:
                 targets.append('dynlib')
@@ -50,7 +53,8 @@ class Wannier90(MakefilePackage):
         return targets
 
     def url_for_version(self, version):
-        if version > Version('2'):
+        maj_ver = version.up_to(1)
+        if (maj_ver > Version('2')):
             url = 'https://github.com/wannier-developers/wannier90/archive/v{0}.tar.gz'
         else:
             url = 'http://wannier.org/code/wannier90-{0}.tar.gz'
@@ -90,7 +94,7 @@ class Wannier90(MakefilePackage):
             filter_file(key, value, self.makefile_name)
 
         if '+shared' in self.spec:
-            if self.spec.satisfies('@2.0.0:2.999'):
+            if self.spec.satisfies('@2.0.0:2.999.999'):
                 # this is to build a .so wannier90 library
                 filter_file('LIBRARY = ../../libwannier.a',
                             'LIBRARY = ../../libwannier.so',
@@ -111,20 +115,20 @@ class Wannier90(MakefilePackage):
                             join_path(self.stage.source_path,
                                       'src/Makefile.2'))
                 filter_file('../../wannier90.x: .*',
-                            r' '.join(['../../wannier90.x: $(OBJS)',
-                                       '../wannier_prog.F90 $(LIBRARY)']),
+                            ' '.join(['../../wannier90.x: $(OBJS)',
+                                      '../wannier_prog.F90 $(LIBRARY)']),
                             join_path(self.stage.source_path,
                                       'src/Makefile.2'))
-                filter_file(r' '.join(['../../postw90.x: $(OBJS_POST)',
-                                      '$(POSTDIR)postw90.F90']),
+                filter_file(' '.join(['../../postw90.x: \\$\\(OBJS_POST\\)',
+                                      '\\$\\(POSTDIR\\)postw90.F90']),
                             ' '.join(['../../postw90.x: $(OBJS_POST)',
                                      '$(POSTDIR)postw90.F90 $(LIBRARY)']),
                             join_path(self.stage.source_path,
                                       'src/Makefile.2'))
                 filter_file(
-                    r' '.join([
-                        '$(COMPILER) ../wannier_prog.F90',
-                        '$(LDOPTS) $(OBJS) $(LIBS)',
+                    ' '.join([
+                        '\\$\\(COMPILER\\) ../wannier_prog.F90',
+                        '\\$\\(LDOPTS\\) \\$\\(OBJS\\) \\$\\(LIBS\\)',
                         '-o ../../wannier90.x']),
                     ' '.join(['$(COMPILER) -I../obj ../wannier_prog.F90',
                               '$(LDOPTS) -L../.. -lwannier',
@@ -132,22 +136,24 @@ class Wannier90(MakefilePackage):
                     join_path(self.stage.source_path,
                               'src/Makefile.2'))
                 filter_file(
-                    ' '.join(['$(COMPILER) $(POSTDIR)postw90.F90',
-                              '$(POSTOPTS) $(LDOPTS)',
-                              '$(OBJS_POST)',
-                              '$(LIBS) -o ../../postw90.x']),
+                    ' '.join(['\\$\\(COMPILER\\) \\$\\(POSTDIR\\)postw90.F90',
+                              '\\$\\(POSTOPTS\\) \\$\\(LDOPTS\\)',
+                              '\\$\\(OBJS_POST\\)',
+                              '\\$\\(LIBS\\) -o ../../postw90.x']),
                     ' '.join(['$(COMPILER) -I../obj $(POSTDIR)postw90.F90',
                               '$(POSTOPTS) $(LDOPTS) $(OBJS_POST)',
                               '-L../.. -lwannier $(LIBS) -o ../../postw90.x']),
                     join_path(self.stage.source_path,
-                              'src/Makefile.2'), string=True)
+                              'src/Makefile.2'))
 
                 filter_file(
-                    '$(AR) $(ARFLAGS) $(LIBRARY) $(OBJS2) $(OBJS)',
-                    ' '.join(['$(MPIF90) $(FCOPTS) -shared -o'
+                    ' '.join(['\\$\\(AR\\) \\$\\(ARFLAGS\\)',
+                              '\\$\\(LIBRARY\\)',
+                              '\\$\\(OBJS2\\) \\$\\(OBJS\\)']),
+                    ' '.join(['$(MPIF90) $(FCOPTS) -shared -o '
                               '$(LIBRARY) $(OBJS2) $(OBJS) $(LIBS)']),
                     join_path(self.stage.source_path,
-                              'src/Makefile.2'), string=True)
+                              'src/Makefile.2'))
 
     def setup_build_environment(self, env):
         env.set('MPIFC', self.prefix.bin.mpifc)
@@ -169,7 +175,7 @@ class Wannier90(MakefilePackage):
         )
 
         if '+shared' in spec:
-            if '@3:' in spec:
+            if spec.satisfies('@3:'):
                 inst = ['libwannier.a', 'libwannier.so']
             else:
                 inst = ['libwannier.so']
@@ -190,7 +196,7 @@ class Wannier90(MakefilePackage):
             join_path(self.prefix.bin, 'w90vdw.x')
         )
 
-        if '@:2' in spec:
+        if spec.satisfies('@:2.99')
             install(
                 join_path(self.stage.source_path,
                           'utility', 'w90pov', 'w90pov'),
