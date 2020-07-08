@@ -23,7 +23,7 @@ class Ligra(Package):
     variant('mkl',    default=False, description="Build with Intel MKL")
     # TODO: Add cilk variant when spack has a cilk plus package created.
 
-    depends_on('intel-mkl', when='+mkl')
+    depends_on('mkl', when='+mkl')
 
     def setup_build_environment(self, env):
         if '+openmp' in self.spec:
