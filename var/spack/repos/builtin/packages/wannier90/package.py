@@ -16,9 +16,7 @@ class Wannier90(MakefilePackage):
     Wannier90 is released under the GNU General Public License.
     """
     homepage = 'http://wannier.org'
-    url = 'http://wannier.org/code/wannier90-2.0.1.tar.gz'
-    # Newer versions are here
-    new_url = 'https://github.com/wannier-developers/wannier90/archive/v3.1.0.tar.gz'
+    url = 'https://github.com/wannier-developers/wannier90/archive/v3.1.0.tar.gz'
 
     version('3.1.0', sha256='40651a9832eb93dec20a8360dd535262c261c34e13c41b6755fa6915c936b254')
     version('3.0.0', sha256='f196e441dcd7b67159a1d09d2d7de2893b011a9f03aab6b30c4703ecbf20fe5b')
@@ -40,12 +38,11 @@ class Wannier90(MakefilePackage):
     @property
     def build_targets(self):
         targets = []
-        if '@:3.0.0' in self.spec:
+        if '@:2' in self.spec:
             targets = [
                 'wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw', 'w90pov'
             ]
-        if '@2.999:' in self.spec:
-            # 'wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw', 'dynlib'
+        else:
             targets = ['wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw']
             if '+shared' in self.spec:
                 targets.append('dynlib')
@@ -194,7 +191,7 @@ class Wannier90(MakefilePackage):
             join_path(self.prefix.bin, 'w90vdw.x')
         )
 
-        if '@:2.999.999' in spec:
+        if '@:2' in spec:
             install(
                 join_path(self.stage.source_path,
                           'utility', 'w90pov', 'w90pov'),
