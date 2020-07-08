@@ -30,30 +30,24 @@ class Ginkgo(CMakePackage, CudaPackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('hip', default=False, description="Compile Ginkgo with HIP support")
 
     depends_on('cmake@3.9:', type='build')
     depends_on('cuda@9:',    when='+cuda')
 
     conflicts('%gcc@:5.2.9')
 
-    # HIP support was added in version 1.2.0
-    conflicts("+hip", when="@1.0.0:1.1.1")
-
-    patch('CAS-HIP-NVCC-1.2.0.patch', when='@1.2.0 +hip')
-    patch('CAS-HIP-NVCC-1.2.0.patch', when='@master +hip')
-
     def cmake_args(self):
         spec = self.spec
         return [
             '-DGINKGO_BUILD_CUDA=%s' % ('ON' if '+cuda' in spec else 'OFF'),
-            '-DGINKGO_BUILD_HIP=%s' % ('ON' if '+hip' in spec else 'OFF'),
             '-DGINKGO_BUILD_OMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
             '-DBUILD_SHARED_LIBS=%s' % ('ON' if '+shared' in spec else 'OFF'),
             '-DGINKGO_JACOBI_FULL_OPTIMIZATIONS=%s' % (
                 'ON' if '+full_optimizations' in spec else 'OFF'),
             '-DGINKGO_DEVEL_TOOLS=%s' % (
                 'ON' if '+develtools' in spec else 'OFF'),
+            # Drop HIP support for now
+            '-DGINKGO_BUILD_HIP=OFF',
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.
             '-DGINKGO_BUILD_BENCHMARKS=OFF',
