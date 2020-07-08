@@ -21,7 +21,7 @@ class RUsethis(RPackage):
 
     depends_on('r@3.2:', type=('build', 'run'))
     depends_on('r-clipr@0.3.0:', type=('build', 'run'))
-    depends_on('r-clisymbols', type=('build', 'run'))
+    depends_on('r-clisymbols', when='@:1.5', type=('build', 'run'))
     depends_on('r-cli', when='@1.6.1:', type=('build', 'run'))
     depends_on('r-crayon', type=('build', 'run'))
     depends_on('r-curl@2.7:', type=('build', 'run'))
