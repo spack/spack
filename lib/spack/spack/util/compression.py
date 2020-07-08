@@ -14,7 +14,7 @@ EXTS       = ["gz", "bz2", "xz", "Z"]
 NOTAR_EXTS = ["zip", "tgz", "tbz2", "txz"]
 
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
-ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(
+ALLOWED_ARCHIVE_TYPES = [".".join(ext) for ext in product(
     PRE_EXTS, EXTS)] + PRE_EXTS + EXTS + NOTAR_EXTS
 
 
