@@ -30,9 +30,7 @@ class LlvmOpenmp(CMakePackage):
         ]
         # Add optional support for both Intel and gcc compilers
         if self.spec.satisfies('+multicompat'):
-            cmake_args.extend([
-                '-DKMP_GOMP_COMPAT=1'
-            ])
+            cmake_args.append('-DKMP_GOMP_COMPAT=1')
         return cmake_args
 
     @property
