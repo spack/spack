@@ -398,12 +398,13 @@ def dump_packages(spec, path):
             source = spack.store.layout.build_packages_path(node)
             source_repo_root = os.path.join(source, node.namespace)
 
-            # There's no provenance installed for the source package.  Skip it.
-            # User can always get something current from the builtin repo.
-            # If it's external, skip it because it either is using the builtin
-            # repo or the provenance is already in place.
-            # The provenance could exist if the external was installed by a
-            # separate Spack instance not configured as an upstream.
+            # If there's no provenance installed for the package, skip it.
+            # If it's external, skip it because it either:
+            # 1) it wasn't built with Spack, so it has no Spack metadata
+            # 2) it was built by another Spack instance, and we do not
+            # (currently) use Spack metadata to associate repos with externals
+            # built be other Spack instances.
+            # Spack can always get something current from the builtin repo.
             if node.external or not os.path.isdir(source_repo_root):
                 continue
 
