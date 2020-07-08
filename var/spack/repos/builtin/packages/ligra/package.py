@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Ligra(Package):
+class Ligra(MakefilePackage):
     """A Lightweight Graph Processing Framework for Shared Memory"""
 
     homepage = "http://jshun.github.io/ligra/"
