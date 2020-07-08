@@ -20,14 +20,82 @@ class Quux(Package):
     depends_on('garply')
 
     def install(self, spec, prefix):
+        quux_cc = '''#include "quux.h"
+#include "garply/garply.h"
+#include "quux_version.h"
+#include <iostream>
+#include <stdexcept>
+
+const int Quux::version_major = quux_version_major;
+const int Quux::version_minor = quux_version_minor;
+
+Quux::Quux() {}
+
+int
+Quux::get_version() const
+{
+    return 10 * version_major + version_minor;
+}
+
+int
+Quux::quuxify() const
+{
+    int quux_version = get_version();
+    std::cout << "Quux::quuxify version " << quux_version << " invoked" <<std::endl;
+    std::cout << "Quux config directory is %s" <<std::endl;
+    Garply garply;
+    int garply_version = garply.garplinate();
+
+    if (garply_version != quux_version) {
+        throw std::runtime_error(
+            "Quux found an incompatible version of Garply.");
+    }
+
+    return quux_version;
+}
+'''
+        quux_h = '''#ifndef QUUX_H_
+
+class Quux
+{
+private:
+    static const int version_major;
+    static const int version_minor;
+
+public:
+    Quux();
+    int get_version() const;
+    int quuxify() const;
+};
+
+#endif // QUUX_H_
+'''
+        quuxifier_cc = '''
+#include "quux.h"
+#include <iostream>
+
+int
+main()
+{
+    Quux quux;
+    quux.quuxify();
+
+    return 0;
+}
+'''
+        quux_version_h = '''const int quux_version_major = %s;
+const int quux_version_minor = %s;
+'''
         mkdirp(prefix.lib64)
         mkdirp('%s/quux' % prefix.include)
-        copy('quux/quux_version_h.in', '%s/quux_version.h' %
-             self.stage.source_path)
-        filter_file('@QUUX_VERSION_MAJOR@', '%s' % self.version[0],
-                    '%s/quux_version.h' % self.stage.source_path)
-        filter_file('@QUUX_VERSION_MINOR@', '%s' % self.version[1:],
-                    '%s/quux_version.h' % self.stage.source_path)
+        with open('%s/quux_version.h' % self.stage.source_path, 'w')  as f:
+            f.write(quux_version_h % (self.version[0], self.version[1:]))
+        with open('%s/quux/quux.cc' % self.stage.source_path, 'w') as f:
+            f.write(quux_cc % (prefix.config))
+        with open('%s/quux/quux.h' % self.stage.source_path, 'w') as f:
+            f.write(quux_h)
+        with open('%s/quux/quuxifier.cc' % self.stage.source_path, 'w') as f:
+            f.write(quuxifier_cc)
         gpp = which('/usr/bin/g++')
         gpp('-Dquux_EXPORTS',
             '-I%s' % self.stage.source_path,

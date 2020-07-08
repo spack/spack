@@ -20,14 +20,98 @@ class Corge(Package):
     depends_on('quux')
 
     def install(self, spec, prefix):
+        corge_cc = '''#include <iostream>
+#include <stdexcept>
+#include "corge.h"
+#include "corge_version.h"
+#include "quux/quux.h"
+
+const int Corge::version_major = corge_version_major;
+const int Corge::version_minor = corge_version_minor;
+
+Corge::Corge()
+{
+}
+
+int
+Corge::get_version() const
+{
+    return 10 * version_major + version_minor;
+}
+
+int
+Corge::corgegate() const
+{
+    int corge_version = get_version();
+    std::cout << "Corge::corgegate version " << corge_version
+              << " invoked" << std::endl;
+    std::cout << "Corge config directory = %s" <<std::endl;
+    Quux quux;
+    int quux_version = quux.quuxify();
+
+    if(quux_version != corge_version) {
+        throw std::runtime_error(
+              "Corge found an incompatible version of Garply.");
+    }
+
+    return corge_version;
+}
+'''
+        corge_h = '''#ifndef CORGE_H_
+
+class Corge
+{
+private:
+    static const int version_major;
+    static const int version_minor;
+
+public:
+    Corge();
+    int get_version() const;
+    int corgegate() const;
+};
+
+#endif // CORGE_H_
+'''
+        corge_version_h = '''
+const int corge_version_major = %s;
+const int corge_version_minor = %s;
+'''
+        corgegator_cc = '''
+#include <iostream>
+#include "corge.h"
+
+int
+main(int argc, char* argv[])
+{
+    std::cout << "corgerator called with ";
+    if (argc == 0) {
+        std::cout << "no command-line arguments" << std::endl;
+    } else {
+        std::cout << "command-line arguments:";
+        for (int i = 0; i < argc; ++i) {
+            std::cout << " \"" << argv[i] << "\"";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "corgegating.."<<std::endl;
+    Corge corge;
+    corge.corgegate();
+    std::cout << "done."<<std::endl;
+    return 0;
+}
+'''
         mkdirp(prefix.lib64)
         mkdirp('%s/corge' % prefix.include)
-        copy('corge/corge_version_h.in', '%s/corge_version.h' %
-             self.stage.source_path)
-        filter_file('@CORGE_VERSION_MAJOR@', '%s' % self.version[0],
-                    '%s/corge_version.h' % self.stage.source_path)
-        filter_file('@CORGE_VERSION_MINOR@', '%s' % self.version[1:],
-                    '%s/corge_version.h' % self.stage.source_path)
+        mkdirp('%s/corge' % self.stage.source_path)
+        with open('%s/corge_version.h' % self.stage.source_path, 'w') as f:
+            f.write(corge_version_h % (self.version[0],  self.version[1:]))
+        with open('%s/corge/corge.cc' % self.stage.source_path, 'w') as f:
+            f.write(corge_cc % prefix.config)
+        with open('%s/corge/corge.h' % self.stage.source_path, 'w') as f:
+            f.write(corge_h)
+        with open('%s/corge/corgegator.cc' % self.stage.source_path, 'w') as f:
+            f.write(corgegator_cc)
         gpp = which('/usr/bin/g++')
         gpp('-Dcorge_EXPORTS',
             '-I%s' % self.stage.source_path,

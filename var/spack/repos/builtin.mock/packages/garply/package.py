@@ -18,14 +18,71 @@ class Garply(Package):
             sha256='534ac8ba7a6fed7e8bbb543bd43ca04999e65337445a531bd296939f5ac2f33d')
 
     def install(self, spec, prefix):
+        garply_h = '''#ifndef GARPLY_H_
+
+class Garply
+{
+private:
+    static const int version_major;
+    static const int version_minor;
+
+public:
+    Garply();
+    int get_version() const;
+    int garplinate() const;
+};
+
+#endif // GARPLY_H_
+'''
+        garply_cc = '''#include "garply.h"
+#include "garply_version.h"
+#include <iostream>
+
+const int Garply::version_major = garply_version_major;
+const int Garply::version_minor = garply_version_minor;
+
+Garply::Garply() {}
+
+int
+Garply::get_version() const
+{
+    return 10 * version_major + version_minor;
+}
+
+int
+Garply::garplinate() const
+{
+    std::cout << "Garply::garplinate version " << get_version() << " invoked" << std::endl;
+    std::cout << "Garply config dir = %s" << std::endl;
+    return get_version();
+}
+'''
+        garplinator_cc = '''#include "garply.h"
+#include <iostream>
+
+int
+main()
+{
+    Garply garply;
+    garply.garplinate();
+
+    return 0;
+}
+'''
+        garply_version_h = '''const int garply_version_major = %s;
+const int garply_version_minor = %s;
+'''
         mkdirp(prefix.lib64)
         mkdirp('%s/garply' % prefix.include)
-        copy('garply/garply_version_h.in', '%s/garply_version.h' %
-             self.stage.source_path)
-        filter_file('@GARPLY_VERSION_MAJOR@', '%s' % self.version[0],
-                    '%s/garply_version.h' % self.stage.source_path)
-        filter_file('@GARPLY_VERSION_MINOR@', '%s' % self.version[1:],
-                    '%s/garply_version.h' % self.stage.source_path)
+        mkdirp('%s/garply' % self.stage.source_path)
+        with open('%s/garply_version.h' % self.stage.source_path, 'w')  as f:
+            f.write(garply_version_h % (self.version[0], self.version[1:]))
+        with open('%s/garply/garply.h' % self.stage.source_path, 'w') as f:
+            f.write(garply_h)
+        with open('%s/garply/garply.cc' % self.stage.source_path, 'w') as f:
+            f.write(garply_cc % prefix.config)
+        with open('%s/garply/garplinator.cc' % self.stage.source_path,'w') as f:
+            f.write(garplinator_cc)
         gpp = which('/usr/bin/g++')
         gpp('-Dgarply_EXPORTS',
             '-I%s' % self.stage.source_path,
