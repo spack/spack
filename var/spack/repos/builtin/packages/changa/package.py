@@ -4,15 +4,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
+
 
 class Changa(AutotoolsPackage):
-    """ChaNGa (Charm N-body GrAvity solver) is a code to perform collisionless N-body simulations.
-    It can perform cosmological simulations with periodic boundary conditions in comoving coordinates
-    or simulations of isolated stellar systems. It also can include hydrodynamics using the
-    Smooth Particle Hydrodynamics (SPH) technique. It uses a Barnes-Hut tree to calculate gravity,
-    with hexadecapole expansion of nodes and Ewald summation for periodic forces.
-    Timestepping is done with a leapfrog integrator with individual timesteps for each particle."""
+    """ChaNGa (Charm N-body GrAvity solver) is a code to perform collisionless
+    N-body simulations. It can perform cosmological simulations with periodic
+    boundary conditions in comoving coordinates or simulations of isolated
+    stellar systems. It also can include hydrodynamics using the Smooth
+    Particle Hydrodynamics (SPH) technique. It uses a Barnes-Hut tree to
+    calculate gravity, with hexadecapole expansion of nodes and
+    Ewald summation for periodic forces. Timestepping is done with a leapfrog
+    integrator with individual timesteps for each particle."""
 
     homepage = "http://faculty.washington.edu/trq/hpcc/tools/changa.html"
     url      = "https://github.com/N-BodyShop/changa/archive/v3.4.tar.gz"
@@ -22,17 +24,18 @@ class Changa(AutotoolsPackage):
     patch("fix_configure_path.patch")
 
     resource(
-            name="utility",
-            url="https://github.com/N-BodyShop/utility/archive/v3.4.tar.gz",
-            sha256="19f9f09023ce9d642e848a36948788fb29cd7deb8e9346cdaac4c945f1416667",
-            placement="utility"
-            )
+        name="utility",
+        url="https://github.com/N-BodyShop/utility/archive/v3.4.tar.gz",
+        sha256="19f9f09023ce9d642e848a36948788fb29cd7deb8e9346cdaac4c945f1416667",
+        placement="utility"
+    )
 
     depends_on("charmpp build-target=ChaNGa")
 
     def configure_args(self):
         args = []
-        args.append("STRUCT_DIR={}/utility/structures".format(self.stage.source_path))
+        args.append("STRUCT_DIR={}/utility/structures"
+                    .format(self.stage.source_path))
         return args
 
     def install(self, spec, prefix):
@@ -40,5 +43,3 @@ class Changa(AutotoolsPackage):
             mkdirp(prefix.bin)
             copy('ChaNGa', prefix.bin)
             copy('charmrun', prefix.bin)
-
-

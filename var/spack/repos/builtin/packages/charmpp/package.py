@@ -217,7 +217,6 @@ class Charmpp(Package):
                                     present on the system")
 
         target = spec.variants["build-target"].value
-        #builddir = prefix + "/" + str(self.charmarch)
         builddir = prefix
 
         # We assume that Spack's compiler wrappers make this work. If
