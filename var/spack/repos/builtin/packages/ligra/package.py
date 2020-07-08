@@ -1,0 +1,58 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+# ----------------------------------------------------------------------------
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install ligra
+#
+# You can edit this file again by typing:
+#
+#     spack edit ligra
+#
+# See the Spack documentation for more information on packaging.
+# ----------------------------------------------------------------------------
+
+from spack import *
+
+
+class Ligra(Package):
+    """A Lightweight Graph Processing Framework for Shared Memory"""
+
+    homepage = "http://jshun.github.io/ligra/"
+    url      = "https://github.com/jshun/ligra/archive/v.1.5.tar.gz"
+
+    version('1.5', sha256='74113a5a3c19a0e319a5b9ebefc8a67c5d18d4d2a9670363092a966f4163f6b7')
+    version('1.4', sha256='bb70a1428c71cf2f7e1512cdedcd8330c754f5a2c8309ab9d9666591cff6a4e1')
+    version('1.3', sha256='df848038734bb9724d6c9bd95595c91eb6b07027642be93bff161f020ff257e4')
+    version('1.2', sha256='ec8778b0762772fc78437243ccaee72066d67a310bc352d6665dd2de520c04cc')
+    version('1.1', sha256='a7311b96fabc286a8f1250d8a6e2d1b1e4545c720fa6bb4acf7ed31211fcc99a')
+    version('1.0', sha256='fb39ae0a3eddb26f37b8cc0a543648575a50bcc488cecd4a5f1beaaf2458736c')
+
+    variant('openmp', default=True, description="Build with OpenMP")
+    variant('mkl',    default=False, description="Build with Intel MKL")
+    # TODO: Add cilk variant when spack has a cilk plus package created.
+
+    depends_on('intel-mkl', when='+mkl')
+
+    def setup_build_environment(self, env):
+        if '+openmp' in self.spec:
+            env.set('OPENMP', '1')
+        # when +mkl, MKLROOT will be defined by intel-mkl package
+
+    def setup_run_environment(self, env):
+        env.append('PATH', self.prefix.apps)
+        env.append('PATH', self.prefix.utils)
+
+    def install(self, spec, prefix):
+        make('-C', 'apps')
+        make('-C', 'utils')
+        install_tree(self.stage.source_path, prefix)
+        install_tree(join_path(self.stage.source_path, 'ligra'), prefix.include)
