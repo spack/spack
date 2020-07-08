@@ -1,0 +1,11 @@
+--- pyext/setup.py.in.orig	2017-07-17 12:13:12.057895620 +0200
++++ pyext/setup.py.in	2017-07-17 12:15:11.991048036 +0200
+@@ -34,7 +34,7 @@
+ extns = [ext("util"),  ext("core", statics=static_files, depends=core_depends)]
+
+ ## Enable building of ROOT extension if ROOT is present
+-if os.environ.has_key("BUILD_ROOTCOMPAT"):
++if "BUILD_ROOTCOMPAT" in os.environ:
+     try:
+         # import ROOT
+         # TODO: Need to test for and use root-config in configure

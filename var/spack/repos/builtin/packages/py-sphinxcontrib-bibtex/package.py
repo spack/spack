@@ -14,6 +14,7 @@ class PySphinxcontribBibtex(PythonPackage):
 
     import_modules = ['sphinxcontrib', 'sphinxcontrib.bibtex']
 
+    version('1.0.0', sha256='629612b001f86784669d65e662377a482052decfd9a0a17c46860878eef7b9e0')
     version('0.3.5', sha256='c93e2b4a0d14f0ab726f95f0a33c1675965e9df3ed04839635577b8f978206cd')
 
     depends_on('py-setuptools', type='build')

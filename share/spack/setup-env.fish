@@ -36,6 +36,12 @@
 # to come up with a user-friendly naming scheme for spack dotfiles.
 #################################################################################
 
+# prevent infinite recursion when spack shells out (e.g., on cray for modules)
+if test -n "$_sp_initializing"
+    exit 0
+end
+set -x _sp_initializing true
+
 
 #
 # Test for STDERR-NOCARET feature: if this is off, fish will redirect stderr to
@@ -721,3 +727,6 @@ sp_multi_pathadd MODULEPATH $_sp_tcl_roots
 # [3]: When the test in the if statement fails, the `status` flag is set to 1.
 #      `true` here manuallt resets the value of `status` to 0. Since `set`
 #      passes `status` along, we thus avoid the function returning 1 by mistake.
+
+# done: unset sentinel variable as we're no longer initializing
+set -e _sp_initializing
