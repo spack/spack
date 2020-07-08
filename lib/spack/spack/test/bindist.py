@@ -284,7 +284,7 @@ def test_default_rpaths_install_nondefault_layout(tmpdir,
     buildcache.setup_parser(parser)
 
     # Set default buildcache args
-    install_args = ['install', '-a', '-u', '%s' % cspec.name ]
+    install_args = ['install', '-a', '-u', '%s' % cspec.name]
 
     # Install some packages with dependent packages
     # test install in non-default install path scheme

@@ -41,7 +41,8 @@ int
 Quux::quuxify() const
 {
     int quux_version = get_version();
-    std::cout << "Quux::quuxify version " << quux_version << " invoked" <<std::endl;
+    std::cout << "Quux::quuxify version " << quux_version
+              << " invoked" <<std::endl;
     std::cout << "Quux config directory is %s" <<std::endl;
     Garply garply;
     int garply_version = garply.garplinate();

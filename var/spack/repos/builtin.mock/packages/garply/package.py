@@ -52,7 +52,8 @@ Garply::get_version() const
 int
 Garply::garplinate() const
 {
-    std::cout << "Garply::garplinate version " << get_version() << " invoked" << std::endl;
+    std::cout << "Garply::garplinate version " << get_version()
+              << " invoked" << std::endl;
     std::cout << "Garply config dir = %s" << std::endl;
     return get_version();
 }
@@ -81,7 +82,8 @@ const int garply_version_minor = %s;
             f.write(garply_h)
         with open('%s/garply/garply.cc' % self.stage.source_path, 'w') as f:
             f.write(garply_cc % prefix.config)
-        with open('%s/garply/garplinator.cc' % self.stage.source_path,'w') as f:
+        with open('%s/garply/garplinator.cc' %
+                  self.stage.source_path, 'w') as f:
             f.write(garplinator_cc)
         gpp = which('/usr/bin/g++')
         gpp('-Dgarply_EXPORTS',
