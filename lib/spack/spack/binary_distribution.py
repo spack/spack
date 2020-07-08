@@ -498,6 +498,7 @@ def download_tarball(spec):
 
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
+        stage.create()
         try:
             stage.fetch()
             return stage.save_filename
