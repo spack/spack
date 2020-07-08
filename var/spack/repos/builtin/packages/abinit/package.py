@@ -110,6 +110,8 @@ class Abinit(AutotoolsPackage):
             oapp('MPIFC={0}/mpifc'.format(spec['mpi'].prefix.bin))
             oapp('--enable-connectors')
             oapp('--with-dft-flavor=wannier90')
+        else:
+            oapp('--with-dft-flavor=atompaw+libxc')
 
         if '+mpi' in spec:
             # MPI version:
@@ -117,8 +119,6 @@ class Abinit(AutotoolsPackage):
             oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
             oapp('--enable-mpi=yes')
             oapp('--enable-mpi-io=yes')
-            if '~wannier90' in spec:
-                oapp('--with-dft-flavor=atompaw+libxc')
 
         # Activate OpenMP in Abinit Fortran code.
         if '+openmp' in spec:
