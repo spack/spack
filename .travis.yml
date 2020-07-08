@@ -22,7 +22,6 @@ addons:
       - fish
 
 before_install:
-  - ccache -M 2G && ccache -z
   - if [[ "$TRAVIS_DIST" == "trusty" ]]; then
         share/spack/qa/install_patchelf.sh;
     else
