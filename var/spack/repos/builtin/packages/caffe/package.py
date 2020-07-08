@@ -81,4 +81,10 @@ class Caffe(CMakePackage):
             version = spec['python'].version.up_to(1)
             args.append('-Dpython_version=%s' % version)
 
+        if spec['hdf5'].satisfies('+mpi'):
+            args.extend([
+                '-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),
+                '-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx)
+            ])
+
         return args

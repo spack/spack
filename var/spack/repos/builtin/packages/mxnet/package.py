@@ -46,6 +46,7 @@ class Mxnet(MakefilePackage):
 
     patch('makefile.patch', when='@0.10:0.11')
     patch('makefile.opencv.patch', when='@1.6.0')
+    patch('parallell_shuffle.patch', when='@1.6.0')
 
     def build(self, spec, prefix):
         # copy template configuration file

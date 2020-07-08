@@ -107,16 +107,9 @@ def expected_patchelf_path(request, mutable_database, monkeypatch):
 
 
 @pytest.fixture()
-def mock_patchelf(tmpdir):
-    import jinja2
-
+def mock_patchelf(tmpdir, mock_executable):
     def _factory(output):
-        f = tmpdir.mkdir('bin').join('patchelf')
-        t = jinja2.Template('#!/bin/bash\n{{ output }}\n')
-        f.write(t.render(output=output))
-        f.chmod(0o755)
-        return str(f)
-
+        return mock_executable('patchelf', output=output)
     return _factory
 
 
@@ -344,7 +337,8 @@ def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
         [str(new_binary)], [str(orig_binary)], str(orig_binary.dirpath())
     )
 
-    assert rpaths_for(new_binary) == '$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib'
+    # Some compilers add rpaths so ensure changes included in final result
+    assert '$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib' in rpaths_for(new_binary)
 
 
 def test_raise_if_not_relocatable(monkeypatch):

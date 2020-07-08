@@ -38,6 +38,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     version('8.2.0', sha256='196c3c04ba2613f893283977e6011b2345d1cd1af9abeac58e916b1aab3e0080')
     version('8.1.0', sha256='1d1866f992626e61349a1ccd0b8d5253816222cdc13390dcfaa74b093aa2b153')
 
+    version('7.5.0', sha256='b81946e7f01f90528a1f7352ab08cc602b9ccc05d4e44da4bd501c5a189ee661')
     version('7.4.0', sha256='eddde28d04f334aec1604456e536416549e9b1aa137fc69204e65eb0c009fe51')
     version('7.3.0', sha256='832ca6ae04636adbb430e865a1451adf6979ab44ca1c8374f61fba65645ce15c')
     version('7.2.0', sha256='1cf7adf8ff4b5aa49041c8734bbcf1ad18cc4c94d0029aae0f4e48841088479a')
@@ -114,7 +115,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('zstd', when='@10:')
     depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
-    depends_on('binutils~libiberty', when='+binutils')
+    depends_on('binutils~libiberty', when='+binutils', type=('build', 'link', 'run'))
     depends_on('zip', type='build', when='languages=java')
     depends_on('cuda', when='+nvptx')
 
@@ -242,10 +243,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
-    # Backport libsanitizer patch for glibc >= 2.31 and 8.1.0 <= gcc <= 9.2.0
+    # Backport libsanitizer patch for glibc >= 2.31 and 5.3.0 <= gcc <= 9.2.0
     # https://bugs.gentoo.org/708346
-    patch('glibc-2.31-libsanitizer-1.patch', when='@8.1.0:8.3.99,9.0.0:9.2.0')
-    patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:8.3.99,9.0.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-1.patch', when='@7.1.0:7.5.0,8.1.0:8.3.0,9.0.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-1-gcc-6.patch', when='@5.3.0:5.5.0,6.1.0:6.5.0')
+    patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:8.3.0,9.0.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-2-gcc-6.patch', when='@5.3.0:5.5.0,6.1.0:6.5.0')
+    patch('glibc-2.31-libsanitizer-2-gcc-7.patch', when='@7.1.0:7.5.0')
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch('ucontext_t.patch', when='@4.9,5.1:5.4,6.1:6.4,7.1')
@@ -331,15 +335,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Binutils
         if spec.satisfies('+binutils'):
-            stage1_ldflags = str(self.rpath_args)
-            boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
-            if '%gcc' in spec:
-                stage1_ldflags = boot_ldflags
             binutils = spec['binutils'].prefix.bin
             options.extend([
                 '--with-sysroot=/',
-                '--with-stage1-ldflags=' + stage1_ldflags,
-                '--with-boot-ldflags=' + boot_ldflags,
                 '--with-gnu-ld',
                 '--with-ld=' + binutils.ld,
                 '--with-gnu-as',
@@ -371,6 +369,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 '--with-sysroot={0}'.format(macos_sdk_path()),
                 '--with-libiconv-prefix={0}'.format(spec['iconv'].prefix)
             ])
+
+        # enable appropriate bootstrapping flags
+        stage1_ldflags = str(self.rpath_args)
+        boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
+        options.append('--with-stage1-ldflags=' + stage1_ldflags)
+        options.append('--with-boot-ldflags=' + boot_ldflags)
 
         return options
 

@@ -245,7 +245,9 @@ def supported_compilers():
        See available_compilers() to get a list of all the available
        versions of supported compilers.
     """
-    return sorted(name for name in
+    # Hack to be able to call the compiler `apple-clang` while still
+    # using a valid python name for the module
+    return sorted(name if name != 'apple_clang' else 'apple-clang' for name in
                   llnl.util.lang.list_modules(spack.paths.compilers_path))
 
 
@@ -469,7 +471,13 @@ def class_for_compiler_name(compiler_name):
     """Given a compiler module name, get the corresponding Compiler class."""
     assert(supported(compiler_name))
 
-    file_path = os.path.join(spack.paths.compilers_path, compiler_name + ".py")
+    # Hack to be able to call the compiler `apple-clang` while still
+    # using a valid python name for the module
+    module_name = compiler_name
+    if compiler_name == 'apple-clang':
+        module_name = compiler_name.replace('-', '_')
+
+    file_path = os.path.join(spack.paths.compilers_path, module_name + ".py")
     compiler_mod = simp.load_source(_imported_compilers_module, file_path)
     cls = getattr(compiler_mod, mod_to_class(compiler_name))
 
@@ -662,7 +670,7 @@ def make_compiler_list(detected_versions):
         operating_system, compiler_name, version = cmp_id
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-        paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
+        paths = [paths.get(x, None) for x in ('cc', 'cxx', 'f77', 'fc')]
         target = cpu.host()
         compiler = compiler_cls(
             spec, operating_system, str(target.family), paths
@@ -716,6 +724,8 @@ def is_mixed_toolchain(compiler):
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
+        if toolchains == set(['Clang', 'AppleClang']):
+            return False
         tty.debug("[TOOLCHAINS] {0}".format(toolchains))
         return True
 

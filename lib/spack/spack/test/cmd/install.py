@@ -610,17 +610,17 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
         assert 'foo.c:89: warning: some weird warning!' in msg
 
 
-def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
-    msg = ''
-    with capfd.disabled():
-        try:
-            install('--cache-only', 'libdwarf')
-        except spack.installer.InstallError as e:
-            msg = str(e)
+def test_cache_only_fails(tmpdir, mock_fetch, install_mockery):
+    # libelf from cache fails to install, which automatically removes the
+    # the libdwarf build task and flags the package as failed to install.
+    err_msg = 'Installation of libdwarf failed'
+    with pytest.raises(spack.installer.InstallError, match=err_msg):
+        install('--cache-only', 'libdwarf')
 
-    # libelf from cache failed to install, which automatically removed the
-    # the libdwarf build task and flagged the package as failed to install.
-    assert 'Installation of libdwarf failed' in msg
+    # Check that failure prefix locks are still cached
+    failure_lock_prefixes = ','.join(spack.store.db._prefix_failures.keys())
+    assert 'libelf' in failure_lock_prefixes
+    assert 'libdwarf' in failure_lock_prefixes
 
 
 def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):

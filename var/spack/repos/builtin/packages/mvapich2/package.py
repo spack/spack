@@ -10,10 +10,11 @@ import sys
 class Mvapich2(AutotoolsPackage):
     """MVAPICH2 is an MPI implementation for Infiniband networks."""
     homepage = "http://mvapich.cse.ohio-state.edu/"
-    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.3.tar.gz"
+    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.4.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
     # Prefer the latest stable release
+    version('2.3.4', sha256='7226a45c7c98333c8e5d2888119cce186199b430c13b7b1dca1769909e68ea7a')
     version('2.3.3', sha256='41d3261be57e5bc8aabf4e32981543c015c5443ff032a26f18205985e18c2b73')
     version('2.3.2', sha256='30cc0d7bcaa075d204692f76bca4d65a539e0f661c7460ffa9f835d6249e1ebf')
     version('2.3.1', sha256='314e12829f75f3ed83cd4779a972572d1787aac6543a3d024ea7c6080e0ee3bf')
@@ -198,6 +199,16 @@ class Mvapich2(AutotoolsPackage):
 
         return opts
 
+    def flag_handler(self, name, flags):
+        if name == 'fflags':
+            # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
+            if self.spec.satisfies('%gcc@10:'):
+                if flags is None:
+                    flags = []
+                flags.append('-fallow-argument-mismatch')
+
+        return (flags, None, None)
+
     def setup_build_environment(self, env):
         # mvapich2 configure fails when F90 and F90FLAGS are set
         env.unset('F90')
@@ -207,9 +218,24 @@ class Mvapich2(AutotoolsPackage):
         if 'process_managers=slurm' in self.spec:
             env.set('SLURM_MPI_TYPE', 'pmi2')
 
+        # Because MPI functions as a compiler, we need to treat it as one and
+        # add its compiler paths to the run environment.
+        self.setup_compiler_environment(env)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
-        # On Cray, the regular compiler wrappers *are* the MPI wrappers.
-        if 'platform=cray' in self.spec:
+        self.setup_compiler_environment(env)
+
+        # use the Spack compiler wrappers under MPI
+        env.set('MPICH_CC', spack_cc)
+        env.set('MPICH_CXX', spack_cxx)
+        env.set('MPICH_F77', spack_f77)
+        env.set('MPICH_F90', spack_fc)
+        env.set('MPICH_FC', spack_fc)
+
+    def setup_compiler_environment(self, env):
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
+        if self.spec.external_module and 'cray' in self.spec.external_module:
             env.set('MPICC',  spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
@@ -220,14 +246,10 @@ class Mvapich2(AutotoolsPackage):
             env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
             env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
-        env.set('MPICH_CC', spack_cc)
-        env.set('MPICH_CXX', spack_cxx)
-        env.set('MPICH_F77', spack_f77)
-        env.set('MPICH_F90', spack_fc)
-        env.set('MPICH_FC', spack_fc)
-
     def setup_dependent_package(self, module, dependent_spec):
-        if 'platform=cray' in self.spec:
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
+        if self.spec.external_module and 'cray' in self.spec.external_module:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx
             self.spec.mpifc = spack_fc

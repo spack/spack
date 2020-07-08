@@ -37,6 +37,7 @@ from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
 import spack.util.lock as lk
+from spack.util.path import substitute_path_variables
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -79,9 +80,6 @@ valid_environment_name_re = r'^\w[\w-]*$'
 #: version of the lockfile format. Must increase monotonically.
 lockfile_format_version = 2
 
-#: legal first keys in the spack.yaml manifest file
-env_schema_keys = ('spack', 'env')
-
 # Magic names
 # The name of the standalone spec list in the manifest yaml
 user_speclist_name = 'specs'
@@ -117,7 +115,7 @@ def activate(
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
         add_view (bool): generate commands to add view to path variables
-        shell (string): One of `sh`, `csh`.
+        shell (string): One of `sh`, `csh`, `fish`.
         prompt (string): string to add to the users prompt, or None
 
     Returns:
@@ -143,6 +141,19 @@ def activate(
             cmds += 'if (! $?SPACK_OLD_PROMPT ) '
             cmds += 'setenv SPACK_OLD_PROMPT "${prompt}";\n'
             cmds += 'set prompt="%s ${prompt}";\n' % prompt
+    elif shell == 'fish':
+        if os.getenv('TERM') and 'color' in os.getenv('TERM') and prompt:
+            prompt = colorize('@G{%s} ' % prompt, color=True)
+
+        cmds += 'set -gx SPACK_ENV %s;\n' % env.path
+        cmds += 'function despacktivate;\n'
+        cmds += '   spack env deactivate;\n'
+        cmds += 'end;\n'
+        #
+        # NOTE: We're not changing the fish_prompt function (which is fish's
+        # solution to the PS1 variable) here. This is a bit fiddly, and easy to
+        # screw up => spend time reasearching a solution. Feedback welcome.
+        #
     else:
         if os.getenv('TERM') and 'color' in os.getenv('TERM') and prompt:
             prompt = colorize('@G{%s} ' % prompt, color=True)
@@ -158,6 +169,12 @@ def activate(
             cmds += 'fi;\n'
             cmds += 'export PS1="%s ${PS1}";\n' % prompt
 
+    #
+    # NOTE in the fish-shell: Path variables are a special kind of variable
+    # used to support colon-delimited path lists including PATH, CDPATH,
+    # MANPATH, PYTHONPATH, etc. All variables that end in PATH (case-sensitive)
+    # become PATH variables.
+    #
     if add_view and default_view_name in env.views:
         with spack.store.db.read_transaction():
             cmds += env.add_default_view_to_shell(shell)
@@ -169,7 +186,7 @@ def deactivate(shell='sh'):
     """Undo any configuration or repo settings modified by ``activate()``.
 
     Arguments:
-        shell (string): One of `sh`, `csh`. Shell style to use.
+        shell (string): One of `sh`, `csh`, `fish`. Shell style to use.
 
     Returns:
         (string): shell commands for `shell` to undo environment variables
@@ -193,6 +210,12 @@ def deactivate(shell='sh'):
         cmds += 'set prompt="$SPACK_OLD_PROMPT" && '
         cmds += 'unsetenv SPACK_OLD_PROMPT;\n'
         cmds += 'unalias despacktivate;\n'
+    elif shell == 'fish':
+        cmds += 'set -e SPACK_ENV;\n'
+        cmds += 'functions -e despacktivate;\n'
+        #
+        # NOTE: Not changing fish_prompt (above) => no need to restore it here.
+        #
     else:
         cmds += 'if [ ! -z ${SPACK_ENV+x} ]; then\n'
         cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
@@ -249,18 +272,13 @@ def find_environment(args):
         # at env_dir (env and env_dir are mutually exclusive)
         env = getattr(args, 'env_dir', None)
 
-        # if no argument, look for a manifest file
+        # if no argument, look for the environment variable
         if not env:
-            if os.path.exists(manifest_name):
-                env = os.getcwd()
+            env = os.environ.get(spack_env_var)
 
-            # if no env, env_dir, or manifest try the environment
+            # nothing was set; there's no active environment
             if not env:
-                env = os.environ.get(spack_env_var)
-
-                # nothing was set; there's no active environment
-                if not env:
-                    return None
+                return None
 
     # if we get here, env isn't the name of a spack environment; it has
     # to be a path to an environment, or there is something wrong.
@@ -365,7 +383,7 @@ def create(name, init_file=None, with_view=None):
 
 def config_dict(yaml_data):
     """Get the configuration scope section out of an spack.yaml"""
-    key = spack.config.first_existing(yaml_data, env_schema_keys)
+    key = spack.config.first_existing(yaml_data, spack.schema.env.keys)
     return yaml_data[key]
 
 
@@ -391,42 +409,19 @@ def all_environments():
         yield read(name)
 
 
-def validate(data, filename=None):
-    # validating changes data by adding defaults. Return validated data
-    validate_data = copy.deepcopy(data)
-    # HACK to fully copy ruamel CommentedMap that doesn't provide copy method
-    import ruamel.yaml as yaml
-    setattr(
-        validate_data,
-        yaml.comments.Comment.attrib,
-        getattr(data, yaml.comments.Comment.attrib, yaml.comments.Comment())
-    )
-
-    import jsonschema
-    try:
-        spack.schema.Validator(spack.schema.env.schema).validate(validate_data)
-    except jsonschema.ValidationError as e:
-        if hasattr(e.instance, 'lc'):
-            line_number = e.instance.lc.line + 1
-        else:
-            line_number = None
-        raise spack.config.ConfigFormatError(
-            e, data, filename, line_number)
-    return validate_data
-
-
 def _read_yaml(str_or_file):
     """Read YAML from a file for round-trip parsing."""
     data = syaml.load_config(str_or_file)
     filename = getattr(str_or_file, 'name', None)
-    default_data = validate(data, filename)
+    default_data = spack.config.validate(
+        data, spack.schema.env.schema, filename)
     return (data, default_data)
 
 
 def _write_yaml(data, str_or_file):
     """Write YAML to a file preserving comments and dict order."""
     filename = getattr(str_or_file, 'name', None)
-    validate(data, filename)
+    spack.config.validate(data, spack.schema.env.schema, filename)
     syaml.dump_config(data, str_or_file, default_flow_style=False)
 
 
@@ -434,12 +429,14 @@ def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
     arch = architecture.Arch(
         architecture.platform(), 'default_os', 'default_target')
+    arch_spec = spack.spec.Spec('arch=%s' % arch)
     valid_variables = {
         'target': str(arch.target),
         'os': str(arch.os),
         'platform': str(arch.platform),
-        'arch': str(arch),
-        'architecture': str(arch),
+        'arch': arch_spec,
+        'architecture': arch_spec,
+        'arch_str': str(arch),
         're': re,
         'env': os.environ,
         'hostname': socket.gethostname()
@@ -780,8 +777,8 @@ class Environment(object):
         # highest-precedence scopes are last.
         includes = config_dict(self.yaml).get('include', [])
         for i, config_path in enumerate(reversed(includes)):
-            # allow paths to contain environment variables
-            config_path = config_path.format(**os.environ)
+            # allow paths to contain spack config/environment variables, etc.
+            config_path = substitute_path_variables(config_path)
 
             # treat relative paths as relative to the environment
             if not os.path.isabs(config_path):
@@ -814,11 +811,20 @@ class Environment(object):
         return spack.config.SingleFileScope(config_name,
                                             self.manifest_path,
                                             spack.schema.env.schema,
-                                            [env_schema_keys])
+                                            [spack.schema.env.keys])
 
     def config_scopes(self):
         """A list of all configuration scopes for this environment."""
         return self.included_config_scopes() + [self.env_file_config_scope()]
+
+    def set_config(self, path, value):
+        """Set configuration for this environment"""
+        yaml = config_dict(self.yaml)
+        keys = spack.config.process_config_path(path)
+        for key in keys[:-1]:
+            yaml = yaml[key]
+        yaml[keys[-1]] = value
+        self.write()
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
@@ -906,13 +912,23 @@ class Environment(object):
         old_specs = set(self.user_specs)
         for spec in matches:
             if spec in list_to_change:
-                list_to_change.remove(spec)
-
-        self.update_stale_references(list_name)
+                try:
+                    list_to_change.remove(spec)
+                    self.update_stale_references(list_name)
+                    new_specs = set(self.user_specs)
+                except spack.spec_list.SpecListError:
+                    # define new specs list
+                    new_specs = set(self.user_specs)
+                    msg = "Spec '%s' is part of a spec matrix and " % spec
+                    msg += "cannot be removed from list '%s'." % list_to_change
+                    if force:
+                        msg += " It will be removed from the concrete specs."
+                        # Mock new specs so we can remove this spec from
+                        # concrete spec lists
+                        new_specs.remove(spec)
+                    tty.warn(msg)
 
         # If force, update stale concretized specs
-        # Only check specs removed by this operation
-        new_specs = set(self.user_specs)
         for spec in old_specs - new_specs:
             if force and spec in self.concretized_user_specs:
                 i = self.concretized_user_specs.index(spec)
@@ -1500,8 +1516,12 @@ class Environment(object):
                         del yaml_dict[key]
 
         # if all that worked, write out the manifest file at the top level
-        # Only actually write if it has changed or was never written
-        changed = self.yaml != self.raw_yaml
+        # (we used to check whether the yaml had changed and not write it out
+        # if it hadn't. We can't do that anymore because it could be the only
+        # thing that changed is the "override" attribute on a config dict,
+        # which would not show up in even a string comparison between the two
+        # keys).
+        changed = not yaml_equivalent(self.yaml, self.raw_yaml)
         written = os.path.exists(self.manifest_path)
         if changed or not written:
             self.raw_yaml = copy.deepcopy(self.yaml)
@@ -1526,6 +1546,39 @@ class Environment(object):
         deactivate()
         if self._previous_active:
             activate(self._previous_active)
+
+
+def yaml_equivalent(first, second):
+    """Returns whether two spack yaml items are equivalent, including overrides
+    """
+    if isinstance(first, dict):
+        return isinstance(second, dict) and _equiv_dict(first, second)
+    elif isinstance(first, list):
+        return isinstance(second, list) and _equiv_list(first, second)
+    else:  # it's a string
+        return isinstance(second, six.string_types) and first == second
+
+
+def _equiv_list(first, second):
+    """Returns whether two spack yaml lists are equivalent, including overrides
+    """
+    if len(first) != len(second):
+        return False
+    return all(yaml_equivalent(f, s) for f, s in zip(first, second))
+
+
+def _equiv_dict(first, second):
+    """Returns whether two spack yaml dicts are equivalent, including overrides
+    """
+    if len(first) != len(second):
+        return False
+    same_values = all(yaml_equivalent(fv, sv)
+                      for fv, sv in zip(first.values(), second.values()))
+    same_keys_with_same_overrides = all(
+        fk == sk and getattr(fk, 'override', False) == getattr(sk, 'override',
+                                                               False)
+        for fk, sk in zip(first.keys(), second.keys()))
+    return same_values and same_keys_with_same_overrides
 
 
 def display_specs(concretized_specs):

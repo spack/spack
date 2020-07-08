@@ -398,7 +398,9 @@ class Boost(Package):
         # and at least in clang 3.9 still fails to build
         #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
         #   https://svn.boost.org/trac/boost/ticket/12496
-        if spec.satisfies('%clang'):
+        if (spec.satisfies('%apple-clang') or
+                spec.satisfies('%clang') or
+                spec.satisfies('%fj')):
             options.extend(['pch=off'])
             if '+clanglibcpp' in spec:
                 cxxflags.append('-stdlib=libc++')
@@ -512,3 +514,6 @@ class Boost(Package):
         # on Darwin; correct this
         if (sys.platform == 'darwin') and ('+shared' in spec):
             fix_darwin_install_name(prefix.lib)
+
+    def setup_run_environment(self, env):
+        env.set('BOOST_ROOT', self.prefix)

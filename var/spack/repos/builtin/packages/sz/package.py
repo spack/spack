@@ -54,6 +54,8 @@ class Sz(CMakePackage):
     depends_on('hdf5', when="+hdf5")
     depends_on('netcdf-c', when="+netcdf")
 
+    patch('ctags-only-if-requested.patch', when='@2.1.8.1:2.1.8.3')
+
     @property
     def build_directory(self):
         """autotools needs a different build directory to work"""

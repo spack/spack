@@ -30,6 +30,9 @@ class F18(CMakePackage):
 
     # Conflicts
     compiler_warning = 'F18 requires a compiler with support for C++17'
+    # See https://en.wikipedia.org/wiki/Xcode#Latest_versions for a
+    # conversion table from LLVM versions to Apple's Clang
+    conflicts('%apple-clang@:10.1', msg=compiler_warning)
     conflicts('%clang@:6', msg=compiler_warning)
     conflicts('%gcc@:7.1', msg=compiler_warning)
     conflicts('%intel', msg=compiler_warning)

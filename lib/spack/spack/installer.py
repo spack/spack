@@ -373,6 +373,13 @@ def _update_explicit_entry_in_db(pkg, rec, explicit):
             rec.explicit = True
 
 
+def clear_failures():
+    """
+    Remove all failure tracking markers for the Spack instance.
+    """
+    spack.store.db.clear_all_failures()
+
+
 def dump_packages(spec, path):
     """
     Dump all package information for a spec and its dependencies.
@@ -549,6 +556,9 @@ install_args_docstring = """
             dirty (bool): Don't clean the build environment before installing.
             explicit (bool): True if package was explicitly installed, False
                 if package was implicitly installed (as a dependency).
+            fail_fast (bool): Fail if any dependency fails to install;
+                otherwise, the default is to install as many dependencies as
+                possible (i.e., best effort installation).
             fake (bool): Don't really build; install fake stub files instead.
             force (bool): Install again, even if already installed.
             install_deps (bool): Install dependencies before installing this
@@ -784,6 +794,9 @@ class PackageInstaller(object):
         The ``stop_before`` or ``stop_at`` arguments are removed from the
         installation arguments.
 
+        The last phase is also set to None if it is the last phase of the
+        package already
+
         Args:
             kwargs:
               ``stop_before``': stop before execution of this phase (or None)
@@ -800,6 +813,10 @@ class PackageInstaller(object):
                 self.pkg.last_phase not in self.pkg.phases:
             tty.die('\'{0}\' is not an allowed phase for package {1}'
                     .format(self.pkg.last_phase, self.pkg.name))
+        # If we got a last_phase, make sure it's not already last
+        if self.pkg.last_phase and \
+                self.pkg.last_phase == self.pkg.phases[-1]:
+            self.pkg.last_phase = None
 
     def _cleanup_all_tasks(self):
         """Cleanup all build tasks to include releasing their locks."""
@@ -825,7 +842,7 @@ class PackageInstaller(object):
         """
         lock = self.failed.get(pkg_id, None)
         if lock is not None:
-            err = "{0} exception when removing failure mark for {1}: {2}"
+            err = "{0} exception when removing failure tracking for {1}: {2}"
             msg = 'Removing failure mark on {0}'
             try:
                 tty.verbose(msg.format(pkg_id))
@@ -1164,13 +1181,12 @@ class PackageInstaller(object):
             if task.compiler:
                 spack.compilers.add_compilers_to_config(
                     spack.compilers.find_compilers([pkg.spec.prefix]))
-
-        except StopIteration as e:
-            # A StopIteration exception means that do_install was asked to
-            # stop early from clients.
-            tty.msg('{0} {1}'.format(self.pid, str(e)))
-            tty.msg('Package stage directory : {0}'
-                    .format(pkg.stage.source_path))
+        except spack.build_environment.StopPhase as e:
+            # A StopPhase exception means that do_install was asked to
+            # stop early from clients, and is not an error at this point
+            tty.debug('{0} {1}'.format(self.pid, str(e)))
+            tty.debug('Package stage directory : {0}'
+                      .format(pkg.stage.source_path))
 
     _install_task.__doc__ += install_args_docstring
 
@@ -1379,10 +1395,13 @@ class PackageInstaller(object):
 
         Args:"""
 
+        fail_fast = kwargs.get('fail_fast', False)
         install_deps = kwargs.get('install_deps', True)
         keep_prefix = kwargs.get('keep_prefix', False)
         keep_stage = kwargs.get('keep_stage', False)
         restage = kwargs.get('restage', False)
+
+        fail_fast_err = 'Terminating after first install failure'
 
         # install_package defaults True and is popped so that dependencies are
         # always installed regardless of whether the root was installed
@@ -1443,6 +1462,10 @@ class PackageInstaller(object):
             if pkg_id in self.failed or spack.store.db.prefix_failed(spec):
                 tty.warn('{0} failed to install'.format(pkg_id))
                 self._update_failed(task)
+
+                if fail_fast:
+                    raise InstallError(fail_fast_err)
+
                 continue
 
             # Attempt to get a write lock.  If we can't get the lock then
@@ -1524,13 +1547,27 @@ class PackageInstaller(object):
                 self._update_installed(task)
                 raise
 
-            except (Exception, KeyboardInterrupt, SystemExit) as exc:
-                # Assuming best effort installs so suppress the exception and
-                # mark as a failure UNLESS this is the explicit package.
+            except KeyboardInterrupt as exc:
+                # The build has been terminated with a Ctrl-C so terminate.
                 err = 'Failed to install {0} due to {1}: {2}'
                 tty.error(err.format(pkg.name, exc.__class__.__name__,
                           str(exc)))
+                raise
+
+            except (Exception, SystemExit) as exc:
+                # Best effort installs suppress the exception and mark the
+                # package as a failure UNLESS this is the explicit package.
+                err = 'Failed to install {0} due to {1}: {2}'
+                tty.error(err.format(pkg.name, exc.__class__.__name__,
+                          str(exc)))
+
                 self._update_failed(task, True, exc)
+
+                if fail_fast:
+                    # The user requested the installation to terminate on
+                    # failure.
+                    raise InstallError('{0}: {1}'
+                                       .format(fail_fast_err, str(exc)))
 
                 if pkg_id == self.pkg_id:
                     raise

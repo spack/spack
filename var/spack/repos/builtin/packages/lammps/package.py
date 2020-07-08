@@ -61,8 +61,8 @@ class Lammps(CMakePackage, CudaPackage):
                           'molecule', 'mpiio', 'peri', 'poems', 'python',
                           'qeq', 'replica', 'rigid', 'shock', 'snap', 'spin',
                           'srd', 'user-atc', 'user-h5md', 'user-lb',
-                          'user-misc', 'user-netcdf', 'user-omp', 'user-reaxc',
-                          'voronoi']
+                          'user-meamc', 'user-misc', 'user-netcdf', 'user-omp',
+                          'user-reaxc', 'voronoi']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
@@ -120,6 +120,8 @@ class Lammps(CMakePackage, CudaPackage):
     conflicts('+user-misc', when='~manybody')
     conflicts('%gcc@9:', when='@:20200303+openmp')
     conflicts('+kokkos', when='@:20200227')
+    conflicts('+meam', when='@20181212:')
+    conflicts('+user-meamc', when='@:20181212')
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")

@@ -51,13 +51,16 @@ class Psi4(CMakePackage):
         ]
 
     @run_after('install')
-    def filter_compilers(self, spec, prefix):
+    def filter_compilers(self):
         """Run after install to tell the configuration files to
         use the compilers that Spack built the package with.
 
         If this isn't done, they'll have PLUGIN_CXX set to
         Spack's generic cxx. We want it to be bound to
         whatever compiler it was built with."""
+
+        spec = self.spec
+        prefix = spec.prefix
 
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 

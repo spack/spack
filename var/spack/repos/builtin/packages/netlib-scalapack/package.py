@@ -41,11 +41,11 @@ class NetlibScalapack(CMakePackage):
     depends_on('cmake', when='@2.0.0:', type='build')
 
     # See: https://github.com/Reference-ScaLAPACK/scalapack/issues/9
-    patch("cmake_fortran_mangle.patch", when='@2.0.2:@2.0.99')
+    patch("cmake_fortran_mangle.patch", when='@2.0.2:2.0.99')
     # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/10
-    patch("mpi2-compatibility.patch", when='@2.0.2:@2.0.99')
+    patch("mpi2-compatibility.patch", when='@2.0.2:2.0.99')
     # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/16
-    patch("int_overflow.patch", when='@2.0.0:@2.1.0')
+    patch("int_overflow.patch", when='@2.0.0:2.1.0')
 
     @property
     def libs(self):
@@ -80,15 +80,6 @@ class NetlibScalapack(CMakePackage):
             options.extend([
                 "-DCMAKE_C_FLAGS=%s" % self.compiler.cc_pic_flag,
                 "-DCMAKE_Fortran_FLAGS=%s" % self.compiler.fc_pic_flag
-            ])
-
-        # Specify Fujitsu-MPI's location
-        if spec.satisfies('%fj') and '^fujitsu-mpi' in spec:
-            options.extend([
-                '-DMPI_C_COMPILER=%s'       % spec['mpi'].mpicc,
-                '-DMPI_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
-                '-DMPI_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-                '-DMPI_BASE_DIR=%s' % spec['mpi'].prefix
             ])
 
         return options

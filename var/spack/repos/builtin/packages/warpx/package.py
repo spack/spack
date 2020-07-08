@@ -20,7 +20,7 @@ class Warpx(MakefilePackage):
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
 
-    version('master', tag='master')
+    version('develop', tag='development')
 
     variant('dims',
             default='3',
@@ -55,7 +55,7 @@ class Warpx(MakefilePackage):
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
-             when='@master',
+             when='@develop',
              tag='development')
 
     resource(name='picsar',
@@ -68,7 +68,8 @@ class Warpx(MakefilePackage):
 
     def edit(self, spec, prefix):
         comp = 'gcc'
-        vendors = {'%gcc': 'gcc', '%intel': 'intel', '%clang': 'llvm'}
+        vendors = {'%gcc': 'gcc', '%intel': 'intel',
+                   '%apple-clang': 'llvm', '%clang': 'llvm'}
         for key, value in vendors.items():
             if self.spec.satisfies(key):
                 comp = value

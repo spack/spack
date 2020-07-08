@@ -111,7 +111,7 @@ def test_log_subproc_and_echo_output_capfd(capfd, tmpdir):
 # Tests below use a pseudoterminal to test llnl.util.tty.log
 #
 def simple_logger(**kwargs):
-    """Mock logger (child) process for testing log.keyboard_input."""
+    """Mock logger (minion) process for testing log.keyboard_input."""
     def handler(signum, frame):
         running[0] = False
     signal.signal(signal.SIGUSR1, handler)
@@ -125,7 +125,7 @@ def simple_logger(**kwargs):
 
 
 def mock_shell_fg(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background."""
+    """PseudoShell controller function for test_foreground_background."""
     ctl.fg()
     ctl.status()
     ctl.wait_enabled()
@@ -134,7 +134,7 @@ def mock_shell_fg(proc, ctl, **kwargs):
 
 
 def mock_shell_fg_no_termios(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background."""
+    """PseudoShell controller function for test_foreground_background."""
     ctl.fg()
     ctl.status()
     ctl.wait_disabled_fg()
@@ -143,7 +143,7 @@ def mock_shell_fg_no_termios(proc, ctl, **kwargs):
 
 
 def mock_shell_bg(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background."""
+    """PseudoShell controller function for test_foreground_background."""
     ctl.bg()
     ctl.status()
     ctl.wait_disabled()
@@ -152,7 +152,7 @@ def mock_shell_bg(proc, ctl, **kwargs):
 
 
 def mock_shell_tstp_cont(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background."""
+    """PseudoShell controller function for test_foreground_background."""
     ctl.tstp()
     ctl.wait_stopped()
 
@@ -163,7 +163,7 @@ def mock_shell_tstp_cont(proc, ctl, **kwargs):
 
 
 def mock_shell_tstp_tstp_cont(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background."""
+    """PseudoShell controller function for test_foreground_background."""
     ctl.tstp()
     ctl.wait_stopped()
 
@@ -177,7 +177,7 @@ def mock_shell_tstp_tstp_cont(proc, ctl, **kwargs):
 
 
 def mock_shell_tstp_tstp_cont_cont(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background."""
+    """PseudoShell controller function for test_foreground_background."""
     ctl.tstp()
     ctl.wait_stopped()
 
@@ -194,7 +194,7 @@ def mock_shell_tstp_tstp_cont_cont(proc, ctl, **kwargs):
 
 
 def mock_shell_bg_fg(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background."""
+    """PseudoShell controller function for test_foreground_background."""
     ctl.bg()
     ctl.status()
     ctl.wait_disabled()
@@ -207,7 +207,7 @@ def mock_shell_bg_fg(proc, ctl, **kwargs):
 
 
 def mock_shell_bg_fg_no_termios(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background."""
+    """PseudoShell controller function for test_foreground_background."""
     ctl.bg()
     ctl.status()
     ctl.wait_disabled()
@@ -220,7 +220,7 @@ def mock_shell_bg_fg_no_termios(proc, ctl, **kwargs):
 
 
 def mock_shell_fg_bg(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background."""
+    """PseudoShell controller function for test_foreground_background."""
     ctl.fg()
     ctl.status()
     ctl.wait_enabled()
@@ -233,7 +233,7 @@ def mock_shell_fg_bg(proc, ctl, **kwargs):
 
 
 def mock_shell_fg_bg_no_termios(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background."""
+    """PseudoShell controller function for test_foreground_background."""
     ctl.fg()
     ctl.status()
     ctl.wait_disabled_fg()
@@ -299,7 +299,7 @@ def test_foreground_background(test_fn, termios_on_or_off, tmpdir):
 
 
 def synchronized_logger(**kwargs):
-    """Mock logger (child) process for testing log.keyboard_input.
+    """Mock logger (minion) process for testing log.keyboard_input.
 
     This logger synchronizes with the parent process to test that 'v' can
     toggle output.  It is used in ``test_foreground_background_output`` below.
@@ -330,7 +330,7 @@ def synchronized_logger(**kwargs):
 
 
 def mock_shell_v_v(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background_output."""
+    """Controller function for test_foreground_background_output."""
     write_lock = kwargs["write_lock"]
     v_lock = kwargs["v_lock"]
 
@@ -357,7 +357,7 @@ def mock_shell_v_v(proc, ctl, **kwargs):
 
 
 def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
-    """PseudoShell master function for test_foreground_background_output."""
+    """Controller function for test_foreground_background_output."""
     write_lock = kwargs["write_lock"]
     v_lock = kwargs["v_lock"]
 
@@ -395,9 +395,9 @@ def test_foreground_background_output(
     shell = PseudoShell(test_fn, synchronized_logger)
     log_path = str(tmpdir.join("log.txt"))
 
-    # Locks for synchronizing with child
-    write_lock = multiprocessing.Lock()  # must be held by child to write
-    v_lock = multiprocessing.Lock()  # held while master is in v mode
+    # Locks for synchronizing with minion
+    write_lock = multiprocessing.Lock()  # must be held by minion to write
+    v_lock = multiprocessing.Lock()  # held while controller is in v mode
 
     with termios_on_or_off():
         shell.start(
@@ -423,16 +423,16 @@ def test_foreground_background_output(
     with open(log_path) as log:
         log = log.read().strip().split("\n")
 
-    # Master and child process coordinate with locks such that the child
+    # Controller and minion process coordinate with locks such that the minion
     # writes "off" when echo is off, and "on" when echo is on.  The
     # output should contain mostly "on" lines, but may contain an "off"
-    # or two. This is because the master toggles echo by sending "v" on
-    # stdin to the child, but this is not synchronized with our locks.
+    # or two. This is because the controller toggles echo by sending "v" on
+    # stdin to the minion, but this is not synchronized with our locks.
     # It's good enough for a test, though.  We allow at most 2 "off"'s in
     # the output to account for the race.
     assert (
         ['forced output', 'on'] == uniq(output) or
-        output.count("off") <= 2  # if master_fd is a bit slow
+        output.count("off") <= 2  # if controller_fd is a bit slow
     )
 
     # log should be off for a while, then on, then off

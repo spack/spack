@@ -96,7 +96,7 @@ class Acts(CMakePackage):
     depends_on('dd4hep @1.10: +geant4 +xercesc', when='+dd4hep +geant4')
     depends_on('eigen @3.2.9:', type='build')
     depends_on('geant4', when='+geant4')
-    depends_on('hepmc@3.1:', when='+hepmc3')
+    depends_on('hepmc3@3.1:', when='+hepmc3')
     depends_on('heppdt', when='+hepmc3')
     depends_on('intel-tbb', when='+examples')
     depends_on('nlohmann-json @3.2.0:', when='@0.14: +json')

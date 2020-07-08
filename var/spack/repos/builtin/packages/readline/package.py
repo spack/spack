@@ -29,7 +29,8 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
 
     def build(self, spec, prefix):
         options = [
-            'SHLIB_LIBS=-L{0} -lncursesw'.format(spec['ncurses'].prefix.lib)
+            'SHLIB_LIBS=-L{0} -lncursesw -ltinfo'.format(
+                spec['ncurses'].prefix.lib)
         ]
 
         make(*options)

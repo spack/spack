@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import filecmp
 import functools as ft
 import os
 import re
@@ -18,6 +17,7 @@ from llnl.util.filesystem import (
     mkdirp, remove_dead_links, remove_empty_directories)
 
 import spack.util.spack_yaml as s_yaml
+import spack.util.spack_json as s_json
 
 import spack.spec
 import spack.store
@@ -411,10 +411,34 @@ class YamlFilesystemView(FilesystemView):
         if not os.path.lexists(dest):
             tty.warn("Tried to remove %s which does not exist" % dest)
             return
-        # remove if dest is a hardlink/symlink to src; this will only
-        # be false if two packages are merged into a prefix and have a
-        # conflicting file
-        if filecmp.cmp(src, dest, shallow=True):
+
+        def needs_file(spec, file):
+            # convert the file we want to remove to a source in this spec
+            projection = self.get_projection_for_spec(spec)
+            relative_path = os.path.relpath(file, projection)
+            test_path = os.path.join(spec.prefix, relative_path)
+
+            # check if this spec owns a file of that name (through the
+            # manifest in the metadata dir, which we have in the view).
+            manifest_file = os.path.join(self.get_path_meta_folder(spec),
+                                         spack.store.layout.manifest_file_name)
+            try:
+                with open(manifest_file, 'r') as f:
+                    manifest = s_json.load(f)
+            except (OSError, IOError):
+                # if we can't load it, assume it doesn't know about the file.
+                manifest = {}
+            return test_path in manifest
+
+        # remove if dest is not owned by any other package in the view
+        # This will only be false if two packages are merged into a prefix
+        # and have a conflicting file
+
+        # check all specs for whether they own the file. That include the spec
+        # we are currently removing, as we remove files before unlinking the
+        # metadata directory.
+        if len([s for s in self.get_all_specs()
+                if needs_file(s, dest)]) <= 1:
             os.remove(dest)
 
     def check_added(self, spec):

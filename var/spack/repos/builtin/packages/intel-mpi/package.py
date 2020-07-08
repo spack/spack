@@ -63,3 +63,9 @@ class IntelMpi(IntelPackage):
             'F90':  spack_fc,
             'FC':   spack_fc,
         })
+
+    def setup_run_environment(self, env):
+        super(IntelMpi, self).setup_run_environment(env)
+
+        for name, value in self.mpi_compiler_wrappers.items():
+            env.set(name, value)

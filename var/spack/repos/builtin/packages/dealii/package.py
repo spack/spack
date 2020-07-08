@@ -301,7 +301,7 @@ class Dealii(CMakePackage, CudaPackage):
             cxx_flags_release.extend(['-O3'])
         elif spec.satisfies('%intel'):
             cxx_flags_release.extend(['-O3'])
-        elif spec.satisfies('%clang'):
+        elif spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
             cxx_flags_release.extend(['-O3', '-ffp-contract=fast'])
 
         # Python bindings

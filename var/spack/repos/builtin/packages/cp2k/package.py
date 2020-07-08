@@ -68,7 +68,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('lmax',
             description='Maximum supported angular momentum (HFX and others)',
             default='5',
-            values=list(HFX_LMAX_RANGE),
+            values=map(str, HFX_LMAX_RANGE),
             multi=False)
 
     depends_on('python', type='build')
@@ -141,6 +141,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('wannier90', when='@3.0+mpi', type='build')
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%nag')
 
