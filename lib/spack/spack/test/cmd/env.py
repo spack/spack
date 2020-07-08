@@ -2042,3 +2042,40 @@ def test_env_write_only_non_default():
         yaml = f.read()
 
     assert yaml == ev.default_manifest_yaml
+
+
+def test_update_and_revert_anonymous_env(tmpdir):
+    raw_yaml = """
+spack:
+  specs:
+  - mpich
+  packages:
+    cmake:
+      paths:
+        cmake@3.17.3: /usr
+"""
+    manifest = tmpdir.ensure('spack.yaml')
+    backup_file = tmpdir.join('spack.yaml.bkp')
+    manifest.write(raw_yaml)
+    env('update', str(manifest.dirname))
+
+    # Check if the backup file has been created
+    assert os.path.exists(str(backup_file))
+    # Try to read the environment (it should not error)
+    ev.create('test', str(manifest))
+
+    # Retrying another update does nothing since the
+    # manifest is up-to-date
+    env('update', str(manifest.dirname))
+
+    # An update on an old manifest fails in presence of a backup file
+    manifest.write(raw_yaml)
+    with pytest.raises(AssertionError):
+        env('update', str(manifest.dirname))
+
+    # Try an update followed by a revert
+    os.unlink(str(backup_file))
+    env('update', str(manifest.dirname))
+    assert os.path.exists(str(backup_file))
+    env('revert', '--force', str(manifest.dirname))
+    assert not os.path.exists(str(backup_file))

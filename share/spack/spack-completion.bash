@@ -743,7 +743,7 @@ _spack_env() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view"
+        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert"
     fi
 }
 
@@ -818,6 +818,24 @@ _spack_env_view() {
         SPACK_COMPREPLY="-h --help"
     else
         SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_env_update() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        _environments
+    fi
+}
+
+_spack_env_revert() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --force"
+    else
+        _environments
     fi
 }
 

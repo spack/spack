@@ -87,13 +87,13 @@ def setup_parser(subparser):
     )
     update.add_argument('section', help='section to update')
 
-    update = sp.add_parser(
+    revert = sp.add_parser(
         'revert',
         help='revert configuration files to their state before update'
     )
-    update.add_argument('--force', action='store_true',
+    revert.add_argument('--force', action='store_true',
                         help='force removal of configuration file')
-    update.add_argument('section', help='section to update')
+    revert.add_argument('section', help='section to update')
 
 
 def _get_scope_and_section(args):
@@ -321,7 +321,7 @@ def config_update(args):
         # Make a backup copy and rewrite the file
         bkp_file = cfg_file + '.bkp'
         if os.path.exists(bkp_file):
-            msg = ('backup file "{0}" exists on disk. Check its content '
+            msg = ('backup file "{0}" exists on disk.\n\nCheck its content '
                    'and remove it before trying to update again.')
             tty.die(msg.format(bkp_file))
         shutil.copy(cfg_file, bkp_file)
@@ -339,7 +339,7 @@ def config_revert(args):
             continue
 
         if os.path.exists(cfg_file) and not args.force:
-            msg = ('configuration file "{0}" exists on disk. Check '
+            msg = ('configuration file "{0}" exists on disk.\n\nCheck '
                    'its content and remove it before trying to revert '
                    'again. use the --force option to overwrite existing '
                    'files')

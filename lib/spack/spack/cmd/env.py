@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import shutil
 import sys
 from collections import namedtuple
 
@@ -37,6 +38,8 @@ subcommands = [
     ['status', 'st'],
     'loads',
     'view',
+    'update',
+    'revert'
 ]
 
 
@@ -392,6 +395,50 @@ def env_loads(args):
 
     print('To load this environment, type:')
     print('   source %s' % loads_file)
+
+
+def env_update_setup_parser(subparser):
+    subparser.add_argument(
+        metavar='env', dest='env',
+        help='name or directory of the environment to activate'
+    )
+
+
+def env_update(args):
+    manifest_file = ev.manifest_file(args.env)
+    backup_file = manifest_file + ".bkp"
+    changed = ev.update_yaml(manifest_file, backup_file=backup_file)
+    if not changed:
+        tty.msg('No update needed')
+        return
+    msg = 'Environment "{0}" updated [backup={1}]'
+    tty.msg(msg.format(args.env, backup_file))
+
+
+def env_revert_setup_parser(subparser):
+    subparser.add_argument(
+        metavar='env', dest='env',
+        help='name or directory of the environment to activate'
+    )
+    subparser.add_argument(
+        '--force', action='store_true', help='force removal of manifest file'
+    )
+
+
+def env_revert(args):
+    manifest_file = ev.manifest_file(args.env)
+    backup_file = manifest_file + ".bkp"
+    if os.path.exists(manifest_file) and not args.force:
+        msg = ('manifest file "{0}" exists on disk.\n\nCheck '
+               'its content and remove it before trying to revert '
+               'and update again. Use the "--force" option to overwrite '
+               'existing files')
+        tty.die(msg.format(manifest_file))
+
+    shutil.copy(backup_file, manifest_file)
+    os.unlink(backup_file)
+    msg = 'Environment "{0}" reverted to old state'
+    tty.msg(msg.format(manifest_file))
 
 
 #: Dictionary mapping subcommand names and aliases to functions
