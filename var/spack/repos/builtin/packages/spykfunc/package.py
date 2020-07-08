@@ -70,8 +70,9 @@ class Spykfunc(PythonPackage):
         env.set('SPARK_HOME', self.spec['spark'].prefix)
         env.set('HADOOP_HOME', self.spec['hadoop'].prefix)
 
-        env.prepend_path('PATH',
-                         os.path.join(self.spec['py-bb5'].prefix, 'bin'))
+        if self.spec.satisfies('@:0.15.6'):
+            env.prepend_path('PATH',
+                             os.path.join(self.spec['py-bb5'].prefix, 'bin'))
         env.prepend_path('PATH',
                          os.path.join(self.spec['py-sparkmanager'].prefix,
                                       'bin'))
