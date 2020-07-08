@@ -280,7 +280,7 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                     spec.validate_detection()
                 except Exception as e:
                     msg = ('"{0}" has been detected on the system but will '
-                           'not be added to packages.yaml [{1}]')
+                           'not be added to packages.yaml [reason={1}]')
                     tty.warn(msg.format(spec, str(e)))
                     continue
 
