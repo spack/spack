@@ -403,7 +403,7 @@ def dump_packages(spec, path):
             # 1) it wasn't built with Spack, so it has no Spack metadata
             # 2) it was built by another Spack instance, and we do not
             # (currently) use Spack metadata to associate repos with externals
-            # built be other Spack instances.
+            # built by other Spack instances.
             # Spack can always get something current from the builtin repo.
             if node.external or not os.path.isdir(source_repo_root):
                 continue
