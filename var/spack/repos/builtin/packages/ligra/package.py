@@ -35,9 +35,10 @@ class Ligra(Package):
         env.prepend_path('PATH', self.prefix.apps)
         env.prepend_path('PATH', self.prefix.utils)
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         make('-C', 'apps')
         make('-C', 'utils')
-        install_tree(self.stage.source_path, prefix)
-        install_tree(join_path(self.stage.source_path, 'ligra'),
-                     prefix.include)
+        
+    def install(self, spec, prefix):
+        install_tree('.', prefix)
+        install_tree('ligra', prefix.include)
