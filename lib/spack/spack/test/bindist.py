@@ -210,8 +210,11 @@ def test_default_rpaths_create_install_default_layout(tmpdir,
     create_args.insert(create_args.index('-a'), '-f')
     args = parser.parse_args(create_args)
     buildcache.buildcache(parser, args)
+    # create mirror index
+    args = parser.parse_args(['update-index', '-d', 'file://%s' % str(mirror_path_def)])
+    buildcache.buildcache(parser, args)
     # list the buildcaches in the mirror
-    args = parser.parse_args(['list', '-f', '-l', '-v'])
+    args = parser.parse_args(['list', '-a', '-l', '-v'])
     buildcache.buildcache(parser, args)
 
     # Uninstall the package and deps
@@ -238,7 +241,7 @@ def test_default_rpaths_create_install_default_layout(tmpdir,
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
 
-    args = parser.parse_args(['list', '-f'])
+    args = parser.parse_args(['list', '-a'])
     buildcache.buildcache(parser, args)
 
     args = parser.parse_args(['list', '-l', '-v'])
@@ -281,7 +284,7 @@ def test_default_rpaths_install_nondefault_layout(tmpdir,
     buildcache.setup_parser(parser)
 
     # Set default buildcache args
-    install_args = ['install', '-a', '-u', cspec.name]
+    install_args = ['install', '-a', '-u', '%s' % cspec.name ]
 
     # Install some packages with dependent packages
     # test install in non-default install path scheme
@@ -340,7 +343,9 @@ def test_relative_rpaths_create_default_layout(tmpdir,
     # create build cache with relatived rpaths
     args = parser.parse_args(create_args)
     buildcache.buildcache(parser, args)
-
+    # create mirror index
+    args = parser.parse_args(['update-index', '-d', 'file://%s' % str(mirror_path_rel)])
+    buildcache.buildcache(parser, args)
     # Uninstall the package and deps
     uparser = argparse.ArgumentParser()
     uninstall.setup_parser(uparser)
@@ -453,7 +458,7 @@ def test_relative_rpaths_install_nondefault(tmpdir,
     buildcache.setup_parser(parser)
 
     # Set default buildcache args
-    install_args = ['install', '-a', '-u', cspec.name]
+    install_args = ['install', '-a', '-u', '%s' % cspec.name]
 
     # test install in non-default install path scheme and relative path
     args = parser.parse_args(install_args)
