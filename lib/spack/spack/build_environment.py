@@ -177,7 +177,7 @@ def clean_environment():
     # Unset mpi environment vars. These flags should only be set by
     # mpi providers for packages with mpi dependencies
     mpi_vars = [
-        'MPICC', 'MPICXX', 'MPIF70', 'MPIF90'
+        'MPICC', 'MPICXX', 'MPIFC', 'MPIF70', 'MPIF90'
     ]
     for v in mpi_vars:
         env.unset(v)
