@@ -466,7 +466,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     web_util.push_to_url(
         specfile_path, remote_specfile_path, keep_original=False)
 
-    tty.msg('Buildache for "%s" written to \n %s' %
+    tty.msg('Buildcache for "%s" written to \n %s' %
             (spec, remote_spackfile_path))
 
     try:
