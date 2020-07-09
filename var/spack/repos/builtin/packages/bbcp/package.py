@@ -9,8 +9,8 @@ from spack import *
 class Bbcp(Package):
     """Securely and quickly copy data from source to target"""
 
-    homepage = "http://www.slac.stanford.edu/~abh/bbcp/"
-    git      = "http://www.slac.stanford.edu/~abh/bbcp/bbcp.git"
+    homepage = "https://www.slac.stanford.edu/~abh/bbcp/"
+    git      = "https://www.slac.stanford.edu/~abh/bbcp/bbcp.git"
 
     version('git', branch='master')
 
