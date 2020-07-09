@@ -16,6 +16,7 @@ class Bbcp(Package):
 
     depends_on('zlib')
     depends_on('openssl')
+    depends_on('libnsl')
 
     def install(self, spec, prefix):
         cd("src")
