@@ -18,3 +18,14 @@ merge_pipeline:
   trigger:
     project: spack/e4s
     strategy: depend
+
+release_pipeline:
+  only:
+  - releases/v0.15
+  variables:
+    SPACK_REPO: https://github.com/spack/spack.git
+    SPACK_REF: releases/v0.15
+  trigger:
+    project: spack/e4s
+    branch: releases/v0.15
+    strategy: depend
