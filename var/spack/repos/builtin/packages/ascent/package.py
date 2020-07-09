@@ -35,21 +35,21 @@ class Ascent(Package, CudaPackage):
 
     homepage = "https://github.com/Alpine-DAV/ascent"
     git      = "https://github.com/Alpine-DAV/ascent.git"
-    url      = "https://github.com/Alpine-DAV/ascent/releases/download/v0.5.0/ascent-v0.5.0-src-with-blt.tar.gz"
+    url      = "https://github.com/Alpine-DAV/ascent/releases/download/v0.5.1/ascent-v0.5.1-src-with-blt.tar.gz"
 
     maintainers = ['cyrush']
 
-    # as of now: dependencies are plumbed in spack to support develop only.
     version('develop',
             branch='develop',
-            submodules=True)
+            submodules=True,
+            preferred=True)
 
     ###########################################################################
     # package variants
     ###########################################################################
 
     variant("shared", default=True, description="Build Ascent as shared libs")
-    variant("test", default=True, description='Enable Ascent unit tests')
+    variant('test', default=True, description='Enable Ascent unit tests')
 
     variant("mpi", default=True, description="Build Ascent MPI Support")
     variant("serial", default=True, description="build serial (non-mpi) libraries")
@@ -67,6 +67,7 @@ class Ascent(Package, CudaPackage):
     variant("cuda", default=False, description="Build cuda support")
     variant("mfem", default=False, description="Build MFEM filter support")
     variant("adios", default=False, description="Build Adios filter support")
+    variant("dray", default=False, description="Build with Devil Ray support")
 
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Ascent's documentation")
@@ -74,8 +75,7 @@ class Ascent(Package, CudaPackage):
     # variant for BabelFlow runtime
     variant("babelflow", default=False, description="Build with BabelFlow")
 
-
-    ###########################################################################
+    ##########################################################################
     # package dependencies
     ###########################################################################
 
@@ -115,24 +115,43 @@ class Ascent(Package, CudaPackage):
     # TPLs for Runtime Features
     #############################
 
-    depends_on("vtk-h@0.5.0",             when="+vtkh")
-    depends_on("vtk-h@0.5.0~openmp",      when="+vtkh~openmp")
-    depends_on("vtk-h@0.5.0+cuda+openmp", when="+vtkh+cuda+openmp")
-    depends_on("vtk-h@0.5.0+cuda~openmp", when="+vtkh+cuda~openmp")
+    depends_on("vtk-h",             when="+vtkh")
+    depends_on("vtk-h~openmp",      when="+vtkh~openmp")
+    depends_on("vtk-h+cuda+openmp", when="+vtkh+cuda+openmp")
+    depends_on("vtk-h+cuda~openmp", when="+vtkh+cuda~openmp")
 
-    depends_on("vtk-h@0.5.0~shared",             when="~shared+vtkh")
-    depends_on("vtk-h@0.5.0~shared~openmp",      when="~shared+vtkh~openmp")
-    depends_on("vtk-h@0.5.0~shared+cuda",        when="~shared+vtkh+cuda")
-    depends_on("vtk-h@0.5.0~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
+    depends_on("vtk-h~shared",             when="~shared+vtkh")
+    depends_on("vtk-h~shared~openmp",      when="~shared+vtkh~openmp")
+    depends_on("vtk-h~shared+cuda",        when="~shared+vtkh+cuda")
+    depends_on("vtk-h~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
 
     # mfem
-    depends_on("mfem+threadsafe+shared+mpi+conduit", when="+shared+mfem+mpi")
-    depends_on("mfem+threadsafe~shared+mpi+conduit", when="~shared+mfem+mpi")
+    depends_on("mfem@~threadsafe~openmp+shared+mpi+conduit", when="+shared+mfem+mpi")
+    depends_on("mfem@~threadsafe~openmp~shared+mpi+conduit", when="~shared+mfem+mpi")
 
-    depends_on("mfem+threadsafe+shared~mpi+conduit", when="+shared+mfem~mpi")
-    depends_on("mfem+threadsafe~shared~mpi+conduit", when="~shared+mfem~mpi")
+    depends_on("mfem@~threadsafe~openmp+shared~mpi+conduit", when="+shared+mfem~mpi")
+    depends_on("mfem@~threadsafe~openmp~shared~mpi+conduit", when="~shared+mfem~mpi")
 
     depends_on("adios", when="+adios")
+
+    # devil ray variants with mpi
+    # we have to specify both because mfem makes us
+    depends_on("dray@develop+mpi~test~utils+shared+cuda",        when="+dray+mpi+cuda+shared")
+    depends_on("dray@develop+mpi~test~utils+shared+openmp",      when="+dray+mpi+openmp+shared")
+    depends_on("dray@develop+mpi~test~utils+shared~openmp~cuda", when="+dray+mpi~openmp~cuda+shared")
+
+    depends_on("dray@develop+mpi~test~utils~shared+cuda",        when="+dray+mpi+cuda~shared")
+    depends_on("dray@develop+mpi~test~utils~shared+openmp",      when="+dray+mpi+openmp~shared")
+    depends_on("dray@develop+mpi~test~utils~shared~openmp~cuda", when="+dray+mpi~openmp~cuda~shared")
+
+    # devil ray variants without mpi
+    depends_on("dray@develop~mpi~test~utils+shared+cuda",        when="+dray~mpi+cuda+shared")
+    depends_on("dray@develop~mpi~test~utils+shared+openmp",      when="+dray~mpi+openmp+shared")
+    depends_on("dray@develop~mpi~test~utils+shared~openmp~cuda", when="+dray~mpi~openmp~cuda+shared")
+
+    depends_on("dray@develop~mpi~test~utils~shared+cuda",        when="+dray~mpi+cuda~shared")
+    depends_on("dray@develop~mpi~test~utils~shared+openmp",      when="+dray~mpi+openmp~shared")
+    depends_on("dray@develop~mpi~test~utils~shared~openmp~cuda", when="+dray~mpi~openmp~cuda~shared")
 
     #######################
     # Documentation related
@@ -416,7 +435,8 @@ class Ascent(Package, CudaPackage):
 
         if "+babelflow" in spec:
             cfg.write(cmake_cache_entry("ENABLE_BABELFLOW", "ON"))
-            cfg.write(cmake_cache_entry("BabelFlow_DIR", spec['babelflow'].prefix))
+            cfg.write(cmake_cache_entry("BabelFlow_DIR",
+                                        spec['babelflow'].prefix))
             cfg.write(cmake_cache_entry("PMT_DIR", spec['pmt'].prefix))
 
         #######################
@@ -466,6 +486,15 @@ class Ascent(Package, CudaPackage):
             cfg.write(cmake_cache_entry("MFEM_DIR", spec['mfem'].prefix))
         else:
             cfg.write("# mfem not built by spack \n")
+
+        #######################
+        # Devil Ray
+        #######################
+        if "+dray" in spec:
+            cfg.write("# devil ray from spack \n")
+            cfg.write(cmake_cache_entry("DRAY_DIR", spec['dray'].prefix))
+        else:
+            cfg.write("# devil ray not built by spack \n")
 
         #######################
         # Adios

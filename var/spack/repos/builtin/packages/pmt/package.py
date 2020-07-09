@@ -7,8 +7,8 @@ from spack import *
 
 
 class Pmt(CMakePackage):
-    """A multi-runtime implementation of a distributed merge tree 
-    segmentation algorithm. The implementation relies on the framework 
+    """A multi-runtime implementation of a distributed merge tree
+    segmentation algorithm. The implementation relies on the framework
     BabelFlow, which allows to execute the algorithm on different runtime
     systems."""
 
@@ -29,14 +29,11 @@ class Pmt(CMakePackage):
     variant("shared", default=True, description="Build ParallelMergeTree as shared libs")
 
     def cmake_args(self):
-      args = []
-
-      args.append('-DLIBRARY_ONLY=ON')
-
-      return args
+        args = []
+        args.append('-DLIBRARY_ONLY=ON')
+        return args
 
     def cmake_install(self, spec, prefix):
-        
         if "+shared" in spec:
             cmake_args.append('-DBUILD_SHARED_LIBS=ON')
         else:

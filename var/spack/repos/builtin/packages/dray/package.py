@@ -5,14 +5,12 @@
 
 from spack import *
 
-import sys
 import os
 import socket
-import glob
-import shutil
 
 import llnl.util.tty as tty
 from os import environ as env
+
 
 def cmake_cache_entry(name, value, vtype=None):
     """
@@ -26,7 +24,8 @@ def cmake_cache_entry(name, value, vtype=None):
             vtype = "PATH"
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
 
-class Dray(Package,CudaPackage):
+
+class Dray(Package, CudaPackage):
     """High-Order Mesh Ray Tracer."""
 
     homepage = "https://github.com/LLNL/devil_ray"
@@ -144,11 +143,6 @@ class Dray(Package,CudaPackage):
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
-        f_compiler = None
-
-        if self.compiler.fc:
-            # even if this is set, it may not exist so do one more sanity check
-            f_compiler = env["SPACK_FC"]
 
         #######################################################################
         # By directly fetching the names of the actual compilers we appear
@@ -175,8 +169,8 @@ class Dray(Package,CudaPackage):
             cmake_exe = cmake_exe.path
 
         host_cfg_fname = "%s-%s-%s-devil_ray.cmake" % (socket.gethostname(),
-                                                    sys_type,
-                                                    spec.compiler)
+                                                       sys_type,
+                                                       spec.compiler)
 
         cfg = open(host_cfg_fname, "w")
         cfg.write("##################################\n")
@@ -200,7 +194,6 @@ class Dray(Package,CudaPackage):
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             mpicc_path = spec['mpi'].mpicc
             mpicxx_path = spec['mpi'].mpicxx
-            mpifc_path = spec['mpi'].mpifc
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
@@ -208,8 +201,7 @@ class Dray(Package,CudaPackage):
             if cpp_compiler == "CC":
                 mpicc_path = "cc"
                 mpicxx_path = "CC"
-                mpifc_path = "ftn"
-            #cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
+
             cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", mpicxx_path))
         else:
@@ -228,9 +220,10 @@ class Dray(Package,CudaPackage):
         if "+cuda" in spec:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "ON"))
             if 'cuda_arch' in spec.variants:
-              cuda_value = spec.variants['cuda_arch'].value
-              cuda_arch = cuda_value[0]
-              cfg.write(cmake_cache_entry('CUDA_ARCH','sm_{0}'.format(cuda_arch)))
+                cuda_value = spec.variants['cuda_arch'].value
+                cuda_arch = cuda_value[0]
+                cfg.write(cmake_cache_entry('CUDA_ARCH',
+                                            'sm_{0}'.format(cuda_arch)))
         else:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
 
@@ -319,9 +312,9 @@ class Dray(Package,CudaPackage):
                 '-DENABLE_CUDA=On',
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
             if 'cuda_arch' in spec.variants:
-              cuda_value = spec.variants['cuda_arch'].value
-              cuda_arch = cuda_value[0]
-              options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
+                cuda_value = spec.variants['cuda_arch'].value
+                cuda_arch = cuda_value[0]
+                options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
         else:
             options.extend(['-DENABLE_CUDA=OFF'])
 

@@ -5,12 +5,10 @@
 
 
 from spack import *
-import sys
 import os
 import socket
-import glob
-import shutil
 import llnl.util.tty as tty
+
 
 def cmake_cache_entry(name, value, vtype=None):
     """
@@ -23,6 +21,7 @@ def cmake_cache_entry(name, value, vtype=None):
         else:
             vtype = "PATH"
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
+
 
 class Apcomp(Package):
     """A multi use-case image compositor"""
@@ -83,11 +82,6 @@ class Apcomp(Package):
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
-        f_compiler = None
-
-        if self.compiler.fc:
-            # even if this is set, it may not exist so do one more sanity check
-            f_compiler = env["SPACK_FC"]
 
         #######################################################################
         # By directly fetching the names of the actual compilers we appear
@@ -149,7 +143,6 @@ class Apcomp(Package):
             cfg.write(cmake_cache_entry("ENABLE_OPENMP", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_OPENMP", "OFF"))
-
 
         if "+mpi" in spec:
             mpicc_path = spec['mpi'].mpicc
