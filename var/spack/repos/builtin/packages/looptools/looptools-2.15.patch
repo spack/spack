@@ -1,0 +1,28 @@
+--- configure.orig	2019-09-12 11:18:19.178513866 +0200
++++ configure	2019-09-12 11:39:41.461764848 +0200
+@@ -257,7 +257,11 @@
+ _EOF_
+ 
+ for CONF_BITS in ${CONF_BITS:--m64 -m32} ; do
+-  eval $CONF_CC$CONF_CFLAGS $CONF_BITS -c $test-c.c 1>&2 || continue
++  if test "$CONF_MACH" = "aarch64"; then
++    eval $CONF_CC$CONF_CFLAGS -c $test-c.c 1>&2 || continue
++  else    
++    eval $CONF_CC$CONF_CFLAGS $CONF_BITS -c $test-c.c 1>&2 || continue
++  fi
+   eval $CONF_FC$CONF_FFLAGS -o $test$CONF_EXE $test.f $test-c.o 1>&2 && break
+ done
+ 
+@@ -274,8 +278,10 @@
+   exit 1 ;;
+ esac
+ 
+-CONF_CFLAGS+=" $CONF_BITS"
+-CONF_CXXFLAGS+=" $CONF_BITS"
++if test "$CONF_MACH" != "aarch64"; then 
++  CONF_CFLAGS+=" $CONF_BITS"
++  CONF_CXXFLAGS+=" $CONF_BITS"
++fi
+ 
+ test "$CONF_OS$CONF_BITS" = "Linux-m64" && CONF_LIBDIRSUFFIX=64
+ 
