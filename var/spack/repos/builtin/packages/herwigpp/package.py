@@ -34,19 +34,19 @@ class Herwigpp(AutotoolsPackage):
             make()
 
         with working_dir('Contrib/AlpGen'):
-            make('BasicLesHouchesFileReader.so', 
+            make('BasicLesHouchesFileReader.so',
                  "HERWIGINCLUDE=-I{0}/include".format(self.stage.source_path))
-            make('AlpGenHandler.so', 
+            make('AlpGenHandler.so',
                  "HERWIGINCLUDE=-I{0}/include".format(self.stage.source_path))
 
     def install(self, spec, prefix):
         make('install')
         install(
-            join_path(self.stage.source_path, 
-                'Contrib', 'AlpGen', 'AlpGenHandler.so'),
+            join_path(self.stage.source_path,
+                      'Contrib', 'AlpGen', 'AlpGenHandler.so'),
             join_path(prefix.lib, 'Herwig++', 'AlpGenHandler.so'))
 
         install(
-            join_path(self.stage.source_path, 
-                'Contrib', 'AlpGen', 'BasicLesHouchesFileReader.so'),
+            join_path(self.stage.source_path,
+                      'Contrib', 'AlpGen', 'BasicLesHouchesFileReader.so'),
             join_path(prefix.lib, 'Herwig++', 'BasicLesHouchesFileReader.so'))
