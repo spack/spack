@@ -35,7 +35,7 @@ class Changa(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        args.append("STRUCT_DIR={}/utility/structures"
+        args.append("STRUCT_DIR={0}/utility/structures"
                     .format(self.stage.source_path))
         return args
 
