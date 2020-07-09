@@ -33,9 +33,9 @@ class VtkM(CMakePackage, CudaPackage):
     version('1.1.0', sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18")
     # version used by ascent
     version('ascent_ver', commit="a3b8525ef97d94996ae843db0dd4f675c38e8b1e")
-
-    patch('vtkmdiy_fpic.patch', when='@1.5.3')
-    patch('disable_flying_edges.patch', when='@1.5.3')
+    # patches, required for ascent
+    patch('vtkmdiy_fpic.patch', when='@ascent_ver')
+    patch('disable_flying_edges.patch', when='@ascent_ver')
     # use release, instead of release with debug symbols b/c vtkm libs
     # can overwhelm compilers with too many symbols
     variant('build_type', default='Release', description='CMake build type',
