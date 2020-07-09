@@ -9,12 +9,11 @@ from spack import *
 class Vbfnlo(AutotoolsPackage):
     """VBFNLO is a fully flexible parton level Monte Carlo program
        for the simulation of vector boson fusion, double and triple
-       vector boson production in hadronic collisions at 
+       vector boson production in hadronic collisions at
        next to leading order in the strong coupling constant. """
 
     homepage = "https://www.itp.kit.edu/vbfnlo/wiki/doku.php?id=overview"
     url      = "https://github.com/vbfnlo/vbfnlo/archive/v3.0.0beta5.tar.gz"
-
 
     # The commented out versions exist, but are not tested
     version('3.0.0beta5', sha256='777a3dedb365ea9abc38848a60f30d325da3799cbad69fa308664b94a8c31a90')
@@ -29,15 +28,12 @@ class Vbfnlo(AutotoolsPackage):
     depends_on('gsl')
     depends_on('lhapdf')
     depends_on('looptools')
-    # depends_on('feynhiggs')
 
     def configure_args(self):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
         args = ["--with-hepmc=" + self.spec['hepmc'].prefix,
                 "--with-gsl=" + self.spec['gsl'].prefix,
-                "--with-LHAPDF=" + self.spec['lhapdf'].prefix
-                " --with-LOOPTOOLS=" + self.spec['looptools'].prefix,
+                "--with-LHAPDF=" + self.spec['lhapdf'].prefix,
+                "--with-LOOPTOOLS=" + self.spec['looptools'].prefix,
                 "FCFLAGS=-std=legacy"]
 
         return args
