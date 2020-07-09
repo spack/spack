@@ -36,8 +36,7 @@ def decompressor_for(path, extension=None):
         bunzip2 = which('bunzip2', required=True)
         return bunzip2
     tar = which('tar', required=True)
-    tar.add_default_arg('--no-same-owner')
-    tar.add_default_arg('-xf')
+    tar.add_default_arg('-oxf')
     return tar
 
 
