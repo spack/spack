@@ -51,7 +51,6 @@ class Paraview(CMakePackage, CudaPackage):
             description='Use module kits')
 
     conflicts('+python', when='+python3')
-    conflicts('+python', when='@5.6:')
     conflicts('+python3', when='@:5.5')
     conflicts('+shared', when='+cuda')
     # Legacy rendering dropped in 5.5
@@ -109,6 +108,11 @@ class Paraview(CMakePackage, CudaPackage):
     # depends_on('sqlite') # external version not supported
     depends_on('zlib')
     depends_on('cmake@3.3:', type='build')
+
+    # Can't contretize with python2 and py-setuptools@45.0.0:
+    depends_on('py-setuptools@:44.99.99', when='+python')
+    # Can't contretize with python2 and py-pillow@7.0.0:
+    depends_on('py-pillow@:6', when='+python')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 
@@ -232,13 +236,39 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DPARAVIEW_QT_VERSION=%s' % spec['qt'].version[0],
             ])
 
+        # CMake flags for python are different for different versions
+        # Make sure Spack uses the right cmake flags
         if '+python' in spec or '+python3' in spec:
-            cmake_args.extend([
-                '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
-                '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
-                spec['python'].command.path,
-                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi')
-            ])
+            if spec.satisfies('@5.8:'):
+                cmake_args.append('-DPARAVIEW_USE_PYTHON:BOOL=ON')
+                if '+python3' in spec:
+                    cmake_args.append('-DPARAVIEW_PYTHON_VERSION:STRING=3')
+                else:
+                    cmake_args.append('-DPARAVIEW_PYTHON_VERSION:STRING=2')
+            elif spec.satisfies('@5.7:'):
+                cmake_args.extend([
+                    '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
+                    '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
+                    spec['python'].command.path
+                ])
+                if '+python3' in spec:
+                    cmake_args.append('-DPARAVIEW_PYTHON_VERSION:STRING=3')
+                else:
+                    cmake_args.append('-DPARAVIEW_PYTHON_VERSION:STRING=2')
+            else:
+                cmake_args.extend([
+                    '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
+                    '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
+                    spec['python'].command.path
+                ])
+                if '+python3' in spec:
+                    cmake_args.append('-DVTK_PYTHON_VERSION:STRING=3')
+                else:
+                    cmake_args.append('-DVTK_PYTHON_VERSION:STRING=2')
+            cmake_args.append('-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi'))
+
+
+
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
 
