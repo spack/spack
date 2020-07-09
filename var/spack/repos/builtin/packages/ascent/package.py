@@ -69,7 +69,7 @@ class Ascent(Package, CudaPackage):
     variant("adios", default=False, description="Build Adios filter support")
 
     # variants for dev-tools (docs, etc)
-    variant("doc", default=False, description="Build Conduit's documentation")
+    variant("doc", default=False, description="Build Ascent's documentation")
 
     # variant for BabelFlow runtime
     variant("babelflow", default=False, description="Build with BabelFlow")
