@@ -17,6 +17,8 @@ class Wannier90(MakefilePackage):
     homepage = 'http://wannier.org'
     url = 'http://wannier.org/code/wannier90-2.0.1.tar.gz'
 
+    version('3.1.0', sha256='40651a9832eb93dec20a8360dd535262c261c34e13c41b6755fa6915c936b254')
+    version('3.0.0', sha256='f196e441dcd7b67159a1d09d2d7de2893b011a9f03aab6b30c4703ecbf20fe5b')
     version('2.1.0', sha256='ee90108d4bc4aa6a1cf16d72abebcb3087cf6c1007d22dda269eb7e7076bddca')
     version('2.0.1', sha256='05ea7cd421a219ce19d379ad6ae3d9b1a84be4ffb367506ffdfab1e729309e94')
 
@@ -29,6 +31,15 @@ class Wannier90(MakefilePackage):
     build_targets = [
         'wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw', 'w90pov'
     ]
+
+    def url_for_version(self, version):
+        # Starting from version 3.0.0, the tarballs are hosted on Github
+        if version >= Version('3.0.0'):
+            url = "https://github.com/wannier-developers/wannier90/archive/v{0}.tar.gz"
+        else:
+            url = "http://wannier.org/code/wannier90-{0}.tar.gz"
+
+        return url.format(version)
 
     @property
     def makefile_name(self):
