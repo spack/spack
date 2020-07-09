@@ -37,7 +37,7 @@ class Hpctoolkit(AutotoolsPackage):
             description='Build for Blue Gene compute nodes, including '
             'hpcprof-mpi.')
 
-    variant('mpi', default=False,
+    variant('mpi', default=True,
             description='Build hpcprof-mpi, the MPI version of hpcprof.')
 
     # We can't build with both PAPI and perfmon for risk of segfault
