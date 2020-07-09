@@ -14,6 +14,8 @@ class Icu4c(AutotoolsPackage):
     homepage = "http://site.icu-project.org/"
     url      = "https://github.com/unicode-org/icu/releases/download/release-65-1/icu4c-65_1-src.tgz"
 
+    version('67.1', sha256='94a80cd6f251a53bd2a997f6f1b5ac6653fe791dfab66e1eb0227740fb86d5dc')
+    version('66.1', sha256='52a3f2209ab95559c1cf0a14f24338001f389615bf00e2585ef3dbc43ecf0a2e')
     version('65.1', sha256='53e37466b3d6d6d01ead029e3567d873a43a5d1c668ed2278e253b683136d948')
     version('64.1', sha256='92f1b7b9d51b396679c17f35a2112423361b8da3c1b9de00aa94fd768ae296e6')
     version('60.3', sha256='476287b17db6e0b7da230dce4b58e8e5669b1510847f82cab3647920f1374390')
