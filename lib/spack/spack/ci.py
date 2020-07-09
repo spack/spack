@@ -613,7 +613,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     debug_flag = '-d '
 
                 job_scripts = [
-                    'spack env activate .',
+                    'spack env activate --without-view .',
                     'spack {0}ci rebuild'.format(debug_flag),
                 ]
 
