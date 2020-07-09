@@ -23,6 +23,8 @@ class GdkPixbuf(Package):
     version('2.38.0', sha256='dd50973c7757bcde15de6bcd3a6d462a445efd552604ae6435a0532fbbadae47')
     version('2.31.2', sha256='9e467ed09894c802499fb2399cd9a89ed21c81700ce8f27f970a833efb1e47aa')
 
+    variant('x11', default=False, description="Enable X11 support")
+
     depends_on('meson@0.46.0:', type='build', when='@2.37.92:')
     depends_on('meson@0.45.0:', type='build', when='@2.37.0:')
     depends_on('ninja', type='build', when='@2.37.0:')
@@ -39,6 +41,7 @@ class GdkPixbuf(Package):
     depends_on('zlib')
     depends_on('libtiff')
     depends_on('gobject-introspection')
+    depends_on('libx11', when='+x11')
 
     # Replace the docbook stylesheet URL with the one that our
     # docbook-xsl package uses/recognizes.
@@ -56,7 +59,9 @@ class GdkPixbuf(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
-            meson('..', *std_meson_args)
+            meson_args = std_meson_args
+            meson_args += ['-Dx11={0}'.format('+x11' in spec)]
+            meson('..', *meson_args)
             ninja('-v')
             if self.run_tests:
                 ninja('test')
