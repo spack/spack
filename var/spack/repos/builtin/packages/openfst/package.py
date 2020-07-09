@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Openfst(AutotoolsPackage):
     url      = "http://www.openfst.org/twiki/pub/FST/FstDownload/openfst-1.6.1.tar.gz"
     list_url = "http://www.openfst.org/twiki/bin/view/FST/FstDownload"
 
+    version('1.6.7',  sha256='e21a486d827cde6a592c8e91721e4540ad01a5ae35a60423cf17be4d716017f7')
     version('1.6.1',  sha256='5245af8ebccb96208eec2dfe3b3a81143d3565a4d41220bff299287fb3333f7d')
     version('1.6.0',  sha256='c03467951631af3f74a6f33ffd50f04285bc4562f79127afd95785120379d293')
     version('1.5.4',  sha256='acc115aaaa33de53de62dae44120ab368fabaea06f52606b77714081ecd32657')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,6 @@ class Transdecoder(MakefilePackage):
         install_tree('PerlLib', prefix.PerlLib)
         install_tree('util', prefix.util)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', prefix)
-        run_env.prepend_path('PATH', prefix.util)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix)
+        env.prepend_path('PATH', self.prefix.util)

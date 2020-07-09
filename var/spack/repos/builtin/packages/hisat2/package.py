@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,5 +40,5 @@ class Hisat2(MakefilePackage):
             if os.path.isfile(file):
                 install(file, prefix.bin)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.spec.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.spec.prefix)

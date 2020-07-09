@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class Scons(PythonPackage):
     homepage = "http://scons.org"
     url      = "https://pypi.io/packages/source/s/scons/scons-3.1.1.tar.gz"
 
+    version('3.1.2', sha256='8aaa483c303efeb678e6f7c776c8444a482f8ddc3ad891f8b6cdd35264da9a1f')
     version('3.1.1', sha256='fd44f8f2a4562e7e5bc8c63c82b01e469e8115805a3e9c2923ee54cdcd6678b3')
     version('3.1.0', sha256='94e0d0684772d3e6d9368785296716e0ed6ce757270b3ed814e5aa72d3163890')
     version('3.0.5', sha256='e95eaae17d9e490cf12cd37f091a6cbee8a628b5c8dbd3cab1f348f602f46462')

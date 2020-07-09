@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -209,7 +209,7 @@ class Executable(object):
                 istream.close()
 
     def __eq__(self, other):
-        return self.exe == other.exe
+        return hasattr(other, 'exe') and self.exe == other.exe
 
     def __neq__(self, other):
         return not (self == other)

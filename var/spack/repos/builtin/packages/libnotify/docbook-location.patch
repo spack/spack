@@ -1,0 +1,11 @@
+--- a/meson.build	2020-03-30 14:00:26.851258170 -0400
++++ b/meson.build	2020-03-30 14:03:43.134195999 -0400
+@@ -54,7 +54,7 @@
+ 
+ if get_option('man')
+   xsltproc = find_program('xsltproc', required: true)
+-  stylesheet = 'http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xsl'
++  stylesheet = 'http://cdn.docbook.org/release/xsl/current/manpages/docbook.xsl'
+   xsltproc_command = [
+     xsltproc,
+     '--nonet',

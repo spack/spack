@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -146,23 +146,23 @@ class Athena(AutotoolsPackage):
 
     patch('missing-separator.patch')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
 
-        spack_env.set('OPT', '-O3')
+        env.set('OPT', '-O3')
 
         if '+mpi' in spec:
-            spack_env.set('CC', spec['mpi'].mpicc)
-            spack_env.set('LDR', spec['mpi'].mpicc)
-            spack_env.set('MPILIB', spec['mpi'].libs.ld_flags)
-            spack_env.set('MPIINC', spec['mpi'].headers.include_flags)
+            env.set('CC', spec['mpi'].mpicc)
+            env.set('LDR', spec['mpi'].mpicc)
+            env.set('MPILIB', spec['mpi'].libs.ld_flags)
+            env.set('MPIINC', spec['mpi'].headers.include_flags)
         else:
-            spack_env.set('CC', spack_cc)
-            spack_env.set('LDR', spack_cc)
+            env.set('CC', spack_cc)
+            env.set('LDR', spack_cc)
 
         if '+fft' in spec:
-            spack_env.set('FFTWLIB', spec['fftw'].libs.ld_flags)
-            spack_env.set('FFTWINC', spec['fftw'].headers.include_flags)
+            env.set('FFTWLIB', spec['fftw'].libs.ld_flags)
+            env.set('FFTWINC', spec['fftw'].headers.include_flags)
 
     def configure_args(self):
         spec = self.spec

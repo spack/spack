@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -253,14 +253,14 @@ However, other more powerful methods are generally preferred for user
 environments.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^
-Spack-Generated Modules
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using ``spack load`` to Manage the User Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Suppose that Spack has been used to install a set of command-line
 programs, which users now wish to use.  One can in principle put a
 number of ``spack load`` commands into ``.bashrc``, for example, to
-load a set of Spack-generated modules:
+load a set of Spack packages:
 
 .. code-block:: sh
 
@@ -273,7 +273,7 @@ load a set of Spack-generated modules:
 Although simple load scripts like this are useful in many cases, they
 have some drawbacks:
 
-1. The set of modules loaded by them will in general not be
+1. The set of packages loaded by them will in general not be
    consistent.  They are a decent way to load commands to be called
    from command shells.  See below for better ways to assemble a
    consistent set of packages for building application programs.
@@ -284,20 +284,27 @@ have some drawbacks:
    The ``spack load`` and ``spack module tcl loads`` commands, on the
    other hand, are not very smart: if the user-supplied spec matches
    more than one installed package, then ``spack module tcl loads`` will
-   fail. This may change in the future.  For now, the workaround is to
-   be more specific on any ``spack module tcl loads`` lines that fail.
+   fail. This default behavior may change in the future.  For now,
+   the workaround is to either be more specific on any failing ``spack load``
+   commands or to use ``spack load --first`` to allow spack to load the
+   first matching spec.
 
 
 """"""""""""""""""""""
 Generated Load Scripts
 """"""""""""""""""""""
 
-Another problem with using `spack load` is, it is slow; a typical user
-environment could take several seconds to load, and would not be
-appropriate to put into ``.bashrc`` directly.  It is preferable to use
-a series of ``spack module tcl loads`` commands to pre-compute which
-modules to load.  These can be put in a script that is run whenever
-installed Spack packages change.  For example:
+Another problem with using `spack load` is, it can be slow; a typical
+user environment could take several seconds to load, and would not be
+appropriate to put into ``.bashrc`` directly.  This is because it
+requires the full start-up overhead of python/Spack for each command.
+In some circumstances it is preferable to use a series of ``spack
+module tcl loads`` (or ``spack module lmod loads``) commands to
+pre-compute which modules to load.  This will generate the modulenames
+to load the packages using environment modules, rather than Spack's
+built-in support for environment modifications. These can be put in a
+script that is run whenever installed Spack packages change.  For
+example:
 
 .. code-block:: sh
 
@@ -439,7 +446,7 @@ environment.
 
 A single-prefix filesystem view is a single directory tree that is the
 union of the directory hierarchies of a number of installed packages;
-it is similar to the directory hiearchy that might exist under
+it is similar to the directory hierarchy that might exist under
 ``/usr/local``.  The files of the view's installed packages are
 brought into the view by symbolic or hard links, referencing the
 original Spack installation.
@@ -634,7 +641,7 @@ Global Activations
 Python (and similar systems) packages directly or creating a view.
 If extensions are globally activated, then ``spack load python`` will
 also load all the extensions activated for the given ``python``.
-This reduces the need for users to load a large number of modules.
+This reduces the need for users to load a large number of packages.
 
 However, Spack global activations have two potential drawbacks:
 
@@ -1090,6 +1097,248 @@ or filesystem views.  However, it has some drawbacks:
    integrate Spack explicitly in their workflow.  Not all users are
    willing to do this.
 
+-------------------------------------
+Using Spack to Replace Homebrew/Conda
+-------------------------------------
+
+Spack is an incredibly powerful package manager, designed for supercomputers
+where users have diverse installation needs. But Spack can also be used to
+handle simple single-user installations on your laptop. Most macOS users are
+already familiar with package managers like Homebrew and Conda, where all
+installed packages are symlinked to a single central location like ``/usr/local``.
+In this section, we will show you how to emulate the behavior of Homebrew/Conda
+using :ref:`environments`!
+
+^^^^^
+Setup
+^^^^^
+
+First, let's create a new environment. We'll assume that Spack is already set up
+correctly, and that you've already sourced the setup script for your shell.
+To create a new environment, simply run:
+
+.. code-block:: console
+
+   $ spack env create myenv
+   ==> Updating view at /Users/me/spack/var/spack/environments/myenv/.spack-env/view
+   ==> Created environment 'myenv' in /Users/me/spack/var/spack/environments/myenv
+   $ spack env activate myenv
+
+Here, *myenv* can be anything you want to name your environment. Next, we can add
+a list of packages we would like to install into our environment. Let's say we
+want a newer version of Bash than the one that comes with macOS, and we want a
+few Python libraries. We can run:
+
+.. code-block:: console
+
+   $ spack add bash
+   ==> Adding bash to environment myenv
+   ==> Updating view at /Users/me/spack/var/spack/environments/myenv/.spack-env/view
+   $ spack add python@3:
+   ==> Adding python@3: to environment myenv
+   ==> Updating view at /Users/me/spack/var/spack/environments/myenv/.spack-env/view
+   $ spack add py-numpy py-scipy py-matplotlib
+   ==> Adding py-numpy to environment myenv
+   ==> Adding py-scipy to environment myenv
+   ==> Adding py-matplotlib to environment myenv
+   ==> Updating view at /Users/me/spack/var/spack/environments/myenv/.spack-env/view
+
+Each package can be listed on a separate line, or combined into a single line.
+Notice that we're explicitly asking for Python 3 here. You can use any spec
+you would normally use on the command line with other Spack commands.
+
+Next, we want to manually configure a couple of things. In the ``myenv``
+directory, we can find the ``spack.yaml`` that actually defines our environment.
+
+.. code-block:: console
+
+   $ vim ~/spack/var/spack/environments/myenv/spack.yaml
+
+.. code-block:: yaml
+
+   # This is a Spack Environment file.
+   #
+   # It describes a set of packages to be installed, along with
+   # configuration settings.
+   spack:
+     # add package specs to the `specs` list
+     specs: [bash, 'python@3:', py-numpy, py-scipy, py-matplotlib]
+     view:
+       default:
+         root: /Users/me/spack/var/spack/environments/myenv/.spack-env/view
+         projections: {}
+     config: {}
+     mirrors: {}
+     modules:
+       enable: []
+     packages: {}
+     repos: []
+     upstreams: {}
+     definitions: []
+     concretization: separately
+
+You can see the packages we added earlier in the ``specs:`` section. If you
+ever want to add more packages, you can either use ``spack add`` or manually
+edit this file.
+
+We also need to change the ``concretization:`` option. By default, Spack
+concretizes each spec *separately*, allowing multiple versions of the same
+package to coexist. Since we want a single consistent environment, we want to
+concretize all of the specs *together*.
+
+Here is what your ``spack.yaml`` looks like with these new settings, and with
+some of the sections we don't plan on using removed:
+
+.. code-block:: diff
+
+   spack:
+   -  specs: [bash, 'python@3:', py-numpy, py-scipy, py-matplotlib]
+   +  specs:
+   +  - bash
+   +  - 'python@3:'
+   +  - py-numpy
+   +  - py-scipy
+   +  - py-matplotlib
+   -  view:
+   -    default:
+   -      root: /Users/me/spack/var/spack/environments/myenv/.spack-env/view
+   -      projections: {}
+   +  view: /Users/me/spack/var/spack/environments/myenv/.spack-env/view
+   -  config: {}
+   -  mirrors: {}
+   -  modules:
+   -    enable: []
+   -  packages: {}
+   -  repos: []
+   -  upstreams: {}
+   -  definitions: []
+   +  concretization: together
+   -  concretization: separately
+
+""""""""""""""""
+Symlink location
+""""""""""""""""
+
+In the ``spack.yaml`` file above, you'll notice that by default, Spack symlinks
+all installations to ``/Users/me/spack/var/spack/environments/myenv/.spack-env/view``.
+You can actually change this to any directory you want. For example, Homebrew
+uses ``/usr/local``, while Conda uses ``/Users/me/anaconda``. In order to access
+files in these locations, you need to update ``PATH`` and other environment variables
+to point to them. Activating the Spack environment does this automatically, but
+you can also manually set them in your ``.bashrc``.
+
+.. warning::
+
+   There are several reasons why you shouldn't use ``/usr/local``:
+
+   1. If you are on macOS 10.11+ (El Capitan and newer), Apple makes it hard
+      for you. You may notice permissions issues on ``/usr/local`` due to their
+      `System Integrity Protection <https://support.apple.com/en-us/HT204899>`_.
+      By default, users don't have permissions to install anything in ``/usr/local``,
+      and you can't even change this using ``sudo chown`` or ``sudo chmod``.
+   2. Other package managers like Homebrew will try to install things to the
+      same directory. If you plan on using Homebrew in conjunction with Spack,
+      don't symlink things to ``/usr/local``.
+   3. If you are on a shared workstation, or don't have sudo privileges, you
+      can't do this.
+
+   If you still want to do this anyway, there are several ways around SIP.
+   You could disable SIP by booting into recovery mode and running
+   ``csrutil disable``, but this is not recommended, as it can open up your OS
+   to security vulnerabilities. Another technique is to run ``spack concretize``
+   and ``spack install`` using ``sudo``. This is also not recommended.
+
+   The safest way I've found is to create your installation directories using
+   sudo, then change ownership back to the user like so:
+
+   .. code-block:: bash
+
+      for directory in .spack bin contrib include lib man share
+      do
+          sudo mkdir -p /usr/local/$directory
+          sudo chown $(id -un):$(id -gn) /usr/local/$directory
+      done
+
+   Depending on the packages you install in your environment, the exact list of
+   directories you need to create may vary. You may also find some packages
+   like Java libraries that install a single file to the installation prefix
+   instead of in a subdirectory. In this case, the action is the same, just replace
+   ``mkdir -p`` with ``touch`` in the for-loop above.
+
+   But again, it's safer just to use the default symlink location.
+
+
+^^^^^^^^^^^^
+Installation
+^^^^^^^^^^^^
+
+To actually concretize the environment, run:
+
+.. code-block:: console
+
+   $ spack concretize
+
+This will tell you which if any packages are already installed, and alert you
+to any conflicting specs.
+
+To actually install these packages and symlink them to your ``view:``
+directory, simply run:
+
+.. code-block:: console
+
+   $ spack install
+
+Now, when you type ``which python3``, it should find the one you just installed.
+
+In order to change the default shell to our newer Bash installation, we first
+need to add it to this list of acceptable shells. Run:
+
+.. code-block:: console
+
+   $ sudo vim /etc/shells
+
+and add the absolute path to your bash executable. Then run:
+
+.. code-block:: console
+
+   $ chsh -s /path/to/bash
+
+Now, when you log out and log back in, ``echo $SHELL`` should point to the
+newer version of Bash.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updating Installed Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let's say you upgraded to a new version of macOS, or a new version of Python
+was released, and you want to rebuild your entire software stack. To do this,
+simply run the following commands:
+
+.. code-block:: console
+
+   $ spack env activate myenv
+   $ spack concretize --force
+   $ spack install
+
+The ``--force`` flag tells Spack to overwrite its previous concretization
+decisions, allowing you to choose a new version of Python. If any of the new
+packages like Bash are already installed, ``spack install`` won't re-install
+them, it will keep the symlinks in place.
+
+^^^^^^^^^^^^^^
+Uninstallation
+^^^^^^^^^^^^^^
+
+If you decide that Spack isn't right for you, uninstallation is simple.
+Just run:
+
+.. code-block:: console
+
+   $ spack env activate myenv
+   $ spack uninstall --all
+
+This will uninstall all packages in your environment and remove the symlinks.
+
 ------------------------
 Using Spack on Travis-CI
 ------------------------
@@ -1108,6 +1357,14 @@ The main points that are implemented below:
    are actually allocated for the user. We limit the parallelism of
    the spack builds in the config.
    (The Travis yaml parser is a bit buggy on the echo command.)
+
+#. Without control for the user, Travis jobs will run on various
+   ``x86_64`` microarchitectures. If you plan to cache build results,
+   e.g. to accelerate dependency builds, consider building for the
+   generic ``x86_64`` target only.
+   Limiting the microarchitecture will also find more packages when
+   working with the
+   `E4S Spack build cache <https://oaciss.uoregon.edu/e4s/e4s_buildcache_inventory.html>`_.
 
 #. Builds over 10 minutes need to be prefixed with ``travis_wait``.
    Alternatively, generate output once with ``spack install -v``.
@@ -1148,10 +1405,13 @@ The main points that are implemented below:
      - export CXXFLAGS="-std=c++11"
 
    install:
-     - if ! which spack >/dev/null; then
+     - |
+       if ! which spack >/dev/null; then
          mkdir -p $SPACK_ROOT &&
          git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
-         echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml;
+         printf "config:\n  build_jobs: 2\n" > $SPACK_ROOT/etc/spack/config.yaml &&
+         printf "packages:\n  all:\n    target: ['x86_64']\n" \
+                 > $SPACK_ROOT/etc/spack/packages.yaml;
        fi
      - travis_wait spack install cmake@3.7.2~openssl~ncurses
      - travis_wait spack install boost@1.62.0~graph~iostream~locale~log~wave
@@ -1183,12 +1443,7 @@ The following functionality is prepared:
 
 #. Base image: the example starts from a minimal ubuntu.
 
-#. Installing as root: docker images are usually set up as root.
-   Since some autotools scripts might complain about this being unsafe, we set
-   ``FORCE_UNSAFE_CONFIGURE=1`` to avoid configure errors.
-
-#. Pre-install the spack dependencies, including modules from the packages.
-   This avoids needing to build those from scratch via ``spack bootstrap``.
+#. Pre-install the spack dependencies.
    Package installs are followed by a clean-up of the system package index,
    to avoid outdated information and it saves space.
 
@@ -1217,10 +1472,9 @@ In order to build and run the image, execute:
 
    # general environment for docker
    ENV        DEBIAN_FRONTEND=noninteractive \
-              SPACK_ROOT=/usr/local \
-              FORCE_UNSAFE_CONFIGURE=1
+              SPACK_ROOT=/usr/local
 
-   # install minimal spack depedencies
+   # install minimal spack dependencies
    RUN        apt-get update \
               && apt-get install -y --no-install-recommends \
                  autoconf \
@@ -1254,7 +1508,7 @@ In order to build and run the image, execute:
    RUN        spack install tar \
               && spack clean -a
 
-   # need the modules already during image build?
+   # need the executables from a package already during image build?
    #RUN        /bin/bash -l -c ' \
    #                spack load tar \
    #                && which tar'

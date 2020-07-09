@@ -1,0 +1,225 @@
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainer.h b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainer.h
+index b5b8525..3e95332 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainer.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainer.h
+@@ -38,6 +38,8 @@
+ 
+ namespace kmb{
+ 
++using std::size_t;
++
+ class Matrix4x4;
+ 
+ class Point3DContainer
+diff --git a/spack-src/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Bucket.h b/spack-src/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Bucket.h
+index cd1d5df..a2fff46 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Bucket.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Bucket.h
+@@ -194,7 +194,7 @@
+ 		return itClone;
+ 	};
+ 
+-	size_t getCount(int i,int j,int k) const{
++	std::size_t getCount(int i,int j,int k) const{
+ 		return regions.count(getIndex(i,j,k));
+ 	};
+ 
+
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_BLArray.h b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_BLArray.h
+index 4761262..b9a0c8c 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_BLArray.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_BLArray.h
+@@ -30,6 +30,8 @@
+ 
+ namespace kmb{
+ 
++using std::size_t;
++
+ class BLArrayIndex;
+ 
+ class BLArrayBase
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Classification.h b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Classification.h
+index 81b3b9f..51c06cc 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Classification.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Classification.h
+@@ -39,6 +39,8 @@
+ 
+ namespace kmb{
+ 
++using std::size_t;
++
+ typedef int classificationType;
+ 
+ template<typename T>
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point2DContainer.h b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point2DContainer.h
+index 0f7e548..39278e6 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point2DContainer.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point2DContainer.h
+@@ -38,6 +38,8 @@
+ 
+ namespace kmb{
+ 
++using std::size_t;
++
+ class Point2DContainer
+ {
+ protected:
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerArray.h b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerArray.h
+index c4c0dc9..8852677 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerArray.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerArray.h
+@@ -17,6 +17,8 @@
+ 
+ namespace kmb{
+ 
++using std::size_t;
++
+ class Point3DContainerArray : public Point3DContainer
+ {
+ private:
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerMArray.h b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerMArray.h
+index 51bb315..8bb557f 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerMArray.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerMArray.h
+@@ -19,6 +19,8 @@
+ 
+ namespace kmb{
+ 
++using std::size_t;
++
+ class Point3DContainerMArray : public Point3DContainer
+ {
+ private:
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerVect.h b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerVect.h
+index 1254a5c..57b1763 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerVect.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerVect.h
+@@ -31,6 +31,8 @@
+ 
+ namespace kmb{
+ 
++using std::size_t;
++
+ class Point3DContainerVect : public Point3DContainer
+ {
+ private:
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DOctree.h b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DOctree.h
+index 778e253..b743069 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DOctree.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DOctree.h
+@@ -32,6 +32,8 @@
+ 
+ namespace kmb{
+ 
++using std::size_t;
++
+ class Point3DOctree
+ {
+ private:
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DOctree.cpp b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DOctree.cpp
+index 6a8bb38..d29e6fa 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DOctree.cpp
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DOctree.cpp
+@@ -85,10 +85,10 @@ kmb::Point3DOctree::getLocalCount(void) const
+ 	return count;
+ }
+ 
+-size_t
++std::size_t
+ kmb::Point3DOctree::getCount(void) const
+ {
+-	size_t sum = 0;
++	std::size_t sum = 0;
+ 	if( children != NULL ){
+ 		for(int i=0;i<8;++i){
+ 			sum += children[i]->getCount();
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point2DContainerMap.cpp b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point2DContainerMap.cpp
+index 6838486..2d4874c 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point2DContainerMap.cpp
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point2DContainerMap.cpp
+@@ -33,6 +33,8 @@
+ #pragma warning(disable:4100)
+ #endif
+ 
++using std::size_t;
++
+ 
+ 
+ const char* kmb::Point2DContainerMap::CONTAINER_TYPE = "stl::map<id,Point2D*>";
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerArray.cpp b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerArray.cpp
+index 02362fc..b9bf597 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerArray.cpp
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerArray.cpp
+@@ -19,6 +19,8 @@
+ #pragma warning(disable:4100)
+ #endif
+ 
++using std::size_t;
++
+ const char* kmb::Point3DContainerArray::CONTAINER_TYPE = "double_array";
+ 
+ kmb::Point3DContainerArray::Point3DContainerArray(void)
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerMap.cpp b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerMap.cpp
+index 9619325..24997b6 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerMap.cpp
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerMap.cpp
+@@ -33,6 +33,7 @@
+ #pragma warning(disable:4100)
+ #endif
+ 
++using std::size_t;
+ 
+ 
+ const char* kmb::Point3DContainerMap::CONTAINER_TYPE = "stl::map<id,Point3D*>";
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerVect.cpp b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerVect.cpp
+index 06add56..ec55033 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerVect.cpp
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Point3DContainerVect.cpp
+@@ -32,6 +32,8 @@
+ #pragma warning(disable:4100)
+ #endif
+ 
++using std::size_t;
++
+ const char* kmb::Point3DContainerVect::CONTAINER_TYPE = "stl::vector<Point3D*>";
+ 
+ kmb::Point3DContainerVect::Point3DContainerVect(void)
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/MeshDB/kmbElementContainerNArray.h b/lib/src/REVOCAP_Refiner-0.4.3/MeshDB/kmbElementContainerNArray.h
+index f3335d0..138aa5e 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/MeshDB/kmbElementContainerNArray.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/MeshDB/kmbElementContainerNArray.h
+@@ -27,6 +27,8 @@
+ 
+ namespace kmb{
+ 
++using std::size_t;
++
+ class ElementContainerNArray : public ElementContainer
+ {
+ protected:
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/MeshDB/kmbNodeNeighborPtrInfo.h b/lib/src/REVOCAP_Refiner-0.4.3/MeshDB/kmbNodeNeighborPtrInfo.h
+index 70cdc5e..6a7a4b7 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/MeshDB/kmbNodeNeighborPtrInfo.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/MeshDB/kmbNodeNeighborPtrInfo.h
+@@ -24,6 +24,8 @@
+ 
+ namespace kmb{
+ 
++using std::size_t;
++
+ class Element;
+ class ElementContainer;
+ class MeshData;
+diff --git a/lib/src/REVOCAP_Refiner-0.4.3/Shape/kmbFittingToSurface.h b/lib/src/REVOCAP_Refiner-0.4.3/Shape/kmbFittingToSurface.h
+index 3a6d7dd..5910b77 100644
+--- a/lib/src/REVOCAP_Refiner-0.4.3/Shape/kmbFittingToSurface.h
++++ b/lib/src/REVOCAP_Refiner-0.4.3/Shape/kmbFittingToSurface.h
+@@ -19,6 +19,8 @@
+ 
+ namespace kmb{
+ 
++using std::size_t;
++
+ class MeshData;
+ class Surface3D;
+ template <typename> class Vector2WithIntBindings;

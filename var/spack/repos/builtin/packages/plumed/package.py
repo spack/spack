@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,9 +21,17 @@ class Plumed(AutotoolsPackage):
     and C/C++ codes.
     """
     homepage = 'http://www.plumed.org/'
-    url = 'https://github.com/plumed/plumed2/archive/v2.5.0.tar.gz'
+    url = 'https://github.com/plumed/plumed2/archive/v2.5.3.tar.gz'
+    git = 'https://github.com/plumed/plumed2.git'
 
+    version('master', branch='master')
+    version('2.6.0', sha256='3d57ae460607a49547ef38a52c4ac93493a3966857c352280a9c05f5dcdb1820')
+    version('2.5.4', preferred=True, sha256='a1647e598191f261e75d06351e607475d395af481315052a4c28563ac9989a7f')
+    version('2.5.3', sha256='543288be667dc4201fc461ecd2dd4878ddfbeac682d0c021c99ea8e501c7c9dc')
+    version('2.5.2', sha256='85d10cc46e2e37c7719cf51c0931278f56c2c8f8a9d86188b2bf97c2535a2ab4')
+    version('2.5.1', sha256='de309980dcfd6f6e0e70e138856f4bd9eb4d8a513906a5e6389f18a5af7f2eba')
     version('2.5.0', sha256='53e08187ec9f8af2326fa84407e34644a7c51d2af93034309fb70675eee5e4f7')
+    version('2.4.6', sha256='c22ad19f5cd36ce9fe4ba0b53158fc2a3d985c48fc04606e3f3b3e835b994cb3')
     version('2.4.4', sha256='1e5c24109314481fad404da97d61c7339b219e27e120c9c80bacc79c9f6a51a8')
     version('2.4.2', sha256='528ce57f1f5330480bcd403140166a4580efd2acaea39c85dfeca5e2cd649321')
     version('2.4.1', sha256='f00410ebdd739c2ddf55fcd714ff4bd88a1029e02d2fc9cea0b5fca34e0fc4eb')
@@ -53,7 +61,7 @@ class Plumed(AutotoolsPackage):
     depends_on('lapack')
     # For libmatheval support through the 'function' module
     # which is enabled by default (or when optional_modules=all)
-    depends_on('libmatheval')
+    depends_on('libmatheval', when='@:2.4.99')
 
     depends_on('mpi', when='+mpi')
     depends_on('gsl', when='+gsl')
@@ -61,6 +69,7 @@ class Plumed(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
+    depends_on('py-cython', type='build', when='@2.5:')
 
     force_autoreconf = True
 

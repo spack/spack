@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ class Dcmtk(CMakePackage):
     depends_on('libxml2', type=('build', 'link'), when='+xml')
 
     variant('iconv', default=True, description="Charset conversion support (iconv)")
-    depends_on('libiconv', type=('build', 'link'))
+    depends_on('iconv', type=('build', 'link'))
 
     variant('cxx11', default=False, description="Enable c++11 features")
     variant('stl', default=True, description="Use native STL implementation")

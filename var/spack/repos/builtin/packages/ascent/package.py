@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,13 +50,13 @@ class Ascent(Package, CudaPackage):
     ###########################################################################
 
     variant("shared", default=True, description="Build Ascent as shared libs")
-    variant('test', default=True, description='Enable Ascent unit tests')
+    variant("test", default=True, description='Enable Ascent unit tests')
 
     variant("mpi", default=True, description="Build Ascent MPI Support")
     variant("serial", default=True, description="build serial (non-mpi) libraries")
 
     # variants for language support
-    variant("python", default=True, description="Build Ascent Python support")
+    variant("python", default=False, description="Build Ascent Python support")
     variant("fortran", default=True, description="Build Ascent Fortran support")
 
     # variants for runtime features

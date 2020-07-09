@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,14 @@ It is recommended that the following be put in your ``.bashrc`` file:
 
     alias less='less -R'
 
+If you do not see colorized output when using ``less -R`` it is because color
+is being disabled in the piped output. In this case, tell spack to force
+colorized output.
+
+.. code-block:: console
+
+    $ spack --color always | less -R 
+
 --------------------------
 Listing available packages
 --------------------------
@@ -45,7 +53,7 @@ can install:
 .. command-output:: spack list
    :ellipsis: 10
 
-There are thosands of them, so we've truncated the output above, but you
+There are thousands of them, so we've truncated the output above, but you
 can find a :ref:`full list here <package-list>`.
 Packages are listed by name in alphabetical order.
 A pattern to match with no wildcards, ``*`` or ``?``,
@@ -232,6 +240,50 @@ remove dependent packages *before* removing their dependencies or use the
 
 .. _nondownloadable:
 
+^^^^^^^^^^^^^^^^^^
+Garbage collection
+^^^^^^^^^^^^^^^^^^
+
+When Spack builds software from sources, if often installs tools that are needed
+just to build or test other software. These are not necessary at runtime.
+To support cases where removing these tools can be a benefit Spack provides
+the ``spack gc`` ("garbage collector") command, which will uninstall all unneeded packages:
+
+.. code-block:: console
+
+   $ spack find
+   ==> 24 installed packages
+   -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
+   autoconf@2.69    findutils@4.6.0  libiconv@1.16        libszip@2.1.1  m4@1.4.18    openjpeg@2.3.1  pkgconf@1.6.3  util-macros@1.19.1
+   automake@1.16.1  gdbm@1.18.1      libpciaccess@0.13.5  libtool@2.4.6  mpich@3.3.2  openssl@1.1.1d  readline@8.0   xz@5.2.4
+   cmake@3.16.1     hdf5@1.10.5      libsigsegv@2.12      libxml2@2.9.9  ncurses@6.1  perl@5.30.0     texinfo@6.5    zlib@1.2.11
+
+   $ spack gc
+   ==> The following packages will be uninstalled:
+
+       -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
+       vn47edz autoconf@2.69    6m3f2qn findutils@4.6.0  ubl6bgk libtool@2.4.6  pksawhz openssl@1.1.1d  urdw22a readline@8.0
+       ki6nfw5 automake@1.16.1  fklde6b gdbm@1.18.1      b6pswuo m4@1.4.18      k3s2csy perl@5.30.0     lp5ya3t texinfo@6.5
+       ylvgsov cmake@3.16.1     5omotir libsigsegv@2.12  leuzbbh ncurses@6.1    5vmfbrq pkgconf@1.6.3   5bmv4tg util-macros@1.19.1
+
+   ==> Do you want to proceed? [y/N] y
+
+   [ ... ]
+
+   $ spack find
+   ==> 9 installed packages
+   -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
+   hdf5@1.10.5  libiconv@1.16  libpciaccess@0.13.5  libszip@2.1.1  libxml2@2.9.9  mpich@3.3.2  openjpeg@2.3.1  xz@5.2.4  zlib@1.2.11
+
+In the example above Spack went through all the packages in the package database
+and removed everything that is not either:
+
+1. A package installed upon explicit request of the user
+2. A ``link`` or ``run`` dependency, even transitive, of one of the packages at point 1.
+
+You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages
+or :ref:`dependency-types` for a more thorough treatment of dependency types.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-Downloadable Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -414,6 +466,8 @@ Packages are divided into groups according to their architecture and
 compiler.  Within each group, Spack tries to keep the view simple, and
 only shows the version of installed packages.
 
+.. _cmd-spack-find-metadata:
+
 """"""""""""""""""""""""""""""""
 Viewing more metadata
 """"""""""""""""""""""""""""""""
@@ -573,8 +627,8 @@ output metadata on specs and all dependencies as json:
        "target": "x86_64"
       },
       "compiler": {
-       "name": "clang",
-       "version": "10.0.0-apple"
+       "name": "apple-clang",
+       "version": "10.0.0"
       },
       "namespace": "builtin",
       "parameters": {
@@ -808,7 +862,7 @@ Variants are named options associated with a particular package. They are
 optional, as each package must provide default values for each variant it
 makes available. Variants can be specified using
 a flexible parameter syntax ``name=<value>``. For example,
-``spack install libelf debug=True`` will install libelf build with debug
+``spack install libelf debug=True`` will install libelf built with debug
 flags. The names of particular variants available for a package depend on
 what was provided by the package author. ``spack info <package>`` will
 provide information on what build variants are available.
@@ -871,7 +925,7 @@ contains any spaces. Any of ``cppflags=-O3``, ``cppflags="-O3"``,
 ``cppflags='-O3'``, and ``cppflags="-O3 -fPIC"`` are acceptable, but
 ``cppflags=-O3 -fPIC`` is not. Additionally, if the value of the
 compiler flags is not the last thing on the line, it must be followed
-by a space. The commmand ``spack install libelf cppflags="-O3"%intel``
+by a space. The command ``spack install libelf cppflags="-O3"%intel``
 will be interpreted as an attempt to set ``cppflags="-O3%intel"``.
 
 The six compiler flags are injected in the order of implicit make commands
@@ -883,11 +937,13 @@ in GNU Autotools. If all flags are set, the order is
 Compiler environment variables and additional RPATHs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the exceptional case a compiler requires setting special environment
-variables, like an explicit library load path. These can bet set in an
-extra section in the compiler configuration (the supported environment
-modification commands are: ``set``, ``unset``, ``append-path``, and
-``prepend-path``). The user can also specify additional ``RPATHs`` that the
+Sometimes compilers require setting special environment variables to
+operate correctly. Spack handles these cases by allowing custom environment
+modifications in the ``environment`` attribute of the compiler configuration
+section. See also the :ref:`configuration_environment_variables` section
+of the configuration files docs for more information.
+
+It is also possible to specify additional ``RPATHs`` that the
 compiler will add to all executables generated by that compiler.  This is
 useful for forcing certain compilers to RPATH their own runtime libraries, so
 that executables will run without the need to set ``LD_LIBRARY_PATH``.
@@ -904,27 +960,18 @@ that executables will run without the need to set ``LD_LIBRARY_PATH``.
           fc: /opt/gcc/bin/gfortran
         environment:
           unset:
-            BAD_VARIABLE: # The colon is required but the value must be empty
+            - BAD_VARIABLE
           set:
             GOOD_VARIABLE_NUM: 1
             GOOD_VARIABLE_STR: good
-          prepend-path:
+          prepend_path:
             PATH: /path/to/binutils
-          append-path:
+          append_path:
             LD_LIBRARY_PATH: /opt/gcc/lib
         extra_rpaths:
         - /path/to/some/compiler/runtime/directory
         - /path/to/some/other/compiler/runtime/directory
 
-
-.. note::
-
-   The section `environment` is interpreted as an ordered dictionary, which
-   means two things. First, environment modification are applied in the order
-   they are specified in the configuration file. Second, you cannot express
-   environment modifications that require mixing different commands, i.e. you
-   cannot `set` one variable, than `prepend-path` to another one, and than
-   again `set` a third one.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Architecture specifiers
@@ -1028,13 +1075,13 @@ of failing:
 In the snippet above, for instance, the microarchitecture was demoted to ``haswell`` when
 compiling with ``gcc@4.8`` since support to optimize for ``broadwell`` starts from ``gcc@4.9:``.
 
-Finally if Spack has no information to match compiler and target, it will
+Finally, if Spack has no information to match compiler and target, it will
 proceed with the installation but avoid injecting any microarchitecture
 specific flags.
 
 .. warning::
 
-   Currently Spack doesn't print any warning to the user if it has no information
+   Currently, Spack doesn't print any warning to the user if it has no information
    on which optimization flags should be used for a given compiler. This behavior
    might change in the future.
 
@@ -1044,7 +1091,7 @@ specific flags.
 Virtual dependencies
 --------------------
 
-The dependence graph for ``mpileaks`` we saw above wasn't *quite*
+The dependency graph for ``mpileaks`` we saw above wasn't *quite*
 accurate.  ``mpileaks`` uses MPI, which is an interface that has many
 different implementations.  Above, we showed ``mpileaks`` and
 ``callpath`` depending on ``mpich``, which is one *particular*
@@ -1187,6 +1234,8 @@ add a version specifier to the spec:
 Notice that the package versions that provide insufficient MPI
 versions are now filtered out.
 
+.. _extensions:
+
 ---------------------------
 Extensions & Python support
 ---------------------------
@@ -1194,8 +1243,7 @@ Extensions & Python support
 Spack's installation model assumes that each package will live in its
 own install prefix.  However, certain packages are typically installed
 *within* the directory hierarchy of other packages.  For example,
-modules in interpreted languages like `Python
-<https://www.python.org>`_ are typically installed in the
+`Python <https://www.python.org>`_ packages are typically installed in the
 ``$prefix/lib/python-2.7/site-packages`` directory.
 
 Spack has support for this type of installation as well.  In Spack,
@@ -1271,10 +1319,9 @@ directly when you run ``python``:
 Using Extensions
 ^^^^^^^^^^^^^^^^
 
-There are three ways to get ``numpy`` working in Python.  The first is
-to use :ref:`shell-support`.  You can simply ``load`` the
-module for the extension, and it will be added to the ``PYTHONPATH``
-in your current shell:
+There are four ways to get ``numpy`` working in Python.  The first is
+to use :ref:`shell-support`.  You can simply ``load`` the extension,
+and it will be added to the ``PYTHONPATH`` in your current shell:
 
 .. code-block:: console
 
@@ -1284,11 +1331,29 @@ in your current shell:
 Now ``import numpy`` will succeed for as long as you keep your current
 session open.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Loading Extensions via Modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Instead of using Spack's environment modification capabilities through
+the ``spack load`` command, you can load numpy through your
+environment modules (using ``environment-modules`` or ``lmod``). This
+will also add the extension to the ``PYTHONPATH`` in your current
+shell.
+
+.. code-block:: console
+
+   $ module load <name of numpy module>
+
+If you do not know the name of the specific numpy module you wish to
+load, you can use the ``spack module tcl|lmod loads`` command to get
+the name of the module from the Spack spec.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating Extensions in a View
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The second way to use extensions is to create a view, which merges the
+Another way to use extensions is to create a view, which merges the
 python installation along with the extensions into a single prefix.
 See :ref:`filesystem-views` for a more in-depth description of views and
 :ref:`cmd-spack-view` for usage of the ``spack view`` command.
@@ -1354,12 +1419,12 @@ packages listed as activated:
    py-nose@1.3.4  py-numpy@1.9.1  py-setuptools@11.3.1
 
 Now, when a user runs python, ``numpy`` will be available for import
-*without* the user having to explicitly loaded.  ``python@2.7.8`` now
+*without* the user having to explicitly load it.  ``python@2.7.8`` now
 acts like a system Python installation with ``numpy`` installed inside
 of it.
 
 Spack accomplishes this by symbolically linking the *entire* prefix of
-the ``py-numpy`` into the prefix of the ``python`` package.  To the
+the ``py-numpy`` package into the prefix of the ``python`` package.  To the
 python interpreter, it looks like ``numpy`` is installed in the
 ``site-packages`` directory.
 

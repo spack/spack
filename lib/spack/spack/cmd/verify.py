@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,8 +25,8 @@ def setup_parser(subparser):
                            help="Ouptut json-formatted errors")
     subparser.add_argument('-a', '--all', action='store_true',
                            help="Verify all packages")
-    subparser.add_argument('files_or_specs', nargs=argparse.REMAINDER,
-                           help="Files or specs to verify")
+    subparser.add_argument('specs_or_files', nargs=argparse.REMAINDER,
+                           help="Specs or files to verify")
 
     type = subparser.add_mutually_exclusive_group()
     type.add_argument(
@@ -47,7 +47,7 @@ def verify(parser, args):
             setup_parser.parser.print_help()
             return 1
 
-        for file in args.files_or_specs:
+        for file in args.specs_or_files:
             results = spack.verify.check_file_manifest(file)
             if results.has_errors():
                 if args.json:
@@ -57,21 +57,21 @@ def verify(parser, args):
 
         return 0
     else:
-        spec_args = spack.cmd.parse_specs(args.files_or_specs)
+        spec_args = spack.cmd.parse_specs(args.specs_or_files)
 
     if args.all:
         query = spack.store.db.query_local if local else spack.store.db.query
 
         # construct spec list
         if spec_args:
-            spec_list = spack.cmd.parse_specs(args.files_or_specs)
+            spec_list = spack.cmd.parse_specs(args.specs_or_files)
             specs = []
             for spec in spec_list:
                 specs += query(spec, installed=True)
         else:
             specs = query(installed=True)
 
-    elif args.files_or_specs:
+    elif args.specs_or_files:
         # construct disambiguated spec list
         env = ev.get_env(args, 'verify')
         specs = list(map(lambda x: spack.cmd.disambiguate_spec(x, env,

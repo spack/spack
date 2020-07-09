@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,9 @@ class PyRtree(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('libspatialindex')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         lib = self.spec['libspatialindex'].prefix.lib
-        spack_env.set('SPATIALINDEX_LIBRARY',
-                      join_path(lib, 'libspatialindex.%s'   % dso_suffix))
-        spack_env.set('SPATIALINDEX_C_LIBRARY',
-                      join_path(lib, 'libspatialindex_c.%s' % dso_suffix))
+        env.set('SPATIALINDEX_LIBRARY',
+                join_path(lib, 'libspatialindex.%s'   % dso_suffix))
+        env.set('SPATIALINDEX_C_LIBRARY',
+                join_path(lib, 'libspatialindex_c.%s' % dso_suffix))

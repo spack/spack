@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ class Mxml(AutotoolsPackage):
     def configure_args(self):
         return [
             # ADIOS build with -fPIC, so we need it too (avoid linkage issue)
-            'CFLAGS={0}'.format(self.compiler.pic_flag),
+            'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
             # Default is non-shared, but avoid any future surprises
             '--disable-shared',
         ]

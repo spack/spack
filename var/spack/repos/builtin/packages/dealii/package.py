@@ -1,9 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+
+import os
 
 
 class Dealii(CMakePackage, CudaPackage):
@@ -14,13 +16,14 @@ class Dealii(CMakePackage, CudaPackage):
     url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
     git      = "https://github.com/dealii/dealii.git"
 
-    maintainers = ['davydden', 'jppelteret']
+    maintainers = ['davydden', 'jppelteret', 'luca-heltai']
 
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
     transitive_rpaths = False
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('9.2.0', sha256='d05a82fb40f1f1e24407451814b5a6004e39366a44c81208b1ae9d65f3efa43a')
     version('9.1.1', sha256='fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276')
     version('9.1.0', sha256='5b070112403f8afbb72345c1bb24d2a38d11ce58891217e353aab97957a04600')
     version('9.0.1', sha256='df2f0d666f2224be07e3741c0e8e02132fd67ea4579cd16a2429f7416146ee64')
@@ -66,6 +69,8 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Slepc (only with Petsc and MPI)')
     variant('symengine', default=True,
             description='Compile with SymEngine')
+    variant('threads',  default=True,
+            description='Compile with multi-threading via TBB')
     variant('trilinos', default=True,
             description='Compile with Trilinos (only with MPI)')
     variant('python',   default=False,
@@ -95,7 +100,7 @@ class Dealii(CMakePackage, CudaPackage):
                         patch('boost_1.68.0.patch',
                               level=1,
                               when='@1.68.0'),
-                       ],
+                        ],
                when='~python')
     depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python',
                patches=[patch('boost_1.65.1_singleton.patch',
@@ -104,13 +109,12 @@ class Dealii(CMakePackage, CudaPackage):
                         patch('boost_1.68.0.patch',
                               level=1,
                               when='@1.68.0'),
-                       ],
+                        ],
                when='+python')
     # bzip2 is not needed since 9.0
     depends_on('bzip2', when='@:8.99')
     depends_on('lapack')
     depends_on('suite-sparse')
-    depends_on('tbb')
     depends_on('zlib')
 
     # optional dependencies
@@ -136,7 +140,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('metis@5:+int64',   when='+metis+int64')
     depends_on('metis@5:~int64',   when='+metis~int64')
     depends_on('muparser', when='+muparser')
-    depends_on('nanoflann',        when='@9.0:+nanoflann')
+    # Nanoflann support has been removed after 9.2.0
+    depends_on('nanoflann',        when='@9.0:9.2+nanoflann')
     depends_on('netcdf-c+mpi',     when='+netcdf+mpi')
     depends_on('netcdf-cxx',       when='+netcdf+mpi')
     depends_on('oce',              when='+oce')
@@ -150,6 +155,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:+sundials')
+    depends_on('trilinos gotype=int', when='+trilinos')
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
     # headers when they are not compiled in the same mode.
@@ -159,6 +165,7 @@ class Dealii(CMakePackage, CudaPackage):
     # depends_on("symengine@0.4: build_type=Release", when="@9.1:+symengine+trilinos^trilinos~debug")  # NOQA: ignore=E501
     # depends_on("symengine@0.4: build_type=Debug", when="@9.1:+symengine+trilinos^trilinos+debug")  # NOQA: ignore=E501
     depends_on('symengine@0.4:', when='@9.1:+symengine')
+    depends_on('tbb', when='+threads')
     # do not require +rol to make concretization of xsdk possible
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
@@ -177,6 +184,12 @@ class Dealii(CMakePackage, CudaPackage):
     patch('https://github.com/dealii/dealii/commit/f8de8c5c28c715717bf8a086e94f071e0fe9deab.patch',
           sha256='61f217744b70f352965be265d2f06e8c1276685e2944ca0a88b7297dd55755da',
           when='@9.0.1 ^boost@1.70.0:')
+
+    # Fix TBB version check
+    # https://github.com/dealii/dealii/pull/9208
+    patch('https://github.com/dealii/dealii/commit/80b13fe5a2eaefc77fa8c9266566fa8a2de91edf.patch',
+          sha256='6f876dc8eadafe2c4ec2a6673864fb451c6627ca80511b6e16f3c401946fdf33',
+          when='@9.0.0:9.1.1')
 
     # check that the combination of variants makes sense
     # 64-bit BLAS:
@@ -198,6 +211,10 @@ class Dealii(CMakePackage, CudaPackage):
                   msg='The interface to {0} is supported from version 9.1.0 '
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
+
+    conflicts('+nanoflann', when='@9.3.0:',
+              msg='The interface to nanoflann was removed from version 9.3.0. '
+                  'Please explicitly disable this variant via ~nanoflann')
 
     conflicts('+slepc', when='~petsc',
               msg='It is not possible to enable slepc interfaces '
@@ -233,7 +250,6 @@ class Dealii(CMakePackage, CudaPackage):
         lapack_blas_headers = spec['lapack'].headers + spec['blas'].headers
         options.extend([
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
-            '-DDEAL_II_WITH_THREADS:BOOL=ON',
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
             # CMake's FindBlas/Lapack may pickup system's blas/lapack instead
             # of Spack's. Be more specific to avoid this.
@@ -247,7 +263,13 @@ class Dealii(CMakePackage, CudaPackage):
             '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
 
-        if (spec.satisfies('^intel-parallel-studio+tbb')):
+        if '+threads' in spec:
+            options.append('-DDEAL_II_WITH_THREADS:BOOL=ON')
+        else:
+            options.extend(['-DDEAL_II_WITH_THREADS:BOOL=OFF'])
+
+        if (spec.satisfies('^intel-parallel-studio+tbb')
+            and '+threads' in spec):
             # deal.II/cmake will have hard time picking up TBB from Intel.
             tbb_ver = '.'.join(('%s' % spec['tbb'].version).split('.')[1:])
             options.extend([
@@ -279,7 +301,7 @@ class Dealii(CMakePackage, CudaPackage):
             cxx_flags_release.extend(['-O3'])
         elif spec.satisfies('%intel'):
             cxx_flags_release.extend(['-O3'])
-        elif spec.satisfies('%clang'):
+        elif spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
             cxx_flags_release.extend(['-O3', '-ffp-contract=fast'])
 
         # Python bindings
@@ -444,6 +466,13 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DCMAKE_CXX_FLAGS:STRING=%s' % (
                     ' '.join(cxx_flags))
             ])
+
+        # Add flags for machine vectorization, used when tutorials
+        # and user code is built.
+        # See https://github.com/dealii/dealii/issues/9164
+        options.extend([
+            '-DDEAL_II_CXX_FLAGS=%s' % os.environ['SPACK_TARGET_ARGS']
+        ])
 
         return options
 

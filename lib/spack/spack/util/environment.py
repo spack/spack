@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,12 +32,14 @@ system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
 _shell_set_strings = {
     'sh': 'export {0}={1};\n',
     'csh': 'setenv {0} {1};\n',
+    'fish': 'set -gx {0} {1};\n'
 }
 
 
 _shell_unset_strings = {
     'sh': 'unset {0};\n',
     'csh': 'unsetenv {0};\n',
+    'fish': 'set -e {0};\n',
 }
 
 
@@ -376,7 +378,7 @@ class EnvironmentModifications(object):
         """Stores a request to unset an environment variable.
 
         Args:
-            name: name of the environment variable to be set
+            name: name of the environment variable to be unset
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = UnsetEnv(name, **kwargs)
@@ -597,12 +599,15 @@ class EnvironmentModifications(object):
             'SHLVL', '_', 'PWD', 'OLDPWD', 'PS1', 'PS2', 'ENV',
             # Environment modules v4
             'LOADEDMODULES', '_LMFILES_', 'BASH_FUNC_module()', 'MODULEPATH',
-            'MODULES_(.*)', r'(\w*)_mod(quar|share)'
+            'MODULES_(.*)', r'(\w*)_mod(quar|share)',
+            # Lmod configuration
+            r'LMOD_(.*)', 'MODULERCFILE'
         ])
 
         # Compute the environments before and after sourcing
         before = sanitize(
-            dict(os.environ), blacklist=blacklist, whitelist=whitelist
+            environment_after_sourcing_files(os.devnull, **kwargs),
+            blacklist=blacklist, whitelist=whitelist
         )
         file_and_args = (filename,) + arguments
         after = sanitize(
@@ -918,8 +923,14 @@ def environment_after_sourcing_files(*files, **kwargs):
         source_file.extend(x for x in file_and_args)
         source_file = ' '.join(source_file)
 
+        # If the environment contains 'python' use it, if not
+        # go with sys.executable. Below we just need a working
+        # Python interpreter, not necessarily sys.executable.
+        python_cmd = executable.which('python3', 'python', 'python2')
+        python_cmd = python_cmd.name if python_cmd else sys.executable
+
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-        dump_environment = 'python -c "{0}"'.format(dump_cmd)
+        dump_environment = python_cmd + ' -c "{0}"'.format(dump_cmd)
 
         # Try to source the file
         source_file_arguments = ' '.join([

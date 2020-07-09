@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,6 @@ class Unrar(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter("makefile")
         makefile.filter(
-            "LIBFLAGS=-fPIC", "LIBFLAGS={0}".format(self.compiler.pic_flag)
+            "LIBFLAGS=-fPIC", "LIBFLAGS={0}".format(self.compiler.cc_pic_flag)
         )
         makefile.filter("DESTDIR=/usr", "DESTDIR={0}".format(self.prefix))

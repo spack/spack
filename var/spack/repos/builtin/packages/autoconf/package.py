@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Autoconf(AutotoolsPackage):
+class Autoconf(AutotoolsPackage, GNUMirrorPackage):
     """Autoconf -- system configuration part of autotools"""
 
     homepage = 'https://www.gnu.org/software/autoconf/'
-    url      = 'https://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz'
+    gnu_mirror_path = 'autoconf/autoconf-2.69.tar.gz'
 
     version('2.69', sha256='954bd69b391edc12d6a4a51a2dd1476543da5c6bbf05a95b59dc0dd6fd4c2969')
     version('2.62', sha256='83aa747e6443def0ebd1882509c53f5a2133f502ddefa21b3de141c433914bdd')

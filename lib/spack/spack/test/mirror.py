@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,9 @@ from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
 
-pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_packages')
+from llnl.util.filesystem import resolve_link_target_relative_to_the_link
+
+pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_repo')
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = ['.hg', '.git', '.svn']
@@ -50,52 +52,52 @@ def check_mirror():
         mirror_root = os.path.join(stage.path, 'test-mirror')
         # register mirror with spack config
         mirrors = {'spack-mirror-test': 'file://' + mirror_root}
-        spack.config.set('mirrors', mirrors)
-        with spack.config.override('config:checksum', False):
-            specs = [Spec(x).concretized() for x in repos]
-            spack.mirror.create(mirror_root, specs)
-
-        # Stage directory exists
-        assert os.path.isdir(mirror_root)
-
-        for spec in specs:
-            fetcher = spec.package.fetcher[0]
-            per_package_ref = os.path.join(
-                spec.name, '-'.join([spec.name, str(spec.version)]))
-            mirror_paths = spack.mirror.mirror_archive_paths(
-                fetcher,
-                per_package_ref)
-            expected_path = os.path.join(
-                mirror_root, mirror_paths.storage_path)
-            assert os.path.exists(expected_path)
-
-        # Now try to fetch each package.
-        for name, mock_repo in repos.items():
-            spec = Spec(name).concretized()
-            pkg = spec.package
-
+        with spack.config.override('mirrors', mirrors):
             with spack.config.override('config:checksum', False):
-                with pkg.stage:
-                    pkg.do_stage(mirror_only=True)
+                specs = [Spec(x).concretized() for x in repos]
+                spack.mirror.create(mirror_root, specs)
 
-                    # Compare the original repo with the expanded archive
-                    original_path = mock_repo.path
-                    if 'svn' in name:
-                        # have to check out the svn repo to compare.
-                        original_path = os.path.join(
-                            mock_repo.path, 'checked_out')
+            # Stage directory exists
+            assert os.path.isdir(mirror_root)
 
-                        svn = which('svn', required=True)
-                        svn('checkout', mock_repo.url, original_path)
+            for spec in specs:
+                fetcher = spec.package.fetcher[0]
+                per_package_ref = os.path.join(
+                    spec.name, '-'.join([spec.name, str(spec.version)]))
+                mirror_paths = spack.mirror.mirror_archive_paths(
+                    fetcher,
+                    per_package_ref)
+                expected_path = os.path.join(
+                    mirror_root, mirror_paths.storage_path)
+                assert os.path.exists(expected_path)
 
-                    dcmp = filecmp.dircmp(
-                        original_path, pkg.stage.source_path)
+            # Now try to fetch each package.
+            for name, mock_repo in repos.items():
+                spec = Spec(name).concretized()
+                pkg = spec.package
 
-                    # make sure there are no new files in the expanded
-                    # tarball
-                    assert not dcmp.right_only
-                    # and that all original files are present.
-                    assert all(l in exclude for l in dcmp.left_only)
+                with spack.config.override('config:checksum', False):
+                    with pkg.stage:
+                        pkg.do_stage(mirror_only=True)
+
+                        # Compare the original repo with the expanded archive
+                        original_path = mock_repo.path
+                        if 'svn' in name:
+                            # have to check out the svn repo to compare.
+                            original_path = os.path.join(
+                                mock_repo.path, 'checked_out')
+
+                            svn = which('svn', required=True)
+                            svn('checkout', mock_repo.url, original_path)
+
+                        dcmp = filecmp.dircmp(
+                            original_path, pkg.stage.source_path)
+
+                        # make sure there are no new files in the expanded
+                        # tarball
+                        assert not dcmp.right_only
+                        # and that all original files are present.
+                        assert all(l in exclude for l in dcmp.left_only)
 
 
 def test_url_mirror(mock_archive):
@@ -146,6 +148,12 @@ def test_all_mirror(
     repos.clear()
 
 
+def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
+    spec = Spec('trivial-install-test-package@nonexistingversion')
+    fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
+    spack.mirror.mirror_archive_paths(fetcher, 'per-package-ref', spec)
+
+
 def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
     spec = Spec('patch-several-dependencies')
     spec.concretize()
@@ -186,3 +194,33 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
             'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234',
             'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd.gz'  # NOQA: ignore=E501
         ]) - files_cached_in_mirror)
+
+
+class MockFetcher(object):
+    """Mock fetcher object which implements the necessary functionality for
+       testing MirrorCache
+    """
+    @staticmethod
+    def archive(dst):
+        with open(dst, 'w'):
+            pass
+
+
+@pytest.mark.regression('14067')
+def test_mirror_cache_symlinks(tmpdir):
+    """Confirm that the cosmetic symlink created in the mirror cache (which may
+       be relative) targets the storage path correctly.
+    """
+    cosmetic_path = 'zlib/zlib-1.2.11.tar.gz'
+    global_path = '_source-cache/archive/c3/c3e5.tar.gz'
+    cache = spack.caches.MirrorCache(str(tmpdir), False)
+    reference = spack.mirror.MirrorReference(cosmetic_path, global_path)
+
+    cache.store(MockFetcher(), reference.storage_path)
+    cache.symlink(reference)
+
+    link_target = resolve_link_target_relative_to_the_link(
+        os.path.join(cache.root, reference.cosmetic_path))
+    assert os.path.exists(link_target)
+    assert (os.path.normpath(link_target) ==
+            os.path.join(cache.root, reference.storage_path))

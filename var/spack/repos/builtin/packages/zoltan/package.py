@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -95,7 +95,7 @@ class Zoltan(AutotoolsPackage):
                 'RANLIB=echo',
                 '--with-ar=$(CXX) -shared $(LDFLAGS) -o'
             ])
-            config_cflags.append(self.compiler.pic_flag)
+            config_cflags.append(self.compiler.cc_pic_flag)
             if spec.satisfies('%gcc'):
                 config_args.append('--with-libs=-lgfortran')
             if spec.satisfies('%intel'):

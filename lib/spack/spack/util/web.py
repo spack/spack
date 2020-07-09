@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,24 +7,22 @@ from __future__ import print_function
 
 import codecs
 import errno
-import re
+import multiprocessing.pool
 import os
 import os.path
+import re
 import shutil
 import ssl
 import sys
 import traceback
 
-from itertools import product
-
 import six
-from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
-import multiprocessing.pool
+from six.moves.urllib.request import urlopen, Request
 
 try:
     # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParser, HTMLParseError
+    from HTMLParser import HTMLParser, HTMLParseError  # novm
 except ImportError:
     # In Python 3, things moved to html.parser
     from html.parser import HTMLParser
@@ -50,30 +48,6 @@ from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 # Timeout in seconds for web requests
 _timeout = 10
 
-# See docstring for standardize_header_names()
-_separators = ('', ' ', '_', '-')
-HTTP_HEADER_NAME_ALIASES = {
-    "Accept-ranges": set(
-        ''.join((A, 'ccept', sep, R, 'anges'))
-        for A, sep, R in product('Aa', _separators, 'Rr')),
-
-    "Content-length": set(
-        ''.join((C, 'ontent', sep, L, 'ength'))
-        for C, sep, L in product('Cc', _separators, 'Ll')),
-
-    "Content-type": set(
-        ''.join((C, 'ontent', sep, T, 'ype'))
-        for C, sep, T in product('Cc', _separators, 'Tt')),
-
-    "Date": set(('Date', 'date')),
-
-    "Last-modified": set(
-        ''.join((L, 'ast', sep, M, 'odified'))
-        for L, sep, M in product('Ll', _separators, 'Mm')),
-
-    "Server": set(('Server', 'server'))
-}
-
 
 class LinkParser(HTMLParser):
     """This parser just takes an HTML page and strips out the hrefs on the
@@ -88,34 +62,6 @@ class LinkParser(HTMLParser):
             for attr, val in attrs:
                 if attr == 'href':
                     self.links.append(val)
-
-
-class NonDaemonProcess(multiprocessing.Process):
-    """Process that allows sub-processes, so pools can have sub-pools."""
-    @property
-    def daemon(self):
-        return False
-
-    @daemon.setter
-    def daemon(self, value):
-        pass
-
-
-if sys.version_info[0] < 3:
-    class NonDaemonPool(multiprocessing.pool.Pool):
-        """Pool that uses non-daemon processes"""
-        Process = NonDaemonProcess
-else:
-
-    class NonDaemonContext(type(multiprocessing.get_context())):
-        Process = NonDaemonProcess
-
-    class NonDaemonPool(multiprocessing.pool.Pool):
-        """Pool that uses non-daemon processes"""
-
-        def __init__(self, *args, **kwargs):
-            kwargs['context'] = NonDaemonContext()
-            super(NonDaemonPool, self).__init__(*args, **kwargs)
 
 
 def uses_ssl(parsed_url):
@@ -155,7 +101,7 @@ def read_from_url(url, accept_content_type=None):
                 warn_no_ssl_cert_checking()
             else:
                 # User wants SSL verification, and it *can* be provided.
-                context = ssl.create_default_context()
+                context = ssl.create_default_context()  # novm
         else:
             # User has explicitly indicated that they do not want SSL
             # verification.
@@ -173,7 +119,7 @@ def read_from_url(url, accept_content_type=None):
         req.get_method = lambda: "HEAD"
         resp = _urlopen(req, timeout=_timeout, context=context)
 
-        content_type = resp.headers.get('Content-type')
+        content_type = get_header(resp.headers, 'Content-type')
 
     # Do the real GET request when we know it's just HTML.
     req.get_method = lambda: "GET"
@@ -185,7 +131,7 @@ def read_from_url(url, accept_content_type=None):
             ERROR=str(err)))
 
     if accept_content_type and not is_web_url:
-        content_type = response.headers.get('Content-type')
+        content_type = get_header(response.headers, 'Content-type')
 
     reject_content_type = (
         accept_content_type and (
@@ -208,9 +154,8 @@ def warn_no_ssl_cert_checking():
              "your Python to enable certificate verification.")
 
 
-def push_to_url(local_file_path, remote_path, **kwargs):
-    keep_original = kwargs.get('keep_original', True)
-
+def push_to_url(
+        local_file_path, remote_path, keep_original=True, extra_args=None):
     remote_url = url_util.parse(remote_path)
     verify_ssl = spack.config.get('config:verify_ssl')
 
@@ -233,9 +178,12 @@ def push_to_url(local_file_path, remote_path, **kwargs):
                     # needs to be done in separate steps.
                     shutil.copy2(local_file_path, remote_file_path)
                     os.remove(local_file_path)
+                else:
+                    raise
 
     elif remote_url.scheme == 's3':
-        extra_args = kwargs.get('extra_args', {})
+        if extra_args is None:
+            extra_args = {}
 
         remote_path = remote_url.path
         while remote_path.startswith('/'):
@@ -290,16 +238,31 @@ def remove_url(url):
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
-        s3.delete_object(Bucket=url.s3_bucket, Key=url.path)
+        s3.delete_object(Bucket=url.netloc, Key=url.path)
         return
 
     # Don't even try for other URL schemes.
 
 
-def _list_s3_objects(client, url, num_entries, start_after=None):
+def _iter_s3_contents(contents, prefix):
+    for entry in contents:
+        key = entry['Key']
+
+        if not key.startswith('/'):
+            key = '/' + key
+
+        key = os.path.relpath(key, prefix)
+
+        if key == '.':
+            continue
+
+        yield key
+
+
+def _list_s3_objects(client, bucket, prefix, num_entries, start_after=None):
     list_args = dict(
-        Bucket=url.netloc,
-        Prefix=url.path,
+        Bucket=bucket,
+        Prefix=prefix[1:],
         MaxKeys=num_entries)
 
     if start_after is not None:
@@ -311,21 +274,19 @@ def _list_s3_objects(client, url, num_entries, start_after=None):
     if result['IsTruncated']:
         last_key = result['Contents'][-1]['Key']
 
-    iter = (key for key in
-            (
-                os.path.relpath(entry['Key'], url.path)
-                for entry in result['Contents']
-            )
-            if key != '.')
+    iter = _iter_s3_contents(result['Contents'], prefix)
 
     return iter, last_key
 
 
 def _iter_s3_prefix(client, url, num_entries=1024):
     key = None
+    bucket = url.netloc
+    prefix = re.sub(r'^/*', '/', url.path)
+
     while True:
         contents, key = _list_s3_objects(
-            client, url, num_entries, start_after=key)
+            client, bucket, prefix, num_entries, start_after=key)
 
         for x in contents:
             yield x
@@ -348,107 +309,150 @@ def list_url(url):
             for key in _iter_s3_prefix(s3, url)))
 
 
-def _spider(url, visited, root, depth, max_depth, raise_on_error):
-    """Fetches URL and any pages it links to up to max_depth.
+def spider(root_urls, depth=0, concurrency=32):
+    """Get web pages from root URLs.
 
-       depth should initially be zero, and max_depth is the max depth of
-       links to follow from the root.
+    If depth is specified (e.g., depth=2), then this will also follow
+    up to <depth> levels of links from each root.
 
-       Prints out a warning only if the root can't be fetched; it ignores
-       errors with pages that the root links to.
+    Args:
+        root_urls (str or list of str): root urls used as a starting point
+            for spidering
+        depth (int): level of recursion into links
+        concurrency (int): number of simultaneous requests that can be sent
 
-       Returns a tuple of:
-       - pages: dict of pages visited (URL) mapped to their full text.
-       - links: set of links encountered while visiting the pages.
+    Returns:
+        A dict of pages visited (URL) mapped to their full text and the
+        set of visited links.
     """
-    pages = {}     # dict from page URL -> text content.
-    links = set()  # set of all links seen on visited pages.
+    # Cache of visited links, meant to be captured by the closure below
+    _visited = set()
 
-    try:
-        response_url, _, response = read_from_url(url, 'text/html')
-        if not response_url or not response:
-            return pages, links
+    def _spider(url, collect_nested):
+        """Fetches URL and any pages it links to.
 
-        page = codecs.getreader('utf-8')(response).read()
-        pages[response_url] = page
+        Prints out a warning only if the root can't be fetched; it ignores
+        errors with pages that the root links to.
 
-        # Parse out the links in the page
-        link_parser = LinkParser()
+        Args:
+            url (str): url being fetched and searched for links
+            collect_nested (bool): whether we want to collect arguments
+                for nested spidering on the links found in this url
+
+        Returns:
+            A tuple of:
+            - pages: dict of pages visited (URL) mapped to their full text.
+            - links: set of links encountered while visiting the pages.
+            - spider_args: argument for subsequent call to spider
+        """
+        pages = {}  # dict from page URL -> text content.
+        links = set()  # set of all links seen on visited pages.
         subcalls = []
-        link_parser.feed(page)
 
-        while link_parser.links:
-            raw_link = link_parser.links.pop()
-            abs_link = url_util.join(
-                response_url,
-                raw_link.strip(),
-                resolve_href=True)
-            links.add(abs_link)
+        try:
+            response_url, _, response = read_from_url(url, 'text/html')
+            if not response_url or not response:
+                return pages, links, subcalls
 
-            # Skip stuff that looks like an archive
-            if any(raw_link.endswith(suf) for suf in ALLOWED_ARCHIVE_TYPES):
-                continue
+            page = codecs.getreader('utf-8')(response).read()
+            pages[response_url] = page
 
-            # Skip things outside the root directory
-            if not abs_link.startswith(root):
-                continue
+            # Parse out the links in the page
+            link_parser = LinkParser()
+            link_parser.feed(page)
 
-            # Skip already-visited links
-            if abs_link in visited:
-                continue
+            while link_parser.links:
+                raw_link = link_parser.links.pop()
+                abs_link = url_util.join(
+                    response_url,
+                    raw_link.strip(),
+                    resolve_href=True)
+                links.add(abs_link)
 
-            # If we're not at max depth, follow links.
-            if depth < max_depth:
-                subcalls.append((abs_link, visited, root,
-                                 depth + 1, max_depth, raise_on_error))
-                visited.add(abs_link)
+                # Skip stuff that looks like an archive
+                if any(raw_link.endswith(s) for s in ALLOWED_ARCHIVE_TYPES):
+                    continue
 
-        if subcalls:
-            pool = NonDaemonPool(processes=len(subcalls))
-            try:
-                results = pool.map(_spider_wrapper, subcalls)
+                # Skip already-visited links
+                if abs_link in _visited:
+                    continue
 
-                for sub_pages, sub_links in results:
-                    pages.update(sub_pages)
-                    links.update(sub_links)
+                # If we're not at max depth, follow links.
+                if collect_nested:
+                    subcalls.append((abs_link,))
+                    _visited.add(abs_link)
 
-            finally:
-                pool.terminate()
-                pool.join()
+        except URLError as e:
+            tty.debug(str(e))
 
-    except URLError as e:
-        tty.debug(e)
+            if hasattr(e, 'reason') and isinstance(e.reason, ssl.SSLError):
+                tty.warn("Spack was unable to fetch url list due to a "
+                         "certificate verification problem. You can try "
+                         "running spack -k, which will not check SSL "
+                         "certificates. Use this at your own risk.")
 
-        if hasattr(e, 'reason') and isinstance(e.reason, ssl.SSLError):
-            tty.warn("Spack was unable to fetch url list due to a certificate "
-                     "verification problem. You can try running spack -k, "
-                     "which will not check SSL certificates. Use this at your "
-                     "own risk.")
+        except HTMLParseError as e:
+            # This error indicates that Python's HTML parser sucks.
+            msg = "Got an error parsing HTML."
 
-        if raise_on_error:
-            raise NoNetworkConnectionError(str(e), url)
+            # Pre-2.7.3 Pythons in particular have rather prickly HTML parsing.
+            if sys.version_info[:3] < (2, 7, 3):
+                msg += " Use Python 2.7.3 or newer for better HTML parsing."
 
-    except HTMLParseError as e:
-        # This error indicates that Python's HTML parser sucks.
-        msg = "Got an error parsing HTML."
+            tty.warn(msg, url, "HTMLParseError: " + str(e))
 
-        # Pre-2.7.3 Pythons in particular have rather prickly HTML parsing.
-        if sys.version_info[:3] < (2, 7, 3):
-            msg += " Use Python 2.7.3 or newer for better HTML parsing."
+        except Exception as e:
+            # Other types of errors are completely ignored,
+            # except in debug mode
+            tty.debug("Error in _spider: %s:%s" % (type(e), str(e)),
+                      traceback.format_exc())
 
-        tty.warn(msg, url, "HTMLParseError: " + str(e))
+        finally:
+            tty.debug("SPIDER: [url={0}]".format(url))
 
-    except Exception as e:
-        # Other types of errors are completely ignored, except in debug mode.
-        tty.debug("Error in _spider: %s:%s" % (type(e), e),
-                  traceback.format_exc())
+        return pages, links, subcalls
+
+    # TODO: Needed until we drop support for Python 2.X
+    def star(func):
+        def _wrapper(args):
+            return func(*args)
+        return _wrapper
+
+    if isinstance(root_urls, six.string_types):
+        root_urls = [root_urls]
+
+    # Clear the local cache of visited pages before starting the search
+    _visited.clear()
+
+    current_depth = 0
+    pages, links, spider_args = {}, set(), []
+
+    collect = current_depth < depth
+    for root in root_urls:
+        root = url_util.parse(root)
+        spider_args.append((root, collect))
+
+    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+    try:
+        while current_depth <= depth:
+            tty.debug("SPIDER: [depth={0}, max_depth={1}, urls={2}]".format(
+                current_depth, depth, len(spider_args))
+            )
+            results = tp.map(star(_spider), spider_args)
+            spider_args = []
+            collect = current_depth < depth
+            for sub_pages, sub_links, sub_spider_args in results:
+                sub_spider_args = [x + (collect,) for x in sub_spider_args]
+                pages.update(sub_pages)
+                links.update(sub_links)
+                spider_args.extend(sub_spider_args)
+
+            current_depth += 1
+    finally:
+        tp.terminate()
+        tp.join()
 
     return pages, links
-
-
-def _spider_wrapper(args):
-    """Wrapper for using spider with multiprocessing."""
-    return _spider(*args)
 
 
 def _urlopen(req, *args, **kwargs):
@@ -472,37 +476,22 @@ def _urlopen(req, *args, **kwargs):
     return opener(req, *args, **kwargs)
 
 
-def spider(root, depth=0):
-    """Gets web pages from a root URL.
-
-       If depth is specified (e.g., depth=2), then this will also follow
-       up to <depth> levels of links from the root.
-
-       This will spawn processes to fetch the children, for much improved
-       performance over a sequential fetch.
-
-    """
-    root = url_util.parse(root)
-    pages, links = _spider(root, set(), root, 0, depth, False)
-    return pages, links
-
-
-def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
+def find_versions_of_archive(
+        archive_urls, list_url=None, list_depth=0, concurrency=32
+):
     """Scrape web pages for new versions of a tarball.
 
-    Arguments:
+    Args:
         archive_urls (str or list or tuple): URL or sequence of URLs for
             different versions of a package. Typically these are just the
             tarballs from the package file itself. By default, this searches
             the parent directories of archives.
-
-    Keyword Arguments:
         list_url (str or None): URL for a listing of archives.
             Spack will scrape these pages for download links that look
             like the archive URL.
-
-        list_depth (int): Max depth to follow links on list_url pages.
+        list_depth (int): max depth to follow links on list_url pages.
             Defaults to 0.
+        concurrency (int): maximum number of concurrent requests
     """
     if not isinstance(archive_urls, (list, tuple)):
         archive_urls = [archive_urls]
@@ -523,12 +512,7 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     list_urls |= additional_list_urls
 
     # Grab some web pages to scrape.
-    pages = {}
-    links = set()
-    for lurl in list_urls:
-        pg, lnk = spider(lurl, depth=list_depth)
-        pages.update(pg)
-        links.update(lnk)
+    pages, links = spider(list_urls, depth=list_depth, concurrency=concurrency)
 
     # Scrape them for archive URLs
     regexes = []
@@ -577,106 +561,34 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     return versions
 
 
-def standardize_header_names(headers):
-    """Replace certain header names with standardized spellings.
+def get_header(headers, header_name):
+    """Looks up a dict of headers for the given header value.
 
-    Standardizes the spellings of the following header names:
-    - Accept-ranges
-    - Content-length
-    - Content-type
-    - Date
-    - Last-modified
-    - Server
+    Looks up a dict of headers, [headers], for a header value given by
+    [header_name].  Returns headers[header_name] if header_name is in headers.
+    Otherwise, the first fuzzy match is returned, if any.
 
-    Every name considered is translated to one of the above names if the only
-    difference between the two is how the first letters of each word are
-    capitalized; whether words are separated; or, if separated, whether they
-    are so by a dash (-), underscore (_), or space ( ).  Header names that
-    cannot be mapped as described above are returned unaltered.
+    This fuzzy matching is performed by discarding word separators and
+    capitalization, so that for example, "Content-length", "content_length",
+    "conTENtLength", etc., all match.  In the case of multiple fuzzy-matches,
+    the returned value is the "first" such match given the underlying mapping's
+    ordering, or unspecified if no such ordering is defined.
 
-    For example: The standard spelling of "Content-length" would be substituted
-    for any of the following names:
-    - Content-length
-    - content_length
-    - contentlength
-    - content_Length
-    - contentLength
-    - content Length
-
-    ... and any other header name, such as "Content-encoding", would not be
-    altered, regardless of spelling.
-
-    If headers is a string, then it (or an appropriate substitute) is returned.
-
-    If headers is a non-empty tuple, headers[0] is a string, and there exists a
-    standardized spelling for header[0] that differs from it, then a new tuple
-    is returned.  This tuple has the same elements as headers, except the first
-    element is the standardized spelling for headers[0].
-
-    If headers is a sequence, then a new list is considered, where each element
-    is its corresponding element in headers, but mapped as above if a string or
-    tuple.  This new list is returned if at least one of its elements differ
-    from their corrsponding element in headers.
-
-    If headers is a mapping, then a new dict is considered, where the key in
-    each item is the key of its corresponding item in headers, mapped as above
-    if a string or tuple.  The value is taken from the corresponding item.  If
-    the keys of multiple items in headers map to the same key after being
-    standardized, then the value for the resulting item is undefined.  The new
-    dict is returned if at least one of its items has a key that differs from
-    that of their corresponding item in headers, or if the keys of multiple
-    items in headers map to the same key after being standardized.
-
-    In all other cases headers is returned unaltered.
+    If header_name is not in headers, and no such fuzzy match exists, then a
+    KeyError is raised.
     """
-    if isinstance(headers, six.string_types):
-        for standardized_spelling, other_spellings in (
-                HTTP_HEADER_NAME_ALIASES.items()):
-            if headers in other_spellings:
-                if headers == standardized_spelling:
-                    return headers
-                return standardized_spelling
-        return headers
 
-    if isinstance(headers, tuple):
-        if not headers:
-            return headers
-        old = headers[0]
-        if isinstance(old, six.string_types):
-            new = standardize_header_names(old)
-            if old is not new:
-                return (new,) + headers[1:]
-        return headers
+    def unfuzz(header):
+        return re.sub(r'[ _-]', '', header).lower()
 
     try:
-        changed = False
-        new_dict = {}
-        for key, value in headers.items():
-            if isinstance(key, (tuple, six.string_types)):
-                old_key, key = key, standardize_header_names(key)
-                changed = changed or key is not old_key
-
-            new_dict[key] = value
-
-        return new_dict if changed else headers
-    except (AttributeError, TypeError, ValueError):
-        pass
-
-    try:
-        changed = False
-        new_list = []
-        for item in headers:
-            if isinstance(item, (tuple, six.string_types)):
-                old_item, item = item, standardize_header_names(item)
-                changed = changed or item is not old_item
-
-            new_list.append(item)
-
-        return new_list if changed else headers
-    except TypeError:
-        pass
-
-    return headers
+        return headers[header_name]
+    except KeyError:
+        unfuzzed_header_name = unfuzz(header_name)
+        for header, value in headers.items():
+            if unfuzz(header) == unfuzzed_header_name:
+                return value
+        raise
 
 
 class SpackWebError(spack.error.SpackError):

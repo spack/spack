@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,7 +46,7 @@ class EqR(AutotoolsPackage):
         if not os.path.exists(r_location):
             rscript = which('Rscript')
             if rscript is not None:
-                r_location = rscript('-e', 'cat(R.home())')
+                r_location = rscript('-e', 'cat(R.home())', output=str)
             else:
                 msg = 'couldn\'t locate Rscript on your PATH'
                 raise RuntimeError(msg)

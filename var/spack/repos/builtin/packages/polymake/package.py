@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Polymake(Package):
     depends_on("ninja", type='build', when='@3.2:')
     depends_on("perl")
     depends_on("perl-json")
-    depends_on("perl-term-readkey")
+    depends_on("perl-termreadkey")
     depends_on("perl-term-readline-gnu")
     depends_on("perl-xml-libxml")
     depends_on("perl-xml-libxslt")

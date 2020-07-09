@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,6 @@ import six.moves.urllib.error as urllib_error
 
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
-import spack.util.web as web_util
 
 
 # NOTE(opadron): Workaround issue in boto where its StreamingBody
@@ -54,8 +53,7 @@ def _s3_open(url):
 
     # NOTE(opadron): Apply workaround here (see above)
     stream = WrapStream(obj['Body'])
-    headers = web_util.standardize_header_names(
-        obj['ResponseMetadata']['HTTPHeaders'])
+    headers = obj['ResponseMetadata']['HTTPHeaders']
 
     return url, headers, stream
 

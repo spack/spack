@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,9 +30,13 @@ class Pfunit(CMakePackage):
     variant('shared', default=True,
             description='Build shared library in addition to static')
     variant('mpi', default=False, description='Enable MPI')
-    variant('use_comm_world', default=False, description='Enable MPI_COMM_WORLD for testing')
+    variant('use_comm_world', default=False,
+            description='Enable MPI_COMM_WORLD for testing')
     variant('openmp', default=False, description='Enable OpenMP')
     variant('docs', default=False, description='Build docs')
+
+    variant('max_array_rank', values=int, default=5,
+            description='Max number of Fortran dimensions of array asserts')
 
     depends_on('python@2.7:', type=('build', 'run'))  # python3 too!
     depends_on('mpi', when='+mpi')
@@ -53,7 +57,8 @@ class Pfunit(CMakePackage):
             '-DBUILD_SHARED=%s' % ('YES' if '+shared' in spec else 'NO'),
             '-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % spec.prefix.include,
             '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO'),
-            '-DOPENMP=%s' % ('YES' if '+openmp' in spec else 'NO')]
+            '-DOPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
+            '-DMAX_RANK=%s' % spec.variants['max_array_rank'].value]
 
         if spec.satisfies('+mpi'):
             args.extend(['-DMPI=YES', '-DMPI_USE_MPIEXEC=YES',
@@ -82,12 +87,14 @@ class Pfunit(CMakePackage):
                 return value
         raise InstallError('Unsupported compiler.')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('PFUNIT', self.spec.prefix)
-        run_env.set('PFUNIT', self.spec.prefix)
-        spack_env.set('F90_VENDOR', self.compiler_vendor())
-        run_env.set('F90_VENDOR', self.compiler_vendor())
+    def setup_build_environment(self, env):
+        env.set('PFUNIT', self.spec.prefix)
+        env.set('F90_VENDOR', self.compiler_vendor())
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('PFUNIT', self.spec.prefix)
-        spack_env.set('F90_VENDOR', self.compiler_vendor())
+    def setup_run_environment(self, env):
+        env.set('PFUNIT', self.spec.prefix)
+        env.set('F90_VENDOR', self.compiler_vendor())
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('PFUNIT', self.spec.prefix)
+        env.set('F90_VENDOR', self.compiler_vendor())

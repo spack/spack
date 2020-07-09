@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -67,17 +67,17 @@ class VtkH(Package, CudaPackage):
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
 
-    depends_on("vtk-m@1.5.3~tbb+openmp", when="+openmp")
-    depends_on("vtk-m@1.5.3~tbb~openmp", when="~openmp")
+    depends_on("vtk-m@ascent_ver~tbb+openmp", when="+openmp")
+    depends_on("vtk-m@ascent_ver~tbb~openmp", when="~openmp")
 
-    depends_on("vtk-m@1.5.3+cuda~tbb+openmp", when="+cuda+openmp")
-    depends_on("vtk-m@1.5.3+cuda~tbb~openmp", when="+cuda~openmp")
+    depends_on("vtk-m@ascent_ver+cuda~tbb+openmp", when="+cuda+openmp")
+    depends_on("vtk-m@ascent_ver+cuda~tbb~openmp", when="+cuda~openmp")
 
-    depends_on("vtk-m@1.5.3~tbb+openmp~shared", when="+openmp~shared")
-    depends_on("vtk-m@1.5.3~tbb~openmp~shared", when="~openmp~shared")
+    depends_on("vtk-m@ascent_ver~tbb+openmp~shared", when="+openmp~shared")
+    depends_on("vtk-m@ascent_ver~tbb~openmp~shared", when="~openmp~shared")
 
-    depends_on("vtk-m@1.5.3+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
-    depends_on("vtk-m@1.5.3+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
+    depends_on("vtk-m@ascent_ver+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
+    depends_on("vtk-m@ascent_ver+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):

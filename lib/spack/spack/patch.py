@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -64,11 +64,8 @@ class Patch(object):
         self.level = level
         self.working_dir = working_dir
 
-    def fetch(self, stage):
+    def fetch(self):
         """Fetch the patch in case of a UrlPatch
-
-        Args:
-            stage: stage for the package that needs to be patched
         """
 
     def clean(self):
@@ -88,7 +85,8 @@ class Patch(object):
 
         apply_patch(stage, self.path, self.level, self.working_dir)
 
-    def cache(self):
+    @property
+    def stage(self):
         return None
 
     def to_dict(self):
@@ -171,6 +169,7 @@ class UrlPatch(Patch):
         super(UrlPatch, self).__init__(pkg, url, level, working_dir)
 
         self.url = url
+        self._stage = None
 
         self.ordering_key = ordering_key
 
@@ -184,28 +183,12 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
-    # TODO: this function doesn't use the stage arg
-    def fetch(self, stage):
+    def fetch(self):
         """Retrieve the patch in a temporary stage and compute self.path
 
         Args:
             stage: stage for the package that needs to be patched
         """
-        # use archive digest for compressed archives
-        fetch_digest = self.sha256
-        if self.archive_sha256:
-            fetch_digest = self.archive_sha256
-
-        fetcher = fs.URLFetchStrategy(self.url, fetch_digest,
-                                      expand=bool(self.archive_sha256))
-
-        per_package_ref = os.path.join(
-            self.owner.split('.')[-1], os.path.basename(self.url))
-        # Reference starting with "spack." is required to avoid cyclic imports
-        mirror_ref = spack.mirror.mirror_archive_paths(
-            fetcher, per_package_ref)
-
-        self.stage = spack.stage.Stage(fetcher, mirror_paths=mirror_ref)
         self.stage.create()
         self.stage.fetch()
         self.stage.check()
@@ -239,8 +222,32 @@ class UrlPatch(Patch):
                     "sha256 checksum failed for %s" % self.path,
                     "Expected %s but got %s" % (self.sha256, checker.sum))
 
-    def cache(self):
-        return self.stage
+    @property
+    def stage(self):
+        if self._stage:
+            return self._stage
+
+        # use archive digest for compressed archives
+        fetch_digest = self.sha256
+        if self.archive_sha256:
+            fetch_digest = self.archive_sha256
+
+        fetcher = fs.URLFetchStrategy(self.url, fetch_digest,
+                                      expand=bool(self.archive_sha256))
+
+        # The same package can have multiple patches with the same name but
+        # with different contents, therefore apply a subset of the hash.
+        name = '{0}-{1}'.format(os.path.basename(self.url), fetch_digest[:7])
+
+        per_package_ref = os.path.join(self.owner.split('.')[-1], name)
+        # Reference starting with "spack." is required to avoid cyclic imports
+        mirror_ref = spack.mirror.mirror_archive_paths(
+            fetcher,
+            per_package_ref)
+
+        self._stage = spack.stage.Stage(fetcher, mirror_paths=mirror_ref)
+        self._stage.create()
+        return self._stage
 
     def clean(self):
         self.stage.destroy()
@@ -339,7 +346,8 @@ class PatchCache(object):
         sha_index = self.index.get(sha256)
         if not sha_index:
             raise NoSuchPatchError(
-                "Couldn't find patch with sha256: %s" % sha256)
+                "Couldn't find patch for package %s with sha256: %s"
+                % (pkg.fullname, sha256))
 
         patch_dict = sha_index.get(pkg.fullname)
         if not patch_dict:

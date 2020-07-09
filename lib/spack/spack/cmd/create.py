@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ level = "short"
 
 
 package_template = '''\
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,6 +59,10 @@ class {class_name}({base_class_name}):
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
 {url_def}
+
+    # FIXME: Add a list of GitHub accounts to
+    # notify when the package is updated.
+    # maintainers = ['github_user1', 'github_user2']
 
 {versions}
 
@@ -241,7 +245,9 @@ class PythonPackageTemplate(PackageTemplate):
     base_class_name = 'PythonPackage'
 
     dependencies = """\
-    # FIXME: Add dependencies if required.
+    # FIXME: Add dependencies if required. Only add the python dependency
+    # if you need specific versions. A generic python dependency is
+    # added implicity by the PythonPackage class.
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))"""
@@ -423,7 +429,8 @@ def setup_parser(subparser):
         '-n', '--name',
         help="name of the package to create")
     subparser.add_argument(
-        '-t', '--template', metavar='TEMPLATE', choices=templates.keys(),
+        '-t', '--template', metavar='TEMPLATE',
+        choices=sorted(templates.keys()),
         help="build system template to use. options: %(choices)s")
     subparser.add_argument(
         '-r', '--repo',
@@ -438,6 +445,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--skip-editor', action='store_true',
         help="skip the edit session for the package (e.g., automation)")
+    subparser.add_argument(
+        '-b', '--batch', action='store_true',
+        help="don't ask which versions to checksum")
 
 
 class BuildSystemGuesser:
@@ -468,13 +478,13 @@ class BuildSystemGuesser:
         # build systems, we choose the first match in this list.
         clues = [
             (r'/CMakeLists\.txt$',    'cmake'),
+            (r'/NAMESPACE$',          'r'),
             (r'/configure$',          'autotools'),
             (r'/configure\.(in|ac)$', 'autoreconf'),
             (r'/Makefile\.am$',       'autoreconf'),
             (r'/SConstruct$',         'scons'),
             (r'/waf$',                'waf'),
             (r'/setup\.py$',          'python'),
-            (r'/NAMESPACE$',          'r'),
             (r'/WORKSPACE$',          'bazel'),
             (r'/Build\.PL$',          'perlbuild'),
             (r'/Makefile\.PL$',       'perlmake'),
@@ -504,7 +514,7 @@ class BuildSystemGuesser:
         # Determine the build system based on the files contained
         # in the archive.
         for pattern, bs in clues:
-            if any(re.search(pattern, l) for l in lines):
+            if any(re.search(pattern, line) for line in lines):
                 self.build_system = bs
                 break
 
@@ -622,7 +632,8 @@ def get_versions(args, name):
 
         versions = spack.stage.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
-            keep_stage=args.keep_stage)
+            keep_stage=args.keep_stage,
+            batch=(args.batch or len(url_dict) == 1))
     else:
         versions = unhashed_versions
 

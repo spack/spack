@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,11 +18,12 @@ class VtkM(CMakePackage, CudaPackage):
     architectures."""
 
     homepage = "https://m.vtk.org/"
-    url      = "https://gitlab.kitware.com/vtk/vtk-m/-/archive/v1.5.0/vtk-m-v1.5.0.tar.gz"
+    maintainers = ['robertmaynard', 'kmorel', 'vicentebolea']
+
+    url      = "https://gitlab.kitware.com/vtk/vtk-m/-/archive/v1.5.1/vtk-m-v1.5.1.tar.gz"
     git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
 
     version('master', branch='master')
-    version('1.5.3', commit="a3b8525ef97d94996ae843db0dd4f675c38e8b1e")
     version('1.5.2', commit="c49390f2537c5ba8cf25bd39aa5c212d6eafcf61")
     version('1.5.1', commit="124fb23c50c14b171ae91b27abca77c435968fa5")
     version('1.5.0', sha256="b1b13715c7fcc8d17f5c7166ff5b3e9025f6865dc33eb9b06a63471c21349aa8")
@@ -30,6 +31,8 @@ class VtkM(CMakePackage, CudaPackage):
     version('1.3.0', sha256="f88c1b0a1980f695240eeed9bcccfa420cc089e631dc2917c9728a2eb906df2e")
     version('1.2.0', sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763")
     version('1.1.0', sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18")
+    # version used by ascent
+    version('ascent_ver', commit="a3b8525ef97d94996ae843db0dd4f675c38e8b1e")
 
     patch('vtkmdiy_fpic.patch', when='@1.5.3')
     patch('disable_flying_edges.patch', when='@1.5.3')
@@ -49,7 +52,7 @@ class VtkM(CMakePackage, CudaPackage):
     variant("64bitids", default=False,
             description="enable 64 bits ids")
 
-    depends_on("cmake")
+    depends_on("cmake@3.12:", type="build")         # CMake >= 3.12
     depends_on("tbb", when="+tbb")
     depends_on("cuda", when="+cuda")
     depends_on("mpi", when="+mpi")
@@ -150,4 +153,8 @@ class VtkM(CMakePackage, CudaPackage):
                 print("64 bit ids enabled")
             else:
                 options.append("-DVTKm_USE_64BIT_IDS:BOOL=OFF")
+
+            if spec.variants["build_type"].value != 'Release':
+                options.append("-DVTKm_NO_ASSERT:BOOL=ON")
+
             return options

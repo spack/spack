@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -201,7 +201,6 @@ def filter_file(regex, repl, *filenames, **kwargs):
                         output_file.writelines(input_file.readlines())
 
         except BaseException:
-            os.remove(tmp_filename)
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)
             raise
@@ -457,7 +456,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
             if os.path.isdir(s):
                 mkdirp(d)
             else:
-                shutil.copyfile(s, d)
+                shutil.copy2(s, d)
 
         if _permissions:
             set_install_permissions(d)
@@ -625,9 +624,9 @@ def replace_directory_transaction(directory_name, tmp_root=None):
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
     assert os.path.isdir(directory_name), \
-        '"directory_name" must be a valid directory'
+        'Invalid directory: ' + directory_name
     assert os.path.isabs(directory_name), \
-        '"directory_name" must contain an absolute path'
+        '"directory_name" must contain an absolute path: ' + directory_name
 
     directory_basename = os.path.basename(directory_name)
 
@@ -917,10 +916,8 @@ def remove_if_dead_link(path):
     Parameters:
         path (str): The potential dead link
     """
-    if os.path.islink(path):
-        real_path = os.path.realpath(path)
-        if not os.path.exists(real_path):
-            os.unlink(path)
+    if os.path.islink(path) and not os.path.exists(path):
+        os.unlink(path)
 
 
 def remove_linked_tree(path):
@@ -1156,7 +1153,9 @@ class HeaderList(FileList):
 
     # Make sure to only match complete words, otherwise path components such
     # as "xinclude" will cause false matches.
-    include_regex = re.compile(r'(.*)(\binclude\b)(.*)')
+    # Avoid matching paths such as <prefix>/include/something/detail/include,
+    # e.g. in the CUDA Toolkit which ships internal libc++ headers.
+    include_regex = re.compile(r'(.*?)(\binclude\b)(.*)')
 
     def __init__(self, files):
         super(HeaderList, self).__init__(files)

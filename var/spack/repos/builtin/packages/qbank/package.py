@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,11 +36,9 @@ class Qbank(Package):
     phases = ['configure', 'build', 'install']
 
     def configure_args(self):
-        prefix = self.prefix
-
         config_args = [
-            '--prefix', prefix,
-            '--logdir', join_path(prefix, 'var', 'log', 'qbank')
+            '--prefix', self.prefix,
+            '--logdir', self.prefix.var.log.qbank
         ]
 
         return config_args
@@ -59,11 +57,8 @@ class Qbank(Package):
         make('install')
 
         if '+doc' in spec:
-            install_tree('doc', join_path(prefix, 'doc'))
+            install_tree('doc', prefix.doc)
 
-    def setup_environment(self, spack_env, run_env):
-        spec = self.spec
-        prefix = self.prefix
-
-        if '+doc' in spec:
-            run_env.prepend_path('MANPATH', join_path(prefix, 'doc'))
+    def setup_run_environment(self, env):
+        if '+doc' in self.spec:
+            env.prepend_path('MANPATH', self.prefix.doc)

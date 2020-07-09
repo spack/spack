@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -173,16 +173,16 @@ class Amrvis(MakefilePackage):
         with open('GNUmakefile', 'w') as file:
             file.writelines(contents)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # We don't want an AMREX_HOME the user may have set already
-        spack_env.unset('AMREX_HOME')
+        env.unset('AMREX_HOME')
         # Help force Amrvis to not pick up random system compilers
         if '+mpi' in self.spec:
-            spack_env.set('MPI_HOME', self.spec['mpi'].prefix)
-            spack_env.set('CC', self.spec['mpi'].mpicc)
-            spack_env.set('CXX', self.spec['mpi'].mpicxx)
-            spack_env.set('F77', self.spec['mpi'].mpif77)
-            spack_env.set('FC', self.spec['mpi'].mpifc)
+            env.set('MPI_HOME', self.spec['mpi'].prefix)
+            env.set('CC', self.spec['mpi'].mpicc)
+            env.set('CXX', self.spec['mpi'].mpicxx)
+            env.set('F77', self.spec['mpi'].mpif77)
+            env.set('FC', self.spec['mpi'].mpifc)
 
     def install(self, spec, prefix):
         # Install exe manually

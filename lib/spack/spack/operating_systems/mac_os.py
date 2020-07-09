@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,6 +54,7 @@ class MacOs(OperatingSystem):
             '10.13': 'highsierra',
             '10.14': 'mojave',
             '10.15': 'catalina',
+            '11.0':  'bigsur',
         }
 
         mac_ver = str(macos_version().up_to(2))

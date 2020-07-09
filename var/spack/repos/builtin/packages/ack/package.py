@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,11 +25,13 @@ class Ack(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        ack = 'ack-{0}-single-file'.format(self.version)
+        ack_source = 'ack-{0}-single-file'.format(self.version)
+        ack_installed = join_path(prefix.bin, "ack")
+
+        # install source
+        install(ack_source, ack_installed)
+        set_executable(ack_installed)
 
         # rewrite the script's #! line to call the perl dependency
         shbang = '#!' + spec['perl'].command.path
-        filter_file(r'^#!/usr/bin/env perl', shbang, ack)
-
-        install(ack, join_path(prefix.bin, "ack"))
-        set_executable(join_path(prefix.bin, "ack"))
+        filter_file(r'^#!/usr/bin/env perl', shbang, ack_installed)

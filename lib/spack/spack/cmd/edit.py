@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -84,12 +84,11 @@ def setup_parser(subparser):
         help="namespace of package to edit")
 
     subparser.add_argument(
-        'name', nargs='?', default=None,
-        help="name of package to edit")
+        'package', nargs='?', default=None, help="package name")
 
 
 def edit(parser, args):
-    name = args.name
+    name = args.package
 
     # By default, edit package files
     path = spack.paths.packages_path

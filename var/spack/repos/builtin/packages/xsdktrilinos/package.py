@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -65,7 +65,9 @@ class Xsdktrilinos(CMakePackage):
         ])
 
         # Fortran lib
-        if spec.satisfies('%gcc') or spec.satisfies('%clang'):
+        if (spec.satisfies('%gcc') or
+                spec.satisfies('%clang') or
+                spec.satisfies('%apple-clang')):
             libgfortran = os.path.dirname(os.popen(
                 '%s --print-file-name libgfortran.a' %
                 join_path(mpi_bin, 'mpif90')).read())

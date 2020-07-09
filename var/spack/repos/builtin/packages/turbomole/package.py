@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,9 +52,8 @@ class Turbomole(Package):
             return
 
     def install(self, spec, prefix):
-        if spec.satisfies('@:7.0.2'):
-            calculate_version = 'calculate_2.4_linux64'
-            molecontrol_version = 'MoleControl_2.5'
+        calculate_version = 'calculate_2.4_linux64'
+        molecontrol_version = 'MoleControl_2.5'
 
         tm_arch = self.get_tm_arch()
 
@@ -114,33 +113,25 @@ class Turbomole(Package):
             install('mpirun_scripts/ricc2', join_path(dst, 'mpirun_scripts'))
             install('mpirun_scripts/ridft', join_path(dst, 'mpirun_scripts'))
 
-    def setup_environment(self, spack_env, run_env):
-        if self.spec.satisfies('@:7.0.2'):
-            molecontrol_version = 'MoleControl_2.5'
+    def setup_run_environment(self, env):
+        molecontrol_version = 'MoleControl_2.5'
 
         tm_arch = self.get_tm_arch()
 
-        run_env.set('TURBODIR', join_path(self.prefix, 'TURBOMOLE'))
-        run_env.set('MOLE_CONTROL',
-                    join_path(self.prefix, 'TURBOMOLE', molecontrol_version))
+        env.set('TURBODIR', self.prefix.TURBOMOLE)
+        env.set('MOLE_CONTROL',
+                join_path(self.prefix, 'TURBOMOLE', molecontrol_version))
 
-        run_env.prepend_path('PATH',
-                             join_path(self.prefix, 'TURBOMOLE', 'thermocalc'))
-        run_env.prepend_path('PATH',
-                             join_path(self.prefix, 'TURBOMOLE', 'scripts'))
+        env.prepend_path('PATH', self.prefix.TURBOMOLE.thermocalc)
+        env.prepend_path('PATH', self.prefix.TURBOMOLE.scripts)
         if '+mpi' in self.spec:
-            run_env.set('PARA_ARCH', 'MPI')
-            run_env.prepend_path('PATH',
-                                 join_path(self.prefix,
-                                           'TURBOMOLE', 'bin', '%s_mpi'
-                                           % tm_arch))
+            env.set('PARA_ARCH', 'MPI')
+            env.prepend_path('PATH', join_path(
+                self.prefix, 'TURBOMOLE', 'bin', '%s_mpi' % tm_arch))
         elif '+smp' in self.spec:
-            run_env.set('PARA_ARCH', 'SMP')
-            run_env.prepend_path('PATH',
-                                 join_path(self.prefix,
-                                           'TURBOMOLE', 'bin', '%s_smp'
-                                           % tm_arch))
+            env.set('PARA_ARCH', 'SMP')
+            env.prepend_path('PATH', join_path(
+                self.prefix, 'TURBOMOLE', 'bin', '%s_smp' % tm_arch))
         else:
-            run_env.prepend_path('PATH',
-                                 join_path(self.prefix,
-                                           'TURBOMOLE', 'bin', tm_arch))
+            env.prepend_path('PATH', join_path(
+                self.prefix, 'TURBOMOLE', 'bin', tm_arch))

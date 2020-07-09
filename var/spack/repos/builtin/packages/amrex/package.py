@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,16 +12,24 @@ class Amrex(CMakePackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
+    url      = "https://github.com/AMReX-Codes/amrex/releases/download/20.05/amrex-20.05.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
 
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
-    version('19.10', commit='52844b32b7da11e9733b9a7f4a782e51de7f5e1e')  # tag:19.10
-    version('19.08', commit='bdd1146139e8727a513d451075f900c172eb81fd')  # tag:19.08
-    version('18.10.1', commit='260b53169badaa760b91dfc60ea6b2ea3d9ccf06')  # tag:18.10.1
-    version('18.10', commit='d37a266c38092e1174096e245326e9eead1f4e03')  # tag:18.10
-    version('18.09.1', commit='88120db4736c325a2d3d2c291adacaffd3bf224b')  # tag:18.09.1
+    version('20.07', sha256='c386f566f4c57ee56b5630f79ce2c6117d5a612a4aab69b7b26e48d577251165')
+    version('20.06', sha256='be2f2a5107111fcb8b3928b76024b370c7cb01a9e5dd79484cf7fcf59d0b4858')
+    version('20.05', sha256='97d753bb75e845a0a959ec1a044a48e6adb86dd008b5e29ce7a01d49ed276338')
+    version('20.04', sha256='a7ece54d5d89cc00fd555551902a0d4d0fb50db15d2600f441353eed0dddd83b')
+    version('20.03', sha256='9728f20c0d7297c935fe5cbc63c1ee60f983b833a735c797340ee2765d626165')
+    version('20.02', sha256='2eda858b43e7455718ccb96c18f678da1778ec61031e90effdcb9c3e7e6f9bb5')
+    version('20.01', sha256='957e7a7fe90a0a9f4ae10bf9e46dba68d72448d0bec69a4a4e66a544930caca3')
+    version('19.10', sha256='9f30a2b3ec13711dfc6a1b59af59bd7df78449b5846ac6457b5dbbdecb20c576')
+    version('19.08', sha256='94b1e9a9dcfb8c5b52aef91a2ed373aef504d766dd7d0aba6731ceb94e48e940')
+    version('18.10.1', sha256='e648465c9c3b7ff4c696dfa8b6d079b4f61c80d96c51e27af210951c9367c201')
+    version('18.10', sha256='298eba03ef03d617c346079433af1089d38076d6fab2c34476c687740c1f4234')
+    version('18.09.1', sha256='a065ee4d1d98324b6c492ae20ea63ba12a4a4e23432bf5b3fe9788d44aa4398e')
 
     # Config options
     variant('dimensions', default='3',
@@ -50,14 +58,47 @@ class Amrex(CMakePackage):
             values=('Debug', 'Release'))
     variant('sundials', default=False,
             description='Build AMReX with SUNDIALS support')
+    variant('hdf5',  default=False,
+            description='Enable HDF5-based I/O')
+    variant('hypre', default=False,
+            description='Enable Hypre interfaces')
+    variant('petsc', default=False,
+            description='Enable PETSc interfaces')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
     depends_on('sundials@4.0.0:4.1.0 +ARKODE +CVODE', when='@19.08: +sundials')
-    depends_on('python@2.7:', type='build')
+    depends_on('python@2.7:', type='build', when='@:20.04')
     depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
-    depends_on('cmake@3.13:',  type='build', when='@18.11:')
+    depends_on('cmake@3.13:', type='build', when='@18.11:')
+    depends_on('cmake@3.14:', type='build', when='@19.04:')
+    conflicts('%apple-clang')
     conflicts('%clang')
+
+    # Check options compatibility
+    conflicts('+sundials', when='~fortran',
+              msg='AMReX SUNDIALS support needs AMReX Fortran API (+fortran)')
+    conflicts('+hdf5', when='@:20.06',
+              msg='AMReX HDF5 support needs AMReX newer than version 20.06')
+    conflicts('+hypre', when='@:20.06',
+              msg='AMReX Hypre support needs AMReX newer than version 20.06')
+    conflicts('+hypre', when='~fortran',
+              msg='AMReX Hypre support needs AMReX Fortran API (+fortran)')
+    conflicts('+hypre', when='~linear_solvers',
+              msg='AMReX Hypre support needs variant +linear_solvers')
+    conflicts('+petsc', when='@:20.06',
+              msg='AMReX PETSc support needs AMReX newer than version 20.06')
+    conflicts('+petsc', when='~fortran',
+              msg='AMReX PETSc support needs AMReX Fortran API (+fortran)')
+    conflicts('+petsc', when='~linear_solvers',
+              msg='AMReX PETSc support needs variant +linear_solvers')
+
+    def url_for_version(self, version):
+        if version >= Version('20.05'):
+            url = "https://github.com/AMReX-Codes/amrex/releases/download/{0}/amrex-{0}.tar.gz"
+        else:
+            url = "https://github.com/AMReX-Codes/amrex/archive/{0}.tar.gz"
+        return url.format(version.dotted)
 
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'
@@ -73,10 +114,18 @@ class Amrex(CMakePackage):
             self.spec.variants['precision'].value.upper(),
             '-DENABLE_EB:BOOL=%s' % self.cmake_is_on('+eb'),
             '-DXSDK_ENABLE_Fortran:BOOL=%s' % self.cmake_is_on('+fortran'),
+            '-DENABLE_FORTRAN_INTERFACES:BOOL=%s'
+            % self.cmake_is_on('+fortran'),
             '-DENABLE_LINEAR_SOLVERS:BOOL=%s' %
             self.cmake_is_on('+linear_solvers'),
             '-DENABLE_AMRDATA:BOOL=%s' % self.cmake_is_on('+amrdata'),
             '-DENABLE_PARTICLES:BOOL=%s' % self.cmake_is_on('+particles'),
-            '-DENABLE_SUNDIALS:BOOL=%s' % self.cmake_is_on('+sundials')
+            '-DENABLE_SUNDIALS:BOOL=%s' % self.cmake_is_on('+sundials'),
+            '-DENABLE_HDF5:BOOL=%s' % self.cmake_is_on('+hdf5'),
+            '-DENABLE_HYPRE:BOOL=%s' % self.cmake_is_on('+hypre'),
+            '-DENABLE_PETSC:BOOL=%s' % self.cmake_is_on('+petsc'),
         ]
+        if self.spec.satisfies('%fj'):
+            args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+
         return args

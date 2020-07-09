@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,11 +48,11 @@ class Gtkplus(AutotoolsPackage):
         filter_file(r'CFLAGS="-DGDK_PIXBUF_DISABLE_DEPRECATED $CFLAGS"',
                     '', 'configure', string=True)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path("XDG_DATA_DIRS",
-                               self.prefix.share)
-        run_env.prepend_path("XDG_DATA_DIRS",
-                             self.prefix.share)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
     def configure_args(self):
         args = []

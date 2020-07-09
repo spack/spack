@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Elmerfem(CMakePackage):
     url      = "https://github.com/ElmerCSC/elmerfem/archive/release-8.4.tar.gz"
 
     version('8.4', sha256='cc3ce807d76798361592cc14952cdc3db1ad8f9bac038017514033ce9badc5b3')
+    version('devel', git='https://github.com/ElmerCSC/elmerfem.git', branch='devel')
 
     variant('openmp', default=True, description='Enable OpenMP support.')
     variant('mumps', default=False, description='Enable MUMPS support.')

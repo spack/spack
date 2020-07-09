@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ from llnl.util.lang import union_dicts
 import spack.schema.merged
 import spack.schema.projections
 
+#: legal first keys in the schema
+keys = ('spack', 'env')
 
 spec_list_schema = {
     'type': 'array',

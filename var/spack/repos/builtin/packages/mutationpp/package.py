@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,12 +40,12 @@ class Mutationpp(CMakePackage):
         if '+examples' in self.spec and os.path.isdir('examples'):
             install_tree('examples', self.prefix.examples)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('MPP_DIRECTORY', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('MPP_DIRECTORY', self.prefix)
         if os.path.isdir(self.prefix.data):
-            run_env.set('MPP_DATA_DIRECTORY', self.prefix.data)
+            env.set('MPP_DATA_DIRECTORY', self.prefix.data)
 
-    def setup_dependent_environment(self, spack_env, run_env):
-        spack_env.set('MPP_DIRECTORY', self.prefix)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('MPP_DIRECTORY', self.prefix)
         if os.path.isdir(self.prefix.data):
-            spack_env.set('MPP_DATA_DIRECTORY', self.prefix.data)
+            env.set('MPP_DATA_DIRECTORY', self.prefix.data)

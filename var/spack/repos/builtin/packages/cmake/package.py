@@ -1,29 +1,42 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 
+import re
+import os
+
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
     homepage = 'https://www.cmake.org'
-    url      = 'https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4.tar.gz'
+    url      = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
     maintainers = ['chuckatkins']
 
-    version('3.15.4', sha256='8a211589ea21374e49b25fc1fc170e2d5c7462b795f1b29c84dd0e984301ed7a')
-    version('3.15.3', sha256='13958243a01365b05652fa01b21d40fa834f70a9e30efa69c02604e64f58b8f5')
-    version('3.15.2', sha256='539088cb29a68e6d6a8fba5c00951e5e5b1a92c68fa38a83e1ed2f355933f768')
-    version('3.15.1', sha256='18dec548d8f8b04d53c60f9cedcebaa6762f8425339d1e2c889c383d3ccdd7f7')
-    version('3.15.0', sha256='0678d74a45832cacaea053d85a5685f3ed8352475e6ddf9fcb742ffca00199b5')
-    version('3.14.5', sha256='505ae49ebe3c63c595fa5f814975d8b72848447ee13b6613b0f8b96ebda18c06')
-    version('3.14.4', sha256='00b4dc9b0066079d10f16eed32ec592963a44e7967371d2f5077fd1670ff36d9')
-    version('3.14.3', sha256='215d0b64e81307182b29b63e562edf30b3875b834efdad09b3fcb5a7d2f4b632')
-    version('3.14.2', sha256='a3cbf562b99270c0ff192f692139e98c605f292bfdbc04d70da0309a5358e71e')
-    version('3.14.1', sha256='7321be640406338fc12590609c42b0fae7ea12980855c1be363d25dcd76bb25f')
-    version('3.14.0', sha256='aa76ba67b3c2af1946701f847073f4652af5cbd9f141f221c97af99127e75502')
+    executables = ['cmake']
+
+    version('3.17.3',   sha256='0bd60d512275dc9f6ef2a2865426a184642ceb3761794e6b65bff233b91d8c40')
+    version('3.17.1',   sha256='3aa9114485da39cbd9665a0bfe986894a282d5f0882b1dea960a739496620727')
+    version('3.17.0',   sha256='b74c05b55115eacc4fa2b77a814981dbda05cdc95a53e279fe16b7b272f00847')
+    version('3.16.5',   sha256='5f760b50b8ecc9c0c37135fae5fbf00a2fef617059aa9d61c1bb91653e5a8bfc')
+    version('3.16.2',   sha256='8c09786ec60ca2be354c29829072c38113de9184f29928eb9da8446a5f2ce6a9')
+    version('3.16.1',   sha256='a275b3168fa8626eca4465da7bb159ff07c8c6cb0fb7179be59e12cbdfa725fd')
+    version('3.16.0',   sha256='6da56556c63cab6e9a3e1656e8763ed4a841ac9859fefb63cbe79472e67e8c5f')
+    version('3.15.5',   sha256='fbdd7cef15c0ced06bb13024bfda0ecc0dedbcaaaa6b8a5d368c75255243beb4')
+    version('3.15.4',   sha256='8a211589ea21374e49b25fc1fc170e2d5c7462b795f1b29c84dd0e984301ed7a')
+    version('3.15.3',   sha256='13958243a01365b05652fa01b21d40fa834f70a9e30efa69c02604e64f58b8f5')
+    version('3.15.2',   sha256='539088cb29a68e6d6a8fba5c00951e5e5b1a92c68fa38a83e1ed2f355933f768')
+    version('3.15.1',   sha256='18dec548d8f8b04d53c60f9cedcebaa6762f8425339d1e2c889c383d3ccdd7f7')
+    version('3.15.0',   sha256='0678d74a45832cacaea053d85a5685f3ed8352475e6ddf9fcb742ffca00199b5')
+    version('3.14.5',   sha256='505ae49ebe3c63c595fa5f814975d8b72848447ee13b6613b0f8b96ebda18c06')
+    version('3.14.4',   sha256='00b4dc9b0066079d10f16eed32ec592963a44e7967371d2f5077fd1670ff36d9')
+    version('3.14.3',   sha256='215d0b64e81307182b29b63e562edf30b3875b834efdad09b3fcb5a7d2f4b632')
+    version('3.14.2',   sha256='a3cbf562b99270c0ff192f692139e98c605f292bfdbc04d70da0309a5358e71e')
+    version('3.14.1',   sha256='7321be640406338fc12590609c42b0fae7ea12980855c1be363d25dcd76bb25f')
+    version('3.14.0',   sha256='aa76ba67b3c2af1946701f847073f4652af5cbd9f141f221c97af99127e75502')
     version('3.13.4',   sha256='fdd928fee35f472920071d1c7f1a6a2b72c9b25e04f7a37b409349aef3f20e9b')
     version('3.13.3',   sha256='665f905036b1f731a2a16f83fb298b1fb9d0f98c382625d023097151ad016b25')
     version('3.13.2',   sha256='c925e7d2c5ba511a69f43543ed7b4182a7d446c274c7480d0e42cd933076ae25')
@@ -45,6 +58,7 @@ class Cmake(Package):
     version('3.10.0',   sha256='b3345c17609ea0f039960ef470aa099de9942135990930a57c14575aae884987')
     version('3.9.6',    sha256='7410851a783a41b521214ad987bb534a7e4a65e059651a2514e6ebfc8f46b218')
     version('3.9.4',    sha256='b5d86f12ae0072db520fdbdad67405f799eb728b610ed66043c20a92b4906ca1')
+    version('3.9.2',    sha256='954a5801a456ee48e76f01107c9a4961677dd0f3e115275bbd18410dc22ba3c1')
     version('3.9.0',    sha256='167701525183dbb722b9ffe69fb525aa2b81798cf12f5ce1c020c93394dfae0f')
     version('3.8.2',    sha256='da3072794eb4c09f2d782fcee043847b99bb4cf8d4573978d9b2024214d6e92d')
     version('3.8.1',    sha256='ce5d9161396e06501b00e52933783150a87c33080d4bdcef461b5b7fd24ac228')
@@ -71,6 +85,10 @@ class Cmake(Package):
     # See https://gitlab.kitware.com/cmake/cmake/merge_requests/2873
     patch('cmake-macos-add-coreservices.patch', when='@3.11.0:3.13.3')
 
+    # Fix builds with XLF + Ninja generator
+    # https://gitlab.kitware.com/cmake/cmake/merge_requests/4075
+    patch('fix-xlf-ninja-mr-4075.patch', sha256="42d8b2163a2f37a745800ec13a96c08a3a20d5e67af51031e51f63313d0dedd1", when="@3.15.5")
+
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
     # a build dependency, and its libs will not interfere with others in
@@ -80,6 +98,13 @@ class Cmake(Package):
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
+
+    # Tries to build an Objective-C file from libuv with GCC's C frontend
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/20620
+    # https://github.com/libuv/libuv/issues/2805
+    conflicts('%gcc platform=darwin',
+              msg='CMake does not compile with GCC on macOS yet, use clang. '
+                  'See: https://gitlab.kitware.com/cmake/cmake/-/issues/20620')
 
     # Really this should conflict since it's enabling or disabling openssl for
     # CMake's internal copy of curl.  Ideally we'd want a way to have the
@@ -93,7 +118,8 @@ class Cmake(Package):
     depends_on('zlib',           when='~ownlibs')
     depends_on('bzip2',          when='~ownlibs')
     depends_on('xz',             when='~ownlibs')
-    depends_on('libarchive',     when='~ownlibs')
+    depends_on('libarchive@3.1.0:', when='~ownlibs')
+    depends_on('libarchive@3.3.3:',     when='@3.15.0:~ownlibs')
     depends_on('libuv@1.0.0:1.10.99',   when='@3.7.0:3.10.3~ownlibs')
     depends_on('libuv@1.10.0:1.10.99',  when='@3.11.0:3.11.99~ownlibs')
     depends_on('libuv@1.10.0:',  when='@3.12.0:~ownlibs')
@@ -112,12 +138,39 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/issues/18232
     patch('nag-response-files.patch', when='@3.7:3.12')
 
+    # Cray libhugetlbfs and icpc warnings failing CXX tests
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4698
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4681
+    patch('ignore_crayxc_warnings.patch', when='@3.7:3.17.2')
+
+    # The Fujitsu compiler requires the '--linkfortran' option
+    # to combine C++ and Fortran programs.
+    patch('fujitsu_add_linker_option.patch', when='%fj')
+
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
     # https://gitlab.kitware.com/cmake/cmake/issues/18166
     conflicts('%intel', when='@3.11.0:3.11.4')
+    conflicts('%intel@:14', when='@3.14:',
+              msg="Intel 14 has immature C++11 support")
 
     phases = ['bootstrap', 'build', 'install']
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        exe_to_path = dict(
+            (os.path.basename(p), p) for p in exes_in_prefix
+        )
+        if 'cmake' not in exe_to_path:
+            return None
+
+        cmake = spack.util.executable.Executable(exe_to_path['cmake'])
+        output = cmake('--version', output=str)
+        if output:
+            match = re.search(r'cmake.*version\s+(\S+)', output)
+            if match:
+                version_str = match.group(1)
+                return Spec('cmake@{0}'.format(version_str))
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':
@@ -158,8 +211,19 @@ class Cmake(Package):
             args.append('--sphinx-html')
             args.append('--sphinx-man')
 
+        # Now for CMake arguments to pass after the initial bootstrap
+        args.append('--')
+
+        # Make sure to create an optimized release build
+        args.append('-DCMAKE_BUILD_TYPE=Release')
+
+        # Install CMake correctly, even if `spack install` runs
+        # inside a ctest environment
+        args.append('-DCMake_TEST_INSTALL=OFF')
+
+        # When building our own private copy of curl then we need to properly
+        # enable / disable oepnssl
         if '+ownlibs' in spec:
-            args.append('--')
             args.append('-DCMAKE_USE_OPENSSL=%s' % str('+openssl' in spec))
 
         return args
@@ -179,3 +243,9 @@ class Cmake(Package):
 
     def install(self, spec, prefix):
         make('install')
+
+        if spec.satisfies('%fj'):
+            for f in find(self.prefix, 'FindMPI.cmake', recursive=True):
+                filter_file('mpcc_r)', 'mpcc_r mpifcc)', f, string=True)
+                filter_file('mpc++_r)', 'mpc++_r mpiFCC)', f, string=True)
+                filter_file('mpifc)', 'mpifc mpifrt)', f, string=True)

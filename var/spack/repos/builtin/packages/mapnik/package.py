@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,12 @@ class Mapnik(AutotoolsPackage):
     homepage = "https://mapnik.org/"
     url      = "https://github.com/mapnik/mapnik/releases/download/v3.0.22/mapnik-v3.0.22.tar.bz2"
 
+    version('3.0.23', sha256='4b1352e01f7ce25ab099e586d7ae98e0b74145a3bf94dd365cb0a2bdab3b9dc2')
     version('3.0.22', sha256='930612ad9e604b6a29b9cea1bc1de85cf7cf2b2b8211f57ec8b6b94463128ab9')
 
     depends_on('python', type=('build', 'run'))
-    # Build fails with boost@1.70
-    depends_on('boost@:1.69.0+regex+filesystem+system+icu+program_options cxxstd=11')
+    depends_on('boost@:1.72.0 +regex+filesystem+system+icu+program_options cxxstd=11', when='@3.0.23')
+    depends_on('boost@:1.69.0 +regex+filesystem+system+icu+program_options cxxstd=11', when='@3.0.22')
     depends_on('icu4c')
     depends_on('zlib')
     depends_on('freetype')
@@ -29,7 +30,7 @@ class Mapnik(AutotoolsPackage):
     depends_on('libjpeg')
     depends_on('libtiff')
     depends_on('proj')
-    depends_on('cairo')
+    depends_on('cairo+pdf')  # +pdf needed for mapnik.printing
     depends_on('postgresql', type=('build', 'link', 'run'))
     depends_on('gdal', type=('build', 'link', 'run'))
     depends_on('sqlite+rtree', type=('build', 'link', 'run'))
@@ -37,9 +38,9 @@ class Mapnik(AutotoolsPackage):
 
     conflicts('%gcc@9.0.0:')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
-        spack_env.set('GDAL_DATA', spec['gdal'].prefix.share.gdal)
+        env.set('GDAL_DATA', spec['gdal'].prefix.share.gdal)
 
     def configure_args(self):
         return [

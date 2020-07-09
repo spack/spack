@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,9 @@ class NlohmannJson(CMakePackage):
     url      = "https://github.com/nlohmann/json/archive/v3.1.2.tar.gz"
     maintainers = ['ax3l']
 
+    version('3.7.2', sha256='914c4af3f14bb98ff084172685fba5d32e8ce4390ec8ba5da45c63daa305df4d')
     version('3.7.0', sha256='d51a3a8d3efbb1139d7608e28782ea9efea7e7933157e8ff8184901efd8ee760')
+    version('3.6.1', sha256='80c45b090e40bf3d7a7f2a6e9f36206d3ff710acfa8d8cc1f8c763bb3075e22e')
     version('3.5.0', sha256='e0b1fc6cc6ca05706cce99118a87aca5248bd9db3113e703023d23f044995c1d')
     version('3.4.0', sha256='c377963a95989270c943d522bfefe7b889ef5ed0e1e15d535fd6f6f16ed70732')
     version('3.3.0', sha256='2fd1d207b4669a7843296c41d3b6ac5b23d00dec48dba507ba051d14564aa801')

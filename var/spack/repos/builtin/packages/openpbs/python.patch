@@ -1,0 +1,11 @@
+--- a/buildutils/python-autoconf.py
++++ b/buildutils/python-autoconf.py
+@@ -70,7 +70,7 @@ if py_stdlibdir:
+ else:
+     py_stdlibdir_real  = "%s/lib" % (sysconfig.PREFIX,) 
+ 
+-py_lib_configdir = get_py_config_var('LIBPL')
++py_lib_configdir = ''  # get_py_config_var('LIBPL')
+ if py_lib_configdir:
+     py_lib_configdir=py_lib_configdir.replace(py_stdlibdir,py_stdlibdir_real)
+ 

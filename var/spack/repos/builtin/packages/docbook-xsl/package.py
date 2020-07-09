@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,10 +26,10 @@ class DocbookXsl(Package):
     def catalog(self):
         return os.path.join(self.prefix, 'catalog.xml')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         catalog = self.catalog
-        run_env.set('XML_CATALOG_FILES', catalog, separator=' ')
+        env.set('XML_CATALOG_FILES', catalog, separator=' ')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         catalog = self.catalog
-        spack_env.prepend_path("XML_CATALOG_FILES", catalog)
+        env.prepend_path("XML_CATALOG_FILES", catalog)

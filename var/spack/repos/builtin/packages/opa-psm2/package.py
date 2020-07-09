@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,12 +35,12 @@ class OpaPsm2(MakefilePackage):
     patch('opa-psm2-compiler.patch', when='@11.2.68:',
           sha256='fe31fda9aaee13acb87d178af2282446196d2cc0b21163034573706110b2e2d6')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('DESTDIR', self.prefix)
+    def setup_build_environment(self, env):
+        env.set('DESTDIR', self.prefix)
         if '%intel' in self.spec:
             # this variable must be set when we use the Intel compilers to
             # ensure that the proper flags are set
-            spack_env.set('CCARCH', 'icc')
+            env.set('CCARCH', 'icc')
 
     def edit(self, spec, prefix):
         # Change the makefile so libraries and includes are not

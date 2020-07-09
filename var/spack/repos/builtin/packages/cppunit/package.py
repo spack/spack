@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,8 @@ class Cppunit(AutotoolsPackage):
             multi=False,
             description='Use the specified C++ standard when building.')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         cxxstd = self.spec.variants['cxxstd'].value
         cxxstdflag = '' if cxxstd == 'default' else \
                      getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
-        spack_env.append_flags('CXXFLAGS', cxxstdflag)
+        env.append_flags('CXXFLAGS', cxxstdflag)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import re
 import pytest
 
 import spack.fetch_strategy
+import spack.package
 import spack.paths
 import spack.repo
 import spack.util.executable as executable
@@ -141,7 +142,6 @@ def test_all_packages_use_sha256_checksums():
     assert [] == errors
 
 
-@pytest.mark.xfail
 def test_api_for_build_and_run_environment():
     """Ensure that every package uses the correct API to set build and
     run environment, and not the old one.
@@ -154,7 +154,7 @@ def test_api_for_build_and_run_environment():
             failing.append(pkg)
 
     msg = ('there are {0} packages using the old API to set build '
-           'and run environment [{1}], for further information see'
+           'and run environment [{1}], for further information see '
            'https://github.com/spack/spack/pull/11115')
     assert not failing, msg.format(
         len(failing), ','.join(x.name for x in failing)
@@ -182,7 +182,24 @@ def test_prs_update_old_api():
             if failed:
                 failing.append(name)
 
-    msg = 'there are {0} packages still using old APIs in this PR [{1}]'
+    msg = ('there are {0} packages using the old API to set build '
+           'and run environment [{1}], for further information see '
+           'https://github.com/spack/spack/pull/11115')
     assert not failing, msg.format(
         len(failing), ','.join(failing)
+    )
+
+
+def test_all_dependencies_exist():
+    """Make sure no packages have nonexisting dependencies."""
+    missing = {}
+    pkgs = [pkg for pkg in spack.repo.path.all_package_names()]
+    spack.package.possible_dependencies(
+        *pkgs, transitive=True, missing=missing)
+
+    lines = [
+        "%s: [%s]" % (name, ", ".join(deps)) for name, deps in missing.items()
+    ]
+    assert not missing, "These packages have missing dependencies:\n" + (
+        "\n".join(lines)
     )

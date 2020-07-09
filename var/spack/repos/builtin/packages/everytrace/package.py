@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,3 @@ class Everytrace(CMakePackage):
             '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
             '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO'),
             '-DUSE_CXX=%s' % ('YES' if '+cxx' in spec else 'NO')]
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', join_path(self.prefix, 'bin'))

@@ -68,10 +68,6 @@ PackageName: py
 PackageHomePage: https://pypi.python.org/pypi/py
 PackageLicenseDeclared: MIT
 
-PackageName: pyqver
-PackageHomePage: https://github.com/ghewgill/pyqver
-PackageLicenseDeclared: BSD-3-Clause
-
 PackageName: pytest
 PackageHomePage: https://pypi.python.org/pypi/pytest
 PackageLicenseDeclared: MIT

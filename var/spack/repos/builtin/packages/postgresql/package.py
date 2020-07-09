@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -87,25 +87,32 @@ class Postgresql(AutotoolsPackage):
         else:
             AutotoolsPackage.install(self, spec, prefix)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         spec = self.spec
 
         if '+perl' in spec:
-            run_env.prepend_path('PERL5LIB', self.prefix.lib)
+            env.prepend_path('PERL5LIB', self.prefix.lib)
         if '+tcl' in spec:
-            run_env.prepend_path('TCLLIBPATH', self.prefix.lib)
+            env.prepend_path('TCLLIBPATH', self.prefix.lib)
         if '+python' in spec:
-            run_env.prepend_path('PYTHONPATH', self.prefix.lib)
+            env.prepend_path('PYTHONPATH', self.prefix.lib)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         spec = self.spec
 
         if '+perl' in spec:
-            spack_env.prepend_path('PERL5LIB', self.prefix.lib)
-            run_env.prepend_path('PERL5LIB', self.prefix.lib)
+            env.prepend_path('PERL5LIB', self.prefix.lib)
         if '+tcl' in spec:
-            spack_env.prepend_path('TCLLIBPATH', self.prefix.lib)
-            run_env.prepend_path('TCLLIBPATH', self.prefix.lib)
+            env.prepend_path('TCLLIBPATH', self.prefix.lib)
         if '+python' in spec:
-            spack_env.prepend_path('PYTHONPATH', self.prefix.lib)
-            run_env.prepend_path('PYTHONPATH', self.prefix.lib)
+            env.prepend_path('PYTHONPATH', self.prefix.lib)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        spec = self.spec
+
+        if '+perl' in spec:
+            env.prepend_path('PERL5LIB', self.prefix.lib)
+        if '+tcl' in spec:
+            env.prepend_path('TCLLIBPATH', self.prefix.lib)
+        if '+python' in spec:
+            env.prepend_path('PYTHONPATH', self.prefix.lib)
