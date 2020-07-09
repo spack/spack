@@ -39,11 +39,10 @@ class Ascent(Package, CudaPackage):
 
     maintainers = ['cyrush']
 
+    # as of now: dependencies are plumbed in spack to support develop only.
     version('develop',
             branch='develop',
             submodules=True)
-
-    version('0.5.0', sha256='2837b7371db3ac1bcc31a479d7cf0eb62a503cacadfa4187061502b3c4a89fa0')
 
     ###########################################################################
     # package variants
