@@ -12,7 +12,7 @@ class Bbcp(Package):
     homepage = "https://www.slac.stanford.edu/~abh/bbcp/"
     git      = "https://www.slac.stanford.edu/~abh/bbcp/bbcp.git"
 
-    version('git', branch='master')
+    version('master', branch='master')
 
     depends_on('zlib')
     depends_on('openssl')
