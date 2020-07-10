@@ -749,7 +749,7 @@ def test_compiler_bootstrap_already_installed(
 
 
 def test_install_fails_no_args(tmpdir):
-    # ensure no spack.yaml in dirrectory
+    # ensure no spack.yaml in directory
     with tmpdir.as_cwd():
         output = install(fail_on_error=False)
 
@@ -760,7 +760,7 @@ def test_install_fails_no_args(tmpdir):
 
 
 def test_install_fails_no_args_suggests_env_activation(tmpdir):
-    # ensure spack.yaml in dirrectory
+    # ensure spack.yaml in directory
     tmpdir.ensure('spack.yaml')
 
     with tmpdir.as_cwd():
