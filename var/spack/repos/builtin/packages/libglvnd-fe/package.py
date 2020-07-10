@@ -6,7 +6,7 @@
 from spack import *
 
 
-class LibglvndFE(BundlePackage):
+class LibglvndFe(BundlePackage):
     """The GL Vendor-Neutral Dispatch library (Frontend Dummy Package)
 
     libglvnd is a vendor-neutral dispatch layer for arbitrating OpenGL API
