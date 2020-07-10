@@ -56,8 +56,9 @@ class AutotoolsPackage(PackageBase):
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'AutotoolsPackage'
-    #: Whether or not to update ``config.guess`` on old architectures
-    patch_config_guess = True
+    #: Whether or not to update ``config.guess`` and ``config.sub`` on old
+    #: architectures
+    patch_config_files = True
     #: Whether or not to update ``libtool``
     #: (currently only for Arm/Clang/Fujitsu compilers)
     patch_libtool = True
@@ -86,72 +87,92 @@ class AutotoolsPackage(PackageBase):
         return [os.path.join(self.build_directory, 'config.log')]
 
     @run_after('autoreconf')
-    def _do_patch_config_guess(self):
-        """Some packages ship with an older config.guess and need to have
-        this updated when installed on a newer architecture. In particular,
-        config.guess fails for PPC64LE for version prior to a 2013-06-10
-        build date (automake 1.13.4) and for ARM (aarch64)."""
+    def _do_patch_config_files(self):
+        """Some packages ship with older config.guess/config.sub files and
+        need to have these updated when installed on a newer architecture.
+        In particular, config.guess fails for PPC64LE for version prior
+        to a 2013-06-10 build date (automake 1.13.4) and for ARM (aarch64)."""
 
-        if not self.patch_config_guess or (
+        if not self.patch_config_files or (
                 not self.spec.satisfies('target=ppc64le:') and
                 not self.spec.satisfies('target=aarch64:')
         ):
             return
-        my_config_guess = None
-        config_guess = None
-        if os.path.exists('config.guess'):
-            # First search the top-level source directory
-            my_config_guess = 'config.guess'
+
+        # TODO: Expand this to select the 'config.sub'-compatible architecture
+        # for each platform (e.g. 'config.sub' doesn't accept 'power9le', but
+        # does accept 'ppc64le').
+        if self.spec.satisfies('target=ppc64le:'):
+            config_arch = 'ppc64le'
+        elif self.spec.satisfies('target=aarch64:'):
+            config_arch = 'aarch64'
         else:
-            # Then search in all sub directories.
-            # We would like to use AC_CONFIG_AUX_DIR, but not all packages
-            # ship with their configure.in or configure.ac.
-            d = '.'
-            dirs = [os.path.join(d, o) for o in os.listdir(d)
-                    if os.path.isdir(os.path.join(d, o))]
-            for dirname in dirs:
-                path = os.path.join(dirname, 'config.guess')
+            config_arch = 'local'
+
+        my_config_files = {'guess': None, 'sub': None}
+        config_files = {'guess': None, 'sub': None}
+        config_args = {'guess': [], 'sub': [config_arch]}
+
+        for config_name in config_files.keys():
+            config_file = 'config.{0}'.format(config_name)
+            if os.path.exists(config_file):
+                # First search the top-level source directory
+                my_config_files[config_name] = config_file
+            else:
+                # Then search in all sub directories recursively.
+                # We would like to use AC_CONFIG_AUX_DIR, but not all packages
+                # ship with their configure.in or configure.ac.
+                config_path = next((os.path.join(r, f)
+                                    for r, ds, fs in os.walk('.') for f in fs
+                                    if f == config_file), None)
+                my_config_files[config_name] = config_path
+
+            if my_config_files[config_name] is not None:
+                try:
+                    config_path = my_config_files[config_name]
+                    check_call([config_path] + config_args[config_name],
+                               stdout=PIPE, stderr=PIPE)
+                    # The package's config file already runs OK, so just use it
+                    continue
+                except Exception as e:
+                    tty.debug(e)
+            else:
+                continue
+
+            # Look for a spack-installed automake package
+            if 'automake' in self.spec:
+                automake_dir = 'automake-' + str(self.spec['automake'].version)
+                automake_path = os.path.join(self.spec['automake'].prefix,
+                                             'share', automake_dir)
+                path = os.path.join(automake_path, config_file)
                 if os.path.exists(path):
-                    my_config_guess = path
+                    config_files[config_name] = path
+            # Look for the system's config.guess
+            if (config_files[config_name] is None and
+                    os.path.exists('/usr/share')):
+                automake_dir = [s for s in os.listdir('/usr/share') if
+                                "automake" in s]
+                if automake_dir:
+                    automake_path = os.path.join('/usr/share', automake_dir[0])
+                    path = os.path.join(automake_path, config_file)
+                    if os.path.exists(path):
+                        config_files[config_name] = path
+            if config_files[config_name] is not None:
+                try:
+                    config_path = config_files[config_name]
+                    my_config_path = my_config_files[config_name]
 
-        if my_config_guess is not None:
-            try:
-                check_call([my_config_guess], stdout=PIPE, stderr=PIPE)
-                # The package's config.guess already runs OK, so just use it
-                return
-            except Exception as e:
-                tty.debug(e)
-        else:
-            return
+                    check_call([config_path] + config_args[config_name],
+                               stdout=PIPE, stderr=PIPE)
 
-        # Look for a spack-installed automake package
-        if 'automake' in self.spec:
-            automake_path = os.path.join(self.spec['automake'].prefix, 'share',
-                                         'automake-' +
-                                         str(self.spec['automake'].version))
-            path = os.path.join(automake_path, 'config.guess')
-            if os.path.exists(path):
-                config_guess = path
-        # Look for the system's config.guess
-        if config_guess is None and os.path.exists('/usr/share'):
-            automake_dir = [s for s in os.listdir('/usr/share') if
-                            "automake" in s]
-            if automake_dir:
-                automake_path = os.path.join('/usr/share', automake_dir[0])
-                path = os.path.join(automake_path, 'config.guess')
-                if os.path.exists(path):
-                    config_guess = path
-        if config_guess is not None:
-            try:
-                check_call([config_guess], stdout=PIPE, stderr=PIPE)
-                mod = os.stat(my_config_guess).st_mode & 0o777 | stat.S_IWUSR
-                os.chmod(my_config_guess, mod)
-                shutil.copyfile(config_guess, my_config_guess)
-                return
-            except Exception as e:
-                tty.debug(e)
+                    m = os.stat(my_config_path).st_mode & 0o777 | stat.S_IWUSR
+                    os.chmod(my_config_path, m)
+                    shutil.copyfile(config_path, my_config_path)
+                    continue
+                except Exception as e:
+                    tty.debug(e)
 
-        raise RuntimeError('Failed to find suitable config.guess')
+            raise RuntimeError('Failed to find suitable ' + config_file)
 
     @run_after('configure')
     def _do_patch_libtool(self):
