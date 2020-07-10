@@ -20,5 +20,6 @@ class Looptools(AutotoolsPackage):
     version('2.8', sha256='2395518d0eac9b0883a2c249b9a5ba80df443929c520c45e60f5a4284166eb42')
 
     def configure_args(self):
-        args = ["FFLAGS=-fPIC", "CFLAGS=-fPIC"]
+        args = ["FFLAGS=" + self.compiler.f77_pic_flag,
+                "CFLAGS=" + self.compiler.cc_pic_flag]
         return args
