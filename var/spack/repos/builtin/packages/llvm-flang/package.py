@@ -238,6 +238,6 @@ class LlvmFlang(CMakePackage, CudaPackage):
                         spec['libelf'].prefix.include,
                         spec['hwloc'].prefix.include))
 
-        cmake(*args)
-        make()
-        make('install')
+            cmake(*args)
+            make()
+            make('install')
