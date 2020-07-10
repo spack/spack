@@ -47,10 +47,23 @@ def filename_dict(file_registry, monkeypatch):
 
 
 @pytest.fixture()
-def modulefile_content(filename_dict, request):
+def modulefile_content(filename_dict, request, monkeypatch):
     """Returns a function that generates the content of a module file
     as a list of lines.
     """
+
+    # Pach out to avoid read access
+    def _mock(self, what):
+        mod = self.conf.module
+        return [mod.make_layout(x).use_name
+                for x in getattr(self.conf, what)]
+
+    monkeypatch.setattr(
+        spack.modules.common.BaseContext,
+        '_create_module_list_of',
+        _mock,
+        raising=False
+    )
 
     writer_cls = getattr(request.module, 'writer_cls')
 

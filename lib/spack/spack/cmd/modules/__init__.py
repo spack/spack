@@ -298,9 +298,10 @@ def refresh(module_type, specs, args):
     cls = spack.modules.module_types[module_type]
 
     # Skip unknown packages.
-    writers = [
-        cls(spec) for spec in specs
-        if spack.repo.path.exists(spec.name)]
+    clean_specs = [spec
+                   for spec in specs
+                   if spack.repo.path.exists(spec.name)]
+    writers = [cls(spec) for spec in clean_specs]
 
     # Filter blacklisted packages early
     with spack.store.db.read_transaction():
@@ -340,13 +341,15 @@ def refresh(module_type, specs, args):
         shutil.rmtree(module_type_root, ignore_errors=False)
     filesystem.mkdirp(module_type_root)
 
+    hashes = set(spec.dag_hash() for spec in clean_specs)
+
     # Dump module index after potentially removing module tree
     spack.modules.common.generate_module_index(
         module_type_root, writers, overwrite=args.delete_tree)
     with spack.store.db.read_transaction():
         for x in writers:
             try:
-                x.write(overwrite=True)
+                x.write(overwrite=True, concurrent=hashes)
             except Exception as e:
                 tty.debug(e)
                 msg = 'Could not write module file [{0}]'
