@@ -51,11 +51,7 @@ class Thepeg(AutotoolsPackage):
     patch('thepeg-1.8.3.patch', when='@1.8.3', level=0)
     patch('thepeg-1.9.0.patch', when='@1.9.0', level=0)
     patch('thepeg-1.9.2.patch', when='@1.9.2', level=0)
-    patch('thepeg-2.1.1.patch', when='@2.1.1', level=0)
-    patch('thepeg-2.1.3.patch', when='@2.1.3', level=0)
-    patch('thepeg-2.1.5.patch', when='@2.1.5', level=0)
-    patch('thepeg-2.1.6.patch', when='@2.1.6', level=0)
-    patch('thepeg-2.2.0.patch', when='@2.2.0', level=0)
+    patch('thepeg-2.1.1.patch', when='@2.1.1:2.2.1', level=0)
 
     depends_on('gsl')
     depends_on('lhapdf')
