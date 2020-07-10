@@ -294,9 +294,12 @@ environment variables:
                 # There's a spack.yaml file in the working dir, the user may
                 # have intended to use that
                 msg += "\n\n"
-                msg += "Did you mean to use the environment"
-                msg += " in the current directory?\n"
-                msg += "    Try 'spack -e . install'"
+                msg += "Did you mean to install using the `spack.yaml`"
+                msg += " in this directory? Try: \n"
+                msg += "    spack env activate .\n"
+                msg += "    spack install\n"
+                msg += "  OR\n"
+                msg += "    spack --env . install"
             tty.die(msg)
 
     if args.no_checksum:
