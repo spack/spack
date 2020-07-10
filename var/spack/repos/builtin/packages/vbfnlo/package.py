@@ -29,6 +29,10 @@ class Vbfnlo(AutotoolsPackage):
     depends_on('lhapdf')
     depends_on('looptools')
 
+    @when('@2.7.1')
+    def setup_build_environment(self, env):
+        env.unset('F77')
+
     def configure_args(self):
         args = ["--with-hepmc=" + self.spec['hepmc'].prefix,
                 "--with-gsl=" + self.spec['gsl'].prefix,
