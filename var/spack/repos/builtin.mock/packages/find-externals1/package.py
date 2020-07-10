@@ -8,7 +8,6 @@ import re
 import spack.package
 
 
-@spack.package.detectable
 class FindExternals1(AutotoolsPackage):
     executables = ['find-externals1-exe']
 

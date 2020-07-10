@@ -141,7 +141,92 @@ class InstallPhase(object):
             return other
 
 
+#: Registers which are the detectable packages, by repo and package name
+#: Need a pass of package repositories to be filled.
+detectable_packages = collections.defaultdict(list)
+
+
+class DetectablePackageMeta(object):
+    """Check if a package is detectable and add default implementations
+    for the detection function.
+    """
+    def __init__(cls, name, bases, attr_dict):
+        # If a package has the executables attribute then it's
+        # assumed to be detectable
+        if hasattr(cls, 'executables'):
+            @classmethod
+            def determine_spec_details(cls, prefix, exes_in_prefix):
+                """Allow ``spack external find ...`` to locate installations.
+
+                Args:
+                    prefix (str): the directory containing the executables
+                    exes_in_prefix (set): the executables that match the regex
+
+                Returns:
+                    The list of detected specs for this package
+                """
+                exes_by_version = collections.defaultdict(list)
+                # The default filter function is the identity function for the
+                # list of executables
+                filter_fn = getattr(cls, 'filter_detected_exes',
+                                    lambda x, exes: exes)
+                exes_in_prefix = filter_fn(prefix, exes_in_prefix)
+                for exe in exes_in_prefix:
+                    try:
+                        version_str = cls.determine_version(exe)
+                        if version_str:
+                            exes_by_version[version_str].append(exe)
+                    except Exception as e:
+                        msg = ('An error occurred when trying to detect '
+                               'the version of "{0}" [{1}]')
+                        tty.debug(msg.format(exe, str(e)))
+
+                specs = []
+                for version_str, exes in exes_by_version.items():
+                    variants = cls.determine_variants(exes, version_str)
+                    # Normalize output to list
+                    if not isinstance(variants, list):
+                        variants = [variants]
+
+                    for variant in variants:
+                        if isinstance(variant, six.string_types):
+                            variant = (variant, {})
+                        variant_str, extra_attributes = variant
+                        spec_str = '{0}@{1} {2}'.format(
+                            cls.name, version_str, variant_str
+                        )
+                        specs.append(spack.spec.Spec.from_detection(
+                            spec_str, extra_attributes=extra_attributes
+                        ))
+
+                return sorted(specs)
+
+            @classmethod
+            def determine_variants(cls, exes, version_str):
+                return ''
+
+            # Register the class as a detectable package
+            detectable_packages[cls.namespace].append(cls.name)
+
+            # Attach function implementations to the detectable class
+            default = False
+            if not hasattr(cls, 'determine_spec_details'):
+                default = True
+                cls.determine_spec_details = determine_spec_details
+
+            if default and not hasattr(cls, 'determine_version'):
+                msg = ('the package "{0}" in the "{1}" repo needs to define'
+                       ' the "determine_version" method to be detectable')
+                NotImplementedError(msg.format(cls.name, cls.namespace))
+
+            if default and not hasattr(cls, 'determine_variants'):
+                cls.determine_variants = determine_variants
+
+        super(DetectablePackageMeta, cls).__init__(name, bases, attr_dict)
+
+
 class PackageMeta(
+    DetectablePackageMeta,
     spack.directives.DirectiveMeta,
     spack.mixins.PackageMixinsMeta,
     spack.multimethod.MultiMethodMeta
@@ -2233,85 +2318,6 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
         pkg.possible_dependencies(visited=visited, **kwargs)
 
     return visited
-
-
-#: Registers which are the detectable packages, by repo and package name
-detectable_packages = collections.defaultdict(list)
-
-
-def detectable(decorated_cls):
-    """Mark a package class as detectable and add a default implementation
-    for detection logic.
-
-    The decorator registers the class as detectable and attaches to it a
-    default implementation of ``determine_spec_details``.
-
-    Args:
-        decorated_cls: class to be decorated
-
-    Returns:
-        Decorated class
-    """
-    @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        """Allow ``spack external find ...`` to locate installations.
-
-        Args:
-            prefix (str): the directory containing the executables
-            exes_in_prefix (set): the executables that match the regex
-
-        Returns:
-            The list of detected specs for this package
-        """
-        exes_by_version = collections.defaultdict(list)
-        # The default filter function is the identity function for the
-        # list of executables
-        filter_fn = getattr(cls, 'filter_detected_exes', lambda x, exes: exes)
-        exes_in_prefix = filter_fn(prefix, exes_in_prefix)
-        for exe in exes_in_prefix:
-            try:
-                version_str = cls.determine_version(exe)
-                if version_str:
-                    exes_by_version[version_str].append(exe)
-            except Exception as e:
-                msg = ('An error occurred when trying to detect the version '
-                       'of "{0}" [{1}]')
-                tty.debug(msg.format(exe, str(e)))
-
-        specs = []
-        for version_str, exes in exes_by_version.items():
-            variants = cls.determine_variants(exes, version_str)
-            # Normalize output to list
-            if not isinstance(variants, list):
-                variants = [variants]
-
-            for variant in variants:
-                if isinstance(variant, six.string_types):
-                    variant = (variant, {})
-                variant_str, extra_attributes = variant
-                spec_str = '{0}@{1} {2}'.format(
-                    cls.name, version_str, variant_str
-                )
-                specs.append(spack.spec.Spec.from_detection(
-                    spec_str, extra_attributes=extra_attributes
-                ))
-
-        return sorted(specs)
-
-    @classmethod
-    def determine_variants(cls, exes, version_str):
-        return ''
-
-    detectable_packages[decorated_cls.namespace].append(decorated_cls.name)
-    default = False
-    if not hasattr(decorated_cls, 'determine_spec_details'):
-        default = True
-        decorated_cls.determine_spec_details = determine_spec_details
-
-    if default and not hasattr(decorated_cls, 'determine_variants'):
-        decorated_cls.determine_variants = determine_variants
-
-    return decorated_cls
 
 
 class FetchError(spack.error.SpackError):

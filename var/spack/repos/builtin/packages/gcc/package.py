@@ -14,7 +14,6 @@ import spack.util.executable
 from spack.operating_systems.mac_os import macos_version, macos_sdk_path
 
 
-@detectable
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Compiler Collection includes front ends for C, C++, Objective-C,
     Fortran, Ada, and Go, as well as libraries for these languages."""

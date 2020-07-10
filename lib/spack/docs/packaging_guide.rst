@@ -4057,21 +4057,18 @@ Making a package discoverable with ``spack external find``
 The simplest way to make a package discoverable with
 :ref:`spack external find <cmd-spack-external-find>` is to:
 
-1. Mark the Package with the ``detectable`` decorator
-2. Define the executables associated with the package
-3. Implement a method to determine the versions of these executables
+1. Define the executables associated with the package
+2. Implement a method to determine the versions of these executables
 
 ^^^^^^^^^^^^^^^^^
 Minimal detection
 ^^^^^^^^^^^^^^^^^
 
-The first two steps are fairly simple, as they require only to
-decorate the package being defined and specify a package level
-``executables`` attribute:
+The first step is fairly simple, as it requires only to
+specify a package level ``executables`` attribute:
 
 .. code-block:: python
 
-   @detectable
    class Foo(Package):
        # Each string provided here is treated as a regular expression, and
        # would match for example 'foo', 'foobar', and 'bazfoo'.

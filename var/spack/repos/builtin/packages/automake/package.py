@@ -5,7 +5,6 @@
 import re
 
 
-@detectable
 class Automake(AutotoolsPackage, GNUMirrorPackage):
     """Automake -- make file builder part of autotools"""
 
