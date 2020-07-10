@@ -42,5 +42,5 @@ class Changa(AutotoolsPackage):
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             mkdirp(prefix.bin)
-            copy('ChaNGa', prefix.bin)
-            copy('charmrun', prefix.bin)
+            install('ChaNGa', prefix.bin)
+            install('charmrun', prefix.bin)
