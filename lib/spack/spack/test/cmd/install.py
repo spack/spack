@@ -746,3 +746,27 @@ def test_compiler_bootstrap_already_installed(
     # Test succeeds if it does not raise an error
     install('gcc@2.0')
     install('a%gcc@2.0')
+
+
+def test_install_fails_no_args(tmpdir):
+    # ensure no spack.yaml in directory
+    with tmpdir.as_cwd():
+        output = install(fail_on_error=False)
+
+    # check we got the short version of the error message with no spack.yaml
+    assert 'requires a package argument or active environment' in output
+    assert 'spack env activate .' not in output
+    assert 'using the `spack.yaml` in this directory' not in output
+
+
+def test_install_fails_no_args_suggests_env_activation(tmpdir):
+    # ensure spack.yaml in directory
+    tmpdir.ensure('spack.yaml')
+
+    with tmpdir.as_cwd():
+        output = install(fail_on_error=False)
+
+    # check we got the long version of the error message with spack.yaml
+    assert 'requires a package argument or active environment' in output
+    assert 'spack env activate .' in output
+    assert 'using the `spack.yaml` in this directory' in output
