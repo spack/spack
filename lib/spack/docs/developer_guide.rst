@@ -799,7 +799,7 @@ Publishing a release on GitHub
 .. _merging-releases:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Updating `develop` and `releases/latest`
+Updating `releases/latest` and `develop`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the new release is the **highest** Spack release yet, you should
@@ -824,13 +824,13 @@ release is currently ``0.15.3``:
    The ``--force`` argument makes ``git`` overwrite the existing
    ``releases/latest`` tag with the new one.
 
-We also merge each new latest release into ``develop``. Make sure that
-it is merged back into ``develop`` with a merge commit:
+We also merge each release that we tag as ``releases/latest`` into ``develop``.
+Make sure to do this with a merge commit:
 
 .. code-block:: console
 
    $ git checkout develop
-   $ git merge --no-ff releases/vX.Y  # vX.Y is the new release's branch
+   $ git merge --no-ff vX.Y.Z  # vX.Y.Z is the new release's tag
    $ git push
 
 We merge back to ``develop`` because it:
