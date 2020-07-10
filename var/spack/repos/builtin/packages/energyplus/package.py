@@ -32,8 +32,7 @@ class Energyplus(Package):
         if spec.satisfies('@:8.9.9'):
             source_dir = glob.glob('EnergyPlus*')[0]
 
-        install_tree(source_dir,
-                     join_path(prefix.lib, 'energyplus'))
+        install_tree(source_dir, prefix.lib.enregyplus)
 
         mkdirp(prefix.bin)
         for b in ['energyplus', 'EPMacro', 'ExpandObjects']:
