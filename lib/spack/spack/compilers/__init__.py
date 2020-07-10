@@ -576,7 +576,7 @@ def arguments_to_detect_version_fn(operating_system, paths):
                         )
                         command_arguments.append(detect_version_args)
 
-        # Order already respecs priority from compiler class
+        # Order already respects priority from compiler class
         return command_arguments
 
     fn = getattr(
