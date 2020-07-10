@@ -178,7 +178,7 @@ class Wannier90(MakefilePackage):
 
         inst = []
         if '+shared' in spec:
-            if 'arch=Darwin' in spec:
+            if spec.satisfies('platform=darwin'):
                 inst.append('libwannier.dylib')
             else:
                 inst.append('libwannier.so')
