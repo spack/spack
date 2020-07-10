@@ -602,7 +602,7 @@ def relocate_package(spec, allow_root):
         if not is_backup_file(text_name):
             text_names.append(text_name)
 
-# If we are installing back to the same location don't replace anything
+# If we are not installing back to the same install tree do the relocation
     if old_layout_root != new_layout_root:
         files_to_relocate = [os.path.join(workdir, filename)
                              for filename in buildinfo.get('relocate_binaries')
@@ -651,6 +651,17 @@ def relocate_package(spec, allow_root):
                 buildinfo['relocate_binaries'])))
         # relocate the install prefixes in binary files including dependencies
         relocate.relocate_text_bin(files_to_relocate,
+                                   old_prefix, new_prefix,
+                                   old_spack_prefix,
+                                   new_spack_prefix,
+                                   prefix_to_prefix)
+
+# If we are installing back to the same location
+# relocate the sbang location if the spack directory changed
+    else:
+        if old_spack_prefix != new_spack_prefix:
+            relocate.relocate_text(text_names,
+                                   old_layout_root, new_layout_root,
                                    old_prefix, new_prefix,
                                    old_spack_prefix,
                                    new_spack_prefix,
