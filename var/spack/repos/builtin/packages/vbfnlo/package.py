@@ -21,7 +21,7 @@ class Vbfnlo(AutotoolsPackage):
     # version('3.0.0beta3', sha256='ab4cc3289051ab09ed94fa41d0eb1c5c4adcd9f39fa04e3c95a3867f256541bc')
     version('3.0.0beta2', sha256='33dd0781e645a5baa664fc5aa81d43c12586bf095ef25895e86cb4192c22473b')
     version('3.0.0beta1', sha256='19f0bf7e4c93b0f287d2531d6802c114a78eb46cde28ea820b2a074a5819c7ca')
-    # version('2.7.1',      sha256='13e33d73d8a8ef64094621f87e6f94e01712e76cc19a86298d0b52cfcb9decca')
+    version('2.7.1',      sha256='13e33d73d8a8ef64094621f87e6f94e01712e76cc19a86298d0b52cfcb9decca', preferred=True)
     # version('2.7.0',      sha256='0e96c0912599e3000fffec5305700b947b604a7b06c7975851503f445311e4ef')
 
     depends_on('hepmc')
