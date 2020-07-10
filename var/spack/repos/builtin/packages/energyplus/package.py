@@ -36,9 +36,6 @@ class Energyplus(Package):
                      join_path(prefix.lib, 'energyplus'))
 
         mkdirp(prefix.bin)
-        os.symlink(join_path(prefix.lib, 'energyplus/energyplus'),
-                   join_path(prefix.bin, 'energyplus'))
-        os.symlink(join_path(prefix.lib, 'energyplus/EPMacro'),
-                   join_path(prefix.bin, 'EPMacro'))
-        os.symlink(join_path(prefix.lib, 'energyplus/ExpandObjects'),
-                   join_path(prefix.bin, 'ExpandObjects'))
+        for b in ['energyplus', 'EPMacro', 'ExpandObjects']:
+            os.symlink(join_path(prefix.lib.energyplus, b),
+                       join_path(prefix.bin, b))
