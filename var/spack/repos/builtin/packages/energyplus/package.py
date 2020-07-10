@@ -17,10 +17,10 @@ class Energyplus(Package):
     homepage = "https://energyplus.net"
 
     # versions require explicit URLs as they contain hashes
-    version('8.9.0', sha256='13a5192b25815eb37b3ffd019ce3b99fd9f854935f8cc4362814f41c56e9ca98',
-            url="https://github.com/NREL/EnergyPlus/releases/download/v8.9.0-WithIDDFixes/EnergyPlus-8.9.0-eba93e8e1b-Linux-x86_64.tar.gz")
     version('9.3.0', sha256='c939dc4f867224e110485a8e0712ce4cfb1e06f8462bc630b54f83a18c93876c',
             url="https://github.com/NREL/EnergyPlus/releases/download/v9.3.0/EnergyPlus-9.3.0-baff08990c-Linux-x86_64.tar.gz")
+    version('8.9.0', sha256='13a5192b25815eb37b3ffd019ce3b99fd9f854935f8cc4362814f41c56e9ca98',
+            url="https://github.com/NREL/EnergyPlus/releases/download/v8.9.0-WithIDDFixes/EnergyPlus-8.9.0-eba93e8e1b-Linux-x86_64.tar.gz")
 
     def install(self, spec, prefix):
         # binary distribution, we just unpack to lib/energyplus
