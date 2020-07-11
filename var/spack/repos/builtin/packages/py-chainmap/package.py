@@ -7,8 +7,8 @@ from spack import *
 
 
 class PyChainmap(PythonPackage):
-    """Clone/backport of ChainMap for Python 2.6, Python 3.2, and PyPy3 
-       based on Python 3.2--versions that currently lack their own 
+    """Clone/backport of ChainMap for Python 2.6, Python 3.2, and PyPy3
+       based on Python 3.2--versions that currently lack their own
        ChainMap implementations."""
 
     homepage = "https://bitbucket.org/jeunice/chainmap/src/default/"
