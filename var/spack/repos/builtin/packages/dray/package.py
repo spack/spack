@@ -82,8 +82,8 @@ class Dray(Package, CudaPackage):
     depends_on("mfem+shared+conduit~threadsafe", when="+shared")
     depends_on("mfem~shared+conduit~threadsafe", when="~shared")
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('CTEST_OUTPUT_ON_FAILURE', '1')
+    def setup_build_environment(self, env):
+        env.set('CTEST_OUTPUT_ON_FAILURE', '1')
 
     def install(self, spec, prefix):
         """
