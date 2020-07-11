@@ -1,4 +1,18 @@
-# v0.14.2 (2019-04-15)
+# V0.14.3 (2020-07-10)
+
+This is a minor release on the `0.14` series. The latest release of
+Spack is `0.15.1`. This release includes bugfixes backported to the
+`0.14` series from `0.15.0` and `0.15.1`. These include
+
+* Spack has a public mirror for source files to prevent downtimes when sites go down (#17077)
+* Spack setup scripts no longer hang when sourced in .*rc files on Cray (#17386)
+* Spack commands no longer fail in incomplete spack environment (#16473)
+* Improved detection of config.guess and config.sub files (#16854, #17149, #17333, #17356)
+* GCC builds on aarch64 architectures and at spec `%gcc +binutils` (#17280, #9024)
+* Better cleaning of the build environment (#8623)
+* `spack versions` command no longer has potential to cause fork bomb (#16749)
+
+# v0.14.2 (2020-04-15)
 
 This is a minor release on the `0.14` series. It includes performance
 improvements and bug fixes:
@@ -13,7 +27,7 @@ improvements and bug fixes:
 * Avoid adding spurious `LMOD` env vars to Intel modules (#15778)
 * Don't output [+] for mock installs run during tests (#15609)
 
-# v0.14.1 (2019-03-20)
+# v0.14.1 (2020-03-20)
 
 This is a bugfix release on top of `v0.14.0`.  Specific fixes include:
 
