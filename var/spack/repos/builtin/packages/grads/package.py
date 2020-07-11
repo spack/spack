@@ -44,6 +44,14 @@ class Grads(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('SUPPLIBS', '/')
+    
+    @run_after('install')
+    def copy_data(self):
+        with working_dir(self.build_directory):
+            install_tree('data', join_path(self.prefix, 'data'))
+        with working_dir(self.package_dir):
+            copy('udpt', join_path(self.prefix, 'data'))
+
 
     """
     def configure_args(self):
