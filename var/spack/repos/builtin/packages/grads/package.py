@@ -22,6 +22,16 @@ class Grads(AutotoolsPackage):
     variant('geotiff', default=True, description="Enable GeoTIFF support")
     variant('shapefile', default=True, description="Enable Shapefile support")
 
+    """
+    # FIXME: Fails with undeclared functions (tdefi, tdef, ...) in gauser.c
+    variant('hdf5', default=False, description="Enable HDF5 support")
+    variant('hdf4', default=False, description="Enable HDF4 support")
+    variant('netcdf', default=False, description="Enable NetCDF support")
+    depends_on('hdf5', when='+hdf5')
+    depends_on('hdf', when='+hdf4')
+    depends_on('netcdf-c', when='+netcdf')
+    """
+
     depends_on('libgeotiff', when='+geotiff')
     depends_on('shapelib', when='+shapefile')
     depends_on('udunits')
