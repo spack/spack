@@ -41,9 +41,11 @@ class Grads(AutotoolsPackage):
     depends_on('pkgconfig')
     depends_on('readline')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('SUPPLIBS', '/')
-        run_env.set('GADDIR', join_path(self.prefix, 'data'))
+    def setup_build_environment(self, env):
+        env.set('SUPPLIBS', '/')
+
+    def setup_run_environment(self, env):
+        env.set('GADDIR', join_path(self.prefix, 'data'))
 
     @run_after('install')
     def copy_data(self):
