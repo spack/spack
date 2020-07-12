@@ -89,7 +89,7 @@ class Magics(CMakePackage):
 
     # Even if netcdf is disabled and -DENABLE_NETCDF=OFF is set, building
     # magics still requires legacy netcdf-cxx
-    depends_on('netcdf-cxx', when='@4.2.4:4.3.1')
+    depends_on('netcdf-cxx', when='@4.1.0:4.3.1')
 
     # Optional dependencies
     depends_on('netcdf-cxx', when='+netcdf')
@@ -142,7 +142,7 @@ class Magics(CMakePackage):
                 args.append('-DENABLE_ECCODES=OFF')
 
         # magics@4.2.4:4.3.1 cannot be built without netcdf
-        if '+netcdf' in self.spec or self.spec.satisfies('@4.2.4:4.3.1'):
+        if '+netcdf' in self.spec or self.spec.satisfies('@4.1.0:4.3.1'):
             args.append('-DENABLE_NETCDF=ON')
         else:
             args.append('-DENABLE_NETCDF=OFF')
