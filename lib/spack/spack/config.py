@@ -30,6 +30,7 @@ schemas are in submodules of :py:mod:`spack.schema`.
 
 """
 
+import collections
 import copy
 import os
 import re
@@ -352,6 +353,7 @@ class Configuration(object):
         self.scopes = OrderedDict()
         for scope in scopes:
             self.push_scope(scope)
+        self.format_updates = collections.defaultdict(list)
 
     def push_scope(self, scope):
         """Add a higher precedence scope to the Configuration."""
@@ -440,7 +442,7 @@ class Configuration(object):
         for scope in self.scopes.values():
             scope.clear()
 
-    def update_config(self, section, update_data, scope=None):
+    def update_config(self, section, update_data, scope=None, force=False):
         """Update the configuration file for a particular scope.
 
         Overwrites contents of a section in a scope with update_data,
@@ -449,7 +451,25 @@ class Configuration(object):
         update_data should have the top-level section name stripped off
         (it will be re-added).  Data itself can be a list, dict, or any
         other yaml-ish structure.
+
+        Configuration scopes that are still written in an old schema
+        format will fail to update unless ``force`` is True.
+
+        Args:
+            section (str): section of the configuration to be updated
+            update_data (dict): data to be used for the update
+            scope (str): scope to be updated
+            force (str): force the update
         """
+        if self.format_updates.get(section) and not force:
+            msg = ('The "{0}" section of the configuration needs to be written'
+                   ' to disk, but is currently using a deprecated format. '
+                   'Please update it using:\n\n'
+                   '\tspack config [--scope=<scope] update {0}\n\n'
+                   'Not that any update will not be forward-compatible.')
+            msg = msg.format(section)
+            raise RuntimeError(msg)
+
         _validate_section_name(section)  # validate section name
         scope = self._validate_scope(scope)  # get ConfigScope object
 
@@ -513,6 +533,15 @@ class Configuration(object):
 
             if section not in data:
                 continue
+
+            # We might be reading configuration files in an old format,
+            # thus read data and update it in memory if need be.
+            changed = _update_in_memory(data, section)
+            if changed:
+                self.format_updates[section].append(scope)
+                msg = ('OUTDATED CONFIGURATION FILE '
+                       '[section={0}, scope={1}, dir={2}]')
+                tty.debug(msg.format(section, scope.name, scope.path))
 
             merged_section = merge_yaml(merged_section, data)
 
@@ -723,7 +752,7 @@ def get(path, default=None, scope=None):
 
 
 def set(path, value, scope=None):
-    """Convenience function for getting single values in config files.
+    """Convenience function for setting single values in config files.
 
     Accepts the path syntax described in ``get()``.
     """
@@ -1002,6 +1031,38 @@ def default_list_scope():
     Commands that list configuration list *all* scopes (merged) by default.
     """
     return None
+
+
+def _update_in_memory(data, section):
+    """Update the format of the configuration data in memory.
+
+    This function assumes the section is valid (i.e. validation
+    is responsibility of the caller)
+
+    Args:
+        data (dict): configuration data
+        section (str): section of the configuration to update
+
+    Returns:
+        True if the data was changed, False otherwise
+    """
+    update_fn = ensure_latest_format_fn(section)
+    changed = update_fn(data[section])
+    return changed
+
+
+def ensure_latest_format_fn(section):
+    """Return a functions that takes as input a dictionary read from
+    a configuration file and update it to the latest format.
+
+    Args:
+        section (str): section of the configuration e.g. "packages",
+            "config", etc.
+    """
+    section_module_name = 'spack.schema.' + section
+    section_module = __import__(section_module_name, fromlist=['update'])
+    update_fn = getattr(section_module, 'update', lambda x: False)
+    return update_fn
 
 
 class ConfigError(SpackError):

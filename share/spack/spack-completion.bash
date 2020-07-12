@@ -635,7 +635,7 @@ _spack_config_rm() {
 _spack_config_update() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help --list-only"
     else
         _config_sections
     fi

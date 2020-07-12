@@ -85,6 +85,8 @@ def setup_parser(subparser):
     update = sp.add_parser(
         'update', help='update configuration files to the latest format'
     )
+    update.add_argument('--list-only', action='store_true',
+                        help='list the files that need update')
     update.add_argument('section', help='section to update')
 
     revert = sp.add_parser(
@@ -291,32 +293,34 @@ def config_remove(args):
 
 
 def config_update(args):
-    # Check if the Python module defines an update function. If not
-    # there's no need to update.
-    section_module_name = 'spack.schema.' + args.section
-    section_module = __import__(section_module_name, fromlist=['update'])
-    update_fn = getattr(section_module, 'update', None)
-    if not update_fn:
-        tty.msg('Configuration files in the "{0}" section '
-                'need no update'.format(args.section))
+    # Read the configuration files
+    spack.config.config.get_config(args.section, scope=args.scope)
+    updates = spack.config.config.format_updates[args.section]
+
+    # Report if there are no updates to be done
+    if not updates:
+        msg = 'No updates needed for "{0}" section.'
+        tty.msg(msg.format(args.section))
         return
 
-    scopes = [args.scope] if args.scope else spack.config.file_scopes()
-    for scope in scopes:
-        cfg_file = spack.config.config.get_config_filename(scope, args.section)
-        if not os.path.exists(cfg_file):
-            continue
+    # If user just asked what needs to be updated, print details and exit
+    if args.list_only:
+        msg = 'Update needed for the "{0}" section:'
+        tty.msg(msg.format(args.section))
+        for scope in updates:
+            tty.msg('\t[scope={0}, dir={1}]'.format(scope.name, scope.path))
+        return
 
+    # Get a function to update the format
+    update_fn = spack.config.ensure_latest_format_fn(args.section)
+    for scope in updates:
+        cfg_file = spack.config.config.get_config_filename(
+            scope.name, args.section
+        )
         with open(cfg_file) as f:
             data = syaml.load(f) or {}
             data = data.pop(args.section, {})
-
-        # Check if the file needs update
-        needs_update = update_fn(data)
-        if not needs_update:
-            msg = "no update needed for file {0} [section={1}, scope={2}]"
-            tty.debug(msg.format(cfg_file, section, scope))
-            continue
+        update_fn(data)
 
         # Make a backup copy and rewrite the file
         bkp_file = cfg_file + '.bkp'
@@ -324,8 +328,11 @@ def config_update(args):
             msg = ('backup file "{0}" exists on disk.\n\nCheck its content '
                    'and remove it before trying to update again.')
             tty.die(msg.format(bkp_file))
+
         shutil.copy(cfg_file, bkp_file)
-        spack.config.set(args.section, data, scope=scope)
+        spack.config.config.update_config(
+            args.section, data, scope=scope.name, force=True
+        )
         msg = 'File "{0}" updated [backup={1}]'
         tty.msg(msg.format(cfg_file, bkp_file))
 

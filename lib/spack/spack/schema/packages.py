@@ -94,12 +94,10 @@ properties = {
                 },
                 'deprecatedProperties': {
                     'properties': ['modules', 'paths'],
-                    'message': 'the attributes "modules" and "paths" in the '
-                               '"packages" section of the configuration have '
-                               'been deprecated.\n\n'
-                               'Run "spack config update packages" or "spack '
-                               'env update" to update your configuration',
-                    'error': True
+                    'message': 'the attribute "{property}" in the "packages" '
+                               'section of the configuration has been '
+                               'deprecated [entry={entry}]',
+                    'error': False
                 }
             },
         },
