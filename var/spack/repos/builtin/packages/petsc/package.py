@@ -134,16 +134,17 @@ class Petsc(Package):
     conflicts('^intel-mkl', when='@3.8.0')
 
     # These require +mpi
-    conflicts('+cgns', when='~mpi', msg="Requires +mpi")
-    conflicts('+exodusii', when='~mpi', msg="Requires +mpi")
-    conflicts('+fftw', when='~mpi', msg="Requires +mpi")
-    conflicts('+hdf5', when='~mpi', msg="Requires +mpi")
-    conflicts('+hypre', when='~mpi', msg="Requires +mpi")
-    conflicts('+moab', when='~mpi', msg="Requires +mpi")
-    conflicts('+mumps', when='~mpi', msg="Requires +mpi")
-    conflicts('+p4est', when='~mpi', msg="Requires +mpi")
-    conflicts('+superlu-dist', when='~mpi', msg="Requires +mpi")
-    conflicts('+trilinos', when='~mpi', msg="Requires +mpi")
+    mpi_msg = 'Requires +mpi'
+    conflicts('+cgns', when='~mpi', msg=mpi_msg)
+    conflicts('+exodusii', when='~mpi', msg=mpi_msg)
+    conflicts('+fftw', when='~mpi', msg=mpi_msg)
+    conflicts('+hdf5', when='~mpi', msg=mpi_msg)
+    conflicts('+hypre', when='~mpi', msg=mpi_msg)
+    conflicts('+moab', when='~mpi', msg=mpi_msg)
+    conflicts('+mumps', when='~mpi', msg=mpi_msg)
+    conflicts('+p4est', when='~mpi', msg=mpi_msg)
+    conflicts('+superlu-dist', when='~mpi', msg=mpi_msg)
+    conflicts('+trilinos', when='~mpi', msg=mpi_msg)
 
     filter_compiler_wrappers(
         'petscvariables', relative_root='lib/petsc/conf'
