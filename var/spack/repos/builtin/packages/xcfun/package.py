@@ -11,9 +11,11 @@ class Xcfun(CMakePackage):
 
     homepage = "https://github.com/dftlibs/xcfun"
     url = "https://github.com/dftlibs/xcfun/archive/v2.0.0a4.tar.gz"
+    git = "https://github.com/dftlibs/xcfun"
 
     maintainers = ['robertodr', 'bast']
 
+    version('master', branch='master')
     version('2.0.0a6',
             sha256='a51086490890393439f98c5e3e4e1622908fe934bbc5063b1d4363cc4c15496d')
 
