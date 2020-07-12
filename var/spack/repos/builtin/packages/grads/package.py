@@ -37,14 +37,17 @@ class Grads(AutotoolsPackage):
     version('2.2.1', sha256='695e2066d7d131720d598bac0beb61ac3ae5578240a5437401dc0ffbbe516206')
 
     variant('hdf5', default=False, description="Enable HDF5 support")
+    variant('hdf4', default=False, description="Enable HDF4 support")
     variant('netcdf', default=False, description="Enable NetCDF support")
     variant('geotiff', default=False, description="Enable GeoTIFF support")
     variant('shapefile', default=False, description="Enable Shapefile support")
 
     depends_on('hdf5', when='+hdf5')
+    depends_on('hdf', when='+hdf4')
     depends_on('netcdf-c', when='+netcdf')
     depends_on('libgeotiff', when='+geotiff')
     depends_on('shapelib', when='+shapefile')
+    depends_on('udunits')
     depends_on('libgd')
     depends_on('libxmu')
     depends_on('cairo +X +pdf +fc +ft')
@@ -66,3 +69,8 @@ class Grads(AutotoolsPackage):
                 join_path(self.prefix, 'lib'),
                 join_path(self.prefix, 'data/udpt')
             )
+
+    def configure_args(self):
+        args = []
+
+        return args
