@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install grads
-#
-# You can edit this file again by typing:
-#
-#     spack edit grads
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
@@ -36,15 +19,9 @@ class Grads(AutotoolsPackage):
 
     version('2.2.1', sha256='695e2066d7d131720d598bac0beb61ac3ae5578240a5437401dc0ffbbe516206')
 
-    variant('hdf5', default=False, description="Enable HDF5 support")
-    variant('hdf4', default=False, description="Enable HDF4 support")
-    variant('netcdf', default=False, description="Enable NetCDF support")
-    variant('geotiff', default=False, description="Enable GeoTIFF support")
-    variant('shapefile', default=False, description="Enable Shapefile support")
+    variant('geotiff', default=True, description="Enable GeoTIFF support")
+    variant('shapefile', default=True, description="Enable Shapefile support")
 
-    depends_on('hdf5', when='+hdf5')
-    depends_on('hdf', when='+hdf4')
-    depends_on('netcdf-c', when='+netcdf')
     depends_on('libgeotiff', when='+geotiff')
     depends_on('shapelib', when='+shapefile')
     depends_on('udunits')
@@ -72,5 +49,5 @@ class Grads(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-
+        args.extend(self.with_or_without('geotiff'))
         return args
