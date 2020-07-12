@@ -64,7 +64,10 @@ class Magics(CMakePackage):
     depends_on('perl-xml-parser', type='build')
 
     # Non-optional dependencies
-    depends_on('proj@:5')
+    # change of proj4 api starting from version 4.3.0
+    # https://github.com/OSGeo/PROJ/wiki/proj.h-adoption-status
+    depends_on('proj@:5', when='@:4.2.6')
+    depends_on('proj@6:', when='@4.3:')
     depends_on('boost')
     depends_on('expat')
 
@@ -85,8 +88,8 @@ class Magics(CMakePackage):
     depends_on('grib-api', when='grib=grib-api')
 
     # Even if netcdf is disabled and -DENABLE_NETCDF=OFF is set, building
-    # magics requires netcdf at least in versions TODO
-    depends_on('netcdf-cxx', when='@4.2.4')
+    # magics still requires legacy netcdf-cxx
+    depends_on('netcdf-cxx', when='@4.2.4:4.3.1')
 
     # Optional dependencies
     depends_on('netcdf-cxx', when='+netcdf')
@@ -138,7 +141,8 @@ class Magics(CMakePackage):
             if self.spec.satisfies('@2.29.1:'):
                 args.append('-DENABLE_ECCODES=OFF')
 
-        if '+netcdf' in self.spec:
+        # magics@4.2.4:4.3.1 cannot be built without netcdf
+        if '+netcdf' in self.spec or self.spec.satisfies('@4.2.4:4.3.1'):
             args.append('-DENABLE_NETCDF=ON')
         else:
             args.append('-DENABLE_NETCDF=OFF')
