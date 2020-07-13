@@ -14,6 +14,11 @@ class ProcessInProcess(Package):
 
     version('1', branch='pip-1')
 
+    conflicts('%gcc@4:', when='os=centos7')
+    conflicts('%gcc@4:', when='os=rhel7') 
+    conflicts('%gcc@8:', when='os=centos8')
+    conflicts('%gcc@8:', when='os=rhel8') 
+
     # packages required for building PiP-gdb
     depends_on('texinfo', type='build')
 
@@ -27,7 +32,7 @@ class ProcessInProcess(Package):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check(self):
-        make('install-test')
+        make('check-installed')
 
     def flag_handler(self, name, flags):
         arch = self.spec.architecture
