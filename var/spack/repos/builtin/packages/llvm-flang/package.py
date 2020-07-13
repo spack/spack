@@ -238,6 +238,7 @@ class LlvmFlang(CMakePackage, CudaPackage):
                         spec['libelf'].prefix.include,
                         spec['hwloc'].prefix.include))
 
+            # Only build if offload target.
             cmake(*args)
             make()
             make('install')
