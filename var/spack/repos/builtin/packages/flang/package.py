@@ -63,6 +63,7 @@ class Flang(CMakePackage, CudaPackage):
                 spec['llvm-flang'].prefix.bin, 'clang'),
             '-DCMAKE_CXX_COMPILER=%s' % os.path.join(
                 spec['llvm-flang'].prefix.bin, 'clang++'),
+            '-DCMAKE_CXX_FLAGS=-L%s' % self.compiler.implicit_rpaths()[1],
             '-DCMAKE_Fortran_COMPILER=%s' % os.path.join(
                 spec['llvm-flang'].prefix.bin, 'flang'),
             '-DFLANG_LIBOMP=%s' % find_libraries(
