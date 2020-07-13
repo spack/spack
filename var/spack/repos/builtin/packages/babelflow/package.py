@@ -31,5 +31,4 @@ class Babelflow(CMakePackage):
         args = [
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
                 'ON' if '+shared' in spec else 'OFF')]
-                
         return args
