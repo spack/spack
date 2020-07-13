@@ -27,11 +27,9 @@ class Babelflow(CMakePackage):
 
     variant("shared", default=True, description="Build Babelflow as shared libs")
 
-    def cmake_install(self, spec, prefix):
-        if "+shared" in spec:
-            cmake_args.append('-DBUILD_SHARED_LIBS=ON')
-        else:
-            cmake_args.append('-DBUILD_SHARED_LIBS=OFF')
-
-        make()
-        make('install')
+    def cmake_args(self):
+        args = [
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in spec else 'OFF')]
+                
+        return args
