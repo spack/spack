@@ -38,25 +38,25 @@ class Grads(AutotoolsPackage):
     depends_on('libgd')
     depends_on('libxmu')
     depends_on('cairo +X +pdf +fc +ft')
-    depends_on('pkgconfig')
+    depends_on('pkgconfig', type='build')
     depends_on('readline')
 
     def setup_build_environment(self, env):
         env.set('SUPPLIBS', '/')
 
     def setup_run_environment(self, env):
-        env.set('GADDIR', join_path(self.prefix, 'data'))
+        env.set('GADDIR', self.prefix.data)
 
     @run_after('install')
     def copy_data(self):
         with working_dir(self.build_directory):
-            install_tree('data', join_path(self.prefix, 'data'))
+            install_tree('data', self.prefix.data)
         with working_dir(self.package_dir):
-            copy('udpt', join_path(self.prefix, 'data'))
+            install('udpt', self.prefix.data)
             filter_file(
                 r'({lib})',
-                join_path(self.prefix, 'lib'),
-                join_path(self.prefix, 'data/udpt')
+                self.prefix.lib,
+                self.prefix.data.udpt
             )
 
     def configure_args(self):
