@@ -30,6 +30,8 @@ class Apcomp(Package):
     git      = 'https://github.com/Alpine-DAV/ap_compositor.git'
     url      = "https://github.com/Alpine-DAV/ap_compositor/releases/download/v0.0.1/apcomp-v0.0.1.tar.gz"
 
+    maintainers = ['mclarsen','cyrush']
+
     version('master', branch='master', submodules='True')
     version('0.0.1', sha256="cbf85fe58d5d5bc2f468d081386cc8b79861046b3bb7e966edfa3f8e95b998b2", preferred=True)
 
