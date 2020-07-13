@@ -38,6 +38,6 @@ class PyPyscf(PythonPackage):
         pyscf_search_dir.append(spec['libcint'].prefix)
         pyscf_search_dir.append(spec['libxc'].prefix)
         pyscf_search_dir.append(spec['xcfun'].prefix)
-        pyscf_search_dir.append(spec['xcfun'].prefix + '/include/XCFun')
+        pyscf_search_dir.append(spec['xcfun'].prefix.include.XCFun)
 
         env.set('PYSCF_INC_DIR', format(":").join(pyscf_search_dir))
