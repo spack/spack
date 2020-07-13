@@ -58,9 +58,9 @@ class Wannier90(MakefilePackage):
 
     @property
     def makefile_name(self):
-        # Version 2.1.0 uses make.sys,
-        # prior versions, and later (3+) verions use make.inc
-        if '@2.1.0':
+        # Version 2.0.1 uses make.sys,
+        # other verions use make.inc
+        if self.spec.satisfies('@2.0.1'):
             filename = 'make.sys'
         else:
             filename = 'make.inc'
@@ -117,35 +117,34 @@ class Wannier90(MakefilePackage):
                             join_path(self.stage.source_path,
                                       'src/Makefile.2'))
                 filter_file('../../wannier90.x: .*',
-                            ' '.join(['../../wannier90.x: $(OBJS)',
-                                      '../wannier_prog.F90 $(LIBRARY)']),
+                            '../../wannier90.x: $(OBJS)'
+                            '../wannier_prog.F90 $(LIBRARY)',
                             join_path(self.stage.source_path,
                                       'src/Makefile.2'),
                             string=True)
-                filter_file(' '.join(['../../postw90.x: $(OBJS_POST)',
-                                      '$(POSTDIR)postw90.F90']),
-                            ' '.join(['../../postw90.x: $(OBJS_POST)',
-                                     '$(POSTDIR)postw90.F90 $(LIBRARY)']),
+                filter_file('../../postw90.x: $(OBJS_POST) '
+                            '$(POSTDIR)postw90.F90',
+                            '../../postw90.x: $(OBJS_POST) '
+                            '$(POSTDIR)postw90.F90 $(LIBRARY)',
                             join_path(self.stage.source_path,
                                       'src/Makefile.2'), string=True)
                 filter_file(
-                    ' '.join([
-                        '$(COMPILER) ../wannier_prog.F90',
-                        '$(LDOPTS) $(OBJS) $(LIBS)',
-                        '-o ../../wannier90.x']),
-                    ' '.join(['$(COMPILER) -I../obj ../wannier_prog.F90',
-                              '$(LDOPTS) -L../.. -lwannier',
-                              '-o ../../wannier90.x']),
+                    '$(COMPILER) ../wannier_prog.F90 '
+                    '$(LDOPTS) $(OBJS) $(LIBS)'
+                    '-o ../../wannier90.x',
+                    '$(COMPILER) -I../obj ../wannier_prog.F90 '
+                    '$(LDOPTS) -L../.. -lwannier '
+                    '-o ../../wannier90.x',
                     join_path(self.stage.source_path,
                               'src/Makefile.2'), string=True)
                 filter_file(
-                    ' '.join(['$(COMPILER) $(POSTDIR)postw90.F90',
-                              '$(POSTOPTS) $(LDOPTS)',
-                              '$(OBJS_POST)',
-                              '$(LIBS) -o ../../postw90.x']),
-                    ' '.join(['$(COMPILER) -I../obj $(POSTDIR)postw90.F90',
-                              '$(POSTOPTS) $(LDOPTS) $(OBJS_POST)',
-                              '-L../.. -lwannier $(LIBS) -o ../../postw90.x']),
+                    '$(COMPILER) $(POSTDIR)postw90.F90 '
+                    '$(POSTOPTS) $(LDOPTS) '
+                    '$(OBJS_POST) '
+                    '$(LIBS) -o ../../postw90.x',
+                    '$(COMPILER) -I../obj $(POSTDIR)postw90.F90 '
+                    '$(POSTOPTS) $(LDOPTS) $(OBJS_POST) '
+                    '-L../.. -lwannier $(LIBS) -o ../../postw90.x',
                     join_path(self.stage.source_path,
                               'src/Makefile.2'), string=True)
 
