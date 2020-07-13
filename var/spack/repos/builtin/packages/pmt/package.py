@@ -29,15 +29,10 @@ class Pmt(CMakePackage):
     variant("shared", default=True, description="Build ParallelMergeTree as shared libs")
 
     def cmake_args(self):
-        args = []
-        args.append('-DLIBRARY_ONLY=ON')
+        args = [
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in spec else 'OFF'),
+            '-DLIBRARY_ONLY=ON'
+        ]
+                
         return args
-
-    def cmake_install(self, spec, prefix):
-        if "+shared" in spec:
-            cmake_args.append('-DBUILD_SHARED_LIBS=ON')
-        else:
-            cmake_args.append('-DBUILD_SHARED_LIBS=OFF')
-
-        make()
-        make('install')
