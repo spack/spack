@@ -267,8 +267,8 @@ class Paraview(CMakePackage, CudaPackage):
                     cmake_args.append('-DVTK_PYTHON_VERSION:STRING=3')
                 else:
                     cmake_args.append('-DVTK_PYTHON_VERSION:STRING=2')
-            cmake_args.append('-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s'\
-                    % variant_bool('+mpi'))
+            cmake_args.append('-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' %
+                    variant_bool('+mpi'))
 
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
