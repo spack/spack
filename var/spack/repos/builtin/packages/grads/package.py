@@ -38,8 +38,8 @@ class Grads(AutotoolsPackage):
     depends_on('libgd')
     depends_on('libxmu')
     depends_on('cairo +X +pdf +fc +ft')
-    depends_on('pkgconfig', type='build')
     depends_on('readline')
+    depends_on('pkgconfig', type='build')
 
     def setup_build_environment(self, env):
         env.set('SUPPLIBS', '/')
