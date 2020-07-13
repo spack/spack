@@ -114,6 +114,7 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')
+    conflicts('+rocm', when='+cuda')
 
     # Required dependencies
     depends_on('cmake@3.5:', type='build')
