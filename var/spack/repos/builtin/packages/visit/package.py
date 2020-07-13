@@ -159,6 +159,7 @@ class Visit(CMakePackage):
     # https://github.com/visit-dav/visit/issues/3498
     depends_on('vtk@8.1.0:8.1.999+opengl2~python', when='~python @3.0:3.999,develop')
     depends_on('vtk@8.1.0:8.1.999+opengl2+python', when='+python @3.0:3.999,develop')
+    depends_on('glu', when='platform=linux')
     depends_on('vtk@6.1.0~opengl2', when='@:2.999')
     depends_on('vtk+python', when='+python @3.0:,develop')
     depends_on('vtk~mpi', when='~mpi')
