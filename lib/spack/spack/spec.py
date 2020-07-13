@@ -3343,13 +3343,15 @@ class Spec(object):
             query_parameters = re.split(r'\s*,\s*', csv)
 
         try:
-            value = next(
-                itertools.chain(
-                    # Regular specs
-                    (x for x in self.traverse() if x.name == name),
-                    self._providers.providers_for(name)
-                )
-            )
+            # Translate the name of virtual specs to its real spec
+            real_name = next(itertools.chain(
+                (x.name for x in self._providers.providers_for(name)), [name]
+            ))
+            # Get the spec (this will ensure we get the same object ID
+            # for a spec both if we use its real name or its virtual name)
+            value = next(iter(
+                [x for x in self.traverse() if x.name == real_name]
+            ))
         except StopIteration:
             raise KeyError("No spec with name %s in %s" % (name, self))
 
