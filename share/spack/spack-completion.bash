@@ -635,7 +635,7 @@ _spack_config_rm() {
 _spack_config_update() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --list-only"
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
     else
         _config_sections
     fi
@@ -644,7 +644,7 @@ _spack_config_update() {
 _spack_config_revert() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --force"
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
     else
         _config_sections
     fi
@@ -824,7 +824,7 @@ _spack_env_view() {
 _spack_env_update() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
     else
         _environments
     fi
@@ -833,7 +833,7 @@ _spack_env_update() {
 _spack_env_revert() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --force"
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
     else
         _environments
     fi

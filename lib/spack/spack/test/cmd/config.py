@@ -428,7 +428,7 @@ def test_config_update_packages(old_format_packages_yaml):
     properly.
     """
     old_format_packages_yaml()
-    config('update', 'packages')
+    config('update', '-y', 'packages')
 
     # Check the entries have been transformed
     data = spack.config.get('packages')
@@ -442,33 +442,30 @@ def test_config_update_packages(old_format_packages_yaml):
 
 def test_config_update_not_needed(mutable_config):
     data_before = spack.config.get('repos')
-    config('update', 'repos')
+    config('update', '-y', 'repos')
     data_after = spack.config.get('repos')
     assert data_before == data_after
 
 
-def test_config_update_fail_if_bkp_is_there(old_format_packages_yaml):
+def test_config_update_fail_on_permission_issue(old_format_packages_yaml):
     # The first time it will update and create the backup file
-    old_format_packages_yaml()
-    config('update', 'packages')
-    # The second time it will stop because a backup file
-    # is already present
-    old_format_packages_yaml()
+    cfg_file = old_format_packages_yaml()
+    os.chmod(cfg_file, 0o555)
     with pytest.raises(spack.main.SpackCommandError):
-        config('update', 'packages')
+        config('update', '-y', 'packages')
 
 
 def test_config_revert(old_format_packages_yaml):
     cfg_file = old_format_packages_yaml()
     bkp_file = cfg_file + '.bkp'
 
-    config('update', 'packages')
+    config('update', '-y', 'packages')
 
     # Check that the backup file exists, compute its md5 sum
     assert os.path.exists(bkp_file)
     md5bkp = fs.md5sum(bkp_file)
 
-    config('revert', '--force', 'packages')
+    config('revert', '-y', 'packages')
 
     # Check that the backup file does not exist anymore and
     # that the md5 sum of the configuration file is the same
@@ -477,10 +474,13 @@ def test_config_revert(old_format_packages_yaml):
     assert md5bkp == fs.md5sum(cfg_file)
 
 
-def test_config_revert_raise_if_not_force(old_format_packages_yaml):
-    old_format_packages_yaml()
-    config('update', 'packages')
+def test_config_revert_raise_if_cant_write(old_format_packages_yaml):
+    cfg_file = old_format_packages_yaml()
+    config('update', '-y', 'packages')
+
+    # Mock a global scope where we cannot write
+    os.chmod(cfg_file, 0o555)
     # The command raises with an helpful error if a configuration
-    # file is to be deleted and the user didn't specify --force
+    # file is to be deleted and we don't have sufficient permissions
     with pytest.raises(spack.main.SpackCommandError):
-        config('revert', 'packages')
+        config('revert', '-y', 'packages')

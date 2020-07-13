@@ -1768,7 +1768,7 @@ def update_yaml(manifest, backup_file):
         return False
 
     # Copy environment to a backup file and update it
-    msg = ('backup file "{0}" exists on disk. Check its content '
+    msg = ('backup file "{0}" already exists on disk. Check its content '
            'and remove it before trying to update again.')
     assert not os.path.exists(backup_file), msg.format(backup_file)
 
@@ -1776,6 +1776,18 @@ def update_yaml(manifest, backup_file):
     with open(manifest, 'w') as f:
         _write_yaml(data, f)
     return True
+
+
+def is_latest_format(manifest):
+    """Return True if the manifest file is at the latest schema format,
+    False otherwise.
+
+    Args:
+        manifest (str): manifest file to be analyzed
+    """
+    with open(manifest) as f:
+        data = syaml.load(f)
+    return spack.schema.env.update(list(data.values()).pop())
 
 
 class SpackEnvironmentError(spack.error.SpackError):

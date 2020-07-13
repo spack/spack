@@ -2057,7 +2057,7 @@ spack:
     manifest = tmpdir.ensure('spack.yaml')
     backup_file = tmpdir.join('spack.yaml.bkp')
     manifest.write(raw_yaml)
-    env('update', str(manifest.dirname))
+    env('update', '-y', str(manifest.dirname))
 
     # Check if the backup file has been created
     assert os.path.exists(str(backup_file))
@@ -2066,16 +2066,12 @@ spack:
 
     # Retrying another update does nothing since the
     # manifest is up-to-date
-    env('update', str(manifest.dirname))
-
-    # An update on an old manifest fails in presence of a backup file
-    manifest.write(raw_yaml)
-    with pytest.raises(AssertionError):
-        env('update', str(manifest.dirname))
+    env('update', '-y', str(manifest.dirname))
 
     # Try an update followed by a revert
     os.unlink(str(backup_file))
-    env('update', str(manifest.dirname))
+    manifest.write(raw_yaml)
+    env('update', '-y', str(manifest.dirname))
     assert os.path.exists(str(backup_file))
-    env('revert', '--force', str(manifest.dirname))
+    env('revert', '-y', str(manifest.dirname))
     assert not os.path.exists(str(backup_file))

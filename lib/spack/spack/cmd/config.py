@@ -2,15 +2,17 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from __future__ import print_function
 
+import collections
 import os
 import re
 import shutil
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import spack.config
+import spack.cmd.common.arguments
 import spack.schema.env
 import spack.environment as ev
 import spack.schema.packages
@@ -85,16 +87,14 @@ def setup_parser(subparser):
     update = sp.add_parser(
         'update', help='update configuration files to the latest format'
     )
-    update.add_argument('--list-only', action='store_true',
-                        help='list the files that need update')
+    spack.cmd.common.arguments.add_common_arguments(update, ['yes_to_all'])
     update.add_argument('section', help='section to update')
 
     revert = sp.add_parser(
         'revert',
         help='revert configuration files to their state before update'
     )
-    revert.add_argument('--force', action='store_true',
-                        help='force removal of configuration file')
+    spack.cmd.common.arguments.add_common_arguments(revert, ['yes_to_all'])
     revert.add_argument('section', help='section to update')
 
 
@@ -303,13 +303,40 @@ def config_update(args):
         tty.msg(msg.format(args.section))
         return
 
-    # If user just asked what needs to be updated, print details and exit
-    if args.list_only:
-        msg = 'Update needed for the "{0}" section:'
-        tty.msg(msg.format(args.section))
+    cannot_overwrite = []
+    for scope in updates:
+        cfg_file = spack.config.config.get_config_filename(
+            scope.name, args.section
+        )
+        scope_dir = scope.path
+        dir_ok = fs.can_access_dir(scope_dir) and os.access(scope_dir, os.W_OK)
+        cfg_ok = fs.can_access(cfg_file)
+        if not (dir_ok and cfg_ok):
+            cannot_overwrite.append((scope, cfg_file))
+
+    if cannot_overwrite:
+        msg = 'Detected permission issues with the following scopes:\n\n'
+        for scope, cfg_file in cannot_overwrite:
+            msg += '\t[scope={0}, cfg={1}]\n'.format(scope.name, cfg_file)
+        msg += ('\nEither ensure to have the right permissions before retrying'
+                ' or be more specific on the scope to update.')
+        tty.die(msg)
+
+    proceed = True
+    if not args.yes_to_all:
+        msg = ('The following configuration files are going to be updated to'
+               ' the latest schema format:\n\n')
         for scope in updates:
-            tty.msg('\t[scope={0}, dir={1}]'.format(scope.name, scope.path))
-        return
+            cfg_file = spack.config.config.get_config_filename(
+                scope.name, args.section
+            )
+            msg += '\t[scope={0}, file={1}]\n'.format(scope.name, cfg_file)
+        msg += '\nThis operation is not forward-compatible.'
+        tty.msg(msg)
+        proceed = tty.get_yes_or_no('Do you want to proceed?', default=False)
+
+    if not proceed:
+        tty.die('Operation aborted.')
 
     # Get a function to update the format
     update_fn = spack.config.ensure_latest_format_fn(args.section)
@@ -324,11 +351,6 @@ def config_update(args):
 
         # Make a backup copy and rewrite the file
         bkp_file = cfg_file + '.bkp'
-        if os.path.exists(bkp_file):
-            msg = ('backup file "{0}" exists on disk.\n\nCheck its content '
-                   'and remove it before trying to update again.')
-            tty.die(msg.format(bkp_file))
-
         shutil.copy(cfg_file, bkp_file)
         spack.config.config.update_config(
             args.section, data, scope=scope.name, force=True
@@ -339,19 +361,54 @@ def config_update(args):
 
 def config_revert(args):
     scopes = [args.scope] if args.scope else spack.config.file_scopes()
+
+    # Search for backup files in the configuration scopes
+    Entry = collections.namedtuple('Entry', ['scope', 'cfg', 'bkp'])
+    to_be_restored, cannot_overwrite = [], []
     for scope in scopes:
         cfg_file = spack.config.config.get_config_filename(scope, args.section)
         bkp_file = cfg_file + '.bkp'
+
+        # If the backup files doesn't exist move to the next scope
         if not os.path.exists(bkp_file):
             continue
 
-        if os.path.exists(cfg_file) and not args.force:
-            msg = ('configuration file "{0}" exists on disk.\n\nCheck '
-                   'its content and remove it before trying to revert '
-                   'again. use the --force option to overwrite existing '
-                   'files')
-            tty.die(msg.format(cfg_file))
+        # If it exists and we don't have write access in this scope
+        # keep track of it and report a comprehensive error later
+        entry = Entry(scope, cfg_file, bkp_file)
+        scope_dir = os.path.dirname(bkp_file)
+        dir_ok = fs.can_access_dir(scope_dir) and os.access(scope_dir, os.W_OK)
+        cfg_ok = not os.path.exists(cfg_file) or fs.can_access(cfg_file)
+        bkp_ok = fs.can_access(bkp_file)
+        if not (dir_ok and cfg_ok and bkp_ok):
+            cannot_overwrite.append(entry)
+            continue
 
+        to_be_restored.append(entry)
+
+    # Report errors if we can't revert a configuration
+    if cannot_overwrite:
+        msg = 'Detected permission issues with the following scopes:\n\n'
+        for e in cannot_overwrite:
+            msg += '\t[scope={0.scope}, cfg={0.cfg}, bkp={0.bkp}]\n'.format(e)
+        msg += ('\nEither ensure to have the right permissions before retrying'
+                ' or be more specific on the scope to revert.')
+        tty.die(msg)
+
+    proceed = True
+    if not args.yes_to_all:
+        msg = ('The following scopes will be restored from the corresponding'
+               ' backup files:\n')
+        for entry in to_be_restored:
+            msg += '\t[scope={0.scope}, bkp={0.bkp}]\n'.format(entry)
+        msg += 'This operation cannot be undone.'
+        tty.msg(msg)
+        proceed = tty.get_yes_or_no('Do you want to proceed?', default=False)
+
+    if not proceed:
+        tty.die('Operation aborted.')
+
+    for _, cfg_file, bkp_file in to_be_restored:
         shutil.copy(bkp_file, cfg_file)
         os.unlink(bkp_file)
         msg = 'File "{0}" reverted to old state'

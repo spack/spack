@@ -15,6 +15,7 @@ from llnl.util.tty.color import colorize
 
 import spack.config
 import spack.schema.env
+import spack.cmd.common.arguments
 import spack.cmd.install
 import spack.cmd.uninstall
 import spack.cmd.modules
@@ -402,16 +403,32 @@ def env_update_setup_parser(subparser):
         metavar='env', dest='env',
         help='name or directory of the environment to activate'
     )
+    spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def env_update(args):
     manifest_file = ev.manifest_file(args.env)
     backup_file = manifest_file + ".bkp"
-    changed = ev.update_yaml(manifest_file, backup_file=backup_file)
-    if not changed:
-        tty.msg('No update needed')
+    needs_update = ev.is_latest_format(manifest_file)
+
+    if not needs_update:
+        tty.msg('No update needed for the environment "{0}"'.format(args.env))
         return
-    msg = 'Environment "{0}" updated [backup={1}]'
+
+    proceed = True
+    if not args.yes_to_all:
+        msg = ('The environment "{0}" is going to be updated to the latest '
+               'schema format. This operation is not forward-compatible i.e.'
+               'old versions of Spack will not be able to use this environment'
+               ' anymore.')
+        tty.msg(msg.format(args.env))
+        proceed = tty.get_yes_or_no('Do you want to proceed?', default=False)
+
+    if not proceed:
+        tty.die('Operation aborted.')
+
+    ev.update_yaml(manifest_file, backup_file=backup_file)
+    msg = 'Environment "{0}" has been updated [backup={1}]'
     tty.msg(msg.format(args.env, backup_file))
 
 
@@ -420,20 +437,31 @@ def env_revert_setup_parser(subparser):
         metavar='env', dest='env',
         help='name or directory of the environment to activate'
     )
-    subparser.add_argument(
-        '--force', action='store_true', help='force removal of manifest file'
-    )
+    spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def env_revert(args):
     manifest_file = ev.manifest_file(args.env)
     backup_file = manifest_file + ".bkp"
-    if os.path.exists(manifest_file) and not args.force:
-        msg = ('manifest file "{0}" exists on disk.\n\nCheck '
-               'its content and remove it before trying to revert '
-               'and update again. Use the "--force" option to overwrite '
-               'existing files')
+
+    # Check that both the spack.yaml and the backup exist, the inform user
+    # on what is going to happen and ask for confirmation
+    if not os.path.exists(manifest_file):
+        msg = 'cannot fine the manifest file of the environment [file={0}]'
         tty.die(msg.format(manifest_file))
+    if not os.path.exists(backup_file):
+        msg = 'cannot find the old manifest file to be restored [file={0}]'
+        tty.die(msg.format(backup_file))
+
+    proceed = True
+    if not args.yes_to_all:
+        msg = ('Spack is going to overwrite the current manifest file'
+               ' with a backup copy [manifest={0}, backup={1}]')
+        tty.msg(msg.format(manifest_file, backup_file))
+        proceed = tty.get_yes_or_no('Do you want to proceed?', default=False)
+
+    if not proceed:
+        tty.die('Operation aborted.')
 
     shutil.copy(backup_file, manifest_file)
     os.unlink(backup_file)
