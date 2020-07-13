@@ -31,5 +31,4 @@ class Pmt(CMakePackage):
                 'ON' if '+shared' in spec else 'OFF'),
             '-DLIBRARY_ONLY=ON'
         ]
-                
         return args
