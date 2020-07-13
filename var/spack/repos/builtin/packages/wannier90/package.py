@@ -5,7 +5,6 @@
 
 import inspect
 import os.path
-from llnl.util.filesystem import find
 
 from spack import *
 
