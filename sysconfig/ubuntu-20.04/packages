@@ -30,3 +30,5 @@ software-properties-common
 tcl-dev
 unzip
 zlib1g-dev
+libx11-dev
+libxcomposite-dev
