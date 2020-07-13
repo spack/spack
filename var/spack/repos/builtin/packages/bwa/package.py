@@ -26,8 +26,8 @@ class Bwa(Package):
 
     def install(self, spec, prefix):
         zlib_inc_path = spec['zlib'].prefix.include
-        sse2neon_inc_path = spec['sse2neon'].prefix.include
         if platform.machine() == 'aarch64':
+            sse2neon_inc_path = spec['sse2neon'].prefix.include
             filter_file(r'^INCLUDES=', "INCLUDES=-I%s -I%s" %
                         (zlib_inc_path, sse2neon_inc_path),
                         'Makefile')
