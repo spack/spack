@@ -29,7 +29,7 @@ packages:
       - connectome-tools@0.3.2
       - spatial-index@0.2.1
       - spykfunc@0.15.6
-      - psp-validation@0.2.1
+      - psp-validation@0.3.0
       - py-pytouchreader@1.4.6
       - py-basalt@0.2.9
       - py-entity-management@1.1.3
