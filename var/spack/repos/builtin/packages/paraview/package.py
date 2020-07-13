@@ -51,6 +51,8 @@ class Paraview(CMakePackage, CudaPackage):
             description='Use module kits')
 
     conflicts('+python', when='+python3')
+    # Python 2 support dropped with 5.9.0
+    conflicts('+python', when='@5.9:')
     conflicts('+python3', when='@:5.5')
     conflicts('+shared', when='+cuda')
     # Legacy rendering dropped in 5.5
@@ -266,8 +268,6 @@ class Paraview(CMakePackage, CudaPackage):
                 else:
                     cmake_args.append('-DVTK_PYTHON_VERSION:STRING=2')
             cmake_args.append('-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi'))
-
-
 
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
