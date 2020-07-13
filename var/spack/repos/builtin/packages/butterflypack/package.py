@@ -39,6 +39,8 @@ class Butterflypack(CMakePackage):
     depends_on('scalapack')
     depends_on('arpack-ng')
 
+    patch('fjfortran.patch', when='%fj')
+
     def cmake_args(self):
         spec = self.spec
 
