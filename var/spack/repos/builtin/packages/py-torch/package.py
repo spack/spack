@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class PyTorch(PythonPackage, CudaPackage):
     """Tensors and Dynamic neural networks in Python
     with strong GPU acceleration."""
@@ -173,7 +174,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # https://github.com/pytorch/pytorch/pull/37865
     # Fixes CMake configuration error when XNNPACK is disabled
     patch('xnnpack.patch', when='@1.5.0:1.5.999')
-    
+
     # Fixes Build error for when ROCm is enable for pytorch-1.5 release
     patch('rocm.patch', when='@1.5.0:1.5.999+rocm')
 
@@ -248,11 +249,9 @@ class PyTorch(PythonPackage, CudaPackage):
 
         enable_or_disable('fbgemm')
         enable_or_disable('test', keyword='BUILD')
-        
         enable_or_disable('rocm')
         if '+rocm' in self.spec:
             env.set('USE_MKLDNN', 0)
-        
         if '+miopen' in self.spec:
             env.set('MIOPEN_LIB_DIR', self.spec['miopen'].libs.directories[0])
             env.set('MIOPEN_INCLUDE_DIR', self.spec['miopen'].prefix.include)
