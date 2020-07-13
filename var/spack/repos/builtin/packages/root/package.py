@@ -381,7 +381,7 @@ class Root(CMakePackage):
                 ['pythia8'],
                 ['qt', 'qt4'],  # See conflicts
                 ['qtgsi', 'qt4'],  # See conflicts
-                ['r', 'R'],
+                ['r', 'r'],
                 ['rfio', False],
                 ['roofit'],
                 ['root7'],  # See conflicts
