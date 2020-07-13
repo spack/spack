@@ -34,7 +34,7 @@ class PyMaestrowf(PythonPackage):
     version('1.1.0', sha256='1bfec546831f2ef577d7823bb50dcd12622644dad0d3d761998eafd0905b6977')
     version('1.0.1', sha256='dd42ffeac1f0492a576c630b37e5d3593273e59664407f2ebf78d49322d37146')
 
-    depends_on('python@2.7:3.3.99,3.5:',   type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:',   type=('build', 'run'))
     depends_on('py-setuptools@:44.99.99',  type='build',  when='^python@:3.4')
     depends_on('py-pyyaml@4.2b1:', type=('build', 'run'))
     depends_on('py-six',           type=('build', 'run'))
