@@ -65,9 +65,13 @@ class Mesa(AutotoolsPackage):
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
     # Provides
-    provides('gl@4.5',  when='+opengl')
-    provides('glx@1.4', when='+glx')
-    # provides('egl@1.5', when='+egl')
+    provides('gl@4.5',  when='+opengl ~glvnd')
+    provides('glx@1.4', when='+glx ~glvnd')
+    # provides('egl@1.5', when='+egl ~glvnd')
+
+    provides('libglvnd-be-gl', when='+glvnd')
+    provides('libglvnd-be-glx', when='+glvnd +glx')
+    # provides('libglvnd-be-egl', when='+glvnd +egl')
 
     # Variant dependencies
     depends_on('llvm@6:', when='+llvm')
@@ -179,10 +183,32 @@ class Mesa(AutotoolsPackage):
         return args
 
     @property
-    def libs(self):
-        for dir in ['lib64', 'lib']:
-            libs = find_libraries(['libGL', 'libOSMesa'],
-                                  join_path(self.prefix, dir),
-                                  shared=True, recursive=False)
-            if libs:
-                return libs
+    def gl_libs(self):
+        result = LibraryList(())
+
+        if '~glvnd' in self.spec:
+            result.extend(find_libraries('libGL',
+                                         root=self.spec.prefix,
+                                         shared='+shared' in self.spec,
+                                         recursive=True))
+        return result
+
+    @property
+    def glx_libs(self):
+        result = LibraryList(())
+
+        if '~glvnd' in self.spec:
+            result.extend(find_libraries('libGLX',
+                                         root=self.spec.prefix,
+                                         shared='+shared' in self.spec,
+                                         recursive=True))
+        return result
+
+    def setup_run_environment(self, env):
+        if '+glx +glvnd' in self.spec:
+            env.set('__GLX_VENDOR_LIBRARY_NAME', 'mesa')
+
+        if '+egl +glvnd' in self.spec:
+            env.set('__EGL_VENDOR_LIBRARY_FILENAMES', ':'.join((
+                os.path.join(self.spec.prefix, 'share', 'glvnd',
+                             'egl_vendor.d', '50_mesa.json'))))
