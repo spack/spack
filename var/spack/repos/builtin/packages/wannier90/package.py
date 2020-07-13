@@ -150,10 +150,10 @@ class Wannier90(MakefilePackage):
                               'src/Makefile.2'), string=True)
 
                 filter_file(
-                    ' '.join(['$(AR) $(ARFLAGS)',
-                              '$(LIBRARY) $(OBJS2) $(OBJS)']),
-                    ' '.join(['$(MPIF90) $(FCOPTS) -shared -o '
-                              '$(LIBRARY) $(OBJS2) $(OBJS) $(LIBS)']),
+                    '$(AR) $(ARFLAGS) '
+                    '$(LIBRARY) $(OBJS2) $(OBJS)',
+                    '$(MPIF90) $(FCOPTS) -shared -o '
+                    '$(LIBRARY) $(OBJS2) $(OBJS) $(LIBS)',
                     join_path(self.stage.source_path,
                               'src/Makefile.2'), string=True)
 
