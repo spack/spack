@@ -288,7 +288,9 @@ script:
 
 The output above shows the `applications` category of modules, which are
 generated from centrally build packages.
-To update the version of any of these modules, edit the corresponding YAML
+
+To update the version of any of these modules, first we have to make sure
+that the corresponding software is built by edit the corresponding YAML
 configuration:
 
     $ vim spack/deploy/packages/bbp-packages.yaml
@@ -302,9 +304,11 @@ deployment chain (all found in `spack/deploy/packages`):
 * `external-libraries` for packages that are seldomly changed and for which
   the dependency graph may be truncated by Spack (e.g., Spark, Python) - mainly dependencies for building
 
-To actually enable the generation of corresponding module files, new
-software has to be whitelisted in the module configuration for spack, e.g.
-by editing:
+Following this, we may have to enable the generation of corresponding
+module files.
+If this is the first time the  software is deployed,
+it has to be whitelisted in the module configuration for spack,
+e.g. by editing:
 
     $ vim spack/deploy/configs/applications/modules.yaml
 
