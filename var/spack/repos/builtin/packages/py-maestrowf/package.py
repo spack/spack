@@ -43,6 +43,6 @@ class PyMaestrowf(PythonPackage):
     depends_on('py-tabulate',      type=('build', 'run'), when='@1.1.0:')
     depends_on('py-filelock',      type=('build', 'run'), when='@1.1.0:')
     depends_on('py-coloredlogs',   type=('build', 'run'), when='@1.1.7:')
-    depends_on('py-chainmap',      type=('build', 'run'), when='@1.1.7: ^python@2.7:3.3.99')
+    depends_on('py-chainmap',      type=('build', 'run'), when='@1.1.7: ^python@:2')
     depends_on('py-dill',          type=('build', 'run'), when='@1.1.7:')
     depends_on('py-jsonschema',    type=('build', 'run'), when='@1.1.7:')
