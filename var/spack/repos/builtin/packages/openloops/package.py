@@ -69,7 +69,7 @@ class Openloops(Package):
 
     variant('num_jobs', description='Number of parallel jobs to run. '  +
                                     'Set to 1 if compiling a large number' +
-                                    'of processes', default=0)
+                                    'of processes (e.g. lcg.coll)', default=0)
     depends_on('python', type=("build", "run"))
 
     phases = ['configure', 'build', 'build_processes', 'install']
@@ -98,9 +98,9 @@ class Openloops(Package):
                 print('gfortran_f_flags = -ffree-line-length-none' +
                       '-fdollar-ok -mcmodel=medium', file=f)
 
-        if self.spec.satisfies('@:1.999.999'):
+        if self.spec.satisfies('@:1.999.999 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft1.coll'), 'lcg.coll')
-        elif self.spec.satisfies('@2:2.999.999'):
+        elif self.spec.satisfies('@2:2.999.999 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft2.coll'), 'lcg.coll')
 
     def build(self, spec, prefix):
