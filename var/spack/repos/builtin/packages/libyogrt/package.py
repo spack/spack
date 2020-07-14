@@ -39,7 +39,7 @@ class Libyogrt(AutotoolsPackage):
     conflicts('scheduler=lsf', when='@:1.22')
 
     variant('static', default='False',
-            description="build static library",)
+            description="build static library")
 
     def url_for_version(self, version):
         if version < Version(1.21):
