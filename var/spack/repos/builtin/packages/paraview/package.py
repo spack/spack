@@ -238,37 +238,18 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DPARAVIEW_QT_VERSION=%s' % spec['qt'].version[0],
             ])
 
-        # CMake flags for python are different for different versions
+        # CMake flags for python have changed with newer ParaView versions
         # Make sure Spack uses the right cmake flags
         if '+python' in spec or '+python3' in spec:
-            if spec.satisfies('@5.8:'):
-                cmake_args.append('-DPARAVIEW_USE_PYTHON:BOOL=ON')
-                if '+python3' in spec:
-                    cmake_args.append('-DPARAVIEW_PYTHON_VERSION:STRING=3')
-                else:
-                    cmake_args.append('-DPARAVIEW_PYTHON_VERSION:STRING=2')
-            elif spec.satisfies('@5.7:'):
-                cmake_args.extend([
-                    '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
-                    '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
-                    spec['python'].command.path
-                ])
-                if '+python3' in spec:
-                    cmake_args.append('-DPARAVIEW_PYTHON_VERSION:STRING=3')
-                else:
-                    cmake_args.append('-DPARAVIEW_PYTHON_VERSION:STRING=2')
-            else:
-                cmake_args.extend([
-                    '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
-                    '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
-                    spec['python'].command.path
-                ])
-                if '+python3' in spec:
-                    cmake_args.append('-DVTK_PYTHON_VERSION:STRING=3')
-                else:
-                    cmake_args.append('-DVTK_PYTHON_VERSION:STRING=2')
-            cmake_args.append('-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' %
-                              variant_bool('+mpi'))
+            py_use_opt = 'USE' if spec.satisfies('@5.8:') else 'ENABLE'
+            py_ver_opt = 'PARAVIEW' if spec.satisfies('@5.7:') else 'VTK'
+            py_ver_val = 3 if '+python3' in spec else 2
+            cmake_args.extend([
+                '-DPARAVIEW_%s_PYTHON:BOOL=ON' % py_use_opt,
+                '-DPYTHON_EXECUTABLE:FILEPATH=%s' % spec['python'].command.path,
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi'),
+                '-D%s_PYTHON_VERSION:STRING=%d' % (py_ver_opt, py_ver_val)
+            ])
 
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
