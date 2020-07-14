@@ -246,7 +246,8 @@ class Paraview(CMakePackage, CudaPackage):
             py_ver_val = 3 if '+python3' in spec else 2
             cmake_args.extend([
                 '-DPARAVIEW_%s_PYTHON:BOOL=ON' % py_use_opt,
-                '-DPYTHON_EXECUTABLE:FILEPATH=%s' % spec['python'].command.path,
+                '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
+                spec['python'].command.path,
                 '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi'),
                 '-D%s_PYTHON_VERSION:STRING=%d' % (py_ver_opt, py_ver_val)
             ])
