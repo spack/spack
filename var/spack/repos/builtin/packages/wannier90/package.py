@@ -91,16 +91,9 @@ class Wannier90(MakefilePackage):
         if '+shared' in self.spec:
             if self.spec.satisfies('@:2'):
                 # this is to build a .shared wannier90 library
-                if self.spec.satisfies('platform=darwin'):
-                    filter_file('LIBRARY = ../../libwannier.a',
-                                'LIBRARY = ../../libwannier.dylib',
-                                join_path(self.stage.source_path,
-                                          'src/Makefile.2'))
-                else:
-                    filter_file('LIBRARY = ../../libwannier.a',
-                                'LIBRARY = ../../libwannier.so',
-                                join_path(self.stage.source_path,
-                                          'src/Makefile.2'))
+                filter_file('LIBRARY = ../../libwannier.a',
+                            'LIBRARY = ../../libwannier.' + dso_suffix,
+                            join_path(self.stage.source_path, 'src/Makefile.2'))
                 objs_post = ['parameters.o', 'kmesh.o', 'io.o', 'comms.o',
                              'utility.o', 'get_oper.o', 'constants.o',
                              'postw90_common.o', 'wan_ham.o', 'spin.o',
