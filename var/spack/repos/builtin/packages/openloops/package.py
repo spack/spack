@@ -94,9 +94,9 @@ class Openloops(Package):
             print('cxx = {0}'.format(env['SPACK_CXX']), file=f)
             print('fortran_compiler = {0}'.format(env['SPACK_FC']), file=f)
             if self.spec.satisfies('@1.3.1') and not is_intel:
-                print('gfortran_f_flags = -ffree-line-length-none', file=f)
+                print('gfortran_f_flags = -ffree-line-length-none ', file=f)
             if self.spec.satisfies('@2.1.1') and not is_intel:
-                print('gfortran_f_flags = -ffree-line-length-none' +
+                print('gfortran_f_flags = -ffree-line-length-none ' +
                       '-fdollar-ok -mcmodel=medium', file=f)
 
         if self.spec.satisfies('@:1.999.999 processes=lcg.coll'):
