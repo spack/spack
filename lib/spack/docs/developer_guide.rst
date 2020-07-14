@@ -799,49 +799,12 @@ Publishing a release on GitHub
 .. _merging-releases:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Updating `develop` and `releases/latest`
+Updating `releases/latest` and `develop`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We merge each release into ``develop``, we tag the latest release as
-``releases/latest``.
-
-#. Once each release is complete, make sure that it is merged back into
-   ``develop`` with a merge commit:
-
-   .. code-block:: console
-
-      $ git checkout develop
-      $ git merge --no-ff releases/vX.Y  # vX.Y is the new release's branch
-      $ git push
-
-   We merge back to ``develop`` because it:
-
-     * updates the version and ``CHANGELOG.md`` on ``develop``.
-     * ensures that your release tag is reachable from the head of
-       ``develop``
-
-   We *must* use a real merge commit (via the ``--no-ff`` option) because it
-   ensures that the release tag is reachable from the tip of ``develop``.
-   This is necessary for ``spack -V`` to work properly -- it uses ``git
-   describe --tags`` to find the last reachable tag in the repository and
-   reports how far we are from it. For example:
-
-   .. code-block:: console
-
-      $ spack -V
-      0.14.2-1486-b80d5e74e5
-
-   This says that we are at commit ``b80d5e74e5``, which is 1,486 commits
-   ahead of the ``0.14.2`` release.
-
-   We put this step last in the process because it's best to do it only once
-   the release is complete and tagged. If you do it before you've tagged the
-   release and later decide you want to tag some later commit, you'll need
-   to merge again.
-
-#. If the new release is the **highest** Spack release yet, you should
-   also tag it as ``releases/latest``. For example, suppose the highest
-   release is currently ``0.15.3``:
+If the new release is the **highest** Spack release yet, you should
+also tag it as ``releases/latest``. For example, suppose the highest
+release is currently ``0.15.3``:
 
      * If you are releasing ``0.15.4`` or ``0.16.0``, then you should tag
        it with ``releases/latest``, as these are higher than ``0.15.3``.
@@ -861,6 +824,39 @@ We merge each release into ``develop``, we tag the latest release as
    The ``--force`` argument makes ``git`` overwrite the existing
    ``releases/latest`` tag with the new one.
 
+We also merge each release that we tag as ``releases/latest`` into ``develop``.
+Make sure to do this with a merge commit:
+
+.. code-block:: console
+
+   $ git checkout develop
+   $ git merge --no-ff vX.Y.Z  # vX.Y.Z is the new release's tag
+   $ git push
+
+We merge back to ``develop`` because it:
+
+  * updates the version and ``CHANGELOG.md`` on ``develop``.
+  * ensures that your release tag is reachable from the head of
+    ``develop``
+
+We *must* use a real merge commit (via the ``--no-ff`` option) because it
+ensures that the release tag is reachable from the tip of ``develop``.
+This is necessary for ``spack -V`` to work properly -- it uses ``git
+describe --tags`` to find the last reachable tag in the repository and
+reports how far we are from it. For example:
+
+.. code-block:: console
+
+   $ spack -V
+   0.14.2-1486-b80d5e74e5
+
+This says that we are at commit ``b80d5e74e5``, which is 1,486 commits
+ahead of the ``0.14.2`` release.
+
+We put this step last in the process because it's best to do it only once
+the release is complete and tagged. If you do it before you've tagged the
+release and later decide you want to tag some later commit, you'll need
+to merge again.
 
 .. _announcing-releases:
 

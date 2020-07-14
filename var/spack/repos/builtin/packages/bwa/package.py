@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import platform
 
 
 class Bwa(Package):
@@ -19,10 +20,20 @@ class Bwa(Package):
             url='https://github.com/lh3/bwa/archive/0.7.12.tar.gz')
 
     depends_on('zlib')
+    depends_on('sse2neon', when='target=aarch64:')
+
+    patch('bwa_for_aarch64.patch', sha256='b77213b16cf8760f01e32f9a0b2cd8988cf7bac48a11267100f703cbd55c4bfd', when='target=aarch64:')
 
     def install(self, spec, prefix):
-        filter_file(r'^INCLUDES=',
-                    "INCLUDES=-I%s" % spec['zlib'].prefix.include, 'Makefile')
+        zlib_inc_path = spec['zlib'].prefix.include
+        if platform.machine() == 'aarch64':
+            sse2neon_inc_path = spec['sse2neon'].prefix.include
+            filter_file(r'^INCLUDES=', "INCLUDES=-I%s -I%s" %
+                        (zlib_inc_path, sse2neon_inc_path),
+                        'Makefile')
+        else:
+            filter_file(r'^INCLUDES=', "INCLUDES=-I%s" %
+                        zlib_inc_path, 'Makefile')
         filter_file(r'^LIBS=', "LIBS=-L%s " % spec['zlib'].prefix.lib,
                     'Makefile')
         make()
