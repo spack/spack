@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import shutil
 import os
+
 
 class Openloops(Package):
     """The OpenLoops 2 program is a fully automated implementation of the
@@ -30,8 +30,8 @@ class Openloops(Package):
         "pplnttj", "ppwtt", "ppwtt_ew", "ppwttj",
         "ppwttj_ew", "ppztt", "ppztt_ew", "ppzttj", "ppaatt", "ppwwtt",
         "ppzatt", "ppzztt", "ppvvvv", "ppaaaj2", "ppllaa",
-        "ppllaaj", "pplllla", "ppvvv", "ppvvv2", "ppvvv_ew", "ppvvvj", "ppaajj",
-        "ppaajj2", "ppaajjj", "pplla", "pplla2",
+        "ppllaaj", "pplllla", "ppvvv", "ppvvv2", "ppvvv_ew", "ppvvvj",
+        "ppaajj",  "ppaajj2", "ppaajjj", "pplla", "pplla2",
         "pplla_ew", "ppllaj", "ppllaj2", "ppllaj_ew", "ppllaj_nf5", "ppllajj",
         "ppllll", "ppllll2", "ppllll2_nf5",
         "ppllll2_onlyh", "ppllll_ew", "ppllllj", "ppllllj2", "ppllllj2_nf5",
@@ -59,15 +59,15 @@ class Openloops(Package):
         "eehtt", "eehttj", "eehll_ew", "eehvtt", "eehhtt", "heftppllj",
         "heftpplljj", "heftpplljjj")
 
-    variant('compile_extra', default=False, 
+    variant('compile_extra', default=False,
             description='Compile real radiation tree amplitudes')
-    variant('processes', description='Processes to install. See https://'+
-                                     'openloops.hepforge.org/process_'+
+    variant('processes', description='Processes to install. See https://' +
+                                     'openloops.hepforge.org/process_' +
                                      'library.php?repo=public for details',
-            values=disjoint_sets(('all.coll',), ('lhc.coll',), ('lcg.coll',), 
+            values=disjoint_sets(('all.coll',), ('lhc.coll',), ('lcg.coll',),
                                  all_processes).with_default('lhc.coll'))
 
-    variant('num_jobs', description='Number of parallel jobs to run. ' +
+    variant('num_jobs', description='Number of parallel jobs to run. '  +
                                     'Set to 1 if compiling a large number' +
                                     'of processes', default=0)
     depends_on('python', type=("build", "run"))
@@ -75,24 +75,28 @@ class Openloops(Package):
     phases = ['configure', 'build', 'build_processes', 'install']
 
     def configure(self, spec, prefix):
-        spack_env = 'PATH LD_LIBRARY_PATH CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH INTEL_LICENSE_FILE'.split()
+        spack_env = ('PATH LD_LIBRARY_PATH CPATH C_INCLUDE_PATH' +
+                     'CPLUS_INCLUDE_PATH INTEL_LICENSE_FILE').split()
         for k in env.keys():
             if k.startswith('SPACK_'):
                 spack_env.append(k)
 
         spack_env = ' '.join(spack_env)
+        is_intel = self.spec.satisfies('%intel')
+        njobs = self.spec.variants['num_jobs'].value
 
         with open('openloops.cfg', 'w') as f:
             print('[OpenLoops]', file=f)
             print('import_env={0}'.format(spack_env), file=f)
-            print('num_jobs = {0}'.format(self.spec.variants['num_jobs'].value), file=f)
+            print('num_jobs = {0}'.format(njobs), file=f)
             print('cc = {0}'.format(env['SPACK_CC']), file=f)
             print('cxx = {0}'.format(env['SPACK_CXX']), file=f)
             print('fortran_compiler = {0}'.format(env['SPACK_FC']), file=f)
-            if self.spec.satisfies('@1.3.1') and not self.spec.satisfies('%intel'):
+            if self.spec.satisfies('@1.3.1') and not is_intel:
                 print('gfortran_f_flags = -ffree-line-length-none', file=f)
-            if self.spec.satisfies('@2.1.1') and not self.spec.satisfies('%intel'):
-                print('gfortran_f_flags = -ffree-line-length-none -fdollar-ok -mcmodel=medium', file=f)
+            if self.spec.satisfies('@2.1.1') and not is_intel:
+                print('gfortran_f_flags = -ffree-line-length-none' +
+                      '-fdollar-ok -mcmodel=medium', file=f)
 
         if self.spec.satisfies('@:1.999.999'):
             copy(join_path(os.path.dirname(__file__), 'sft1.coll'), 'lcg.coll')
@@ -114,4 +118,6 @@ class Openloops(Package):
         ol('libinstall', ce, *processes)
 
     def install(self, spec, prefix):
-        install_tree(join_path(self.stage.path, 'spack-src'), self.prefix, ignore=lambda x: x in ('process_obj', 'process_src'))
+        install_tree(join_path(self.stage.path, 'spack-src'),
+                     self.prefix,
+                     ignore=lambda x: x in ('process_obj', 'process_src'))
