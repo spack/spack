@@ -74,25 +74,25 @@ class Openloops(Package):
 
     phases = ['configure', 'build', 'build_processes', 'install']
 
-#    def setup_build_environment(self, env):
-#      env.set("CC", self.compiler.cc)
-#      env.set("CXX", self.compiler.cxx)
-#      env.set("FC", self.compiler.fc)
-#      env.set("F77", self.compiler.fc)
-#      env.set("FORTRAN", self.compiler.fc)
-#      env.set("PATH", "/bin:/usr/bin:")
-
     def configure(self, spec, prefix):
+        spack_env = 'PATH LD_LIBRARY_PATH CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH INTEL_LICENSE_FILE'.split()
+        for k in env.keys():
+            if k.startswith('SPACK_'):
+                spack_env.append(k)
+
+        spack_env = ' '.join(spack_env)
+
         with open('openloops.cfg', 'w') as f:
             print('[OpenLoops]', file=f)
+            print('import_env={0}'.format(spack_env), file=f)
             print('num_jobs = {0}'.format(self.spec.variants['num_jobs'].value), file=f)
-            print('cc = {0}'.format(self.compiler.cc), file=f)
-            print('cxx = {0}'.format(self.compiler.cxx), file=f)
-            print('fortran_compiler = {0}'.format(self.compiler.fc), file=f)
+            print('cc = {0}'.format(env['SPACK_CC']), file=f)
+            print('cxx = {0}'.format(env['SPACK_CXX']), file=f)
+            print('fortran_compiler = {0}'.format(env['SPACK_FC']), file=f)
             if self.spec.satisfies('@1.3.1') and not self.spec.satisfies('%intel'):
-                print('gfortran_f_flags = -ffree-line-length-none')
+                print('gfortran_f_flags = -ffree-line-length-none', file=f)
             if self.spec.satisfies('@2.1.1') and not self.spec.satisfies('%intel'):
-                print('gfortran_f_flags = -ffree-line-length-none -fdollar-ok -mcmodel=medium')
+                print('gfortran_f_flags = -ffree-line-length-none -fdollar-ok -mcmodel=medium', file=f)
 
         if self.spec.satisfies('@:1.999.999'):
             copy(join_path(os.path.dirname(__file__), 'sft1.coll'), 'lcg.coll')
@@ -106,8 +106,6 @@ class Openloops(Package):
     def build_processes(self, spec, prefix):
         ol = Executable('./openloops')
         processes = self.spec.variants['processes'].value
-        if not isinstance(processes, str):
-            processes = [processes]
         if self.spec.variants['compile_extra']:
             ce = 'compile_extra=1'
         else:
@@ -116,13 +114,4 @@ class Openloops(Package):
         ol('libinstall', ce, *processes)
 
     def install(self, spec, prefix):
-#        shutil.rmtree('process_obj')
-#        shutil.rmtree('process_src')
-
-        install_tree(self.stage, self.prefix, ignore=lambda x: x in ('process_obj', 'process_src'))
-#        for p in os.listdir(self.stage):
-#            if os.path.isdir(p):
-#                copy_tree(p)
-#            else:
-#                install(p)
-	# TODO
+        install_tree(join_path(self.stage.path, 'spack-src'), self.prefix, ignore=lambda x: x in ('process_obj', 'process_src'))
