@@ -52,5 +52,6 @@ jobs:
     - name: Run the build test
       run: |
         . share/spack/setup-env.sh
+        spack compiler find
         SPEC=${{ matrix.package }} share/spack/qa/run-build-tests
         ccache -s

@@ -94,6 +94,7 @@ jobs:
       env:
           COVERAGE: true
       run: |
+          bin/spack compiler find
           share/spack/qa/run-shell-tests
     - uses: codecov/codecov-action@v1
       with:
