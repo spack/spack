@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import shutil
+import os
 
 class Openloops(Package):
     """The OpenLoops 2 program is a fully automated implementation of the
@@ -114,4 +116,13 @@ class Openloops(Package):
         ol('libinstall', ce, *processes)
 
     def install(self, spec, prefix):
+#        shutil.rmtree('process_obj')
+#        shutil.rmtree('process_src')
+
+        install_tree(self.stage, self.prefix, ignore=lambda x: x in ('process_obj', 'process_src'))
+#        for p in os.listdir(self.stage):
+#            if os.path.isdir(p):
+#                copy_tree(p)
+#            else:
+#                install(p)
 	# TODO
