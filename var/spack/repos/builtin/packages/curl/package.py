@@ -52,6 +52,7 @@ class Curl(AutotoolsPackage):
     conflicts('platform=linux', when='+darwinssl')
 
     depends_on('openssl', when='~darwinssl')
+    depends_on('libidn2')
     depends_on('zlib')
     depends_on('nghttp2', when='+nghttp2')
     depends_on('libssh2', when='+libssh2')
@@ -62,6 +63,8 @@ class Curl(AutotoolsPackage):
         spec = self.spec
 
         args = ['--with-zlib={0}'.format(spec['zlib'].prefix)]
+        args.append('--with-libidn2={0}'.format(spec['libidn2'].prefix))
+
         if spec.satisfies('+darwinssl'):
             args.append('--with-darwinssl')
         else:
