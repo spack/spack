@@ -222,7 +222,7 @@ class Openmpi(AutotoolsPackage):
     variant('singularity', default=False,
             description="Build support for the Singularity container")
     variant('lustre', default=False,
-            description="Lustre filesystem support")
+            description="Lustre filesystem library support")
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
