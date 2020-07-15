@@ -19,7 +19,19 @@ from six.moves import input
 
 from llnl.util.tty.color import cprint, cwrite, cescape, clen
 
-_debug = False
+# Debug levels
+#
+# Note that from a standard Python logging level perspective, the following
+# should, perhaps, be descending (from 10).
+DISABLED = 0
+BASIC = 1
+STANDARD = 2
+DETAILED = 3
+LENGTHY = 4
+
+
+# Globals
+_debug = DISABLED
 _verbose = False
 _stacktrace = False
 _timestamp = False
@@ -29,21 +41,26 @@ _error_enabled = True
 indent = "  "
 
 
+def debug_level():
+    return _debug
+
+
 def is_verbose():
     return _verbose
 
 
-def is_debug():
-    return _debug
+def is_debug(level=BASIC):
+    return _debug >= level
 
 
 def is_stacktrace():
     return _stacktrace
 
 
-def set_debug(flag):
+def set_debug(level=DISABLED):
     global _debug
-    _debug = flag
+    assert level >= 0, 'Debug level must be a positive value'
+    _debug = level
 
 
 def set_verbose(flag):
@@ -136,8 +153,9 @@ def get_timestamp(force=False):
     """Get a string timestamp"""
     if _debug or _timestamp or force:
         # Note inclusion of the PID is useful for parallel builds.
-        return '[{0}, {1}] '.format(
-            datetime.now().strftime("%Y-%m-%d-%H:%M:%S.%f"), os.getpid())
+        pid = ', {0}'.format(os.getpid()) if is_debug(STANDARD) else '' 
+        return '[{0}{1}] '.format(
+            datetime.now().strftime("%Y-%m-%d-%H:%M:%S.%f"), pid)
     else:
         return ''
 
@@ -197,7 +215,8 @@ def verbose(message, *args, **kwargs):
 
 
 def debug(message, *args, **kwargs):
-    if _debug:
+    level = kwargs.get('level', STANDARD)
+    if is_debug(level):
         kwargs.setdefault('format', 'g')
         kwargs.setdefault('stream', sys.stderr)
         info(message, *args, **kwargs)
