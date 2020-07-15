@@ -43,7 +43,10 @@ class Subversion(AutotoolsPackage):
 
     def url_for_version(self, version):
         """Handle Subversion's new release URL versions"""
-        url = 'https://downloads.apache.org/subversion'
+        if version > Version('1.12.2'):
+            url = 'https://downloads.apache.org/subversion'
+        else:
+            url = 'https://archive.apache.org/dist/subversion'
         return url + '/subversion-%s.tar.gz' % (version)
 
     # http://www.linuxfromscratch.org/blfs/view/svn/general/subversion.html
