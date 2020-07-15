@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from llnl.util import tty
 import os
 
 
@@ -124,7 +123,6 @@ class Vasp(MakefilePackage):
 
         if '+vaspsol' in spec:
             cpp_options.append('-Dsol_compat')
-            tty.debug(cpp_options)
 
         # Finally
         spack_env.set('CPP_OPTIONS', ' '.join(cpp_options))
