@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Pmt(CMakePackage):
+class ParallelMergeTree(CMakePackage):
     """A multi-runtime implementation of a distributed merge tree
     segmentation algorithm. The implementation relies on the framework
     BabelFlow, which allows to execute the algorithm on different runtime
