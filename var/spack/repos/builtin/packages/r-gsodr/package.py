@@ -10,7 +10,8 @@ class RGsodr(RPackage):
     """A Global Surface Summary of the Day (GSOD) Weather Data Client for R"""
 
     homepage = "https://docs.ropensci.org/GSODR/"
-    url      = "https://cran.r-project.org/src/contrib/GSODR_2.1.1.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/GSODR_2.1.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/GSODR"
 
     version('2.1.1', sha256='dba732e5bd1e367b9d710e6b8924f0c02fa4546202f049124dba02bc2e3329f5')
 
