@@ -98,6 +98,65 @@ class Mirror(object):
         else:
             return Mirror(d['fetch'], d['push'], name)
 
+    @staticmethod
+    def from_args(args):
+        result = None
+
+        if ((args.directory and args.mirror_name) or
+                (args.mirror_name and args.mirror_url) or
+                (args.mirror_url and args.directory)):
+            raise ValueError(
+                'no more than one of --directory, --mirror-url, and'
+                ' --mirror-name allowed')
+
+        if args.directory:
+            location = args.directory
+
+            # User meant to provide a path to a local directory.
+            # Ensure that they did not accidentally pass a URL.
+            scheme = url_util.parse(location, scheme='<missing>').scheme
+            if scheme != '<missing>':
+                raise ValueError(
+                    '"-d, --directory" expected a local path;'
+                    ' got a URL, instead')
+
+            # User meant to provide a path to a local directory.
+            # Ensure that the mirror lookup does not mistake it for a named
+            # mirror.
+            location = 'file://' + location
+            result = spack.mirror.MirrorCollection().lookup(location)
+
+        elif args.mirror_name:
+            location = args.mirror_name
+
+            # User meant to provide the name of a preconfigured mirror.
+            # Ensure that the mirror lookup actually returns a named mirror.
+            result = spack.mirror.MirrorCollection().lookup(location)
+            if result.name == "<unnamed>":
+                raise ValueError(
+                    'no configured mirror named "{name}"'.format(
+                        name=location))
+
+        elif args.mirror_url:
+            location = args.mirror_url
+
+            # User meant to provide a URL for an anonymous mirror.
+            # Ensure that they actually provided a URL.
+            scheme = url_util.parse(location, scheme='<missing>').scheme
+            if scheme == '<missing>':
+                raise ValueError(
+                    '"{url}" is not a valid URL'.format(url=location))
+
+            result = spack.mirror.MirrorCollection().lookup(location)
+
+        else:
+            # User did not provide any mirror specifications.
+            # Use source_cache as the default mirror.
+            result = spack.mirror.Mirror(
+                spack.config.get('config:source_cache'))
+
+        return result
+
     def display(self, max_len=0):
         if self._push_url is None:
             _display_mirror_entry(max_len, self._name, self._fetch_url)
