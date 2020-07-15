@@ -1052,8 +1052,10 @@ def _update_in_memory(data, section):
 
 
 def ensure_latest_format_fn(section):
-    """Return a functions that takes as input a dictionary read from
+    """Return a function that takes as input a dictionary read from
     a configuration file and update it to the latest format.
+
+    The function returns True if there was any update, False otherwise.
 
     Args:
         section (str): section of the configuration e.g. "packages",
