@@ -360,7 +360,9 @@ def config_update(args):
 
 
 def config_revert(args):
-    scopes = [args.scope] if args.scope else spack.config.file_scopes()
+    scopes = [args.scope] if args.scope else [
+        x.name for x in spack.config.config.file_scopes
+    ]
 
     # Search for backup files in the configuration scopes
     Entry = collections.namedtuple('Entry', ['scope', 'cfg', 'bkp'])
