@@ -88,66 +88,60 @@ class Wannier90(MakefilePackage):
         for key, value in substitutions.items():
             filter_file(key, value, self.makefile_name)
 
-        if '+shared' in self.spec:
-            if self.spec.satisfies('@:2'):
-                # this is to build a .shared wannier90 library
-                filter_file('LIBRARY = ../../libwannier.a',
-                            'LIBRARY = ../../libwannier.' + dso_suffix,
-                            join_path(self.stage.source_path, 'src/Makefile.2'))
-                objs_post = ['parameters.o', 'kmesh.o', 'io.o', 'comms.o',
-                             'utility.o', 'get_oper.o', 'constants.o',
-                             'postw90_common.o', 'wan_ham.o', 'spin.o',
-                             'dos.o', 'berry.o', 'kpath.o', 'kslice.o',
-                             'boltzwann.o', 'geninterp.o']
-                new_objs_post = ['comms.o', 'get_oper.o', 'postw90_common.o',
-                                 'wan_ham.o', 'spin.o', 'dos.o', 'berry.o',
-                                 'kpath.o', 'kslice.o', 'boltzwann.o',
-                                 'geninterp.o']
-                filter_file(''.join(['OBJS_POST  = ', ' '.join(objs_post)]),
-                            ''.join(['OBJS_POST  = ',
-                                     ' '.join(new_objs_post)]),
-                            join_path(self.stage.source_path,
-                                      'src/Makefile.2'))
-                filter_file('../../wannier90.x: .*',
-                            '../../wannier90.x: $(OBJS)'
-                            '../wannier_prog.F90 $(LIBRARY)',
-                            join_path(self.stage.source_path,
-                                      'src/Makefile.2'),
-                            string=True)
-                filter_file('../../postw90.x: $(OBJS_POST) '
-                            '$(POSTDIR)postw90.F90',
-                            '../../postw90.x: $(OBJS_POST) '
-                            '$(POSTDIR)postw90.F90 $(LIBRARY)',
-                            join_path(self.stage.source_path,
-                                      'src/Makefile.2'), string=True)
-                filter_file(
-                    '$(COMPILER) ../wannier_prog.F90 '
-                    '$(LDOPTS) $(OBJS) $(LIBS)'
-                    '-o ../../wannier90.x',
-                    '$(COMPILER) -I../obj ../wannier_prog.F90 '
-                    '$(LDOPTS) -L../.. -lwannier '
-                    '-o ../../wannier90.x',
-                    join_path(self.stage.source_path,
-                              'src/Makefile.2'), string=True)
-                filter_file(
-                    '$(COMPILER) $(POSTDIR)postw90.F90 '
-                    '$(POSTOPTS) $(LDOPTS) '
-                    '$(OBJS_POST) '
-                    '$(LIBS) -o ../../postw90.x',
-                    '$(COMPILER) -I../obj $(POSTDIR)postw90.F90 '
-                    '$(POSTOPTS) $(LDOPTS) $(OBJS_POST) '
-                    '-L../.. -lwannier $(LIBS) -o ../../postw90.x',
-                    join_path(self.stage.source_path,
-                              'src/Makefile.2'), string=True)
-
-                filter_file(
-                    '$(AR) $(ARFLAGS) '
-                    '$(LIBRARY) $(OBJS2) $(OBJS)',
-                    '$(MPIF90) $(FCOPTS) -shared -o '
-                    '$(LIBRARY) $(OBJS2) $(OBJS) $(LIBS)',
-                    join_path(self.stage.source_path,
-                              'src/Makefile.2'), string=True)
-
+        if '@:2 +shared' in self.spec:
+            # this is to build a .shared wannier90 library
+            filter_file('LIBRARY = ../../libwannier.a',
+                        'LIBRARY = ../../libwannier.' + dso_suffix,
+                        join_path(self.stage.source_path, 'src/Makefile.2'))
+            filter_file('parameters.o kmesh.o io.o comms.o '
+                        'utility.o get_oper.o constants.o '
+                        'postw90_common.o wan_ham.o spin.o '
+                        'dos.o berry.o kpath.o kslice.o '
+                        'boltzwann.o geninterp.o',
+                        'comms.o get_oper.o postw90_common.o '
+                        'wan_ham.o spin.o dos.o berry.o '
+                        'kpath.o kslice.o boltzwann.o geninterp.o',
+                        join_path(self.stage.source_path,
+                                  'src/Makefile.2'))
+            filter_file('../../wannier90.x: .*',
+                        '../../wannier90.x: $(OBJS)'
+                        '../wannier_prog.F90 $(LIBRARY)',
+                        join_path(self.stage.source_path,
+                                  'src/Makefile.2'),
+                        string=True)
+            filter_file('../../postw90.x: $(OBJS_POST) '
+                        '$(POSTDIR)postw90.F90',
+                        '../../postw90.x: $(OBJS_POST) '
+                        '$(POSTDIR)postw90.F90 $(LIBRARY)',
+                        join_path(self.stage.source_path,
+                                  'src/Makefile.2'), string=True)
+            filter_file(
+                '$(COMPILER) ../wannier_prog.F90 '
+                '$(LDOPTS) $(OBJS) $(LIBS) '
+                '-o ../../wannier90.x',
+                '$(COMPILER) -I../obj ../wannier_prog.F90 '
+                '$(LDOPTS) -L../.. -lwannier '
+                '-o ../../wannier90.x',
+                join_path(self.stage.source_path,
+                          'src/Makefile.2'), string=True)
+            filter_file(
+                '$(COMPILER) $(POSTDIR)postw90.F90 '
+                '$(POSTOPTS) $(LDOPTS) '
+                '$(OBJS_POST) '
+                '$(LIBS) -o ../../postw90.x',
+                '$(COMPILER) -I../obj $(POSTDIR)postw90.F90 '
+                '$(POSTOPTS) $(LDOPTS) $(OBJS_POST) '
+                '-L../.. -lwannier $(LIBS) -o ../../postw90.x',
+                join_path(self.stage.source_path,
+                          'src/Makefile.2'), string=True)
+            filter_file(
+                '$(AR) $(ARFLAGS) '
+                '$(LIBRARY) $(OBJS2) $(OBJS)',
+                '$(MPIF90) $(FCOPTS) -shared -o '
+                '$(LIBRARY) $(OBJS2) $(OBJS) $(LIBS)',
+                join_path(self.stage.source_path,
+                          'src/Makefile.2'), string=True)
+            
     def setup_build_environment(self, env):
         env.set('MPIFC', self.prefix.bin.mpifc)
 
@@ -169,10 +163,7 @@ class Wannier90(MakefilePackage):
 
         inst = []
         if '+shared' in spec:
-            if spec.satisfies('platform=darwin'):
-                inst.append('libwannier.dylib')
-            else:
-                inst.append('libwannier.so')
+            inst.append('libwannier.' + dso_suffix)
         # version 3 or 2 without the shared variant
         # also has a .a version of the library
         if '@3:' in spec or '~shared' in spec:
