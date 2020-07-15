@@ -45,6 +45,7 @@ user_var_path         = os.path.join(user_config_path, "var", "spack")
 stage_path            = os.path.join(user_var_path, "stage")
 repos_path            = os.path.join(var_path, "repos")
 share_path            = os.path.join(prefix, "share", "spack")
+user_share_path       = os.path.join(user_config_path, "share", "spack")
 
 # Paths to built-in Spack repositories.
 packages_path      = os.path.join(repos_path, "builtin")
