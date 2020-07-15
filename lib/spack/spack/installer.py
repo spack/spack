@@ -452,7 +452,8 @@ def install_msg(name, pid):
     Return:
         (str) Colorized installing message
     """
-    return '{0}: '.format(pid) + colorize('@*{Installing} @*g{%s}' % name)
+    pre = '{0}: '.format(pid) if tty.show_pid() else ''
+    return pre + colorize('@*{Installing} @*g{%s}' % name)
 
 
 def log(pkg):
@@ -1061,7 +1062,8 @@ class PackageInstaller(object):
 
         pkg.run_tests = (tests is True or tests and pkg.name in tests)
 
-        pre = '{0}: {1}:'.format(self.pid, pkg.name)
+        pid = '{0}: '.format(self.pid) if tty.show_pid() else ''
+        pre = '{0}{1}:'.format(pid, pkg.name)
 
         def build_process():
             """
@@ -1189,7 +1191,8 @@ class PackageInstaller(object):
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
-            tty.debug('{0} {1}'.format(self.pid, str(e)))
+            pre = '{0}'.format(self.pid) if tty.show_pid() else ''
+            tty.debug('{0}{1}'.format(pid, str(e)))
             tty.debug('Package stage directory : {0}'
                       .format(pkg.stage.source_path))
 
