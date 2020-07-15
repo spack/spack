@@ -86,17 +86,17 @@ class Openloops(Package):
         njobs = self.spec.variants['num_jobs'].value
 
         with open('openloops.cfg', 'w') as f:
-            print('[OpenLoops]', file=f)
-            print('import_env={0}'.format(spack_env), file=f)
-            print('num_jobs = {0}'.format(njobs), file=f)
-            print('cc = {0}'.format(env['SPACK_CC']), file=f)
-            print('cxx = {0}'.format(env['SPACK_CXX']), file=f)
-            print('fortran_compiler = {0}'.format(env['SPACK_FC']), file=f)
+            f.write('[OpenLoops]\n')
+            f.write('import_env={0}\n'.format(spack_env))
+            f.write('num_jobs = {0}\n'.format(njobs))
+            f.write('cc = {0}\n'.format(env['SPACK_CC']))
+            f.write('cxx = {0}\n'.format(env['SPACK_CXX']))
+            f.write('fortran_compiler = {0}\n'.format(env['SPACK_FC']))
             if self.spec.satisfies('@1.3.1') and not is_intel:
-                print('gfortran_f_flags = -ffree-line-length-none ', file=f)
+                f.write('gfortran_f_flags = -ffree-line-length-none\n')
             if self.spec.satisfies('@2.1.1') and not is_intel:
-                print('gfortran_f_flags = -ffree-line-length-none ' +
-                      '-fdollar-ok -mcmodel=medium', file=f)
+                f.write('gfortran_f_flags = -ffree-line-length-none ' +
+                      '-fdollar-ok -mcmodel=medium\n')
 
         if self.spec.satisfies('@:1.999.999 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft1.coll'), 'lcg.coll')
