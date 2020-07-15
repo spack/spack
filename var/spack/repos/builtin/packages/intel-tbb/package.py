@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ from spack import *
 import glob
 import inspect
 import platform
+import sys
 
 
 class IntelTbb(Package):
@@ -16,38 +17,62 @@ class IntelTbb(Package):
     portable and composable, and that have future-proof scalability.
     """
     homepage = "http://www.threadingbuildingblocks.org/"
+    url_prefix = 'https://github.com/oneapi-src/oneTBB/'
+    url = url_prefix + 'archive/v2020.1.tar.gz'
 
-    # See url_for_version() below.
+    # Note: when adding new versions, please check and update the
+    # patches, filters and url_for_version() below as needed.
+
+    version('2020.2', sha256='4804320e1e6cbe3a5421997b52199e3c1a3829b2ecb6489641da4b8e32faf500')
+    version('2020.1', sha256='7c96a150ed22bc3c6628bc3fef9ed475c00887b26d37bca61518d76a56510971')
+    version('2020.0', sha256='57714f2d2cf33935db33cee93af57eb3ecd5a7bef40c1fb7ca4a41d79684b118')
+    version('2019.9', sha256='3f5ea81b9caa195f1967a599036b473b2e7c347117330cda99b79cfcf5b77c84')
+    version('2019.8', sha256='6b540118cbc79f9cbc06a35033c18156c21b84ab7b6cf56d773b168ad2b68566')
+    version('2019.7', sha256='94847fc627ed081c63ea253e31f23645ed3671548106b095ce303d1da5d76275')
+    version('2019.6', sha256='21cd496ac768560e70d35e5423878aa3bcf0285f7194be77935d8febf0b18f47')
+    version('2019.5', sha256='abf9236e6ec9a3675fa59ab56c2192c7ab4f7096a82af118e8efa514b2541578')
     version('2019.4', sha256='673e540aba6e526b220cbeacc3e4ff7b19a8689a00d7a09a9dc94396d73b24df')
-    version('2019.3', sha256='b2244147bc8159cdd8f06a38afeb42f3237d3fc822555499d7ccfbd4b86f8ece')
-    version('2019.2', sha256='1245aa394a92099e23ce2f60cdd50c90eb3ddcd61d86cae010ef2f1de61f32d9')
-    version('2019.1', sha256='a4875c6b6853213083e52ecd303546bdf424568ec67cfc7e51d132a7c037c66a')
-    version('2019',   sha256='4d149895826cea785cd3b9a14f4aa743b6ef0df520eca7ee27d438fdc3d73399')
-    version('2018.6', sha256='d3e5fbca3cc643d03bf332d576ff85e19aa774b483f148f95cd7d09958372109')
-    version('2018.5', sha256='c4c2896af527392496c5e01ef8579058a71b6eebbd695924cd138841c13f07be')
-    version('2018.4', sha256='d5604a04787c8a037d4944eeb89792e7c45f6a83c141b20df7ee89c2fb012ed1')
-    version('2018.3', sha256='23793c8645480148e9559df96b386b780f92194c80120acce79fcdaae0d81f45')
-    version('2018.2', sha256='78bb9bae474736d213342f01fe1a6d00c6939d5c75b367e2e43e7bf29a6d8eca')
-    version('2018.1', sha256='c6462217d4ecef2b44fce63cfdf31f9db4f6ff493869899d497a5aef68b05fc5')
-    version('2018',   sha256='94f643f1edfaccb57d64b503c7c96f00dec64e8635c054bbaa33855d72c5822d')
-    version('2017.8', sha256='1b1357f280e750d42506212adad02f85ac07c9d3e3c0813104f9122ef350497f')
-    version('2017.7', sha256='78ad6ec9dd492b9dcc4753938b06716f7458506084adc138ced09aa0aa609b6b')
-    version('2017.6', sha256='40d5409a6fd7e214a21fd1949df422ba113fa78fde42a6aac40a2fba36e9bcdb')
-    version('2017.5', sha256='3122c87a35fde759567c8579ba36a36037c6df84c3f9c4df6c9e171f866f352f')
-    version('2017.4', sha256='ed4f0cfc4acec8a0cf253037e8c555dd32ebe1b80b34fb0e3b2bf54087932562')
-    version('2017.3', sha256='00a8b2798c498507572e24c2db7bf4896f05b760a38ed9ba566ffd348a7c6cef')
-    version('2017.2', sha256='85e44041d967ce8c70077dbb57941cfa1d351688855aec47eb14c74eb2075f28')
-    version('2017.1', sha256='a68bb7926fb9bee2a5f17b293c6d6aa33ccb089c3b321569bd4fe281cf65fa77')
-    version('2017',   sha256='c49139279067df1260dae4f0fe7e4d485898ce45e5f7e314c37eb5da8a0c303a')
-    version('4.4.6',  sha256='1d6b7e7db9141238c70984103f04280605dbcaa7fbcd049d332d2e73deed4f6d')
-    version('4.4.5',  sha256='984308f9dd8a36ff274c124b6f7f7d0ff74d4b7ebdf06511af78e098b5b6e70f')
-    version('4.4.4',  sha256='40e94c1adfd13308d207971629316ae9f76639b24f080bae8757c42d35778f10')
-    version('4.4.3',  sha256='9acb1c4e71edc3d5004ab9f0ed2bbd697ecec28a4315bbd2be8c5365e8214b90')
-    version('4.4.2',  sha256='3f6d7a32ac8b58469de7df3a2fcfe318793241ea39ce73aae1e637dbed833375')
-    version('4.4.1',  sha256='d67c5860ba1116b320b0d60a0ce403b088dc19355ab32c28cdaa3e352609713a')
-    version('4.4',    sha256='88e37f08ffcfaa24a2caf6c1a9084000cce689cc4b11edea7e89b20ab74ceceb')
+    version('2019.3', sha256='4cb6bde796ae056e7c29f31bfdc6cfd0cfe848925219e9c82a20f09158e81542')
+    version('2019.2', sha256='3bbe21054bd5b593ef99d4dfe451432cbf1f6f9429cd0dd543e879ef7e4e3327')
+    version('2019.1', sha256='e6fb8dd1a1ae834b4e5f4ae6c4c87a3362f81a3aaeddfa6325168c6cfee59391')
+    version('2019',   sha256='91f00308a4e431bd9632b439d516134d7084f1eb35f52b7c9b111b46bdfcf093')
+    version('2018.6', sha256='0ebb5fc877871ef15f7395d6e3c86de4ffedb820dc336383a3ab71fc39426aa7')
+    version('2018.5', sha256='b8dbab5aea2b70cf07844f86fa413e549e099aa3205b6a04059ca92ead93a372')
+    version('2018.4', sha256='c973b41b6da3db10efa7e14ce64a850e3fbfbcc16374494a005bf994d53a770a')
+    version('2018.3', sha256='e5f19d747f6adabfc7daf2cc0a1ddcfab0f26bc083d70ea0a63def4a9f3919c5')
+    version('2018.2', sha256='733c4dba646573b8285b1923dc106f0d771725bea620baa3659c86ab9312a1f4')
+    version('2018.1', sha256='a9f51e0d081fbdda441d0150e759c7562318d6d7bc5a0c9a9d8064217d4d8d8d')
+    version('2018',   sha256='d427c58a59863c5f9510fffb3d05cd1bcc7abb94cdde1613407559e88b1263ab')
+    version('2017.8', sha256='227cc1a8329da67f9957285f0020ad4d73d9ce26cbf88614349b8b74bb189ae1')
+    version('2017.7', sha256='f487243e5931e967479189ef75946f02e3bb666ea73dcc19ac2828edd5550746')
+    version('2017.6', sha256='b0f40edd010b90ce2519c1cebfa6f33216a1828d4fba19291b5cd23bd7fe809b')
+    version('2017.5', sha256='b785e7181317350f0bb20f7bffda20bdecde7e82b824d2e5eb6d408a3b9cbeaf')
+    version('2017.4', sha256='9a70ae3068767bf8c530bf98b9bbc655e36e82a301b347f7de76f99f401df1dd')
+    version('2017.3', sha256='230ed3ff32bb3e91df1f59e4a3a567bde02639d9970b7e87cee0421b4c0b0f23')
+    version('2017.2', sha256='dd37c896f95ca2357e828c24c9c4a169c6a6b5c905b3862a6cab09474d164497')
+    version('2017.1', sha256='9b5b36b6d0ed97a3a1711b9095e78aed79bc998957a4a6b3d8a7af063523f037')
+    version('2017',   sha256='470544b0f374987273cc12e7706353edba8f9547578291d45b5b29358d4e5e81')
+    version('4.4.6',  sha256='65101b3a0eda38320ec3e3603daa79c54e6a60fb59ed2959738eaf4ce6d17f0a')
+    version('4.4.5',  sha256='2e372703fe444442c77760229897f00bb4babff62f7d0861b3f2783883cb257e')
+    version('4.4.4',  sha256='3ed03838c4e368b78305b0561cac48d369919bb4d9d68edd4d8a3becd6f62f5c')
+    version('4.4.3',  sha256='f0ff2e3735c8057b792f29c96f4f7623c1e4c76abfeda88be48645b8338c0f00')
+    version('4.4.2',  sha256='1ab10e70354685cee3ddf614f3e291434cea86c8eb62031e025f4052278152ad')
+    version('4.4.1',  sha256='05737bf6dd220b31aad63d77ca59c742271f81b4cc6643aa6f93d37450ae32b5')
+    version('4.4',    sha256='93c74b6054c69c86fa49d0fce7c50061fc907cb198a7237b8dd058298fd40c0e')
 
     provides('tbb')
+
+    # Clang builds incorrectly determine GCC version which in turn incorrectly
+    # causes a mismatch in C++ features resulting in a link error. This also
+    # means that clang builds require a gcc compiler to work correctly (this
+    # has always been the case).
+    #
+    #    See https://github.com/intel/tbb/pull/147 for details.
+    #
+    conflicts('%apple-clang', when='@:2019.6',
+              msg='2019.7 or later required for clang')
+    conflicts('%clang', when='@:2019.6',
+              msg='2019.7 or later required for clang')
 
     conflicts('%gcc@6.1:', when='@:4.4.3',
               msg='4.4.4 or later required for GCC >= 6.1.')
@@ -64,54 +89,43 @@ class IntelTbb(Package):
     variant('tm', default=True,
             description='Enable use of transactional memory on x86')
 
+    # Testing version ranges inside when clauses was fixed in e9ee9eaf.
+    # See: #8957 and #13989.
+
     # Build and install CMake config files if we're new enough.
-    depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
+    # CMake support started in 2017.7.
+    depends_on('cmake@3.0.0:', type='build', when='@2017.7:')
 
-    # Note: see issues #11371 and #8957 to understand why 2019.x patches are
-    # specified one at a time.  In a nutshell, it is currently impossible
-    # to patch `2019.1` without patching `2019`.  When #8957 is fixed, this
-    # can be simplified.
-
-    # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
-    # one patch format for 2019.1 and after...
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=centos6')
-    # ...another patch file for 2019 and before
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=centos6')
-
-    # patch for pedantic warnings (#10836)
-    # one patch file for 2019.1 and after...
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.4')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.3')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.2')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.1')
-    # ...another patch file for 2019 and before
-    patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2019.0')
+    # Patch for pedantic warnings (#10836).  This was fixed in the TBB
+    # source tree in 2019.6.
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.1:2019.5')
+    patch("gcc_generic-pedantic-4.4.patch",  level=1, when='@:2019.0')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
-    patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
+    patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:')
+    patch("tbb_cmakeConfig.patch", level=0, when='@2017.7:2019.4')
+
+    # Restore the debug targets.
+    patch("makefile-debug.patch", when="@2020:")
 
     # Some very old systems don't support transactional memory.
     patch("disable-tm.patch", when='~tm')
 
+    # Version and tar file names:
+    #  2020.0 --> v2020.0.tar.gz  starting with 2020
+    #  2017.1 --> 2017_U1.tar.gz  starting with 2017
+    #  2017   --> 2017.tar.gz
+    #  4.4.6  --> 4.4.6.tar.gz
+    #
     def url_for_version(self, version):
-        url = 'https://github.com/01org/tbb/archive/{0}.tar.gz'
-        if (version[0] >= 2017) and len(version) > 1:
-            return url.format('{0}_U{1}'.format(version[0], version[1]))
+        url = self.url_prefix + 'archive/{0}.tar.gz'
+        if version[0] >= 2020:
+            name = 'v{0}'.format(version)
+        elif version[0] >= 2017 and len(version) > 1:
+            name = '{0}_U{1}'.format(version[0], version[1])
         else:
-            return url.format(version)
+            name = '{0}'.format(version)
+        return url.format(name)
 
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:
@@ -120,17 +134,25 @@ class IntelTbb(Package):
             for f in fs:
                 lines = open(f).readlines()
                 of = open(f, "w")
-                for l in lines:
-                    if l.strip().startswith("CPLUS ="):
+                for lin in lines:
+                    if lin.strip().startswith("CPLUS ="):
                         of.write("# coerced to spack\n")
                         of.write("CPLUS = $(CXX)\n")
-                    elif l.strip().startswith("CONLY ="):
+                    elif lin.strip().startswith("CONLY ="):
                         of.write("# coerced to spack\n")
                         of.write("CONLY = $(CC)\n")
                     else:
-                        of.write(l)
+                        of.write(lin)
 
     def install(self, spec, prefix):
+        # Deactivate use of RTM with GCC when on an OS with a very old
+        # assembler.
+        if (spec.satisfies('%gcc@4.8.0: os=rhel6')
+                or spec.satisfies('%gcc@4.8.0: os=centos6')
+                or spec.satisfies('%gcc@4.8.0: os=scientific6')):
+            filter_file(r'RTM_KEY.*=.*rtm.*', 'RTM_KEY =',
+                        join_path('build', 'linux.gcc.inc'))
+
         # We need to follow TBB's compiler selection logic to get the proper
         # build + link flags but we still need to use spack's compiler wrappers
         # to accomplish this, we do two things:
@@ -143,7 +165,7 @@ class IntelTbb(Package):
         #
         self.coerce_to_spack("build")
 
-        if spec.satisfies('%clang'):
+        if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
             tbb_compiler = "clang"
         elif spec.satisfies('%intel'):
             tbb_compiler = "icc"
@@ -190,7 +212,7 @@ class IntelTbb(Package):
             for f in fs:
                 install(f, prefix.lib)
 
-        if self.spec.satisfies('@2017.0:'):
+        if spec.satisfies('@2017.8,2018.1:', strict=True):
             # Generate and install the CMake Config file.
             cmake_args = ('-DTBB_ROOT={0}'.format(prefix),
                           '-DTBB_OS={0}'.format(platform.system()),
@@ -198,3 +220,15 @@ class IntelTbb(Package):
                           'tbb_config_generator.cmake')
             with working_dir(join_path(self.stage.source_path, 'cmake')):
                 inspect.getmodule(self).cmake(*cmake_args)
+
+    @run_after('install')
+    def darwin_fix(self):
+        # Replace @rpath in ids with full path
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.prefix.lib)
+
+    @property
+    def libs(self):
+        shared = True if '+shared' in self.spec else False
+        return find_libraries(
+            'libtbb*', root=self.prefix, shared=shared, recursive=True)
