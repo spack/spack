@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Acts(CMakePackage):
+class Acts(CMakePackage, CudaPackage):
     """
     A Common Tracking Software (Acts)
 
@@ -35,6 +35,9 @@ class Acts(CMakePackage):
 
     # Supported Acts versions
     version('master', branch='master')
+    version('0.25.2', commit='76bf1f3e4be51d4d27126b473a2caa8d8a72b320')
+    version('0.25.1', commit='6e8a1ea6d2c7385a78e3e190efb2a8a0c1fa957f')
+    version('0.25.0', commit='0aca171951a214299e8ff573682b1c5ecec63d42')
     version('0.24.0', commit='ef4699c8500bfea59a5fe88bed67fde2f00f0adf')
     version('0.23.0', commit='dc443dd7e663bc4d7fb3c1e3f1f75aaf57ffd4e4')
     version('0.22.1', commit='ca1b8b1645db6b552f44c48d2ff34c8c29618f3a')
@@ -141,6 +144,7 @@ class Acts(CMakePackage):
 
         args = [
             cmake_variant("BENCHMARKS", "benchmarks"),
+            cmake_variant("CUDA_PLUGIN", "cuda"),
             cmake_variant("DD4HEP_PLUGIN", "dd4hep"),
             cmake_variant("DIGITIZATION_PLUGIN", "digitization"),
             cmake_variant("EXAMPLES", "examples"),
@@ -156,6 +160,10 @@ class Acts(CMakePackage):
             cmake_variant("LEGACY", "legacy"),
             cmake_variant("TGEO_PLUGIN", "tgeo")
         ]
+
+        cuda_arch = spec.variants['cuda_arch'].value
+        if cuda_arch != 'none':
+            args.append('-DCUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
 
         if 'root' in spec:
             cxxstd = spec['root'].variants['cxxstd'].value
