@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test detection of compiler version"""
 import pytest
+import os
+
+import llnl.util.filesystem as fs
 
 import spack.compilers.arm
 import spack.compilers.cce
@@ -15,6 +18,9 @@ import spack.compilers.nag
 import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
+
+from spack.operating_systems.cray_frontend import CrayFrontend
+import spack.util.module_cmd
 
 
 @pytest.mark.parametrize('version_str,expected_version', [
@@ -53,11 +59,22 @@ def test_cce_version_detection(version_str, expected_version):
      'Target: x86_64-apple-darwin18.7.0\n'
      'Thread model: posix\n'
      'InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n',  # noqa
-     '11.0.0-apple'),
+     '11.0.0'),
     ('Apple LLVM version 7.0.2 (clang-700.1.81)\n'
      'Target: x86_64-apple-darwin15.2.0\n'
-     'Thread model: posix\n', '7.0.2-apple'),
-    # Other platforms
+     'Thread model: posix\n', '7.0.2'),
+])
+def test_apple_clang_version_detection(
+        version_str, expected_version
+):
+    cls = spack.compilers.class_for_compiler_name('apple-clang')
+    version = cls.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.regression('10191')
+@pytest.mark.parametrize('version_str,expected_version', [
+    # LLVM Clang
     ('clang version 6.0.1-svn334776-1~exp1~20181018152737.116 (branches/release_60)\n'  # noqa
      'Target: x86_64-pc-linux-gnu\n'
      'Thread model: posix\n'
@@ -178,3 +195,41 @@ def test_xl_version_detection(version_str, expected_version):
 
     version = spack.compilers.xl_r.XlR.extract_version_from_output(version_str)
     assert version == expected_version
+
+
+@pytest.mark.parametrize('compiler,version', [
+    ('gcc', '8.1.0'),
+    ('gcc', '1.0.0-foo'),
+    ('pgi', '19.1'),
+    ('pgi', '19.1a'),
+    ('intel', '9.0.0'),
+    ('intel', '0.0.0-foobar')
+])
+def test_cray_frontend_compiler_detection(
+        compiler, version, tmpdir, monkeypatch, working_env
+):
+    """Test that the Cray frontend properly finds compilers form modules"""
+    # setup the fake compiler directory
+    compiler_dir = tmpdir.join(compiler)
+    compiler_exe = compiler_dir.join('cc').ensure()
+    fs.set_executable(str(compiler_exe))
+
+    # mock modules
+    def _module(cmd, *args):
+        module_name = '%s/%s' % (compiler, version)
+        module_contents = 'prepend-path PATH %s' % compiler_dir
+        if cmd == 'avail':
+            return module_name if compiler in args[0] else ''
+        if cmd == 'show':
+            return module_contents if module_name in args else ''
+    monkeypatch.setattr(spack.operating_systems.cray_frontend, 'module',
+                        _module)
+
+    # remove PATH variable
+    os.environ.pop('PATH', None)
+
+    # get a CrayFrontend object
+    cray_fe_os = CrayFrontend()
+
+    paths = cray_fe_os.compiler_search_paths
+    assert paths == [str(compiler_dir)]

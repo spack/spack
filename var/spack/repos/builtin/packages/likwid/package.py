@@ -60,9 +60,15 @@ class Likwid(Package):
                     *files)
 
     def install(self, spec, prefix):
-        supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
+        supported_compilers = {
+            'apple-clang': 'CLANG',
+            'clang': 'CLANG',
+            'gcc': 'GCC',
+            'intel': 'ICC'
+        }
         if spec.target.family == 'aarch64':
-            supported_compilers = {'gcc': 'GCCARMv8', 'clang': 'ARMCLANG'}
+            supported_compilers = {
+                'gcc': 'GCCARMv8', 'clang': 'ARMCLANG', 'arm': 'ARMCLANG'}
         elif spec.target.family == 'ppc64' or spec.target.family == 'ppc64le':
             supported_compilers = {'gcc': 'GCCPOWER'}
         if self.compiler.name not in supported_compilers:

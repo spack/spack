@@ -8,9 +8,11 @@ from spack import *
 
 class LibjpegTurbo(Package):
     """libjpeg-turbo is a fork of the original IJG libjpeg which uses SIMD to
-       accelerate baseline JPEG compression and decompression. libjpeg is a
-       library that implements JPEG image encoding, decoding and
-       transcoding."""
+    accelerate baseline JPEG compression and decompression.
+
+    libjpeg is a library that implements JPEG image encoding, decoding and
+    transcoding.
+    """
     # https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
     homepage = "https://libjpeg-turbo.org/"
     url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.4.tar.gz"

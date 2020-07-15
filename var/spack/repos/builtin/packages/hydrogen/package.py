@@ -117,9 +117,6 @@ class Hydrogen(CMakePackage):
 
         args = [
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+hybrid' in spec),
             '-DHydrogen_ENABLE_QUADMATH:BOOL=%s'     % ('+quad' in spec),
@@ -134,8 +131,8 @@ class Hydrogen(CMakePackage):
             '-DHydrogen_ENABLE_HALF=%s' % ('+half' in spec),
         ]
 
-        # Add support for OS X to find OpenMP
-        if (self.spec.satisfies('%clang platform=darwin')):
+        # Add support for OS X to find OpenMP (LLVM installed via brew)
+        if self.spec.satisfies('%clang platform=darwin'):
             clang = self.compiler.cc
             clang_bin = os.path.dirname(clang)
             clang_root = os.path.dirname(clang_bin)

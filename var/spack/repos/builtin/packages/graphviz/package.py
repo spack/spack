@@ -137,6 +137,13 @@ class Graphviz(AutotoolsPackage):
         filter_file(r'-lstdc\+\+', '-lc++', 'configure.ac',
                     *(d + '/Makefile.am' for d in mkdirs))
 
+    @when('%apple-clang')
+    def patch(self):
+        # When using Clang, replace GCC's libstdc++ with LLVM's libc++
+        mkdirs = ['cmd/dot', 'cmd/edgepaint', 'cmd/mingle', 'plugin/gdiplus']
+        filter_file(r'-lstdc\+\+', '-lc++', 'configure.ac',
+                    *(d + '/Makefile.am' for d in mkdirs))
+
     def configure_args(self):
         spec = self.spec
         args = ['--disable-silent-rules']

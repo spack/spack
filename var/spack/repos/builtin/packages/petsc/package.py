@@ -2,11 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import os
-import sys
-from spack import *
 
 
 class Petsc(Package):
@@ -116,9 +112,7 @@ class Petsc(Package):
     # temporary workaround Clang 8.1.0 with XCode 8.3 on macOS, see
     # https://bitbucket.org/petsc/petsc/commits/4f290403fdd060d09d5cb07345cbfd52670e3cbc
     # the patch is an adaptation of the original commit to 3.7.5
-    if sys.platform == "darwin":
-        patch('macos-clang-8.1.0.diff',
-              when='@3.7.5%clang@8.1.0:')
+    patch('macos-clang-8.1.0.diff', when='@3.7.5%apple-clang@8.1.0:')
     patch('pkg-config-3.7.6-3.8.4.diff', when='@3.7.6:3.8.4')
 
     patch('xcode_stub_out_of_sync.patch', when='@:3.10.4')

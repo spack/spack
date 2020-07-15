@@ -18,6 +18,7 @@ class Sqlitebrowser(CMakePackage):
 
     msg = 'sqlitebrowser requires C++11 support'
     conflicts('%gcc@:4.8.0', msg=msg)
+    conflicts('%apple-clang@:3.9', msg=msg)
     conflicts('%clang@:3.2', msg=msg)
     conflicts('%intel@:12',  msg=msg)
     conflicts('%xl@:13.0',   msg=msg)

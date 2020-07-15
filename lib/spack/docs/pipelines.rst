@@ -45,6 +45,7 @@ for setting up a build pipeline are as follows:
         tags:
           - <custom-tag>
         script:
+          - spack env activate .
           - spack ci generate
             --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
         artifacts:
@@ -81,9 +82,9 @@ or Amazon Elastic Kubernetes Service (`EKS <https://aws.amazon.com/eks>`_), thou
 topics are outside the scope of this document.
 
 Spack's pipelines are now making use of the
-`trigger <https://docs.gitlab.com/12.9/ee/ci/yaml/README.html#trigger>` syntax to run
+`trigger <https://docs.gitlab.com/12.9/ee/ci/yaml/README.html#trigger>`_ syntax to run
 dynamically generated
-`child pipelines <https://docs.gitlab.com/12.9/ee/ci/parent_child_pipelines.html>`.
+`child pipelines <https://docs.gitlab.com/12.9/ee/ci/parent_child_pipelines.html>`_.
 Note that the use of dynamic child pipelines requires running Gitlab version
 ``>= 12.9``.
 
@@ -103,7 +104,7 @@ needed for pipeline operation that should not be visible in a spack environment
 file.  These environment variables are described in more detail
 :ref:`ci_environment_variables`.
 
-.. _cmd_spack_ci:
+.. _cmd-spack-ci:
 
 ^^^^^^^^^^^^^^^^^^
 ``spack ci``
@@ -112,7 +113,7 @@ file.  These environment variables are described in more detail
 Super-command for functionality related to generating pipelines and executing
 pipeline jobs.
 
-.. _cmd_spack_ci_generate:
+.. _cmd-spack-ci-generate:
 
 ^^^^^^^^^^^^^^^^^^^^^
 ``spack ci generate``
@@ -121,7 +122,7 @@ pipeline jobs.
 Concretizes the specs in the active environment, stages them (as described in
 :ref:`staging_algorithm`), and writes the resulting ``.gitlab-ci.yml`` to disk.
 
-.. _cmd_spack_ci_rebuild:
+.. _cmd-spack-ci-rebuild:
 
 ^^^^^^^^^^^^^^^^^^^^
 ``spack ci rebuild``
@@ -384,6 +385,7 @@ a custom spack and make sure the generated rebuild jobs will clone it too:
      - git clone ${SPACK_REPO} --branch ${SPACK_REF}
      - . ./spack/share/spack/setup-env.sh
    script:
+     - spack env activate .
      - spack ci generate
        --spack-repo ${SPACK_REPO} --spack-ref ${SPACK_REF}
        --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"

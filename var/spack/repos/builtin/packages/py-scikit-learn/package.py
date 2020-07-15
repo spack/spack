@@ -69,9 +69,7 @@ class PyScikitLearn(PythonPackage):
     depends_on('py-pytest@3.3.0:', type='test')
     depends_on('py-pandas', type='test')
     depends_on('py-setuptools', type='build')
-    # Technically not correct, but currently no way to check if we
-    # are using Apple Clang or not.
-    depends_on('llvm-openmp', when='@0.21: %clang platform=darwin +openmp')
+    depends_on('llvm-openmp', when='@0.21: %apple-clang +openmp')
 
     # Release tarballs are already cythonized. If you wanted to build a release
     # version without OpenMP support, you would need to delete all .c files
@@ -84,7 +82,7 @@ class PyScikitLearn(PythonPackage):
         if self.spec.satisfies('~openmp'):
             env.set('SKLEARN_NO_OPENMP', 'True')
         # https://scikit-learn.org/stable/developers/advanced_installation.html#mac-osx
-        elif self.spec.satisfies('@0.21: %clang platform=darwin +openmp'):
+        elif self.spec.satisfies('@0.21: %apple-clang +openmp'):
             env.append_flags(
                 'CPPFLAGS', self.compiler.openmp_flag)
             env.append_flags(

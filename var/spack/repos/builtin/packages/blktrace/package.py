@@ -27,5 +27,12 @@ class Blktrace(MakefilePackage):
 
     depends_on('libaio')
 
+    def edit(self, spec, prefix):
+        makefiles = ['Makefile', 'btreplay/Makefile',
+                     'btt/Makefile', 'iowatcher/Makefile']
+        for m in makefiles:
+            makefile = FileFilter(m)
+            makefile.filter('CC.*=.*', 'CC = {0}'.format(spack_cc))
+
     def install(self, spec, prefix):
         install_tree('.', prefix)
