@@ -30,7 +30,7 @@ class PyNetket(PythonPackage):
 
     depends_on('blas')
     depends_on('mpi')
-    depends_on('python', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-mpi4py', type=('build', 'run'))
