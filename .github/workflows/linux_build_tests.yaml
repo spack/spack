@@ -3,13 +3,12 @@ name: linux builds
 on:
   push:
     branches:
-    - master
     - develop
     - releases/**
   pull_request:
     branches:
-    - master
     - develop
+    - releases/**
     paths-ignore:
       # Don't run if we only modified packages in the built-in repository
       - 'var/spack/repos/builtin/**'

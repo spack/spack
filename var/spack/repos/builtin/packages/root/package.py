@@ -235,6 +235,7 @@ class Root(CMakePackage):
     depends_on('r',         when='+r', type=('build', 'run'))
     depends_on('r-rcpp',    when='+r', type=('build', 'run'))
     depends_on('r-rinside', when='+r', type=('build', 'run'))
+    depends_on('readline',  when='+r')
     depends_on('shadow',    when='+shadow')
     depends_on('sqlite',    when='+sqlite')
     depends_on('tbb',       when='+tbb')
@@ -381,7 +382,7 @@ class Root(CMakePackage):
                 ['pythia8'],
                 ['qt', 'qt4'],  # See conflicts
                 ['qtgsi', 'qt4'],  # See conflicts
-                ['r', 'R'],
+                ['r', 'r'],
                 ['rfio', False],
                 ['roofit'],
                 ['root7'],  # See conflicts

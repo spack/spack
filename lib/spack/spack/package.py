@@ -22,6 +22,7 @@ import shutil
 import sys
 import textwrap
 import time
+import traceback
 from six import StringIO
 from six import string_types
 from six import with_metaclass
@@ -1744,7 +1745,23 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         with spack.store.db.prefix_write_lock(spec):
 
             if pkg is not None:
-                spack.hooks.pre_uninstall(spec)
+                try:
+                    spack.hooks.pre_uninstall(spec)
+                except Exception as error:
+                    if force:
+                        error_msg = (
+                            "One or more pre_uninstall hooks have failed"
+                            " for {0}, but Spack is continuing with the"
+                            " uninstall".format(str(spec)))
+                        if isinstance(error, spack.error.SpackError):
+                            error_msg += (
+                                "\n\nError message: {0}".format(str(error)))
+                        tty.warn(error_msg)
+                        # Note that if the uninstall succeeds then we won't be
+                        # seeing this error again and won't have another chance
+                        # to run the hook.
+                    else:
+                        raise
 
             # Uninstalling in Spack only requires removing the prefix.
             if not spec.external:
@@ -1765,7 +1782,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 spack.store.db.remove(spec)
 
         if pkg is not None:
-            spack.hooks.post_uninstall(spec)
+            try:
+                spack.hooks.post_uninstall(spec)
+            except Exception:
+                # If there is a failure here, this is our only chance to do
+                # something about it: at this point the Spec has been removed
+                # from the DB and prefix, so the post-uninstallation hooks
+                # will not have another chance to run.
+                error_msg = (
+                    "One or more post-uninstallation hooks failed for"
+                    " {0}, but the prefix has been removed (if it is not"
+                    " external).".format(str(spec)))
+                tb_msg = traceback.format_exc()
+                error_msg += "\n\nThe error:\n\n{0}".format(tb_msg)
+                tty.warn(error_msg)
 
         tty.msg("Successfully uninstalled %s" % spec.short_spec)
 

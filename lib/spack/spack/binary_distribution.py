@@ -466,7 +466,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     web_util.push_to_url(
         specfile_path, remote_specfile_path, keep_original=False)
 
-    tty.msg('Buildache for "%s" written to \n %s' %
+    tty.msg('Buildcache for "%s" written to \n %s' %
             (spec, remote_spackfile_path))
 
     try:
@@ -498,6 +498,7 @@ def download_tarball(spec):
 
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
+        stage.create()
         try:
             stage.fetch()
             return stage.save_filename
@@ -602,15 +603,11 @@ def relocate_package(spec, allow_root):
         if not is_backup_file(text_name):
             text_names.append(text_name)
 
-# If we are installing back to the same location don't replace anything
+# If we are not installing back to the same install tree do the relocation
     if old_layout_root != new_layout_root:
-        paths_to_relocate = [old_spack_prefix, old_layout_root]
-        paths_to_relocate.extend(prefix_to_hash.keys())
-        files_to_relocate = list(filter(
-            lambda pathname: not relocate.file_is_relocatable(
-                pathname, paths_to_relocate=paths_to_relocate),
-            map(lambda filename: os.path.join(workdir, filename),
-                buildinfo['relocate_binaries'])))
+        files_to_relocate = [os.path.join(workdir, filename)
+                             for filename in buildinfo.get('relocate_binaries')
+                             ]
         # If the buildcache was not created with relativized rpaths
         # do the relocation of path in binaries
         if (spec.architecture.platform == 'darwin' or
@@ -646,8 +643,26 @@ def relocate_package(spec, allow_root):
                                new_spack_prefix,
                                prefix_to_prefix)
 
+        paths_to_relocate = [old_prefix, old_layout_root]
+        paths_to_relocate.extend(prefix_to_hash.keys())
+        files_to_relocate = list(filter(
+            lambda pathname: not relocate.file_is_relocatable(
+                pathname, paths_to_relocate=paths_to_relocate),
+            map(lambda filename: os.path.join(workdir, filename),
+                buildinfo['relocate_binaries'])))
         # relocate the install prefixes in binary files including dependencies
         relocate.relocate_text_bin(files_to_relocate,
+                                   old_prefix, new_prefix,
+                                   old_spack_prefix,
+                                   new_spack_prefix,
+                                   prefix_to_prefix)
+
+# If we are installing back to the same location
+# relocate the sbang location if the spack directory changed
+    else:
+        if old_spack_prefix != new_spack_prefix:
+            relocate.relocate_text(text_names,
+                                   old_layout_root, new_layout_root,
                                    old_prefix, new_prefix,
                                    old_spack_prefix,
                                    new_spack_prefix,
