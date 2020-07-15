@@ -13,7 +13,7 @@ class PyNetket(PythonPackage):
     machine learning techniques.
     """
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/netket/netket"
     url      = "https://github.com/netket/netket/archive/v2.1.1.tar.gz"
 
     version('2.1.1', sha256='881ae8605a829364b2116bc4398084766b24e2cd8958d0cb2b85595650e7bfd6')
