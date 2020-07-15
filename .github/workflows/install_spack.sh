@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
-git clone https://github.com/spack/spack.git
-echo -e "config:\n  build_jobs: 2" > spack/etc/spack/config.yaml
-. spack/share/spack/setup-env.sh
-spack compilers
+. share/spack/setup-env.sh
+echo -e "config:\n  build_jobs: 2" > etc/spack/config.yaml
+spack config add "packages:all:target:[x86_64]"
+spack compiler find
+spack compiler list
+spack debug report
