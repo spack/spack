@@ -149,11 +149,15 @@ def process_stacktrace(countback):
     return st_text
 
 
+def show_pid():
+    return is_debug(STANDARD)
+
+
 def get_timestamp(force=False):
     """Get a string timestamp"""
     if _debug or _timestamp or force:
         # Note inclusion of the PID is useful for parallel builds.
-        pid = ', {0}'.format(os.getpid()) if is_debug(STANDARD) else '' 
+        pid = ', {0}'.format(os.getpid()) if show_pid() else ''
         return '[{0}{1}] '.format(
             datetime.now().strftime("%Y-%m-%d-%H:%M:%S.%f"), pid)
     else:

@@ -102,7 +102,13 @@ def test_hms(sec, result):
 def test_install_msg():
     name = 'some-package'
     pid = 123456
-    expected = "{0}: Installing {1}".format(pid, name)
+    base_result = 'Installing {0}'.format(name)
+
+    tty._debug = tty.BASIC
+    assert inst.install_msg(name, pid) == base_result
+
+    tty._debug = tty.STANDARD
+    expected = "{0}: {1}".format(pid, base_result)
     assert inst.install_msg(name, pid) == expected
 
 
