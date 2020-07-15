@@ -1778,6 +1778,23 @@ def update_yaml(manifest, backup_file):
     return True
 
 
+def _top_level_key(data):
+    """Return the top level key used in this environment
+
+    Args:
+        data (dict): raw yaml data of the environment
+
+    Returns:
+        Either 'spack' or 'env'
+    """
+    msg = ('cannot find top level attribute "spack" or "env"'
+           'in the environment')
+    assert any(x in data for x in ('spack', 'env')), msg
+    if 'spack' in data:
+        return 'spack'
+    return 'env'
+
+
 def is_latest_format(manifest):
     """Return True if the manifest file is at the latest schema format,
     False otherwise.
@@ -1787,7 +1804,9 @@ def is_latest_format(manifest):
     """
     with open(manifest) as f:
         data = syaml.load(f)
-    return spack.schema.env.update(list(data.values()).pop())
+    top_level_key = _top_level_key(data)
+    changed = spack.schema.env.update(data[top_level_key])
+    return not changed
 
 
 class SpackEnvironmentError(spack.error.SpackError):

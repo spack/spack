@@ -409,7 +409,7 @@ def env_update_setup_parser(subparser):
 def env_update(args):
     manifest_file = ev.manifest_file(args.env)
     backup_file = manifest_file + ".bkp"
-    needs_update = ev.is_latest_format(manifest_file)
+    needs_update = not ev.is_latest_format(manifest_file)
 
     if not needs_update:
         tty.msg('No update needed for the environment "{0}"'.format(args.env))
