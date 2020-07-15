@@ -98,6 +98,9 @@ def config_directory(tmpdir_factory):
 @pytest.fixture(scope='function')
 def default_config(tmpdir_factory, config_directory, monkeypatch):
 
+    # Global Upstream Not Registered in these tests.
+    global_upstream = spack.config.get('upstreams')
+
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     config_directory.copy(mutable_dir)
 
@@ -107,6 +110,11 @@ def default_config(tmpdir_factory, config_directory, monkeypatch):
                        'site', 'user']])
 
     monkeypatch.setattr(spack.config, 'config', cfg)
+
+    # Set Global Upstream
+    upstreams = spack.config.get('upstreams')
+    if not upstreams:
+        spack.config.set('upstreams', global_upstream, scope='user')
 
     # This is essential, otherwise the cache will create weird side effects
     # that will compromise subsequent tests if compilers.yaml is modified
@@ -128,6 +136,7 @@ def default_config(tmpdir_factory, config_directory, monkeypatch):
     timeout = spack.config.get('config:connect_timeout')
     if not timeout:
         spack.config.set('config:connect_timeout', 10, scope='user')
+
     yield spack.config.config
     mutable_dir.remove()
 
