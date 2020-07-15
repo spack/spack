@@ -1125,7 +1125,7 @@ class PackageInstaller(object):
                                 pass
 
                         # cache debug settings
-                        debug_enabled = tty.is_debug()
+                        debug_level = tty.debug_level()
 
                         # Spawn a daemon that reads from a pipe and redirects
                         # everything to log_path
@@ -1134,11 +1134,11 @@ class PackageInstaller(object):
                                     pkg.phases, pkg._InstallPhase_phases):
 
                                 with logger.force_echo():
-                                    inner_debug = tty.is_debug()
-                                    tty.set_debug(debug_enabled)
+                                    inner_debug_level = tty.debug_level()
+                                    tty.set_debug(debug_level)
                                     tty.msg("{0} Executing phase: '{1}'"
                                             .format(pre, phase_name))
-                                    tty.set_debug(inner_debug)
+                                    tty.set_debug(inner_debug_level)
 
                                 # Redirect stdout and stderr to daemon pipe
                                 phase = getattr(pkg, phase_attr)
