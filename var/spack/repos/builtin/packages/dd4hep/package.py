@@ -22,6 +22,7 @@ class Dd4hep(CMakePackage):
     maintainers = ['vvolkl', 'drbenmorgan']
 
     version('master', branch='master')
+    version('1.13.0', sha256='0b1f9d902ebe21a9178c1e41204c066b29f68c8836fd1d03a9ce979811ddb295')
     version('1.12.1', sha256='85e8c775ec03c499ce10911e228342e757c81ce9ef2a9195cb253b85175a2e93')
     version('1.12.0', sha256='133a1fb8ce0466d2482f3ebb03e60b3bebb9b2d3e33d14ba15c8fbb91706b398')
     version('1.11.2', sha256='96a53dd26cb8df11c6dae54669fbc9cc3c90dd47c67e07b24be9a1341c95abc4')
