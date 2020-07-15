@@ -218,16 +218,16 @@ def root_path(name):
 
     # Root folders where the various module files should be written
     active_upstream = spack.config.get('config:active_upstream')
-    if active_upstream is 'global':
+    if active_upstream == 'global':
         # Installs module files to global upstream share directory
         path = os.path.join(spack.paths.share_path, name)
     elif active_upstream is not None:
         # Installs module files to upstream share directory.
         # Extra logic is needed for determining this location.
-        roots = spack.config.get('upstreams')[active_upstream][modules]
+        roots = spack.config.get('upstreams')[active_upstream]['modules']
         path = roots.get(name, os.path.join(spack.paths.user_share_path, name))
     else:
-        # If no upstream is active, install module files to user share directory.
+        # If no upstream is active install module file to user share directory.
         roots = spack.config.get('config:module_roots', {})
         path = roots.get(name, os.path.join(spack.paths.user_share_path, name))
     return spack.util.path.canonicalize_path(path)
