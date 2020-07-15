@@ -31,7 +31,7 @@ class RDevtools(RPackage):
     depends_on('r-desc@1.2.0:', when='@2.3.0:', type=('build', 'run'))
     depends_on('r-dt@0.13:', when='@2.3.0:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-digest@0.6.25', when='@3.2.0:' type=('build', 'run'))
+    depends_on('r-digest@0.6.25:', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-ellipsis@0.3.0:', when='@2.3.0:', type=('build', 'run'))
     depends_on('r-glue@1.4.0:', when='@2.3.0:', type=('build', 'run'))
     depends_on('r-git2r@0.23.0:', type=('build', 'run'))
