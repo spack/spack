@@ -141,7 +141,7 @@ class Wannier90(MakefilePackage):
                 '$(LIBRARY) $(OBJS2) $(OBJS) $(LIBS)',
                 join_path(self.stage.source_path,
                           'src/Makefile.2'), string=True)
-            
+
     def setup_build_environment(self, env):
         env.set('MPIFC', self.prefix.bin.mpifc)
 
