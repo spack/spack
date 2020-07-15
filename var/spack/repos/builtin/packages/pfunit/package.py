@@ -14,12 +14,13 @@ class Pfunit(CMakePackage):
 
     homepage = "http://pfunit.sourceforge.net/"
     url      = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit/archive/3.2.9.tar.gz"
+    git      = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit.git"
 
     maintainers = ['citibeth']
 
-    # Currently investigating build fails for v 4.0.0.
-    # See discussion in PR #11642.
-    # version('4.0.0',  sha256='b8b6470f2b1e2b19c164c244c10e803bd69c8da9a6a5a65ba7c479fb8b92a1e1') # noqa: E501
+    version('4.1.9',  tag='v4.1.9', submodules=True)
+    version('4.1.5',  tag='v4.1.5', submodules=True)
+    version('4.0.0',  tag='v4.0.0', submodules=True)
     version('3.3.3',  sha256='9f673b58d20ad23148040a100227b4f876458a9d9aee0f0d84a5f0eef209ced5')
     version('3.3.2',  sha256='b1cc2e109ba602ea71bccefaa3c4a06e7ab1330db9ce6c08db89cfde497b8ab8')
     version('3.3.1',  sha256='f8f4bea7de991a518a0371b4c70b19e492aa9a0d3e6715eff9437f420b0cdb45')
@@ -40,6 +41,7 @@ class Pfunit(CMakePackage):
 
     depends_on('python@2.7:', type=('build', 'run'))  # python3 too!
     depends_on('mpi', when='+mpi')
+    depends_on('m4', when='@4.1.5:4.1.9')
 
     conflicts("use_comm_world", when="~mpi")
     patch("mpi-test.patch", when="+use_comm_world")
