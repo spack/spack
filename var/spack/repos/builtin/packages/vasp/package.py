@@ -18,7 +18,7 @@ class Vasp(MakefilePackage):
     homepage = "http://vasp.at"
     url      = "file://{0}/vasp.5.4.4.tar.gz".format(os.getcwd())
 
-    version('5.4.4', sha256='5bd2449462386f01e575f9adf629c08cb03a13142806ffb6a71309ca4431cfb3') # noqa
+    version('5.4.4', sha256='5bd2449462386f01e575f9adf629c08cb03a13142806ffb6a71309ca4431cfb3')
 
     resource(name='vaspsol',
              git='https://github.com/henniggroup/VASPsol.git',
