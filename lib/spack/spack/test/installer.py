@@ -155,7 +155,7 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     spec.external_module = 'unchecked_module'
     inst._process_external_package(spec.package, False)
 
-    out = capfd.readouterr()[0]
+    out = capfd.readouterr()[1]
     assert 'has external module in {0}'.format(spec.external_module) in out
     assert 'is actually installed in {0}'.format(spec.external_path) in out
 
@@ -168,7 +168,7 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
     pkg = spack.repo.get('trivial-install-test-package')
     assert not inst._process_binary_cache_tarball(pkg, None, False, False)
 
-    assert 'exists in binary cache but' in capfd.readouterr()[0]
+    assert 'exists in binary cache but' in capfd.readouterr()[1]
 
 
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):

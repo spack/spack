@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import pytest
 
 import spack.fetch_strategy as spack_fs
@@ -27,3 +28,19 @@ def test_s3fetchstrategy_bad_url(tmpdir):
         assert fetcher.archive_file is None
         with pytest.raises(spack_fs.FetchError):
             fetcher.fetch()
+
+
+def test_s3fetchstrategy_downloaded(tmpdir):
+    """Ensure fetch with archive file already downloaded is a noop."""
+    testpath = str(tmpdir)
+    archive = os.path.join(testpath, 's3.tar.gz')
+
+    class Archived_S3FS(spack_fs.S3FetchStrategy):
+        @property
+        def archive_file(self):
+            return archive
+
+    url = 's3:///{0}'.format(archive)
+    fetcher = Archived_S3FS(url=url)
+    with spack_stage.Stage(fetcher, path=testpath):
+        fetcher.fetch()

@@ -240,7 +240,7 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
         tty.debug('{0}: installing from source'.format(pre))
         return False
 
-    tty.debug('Successfully installed {0} from binary cache'.format(pkg_id))
+    tty.msg('Successfully installed {0} from binary cache'.format(pkg_id))
     _print_installed_pkg(pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec)
     return True
@@ -273,19 +273,19 @@ def _process_external_package(pkg, explicit):
     spec = pkg.spec
 
     if spec.external_module:
-        tty.msg('{0} has external module in {1}'
-                .format(pre, spec.external_module))
-        tty.msg('{0} is actually installed in {1}'
-                .format(pre, spec.external_path))
+        tty.debug('{0} has external module in {1}'
+                  .format(pre, spec.external_module), level=tty.BASIC)
+        tty.debug('{0} is actually installed in {1}'
+                  .format(pre, spec.external_path), level=tty.BASIC)
     else:
-        tty.msg("{0} externally installed in {1}"
-                .format(pre, spec.external_path))
+        tty.debug('{0} externally installed in {1}'
+                  .format(pre, spec.external_path), level=tty.BASIC)
 
     try:
         # Check if the package was already registered in the DB.
         # If this is the case, then just exit.
         rec = spack.store.db.get_record(spec)
-        tty.msg('{0} already registered in DB'.format(pre))
+        tty.debug('{0} already registered in DB'.format(pre), level=tty.BASIC)
 
         # Update the value of rec.explicit if it is necessary
         _update_explicit_entry_in_db(pkg, rec, explicit)
@@ -294,11 +294,11 @@ def _process_external_package(pkg, explicit):
         # If not, register it and generate the module file.
         # For external packages we just need to run
         # post-install hooks to generate module files.
-        tty.msg('{0} generating module file'.format(pre))
+        tty.debug('{0} generating module file'.format(pre), level=tty.BASIC)
         spack.hooks.post_install(spec)
 
         # Add to the DB
-        tty.msg('{0} registering into DB'.format(pre))
+        tty.debug('{0} registering into DB'.format(pre), level=tty.BASIC)
         spack.store.db.add(spec, None, explicit=explicit)
 
 
@@ -320,8 +320,8 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned):
     tarball = binary_distribution.download_tarball(binary_spec)
     # see #10063 : install from source if tarball doesn't exist
     if tarball is None:
-        tty.msg('{0} exists in binary cache but with different hash'
-                .format(pkg.name))
+        tty.debug('{0} exists in binary cache but with different hash'
+                  .format(pkg.name), level=tty.BASIC)
         return False
 
     pkg_id = package_id(pkg)
@@ -369,7 +369,7 @@ def _update_explicit_entry_in_db(pkg, rec, explicit):
         with spack.store.db.write_transaction():
             rec = spack.store.db.get_record(pkg.spec)
             message = '{s.name}@{s.version} : marking the package explicit'
-            tty.msg(message.format(s=pkg.spec))
+            tty.debug(message.format(s=pkg.spec), level=tty.BASIC)
             rec.explicit = True
 
 
@@ -1082,8 +1082,9 @@ class PackageInstaller(object):
                     pkg.do_stage()
 
             pkg_id = package_id(pkg)
-            tty.msg('{0} Building {1} [{2}]'
-                    .format(pre, pkg_id, pkg.build_system_class))
+            tty.debug('{0} Building {1} [{2}]'
+                      .format(pre, pkg_id, pkg.build_system_class),
+                      level=tty.BASIC)
 
             # get verbosity from do_install() parameter or saved value
             echo = verbose
@@ -1104,8 +1105,8 @@ class PackageInstaller(object):
                     if install_source and os.path.isdir(source_path):
                         src_target = os.path.join(pkg.spec.prefix, 'share',
                                                   pkg.name, 'src')
-                        tty.msg('{0} Copying source to {1}'
-                                .format(pre, src_target))
+                        tty.debug('{0} Copying source to {1}'
+                                  .format(pre, src_target), level=tty.BASIC)
                         fs.install_tree(pkg.stage.source_path, src_target)
 
                     # Do the real install in the source directory.
@@ -1156,11 +1157,12 @@ class PackageInstaller(object):
             pkg._total_time = time.time() - start_time
             build_time = pkg._total_time - pkg._fetch_time
 
-            tty.msg('{0} Successfully installed {1}'
-                    .format(pre, pkg_id),
-                    'Fetch: {0}.  Build: {1}.  Total: {2}.'
-                    .format(_hms(pkg._fetch_time), _hms(build_time),
-                            _hms(pkg._total_time)))
+            tty.debug('{0} Successfully installed {1}'
+                      .format(pre, pkg_id),
+                      'Fetch: {0}.  Build: {1}.  Total: {2}.'
+                      .format(_hms(pkg._fetch_time), _hms(build_time),
+                              _hms(pkg._total_time)),
+                      level=tty.BASIC)
             _print_installed_pkg(pkg.prefix)
 
             # preserve verbosity across runs
