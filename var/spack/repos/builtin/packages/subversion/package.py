@@ -42,7 +42,7 @@ class Subversion(AutotoolsPackage):
     parallel = False
 
     def url_for_version(self, version):
-        """Handle Subversion's new release URL versions"""
+        """Handle Subversion's new and old releases URL versions"""
         if version > Version('1.12.2'):
             url = 'https://downloads.apache.org/subversion'
         else:
