@@ -110,7 +110,7 @@ class Openloops(Package):
     def build_processes(self, spec, prefix):
         ol = Executable('./openloops')
         processes = self.spec.variants['processes'].value
-        if self.spec.variants['compile_extra']:
+        if 'compile_extra' in self.spec:
             ce = 'compile_extra=1'
         else:
             ce = ''
