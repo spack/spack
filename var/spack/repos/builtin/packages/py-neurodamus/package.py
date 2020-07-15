@@ -13,6 +13,7 @@ class PyNeurodamus(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/sim/neurodamus-py"
 
     version('develop', branch='master')
+    version('1.2.0',   tag='1.2.0')
     version('1.1.0',   tag='1.1.0')
     version('0.8.0',   tag='0.8.0')
     version('0.7.2',   tag='0.7.2')
