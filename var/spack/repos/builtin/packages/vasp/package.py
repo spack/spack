@@ -43,12 +43,12 @@ class Vasp(MakefilePackage):
     depends_on('netlib-scalapack', when='+scalapack')
     depends_on('cuda', when='+cuda')
 
+    conflicts('%gcc@:8', msg='GFortran before 9.x does not support all features needed to build VASP')
     conflicts('+vaspsol', when='+cuda', msg='+vaspsol only available for CPU')
 
     parallel = False
 
     def edit(self, spec, prefix):
-        spec = self.spec
 
         if '%gcc' in spec:
             make_include = join_path('arch', 'makefile.include.linux_gnu')
@@ -135,5 +135,4 @@ class Vasp(MakefilePackage):
             make()
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
         install_tree('bin/', prefix.bin)
