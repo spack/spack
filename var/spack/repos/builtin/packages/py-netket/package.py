@@ -26,13 +26,13 @@ class PyNetket(PythonPackage):
 
     # build only deps
     depends_on('py-setuptools', type='build')
-    depends_on('cmake', type='build')
+    depends_on('cmake@3.12', type='build')
 
     depends_on('blas')
     depends_on('mpi')
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-mpi4py', type=('build', 'run'))
-    depends_on('py-numba', type=('build', 'run'))
-    depends_on('py-tqdm', type=('build', 'run'))
+    depends_on('py-numpy@1.16:', type=('build', 'run'))
+    depends_on('py-scipy@1.2.1:', type=('build', 'run'))
+    depends_on('py-mpi4py@3.0.1:', type=('build', 'run'))
+    depends_on('py-numba@0.48.0:', type=('build', 'run'))
+    depends_on('py-tqdm@4.42.1:', type=('build', 'run'))
