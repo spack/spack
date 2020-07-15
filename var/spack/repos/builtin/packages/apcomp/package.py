@@ -36,7 +36,7 @@ class Apcomp(Package):
     version('0.0.1', sha256="cbf85fe58d5d5bc2f468d081386cc8b79861046b3bb7e966edfa3f8e95b998b2", preferred=True)
 
     variant('openmp', default=True, description='Build with openmp support')
-    variant('mpi', default=True, description='Build with openmp support')
+    variant('mpi', default=True, description='Build with MPI support')
     variant('shared', default=True, description='Build Shared Library')
 
     depends_on('cmake@3.9:', type='build')
@@ -49,10 +49,8 @@ class Apcomp(Package):
         Build and install APComp
         """
         with working_dir('spack-build', create=True):
-            py_site_pkgs_dir = None
             host_cfg_fname = self.create_host_config(spec,
-                                                     prefix,
-                                                     py_site_pkgs_dir)
+                                                     prefix)
             cmake_args = []
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
@@ -73,7 +71,7 @@ class Apcomp(Package):
             # install copy of host config for provenance
             install(host_cfg_fname, prefix)
 
-    def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
+    def create_host_config(self, spec, prefix):
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build apcomp.
@@ -86,8 +84,7 @@ class Apcomp(Package):
         cpp_compiler = env["SPACK_CXX"]
 
         #######################################################################
-        # By directly fetching the names of the actual compilers we appear
-        # to doing something evil here, but this is necessary to create a
+        # We directly fetch the names of the actual compilers to create a
         # 'host config' file that works outside of the spack install env.
         #######################################################################
 
