@@ -18,6 +18,7 @@ class AllpathsLg(AutotoolsPackage):
     # compiles with gcc 4.7.0 to 4.9.4)
     conflicts('%gcc@:4.6.4,5.1.0:')
     conflicts('%cce')
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%intel')
     conflicts('%nag')

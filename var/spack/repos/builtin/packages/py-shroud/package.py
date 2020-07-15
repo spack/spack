@@ -14,10 +14,11 @@ class PyShroud(PythonPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('0.12.1', tag='v0.12.1')
     version('0.11.0', tag='v0.11.0')
     version('0.10.1', tag='v0.10.1')
     version('0.9.0', tag='v0.9.0')
     version('0.8.0', tag='v0.8.0')
 
-    depends_on("py-setuptools", type='build')
+    depends_on("py-setuptools", type=('build', 'run'))
     depends_on("py-pyyaml@4.2b1:", type=('build', 'run'))

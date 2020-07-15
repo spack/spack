@@ -292,6 +292,7 @@ class URLFetchStrategy(FetchStrategy):
             tty.msg("Already downloaded %s" % self.archive_file)
             return
 
+        url = None
         for url in self.candidate_urls:
             try:
                 partial_file, save_file = self._fetch_from_url(url)
@@ -303,7 +304,7 @@ class URLFetchStrategy(FetchStrategy):
                 pass
 
         if not self.archive_file:
-            raise FailedDownloadError(self.url)
+            raise FailedDownloadError(url)
 
     def _fetch_from_url(self, url):
         save_file = None
@@ -369,12 +370,12 @@ class URLFetchStrategy(FetchStrategy):
             if curl.returncode == 22:
                 # This is a 404.  Curl will print the error.
                 raise FailedDownloadError(
-                    self.url, "URL %s was not found!" % self.url)
+                    url, "URL %s was not found!" % url)
 
             elif curl.returncode == 60:
                 # This is a certificate error.  Suggest spack -k
                 raise FailedDownloadError(
-                    self.url,
+                    url,
                     "Curl was unable to fetch due to invalid certificate. "
                     "This is either an attack, or your cluster's SSL "
                     "configuration is bad.  If you believe your SSL "
@@ -386,7 +387,7 @@ class URLFetchStrategy(FetchStrategy):
                 # This is some other curl error.  Curl will print the
                 # error, but print a spack message too
                 raise FailedDownloadError(
-                    self.url,
+                    url,
                     "Curl failed with error %d" % curl.returncode)
 
         # Check if we somehow got an HTML file rather than the archive we

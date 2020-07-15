@@ -25,6 +25,7 @@ class Arrayfire(CMakePackage, CudaPackage):
     depends_on('fftw')
     depends_on('blas')
     depends_on('cuda@7.5:', when='+cuda')
+    depends_on('cudnn', when='+cuda')
     depends_on('opencl +icd', when='+opencl')
     # TODO add more opencl backends:
     # currently only Cuda backend is enabled

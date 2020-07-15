@@ -12,8 +12,13 @@ class Protobuf(Package):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
-    url      = "https://github.com/protocolbuffers/protobuf/archive/v3.10.1.tar.gz"
+    url      = "https://github.com/protocolbuffers/protobuf/archive/v3.12.2.tar.gz"
 
+    version('3.12.2',  sha256='bb8ce9ba11eb7bccf080599fe7cad9cc461751c8dd1ba61701c0070d58cde973')
+    version('3.12.1',  sha256='cb9b3f9d625b5739a358268eb3421de11cacd90025f5f7672c3930553eca810e')
+    version('3.12.0',  sha256='946ba5371e423e1220d2cbefc1f65e69a1e81ca5bab62a03d66894172983cfcd')
+    version('3.11.4',  sha256='a79d19dcdf9139fa4b81206e318e33d245c4c9da1ffed21c87288ed4380426f9')
+    version('3.11.3',  sha256='cf754718b0aa945b00550ed7962ddc167167bd922b842199eeb6505e6f344852')
     version('3.11.2',  sha256='e8c7601439dbd4489fe5069c33d374804990a56c2f710e00227ee5d8fd650e67')
     version('3.11.1',  sha256='4f8e805825c53bbc3c9f6b6abc009b5b5679e4702bccfca1121c42ff5ec801c7')
     version('3.11.0',  sha256='6d356a6279cc76d2d5c4dfa6541641264b59eae0bc96b852381361e3400d1f1c')
@@ -56,10 +61,10 @@ class Protobuf(Package):
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
     patch('pkgconfig.patch', when='@3.0.2:3.3.2')
 
-    patch('intel-v1.patch', when='@3.2:@3.6 %intel')
+    patch('intel-v1.patch', when='@3.2:3.6 %intel')
 
     # See https://github.com/protocolbuffers/protobuf/pull/7197
-    patch('intel-v2.patch', when='@3.7:@3.11.4 %intel')
+    patch('intel-v2.patch', when='@3.7:3.11.4 %intel')
 
     patch('protoc2.5.0_aarch64.patch', sha256='7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451', when='@2.5.0 target=aarch64:')
 

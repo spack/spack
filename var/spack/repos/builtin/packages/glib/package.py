@@ -141,10 +141,18 @@ class Glib(Package):
             args.append('--with-libiconv=maybe')
         else:
             args.append('--with-libiconv=gnu')
-        if 'tracing=dtrace' in self.spec or 'tracing=systemtap' in self.spec:
-            args.append('--enable-tracing')
+        if self.spec.satisfies('@2.56:'):
+            for value in ('dtrace', 'systemtap'):
+                if ('tracing=' + value) in self.spec:
+                    args.append('--enable-' + value)
+                else:
+                    args.append('--disable-' + value)
         else:
-            args.append('--disable-tracing')
+            if ('tracing=dtrace' in self.spec
+                    or 'tracing=systemtap' in self.spec):
+                args.append('--enable-tracing')
+            else:
+                args.append('--disable-tracing')
         # SELinux is not available in Spack, so glib should not use it.
         args.append('--disable-selinux')
         # glib should not use the globally installed gtk-doc. Otherwise,

@@ -50,6 +50,7 @@ class PyTorch(PythonPackage, CudaPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.5.1', tag='v1.5.1', submodules=True)
     version('1.5.0', tag='v1.5.0', submodules=True)
     version('1.4.1', tag='v1.4.1', submodules=True)
     version('1.4.0', tag='v1.4.0', submodules=True,
@@ -154,7 +155,7 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('nccl', when='+nccl')
     depends_on('gloo', when='+gloo')
     depends_on('opencv', when='+opencv')
-    depends_on('llvm-openmp', when='%clang platform=darwin +openmp')
+    depends_on('llvm-openmp', when='%apple-clang +openmp')
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('leveldb', when='+leveldb')
     depends_on('lmdb', when='+lmdb')
@@ -170,7 +171,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # https://github.com/pytorch/pytorch/pull/35607
     # https://github.com/pytorch/pytorch/pull/37865
     # Fixes CMake configuration error when XNNPACK is disabled
-    patch('xnnpack.patch', when='@1.5.0')
+    patch('xnnpack.patch', when='@1.5.0:1.5.999')
 
     # https://github.com/pytorch/pytorch/pull/37086
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3

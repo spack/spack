@@ -15,6 +15,7 @@ class RSpatialeco(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/spatialEco_1.3-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/spatialEco"
 
+    version('1.3-2', sha256='9dfa427ee8b112446b582f6739a1c40a6e3ad3d050f522082a28ce47c675e57a')
     version('1.3-1', sha256='ff12e26cc1bbf7934fbf712c99765d96ce6817e8055faa15a26d9ebade4bbf1c')
     version('1.3-0', sha256='cfa09673cb3bbed30b243082fc2d63ac09f48b9f072a18d32b95c2c29979d1d0')
 

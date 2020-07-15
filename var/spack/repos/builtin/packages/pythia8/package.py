@@ -23,13 +23,46 @@ class Pythia8(AutotoolsPackage):
     version('8212', sha256='f8fb4341c7e8a8be3347eb26b00329a388ccf925313cfbdba655a08d7fd5a70e')
 
     variant('shared', default=True, description='Build shared library')
+    variant('hepmc', default=True, description='Build HepMC2 extensions')
+    variant('evtgen', default=False, description='Build EvtGen extensions')
+    variant('root', default=False, description='Build ROOT extensions')
+    variant('fastjet', default=False, description='Build fastjet extensions')
 
     depends_on('rsync', type='build')
+    depends_on('hepmc@:2.99.99', when="+hepmc")
+    depends_on('root', when="+root")
+    depends_on('evtgen', when="+evtgen")
+    depends_on("fastjet@3.0.0:", when="+fastjet")
+
+    conflicts("^evtgen+pythia8", when="+evtgen",
+              msg="Building pythia with evtgen bindings and "
+              "evtgen with pythia bindings results in a circular dependency "
+              "that cannot be resolved at the moment! "
+              "Use pythia8+evtgen^evtgen~pythia8")
 
     def configure_args(self):
         args = []
 
         if '+shared' in self.spec:
             args.append('--enable-shared')
+        if '+hepmc' in self.spec:
+            args.append('--with-hepmc=%s' % self.spec["hepmc"].prefix)
+        else:
+            args.append('--without-hepmc')
+        if '+fastjet' in self.spec:
+            args.append('--with-fastjet3=%s' % self.spec["fastjet"].prefix)
+        else:
+            args.append('--without-fastjet')
+        if '+evtgen' in self.spec:
+            args.append('--with-evtgen=%s' % self.spec["evtgen"].prefix)
+        else:
+            args.append('--without-evtgen')
+        if '+root' in self.spec:
+            args.append('--with-root=%s' % self.spec["root"].prefix)
+        else:
+            args.append('--without-evtgen')
 
         return args
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.set('PYTHIA8DATA', self.prefix.share.Pythia8.xmldoc)

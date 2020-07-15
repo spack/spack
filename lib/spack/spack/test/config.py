@@ -576,7 +576,7 @@ def get_config_error(filename, schema, yaml_string):
 
     # parse and return error, or fail.
     try:
-        spack.config._read_config_file(filename, schema)
+        spack.config.read_config_file(filename, schema)
     except spack.config.ConfigFormatError as e:
         return e
     else:

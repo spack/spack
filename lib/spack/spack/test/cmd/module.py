@@ -14,6 +14,7 @@ from spack.test.conftest import use_store, use_configuration, use_repo
 
 module = spack.main.SpackCommand('module')
 
+
 #: make sure module files are generated for all the tests here
 @pytest.fixture(scope='module', autouse=True)
 def ensure_module_files_are_there(
@@ -168,10 +169,10 @@ def test_loads_recursive_blacklisted(database, module_configuration):
     output = module('lmod', 'loads', '-r', 'mpileaks ^mpich')
     lines = output.split('\n')
 
-    assert any(re.match(r'[^#]*module load.*mpileaks', l) for l in lines)
-    assert not any(re.match(r'[^#]module load.*callpath', l) for l in lines)
-    assert any(re.match(r'## blacklisted or missing.*callpath', l)
-               for l in lines)
+    assert any(re.match(r'[^#]*module load.*mpileaks', ln) for ln in lines)
+    assert not any(re.match(r'[^#]module load.*callpath', ln) for ln in lines)
+    assert any(re.match(r'## blacklisted or missing.*callpath', ln)
+               for ln in lines)
 
     # TODO: currently there is no way to separate stdout and stderr when
     # invoking a SpackCommand. Supporting this requires refactoring

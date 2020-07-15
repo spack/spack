@@ -32,6 +32,7 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
+import re
 import inspect
 import multiprocessing
 import os
@@ -148,15 +149,38 @@ def clean_environment():
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
 
-    # On Cray systems newer than CNL5, unset CRAY_LD_LIBRARY_PATH to avoid
-    # interference with Spack dependencies. CNL5 (e.g. Blue Waters) requires
-    # these variables to be set.
+    # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
+    # interference with Spack dependencies.
+    # CNL requires these variables to be set (or at least some of them,
+    # depending on the CNL version).
     hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
-    if str(hostarch.platform) == 'cray' and str(hostarch.os) != 'cnl5':
+    on_cray = str(hostarch.platform) == 'cray'
+    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    if on_cray and not using_cnl:
         env.unset('CRAY_LD_LIBRARY_PATH')
         for varname in os.environ.keys():
             if 'PKGCONF' in varname:
                 env.unset(varname)
+
+    # Unset the following variables because they can affect installation of
+    # Autotools and CMake packages.
+    build_system_vars = [
+        'CC', 'CFLAGS', 'CPP', 'CPPFLAGS',  # C variables
+        'CXX', 'CCC', 'CXXFLAGS', 'CXXCPP',  # C++ variables
+        'F77', 'FFLAGS', 'FLIBS',  # Fortran77 variables
+        'FC', 'FCFLAGS', 'FCLIBS',  # Fortran variables
+        'LDFLAGS', 'LIBS'  # linker variables
+    ]
+    for v in build_system_vars:
+        env.unset(v)
+
+    # Unset mpi environment vars. These flags should only be set by
+    # mpi providers for packages with mpi dependencies
+    mpi_vars = [
+        'MPICC', 'MPICXX', 'MPIFC', 'MPIF77', 'MPIF90'
+    ]
+    for v in mpi_vars:
+        env.unset(v)
 
     build_lang = spack.config.get('config:build_language')
     if build_lang:
@@ -181,6 +205,9 @@ def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
     compiler = pkg.compiler
     spec = pkg.spec
+
+    # Make sure the executables for this compiler exist
+    compiler.verify_executables()
 
     # Set compiler variables used by CMake and autotools
     assert all(key in compiler.link_paths for key in (

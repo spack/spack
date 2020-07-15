@@ -54,10 +54,10 @@ class Conduit(Package):
     ###########################################################################
 
     variant("shared", default=True, description="Build Conduit as shared libs")
-    variant('test', default=True, description='Enable Conduit unit tests')
+    variant("test", default=True, description='Enable Conduit unit tests')
 
     # variants for python support
-    variant("python", default=True, description="Build Conduit Python support")
+    variant("python", default=False, description="Build Conduit Python support")
     variant("fortran", default=True, description="Build Conduit Fortran support")
 
     # variants for comm and i/o
@@ -93,6 +93,7 @@ class Conduit(Package):
     depends_on("python", when="+python")
     extends("python", when="+python")
     depends_on("py-numpy", when="+python", type=('build', 'run'))
+    depends_on("py-mpi4py", when="+python+mpi", type=('build', 'run'))
 
     #######################
     # I/O Packages
@@ -371,7 +372,9 @@ class Conduit(Package):
         if fflags:
             cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
 
-        if ("gfortran" in f_compiler) and ("clang" in cpp_compiler):
+        if ((f_compiler is not None)
+           and ("gfortran" in f_compiler)
+           and ("clang" in cpp_compiler)):
             libdir = os.path.join(os.path.dirname(
                                   os.path.dirname(f_compiler)), "lib")
             flags = ""
@@ -467,7 +470,7 @@ class Conduit(Package):
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
-            if cpp_compiler == "CC":
+            if spec['mpi'].mpicc == spack_cc:
                 mpicc_path = "cc"
                 mpicxx_path = "CC"
                 mpifc_path = "ftn"

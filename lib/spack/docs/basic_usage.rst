@@ -627,8 +627,8 @@ output metadata on specs and all dependencies as json:
        "target": "x86_64"
       },
       "compiler": {
-       "name": "clang",
-       "version": "10.0.0-apple"
+       "name": "apple-clang",
+       "version": "10.0.0"
       },
       "namespace": "builtin",
       "parameters": {
