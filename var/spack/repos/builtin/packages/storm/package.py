@@ -15,8 +15,8 @@ class Storm(Package):
 
     homepage = "https://storm.apache.org/"
     url      = "https://archive.apache.org/dist/storm/apache-storm-2.2.0/apache-storm-2.2.0.tar.gz"
-    url_list = "https://archive.apache.org/dist/storm/"
-    list_depth = 2
+    list_url = "https://archive.apache.org/dist/storm/"
+    list_depth = 1
 
     version('2.2.0', sha256='f621163f349a8e85130bc3d2fbb34e3b08f9c039ccac5474f3724e47a3a38675')
     version('2.1.0', sha256='e279a495dda42af7d9051543989f74a1435a5bda53e795a1de4a1def32027fc4')
