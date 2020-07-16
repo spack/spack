@@ -310,7 +310,6 @@ class ProviderIndexer(Indexer):
     def update(self, pkg_fullname):
         shortname = pkg_fullname.split('.')[-1]
         if spack.spec.Spec.is_virtual(shortname):
-            print(pkg_fullname)
             return
         self.index.remove_provider(pkg_fullname)
         self.index.update(pkg_fullname)
@@ -1001,7 +1000,7 @@ class Repo(object):
         names = sorted(self._pkg_checker.keys())
         if include_virtuals:
             return names
-        return list(filter(lambda x: not spack.spec.Spec.is_virtual(x), names))
+        return list(filter(lambda x: not self.is_virtual(x), names))
 
     def packages_with_tags(self, *tags):
         v = set(self.all_package_names())
@@ -1032,7 +1031,7 @@ class Repo(object):
 
     def is_virtual(self, pkg_name):
         """True if the package with this name is virtual, False otherwise."""
-        return self.provider_index.contains(pkg_name)
+        return pkg_name in self.provider_index
 
     def _get_pkg_module(self, pkg_name):
         """Create a module for a particular package.
