@@ -18,7 +18,6 @@ class Xcfun(CMakePackage):
     version('master', branch='master')
     version('2.0.0a6',
             sha256='a51086490890393439f98c5e3e4e1622908fe934bbc5063b1d4363cc4c15496d')
-    version('pyscf', commit='355f42497a9cd17d16ae91da1f1aaaf93756ae8b')
 
     extends('python')
     depends_on('cmake@3.11:', type='build')
