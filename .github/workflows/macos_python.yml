@@ -29,7 +29,7 @@ jobs:
       run: |
         . .github/workflows/install_spack.sh
         # 9.2.0 is the latest version on which we apply homebrew patch
-        spack install -v --fail-fast gcc@9.2.0
+        spack install -v --fail-fast gcc@9.2.0 %apple-clang
 
   install_jupyter_clang:
     name: jupyter
@@ -40,6 +40,7 @@ jobs:
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
+        spack config add packages:opengl:paths:opengl@4.1:/usr/X11R6
         spack install -v --fail-fast py-jupyter %apple-clang
 
   install_scipy_clang:
