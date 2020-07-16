@@ -27,11 +27,7 @@ class PyPyscf(PythonPackage):
     depends_on('blas')
     depends_on('libcint+coulomb_erf+f12')
     depends_on('libxc')
-    depends_on('xcfun')
-
-    # conflicts
-    conflicts('^xcfun@2.0.0a3:',
-              msg='PySCF does not support recent version of the xcfun API')
+    depends_on('xcfun@:2.0.0a2')  # PySCF does not support recent version of the xcfun API'
 
     def setup_build_environment(self, env):
         # Tell PSCF where supporting libraries are located."
