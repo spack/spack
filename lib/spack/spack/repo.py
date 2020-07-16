@@ -308,6 +308,10 @@ class ProviderIndexer(Indexer):
         self.index = spack.provider_index.ProviderIndex.from_json(stream)
 
     def update(self, pkg_fullname):
+        shortname = pkg_fullname.split('.')[-1]
+        if spack.spec.Spec.is_virtual(shortname):
+            print(pkg_fullname)
+            return
         self.index.remove_provider(pkg_fullname)
         self.index.update(pkg_fullname)
 
@@ -517,12 +521,12 @@ class RepoPath(object):
         """Get the first repo in precedence order."""
         return self.repos[0] if self.repos else None
 
-    def all_package_names(self):
+    def all_package_names(self, include_virtuals=False):
         """Return all unique package names in all repositories."""
         if self._all_package_names is None:
             all_pkgs = set()
             for repo in self.repos:
-                for name in repo.all_package_names():
+                for name in repo.all_package_names(include_virtuals):
                     all_pkgs.add(name)
             self._all_package_names = sorted(all_pkgs, key=lambda n: n.lower())
         return self._all_package_names
@@ -992,9 +996,12 @@ class Repo(object):
             self._fast_package_checker = FastPackageChecker(self.packages_path)
         return self._fast_package_checker
 
-    def all_package_names(self):
+    def all_package_names(self, include_virtuals=False):
         """Returns a sorted list of all package names in the Repo."""
-        return sorted(self._pkg_checker.keys())
+        names = sorted(self._pkg_checker.keys())
+        if include_virtuals:
+            return names
+        return list(filter(lambda x: not spack.spec.Spec.is_virtual(x), names))
 
     def packages_with_tags(self, *tags):
         v = set(self.all_package_names())
@@ -1190,9 +1197,9 @@ def get(spec):
     return path.get(spec)
 
 
-def all_package_names():
+def all_package_names(include_virtuals=False):
     """Convenience wrapper around ``spack.repo.all_package_names()``."""
-    return path.all_package_names()
+    return path.all_package_names(include_virtuals)
 
 
 def set_path(repo):

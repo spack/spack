@@ -21,6 +21,8 @@ class MockPackageBase(object):
     Use ``MockPackageMultiRepo.add_package()`` to create new instances.
 
     """
+    virtual = False
+
     def __init__(self, dependencies, dependency_types,
                  conditions=None, versions=None):
         """Instantiate a new MockPackageBase.

@@ -1196,7 +1196,9 @@ class Spec(object):
     @staticmethod
     def is_virtual(name):
         """Test if a name is virtual without requiring a Spec."""
-        return (name is not None) and (not spack.repo.path.exists(name))
+        return (name is not None and
+                (not spack.repo.path.exists(name) or
+                 spack.repo.path.get_pkg_class(name).virtual))
 
     @property
     def concrete(self):
