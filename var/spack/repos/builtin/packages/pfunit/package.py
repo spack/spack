@@ -43,6 +43,10 @@ class Pfunit(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('m4', when='@4.1.5:4.1.9')
 
+    conflicts("%gcc@7.2.0", when="@4.0.0:",
+              msg='pFUnit v4 cannot be built with gcc 7.2.0. Please choose a different compiler.')
+    # See https://github.com/Goddard-Fortran-Ecosystem/pFUnit/pull/179
+    conflicts("+shared", when="@4.0.0:4.1.5")
     conflicts("use_comm_world", when="~mpi")
     patch("mpi-test.patch", when="+use_comm_world")
 
