@@ -67,6 +67,3 @@ class Intel(IntelPackage):
 
     # Since the current package is a subset of 'intel-parallel-studio',
     # all remaining Spack actions are handled in the package class.
-
-    def test(self):
-        self.test_compiler()

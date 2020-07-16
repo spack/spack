@@ -500,35 +500,19 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 # Stop searching filename/regex combos for this language
                 break
 
-    def test(self):
-        # Get compiler tests
-        compiler_test_dir = self.test_dir.join('compiler_tests')
-        shutil.copytree(os.path.join(spack.paths.tests_path, 'compilers'),
-                        compiler_test_dir)
+    #####
+    # Variables for running the compiler
+    #####
+    @property
+    def cxx11_flag(self):
+        if self.version < ver('4.3'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C++11 standard",
+                                          "cxx11_flag",
+                                          " < 4.3")
+        elif self.version < ver('4.7'):
+            return "-std=c++0x"
+        else:
+            return "-std=c++11"
 
-        # get tests for each language and associate executable
-        langs = ('c', 'cxx', 'fortran')
-        compilers = ('gcc', 'g++', 'gfortran')
-        for lang, compiler in zip(langs, compilers):
-            # Only test the languages this spec supports
-            lang_variant = 'c++' if lang == 'cxx' else lang
-            if self.spec.satisfies('languages=%s' % lang_variant):
-                # compile and run each test to ensure it works
-                lang_dir = os.path.join(compiler_test_dir, lang)
-                for test in os.listdir(lang_dir):
-                    full_path = os.path.join(lang_dir, test)
-                    exe_name = '%s.exe' % test
-
-                    options = ['-std=c++11'] if 'c++11' in test else []
-
-                    # standard options
-                    options.extend(['-o', exe_name])
-
-                    # We can finally append the filename
-                    options.append(full_path)
-                    compiled = self.run_test(compiler, options=options, installed=True)
-
-                    # run the test to ensure it works
-                    # only run it if the compile step worked
-                    if compiled:
-                        self.run_test(exe_name, expected=["Hello world", "YES!"])
+    # TODO: copy others from lib/spack/spack/compilers/gcc.py

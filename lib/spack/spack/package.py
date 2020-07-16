@@ -1567,24 +1567,35 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
                 # run test methods from the package and all virtuals it provides
                 # virtuals have to be deduped by name
-                virtual_names = set([vspec.name for vspec in self.virtuals_provided])
-                test_specs = [self.spec] + [spack.spec.Spec(vname)
-                                            for vname in virtual_names]
+                v_names = list(set([vspec.name
+                                    for vspec in self.virtuals_provided]))
+
+                # hack for compilers that are not dependencies (yet)
+                # TODO: this all eventually goes away
+                if self.name in ('gcc', 'intel', 'intel-parallel-studio', 'pgi'):
+                    v_names.extend(['c', 'cxx', 'fortran'])
+                if self.spec.satisfies('llvm+clang'):
+                    v_names.extend(['c', 'cxx'])
+
+                test_specs = [self.spec] + [spack.spec.Spec(v_name)
+                                            for v_name in v_names]
                 for spec in test_specs:
+                    # Fail gracefully if a virtual has no package/tests
+                    try:
+                        spec_pkg = spec.package
+                    except spack.repo.UnknownPackageError:
+                        continue
+
                     # copy test data into testdir/data
-                    data_source = Prefix(self.package_dir).test
+                    data_source = Prefix(spec_pkg.package_dir).test
                     data_dir = os.path.join(testdir.data, spec.name)
                     if os.path.isdir(data_source):
-                        shutil.copytree(datadir, data_dir)
+                        shutil.copytree(data_source, data_dir)
 
                     try:
                         # grab the function for each method so we can all it
                         # with this package in place of its `self` object
-                        try:
-                            pkg = spec.package
-                        except spack.repo.UnknownPackageError:
-                            continue
-                        test_method = pkg.__class__.test.__func__
+                        test_method = spec_pkg.__class__.test.__func__
                         test_method(self)
                     except BaseException:
                         # reset debug level on failfast errors
