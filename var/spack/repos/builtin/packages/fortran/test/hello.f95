@@ -1,6 +1,6 @@
-      program line
+program line
 
       write (*,*) "Hello world from FORTRAN"
       write (*,*) "YES!"
 
-      end
+end program line

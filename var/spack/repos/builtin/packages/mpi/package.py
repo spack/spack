@@ -13,7 +13,7 @@ class Mpi(Package):
     def test(self):
         for lang in ('c', 'f'):
             filename = 'mpi_hello.' + lang
-            filepath = os.path.join(self.test_dir, 'data', self.name)
+            filepath = os.path.join(self.test_dir, 'data', 'mpi')
 
             compiler_var = 'MPI%sC' % lang.upper()
             compiler = os.environ[compiler_var]
