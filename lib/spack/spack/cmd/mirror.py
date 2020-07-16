@@ -35,17 +35,18 @@ def setup_parser(subparser):
     # Create
     create_parser = sp.add_parser('create', help=mirror_create.__doc__)
 
-    create_parser.add_argument(
+    group = create_parser.add_mutually_exclusive_group(required=False)
+    group.add_argument(
         '-d', '--directory',
         metavar='directory',
         type=str,
         help="local directory in which to create mirror")
-    create_parser.add_argument(
+    group.add_argument(
         '-m', '--mirror-name',
         metavar='mirror-name',
         type=str,
         help="name of the configured mirror to be created.")
-    create_parser.add_argument(
+    group.add_argument(
         '--mirror-url',
         metavar='mirror-url',
         type=str,

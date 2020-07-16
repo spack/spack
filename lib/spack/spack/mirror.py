@@ -105,9 +105,8 @@ class Mirror(object):
         if ((args.directory and args.mirror_name) or
                 (args.mirror_name and args.mirror_url) or
                 (args.mirror_url and args.directory)):
-            raise ValueError(
-                'no more than one of --directory, --mirror-url, and'
-                ' --mirror-name allowed')
+            raise ValueError('no more than one of "directory",'
+                             ' "mirror_url", and "mirror_name" allowed')
 
         if args.directory:
             location = args.directory
@@ -117,8 +116,7 @@ class Mirror(object):
             scheme = url_util.parse(location, scheme='<missing>').scheme
             if scheme != '<missing>':
                 raise ValueError(
-                    '"-d, --directory" expected a local path;'
-                    ' got a URL, instead')
+                    '"directory" must be a local path (got a URL)')
 
             # User meant to provide a path to a local directory.
             # Ensure that the mirror lookup does not mistake it for a named
