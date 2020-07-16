@@ -37,8 +37,7 @@ class Idl(Package):
         
         # set necessary environment variables
         env.prepend_path('EXELIS_DIR', self.prefix)
-        env.prepend_path('IDL_DIR', join_path(self.prefix, 'idl'))
+        env.prepend_path('IDL_DIR', self.prefix.idl)
         
         # add bin to path
         env.prepend_path('PATH', join_path(self.prefix, 'idl', 'bin'))
-
