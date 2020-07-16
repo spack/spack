@@ -104,7 +104,7 @@ class Wannier90(MakefilePackage):
                         join_path(self.stage.source_path,
                                   'src/Makefile.2'))
             filter_file('../../wannier90.x: .*',
-                        '../../wannier90.x: $(OBJS)'
+                        '../../wannier90.x: $(OBJS) '
                         '../wannier_prog.F90 $(LIBRARY)',
                         join_path(self.stage.source_path,
                                   'src/Makefile.2'))
