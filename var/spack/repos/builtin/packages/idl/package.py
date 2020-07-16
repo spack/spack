@@ -40,4 +40,4 @@ class Idl(Package):
         env.prepend_path('IDL_DIR', self.prefix.idl)
         
         # add bin to path
-        env.prepend_path('PATH', join_path(self.prefix, 'idl', 'bin'))
+        env.prepend_path('PATH', self.prefix.idl.bin)
