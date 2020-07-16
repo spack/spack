@@ -1562,25 +1562,42 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     shutil.rmtree(testdir)
                 fsys.mkdirp(testdir)
 
-                # copy test data into testdir/data
-                datadir = Prefix(self.package_dir).test
-                if os.path.isdir(datadir):
-                    shutil.copytree(datadir, testdir.data)
+                # cd to test directory
+                os.chdir(testdir)
 
-                try:
-                    os.chdir(testdir)
-                    self.test()
-                    if self.test_failures:
-                        raise TestFailure(self.test_failures)
+                # run test methods from the package and all virtuals it provides
+                # virtuals have to be deduped by name
+                virtual_names = set([vspec.name for vspec in self.virtuals_provided])
+                test_specs = [self.spec] + [spack.spec.Spec(vname)
+                                            for vname in virtual_names]
+                for spec in test_specs:
+                    # copy test data into testdir/data
+                    data_source = Prefix(self.package_dir).test
+                    data_dir = os.path.join(testdir.data, spec.name)
+                    if os.path.isdir(data_source):
+                        shutil.copytree(datadir, data_dir)
 
-                    # cleanup test directory on success
-                    if remove_directory:
-                        shutil.rmtree(testdir)
-                        if not os.listdir(self.test_stage):
-                            shutil.rmtree(self.test_stage)
-                finally:
-                    # reset debug level
-                    tty.set_debug(old_debug)
+                    try:
+                        # grab the function for each method so we can all it
+                        # with this package in place of its `self` object
+                        test_method = spec.package.__class__.test.__func__
+                        test_method(self)
+                    except BaseException:
+                        # reset debug level on failfast errors
+                        tty.set_debug(old_debug)
+                        raise
+
+                if self.test_failures:
+                    raise TestFailure(self.test_failures)
+
+                # cleanup test directory on success
+                if remove_directory:
+                    shutil.rmtree(testdir)
+                    if not os.listdir(self.test_stage):
+                        shutil.rmtree(self.test_stage)
+
+                # reset debug level
+                tty.set_debug(old_debug)
 
         spack.build_environment.fork(
             self, test_process, dirty=dirty, fake=False, context='test',
@@ -1615,6 +1632,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 runner = which(exe)
                 if runner is None and skip_missing:
                     return
+                assert runner is not None, \
+                    "Failed to find executable '{0}'".format(exe)
 
                 self._run_test_helper(
                     runner, options, expected, status, installed, purpose)
@@ -1679,9 +1698,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         else:
             tty.debug('test: {0}: expect command status in {1}'
                       .format(runner.name, status))
-
-        assert runner is not None, \
-            "Failed to find executable '{0}'".format(runner.name)
 
         if installed:
             msg = "Executable '{0}' expected in prefix".format(runner.name)
