@@ -11,10 +11,9 @@ class Syscalc(MakefilePackage):
     """ A tool to derive theoretical systematic uncertainties"""
 
     homepage = "https://cp3.irmp.ucl.ac.be/projects/madgraph/wiki/SysCalc"
-    url      = "http://madgraph.phys.ucl.ac.be/Downloads/SysCalc_V1.1.6.tar.gz"
+    url      = "http://madgraph.phys.ucl.ac.be/Downloads/SysCalc_V1.1.7.tar.gz"
 
-    version('1.1.7', sha256='1b563771c972acfefcfc2dd9fed452a508b560ffdec826c427c8f5fb6eb2d76b')
-    version('1.1.6', sha256='c4cc82a5582ba0517c832b2c0f78ca264c07e0dc68a0256de9f38426c67b1786')
+    version('1.1.7', sha256='b195f828e2cbeb9aebd2f382d8a6efc0235fdb708a55a86e2b5c957ac9fe7138')
 
     depends_on('lhapdf@6:')
 
