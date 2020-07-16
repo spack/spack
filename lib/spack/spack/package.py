@@ -1580,7 +1580,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     try:
                         # grab the function for each method so we can all it
                         # with this package in place of its `self` object
-                        test_method = spec.package.__class__.test.__func__
+                        try:
+                            pkg = spec.package
+                        except spack.repo.UnknownPackageError:
+                            continue
+                        test_method = pkg.__class__.test.__func__
                         test_method(self)
                     except BaseException:
                         # reset debug level on failfast errors
