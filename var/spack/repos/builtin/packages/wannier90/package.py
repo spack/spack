@@ -107,8 +107,7 @@ class Wannier90(MakefilePackage):
                         '../../wannier90.x: $(OBJS)'
                         '../wannier_prog.F90 $(LIBRARY)',
                         join_path(self.stage.source_path,
-                                  'src/Makefile.2'),
-                        string=True)
+                                  'src/Makefile.2'))
             filter_file('../../postw90.x: $(OBJS_POST) '
                         '$(POSTDIR)postw90.F90',
                         '../../postw90.x: $(OBJS_POST) '
