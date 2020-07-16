@@ -499,20 +499,3 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 env.set(lang.upper(), abspath)
                 # Stop searching filename/regex combos for this language
                 break
-
-    #####
-    # Variables for running the compiler
-    #####
-    @property
-    def cxx11_flag(self):
-        if self.version < ver('4.3'):
-            raise UnsupportedCompilerFlag(self,
-                                          "the C++11 standard",
-                                          "cxx11_flag",
-                                          " < 4.3")
-        elif self.version < ver('4.7'):
-            return "-std=c++0x"
-        else:
-            return "-std=c++11"
-
-    # TODO: copy others from lib/spack/spack/compilers/gcc.py

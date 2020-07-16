@@ -23,6 +23,7 @@ import sys
 import textwrap
 import time
 import traceback
+import types
 from six import StringIO
 from six import string_types
 from six import with_metaclass
@@ -1595,8 +1596,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     try:
                         # grab the function for each method so we can all it
                         # with this package in place of its `self` object
-                        test_method = spec_pkg.__class__.test.__func__
-                        test_method(self)
+                        test_fn = spec_pkg.__class__.test
+                        if not isinstance(test_fn, types.FunctionType):
+                            test_fn = test_method.__func__
+                        test_fn(self)
                     except BaseException:
                         # reset debug level on failfast errors
                         tty.set_debug(old_debug)

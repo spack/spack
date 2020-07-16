@@ -1017,6 +1017,15 @@ class IntelPackage(PackageBase):
 
         env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
 
+        if self.spec.name in ('intel', 'intel-parallel-studio'):
+            # this package provides compilers
+            # TODO: fix check above when compilers are dependencies
+            env.set('CC', self.prefix.bin.icc)
+            env.set('CXX', self.prefix.bin.icpc)
+            env.set('FC', self.prefix.bin.ifort)
+            env.set('F77', self.prefix.bin.ifort)
+            env.set('F90', self.prefix.bin.ifort)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         # NB: This function is overwritten by 'mpi' provider packages:
         #
