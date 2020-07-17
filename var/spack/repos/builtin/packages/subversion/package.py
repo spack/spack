@@ -11,6 +11,10 @@ class Subversion(AutotoolsPackage):
 
     homepage = 'https://subversion.apache.org/'
     url      = 'https://archive.apache.org/dist/subversion/subversion-1.12.2.tar.gz'
+    urls = [
+        'https://archive.apache.org/dist/subversion/subversion-1.12.2.tar.gz',
+        'https://downloads.apache.org/subversion/subversion-1.13.0.tar.gz'
+    ]
 
     version('1.14.0', sha256='ef3d1147535e41874c304fb5b9ea32745fbf5d7faecf2ce21d4115b567e937d0')
     version('1.13.0', sha256='daad440c03b8a86fcca804ea82217bb1902cfcae1b7d28c624143c58dcb96931')
@@ -40,14 +44,6 @@ class Subversion(AutotoolsPackage):
 
     # Installation has race cases.
     parallel = False
-
-    def url_for_version(self, version):
-        """Handle Subversion's new and old releases URL versions"""
-        if version > Version('1.12.2'):
-            url = 'https://downloads.apache.org/subversion'
-        else:
-            url = 'https://archive.apache.org/dist/subversion'
-        return url + '/subversion-%s.tar.gz' % (version)
 
     # http://www.linuxfromscratch.org/blfs/view/svn/general/subversion.html
     def configure_args(self):
