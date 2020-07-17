@@ -33,11 +33,11 @@ class Harfbuzz(AutotoolsPackage):
 
     def url_for_version(self, version):
         if version > Version('2.3.1'):
-            url = "https://github.com/harfbuzz/harfbuzz/releases/download/2.6.8/harfbuzz-2.6.8.tar.xz"
+            url = "https://github.com/harfbuzz/harfbuzz/releases/download/{0}/harfbuzz-{0}.tar.xz"
         else:
-            url = "http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-0.9.37.tar.bz2"
+            url = "http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-{0}.tar.bz2"
 
-        return url.format(version.up_to(2), version)
+        return url.format(version)
 
     def configure_args(self):
         args = []
