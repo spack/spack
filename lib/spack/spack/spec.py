@@ -1204,7 +1204,9 @@ class Spec(object):
             msg = 'virtual dependency "{0}" cannot be specified multiple times'
             raise ValueError(msg.format(virtual))
 
-        self._user_requested_providers[virtual] = spec
+        # Specs here need to be copied, otherwise we'll bring in a reference
+        # to an object that will be modified in-place during concretization
+        self._user_requested_providers[virtual] = spec.copy()
 
     def reconstruct_virtuals_on_edges(self):
         """Reconstruct virtuals on edges. Used to read from old DB
