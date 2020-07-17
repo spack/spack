@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.tty as tty
+
 from spack import *
 
 import sys
@@ -80,3 +82,32 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
             args.append('--without-gnutls')
 
         return args
+
+    def _test_check_versions(self):
+        """Perform version checks on installed package binaries."""
+        spec_vers = str(self.spec.version)
+
+        checks = {
+            'ctags':        ([spec_vers], None),
+            'ebrowse':      ([spec_vers], None),
+            'emacs':        ([spec_vers], None),
+            'emacsclient':  ([spec_vers], None),
+            'etags':        ([spec_vers], None),
+        }
+
+        for exe in checks:
+            expected, status = checks[exe]
+            reason = 'test version of {0} is {1}'.format(exe, expected[0])
+            self.run_test(exe, ['--version'], expected, status, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        tty.debug('Expected results currently based on simple cmake builds')
+
+        if not self.spec.satisfies('@24.5:26.3'):
+            tty.debug('Expected results have not been confirmed for {0} {1}'
+                      .format(self.name, self.spec.version))
+
+        # Simple version check tests on known binaries
+        self._test_check_versions()
