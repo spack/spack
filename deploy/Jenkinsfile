@@ -102,7 +102,7 @@ pipeline {
                choices: deployment_stages_string(),
                description: 'Stage from which to restart the building process')
         booleanParam(name: 'BUILDCACHE',
-                     defaultValue: true,
+                     defaultValue: false,
                      description: 'Use cache to install already compiled software')
         booleanParam(name: 'SOURCECACHE',
                      defaultValue: true,
