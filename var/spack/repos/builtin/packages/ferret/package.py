@@ -57,9 +57,13 @@ class Ferret(Package):
         filter_file(r'^JAVA_HOME.+',
                     ' ',
                     'FERRET/site_specific.mk')
-        filter_file(r'-lm',
-                    '-lgfortran -lm',
-                    'FERRET/platform_specific.mk.x86_64-linux')
+
+        if '@:7.3' in self.spec:
+            # Don't force using the static version of libgfortran
+            filter_file(r'-Wl,-Bstatic -lgfortran -Wl,-Bdynamic',
+                        '-lgfortran',
+                        'FERRET/platform_specific.mk.x86_64-linux')
+
         filter_file(r'\$\(NETCDF4_DIR\)/lib64/libnetcdff.a',
                     "-L%s -lnetcdff" % self.spec['netcdf-fortran'].prefix.lib,
                     'FERRET/platform_specific.mk.x86_64-linux')
