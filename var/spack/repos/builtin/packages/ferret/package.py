@@ -24,6 +24,7 @@ class Ferret(Package):
     depends_on("readline")
     depends_on("zlib")
     depends_on("libx11")
+    depends_on("curl")
 
     def url_for_version(self, version):
         return "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v{0}.tar.gz".format(
