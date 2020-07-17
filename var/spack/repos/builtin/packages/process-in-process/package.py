@@ -14,10 +14,14 @@ class ProcessInProcess(Package):
 
     version('1', branch='pip-1')
 
-    conflicts('%gcc@4:', when='os=centos7')
-    conflicts('%gcc@4:', when='os=rhel7') 
-    conflicts('%gcc@8:', when='os=centos8')
-    conflicts('%gcc@8:', when='os=rhel8') 
+    conflicts('%gcc@:3', when='os=centos7')
+    conflicts('%gcc@5:', when='os=centos7')
+    conflicts('%gcc@:3', when='os=rhel7') 
+    conflicts('%gcc@5:', when='os=rhel7') 
+    conflicts('%gcc@:7', when='os=centos8')
+    conflicts('%gcc@9:', when='os=centos8')
+    conflicts('%gcc@:7', when='os=rhel8') 
+    conflicts('%gcc@9:', when='os=rhel8') 
 
     # packages required for building PiP-gdb
     depends_on('texinfo', type='build')
