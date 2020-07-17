@@ -23,7 +23,7 @@ combinations:
     architecture:
     - linux-rhel7-x86_64
     compiler:
-    - gcc@8.3.0
+    - gcc@9.3.0
     mpi: None
     lapack: None
     python: None
@@ -38,10 +38,9 @@ packages:
       - compiler
     specs:
       - gcc@9.3.0
-      - gcc@8.3.0
-      - intel-parallel-studio+advisor+clck+daal+gdb+inspector+ipp+itac+mkl+mpi+rpath+shared+tbb+vtune@cluster.2019.5
+      - intel-parallel-studio+advisor+clck+daal+gdb+inspector+ipp+itac+mkl+mpi+rpath+shared+tbb+vtune@cluster.2020.1
       #- intel@18.0.3
-      - intel@19.0.4
+      - intel@20.0.1
       - pgi+network+nvidia+mpi@19.10
 
   bootstrapped_compilers:
@@ -51,4 +50,4 @@ packages:
       - architecture
       - compiler
     specs:
-      - llvm@9.0.0
+      - llvm@10.0.0

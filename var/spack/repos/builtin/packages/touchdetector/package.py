@@ -34,7 +34,7 @@ class Touchdetector(CMakePackage):
     depends_on('boost@1.50:')
     depends_on('catch2', when='@5.0.2:')
     depends_on('eigen', when='@4.5:')
-    depends_on('fmt', when='@4.5:')
+    depends_on('fmt@:5.999', when='@4.5:')
     depends_on('morphio@2.0.8:', when='@4.5:5.1')
     depends_on('morpho-kit', when='@5.2:')
     depends_on('mvdtool@2.1.0:', when='@5.1.1:')

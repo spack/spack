@@ -24,7 +24,7 @@ def build_and_deploy_docker() {
 def deployment_directory(parent) {
     def pull = env.ghprbPullId
     if (parent || pull == null) {
-        return "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins"
+        return "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins/merge"
     } else {
         return "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins/pulls/${pull}"
     }
@@ -142,10 +142,10 @@ pipeline {
                     steps {
                         dir("${DEPLOYMENT_ROOT}/spack") {
                             checkout([$class: 'GitSCM',
-                                      branches: [[name: "develop"]],
+                                      branches: [[name: "merge/2020/07"]],
                                       extensions: [[$class: 'LocalBranch']],
                                       userRemoteConfigs: [[
-                                            refspec: "+refs/heads/develop:refs/remotes/origin/develop",
+                                            refspec: "+refs/heads/merge/2020/07:refs/remotes/origin/merge/2020/07",
                                             url: "https://github.com/BlueBrain/spack.git"
                                       ]]])
                         }

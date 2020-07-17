@@ -13,7 +13,7 @@ gnu-stable:
   architecture:
   - linux-rhel7-x86_64
   compiler:
-  - gcc@8.3.0
+  - gcc@9.3.0
   mpi:
   - hpe-mpi@2.21
   lapack:
@@ -26,7 +26,7 @@ intel-stable:
   architecture:
   - linux-rhel7-x86_64
   compiler:
-  - intel@19.0.4
+  - intel@2020.0.1
   mpi:
   - hpe-mpi@2.21
   lapack:
