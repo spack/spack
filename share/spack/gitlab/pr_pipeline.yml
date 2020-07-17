@@ -14,7 +14,7 @@ merge_pipeline:
   - develop
   variables:
     SPACK_REPO: https://github.com/spack/spack.git
-    SPACK_REF: develop
+    SPACK_REF: ${CI_COMMIT_SHA}
   trigger:
     project: spack/e4s
     strategy: depend
