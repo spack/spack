@@ -542,7 +542,7 @@ class Openmpi(AutotoolsPackage):
             singularity_opt = '--with-singularity={0}'.format(spec['singularity'].prefix)
             config_args.append(singularity_opt)
         # Lustre filesystem support
-	if spec.satisfies('+lustre'):
+        if spec.satisfies('+lustre'):
             lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
             config_args.append(lustre_opt)
         # Hwloc support
