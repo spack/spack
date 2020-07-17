@@ -869,8 +869,8 @@ def get_specs(allarch=False):
         except (URLError, web_util.SpackWebError) as url_err:
             tty.error('Failed to read index {0}'.format(index_url))
             tty.debug(url_err)
-            # Just return whatever specs we may already have cached
-            return _cached_specs
+            # Continue on to the next mirror
+            continue
 
         tmpdir = tempfile.mkdtemp()
         index_file_path = os.path.join(tmpdir, 'index.json')
