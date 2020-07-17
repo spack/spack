@@ -58,11 +58,32 @@ class Ferret(Package):
                     ' ',
                     'FERRET/site_specific.mk')
 
-        if '@:7.3' in self.spec:
-            # Don't force using the static version of libgfortran
-            filter_file(r'-Wl,-Bstatic -lgfortran -Wl,-Bdynamic',
-                        '-lgfortran',
-                        'FERRET/platform_specific.mk.x86_64-linux')
+        # Don't force using the static version of libgfortran
+        filter_file(r'-Wl,-Bstatic -lgfortran -Wl,-Bdynamic',
+                    '-lgfortran',
+                    'FERRET/platform_specific.mk.x86_64-linux')
+
+        # This prevents the rpaths to be properly set by Spack's wrappers
+        filter_file(r'-v --verbose',
+                    '',
+                    'FERRET/platform_specific.mk.x86_64-linux')
+
+        # Make sure Ferret uses Spack's compiler wrappers
+        filter_file(r'^[ \t]*CC[ \t]*=.+',
+                    'CC = %s' % spack_cc,
+                    'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'^[ \t]*CXX[ \t]*=.+',
+                    'CXX = %s' % spack_cxx,
+                    'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'^[ \t]*FC[ \t]*=.+',
+                    'FC = %s' % spack_fc,
+                    'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'^[ \t]*F77[ \t]*=.+',
+                    'F77 = %s' % spack_f77,
+                    'FERRET/platform_specific.mk.x86_64-linux')
+        filter_file(r'^[ \t]*LD[ \t]*=.+',
+                    'LD = %s' % spack_cc,
+                    'FERRET/platform_specific.mk.x86_64-linux')
 
         filter_file(r'\$\(NETCDF4_DIR\)/lib64/libnetcdff.a',
                     "-L%s -lnetcdff" % self.spec['netcdf-fortran'].prefix.lib,
