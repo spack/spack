@@ -1057,6 +1057,9 @@ class PackageInstaller(object):
         if use_cache and \
                 _install_from_cache(pkg, cache_only, explicit, unsigned):
             self._update_installed(task)
+            if task.compiler:
+                spack.compilers.add_compilers_to_config(
+                    spack.compilers.find_compilers([pkg.spec.prefix]))
             return
 
         pkg.run_tests = (tests is True or tests and pkg.name in tests)
