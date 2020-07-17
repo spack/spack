@@ -539,7 +539,8 @@ class Openmpi(AutotoolsPackage):
 
         # Singularity container support
         if spec.satisfies('+singularity @:4.9'):
-            singularity_opt = '--with-singularity={0}'.format(spec['singularity'].prefix)
+            singularity_opt = '--with-singularity={0}'.format(
+                spec['singularity'].prefix)
             config_args.append(singularity_opt)
         # Lustre filesystem support
         if spec.satisfies('+lustre'):
