@@ -10,7 +10,6 @@ class Subversion(AutotoolsPackage):
     """Apache Subversion - an open source version control system."""
 
     homepage = 'https://subversion.apache.org/'
-    url      = 'https://archive.apache.org/dist/subversion/subversion-1.12.2.tar.gz'
     urls = [
         'https://archive.apache.org/dist/subversion/subversion-1.12.2.tar.gz',
         'https://downloads.apache.org/subversion/subversion-1.13.0.tar.gz'
