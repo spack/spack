@@ -1,0 +1,1025 @@
+--- models/sm/restrict_ckm.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/sm/restrict_ckm.dat	2016-05-03 22:54:19.000000001 +0200
+@@ -6,9 +6,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -16,30 +16,30 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+-   15 1.777000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   15 1.776820e+00 # MTA 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03 
+ 
+ ###################################
+ ## INFORMATION FOR WOLFENSTEIN
+ ###################################
+ Block Wolfenstein 
+-    1 2.253000e-01 # lamWS 
+-    2 8.080000e-01 # AWS 
+-    3 1.320000e-01 # rhoWS 
+-    4 3.410000e-01 # etaWS 
++    1 2.257000e-01 # lamWS 
++    2 8.140000e-01 # AWS 
++    3 1.350000e-01 # rhoWS 
++    4 3.490000e-01 # etaWS 
+ 
+ ###################################
+ ## INFORMATION FOR YUKAWA
+@@ -47,7 +47,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 4.700000e+00 # ymb
+-    6 1.730000e+02 # ymt
++    6 1.725000e+02 # ymt
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 1.777000e+00 # ymtau 
+--- models/sm/restrict_c_mass.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/sm/restrict_c_mass.dat	2016-05-03 22:54:19.000000001 +0200
+@@ -6,9 +6,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -16,20 +16,20 @@
+ Block MASS 
+     4 1.550000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+-   15 1.777000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   15 1.776820e+00 # MTA 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03
+ 
+ ###################################
+@@ -47,7 +47,7 @@
+ Block YUKAWA 
+     4 1.550000e+00 # ymc 
+     5 4.700000e+00 # ymb
+-    6 1.730000e+02 # ymt
++    6 1.725000e+02 # ymt
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 1.777000e+00 # ymtau 
+--- models/sm/restrict_default.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/sm/restrict_default.dat	2016-05-03 22:54:19.000000001 +0200
+@@ -6,9 +6,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -16,20 +16,20 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+-   15 1.777000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   15 1.776820e+00 # MTA 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03
+ 
+ ###################################
+@@ -47,7 +47,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 4.700000e+00 # ymb
+-    6 1.730000e+02 # ymt
++    6 1.725000e+02 # ymt
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 1.777000e+00 # ymtau 
+--- models/sm/restrict_lepton_masses.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/sm/restrict_lepton_masses.dat	2016-05-03 22:54:19.000000001 +0200
+@@ -6,9 +6,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -16,20 +16,20 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 5.110000e-04 # Me 
+    13 1.056600e-01 # MM 
+-   15 1.777000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   15 1.776820e+00 # MTA 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 2.270000e-12
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03 
+ 
+ ###################################
+@@ -47,7 +47,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 4.700000e+00 # ymb
+-    6 1.730000e+02 # ymt
++    6 1.725000e+02 # ymt
+    11 5.110000e-04 # yme
+    13 1.056600e-01 # ymm
+    15 1.777000e+00 # ymtau 
+--- models/sm/restrict_no_b_mass.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/sm/restrict_no_b_mass.dat	2016-05-03 22:54:19.000000001 +0200
+@@ -6,9 +6,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -16,20 +16,20 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 0.000000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+-   15 1.777000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   15 1.776820e+00 # MTA 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03
+ 
+ ###################################
+@@ -47,7 +47,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 0.000000e+00 # ymb 
+-    6 1.730000e+02 # ymt
++    6 1.725000e+02 # ymt
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 1.777000e+00 # ymtau 
+--- models/sm/restrict_no_masses.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/sm/restrict_no_masses.dat	2016-05-03 22:54:19.000000001 +0200
+@@ -6,9 +6,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -16,20 +16,20 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 0.000000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+    15 0.000000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.320000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03
+ 
+ ###################################
+@@ -47,7 +47,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 0.000000e+00 # ymb 
+-    6 1.730000e+02 # ymt
++    6 1.725000e+02 # ymt
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 0.000000e+00 # ymtau 
+--- models/sm/restrict_no_tau_mass.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/sm/restrict_no_tau_mass.dat	2016-05-03 22:54:19.000000001 +0200
+@@ -6,9 +6,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -16,20 +16,20 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+    15 0.000000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03
+ 
+ ###################################
+@@ -47,7 +47,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 4.700000e+00 # ymb
+-    6 1.730000e+02 # ymt
++    6 1.725000e+02 # ymt
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 0.000000e+00 # ymtau 
+--- models/sm/restrict_no_widths.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/sm/restrict_no_widths.dat	2016-05-03 22:54:19.000000001 +0200
+@@ -16,7 +16,7 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+    15 1.777000e+00 # MTA 
+--- models/sm/restrict_zeromass_ckm.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/sm/restrict_zeromass_ckm.dat	2016-05-03 22:54:20.000000001 +0200
+@@ -6,9 +6,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -16,30 +16,30 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 0.000000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+    15 0.000000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03
+ 
+ ###################################
+ ## INFORMATION FOR WOLFENSTEIN
+ ###################################
+ Block Wolfenstein 
+-    1 2.253000e-01 # lamWS 
+-    2 8.080000e-01 # AWS 
+-    3 1.320000e-01 # rhoWS 
+-    4 3.410000e-01 # etaWS 
++    1 2.257000e-01 # lamWS 
++    2 8.140000e-01 # AWS 
++    3 1.350000e-01 # rhoWS 
++    4 3.490000e-01 # etaWS 
+ 
+ ###################################
+ ## INFORMATION FOR YUKAWA
+@@ -47,7 +47,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 0.000000e+00 # ymb 
+-    6 1.730000e+02 # ymt
++    6 1.725000e+02 # ymt
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 0.000000e+00 # ymtau 
+--- models/loop_sm/restrict_ckm.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/loop_sm/restrict_ckm.dat	2016-05-03 22:54:29.000000001 +0200
+@@ -12,9 +12,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -22,30 +22,30 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+-   15 1.777000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   15 1.776820e+00 # MTA 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03 
+ 
+ ###################################
+ ## INFORMATION FOR WOLFENSTEIN
+ ###################################
+ Block Wolfenstein 
+-    1 2.253000e-01 # lamWS 
+-    2 8.080000e-01 # AWS 
+-    3 1.320000e-01 # rhoWS 
+-    4 3.410000e-01 # etaWS 
++    1 2.257000e-01 # lamWS 
++    2 8.140000e-01 # AWS 
++    3 1.350000e-01 # rhoWS 
++    4 3.490000e-01 # etaWS 
+ 
+ ###################################
+ ## INFORMATION FOR YUKAWA
+@@ -53,7 +53,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 4.700000e+00 # ymb 
+-    6 1.730000e+02 # ymt 
++    6 1.725000e+02 # ymt 
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 1.777000e+00 # ymtau 
+--- models/loop_sm/restrict_c_mass.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/loop_sm/restrict_c_mass.dat	2016-05-03 22:54:29.000000001 +0200
+@@ -12,9 +12,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -22,20 +22,20 @@
+ Block MASS 
+     4 1.550000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+-   15 1.777000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   15 1.776820e+00 # MTA 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00 
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03 
+ 
+ ###################################
+@@ -53,7 +53,7 @@
+ Block YUKAWA 
+     4 1.550000e+00 # ymc 
+     5 4.700000e+00 # ymb 
+-    6 1.730000e+02 # ymt 
++    6 1.725000e+02 # ymt 
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 1.777000e+00 # ymtau 
+--- models/loop_sm/restrict_default.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/loop_sm/restrict_default.dat	2016-05-03 22:54:29.000000001 +0200
+@@ -12,9 +12,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -22,20 +22,20 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+-   15 1.777000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   15 1.776820e+00 # MTA 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03
+ 
+ ###################################
+@@ -53,7 +53,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 4.700000e+00 # ymb 
+-    6 1.730000e+02 # ymt 
++    6 1.725000e+02 # ymt 
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 1.777000e+00 # ymtau 
+--- models/loop_sm/restrict_lepton_masses.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/loop_sm/restrict_lepton_masses.dat	2016-05-03 22:54:29.000000001 +0200
+@@ -12,9 +12,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -22,20 +22,20 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 5.110000e-04 # Me 
+    13 1.056600e-01 # MM 
+-   15 1.777000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   15 1.776820e+00 # MTA 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 2.270000e-12
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03 
+ 
+ ###################################
+@@ -53,7 +53,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 4.700000e+00 # ymb
+-    6 1.730000e+02 # ymt
++    6 1.725000e+02 # ymt
+    11 5.110000e-04 # yme
+    13 1.056600e-01 # ymm
+    15 1.777000e+00 # ymtau 
+--- models/loop_sm/restrict_no_b_mass.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/loop_sm/restrict_no_b_mass.dat	2016-05-03 22:54:29.000000001 +0200
+@@ -12,9 +12,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -22,20 +22,20 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 0.000000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+-   15 1.777000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   15 1.776820e+00 # MTA 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03 
+ 
+ ###################################
+@@ -53,7 +53,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 0.000000e+00 # ymb 
+-    6 1.730000e+02 # ymt 
++    6 1.725000e+02 # ymt 
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 1.777000e+00 # ymtau 
+--- models/loop_sm/restrict_no_masses.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/loop_sm/restrict_no_masses.dat	2016-05-03 22:54:29.000000001 +0200
+@@ -12,9 +12,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -22,20 +22,20 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 0.000000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+    15 0.000000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03 
+ 
+ ###################################
+@@ -53,7 +53,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 0.000000e+00 # ymb 
+-    6 1.730000e+02 # ymt 
++    6 1.725000e+02 # ymt 
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 0.000000e+00 # ymtau 
+--- models/loop_sm/restrict_no_tau_mass.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/loop_sm/restrict_no_tau_mass.dat	2016-05-03 22:54:29.000000001 +0200
+@@ -12,9 +12,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -22,20 +22,20 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+    15 0.000000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03 
+ 
+ ###################################
+@@ -53,7 +53,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 4.700000e+00 # ymb 
+-    6 1.730000e+02 # ymt 
++    6 1.725000e+02 # ymt 
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 0.000000e+00 # ymtau 
+--- models/loop_sm/restrict_no_widths.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/loop_sm/restrict_no_widths.dat	2016-05-03 22:54:29.000000001 +0200
+@@ -22,7 +22,7 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+    15 1.777000e+00 # MTA 
+@@ -53,7 +53,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 4.700000e+00 # ymb 
+-    6 1.730000e+02 # ymt 
++    6 1.725000e+02 # ymt 
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 1.777000e+00 # ymtau 
+--- models/loop_sm/restrict_parallel_test.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/loop_sm/restrict_parallel_test.dat	2016-05-03 22:54:29.000000001 +0200
+@@ -22,7 +22,7 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.620000e+00 # MB 
+-    6 1.743000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+    15 1.777000e+00 # MTA 
+@@ -53,7 +53,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 4.6200000e+00 # ymb 
+-    6 1.743000e+02 # ymt 
++    6 1.725000e+02 # ymt 
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 1.777000e+00 # ymtau 
+--- models/loop_sm/restrict_test.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/loop_sm/restrict_test.dat	2016-05-03 22:54:29.000000001 +0200
+@@ -22,7 +22,7 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 4.700000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+    15 1.777000e+00 # MTA 
+--- models/loop_sm/restrict_zeromass_ckm.dat	2015-10-26 02:18:52.000000001 +0100
++++ models/loop_sm/restrict_zeromass_ckm.dat	2016-05-03 22:54:29.000000001 +0200
+@@ -12,9 +12,9 @@
+ ## INFORMATION FOR SMINPUTS
+ ###################################
+ Block SMINPUTS 
+-    1 1.325070e+02 # aEWM1 
+-    2 1.166390e-05 # Gf 
+-    3 1.180000e-01 # aS 
++    1 1.32348905e+02 # aEWM1 
++    2 1.16637000e-05 # Gf 
++    3 1.18400000e-01 # aS 
+ 
+ ###################################
+ ## INFORMATION FOR MASS
+@@ -22,30 +22,30 @@
+ Block MASS 
+     4 0.000000e+00 # MC 
+     5 0.000000e+00 # MB 
+-    6 1.730000e+02 # MT 
++    6 1.725000e+02 # MT 
+    11 0.000000e+00 # Me 
+    13 0.000000e+00 # MM 
+    15 0.000000e+00 # MTA 
+-   23 9.118800e+01 # MZ 
++   23 9.118760e+01 # MZ 
+    25 1.250000e+02 # MH 
+ 
+ ###################################
+ ## INFORMATION FOR DECAY
+ ###################################
+-DECAY   6 1.491500E+00
++DECAY   6 1.32000000E+00
+ DECAY  15 0.000000e+00
+-DECAY  23 2.441404e+00 
+-DECAY  24 2.047600e+00 
++DECAY  23 2.49520000e+00  
++DECAY  24 2.085000e+00 
+ DECAY  25 6.38233934e-03 
+ 
+ ###################################
+ ## INFORMATION FOR WOLFENSTEIN
+ ###################################
+ Block Wolfenstein 
+-    1 2.253000e-01 # lamWS 
+-    2 8.080000e-01 # AWS 
+-    3 1.320000e-01 # rhoWS 
+-    4 3.410000e-01 # etaWS 
++    1 2.257000e-01 # lamWS 
++    2 8.140000e-01 # AWS 
++    3 1.350000e-01 # rhoWS 
++    4 3.490000e-01 # etaWS 
+ 
+ ###################################
+ ## INFORMATION FOR YUKAWA
+@@ -53,7 +53,7 @@
+ Block YUKAWA 
+     4 0.000000e+00 # ymc 
+     5 0.000000e+00 # ymb 
+-    6 1.730000e+02 # ymt 
++    6 1.725000e+02 # ymt 
+    11 0.000000e+00 # yme 
+    13 0.000000e+00 # ymm 
+    15 0.000000e+00 # ymtau 
+--- bin/.compile.py.orig	2017-02-23 09:30:11.498513439 +0100
++++ bin/.compile.py	2017-02-23 09:30:45.660867637 +0100
+@@ -59,7 +59,8 @@
+             self.make_stdHep()
+             self.make_CutTools()
+             self.make_IREGI()
+-            self.install_package(ext_programs)
++            if ext_programs:
++                self.install_package(ext_programs)
+             self.test_output_LO()
+             self.test_output_NLO()
+             self.precompilation(debug=True)
+--- madgraph/interface/loop_interface.py.orig	2018-05-01 10:19:36.391921213 +0300
++++ madgraph/interface/loop_interface.py	2018-05-01 10:20:08.019974345 +0300
+@@ -23,7 +23,7 @@
+ import re
+ 
+ import madgraph
+-from madgraph import MG4DIR, MG5DIR, MadGraph5Error
++from madgraph import MG4DIR, MG5DIR, MadGraph5Error, ReadWrite
+ import madgraph.interface.madgraph_interface as mg_interface
+ import madgraph.interface.extended_cmd as cmd
+ import madgraph.interface.launch_ext_program as launch_ext
+@@ -503,6 +503,9 @@
+         if (opt['ninja'] is None) or (os.path.isfile(pjoin(MG5DIR, opt['ninja'],'libninja.a'))): 
+             return
+         
++        if not ReadWrite:
++            return
++
+         logger.info("First output using loop matrix-elements has been detected. Now asking for loop reduction:", '$MG:BOLD')
+         to_install = self.ask('install', '0',  ask_class=AskLoopInstaller, timeout=300, 
+                               path_msg=' ')
+
+--- vendor/CutTools/makefile.orig	2018-06-18 13:24:17.164637074 +0200
++++ vendor/CutTools/makefile	2018-06-18 13:24:27.756740547 +0200
+@@ -9,7 +9,7 @@
+ ifeq ($(wildcard ../make_opts), ../make_opts)
+   include ../make_opts
+ else
+-  FFLAGS = 
++  FFLAGS = -std=legacy
+   FC=gfortran
+ endif
+ 
+--- vendor/IREGI/src/makefile_ML5_lib.orig	2018-07-09 13:33:48.546490615 +0200
++++ vendor/IREGI/src/makefile_ML5_lib	2018-07-09 13:33:57.238573607 +0200
+@@ -5,7 +5,7 @@
+ FFDIR=$(qcdlooppath)/ff
+ onelooppath=$(PWD)/oneloop
+ #FFLAGS=-O -g -ggdb -fno-automatic -fbounds-check -I$(onelooppath) # -fbounds-check is very useful in checking mermory error,-g is for debuging,-ggdb is for debuging special in gdb
+-FFLAGS=-O -g -fPIC -I$(onelooppath)
++FFLAGS=-O -g -fPIC -I$(onelooppath) -std=legacy
+ obj= global.o funlib.o linear_algebra.o kinematics.o matrices.o matrix_base.o cmatrix_base.o mis_warp.o special_fun.o pave_reduce.o cpave_reduce.o si_reduce.o csi_reduce.o ti_reduce.o cti_reduce.o gti_reduce.o binary_tree.o IREGI4ML5_interface.o avh_olo_foriregi.o
+ olomod= avh_olo_foriregi.mod avh_olo_foriregi_dp_box.mod    avh_olo_foriregi_dp_olog.mod   avh_olo_foriregi_units.mod \
+         avh_olo_foriregi_dp.mod        avh_olo_foriregi_dp_boxc.mod   avh_olo_foriregi_dp_prec.mod   avh_olo_foriregi_version.mod \
+--- madgraph/various/misc.py.orig      2018-04-29 15:59:44.000000000 +0200
++++ madgraph/various/misc.py   2018-07-18 10:11:06.000000000 +0200
+@@ -469,6 +469,8 @@
+     try:
+         if nb_core > 1:
+             cmd.append('-j%s' % nb_core)
++        if nb_core < 0:
++            cmd.append('-j1')
+         cmd += arg
+         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
+                              stderr=subprocess.STDOUT, cwd=cwd, **opt)
+
+--- bin/.compile.py.orig	2018-07-18 10:56:33.000000000 +0200
++++ bin/.compile.py	2018-07-18 10:42:56.000000000 +0200
+@@ -168,7 +168,7 @@
+             text = text.replace(base,compiler)
+         open(path, 'w').writelines(text)
+ 
+-        misc.compile(cwd = os.path.join(MG5DIR, 'vendor', 'StdHEP'))
++        misc.compile(cwd = os.path.join(MG5DIR, 'vendor', 'StdHEP'), nb_core=-1)
+ 
+     @staticmethod
+     def make_CutTools():
+@@ -190,7 +190,7 @@
+             text = text.replace(base,compiler)
+         open(path, 'w').writelines(text)
+ 
+-        misc.compile(cwd = os.path.join(MG5DIR, 'vendor', 'CutTools'))
++        misc.compile(cwd = os.path.join(MG5DIR, 'vendor', 'CutTools'), nb_core=-1)
+ 
+     @staticmethod
+     def make_IREGI():
+@@ -274,7 +274,7 @@
+                     open(name,'w').write('\n'.join(lines))
+                     mod = False
+ 
+-        misc.compile(cwd = os.path.join(iregi_path,'src'))        
++        misc.compile(cwd = os.path.join(iregi_path,'src'), nb_core=-1)        
+ 
+     def install_package(self, programs=[]):
+         print "installing external package"
