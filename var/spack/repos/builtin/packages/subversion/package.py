@@ -10,8 +10,13 @@ class Subversion(AutotoolsPackage):
     """Apache Subversion - an open source version control system."""
 
     homepage = 'https://subversion.apache.org/'
-    url      = 'https://archive.apache.org/dist/subversion/subversion-1.12.2.tar.gz'
+    urls = [
+        'https://archive.apache.org/dist/subversion/subversion-1.12.2.tar.gz',
+        'https://downloads.apache.org/subversion/subversion-1.13.0.tar.gz'
+    ]
 
+    version('1.14.0', sha256='ef3d1147535e41874c304fb5b9ea32745fbf5d7faecf2ce21d4115b567e937d0')
+    version('1.13.0', sha256='daad440c03b8a86fcca804ea82217bb1902cfcae1b7d28c624143c58dcb96931')
     version('1.12.2', sha256='f4927d6603d96c5ddabebbafe9a0f6833c18a891ff0ce1ea6ffd186ce9bc21f3')
     version('1.9.7',  sha256='c72a209c883e20245f14c4e644803f50ae83ae24652e385ff5e82300a0d06c3c')
     version('1.9.6',  sha256='a400cbc46d05cb29f2d7806405bb539e9e045b24013b0f12f8f82688513321a7')
