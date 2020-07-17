@@ -446,19 +446,16 @@ def create(path, specs, skip_unstable_versions=False):
     mirror_cache = spack.caches.MirrorCache(
         mirror_root, skip_unstable_versions=skip_unstable_versions)
     mirror_stats = MirrorStats()
-    try:
-        spack.caches.mirror_cache = mirror_cache
-        # Iterate through packages and download all safe tarballs for each
-        for spec in specs:
-            if spec.package.has_code:
-                mirror_stats.next_spec(spec)
-                _add_single_spec(spec, mirror_root, mirror_stats)
-            else:
-                tty.msg("Skipping package {pkg} without code".format(
-                    pkg=spec.format("{name}{@version}")
-                ))
-    finally:
-        spack.caches.mirror_cache = None
+
+    # Iterate through packages and download all safe tarballs for each
+    for spec in specs:
+        if spec.package.has_code:
+            mirror_stats.next_spec(spec)
+            _add_single_spec(spec, mirror_cache, mirror_stats)
+        else:
+            tty.msg("Skipping package {pkg} without code".format(
+                pkg=spec.format("{name}{@version}")
+            ))
 
     return mirror_stats.stats()
 
