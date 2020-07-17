@@ -108,7 +108,7 @@ pipeline {
                      defaultValue: true,
                      description: 'Use cache to install already downloaded sources')
         string(name: 'sha1',
-               defaultValue: 'develop',
+               defaultValue: 'merge/2020/07',
                description: 'Used for fetching the right Jenkinsfile')
     }
 
