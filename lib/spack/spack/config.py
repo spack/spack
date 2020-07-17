@@ -34,7 +34,6 @@ import copy
 import os
 import re
 import sys
-import multiprocessing
 from contextlib import contextmanager
 from six import iteritems
 from ordereddict_backport import OrderedDict
@@ -57,6 +56,7 @@ import spack.schema.modules
 import spack.schema.config
 import spack.schema.upstreams
 import spack.schema.env
+import spack.util.cpus
 from spack.error import SpackError
 
 # Hacked yaml for configuration files preserves line numbers.
@@ -107,7 +107,7 @@ config_defaults = {
         'verify_ssl': True,
         'checksum': True,
         'dirty': False,
-        'build_jobs': min(16, multiprocessing.cpu_count()),
+        'build_jobs': min(16, spack.util.cpus.cpus_available()),
         'build_stage': '$tempdir/spack-stage',
     }
 }

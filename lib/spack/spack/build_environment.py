@@ -65,7 +65,6 @@ from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module, module
 from spack.util.log_parse import parse_log_events, make_log_context
 
-
 #
 # This can be set by the user to globally disable parallel builds.
 #
@@ -450,7 +449,7 @@ def _set_variables_for_single_module(pkg, module):
         return
 
     jobs = spack.config.get('config:build_jobs', 16) if pkg.parallel else 1
-    jobs = min(jobs, multiprocessing.cpu_count())
+    jobs = min(jobs, spack.util.cpus.cpus_available())
     assert jobs is not None, "no default set for config:build_jobs"
 
     m = module

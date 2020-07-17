@@ -4,10 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import multiprocessing
 
 import pytest
-
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -32,8 +30,9 @@ def ncores(monkeypatch, request):
     def _cpu_count():
         return request.param
 
-    # Patch multiprocessing.cpu_count() to return the value we need
-    monkeypatch.setattr(multiprocessing, 'cpu_count', _cpu_count)
+    # Patch spack.util.cpus.cpus_available() to return the value we need
+    monkeypatch.setattr('spack.util.cpus.cpus_available', _cpu_count)
+
     # Patch the configuration parts that have been cached already
     monkeypatch.setitem(spack.config.config_defaults['config'],
                         'build_jobs', min(16, request.param))
