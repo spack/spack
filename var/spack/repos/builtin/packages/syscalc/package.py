@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Syscalc(MakefilePackage):
@@ -20,7 +19,7 @@ class Syscalc(MakefilePackage):
     def url_for_version(self, version):
         url = self.url.rsplit('/', 1)[0]
         url += '/SysCalc_V{0}.tar.gz'
-        
+
         url = url.format(version)
         return url
 
