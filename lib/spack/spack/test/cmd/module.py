@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import pytest
 
 import spack.main
 import spack.modules
+from spack.test.conftest import use_store, use_configuration, use_repo
 
 module = spack.main.SpackCommand('module')
 
@@ -30,11 +31,6 @@ def _module_files(module_type, *specs):
     specs = [spack.spec.Spec(x).concretized() for x in specs]
     writer_cls = spack.modules.module_types[module_type]
     return [writer_cls(spec).layout.filename for spec in specs]
-
-
-@pytest.fixture(scope='module', autouse=True)
-def ensure_module_files_are_there(database):
-    module('tcl', 'refresh', '-y')
 
 
 @pytest.fixture(
@@ -173,10 +169,10 @@ def test_loads_recursive_blacklisted(database, module_configuration):
     output = module('lmod', 'loads', '-r', 'mpileaks ^mpich')
     lines = output.split('\n')
 
-    assert any(re.match(r'[^#]*module load.*mpileaks', l) for l in lines)
-    assert not any(re.match(r'[^#]module load.*callpath', l) for l in lines)
-    assert any(re.match(r'## blacklisted or missing.*callpath', l)
-               for l in lines)
+    assert any(re.match(r'[^#]*module load.*mpileaks', ln) for ln in lines)
+    assert not any(re.match(r'[^#]module load.*callpath', ln) for ln in lines)
+    assert any(re.match(r'## blacklisted or missing.*callpath', ln)
+               for ln in lines)
 
     # TODO: currently there is no way to separate stdout and stderr when
     # invoking a SpackCommand. Supporting this requires refactoring

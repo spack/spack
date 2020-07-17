@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -84,7 +84,7 @@ class Adios(AutotoolsPackage):
     depends_on('c-blosc@1.12.0:', when='+blosc')
     # optional transports & file converters
     depends_on('hdf5@1.8:+hl+mpi', when='+hdf5')
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c', when='+netcdf')
     depends_on('libevpath', when='staging=flexpath')
     depends_on('dataspaces+mpi', when='staging=dataspaces')
 
@@ -127,13 +127,18 @@ class Adios(AutotoolsPackage):
 
         return '--without-phdf5'
 
+    def setup_build_environment(self, env):
+        # https://github.com/ornladios/ADIOS/issues/206
+        if self.spec.satisfies('%gcc@10: +fortran'):
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
+
     def configure_args(self):
         spec = self.spec
         self.validate(spec)
 
         extra_args = [
             # required, otherwise building its python bindings will fail
-            'CFLAGS={0}'.format(self.compiler.pic_flag)
+            'CFLAGS={0}'.format(self.compiler.cc_pic_flag)
         ]
 
         extra_args += self.enable_or_disable('shared')

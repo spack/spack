@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Flex(AutotoolsPackage):
     depends_on('bison',         type='build')
     depends_on('gettext@0.19:', type='build')
     depends_on('help2man',      type='build')
+    depends_on('findutils',     type='build')
+    depends_on('diffutils',     type='build')
 
     # Older tarballs don't come with a configure script and the patch for
     # 2.6.4 touches configure
@@ -40,6 +42,11 @@ class Flex(AutotoolsPackage):
     # - https://github.com/spack/spack/issues/6942
     # - https://github.com/westes/flex/issues/241
     patch('https://github.com/westes/flex/commit/24fd0551333e7eded87b64dd36062da3df2f6380.patch', sha256='09c22e5c6fef327d3e48eb23f0d610dcd3a35ab9207f12e0f875701c677978d3', when='@2.6.4')
+
+    @when('@:2.6.0,2.6.4')
+    def autoreconf(self, spec, prefix):
+        autogen = Executable('./autogen.sh')
+        autogen()
 
     @property
     def force_autoreconf(self):

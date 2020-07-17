@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -141,8 +141,9 @@ _missing_modules_warning = (
     " this command with debug output enabled for more details.")
 
 
-def loads(module_type, specs, args, out=sys.stdout):
+def loads(module_type, specs, args, out=None):
     """Prompt the list of modules associated with a list of specs"""
+    out = sys.stdout if out is None else out
 
     if args.latest:
         def install_date(s):

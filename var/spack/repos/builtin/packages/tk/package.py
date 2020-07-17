@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 import os
 
 
-class Tk(AutotoolsPackage):
+class Tk(AutotoolsPackage, SourceforgePackage):
     """Tk is a graphical user interface toolkit that takes developing
        desktop applications to a higher level than conventional
        approaches. Tk is the standard GUI not only for Tcl, but for
@@ -15,7 +15,7 @@ class Tk(AutotoolsPackage):
        applications that run unchanged across Windows, Mac OS X, Linux
        and more."""
     homepage = "http://www.tcl.tk"
-    url      = "http://prdownloads.sourceforge.net/tcl/tk8.6.5-src.tar.gz"
+    sourceforge_mirror_path = "tcl/tk8.6.5-src.tar.gz"
 
     version('8.6.8', sha256='49e7bca08dde95195a27f594f7c850b088be357a7c7096e44e1158c7a5fd7b33')
     version('8.6.6', sha256='d62c371a71b4744ed830e3c21d27968c31dba74dd2c45f36b9b071e6d88eb19d')
@@ -60,14 +60,14 @@ class Tk(AutotoolsPackage):
         return find_libraries(['libtk{0}'.format(self.version.up_to(2))],
                               root=self.prefix, recursive=True)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
+        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
         run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))

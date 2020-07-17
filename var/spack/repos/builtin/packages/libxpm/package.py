@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libxpm(AutotoolsPackage):
+class Libxpm(AutotoolsPackage, XorgPackage):
     """libXpm - X Pixmap (XPM) image file format library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXpm"
-    url      = "https://www.x.org/archive//individual/lib/libXpm-3.5.12.tar.gz"
+    xorg_mirror_path = "lib/libXpm-3.5.12.tar.gz"
 
     version('3.5.12', sha256='2523acc780eac01db5163267b36f5b94374bfb0de26fc0b5a7bee76649fd8501')
     version('3.5.11', sha256='53ddf924441b7ed2de994d4934358c13d9abf4828b1b16e1255ade5032b31df7')
@@ -26,10 +26,10 @@ class Libxpm(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # If libxpm is installed as an external package, gettext won't
         # be available in the spec. See
         # https://github.com/spack/spack/issues/9149 for details.
         if 'gettext' in self.spec:
-            spack_env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
+            env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
                 self.spec['gettext'].prefix.lib))

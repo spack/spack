@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -95,6 +95,6 @@ class Samrai(AutotoolsPackage):
 
         return options
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         if self.spec.satisfies('@3.12:'):
-            spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
+            env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)

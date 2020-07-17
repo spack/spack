@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import os
 import llnl.util.tty as tty
 from spack import *
+import platform
 
 # - vanilla CentOS 7, and possibly other systems, fail a test:
 #   TestCloneNEWUSERAndRemapRootDisableSetgroups
@@ -35,8 +36,30 @@ class Go(Package):
 
     extendable = True
 
+    version('1.14.4', sha256='7011af3bbc2ac108d1b82ea8abb87b2e63f78844f0259be20cde4d42c5c40584')
+    version('1.14.3', sha256='93023778d4d1797b7bc6a53e86c3a9b150c923953225f8a48a2d5fabc971af56')
+    version('1.14.2', sha256='98de84e69726a66da7b4e58eac41b99cbe274d7e8906eeb8a5b7eb0aadee7f7c')
+    version('1.14.1', sha256='2ad2572115b0d1b4cb4c138e6b3a31cee6294cb48af75ee86bec3dca04507676')
+    version('1.14',   sha256='6d643e46ad565058c7a39dac01144172ef9bd476521f42148be59249e4b74389')
+    version('1.13.12', sha256='17ba2c4de4d78793a21cc659d9907f4356cd9c8de8b7d0899cdedcef712eba34')
+    version('1.13.11', sha256='89ed1abce25ad003521c125d6583c93c1280de200ad221f961085200a6c00679')
+    version('1.13.10', sha256='eb9ccc8bf59ed068e7eff73e154e4f5ee7eec0a47a610fb864e3332a2fdc8b8c')
+    version('1.13.9', sha256='34bb19d806e0bc4ad8f508ae24bade5e9fedfa53d09be63b488a9314d2d4f31d')
+    version('1.13.8', sha256='b13bf04633d4d8cf53226ebeaace8d4d2fd07ae6fa676d0844a688339debec34')
+    version('1.13.7', sha256='e4ad42cc5f5c19521fbbbde3680995f2546110b5c6aa2b48c3754ff7af9b41f4')
+    version('1.13.6', sha256='aae5be954bdc40bcf8006eb77e8d8a5dde412722bc8effcdaf9772620d06420c')
+    version('1.13.5', sha256='27d356e2a0b30d9983b60a788cf225da5f914066b37a6b4f69d457ba55a626ff')
+    version('1.13.4', sha256='95dbeab442ee2746b9acf0934c8e2fc26414a0565c008631b04addb8c02e7624')
+    version('1.13.3', sha256='4f7123044375d5c404280737fbd2d0b17064b66182a65919ffe20ffe8620e3df')
+    version('1.13.2', sha256='1ea68e01472e4276526902b8817abd65cf84ed921977266f0c11968d5e915f44')
     version('1.13.1', sha256='81f154e69544b9fa92b1475ff5f11e64270260d46e7e36c34aafc8bc96209358')
-    version('1.13', sha256='3fc0b8b6101d42efd7da1da3029c0a13f22079c0c37ef9730209d8ec665bf122')
+    version('1.13',    sha256='3fc0b8b6101d42efd7da1da3029c0a13f22079c0c37ef9730209d8ec665bf122')
+    version('1.12.17', sha256='de878218c43aa3c3bad54c1c52d95e3b0e5d336e1285c647383e775541a28b25')
+    version('1.12.15', sha256='8aba74417e527524ad5724e6e6c21016795d1017692db76d1b0851c6bdec84c3')
+    version('1.12.14', sha256='39dbf05f7e2ffcb19b08f07d53dcc96feadeb1987fef9e279e7ff0c598213064')
+    version('1.12.13', sha256='5383d3b8db4baa48284ffcb14606d9cad6f03e9db843fa6d835b94d63cccf5a7')
+    version('1.12.12', sha256='fcb33b5290fa9bcc52be3211501540df7483d7276b031fc77528672a3c705b99')
+    version('1.12.11', sha256='fcf58935236802929f5726e96cd1d900853b377bec2c51b2e37219c658a4950f')
     version('1.12.10', sha256='f56e48fce80646d3c94dcf36d3e3f490f6d541a92070ad409b87b6bbb9da3954')
     version('1.12.9', sha256='ab0e56ed9c4732a653ed22e232652709afbf573e710f56a07f7fdeca578d62fc')
     version('1.12.8', sha256='11ad2e2e31ff63fcf8a2bdffbe9bfa2e1845653358daed593c8c2d03453c9898')
@@ -69,7 +92,10 @@ class Go(Package):
     depends_on('git', type=('build', 'link', 'run'))
     # TODO: Make non-c self-hosting compilers feasible without backflips
     # should be a dep on external go compiler
-    depends_on('go-bootstrap', type='build')
+    if platform.machine() == 'aarch64':
+        depends_on('gcc languages=go', type='build')
+    else:
+        depends_on('go-bootstrap', type='build')
 
     # https://github.com/golang/go/issues/17545
     patch('time_test.patch', when='@1.6.4:1.7.4')
@@ -104,12 +130,12 @@ class Go(Package):
 
         install_tree(wd, prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('GOROOT_FINAL', self.spec.prefix)
+    def setup_build_environment(self, env):
+        env.set('GOROOT_FINAL', self.spec.prefix)
         # We need to set CC/CXX_FOR_TARGET, otherwise cgo will use the
         # internal Spack wrappers and fail.
-        spack_env.set('CC_FOR_TARGET', self.compiler.cc)
-        spack_env.set('CXX_FOR_TARGET', self.compiler.cxx)
+        env.set('CC_FOR_TARGET', self.compiler.cc)
+        env.set('CXX_FOR_TARGET', self.compiler.cxx)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before go modules' install() methods.
@@ -123,19 +149,24 @@ class Go(Package):
         #  Add a go command/compiler for extensions
         module.go = self.spec['go'].command
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def generate_path_components(self, dependent_spec):
         if os.environ.get('GOROOT', False):
             tty.warn('GOROOT is set, this is not recommended')
 
+        # Set to include paths of dependencies
         path_components = []
-        # Set GOPATH to include paths of dependencies
         for d in dependent_spec.traverse():
             if d.package.extends(self.spec):
                 path_components.append(d.prefix)
+        return path_components
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # This *MUST* be first, this is where new code is installed
-        spack_env.set('GOPATH', ':'.join(path_components))
+        env.set('GOPATH', ':'.join(self.generate_path_components(
+            dependent_spec)))
 
+    def setup_dependent_run_environment(self, env, dependent_spec):
         # Allow packages to find this when using module files
-        run_env.prepend_path('GOPATH', ':'.join(
-            [dependent_spec.prefix] + path_components))
+        env.prepend_path('GOPATH', ':'.join(
+            [dependent_spec.prefix] + self.generate_path_components(
+                dependent_spec)))

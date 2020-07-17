@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,7 +49,7 @@ class Eccodes(CMakePackage):
     # tests are enabled but the testing scripts don't use it.
     # depends_on('valgrind', type='test', when='+test')
 
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c', when='+netcdf')
     depends_on('openjpeg@1.5.0:1.5.999,2.1.0:2.1.999', when='jp2k=openjpeg')
     depends_on('jasper', when='jp2k=jasper')
     depends_on('libpng', when='+png')
@@ -100,7 +100,7 @@ class Eccodes(CMakePackage):
                          '-DHDF5_ROOT=' + self.spec['hdf5'].prefix,
                          # Prevent possible overriding by environment variables
                          # NETCDF_ROOT, NETCDF_DIR, and NETCDF_PATH.
-                         '-DNETCDF_PATH=' + self.spec['netcdf'].prefix])
+                         '-DNETCDF_PATH=' + self.spec['netcdf-c'].prefix])
         else:
             args.append('-DENABLE_NETCDF=OFF')
 

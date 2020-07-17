@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Pkgconf(AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url      = "http://distfiles.dereferenced.org/pkgconf/pkgconf-1.6.3.tar.xz"
 
+    version('1.7.3',  sha256='b846aea51cf696c3392a0ae58bef93e2e72f8e7073ca6ad1ed8b01c85871f9c0')
     version('1.6.3',  sha256='61f0b31b0d5ea0e862b454a80c170f57bad47879c0c42bd8de89200ff62ea210')
     version('1.6.1',  sha256='22b9ee38438901f9d60f180e5182821180854fa738fd071f593ea26a81da208c')
     version('1.6.0',  sha256='6135a3abb576672ba54a899860442ba185063f0f90dae5892f64f7bae8e1ece5')
@@ -30,10 +31,9 @@ class Pkgconf(AutotoolsPackage):
     # TODO: Add a package for the kyua testing framework
     # depends_on('kyua', type='test')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Adds the ACLOCAL path for autotools."""
-        spack_env.append_path('ACLOCAL_PATH',
-                              join_path(self.prefix.share, 'aclocal'))
+        env.append_path('ACLOCAL_PATH', self.prefix.share.aclocal)
 
     @run_after('install')
     def link_pkg_config(self):

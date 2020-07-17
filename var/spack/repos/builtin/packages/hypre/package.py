@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Hypre(Package):
     maintainers = ['ulrikeyang', 'osborn9', 'balay']
 
     version('develop', branch='master')
+    version('2.18.2', sha256='28007b5b584eaf9397f933032d8367788707a2d356d78e47b99e551ab10cc76a')
     version('2.18.1', sha256='220f9c4ad024e815add8dad8950eaa2d8f4f231104788cf2a3c5d9da8f94ba6e')
     version('2.18.0', sha256='62591ac69f9cc9728bd6d952b65bcadd2dfe52b521081612609804a413f49b07')
     version('2.17.0', sha256='4674f938743aa29eb4d775211b13b089b9de84bfe5e9ea00c7d8782ed84a46d7')

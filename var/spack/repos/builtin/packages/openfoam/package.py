@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,7 +38,7 @@
 # - Combining +mgridgen with +int64 or +float32 probably won't work.
 #
 # The spack 'develop' version of openfoam retains the upstream
-# WM_PROJECT_VERSION=plus naming internally.
+# WM_PROJECT_VERSION=com naming internally.
 #
 ##############################################################################
 import glob
@@ -259,12 +259,21 @@ class Openfoam(Package):
     maintainers = ['olesenm']
     homepage = "http://www.openfoam.com/"
     url      = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
-    git      = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
+    git      = "https://develop.openfoam.com/Development/openfoam.git"
     list_url = "https://sourceforge.net/projects/openfoam/files/"
     list_depth = 2
 
     version('develop', branch='develop', submodules='True')
-    version('1906', sha256='15e38c2dc659b63753a0dd3dff913222cc46d6a40089a1b76973dd741145f61a')
+    version('master', branch='master', submodules='True')
+    version('2006', sha256='30c6376d6f403985fc2ab381d364522d1420dd58a42cb270d2ad86f8af227edc')
+    version('1912_200506', sha256='831a39ff56e268e88374d0a3922479fd80260683e141e51980242cc281484121')
+    version('1912_200403', sha256='1de8f4ddd39722b75f6b01ace9f1ba727b53dd999d1cd2b344a8c677ac2db4c0')
+    version('1912', sha256='437feadf075419290aa8bf461673b723a60dc39525b23322850fb58cb48548f2')
+    version('1906_200312', sha256='f75645151ed5d8c5da592d307480979fe580a25627cc0c9718ef370211577594')
+    version('1906_191103', sha256='631a7fcd926ccbcdef0ab737a9dc55e58d6bedae2f3acaa041ea679db6c9303b')
+    version('1906', sha256='bee03c4b1da0d2c9f98eb469eeffbce3a8614728ef8e87f664042a7490976537')
+    version('1812_200312', sha256='925d2877c12740fab177a30fdcaa8899c262c15b90225f9c29d18a2d97532de0')
+    version('1812_191001', sha256='857a3d476696679313ea9a3f022b33446ddef2bcd417049a9486d504c12038dd')
     version('1812_190531', sha256='51f0ef49a199edf3cd94e2ccfc7330e54e93c8e4ddb29ee66fe3e6b443583b34')
     version('1812', sha256='d4d23d913419c6a364b1fe91509c1fadb5661bdf2eedb8fe9a8a005924eb2032')
     version('1806', sha256='6951aab6405294fe59cec90b0a4e425f5403043191cda02ebaaa890ce1fcc819')
@@ -338,13 +347,13 @@ class Openfoam(Package):
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
     # kahip patch (wmake)
-    patch('https://develop.openfoam.com/Development/OpenFOAM-plus/commit/4068c03c616a4964472e06d5fb5b9bc2dd0bf1b7.patch',
+    patch('https://develop.openfoam.com/Development/openfoam/commit/8831dfc58b0295d0d301a78341dd6f4599073d45.patch',
           when='@1806',
           sha256='21f1ab68c82dfa41ed1a4439427c94c43ddda02c84175c30da623d905d3e5d61'
-    )
+          )
 
     # Some user config settings
-    # default: 'compile-option': 'RpathOpt',
+    # default: 'compile-option': '-spack',
     # default: 'mplib': 'USERMPI',     # Use user mpi for spack
     config = {
         # Add links into bin/, lib/ (eg, for other applications)
@@ -368,28 +377,40 @@ class Openfoam(Package):
     #
 
     def url_for_version(self, version):
-        # Prior to 1706 had additional '+' in the naming
-        fmt = self.list_url
+        """Handles locations for patched and unpatched versions.
+        Patched version (eg '1906_191103') are located in the
+        corresponding unpatched directories (eg '1906').
+        Older versions (eg, v1612+) had additional '+' in naming
+        """
+        tty.info('openfoam: {0}'.format(version))
         if version <= Version('1612'):
-            fmt += 'v{0}+/OpenFOAM-v{0}+.tgz'
+            fmt = 'v{0}+/OpenFOAM-v{1}+.tgz'
         else:
-            fmt += 'v{0}/OpenFOAM-v{0}.tgz'
-        return fmt.format(version, version)
+            fmt = 'v{0}/OpenFOAM-v{1}.tgz'
+        return self.list_url + fmt.format(version.up_to(1), version)
 
-    def setup_environment(self, spack_env, run_env):
-        """Add environment variables to the generated module file.
-        These environment variables come from running:
+    def setup_minimal_environment(self, env):
+        """Sets a minimal openfoam environment.
+        """
+        tty.info('OpenFOAM minimal env {0}'.format(self.prefix))
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
+        env.set('WM_PROJECT_DIR', self.projectdir)
+        for d in ['wmake', self.archbin]:  # bin added automatically
+            env.prepend_path('PATH', join_path(self.projectdir, d))
+
+    def setup_build_environment(self, env):
+        """Sets the build environment (prior to unpacking the sources).
+        """
+        pass
+
+    def setup_run_environment(self, env):
+        """Sets the run environment (post-installation).
+        The environment comes from running:
 
         .. code-block:: console
 
            $ . $WM_PROJECT_DIR/etc/bashrc
         """
-
-        # NOTE: Spack runs setup_environment twice.
-        # 1) pre-build to set up the build environment
-        # 2) post-install to determine runtime environment variables
-        # The etc/bashrc is only available (with corrrect content)
-        # post-installation.
 
         bashrc = join_path(self.projectdir, 'etc', 'bashrc')
         minimal = True
@@ -402,15 +423,15 @@ class Openfoam(Package):
                     blacklist=[  # Blacklist these
                         # Inadvertent changes
                         # -------------------
-                        'PS1',            # Leave unaffected
-                        'MANPATH',        # Leave unaffected
+                        'PS1',              # Leave untouched
+                        'MANPATH',          # Leave untouched
 
                         # Unneeded bits
                         # -------------
                         # 'FOAM_SETTINGS',  # Do not use with modules
                         # 'FOAM_INST_DIR',  # Old
                         # 'FOAM_(APP|ETC|SRC|SOLVERS|UTILITIES)',
-                        # 'FOAM_TUTORIALS',  # can be useful
+                        # 'FOAM_TUTORIALS', # May be useful
                         # 'WM_OSTYPE',      # Purely optional value
 
                         # Third-party cruft - only used for orig compilation
@@ -424,11 +445,10 @@ class Openfoam(Package):
                         '(FOAM|WM)_.*USER_.*',
                     ],
                     whitelist=[  # Whitelist these
-                        'MPI_ARCH_PATH',  # Can be needed for compilation
+                        'MPI_ARCH_PATH',  # Can be required for compilation
                     ])
 
-                run_env.extend(mods)
-                spack_env.extend(mods)
+                env.extend(mods)
                 minimal = False
                 tty.info('OpenFOAM bashrc env: {0}'.format(bashrc))
             except Exception:
@@ -436,22 +456,23 @@ class Openfoam(Package):
 
         if minimal:
             # pre-build or minimal environment
-            tty.info('OpenFOAM minimal env {0}'.format(self.prefix))
-            run_env.set('FOAM_PROJECT_DIR', self.projectdir)
-            run_env.set('WM_PROJECT_DIR', self.projectdir)
-            spack_env.set('FOAM_PROJECT_DIR', self.projectdir)
-            spack_env.set('WM_PROJECT_DIR', self.projectdir)
-            for d in ['wmake', self.archbin]:  # bin added automatically
-                run_env.prepend_path('PATH', join_path(self.projectdir, d))
-                spack_env.prepend_path('PATH', join_path(self.projectdir, d))
+            self.setup_minimal_environment(env)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Location of the OpenFOAM project directory.
-        This is identical to the WM_PROJECT_DIR value, but we avoid that
-        variable since it would mask the normal OpenFOAM cleanup of
-        previous versions.
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        """Use full OpenFOAM environment when building.
+        Mirror WM_PROJECT_DIR value as FOAM_PROJECT_DIR to avoid
+        masking the normal OpenFOAM cleanup of previous versions.
         """
-        self.setup_environment(spack_env, run_env)
+        self.setup_run_environment(env)
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Use full OpenFOAM environment when running.
+        Mirror WM_PROJECT_DIR value as FOAM_PROJECT_DIR to avoid
+        masking the normal OpenFOAM cleanup of previous versions.
+        """
+        self.setup_run_environment(env)
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
 
     @property
     def projectdir(self):
@@ -521,6 +542,43 @@ class Openfoam(Package):
                     rcfile,
                     backup=False)
 
+    @when('@1906: %fj')
+    @run_before('configure')
+    def make_fujitsu_rules(self):
+        """Create Fujitsu rules (clang variant) unless supplied upstream.
+        Implemented for 1906 and later (older rules are too messy to edit).
+        Already included after 1912.
+        """
+        general_rules = 'wmake/rules/General'
+        arch_rules = 'wmake/rules/linuxARM64'  # self.arch
+        src = arch_rules + 'Clang'
+        dst = arch_rules + 'Fujitsu'  # self.compiler
+
+        if os.path.exists(dst):
+            return
+
+        # Handle rules/<ARCH><COMP> or rules/<ARCH>/<COMP>
+        if not os.path.exists(src):
+            src = join_path(arch_rules, 'Clang')
+            dst = join_path(arch_rules, 'Fujitsu')  # self.compiler
+            if os.path.exists(dst):
+                return
+
+        tty.info('Add Fujitsu wmake rules')
+        copy_tree(src, dst)
+
+        for cfg in ['c', 'c++', 'general']:
+            rule = join_path(dst, cfg)
+            filter_file('Clang', 'Fujitsu', rule, backup=False)
+
+        src = join_path(general_rules, 'Clang')
+        dst = join_path(general_rules, 'Fujitsu')  # self.compiler
+        copy_tree(src, dst)
+        filter_file('clang', spack_cc, join_path(dst, 'c'),
+                    backup=False, string=True)
+        filter_file('clang++', spack_cxx, join_path(dst, 'c++'),
+                    backup=False, string=True)
+
     def configure(self, spec, prefix):
         """Make adjustments to the OpenFOAM configuration files in their various
         locations: etc/bashrc, etc/config.sh/FEATURE and customizations that
@@ -574,11 +632,11 @@ class Openfoam(Package):
             'metis': {},
             'ensight': {},     # Disable settings
             'paraview': [],
-            'gperftools': [],  # Currently unused
+            'gperftools': [],  # Disable settings
             'vtk': [],
         }
 
-        # With adios2 after 1912 or develop (after 2019-10-01)
+        # With adios2 after 1912
         if spec.satisfies('@1912:'):
             self.etc_config['adios2'] = [
                 ('ADIOS2_ARCH_PATH', spec['adios2'].prefix),
@@ -775,13 +833,13 @@ class OpenfoamArch(object):
 
     Keywords
         label-size=[True]   supports int32/int64
-        compile-option[=RpathOpt]
+        compile-option[=-spack]
         mplib[=USERMPI]
     """
 
     #: Map spack compiler names to OpenFOAM compiler names
     #  By default, simply capitalize the first letter
-    compiler_mapping = {'intel': 'icc'}
+    compiler_mapping = {'intel': 'Icc', 'fj': 'Fujitsu'}
 
     def __init__(self, spec, **kwargs):
         # Some user settings, to be adjusted manually or via variants
@@ -789,10 +847,9 @@ class OpenfoamArch(object):
         self.arch_option      = ''     # Eg, -march=knl
         self.label_size       = None   # <- +int64
         self.precision_option = 'DP'   # <- +float32
-        self.compile_option   = kwargs.get('compile-option', 'RpathOpt')
+        self.compile_option   = kwargs.get('compile-option', '-spack')
         self.arch             = None
         self.options          = None
-        self.rule             = None
         self.mplib            = kwargs.get('mplib', 'USERMPI')
 
         # Normally support WM_LABEL_OPTION, but not yet for foam-extend
@@ -804,15 +861,20 @@ class OpenfoamArch(object):
         if '+float32' in spec:
             self.precision_option = 'SP'
 
+        # TDB: mixed precision?
+        # self.precision_option = 'SPDP'
+
         # Processor/architecture-specific optimizations
         if '+knl' in spec:
             self.arch_option = '-march=knl'
 
         # spec.architecture.platform is like `uname -s`, but lower-case
-        platform = spec.architecture.platform
+        platform = str(spec.architecture.platform)
 
         # spec.target.family is like `uname -m`
-        target = spec.target.family
+        target = str(spec.target.family)
+
+        # No spack platform family for ia64 or armv7l
 
         if platform == 'linux':
             if target == 'x86_64':
@@ -834,10 +896,9 @@ class OpenfoamArch(object):
 
         self.arch = platform
 
-        # Capitalized version of the compiler name, which usually corresponds
-        # to how OpenFOAM will camel-case things.
-        # Use compiler_mapping to handing special cases.
-        # Also handle special compiler options (eg, KNL)
+        # Capitalize first letter of compiler name, which corresponds
+        # to how OpenFOAM handles things (eg, gcc -> Gcc).
+        # Use compiler_mapping for special cases.
         comp = spec.compiler.name
 
         if comp in self.compiler_mapping:
@@ -845,7 +906,6 @@ class OpenfoamArch(object):
         comp = comp.capitalize()
 
         self.compiler = comp
-        self.rule = self.arch + self.compiler
 
         # Build WM_OPTIONS
         # ----
@@ -855,7 +915,8 @@ class OpenfoamArch(object):
         # WM_OPTIONS=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_COMPILE_OPTION
         # ----
         self.options = ''.join([
-            self.rule,
+            self.arch,
+            self.compiler,
             self.precision_option,
             ('Int' + self.label_size if self.label_size else ''),
             self.compile_option])
@@ -876,46 +937,45 @@ class OpenfoamArch(object):
             ('WM_MPLIB',       self.mplib),
         ])
 
-    def _rule_directory(self, projdir=None, general=False):
-        """The wmake/rules/ compiler directory"""
+    def _rule_directory(self, projdir, general=False):
+        """Return the wmake/rules/ General or compiler rules directory.
+        Supports wmake/rules/<ARCH><COMP> and wmake/rules/<ARCH>/<COMP>.
+        """
+        rules_dir = os.path.join(projdir, 'wmake', 'rules')
         if general:
-            relative = os.path.join('wmake', 'rules', 'General')
+            return os.path.join(rules_dir, 'General')
+
+        arch_dir = os.path.join(rules_dir, self.arch)
+        comp_rules = arch_dir + self.compiler
+        if os.path.isdir(comp_rules):
+            return comp_rules
         else:
-            relative = os.path.join('wmake', 'rules', self.rule)
-        if projdir:
-            return os.path.join(projdir, relative)
-        else:
-            return relative
+            return os.path.join(arch_dir, self.compiler)
 
     def has_rule(self, projdir):
-        """Verify that a wmake/rules/ compiler rule exists in the project
-        directory.
+        """Verify that a wmake/rules/ compiler rule exists in the project.
         """
         # Insist on a wmake rule for this architecture/compiler combination
         rule_dir = self._rule_directory(projdir)
 
         if not os.path.isdir(rule_dir):
             raise InstallError(
-                'No wmake rule for {0}'.format(self.rule))
-        if not re.match(r'.+Opt$', self.compile_option):
-            raise InstallError(
-                "WM_COMPILE_OPTION={0} is not type '*Opt'"
-                .format(self.compile_option))
+                'No wmake rule for {0} {1}'.format(self.arch, self.compiler))
         return True
 
     def create_rules(self, projdir, foam_pkg):
-        """ Create cRpathOpt,c++RpathOpt and mplibUSER,mplibUSERMPI
+        """ Create {c,c++}-spack and mplib{USER,USERMPI}
         rules in the specified project directory.
-        The compiler rules are based on the respective cOpt,c++Opt rules
+        The compiler rules are based on the respective {c,c++}Opt rules
         but with additional rpath information for the OpenFOAM libraries.
 
-        The rpath rules allow wmake to use spack information with minimal
-        modification to OpenFOAM.
+        The '-spack' rules channel spack information into OpenFOAM wmake
+        rules with minimal modification to OpenFOAM.
         The rpath is used for the installed libpath (continue to use
         LD_LIBRARY_PATH for values during the build).
         """
         # Note: the 'c' rules normally don't need rpath, since they are just
-        # used for statically linked wmake utilities, but left in anyhow.
+        # used for some statically linked wmake tools, but left in anyhow.
 
         # rpath for installed OpenFOAM libraries
         rpath = '{0}{1}'.format(

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,8 @@ from spack import *
 class Redset(CMakePackage):
     """Create MPI communicators for disparate redundancy sets"""
 
-    homepage = "https://github.com/ECP-VeloC/redset"
-    url      = "https://github.com/ECP-VeloC/redset/archive/v0.0.2.zip"
+    homepage = "https://github.com/ecp-veloc/redset"
+    url      = "https://github.com/ecp-veloc/redset/archive/v0.0.3.zip"
     git      = "https://github.com/ecp-veloc/redset.git"
 
     tags = ['ecp']

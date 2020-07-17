@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class LmSensors(MakefilePackage):
     url = "https://github.com/groeck/lm-sensors/archive/V3-4-0.tar.gz"
     maintainers = ['G-Ragghianti']
 
+    version('3-6-0', sha256='0591f9fa0339f0d15e75326d0365871c2d4e2ed8aa1ff759b3a55d3734b7d197')
+    version('3-5-0', sha256='f671c1d63a4cd8581b3a4a775fd7864a740b15ad046fe92038bcff5c5134d7e0')
     version('3-4-0', sha256='e334c1c2b06f7290e3e66bdae330a5d36054701ffd47a5dde7a06f9a7402cb4e')
     version('3-3-5', sha256='e3802f80785c54822027a8c187b10066ba685ec5e997fd02c1d29761ea9c83d4')
     version('3-3-4', sha256='1c586684b39292b5fabaf5a2701241885ea6483e5e15265e1f501e1b639fdd86')
@@ -32,3 +34,8 @@ class LmSensors(MakefilePackage):
     def install(self, spec, prefix):
         make('install', 'PREFIX={0}'.format(prefix),
              'ETCDIR={0}/etc'.format(prefix))
+
+    @property
+    def libs(self):
+        return find_libraries(
+            'libsensors', root=self.prefix, shared=True, recursive=True)

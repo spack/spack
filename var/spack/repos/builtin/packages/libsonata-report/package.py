@@ -23,7 +23,7 @@ class LibsonataReport(CMakePackage):
 
     depends_on('cmake@3.3:', type='build')
     depends_on('py-setuptools-scm', type='build')
-    depends_on('catch~single_header')
+    depends_on('catch2')
     depends_on('fmt@4.0:')
     depends_on('highfive+mpi', when='+mpi')
     depends_on('highfive~mpi', when='~mpi')

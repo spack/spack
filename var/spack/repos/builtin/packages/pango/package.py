@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,14 +23,22 @@ class Pango(AutotoolsPackage):
 
     variant('X', default=False, description="Enable an X toolkit")
 
-    depends_on("pkgconfig", type="build")
+    depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("harfbuzz")
-    depends_on("cairo")
+    depends_on("cairo+ft+fc")
     depends_on("cairo~X", when='~X')
     depends_on("cairo+X", when='+X')
     depends_on("libxft", when='+X')
     depends_on("glib")
     depends_on('gobject-introspection')
+    depends_on('fontconfig')
+    depends_on('freetype@2:')
+    depends_on('libffi')
+
+    depends_on('harfbuzz@1.2.3:', when='@1.41.0')
+    depends_on('libxft@2.0.0:', when='@1.41.0 +X')
+    depends_on('glib@2.33.12:', when='@1.41.0')
+    depends_on('fontconfig@2.11.91:', when='@1.41.0')
 
     def url_for_version(self, version):
         url = "http://ftp.gnome.org/pub/GNOME/sources/pango/{0}/pango-{1}.tar.xz"
@@ -56,8 +64,8 @@ class Pango(AutotoolsPackage):
     def install(self, spec, prefix):
         make("install", parallel=False)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path("XDG_DATA_DIRS",
-                               self.prefix.share)
-        run_env.prepend_path("XDG_DATA_DIRS",
-                             self.prefix.share)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Hpgmg(Package):
     """
 
     homepage = "https://bitbucket.org/hpgmg/hpgmg"
-    url      = "https://hpgmg.org/static/hpgmg-0.tar.gz"
+    url      = "https://hpgmg.org/static/hpgmg-0.4.tar.gz"
     git      = "https://bitbucket.org/hpgmg/hpgmg.git"
 
     tags = ['proxy-app']
@@ -59,13 +59,11 @@ class Hpgmg(Package):
             args.append('--no-fv')
         else:
             # Apple's Clang doesn't support OpenMP
-            if not (self.spec.satisfies('%clang') and self.compiler.is_apple):
+            if not self.spec.satisfies('%apple-clang'):
                 cflags.append(self.compiler.openmp_flag)
 
         if '+debug' in self.spec:
             cflags.append('-g')
-        elif any(map(self.spec.satisfies, ['%gcc', '%clang', '%intel'])):
-            cflags.append('-O3')
         else:
             cflags.append('-O3')
 

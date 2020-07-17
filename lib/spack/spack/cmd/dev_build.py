@@ -1,19 +1,18 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
 import os
-import argparse
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.config
 import spack.cmd
-import spack.repo
 import spack.cmd.common.arguments as arguments
+import spack.repo
 from spack.stage import DIYStage
 
 description = "developer build: build from code in current working directory"
@@ -40,11 +39,17 @@ def setup_parser(subparser):
         '-q', '--quiet', action='store_true', dest='quiet',
         help="do not display verbose build output while installing")
     subparser.add_argument(
+        '--drop-in', type=str, dest='shell', default=None,
+        help="drop into a build environment in a new shell, e.g. bash, zsh")
+    arguments.add_common_arguments(subparser, ['spec'])
+
+    stop_group = subparser.add_mutually_exclusive_group()
+    stop_group.add_argument(
+        '-b', '--before', type=str, dest='before', default=None,
+        help="phase to stop before when installing (default None)")
+    stop_group.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="specs to use for install. must contain package AND version")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -97,6 +102,7 @@ def dev_build(self, args):
         keep_stage=True,   # don't remove source dir for DIY.
         tests=tests,
         dirty=args.dirty,
+        stop_before=args.before,
         stop_at=args.until)
 
     display_args = {
@@ -131,3 +137,8 @@ def dev_build(self, args):
                     "ignoring the --overwrite flag:")
             spack.cmd.display_specs([spec], **display_args)
         package.do_install(**kwargs)
+
+    # drop into the build environment of the package?
+    if args.shell is not None:
+        spack.build_environment.setup_package(package, dirty=False)
+        os.execvp(args.shell, [args.shell])

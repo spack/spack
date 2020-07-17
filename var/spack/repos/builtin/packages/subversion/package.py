@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,7 +34,7 @@ class Subversion(AutotoolsPackage):
 
     extends('perl', when='+perl')
     depends_on('swig@1.3.24:3.0.0', when='+perl')
-    depends_on('perl-term-readkey', when='+perl')
+    depends_on('perl-termreadkey', when='+perl')
 
     # Installation has race cases.
     parallel = False

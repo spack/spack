@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,10 @@ class Cleverleaf(CMakePackage):
     depends_on('hdf5+mpi')
     depends_on('boost')
     depends_on('cmake@3.1:', type='build')
+
+    # The Fujitsu compiler requires the '--linkfortran'
+    # option to combine C++ and Fortran programs.
+    patch('fujitsu_add_link_flags.patch', when='%fj')
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies('%intel') and name in ['cppflags', 'cxxflags']:

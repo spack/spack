@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,8 +24,9 @@ class Beast1(Package):
         base = 'https://github.com/beast-dev/beast-mcmc/releases/download'
         return '{0}/v{1}/BEASTv{1}.tgz'.format(base, ver.dotted)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('BEAST1', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('BEAST1', self.prefix)
+        env.set('BEAST_LIB', self.prefix.lib)
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)

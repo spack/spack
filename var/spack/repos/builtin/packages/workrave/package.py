@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -67,13 +67,13 @@ class Workrave(AutotoolsPackage):
              destination='',
              placement=m4files[1])
 
-    def setup_environment(self, build_env, run_env):
+    def setup_build_environment(self, env):
         # unset PYTHONHOME to let system python script with explict
         # system python sbangs like glib-mkenums work, see #6968
         # Without this, we will get
         # ImportError: No module named site
         # during build phase when make runs glib-mkenums
-        build_env.unset('PYTHONHOME')
+        env.unset('PYTHONHOME')
 
     @run_before('autoreconf')
     def extra_m4(self):

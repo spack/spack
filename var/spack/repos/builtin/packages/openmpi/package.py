@@ -1,60 +1,13 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import itertools
 import os
 import sys
 import llnl.util.tty as tty
-
-
-def _verbs_dir():
-    """Try to find the directory where the OpenFabrics verbs package is
-    installed. Return None if not found.
-    """
-    try:
-        # Try to locate Verbs by looking for a utility in the path
-        ibv_devices = which("ibv_devices")
-        # Run it (silently) to ensure it works
-        ibv_devices(output=str, error=str)
-        # Get path to executable
-        path = ibv_devices.exe[0]
-        # Remove executable name and "bin" directory
-        path = os.path.dirname(path)
-        path = os.path.dirname(path)
-        # There's usually no "/include" on Unix; use "/usr/include" instead
-        if path == "/":
-            path = "/usr"
-        return path
-    except TypeError:
-        return None
-    except ProcessError:
-        return None
-
-
-def _mxm_dir():
-    """Look for default directory where the Mellanox package is
-    installed. Return None if not found.
-    """
-    # Only using default directory; make this more flexible in the future
-    path = "/opt/mellanox/mxm"
-    if os.path.isdir(path):
-        return path
-    else:
-        return None
-
-
-def _tm_dir():
-    """Look for default directory where the PBS/TM package is
-    installed. Return None if not found.
-    """
-    # /opt/pbs from PBS 18+; make this more flexible in the future
-    paths_list = ("/opt/pbs", )
-    for path in paths_list:
-        if os.path.isdir(path) and os.path.isfile(path + "/include/tm.h"):
-            return path
-    return None
 
 
 class Openmpi(AutotoolsPackage):
@@ -75,27 +28,33 @@ class Openmpi(AutotoolsPackage):
     list_url = "http://www.open-mpi.org/software/ompi/"
     git = "https://github.com/open-mpi/ompi.git"
 
-    version('develop', branch='master')
+    maintainers = ['hppritcha']
+
+    version('master', branch='master')
 
     # Current
-    version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
-
-    # hpe-ddn specific external versions for ime
-    version('ime', sha256='deadbeef000deadbeef000deadbeef000deadbeef000deadbeef000deadbeef0')
+    version('4.0.4', sha256='47e24eb2223fe5d24438658958a313b6b7a55bb281563542e1afc9dec4a31ac4')  # libmpi.so.40.20.4
 
     # Still supported
+    version('4.0.3', sha256='1402feced8c3847b3ab8252165b90f7d1fa28c23b6b2ca4632b6e4971267fd03')  # libmpi.so.40.20.3
+    version('4.0.2', sha256='900bf751be72eccf06de9d186f7b1c4b5c2fa9fa66458e53b77778dffdfe4057')  # libmpi.so.40.20.2
+    version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
     version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
-    version('3.1.4', preferred=True, sha256='17a69e0054db530c7dc119f75bd07d079efa147cf94bf27e590905864fe379d6')  # libmpi.so.40.10.4
+    version('3.1.6', preferred=True, sha256='50131d982ec2a516564d74d5616383178361c2f08fdd7d1202b80bdf66a0d279')  # libmpi.so.40.10.4
+    version('3.1.5', sha256='fbf0075b4579685eec8d56d34d4d9c963e6667825548554f5bf308610af72133')  # libmpi.so.40.10.4
+    version('3.1.4', sha256='17a69e0054db530c7dc119f75bd07d079efa147cf94bf27e590905864fe379d6')  # libmpi.so.40.10.4
     version('3.1.3', sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
     version('3.1.2', sha256='c654ed847f34a278c52a15c98add40402b4a90f0c540779f1ae6c489af8a76c5')  # libmpi.so.40.10.2
     version('3.1.1', sha256='3f11b648dd18a8b878d057e9777f2c43bf78297751ad77ae2cef6db0fe80c77c')  # libmpi.so.40.10.1
     version('3.1.0', sha256='b25c044124cc859c0b4e6e825574f9439a51683af1950f6acda1951f5ccdf06c')  # libmpi.so.40.10.0
+    version('3.0.5', sha256='f8976b95f305efc435aa70f906b82d50e335e34cffdbf5d78118a507b1c6efe8')  # libmpi.so.40.00.5
     version('3.0.4', sha256='2ff4db1d3e1860785295ab95b03a2c0f23420cda7c1ae845c419401508a3c7b5')  # libmpi.so.40.00.5
     version('3.0.3', sha256='fb228e42893fe6a912841a94cd8a0c06c517701ae505b73072409218a12cf066')  # libmpi.so.40.00.4
     version('3.0.2', sha256='d2eea2af48c1076c53cabac0a1f12272d7470729c4e1cb8b9c2ccd1985b2fb06')  # libmpi.so.40.00.2
     version('3.0.1', sha256='663450d1ee7838b03644507e8a76edfb1fba23e601e9e0b5b2a738e54acd785d')  # libmpi.so.40.00.1
     version('3.0.0', sha256='f699bff21db0125d8cccfe79518b77641cd83628725a1e1ed3e45633496a82d7')  # libmpi.so.40.00.0
 
+    # Retired
     version('2.1.6', sha256='98b8e1b8597bbec586a0da79fcd54a405388190247aa04d48e8c40944d4ca86e')  # libmpi.so.20.10.3
     version('2.1.5', sha256='b807ccab801f27c3159a5edf29051cd3331d3792648919f9c4cee48e987e7794')  # libmpi.so.20.10.3
     version('2.1.4', sha256='3e03695ca8bd663bc2d89eda343c92bb3d4fc79126b178f5ddcb68a8796b24e2')  # libmpi.so.20.10.3
@@ -104,7 +63,6 @@ class Openmpi(AutotoolsPackage):
     version('2.1.1', sha256='bd7badd4ff3afa448c0d7f3ca0ee6ce003b957e9954aa87d8e4435759b5e4d16')  # libmpi.so.20.10.1
     version('2.1.0', sha256='b169e15f5af81bf3572db764417670f508c0df37ce86ff50deb56bd3acb43957')  # libmpi.so.20.10.0
 
-    # Retired
     version('2.0.4', sha256='4f82d5f7f294becbd737319f74801206b08378188a95b70abe706fdc77a0c20b')  # libmpi.so.20.0.4
     version('2.0.3', sha256='b52c0204c0e5954c9c57d383bb22b4181c09934f97783292927394d29f2a808a')  # libmpi.so.20.0.3
     version('2.0.2', sha256='cae396e643f9f91f0a795f8d8694adf7bacfb16f967c22fb39e9e28d477730d3')  # libmpi.so.20.0.2
@@ -191,6 +149,7 @@ class Openmpi(AutotoolsPackage):
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
+    patch('fix-ucx-1.7.0-api-instability.patch', when='@4.0.0:4.0.2')
 
     # Vader Bug: https://github.com/open-mpi/ompi/issues/5375
     # Haven't release fix for 2.1.x
@@ -200,33 +159,66 @@ class Openmpi(AutotoolsPackage):
     patch('btl_vader.patch', when='@3.0.1:3.0.2')
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
+    # Make NAG compiler pass the -pthread option to the linker:
+    # https://github.com/open-mpi/ompi/pull/6378
+    # We support only versions based on Libtool 2.4.6.
+    patch('nag_pthread/2.1.4_2.1.999_3.0.1_4.patch', when='@2.1.4:2.1.999,3.0.1:4%nag')
+    patch('nag_pthread/2.1.2_2.1.3_3.0.0.patch', when='@2.1.2:2.1.3,3.0.0%nag')
+    patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
+    patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10.999%nag')
+
+    # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
+    # support "IGNORE TKR" functionality (e.g. NAG).
+    # The issue has been resolved upstream in two steps:
+    #   1) https://github.com/open-mpi/ompi/pull/2294
+    #   2) https://github.com/open-mpi/ompi/pull/5099
+    # The first one was applied starting version v3.0.0 and backported to
+    # v1.10. A subset with relevant modifications is applicable starting
+    # version 1.8.4.
+    patch('use_mpi_tkr_sizeof/step_1.patch', when='@1.8.4:1.10.6,2:2.999')
+    # The second patch was applied starting version v4.0.0 and backported to
+    # v2.x, v3.0.x, and v3.1.x.
+    patch('use_mpi_tkr_sizeof/step_2.patch', when='@1.8.4:2.1.3,3:3.0.1')
+
     variant(
         'fabrics',
         values=disjoint_sets(
-            ('auto',), ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
+            ('auto',),
+            ('psm', 'psm2', 'verbs',
+             'mxm', 'ucx', 'ofi',
+             'fca', 'hcoll',
+             'xpmem', 'cma', 'knem')  # shared memory transports
         ).with_non_feature_values('auto', 'none'),
         description="List of fabrics that are enabled; "
-        "'auto' lets openmpi determine",
+                    "'auto' lets openmpi determine",
     )
 
     variant(
         'schedulers',
         values=disjoint_sets(
-            ('auto',), ('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler')
+            ('auto',),
+            ('alps', 'lsf', 'tm',
+             'slurm', 'sge', 'loadleveler')
         ).with_non_feature_values('auto', 'none'),
         description="List of schedulers for which support is enabled; "
-        "'auto' lets openmpi determine",
+                    "'auto' lets openmpi determine",
     )
 
     # Additional support options
+    variant('atomics', default=False, description='Enable built-in atomics')
     variant('java', default=False, description='Build Java support')
+    variant('static', default=True, description='Build static libraries')
     variant('sqlite3', default=False, description='Build SQLite3 support')
     variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
-    variant('cxx_exceptions', default=True, description='Enable C++ Exception support')
+    variant('wrapper-rpath', default=True,
+            description='Enable rpath support in the wrappers')
+    variant('cxx', default=False, description='Enable C++ MPI bindings')
+    variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
+    variant('gpfs', default=True, description='Enable GPFS support (if present)')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -259,6 +251,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('m4',       type='build', when='@develop')
     depends_on('perl',     type='build', when='@develop')
 
+    depends_on('pkgconfig', type='build')
+
     depends_on('hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
@@ -271,16 +265,53 @@ class Openmpi(AutotoolsPackage):
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('zlib', when='@3.0.0:')
     depends_on('valgrind~mpi', when='+memchecker')
-    depends_on('ucx', when='fabrics=ucx')
-    depends_on('libfabric', when='fabrics=libfabric')
-    depends_on('slurm', when='schedulers=slurm')
-    depends_on('lsf', when='schedulers=lsf')
-    depends_on('binutils+libiberty', when='fabrics=mxm')
 
-    conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
-    conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
-    conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
-    conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
+    depends_on('opa-psm2', when='fabrics=psm2')
+    depends_on('rdma-core', when='fabrics=verbs')
+    depends_on('mxm', when='fabrics=mxm')
+    depends_on('binutils+libiberty', when='fabrics=mxm')
+    depends_on('ucx', when='fabrics=ucx')
+    depends_on('ucx +thread_multiple', when='fabrics=ucx +thread_multiple')
+    depends_on('ucx +thread_multiple', when='@3.0.0: fabrics=ucx')
+    depends_on('libfabric', when='fabrics=ofi')
+    depends_on('fca', when='fabrics=fca')
+    depends_on('hcoll', when='fabrics=hcoll')
+    depends_on('xpmem', when='fabrics=xpmem')
+    depends_on('knem', when='fabrics=knem')
+
+    depends_on('lsf', when='schedulers=lsf')
+    depends_on('openpbs', when='schedulers=tm')
+    depends_on('slurm', when='schedulers=slurm')
+
+    # CUDA support was added in 1.7
+    conflicts('+cuda', when='@:1.6')
+    # PMI support was added in 1.5.5
+    conflicts('+pmi', when='@:1.5.4')
+    # RPATH support in the wrappers was added in 1.7.4
+    conflicts('+wrapper-rpath', when='@:1.7.3')
+
+    conflicts('+cxx', when='@5:',
+              msg='C++ MPI bindings are removed in 5.0.X release')
+    conflicts('+cxx_exceptions', when='@5:',
+              msg='C++ exceptions are removed in 5.0.X release')
+
+    # PSM2 support was added in 1.10.0
+    conflicts('fabrics=psm2', when='@:1.8')
+    # MXM support was added in 1.5.4
+    conflicts('fabrics=mxm', when='@:1.5.3')
+    # libfabric (OFI) support was added in 1.10.0
+    conflicts('fabrics=ofi', when='@:1.8')
+    # fca support was added in 1.5.0 and removed in 5.0.0
+    conflicts('fabrics=fca', when='@:1.4,5:')
+    # hcoll support was added in 1.7.3:
+    conflicts('fabrics=hcoll', when='@:1.7.2')
+    # xpmem support was added in 1.7
+    conflicts('fabrics=xpmem', when='@:1.6')
+    # cma support was added in 1.7
+    conflicts('fabrics=cma', when='@:1.6')
+    # knem support was added in 1.5
+    conflicts('fabrics=knem', when='@:1.4')
+
     conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
     conflicts('schedulers=loadleveler', when='@3.0.0:',
@@ -288,8 +319,6 @@ class Openmpi(AutotoolsPackage):
               'openmpi(>=3.0.0).')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
-    conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
-    # It may be worth considering making libfabric an exclusive fabrics choice
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -314,24 +343,22 @@ class Openmpi(AutotoolsPackage):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_run_environment(self, env):
+        # Because MPI is both a runtime and a compiler, we have to setup the
+        # compiler components as part of the run environment.
         env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
         env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
         env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
         env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+        # Use the spack compiler wrappers under MPI
         env.set('OMPI_CC', spack_cc)
         env.set('OMPI_CXX', spack_cxx)
         env.set('OMPI_FC', spack_fc)
         env.set('OMPI_F77', spack_f77)
-
-    def setup_run_environment(self, env):
-        ''' often we use external mpich/openmpi
-            packages and by defualt they are using system clang.
-            we need to set compiler here to avoid link errors
-        '''
-        env.set('OMPI_CC', self.compiler.cc)
-        env.set('OMPI_CXX', self.compiler.cxx)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
@@ -343,44 +370,72 @@ class Openmpi(AutotoolsPackage):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
+    # Most of the following with_or_without methods might seem redundant
+    # because Spack compiler wrapper adds the required -I and -L flags, which
+    # is enough for the configure script to find them. However, we also need
+    # the flags in Libtool (lib/*.la) and pkg-config (lib/pkgconfig/*.pc).
+    # Therefore, we pass the prefixes explicitly.
+
+    def with_or_without_psm2(self, activated):
+        if not activated:
+            return '--without-psm2'
+        return '--with-psm2={0}'.format(self.spec['opa-psm2'].prefix)
+
     def with_or_without_verbs(self, activated):
-        # Up through version 1.6, this option was previously named
-        # --with-openib
-        opt = 'openib'
-        # In version 1.7, it was renamed to be --with-verbs
-        if self.spec.satisfies('@1.7:'):
-            opt = 'verbs'
-        # If the option has not been activated return
-        # --without-openib or --without-verbs
+        # Up through version 1.6, this option was named --with-openib.
+        # In version 1.7, it was renamed to be --with-verbs.
+        opt = 'verbs' if self.spec.satisfies('@1.7:') else 'openib'
         if not activated:
             return '--without-{0}'.format(opt)
-        line = '--with-{0}'.format(opt)
-        path = _verbs_dir()
-        if (path is not None) and (path not in ('/usr', '/usr/local')):
-            line += '={0}'.format(path)
-        return line
+        return '--with-{0}={1}'.format(opt, self.spec['rdma-core'].prefix)
 
     def with_or_without_mxm(self, activated):
-        opt = 'mxm'
-        # If the option has not been activated return --without-mxm
+        if not activated:
+            return '--without-mxm'
+        return '--with-mxm={0}'.format(self.spec['mxm'].prefix)
+
+    def with_or_without_ucx(self, activated):
+        if not activated:
+            return '--without-ucx'
+        return '--with-ucx={0}'.format(self.spec['ucx'].prefix)
+
+    def with_or_without_ofi(self, activated):
+        # Up through version 3.0.3 this option was name --with-libfabric.
+        # In version 3.0.4, the old name was deprecated in favor of --with-ofi.
+        opt = 'ofi' if self.spec.satisfies('@3.0.4:') else 'libfabric'
         if not activated:
             return '--without-{0}'.format(opt)
-        line = '--with-{0}'.format(opt)
-        path = _mxm_dir()
-        if path is not None:
-            line += '={0}'.format(path)
-        return line
+        return '--with-{0}={1}'.format(opt, self.spec['libfabric'].prefix)
+
+    def with_or_without_fca(self, activated):
+        if not activated:
+            return '--without-fca'
+        return '--with-fca={0}'.format(self.spec['fca'].prefix)
+
+    def with_or_without_hcoll(self, activated):
+        if not activated:
+            return '--without-hcoll'
+        return '--with-hcoll={0}'.format(self.spec['hcoll'].prefix)
+
+    def with_or_without_xpmem(self, activated):
+        if not activated:
+            return '--without-xpmem'
+        return '--with-xpmem={0}'.format(self.spec['xpmem'].prefix)
+
+    def with_or_without_knem(self, activated):
+        if not activated:
+            return '--without-knem'
+        return '--with-knem={0}'.format(self.spec['knem'].prefix)
+
+    def with_or_without_lsf(self, activated):
+        if not activated:
+            return '--without-lsf'
+        return '--with-lsf={0}'.format(self.spec['lsf'].prefix)
 
     def with_or_without_tm(self, activated):
-        opt = 'tm'
-        # If the option has not been activated return --without-tm
         if not activated:
-            return '--without-{0}'.format(opt)
-        line = '--with-{0}'.format(opt)
-        path = _tm_dir()
-        if path is not None:
-            line += '={0}'.format(path)
-        return line
+            return '--without-tm'
+        return '--with-tm={0}'.format(self.spec['openpbs'].prefix)
 
     @run_before('autoreconf')
     def die_without_fortran(self):
@@ -397,18 +452,27 @@ class Openmpi(AutotoolsPackage):
         perl = which('perl')
         perl('autogen.pl')
 
+    def setup_build_environment(self, env):
+        if '~gpfs' in self.spec:
+            env.set('ac_cv_header_gpfs_h', 'no')
+            env.set('ac_cv_header_gpfs_fcntl_h', 'no')
+
     def configure_args(self):
         spec = self.spec
         config_args = [
             '--enable-shared',
+            '--disable-silent-rules'
         ]
 
-        # Add extra_rpaths dirs from compilers.yaml into link wrapper
-        rpaths = [self.compiler.cc_rpath_arg + path
-                  for path in self.compiler.extra_rpaths]
-        config_args.extend([
-            '--with-wrapper-ldflags={0}'.format(' '.join(rpaths))
-        ])
+        # All rpath flags should be appended with self.compiler.cc_rpath_arg.
+        # Later, we might need to update share/openmpi/mpic++-wrapper-data.txt
+        # and mpifort-wrapper-data.txt (see filter_rpaths()).
+        wrapper_ldflags = []
+
+        if '+atomics' in spec:
+            config_args.append('--enable-builtin-atomics')
+        else:
+            config_args.append('--disable-builtin-atomics')
 
         # According to this comment on github:
         #
@@ -420,17 +484,22 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('schedulers=slurm'):
             config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
             if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
-                config_args.append('--enable-static')
+                if '+static' in spec:
+                    config_args.append('--enable-static')
         else:
-            config_args.append('--enable-static')
-            config_args.extend(self.with_or_without('pmi'))
+            if '+static' in spec:
+                config_args.append('--enable-static')
+            else:
+                config_args.append('--disable-static')
 
-        if spec.satisfies('@2.0:'):
-            # for Open-MPI 2.0:, C++ bindings are disabled by default.
-            config_args.extend(['--enable-mpi-cxx'])
+            config_args.extend(self.with_or_without('pmi'))
 
         if spec.satisfies('@3.0.0:', strict=True):
             config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
+
+        if spec.satisfies('@4.0.0:4.0.2'):
+            # uct btl doesn't work with some UCX versions so just disable
+            config_args.append('--enable-mca-no-build=btl-uct')
 
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see
@@ -441,6 +510,13 @@ class Openmpi(AutotoolsPackage):
         # Fabrics
         if 'fabrics=auto' not in spec:
             config_args.extend(self.with_or_without('fabrics'))
+
+        if spec.satisfies('@2.0.0'):
+            if 'fabrics=xpmem' in spec and 'platform=cray' in spec:
+                config_args.append('--with-cray-xpmem')
+            else:
+                config_args.append('--without-cray-xpmem')
+
         # Schedulers
         if 'schedulers=auto' not in spec:
             config_args.extend(self.with_or_without('schedulers'))
@@ -455,7 +531,6 @@ class Openmpi(AutotoolsPackage):
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
-
         # Java support
         if spec.satisfies('@1.7.4:'):
             if '+java' in spec:
@@ -516,11 +591,87 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
-        if '+cxx_exceptions' in spec:
-            config_args.append('--enable-cxx-exceptions')
+        if '+wrapper-rpath' in spec:
+            config_args.append('--enable-wrapper-rpath')
+
+            # Disable new dynamic tags in the wrapper (--disable-new-dtags)
+            # In the newer versions this can be done with a configure option
+            # (for older versions, we rely on filter_compiler_wrappers() and
+            # filter_pc_files()):
+            if spec.satisfies('@3.0.5:'):
+                config_args.append('--disable-wrapper-runpath')
+
+            # Add extra_rpaths and implicit_rpaths into the wrappers.
+            wrapper_ldflags.extend([
+                self.compiler.cc_rpath_arg + path
+                for path in itertools.chain(
+                    self.compiler.extra_rpaths,
+                    self.compiler.implicit_rpaths())])
         else:
-            config_args.append('--disable-cxx-exceptions')
+            config_args.append('--disable-wrapper-rpath')
+
+        if spec.satisfies('@:4'):
+            if '+cxx' in spec:
+                config_args.append('--enable-mpi-cxx')
+            else:
+                config_args.append('--disable-mpi-cxx')
+
+            if '+cxx_exceptions' in spec:
+                config_args.append('--enable-cxx-exceptions')
+            else:
+                config_args.append('--disable-cxx-exceptions')
+
+        if wrapper_ldflags:
+            config_args.append(
+                '--with-wrapper-ldflags={0}'.format(' '.join(wrapper_ldflags)))
+
         return config_args
+
+    @when('+wrapper-rpath')
+    @run_after('install')
+    def filter_rpaths(self):
+
+        def filter_lang_rpaths(lang_tokens, rpath_arg):
+            if self.compiler.cc_rpath_arg == rpath_arg:
+                return
+
+            files = find(self.spec.prefix.share.openmpi,
+                         ['*{0}-wrapper-data*'.format(t) for t in lang_tokens])
+            files.extend(find(self.spec.prefix.lib.pkgconfig,
+                              ['ompi-{0}.pc'.format(t) for t in lang_tokens]))
+
+            x = FileFilter(*[f for f in files if not os.path.islink(f)])
+
+            # Replace self.compiler.cc_rpath_arg, which have been added as
+            # '--with-wrapper-ldflags', with rpath_arg in the respective
+            # language-specific wrappers and pkg-config files.
+            x.filter(self.compiler.cc_rpath_arg, rpath_arg,
+                     string=True, backup=False)
+
+            if self.spec.satisfies('@:1.10.3,2:2.1.1'):
+                # Replace Libtool-style RPATH prefixes '-Wl,-rpath -Wl,' with
+                # rpath_arg for old version of OpenMPI, which assumed that CXX
+                # and FC had the same prefixes as CC.
+                x.filter('-Wl,-rpath -Wl,', rpath_arg,
+                         string=True, backup=False)
+
+        filter_lang_rpaths(['c++', 'CC', 'cxx'], self.compiler.cxx_rpath_arg)
+        filter_lang_rpaths(['fort', 'f77', 'f90'], self.compiler.fc_rpath_arg)
+
+    @when('@:3.0.4+wrapper-rpath')
+    @run_after('install')
+    def filter_pc_files(self):
+        files = find(self.spec.prefix.lib.pkgconfig, '*.pc')
+        x = FileFilter(*[f for f in files if not os.path.islink(f)])
+
+        # Remove this linking flag if present (it turns RPATH into RUNPATH)
+        x.filter('{0}--enable-new-dtags'.format(self.compiler.linker_arg), '',
+                 string=True, backup=False)
+
+        # NAG compiler is usually mixed with GCC, which has a different
+        # prefix for linker arguments.
+        if self.compiler.name == 'nag':
+            x.filter('-Wl,--enable-new-dtags', '', string=True, backup=False)
 
     @run_after('install')
     def delete_mpirun_mpiexec(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,20 +35,24 @@ class Gtksourceview(AutotoolsPackage):
     depends_on('pango')
     depends_on('gdk-pixbuf')
     depends_on('atk')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     def url_for_version(self, version):
         url  = 'https://download.gnome.org/sources/gtksourceview/'
         url += '{0}/gtksourceview-{1}.tar.xz'
         return url.format(version.up_to(2), version)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
-        run_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
-        run_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
+    def setup_build_environment(self, env):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
+    def setup_run_environment(self, env):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
     # TODO: If https://github.com/spack/spack/pull/12344 is merged, this
     # method is unnecessary.

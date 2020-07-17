@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,7 @@ class EcpIoSdk(CMakePackage):
     depends_on('hdf5+mpi+fortran', when='+hdf5')
     depends_on('mercury+mpi+ofi+sm', when='+mercury')
     depends_on('parallel-netcdf+fortran+pic', when='+pnetcdf')
-    depends_on('unifyfs+fortran+numa', when='+unifyfs')
+    depends_on('unifyfs+fortran', when='+unifyfs')
     depends_on('veloc', when='+veloc')
 
     def cmake_args(self):

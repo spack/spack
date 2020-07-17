@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,11 +29,13 @@ class Ape(Package):
         # When preprocessor expands macros (i.e. CFLAGS) defined as quoted
         # strings the result may be > 132 chars and is terminated.
         # This will look to a compiler as an Unterminated character constant
-        # and produce Line truncated errors. To vercome this, add flags to
+        # and produce Line truncated errors. To overcome this, add flags to
         # let compiler know that the entire line is meaningful.
         # TODO: For the lack of better approach, assume that clang is mixed
-        # with GNU fortran.
-        if spec.satisfies('%clang') or spec.satisfies('%gcc'):
+        # TODO: with GNU fortran.
+        if (spec.satisfies('%apple-clang') or
+                spec.satisfies('%clang') or
+                spec.satisfies('%gcc')):
             args.extend([
                 'FCFLAGS=-O2 -ffree-line-length-none'
             ])

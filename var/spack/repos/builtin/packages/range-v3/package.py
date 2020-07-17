@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class RangeV3(CMakePackage):
     maintainers = ['chissg']
 
     version('develop', branch='master')
-    version('0.9.0', sha256='b76c571aa2b0047d94daf46e51c6bb7609618134df0770eab5ec4ad275fcba3b')
+    version('0.10.0', sha256='5a1cd44e7315d0e8dcb1eee4df6802221456a9d1dbeac53da02ac7bd4ea150cd')
     version('0.5.0', sha256='32e30b3be042246030f31d40394115b751431d9d2b4e0f6d58834b2fd5594280')
     version('0.4.0', sha256='5dbc878b7dfc500fb04b6b9f99d63993a2731ea34b0a4b8d5f670a5a71a18e39')
     version('0.3.7', sha256='e6b0fb33bfd07ec32d54bcddd3e8d62e995a3cf0b64b34788ec264da62581207')
@@ -37,8 +37,9 @@ class RangeV3(CMakePackage):
     version('0.2.1', sha256='25d5e3dad8052d668873e960bd78f068bebfba3bd28a278f805ea386f9438790')
     version('0.2.0', sha256='49b1a62a7a36dab582521c8034d8e736a8922af664d007c1529d3162b1294331')
 
-    patch('0001-Fix-warning-about-shadowing-in-adjacent_filter.patch', when='@0.9.0')
-
+    # Note that as of 0.3.6 range is a header-only library so it is not
+    # necessary to match standards with packages using this
+    # one. Eventually range-v3 will be obsoleted by the C++ standard.
     variant('cxxstd',
             default='11',
             values=('11', '14', '17'),

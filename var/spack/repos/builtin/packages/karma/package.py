@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,15 +24,11 @@ class Karma(Package):
     phases = ['install']
 
     resource(
-                name='karma-linux',
-                url='ftp://ftp.atnf.csiro.au/pub/software/karma/karma-1.7.25-amd64_Linux_libc6.3.tar.bz2',
-                sha256='effc3ed61c28b966b357147d90357d03c22d743c6af6edb49a863c6eb625a441',
-                destination='./'
-               )
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('LIBRARY_PATH', self.prefix.lib)
-        run_env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
+        name='karma-linux',
+        url='ftp://ftp.atnf.csiro.au/pub/software/karma/karma-1.7.25-amd64_Linux_libc6.3.tar.bz2',
+        sha256='effc3ed61c28b966b357147d90357d03c22d743c6af6edb49a863c6eb625a441',
+        destination='./'
+    )
 
     def install(self, spec, prefix):
         install_tree('./karma-1.7.25/amd64_Linux_libc6.3/bin', prefix.bin)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack.util.environment import is_system_path
 from spack import *
 
 
-class Tcl(AutotoolsPackage):
+class Tcl(AutotoolsPackage, SourceforgePackage):
     """Tcl (Tool Command Language) is a very powerful but easy to
        learn dynamic programming language, suitable for a very wide
        range of uses, including web and desktop applications,
@@ -18,7 +18,7 @@ class Tcl(AutotoolsPackage):
        that is truly cross platform, easily deployed and highly
        extensible."""
     homepage = "http://www.tcl.tk"
-    url      = "http://prdownloads.sourceforge.net/tcl/tcl8.6.5-src.tar.gz"
+    sourceforge_mirror_path = "tcl/tcl8.6.5-src.tar.gz"
 
     version('8.6.8', sha256='c43cb0c1518ce42b00e7c8f6eaddd5195c53a98f94adc717234a65cbcfd3f96a')
     version('8.6.6', sha256='a265409781e4b3edcc4ef822533071b34c3dc6790b893963809b9fe221befe07')
@@ -97,17 +97,17 @@ class Tcl(AutotoolsPackage):
         return join_path(self.tcl_lib_dir,
                          'tcl{0}'.format(self.version.up_to(2)))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
-        run_env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
+        env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
         For further info see: https://wiki.tcl.tk/1787"""
 
-        spack_env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
+        env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
 
         # If we set TCLLIBPATH, we must also ensure that the corresponding
         # tcl is found in the build environment. This to prevent cases
@@ -116,7 +116,7 @@ class Tcl(AutotoolsPackage):
         # it boils down to the same situation we have here.
         path = os.path.dirname(self.command.path)
         if not is_system_path(path):
-            spack_env.prepend_path('PATH', path)
+            env.prepend_path('PATH', path)
 
         tcl_paths = [join_path(self.prefix, self.tcl_builtin_lib_dir)]
 
@@ -130,12 +130,16 @@ class Tcl(AutotoolsPackage):
         # "TCLLIBPATH is a Tcl list, not some platform-specific
         # colon-separated or semi-colon separated format"
         tcllibpath = ' '.join(tcl_paths)
-        spack_env.set('TCLLIBPATH', tcllibpath)
+        env.set('TCLLIBPATH', tcllibpath)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Set TCLLIBPATH to include the tcl-shipped directory for
+        extensions and any other tcl extension it depends on.
+        For further info see: https://wiki.tcl.tk/1787"""
 
         # For run time environment set only the path for
         # dependent_spec and prepend it to TCLLIBPATH
         if dependent_spec.package.extends(self.spec):
             dependent_tcllibpath = join_path(dependent_spec.prefix,
                                              self.tcl_lib_dir)
-            run_env.prepend_path('TCLLIBPATH', dependent_tcllibpath,
-                                 separator=' ')
+            env.prepend_path('TCLLIBPATH', dependent_tcllibpath, separator=' ')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,32 +7,29 @@ from spack import *
 
 
 class PyGrpcio(PythonPackage):
-    """Package for gRPC Python"""
+    """HTTP/2-based RPC framework."""
 
-    homepage = "https://pypi.org/project/grpcio/"
-    url      = "https://github.com/grpc/grpc/archive/v1.16.0.tar.gz"
+    homepage = "https://grpc.io/"
+    url      = "https://pypi.io/packages/source/g/grpcio/grpcio-1.27.2.tar.gz"
 
-    version('1.16.0', sha256='d99db0b39b490d2469a8ef74197d5f211fa740fc9581dccecbb76c56d080fce1')
+    version('1.27.2', sha256='5ae532b93cf9ce5a2a549b74a2c35e3b690b171ece9358519b3039c7b84c887e')
+    version('1.25.0', sha256='c948c034d8997526011960db54f512756fb0b4be1b81140a15b4ef094c6594a4')
 
-    depends_on('cares', type=('build', 'run'))
-    depends_on('zlib', type=('build', 'run'))
-    depends_on('openssl@1.0.2:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-six@1.10:', type=('build', 'run'))
-    depends_on('py-futures@2.2.0:', type=('build', 'run'), when='^python@2.7.0:2.7.999')
-    depends_on('py-enum34@1.0.4:', type=('build', 'run'), when='^python@:3.1')
-    depends_on('py-sphinx@1.3:', type=('build', 'run'))
-    depends_on('py-sphinx-rtd-theme@0.1.8:', type=('build', 'run'))
-    depends_on('py-cython@0.23:', type=('build', 'run'))
+    depends_on('py-six@1.5.2:', type=('build', 'run'))
+    depends_on('py-futures@2.2.0:', when='^python@:3.1', type=('build', 'run'))
+    depends_on('py-enum34@1.0.4:', when='^python@:3.3', type=('build', 'run'))
+    depends_on('py-cython@0.23:', type='build')
+    depends_on('openssl')
+    depends_on('zlib')
+    depends_on('c-ares')
 
     def setup_build_environment(self, env):
-        env.set('GRPC_PYTHON_BUILD_WITH_CYTHON', '1')
-        env.set('GRPC_PYTHON_BUILD_SYSTEM_OPENSSL', '1')
-        env.set('GRPC_PYTHON_BUILD_SYSTEM_ZLIB', '1')
-        env.set('GRPC_PYTHON_BUILD_SYSTEM_CARES', '1')
-        env.append_flags('LDFLAGS', self.spec['cares'].libs.search_flags)
-        env.append_flags(
-            'CFLAGS',
-            '-I{0}'.format(self.spec['cares'].prefix.include)
-        )
-        env.append_flags('LDFLAGS', self.spec['zlib'].libs.search_flags)
+        env.set('GRPC_PYTHON_BUILD_WITH_CYTHON', True)
+        env.set('GRPC_PYTHON_BUILD_SYSTEM_OPENSSL', True)
+        env.set('GRPC_PYTHON_BUILD_SYSTEM_ZLIB', True)
+        env.set('GRPC_PYTHON_BUILD_SYSTEM_CARES', True)
+
+    def patch(self):
+        if self.spec.satisfies('%fj'):
+            filter_file("-std=gnu99", "", "setup.py")

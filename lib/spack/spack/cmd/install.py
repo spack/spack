@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import argparse
 import os
 import shutil
 import sys
+import textwrap
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -31,6 +32,7 @@ def update_kwargs_from_args(args, kwargs):
     that will be passed to Package.do_install API"""
 
     kwargs.update({
+        'fail_fast': args.fail_fast,
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
@@ -41,11 +43,12 @@ def update_kwargs_from_args(args, kwargs):
         'use_cache': args.use_cache,
         'cache_only': args.cache_only,
         'explicit': True,  # Always true for install command
-        'stop_at': args.until
+        'stop_at': args.until,
+        'unsigned': args.unsigned,
     })
 
     kwargs.update({
-        'install_dependencies': ('dependencies' in args.things_to_install),
+        'install_deps': ('dependencies' in args.things_to_install),
         'install_package': ('package' in args.things_to_install)
     })
 
@@ -72,8 +75,10 @@ the dependencies"""
     subparser.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
-    arguments.add_common_arguments(subparser,
-                                   ['jobs', 'install_status', 'overwrite'])
+    arguments.add_common_arguments(subparser, ['jobs', 'overwrite'])
+    subparser.add_argument(
+        '--fail-fast', action='store_true',
+        help="stop all builds if any build fails (default is best effort)")
     subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="don't remove the install prefix if installation fails")
@@ -95,6 +100,10 @@ the dependencies"""
         '--cache-only', action='store_true', dest='cache_only', default=False,
         help="only install package from binary mirrors")
 
+    subparser.add_argument(
+        '--no-check-signature', action='store_true',
+        dest='unsigned', default=False,
+        help="do not check signatures of binary packages")
     subparser.add_argument(
         '--show-log-on-error', action='store_true',
         help="print full build log to stderr if build fails")
@@ -119,11 +128,6 @@ the dependencies"""
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
-    subparser.add_argument(
-        'package',
-        nargs=argparse.REMAINDER,
-        help="spec of the package to install"
-    )
     testing = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(testing, ['test'])
     testing.add_argument(
@@ -142,38 +146,62 @@ the dependencies"""
         help="filename for the log file. if not passed a default will be used"
     )
     subparser.add_argument(
+        '--help-cdash',
+        action='store_true',
+        help="Show usage instructions for CDash reporting"
+    )
+    add_cdash_args(subparser, False)
+    arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
+
+
+def add_cdash_args(subparser, add_help):
+    cdash_help = {}
+    if add_help:
+        cdash_help['upload-url'] = "CDash URL where reports will be uploaded"
+        cdash_help['build'] = """The name of the build that will be reported to CDash.
+Defaults to spec of the package to install."""
+        cdash_help['site'] = """The site name that will be reported to CDash.
+Defaults to current system hostname."""
+        cdash_help['track'] = """Results will be reported to this group on CDash.
+Defaults to Experimental."""
+        cdash_help['buildstamp'] = """Instead of letting the CDash reporter prepare the
+buildstamp which, when combined with build name, site and project,
+uniquely identifies the build, provide this argument to identify
+the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
+    else:
+        cdash_help['upload-url'] = argparse.SUPPRESS
+        cdash_help['build'] = argparse.SUPPRESS
+        cdash_help['site'] = argparse.SUPPRESS
+        cdash_help['track'] = argparse.SUPPRESS
+        cdash_help['buildstamp'] = argparse.SUPPRESS
+
+    subparser.add_argument(
         '--cdash-upload-url',
         default=None,
-        help="CDash URL where reports will be uploaded"
+        help=cdash_help['upload-url']
     )
     subparser.add_argument(
         '--cdash-build',
         default=None,
-        help="""The name of the build that will be reported to CDash.
-Defaults to spec of the package to install."""
+        help=cdash_help['build']
     )
     subparser.add_argument(
         '--cdash-site',
         default=None,
-        help="""The site name that will be reported to CDash.
-Defaults to current system hostname."""
+        help=cdash_help['site']
     )
+
     cdash_subgroup = subparser.add_mutually_exclusive_group()
     cdash_subgroup.add_argument(
         '--cdash-track',
         default='Experimental',
-        help="""Results will be reported to this group on CDash.
-Defaults to Experimental."""
+        help=cdash_help['track']
     )
     cdash_subgroup.add_argument(
         '--cdash-buildstamp',
         default=None,
-        help="""Instead of letting the CDash reporter prepare the
-buildstamp which, when combined with build name, site and project,
-uniquely identifies the build, provide this argument to identify
-the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
+        help=cdash_help['buildstamp']
     )
-    arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def default_log_file(spec):
@@ -194,8 +222,13 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
         # handle active environment, if any
         env = ev.get_env(cli_args, 'install')
         if env:
-            env.install(abstract_spec, spec, **kwargs)
-            env.write()
+            with env.write_transaction():
+                concrete = env.concretize_and_add(
+                    abstract_spec, spec)
+                env.write(regenerate_views=False)
+            env._install(concrete, **kwargs)
+            with env.write_transaction():
+                env.regenerate_views()
         else:
             spec.package.do_install(**kwargs)
 
@@ -212,25 +245,52 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
 
 
 def install(parser, args, **kwargs):
-    if not args.package and not args.specfiles:
-        # if there are no args but an active environment or spack.yaml file
+    if args.help_cdash:
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog=textwrap.dedent('''\
+environment variables:
+  SPACK_CDASH_AUTH_TOKEN
+                        authentication token to present to CDash
+                        '''))
+        add_cdash_args(parser, True)
+        parser.print_help()
+        return
+
+    if not args.spec and not args.specfiles:
+        # if there are no args but an active environment
         # then install the packages from it.
         env = ev.get_env(args, 'install')
         if env:
             if not args.only_concrete:
-                concretized_specs = env.concretize()
-                ev.display_specs(concretized_specs)
+                with env.write_transaction():
+                    concretized_specs = env.concretize()
+                    ev.display_specs(concretized_specs)
 
-                # save view regeneration for later, so that we only do it
-                # once, as it can be slow.
-                env.write(regenerate_views=False)
+                    # save view regeneration for later, so that we only do it
+                    # once, as it can be slow.
+                    env.write(regenerate_views=False)
 
             tty.msg("Installing environment %s" % env.name)
             env.install_all(args)
-            env.regenerate_views()
+            with env.write_transaction():
+                # It is not strictly required to synchronize view regeneration
+                # but doing so can prevent redundant work in the filesystem.
+                env.regenerate_views()
             return
         else:
-            tty.die("install requires a package argument or a spack.yaml file")
+            msg = "install requires a package argument or active environment"
+            if 'spack.yaml' in os.listdir(os.getcwd()):
+                # There's a spack.yaml file in the working dir, the user may
+                # have intended to use that
+                msg += "\n\n"
+                msg += "Did you mean to install using the `spack.yaml`"
+                msg += " in this directory? Try: \n"
+                msg += "    spack env activate .\n"
+                msg += "    spack install\n"
+                msg += "  OR\n"
+                msg += "    spack --env . install"
+            tty.die(msg)
 
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
@@ -247,7 +307,7 @@ def install(parser, args, **kwargs):
     if args.log_file:
         reporter.filename = args.log_file
 
-    abstract_specs = spack.cmd.parse_specs(args.package)
+    abstract_specs = spack.cmd.parse_specs(args.spec)
     tests = False
     if args.test == 'all' or args.run_tests:
         tests = True
@@ -258,7 +318,7 @@ def install(parser, args, **kwargs):
     try:
         with spack.store.db.read_transaction():
             specs = spack.cmd.parse_specs(
-                args.package, concretize=True, tests=tests)
+                args.spec, concretize=True, tests=tests)
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)

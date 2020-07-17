@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,9 +47,9 @@ class Nauty(AutotoolsPackage):
         ]
     }
     # Iterate over patches
-    for condition, urls in urls_for_patches.items():
-        for url, sha256 in urls:
-            patch(url, when=condition, level=1, sha256=sha256)
+    for condition, url_and_sha256 in urls_for_patches.items():
+        for path, sha256 in url_and_sha256:
+            patch(path, when=condition, level=1, sha256=sha256)
 
     depends_on('m4',  type='build', when='@2.6r7')
     depends_on('autoconf',  type='build', when='@2.6r7')

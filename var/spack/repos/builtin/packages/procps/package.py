@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Procps(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('dejagnu',  type='test')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('gettext')
     depends_on('ncurses')
 
@@ -35,7 +35,7 @@ class Procps(AutotoolsPackage):
 
     def configure_args(self):
         return [
-            '--with-libiconv-prefix={0}'.format(self.spec['libiconv'].prefix),
+            '--with-libiconv-prefix={0}'.format(self.spec['iconv'].prefix),
             '--with-libintl-prefix={0}'.format(self.spec['gettext'].prefix),
             '--with-ncurses',
             # Required to avoid libintl linking errors

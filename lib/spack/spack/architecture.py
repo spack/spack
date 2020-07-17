@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,6 +69,7 @@ from llnl.util.lang import memoized, list_modules, key_ordering
 import spack.compiler
 import spack.paths
 import spack.error as serr
+import spack.util.executable
 import spack.version
 from spack.util.naming import mod_to_class
 from spack.util.spack_yaml import syaml_dict
@@ -208,13 +209,18 @@ class Target(object):
         compiler_version = compiler.version
         version_number, suffix = cpu.version_components(compiler.version)
         if not version_number or suffix not in ('', 'apple'):
-            # Try to deduce the correct version. Depending on where this
-            # function is called we might get either a CompilerSpec or a
-            # fully fledged compiler object
+            # Try to deduce the underlying version of the compiler, regardless
+            # of its name in compilers.yaml. Depending on where this function
+            # is called we might get either a CompilerSpec or a fully fledged
+            # compiler object.
             import spack.spec
             if isinstance(compiler, spack.spec.CompilerSpec):
                 compiler = spack.compilers.compilers_for_spec(compiler).pop()
-            compiler_version = compiler.cc_version(compiler.cc)
+            try:
+                compiler_version = compiler.get_real_version()
+            except spack.util.executable.ProcessError as e:
+                # log this and just return compiler.version instead
+                tty.debug(str(e))
 
         return self.microarchitecture.optimization_flags(
             compiler.name, str(compiler_version)

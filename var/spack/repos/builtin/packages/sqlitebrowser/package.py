@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Sqlitebrowser(CMakePackage):
 
     msg = 'sqlitebrowser requires C++11 support'
     conflicts('%gcc@:4.8.0', msg=msg)
+    conflicts('%apple-clang@:3.9', msg=msg)
     conflicts('%clang@:3.2', msg=msg)
     conflicts('%intel@:12',  msg=msg)
     conflicts('%xl@:13.0',   msg=msg)

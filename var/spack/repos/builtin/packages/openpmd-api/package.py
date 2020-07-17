@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,13 @@ class OpenpmdApi(CMakePackage):
 
     maintainers = ['ax3l']
 
-    version('develop', branch='dev')
+    version('dev', branch='dev')
+    version('0.11.1',  tag='0.11.1-alpha')
+    version('0.11.0',  tag='0.11.0-alpha')
+    version('0.10.3',  tag='0.10.3-alpha')
+    version('0.10.2',  tag='0.10.2-alpha')
+    version('0.10.1',  tag='0.10.1-alpha')
+    version('0.10.0',  tag='0.10.0-alpha')
 
     variant('shared', default=True,
             description='Build a shared version of the library')
@@ -24,33 +30,35 @@ class OpenpmdApi(CMakePackage):
             description='Enable HDF5 support')
     variant('adios1', default=False,
             description='Enable ADIOS1 support')
-    variant('adios2', default=False,
+    variant('adios2', default=True,
             description='Enable ADIOS2 support')
-    variant('json', default=True,
-            description='Enable JSON support')
     variant('python', default=False,
             description='Enable Python bindings')
 
     depends_on('cmake@3.11.0:', type='build')
     depends_on('mpark-variant@1.4.0:')
-    depends_on('catch@2.6.1: ~single_header', type='test')
+    depends_on('catch2@2.6.1:', type='test')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
     depends_on('hdf5@1.8.13:', when='+hdf5')
     depends_on('hdf5@1.8.13: ~mpi', when='~mpi +hdf5')
     depends_on('hdf5@1.8.13: +mpi', when='+mpi +hdf5')
-    depends_on('adios@1.13.1:', when='+adios1')
-    depends_on('adios@1.13.1: ~mpi', when='~mpi +adios1')
-    depends_on('adios@1.13.1: +mpi', when='+mpi +adios1')
-    depends_on('adios2@2.4.0:', when='+adios2')
-    depends_on('adios2@2.4.0: ~mpi', when='~mpi +adios2')
-    depends_on('adios2@2.4.0: +mpi', when='+mpi +adios2')
-    depends_on('nlohmann-json@3.7.0:', when='+json')
+    depends_on('adios@1.13.1: ~sz', when='+adios1')
+    depends_on('adios@1.13.1: ~mpi ~sz', when='~mpi +adios1')
+    depends_on('adios@1.13.1: +mpi ~sz', when='+mpi +adios1')
+    depends_on('adios2@2.5.0:', when='+adios2')
+    depends_on('adios2@2.5.0: ~mpi', when='~mpi +adios2')
+    depends_on('adios2@2.5.0: +mpi', when='+mpi +adios2')
+    depends_on('nlohmann-json@3.7.0:')
     depends_on('py-pybind11@2.3.0:', when='+python', type='link')
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
     depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
     depends_on('python@3.5:', when='+python', type=['link', 'test', 'run'])
 
     extends('python', when='+python')
+
+    # Fix breaking HDF5 1.12.0 API
+    # https://github.com/openPMD/openPMD-api/pull/696
+    patch('hdf5-1.12.0.patch', when='@:0.11.0 +hdf5')
 
     def cmake_args(self):
         spec = self.spec
@@ -67,8 +75,6 @@ class OpenpmdApi(CMakePackage):
                 'ON' if '+adios1' in spec else 'OFF'),
             '-DopenPMD_USE_ADIOS2:BOOL={0}'.format(
                 'ON' if '+adios2' in spec else 'OFF'),
-            '-DopenPMD_USE_JSON:BOOL={0}'.format(
-                'ON' if '+json' in spec else 'OFF'),
             '-DopenPMD_USE_PYTHON:BOOL={0}'.format(
                 'ON' if '+python' in spec else 'OFF'),
             # tests and examples
@@ -84,34 +90,34 @@ class OpenpmdApi(CMakePackage):
             args.append('-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
                         self.spec['python'].command.path))
 
-        if spec.satisfies('+json'):
-            args.append('-DopenPMD_USE_INTERNAL_JSON:BOOL=OFF')
-
-        args.append('-DopenPMD_USE_INTERNAL_VARIANT:BOOL=OFF')
+        args.extend([
+            '-DopenPMD_USE_INTERNAL_JSON:BOOL=OFF',
+            '-DopenPMD_USE_INTERNAL_VARIANT:BOOL=OFF'
+        ])
         if self.run_tests:
             args.append('-DopenPMD_USE_INTERNAL_CATCH:BOOL=OFF')
 
         return args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         spec = self.spec
         # pre-load dependent CMake-PUBLIC header-only libs
-        run_env.prepend_path('CMAKE_PREFIX_PATH', spec['mpark-variant'].prefix)
-        run_env.prepend_path('CPATH', spec['mpark-variant'].prefix.include)
+        env.prepend_path('CMAKE_PREFIX_PATH', spec['mpark-variant'].prefix)
+        env.prepend_path('CPATH', spec['mpark-variant'].prefix.include)
 
         # more deps searched in openPMDConfig.cmake
         if spec.satisfies("+mpi"):
-            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['mpi'].prefix)
+            env.prepend_path('CMAKE_PREFIX_PATH', spec['mpi'].prefix)
         if spec.satisfies("+adios1"):
-            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['adios'].prefix)
+            env.prepend_path('CMAKE_PREFIX_PATH', spec['adios'].prefix)
+            env.prepend_path('PATH', spec['adios'].prefix.bin)  # adios-config
         if spec.satisfies("+adios2"):
-            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['adios2'].prefix)
+            env.prepend_path('CMAKE_PREFIX_PATH', spec['adios2'].prefix)
         if spec.satisfies("+hdf5"):
-            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['hdf5'].prefix)
+            env.prepend_path('CMAKE_PREFIX_PATH', spec['hdf5'].prefix)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # pre-load dependent CMake-PUBLIC header-only libs
-        spack_env.prepend_path('CMAKE_PREFIX_PATH',
-                               self.spec['mpark-variant'].prefix)
-        spack_env.prepend_path('CPATH',
-                               self.spec['mpark-variant'].prefix.include)
+        env.prepend_path('CMAKE_PREFIX_PATH',
+                         self.spec['mpark-variant'].prefix)
+        env.prepend_path('CPATH', self.spec['mpark-variant'].prefix.include)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,3 +20,4 @@ class PyPy4j(PythonPackage):
     version('0.10.3', sha256='f4570108ad014dd52a65c2288418e31cb8227b5ecc39ad7fc7fe98314f7a26f2')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-nose@1.3.7:', type='test')

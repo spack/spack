@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Tmux(AutotoolsPackage):
     homepage = "http://tmux.github.io"
     url = "https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz"
 
+    version('3.0a', sha256='4ad1df28b4afa969e59c08061b45082fdc49ff512f30fc8e43217d7b0e5f8db9')
+    version('2.9', sha256='34901232f486fd99f3a39e864575e658b5d49f43289ccc6ee57c365f2e2c2980')
     version('2.8', sha256='7f6bf335634fafecff878d78de389562ea7f73a7367f268b66d37ea13617a2ba')
     version('2.7', sha256='9ded7d100313f6bc5a87404a4048b3745d61f2332f99ec1400a7c4ed9485d452')
     version('2.6', sha256='b17cd170a94d7b58c0698752e1f4f263ab6dc47425230df7e53a6435cc7cd7e8')
@@ -27,13 +29,7 @@ class Tmux(AutotoolsPackage):
     version('2.1', sha256='31564e7bf4bcef2defb3cb34b9e596bd43a3937cad9e5438701a81a5a9af6176')
     version('1.9a', sha256='c5e3b22b901cf109b20dab54a4a651f0471abd1f79f6039d79b250d21c2733f5')
 
+    # used by configure to e.g. find libtinfo
+    depends_on('pkgconfig', type='build')
     depends_on('libevent')
     depends_on('ncurses')
-
-    def flag_handler(self, name, flags):
-        if name == 'cppflags':
-            flags.append(self.spec['ncurses'].headers.include_flags)
-        return (None, flags, None)
-
-    def configure_args(self):
-        return ['LIBTINFO_LIBS=-lncurses']

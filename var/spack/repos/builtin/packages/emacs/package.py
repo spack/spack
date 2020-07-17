@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,12 +8,13 @@ from spack import *
 import sys
 
 
-class Emacs(AutotoolsPackage):
+class Emacs(AutotoolsPackage, GNUMirrorPackage):
     """The Emacs programmable text editor."""
 
     homepage = "https://www.gnu.org/software/emacs"
-    url      = "https://ftpmirror.gnu.org/emacs/emacs-24.5.tar.gz"
+    gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
+    version('26.3', sha256='09c747e048137c99ed35747b012910b704e0974dde4db6696fde7054ce387591')
     version('26.2', sha256='4f99e52a38a737556932cc57479e85c305a37a8038aaceb5156625caf102b4eb')
     version('26.1', sha256='760382d5e8cdc5d0d079e8f754bce1136fbe1473be24bb885669b0e38fc56aa3')
     version('25.3', sha256='f72c6a1b48b6fbaca2b991eed801964a208a2f8686c70940013db26cd37983c9')
@@ -35,6 +36,7 @@ class Emacs(AutotoolsPackage):
     depends_on('ncurses')
     depends_on('pcre')
     depends_on('zlib')
+    depends_on('libxml2')
     depends_on('libtiff', when='+X')
     depends_on('libpng', when='+X')
     depends_on('libxpm', when='+X')
@@ -44,6 +46,13 @@ class Emacs(AutotoolsPackage):
     depends_on('gtkplus', when='+X toolkit=gtk')
     depends_on('gnutls', when='+tls')
     depends_on('jpeg')
+
+    @when('platform=darwin')
+    def setup_build_environment(self, env):
+        # on macOS, emacs' config does search hard enough for ncurses'
+        # termlib `-ltinfo` lib, which results in linker errors
+        if '+termlib' in self.spec['ncurses']:
+            env.append_flags('LDFLAGS', '-ltinfo')
 
     def configure_args(self):
         spec = self.spec

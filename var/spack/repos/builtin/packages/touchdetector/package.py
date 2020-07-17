@@ -32,7 +32,7 @@ class Touchdetector(CMakePackage):
 
     depends_on('cmake', type='build')
     depends_on('boost@1.50:')
-    depends_on('catch~single_header', when='@5.0.2:')
+    depends_on('catch2', when='@5.0.2:')
     depends_on('eigen', when='@4.5:')
     depends_on('fmt', when='@4.5:')
     depends_on('morphio@2.0.8:', when='@4.5:5.1')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,6 +57,7 @@ class Fftw(AutotoolsPackage):
               msg='Long double precision is not supported in FFTW 2')
     conflicts('precision=quad', when='@2.1.5',
               msg='Quad precision is not supported in FFTW 2')
+    conflicts('+openmp', when='%apple-clang', msg="Apple's clang does not support OpenMP")
 
     provides('fftw-api@2', when='@2.1.5')
     provides('fftw-api@3', when='@3:')
@@ -124,11 +125,6 @@ class Fftw(AutotoolsPackage):
 
         # Variants that affect every precision
         if '+openmp' in spec:
-            # Note: Apple's Clang does not support OpenMP.
-            if spec.satisfies('%clang'):
-                ver = str(self.compiler.version)
-                if ver.endswith('-apple'):
-                    raise InstallError("Apple's clang does not support OpenMP")
             options.append('--enable-openmp')
             if spec.satisfies('@:2'):
                 # TODO: libtool strips CFLAGS, so 2.x libxfftw_threads

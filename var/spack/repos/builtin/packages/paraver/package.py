@@ -1,12 +1,10 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 import os
-import platform
-import distutils.dir_util
 
 
 class Paraver(Package):
@@ -14,54 +12,13 @@ class Paraver(Package):
         based on traces that can be used to analyse any information that
         is expressed on its input trace format.  Traces for parallel MPI,
         OpenMP and other programs can be genereated with Extrae."""
-
     homepage = "https://tools.bsc.es/paraver"
     url = "https://ftp.tools.bsc.es/paraver/wxparaver-4.6.3-src.tar.bz2"
 
-    system = platform.system()
-    machine = platform.machine()
-
-    # TODO: changed source to binary distribution
-    # see discussion in https://github.com/LLNL/spack/issues/4860
-
-    if system == "Linux" and machine == "x86_64":
-        version(
-            "4.6.3",
-            sha256="f26555ce22fd83bfdcbf90648491026cf26555ce22fd83bfdcbf90648491026c",
-        )
-    elif system == "Linux" and machine == "i686":
-        version(
-            "4.6.3",
-            sha256="f26555ce22fd83bfdcbf90648491026cee13df1b9b8a86dd28e9332d4cb8b9bd",
-        )
-    elif system == "Darwin":
-        version(
-            "4.6.3",
-            sha256="f26555ce22fd83bfdcbf90648491026c922d7f531751278fcc05da57b6a771fd",
-        )
-    elif system == "Windows":
-        version(
-            "4.6.3",
-            sha256="f26555ce22fd83bfdcbf90648491026c943388e760d91e95ef5287aeb460a8b6",
-        )
-
-    def url_for_version(self, version):
-        base_url = "https://ftp.tools.bsc.es/wxparaver/wxparaver"
-        package_ext = ""
-
-        system = platform.system()
-        machine = platform.machine()
-
-        if system == "Linux" and machine == "x86_64":
-            package_ext = "linux_x86_64.tar.bz2"
-        elif system == "Linux" and machine == "i686":
-            package_ext = "linux_x86_32.tar.bz2"
-        elif system == "Darwin":
-            package_ext = "mac.zip"
-        elif system == "Windows":
-            package_ext = "win.zip"
-
-        return "{0}-{1}-{2}".format(base_url, version, package_ext)
+    # NOTE: Paraver provides only latest version for download.
+    #       Don't keep/add older versions.
+    version('4.6.3', sha256='ac6025eec5419e1060967eab71dfd123e585be5b5f3ac3241085895dbeca255a')
+    version('4.6.2', sha256='74b85bf9e6570001d372b376b58643526e349b1d2f1e7633ca38bb0800ecf929')
 
     depends_on("boost")
     # depends_on("extrae")
@@ -69,9 +26,31 @@ class Paraver(Package):
     depends_on("wxpropgrid")
 
     def install(self, spec, prefix):
-        distutils.dir_util.copy_tree(".", prefix)
+        os.chdir("ptools_common_files")
+        configure("--prefix=%s" % prefix)
+        make()
+        make("install")
 
-        if platform.system() == "Darwin":
-            os.symlink(
-                join_path(prefix, "wxparaver.app/Contents/MacOS/"), prefix.bin
-            )
+        os.chdir("../paraver-kernel")
+        # "--with-extrae=%s" % spec['extrae'].prefix,
+        configure("--prefix=%s" % prefix,
+                  "--with-ptools-common-files=%s" % prefix,
+                  "--with-boost=%s" % spec['boost'].prefix,
+                  "--with-boost-serialization=boost_serialization")
+        make()
+        make("install")
+
+        os.chdir("../paraver-toolset")
+        configure("--prefix=%s" % prefix)
+        make()
+        make("install")
+
+        os.chdir("../wxparaver")
+        # "--with-extrae=%s" % spec['extrae'].prefix,
+        configure("--prefix=%s" % prefix,
+                  "--with-paraver=%s" % prefix,
+                  "--with-boost=%s" % spec['boost'].prefix,
+                  "--with-boost-serialization=boost_serialization",
+                  "--with-wxdir=%s" % spec['wxwidgets'].prefix.bin)
+        make()
+        make("install")

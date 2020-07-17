@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Meraculous(CMakePackage):
+class Meraculous(CMakePackage, SourceforgePackage):
     """Meraculous is a while genome assembler for Next Generation Sequencing
        data geared for large genomes."""
 
     homepage = "http://jgi.doe.gov/data-and-tools/meraculous/"
-    url      = "https://downloads.sourceforge.net/project/meraculous20/Meraculous-v2.2.4.tar.gz"
+    sourceforge_mirror_path = "meraculous20/Meraculous-v2.2.4.tar.gz"
     git      = "https://bitbucket.org/berkeleylab/genomics-meraculous2.git"
 
     version('2.2.5.1', branch='release-2.2.5.1')
@@ -28,6 +28,6 @@ class Meraculous(CMakePackage):
         edit = FileFilter('CMakeLists.txt')
         edit.filter(r"-static-libstdc\+\+", "")
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('MERACULOUS_ROOT', self.prefix)
-        run_env.prepend_path('PERL5LIB', self.prefix.lib)
+    def setup_run_environment(self, env):
+        env.set('MERACULOUS_ROOT', self.prefix)
+        env.prepend_path('PERL5LIB', self.prefix.lib)

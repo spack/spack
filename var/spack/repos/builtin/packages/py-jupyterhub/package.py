@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,5 +31,5 @@ class PyJupyterhub(PythonPackage):
     depends_on('py-oauthlib@3.0:', when='@1.0.0:', type=('build', 'run'))
     depends_on('py-python-oauth2@1.0:', when='@:9.4', type=('build', 'run'))
     depends_on('py-pamela', type=('build', 'run'))
-    depends_on('py-jupyter-notebook', type=('build', 'run'))
+    depends_on('py-notebook', type=('build', 'run'))
     depends_on('py-prometheus-client@0.0.21:', type=('build', 'run'))

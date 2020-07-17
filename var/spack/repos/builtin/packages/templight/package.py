@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -101,10 +101,12 @@ class Templight(CMakePackage):
         with open("tools/clang/tools/CMakeLists.txt", "a") as cmake_lists:
             cmake_lists.write("add_clang_subdirectory(templight)")
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
-        run_env.set('CC', join_path(self.spec.prefix.bin, 'templight'))
-        run_env.set('CXX', join_path(self.spec.prefix.bin, 'templight++'))
+    def setup_build_environment(self, env):
+        env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
+
+    def setup_run_environment(self, env):
+        env.set('CC', join_path(self.spec.prefix.bin, 'templight'))
+        env.set('CXX', join_path(self.spec.prefix.bin, 'templight++'))
 
     def cmake_args(self):
         spec = self.spec

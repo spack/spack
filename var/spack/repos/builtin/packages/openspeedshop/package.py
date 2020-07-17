@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -92,12 +92,11 @@ class Openspeedshop(CMakePackage):
     depends_on("dyninst@develop", when='@develop')
     depends_on("dyninst@10:", when='@2.3.1.3:9999')
 
-    depends_on("python", when='@develop', type=('build', 'run'))
-    depends_on("python@2.7.14:2.7.99", when='@2.3.1.3:9999', type=('build', 'run'))
+    depends_on("python@2.7.14:2.7.99", type=('build', 'run'))
 
     depends_on("libxml2")
 
-    depends_on("qt@3.3.8b+krellpatch", when='gui=qt3')
+    depends_on("qt@3:3.9", when='gui=qt3')
 
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
@@ -278,7 +277,7 @@ class Openspeedshop(CMakePackage):
 
         cmake_options.extend(mpi_options)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Set up the compile and runtime environments for a package."""
 
         # Find Dyninst library path, this is needed to
@@ -290,9 +289,9 @@ class Openspeedshop(CMakePackage):
                                         shared=True, recursive=True)
 
         # Set Dyninst RT library path to support OSS loop resolution code
-        run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir[0])
+        env.set('DYNINSTAPI_RT_LIB', dyninst_libdir[0])
 
-        run_env.set('OPENSS_RAWDATA_DIR', '.')
+        env.set('OPENSS_RAWDATA_DIR', '.')
 
         # Set the openspeedshop plugin path
         if os.path.isdir(self.prefix.lib64):
@@ -301,13 +300,13 @@ class Openspeedshop(CMakePackage):
             lib_dir = self.prefix.lib
         plugin_path = '/openspeedshop'
         oss_plugin_path = lib_dir + plugin_path
-        run_env.set('OPENSS_PLUGIN_PATH', oss_plugin_path)
+        env.set('OPENSS_PLUGIN_PATH', oss_plugin_path)
 
         cbtf_mc = '/sbin/cbtf_mrnet_commnode'
         cbtf_lmb = '/sbin/cbtf_libcbtf_mrnet_backend'
-        run_env.set('XPLAT_RSH', 'ssh')
-        run_env.set('MRNET_COMM_PATH',
-                    join_path(self.spec['cbtf-krell'].prefix + cbtf_mc))
+        env.set('XPLAT_RSH', 'ssh')
+        env.set('MRNET_COMM_PATH',
+                join_path(self.spec['cbtf-krell'].prefix + cbtf_mc))
 
         # Set CBTF_MPI_IMPLEMENTATON to the appropriate mpi implementation
         # This is needed by O|SS and CBTF tools to deploy the correct
@@ -315,23 +314,25 @@ class Openspeedshop(CMakePackage):
         # Users may have to set the CBTF_MPI_IMPLEMENTATION variable
         # manually if multiple mpi's are specified in the build
         if self.spec.satisfies('+mpich'):
-            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpich")
+            env.set('CBTF_MPI_IMPLEMENTATION', "mpich")
 
         if self.spec.satisfies('+mvapich'):
-            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich")
+            env.set('CBTF_MPI_IMPLEMENTATION', "mvapich")
 
         if self.spec.satisfies('+mvapich2'):
-            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich2")
+            env.set('CBTF_MPI_IMPLEMENTATION', "mvapich2")
 
         if self.spec.satisfies('+mpt'):
-            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpt")
+            env.set('CBTF_MPI_IMPLEMENTATION', "mpt")
 
         if self.spec.satisfies('+openmpi'):
-            run_env.set('CBTF_MPI_IMPLEMENTATION', "openmpi")
+            env.set('CBTF_MPI_IMPLEMENTATION', "openmpi")
 
-        run_env.set('CBTF_MRNET_BACKEND_PATH',
-                    join_path(self.spec['cbtf-krell'].prefix + cbtf_lmb))
-        run_env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)
-        run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.bin)
-        run_env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.sbin)
-        run_env.prepend_path('PATH', self.spec['python'].prefix.bin)
+        env.set('CBTF_MRNET_BACKEND_PATH',
+                join_path(self.spec['cbtf-krell'].prefix + cbtf_lmb))
+        env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)
+        env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.bin)
+        env.prepend_path('PATH', self.spec['cbtf-krell'].prefix.sbin)
+        mpath = '/share/man'
+        env.prepend_path('MANPATH', self.spec['cbtf-krell'].prefix + mpath)
+        env.prepend_path('PATH', self.spec['python'].prefix.bin)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,10 @@ import six
 
 import ruamel.yaml.error as yaml_error
 
+from ordereddict_backport import OrderedDict
+
 try:
-    from collections.abc import Mapping
+    from collections.abc import Mapping  # novm
 except ImportError:
     from collections import Mapping
 
@@ -166,7 +168,7 @@ class MirrorCollection(Mapping):
     """A mapping of mirror names to mirrors."""
 
     def __init__(self, mirrors=None, scope=None):
-        self._mirrors = dict(
+        self._mirrors = OrderedDict(
             (name, Mirror.from_dict(mirror, name))
             for name, mirror in (
                 mirrors.items() if mirrors is not None else
@@ -178,6 +180,7 @@ class MirrorCollection(Mapping):
     def to_yaml(self, stream=None):
         return syaml.dump(self.to_dict(True), stream)
 
+    # TODO: this isn't called anywhere
     @staticmethod
     def from_yaml(stream, name=None):
         try:
@@ -398,7 +401,7 @@ def get_matching_versions(specs, num_versions=1):
     return matching
 
 
-def create(path, specs):
+def create(path, specs, skip_unstable_versions=False):
     """Create a directory to be used as a spack mirror, and fill it with
     package archives.
 
@@ -406,6 +409,9 @@ def create(path, specs):
         path: Path to create a mirror directory hierarchy in.
         specs: Any package versions matching these specs will be added \
             to the mirror.
+        skip_unstable_versions: if true, this skips adding resources when
+            they do not have a stable archive checksum (as determined by
+            ``fetch_strategy.stable_target``)
 
     Return Value:
         Returns a tuple of lists: (present, mirrored, error)
@@ -437,7 +443,8 @@ def create(path, specs):
             raise MirrorError(
                 "Cannot create directory '%s':" % mirror_root, str(e))
 
-    mirror_cache = spack.caches.MirrorCache(mirror_root)
+    mirror_cache = spack.caches.MirrorCache(
+        mirror_root, skip_unstable_versions=skip_unstable_versions)
     mirror_stats = MirrorStats()
     try:
         spack.caches.mirror_cache = mirror_cache
@@ -445,7 +452,7 @@ def create(path, specs):
         for spec in specs:
             if spec.package.has_code:
                 mirror_stats.next_spec(spec)
-                add_single_spec(spec, mirror_root, mirror_stats)
+                _add_single_spec(spec, mirror_root, mirror_stats)
             else:
                 tty.msg("Skipping package {pkg} without code".format(
                     pkg=spec.format("{name}{@version}")
@@ -497,7 +504,7 @@ class MirrorStats(object):
         self.errors.add(self.current_spec)
 
 
-def add_single_spec(spec, mirror_root, mirror_stats):
+def _add_single_spec(spec, mirror, mirror_stats):
     tty.msg("Adding package {pkg} to mirror".format(
         pkg=spec.format("{name}{@version}")
     ))
@@ -505,10 +512,10 @@ def add_single_spec(spec, mirror_root, mirror_stats):
     while num_retries > 0:
         try:
             with spec.package.stage as pkg_stage:
-                pkg_stage.cache_mirror(mirror_stats)
+                pkg_stage.cache_mirror(mirror, mirror_stats)
                 for patch in spec.package.all_patches():
-                    if patch.cache():
-                        patch.cache().cache_mirror(mirror_stats)
+                    if patch.stage:
+                        patch.stage.cache_mirror(mirror, mirror_stats)
                     patch.clean()
             exception = None
             break

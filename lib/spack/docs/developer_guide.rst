@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -363,11 +363,11 @@ Developer commands
 ``spack doc``
 ^^^^^^^^^^^^^
 
-.. _cmd-spack-test:
-
 ^^^^^^^^^^^^^^
 ``spack test``
 ^^^^^^^^^^^^^^
+
+See the :ref:`contributor guide section <cmd-spack-test>` on ``spack test``.
 
 .. _cmd-spack-python:
 

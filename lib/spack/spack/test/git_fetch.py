@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,6 @@ from spack.stage import Stage
 from spack.version import ver
 from spack.fetch_strategy import GitFetchStrategy
 from spack.util.executable import which
-
 
 pytestmark = pytest.mark.skipif(
     not which('git'), reason='requires git to be installed')
@@ -88,7 +87,7 @@ def test_fetch(type_of_test,
                secure,
                mock_git_repository,
                config,
-               mutable_mock_packages,
+               mutable_mock_repo,
                git_version):
     """Tries to:
 
@@ -137,7 +136,7 @@ def test_fetch(type_of_test,
 
 
 @pytest.mark.parametrize("type_of_test", ['branch', 'commit'])
-def test_debug_fetch(type_of_test, mock_git_repository, config):
+def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config):
     """Fetch the repo with debug enabled."""
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
@@ -169,14 +168,14 @@ def test_git_extra_fetch(tmpdir):
 def test_needs_stage():
     """Trigger a NoStageError when attempt a fetch without a stage."""
     with pytest.raises(spack.fetch_strategy.NoStageError,
-                       matches=_mock_transport_error):
+                       match=r"set_stage.*before calling fetch"):
         fetcher = GitFetchStrategy(git='file:///not-a-real-git-repo')
         fetcher.fetch()
 
 
 @pytest.mark.parametrize("get_full_repo", [True, False])
 def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
-                       config, mutable_mock_packages):
+                       config, mutable_mock_repo):
     """Ensure that we can clone a full repository."""
 
     if git_version < ver('1.7.1'):
@@ -217,3 +216,59 @@ def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
         else:
             assert(nbranches == 2)
             assert(ncommits == 1)
+
+
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.parametrize("submodules", [True, False])
+def test_gitsubmodule(submodules, mock_git_repository, config,
+                      mutable_mock_repo):
+    """
+    Test GitFetchStrategy behavior with submodules
+    """
+    type_of_test = 'tag-branch'
+    t = mock_git_repository.checks[type_of_test]
+
+    # Construct the package under test
+    spec = Spec('git-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    args = copy.copy(t.args)
+    args['submodules'] = submodules
+    pkg.versions[ver('git')] = args
+    pkg.do_stage()
+    with working_dir(pkg.stage.source_path):
+        for submodule_count in range(2):
+            file_path = os.path.join(pkg.stage.source_path,
+                                     'third_party/submodule{0}/r0_file_{0}'
+                                     .format(submodule_count))
+            if submodules:
+                assert os.path.isfile(file_path)
+            else:
+                assert not os.path.isfile(file_path)
+
+
+@pytest.mark.disable_clean_stage_check
+def test_gitsubmodules_delete(mock_git_repository, config, mutable_mock_repo):
+    """
+    Test GitFetchStrategy behavior with submodules_delete
+    """
+    type_of_test = 'tag-branch'
+    t = mock_git_repository.checks[type_of_test]
+
+    # Construct the package under test
+    spec = Spec('git-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    args = copy.copy(t.args)
+    args['submodules'] = True
+    args['submodules_delete'] = ['third_party/submodule0',
+                                 'third_party/submodule1']
+    pkg.versions[ver('git')] = args
+    pkg.do_stage()
+    with working_dir(pkg.stage.source_path):
+        file_path = os.path.join(pkg.stage.source_path,
+                                 'third_party/submodule0')
+        assert not os.path.isdir(file_path)
+        file_path = os.path.join(pkg.stage.source_path,
+                                 'third_party/submodule1')
+        assert not os.path.isdir(file_path)
