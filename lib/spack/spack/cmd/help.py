@@ -35,6 +35,10 @@ spec expression syntax:
       @g{%compiler@version}             build with specific compiler version
       @g{%compiler@min:max}             specific version range (see above)
 
+    compiler flags:
+      @g{cflags="flags"}                cppflags, cflags, cxxflags,
+                                    fflags, ldflags, ldlibs
+
     variants:
       @B{+variant}                      enable <variant>
       @r{-variant} or @r{~variant}          disable <variant>
