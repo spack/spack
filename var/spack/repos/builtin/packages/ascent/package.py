@@ -109,7 +109,7 @@ class Ascent(Package, CudaPackage):
     # BabelFlow
     #######################
     depends_on('babelflow@develop', when='+babelflow+mpi')
-    depends_on('pmt@develop', when='+babelflow+mpi')
+    depends_on('parallelmergetree@develop', when='+babelflow+mpi')
 
     #############################
     # TPLs for Runtime Features
@@ -426,18 +426,18 @@ class Ascent(Package, CudaPackage):
                 else:
                     cfg.write(cmake_cache_entry("MPIEXEC",
                                                 mpiexe_bin))
+
+            ###################################
+            # BABELFLOW (also depends on mpi)
+            ###################################
+            if "+babelflow" in spec:
+                cfg.write(cmake_cache_entry("ENABLE_BABELFLOW", "ON"))
+                cfg.write(cmake_cache_entry("BabelFlow_DIR",
+                                            spec['babelflow'].prefix))
+                cfg.write(cmake_cache_entry("PMT_DIR",
+                                            spec['parallelmergetree'].prefix))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
-
-        #######################
-        # BABELFLOW
-        #######################
-
-        if "+babelflow" in spec:
-            cfg.write(cmake_cache_entry("ENABLE_BABELFLOW", "ON"))
-            cfg.write(cmake_cache_entry("BabelFlow_DIR",
-                                        spec['babelflow'].prefix))
-            cfg.write(cmake_cache_entry("PMT_DIR", spec['pmt'].prefix))
 
         #######################
         # CUDA
