@@ -15,7 +15,7 @@ class Lustre(Package):
 
     version('2.12')
 
-    # Lustre is filesystem and needs to be installed on system. 
+    # Lustre is filesystem and needs to be installed on system.
     # To have it as external package in SPACK, follow below:
     # config file packages.yaml needs to be adjusted:
     #   lustre:
