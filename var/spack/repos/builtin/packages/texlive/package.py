@@ -18,7 +18,7 @@ class Texlive(AutotoolsPackage):
     around the world."""
 
     homepage = "http://www.tug.org/texlive"
-    url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2019/texlive-20190410-source.tar.xz'
+    url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2020/texlive-20200406-source.tar.xz'
     base_url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/{year}/texlive-{version}-{dist}.tar.xz'
     list_url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive'
     list_depth = 1
@@ -29,11 +29,17 @@ class Texlive(AutotoolsPackage):
     # connection at install time and the package versions could change over
     # time. It is better to use a version built from tarballs, as defined with
     # the "releases" below.
-    version('live', sha256='44aa41b5783e345b7021387f19ac9637ff1ce5406a59754230c666642dfe7750',
-            url='ftp://tug.org/historic/systems/texlive/2019/install-tl-unx.tar.gz')
+    version('live', sha256='7c90a50e55533d57170cbc7c0370a010019946eb18570282948e1af6f809382d',
+            url='ftp://tug.org/historic/systems/texlive/2020/install-tl-unx.tar.gz')
 
     # Add information for new versions below.
     releases = [
+        {
+            'version': '20200406',
+            'year': '2020',
+            'sha256_source': 'e32f3d08cbbbcf21d8d3f96f2143b64a1f5e4cb01b06b761d6249c8785249078',
+            'sha256_texmf': '0aa97e583ecfd488e1dc60ff049fec073c1e22dfe7de30a3e4e8c851bb875a95',
+        },
         {
             'version': '20190410',
             'year': '2019',
