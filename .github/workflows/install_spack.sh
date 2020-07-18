@@ -12,6 +12,7 @@ compilers:
       cxx: /usr/bin/clang++
       f77: /usr/local/bin/gfortran-9
       fc: /usr/local/bin/gfortran-9
+    modules: []
     operating_system: catalina
     target: x86_64
 EOF
