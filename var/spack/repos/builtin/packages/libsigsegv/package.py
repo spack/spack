@@ -79,12 +79,12 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
 
     def test(self):
         """Perform smoke tests on the installed package."""
-        tty.warn('Expected results currently based on simple {0} builds'
-                 .format(self.name))
+        tty.debug('Expected results currently based on simple {0} builds'
+                  .format(self.name))
 
         if not self.spec.satisfies('@2.10:2.12'):
-            tty.warn('Expected results have not been confirmed for {0} {1}'
-                     .format(self.name, self.spec.versin))
+            tty.debug('Expected results have not been confirmed for {0} {1}'
+                      .format(self.name, self.spec.version))
 
         # Run the simple built-in smoke test
         self._run_smoke_tests()
