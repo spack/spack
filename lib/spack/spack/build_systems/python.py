@@ -89,6 +89,26 @@ class PythonPackage(PackageBase):
     py_namespace = None
 
     @property
+    def homepage(self):
+        if self.pypi:
+            name = self.pypi.split('/')[0]
+            return 'https://pypi.org/' + name + '/'
+
+    @property
+    def url(self):
+        if self.pypi:
+            return (
+                'https://files.pythonhosted.org/packages/source/'
+                + self.pypi[0] + '/' + self.pypi
+            )
+
+    @property
+    def list_url(self):
+        if self.pypi:
+            name = self.pypi.split('/')[0]
+            return 'https://pypi.org/simple/' + name + '/'
+
+    @property
     def import_modules(self):
         """Names of modules that the Python package provides.
 
