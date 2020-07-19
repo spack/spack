@@ -117,7 +117,7 @@ class PackageTemplate(BundlePackageTemplate):
         make()
         make('install')"""
 
-    url_line = """    url      = \"{url}\""""
+    url_line = '    url      = "{url}"'
 
     def __init__(self, name, url, versions):
         super(PackageTemplate, self).__init__(name, versions)
@@ -270,14 +270,20 @@ class PythonPackageTemplate(PackageTemplate):
         args = []
         return args"""
 
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
         if not name.startswith('py-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = 'py-{0}'.format(name)
 
-        super(PythonPackageTemplate, self).__init__(name, *args, **kwargs)
+        # If URL is from PyPI, use `pypi` URL
+        if 'files.pythonhosted.org' in url or 'pypi.org' in url or \
+                'pypi.python.org' in url or 'pypi.io' in url:
+            url = '/'.join(url.split('/')[-2:])
+            self.url_line = '    pypi     = "{url}"'
+
+        super(PythonPackageTemplate, self).__init__(name, url, *args, **kwargs)
 
 
 class RPackageTemplate(PackageTemplate):
