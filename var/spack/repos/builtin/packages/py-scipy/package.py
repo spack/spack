@@ -13,6 +13,7 @@ class PyScipy(PythonPackage):
 
     homepage = "https://www.scipy.org/"
     url      = "https://pypi.io/packages/source/s/scipy/scipy-1.5.4.tar.gz"
+    list_url = "https://pypi.org/simple/scipy/"
     git      = "https://github.com/scipy/scipy.git"
 
     maintainers = ['adamjstewart']

@@ -554,7 +554,10 @@ def find_versions_of_archive(
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        url_regex += r'(\/download)?$'
+        url_regex += r'(\/download)?'
+        # PyPI adds #sha256=... to the end of the URL
+        url_regex += '(#sha256=.*)?'
+        url_regex += '$'
 
         regexes.append(url_regex)
 

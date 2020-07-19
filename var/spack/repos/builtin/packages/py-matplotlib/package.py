@@ -12,6 +12,7 @@ class PyMatplotlib(PythonPackage):
 
     homepage = "https://matplotlib.org/"
     url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.3.2.tar.gz"
+    list_url = "https://pypi.org/simple/matplotlib/"
 
     maintainers = ['adamjstewart']
     import_modules = [
