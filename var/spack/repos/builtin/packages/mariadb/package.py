@@ -52,6 +52,7 @@ class Mariadb(CMakePackage):
     depends_on('msgpack-c')
     depends_on('openssl')
     depends_on('openssl@:1.0', when='@:10.1')
+    depends_on('krb5')
 
     conflicts('%gcc@9.1.0:', when='@:5.5')
 
