@@ -76,6 +76,10 @@ packages:
         version: [5.16.3]
     petsc:
         variants: ~fortran
+    pkg-config:
+        paths:
+            pkg-config@0.28: /usr
+        version: [0.28]
     python:
         variants: +tk
         version: [3.8.3]
@@ -90,8 +94,8 @@ packages:
         variants: +int64
     tar:
         paths:
-            tar@1.26: /usr
-        version: [1.26]
+            tar@1.28: /usr
+        version: [1.28]
     timemory:
         variants: +mpi+cuda+cupti+caliper~gperftools~python@3.0.0a
     trilinos:
