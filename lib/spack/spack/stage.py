@@ -459,7 +459,7 @@ class Stage(object):
 
         def print_errors(errors):
             for msg in errors:
-                tty.debug(msg, level=tty.BASIC)
+                tty.debug(msg)
 
         errors = []
         for fetcher in generate_fetchers():
@@ -544,11 +544,9 @@ class Stage(object):
         downloaded."""
         if not self.expanded:
             self.fetcher.expand()
-            tty.debug('Created stage in {0}'.format(self.path),
-                      level=tty.BASIC)
+            tty.debug('Created stage in {0}'.format(self.path))
         else:
-            tty.debug('Already staged {0} in {1}'.format(self.name, self.path),
-                      level=tty.BASIC)
+            tty.debug('Already staged {0} in {1}'.format(self.name, self.path))
 
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
@@ -719,14 +717,13 @@ class DIYStage(object):
         pass
 
     def fetch(self, *args, **kwargs):
-        tty.debug('No need to fetch for DIY.', level=tty.BASIC)
+        tty.debug('No need to fetch for DIY.')
 
     def check(self):
-        tty.debug('No checksum needed for DIY.', level=tty.BASIC)
+        tty.debug('No checksum needed for DIY.')
 
     def expand_archive(self):
-        tty.debug('Using source directory: {0}'.format(self.source_path),
-                  level=tty.BASIC)
+        tty.debug('Using source directory: {0}'.format(self.source_path))
 
     @property
     def expanded(self):
@@ -744,7 +741,7 @@ class DIYStage(object):
         pass
 
     def cache_local(self):
-        tty.debug('Sources for DIY stages are not cached', level=tty.BASIC)
+        tty.debug('Sources for DIY stages are not cached')
 
 
 def ensure_access(file):
@@ -799,8 +796,7 @@ def get_checksums_for_versions(
               '',
               *spack.cmd.elide_list(
                   ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
-                   for v in sorted_versions]),
-              level=tty.BASIC)
+                   for v in sorted_versions]))
     print()
 
     if batch:
@@ -815,7 +811,7 @@ def get_checksums_for_versions(
     versions = sorted_versions[:archives_to_fetch]
     urls = [url_dict[v] for v in versions]
 
-    tty.debug('Downloading...', level=tty.BASIC)
+    tty.debug('Downloading...')
     version_hashes = []
     i = 0
     errors = []
@@ -844,7 +840,7 @@ def get_checksums_for_versions(
             tty.msg('Something failed on {0}, skipping.  ({1})'.format(url, e))
 
     for msg in errors:
-        tty.debug(msg, level=tty.BASIC)
+        tty.debug(msg)
 
     if not version_hashes:
         tty.die("Could not fetch any versions for {0}".format(name))
@@ -860,8 +856,7 @@ def get_checksums_for_versions(
 
     num_hash = len(version_hashes)
     tty.debug('Checksummed {0} version{1} of {2}:'.format(
-              num_hash, '' if num_hash == 1 else 's', name),
-              level=tty.BASIC)
+              num_hash, '' if num_hash == 1 else 's', name))
 
     return version_lines
 

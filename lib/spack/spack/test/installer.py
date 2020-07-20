@@ -99,16 +99,21 @@ def test_hms(sec, result):
     assert inst._hms(sec) == result
 
 
-def test_install_msg():
+def test_install_msg(monkeypatch):
+    """Test results of call to install_msg based on debug level."""
     name = 'some-package'
     pid = 123456
-    base_result = 'Installing {0}'.format(name)
+    install_msg = 'Installing {0}'.format(name)
 
-    tty._debug = tty.BASIC
-    assert inst.install_msg(name, pid) == base_result
+    monkeypatch.setattr(tty, '_debug', 0)
+    assert inst.install_msg(name, pid) == install_msg
 
-    tty._debug = tty.STANDARD
-    expected = "{0}: {1}".format(pid, base_result)
+    monkeypatch.setattr(tty, '_debug', 1)
+    assert inst.install_msg(name, pid) == install_msg
+
+    # Expect the PID to be added at debug level 2
+    monkeypatch.setattr(tty, '_debug', 2)
+    expected = "{0}: {1}".format(pid, install_msg)
     assert inst.install_msg(name, pid) == expected
 
 
@@ -155,9 +160,8 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     spec.external_module = 'unchecked_module'
     inst._process_external_package(spec.package, False)
 
-    out = capfd.readouterr()[1]
+    out = capfd.readouterr()[0]
     assert 'has external module in {0}'.format(spec.external_module) in out
-    assert 'is actually installed in {0}'.format(spec.external_path) in out
 
 
 def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
@@ -168,7 +172,7 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
     pkg = spack.repo.get('trivial-install-test-package')
     assert not inst._process_binary_cache_tarball(pkg, None, False, False)
 
-    assert 'exists in binary cache but' in capfd.readouterr()[1]
+    assert 'exists in binary cache but' in capfd.readouterr()[0]
 
 
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):

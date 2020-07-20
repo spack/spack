@@ -1123,7 +1123,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if not self.has_code:
             tty.debug('No fetch required for {0}: package has no code.'
-                      .format(self.name), level=tty.BASIC)
+                      .format(self.name))
 
         start_time = time.time()
         checksum = spack.config.get('config:checksum')
@@ -1140,7 +1140,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                                     default=False)
                 if ignore_checksum:
                     tty.debug('Fetching with no checksum. {0}'
-                              .format(ck_msg), level=tty.BASIC)
+                              .format(ck_msg))
 
             if not ignore_checksum:
                 raise FetchError("Will not fetch %s" %
@@ -1196,8 +1196,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # If there are no patches, note it.
         if not patches and not has_patch_fun:
-            tty.debug('No patches needed for {0}'.format(self.name),
-                      level=tty.BASIC)
+            tty.debug('No patches needed for {0}'.format(self.name))
             return
 
         # Construct paths to special files in the archive dir used to
@@ -1210,18 +1209,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
-            tty.debug('Patching failed last time. Restaging.',
-                      level=tty.BASIC)
+            tty.debug('Patching failed last time. Restaging.')
             self.stage.restage()
 
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
-            tty.debug('Already patched {0}'.format(self.name),
-                      level=tty.BASIC)
+            tty.debug('Already patched {0}'.format(self.name))
             return
         elif os.path.isfile(no_patches_file):
-            tty.debug('No patches needed for {0}'.format(self.name),
-                      level=tty.BASIC)
+            tty.debug('No patches needed for {0}'.format(self.name))
             return
 
         # Apply all the patches for specs that match this one
@@ -1230,8 +1226,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with working_dir(self.stage.source_path):
                     patch.apply(self.stage)
-                tty.debug('Applied patch {0}'.format(patch.path_or_url),
-                          level=tty.BASIC)
+                tty.debug('Applied patch {0}'.format(patch.path_or_url))
                 patched = True
             except spack.error.SpackError as e:
                 tty.debug(e)
@@ -1245,8 +1240,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with working_dir(self.stage.source_path):
                     self.patch()
-                tty.debug('Ran patch() for {0}'.format(self.name),
-                          level=tty.BASIC)
+                tty.debug('Ran patch() for {0}'.format(self.name))
                 patched = True
             except spack.multimethod.NoSuchMethodError:
                 # We are running a multimethod without a default case.
@@ -1256,8 +1250,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # directive, AND the patch function didn't apply, say
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
-                    tty.debug('No patches needed for {0}'.format(self.name),
-                              level=tty.BASIC)
+                    tty.debug('No patches needed for {0}'.format(self.name))
             except spack.error.SpackError as e:
                 tty.debug(e)
 
@@ -1349,8 +1342,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if os.path.exists(makefile):
                 break
         else:
-            tty.debug('No Makefile found in the build directory',
-                      level=tty.BASIC)
+            tty.debug('No Makefile found in the build directory')
             return False
 
         # Check if 'target' is a valid target.
@@ -1382,7 +1374,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         for missing_target_msg in missing_target_msgs:
             if missing_target_msg.format(target) in stderr:
                 tty.debug("Target '{0}' not found in {1}"
-                          .format(target, makefile), level=tty.BASIC)
+                          .format(target, makefile))
                 return False
 
         return True
@@ -1410,8 +1402,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Check if we have a Ninja build script
         if not os.path.exists('build.ninja'):
-            tty.debug('No Ninja build script found in the build directory',
-                      level=tty.BASIC)
+            tty.debug('No Ninja build script found in the build directory')
             return False
 
         # Get a list of all targets in the Ninja build script
@@ -1424,7 +1415,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if not matches:
             tty.debug("Target '{0}' not found in build.ninja"
-                      .format(target), level=tty.BASIC)
+                      .format(target))
             return False
 
         return True
@@ -1732,11 +1723,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 if deprecator:
                     spack.store.db.deprecate(specs[0], deprecator)
                     tty.debug('Deprecating stale DB entry for {0}'
-                              .format(spec.short_spec), level=tty.BASIC)
+                              .format(spec.short_spec))
                 else:
                     spack.store.db.remove(specs[0])
                     tty.debug('Removed stale DB entry for {0}'
-                              .format(spec.short_spec), level=tty.BASIC)
+                              .format(spec.short_spec))
                 return
             else:
                 raise InstallError(str(spec) + " is not installed.")

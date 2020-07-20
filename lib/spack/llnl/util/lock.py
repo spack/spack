@@ -474,7 +474,8 @@ class Lock(object):
                 return False
 
     def _debug(self, *args):
-        tty.debug(*args, level=tty.DETAILED)
+        """Output lock debug messages at the default level."""
+        tty.debug(*args, level=2)
 
     def _get_counts_desc(self):
         return '(reads {0}, writes {1})'.format(self._reads, self._writes) \
@@ -524,7 +525,8 @@ class Lock(object):
             locktype, self, status_desc)
 
     def _detailed(self, *args):
-        tty.debug(*args, level=tty.LENGTHY)
+        """Output detailed lock log messages at a more verbose level."""
+        tty.debug(*args, level=3)
 
 
 class LockTransaction(object):

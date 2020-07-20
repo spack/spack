@@ -9,11 +9,11 @@ import pytest
 import llnl.util.tty as tty
 
 
-def test_get_timestamp():
+def test_get_timestamp(monkeypatch):
     """Ensure the results of get_timestamp are reasonable."""
 
     # Debug disabled should return an empty string
-    tty._debug = tty.DISABLED
+    monkeypatch.setattr(tty, '_debug', 0)
     assert not tty.get_timestamp(False), 'Expected an empty string'
 
     # Debug disabled but force the timestamp should return a string
@@ -21,18 +21,13 @@ def test_get_timestamp():
 
     pid_str = ' {0}'.format(os.getpid())
 
-    # Basic debugging should return a timestamp sans pid
-    tty._debug = tty.BASIC
+    # Level 1 debugging should return a timestamp WITHOUT the pid
+    monkeypatch.setattr(tty, '_debug', 1)
     out_str = tty.get_timestamp(False)
     assert out_str and pid_str not in out_str, 'Expected no PID in results'
 
-    # Standard debugging should return a timestamp WITH the pid
-    tty._debug = tty.STANDARD
-    out_str = tty.get_timestamp(False)
-    assert out_str and pid_str in out_str, 'Expected PID in results'
-
-    # Detailed debugging should return a timestamp WITH the pid
-    tty._debug = tty.DETAILED
+    # Level 2 debugging should also return a timestamp WITH the pid
+    monkeypatch.setattr(tty, '_debug', 2)
     out_str = tty.get_timestamp(False)
     assert out_str and pid_str in out_str, 'Expected PID in results'
 
