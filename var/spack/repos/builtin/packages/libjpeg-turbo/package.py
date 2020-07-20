@@ -15,7 +15,7 @@ class LibjpegTurbo(Package):
     """
     # https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
     homepage = "https://libjpeg-turbo.org/"
-    url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.3.tar.gz"
+    url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.4.tar.gz"
 
     version('2.0.4', sha256='7777c3c19762940cff42b3ba4d7cd5c52d1671b39a79532050c85efb99079064')
     version('2.0.3', sha256='a69598bf079463b34d45ca7268462a18b6507fdaa62bb1dfd212f02041499b5d')
