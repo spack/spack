@@ -1761,7 +1761,8 @@ def update_yaml(manifest, backup_file):
     with open(manifest) as f:
         data = syaml.load(f)
 
-    needs_update = spack.schema.env.update(list(data.values()).pop())
+    top_level_key = _top_level_key(data)
+    needs_update = spack.schema.env.update(data[top_level_key])
     if not needs_update:
         msg = "No update needed [manifest={0}]".format(manifest)
         tty.debug(msg)
