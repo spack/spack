@@ -4209,11 +4209,13 @@ to validate the detected Spec objects:
        """Validate a detected spec. Raise an exception if validation fails."""
 
 This method receives a detected spec along with its extra attributes and can be
-used to assert that certain conditions are met by the spec. In case the assertions
-are not honored the spec will be discarded and any assertion message will be logged
-as the reason for discarding it.
+used to check that certain conditions are met by the spec. Packagers can either
+use assertions or raise an ``InvalidSpecDetected`` exception when the check fails.
+In case the conditions are not honored the spec will be discarded and any message
+associated with the assertion or the exception will be logged as the reason for
+discarding it.
 
-As an example, a package that wants to assert that the ``compilers`` attribute is
+As an example, a package that wants to check that the ``compilers`` attribute is
 in the extra attributes can implement this method like this:
 
 .. code-block:: python
@@ -4224,6 +4226,18 @@ in the extra attributes can implement this method like this:
        msg = ('the extra attribute "compilers" must be set for '
               'the detected spec "{0}"'.format(spec))
        assert 'compilers' in extra_attributes, msg
+
+or like this:
+
+.. code-block:: python
+
+   @classmethod
+   def validate_detected_spec(cls, spec, extra_attributes):
+       """Check that 'compilers' is in the extra attributes."""
+       if 'compilers' not in extra_attributes:
+         msg = ('the extra attribute "compilers" must be set for '
+                 'the detected spec "{0}"'.format(spec))
+         raise InvalidSpecDetected(msg)
 
 .. _determine_spec_details:
 
