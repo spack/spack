@@ -101,7 +101,8 @@ class Cuda(Package):
                             "please remove the file and try again ")
         runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
         chmod = which('chmod')
-        chmod('+x', runfile)
+        if not os.access(runfile, os.X_OK):
+            chmod('+x', runfile)
         runfile = which(runfile)
 
         # Note: NVIDIA does not officially support many newer versions of
