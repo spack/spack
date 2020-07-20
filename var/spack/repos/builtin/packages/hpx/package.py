@@ -131,7 +131,7 @@ class Hpx(CMakePackage, CudaPackage):
         args.extend(self.instrumentation_args())
 
         if 'instrumentation=apex' in spec:
-            args += ['-DAPEX_WITH_OTF2=ON'
+            args += ['-DAPEX_WITH_OTF2=ON',
                      '-DOTF2_ROOT={0}'.format(spec['otf2'].prefix)]
 
         # Networking
