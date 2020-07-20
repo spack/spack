@@ -27,10 +27,6 @@ packages:
         paths:
             flex@2.5.37: /usr
         version: [2.5.37]
-    fontconfig:
-        paths:
-            fontconfig@2.10.95: /usr
-        version: [2.10.95]
     hadoop:
         version: [2.9.0]
     hdf5:
