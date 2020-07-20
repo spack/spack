@@ -102,7 +102,7 @@ packages:
         variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
         version: [xsdk-0.4.0-rc1]
     all:
-        compiler: [gcc@9.3.0, intel@20.0.1]
+        compiler: [gcc@9.3.0, intel@20.0.1, gcc@4.8.5]
         target: [x86_64]
         providers:
             mpi: [hpe-mpi, intel-mpi]
