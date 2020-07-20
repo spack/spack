@@ -16,6 +16,8 @@ class Xcfun(CMakePackage):
 
     version('2.0.0a6',
             sha256='a51086490890393439f98c5e3e4e1622908fe934bbc5063b1d4363cc4c15496d')
+    version('2.0.0a2',
+            sha256='f29e80fdb5c8089fb0eeb7827659111005cb13eb42bf75fcb0c034f6bd067c31')
 
     extends('python')
     depends_on('cmake@3.11:', type='build')

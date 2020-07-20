@@ -405,9 +405,14 @@ def dump_packages(spec, path):
             source = spack.store.layout.build_packages_path(node)
             source_repo_root = os.path.join(source, node.namespace)
 
-            # There's no provenance installed for the source package.  Skip it.
-            # User can always get something current from the builtin repo.
-            if not os.path.isdir(source_repo_root):
+            # If there's no provenance installed for the package, skip it.
+            # If it's external, skip it because it either:
+            # 1) it wasn't built with Spack, so it has no Spack metadata
+            # 2) it was built by another Spack instance, and we do not
+            # (currently) use Spack metadata to associate repos with externals
+            # built by other Spack instances.
+            # Spack can always get something current from the builtin repo.
+            if node.external or not os.path.isdir(source_repo_root):
                 continue
 
             # Create a source repo and get the pkg directory out of it.
@@ -1052,6 +1057,9 @@ class PackageInstaller(object):
         if use_cache and \
                 _install_from_cache(pkg, cache_only, explicit, unsigned):
             self._update_installed(task)
+            if task.compiler:
+                spack.compilers.add_compilers_to_config(
+                    spack.compilers.find_compilers([pkg.spec.prefix]))
             return
 
         pkg.run_tests = (tests is True or tests and pkg.name in tests)
