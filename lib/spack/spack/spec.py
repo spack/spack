@@ -988,8 +988,6 @@ class Spec(object):
         self.variants = vt.VariantMap(self)
         self.architecture = None
         self.compiler = None
-        self.external_path = None
-        self.external_modules = None
         self.compiler_flags = FlagMap(self)
         self._dependents = DependencyMap()
         self._dependencies = DependencyMap()
