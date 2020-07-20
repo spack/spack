@@ -142,7 +142,7 @@ pipeline {
                     steps {
                         dir("${DEPLOYMENT_ROOT}/spack") {
                             checkout([$class: 'GitSCM',
-                                      branches: [[name: "merge/2020/07"]],
+                                      branches: [[name: "FETCH_HEAD"]],
                                       extensions: [[$class: 'LocalBranch']],
                                       userRemoteConfigs: [[
                                             refspec: "+refs/heads/merge/2020/07:refs/remotes/origin/merge/2020/07",
