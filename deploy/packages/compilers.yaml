@@ -43,11 +43,11 @@ packages:
       - intel@20.0.1
       # - pgi+network+nvidia+mpi@19.10
 
-  bootstrapped_compilers:
-    target_matrix:
-      - bootstrapped_core
-    requires:
-      - architecture
-      - compiler
-    specs:
-      # - llvm@10.0.0
+  # bootstrapped_compilers:
+  #   target_matrix:
+  #     - bootstrapped_core
+  #   requires:
+  #     - architecture
+  #     - compiler
+  #   specs:
+  #     - llvm@10.0.0
