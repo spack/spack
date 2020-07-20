@@ -11,12 +11,12 @@ class PyXdot(PythonPackage):
     dot language."""
 
     homepage = "https://github.com/jrfonseca/xdot.py"
-    url      = "https://pypi.io/packages/source/x/xdot/xdot-1.0.tar.gz"
+    url      = "https://github.com/jrfonseca/xdot.py/archive/0.9.tar.gz"
     git      = "https://github.com/jrfonseca/xdot.py.git"
 
     version('master', branch='master')
-    version('1.0', sha256='7e067896d729af82f1fd0758e265f129944d469c30f550e3f15dbdb751cc42a1')
-    version('0.9', sha256='a33701664ecfefe7c7313a120a587e87334f3a566409bc451538fcde5edd6907')
+    version('1.0', sha256='a8594f94f43f938e01e42ff6015c7e00e3ee1a00c7f06d6287d8c939ffa94f76')
+    version('0.9', sha256='df7790db573d7a5512e6fa618d9051508c43cf64ca432d97c2207c87b6f20dbd')
 
     # setuptools is required at runtime to avoid:
     # No module named 'pkg_resources'
