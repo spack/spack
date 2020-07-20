@@ -51,6 +51,10 @@ packages:
       tbb: [intel-tbb]
       unwind: [libunwind]
       sycl: [hipsycl]
+      oneloop: [gosam-contrib]
+      golem: [gosam-contrib]
+      ninja-mc: [gosam-contrib]
+      samurai: [gosam-contrib]
     permissions:
       read: world
       write: user
