@@ -76,10 +76,6 @@ packages:
         version: [5.16.3]
     petsc:
         variants: ~fortran
-    pkg-config:
-        paths:
-            pkg-config@0.28: /usr
-        version: [0.28]
     python:
         variants: +tk
         version: [3.8.3]
