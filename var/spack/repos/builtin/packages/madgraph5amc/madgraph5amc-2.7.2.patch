@@ -20,3 +20,15 @@
  obj= global.o funlib.o linear_algebra.o kinematics.o matrices.o matrix_base.o cmatrix_base.o mis_warp.o special_fun.o pave_reduce.o cpave_reduce.o si_reduce.o csi_reduce.o ti_reduce.o cti_reduce.o gti_reduce.o binary_tree.o IREGI4ML5_interface.o avh_olo_foriregi.o
  olomod= avh_olo_foriregi.mod avh_olo_foriregi_dp_box.mod    avh_olo_foriregi_dp_olog.mod   avh_olo_foriregi_units.mod \
          avh_olo_foriregi_dp.mod        avh_olo_foriregi_dp_boxc.mod   avh_olo_foriregi_dp_prec.mod   avh_olo_foriregi_version.mod \
+--- pythia-pgs/src/makefile.orig        2020-07-20 14:08:34.836980103 +0200
++++ pythia-pgs/src/makefile     2020-07-20 14:08:47.669744808 +0200
+@@ -19,7 +19,7 @@
+ ifeq "$(FF)" ""
+     FF = g77
+ endif
+-FFLAGS = -O -fno-automatic -I$(PGS)/src
++FFLAGS = -O -fno-automatic -std=legacy -I$(PGS)/src
+ 
+ LDIRS = -L${STDHEP_DIR}/lib -L${PYDIR}/lib -L${LHAPDF}/lib 
+ LIBS1 = ${XLIBS1} -ltauola -lpythiaext -lstdhep -lFmcfio \
+
