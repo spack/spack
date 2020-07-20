@@ -39,8 +39,6 @@ packages:
         version: [64.1]
     intel-mkl:
         version: [2018.3.222]
-    intel-tbb:
-        version: [2019.4]
     # Drags in heavy PEARL dependencies
     intltool:
         paths:
@@ -104,7 +102,7 @@ packages:
         variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
         version: [xsdk-0.4.0-rc1]
     all:
-        compiler: [gcc@8.3.0, intel@19.0.4]
+        compiler: [gcc@9.3.0, intel@20.0.1]
         target: [x86_64]
         providers:
             mpi: [hpe-mpi, intel-mpi]
