@@ -870,11 +870,11 @@ class Openmpi(AutotoolsPackage):
 
     def test(self):
         """Perform smoke tests on the installed package."""
-        tty.warn('Expected results currently based on simple openmpi builds')
+        tty.debug('Expected results currently based on simple openmpi builds')
 
         if not self.spec.satisfies('@2.0.0:4.0.3'):
-            tty.warn('Expected results have not been confirmed for {0} {1}'
-                     .format(self.name, self.spec.version))
+            tty.debug('Expected results have not been confirmed for {0} {1}'
+                      .format(self.name, self.spec.version))
 
         # Simple version check tests on known packages
         self._test_check_versions()
