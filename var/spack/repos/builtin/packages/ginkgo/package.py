@@ -18,6 +18,8 @@ class Ginkgo(CMakePackage, CudaPackage):
 
     version('develop', branch='develop')
     version('master', branch='master')
+    version('1.2.0', commit='b4be2be961fd5db45c3d02b5e004d73550722e31')  # v1.2.0
+    version('1.1.1', commit='08d2c5200d3c78015ac8a4fd488bafe1e4240cf5')  # v1.1.1
     version('1.1.0', commit='b9bec8225442b3eb2a85a870efa112ab767a17fb')  # v1.1.0
     version('1.0.0', commit='45244641e0c2b19ba33aecd25153c0bddbcbe1a0')  # v1.0.0
 
@@ -44,6 +46,8 @@ class Ginkgo(CMakePackage, CudaPackage):
                 'ON' if '+full_optimizations' in spec else 'OFF'),
             '-DGINKGO_DEVEL_TOOLS=%s' % (
                 'ON' if '+develtools' in spec else 'OFF'),
+            # Drop HIP support for now
+            '-DGINKGO_BUILD_HIP=OFF',
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.
             '-DGINKGO_BUILD_BENCHMARKS=OFF',

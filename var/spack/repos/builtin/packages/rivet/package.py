@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class Rivet(AutotoolsPackage):
@@ -58,16 +59,55 @@ class Rivet(AutotoolsPackage):
     version('1.1.2',  sha256='a15b5d3339481446dec1b719d7d531a87a2e9d11c9fe8044e270ea69611b07c8')
     version('1.1.1',  sha256='bd87fefee6bb8368216755342dc80ab3f8f3c813732dd03c6f94135d45f7036b')
 
-    depends_on('yoda', type=('build', 'run'), when='@2.0.0:')
-    depends_on('yoda@1.8.0:', type=('build', 'run'), when='@3.1.0:')
+    # According to A. Buckley (main Rivet developer):
+    # "typically a given Rivet version will work with
+    # all YODA releases of that middle-digit version,
+    # and maybe older. Generally it's always a good idea
+    # to be using the latest versions of both.". The versions below
+    # are taken from LCG stack which, in most cases, is the definition
+    # of "latest" at the moment of release.
+    depends_on('yoda@1.0.4', when='@2.0.0')
+    depends_on('yoda@1.0.5', when='@2.1.0')
+    depends_on('yoda@1.0.6', when='@2.1.1')
+    depends_on('yoda@1.1.0', when='@2.1.2')
+    depends_on('yoda@1.3.0', when='@2.2.0')
+    depends_on('yoda@1.3.1', when='@2.2.1')
+    depends_on('yoda@1.4.0', when='@2.3.0')
+    depends_on('yoda@1.5.5', when='@2.4.0')
+    depends_on('yoda@1.5.9', when='@2.4.2')
+    depends_on('yoda@1.6.1', when='@2.4.3')
+    depends_on('yoda@1.6.2', when='@2.5.0')
+    depends_on('yoda@1.6.3', when='@2.5.1')
+    depends_on('yoda@1.6.5', when='@2.5.2')
+    depends_on('yoda@1.6.6', when='@2.5.3')
+    depends_on('yoda@1.6.7', when='@2.5.4')
+    depends_on('yoda@1.7.1', when='@2.6.1')
+    depends_on('yoda@1.7.4', when='@2.6.2')
+    depends_on('yoda@1.7.5', when='@2.7.2')
+    depends_on('yoda@1.7.5', when='@2.7.2b')
+    depends_on('yoda@1.7.7', when='@3.0.1')
+    depends_on('yoda@1.8.0', when='@3.1.0')
+    depends_on('yoda@1.8.2', when='@3.1.1')
+    depends_on('yoda@1.8.3', when='@3.1.2')
+
+    # The following versions were not a part of LCG stack
+    # and thus the exact version of YODA is unknown
+    depends_on('yoda@1.7.0:1.7.999', when='@2.6.0,2.7.0,2.7.1,3.0.0,3.0.2,3.1.0')
+    depends_on('yoda@1.5.0:1.5.999', when='@2.4.1')
 
     depends_on('hepmc', type=('build', 'run'))
     depends_on('boost', when='@:2.5.0,3:', type=('build', 'run'))
     depends_on('fastjet', type=('build', 'run'))
+    depends_on('fjcontrib', type=('build', 'run'), when='@3.0.0:')
     depends_on('gsl', type=('build', 'run'), when='@:2.6.0,2.6.2:')
     depends_on('python', type=('build', 'run'))
     depends_on('swig', type=('build', 'run'))
     depends_on('yaml-cpp', when='@2.0.0:2.1.2', type=('build', 'run'))
+
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
 
     patch('rivet-1.8.2.patch', when='@1.8.2', level=0)
     patch('rivet-1.9.0.patch', when='@1.9.0', level=0)
@@ -92,11 +132,15 @@ class Rivet(AutotoolsPackage):
     @run_before('configure')
     def copy_gsl_m4(self):
         if self.spec.satisfies('@2.6.2:'):
-            copy('rivet/gsl.m4', 'm4/gsl.m4')
+            copy(join_path(os.path.dirname(__file__), 'gsl.m4'), 'm4/gsl.m4')
 
     @property
     def force_autoreconf(self):
         return self.version >= Version('2.6.2')
+
+    def setup_build_environment(self, env):
+        # this avoids an "import site" error in the build
+        env.unset('PYTHONHOME')
 
     def configure_args(self):
         args = []
@@ -105,7 +149,7 @@ class Rivet(AutotoolsPackage):
         if self.spec.satisfies('@:1.999.999'):
             args += ['--with-boost-incpath=' + self.spec['boost'].includes]
         else:
-            if spec.satisfies('@:2.5.0,3:'):
+            if self.spec.satisfies('@:2.5.0,3:'):
                 args += ['--with-boost=' + self.spec['boost'].prefix]
 
         args += ['--with-fastjet=' + self.spec['fastjet'].prefix]
@@ -113,7 +157,10 @@ class Rivet(AutotoolsPackage):
             args += ['--with-yoda=' + self.spec['yoda'].prefix]
 
         if self.spec.satisfies('@:2.6.0,2.6.2:'):
-            args += ['--with-gsl=' + self.spc['gsl'].prefix]
+            args += ['--with-gsl=' + self.spec['gsl'].prefix]
+
+        if self.spec.satisfies('@3.0.0:'):
+            args += ['--with-fjcontrib=' + self.spec['fjcontrib'].prefix]
 
         args += ['--disable-pdfmanual', '--enable-unvalidated']
 

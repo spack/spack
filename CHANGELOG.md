@@ -1,3 +1,19 @@
+# v0.15.1 (2020-07-10)
+
+This minor release includes several important fixes:
+
+* Fix shell support on Cray (#17386)
+* Fix use of externals installed with other Spack instances (#16954)
+* Fix gcc+binutils build (#9024)
+* Fixes for usage of intel-mpi (#17378 and #17382)
+* Fixes to Autotools config.guess detection (#17333 and #17356)
+* Update `spack install` message to prompt user when an environment is not
+  explicitly activated (#17454)
+
+This release also adds a mirror for all sources that are
+fetched in Spack (#17077). It is expected to be useful when the
+official website for a Spack package is unavailable.
+
 # v0.15.0 (2020-06-28)
 
 `v0.15.0` is a major feature release.
