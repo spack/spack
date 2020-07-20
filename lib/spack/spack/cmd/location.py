@@ -54,7 +54,7 @@ def setup_parser(subparser):
     directories.add_argument(
         '-e', '--env', action='store',
         help="location of an environment managed by spack")
-    directories.add_argument(
+    subparser.add_argument(
         '--latest',
         help='use the last installed package when multiple ones match',
         action='store_true'
