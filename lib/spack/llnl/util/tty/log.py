@@ -323,8 +323,7 @@ class log_output(object):
     work within test frameworks like nose and pytest.
     """
 
-    def __init__(self, file_like=None, echo=False, debug=tty.DISABLED,
-                 buffer=False):
+    def __init__(self, file_like=None, echo=False, debug=0, buffer=False):
         """Create a new output log context manager.
 
         Args:

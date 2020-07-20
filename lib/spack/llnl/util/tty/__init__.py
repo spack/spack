@@ -19,19 +19,8 @@ from six.moves import input
 
 from llnl.util.tty.color import cprint, cwrite, cescape, clen
 
-# Debug levels
-#
-# Note that from a standard Python logging level perspective, the following
-# should, perhaps, be descending (from 10).
-DISABLED = 0
-BASIC = 1
-STANDARD = 2
-DETAILED = 3
-LENGTHY = 4
-
-
 # Globals
-_debug = DISABLED
+_debug = 0
 _verbose = False
 _stacktrace = False
 _timestamp = False
@@ -49,7 +38,7 @@ def is_verbose():
     return _verbose
 
 
-def is_debug(level=BASIC):
+def is_debug(level=1):
     return _debug >= level
 
 
@@ -57,7 +46,7 @@ def is_stacktrace():
     return _stacktrace
 
 
-def set_debug(level=DISABLED):
+def set_debug(level=0):
     global _debug
     assert level >= 0, 'Debug level must be a positive value'
     _debug = level
@@ -150,7 +139,7 @@ def process_stacktrace(countback):
 
 
 def show_pid():
-    return is_debug(STANDARD)
+    return is_debug(2)
 
 
 def get_timestamp(force=False):
@@ -219,7 +208,7 @@ def verbose(message, *args, **kwargs):
 
 
 def debug(message, *args, **kwargs):
-    level = kwargs.get('level', STANDARD)
+    level = kwargs.get('level', 1)
     if is_debug(level):
         kwargs.setdefault('format', 'g')
         kwargs.setdefault('stream', sys.stderr)

@@ -289,8 +289,7 @@ class URLFetchStrategy(FetchStrategy):
     @_needs_stage
     def fetch(self):
         if self.archive_file:
-            tty.debug('Already downloaded {0}'.format(self.archive_file),
-                      level=tty.BASIC)
+            tty.debug('Already downloaded {0}'.format(self.archive_file))
             return
 
         url = None
@@ -305,7 +304,7 @@ class URLFetchStrategy(FetchStrategy):
                 errors.append(str(e))
 
         for msg in errors:
-            tty.debug(msg, level=tty.BASIC)
+            tty.debug(msg)
 
         if not self.archive_file:
             raise FailedDownloadError(url)
@@ -316,7 +315,7 @@ class URLFetchStrategy(FetchStrategy):
         if self.stage.save_filename:
             save_file = self.stage.save_filename
             partial_file = self.stage.save_filename + '.part'
-        tty.debug('Fetching {0}'.format(url), level=tty.BASIC)
+        tty.debug('Fetching {0}'.format(url))
         if partial_file:
             save_args = ['-C',
                          '-',  # continue partial downloads
@@ -419,8 +418,7 @@ class URLFetchStrategy(FetchStrategy):
     def expand(self):
         if not self.expand_archive:
             tty.debug('Staging unexpanded archive {0} in {1}'
-                      .format(self.archive_file, self.stage.source_path),
-                      level=tty.BASIC)
+                      .format(self.archive_file, self.stage.source_path))
             if not self.stage.expanded:
                 mkdirp(self.stage.source_path)
             dest = os.path.join(self.stage.source_path,
@@ -428,8 +426,7 @@ class URLFetchStrategy(FetchStrategy):
             shutil.move(self.archive_file, dest)
             return
 
-        tty.debug('Staging archive: {0}'.format(self.archive_file),
-                  level=tty.BASIC)
+        tty.debug('Staging archive: {0}'.format(self.archive_file))
 
         if not self.archive_file:
             raise NoArchiveFileError(
@@ -603,7 +600,7 @@ class VCSFetchStrategy(FetchStrategy):
     @_needs_stage
     def check(self):
         tty.debug('No checksum needed when fetching with {0}'
-                  .format(self.url_attr), level=tty.BASIC)
+                  .format(self.url_attr))
 
     @_needs_stage
     def expand(self):
@@ -681,7 +678,7 @@ class GoFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        tty.debug('Getting go resource: {0}'.format(self.url), level=tty.BASIC)
+        tty.debug('Getting go resource: {0}'.format(self.url))
 
         with working_dir(self.stage.path):
             try:
@@ -797,12 +794,10 @@ class GitFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def fetch(self):
         if self.stage.expanded:
-            tty.debug('Already fetched {0}'.format(self.stage.source_path),
-                      level=tty.BASIC)
+            tty.debug('Already fetched {0}'.format(self.stage.source_path))
             return
 
-        tty.debug('Cloning git repository: {0}'.format(self._repo_info()),
-                  level=tty.BASIC)
+        tty.debug('Cloning git repository: {0}'.format(self._repo_info()))
 
         git = self.git
         if self.commit:
@@ -970,12 +965,10 @@ class SvnFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def fetch(self):
         if self.stage.expanded:
-            tty.debug('Already fetched {0}'.format(self.stage.source_path),
-                      level=tty.BASIC)
+            tty.debug('Already fetched {0}'.format(self.stage.source_path))
             return
 
-        tty.debug('Checking out subversion repository: {0}'
-                  .format(self.url), level=tty.BASIC)
+        tty.debug('Checking out subversion repository: {0}'.format(self.url))
 
         args = ['checkout', '--force', '--quiet']
         if self.revision:
@@ -1081,15 +1074,14 @@ class HgFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def fetch(self):
         if self.stage.expanded:
-            tty.debug('Already fetched {0}'.format(self.stage.source_path),
-                      level=tty.BASIC)
+            tty.debug('Already fetched {0}'.format(self.stage.source_path))
             return
 
         args = []
         if self.revision:
             args.append('at revision %s' % self.revision)
         tty.debug('Cloning mercurial repository: {0} {1}'
-                  .format(self.url, args), level=tty.BASIC)
+                  .format(self.url, args))
 
         args = ['clone']
 
@@ -1145,8 +1137,7 @@ class S3FetchStrategy(URLFetchStrategy):
     @_needs_stage
     def fetch(self):
         if self.archive_file:
-            tty.debug('Already downloaded {0}'.format(self.archive_file),
-                      level=tty.BASIC)
+            tty.debug('Already downloaded {0}'.format(self.archive_file))
             return
 
         parsed_url = url_util.parse(self.url)
@@ -1154,7 +1145,7 @@ class S3FetchStrategy(URLFetchStrategy):
             raise FetchError(
                 'S3FetchStrategy can only fetch from s3:// urls.')
 
-        tty.debug('Fetching {0}'.format(self.url), level=tty.BASIC)
+        tty.debug('Fetching {0}'.format(self.url))
 
         basename = os.path.basename(parsed_url.path)
 

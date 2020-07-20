@@ -362,16 +362,9 @@ def make_argument_parser(**kwargs):
         '-C', '--config-scope', dest='config_scopes', action='append',
         metavar='DIR', help="add a custom configuration scope")
     parser.add_argument(
-        '-d', '--debug', action='store_true',
-        help="write out basic debug messages")
-    parser.add_argument(
-        '-dd', action='store_true',
-        help="write out basic and standard debug messages")
-    parser.add_argument(
-        '-ddd', action='store_true',
-        help="write out basic, standard and detailed debug messages")
-    parser.add_argument(
-        '-dddd', action='store_true', help="write out all debug messages")
+        '-d', '--debug', action='count', default=0,
+        help="write out debug messages "
+             "(more d's for more verbosity: -d, -dd, -ddd, etc.)")
     parser.add_argument(
         '--timestamp', action='store_true',
         help="Add a timestamp to tty output")
@@ -417,7 +410,7 @@ def make_argument_parser(**kwargs):
         help="lines of profile output or 'all' (default: 20)")
     parser.add_argument(
         '-v', '--verbose', action='store_true',
-        help="print additional, verbose output")
+        help="print additional output during builds")
     parser.add_argument(
         '--stacktrace', action='store_true',
         help="add stacktraces to all printed statements")
@@ -443,15 +436,12 @@ def setup_main_options(args):
 
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
-    debug_level = tty.LENGTHY if args.dddd else \
-        tty.DETAILED if args.ddd else tty.STANDARD if args.dd else \
-        tty.BASIC if args.debug else tty.DISABLED
-    tty.set_debug(debug_level)
+    tty.set_debug(args.debug)
     tty.set_stacktrace(args.stacktrace)
 
     # debug must be set first so that it can even affect behavior of
     # errors raised by spack.config.
-    if debug_level:
+    if args.debug:
         spack.error.debug = True
         spack.util.debug.register_interrupt_handler()
         spack.config.set('config:debug', True, scope='command_line')
