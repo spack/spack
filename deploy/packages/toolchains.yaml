@@ -19,7 +19,7 @@ gnu-stable:
   lapack:
   - intel-mkl@2019.3.199
   python:
-  - python@3.7.4
+  - python@3.8.3
 
 # stable intel toolchain
 intel-stable:
@@ -32,7 +32,7 @@ intel-stable:
   lapack:
   - intel-mkl@2019.3.199
   python:
-  - python@3.7.4
+  - python@3.8.3
 
 # stable intel knl toolchain
 # intel-knl-stable:

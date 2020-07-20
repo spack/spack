@@ -30,7 +30,7 @@ packages:
       - architecture
       - compiler
     specs:
-      - python@3.7.4
+      - python@3.8.3
 
   gnu-stable-serial:
     target_matrix:
