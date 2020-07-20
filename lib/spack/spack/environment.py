@@ -175,9 +175,17 @@ def activate(
     # MANPATH, PYTHONPATH, etc. All variables that end in PATH (case-sensitive)
     # become PATH variables.
     #
-    if add_view and default_view_name in env.views:
-        with spack.store.db.read_transaction():
-            cmds += env.add_default_view_to_shell(shell)
+    try:
+        if add_view and default_view_name in env.views:
+            with spack.store.db.read_transaction():
+                cmds += env.add_default_view_to_shell(shell)
+    except (spack.repo.UnknownPackageError,
+            spack.repo.UnknownNamespaceError) as e:
+        tty.error(e)
+        tty.die(
+            'Environment DAG is broken due to a missing package or repo.',
+            'To resolve without it, force concretize with the command: ',
+            '   spack --no-env-view concretize --force')
 
     return cmds
 
@@ -527,20 +535,26 @@ class ViewDescriptor(object):
             installed_specs_for_view = set(
                 s for s in specs_for_view if s in self and s.package.installed)
 
-            view = self.view()
+            # To ensure there are no conflicts with packages being installed
+            # that cannot be resolved or have repos that have been removed
+            # we always regenerate the view from scratch. We must first make
+            # sure the root directory exists for the very first time though.
+            fs.mkdirp(self.root)
+            with fs.replace_directory_transaction(self.root):
+                view = self.view()
 
-            view.clean()
-            specs_in_view = set(view.get_all_specs())
-            tty.msg("Updating view at {0}".format(self.root))
+                view.clean()
+                specs_in_view = set(view.get_all_specs())
+                tty.msg("Updating view at {0}".format(self.root))
 
-            rm_specs = specs_in_view - installed_specs_for_view
-            add_specs = installed_specs_for_view - specs_in_view
+                rm_specs = specs_in_view - installed_specs_for_view
+                add_specs = installed_specs_for_view - specs_in_view
 
-            # pass all_specs in, as it's expensive to read all the
-            # spec.yaml files twice.
-            view.remove_specs(*rm_specs, with_dependents=False,
-                              all_specs=specs_in_view)
-            view.add_specs(*add_specs, with_dependencies=False)
+                # pass all_specs in, as it's expensive to read all the
+                # spec.yaml files twice.
+                view.remove_specs(*rm_specs, with_dependents=False,
+                                  all_specs=specs_in_view)
+                view.add_specs(*add_specs, with_dependencies=False)
 
 
 class Environment(object):
