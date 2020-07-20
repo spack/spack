@@ -1,3 +1,8 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import shutil
 import pathlib
@@ -14,15 +19,13 @@ class Idl(Package):
     homepage = "https://www.harrisgeospatial.com/Software-Technology/IDL"
     idl_mirror_path = 'idl/idl-8.7.tar.gz'
     manual_download = True
+    url = "file://mirror.com/idl8.7-linux.tar.gz"
 
     maintainers = ['francinelapid']
 
     #version('8.7')
 
     license_required = True
-
-    def url_for_version(self, version):
-        return "file://{0}/idl{1}-linux.tar.gz".format(os.getcwd(), version)
 
     def install(self, spec, prefix):
 
