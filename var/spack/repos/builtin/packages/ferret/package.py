@@ -15,6 +15,8 @@ class Ferret(Package):
     homepage = "http://ferret.pmel.noaa.gov/Ferret/home"
     url      = "https://github.com/NOAA-PMEL/Ferret/archive/v7.6.0.tar.gz"
 
+    maintainers = ['RemiLacroix-IDRIS']
+
     version('7.6.0', sha256='69832d740bd44c9eadd198a5de4d96c4c01ae90ae28c2c3414c1bb9f43e475d1')
     version('7.5.0', sha256='2a038c547e6e80e6bd0645a374c3247360cf8c94ea56f6f3444b533257eb16db')
     version('7.4',   sha256='5167bb9e6ef441ae9cf90da555203d2155e3fcf929e7b8dddb237de0d58c5e5f')
@@ -50,21 +52,24 @@ class Ferret(Package):
             return 'https://github.com/NOAA-PMEL/Ferret/archive/v{0}.tar.gz'.format(version)
 
     def patch(self):
-        hdf5_prefix = self.spec['hdf5'].prefix
-        netcdff_prefix = self.spec['netcdf-fortran'].prefix
-        readline_prefix = self.spec['readline'].prefix
-        libz_prefix = self.spec['zlib'].prefix
+        spec = self.spec
+        hdf5_prefix = spec['hdf5'].prefix
+        netcdff_prefix = spec['netcdf-fortran'].prefix
+        readline_prefix = spec['readline'].prefix
+        libz_prefix = spec['zlib'].prefix
 
-        work_dir = 'FERRET' if '@:7.2' in self.spec else '.'
+        work_dir = 'FERRET' if '@:7.2' in spec else '.'
         with working_dir(work_dir, create=False):
-            if '@7.3:' in self.spec:
+            if '@7.3:' in spec:
                 copy('site_specific.mk.in', 'site_specific.mk')
-                copy('external_functions/ef_utility/site_specific.mk.in', 'external_functions/ef_utility/site_specific.mk')
+                copy('external_functions/ef_utility/site_specific.mk.in',
+                     'external_functions/ef_utility/site_specific.mk')
 
                 filter_file(r'^DIR_PREFIX.+',
                             'DIR_PREFIX = %s' % self.stage.source_path,
                             'site_specific.mk')
-                # Setting this to blank not to force using the static version of readline
+                # Setting this to blank not to force
+                # using the static version of readline
                 filter_file(r'^(READLINE_(LIB)?DIR).+',
                             '\\1 = ',
                             'site_specific.mk')
@@ -83,7 +88,7 @@ class Ferret(Package):
                         'BUILDTYPE = x86_64-linux',
                         'site_specific.mk')
             filter_file(r'^INSTALL_FER_DIR.+',
-                        'INSTALL_FER_DIR = %s' % self.spec.prefix,
+                        'INSTALL_FER_DIR = %s' % spec.prefix,
                         'site_specific.mk')
             filter_file(r'^(HDF5_(LIB)?DIR).+',
                         '\\1 = %s' % hdf5_prefix,
@@ -92,7 +97,7 @@ class Ferret(Package):
                         '\\1 = %s' % netcdff_prefix,
                         'site_specific.mk')
 
-            if '@:7.3' in self.spec:
+            if '@:7.3' in spec:
                 # Don't force using the static version of libz
                 filter_file(r'\$\(LIBZ_DIR\)/lib64/libz.a',
                             '-lz',
@@ -103,7 +108,8 @@ class Ferret(Package):
                             '-lgfortran',
                             'platform_specific.mk.x86_64-linux')
 
-                # This prevents the rpaths to be properly set by Spack's wrappers
+                # This prevents the rpaths to be properly set
+                # by Spack's compiler wrappers
                 filter_file(r'-v --verbose',
                             '',
                             'platform_specific.mk.x86_64-linux')
@@ -117,7 +123,7 @@ class Ferret(Package):
                             '',
                             'platform_specific.mk.x86_64-linux')
 
-            if '@:7.4' in self.spec:
+            if '@:7.4' in spec:
                 compilers_spec_file = 'platform_specific.mk.x86_64-linux'
             else:
                 compilers_spec_file = 'site_specific.mk'
@@ -137,16 +143,16 @@ class Ferret(Package):
                         compilers_spec_file)
 
             filter_file(r'\$\(NETCDF4?_(LIB)?DIR\).*/libnetcdff.a',
-                        "-L%s -lnetcdff" % self.spec['netcdf-fortran'].prefix.lib,
+                        "-L%s -lnetcdff" % spec['netcdf-fortran'].prefix.lib,
                         'platform_specific.mk.x86_64-linux')
             filter_file(r'\$\(NETCDF4?_(LIB)?DIR\).*/libnetcdf.a',
-                        "-L%s -lnetcdf" % self.spec['netcdf-c'].prefix.lib,
+                        "-L%s -lnetcdf" % spec['netcdf-c'].prefix.lib,
                         'platform_specific.mk.x86_64-linux')
             filter_file(r'\$\(HDF5_(LIB)?DIR\).*/libhdf5_hl.a',
-                        "-L%s -lhdf5_hl" % self.spec['hdf5'].prefix.lib,
+                        "-L%s -lhdf5_hl" % spec['hdf5'].prefix.lib,
                         'platform_specific.mk.x86_64-linux')
             filter_file(r'\$\(HDF5_(LIB)?DIR\).*/libhdf5.a',
-                        "-L%s -lhdf5" % self.spec['hdf5'].prefix.lib,
+                        "-L%s -lhdf5" % spec['hdf5'].prefix.lib,
                         'platform_specific.mk.x86_64-linux')
 
     def install(self, spec, prefix):
@@ -168,7 +174,8 @@ class Ferret(Package):
 
     def setup_run_environment(self, env):
         env.set('FER_DIR', self.prefix)
-        env.set('FER_GO', ' '.join(['.', self.prefix.go, self.prefix.examples, self.prefix.contrib]))
+        env.set('FER_GO', ' '.join(['.', self.prefix.go, self.prefix.examples,
+                                    self.prefix.contrib]))
         env.set('FER_EXTERNAL_FUNCTIONS', self.prefix.ext_func.libs)
         env.set('FER_PALETTE', ' '.join(['.', self.prefix.ppl]))
         env.set('FER_FONTS', self.prefix.ppl.fonts)
