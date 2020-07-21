@@ -22,6 +22,8 @@ class IbmJava(Package):
     # not be available for download.
 
     version_list = [
+        ('8.0.6.11', 'ppc64',   '6fd17a6b9a34bb66e0db37f6402dc1b7612d54084c94b859f4a42f445fd174d4'),
+        ('8.0.6.11', 'ppc64le', 'd69ff7519e32e89db88a9a4d4d88d1881524073ac940f35d3860db2c6647be2e'),
         ('8.0.6.10', 'ppc64',   'ff5151ead88f891624eefe33d80d56c325ca0aa4b93bd96c135cad326993eda2'),
         ('8.0.6.10', 'ppc64le', 'ea99ab28dd300b08940882d178247e99aafe5a998b1621cf288dfb247394e067'),
         ('8.0.6.7',  'ppc64',   'a1accb461a039af4587ea86511e317fea1d423e7f781459a17ed3947afed2982'),
