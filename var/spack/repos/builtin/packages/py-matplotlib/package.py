@@ -81,7 +81,8 @@ class PyMatplotlib(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', when='@:2', type=('build', 'link', 'run'))
     depends_on('python@3.5:', when='@3:', type=('build', 'link', 'run'))
     depends_on('python@3.6:', when='@3.1:', type=('build', 'link', 'run'))
-    depends_on('freetype@2.3:')
+    depends_on('freetype@2.3:')  # freetype 2.6.1 needed for tests to pass
+    depends_on('qhull@2015.2:', when='@3.3:')
     depends_on('libpng@1.2:')
     depends_on('py-numpy@1.11:', type=('build', 'run'))
     depends_on('py-numpy@1.15:', when='@3.3:', type=('build', 'run'))
@@ -144,7 +145,7 @@ class PyMatplotlib(PythonPackage):
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')
 
     @run_before('build')
-    def set_backend(self):
+    def configure(self):
         """Set build options with regards to backend GUI libraries."""
 
         backend = self.spec.variants['backend'].value
@@ -153,6 +154,13 @@ class PyMatplotlib(PythonPackage):
             # Default backend
             setup.write('[rc_options]\n')
             setup.write('backend = ' + backend + '\n')
+
+            # Starting with version 3.3.0, freetype is downloaded by default
+            # Force matplotlib to use Spack installations of freetype and qhull
+            if self.version >= Version('3.3.0'):
+                setup.write('[libs]\n')
+                setup.write('system_freetype = True\n')
+                setup.write('system_qhull = True\n')
 
     def test(self):
         pytest = which('pytest')
