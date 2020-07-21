@@ -23,5 +23,5 @@ class PySphinxcontribTrio(PythonPackage):
     depends_on('py-sphinx@1.7:')
 
     def path(self):
-        tmp_path = os.path.join(os.path.dirname(__file__), 'sphinxcontrib-trio.patch'))
+        tmp_path = os.path.join(os.path.dirname(__file__), 'sphinxcontrib-trio.patch')
         apply_patch(self.stage, tmp_path)
