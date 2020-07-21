@@ -165,3 +165,26 @@ class Ferret(Package):
         if '+datasets' in self.spec:
             mkdir(self.prefix.fer_dsets)
             install_tree('fer_dsets', self.prefix.fer_dsets)
+
+    def setup_run_environment(self, env):
+        env.set('FER_DIR', self.prefix)
+        env.set('FER_GO', ' '.join(['.', self.prefix.go, self.prefix.examples, self.prefix.contrib]))
+        env.set('FER_EXTERNAL_FUNCTIONS', self.prefix.ext_func.libs)
+        env.set('FER_PALETTE', ' '.join(['.', self.prefix.ppl]))
+        env.set('FER_FONTS', self.prefix.ppl.fonts)
+
+        fer_data = ['.']
+        fer_descr = ['.']
+        fer_grids = ['.']
+
+        if '+datasets' in self.spec:
+            env.set('FER_DSETS', self.prefix.fer_dsets)
+
+            fer_data.append(self.prefix.fer_dsets.data)
+            fer_descr.append(self.prefix.fer_dsets.descr)
+            fer_grids.append(self.prefix.fer_dsets.grids)
+
+        fer_data.extend([self.prefix.go, self.prefix.examples])
+        env.set('FER_DATA', ' '.join(fer_data))
+        env.set('FER_DESCR', ' '.join(fer_descr))
+        env.set('FER_GRIDS', ' '.join(fer_grids))
