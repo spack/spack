@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.pkgkit import *
+from spack import *
 
 
 class PyRecommonmark(PythonPackage):
@@ -11,7 +11,8 @@ class PyRecommonmark(PythonPackage):
 
     This allows you to write CommonMark inside of Docutils & Sphinx projects.
 
-    Documentation is available on Read the Docs: http://recommonmark.readthedocs.org"""
+    Documentation is available on Read the Docs: 
+    http://recommonmark.readthedocs.org"""
 
     homepage = "https://github.com/readthedocs/recommonmark"
     url      = "https://files.pythonhosted.org/packages/f5/71/046160d730f664662d65b3f8b399b519ad378ffa4369ff3b6060cf1318d7/recommonmark-0.6.0.tar.gz"
@@ -21,4 +22,3 @@ class PyRecommonmark(PythonPackage):
     depends_on('py-commonmark')
     depends_on('py-docutils')
     depends_on('py-sphinx')
-

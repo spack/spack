@@ -3,11 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.pkgkit import *
+from spack import *
 
 
 class PySphinxcontribMermaid(PythonPackage):
-    """This extension allows you to embed `Mermaid <http://knsv.github.io/mermaid/>`_ graphs in your documents,
+    """This extension allows you to embed 
+    `Mermaid <http://knsv.github.io/mermaid/>`_ graphs in your documents,
     including general flowcharts, sequence and gantt diagrams."""
 
     homepage = "https://github.com/mgaitan/sphinxcontrib-mermaid"
@@ -18,7 +19,3 @@ class PySphinxcontribMermaid(PythonPackage):
     version('0.3.1', sha256='649738afc3022d25a742a928f7b4146cf6024b1d8bb49017962713d2de78123c', extension='zip')
 
     depends_on('py-sphinx@1.7:')
-
-
-
-

@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.pkgkit import *
+from spack import *
+
 
 class PyHieroglyph(PythonPackage):
-    """Hieroglyph is an extension for Sphinx which builds HTML presentations from ReStructured Text documents.
+    """Hieroglyph is an extension for Sphinx which builds HTML 
+    presentations from ReStructured Text documents.
     """
 
     homepage = "https://github.com/nyergler/hieroglyph"
@@ -18,6 +20,3 @@ class PyHieroglyph(PythonPackage):
     depends_on('py-setuptools')
     depends_on('py-sphinx@1.2:')
     depends_on('py-six')
-
-
-

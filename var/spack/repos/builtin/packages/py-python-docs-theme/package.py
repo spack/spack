@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.pkgkit import *
+from spack import *
 
 
 class PyPythonDocsTheme(PythonPackage):
@@ -17,5 +17,3 @@ class PyPythonDocsTheme(PythonPackage):
     version('2018.7', sha256='018a5bf2a7318c9c9a8346303dac8afc6bc212d92e86561c9b95a3372714155a')
 
     depends_on('py-setuptools')
-
-

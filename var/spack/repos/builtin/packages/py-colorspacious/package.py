@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.pkgkit import *
+from spack import *
 
 
 class PyColorspacious(PythonPackage):
-    """`colorlog.ColoredFormatter` is a formatter for use with Python's `logging`
-    module that outputs records using terminal colors.
+    """`colorlog.ColoredFormatter` is a formatter for use with Python's 
+    `logging` module that outputs records using terminal colors.
      """
 
     homepage = "https://github.com/borntyping/python-colorlog"

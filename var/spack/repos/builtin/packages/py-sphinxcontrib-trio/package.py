@@ -5,13 +5,14 @@
 
 import os.path
 
-from spack.pkgkit import *
+from spack import *
 from spack.patch import apply_patch
 
 
 class PySphinxcontribTrio(PythonPackage):
-    """This sphinx extension helps you document Python code that uses async/await, or abstract methods, or
-     context managers, or generators, or ... you get the idea."""
+    """This sphinx extension helps you document Python code that uses 
+    async/await, or abstract methods, or context managers, or generators, 
+    or ... you get the idea."""
 
     homepage = "https://github.com/python-trio/sphinxcontrib-trio"
     url      = "https://files.pythonhosted.org/packages/05/12/442779c256f7610cbb8292ce7d8b5ec787ac07cfedf837ba11225628f7c4/sphinxcontrib-trio-1.1.0.tar.gz"
@@ -23,5 +24,3 @@ class PySphinxcontribTrio(PythonPackage):
 
     def path(self):
         apply_patch(self.stage, os.path.join(os.path.dirname(__file__), 'sphinxcontrib-trio.patch'))
-
-

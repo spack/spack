@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.pkgkit import *
+from spack import *
 
 
 class PyYolk3k(PythonPackage):
-    """Yolk is a Python tool for obtaining information about installed Python 
+    """Yolk is a Python tool for obtaining information about installed Python
     packages and querying packages avilable on PyPI (Python Package Index).
     Yolk3k is a fork of the original yolk. `yolk3k` add Python 3 support and
     adds additional features."""
@@ -20,4 +20,3 @@ class PyYolk3k(PythonPackage):
     depends_on('py-pygments')
     depends_on('py-jinja2')
     depends_on('py-docutils')
-

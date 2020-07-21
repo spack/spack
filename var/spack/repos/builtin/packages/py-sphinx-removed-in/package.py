@@ -3,11 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.pkgkit import *
+from spack import *
 
 
 class PySphinxRemovedIn(PythonPackage):
-    """This is a Sphinx extension which recognizes the .. versionremoved:: and .. removed-in directives.
+    """This is a Sphinx extension which recognizes the 
+    .. versionremoved:: and .. removed-in directives.
     These are missing from Sphinx'es core markup.
 ."""
 
