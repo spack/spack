@@ -22,7 +22,10 @@ class PyGensim(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.11.3:', type=('build', 'run'))
+
+    depends_on('py-numpy@1.11.3:1.16.1', when='^python@:2.999', type=('build', 'run'))
+    depends_on('py-numpy@1.11.3:',       when='^python@3:',     type=('build', 'run'))
+
     depends_on('py-scipy@0.18.1:', type=('build', 'run'))
     depends_on('py-six@1.5.0:', type=('build', 'run'))
     depends_on('py-smart-open@1.8.1:', type=('build', 'run'))
