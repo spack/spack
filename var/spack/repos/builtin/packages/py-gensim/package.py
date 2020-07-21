@@ -16,6 +16,7 @@ class PyGensim(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.8.3', sha256='786adb0571f75114e9c5f7a31dd2e6eb39a9791f22c8757621545e2ded3ea367')
     version('3.8.1', sha256='33277fc0a8d7b0c7ce70fcc74bb82ad39f944c009b334856c6e86bf552b1dfdc')
     version('3.8.0', sha256='ec5de7ff2bfa8692fa96a846bb5aae52f267fc322fbbe303c1f042d258af5766')
 
