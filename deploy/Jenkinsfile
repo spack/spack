@@ -84,7 +84,7 @@ def run_stages() {
 
 pipeline {
     agent {
-        label 'bb5'
+        label 'bb5-full'
     }
 
     options {
