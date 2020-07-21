@@ -9,9 +9,18 @@ import os
 
 
 class Totalview(Package):
-    """Totalview parallel debugger."""
+    """Totalview parallel debugger.
+
+    Source must be made available to Spack
+    externally, either by having the tarballs in the current working directory
+    or having the tarballs in a Spack mirror.
+
+    The documentation tarball will
+    be used as the primary source and the architecture appropriate tarball will
+    be downloaded as a resource."""
 
     homepage = "https://www.roguewave.com/products-services/totalview"
+    maintainers = ['nicholas-sly']
     manual_download = True
     license_required = True
     license_comment = '#'
@@ -26,10 +35,10 @@ class Totalview(Package):
 
     # Distributed with Totalview
     variant('memoryscape', default=True, description='Install memoryscape')
-        # Clearly, there are other tarballs for power and x86, but I don't have
-        # those files to definitely determine the appropriate filenames and
-        # hashes.
 
+    # Because the actual source tarball is architecture dependent, the main
+    # download is the documentation tarball and the source is downloaded as a
+    # resource once the target architecture is known.
     resource(
             name='x86_64',
             url='totalview_{0}_linux_x86-64.tar'.format(version),
