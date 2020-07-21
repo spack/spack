@@ -11,7 +11,7 @@ class Idl(Package):
     """IDL Software: Interactive Data Visulation.
 
     Note: IDL is a licensed software. You will also need an existing
-    downloaded tarball of IDL in your current directory or in a 
+    downloaded tarball of IDL in your current directory or in a
     spack mirror in order to install."""
 
     homepage = "https://www.harrisgeospatial.com/Software-Technology/IDL"
