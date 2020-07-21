@@ -26,7 +26,7 @@ packages:
       - cuda@9.0.176
       - cuda@9.2.88
       - cuda@10.1.243
-      - cudnn@7.3.0
+      - cudnn@7.3.0.29-9.0-linux-x64
       # - freeimage@3.18.0
       - glew
       - gmsh+metis~mpi+oce+openmp+shared@4.4.1
