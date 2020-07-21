@@ -35,6 +35,15 @@ class Kahip(SConsPackage):
     conflicts('%apple-clang')
     conflicts('%clang')
 
+    # Fix SConstruct files to be python3 friendly (convert print from a
+    # statement to a function)
+    # Split into 2 patch files:
+    # *) first file patches Sconstruct files present in all versions (from
+    # 2.00 to 2.11)
+    # *) second is for files only present in 2.00
+    patch('fix-sconstruct-for-py3.patch', when='@2: ^python@3:')
+    patch('fix-sconstruct-for-py3-v2.00.patch', when='@2.00 ^python@3:')
+
     def patch(self):
         """Internal compile.sh scripts hardcode number of cores to build with.
         Filter these out so Spack can control it."""
