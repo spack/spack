@@ -7,10 +7,10 @@ from spack import *
 
 
 class PySphinxRemovedIn(PythonPackage):
-    """This is a Sphinx extension which recognizes the 
+    """This is a Sphinx extension which recognizes the
     .. versionremoved:: and .. removed-in directives.
     These are missing from Sphinx'es core markup.
-."""
+    ."""
 
     homepage = "https://github.com/MrSenko/sphinx-removed-in"
     url      = "https://pypi.io/packages/source/s/sphinx-removed-in/sphinx-removed-in-0.2.0.tar.gz"

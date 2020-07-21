@@ -11,7 +11,7 @@ class PyRecommonmark(PythonPackage):
 
     This allows you to write CommonMark inside of Docutils & Sphinx projects.
 
-    Documentation is available on Read the Docs: 
+    Documentation is available on Read the Docs:
     http://recommonmark.readthedocs.org"""
 
     homepage = "https://github.com/readthedocs/recommonmark"

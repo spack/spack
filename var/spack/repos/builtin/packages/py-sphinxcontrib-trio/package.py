@@ -10,8 +10,8 @@ from spack.patch import apply_patch
 
 
 class PySphinxcontribTrio(PythonPackage):
-    """This sphinx extension helps you document Python code that uses 
-    async/await, or abstract methods, or context managers, or generators, 
+    """This sphinx extension helps you document Python code that uses
+    async/await, or abstract methods, or context managers, or generators,
     or ... you get the idea."""
 
     homepage = "https://github.com/python-trio/sphinxcontrib-trio"
@@ -23,4 +23,5 @@ class PySphinxcontribTrio(PythonPackage):
     depends_on('py-sphinx@1.7:')
 
     def path(self):
-        apply_patch(self.stage, os.path.join(os.path.dirname(__file__), 'sphinxcontrib-trio.patch'))
+        tmp_path = os.path.join(os.path.dirname(__file__)
+        apply_patch(self.stage, tmp_path, 'sphinxcontrib-trio.patch'))

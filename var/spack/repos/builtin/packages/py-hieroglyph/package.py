@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyHieroglyph(PythonPackage):
-    """Hieroglyph is an extension for Sphinx which builds HTML 
+    """Hieroglyph is an extension for Sphinx which builds HTML
     presentations from ReStructured Text documents.
     """
 

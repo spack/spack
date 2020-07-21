@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyColorspacious(PythonPackage):
-    """`colorlog.ColoredFormatter` is a formatter for use with Python's 
+    """`colorlog.ColoredFormatter` is a formatter for use with Python's
     `logging` module that outputs records using terminal colors.
      """
 
