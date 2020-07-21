@@ -6,7 +6,7 @@
 import os
 import os.path
 import copy
-
+import platform
 import spack.util.environment
 
 
@@ -29,9 +29,13 @@ class Cp2k(MakefilePackage, CudaPackage):
     version('3.0', sha256='1acfacef643141045b7cbade7006f9b7538476d861eeecd9658c9e468dc61151')
     version('master', branch='master', submodules="True")
 
+    smm_default = 'libxsmm'
+    if platform.machine() == 'aarch64':
+        smm_default = 'blas'
+
     variant('mpi', default=True, description='Enable MPI support')
     variant('openmp', default=False, description='Enable OpenMP support')
-    variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'blas'),
+    variant('smm', default=smm_default, values=('libxsmm', 'libsmm', 'blas'),
             description='Library for small matrix multiplications')
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('libxc', default=True,
