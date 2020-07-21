@@ -41,7 +41,7 @@ packages:
     specs:
       - assimp
       - boost
-      - catch ~single_header
+      - catch2 ~single_header
       - deflect
       - eigen
       - fmt
