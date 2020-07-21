@@ -381,9 +381,6 @@ def make_argument_parser(**kwargs):
     env_group.add_argument(
         '-E', '--no-env', dest='no_env', action='store_true',
         help="run without any environments activated (see spack env)")
-    env_group.add_argument(
-        '--no-env-view', dest='no_env_view', action='store_true',
-        help="run without any activating views for environments activated")
     parser.add_argument(
         '--use-env-repo', action='store_true',
         help="when running in an environment, use its package repository")
@@ -712,7 +709,7 @@ def main(argv=None):
     if not args.no_env:
         env = ev.find_environment(args)
         if env:
-            ev.activate(env, args.use_env_repo, not args.no_env_view)
+            ev.activate(env, args.use_env_repo, add_view=False)
 
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(','))

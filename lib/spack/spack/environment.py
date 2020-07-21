@@ -183,9 +183,12 @@ def activate(
             spack.repo.UnknownNamespaceError) as e:
         tty.error(e)
         tty.die(
-            'Environment DAG is broken due to a missing package or repo.',
-            'To resolve without it, force concretize with the command: ',
-            '   spack --no-env-view concretize --force')
+            'Environment view is broken due to a missing package or repo.\n',
+            '  To activate without views enabled, activate with:\n',
+            '    spack env activate -V {}\n'.format(env.name),
+            '  To remove it and resolve the issue, '
+            'force concretize with the command:\n',
+            '    spack -e {} concretize --force'.format(env.name))
 
     return cmds
 
@@ -238,9 +241,15 @@ def deactivate(shell='sh'):
         cmds += '    unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n'
         cmds += 'fi;\n'
 
-    if default_view_name in _active_environment.views:
-        with spack.store.db.read_transaction():
-            cmds += _active_environment.rm_default_view_from_shell(shell)
+    try:
+        if default_view_name in _active_environment.views:
+            with spack.store.db.read_transaction():
+                cmds += _active_environment.rm_default_view_from_shell(shell)
+    except (spack.repo.UnknownPackageError,
+            spack.repo.UnknownNamespaceError) as e:
+        tty.warn(e)
+        tty.warn('Could not fully deactivate view due to missing package '
+                 'or repo, shell environment may be corrupt.')
 
     tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
     _active_environment = None
@@ -1124,6 +1133,24 @@ class Environment(object):
         specs = self._get_environment_specs()
         for view in self.views.values():
             view.regenerate(specs, self.roots())
+
+    def check_views(self):
+        """Checks if the environments default view can be activated."""
+        try:
+            # This is effectively a no-op, but it touches all packages in the
+            # default view if they are installed.
+            for view_name, view in self.views.items():
+                for _, spec in self.concretized_specs():
+                    if spec in view and spec.package.installed:
+                        tty.debug(
+                            'Spec %s in view %s' % (spec.name, view_name))
+        except (spack.repo.UnknownPackageError,
+                spack.repo.UnknownNamespaceError) as e:
+            tty.warn(e)
+            tty.warn(
+                'Environment %s includes out of date packages or repos. '
+                'Loading the environment view will require reconcretization.'
+                % self.name)
 
     def _env_modifications_for_default_view(self, reverse=False):
         all_mods = spack.util.environment.EnvironmentModifications()
