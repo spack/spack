@@ -375,3 +375,26 @@ HDF5 version {version} {version}
                 print('-' * 80)
                 raise RuntimeError("HDF5 install check failed")
         shutil.rmtree(checkdir)
+
+    def _test_check_versions(self):
+        """Perform version checks on selected installed package binaries."""
+        spec_vers_str = 'Version {0}'.format(self.spec.version)
+
+        exes = [
+            'h5copy', 'h5diff', 'h5dump', 'h5format_convert', 'h5ls',
+            'h5mkgrp', 'h5repack', 'h5stat', 'h5unjam',
+        ]
+        use_short_opt = ['h52gif', 'h5repart', 'h5unjam']
+        for exe in exes:
+            reason = 'test version of {0} is {1}'.format(exe, spec_vers_str)
+            option = '-V' if exe in use_short_opt else '--version'
+            self.run_test(exe, [option], spec_vers_str, None, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on known binaries
+        self._test_check_versions()
+
+        # Run existing install check
+        self.check_install()
