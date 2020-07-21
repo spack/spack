@@ -47,6 +47,8 @@ class Legion(CMakePackage):
             description='Build on top of ibv conduit for InfiniBand support')
     variant('shared', default=True, description='Build shared libraries')
     variant('hdf5', default=True, description='Enable HDF5 support')
+    variant('spy', default=False,
+            description='Enable detailed logging for Legion Spy')
     variant('build_type', default='Release',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'),
             description='The build type to build', multi=False)
@@ -86,5 +88,8 @@ class Legion(CMakePackage):
             options.append('-DLegion_USE_HDF5=ON')
         else:
             options.append('-DLegion_USE_HDF5=OFF')
+
+        if '+spy' in self.spec:
+            options.append('-DLegion_SPY=ON')
 
         return options
