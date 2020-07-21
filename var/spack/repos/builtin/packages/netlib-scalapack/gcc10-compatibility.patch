@@ -1,0 +1,33 @@
+From 6dff04cc6f5ad2c35e76dec18b7eec86943a3ed1 Mon Sep 17 00:00:00 2001
+From: DesWurstes <DesWurstes@users.noreply.github.com>
+Date: Fri, 15 May 2020 15:54:14 +0100
+Subject: [PATCH] Set -fallow-argument-mismatch
+
+---
+ CMakeLists.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 638dbdc..93fc34b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -14,6 +14,9 @@ if (UNIX)
+    if ("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
+       set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fltconsistency -fp_port" )
+    endif ()
++   if ("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
++      set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch" )
++   endif()
+ endif ()
+ 
+ #
+@@ -79,6 +82,9 @@ if (UNIX)
+    if ("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
+       set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fltconsistency -fp_port" )
+    endif ()
++   if ("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
++      set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch" )
++   endif()
+ endif ()
+ 
+ macro(SCALAPACK_install_library lib)
