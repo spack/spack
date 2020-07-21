@@ -21,5 +21,6 @@ class PySmartOpen(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-boto3', type=('build', 'run'))
+    depends_on('py-boto', when='@1.8.4', type=('build', 'run'))
     depends_on('py-google-cloud-storage', type=('build', 'run'))
     depends_on('py-bz2file', when='^python@:2', type=('build', 'run'))
