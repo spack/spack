@@ -613,7 +613,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     debug_flag = '-d '
 
                 job_scripts = [
-                    'spack env activate .',
+                    'spack env activate --without-view .',
                     'spack {0}ci rebuild'.format(debug_flag),
                 ]
 
@@ -1043,17 +1043,10 @@ def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
         tty.debug('job package: {0}'.format(job_pkg))
         stage_dir = job_pkg.stage.path
         tty.debug('stage dir: {0}'.format(stage_dir))
-        build_env_src = os.path.join(stage_dir, 'spack-build-env.txt')
         build_out_src = os.path.join(stage_dir, 'spack-build-out.txt')
-        build_env_dst = os.path.join(
-            job_log_dir, 'spack-build-env.txt')
         build_out_dst = os.path.join(
             job_log_dir, 'spack-build-out.txt')
-        tty.debug('Copying logs to artifacts:')
-        tty.debug('  1: {0} -> {1}'.format(
-            build_env_src, build_env_dst))
-        shutil.copyfile(build_env_src, build_env_dst)
-        tty.debug('  2: {0} -> {1}'.format(
+        tty.debug('Copying build log ({0}) to artifacts ({1})'.format(
             build_out_src, build_out_dst))
         shutil.copyfile(build_out_src, build_out_dst)
     except Exception as inst:

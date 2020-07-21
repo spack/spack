@@ -8,6 +8,13 @@ on:
   schedule:
     # nightly at 1 AM
     - cron: '0 1 * * *'
+  pull_request:
+    branches:
+    - develop
+    paths:
+      # Run if we modify this yaml file
+      - '.github/workflows/macos_python.yml'
+      # TODO: run if we touch any of the recipes involved in this
 
 # GitHub Action Limits
 # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
@@ -21,7 +28,8 @@ jobs:
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
-        spack install -v gcc
+        # 9.2.0 is the latest version on which we apply homebrew patch
+        spack install -v --fail-fast gcc@9.2.0 %apple-clang
 
   install_jupyter_clang:
     name: jupyter
@@ -32,7 +40,8 @@ jobs:
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
-        spack install -v py-jupyter %apple-clang
+        spack config add packages:opengl:paths:opengl@4.1:/usr/X11R6
+        spack install -v --fail-fast py-jupyter %apple-clang
 
   install_scipy_clang:
     name: scipy, mpl, pd
@@ -42,9 +51,9 @@ jobs:
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
-        spack install -v py-scipy %apple-clang
-        spack install -v py-matplotlib %apple-clang
-        spack install -v py-pandas %apple-clang
+        spack install -v --fail-fast py-scipy %apple-clang
+        spack install -v --fail-fast py-matplotlib %apple-clang
+        spack install -v --fail-fast py-pandas %apple-clang
 
   install_mpi4py_clang:
     name: mpi4py, petsc4py
@@ -54,5 +63,5 @@ jobs:
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
-        spack install -v py-mpi4py %apple-clang
-        spack install -v py-petsc4py %apple-clang
+        spack install -v --fail-fast py-mpi4py %apple-clang
+        spack install -v --fail-fast py-petsc4py %apple-clang

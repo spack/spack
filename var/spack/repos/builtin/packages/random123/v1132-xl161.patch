@@ -1,0 +1,13 @@
+diff --git a/include/Random123/features/compilerfeatures.h b/include/Random123/features/compilerfeatures.h
+index 2341a7a..3c5d999 100644
+--- a/include/Random123/features/compilerfeatures.h
++++ b/include/Random123/features/compilerfeatures.h
+@@ -206,7 +206,7 @@ added to each of the *features.h files, AND to examples/ut_features.cpp.
+ #include "nvccfeatures.h"
+ #elif defined(__ICC)
+ #include "iccfeatures.h"
+-#elif defined(__xlC__)
++#elif defined(__xlC__) || defined(__ibmxl__)
+ #include "xlcfeatures.h"
+ #elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+ #include "sunprofeatures.h"

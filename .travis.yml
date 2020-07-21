@@ -21,6 +21,14 @@ addons:
       - zsh
       - fish
 
+before_install:
+  - if [[ "$TRAVIS_DIST" == "trusty" ]]; then
+        share/spack/qa/install_patchelf.sh;
+    else
+        sudo apt-get update;
+        sudo apt-get -y install patchelf;
+    fi
+
 # Install various dependencies
 install:
   - pip install --upgrade pip

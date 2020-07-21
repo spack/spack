@@ -349,7 +349,7 @@ class Openfoam(Package):
     # kahip patch (wmake)
     patch('https://develop.openfoam.com/Development/openfoam/commit/8831dfc58b0295d0d301a78341dd6f4599073d45.patch',
           when='@1806',
-          sha256='21f1ab68c82dfa41ed1a4439427c94c43ddda02c84175c30da623d905d3e5d61'
+          sha256='531146be868dd0cda70c1cf12a22110a38a30fd93b5ada6234be3d6c9256c6cf'
           )
 
     # Some user config settings

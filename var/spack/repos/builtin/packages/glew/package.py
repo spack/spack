@@ -16,6 +16,8 @@ class Glew(Package):
 
     depends_on("cmake", type='build')
     depends_on("gl")
+    depends_on('libsm')
+    depends_on('libice')
 
     def install(self, spec, prefix):
         options = []

@@ -21,6 +21,7 @@ class Random123(Package):
 
     patch('ibmxl.patch', when='@1.09')
     patch('arm-gcc.patch', when='@1.09')
+    patch('v1132-xl161.patch', when='@1.13.2')
 
     def install(self, spec, prefix):
         # Random123 doesn't have a build system.

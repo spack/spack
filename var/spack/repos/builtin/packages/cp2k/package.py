@@ -34,6 +34,8 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'blas'),
             description='Library for small matrix multiplications')
     variant('plumed', default=False, description='Enable PLUMED support')
+    variant('libint', default=True,
+            description='Use libint, required for HFX (and possibly others)')
     variant('libxc', default=True,
             description='Support additional functionals via libxc')
     variant('pexsi', default=False,
@@ -82,14 +84,15 @@ class Cp2k(MakefilePackage, CudaPackage):
     # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
     depends_on('pkgconfig', type='build', when='smm=libxsmm')
     # ... and in CP2K 7.0+ for linking to libint2
-    depends_on('pkgconfig', type='build', when='@7.0:')
+    depends_on('pkgconfig', type='build', when='+libint@7.0:')
+    depends_on('pkgconfig', type='build', when='+libxc@7.0:')
 
     # libint & libxc are always statically linked
-    depends_on('libint@1.1.4:1.2', when='@3.0:6.9', type='build')
+    depends_on('libint@1.1.4:1.2', when='+libint@3.0:6.9', type='build')
     for lmax in HFX_LMAX_RANGE:
         # libint2 can be linked dynamically again
         depends_on('libint@2.6.0:+fortran tune=cp2k-lmax-{0}'.format(lmax),
-                   when='@7.0: lmax={0}'.format(lmax))
+                   when='+libint@7.0: lmax={0}'.format(lmax))
 
     depends_on('libxc@2.2.2:', when='+libxc@:5.5999', type='build')
     depends_on('libxc@4.0.3:', when='+libxc@6.0:6.9', type='build')
@@ -218,16 +221,9 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         dflags = ['-DNDEBUG']
         cppflags = [
-            '-D__LIBINT',
             '-D__FFTW3',
             '-I{0}'.format(fftw_header_dir),
         ]
-
-        if '@:6.9' in spec:
-            cppflags += [
-                '-D__LIBINT_MAX_AM=6',
-                '-D__LIBDERIV_MAX_AM1=5',
-            ]
 
         if '^mpi@3:' in spec:
             cppflags.append('-D__MPI_VERSION=3')
@@ -286,19 +282,6 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         if 'superlu-dist@4.3' in spec:
             ldflags.insert(0, '-Wl,--allow-multiple-definition')
-
-        if '@:6.9' in spec:
-            # libint-1.x.y has to be linked statically to work around
-            # inconsistencies in its Fortran interface definition
-            # (short-int vs int) which otherwise causes segfaults at runtime
-            # due to wrong offsets into the shared library symbols.
-            libs.extend([
-                os.path.join(spec['libint'].libs.directories[0], 'libderiv.a'),
-                os.path.join(spec['libint'].libs.directories[0], 'libint.a'),
-            ])
-        else:
-            fcflags += pkgconf('--cflags', 'libint2', output=str).split()
-            libs += pkgconf('--libs', 'libint2', output=str).split()
 
         if '+plumed' in self.spec:
             dflags.extend(['-D__PLUMED2'])
@@ -362,6 +345,30 @@ class Cp2k(MakefilePackage, CudaPackage):
                     spec['wannier90'].libs.directories[0], 'libwannier.a'
                 )
                 libs.append(wannier)
+
+        if '+libint' in spec:
+            cppflags += ['-D__LIBINT']
+
+            if '@:6.9' in spec:
+                cppflags += [
+                    '-D__LIBINT_MAX_AM=6',
+                    '-D__LIBDERIV_MAX_AM1=5',
+                ]
+
+                # libint-1.x.y has to be linked statically to work around
+                # inconsistencies in its Fortran interface definition
+                # (short-int vs int) which otherwise causes segfaults at
+                # runtime due to wrong offsets into the shared library
+                # symbols.
+                libs.extend([
+                    os.path.join(
+                        spec['libint'].libs.directories[0], 'libderiv.a'),
+                    os.path.join(
+                        spec['libint'].libs.directories[0], 'libint.a'),
+                ])
+            else:
+                fcflags += pkgconf('--cflags', 'libint2', output=str).split()
+                libs += pkgconf('--libs', 'libint2', output=str).split()
 
         if '+libxc' in spec:
             cppflags += ['-D__LIBXC']

@@ -144,7 +144,9 @@ class Ncl(Package):
             c2f_flags.extend(['-lgfortran', '-lm'])
         elif self.compiler.name == 'intel':
             fc_flags.append('-fp-model precise')
-            cc_flags.append('-fp-model precise')
+            cc_flags.append('-fp-model precise'
+                            ' -std=c99'
+                            ' -D_POSIX_C_SOURCE=2 -D_GNU_SOURCE')
             c2f_flags.extend(['-lifcore', '-lifport'])
 
         if self.spec.satisfies('%gcc@10:'):

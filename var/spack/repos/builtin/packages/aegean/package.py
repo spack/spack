@@ -21,4 +21,7 @@ class Aegean(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
+        if spec.target.family == 'aarch64':
+            makefile.filter('-m64', '')
+
         makefile.filter('/usr/local', prefix)
