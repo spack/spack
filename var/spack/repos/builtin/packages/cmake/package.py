@@ -258,7 +258,7 @@ class Cmake(Package):
 
         for exe in ['ccmake', 'cmake', 'cpack', 'ctest']:
             reason = 'test version of {0} is {1}'.format(exe, spec_vers_str)
-            self.run_test(exe, ['--version'], spec_vers_str, None,
+            self.run_test(exe, ['--version'], [spec_vers_str],
                           installed=True, purpose=reason, skip_missing=True)
 
     def test(self):
