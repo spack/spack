@@ -6,8 +6,10 @@
 
 from spack import *
 
+
 class Comgr(CMakePackage):
-    """This provides various Lightning Compiler related services. It currently contains one library, the Code Object Manager (Comgr)"""
+    """This provides various Lightning Compiler related services. It currently
+       contains one library, the Code Object Manager (Comgr)"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport"
     url      = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-3.5.0.tar.gz"
@@ -26,10 +28,9 @@ class Comgr(CMakePackage):
     root_cmakelists_dir = 'lib/comgr'
 
     def cmake_args(self):
-        spec=self.spec
         args = [
-                '-DCMAKE_VERBOSE_MAKEFILE=1',
-                '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH="FALSE"'
-               ]
+            '-DCMAKE_VERBOSE_MAKEFILE=1',
+            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE'
+        ]
 
         return args

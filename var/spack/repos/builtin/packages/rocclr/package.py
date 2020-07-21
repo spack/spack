@@ -8,8 +8,11 @@ from spack import *
 import os
 import shutil
 
+
 class Rocclr(CMakePackage):
-    """ROCclr is a virtual device interface that compute runtimes interact with to different backends such as ROCr or PAL This abstraction allows runtimes to work on Windows as well as on Linux without much effort."""
+    """ROCclr is a virtual device interface that compute runtimes interact
+       with to different backends such as ROCr or PAL This abstraction allows
+       runtimes to work on Windows as well as on Linux without much effort."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCclr"
     url      = "https://github.com/ROCm-Developer-Tools/ROCclr/archive/roc-3.5.0.tar.gz"
@@ -34,11 +37,10 @@ class Rocclr(CMakePackage):
 
     @run_before('cmake')
     def buildcleanup(self):
-        build_path=os.path.join(self.stage.path, '../rocclr_build')
+        build_path = os.path.join(self.stage.path, '../rocclr_build')
         shutil.rmtree(build_path, ignore_errors=True)
 
     def cmake_args(self):
         args = ['-DUSE_COMGR_LIBRARY=yes',
                 '-DOPENCL_DIR={}/opencl-on-vdi'.format(self.stage.source_path)]
         return args
-

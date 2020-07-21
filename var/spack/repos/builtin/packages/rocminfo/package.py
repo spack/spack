@@ -6,13 +6,14 @@
 
 from spack import *
 
+
 class Rocminfo(CMakePackage):
     """Radeon Open Compute (ROCm) Runtime rocminfo tool"""
 
     homepage = "https://github.com/RadeonOpenCompute/rocminfo"
     url      = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-3.5.0.tar.gz"
 
-    maintainers = ['srekolam','arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('3.5.0', sha256='1d113f06b7c9b60d0e92b2c12c0c704a565696867496fe7038e5dddd510567b7')
 

@@ -6,6 +6,7 @@
 
 from spack import *
 
+
 class RocmBandwidthTest(CMakePackage):
     """Test to measure PciE bandwidth on ROCm platforms"""
 

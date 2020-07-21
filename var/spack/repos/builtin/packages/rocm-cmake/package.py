@@ -6,8 +6,10 @@
 
 from spack import *
 
+
 class RocmCmake(CMakePackage):
-    """ROCM cmake modules provides cmake modules for common build tasks needed for the ROCM software stack"""
+    """ROCM cmake modules provides cmake modules for common build tasks
+       needed for the ROCM software stack"""
 
     homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
     url      = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-3.5.0.tar.gz"
@@ -21,8 +23,7 @@ class RocmCmake(CMakePackage):
     depends_on('cmake@3.5.2', type='build')
 
     def cmake_args(self):
-        args=[
-              '-DCMAKE_VERBOSE_MAKEFILE=1',
-              '-DROCM_DISABLE_LDCONFIG=ON'
-             ]
+        args = ['-DCMAKE_VERBOSE_MAKEFILE=1',
+                '-DROCM_DISABLE_LDCONFIG=ON'
+        ]
         return args

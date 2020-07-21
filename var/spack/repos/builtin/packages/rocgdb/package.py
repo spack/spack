@@ -8,7 +8,8 @@ from spack import *
 
 
 class Rocgdb(AutotoolsPackage):
-    """This is ROCgdb, the ROCm source-level debugger for Linux, based on GDB, the GNU source-level debugger."""
+    """This is ROCgdb, the ROCm source-level debugger for Linux,
+        based on GDB, the GNU source-level debugger."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCgdb/"
     url      = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-3.5.0.tar.gz"
@@ -26,10 +27,8 @@ class Rocgdb(AutotoolsPackage):
     depends_on('rocm-dbgapi@3.5:', type='link', when='@3.5:')
     depends_on('comgr@3.5:', type='link', when='@3.5:')
     build_directory = 'spack-build'
- 
-    def configure_args(self):
-        spec = self.spec
 
+    def configure_args(self):
         # Generic options to compile GCC
         options = [
             # Distributor options
@@ -42,7 +41,7 @@ class Rocgdb(AutotoolsPackage):
             '--disable-gas',
             '--disable-gdbserver',
             '--disable-sim',
-            '--enable-tui',  
+            '--enable-tui',
             '--disable-gdbtk',
             '--disable-shared',
             '--with-expat',

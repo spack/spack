@@ -28,10 +28,11 @@ class RocmOpencl(CMakePackage):
              placement='rocclr-src')
 
     def cmake_args(self):
-        args = ['-DLIBROCclr_STATIC_DIR={}/../rocclr_build'.format(self.stage.path),
+        args = ['-DLIBROCclr_STATIC_DIR={}/../rocclr_build'.
+                 format(self.stage.path),
                 '-DUSE_COMGR_LIBRARY=yes',
                 '-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE',
                 '-DCMAKE_SKIP_BUILD_RPATH=TRUE',
                 '-DROCclr_DIR={}/rocclr-src'.format(self.stage.source_path)
-               ]
+            ]
         return args
