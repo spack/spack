@@ -1,0 +1,11 @@
+diff --git a/setup.py b/setup.py
+index c0c601b..5b3520a 100644
+--- a/a/setup.py
++++ b/b/setup.py
+@@ -32,4 +32,5 @@ setup(
+         "Framework :: Twisted",
+         "Topic :: Documentation :: Sphinx",
+         "Topic :: Software Development :: Documentation",
+-    ])
++    ],
++    namespace_packages=['sphinxcontrib'])
