@@ -22,6 +22,8 @@ class Ferret(Package):
     version('7.2',   sha256='21c339b1bafa6939fc869428d906451f130f7e77e828c532ab9488d51cf43095')
     version('6.96',  sha256='7eb87156aa586cfe838ab83f08b2102598f9ab62062d540a5da8c9123816331a')
 
+    variant('datasets', default=False, description="Install Ferret standard datasets")
+
     depends_on("hdf5+hl")
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
@@ -34,6 +36,11 @@ class Ferret(Package):
     patch('https://github.com/NOAA-PMEL/Ferret/commit/c7eb70a0b17045c8ca7207d586bfea77a5340668.patch',
           sha256='5bd581db4578c013faed375844b206fbe71f93fe9ce60f8f9f41d64abc6a5972',
           level=1, working_dir='FERRET', when='@:6.99')
+
+    resource(name='datasets',
+             url='https://github.com/NOAA-PMEL/FerretDatasets/archive/v7.6.tar.gz',
+             sha256='b2fef758ec1817c1c19e6225857ca3a82c727d209ed7fd4697d45c5533bb2c72',
+             placement='fer_dsets', when='+datasets')
 
     def url_for_version(self, version):
         if version <= Version('7.2'):
@@ -154,3 +161,7 @@ class Ferret(Package):
             os.environ['HOSTTYPE'] = 'x86_64-linux'
             make(parallel=False)
             make("install")
+
+        if '+datasets' in self.spec:
+            mkdir(self.prefix.fer_dsets)
+            install_tree('fer_dsets', self.prefix.fer_dsets)
