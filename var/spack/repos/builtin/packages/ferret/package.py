@@ -13,10 +13,14 @@ class Ferret(Package):
        designed to meet the needs of oceanographers and meteorologists
        analyzing large and complex gridded data sets."""
     homepage = "http://ferret.pmel.noaa.gov/Ferret/home"
-    url      = "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v696.tar.gz"
+    url      = "https://github.com/NOAA-PMEL/Ferret/archive/v7.6.0.tar.gz"
 
-    version('7.2', sha256='21c339b1bafa6939fc869428d906451f130f7e77e828c532ab9488d51cf43095')
-    version('6.96', sha256='7eb87156aa586cfe838ab83f08b2102598f9ab62062d540a5da8c9123816331a')
+    version('7.6.0', sha256='69832d740bd44c9eadd198a5de4d96c4c01ae90ae28c2c3414c1bb9f43e475d1')
+    version('7.5.0', sha256='2a038c547e6e80e6bd0645a374c3247360cf8c94ea56f6f3444b533257eb16db')
+    version('7.4',   sha256='5167bb9e6ef441ae9cf90da555203d2155e3fcf929e7b8dddb237de0d58c5e5f')
+    version('7.3',   sha256='ae80a732c34156b5287a23696cf4ae4faf4de1dd705ff43cbb4168b05c6faaf4')
+    version('7.2',   sha256='21c339b1bafa6939fc869428d906451f130f7e77e828c532ab9488d51cf43095')
+    version('6.96',  sha256='7eb87156aa586cfe838ab83f08b2102598f9ab62062d540a5da8c9123816331a')
 
     depends_on("hdf5+hl")
     depends_on("netcdf-c")
@@ -26,9 +30,17 @@ class Ferret(Package):
     depends_on("libx11")
     depends_on("curl")
 
+    # Make Java dependency optional with older versions of Ferret
+    patch('https://github.com/NOAA-PMEL/Ferret/commit/c7eb70a0b17045c8ca7207d586bfea77a5340668.patch',
+          sha256='5bd581db4578c013faed375844b206fbe71f93fe9ce60f8f9f41d64abc6a5972',
+          level=1, working_dir='FERRET', when='@:6.99')
+
     def url_for_version(self, version):
-        return "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v{0}.tar.gz".format(
-            version.joined)
+        if version <= Version('7.2'):
+            return 'ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v{0}.tar.gz'.format(
+                version.joined)
+        else:
+            return 'https://github.com/NOAA-PMEL/Ferret/archive/v{0}.tar.gz'.format(version)
 
     def patch(self):
         hdf5_prefix = self.spec['hdf5'].prefix
@@ -36,67 +48,99 @@ class Ferret(Package):
         readline_prefix = self.spec['readline'].prefix
         libz_prefix = self.spec['zlib'].prefix
 
-        filter_file(r'^BUILDTYPE.+',
-                    'BUILDTYPE = x86_64-linux',
-                    'FERRET/site_specific.mk')
-        filter_file(r'^INSTALL_FER_DIR.+',
-                    'INSTALL_FER_DIR = %s' % self.spec.prefix,
-                    'FERRET/site_specific.mk')
-        filter_file(r'^HDF5_DIR.+',
-                    'HDF5_DIR = %s' % hdf5_prefix,
-                    'FERRET/site_specific.mk')
-        filter_file(r'^NETCDF4_DIR.+',
-                    'NETCDF4_DIR = %s' % netcdff_prefix,
-                    'FERRET/site_specific.mk')
-        filter_file(r'^READLINE_DIR.+',
-                    'READLINE_DIR = %s' % readline_prefix,
-                    'FERRET/site_specific.mk')
-        filter_file(r'^LIBZ_DIR.+',
-                    'LIBZ_DIR = %s' % libz_prefix,
-                    'FERRET/site_specific.mk')
-        filter_file(r'^JAVA_HOME.+',
-                    ' ',
-                    'FERRET/site_specific.mk')
+        work_dir = 'FERRET' if '@:7.2' in self.spec else '.'
+        with working_dir(work_dir, create=False):
+            if '@7.3:' in self.spec:
+                copy('site_specific.mk.in', 'site_specific.mk')
+                copy('external_functions/ef_utility/site_specific.mk.in', 'external_functions/ef_utility/site_specific.mk')
 
-        # Don't force using the static version of libgfortran
-        filter_file(r'-Wl,-Bstatic -lgfortran -Wl,-Bdynamic',
-                    '-lgfortran',
-                    'FERRET/platform_specific.mk.x86_64-linux')
+                filter_file(r'^DIR_PREFIX.+',
+                            'DIR_PREFIX = %s' % self.stage.source_path,
+                            'site_specific.mk')
+                # Setting this to blank not to force using the static version of readline
+                filter_file(r'^(READLINE_(LIB)?DIR).+',
+                            '\\1 = ',
+                            'site_specific.mk')
+            else:
+                filter_file(r'^LIBZ_DIR.+',
+                            'LIBZ_DIR = %s' % libz_prefix,
+                            'site_specific.mk')
+                filter_file(r'^JAVA_HOME.+',
+                            ' ',
+                            'site_specific.mk')
+                filter_file(r'^READLINE_DIR.+',
+                            'READLINE_DIR = %s' % readline_prefix,
+                            'site_specific.mk')
 
-        # This prevents the rpaths to be properly set by Spack's wrappers
-        filter_file(r'-v --verbose',
-                    '',
-                    'FERRET/platform_specific.mk.x86_64-linux')
+            filter_file(r'^BUILDTYPE.+',
+                        'BUILDTYPE = x86_64-linux',
+                        'site_specific.mk')
+            filter_file(r'^INSTALL_FER_DIR.+',
+                        'INSTALL_FER_DIR = %s' % self.spec.prefix,
+                        'site_specific.mk')
+            filter_file(r'^(HDF5_(LIB)?DIR).+',
+                        '\\1 = %s' % hdf5_prefix,
+                        'site_specific.mk')
+            filter_file(r'^(NETCDF4?_(LIB)?DIR).+',
+                        '\\1 = %s' % netcdff_prefix,
+                        'site_specific.mk')
 
-        # Make sure Ferret uses Spack's compiler wrappers
-        filter_file(r'^[ \t]*CC[ \t]*=.+',
-                    'CC = %s' % spack_cc,
-                    'FERRET/platform_specific.mk.x86_64-linux')
-        filter_file(r'^[ \t]*CXX[ \t]*=.+',
-                    'CXX = %s' % spack_cxx,
-                    'FERRET/platform_specific.mk.x86_64-linux')
-        filter_file(r'^[ \t]*FC[ \t]*=.+',
-                    'FC = %s' % spack_fc,
-                    'FERRET/platform_specific.mk.x86_64-linux')
-        filter_file(r'^[ \t]*F77[ \t]*=.+',
-                    'F77 = %s' % spack_f77,
-                    'FERRET/platform_specific.mk.x86_64-linux')
-        filter_file(r'^[ \t]*LD[ \t]*=.+',
-                    'LD = %s' % spack_cc,
-                    'FERRET/platform_specific.mk.x86_64-linux')
+            if '@:7.3' in self.spec:
+                # Don't force using the static version of libz
+                filter_file(r'\$\(LIBZ_DIR\)/lib64/libz.a',
+                            '-lz',
+                            'platform_specific.mk.x86_64-linux')
 
-        filter_file(r'\$\(NETCDF4_DIR\)/lib64/libnetcdff.a',
-                    "-L%s -lnetcdff" % self.spec['netcdf-fortran'].prefix.lib,
-                    'FERRET/platform_specific.mk.x86_64-linux')
-        filter_file(r'\$\(NETCDF4_DIR\)/lib64/libnetcdf.a',
-                    "-L%s -lnetcdf" % self.spec['netcdf-c'].prefix.lib,
-                    'FERRET/platform_specific.mk.x86_64-linux')
-        filter_file(r'\$\(HDF5_DIR\)/lib64/libhdf5_hl.a',
-                    "-L%s -lhdf5_hl" % self.spec['hdf5'].prefix.lib,
-                    'FERRET/platform_specific.mk.x86_64-linux')
-        filter_file(r'\$\(HDF5_DIR\)/lib64/libhdf5.a',
-                    "-L%s -lhdf5" % self.spec['hdf5'].prefix.lib,
-                    'FERRET/platform_specific.mk.x86_64-linux')
+                # Don't force using the static version of libgfortran
+                filter_file(r'-Wl,-Bstatic -lgfortran -Wl,-Bdynamic',
+                            '-lgfortran',
+                            'platform_specific.mk.x86_64-linux')
+
+                # This prevents the rpaths to be properly set by Spack's wrappers
+                filter_file(r'-v --verbose',
+                            '',
+                            'platform_specific.mk.x86_64-linux')
+
+                filter_file(r'^[ \t]*LD[ \t]*=.+',
+                            'LD = %s' % spack_cc,
+                            'platform_specific.mk.x86_64-linux')
+            else:
+                # Don't force using the static version of libgfortran
+                filter_file(r'-static-libgfortran',
+                            '',
+                            'platform_specific.mk.x86_64-linux')
+
+            if '@:7.4' in self.spec:
+                compilers_spec_file = 'platform_specific.mk.x86_64-linux'
+            else:
+                compilers_spec_file = 'site_specific.mk'
+
+            # Make sure Ferret uses Spack's compiler wrappers
+            filter_file(r'^[ \t]*CC[ \t]*=.+',
+                        'CC = %s' % spack_cc,
+                        compilers_spec_file)
+            filter_file(r'^[ \t]*CXX[ \t]*=.+',
+                        'CXX = %s' % spack_cxx,
+                        compilers_spec_file)
+            filter_file(r'^[ \t]*FC[ \t]*=.+',
+                        'FC = %s' % spack_fc,
+                        compilers_spec_file)
+            filter_file(r'^[ \t]*F77[ \t]*=.+',
+                        'F77 = %s' % spack_f77,
+                        compilers_spec_file)
+
+            filter_file(r'\$\(NETCDF4?_(LIB)?DIR\).*/libnetcdff.a',
+                        "-L%s -lnetcdff" % self.spec['netcdf-fortran'].prefix.lib,
+                        'platform_specific.mk.x86_64-linux')
+            filter_file(r'\$\(NETCDF4?_(LIB)?DIR\).*/libnetcdf.a',
+                        "-L%s -lnetcdf" % self.spec['netcdf-c'].prefix.lib,
+                        'platform_specific.mk.x86_64-linux')
+            filter_file(r'\$\(HDF5_(LIB)?DIR\).*/libhdf5_hl.a',
+                        "-L%s -lhdf5_hl" % self.spec['hdf5'].prefix.lib,
+                        'platform_specific.mk.x86_64-linux')
+            filter_file(r'\$\(HDF5_(LIB)?DIR\).*/libhdf5.a',
+                        "-L%s -lhdf5" % self.spec['hdf5'].prefix.lib,
+                        'platform_specific.mk.x86_64-linux')
 
     def install(self, spec, prefix):
         if 'LDFLAGS' in env and env['LDFLAGS']:
@@ -104,7 +148,8 @@ class Ferret(Package):
         else:
             env['LDFLAGS'] = '-lquadmath'
 
-        with working_dir('FERRET', create=False):
+        work_dir = 'FERRET' if '@:7.2' in self.spec else '.'
+        with working_dir(work_dir, create=False):
             os.environ['LD_X11'] = '-L%s -lX11' % spec['libx11'].prefix.lib
             os.environ['HOSTTYPE'] = 'x86_64-linux'
             make(parallel=False)
