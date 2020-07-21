@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Rtax(Package):
     homepage = "https://github.com/davidsoergel/rtax"
     url      = "http://static.davidsoergel.com/rtax-0.984.tgz"
 
-    version('0.984', 'e9dbbe4b3c26b0f0f6c14a5fb46aa587')
+    version('0.984', sha256='92ad9a881ca1d17221794b4313654291b30df6a9edcd0453034a090ae13a3442')
 
     depends_on('usearch')
 

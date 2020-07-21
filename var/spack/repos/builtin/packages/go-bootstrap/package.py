@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,11 +24,11 @@ class GoBootstrap(Package):
     # See: https://golang.org/doc/install/source#go14 and
     # https://github.com/golang/go/issues/17545 and
     # https://github.com/golang/go/issues/16352
-    version('1.4-bootstrap-20171003', 'dbf727a4b0e365bf88d97cbfde590016',
+    version('1.4-bootstrap-20171003', sha256='f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52',
             url='https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz')
-    version('1.4-bootstrap-20170531', 'd2cc61cb9f829b3510ee39c0c5568014',
+    version('1.4-bootstrap-20170531', sha256='49f806f66762077861b7de7081f586995940772d29d4c45068c134441a743fa2',
             url='https://storage.googleapis.com/golang/go1.4-bootstrap-20170531.tar.gz')
-    version('1.4-bootstrap-20161024', '76e42c8152e8560ded880a6d1d1f53cb',
+    version('1.4-bootstrap-20161024', sha256='398c70d9d10541ba9352974cc585c43220b6d8dbcd804ba2c9bd2fbf35fab286',
             url='https://storage.googleapis.com/golang/go1.4-bootstrap-20161024.tar.gz')
 
     provides('golang@:1.4-bootstrap-20171003')
@@ -55,8 +55,8 @@ class GoBootstrap(Package):
 
         install_tree('.', prefix)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('GOROOT_BOOTSTRAP', self.spec.prefix)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('GOROOT_BOOTSTRAP', self.spec.prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('GOROOT_FINAL', self.spec.prefix)
+    def setup_build_environment(self, env):
+        env.set('GOROOT_FINAL', self.spec.prefix)

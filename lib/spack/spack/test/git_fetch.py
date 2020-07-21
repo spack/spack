@@ -1,8 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import copy
 import os
 import shutil
 
@@ -18,7 +19,6 @@ from spack.version import ver
 from spack.fetch_strategy import GitFetchStrategy
 from spack.util.executable import which
 
-
 pytestmark = pytest.mark.skipif(
     not which('git'), reason='requires git to be installed')
 
@@ -26,7 +26,8 @@ pytestmark = pytest.mark.skipif(
 _mock_transport_error = 'Mock HTTP transport error'
 
 
-@pytest.fixture(params=[None, '1.8.5.2', '1.8.5.1', '1.7.10', '1.7.0'])
+@pytest.fixture(params=[None, '1.8.5.2', '1.8.5.1',
+                        '1.7.10', '1.7.1', '1.7.0'])
 def git_version(request, monkeypatch):
     """Tests GitFetchStrategy behavior for different git versions.
 
@@ -39,7 +40,8 @@ def git_version(request, monkeypatch):
     real_git_version = ver(git('--version', output=str).lstrip('git version '))
 
     if request.param is None:
-        yield    # don't patch; run with the real git_version method.
+        # Don't patch; run with the real git_version method.
+        yield real_git_version
     else:
         test_git_version = ver(request.param)
         if test_git_version > real_git_version:
@@ -48,8 +50,8 @@ def git_version(request, monkeypatch):
         # Patch the fetch strategy to think it's using a lower git version.
         # we use this to test what we'd need to do with older git versions
         # using a newer git installation.
-        monkeypatch.setattr(GitFetchStrategy, 'git_version', ver('1.7.1'))
-        yield
+        monkeypatch.setattr(GitFetchStrategy, 'git_version', test_git_version)
+        yield test_git_version
 
 
 @pytest.fixture
@@ -85,7 +87,7 @@ def test_fetch(type_of_test,
                secure,
                mock_git_repository,
                config,
-               mutable_mock_packages,
+               mutable_mock_repo,
                git_version):
     """Tries to:
 
@@ -134,7 +136,7 @@ def test_fetch(type_of_test,
 
 
 @pytest.mark.parametrize("type_of_test", ['branch', 'commit'])
-def test_debug_fetch(type_of_test, mock_git_repository, config):
+def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config):
     """Fetch the repo with debug enabled."""
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
@@ -166,6 +168,107 @@ def test_git_extra_fetch(tmpdir):
 def test_needs_stage():
     """Trigger a NoStageError when attempt a fetch without a stage."""
     with pytest.raises(spack.fetch_strategy.NoStageError,
-                       matches=_mock_transport_error):
+                       match=r"set_stage.*before calling fetch"):
         fetcher = GitFetchStrategy(git='file:///not-a-real-git-repo')
         fetcher.fetch()
+
+
+@pytest.mark.parametrize("get_full_repo", [True, False])
+def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
+                       config, mutable_mock_repo):
+    """Ensure that we can clone a full repository."""
+
+    if git_version < ver('1.7.1'):
+        pytest.skip('Not testing get_full_repo for older git {0}'.
+                    format(git_version))
+
+    secure = True
+    type_of_test = 'tag-branch'
+
+    t = mock_git_repository.checks[type_of_test]
+
+    spec = Spec('git-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    args = copy.copy(t.args)
+    args['get_full_repo'] = get_full_repo
+    pkg.versions[ver('git')] = args
+
+    with pkg.stage:
+        with spack.config.override('config:verify_ssl', secure):
+            pkg.do_stage()
+            with working_dir(pkg.stage.source_path):
+                branches\
+                    = mock_git_repository.git_exe('branch', '-a',
+                                                  output=str).splitlines()
+                nbranches = len(branches)
+                commits\
+                    = mock_git_repository.\
+                    git_exe('log', '--graph',
+                            '--pretty=format:%h -%d %s (%ci) <%an>',
+                            '--abbrev-commit',
+                            output=str).splitlines()
+                ncommits = len(commits)
+
+        if get_full_repo:
+            assert(nbranches == 5)
+            assert(ncommits == 2)
+        else:
+            assert(nbranches == 2)
+            assert(ncommits == 1)
+
+
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.parametrize("submodules", [True, False])
+def test_gitsubmodule(submodules, mock_git_repository, config,
+                      mutable_mock_repo):
+    """
+    Test GitFetchStrategy behavior with submodules
+    """
+    type_of_test = 'tag-branch'
+    t = mock_git_repository.checks[type_of_test]
+
+    # Construct the package under test
+    spec = Spec('git-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    args = copy.copy(t.args)
+    args['submodules'] = submodules
+    pkg.versions[ver('git')] = args
+    pkg.do_stage()
+    with working_dir(pkg.stage.source_path):
+        for submodule_count in range(2):
+            file_path = os.path.join(pkg.stage.source_path,
+                                     'third_party/submodule{0}/r0_file_{0}'
+                                     .format(submodule_count))
+            if submodules:
+                assert os.path.isfile(file_path)
+            else:
+                assert not os.path.isfile(file_path)
+
+
+@pytest.mark.disable_clean_stage_check
+def test_gitsubmodules_delete(mock_git_repository, config, mutable_mock_repo):
+    """
+    Test GitFetchStrategy behavior with submodules_delete
+    """
+    type_of_test = 'tag-branch'
+    t = mock_git_repository.checks[type_of_test]
+
+    # Construct the package under test
+    spec = Spec('git-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    args = copy.copy(t.args)
+    args['submodules'] = True
+    args['submodules_delete'] = ['third_party/submodule0',
+                                 'third_party/submodule1']
+    pkg.versions[ver('git')] = args
+    pkg.do_stage()
+    with working_dir(pkg.stage.source_path):
+        file_path = os.path.join(pkg.stage.source_path,
+                                 'third_party/submodule0')
+        assert not os.path.isdir(file_path)
+        file_path = os.path.join(pkg.stage.source_path,
+                                 'third_party/submodule1')
+        assert not os.path.isdir(file_path)

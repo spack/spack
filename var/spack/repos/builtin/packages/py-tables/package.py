@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,29 +11,33 @@ class PyTables(PythonPackage):
     efficiently and easily cope with extremely large amounts of data."""
 
     homepage = "http://www.pytables.org/"
-    url      = "https://github.com/PyTables/PyTables/archive/v3.5.2.tar.gz"
+    url      = "https://pypi.io/packages/source/t/tables/tables-3.6.1.tar.gz"
 
     import_modules = [
         'tables', 'tables.misc', 'tables.nodes', 'tables.scripts'
     ]
 
-    version('3.5.2', sha256='e4fc6f1194f02a8b10ff923e77364fb70710592f620d7de35f4d4e064dc70e91')
-    version('3.4.4', '2cd52095ebb097f5bf58fa65dc6574bb')
-    version('3.3.0', '056c161ae0fd2d6e585b766adacf3b0b')
-    version('3.2.2', '7cbb0972e4d6580f629996a5bed92441',
-            url='https://github.com/PyTables/PyTables/archive/v.3.2.2.tar.gz')
+    version('3.6.1', sha256='49a972b8a7c27a8a173aeb05f67acb45fe608b64cd8e9fa667c0962a60b71b49')
+    version('3.6.0', sha256='db3488214864fb313a611fca68bf1c9019afe4e7877be54d0e61c84416603d4d')
+    version('3.5.2', sha256='b220e32262bab320aa41d33125a7851ff898be97c0de30b456247508e2cc33c2')
+    version('3.4.4', sha256='bdc5c073712af2a43babd139c4855fc99496bb2c3f3f5d1b4770a985e6f9ce29')
+    version('3.3.0', sha256='8383ccf02e041a5d55494a09fc5514140b4653055a2732c981b5fd0f7408822c')
+    version('3.2.2', sha256='3564b351a71ec1737b503b001eb7ceae1f65d5d6e3ffe1ea75aafba10f37fa84')
 
     variant('zlib', default=True, description='Support for zlib compression')
     variant('bzip2', default=False, description='Support for bzip2 compression')
     variant('lzo', default=False, description='Support for lzo compression')
 
     # requirements.txt
+    depends_on('python@3.5:', when='@3.6.1:', type=('build', 'run'))
+    depends_on('python@3.4:', when='@3.6.0:', type=('build', 'run'))
     depends_on('python@2.6:', type=('build', 'run'))
+
     depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type='build')
+    depends_on('py-cython@0.21:', type='build')
     depends_on('py-numpy@1.9.3:', type=('build', 'run'))
     depends_on('py-numexpr@2.6.2:', type=('build', 'run'))
-    depends_on('py-six@1.9.0:', type=('build', 'run'))
+    depends_on('py-six@1.9.0:', when='@:3.5', type=('build', 'run'))
     depends_on('py-mock@2.0:', type='test')
     # tables/req_versions.py
     depends_on('hdf5@1.8.4:1.8.999', when='@:3.3.99')
@@ -45,11 +49,11 @@ class PyTables(PythonPackage):
     depends_on('bzip2', when='+bzip2')
     depends_on('lzo', when='+lzo')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('HDF5_DIR', self.spec['hdf5'].prefix)
+    def setup_build_environment(self, env):
+        env.set('HDF5_DIR', self.spec['hdf5'].prefix)
         if '+bzip2' in self.spec:
-            spack_env.set('BZIP2_DIR', self.spec['bzip2'].prefix)
+            env.set('BZIP2_DIR', self.spec['bzip2'].prefix)
         if '+lzo' in self.spec:
-            spack_env.set('LZO_DIR', self.spec['lzo'].prefix)
+            env.set('LZO_DIR', self.spec['lzo'].prefix)
         if '^c-blosc' in self.spec:
-            spack_env.set('BLOSC_DIR', self.spec['c-blosc'].prefix)
+            env.set('BLOSC_DIR', self.spec['c-blosc'].prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Xmlto(AutotoolsPackage):
     homepage = "https://pagure.io/xmlto"
     url      = "https://releases.pagure.org/xmlto/xmlto-0.0.28.tar.gz"
 
-    version('0.0.28', 'a1fefad9d83499a15576768f60f847c6')
+    version('0.0.28', sha256='2f986b7c9a0e9ac6728147668e776d405465284e13c74d4146c9cbc51fd8aad3')
 
     # FIXME: missing a lot of dependencies
     depends_on('libxslt')

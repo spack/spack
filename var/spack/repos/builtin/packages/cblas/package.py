@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Cblas(Package):
     homepage = "http://www.netlib.org/blas/_cblas/"
 
     # tarball has no version, but on the date below, this MD5 was correct.
-    version('2015-06-06', '1e8830f622d2112239a4a8a83b84209a',
+    version('2015-06-06', sha256='0f6354fd67fabd909baf57ced2ef84e962db58fae126e4f41b21dd4fec60a2a3',
             url='http://www.netlib.org/blas/blast-forum/cblas.tgz')
 
     depends_on('blas')

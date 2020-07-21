@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,14 +12,16 @@ class Ginkgo(CMakePackage, CudaPackage):
     with a focus on sparse solution of linear systems."""
 
     homepage = "https://ginkgo-project.github.io/"
-    url      = "https://github.com/ginkgo-project/ginkgo.git"
     git      = "https://github.com/ginkgo-project/ginkgo.git"
 
     maintainers = ['tcojean', 'hartwiganzt']
 
     version('develop', branch='develop')
     version('master', branch='master')
-    version('1.0.0', commit='4524464')  # v1.0.0
+    version('1.2.0', commit='b4be2be961fd5db45c3d02b5e004d73550722e31')  # v1.2.0
+    version('1.1.1', commit='08d2c5200d3c78015ac8a4fd488bafe1e4240cf5')  # v1.1.1
+    version('1.1.0', commit='b9bec8225442b3eb2a85a870efa112ab767a17fb')  # v1.1.0
+    version('1.0.0', commit='45244641e0c2b19ba33aecd25153c0bddbcbe1a0')  # v1.0.0
 
     variant('shared', default=True, description='Build shared libraries')
     variant('full_optimizations', default=False, description='Compile with all optimizations')
@@ -32,6 +34,8 @@ class Ginkgo(CMakePackage, CudaPackage):
     depends_on('cmake@3.9:', type='build')
     depends_on('cuda@9:',    when='+cuda')
 
+    conflicts('%gcc@:5.2.9')
+
     def cmake_args(self):
         spec = self.spec
         return [
@@ -42,6 +46,8 @@ class Ginkgo(CMakePackage, CudaPackage):
                 'ON' if '+full_optimizations' in spec else 'OFF'),
             '-DGINKGO_DEVEL_TOOLS=%s' % (
                 'ON' if '+develtools' in spec else 'OFF'),
+            # Drop HIP support for now
+            '-DGINKGO_BUILD_HIP=OFF',
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.
             '-DGINKGO_BUILD_BENCHMARKS=OFF',

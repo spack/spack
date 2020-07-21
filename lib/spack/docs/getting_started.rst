@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-#. Python 2 (2.6 or 2.7) or 3 (3.4 - 3.7) to run Spack
+#. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.8) to run Spack
 #. A C/C++ compiler for building
 #. The ``make`` executable for building
 #. The ``git`` and ``curl`` commands for fetching
@@ -71,10 +71,6 @@ This automatically adds Spack to your ``PATH`` and allows the ``spack``
 command to be used to execute spack :ref:`commands <shell-support>` and
 :ref:`useful packaging commands <packaging-shell-support>`.
 
-If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
-installed and available, the ``spack`` command can also load and unload
-:ref:`modules <modules>`.
-
 ^^^^^^^^^^^^^^^^^
 Clean Environment
 ^^^^^^^^^^^^^^^^^
@@ -97,7 +93,7 @@ Check Installation
 With Spack installed, you should be able to run some basic Spack
 commands.  For example:
 
-.. command-output:: spack spec netcdf
+.. command-output:: spack spec netcdf-c
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -190,7 +186,7 @@ where the compiler is installed.  For example:
 .. code-block:: console
 
    $ spack compiler find /usr/local/tools/ic-13.0.079
-   ==> Added 1 new compiler to ~/.spack/compilers.yaml
+   ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
        intel@13.0.079
 
 Or you can run ``spack compiler find`` with no arguments to force
@@ -202,7 +198,7 @@ installed, but you know that new compilers have been added to your
 
    $ module load gcc-4.9.0
    $ spack compiler find
-   ==> Added 1 new compiler to ~/.spack/compilers.yaml
+   ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
        gcc@4.9.0
 
 This loads the environment module for gcc-4.9.0 to add it to
@@ -247,7 +243,7 @@ Manual compiler configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If auto-detection fails, you can manually configure a compiler by
-editing your ``~/.spack/compilers.yaml`` file.  You can do this by running
+editing your ``~/.spack/<platform>/compilers.yaml`` file.  You can do this by running
 ``spack config edit compilers``, which will open the file in your ``$EDITOR``.
 
 Each compiler configuration in the file looks like this:
@@ -263,7 +259,7 @@ Each compiler configuration in the file looks like this:
          cxx: /usr/local/bin/icpc-15.0.024-beta
          f77: /usr/local/bin/ifort-15.0.024-beta
          fc: /usr/local/bin/ifort-15.0.024-beta
-       spec: intel@15.0.0:
+       spec: intel@15.0.0
 
 For compilers that do not support Fortran (like ``clang``), put
 ``None`` for ``f77`` and ``fc``:
@@ -469,18 +465,21 @@ Fortran.
    install GCC with Spack (``spack install gcc``) or with Homebrew
    (``brew install gcc``).
 
-#. The only thing left to do is to edit ``~/.spack/compilers.yaml`` to provide
+#. The only thing left to do is to edit ``~/.spack/darwin/compilers.yaml`` to provide
    the path to ``gfortran``:
 
    .. code-block:: yaml
 
       compilers:
-        darwin-x86_64:
-          clang@7.3.0-apple:
-            cc: /usr/bin/clang
-            cxx: /usr/bin/clang++
-            f77: /path/to/bin/gfortran
-            fc: /path/to/bin/gfortran
+      - compiler:
+        ...
+        paths:
+          cc: /usr/bin/clang
+          cxx: /usr/bin/clang++
+          f77: /path/to/bin/gfortran
+          fc: /path/to/bin/gfortran
+        spec: apple-clang@11.0.0
+
 
    If you used Spack to install GCC, you can get the installation prefix by
    ``spack location -i gcc`` (this will only work if you have a single version
@@ -812,6 +811,100 @@ to add the following to ``packages.yaml``:
    present in PATH, however it will have lower precedence compared to paths
    from other dependencies. This ensures that binaries in Spack dependencies
    are preferred over system binaries.
+   
+^^^^^^
+OpenGL
+^^^^^^
+
+To use hardware-accelerated rendering from a system-supplied OpenGL driver,
+add something like the following to your ``packages`` configuration:
+
+.. code-block:: yaml
+
+    packages:
+        opengl:
+            paths:
+                opengl+glx@4.5: /usr
+            buildable: False
+        all:
+            providers:
+                gl: [opengl]
+                glx: [opengl]
+
+For `EGL <https://www.khronos.org/egl>` support, or for certain modern drivers,
+OpenGL calls are dispatched dynamically at run time to the hardware graphics
+implementation.  This dynamic dispatch is performed using `libglvnd
+<https://github.com/NVIDIA/libglvnd>`.  In this mode, the graphics library
+(e.g.: opengl) must be built to work with libglvnd.  Applications then link
+against libglvnd instead of the underlying implementation.  Environment
+variables set at run time govern the process by which libglvnd loads the
+underlying implementation and dispatches calls to it.  See `this
+<https://github.com/NVIDIA/libglvnd/issues/177#issuecomment-496562769>` comment
+for details on loading a specific GLX implementation and `this
+<https://github.com/NVIDIA/libglvnd/blob/master/src/EGL/icd_enumeration.md>`
+page for information about EGL ICD enumeration.
+
+This codependency between libglvnd and the underlying implementation is modeled
+in Spack with two packages for libglvnd: libglvnd, which provides libglvnd
+proper; and libglvnd-fe, a bundle package that depends on libglvnd and an
+implementation.  Implementations that work through libglvnd are no longer
+providers for graphics virtual dependencies, like "gl" or "glx", but instead
+provide libglvnd versions of these dependencies ("libglvnd-be-gl",
+"libglvnd-be-glx", etc.).  The libglvnd-fe package depends on these
+"libglvnd-be-..." virtual packages, which provide the actual implementation.
+It also depends on libglvnd, itself, and exposes its libraries to downstream
+applications.  For correct operation, the Spack package for the underlying
+implementation has to set the runtime environment to ensure that it is loaded
+when an application linked against libglvnd runs.  This last detail is
+important for users who want to set up an external OpenGL implementation that
+requires libglvnd to work.  This setup requires modifying the ``modules``
+configuration so that modules generated for the external OpenGL implementation
+set the necessary environment variables.
+
+.. code-block:: yaml
+
+    packages:
+        opengl:
+            paths:
+                opengl@4.5+glx+egl+glvnd: /does/not/exist
+            buildable: False
+            variants:+glx+egl+glvnd
+        libglvnd-fe:
+            variants:+gl+glx+egl
+        all:
+            providers:
+                glvnd-be-gl: [opengl]
+                glvnd-be-glx: [opengl]
+                glvnd-be-egl: [opengl]
+                gl: [libglvnd-fe]
+                glx: [libglvnd-fe]
+                egl: [libglvnd-fe]
+      
+.. code-block:: yaml
+
+    modules:
+        tcl:
+          opengl@4.5+glx+glvnd:
+            environment:
+              set:
+                __GLX_VENDOR_LIBRARY_NAME: nvidia
+          opengl@4.5+egl+glvnd:
+            environment:
+              set:
+                __EGL_VENDOR_LIBRARY_FILENAMES: /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+
+One final detail about the above example is that it avoids setting the true
+root of the external OpenGL implementation, instead opting to set it to a path
+that is not expected to exist on the system.  This is done for two reasons.
+First, Spack would add directories under this root to environment variables
+that would affect the process of building and installing other packages, such
+as ``PATH`` and ``PKG_CONFIG_PATH``.  These additions may potentially prevent
+those packages from installing successfully, and this risk is especially great
+for paths that house many libraries and applications, like ``/usr``.  Second,
+providing the true root of the external implementation in the ``packages``
+configuration is not necessary because libglvnd need only the environment
+variables set above in the ``modules`` configuration to determine what OpenGL
+implementation to dispatch calls to at run time.
 
 ^^^
 Git
@@ -819,7 +912,7 @@ Git
 
 Some Spack packages use ``git`` to download, which might not work on
 some computers.  For example, the following error was
-encountered on a Macintosh during ``spack install julia-master``:
+encountered on a Macintosh during ``spack install julia@master``:
 
 .. code-block:: console
 
@@ -848,7 +941,7 @@ from websites and from git.
 
 .. warning::
 
-   This workaround should be used ONLY as a last resort!  Wihout SSL
+   This workaround should be used ONLY as a last resort!  Without SSL
    certificate verification, spack and git will download from sites you
    wouldn't normally trust.  The code you download and run may then be
    compromised!  While this is not a major issue for archives that will
@@ -897,19 +990,14 @@ Core Spack Utilities
 ^^^^^^^^^^^^^^^^^^^^
 
 Core Spack uses the following packages, mainly to download and unpack
-source code, and to load generated environment modules: ``curl``,
-``env``, ``git``, ``go``, ``hg``, ``svn``, ``tar``, ``unzip``,
-``patch``, ``environment-modules``.
+source code: ``curl``, ``env``, ``git``, ``go``, ``hg``, ``svn``,
+``tar``, ``unzip``, ``patch``
 
 As long as the user's environment is set up to successfully run these
 programs from outside of Spack, they should work inside of Spack as
 well.  They can generally be activated as in the ``curl`` example above;
 or some systems might already have an appropriate hand-built
 environment module that may be loaded.  Either way works.
-
-If you find that you are missing some of these programs, ``spack`` can
-build some of them for you with ``spack bootstrap``. Currently supported
-programs are ``environment-modules``.
 
 A few notes on specific programs in this list:
 
@@ -936,45 +1024,6 @@ Some packages use source code control systems as their download method:
 a new ``curl``, then chances are the system-supplied version of these
 other programs will also not work, because they also rely on OpenSSL.
 Once ``curl`` has been installed, you can similarly install the others.
-
-
-.. _InstallEnvironmentModules:
-
-"""""""""""""""""""
-Environment Modules
-"""""""""""""""""""
-
-In order to use Spack's generated module files, you must have
-installed ``environment-modules`` or ``lmod``. The simplest way
-to get the latest version of either of these tools is installing
-it as part of Spack's bootstrap procedure:
-
-.. code-block:: console
-
-   $ spack bootstrap
-
-.. warning::
-   At the moment ``spack bootstrap`` is only able to install ``environment-modules``.
-   Extending its capabilities to prefer ``lmod`` where possible is in the roadmap,
-   and likely to happen before the next release.
-
-Alternatively, on many Linux distributions, you can install a pre-built binary
-from the vendor's repository. On Fedora/RHEL/CentOS, for example, this can be
-done with the command:
-
-.. code-block:: console
-
-   $ yum install environment-modules
-
-Once you have the tool installed and available in your path, you can source
-Spack's setup file:
-
-.. code-block:: console
-
-   $ source share/spack/setup-env.sh
-
-This activates :ref:`shell support <shell-support>` and makes commands like
-``spack load`` available for use.
 
 
 ^^^^^^^^^^^^^^^^^

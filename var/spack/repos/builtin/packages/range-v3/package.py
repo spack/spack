@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ class RangeV3(CMakePackage):
     maintainers = ['chissg']
 
     version('develop', branch='master')
+    version('0.10.0', sha256='5a1cd44e7315d0e8dcb1eee4df6802221456a9d1dbeac53da02ac7bd4ea150cd')
     version('0.5.0', sha256='32e30b3be042246030f31d40394115b751431d9d2b4e0f6d58834b2fd5594280')
     version('0.4.0', sha256='5dbc878b7dfc500fb04b6b9f99d63993a2731ea34b0a4b8d5f670a5a71a18e39')
     version('0.3.7', sha256='e6b0fb33bfd07ec32d54bcddd3e8d62e995a3cf0b64b34788ec264da62581207')

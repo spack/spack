@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Mitos(CMakePackage):
     git      = "https://github.com/llnl/Mitos.git"
 
     version('0.9.2', commit='8cb143a2e8c00353ff531a781a9ca0992b0aaa3d')
-    version('0.9.1', 'c6cb57f3cae54f5157affd97ef7ef79e')
+    version('0.9.1', sha256='67abe227d2f9b4d2f235031b526d3ceb2c4792ad98772b1b1d5af0d227a795fc')
 
     depends_on('dyninst@8.2.1:')
     depends_on('hwloc')

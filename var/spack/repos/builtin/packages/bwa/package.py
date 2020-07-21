@@ -1,9 +1,10 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import platform
 
 
 class Bwa(Package):
@@ -12,18 +13,27 @@ class Bwa(Package):
     homepage = "http://github.com/lh3/bwa"
     url      = "https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2"
 
-    version('0.7.17', '82cba7ef695538e6a38b9d4156837381')
-    version('0.7.16a', 'c5115c9a5ea0406848500e4b23a7708c')
-    version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554')
-    version('0.7.13', 'f094f609438511766c434178a3635ab4')
-    version('0.7.12', 'e24a587baaad411d5da89516ad7a261a',
+    version('0.7.17', sha256='de1b4d4e745c0b7fc3e107b5155a51ac063011d33a5d82696331ecf4bed8d0fd')
+    version('0.7.15', sha256='2f56afefa49acc9bf45f12edb58e412565086cc20be098b8bf15ec07de8c0515')
+    version('0.7.13', sha256='559b3c63266e5d5351f7665268263dbb9592f3c1c4569e7a4a75a15f17f0aedc')
+    version('0.7.12', sha256='285f55b7fa1f9e873eda9a9b06752378a799ecdecbc886bbd9ba238045bf62e0',
             url='https://github.com/lh3/bwa/archive/0.7.12.tar.gz')
 
     depends_on('zlib')
+    depends_on('sse2neon', when='target=aarch64:')
+
+    patch('bwa_for_aarch64.patch', sha256='b77213b16cf8760f01e32f9a0b2cd8988cf7bac48a11267100f703cbd55c4bfd', when='target=aarch64:')
 
     def install(self, spec, prefix):
-        filter_file(r'^INCLUDES=',
-                    "INCLUDES=-I%s" % spec['zlib'].prefix.include, 'Makefile')
+        zlib_inc_path = spec['zlib'].prefix.include
+        if platform.machine() == 'aarch64':
+            sse2neon_inc_path = spec['sse2neon'].prefix.include
+            filter_file(r'^INCLUDES=', "INCLUDES=-I%s -I%s" %
+                        (zlib_inc_path, sse2neon_inc_path),
+                        'Makefile')
+        else:
+            filter_file(r'^INCLUDES=', "INCLUDES=-I%s" %
+                        zlib_inc_path, 'Makefile')
         filter_file(r'^LIBS=', "LIBS=-L%s " % spec['zlib'].prefix.lib,
                     'Makefile')
         make()

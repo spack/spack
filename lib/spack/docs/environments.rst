@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,6 +48,8 @@ Spack uses a "manifest and lock" model similar to `Bundler gemfiles
 <https://bundler.io/man/gemfile.5.html>`_ and other package
 managers. The user input file is named ``spack.yaml`` and the lock
 file is named ``spack.lock``
+
+.. _environments-using:
 
 ------------------
 Using Environments
@@ -128,7 +130,7 @@ To activate an environment, use the following command:
 By default, the ``spack env activate`` will load the view associated
 with the Environment into the user environment. The ``-v,
 --with-view`` argument ensures this behavior, and the ``-V,
---without-vew`` argument activates the environment without changing
+--without-view`` argument activates the environment without changing
 the user environment variables.
 
 The ``-p`` option to the ``spack env activate`` command modifies the
@@ -164,15 +166,6 @@ Any directory can be treated as an environment if it contains a file
 .. code-block:: console
 
    $ spack env activate -d /path/to/directory
-
-Spack commands that are environment sensitive will also act on the
-environment any time the current working directory contains a
-``spack.yaml`` file. Changing working directory to a directory
-containing a ``spack.yaml`` file is equivalent to the command:
-
-.. code-block:: console
-
-   $ spack env activate -d /path/to/dir --without-view
 
 Anonymous specs can be created in place using the command:
 
@@ -279,32 +272,50 @@ in the lockfile, nor does it install the spec.
 
 The ``spack add`` command is environment aware. It adds to the
 currently active environment. All environment aware commands can also
-be called using the ``spack -E`` flag to specify the environment.
+be called using the ``spack -e`` flag to specify the environment.
 
 .. code-block:: console
 
-   $ spack activate myenv
+   $ spack env activate myenv
    $ spack add mpileaks
 
 or
 
 .. code-block:: console
 
-   $ spack -E myenv add python
+   $ spack -e myenv add python
+
+.. _environments_concretization:
 
 ^^^^^^^^^^^^
 Concretizing
 ^^^^^^^^^^^^
 
 Once some user specs have been added to an environment, they can be
-concretized.  The following command will concretize all user specs
-that have been added and not yet concretized:
+concretized. *By default specs are concretized separately*, one after
+the other. This mode of operation permits to deploy a full
+software stack where multiple configurations of the same package
+need to be installed alongside each other. Central installations done
+at HPC centers by system administrators or user support groups
+are a common case that fits in this behavior.
+Environments *can also be configured to concretize all
+the root specs in a self-consistent way* to ensure that
+each package in the environment comes with a single configuration. This
+mode of operation is usually what is required by software developers that
+want to deploy their development environment.
+
+Regardless of which mode of operation has been chosen, the following
+command will ensure all the root specs are concretized according to the
+constraints that are prescribed in the configuration:
 
 .. code-block:: console
 
    [myenv]$ spack concretize
 
-This command will re-concretize all specs:
+In the case of specs that are not concretized together, the command
+above will concretize only the specs that were added and not yet
+concretized. Forcing a re-concretization of all the specs can be done
+instead with this command:
 
 .. code-block:: console
 
@@ -364,11 +375,12 @@ the Environment.
 Loading
 ^^^^^^^
 
-Once an environment has been installed, the following creates a load script for it:
+Once an environment has been installed, the following creates a load
+script for it:
 
 .. code-block:: console
 
-   $ spack env myenv loads -r
+   $ spack env loads -r
 
 This creates a file called ``loads`` in the environment directory.
 Sourcing that file in Bash will make the environment available to the
@@ -467,6 +479,34 @@ Appending to this list in the yaml is identical to using the ``spack
 add`` command from the command line. However, there is more power
 available from the yaml file.
 
+"""""""""""""""""""
+Spec concretization
+"""""""""""""""""""
+
+Specs can be concretized separately or together, as already
+explained in :ref:`environments_concretization`. The behavior active
+under any environment is determined by the ``concretization`` property:
+
+.. code-block:: yaml
+
+   spack:
+       specs:
+         - ncview
+         - netcdf
+         - nco
+         - py-sphinx
+       concretization: together
+
+which can currently take either one of the two allowed values ``together`` or ``separately``
+(the default).
+
+.. admonition:: Re-concretization of user specs
+
+   When concretizing specs together the entire set of specs will be
+   re-concretized after any addition of new user specs, to ensure that
+   the environment remains consistent. When instead the specs are concretized
+   separately only the new specs will be re-concretized after any addition.
+
 """""""""""""
 Spec Matrices
 """""""""""""
@@ -553,7 +593,7 @@ files are identical.
    spack:
      definitions:
        - first: [libelf, libdwarf]
-       - compilers: ['%gcc', '^intel']
+       - compilers: ['%gcc', '%intel']
        - second:
            - $first
            - matrix:
@@ -598,7 +638,7 @@ named list ``compilers`` is ``['%gcc', '%clang', '%intel']`` on
    spack:
      definitions:
        - compilers: ['%gcc', '%clang']
-       - when: target == 'x86_64'
+       - when: arch.satisfies('x86_64:')
          compilers: ['%intel']
 
 .. note::
@@ -617,8 +657,12 @@ The valid variables for a ``when`` clause are:
 #. ``target``. The target string of the default Spack
    architecture on the system.
 
-#. ``architecture`` or ``arch``. The full string of the
-   default Spack architecture on the system.
+#. ``architecture`` or ``arch``. A Spack spec satisfying the default Spack
+   architecture on the system. This supports querying via the ``satisfies``
+   method, as shown above.
+
+#. ``arch_str``. The architecture string of the default Spack architecture
+   on the system.
 
 #. ``re``. The standard regex module in Python.
 
@@ -626,6 +670,40 @@ The valid variables for a ``when`` clause are:
 
 #. ``hostname``. The hostname of the system (if ``hostname`` is an
    executable in the user's PATH).
+
+""""""""""""""""""""""""
+SpecLists as Constraints
+""""""""""""""""""""""""
+
+Dependencies and compilers in Spack can be both packages in an
+environment and constraints on other packages. References to SpecLists
+allow a shorthand to treat packages in a list as either a compiler or
+a dependency using the ``$%`` or ``$^`` syntax respectively.
+
+For example, the following environment has three root packages:
+``gcc@8.1.0``, ``mvapich2@2.3.1 %gcc@8.1.0``, and ``hdf5+mpi
+%gcc@8.1.0 ^mvapich2@2.3.1``.
+
+.. code-block:: yaml
+
+   spack:
+     definitions:
+     - compilers: [gcc@8.1.0]
+     - mpis: [mvapich2@2.3.1]
+     - packages: [hdf5+mpi]
+
+     specs:
+     - $compilers
+     - matrix:
+       - [$mpis]
+       - [$%compilers]
+     - matrix:
+       - [$packages]
+       - [$^mpis]
+       - [$%compilers]
+
+This allows for a much-needed reduction in redundancy between packages
+and constraints.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Environment-managed Views
@@ -764,7 +842,7 @@ ACLOCAL_PATH        share/aclocal
 LD_LIBRARY_PATH     lib, lib64
 LIBRARY_PATH        lib, lib64
 CPATH               include
-PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig
+PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig, share/pkgconfig
 CMAKE_PREFIX_PATH   .
 =================== =========
 

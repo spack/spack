@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Nccmp(Package):
+class Nccmp(Package, SourceforgePackage):
     """Compare NetCDF Files"""
     homepage = "http://nccmp.sourceforge.net/"
-    url      = "http://downloads.sourceforge.net/project/nccmp/nccmp-1.8.2.0.tar.gz"
+    sourceforge_mirror_path = "nccmp/nccmp-1.8.2.0.tar.gz"
 
-    version('1.8.2.0', '81e6286d4413825aec4327e61a28a580')
+    version('1.8.2.0', sha256='7f5dad4e8670568a71f79d2bcebb08d95b875506d3d5faefafe1a8b3afa14f18')
 
-    depends_on('netcdf')
+    depends_on('netcdf-c')
 
     def install(self, spec, prefix):
         # Configure says: F90 and F90FLAGS are replaced by FC and

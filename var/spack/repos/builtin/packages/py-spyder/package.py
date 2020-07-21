@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,7 @@ class PySpyder(PythonPackage):
     homepage = "https://github.com/spyder-ide/spyder"
     url      = "https://pypi.io/packages/source/s/spyder/spyder-3.1.3.tar.gz"
 
-    version('3.1.3', '4b9b7c8c3e6dc00001e6e98473473c36')
-    version('2.3.9', 'dd01e07a77123c128ff79ba57b97c1d7')
+    version('3.1.3', sha256='4978872cc5a006803bc8742d0a8fb43c49aef9524f0a9fcb8bd6dfcfdc2d2d6a')
 
     depends_on('python@2.7.0:2.8.0,3.3.0:', type=('build', 'run'))
     depends_on('py-rope@0.9.4:',      type=('build', 'run'), when='^python@:3')
@@ -40,6 +39,6 @@ class PySpyder(PythonPackage):
     # to pick up webkit, but this is the easier solution (see #9207)
     depends_on('qt+webkit',           type=('build', 'run'))
     depends_on('py-pickleshare',      type=('build', 'run'))
-    depends_on('py-zmq',              type=('build', 'run'))
+    depends_on('py-pyzmq',              type=('build', 'run'))
     depends_on('py-chardet@2.0.0:',   type=('build', 'run'))
     depends_on('py-numpydoc',         type=('build', 'run'))

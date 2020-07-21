@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Mesa(AutotoolsPackage):
      - a system for rendering interactive 3D graphics."""
 
     homepage = "http://www.mesa3d.org"
+    maintainers = ['v-dobrev']
 
     # Note that we always want to build from the git repo instead of a
     # tarball since the tarball has pre-generated files for certain versions
@@ -37,6 +38,7 @@ class Mesa(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('zlib')
     depends_on('expat')
+    depends_on('ncurses+termlib')
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
@@ -63,9 +65,13 @@ class Mesa(AutotoolsPackage):
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
     # Provides
-    provides('gl@4.5',  when='+opengl')
-    provides('glx@1.4', when='+glx')
-    # provides('egl@1.5', when='+egl')
+    provides('gl@4.5',  when='+opengl ~glvnd')
+    provides('glx@1.4', when='+glx ~glvnd')
+    # provides('egl@1.5', when='+egl ~glvnd')
+
+    provides('libglvnd-be-gl', when='+glvnd')
+    provides('libglvnd-be-glx', when='+glvnd +glx')
+    # provides('libglvnd-be-egl', when='+glvnd +egl')
 
     # Variant dependencies
     depends_on('llvm@6:', when='+llvm')
@@ -83,6 +89,7 @@ class Mesa(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = [
+            'LDFLAGS={0}'.format(self.spec['ncurses'].libs.search_flags),
             '--enable-shared',
             '--disable-static',
             '--disable-libglvnd',
@@ -100,6 +107,9 @@ class Mesa(AutotoolsPackage):
         args_platforms = []
         args_gallium_drivers = ['swrast']
         args_dri_drivers = []
+
+        if spec.target.family == 'arm' or spec.target.family == 'aarch64':
+            args.append('--disable-libunwind')
 
         num_frontends = 0
         if '+osmesa' in spec:
@@ -171,3 +181,34 @@ class Mesa(AutotoolsPackage):
         args.append('--with-dri-drivers=' + ','.join(args_dri_drivers))
 
         return args
+
+    @property
+    def gl_libs(self):
+        result = LibraryList(())
+
+        if '~glvnd' in self.spec:
+            result.extend(find_libraries('libGL',
+                                         root=self.spec.prefix,
+                                         shared='+shared' in self.spec,
+                                         recursive=True))
+        return result
+
+    @property
+    def glx_libs(self):
+        result = LibraryList(())
+
+        if '~glvnd' in self.spec:
+            result.extend(find_libraries('libGLX',
+                                         root=self.spec.prefix,
+                                         shared='+shared' in self.spec,
+                                         recursive=True))
+        return result
+
+    def setup_run_environment(self, env):
+        if '+glx +glvnd' in self.spec:
+            env.set('__GLX_VENDOR_LIBRARY_NAME', 'mesa')
+
+        if '+egl +glvnd' in self.spec:
+            env.set('__EGL_VENDOR_LIBRARY_FILENAMES', ':'.join((
+                os.path.join(self.spec.prefix, 'share', 'glvnd',
+                             'egl_vendor.d', '50_mesa.json'))))

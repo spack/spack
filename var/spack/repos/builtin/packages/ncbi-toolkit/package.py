@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,9 @@ class NcbiToolkit(AutotoolsPackage):
     homepage = "https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/"
     url      = "ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/CURRENT/ncbi_cxx--22_0_0.tar.gz"
 
-    version('22_0_0', 'e352d25b24c3a2d087c2cf3cedf6ea95',
+    version('22_0_0', sha256='ef39429bbc7f13c44c0d327432d9cfb430f9f20d10d825e6b2c4ddd7ccce457f',
             url='ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/ARCHIVE/2019/Mar_28_2019/ncbi_cxx--22_0_0.tar.gz')
-    version('21_0_0', '14e021e08b1a78ac9cde98d0cab92098',
+    version('21_0_0', sha256='48cc3ae24ca63d1ab1be148e7525e8c5b9f4eaa5eb36d172800784b640a84a4f',
             url='ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/ARCHIVE/2018/Apr_2_2018/ncbi_cxx--21_0_0.tar.gz')
 
     variant('debug', default=False,

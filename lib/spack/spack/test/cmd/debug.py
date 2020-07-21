@@ -1,14 +1,17 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import platform
 
 import pytest
 
 import os
 import os.path
 
-from spack.main import SpackCommand
+import spack.architecture as architecture
+from spack.main import SpackCommand, get_version
 from spack.util.executable import which
 
 debug = SpackCommand('debug')
@@ -41,3 +44,12 @@ def test_create_db_tarball(tmpdir, database):
 
             spec_suffix = '%s/.spack/spec.yaml' % spec.dag_hash()
             assert spec_suffix in contents
+
+
+def test_report():
+    out = debug('report')
+    arch = architecture.Arch(architecture.platform(), 'frontend', 'frontend')
+
+    assert get_version() in out
+    assert platform.python_version() in out
+    assert str(arch) in out

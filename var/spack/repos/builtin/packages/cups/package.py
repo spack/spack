@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Cups(AutotoolsPackage):
     homepage = "https://www.cups.org/"
     url = "https://github.com/apple/cups/releases/download/v2.2.3/cups-2.2.3-source.tar.gz"
 
-    version('2.2.3', '006a8156680a516e43c59034e31df8bf')
+    version('2.2.3', sha256='66701fe15838f2c892052c913bde1ba106bbee2e0a953c955a62ecacce76885f')
 
     depends_on('gnutls')
 

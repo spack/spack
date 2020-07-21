@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,12 +20,12 @@ class Folly(AutotoolsPackage):
     homepage = "https://github.com/facebook/folly"
     url = "https://github.com/facebook/folly/archive/v2017.06.05.00.tar.gz"
 
-    version('2017.06.05.00', 'a25e8d646702c3e0c1400f591e485a33')
-    version('2016.11.14.00', '88550acdb4d4b331c0ca9922039c8727')
-    version('2016.11.07.00', '2f605b20ad539bccdbfd361daa92081e')
-    version('2016.10.31.00', 'ab3049302792f8470cef64f3a29eedec')
-    version('2016.10.24.00', '0445efb7c16b5c32dfbb173157e54866')
-    version('2016.10.17.00', 'b7e01934a45c5036fab8fdc70e9eaf4d')
+    version('2017.06.05.00', sha256='d22ceda4dfe33583828be1193fa3929d70c51998f0797236e293c44ef828c6d0')
+    version('2016.11.14.00', sha256='cde5b3e1a38d181f7c4e52d590de1c1aca58da7b27b3020d08e9aa45b4c3ed74')
+    version('2016.11.07.00', sha256='4400d7f0fead90d88ce4caee9f0e9aeb8008c9954ea9034e19ae7226175206ba')
+    version('2016.10.31.00', sha256='7bef9ee956248f68f1c4e96be67561842ee6cc030a58e132b93b9be57b6b29ea')
+    version('2016.10.24.00', sha256='d54b609d3750a6a1cfbda7c62e1457af60cf5efc48d7a8e6552d67909e064757')
+    version('2016.10.17.00', sha256='0f83685016d020111ba54ddc48c0cf33e1e0b9b35cee5ae82d5f2cbc5f6b0e82')
 
     depends_on('m4', type='build')
     depends_on('autoconf', type='build')

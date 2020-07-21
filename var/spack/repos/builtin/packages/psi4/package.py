@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,9 @@ class Psi4(CMakePackage):
     a variety of molecular properties."""
 
     homepage = "http://www.psicode.org/"
-    url = "https://github.com/psi4/psi4/archive/0.5.tar.gz"
+    url = "https://github.com/psi4/psi4/archive/v1.3.2.tar.gz"
 
-    version('0.5', '53041b8a9be3958384171d0d22f9fdd0')
+    version('1.3.2', sha256='ed76c67803b6420f35f57a6dd31c47108b9145b8c9fced5c94cdc179f6b5fbf3')
 
     variant('build_type', default='Release',
             description='The build type to build',
@@ -51,13 +51,16 @@ class Psi4(CMakePackage):
         ]
 
     @run_after('install')
-    def filter_compilers(self, spec, prefix):
+    def filter_compilers(self):
         """Run after install to tell the configuration files to
         use the compilers that Spack built the package with.
 
         If this isn't done, they'll have PLUGIN_CXX set to
         Spack's generic cxx. We want it to be bound to
         whatever compiler it was built with."""
+
+        spec = self.spec
+        prefix = spec.prefix
 
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 

@@ -1,0 +1,17 @@
+--- old/build_config/Linux.intel.default/build_rules.mk	2019-06-27 15:55:30.857527494 -0400
++++ new/build_config/Linux.intel.default/build_rules.mk	2019-06-27 15:56:13.007089627 -0400
+@@ -187,10 +187,10 @@
+ ############################################################
+ # OpenMP compiler and linker flags
+ #
+-ESMF_OPENMP_F90COMPILEOPTS += -openmp
+-ESMF_OPENMP_CXXCOMPILEOPTS += -openmp
+-ESMF_OPENMP_F90LINKOPTS    += -openmp
+-ESMF_OPENMP_CXXLINKOPTS    += -openmp
++ESMF_OPENMP_F90COMPILEOPTS += -qopenmp
++ESMF_OPENMP_CXXCOMPILEOPTS += -qopenmp
++ESMF_OPENMP_F90LINKOPTS    += -qopenmp
++ESMF_OPENMP_CXXLINKOPTS    += -qopenmp
+ 
+ ############################################################
+ # Set rpath syntax

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,10 +16,10 @@ class Slate(Package):
     solvers."""
 
     homepage = "https://icl.utk.edu/slate/"
-    hg      = "https://bitbucket.org/icl/slate"
-    maintainers = ['G-Ragghianti']
+    git      = "https://bitbucket.org/icl/slate"
+    maintainers = ['G-Ragghianti', 'mgates3']
 
-    version('develop', hg=hg)
+    version('develop', submodules=True)
 
     variant('cuda',   default=True, description='Build with CUDA support.')
     variant('mpi',    default=True, description='Build with MPI support.')
@@ -31,11 +31,10 @@ class Slate(Package):
 
     conflicts('%gcc@:5')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if('+cuda' in self.spec):
-            spack_env.prepend_path('CPATH', self.spec['cuda'].prefix.include)
-        spack_env.prepend_path('CPATH', self.spec['intel-mkl'].prefix
-                               + '/mkl/include')
+            env.prepend_path('CPATH', self.spec['cuda'].prefix.include)
+        env.prepend_path('CPATH', self.spec['intel-mkl'].prefix.mkl.include)
 
     def install(self, spec, prefix):
         f_cuda = "1" if spec.variants['cuda'].value else "0"

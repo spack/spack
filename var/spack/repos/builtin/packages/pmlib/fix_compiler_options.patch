@@ -1,0 +1,45 @@
+diff -ruN PMlib-org/cmake/CompileOptionSelector.cmake PMlib-fix/cmake/CompileOptionSelector.cmake
+--- PMlib-org/cmake/CompileOptionSelector.cmake	2019-06-09 15:15:08.000000000 +0900
++++ PMlib-fix/cmake/CompileOptionSelector.cmake	2019-09-02 10:53:45.124905538 +0900
+@@ -36,8 +36,8 @@
+     endif()
+ 
+   elseif (TARGET_ARCH STREQUAL "FX100")
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Kfast -Nrt_notune -w -Xg")
+-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Kfast -Nrt_notune -w -Xg")
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Kfast -w -Nclang")
++    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Kfast -w -Nclang")
+     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Cpp -Kfast -Nrt_notune -Knooptmsg")
+     if(enable_PreciseTimer)
+       SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Nfjcex")
+diff -ruN PMlib-org/cmake/Toolchain_fx100.cmake PMlib-fix/cmake/Toolchain_fx100.cmake
+--- PMlib-org/cmake/Toolchain_fx100.cmake	2019-06-09 15:15:08.000000000 +0900
++++ PMlib-fix/cmake/Toolchain_fx100.cmake	2019-09-03 17:37:51.504857455 +0900
+@@ -18,18 +18,18 @@
+ include(CMakeForceCompiler)
+ 
+ if(with_MPI)
+-  CMAKE_FORCE_C_COMPILER(mpifccpx GNU)
+-  CMAKE_FORCE_CXX_COMPILER(mpiFCCpx GNU)
+-  CMAKE_FORCE_Fortran_COMPILER(mpifrtpx GNU)
++  CMAKE_FORCE_C_COMPILER(mpicc GNU)
++  CMAKE_FORCE_CXX_COMPILER(mpicxx GNU)
++  CMAKE_FORCE_Fortran_COMPILER(mpifort GNU)
+ else()
+-  CMAKE_FORCE_C_COMPILER(fccpx GNU)
+-  CMAKE_FORCE_CXX_COMPILER(FCCpx GNU)
+-  CMAKE_FORCE_Fortran_COMPILER(frtpx GNU)
++  CMAKE_FORCE_C_COMPILER(fcc GNU)
++  CMAKE_FORCE_CXX_COMPILER(FCC GNU)
++  CMAKE_FORCE_Fortran_COMPILER(frt GNU)
+ endif()
+ 
+-set(CMAKE_FIND_ROOT_PATH /opt/FJSVmxlang/GM-2.0.0-05)
+-set(CMAKE_INCLUDE_PATH /opt/FJSVmxlang/GM-2.0.0-05/include)
+-set(CMAKE_LIBRARY_PATH /opt/FJSVmxlang/GM-2.0.0-05/lib64)
++#set(CMAKE_FIND_ROOT_PATH /opt/FJSVmxlang/GM-2.0.0-05)
++#set(CMAKE_INCLUDE_PATH /opt/FJSVmxlang/GM-2.0.0-05/include)
++#set(CMAKE_LIBRARY_PATH /opt/FJSVmxlang/GM-2.0.0-05/lib64)
+ 
+ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)

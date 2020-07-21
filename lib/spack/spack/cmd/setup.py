@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,23 +30,13 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="do not try to install dependencies of requested packages")
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'spec'])
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="display verbose build output while installing")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="specs to use for install. must contain package AND version")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
-
-
-def spack_transitive_include_path():
-    return ';'.join(
-        os.path.join(dep, 'include')
-        for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
-    )
 
 
 def write_spconfig(package, dirty):
@@ -60,8 +50,8 @@ def write_spconfig(package, dirty):
     paths = os.environ['PATH'].split(':')
     paths = [item for item in paths if 'spack/env' not in item]
     env['PATH'] = ':'.join(paths)
-    env['SPACK_TRANSITIVE_INCLUDE_PATH'] = spack_transitive_include_path()
     env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
+    env['SPACK_INCLUDE_DIRS'] = os.environ['SPACK_INCLUDE_DIRS']
     env['CC'] = os.environ['SPACK_CC']
     env['CXX'] = os.environ['SPACK_CXX']
     env['FC'] = os.environ['SPACK_FC']
@@ -87,7 +77,7 @@ env = dict(os.environ)
             if name.find('PATH') < 0:
                 fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
             else:
-                if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
+                if name == 'SPACK_INCLUDE_DIRS':
                     sep = ';'
                 else:
                     sep = ':'

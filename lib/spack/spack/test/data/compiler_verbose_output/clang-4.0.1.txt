@@ -1,0 +1,20 @@
+clang version 4.0.1 (tags/RELEASE_401/final)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-redhat-linux/7
+Found candidate GCC installation: /usr/lib/gcc/x86_64-redhat-linux/7
+Selected GCC installation: /usr/bin/../lib/gcc/x86_64-redhat-linux/7
+Candidate multilib: .;@m64
+Candidate multilib: 32;@m32
+Selected multilib: .;@m64
+ "/usr/bin/clang-4.0" -cc1 -triple x86_64-unknown-linux-gnu -emit-obj -mrelax-all -disable-free -disable-llvm-verifier -discard-value-names -main-file-name main.c -mrelocation-model static -mthread-model posix -mdisable-fp-elim -fmath-errno -masm-verbose -mconstructor-aliases -munwind-tables -fuse-init-array -target-cpu x86-64 -v -dwarf-column-info -debugger-tuning=gdb -resource-dir /usr/bin/../lib64/clang/4.0.1 -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib64/clang/4.0.1/include -internal-externc-isystem /include -internal-externc-isystem /usr/include -fdebug-compilation-dir /tmp/spack-test -ferror-limit 19 -fmessage-length 0 -fobjc-runtime=gcc -fdiagnostics-show-option -o /tmp/main-bf64f0.o -x c main.c
+clang -cc1 version 4.0.1 based upon LLVM 4.0.1 default target x86_64-unknown-linux-gnu
+ignoring nonexistent directory "/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /usr/local/include
+ /usr/bin/../lib64/clang/4.0.1/include
+ /usr/include
+End of search list.
+ "/usr/bin/ld" --hash-style=gnu --no-add-needed --build-id --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o output /usr/bin/../lib/gcc/x86_64-redhat-linux/7/../../../../lib64/crt1.o /usr/bin/../lib/gcc/x86_64-redhat-linux/7/../../../../lib64/crti.o /usr/bin/../lib/gcc/x86_64-redhat-linux/7/crtbegin.o -L/usr/bin/../lib/gcc/x86_64-redhat-linux/7 -L/usr/bin/../lib/gcc/x86_64-redhat-linux/7/../../../../lib64 -L/usr/bin/../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/bin/../lib/gcc/x86_64-redhat-linux/7/../../.. -L/usr/bin/../lib -L/lib -L/usr/lib /tmp/main-bf64f0.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/bin/../lib/gcc/x86_64-redhat-linux/7/crtend.o /usr/bin/../lib/gcc/x86_64-redhat-linux/7/../../../../lib64/crtn.o

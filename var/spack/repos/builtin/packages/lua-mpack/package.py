@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,7 @@ class LuaMpack(Package):
 
     depends_on('msgpack-c')
 
-    version('1.0.0-0', '9a7bd842753194124830bc7426e78c1b',
-            url='https://luarocks.org/manifests/tarruda/mpack-1.0.6-0.src.rock',
+    version('1.0.6-0', sha256='9068d9d3f407c72a7ea18bc270b0fa90aad60a2f3099fa23d5902dd71ea4cd5f',
             expand=False)
 
     extends('lua')

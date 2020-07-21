@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Iozone(MakefilePackage):
     homepage = "http://www.iozone.org/"
     url      = "http://www.iozone.org/src/current/iozone3_465.tar"
 
-    version('3_465', 'c924e5e46fb1cf8145f420e8e57eb954')
+    version('3_465', sha256='2e3d72916e7d7340a7c505fc0c3d28553fcc5ff2daf41d811368e55bd4e6a293')
 
     # TODO: Add support for other architectures as necessary
     build_targets = ['linux-AMD64']

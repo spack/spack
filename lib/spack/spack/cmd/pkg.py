@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,13 +6,14 @@
 from __future__ import print_function
 
 import os
-import argparse
 import re
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
+from llnl.util.filesystem import working_dir
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.paths
 import spack.repo
 from spack.util.executable import which
@@ -27,8 +28,7 @@ def setup_parser(subparser):
         metavar='SUBCOMMAND', dest='pkg_command')
 
     add_parser = sp.add_parser('add', help=pkg_add.__doc__)
-    add_parser.add_argument('packages', nargs=argparse.REMAINDER,
-                            help="names of packages to add to git repo")
+    arguments.add_common_arguments(add_parser, ['packages'])
 
     list_parser = sp.add_parser('list', help=pkg_list.__doc__)
     list_parser.add_argument('rev', default='HEAD', nargs='?',
@@ -79,12 +79,28 @@ def packages_path():
         return spack.repo.path.get_repo('builtin').packages_path
 
 
+class GitExe:
+    # Wrapper around Executable for git to set working directory for all
+    # invocations.
+    #
+    # Not using -C as that is not supported for git < 1.8.5.
+    def __init__(self):
+        self._git_cmd = which('git', required=True)
+
+    def __call__(self, *args, **kwargs):
+        with working_dir(packages_path()):
+            return self._git_cmd(*args, **kwargs)
+
+
+_git = None
+
+
 def get_git():
     """Get a git executable that runs *within* the packages path."""
-    git = which('git', required=True)
-    git.add_default_arg('-C')
-    git.add_default_arg(packages_path())
-    return git
+    global _git
+    if _git is None:
+        _git = GitExe()
+    return _git
 
 
 def list_packages(rev):
@@ -102,13 +118,14 @@ def list_packages(rev):
 
 def pkg_add(args):
     """add a package to the git stage with `git add`"""
+    git = get_git()
+
     for pkg_name in args.packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
             tty.die("No such package: %s.  Path does not exist:" %
                     pkg_name, filename)
 
-        git = get_git()
         git('add', filename)
 
 

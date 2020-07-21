@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,9 @@ class Leveldb(CMakePackage):
     git      = "https://github.com/google/leveldb.git"
 
     version('master', branch='master')
-    version('1.22', '55423cac9e3306f4a9502c738a001e4a339d1a38ffbee7572d4a07d5d63949b2')
-    version('1.20', '298b5bddf12c675d6345784261302252')
-    version('1.18', '73770de34a2a5ab34498d2e05b2b7fa0')
+    version('1.22', sha256='55423cac9e3306f4a9502c738a001e4a339d1a38ffbee7572d4a07d5d63949b2')
+    version('1.20', sha256='f5abe8b5b209c2f36560b75f32ce61412f39a2922f7045ae764a2c23335b6664')
+    version('1.18', sha256='4aa1a7479bc567b95a59ac6fb79eba49f61884d6fd400f20b7af147d54c5cee5')
 
     variant('shared', default=True, description='Build shared library')
 

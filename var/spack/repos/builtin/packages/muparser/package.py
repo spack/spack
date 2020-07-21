@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,8 @@ class Muparser(Package):
     homepage = "http://muparser.beltoforion.de/"
     url      = "https://github.com/beltoforion/muparser/archive/v2.2.5.tar.gz"
 
-    version('2.2.6.1', '410d29b4c58d1cdc2fc9ed1c1c7f67fe')
-    # 2.2.6 presents itself as 2.2.5, don't add it to Spack
-    # version('2.2.6', 'f197b2815ca0422b2091788a78f2dc8a')
-    version('2.2.5', '02dae671aa5ad955fdcbcd3fee313fb7')
+    version('2.2.6.1', sha256='d2562853d972b6ddb07af47ce8a1cdeeb8bb3fa9e8da308746de391db67897b3')
+    version('2.2.5', sha256='0666ef55da72c3e356ca85b6a0084d56b05dd740c3c21d26d372085aa2c6e708')
 
     # Replace std::auto_ptr by std::unique_ptr
     # https://github.com/beltoforion/muparser/pull/46

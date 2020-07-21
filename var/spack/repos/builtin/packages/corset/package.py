@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Corset(Package):
     homepage = "https://github.com/Oshlack/Corset/wiki"
     url      = "https://github.com/Oshlack/Corset/releases/download/version-1.06/corset-1.06-linux64.tar.gz"
 
-    version('1.06', '0a6d0bb1f2d1bdbcb8b47656a7f12f23')
+    version('1.06', sha256='4aff83844461cea1edfce3d89776236c300650fc02b497cc9f11eba42d161b60')
 
     def url_for_version(self, version):
         url = 'https://github.com/Oshlack/Corset/releases/download/version-{0}/corset-{0}-linux64.tar.gz'

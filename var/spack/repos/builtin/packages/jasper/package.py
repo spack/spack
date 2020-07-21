@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,13 +10,11 @@ class Jasper(Package):
     """Library for manipulating JPEG-2000 images"""
 
     homepage = "https://www.ece.uvic.ca/~frodo/jasper/"
-    url      = "https://www.ece.uvic.ca/~frodo/jasper/software/jasper-2.0.14.tar.gz"
-    list_url = homepage
+    url      = "https://github.com/mdadams/jasper/archive/version-2.0.16.tar.gz"
 
-    version('2.0.14',  '23561b51da8eb5d0dc85b91eff3d9a7f',
-            url="https://www.ece.uvic.ca/~frodo/jasper/software/jasper-2.0.14.tar.gz")
-    version('1.900.1', 'a342b2b4495b3e1394e161eb5d85d754',
-            url="https://www.ece.uvic.ca/~frodo/jasper/software/jasper-1.900.1.zip")
+    version('2.0.16',  sha256='f1d8b90f231184d99968f361884e2054a1714fdbbd9944ba1ae4ebdcc9bbfdb1')
+    version('2.0.14',  sha256='85266eea728f8b14365db9eaf1edc7be4c348704e562bb05095b9a077cf1a97b')
+    version('1.900.1', sha256='c2b03f28166f9dc8ae434918839ae9aa9962b880fcfd24eebddd0a2daeb9192c')
 
     variant('jpeg',   default=True,  description='Enable the use of the JPEG library')
     variant('opengl', default=False, description='Enable the use of the OpenGL and GLUT libraries')

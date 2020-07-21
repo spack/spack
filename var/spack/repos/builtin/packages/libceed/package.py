@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,11 @@ class Libceed(Package):
     homepage = "https://github.com/CEED/libCEED"
     git      = "https://github.com/CEED/libCEED.git"
 
+    maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
+
     version('develop', branch='master')
+    version('0.6', commit='c7f533e01e2f3f6720fbf37aac2af2ffed225f60')  # tag v0.6 + small portability fixes
+    version('0.5', tag='v0.5')
     version('0.4', tag='v0.4')
     version('0.2', tag='v0.2')
     version('0.1', tag='v0.1')
@@ -21,8 +25,10 @@ class Libceed(Package):
     variant('cuda', default=False, description='Enable CUDA support')
     variant('debug', default=False, description='Enable debug build')
     variant('libxsmm', default=False, description='Enable LIBXSMM backend')
+    variant('magma', default=False, description='Enable MAGMA backend')
 
     conflicts('+libxsmm', when='@:0.2')
+    conflicts('+magma', when='@:0.5')
 
     depends_on('cuda', when='+cuda')
 
@@ -33,6 +39,8 @@ class Libceed(Package):
     depends_on('occa~cuda', when='+occa~cuda')
 
     depends_on('libxsmm', when='+libxsmm')
+
+    depends_on('magma', when='+magma')
 
     patch('pkgconfig-version-0.4.diff', when='@0.4')
 
@@ -60,39 +68,42 @@ class Libceed(Package):
             if '+debug' in spec:
                 opt = '-g'
             elif compiler.name == 'gcc':
-                opt = '-O -g -ffp-contract=fast'
-                if compiler.target in ['x86_64']:
-                    opt += ' -march=native'
-                elif compiler.target in ['ppc64le']:
-                    opt += ' -mcpu=native -mtune=native'
+                opt = '-O3 -g -ffp-contract=fast'
                 if compiler.version >= ver(4.9):
                     opt += ' -fopenmp-simd'
+            elif compiler.name == 'apple-clang':
+                opt = '-O3 -g -march=native -ffp-contract=fast'
+                if compiler.version >= ver(10):
+                    opt += ' -fopenmp-simd'
             elif compiler.name == 'clang':
-                opt = '-O -g -march=native -ffp-contract=fast'
-                if compiler.version.string.endswith('-apple'):
-                    if compiler.version >= ver(10):
-                        opt += ' -fopenmp-simd'
-                else:  # not apple clang
-                    if compiler.version >= ver(6):
-                        opt += ' -fopenmp-simd'
+                opt = '-O3 -g -march=native -ffp-contract=fast'
+                if compiler.version >= ver(6):
+                    opt += ' -fopenmp-simd'
             elif compiler.name in ['xl', 'xl_r']:
                 opt = '-O -g -qsimd=auto'
             else:
                 opt = '-O -g'
             makeopts += ['OPT=%s' % opt]
 
+            if 'avx' in self.spec.target:
+                makeopts.append('AVX=1')
+
             if '+cuda' in spec:
                 makeopts += ['CUDA_DIR=%s' % spec['cuda'].prefix]
-                nvccflags = ['-ccbin %s -Xcompiler "%s" -Xcompiler %s' %
-                             (compiler.cxx, opt, compiler.pic_flag)]
-                nvccflags = ' '.join(nvccflags)
-                makeopts += ['NVCCFLAGS=%s' % nvccflags]
+                if spec.satisfies('@:0.4'):
+                    nvccflags = ['-ccbin %s -Xcompiler "%s" -Xcompiler %s' %
+                                 (compiler.cxx, opt, compiler.cc_pic_flag)]
+                    nvccflags = ' '.join(nvccflags)
+                    makeopts += ['NVCCFLAGS=%s' % nvccflags]
             else:
                 # Disable CUDA auto-detection:
                 makeopts += ['CUDA_DIR=/disable-cuda']
 
             if '+libxsmm' in spec:
                 makeopts += ['XSMM_DIR=%s' % spec['libxsmm'].prefix]
+
+            if '+magma' in spec:
+                makeopts += ['MAGMA_DIR=%s' % spec['magma'].prefix]
 
         return makeopts
 

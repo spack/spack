@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ import spack.directives
 import spack.error as error
 
 try:
-    from collections.abc import Sequence
+    from collections.abc import Sequence  # novm
 except ImportError:
     from collections import Sequence
 
@@ -567,25 +567,24 @@ class VariantMap(lang.HashableMap):
         # print keys in order
         sorted_keys = sorted(self.keys())
 
+        # Separate boolean variants from key-value pairs as they print
+        # differently. All booleans go first to avoid ' ~foo' strings that
+        # break spec reuse in zsh.
+        bool_keys = []
+        kv_keys = []
+        for key in sorted_keys:
+            bool_keys.append(key) if isinstance(self[key].value, bool) \
+                else kv_keys.append(key)
+
         # add spaces before and after key/value variants.
         string = StringIO()
 
-        kv = False
-        for key in sorted_keys:
-            vspec = self[key]
+        for key in bool_keys:
+            string.write(str(self[key]))
 
-            if not isinstance(vspec.value, bool):
-                # add space before all kv pairs.
-                string.write(' ')
-                kv = True
-            else:
-                # not a kv pair this time
-                if kv:
-                    # if it was LAST time, then pad after.
-                    string.write(' ')
-                kv = False
-
-            string.write(str(vspec))
+        for key in kv_keys:
+            string.write(' ')
+            string.write(str(self[key]))
 
         return string.getvalue()
 
@@ -594,16 +593,29 @@ def substitute_abstract_variants(spec):
     """Uses the information in `spec.package` to turn any variant that needs
     it into a SingleValuedVariant.
 
+    This method is best effort. All variants that can be substituted will be
+    substituted before any error is raised.
+
     Args:
         spec: spec on which to operate the substitution
     """
+    # This method needs to be best effort so that it works in matrix exlusion
+    # in $spack/lib/spack/spack/spec_list.py
+    failed = []
     for name, v in spec.variants.items():
         if name in spack.directives.reserved_names:
             continue
-        pkg_variant = spec.package_class.variants[name]
+        pkg_variant = spec.package_class.variants.get(name, None)
+        if not pkg_variant:
+            failed.append(name)
+            continue
         new_variant = pkg_variant.make_variant(v._original_value)
         pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
+
+    # Raise all errors at once
+    if failed:
+        raise UnknownVariantError(spec, failed)
 
 
 # The class below inherit from Sequence to disguise as a tuple and comply
@@ -778,12 +790,13 @@ class DuplicateVariantError(error.SpecError):
 
 class UnknownVariantError(error.SpecError):
     """Raised when an unknown variant occurs in a spec."""
-
-    def __init__(self, pkg, variants):
+    def __init__(self, spec, variants):
         self.unknown_variants = variants
-        super(UnknownVariantError, self).__init__(
-            'Package {0} has no variant {1}!'.format(pkg, comma_or(variants))
-        )
+        variant_str = 'variant' if len(variants) == 1 else 'variants'
+        msg = ('trying to set {0} "{1}" in package "{2}", but the package'
+               ' has no such {0} [happened during concretization of {3}]')
+        msg = msg.format(variant_str, comma_or(variants), spec.name, spec.root)
+        super(UnknownVariantError, self).__init__(msg)
 
 
 class InconsistentValidationError(error.SpecError):

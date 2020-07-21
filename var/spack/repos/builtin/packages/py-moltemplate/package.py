@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyMoltemplate(PythonPackage):
     homepage = "http://moltemplate.org"
     url      = "https://github.com/jewettaij/moltemplate/archive/v2.5.8.tar.gz"
 
-    version('2.5.8', '9e127a254a206222e8a31684780f8dba')
+    version('2.5.8', sha256='f1e2d52249e996d85f5b1b7b50f50037da9e4b9c252cdfc622b21e79aa21162f')
 
     depends_on('python@2.7:',   type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))

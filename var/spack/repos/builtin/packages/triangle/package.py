@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,9 @@ class Triangle(Package):
     homepage = "http://www.cs.cmu.edu/~quake/triangle.html"
     url      = "http://www.netlib.org/voronoi/triangle.zip"
 
-    version('1.6', '10aff8d7950f5e0e2fb6dd2e340be2c9')
+    version('1.6', sha256='1766327add038495fa3499e9b7cc642179229750f7201b94f8e1b7bee76f8480')
+
+    depends_on('libx11', type='link')
 
     def install(self, spec, prefix):
         make()

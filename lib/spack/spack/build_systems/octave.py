@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,12 +29,11 @@ class OctavePackage(PackageBase):
     extends('octave')
     depends_on('octave', type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
-        """Set up the compile and runtime environments for a package."""
+    def setup_build_environment(self, env):
         # octave does not like those environment variables to be set:
-        spack_env.unset('CC')
-        spack_env.unset('CXX')
-        spack_env.unset('FC')
+        env.unset('CC')
+        env.unset('CXX')
+        env.unset('FC')
 
     def install(self, spec, prefix):
         """Install the package from the archive file"""

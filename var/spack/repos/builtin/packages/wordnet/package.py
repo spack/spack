@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,6 @@ class Wordnet(AutotoolsPackage):
 
         return args
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('WNHOME', self.prefix)
-        run_env.set('WNSEARCHDIR', self.prefix.dict)
+    def setup_run_environment(self, env):
+        env.set('WNHOME', self.prefix)
+        env.set('WNSEARCHDIR', self.prefix.dict)

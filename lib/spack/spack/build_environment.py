@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,7 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
+import re
 import inspect
 import multiprocessing
 import os
@@ -39,7 +40,6 @@ import shutil
 import sys
 import traceback
 import types
-from six import iteritems
 from six import StringIO
 
 import llnl.util.tty as tty
@@ -52,7 +52,9 @@ import spack.build_systems.meson
 import spack.config
 import spack.main
 import spack.paths
+import spack.schema.environment
 import spack.store
+import spack.architecture as arch
 from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
@@ -60,7 +62,7 @@ from spack.util.environment import (
 from spack.util.environment import system_dirs
 from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
-from spack.util.module_cmd import load_module, get_path_from_module
+from spack.util.module_cmd import load_module, get_path_from_module, module
 from spack.util.log_parse import parse_log_events, make_log_context
 
 
@@ -145,6 +147,40 @@ def clean_environment():
     env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
+    env.unset('DYLD_FALLBACK_LIBRARY_PATH')
+
+    # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
+    # interference with Spack dependencies.
+    # CNL requires these variables to be set (or at least some of them,
+    # depending on the CNL version).
+    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
+    on_cray = str(hostarch.platform) == 'cray'
+    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    if on_cray and not using_cnl:
+        env.unset('CRAY_LD_LIBRARY_PATH')
+        for varname in os.environ.keys():
+            if 'PKGCONF' in varname:
+                env.unset(varname)
+
+    # Unset the following variables because they can affect installation of
+    # Autotools and CMake packages.
+    build_system_vars = [
+        'CC', 'CFLAGS', 'CPP', 'CPPFLAGS',  # C variables
+        'CXX', 'CCC', 'CXXFLAGS', 'CXXCPP',  # C++ variables
+        'F77', 'FFLAGS', 'FLIBS',  # Fortran77 variables
+        'FC', 'FCFLAGS', 'FCLIBS',  # Fortran variables
+        'LDFLAGS', 'LIBS'  # linker variables
+    ]
+    for v in build_system_vars:
+        env.unset(v)
+
+    # Unset mpi environment vars. These flags should only be set by
+    # mpi providers for packages with mpi dependencies
+    mpi_vars = [
+        'MPICC', 'MPICXX', 'MPIFC', 'MPIF77', 'MPIF90'
+    ]
+    for v in mpi_vars:
+        env.unset(v)
 
     build_lang = spack.config.get('config:build_language')
     if build_lang:
@@ -168,6 +204,10 @@ def clean_environment():
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
     compiler = pkg.compiler
+    spec = pkg.spec
+
+    # Make sure the executables for this compiler exist
+    compiler.verify_executables()
 
     # Set compiler variables used by CMake and autotools
     assert all(key in compiler.link_paths for key in (
@@ -198,6 +238,19 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
+    env.set('SPACK_LINKER_ARG', compiler.linker_arg)
+
+    # Check whether we want to force RPATH or RUNPATH
+    if spack.config.get('config:shared_linking') == 'rpath':
+        env.set('SPACK_DTAGS_TO_STRIP', compiler.enable_new_dtags)
+        env.set('SPACK_DTAGS_TO_ADD', compiler.disable_new_dtags)
+    else:
+        env.set('SPACK_DTAGS_TO_STRIP', compiler.disable_new_dtags)
+        env.set('SPACK_DTAGS_TO_ADD', compiler.enable_new_dtags)
+
+    # Set the target parameters that the compiler will add
+    isa_arg = spec.architecture.target.optimization_flags(compiler)
+    env.set('SPACK_TARGET_ARGS', isa_arg)
 
     # Trap spack-tracked compiler flags as appropriate.
     # env_flags are easy to accidentally override.
@@ -217,7 +270,7 @@ def set_compiler_environment_variables(pkg, env):
                 handler = pkg.flag_handler.__func__
             else:
                 handler = pkg.flag_handler.im_func
-        injf, envf, bsf = handler(pkg, flag, pkg.spec.compiler_flags[flag])
+        injf, envf, bsf = handler(pkg, flag, spec.compiler_flags[flag])
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
@@ -234,7 +287,7 @@ def set_compiler_environment_variables(pkg, env):
             env.set(flag.upper(), ' '.join(f for f in env_flags[flag]))
     pkg.flags_to_build_system_args(build_system_flags)
 
-    env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
+    env.set('SPACK_COMPILER_SPEC', str(spec.compiler))
 
     env.set('SPACK_SYSTEM_DIRS', ':'.join(system_dirs))
 
@@ -328,21 +381,7 @@ def set_build_environment_variables(pkg, env, dirty):
     # Set environment variables if specified for
     # the given compiler
     compiler = pkg.compiler
-    environment = compiler.environment
-
-    for command, variable in iteritems(environment):
-        if command == 'set':
-            for name, value in iteritems(variable):
-                env.set(name, value)
-        elif command == 'unset':
-            for name, _ in iteritems(variable):
-                env.unset(name)
-        elif command == 'prepend-path':
-            for name, value in iteritems(variable):
-                env.prepend_path(name, value)
-        elif command == 'append-path':
-            for name, value in iteritems(variable):
-                env.append_path(name, value)
+    env.extend(spack.schema.environment.parse(compiler.environment))
 
     if compiler.extra_rpaths:
         extra_rpaths = ':'.join(compiler.extra_rpaths)
@@ -404,8 +443,13 @@ def set_build_environment_variables(pkg, env, dirty):
 
 def _set_variables_for_single_module(pkg, module):
     """Helper function to set module variables for single module."""
+    # Put a marker on this module so that it won't execute the body of this
+    # function again, since it is not needed
+    marker = '_set_run_already_called'
+    if getattr(module, marker, False):
+        return
 
-    jobs = spack.config.get('config:build_jobs') if pkg.parallel else 1
+    jobs = spack.config.get('config:build_jobs', 16) if pkg.parallel else 1
     jobs = min(jobs, multiprocessing.cpu_count())
     assert jobs is not None, "no default set for config:build_jobs"
 
@@ -471,6 +515,10 @@ def _set_variables_for_single_module(pkg, module):
 
     m.static_to_shared_library = static_to_shared_library
 
+    # Put a marker on this module so that it won't execute the body of this
+    # function again, since it is not needed
+    setattr(m, marker, True)
+
 
 def set_module_variables_for_package(pkg):
     """Populate the module scope of install() with some useful functions.
@@ -518,7 +566,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
 
     # TODO: Compiler arguments should not be hardcoded but provided by
     #       the different compiler classes.
-    if 'linux' in arch:
+    if 'linux' in arch or 'cray' in arch:
         soname = os.path.basename(shared_lib)
 
         if compat_version:
@@ -595,7 +643,7 @@ def get_rpaths(pkg):
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
-    return rpaths
+    return list(dedupe(filter_system_paths(rpaths)))
 
 
 def get_std_cmake_args(pkg):
@@ -664,35 +712,26 @@ def load_external_modules(pkg):
 
 def setup_package(pkg, dirty):
     """Execute all environment setup routines."""
-    spack_env = EnvironmentModifications()
-    run_env = EnvironmentModifications()
+    build_env = EnvironmentModifications()
 
     if not dirty:
         clean_environment()
 
-    set_compiler_environment_variables(pkg, spack_env)
-    set_build_environment_variables(pkg, spack_env, dirty)
-    pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
+    set_compiler_environment_variables(pkg, build_env)
+    set_build_environment_variables(pkg, build_env, dirty)
+    pkg.architecture.platform.setup_platform_environment(pkg, build_env)
 
-    # traverse in postorder so package can use vars from its dependencies
-    spec = pkg.spec
-    for dspec in pkg.spec.traverse(order='post', root=False,
-                                   deptype=('build', 'test')):
-        spkg = dspec.package
-        set_module_variables_for_package(spkg)
+    build_env.extend(
+        modifications_from_dependencies(pkg.spec, context='build')
+    )
 
-        # Allow dependencies to modify the module
-        dpkg = dspec.package
-        dpkg.setup_dependent_package(pkg.module, spec)
-        dpkg.setup_dependent_environment(spack_env, run_env, spec)
-
-    if (not dirty) and (not spack_env.is_unset('CPATH')):
+    if (not dirty) and (not build_env.is_unset('CPATH')):
         tty.debug("A dependency has updated CPATH, this may lead pkg-config"
                   " to assume that the package is part of the system"
                   " includes and omit it when invoked with '--cflags'.")
 
     set_module_variables_for_package(pkg)
-    pkg.setup_environment(spack_env, run_env)
+    pkg.setup_build_environment(build_env)
 
     # Loading modules, in particular if they are meant to be used outside
     # of Spack, can change environment variables that are relevant to the
@@ -702,7 +741,7 @@ def setup_package(pkg, dirty):
     # unnecessary. Modules affecting these variables will be overwritten anyway
     with preserve_environment('CC', 'CXX', 'FC', 'F77'):
         # All module loads that otherwise would belong in previous
-        # functions have to occur after the spack_env object has its
+        # functions have to occur after the build_env object has its
         # modifications applied. Otherwise the environment modifications
         # could undo module changes, such as unsetting LD_LIBRARY_PATH
         # after a module changes it.
@@ -712,14 +751,55 @@ def setup_package(pkg, dirty):
                 load_module("cce")
             load_module(mod)
 
+        # kludge to handle cray libsci being automatically loaded by PrgEnv
+        # modules on cray platform. Module unload does no damage when
+        # unnecessary
+        module('unload', 'cray-libsci')
+
         if pkg.architecture.target.module_name:
             load_module(pkg.architecture.target.module_name)
 
         load_external_modules(pkg)
 
+    implicit_rpaths = pkg.compiler.implicit_rpaths()
+    if implicit_rpaths:
+        build_env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
+                      ':'.join(implicit_rpaths))
+
     # Make sure nothing's strange about the Spack environment.
-    validate(spack_env, tty.warn)
-    spack_env.apply_modifications()
+    validate(build_env, tty.warn)
+    build_env.apply_modifications()
+
+
+def modifications_from_dependencies(spec, context):
+    """Returns the environment modifications that are required by
+    the dependencies of a spec and also applies modifications
+    to this spec's package at module scope, if need be.
+
+    Args:
+        spec (Spec): spec for which we want the modifications
+        context (str): either 'build' for build-time modifications or 'run'
+            for run-time modifications
+    """
+    env = EnvironmentModifications()
+    pkg = spec.package
+
+    # Maps the context to deptype and method to be called
+    deptype_and_method = {
+        'build': (('build', 'link', 'test'),
+                  'setup_dependent_build_environment'),
+        'run': (('link', 'run'), 'setup_dependent_run_environment')
+    }
+    deptype, method = deptype_and_method[context]
+
+    for dspec in spec.traverse(order='post', root=False, deptype=deptype):
+        dpkg = dspec.package
+        set_module_variables_for_package(dpkg)
+        # Allow dependencies to modify the module
+        dpkg.setup_dependent_package(pkg.module, spec)
+        getattr(dpkg, method)(env, spec)
+
+    return env
 
 
 def fork(pkg, function, dirty, fake):
@@ -765,12 +845,11 @@ def fork(pkg, function, dirty, fake):
                 setup_package(pkg, dirty=dirty)
             return_value = function()
             child_pipe.send(return_value)
-        except StopIteration as e:
-            # StopIteration is used to stop installations
-            # before the final stage, mainly for debug purposes
-            tty.msg(e)
-            child_pipe.send(None)
 
+        except StopPhase as e:
+            # Do not create a full ChildError from this, it's not an error
+            # it's a control statement.
+            child_pipe.send(e)
         except BaseException:
             # catch ANYTHING that goes wrong in the child process
             exc_type, exc, tb = sys.exc_info()
@@ -822,15 +901,20 @@ def fork(pkg, function, dirty, fake):
     child_result = parent_pipe.recv()
     p.join()
 
+    # If returns a StopPhase, raise it
+    if isinstance(child_result, StopPhase):
+        # do not print
+        raise child_result
+
     # let the caller know which package went wrong.
     if isinstance(child_result, InstallError):
         child_result.pkg = pkg
 
-    # If the child process raised an error, print its output here rather
-    # than waiting until the call to SpackError.die() in main(). This
-    # allows exception handling output to be logged from within Spack.
-    # see spack.main.SpackCommand.
     if isinstance(child_result, ChildError):
+        # If the child process raised an error, print its output here rather
+        # than waiting until the call to SpackError.die() in main(). This
+        # allows exception handling output to be logged from within Spack.
+        # see spack.main.SpackCommand.
         child_result.print_context()
         raise child_result
 
@@ -1019,3 +1103,13 @@ class ChildError(InstallError):
 def _make_child_error(msg, module, name, traceback, build_log, context):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
     return ChildError(msg, module, name, traceback, build_log, context)
+
+
+class StopPhase(spack.error.SpackError):
+    """Pickle-able exception to control stopped builds."""
+    def __reduce__(self):
+        return _make_stop_phase, (self.message, self.long_message)
+
+
+def _make_stop_phase(msg, long_msg):
+    return StopPhase(msg, long_msg)

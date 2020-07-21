@@ -1,0 +1,16 @@
+diff --git a/src/include/socket.h b/src/include/socket.h
+index 68ce235..b4f09b9 100644
+--- a/src/include/socket.h
++++ b/src/include/socket.h
+@@ -327,7 +327,11 @@ static ncclResult_t createListenSocket(int *fd, union socketAddress *localAddr)
+   if (socketToPort(&localAddr->sa)) {
+     // Port is forced by env. Make sure we get the port.
+     int opt = 1;
++#if defined(SO_REUSEPORT)
+     SYSCHECK(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)), "setsockopt");
++#else
++    SYSCHECK(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)), "setsockopt");
++#endif
+   }
+ 
+   // localAddr port should be 0 (Any port)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Sw4lite(MakefilePackage):
 
     version('develop', branch='master')
     version('1.1', sha256='34b5f7b56f9e40474c14abebcaa024192de018de6beb6dafee53d3db5b07c6d3')
-    version('1.0', '3d911165f4f2ff6d5f9c1bd56ab6723f')
+    version('1.0', sha256='2ed7784fe0564b33879c280d3a8d54d963f2f45cd7f61215b8077fcc4ce8a608')
 
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('precision', default='double', values=('float', 'double'),

@@ -1,0 +1,60 @@
+diff --git a/util/convert/gfmavs.f b/util/convert/gfmavs.f
+index debe3ec..34e6f66 100644
+--- a/util/convert/gfmavs.f
++++ b/util/convert/gfmavs.f
+@@ -422,7 +422,7 @@ C
+ C
+       WRITE(IUT6,*) 'GFMAVS: OUTPUTING GRID COORDINATES...'
+       DO 1100 IP = 1,NP
+-      WRITE(IUTAVS,'(I8,P3E13.5)')  IP,X(IP),Y(IP),Z(IP)
++      WRITE(IUTAVS,'(I8,1P3E13.5)')  IP,X(IP),Y(IP),Z(IP)
+  1100 CONTINUE
+ C
+       WRITE(IUT6,*) 'GFMAVS: OUTPUTING ELEMENT DATA...'
+@@ -448,7 +448,7 @@ C
+ C
+       WRITE(IUT6,*) 'GFMAVS: OUTPUTING VARIABLES DATA...'
+       DO 1400 IP = 1,NP
+-      WRITE(IUTAVS,'(I8,P4E13.5)')  
++      WRITE(IUTAVS,'(I8,1P4E13.5)')  
+      *      IP,U(IP),V(IP),W(IP),P(IP)
+  1400 CONTINUE
+ C
+@@ -470,7 +470,7 @@ C
+ C
+           DO 2100 JB = 1,NPTMP
+               IP = LPBOUN(JB,ITYPE)
+-              WRITE(IUTAVS,'(I8,P3E13.5)')  
++              WRITE(IUTAVS,'(I8,1P3E13.5)')  
+      *        IP,X(IP),Y(IP),Z(IP)
+  2100     CONTINUE
+ C
+@@ -498,7 +498,7 @@ C
+ C
+           DO 2400 JB = 1,NPTMP
+               IP = LPBOUN(JB,ITYPE)
+-              WRITE(IUTAVS,'(I8,P7E13.5)')  
++              WRITE(IUTAVS,'(I8,1P7E13.5)')  
+      *              IP,U(IP),V(IP),W(IP),P(IP),F(IP),T(IP),VIS(IP)
+  2400     CONTINUE
+ C
+diff --git a/util/multi/partdx_rcap.f b/util/multi/partdx_rcap.f
+index a0962b7..aab1876 100644
+--- a/util/multi/partdx_rcap.f
++++ b/util/multi/partdx_rcap.f
+@@ -448,11 +448,11 @@ C
+ C
+       CLOSE(IUTPT)
+ C
+-  700 FORMAT(A,1X,I)
++  700 FORMAT(A,1X,I8)
+   701 FORMAT(A,1X,A)
+-  702 FORMAT(A,1X,I)
+-  703 FORMAT(I,1X,A,1X,8(I,1X))
+-  704 FORMAT(I,3(1X,F))
++  702 FORMAT(A,1X,I8)
++  703 FORMAT(I8,1X,A,1X,8(I8,1X))
++  704 FORMAT(I8,3(1X,F13.5))
+ CC
+ CC  700 FORMAT(A,1X,I8)
+ CC  701 FORMAT(A,1X,A)

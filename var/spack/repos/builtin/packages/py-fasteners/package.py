@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyFasteners(PythonPackage):
     homepage = "https://github.com/harlowja/fasteners"
     url      = "https://pypi.io/packages/source/f/fasteners/fasteners-0.14.1.tar.gz"
 
-    version('0.14.1', 'fcb13261c9b0039d9b1c4feb9bc75e04')
+    version('0.14.1', sha256='427c76773fe036ddfa41e57d89086ea03111bbac57c55fc55f3006d027107e18')
 
     depends_on('py-setuptools',     type='build')
     depends_on('py-monotonic@0.1:', type=('build', 'run'))
