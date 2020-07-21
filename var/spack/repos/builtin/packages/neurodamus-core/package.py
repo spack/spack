@@ -69,7 +69,7 @@ class NeurodamusCore(SimModel):
     depends_on('python@2.7:', type=('build', 'run'))
 
     # Dont apply name for now for compat with neuron+binary
-    # mech_name = "neurodamus"
+    mech_name = ''
 
     @run_before('build')
     def prepare(self):

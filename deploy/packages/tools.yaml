@@ -20,7 +20,7 @@ packages:
     specs:
       - arm-forge@20.0.3-linux-rhel7-x86_64
       - binutils@2.31.1
-      - bison@3.0.5
+      - bison@3.4.2
       - blender
       - cmake@3.15.3
       - darshan-runtime
@@ -29,7 +29,7 @@ packages:
       - emacs@26.1
       - environment-modules@4.5.1
       - ffmpeg
-      - flex@2.6.3
+      - flex@2.6.4
       - gdb~python@8.2
       - gdbm@1.14.1
       - gettext@0.19.8.1

@@ -82,9 +82,12 @@ class SimModel(Package):
             )
             # Relevant flags to build neuron's nrnmech lib
             # 'ENABLE_CORENEURON' only now, otherwise mods assume neuron
-            include_flag += ' -DENABLE_CORENEURON'
-            include_flag += ' -I%s' % self.spec['coreneuron'].prefix.include
-            link_flag += ' ' + libnrncoremech.ld_flags
+            # Only link with coreneuron when dependencies are passed
+            if dependencies:
+                include_flag += ' -DENABLE_CORENEURON'
+                include_flag += ' -I%s' % \
+                                self.spec['coreneuron'].prefix.include
+                link_flag += ' ' + libnrncoremech.ld_flags
 
         # Neuron mechlib and special
         with profiling_wrapper_on():
