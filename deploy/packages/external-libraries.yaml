@@ -62,4 +62,4 @@ packages:
       - architecture
       - compiler
     specs:
-      - zeromq+libsodium@4.3.2
+      - libzmq+libsodium@4.3.2
