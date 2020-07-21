@@ -5,7 +5,7 @@
 
 
 from spack import *
-
+import sys
 
 class Hpx(CMakePackage, CudaPackage):
     """C++ runtime system for parallel and distributed applications."""
@@ -48,8 +48,11 @@ class Hpx(CMakePackage, CudaPackage):
         description="Support for networking through parcelports",
     )
 
+    default_generic_coroutines = True
+    if sys.platform.startswith('linux'):
+        default_generic_coroutines = False
     variant(
-        "generic_coroutines", default=False,
+        "generic_coroutines", default=default_generic_coroutines,
         description='Use Boost.Context as the underlying coroutines'
                     'context switch implementation.')
 
