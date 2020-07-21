@@ -14,9 +14,9 @@ class Chai(CMakePackage):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
-    version('1.0', tag='v1.0', submodules='True')
-    version('1.1.0', tag='v1.1.0', submodules='True')
     version('1.2.0', tag='v1.2.0', submodules='True')
+    version('1.1.0', tag='v1.1.0', submodules='True')
+    version('1.0', tag='v1.0', submodules='True')
 
     variant('cuda', default=False, description='Build with CUDA support')
 
