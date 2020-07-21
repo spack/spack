@@ -40,7 +40,7 @@ packages:
       - py-morph-tool@0.2.5
       - py-morphio@2.3.4
       - py-neurodamus
-      - py-sonata-network-reduction@0.0.9 ^neuron%intel@19.0.4^py-ipython%gcc
+      - py-sonata-network-reduction@0.0.9 ^neuron%intel@19.1.1.217^py-ipython%gcc
 
   gnu-stable-serial-ophiophob:
     target_matrix:
@@ -65,11 +65,11 @@ packages:
       - parquet-converters@0.5.5
       - synapsetool@0.5.9
       - touchdetector@5.4.0
-      - brayns +opendeck +brion ^brion@3.1.0 ^ospray@1.7.3%intel@19.0.4
-      - brayns@1.0.1 +brion ^brion@3.1.0 ^ospray%intel@19.0.4
-      - brayns-topologyviewer@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.0.4
-      - brayns-brainatlas@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.0.4
-      - brayns-membranelessorganelles@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.0.4
+      - brayns +opendeck +brion ^brion@3.1.0 ^ospray@1.7.3%intel@19.1.17.217
+      - brayns@1.0.1 +brion ^brion@3.1.0 ^ospray%intel@19.1.1.217
+      - brayns-topologyviewer@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.1.1.217
+      - brayns-brainatlas@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.1.1.217
+      - brayns-membranelessorganelles@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.1.1.217
 
   gnu-stable-parallel-python:
     target_matrix:
@@ -120,10 +120,10 @@ packages:
     specs:
       - nest@2.18.0
       - py-efel@3.0.80
-      - py-bglibpy@4.2.23 ^neuron%intel@19.0.4
+      - py-bglibpy@4.2.23 ^neuron%intel@19.1.1.217
       - py-bluepy@0.14.8
-      - py-bluepymm@0.7.15 ^neuron%intel@19.0.4
-      - py-bluepyopt@1.9.27 ^neuron%intel@19.0.4
+      - py-bluepymm@0.7.15 ^neuron%intel@19.1.1.217
+      - py-bluepyopt@1.9.27 ^neuron%intel@19.1.1.217
 
   #### cellular ####
 

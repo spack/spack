@@ -26,7 +26,7 @@ intel-stable:
   architecture:
   - linux-rhel7-x86_64
   compiler:
-  - intel@2020.0.1
+  - intel@19.1.1.217
   mpi:
   - hpe-mpi@2.21
   lapack:
