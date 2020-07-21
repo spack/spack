@@ -7,8 +7,10 @@
 from spack import *
 from os import popen
 
+
 class RocmSmi(MakefilePackage):
-    """This tool exposes functionality for clock and temperature management of your ROCm enabled system"""
+    """This tool exposes functionality for clock and temperature
+       management of your ROCm enabled system"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROC-smi"
     url      = "https://github.com/RadeonOpenCompute/ROC-smi/archive/rocm-3.5.0.tar.gz"
@@ -26,5 +28,7 @@ class RocmSmi(MakefilePackage):
         popen('ln -srf {}/rocm_smi.py {}/rocm-smi'.format(prefix, prefix))
 
         popen('mkdir -p {}/smi-test/tests'.format(prefix))
-        popen('cp -R {}/tests/ {}/smi-test/'.format(self.build_directory, prefix))
-        popen('cp -R {}/test-rocm-smi.sh {}/smi-test'.format(self.build_directory, prefix))
+        popen('cp -R {}/tests/ {}/smi-test/'.format(self.build_directory,
+                                                                prefix))
+        popen('cp -R {}/test-rocm-smi.sh {}/smi-test'.format(
+                                            self.build_directory, prefix))
