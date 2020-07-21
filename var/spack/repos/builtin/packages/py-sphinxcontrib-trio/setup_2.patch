@@ -1,0 +1,9 @@
+--- a/setup.py	2019-08-01 11:41:01.903832333 +0200
++++ b/setup.py	2019-08-01 11:41:10.035832221 +0200
+@@ -32,4 +32,5 @@
+         "Framework :: Twisted",
+         "Topic :: Documentation :: Sphinx",
+         "Topic :: Software Development :: Documentation",
+-    ])
++    ],
++    namespace_packages=['sphinxcontrib'])

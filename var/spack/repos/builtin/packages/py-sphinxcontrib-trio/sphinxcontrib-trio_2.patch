@@ -1,0 +1,10 @@
+diff -urN sphinxcontrib-trio-1.1.0/setup.py sphinxcontrib-trio-1.1.0-cea/setup.py
+--- sphinxcontrib-trio-1.1.0/setup.py	2019-08-01 10:44:29.583879243 +0200
++++ sphinxcontrib-trio-1.1.0-cea/setup.py	2019-08-01 11:57:01.815819059 +0200
+@@ -32,4 +32,5 @@
+         "Framework :: Twisted",
+         "Topic :: Documentation :: Sphinx",
+         "Topic :: Software Development :: Documentation",
+-    ])
++    ],
++    namespace_packages=['sphinxcontrib'])
