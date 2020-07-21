@@ -190,7 +190,7 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     spec = spack.spec.Spec('a').concretized()
     assert inst._process_binary_cache_tarball(spec.package, spec, False, False)
 
-    assert 'Installing a from binary cache' in capfd.readouterr()[0]
+    assert 'Extracting a from binary cache' in capfd.readouterr()[0]
 
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages,

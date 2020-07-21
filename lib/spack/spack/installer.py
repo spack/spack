@@ -215,18 +215,18 @@ def _hms(seconds):
 
 def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
     """
-    Install the package from binary cache
+    Extract the package from binary cache
 
     Args:
         pkg (PackageBase): the package to install from the binary cache
-        cache_only (bool): only install from binary cache
+        cache_only (bool): only extract from binary cache
         explicit (bool): ``True`` if installing the package was explicitly
             requested by the user, otherwise, ``False``
         unsigned (bool): ``True`` if binary package signatures to be checked,
             otherwise, ``False``
 
     Return:
-        (bool) ``True`` if the package was installed from binary cache,
+        (bool) ``True`` if the package was extract from binary cache,
             ``False`` otherwise
     """
     installed_from_cache = _try_install_from_binary_cache(pkg, explicit,
@@ -237,10 +237,10 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
         if cache_only:
             tty.die('{0} when cache-only specified'.format(pre))
 
-        tty.debug('{0}: installing from source'.format(pre))
+        tty.msg('{0}: installing from source'.format(pre))
         return False
 
-    tty.msg('Successfully installed {0} from binary cache'.format(pkg_id))
+    tty.debug('Successfully extracted {0} from binary cache'.format(pkg_id))
     _print_installed_pkg(pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec)
     return True
@@ -314,7 +314,7 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned):
             otherwise, ``False``
 
     Return:
-        (bool) ``True`` if the package was installed from binary cache,
+        (bool) ``True`` if the package was extracted from binary cache,
             else ``False``
     """
     tarball = binary_distribution.download_tarball(binary_spec)
@@ -325,7 +325,7 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned):
         return False
 
     pkg_id = package_id(pkg)
-    tty.msg('Installing {0} from binary cache'.format(pkg_id))
+    tty.msg('Extracting {0} from binary cache'.format(pkg_id))
     binary_distribution.extract_tarball(binary_spec, tarball, allow_root=False,
                                         unsigned=unsigned, force=False)
     pkg.installed_from_binary_cache = True
@@ -335,10 +335,10 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned):
 
 def _try_install_from_binary_cache(pkg, explicit, unsigned=False):
     """
-    Try to install the package from binary cache.
+    Try to extract the package from binary cache.
 
     Args:
-        pkg (PackageBase): the package to be installed from binary cache
+        pkg (PackageBase): the package to be extracted from binary cache
         explicit (bool): the package was explicitly requested by the user
         unsigned (bool): ``True`` if binary package signatures to be checked,
             otherwise, ``False``
