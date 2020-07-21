@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyBoto(PythonPackage):
-    """Boto is a Python package that provides interfaces to Amazon Web Services."""
+    """Boto is a Python package that provides interfaces to
+    Amazon Web Services."""
 
     homepage = "https://github.com/boto/boto"
     url      = "https://github.com/boto/boto/archive/2.49.0.tar.gz"
