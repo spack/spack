@@ -464,7 +464,7 @@ def env_revert(args):
         tty.die('Operation aborted.')
 
     shutil.copy(backup_file, manifest_file)
-    os.unlink(backup_file)
+    os.remove(backup_file)
     msg = 'Environment "{0}" reverted to old state'
     tty.msg(msg.format(manifest_file))
 
