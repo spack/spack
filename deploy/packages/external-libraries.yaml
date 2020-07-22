@@ -20,7 +20,7 @@ packages:
     specs:
       - arrow+parquet~python@0.15.1
       - arrow+parquet~python@0.12.1
-      - boost~mpi@1.70.0
+      - boost~mpi@1.73.0
       - bzip2@1.0.6
       - cgal
       - cuda@9.0.176
