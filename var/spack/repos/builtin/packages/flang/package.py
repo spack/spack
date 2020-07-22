@@ -73,7 +73,6 @@ class Flang(CMakePackage, CudaPackage):
 
         if self.compiler.name == "gcc":
             gcc_prefix = ancestor(self.compiler.cc, 2)
-            print('>>> %s', gcc_prefix)
             options.append('-DGCC_INSTALL_PREFIX=' + gcc_prefix)
 
         if '+cuda' in spec:
