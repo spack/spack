@@ -7,13 +7,18 @@ from spack import *
 
 
 class Chai(CMakePackage, CudaPackage):
-    """Copy-hiding array interface for data migration between memory spaces"""
+    """
+    Copy-hiding array interface for data migration between memory spaces
+    """
 
     homepage = "https://github.com/LLNL/CHAI"
-    url      = "https://github.com/LLNL/CHAI.git"
+    git      = "https://github.com/LLNL/CHAI.git"
 
     version('develop', branch='develop', submodules='True')
-    version('master', branch='master', submodules='True')
+    version('main', branch='main', submodules='True')
+    version('2.1.1', tag='v2.1.1', submodules='True')
+    version('2.1.0', tag='v2.1.0', submodules='True')
+    version('2.0.0', tag='v2.0.0', submodules='True')
     version('1.2.0', tag='v1.2.0', submodules='True')
     version('1.1.0', tag='v1.1.0', submodules='True')
     version('1.0', tag='v1.0', submodules='True')
