@@ -7,6 +7,7 @@
 from spack import *
 import sys
 
+
 class Hpx(CMakePackage, CudaPackage):
     """C++ runtime system for parallel and distributed applications."""
 
@@ -49,7 +50,7 @@ class Hpx(CMakePackage, CudaPackage):
     )
 
     default_generic_coroutines = True
-    if sys.platform.startswith('linux'):
+    if sys.platform.startswith('linux') or sys.platform == 'win32':
         default_generic_coroutines = False
     variant(
         "generic_coroutines", default=default_generic_coroutines,
