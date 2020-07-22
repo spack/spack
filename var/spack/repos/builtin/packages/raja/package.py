@@ -30,8 +30,6 @@ class Raja(CMakePackage, CudaPackage):
 
     variant('openmp', default=True, description='Build OpenMP backend')
     variant('shared', default=True, description='Build Shared Libs')
-    variant('targetopenmp', default=False, description='Build target OpenmP backend')
-    variant('tbb', default=False, description='Build TBB backend')
     variant('chai', default=False, description='Build with CHAI support')
 
     depends_on('cmake@3.8:', type='build')
@@ -69,14 +67,6 @@ class Raja(CMakePackage, CudaPackage):
             options.append('-DENABLE_TESTS=OFF')
         else:
             options.append('-DENABLE_TESTS=ON')
-
-        if '+targetopenmp' in spec:
-            options.extend([
-                '-DENABLE_TARGET_OPENMP=On'])
-
-        if '+tbb' in spec:
-            options.extend([
-                '-DENABLE_TBB=On'])
 
         if '+chai' in spec:
             options.extend([
