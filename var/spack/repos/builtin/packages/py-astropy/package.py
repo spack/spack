@@ -79,5 +79,6 @@ class PyAstropy(PythonPackage):
         if not hdrs:
             hdrs = find_headers('wcslib',self.prefix, recursive=True)
         if not hdrs:
-            hdrs = find_headers('wcslib',join_path(self.prefix.include, 'wcslib'))
+            hdrs = find_headers('wcslib',join_path(self.prefix.include, 'wcslib'),
+                                recursive=True)
         return hdrs or None
