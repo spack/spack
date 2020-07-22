@@ -650,23 +650,18 @@ def make_compiler_list(detected_versions):
     Returns:
         list of Compiler objects
     """
-    # We don't sort on the path of the compiler
-    sort_fn = lambda x: (x.id, x.variation, x.language)
-    compilers_s = sorted(detected_versions, key=sort_fn)
+    group_fn = lambda x: (x.id, x.variation, x.language)
+    sorted_compilers = sorted(detected_versions, key=group_fn)
 
     # Gather items in a dictionary by the id, name variation and language
     compilers_d = {}
-    for sort_key, group in itertools.groupby(compilers_s, key=sort_fn):
+    for sort_key, group in itertools.groupby(sorted_compilers, key=group_fn):
         compiler_id, name_variation, language = sort_key
         by_compiler_id = compilers_d.setdefault(compiler_id, {})
         by_name_variation = by_compiler_id.setdefault(name_variation, {})
         by_name_variation[language] = next(x.path for x in group)
 
-    # For each unique compiler id select the name variation with most entries
-    # i.e. the one that supports most languages
-    compilers = []
-
-    def _default(cmp_id, paths):
+    def _default_make_compilers(cmp_id, paths):
         operating_system, compiler_name, version = cmp_id
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
@@ -677,16 +672,38 @@ def make_compiler_list(detected_versions):
         )
         return [compiler]
 
-    for compiler_id, by_compiler_id in compilers_d.items():
-        _, selected_name_variation = max(
-            (len(by_compiler_id[variation]), variation)
-            for variation in by_compiler_id
-        )
+    # For compilers with the same compiler id:
+    #
+    # - Prefer with C compiler to without
+    # - Prefer with C++ compiler to without
+    # - Prefer no variations to variations (e.g., clang to clang-gpu)
+    #
+    sort_fn = lambda variation: (
+        'cc' not in by_compiler_id[variation],  # None last
+        'cxx' not in by_compiler_id[variation],  # None last
+        variation.prefix,
+        variation.suffix,
+    )
 
-        # Add it to the list of compilers
-        selected = by_compiler_id[selected_name_variation]
+    compilers = []
+    for compiler_id, by_compiler_id in compilers_d.items():
+        ordered = sorted(by_compiler_id, key=sort_fn)
+        selected_variation = ordered[0]
+        selected = by_compiler_id[selected_variation]
+
+        # fill any missing parts from subsequent entries
+        for lang in ['cxx', 'f77', 'fc']:
+            if lang not in selected:
+                next_lang = next((
+                    by_compiler_id[v][lang] for v in ordered
+                    if lang in by_compiler_id[v]), None)
+                if next_lang:
+                    selected[lang] = next_lang
+
         operating_system, _, _ = compiler_id
-        make_compilers = getattr(operating_system, 'make_compilers', _default)
+        make_compilers = getattr(
+            operating_system, 'make_compilers', _default_make_compilers)
+
         compilers.extend(make_compilers(compiler_id, selected))
 
     return compilers
