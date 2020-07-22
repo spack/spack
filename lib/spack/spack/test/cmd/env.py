@@ -2044,7 +2044,11 @@ def test_env_write_only_non_default():
     assert yaml == ev.default_manifest_yaml
 
 
-def test_update_and_revert_anonymous_env(tmpdir):
+@pytest.fixture
+def packages_yaml_v015(tmpdir):
+    """Return the path to an existing manifest in the v0.15.x format
+    and the path to a non yet existing backup file.
+    """
     raw_yaml = """
 spack:
   specs:
@@ -2057,21 +2061,47 @@ spack:
     manifest = tmpdir.ensure('spack.yaml')
     backup_file = tmpdir.join('spack.yaml.bkp')
     manifest.write(raw_yaml)
+    return manifest, backup_file
+
+
+def test_update_anonymous_env(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
     env('update', '-y', str(manifest.dirname))
 
-    # Check if the backup file has been created
+    # The environment is now at the latest format
+    assert ev.is_latest_format(str(manifest))
+    # A backup file has been created and it's not at the latest format
     assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+
+
+def test_double_update(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+
+    # Update the environment
+    env('update', '-y', str(manifest.dirname))
     # Try to read the environment (it should not error)
     ev.create('test', str(manifest))
-
-    # Retrying another update does nothing since the
-    # manifest is up-to-date
+    # Updating again does nothing since the manifest is up-to-date
     env('update', '-y', str(manifest.dirname))
 
-    # Try an update followed by a revert
-    os.unlink(str(backup_file))
-    manifest.write(raw_yaml)
+    # The environment is at the latest format
+    assert ev.is_latest_format(str(manifest))
+    # A backup file has been created and it's not at the latest format
+    assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+
+
+def test_update_and_revert(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+
+    # Update the environment
     env('update', '-y', str(manifest.dirname))
     assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+    assert ev.is_latest_format(str(manifest))
+
+    # Revert to previous state
     env('revert', '-y', str(manifest.dirname))
     assert not os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(manifest))

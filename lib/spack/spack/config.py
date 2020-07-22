@@ -466,7 +466,7 @@ class Configuration(object):
                    ' to disk, but is currently using a deprecated format. '
                    'Please update it using:\n\n'
                    '\tspack config [--scope=<scope] update {0}\n\n'
-                   'Not that any update will not be forward-compatible.')
+                   'Note that any update will not be forward-compatible.')
             msg = msg.format(section)
             raise RuntimeError(msg)
 

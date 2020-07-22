@@ -20,10 +20,16 @@ env = spack.main.SpackCommand('env')
 def old_format_packages_yaml(mutable_config):
     """Create a packages.yaml in the old format"""
     def _create():
-        old_data = {'packages': {'cmake': {'paths': {'cmake@3.14.0': '/usr'}}}}
-        old_data['packages'].update(
-            {'gcc': {'modules': {'gcc@8.3.0': 'gcc-8'}}}
-        )
+        old_data = {
+            'packages': {
+                'cmake': {
+                    'paths': {'cmake@3.14.0': '/usr'}
+                },
+                'gcc': {
+                    'modules': {'gcc@8.3.0': 'gcc-8'}
+                }
+            }
+        }
         scope = spack.config.default_modify_scope()
         cfg_file = spack.config.config.get_config_filename(scope, 'packages')
         with open(cfg_file, 'w') as f:
