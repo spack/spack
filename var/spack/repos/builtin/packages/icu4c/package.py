@@ -35,6 +35,8 @@ class Icu4c(AutotoolsPackage):
 
     conflicts('%intel@:16', when='@60.1:',
               msg="Intel compilers have immature C++11 and multibyte support")
+    conflicts('%gcc@:4', when='@67.1:',
+              msg="Older GCC compilers have immature C++11 support")
 
     patch('https://github.com/unicode-org/icu/commit/ddfc30860354cbcb78c2c0bcf800be5ab44a9e4f.patch',
           sha256='dfc501d78ddfabafe09dc1a7aa70f96b799164b18f6a57d616a9d48aaf989333',

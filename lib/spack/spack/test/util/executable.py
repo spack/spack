@@ -6,7 +6,10 @@
 import sys
 import os
 
+import pytest
+
 import llnl.util.filesystem as fs
+
 import spack
 import spack.util.executable as ex
 from spack.hooks.sbang import filter_shebangs_in_directory
@@ -67,11 +70,16 @@ def test_which_with_slash_ignores_path(tmpdir, working_env):
         assert exe.path == path
 
 
-def test_which_respects_path(tmpdir, working_env):
-    tmpdir.ensure('exe')
-    path = str(tmpdir.join('exe'))
-    os.environ['PATH'] = str(tmpdir)
-    fs.set_executable(path)
+def test_which(tmpdir):
+    os.environ["PATH"] = str(tmpdir)
+    assert ex.which("spack-test-exe") is None
+    with pytest.raises(ex.CommandNotFoundError):
+        ex.which("spack-test-exe", required=True)
 
-    exe = ex.which('exe')
-    assert exe.path == path
+    with tmpdir.as_cwd():
+        fs.touch("spack-test-exe")
+        fs.set_executable('spack-test-exe')
+
+    exe = ex.which("spack-test-exe")
+    assert exe is not None
+    assert exe.path == str(tmpdir.join("spack-test-exe"))
