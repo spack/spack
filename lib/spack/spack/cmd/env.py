@@ -418,7 +418,7 @@ def env_update(args):
     proceed = True
     if not args.yes_to_all:
         msg = ('The environment "{0}" is going to be updated to the latest '
-               'schema format. This operation is not forward-compatible i.e.'
+               'schema format.\nThis operation is not forward-compatible i.e. '
                'old versions of Spack will not be able to use this environment'
                ' anymore.')
         tty.msg(msg.format(args.env))

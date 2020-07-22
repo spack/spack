@@ -2105,3 +2105,10 @@ def test_update_and_revert(packages_yaml_v015):
     env('revert', '-y', str(manifest.dirname))
     assert not os.path.exists(str(backup_file))
     assert not ev.is_latest_format(str(manifest))
+
+
+def test_old_format_cant_be_updated_implicitly(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+    env('activate', str(manifest.dirname))
+    with pytest.raises(spack.main.SpackCommandError):
+        add('hdf5')

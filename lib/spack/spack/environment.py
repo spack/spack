@@ -1473,6 +1473,17 @@ class Environment(object):
                 writing if True.
 
         """
+        # Intercept environment not using the latest schema format and prevent
+        # them from being modified
+        manifest_exists = os.path.exists(self.manifest_path)
+        if manifest_exists and not is_latest_format(self.manifest_path):
+            msg = ('The environment "{0}" needs to be written to disk, but '
+                   'is currently using a deprecated format. Please update it '
+                   'using:\n\n'
+                   '\tspack env update {0}\n\n'
+                   'Note that any update will not be forward-compatible')
+            raise RuntimeError(msg.format(self.name))
+
         # ensure path in var/spack/environments
         fs.mkdirp(self.path)
 

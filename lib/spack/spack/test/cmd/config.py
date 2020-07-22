@@ -19,7 +19,7 @@ env = spack.main.SpackCommand('env')
 @pytest.fixture()
 def old_format_packages_yaml(mutable_config):
     """Create a packages.yaml in the old format"""
-    def _create():
+    def _create(scope=None):
         old_data = {
             'packages': {
                 'cmake': {
@@ -30,7 +30,7 @@ def old_format_packages_yaml(mutable_config):
                 }
             }
         }
-        scope = spack.config.default_modify_scope()
+        scope = scope or spack.config.default_modify_scope()
         cfg_file = spack.config.config.get_config_filename(scope, 'packages')
         with open(cfg_file, 'w') as f:
             syaml.dump(old_data, stream=f)
@@ -438,12 +438,7 @@ def test_config_update_packages(old_format_packages_yaml):
 
     # Check the entries have been transformed
     data = spack.config.get('packages')
-    assert 'externals' in data['cmake']
-    externals = data['cmake']['externals']
-    assert {'spec': 'cmake@3.14.0', 'prefix': '/usr'} in externals
-    assert 'externals' in data['gcc']
-    externals = data['gcc']['externals']
-    assert {'spec': 'gcc@8.3.0', 'modules': ['gcc-8']} in externals
+    check_update(data)
 
 
 def test_config_update_not_needed(mutable_config):
@@ -490,3 +485,38 @@ def test_config_revert_raise_if_cant_write(old_format_packages_yaml):
     # file is to be deleted and we don't have sufficient permissions
     with pytest.raises(spack.main.SpackCommandError):
         config('revert', '-y', 'packages')
+
+
+def test_updating_config_implicitly_raises(old_format_packages_yaml):
+    # Trying to write implicitly to a scope with a configuration file
+    # in the old format raises an exception
+    old_format_packages_yaml()
+    with pytest.raises(RuntimeError):
+        config('add', 'packages:cmake:buildable:false')
+
+
+def test_updating_multiple_scopes_at_once(old_format_packages_yaml):
+    # Create 2 config files in the old format
+    old_format_packages_yaml(scope='user')
+    old_format_packages_yaml(scope='site')
+
+    # Update them at once
+    config('update', '-y', 'packages')
+
+    for scope in ('user', 'site'):
+        data = spack.config.get('packages', scope=scope)
+        check_update(data)
+
+
+def check_update(data):
+    """Check that the data from the old_format_packages_yaml
+    has been updated.
+    """
+    assert 'externals' in data['cmake']
+    externals = data['cmake']['externals']
+    assert {'spec': 'cmake@3.14.0', 'prefix': '/usr'} in externals
+    assert 'paths' not in data['cmake']
+    assert 'externals' in data['gcc']
+    externals = data['gcc']['externals']
+    assert {'spec': 'gcc@8.3.0', 'modules': ['gcc-8']} in externals
+    assert 'modules' not in data['gcc']
