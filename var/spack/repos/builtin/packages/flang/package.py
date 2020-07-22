@@ -63,7 +63,6 @@ class Flang(CMakePackage, CudaPackage):
                 spec['llvm-flang'].prefix.bin, 'clang'),
             '-DCMAKE_CXX_COMPILER=%s' % os.path.join(
                 spec['llvm-flang'].prefix.bin, 'clang++'),
-            '-DCMAKE_CXX_FLAGS=-L%s' % self.compiler.implicit_rpaths()[1],
             '-DCMAKE_Fortran_COMPILER=%s' % os.path.join(
                 spec['llvm-flang'].prefix.bin, 'flang'),
             '-DFLANG_LIBOMP=%s' % find_libraries(
@@ -71,6 +70,11 @@ class Flang(CMakePackage, CudaPackage):
             '-DPYTHON_EXECUTABLE={0}'.format(
                 spec['python'].command.path)
         ]
+
+        if self.compiler.name == "gcc":
+            gcc_prefix = ancestor(self.compiler.cc, 2)
+            print('>>> %s', gcc_prefix)
+            options.append('-DGCC_INSTALL_PREFIX=' + gcc_prefix)
 
         if '+cuda' in spec:
             options.append('-DFLANG_OPENMP_GPU_NVIDIA=ON')

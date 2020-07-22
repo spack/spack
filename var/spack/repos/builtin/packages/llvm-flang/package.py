@@ -195,6 +195,10 @@ class LlvmFlang(CMakePackage, CudaPackage):
         args.append('-DLIBOMP_FORTRAN_MODULES=ON')
         args.append('-DLIBOMP_ENABLE_SHARED=TRUE')
 
+        if self.compiler.name == "gcc":
+           gcc_prefix = ancestor(self.compiler.cc, 2)
+           args.append('-DGCC_INSTALL_PREFIX=' + gcc_prefix)
+
         # used by libomptarget for NVidia gpu
         if '+cuda' in spec:
             args.append('-DOPENMP_ENABLE_LIBOMPTARGET=ON')
