@@ -72,3 +72,10 @@ class PyAstropy(PythonPackage):
             args.extend(['-j', str(make_jobs)])
 
         return args
+
+    @property
+    def headers(self):
+        hdrs = find_headers('wcslib',self.prefix.include, recursive=False)
+        if not hdrs:
+            hdrs = find_headers('wcslib',self.prefix, recursive=True)
+        return hdrs or None
