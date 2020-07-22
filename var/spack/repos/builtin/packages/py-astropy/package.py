@@ -68,10 +68,6 @@ class PyAstropy(PythonPackage):
             '--use-system-expat'
         ]
 
-        if 'wcslib' in spec:
-            args.extend(['--with-wcslib={0}'.format(
-                        spec['wcslib'].headers.directories[0]),])
-
         if spec.satisfies('^python@3:'):
             args.extend(['-j', str(make_jobs)])
 
@@ -82,6 +78,8 @@ class PyAstropy(PythonPackage):
         hdrs = find_headers('wcslib',self.prefix.include, recursive=False)
         if not hdrs:
             hdrs = find_headers('wcslib',self.prefix, recursive=True)
+        if not hdrs:
+            hdrs = find_headers('wcslib',self.prefix.wcslib, recursive=True)
         if not hdrs:
             hdrs = find_headers('wcslib',join_path(self.prefix.include, 'wcslib'),
                                 recursive=True)
