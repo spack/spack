@@ -68,6 +68,10 @@ class PyAstropy(PythonPackage):
             '--use-system-expat'
         ]
 
+        if 'wcslib' in spec:
+            args.extend(['--with-wcslib={0}'.format(
+                        spec['wcslib'].headers.directories[0]),])
+
         if spec.satisfies('^python@3:'):
             args.extend(['-j', str(make_jobs)])
 
