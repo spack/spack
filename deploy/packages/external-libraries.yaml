@@ -45,7 +45,7 @@ packages:
       - optix
       - python@3.8.3
       - qhull@2015.2
-      - qt@5.11.2 ^libjpeg-turbo
+      - qt@5.14.2 ^libjpeg-turbo
       - readline
       - snakemake
       - sqlite
