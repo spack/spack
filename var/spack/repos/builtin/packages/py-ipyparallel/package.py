@@ -17,7 +17,7 @@ class PyIpyparallel(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-tornado', type='run')
     depends_on('py-traitlets', type='run')
-    depends_on('py-zmq', type='run')
+    depends_on('py-pyzmq', type='run')
     depends_on('py-ipython', type='run')
     depends_on('py-ipykernel', type='run')
     depends_on('py-futures', type='run', when='^python@2.7.0:2.7.999')
