@@ -89,7 +89,7 @@ packages:
             tar@1.28: /usr
         version: [1.28]
     timemory:
-        variants: +mpi+cuda+cupti+caliper~gperftools~python@3.0.0a
+        variants: +mpi~cuda+cupti+caliper~gperftools~python@3.0.0a
     trilinos:
         variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
         version: [xsdk-0.4.0-rc1]
