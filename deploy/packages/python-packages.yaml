@@ -93,7 +93,6 @@ packages:
       - py-nodeenv
       - py-pandas
       - py-pathlib2
-      - py-perf
       - py-pillow
       - py-pip
       - py-plotly
@@ -112,19 +111,15 @@ packages:
       - py-six
       - py-sparkmanager
       - py-sphinx
-      # - py-sphinx-bootstrap-theme
       - py-sphinx-rtd-theme
       - py-sympy
       - py-toml
-      # - py-tornado
       - py-urllib3
       - py-virtualenv
       - py-virtualenv-clone
       - py-virtualenvwrapper
       - py-wheel
-      # - py-yapf
       - py-zipp
-      # - py-zmq
 
   gnu-stable-serial-lapack:
     target_matrix:
