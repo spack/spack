@@ -43,7 +43,7 @@ class PyPyarrow(PythonPackage):
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@0.15.0:^python@:3.3.99')
 
     for v in ('@0.9.0', '@0.11.0', '@0.12.1', '@0.13.0', '@0.14.0',
-              '@0.14.1', '@0.15.0', @0.15.1', '@0.17.1'):
+              '@0.14.1', '@0.15.0', '@0.15.1', '@0.17.1'):
         depends_on('arrow+python' + v, when=v)
         depends_on('arrow+python+parquet' + v, when='+parquet' + v)
 
