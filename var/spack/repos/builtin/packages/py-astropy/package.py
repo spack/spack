@@ -63,6 +63,7 @@ class PyAstropy(PythonPackage):
         args = [
             '--use-system-libraries',
             '--use-system-erfa',
+            '--use-system-wcslib',
             '--use-system-cfitsio',
             '--use-system-expat'
         ]
