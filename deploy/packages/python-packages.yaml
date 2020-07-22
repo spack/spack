@@ -67,7 +67,6 @@ packages:
       - py-flake8
       - py-funcsigs
       - py-future
-      - py-futures
       - py-h5py~mpi
       - py-hdfs
       - py-humanize
