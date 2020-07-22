@@ -46,7 +46,7 @@ class Raja(CMakePackage, CudaPackage):
 
         if '+cuda' in spec:
             options.extend([
-                '-DENABLE_CUDA=On',
+                '-DENABLE_CUDA=ON',
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
 
             if not spec.satisfies('cuda_arch=none'):
@@ -54,12 +54,15 @@ class Raja(CMakePackage, CudaPackage):
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
                 flag = '-arch sm_{0}'.format(cuda_arch[0])
                 options.append('-DCMAKE_CUDA_FLAGS:STRING={0}'.format(flag))
-
-        # shared vs static libs
-        if "+shared" in spec:
-            options.append('-DBUILD_SHARED_LIBS=ON')
         else:
-            options.append('-DBUILD_SHARED_LIBS=OFF')
+            options.append('-DENABLE_CUDA=OFF')
+
+        options.append('-DBUILD_SHARED_LIBS={0}'.format(
+            'ON' if '+shared' in spec else 'OFF'))
+
+        options.append('-DENABLE_CHAI={0}'.format(
+            'ON' if '+chai' in spec else 'OFF'))
+
         # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
         # is used by the spack compiler wrapper.  This can go away when BLT
         # removes -Werror from GTest flags

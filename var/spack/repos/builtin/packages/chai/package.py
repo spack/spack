@@ -36,7 +36,7 @@ class Chai(CMakePackage, CudaPackage):
 
         if '+cuda' in spec:
             options.extend([
-                '-DENABLE_CUDA=On',
+                '-DENABLE_CUDA=ON',
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
 
             if not spec.satisfies('cuda_arch=none'):
@@ -44,11 +44,13 @@ class Chai(CMakePackage, CudaPackage):
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
                 flag = '-arch sm_{0}'.format(cuda_arch[0])
                 options.append('-DCMAKE_CUDA_FLAGS:STRING={0}'.format(flag))
-
         else:
-            options.append('-DENABLE_CUDA=Off')
+            options.append('-DENABLE_CUDA=OFF')
 
         options.append('-Dumpire_DIR:PATH='
                        + spec['umpire'].prefix + "/share/umpire/cmake")
+
+        options.append('-DENABLE_TESTS={0}'.format(
+            'ON' if self.run_tests else 'OFF'))
 
         return options
