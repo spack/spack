@@ -30,3 +30,9 @@ class Qhull(CMakePackage):
     patch('qhull-unused-intel-17.02.patch', when='@2015.2')
 
     depends_on('cmake@3.0:', type='build')
+
+    def flag_handler(self, name, flags):
+        # See https://github.com/qhull/qhull/issues/65
+        if name == 'cxxflags' and self.version == Version('2020.1'):
+            flags.append(self.compiler.cxx11_flag)
+        return (flags, None, None)
