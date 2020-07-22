@@ -63,7 +63,6 @@ class PyAstropy(PythonPackage):
         args = [
             '--use-system-libraries',
             '--use-system-erfa',
-            '--use-system-wcslib',
             '--use-system-cfitsio',
             '--use-system-expat'
         ]
@@ -73,14 +72,8 @@ class PyAstropy(PythonPackage):
 
         return args
 
-    @property
-    def headers(self):
-        hdrs = find_headers('wcslib',self.prefix.include, recursive=False)
-        if not hdrs:
-            hdrs = find_headers('wcslib',self.prefix, recursive=True)
-        if not hdrs:
-            hdrs = find_headers('wcslib',self.prefix.wcslib, recursive=True)
-        if not hdrs:
-            hdrs = find_headers('wcslib',join_path(
-                                self.prefix.include, 'wcslib'), recursive=True)
-        return hdrs or None
+        if '+wcslib' in spec:
+            args.extend([
+                '--with-wcslib={0}'.format(
+                    spec['wcslib'].libs.directories[0]),
+            ])
