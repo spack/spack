@@ -72,8 +72,6 @@ class PyAstropy(PythonPackage):
 
         return args
 
-        if '+wcslib' in spec:
-            args.extend([
-                '--with-wcslib={0}'.format(
-                    spec['wcslib'].libs.directories[0]),
-            ])
+    def headers(self):
+        return find_headers('wcs', self.prefix.include, recursive=True) \
+          or None  # return None to indicate failure
