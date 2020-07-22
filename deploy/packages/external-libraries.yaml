@@ -41,7 +41,7 @@ packages:
       - metis+int64@5.1.0
       - ncurses
       - ninja@1.8.2
-      - openblas@0.3.3
+      - openblas@0.3.10
       - optix
       - python@3.8.3
       - qhull@2015.2
