@@ -28,7 +28,7 @@ packages:
       - brion@3.2.0 +python
       - connectome-tools@0.3.2
       - spatial-index@0.2.1
-      - spykfunc@0.15.6
+      - spykfunc@0.15.6 ^spark@3.0.0 ^py-pyspark@3.0.0 ^openjdk@11:11.999
       - psp-validation@0.3.0
       - py-pytouchreader@1.4.6
       - py-basalt@0.2.9

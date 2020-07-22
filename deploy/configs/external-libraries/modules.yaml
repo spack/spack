@@ -32,7 +32,6 @@ modules:
       - julia
       - python
       - snakemake
-      - spark
       - virtualgl
     blacklist:
       - '%gcc'

@@ -34,8 +34,8 @@ packages:
       # for Spykfunc
       - py-morpho-kit
       - py-py4j
-      - py-pyarrow+parquet@0.12.1
-      - py-pyspark
+      - py-pyarrow+parquet@0.17.1
+      - py-pyspark@3.0.0
       - py-dask-mpi
       # Others
       - py-aspy-yaml

@@ -18,9 +18,11 @@ class Spark(Package):
     variant('hadoop', default=False,
             description='Build with Hadoop')
 
-    depends_on('java@8', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'), when=('@3.0.0:'))
+    depends_on('java@8', type=('build', 'run'), when=('@:2.4.99'))
     depends_on('hadoop', when='+hadoop', type=('build', 'run'))
 
+    version('3.0.0', sha256='40f58f117efa83a1d0e66030d3561a8d7678f5473d1f3bb53e05c40d8d6e6781')
     version('2.4.5', sha256='40f58f117efa83a1d0e66030d3561a8d7678f5473d1f3bb53e05c40d8d6e6781')
     version('2.4.0', sha256='b1d6d6cb49d8253b36df8372a722292bb323bd16315d83f0b0bafb66a4154ef2')
     version('2.3.0', sha256='a7e29e78bd43aa6d137f0bb0afd54a3017865d471456c6d436ae79475bbeb161')
@@ -35,6 +37,7 @@ class Spark(Package):
         url = "http://archive.apache.org/dist/spark/spark-{0}/spark-{0}-bin-{1}.tgz"
         if self.spec.satisfies('@2.4.0: +hadoop'):
             checksums = {
+                Version('3.0.0'): '98f6b92e5c476d7abb93cc179c2616aa5dc897da25753bd197e20ef54a28d945',
                 Version('2.4.5'): '020be52524e4df366eb974d41a6e18fcb6efcaba9a51632169e917c74267dd81',
                 Version('2.4.0'): 'c93c096c8d64062345b26b34c85127a6848cff95a4bb829333a06b83222a5cfa'
             }

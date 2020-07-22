@@ -1,0 +1,13 @@
+diff --git a/setup.py b/setup.py
+index d44b28f..493df1e 100644
+--- a/setup.py
++++ b/setup.py
+@@ -224,7 +224,7 @@ def setup_package():
+             'pandas',
+             'pathlib2;python_version<"3.4"',
+             'progress',
+-            'pyarrow<0.15.0',
++            'pyarrow',
+             'sparkmanager>=0.7.0',
+         ],
+         setup_requires=['setuptools_scm'] + maybe_sphinx,
