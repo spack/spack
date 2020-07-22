@@ -702,15 +702,15 @@ def main(argv=None):
         if stored_var_name in os.environ:
             os.environ[var] = os.environ[stored_var_name]
 
+    # make spack.config aware of any command line configuration scopes
+    if args.config_scopes:
+        spack.config.command_line_scopes = args.config_scopes
+
     # activate an environment if one was specified on the command line
     if not args.no_env:
         env = ev.find_environment(args)
         if env:
             ev.activate(env, args.use_env_repo)
-
-    # make spack.config aware of any command line configuration scopes
-    if args.config_scopes:
-        spack.config.command_line_scopes = args.config_scopes
 
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(','))

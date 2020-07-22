@@ -18,6 +18,10 @@ class Rsync(AutotoolsPackage):
 
     depends_on('zlib')
     depends_on('popt')
+    depends_on('openssl', when='@3.2:')
+    depends_on('xxhash', when='@3.2:')
+    depends_on('zstd', when='@3.2:')
+    depends_on('lz4', when='@3.2:')
 
     def configure_args(self):
         return ['--with-included-zlib=no']

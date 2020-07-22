@@ -9,20 +9,6 @@ ENV DOCKERFILE_BASE=centos            \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
     container=docker
 
-COPY bin   $SPACK_ROOT/bin
-COPY etc   $SPACK_ROOT/etc
-COPY lib   $SPACK_ROOT/lib
-COPY share $SPACK_ROOT/share
-COPY var   $SPACK_ROOT/var
-RUN mkdir -p $SPACK_ROOT/opt/spack
-
-RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /usr/local/bin/docker-shell \
- && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /usr/local/bin/interactive-shell \
- && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /usr/local/bin/spack-env
-
 RUN yum update -y \
  && yum install -y epel-release \
  && yum update -y \
@@ -49,6 +35,20 @@ RUN yum update -y \
  && pip install boto3 \
  && rm -rf /var/cache/yum \
  && yum clean all
+
+COPY bin   $SPACK_ROOT/bin
+COPY etc   $SPACK_ROOT/etc
+COPY lib   $SPACK_ROOT/lib
+COPY share $SPACK_ROOT/share
+COPY var   $SPACK_ROOT/var
+RUN mkdir -p $SPACK_ROOT/opt/spack
+
+RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/docker-shell \
+ && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/interactive-shell \
+ && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/spack-env
 
 RUN mkdir -p /root/.spack \
  && cp $SPACK_ROOT/share/spack/docker/modules.yaml \

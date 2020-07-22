@@ -11,7 +11,7 @@ class PyMaestrowf(PythonPackage):
        simulation studies."""
 
     homepage = "https://github.com/LLNL/maestrowf/"
-    url      = "https://github.com/LLNL/maestrowf/archive/v1.1.6.tar.gz"
+    url      = "https://pypi.io/packages/source/m/maestrowf/maestrowf-1.1.8.tar.gz"
     git      = "https://github.com/LLNL/maestrowf/"
 
     maintainers = ['FrankD412']
@@ -21,22 +21,28 @@ class PyMaestrowf(PythonPackage):
     version('master',  branch='master')
 
     # Pre-release candidates
-    version('1.1.5dev',    sha256='eb3d6f31c233e2cde3b84e15c657002b83ff43d4d6b218b33d023a4f527b9e08')
-    version('1.1.4dev1.0', sha256='67f59eed6fa69fc71b88a0a769de9f080300497d3c30d3a0893eabd0702bc48e')
-    version('1.1.4dev1.1', sha256='c8612b5423b44f11e2a7c4fbc31eb741013245870512ee2dbf7367024517528f')
+    version('1.1.7dev0', sha256='bcef838f13da396dd33cc7f503655de7a8f16ee5fe7b1e2a553044334a03f1f0')
 
     # pypi releases
-    version('1.1.6', sha256='27a4ab9072c5b5e2edf91c192d9fe67f040dd45be7f3e44fd9a998ce4cb1e92d', preferred=True)
-    version('1.1.4', sha256='2cb0fa6f6281d8618ac79217ea5f4fd8cb24955c4315e873657f96b815f171d5')
-    version('1.1.2', sha256='ebb45bff54625435bc9f2462e1bdc3b5bdc4d943378c53e7810c11836794c5e0')
-    version('1.1.1', sha256='a476ad4b40846d7b7f9540d6413df1b42eb655735e8d3c6c07e0baa68e20a8bb')
-    version('1.1.0', sha256='14e701d6a10ab758215aab6b6809817d9a39416a4f477cd2f2551883fc68477b')
-    version('1.0.1', sha256='cdd503f0b11db9114405132274b28766044402d1183b5836406ed91d558fd06c')
+    version('1.1.8', sha256='fa8f8eb8dd3adfb9646d7b0dfd498a00423d2131adbc8dbc8016c4159b2ec1d5', preferred=True)
+    version('1.1.7', sha256='ff1b6696f30254b105fcadd297ad437c0c666ebc70124b231a713b89f47f4e94')
+    version('1.1.6', sha256='9812e67d9bd83c452cc99d82fbceb3017b5e36dafdf52eda939748bad4a88756')
+    version('1.1.4', sha256='6603b93494e8e9d939a4ab40ecdfe7923a85960a8a8bddea4734e230d8144016')
+    version('1.1.3', sha256='9812e67d9bd83c452cc99d82fbceb3017b5e36dafdf52eda939748bad4a88756')
+    version('1.1.2', sha256='6998ba2c6ee4ef205c6d47d98cf35d5eaa184e1e859cc41b4120e2aa12c06df3')
+    version('1.1.1', sha256='689ed42ba1fb214db0594756ff6015e466470103f726a5e5bf4d21c1086ad2b1')
+    version('1.1.0', sha256='1bfec546831f2ef577d7823bb50dcd12622644dad0d3d761998eafd0905b6977')
+    version('1.0.1', sha256='dd42ffeac1f0492a576c630b37e5d3593273e59664407f2ebf78d49322d37146')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pyyaml@4.2b1:',     type=('build', 'run'))
-    depends_on('py-six',        type=('build', 'run'))
-    depends_on('py-enum34',     type=('build', 'run'), when='^python@:3.3')
-    depends_on('py-enum34',     type=('build', 'run'), when='@:1.1.3')
-    depends_on('py-tabulate',   type=('build', 'run'), when='@1.1.0:')
-    depends_on('py-filelock',   type=('build', 'run'), when='@1.1.0:')
+    depends_on('python@2.7:2.8,3.5:',   type=('build', 'run'))
+    depends_on('py-setuptools',    type='build')
+    depends_on('py-pyyaml@4.2b1:', type=('build', 'run'))
+    depends_on('py-six',           type=('build', 'run'))
+    depends_on('py-enum34',        type=('build', 'run'), when='^python@:3.3')
+    depends_on('py-enum34',        type=('build', 'run'), when='@:1.1.3')
+    depends_on('py-tabulate',      type=('build', 'run'), when='@1.1.0:')
+    depends_on('py-filelock',      type=('build', 'run'), when='@1.1.0:')
+    depends_on('py-coloredlogs',   type=('build', 'run'), when='@1.1.7:')
+    depends_on('py-chainmap',      type=('build', 'run'), when='@1.1.7: ^python@:2')
+    depends_on('py-dill',          type=('build', 'run'), when='@1.1.7:')
+    depends_on('py-jsonschema',    type=('build', 'run'), when='@1.1.7:')
