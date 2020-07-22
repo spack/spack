@@ -15,6 +15,7 @@ class PyMvdtool(PythonPackage):
     git      = "https://github.com/BlueBrain/MVDTool.git"
 
     version('develop', branch='master', submodules=True, get_full_repo=False)
+    version('2.3.5', tag='v2.3.5', submodules=True, get_full_repo=False)
     version('2.3.4', tag='v2.3.4', submodules=True, get_full_repo=False)
     version('2.3.3', tag='v2.3.3', submodules=True, get_full_repo=False)
     version('2.3.2', tag='v2.3.2', submodules=True, get_full_repo=False)

@@ -58,7 +58,7 @@ packages:
       - range-v3
       - rockets
       - rocksdb~static
-      - spark@2.4.5+hadoop ^jdk@1.8.0_131-b11
+      - spark@3.0.0+hadoop ^hadoop@:2.999 ^openjdk@11:11.999
 
   # gnu-stable-serial-python3:
   #   target_matrix:

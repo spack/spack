@@ -29,10 +29,6 @@ class Spykfunc(PythonPackage):
     depends_on('boost', type=('build', 'link'), when='@0.15.4:')
     depends_on('morpho-kit', type=('build', 'link'), when='@0.15.4:')
 
-    # Note : when spark is used as external package, spec['java'] is not
-    # accessible. Add explicit dependency for now.
-    depends_on('java@8', type=('build', 'run'))
-
     depends_on('py-mvdtool~mpi', type=('build', 'run'), when='@0.14.4:')
 
     depends_on('python@3.6:')
@@ -56,9 +52,11 @@ class Spykfunc(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-progress', type=('build', 'run'))
-    depends_on('py-pyarrow+parquet@:0.12.1', type=('build', 'run'))
-    depends_on('py-pyspark@2.3.2rc2:', type=('build', 'run'))
+    depends_on('py-pyarrow+parquet@0.15.1:', type=('build', 'run'))
+    depends_on('py-pyspark@3.0.0:', type=('build', 'run'))
     depends_on('py-sparkmanager', type=('build', 'run'))
+
+    patch('setup-spark3.patch', when='@:0.15.6 ^spark@3:')
 
     def setup_build_environment(self, env):
         # This is a rather ugly setup to run spykfunc without having to

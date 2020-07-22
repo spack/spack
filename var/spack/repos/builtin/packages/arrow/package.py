@@ -14,6 +14,7 @@ class Arrow(CMakePackage):
 
     homepage = "http://arrow.apache.org"
     url      = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
+    git      = "https://github.com/apache/arrow.git"
 
     version('0.17.1', sha256='ecb6da20f9288c0ca31f9b457ffdd460198765a8af27c1cac4b1382a8d130f86')
     version('0.15.1', sha256='ab1c0d371a10b615eccfcead71bb79832245d788f4834cc6b278c03c3872d593')
@@ -54,13 +55,13 @@ class Arrow(CMakePackage):
     def cmake_args(self):
         args = [
             "-DBoost_DEBUG=ON",
-            "-DBUILD_SHARED_LIBS=ON",
             "-DARROW_USE_SSE=ON",
             "-DARROW_BUILD_SHARED=ON",
-            "-DARROW_BUILD_STATIC=OFF",
+            "-DARROW_BUILD_STATIC=ON",
             "-DARROW_BUILD_TESTS=OFF",
             "-DARROW_WITH_BROTLI=OFF",
             "-DARROW_WITH_LZ4=OFF",
+            "-DARROW_WITH_SNAPPY=ON",
         ]
         if self.spec.satisfies('+python'):
             args.append("-DARROW_PYTHON:BOOL=ON")
