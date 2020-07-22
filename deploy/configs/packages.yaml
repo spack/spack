@@ -28,7 +28,7 @@ packages:
             flex@2.5.37: /usr
         version: [2.5.37]
     hadoop:
-        version: [2.9.0]
+        version: [2.9.2]
     hdf5:
         variants: +hl
     icu4c:
