@@ -25,7 +25,7 @@ class RocmSmiLib(CMakePackage):
     def cmake_args(self):
         args = ['-DCMAKE_INSTALL_RPATH_USE_LINK_PATH="FALSE"',
                 '-DCMAKE_VERBOSE_MAKEFILE=1'
-            ]
+                ]
         return args
 
     @run_after('install')

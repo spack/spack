@@ -31,13 +31,13 @@ class RocprofilerDev(CMakePackage):
 
     def patch(self):
         filter_file('${HSA_RUNTIME_LIB_PATH}/../include',
-             '${HSA_RUNTIME_LIB_PATH}/../include ${HSA_KMT_LIB_PATH}/../include',
-             'test/CMakeLists.txt', string=True)
+                    '${HSA_RUNTIME_LIB_PATH}/../include ${HSA_KMT_LIB_PATH}/..\
+                     /include', 'test/CMakeLists.txt', string=True)
 
     def cmake_args(self):
-        args = ['-DPROF_API_HEADER_PATH={}/roctracer/inc/ext'.
-                                          format(self.stage.source_path),
+        args = ['-DPROF_API_HEADER_PATH={}/roctracer/inc/ext'.format(
+                self.stage.source_path),
                 '-DROCM_ROOT_DIR:STRING={}/include'.format(
-                                         self.spec['hsakmt-roct'].prefix)
-            ]
+                self.spec['hsakmt-roct'].prefix)
+                ]
         return args

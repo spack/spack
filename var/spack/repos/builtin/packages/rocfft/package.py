@@ -32,7 +32,8 @@ class Rocfft(CMakePackage):
     def setup_build_environment(self, build_env):
         build_env.unset('PERL5LIB')
         build_env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
-        build_env.set('DEVICE_LIB_PATH', self.spec['rocm-device-libs'].prefix.lib)
+        build_env.set('DEVICE_LIB_PATH', self.
+                      spec['rocm-device-libs'].prefix.lib)
 
     def setup_run_environment(self, env):
         env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
@@ -50,10 +51,11 @@ class Rocfft(CMakePackage):
 
         args = [
             '-DHIP_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER={}/bin/hipcc'.format(self.spec['hip'].prefix),
+            '-DCMAKE_CXX_COMPILER={}/bin/hipcc'.format(
+                self.spec['hip'].prefix),
             '-DUSE_HIP_CLANG=ON',
             '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE',
-            '-DHIP_CLANG_INCLUDE_PATH={}/lib/clang/{}/include'.
-                format(self.spec['llvm-amdgpu'].prefix, version_number)
+            '-DHIP_CLANG_INCLUDE_PATH={}/lib/clang/{}/include'.format(
+                self.spec['llvm-amdgpu'].prefix, version_number)
         ]
         return args

@@ -6,6 +6,7 @@
 
 from spack import *
 
+
 class RoctracerDev(CMakePackage):
     """ROC-tracer library: Runtimes Generic Callback/Activity APIs.
        The goal of the implementation is to provide a generic independent from
@@ -25,16 +26,19 @@ class RoctracerDev(CMakePackage):
     depends_on('hip@3.5.0:', type='build', when='@3.5.0:')
 
     def setup_build_environment(self, build_env):
-        spec=self.spec
+        spec = self.spec
         build_env.set("HIP_PATH", spec['hip'].prefix)
 
     def patch(self):
-        filter_file('${CMAKE_PREFIX_PATH}/hsa', '${HSA_RUNTIME_INC_PATH}', 'src/CMakeLists.txt', string=True)
+        filter_file('${CMAKE_PREFIX_PATH}/hsa',
+                    '${HSA_RUNTIME_INC_PATH}', 'src/CMakeLists.txt',
+                    string=True)
 
     def cmake_args(self):
-        args = [
-                '-DHIP_VDI=1',
-                '-DCMAKE_MODULE_PATH={}/cmake_modules'.format(self.stage.source_path),
-                '-DHSA_RUNTIME_HSA_INC_PATH={}/include'.format(self.spec['hsa-rocr-dev'].prefix)
-               ]
+        args = ['-DHIP_VDI=1',
+                '-DCMAKE_MODULE_PATH={}/cmake_modules'.format(
+                    self.stage.source_path),
+                '-DHSA_RUNTIME_HSA_INC_PATH={}/include'.format(
+                    self.spec['hsa-rocr-dev'].prefix)
+                ]
         return args
