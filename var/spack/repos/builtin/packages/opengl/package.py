@@ -52,8 +52,6 @@ class Opengl(Package):
 
     provides('egl@1.5', when='~glvnd +egl')
 
-    depends_on('libglvnd', when='+glvnd')
-
     # Override the fetcher method to throw a useful error message;
     # fixes GitHub issue (#7061) in which this package threw a
     # generic, uninformative error during the `fetch` step,

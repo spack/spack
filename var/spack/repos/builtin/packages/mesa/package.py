@@ -48,6 +48,9 @@ class Mesa(AutotoolsPackage):
 
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
+    variant('glvnd',
+            default=False,
+            description="Expose Graphics APIs through libglvnd")
 
     is_linux = sys.platform.startswith('linux')
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
@@ -79,6 +82,7 @@ class Mesa(AutotoolsPackage):
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
     depends_on('glproto@1.4.14:', when='+glx', type='build')
+    depends_on('libglvnd', when='+glvnd')
 
     # Prevent an unnecessary xcb-dri dependency
     patch('autotools-x11-nodri.patch')
@@ -92,7 +96,6 @@ class Mesa(AutotoolsPackage):
             'LDFLAGS={0}'.format(self.spec['ncurses'].libs.search_flags),
             '--enable-shared',
             '--disable-static',
-            '--disable-libglvnd',
             '--disable-nine',
             '--disable-omx-bellagio',
             '--disable-omx-tizonia',
@@ -107,6 +110,11 @@ class Mesa(AutotoolsPackage):
         args_platforms = []
         args_gallium_drivers = ['swrast']
         args_dri_drivers = []
+
+        if '+glvnd' in spec:
+            args.append('--enable-libglvnd')
+        else:
+            args.append('--disable-libglvnd')
 
         if spec.target.family == 'arm' or spec.target.family == 'aarch64':
             args.append('--disable-libunwind')
