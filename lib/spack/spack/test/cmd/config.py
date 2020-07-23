@@ -17,7 +17,7 @@ env = spack.main.SpackCommand('env')
 
 
 @pytest.fixture()
-def old_format_packages_yaml(mutable_config):
+def packages_yaml_v015(mutable_config):
     """Create a packages.yaml in the old format"""
     def _create(scope=None):
         old_data = {
@@ -428,12 +428,12 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     assert output == expected
 
 
-def test_config_update_packages(old_format_packages_yaml):
+def test_config_update_packages(packages_yaml_v015):
     """Test Spack updating old packages.yaml format for externals
     to new format. Ensure that data is preserved and converted
     properly.
     """
-    old_format_packages_yaml()
+    packages_yaml_v015()
     config('update', '-y', 'packages')
 
     # Check the entries have been transformed
@@ -448,16 +448,16 @@ def test_config_update_not_needed(mutable_config):
     assert data_before == data_after
 
 
-def test_config_update_fail_on_permission_issue(old_format_packages_yaml):
+def test_config_update_fail_on_permission_issue(packages_yaml_v015):
     # The first time it will update and create the backup file
-    cfg_file = old_format_packages_yaml()
+    cfg_file = packages_yaml_v015()
     os.chmod(cfg_file, 0o555)
     with pytest.raises(spack.main.SpackCommandError):
         config('update', '-y', 'packages')
 
 
-def test_config_revert(old_format_packages_yaml):
-    cfg_file = old_format_packages_yaml()
+def test_config_revert(packages_yaml_v015):
+    cfg_file = packages_yaml_v015()
     bkp_file = cfg_file + '.bkp'
 
     config('update', '-y', 'packages')
@@ -475,8 +475,8 @@ def test_config_revert(old_format_packages_yaml):
     assert md5bkp == fs.md5sum(cfg_file)
 
 
-def test_config_revert_raise_if_cant_write(old_format_packages_yaml):
-    cfg_file = old_format_packages_yaml()
+def test_config_revert_raise_if_cant_write(packages_yaml_v015):
+    cfg_file = packages_yaml_v015()
     config('update', '-y', 'packages')
 
     # Mock a global scope where we cannot write
@@ -487,20 +487,20 @@ def test_config_revert_raise_if_cant_write(old_format_packages_yaml):
         config('revert', '-y', 'packages')
 
 
-def test_updating_config_implicitly_raises(old_format_packages_yaml):
+def test_updating_config_implicitly_raises(packages_yaml_v015):
     # Trying to write implicitly to a scope with a configuration file
     # in the old format raises an exception
-    old_format_packages_yaml()
+    packages_yaml_v015()
     with pytest.raises(RuntimeError):
         config('add', 'packages:cmake:buildable:false')
 
 
-def test_updating_multiple_scopes_at_once(old_format_packages_yaml):
+def test_updating_multiple_scopes_at_once(packages_yaml_v015):
     # Create 2 config files in the old format
-    old_format_packages_yaml(scope='user')
-    old_format_packages_yaml(scope='site')
+    packages_yaml_v015(scope='user')
+    packages_yaml_v015(scope='site')
 
-    # Update them at once
+    # Update both of them at once
     config('update', '-y', 'packages')
 
     for scope in ('user', 'site'):
@@ -509,7 +509,7 @@ def test_updating_multiple_scopes_at_once(old_format_packages_yaml):
 
 
 def check_update(data):
-    """Check that the data from the old_format_packages_yaml
+    """Check that the data from the packages_yaml_v015
     has been updated.
     """
     assert 'externals' in data['cmake']
