@@ -448,10 +448,15 @@ def test_config_update_not_needed(mutable_config):
     assert data_before == data_after
 
 
-def test_config_update_fail_on_permission_issue(packages_yaml_v015):
+def test_config_update_fail_on_permission_issue(
+        packages_yaml_v015, monkeypatch
+):
     # The first time it will update and create the backup file
-    cfg_file = packages_yaml_v015()
-    os.chmod(cfg_file, 0o555)
+    packages_yaml_v015()
+    # Mock a global scope where we cannot write
+    monkeypatch.setattr(
+        spack.cmd.config, '_can_update_config_file', lambda x, y: False
+    )
     with pytest.raises(spack.main.SpackCommandError):
         config('update', '-y', 'packages')
 
@@ -475,12 +480,14 @@ def test_config_revert(packages_yaml_v015):
     assert md5bkp == fs.md5sum(cfg_file)
 
 
-def test_config_revert_raise_if_cant_write(packages_yaml_v015):
-    cfg_file = packages_yaml_v015()
+def test_config_revert_raise_if_cant_write(packages_yaml_v015, monkeypatch):
+    packages_yaml_v015()
     config('update', '-y', 'packages')
 
     # Mock a global scope where we cannot write
-    os.chmod(cfg_file, 0o555)
+    monkeypatch.setattr(
+        spack.cmd.config, '_can_revert_update', lambda x, y, z: False
+    )
     # The command raises with an helpful error if a configuration
     # file is to be deleted and we don't have sufficient permissions
     with pytest.raises(spack.main.SpackCommandError):

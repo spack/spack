@@ -1570,6 +1570,19 @@ def can_access_dir(path):
 
 
 @memoized
+def can_write_to_dir(path):
+    """Return True if the argument is a directory in which we can write.
+
+    Args:
+        path: path to be tested
+
+    Returns:
+        True if ``path`` is an writeable directory, else False
+    """
+    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK | os.W_OK)
+
+
+@memoized
 def files_in(*search_paths):
     """Returns all the files in paths passed as arguments.
 

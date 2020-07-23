@@ -292,6 +292,12 @@ def config_remove(args):
     set_config(args, path, existing, scope)
 
 
+def _can_update_config_file(scope_dir, cfg_file):
+    dir_ok = fs.can_write_to_dir(scope_dir)
+    cfg_ok = fs.can_access(cfg_file)
+    return dir_ok and cfg_ok
+
+
 def config_update(args):
     # Read the configuration files
     spack.config.config.get_config(args.section, scope=args.scope)
@@ -303,9 +309,8 @@ def config_update(args):
             scope.name, args.section
         )
         scope_dir = scope.path
-        dir_ok = fs.can_access_dir(scope_dir) and os.access(scope_dir, os.W_OK)
-        cfg_ok = fs.can_access(cfg_file)
-        if not (dir_ok and cfg_ok):
+        can_be_updated = _can_update_config_file(scope_dir, cfg_file)
+        if not can_be_updated:
             if scope.name == 'system':
                 skip_system_scope = True
                 msg = ('Not enough permissions to write to "system" scope. '
@@ -372,6 +377,13 @@ def config_update(args):
         tty.msg(msg.format(cfg_file, bkp_file))
 
 
+def _can_revert_update(scope_dir, cfg_file, bkp_file):
+    dir_ok = fs.can_write_to_dir(scope_dir)
+    cfg_ok = not os.path.exists(cfg_file) or fs.can_access(cfg_file)
+    bkp_ok = fs.can_access(bkp_file)
+    return dir_ok and cfg_ok and bkp_ok
+
+
 def config_revert(args):
     scopes = [args.scope] if args.scope else [
         x.name for x in spack.config.config.file_scopes
@@ -392,10 +404,8 @@ def config_revert(args):
         # keep track of it and report a comprehensive error later
         entry = Entry(scope, cfg_file, bkp_file)
         scope_dir = os.path.dirname(bkp_file)
-        dir_ok = fs.can_access_dir(scope_dir) and os.access(scope_dir, os.W_OK)
-        cfg_ok = not os.path.exists(cfg_file) or fs.can_access(cfg_file)
-        bkp_ok = fs.can_access(bkp_file)
-        if not (dir_ok and cfg_ok and bkp_ok):
+        can_be_reverted = _can_revert_update(scope_dir, cfg_file, bkp_file)
+        if not can_be_reverted:
             cannot_overwrite.append(entry)
             continue
 
