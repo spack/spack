@@ -47,7 +47,7 @@ def test_which_relative_path_with_slash(tmpdir, working_env):
 
     with tmpdir.as_cwd():
         no_exe = ex.which('./exe')
-        assert not no_exe
+        assert no_exe is None
 
         fs.set_executable(path)
         exe = ex.which('./exe')
