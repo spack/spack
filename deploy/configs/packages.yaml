@@ -75,6 +75,8 @@ packages:
     python:
         variants: +tk
         version: [3.8.3]
+    qt:
+        variants: ~sql~ssl~tools
     slurm:
         paths:
             slurm@17.02: /usr
