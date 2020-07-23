@@ -15,7 +15,7 @@ class NnC(AutotoolsPackage):
     git      = "https://github.com/sakov/nn-c.git"
 
     version('master', branch='master')
-    version('1.8.62', commit='343c7784d38d3270d75d450569fc0b64767c37e9')
+    version('1.86.2', commit='343c7784d38d3270d75d450569fc0b64767c37e9')
 
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
