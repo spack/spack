@@ -39,6 +39,7 @@ class Dd4hep(CMakePackage):
     variant('xercesc', default=False, description="Enable 'Detector Builders' based on XercesC")
     variant('geant4', default=False, description="Enable the simulation part based on Geant4")
     variant('assimp', default=False, description="Enable CAD interface based on Assimp")
+    variant('hepmc3', default=False, description="Enable build with hepmc3")
 
     depends_on('cmake @3.12:', type='build')
     depends_on('boost @1.49:')
@@ -47,6 +48,7 @@ class Dd4hep(CMakePackage):
     depends_on('xerces-c', when='+xercesc')
     depends_on('geant4@10.2.2:', when='+geant4')
     depends_on('assimp', when='+assimp')
+    depends_on('hepmc3', when="+hepmc3")
 
     def cmake_args(self):
         spec = self.spec
@@ -59,6 +61,7 @@ class Dd4hep(CMakePackage):
             "-DDD4HEP_USE_XERCESC={0}".format(spec.satisfies('+xercesc')),
             "-DDD4HEP_USE_GEANT4={0}".format(spec.satisfies('+geant4')),
             "-DDD4HEP_LOAD_ASSIMP={0}".format(spec.satisfies('+assimp')),
+            "-DDD4HEP_USE_HEPMC3={0}".format(spec.satisfies('+hepmc3')),
             "-DBUILD_TESTING={0}".format(self.run_tests),
             "-DBOOST_ROOT={0}".format(spec['boost'].prefix),
             "-DBoost_NO_BOOST_CMAKE=ON",
