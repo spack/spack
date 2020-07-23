@@ -29,6 +29,6 @@ class RocmSmi(MakefilePackage):
 
         popen('mkdir -p {}/smi-test/tests'.format(prefix))
         popen('cp -R {}/tests/ {}/smi-test/'.format(self.build_directory,
-                                                                prefix))
+                                                    prefix))
         popen('cp -R {}/test-rocm-smi.sh {}/smi-test'.format(
-                                            self.build_directory, prefix))
+              self.build_directory, prefix))

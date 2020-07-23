@@ -25,5 +25,5 @@ class RocmCmake(CMakePackage):
     def cmake_args(self):
         args = ['-DCMAKE_VERBOSE_MAKEFILE=1',
                 '-DROCM_DISABLE_LDCONFIG=ON'
-        ]
+                ]
         return args

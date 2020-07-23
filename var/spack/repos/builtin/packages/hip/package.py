@@ -27,7 +27,8 @@ class Hip(CMakePackage):
     depends_on('llvm-amdgpu@3.5.0:', type='build', when='@3.5.0')
 
     def patch(self):
-        filter_file('INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"',
+        filter_file(
+            'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"',
             'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"',
             'hip-config.cmake.in', string=True)
 

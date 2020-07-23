@@ -26,11 +26,10 @@ class RocmDbgapi(CMakePackage):
 
     def patch(self):
         filter_file(r'(<INSTALL_INTERFACE:include>)',  r'\1 {}/include'.
-        format(self.spec['hsa-rocr-dev'].prefix), 'CMakeLists.txt')
+                    format(self.spec['hsa-rocr-dev'].prefix), 'CMakeLists.txt')
 
     def cmake_args(self):
-        args = [
-                '-DCMAKE_VERBOSE_MAKEFILE=1',
+        args = ['-DCMAKE_VERBOSE_MAKEFILE=1',
                 '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE',
-               ]
+                ]
         return args
