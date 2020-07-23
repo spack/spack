@@ -60,6 +60,8 @@ class Mesa(AutotoolsPackage):
     conflicts('~glx', when='+glvnd')
     conflicts('~egl', when='+glvnd')
 
+    depends_on('libdrm@2.4.75:', when='+egl')
+
     # TODO: Effectively deal with hardware drivers
     # The implication of this is enabling DRI, among other things, and
     # needing to check which llvm targets were built (ptx or amdgpu, etc.)
