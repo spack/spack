@@ -297,13 +297,7 @@ def config_update(args):
     spack.config.config.get_config(args.section, scope=args.scope)
     updates = spack.config.config.format_updates[args.section]
 
-    # Report if there are no updates to be done
-    if not updates:
-        msg = 'No updates needed for "{0}" section.'
-        tty.msg(msg.format(args.section))
-        return
-
-    cannot_overwrite = []
+    cannot_overwrite, skip_system_scope = [], False
     for scope in updates:
         cfg_file = spack.config.config.get_config_filename(
             scope.name, args.section
@@ -312,15 +306,31 @@ def config_update(args):
         dir_ok = fs.can_access_dir(scope_dir) and os.access(scope_dir, os.W_OK)
         cfg_ok = fs.can_access(cfg_file)
         if not (dir_ok and cfg_ok):
+            if scope.name == 'system':
+                skip_system_scope = True
+                msg = ('Not enough permissions to write to "system" scope. '
+                       'Skipping update at that location [cfg={0}]')
+                tty.warn(msg.format(cfg_file))
+                continue
             cannot_overwrite.append((scope, cfg_file))
 
     if cannot_overwrite:
         msg = 'Detected permission issues with the following scopes:\n\n'
         for scope, cfg_file in cannot_overwrite:
             msg += '\t[scope={0}, cfg={1}]\n'.format(scope.name, cfg_file)
-        msg += ('\nEither ensure to have the right permissions before retrying'
-                ' or be more specific on the scope to update.')
+        msg += ('\nEither ensure that you have sufficient permissions to '
+                'modify these files or do not include these scopes in the '
+                'update.')
         tty.die(msg)
+
+    if skip_system_scope:
+        updates = [x for x in updates if x.name != 'system']
+
+    # Report if there are no updates to be done
+    if not updates:
+        msg = 'No updates needed for "{0}" section.'
+        tty.msg(msg.format(args.section))
+        return
 
     proceed = True
     if not args.yes_to_all:
