@@ -466,8 +466,8 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     web_util.push_to_url(
         specfile_path, remote_specfile_path, keep_original=False)
 
-    tty.msg('Buildache for "%s" written to \n %s' %
-            (spec, remote_spackfile_path))
+    tty.debug('Buildcache for "{0}" written to \n {1}'
+              .format(spec, remote_spackfile_path))
 
     try:
         # create an index.html for the build_cache directory so specs can be
@@ -828,13 +828,13 @@ def get_spec(spec=None, force=False):
 
         mirror_dir = url_util.local_file_path(fetch_url_build_cache)
         if mirror_dir:
-            tty.msg("Finding buildcaches in %s" % mirror_dir)
+            tty.debug('Finding buildcaches in {0}'.format(mirror_dir))
             link = url_util.join(fetch_url_build_cache, specfile_name)
             urls.add(link)
 
         else:
-            tty.msg("Finding buildcaches at %s" %
-                    url_util.format(fetch_url_build_cache))
+            tty.debug('Finding buildcaches at {0}'
+                      .format(url_util.format(fetch_url_build_cache)))
             link = url_util.join(fetch_url_build_cache, specfile_name)
             urls.add(link)
 
@@ -857,8 +857,8 @@ def get_specs(allarch=False):
         fetch_url_build_cache = url_util.join(
             mirror.fetch_url, _build_cache_relative_path)
 
-        tty.msg("Finding buildcaches at %s" %
-                url_util.format(fetch_url_build_cache))
+        tty.debug('Finding buildcaches at {0}'
+                  .format(url_util.format(fetch_url_build_cache)))
 
         index_url = url_util.join(fetch_url_build_cache, 'index.json')
 
@@ -909,15 +909,15 @@ def get_keys(install=False, trust=False, force=False):
 
         mirror_dir = url_util.local_file_path(fetch_url_build_cache)
         if mirror_dir:
-            tty.msg("Finding public keys in %s" % mirror_dir)
+            tty.debug('Finding public keys in {0}'.format(mirror_dir))
             files = os.listdir(str(mirror_dir))
             for file in files:
                 if re.search(r'\.key', file) or re.search(r'\.pub', file):
                     link = url_util.join(fetch_url_build_cache, file)
                     keys.add(link)
         else:
-            tty.msg("Finding public keys at %s" %
-                    url_util.format(fetch_url_build_cache))
+            tty.debug('Finding public keys at {0}'
+                      .format(url_util.format(fetch_url_build_cache)))
             # For s3 mirror need to request index.html directly
             p, links = web_util.spider(
                 url_util.join(fetch_url_build_cache, 'index.html'))
@@ -935,14 +935,14 @@ def get_keys(install=False, trust=False, force=False):
                         stage.fetch()
                     except fs.FetchError:
                         continue
-            tty.msg('Found key %s' % link)
+            tty.debug('Found key {0}'.format(link))
             if install:
                 if trust:
                     Gpg.trust(stage.save_filename)
-                    tty.msg('Added this key to trusted keys.')
+                    tty.debug('Added this key to trusted keys.')
                 else:
-                    tty.msg('Will not add this key to trusted keys.'
-                            'Use -t to install all downloaded keys')
+                    tty.debug('Will not add this key to trusted keys.'
+                              'Use -t to install all downloaded keys')
 
 
 def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
@@ -1029,7 +1029,7 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
     """
     rebuilds = {}
     for mirror in spack.mirror.MirrorCollection(mirrors).values():
-        tty.msg('Checking for built specs at %s' % mirror.fetch_url)
+        tty.debug('Checking for built specs at {0}'.format(mirror.fetch_url))
 
         rebuild_list = []
 
