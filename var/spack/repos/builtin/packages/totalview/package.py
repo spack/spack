@@ -58,7 +58,7 @@ class Totalview(Package):
             url='totalview_{0}_linux_powerle.tar'.format(version),
             destination='.',
             sha256='c0e4dbf145312fc7143ad0b7e9474e653933581990e0b9d07237c73dbdff8365',
-            when='@2019.2.18 target=ppcle:'
+            when='@2019.2.18 target=ppc64le:'
             )
 
     def url_for_version(self, version):
@@ -67,16 +67,16 @@ class Totalview(Package):
     def setup_run_environment(self, env):
         env.prepend_path('PATH',
                          join_path(self.prefix, 'toolworks',
-                                   'totalview.{}'.format(self.version), 'bin'))
+                                   'totalview.{0}'.format(self.version), 'bin'))
         env.prepend_path('TVROOT',
                          join_path(self.prefix, 'toolworks',
-                                   'totalview.{}'.format(self.version)))
+                                   'totalview.{0}'.format(self.version)))
         env.prepend_path('TVDSVRLAUNCHCMD', 'ssh')
 
     def install(self, spec, prefix):
         # Assemble install line
         inst_line = [ "./Install",
-                      "-directory {}".format(prefix),
+                      "-directory {0}".format(prefix),
                       "-agree -nosymlink" ]
 
         # Platform specification.
@@ -86,12 +86,15 @@ class Totalview(Package):
             inst_line.append( "-platform linux-x86" )
         elif spec.target.family == "aarch64":
             inst_line.append( "-platform linux-arm64" )
-        elif spec.target.family == "ppcle":
+        elif spec.target.family == "ppc64le":
             inst_line.append( "-platform linux-powerle" )
-        elif spec.target.family == "ppc":
+        elif spec.target.family == "ppc64":
             inst_line.append( "-platform linux-power" )
         else:
-            inst_line.append( "-platform linux-x86-64" )
+            raise InstallError(
+                'Architecture {0} not permitted!'
+                .format(spec.target.family)
+                )
 
         # Docs are the 'base' install used with every architecture.
         docs_inst = inst_line
@@ -99,7 +102,7 @@ class Totalview(Package):
         os.system(" ".join(docs_inst))
 
         # Run install script for totalview and memoryscape (optional).
-        with working_dir("./totalview.{}".format(self.version)):
+        with working_dir("./totalview.{0}".format(self.version)):
 
             inst_line.append( "-install totalview" )
             # If including memoryscape.
