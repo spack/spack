@@ -126,7 +126,7 @@ class Mesa(AutotoolsPackage):
         else:
             args.append('--disable-gallium-osmesa')
 
-        if '+glx' in spec:
+        if '+glx ~glvnd' in spec:
             num_frontends += 1
             if '+egl' in spec:
                 args.append('--enable-glx=dri')
