@@ -36,6 +36,9 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         spec = self.spec
         args = ['--enable-c++']
 
+        if spec.satisfies('%cce@9:'):
+            args.append('LDFLAGS=-rtlib=compiler-rt')
+
         if spec.satisfies('%clang') and not spec.satisfies('platform=darwin'):
             args.append('LDFLAGS=-rtlib=compiler-rt')
 
