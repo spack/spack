@@ -75,21 +75,20 @@ class Totalview(Package):
 
     def install(self, spec, prefix):
         # Assemble install line
-        inst_line = [ "./Install",
-                      "-directory {0}".format(prefix),
-                      "-agree -nosymlink" ]
+        install_cmd = which('./Install')
+        arg_list = ["-agree", "-nosymlink", "-directory", "{0}".format(prefix)]
 
         # Platform specification.
         if spec.target.family == "x86_64":
-            inst_line.append( "-platform linux-x86-64" )
+            arg_list.extend([ "-platform", "linux-x86-64" ])
         elif spec.target.family == "x86":
-            inst_line.append( "-platform linux-x86" )
+            arg_list.extend([ "-platform", "linux-x86" ])
         elif spec.target.family == "aarch64":
-            inst_line.append( "-platform linux-arm64" )
+            arg_list.extend([ "-platform", "linux-arm64" ])
         elif spec.target.family == "ppc64le":
-            inst_line.append( "-platform linux-powerle" )
+            arg_list.extend([ "-platform", "linux-powerle" ])
         elif spec.target.family == "ppc64":
-            inst_line.append( "-platform linux-power" )
+            arg_list.extend([ "-platform", "linux-power" ])
         else:
             raise InstallError(
                 'Architecture {0} not permitted!'
@@ -97,16 +96,17 @@ class Totalview(Package):
                 )
 
         # Docs are the 'base' install used with every architecture.
-        docs_inst = inst_line
-        docs_inst.append( "-install doc-pdf" )
-        os.system(" ".join(docs_inst))
+        install_cmd.exe.extend(arg_list)
+        install_cmd("-install", "doc-pdf")
 
         # Run install script for totalview and memoryscape (optional).
         with working_dir("./totalview.{0}".format(self.version)):
 
-            inst_line.append( "-install totalview" )
+            install_cmd = which('./Install')
+            arg_list.extend([ "-install", "totalview" ])
             # If including memoryscape.
             if '+memoryscape' in spec:
-                inst_line.append( "memoryscape" )
+                arg_list.append( "memoryscape" )
 
-            os.system(" ".join(inst_line))
+            install_cmd.exe.extend(arg_list)
+            install_cmd()
