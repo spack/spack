@@ -56,8 +56,9 @@ class Mesa(AutotoolsPackage):
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
     variant('egl', default=False, description="Enable the EGL frontend.")
 
-    # glvnd requires at least one of +glx or +egl
-    conflicts('~glx ~egl', when='+glvnd')
+    # glvnd requires both +glx and +egl
+    conflicts('~glx', when='+glvnd')
+    conflicts('~egl', when='+glvnd')
 
     # TODO: Effectively deal with hardware drivers
     # The implication of this is enabling DRI, among other things, and
