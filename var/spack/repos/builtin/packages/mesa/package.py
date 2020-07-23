@@ -54,10 +54,10 @@ class Mesa(AutotoolsPackage):
 
     is_linux = sys.platform.startswith('linux')
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
+    variant('egl', default=False, description="Enable the EGL frontend.")
 
-    # TODO: effectively deal with EGL.  The implications of this have not been
-    # worked through yet
-    # variant('egl', default=False, description="Enable the EGL frontend.")
+    # glvnd requires at least one of +glx or +egl
+    conflicts('~glx ~egl', when='+glvnd')
 
     # TODO: Effectively deal with hardware drivers
     # The implication of this is enabling DRI, among other things, and
@@ -70,11 +70,11 @@ class Mesa(AutotoolsPackage):
     # Provides
     provides('gl@4.5',  when='+opengl ~glvnd')
     provides('glx@1.4', when='+glx ~glvnd')
-    # provides('egl@1.5', when='+egl ~glvnd')
+    provides('egl@1.5', when='+egl ~glvnd')
 
     provides('libglvnd-be-gl', when='+glvnd')
     provides('libglvnd-be-glx', when='+glvnd +glx')
-    # provides('libglvnd-be-egl', when='+glvnd +egl')
+    provides('libglvnd-be-egl', when='+glvnd +egl')
 
     # Variant dependencies
     depends_on('llvm@6:', when='+llvm')
@@ -126,7 +126,7 @@ class Mesa(AutotoolsPackage):
         else:
             args.append('--disable-gallium-osmesa')
 
-        if '+glx ~glvnd' in spec:
+        if '+glx' in spec:
             num_frontends += 1
             if '+egl' in spec:
                 args.append('--enable-glx=dri')
