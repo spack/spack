@@ -706,7 +706,7 @@ def main(argv=None):
     if not args.no_env:
         env = ev.find_environment(args)
         if env:
-            ev.activate(env, args.use_env_repo)
+            ev.activate(env, args.use_env_repo, add_view=False)
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:
