@@ -341,7 +341,10 @@ def config_update(args):
                 scope.name, args.section
             )
             msg += '\t[scope={0}, file={1}]\n'.format(scope.name, cfg_file)
-        msg += '\nThis operation is not forward-compatible.'
+        msg += ('\nIf the configuration files are updated, versions of Spack '
+                'that are older than this version may not be able to read '
+                'them. Spack stores backups of the updated files which can '
+                'be retrieved with "spack config revert"')
         tty.msg(msg)
         proceed = tty.get_yes_or_no('Do you want to proceed?', default=False)
 

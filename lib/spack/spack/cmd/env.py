@@ -418,9 +418,10 @@ def env_update(args):
     proceed = True
     if not args.yes_to_all:
         msg = ('The environment "{0}" is going to be updated to the latest '
-               'schema format.\nThis operation is not forward-compatible i.e. '
-               'old versions of Spack will not be able to use this environment'
-               ' anymore.')
+               'schema format.\nIf the environment is updated, versions of '
+               'Spack that are older than this version may not be able to '
+               'read it. Spack stores backups of the updated environment '
+               'which can be retrieved with "spack env revert"')
         tty.msg(msg.format(args.env))
         proceed = tty.get_yes_or_no('Do you want to proceed?', default=False)
 
