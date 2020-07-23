@@ -1056,8 +1056,9 @@ def ensure_latest_format_fn(section):
         section (str): section of the configuration e.g. "packages",
             "config", etc.
     """
-    section_module_name = 'spack.schema.' + section
-    section_module = __import__(section_module_name, fromlist=['update'])
+    # The line below is based on the fact that every module we need
+    # is already imported at the top level
+    section_module = getattr(spack.schema, section)
     update_fn = getattr(section_module, 'update', lambda x: False)
     return update_fn
 
