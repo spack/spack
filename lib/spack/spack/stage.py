@@ -414,10 +414,11 @@ class Stage(object):
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
-            urls = []
+            mirror_urls = []
             for mirror in spack.mirror.MirrorCollection().values():
                 for rel_path in self.mirror_paths:
-                    urls.append(url_util.join(mirror.fetch_url, rel_path))
+                    mirror_urls.append(
+                        url_util.join(mirror.fetch_url, rel_path))
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -435,7 +436,8 @@ class Stage(object):
             self.skip_checksum_for_mirror = not bool(digest)
 
             # Add URL strategies for all the mirrors with the digest
-            for url in urls:
+            # Insert fetchers in the order that the URLs are provided.
+            for url in reversed(mirror_urls):
                 fetchers.insert(
                     0, fs.from_url_scheme(
                         url, digest, expand=expand, extension=extension))
