@@ -710,7 +710,7 @@ def main(argv=None):
     if not args.no_env:
         env = ev.find_environment(args)
         if env:
-            ev.activate(env, args.use_env_repo)
+            ev.activate(env, args.use_env_repo, add_view=False)
 
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(','))
