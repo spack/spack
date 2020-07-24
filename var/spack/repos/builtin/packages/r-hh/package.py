@@ -7,7 +7,9 @@ from spack import *
 
 
 class RHh(RPackage):
-    """Support software for Statistical Analysis and Data Display (Second
+    """HH: Statistical Analysis and Data Display: Heiberger and Holland.
+
+    Support software for Statistical Analysis and Data Display (Second
     Edition, Springer, ISBN 978-1-4939-2121-8, 2015) and (First Edition,
     Springer, ISBN 0-387-40270-5, 2004) by Richard M. Heiberger and Burt
     Holland. This contemporary presentation of statistical methods features
