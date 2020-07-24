@@ -933,6 +933,7 @@ class Environment(object):
                 "Not found: {0}".format(query_spec))
 
         old_specs = set(self.user_specs)
+        new_specs = set()
         for spec in matches:
             if spec in list_to_change:
                 try:
