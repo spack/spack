@@ -5,13 +5,13 @@
 
 import re
 
-import spack.compilers.clang
+import spack.compiler
+import spack.compilers.apple_clang as apple_clang
 
-from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
 
-class Gcc(Compiler):
+class Gcc(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['gcc']
 
@@ -64,10 +64,8 @@ class Gcc(Compiler):
     @property
     def cxx11_flag(self):
         if self.version < ver('4.3'):
-            raise UnsupportedCompilerFlag(self,
-                                          "the C++11 standard",
-                                          "cxx11_flag",
-                                          " < 4.3")
+            raise spack.compiler.UnsupportedCompilerFlag(
+                self, "the C++11 standard", "cxx11_flag", " < 4.3")
         elif self.version < ver('4.7'):
             return "-std=c++0x"
         else:
@@ -76,10 +74,8 @@ class Gcc(Compiler):
     @property
     def cxx14_flag(self):
         if self.version < ver('4.8'):
-            raise UnsupportedCompilerFlag(self,
-                                          "the C++14 standard",
-                                          "cxx14_flag",
-                                          "< 4.8")
+            raise spack.compiler.UnsupportedCompilerFlag(
+                self, "the C++14 standard", "cxx14_flag", "< 4.8")
         elif self.version < ver('4.9'):
             return "-std=c++1y"
         elif self.version < ver('6.0'):
@@ -90,10 +86,8 @@ class Gcc(Compiler):
     @property
     def cxx17_flag(self):
         if self.version < ver('5.0'):
-            raise UnsupportedCompilerFlag(self,
-                                          "the C++17 standard",
-                                          "cxx17_flag",
-                                          "< 5.0")
+            raise spack.compiler.UnsupportedCompilerFlag(
+                self, "the C++17 standard", "cxx17_flag", "< 5.0")
         elif self.version < ver('6.0'):
             return "-std=c++1z"
         else:
@@ -102,19 +96,15 @@ class Gcc(Compiler):
     @property
     def c99_flag(self):
         if self.version < ver('4.5'):
-            raise UnsupportedCompilerFlag(self,
-                                          "the C99 standard",
-                                          "c99_flag",
-                                          "< 4.5")
+            raise spack.compiler.UnsupportedCompilerFlag(
+                self, "the C99 standard", "c99_flag", "< 4.5")
         return "-std=c99"
 
     @property
     def c11_flag(self):
         if self.version < ver('4.7'):
-            raise UnsupportedCompilerFlag(self,
-                                          "the C11 standard",
-                                          "c11_flag",
-                                          "< 4.7")
+            raise spack.compiler.UnsupportedCompilerFlag(
+                self, "the C11 standard", "c11_flag", "< 4.7")
         return "-std=c11"
 
     @property
@@ -152,10 +142,10 @@ class Gcc(Compiler):
 
             7.2.0
         """
-        # Skip any gcc versions that are actually clang, like Apple's gcc.
-        # Returning "unknown" makes them not detected by default.
-        # Users can add these manually to compilers.yaml at their own risk.
-        if spack.compilers.clang.Clang.default_version(cc) != 'unknown':
+        # Apple's gcc is actually apple clang, so skip it. Returning
+        # "unknown" ensures this compiler is not detected by default.
+        # Users can add it manually to compilers.yaml at their own risk.
+        if apple_clang.AppleClang.default_version(cc) != 'unknown':
             return 'unknown'
 
         version = super(Gcc, cls).default_version(cc)

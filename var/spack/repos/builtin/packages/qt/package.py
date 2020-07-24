@@ -158,6 +158,7 @@ class Qt(Package):
     # Non-macOS dependencies and special macOS constraints
     if MACOS_VERSION is None:
         depends_on("fontconfig", when='freetype=spack')
+        depends_on("libsm")
         depends_on("libx11")
         depends_on("libxcb")
         depends_on("libxkbcommon")
