@@ -7,7 +7,9 @@ from spack import *
 
 
 class RDss(RPackage):
-    """DSS is an R library performing differntial analysis for count-based
+    """Dispersion shrinkage for sequencing data.
+
+    DSS is an R library performing differntial analysis for count-based
     sequencing data. It detectes differentially expressed genes (DEGs) from
     RNA-seq, and differentially methylated loci or regions (DML/DMRs) from
     bisulfite sequencing (BS-seq). The core of DSS is a new dispersion
