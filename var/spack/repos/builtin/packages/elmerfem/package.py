@@ -13,32 +13,47 @@ class Elmerfem(CMakePackage):
 
     homepage = "https://www.csc.fi/web/elmer"
     url      = "https://github.com/ElmerCSC/elmerfem/archive/release-8.4.tar.gz"
+    git      = "https://github.com/ElmerCSC/elmerfem.git"
 
+    version('ice',   branch='elmerice')
+    version('devel', branch='devel')
     version('8.4', sha256='cc3ce807d76798361592cc14952cdc3db1ad8f9bac038017514033ce9badc5b3')
-    version('devel', git='https://github.com/ElmerCSC/elmerfem.git', branch='devel')
 
+    variant('mpi', default=True, description='Enable MPI support.')
     variant('openmp', default=True, description='Enable OpenMP support.')
     variant('mumps', default=False, description='Enable MUMPS support.')
     variant('hypre', default=False, description='Enable Hypre support.')
     variant('trilinos', default=False, description='Enable Trilinos support.')
     variant('zoltan', default=False, description='Enable Zoltan support.')
     variant('lua', default=False, description='Enable Lua support.')
+    variant('scatt2d', default=False, description='Build Scattered2DDataInterpolator solver.')
 
     depends_on('mpi')
     depends_on('netcdf-fortran')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('scalapack', when='+mpi')
     depends_on('mumps', when='+mumps')
     depends_on('hypre', when='+hypre')
     depends_on('trilinos~hypre~zoltan~zoltan2', when='+trilinos')
     depends_on('zoltan+fortran', when='+zoltan')
     depends_on('lua@5.1.5', when='+lua')
+    depends_on('nn-c',  when='+scatt2d')
+    depends_on('csa-c', when='+scatt2d')
 
     def cmake_args(self):
 
         spec = self.spec
 
-        args = ['-DWITH_ElmerIce=ON', '-DWITH_CONTRIB=ON', '-DWITH_MPI=ON']
+        args = ['-DWITH_ElmerIce=ON', '-DWITH_CONTRIB=ON']
+
+        if '+mpi' in spec:
+            args.append('-DWITH_MPI=ON')
+        else:
+            args.append('-DWITH_MPI=OFF')
+
+        if self.spec.satisfies('^intel-mkl'):
+            args.append('-DWITH_MKL:BOOL=TRUE')
 
         if '+openmp' in spec:
             args.append('-DWITH_OpenMP=ON')
@@ -82,7 +97,21 @@ class Elmerfem(CMakePackage):
         else:
             args.append('-DWITH_Zoltan=OFF')
 
+        if '+scatt2d' in spec:
+            args.extend([
+                '-DWITH_ScatteredDataInterpolator=ON',
+                '-DNN_LIBRARY='
+                + join_path(self.spec['nn-c'].prefix,  'lib', 'libnn.a'),
+                '-DNN_INCLUDE_DIR='
+                + join_path(self.spec['nn-c'].prefix,  'include'),
+                '-DCSA_LIBRARY='
+                + join_path(self.spec['csa-c'].prefix, 'lib', 'libcsa.so'),
+                '-DCSA_INCLUDE_DIR='
+                + join_path(self.spec['csa-c'].prefix, 'include')
+            ])
+
         return args
 
     def setup_run_environment(self, env):
         env.set('ELMER_HOME', self.prefix)
+        env.set('ELMER_Fortran_COMPILER', self.compiler.fc)
