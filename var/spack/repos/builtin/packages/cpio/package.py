@@ -15,6 +15,8 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
 
     version('2.13', sha256='e87470d9c984317f658567c03bfefb6b0c829ff17dbf6b0de48d71a4c8f3db88')
 
+    patch('https://src.fedoraproject.org/rpms/cpio/raw/dfe64c466d3ea2c8dfbd99700d9006f610064167/f/cpio-2.13-mutiple-definition.patch', sha256='d22633c368b8aedf4c08b23b6fbaa81a52404c8943ab04926404083ac10f1a4b', when='%gcc@10:')
+
     build_directory = 'spack-build'
 
     def flag_handler(self, name, flags):

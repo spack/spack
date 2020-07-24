@@ -3,14 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
 import os
 import sys
-from llnl.util.filesystem import fix_darwin_install_name
+import llnl.util.filesystem as fs
 
 
-class Papi(Package):
+class Papi(AutotoolsPackage):
     """PAPI provides the tool designer and application engineer with a
        consistent interface and methodology for use of the performance
        counter hardware found in most major microprocessors. PAPI
@@ -40,55 +39,81 @@ class Papi(Package):
     variant('lmsensors', default=False, description='Enable lm_sensors support')
     variant('sde', default=False, description='Enable software defined events')
 
+    variant('shared', default=True, description='Build shared libraries')
+    # PAPI requires building static libraries, so there is no "static" variant
+    variant('static_tools', default=False, description='Statically link the PAPI tools')
+    # The PAPI configure option "--with-shlib-tools" is deprecated
+    # and therefore not implemented here
+
     depends_on('lm-sensors', when='+lmsensors')
+
+    conflicts('%gcc@8:', when='@5.3.0', msg='Requires GCC version less than 8.0')
+
+    # This is the only way to match exactly version 6.0.0 without also
+    # including version 6.0.0.1 due to spack version matching logic
+    conflicts('@5.9.99999:6.0.0.a', when='+static_tools', msg='Static tools cannot build on version 6.0.0')
 
     # Does not build with newer versions of gcc, see
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
     patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6.99%gcc@8:')
 
+    configure_directory = 'src'
+
     def setup_build_environment(self, env):
         if '+lmsensors' in self.spec and self.version >= Version('6'):
             env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
 
-    def setup_run_environment(self, env):
-        if '+lmsensors' in self.spec and self.version >= Version('6'):
-            env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
+    setup_run_environment = setup_build_environment
 
-    def install(self, spec, prefix):
-        if '+lmsensors' in spec:
-            if self.version < Version('6'):
-                with working_dir("src/components/lmsensors"):
-                    configure_args = [
-                        "--with-sensors_incdir=%s/sensors" %
-                        spec['lm-sensors'].headers.directories[0],
-                        "--with-sensors_libdir=%s" %
-                        spec['lm-sensors'].libs.directories[0]]
-                    configure(*configure_args)
-        with working_dir("src"):
+    def configure_args(self):
+        spec = self.spec
+        # PAPI uses MPI if MPI is present; since we don't require
+        # an MPI package, we ensure that all attempts to use MPI
+        # fail, so that PAPI does not get confused
+        options = ['MPICC=:']
+        # Build a list of PAPI components
+        components = filter(
+            lambda x: spec.variants[x].value,
+            ['example', 'infiniband', 'powercap', 'rapl', 'lmsensors', 'sde'])
+        if components:
+            options.append('--with-components=' + ' '.join(components))
 
-            configure_args = ["--prefix=%s" % prefix]
+        build_shared = 'yes' if '+shared' in spec else 'no'
+        options.append('--with-shared-lib=' + build_shared)
 
-            # PAPI uses MPI if MPI is present; since we don't require
-            # an MPI package, we ensure that all attempts to use MPI
-            # fail, so that PAPI does not get confused
-            configure_args.append('MPICC=:')
+        if '+static_tools' in spec:
+            options.append('--with-static-tools')
 
-            configure_args.append(
-                '--with-components={0}'.format(' '.join(
-                    filter(lambda x: spec.variants[x].value, spec.variants))))
+        return options
 
-            configure(*configure_args)
+    @run_before('configure')
+    def fortran_check(self):
+        if not self.compiler.fc:
+            msg = 'PAPI requires a Fortran compiler to build'
+            raise RuntimeError(msg)
 
-            # Don't use <malloc.h>
-            for level in [".", "*", "*/*"]:
-                files = glob.iglob(join_path(level, "*.[ch]"))
-                filter_file(r"\<malloc\.h\>", "<stdlib.h>", *files)
+    @run_before('configure')
+    def component_configure(self):
+        configure_script = Executable('./configure')
+        if '+lmsensors' in self.spec and self.version < Version('6'):
+            with working_dir("src/components/lmsensors"):
+                configure_script(
+                    "--with-sensors_incdir=%s/sensors" %
+                    self.spec['lm-sensors'].headers.directories[0],
+                    "--with-sensors_libdir=%s" %
+                    self.spec['lm-sensors'].libs.directories[0])
 
-            make()
-            make("install")
+    @run_before('build')
+    def fix_build(self):
+        # Don't use <malloc.h>
+        for level in [".", "*", "*/*"]:
+            files = glob.iglob(join_path(level, "*.[ch]"))
+            filter_file(r"\<malloc\.h\>", "<stdlib.h>", *files)
 
-            # The shared library is not installed correctly on Darwin
-            if sys.platform == 'darwin':
-                os.rename(join_path(prefix.lib, 'libpapi.so'),
-                          join_path(prefix.lib, 'libpapi.dylib'))
-                fix_darwin_install_name(prefix.lib)
+    @run_after('install')
+    def fix_darwin_install(self):
+        # The shared library is not installed correctly on Darwin
+        if sys.platform == 'darwin':
+            os.rename(join_path(self.prefix.lib, 'libpapi.so'),
+                      join_path(self.prefix.lib, 'libpapi.dylib'))
+            fs.fix_darwin_install_name(self.prefix.lib)

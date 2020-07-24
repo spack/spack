@@ -25,11 +25,9 @@ from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import relocate_text, relocate_links
-from spack.relocate import get_relative_elf_rpaths
-from spack.relocate import get_normalized_elf_rpaths
 from spack.relocate import macho_make_paths_relative
 from spack.relocate import macho_make_paths_normal
-from spack.relocate import set_placeholder, macho_find_paths
+from spack.relocate import _placeholder, macho_find_paths
 from spack.relocate import file_is_relocatable
 
 
@@ -110,6 +108,8 @@ echo $PATH"""
     else:
         create_args.insert(create_args.index('-a'), '-u')
 
+    create_args.insert(create_args.index('-a'), '--rebuild-index')
+
     args = parser.parse_args(create_args)
     buildcache.buildcache(parser, args)
     # trigger overwrite warning
@@ -167,7 +167,7 @@ echo $PATH"""
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
 
-    args = parser.parse_args(['list', '-f'])
+    args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
 
     args = parser.parse_args(['list', 'trivial'])
@@ -228,7 +228,7 @@ def test_relocate_links(tmpdir):
         old_install_prefix = os.path.join(
             '%s' % old_layout_root, 'debian6', 'test')
         old_binname = os.path.join(old_install_prefix, 'binfile')
-        placeholder = set_placeholder(old_layout_root)
+        placeholder = _placeholder(old_layout_root)
         re.sub(old_layout_root, placeholder, old_binname)
         filenames = ['link.ln', 'outsideprefix.ln']
         new_layout_root = os.path.join(
@@ -244,9 +244,8 @@ def test_relocate_links(tmpdir):
         os.utime(new_binname, None)
         os.symlink(old_binname, new_linkname)
         os.symlink('/usr/lib/libc.so', new_linkname2)
-        relocate_links(filenames, old_layout_root, new_layout_root,
-                       old_install_prefix, new_install_prefix,
-                       {old_install_prefix: new_install_prefix})
+        relocate_links(filenames, old_layout_root,
+                       old_install_prefix, new_install_prefix)
         assert os.readlink(new_linkname) == new_binname
         assert os.readlink(new_linkname2) == '/usr/lib/libc.so'
 
@@ -561,15 +560,3 @@ def test_macho_make_paths():
                    '/Users/Shared/spack/pkgB/libB.dylib',
                    '/usr/local/lib/libloco.dylib':
                    '/usr/local/lib/libloco.dylib'}
-
-
-def test_elf_paths():
-    out = get_relative_elf_rpaths(
-        '/usr/bin/test', '/usr',
-        ('/usr/lib', '/usr/lib64', '/opt/local/lib'))
-    assert out == ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib']
-
-    out = get_normalized_elf_rpaths(
-        '/usr/bin/test',
-        ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'])
-    assert out == ['/usr/lib', '/usr/lib64', '/opt/local/lib']

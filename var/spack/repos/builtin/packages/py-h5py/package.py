@@ -12,9 +12,11 @@ class PyH5py(PythonPackage):
 
     homepage = "http://www.h5py.org/"
     url      = "https://pypi.io/packages/source/h/h5py/h5py-2.10.0.tar.gz"
+    git      = "https://github.com/h5py/h5py.git"
 
     import_modules = ['h5py', 'h5py._hl']
 
+    version('master', branch='master')
     version('2.10.0', sha256='84412798925dc870ffd7107f045d7659e60f5d46d1c70c700375248bf6bf512d')
     version('2.9.0', sha256='9d41ca62daf36d6b6515ab8765e4c8c4388ee18e2a665701fef2b41563821002')
     version('2.8.0', sha256='e626c65a8587921ebc7fb8d31a49addfdd0b9a9aa96315ea484c09803337b955')

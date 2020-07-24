@@ -16,10 +16,10 @@ class Slate(Package):
     solvers."""
 
     homepage = "https://icl.utk.edu/slate/"
-    hg      = "https://bitbucket.org/icl/slate"
-    maintainers = ['G-Ragghianti']
+    git      = "https://bitbucket.org/icl/slate"
+    maintainers = ['G-Ragghianti', 'mgates3']
 
-    version('develop', hg=hg)
+    version('develop', submodules=True)
 
     variant('cuda',   default=True, description='Build with CUDA support.')
     variant('mpi',    default=True, description='Build with MPI support.')
@@ -27,7 +27,6 @@ class Slate(Package):
 
     depends_on('cuda@9:', when='+cuda')
     depends_on('intel-mkl')
-    depends_on('mercurial', type='build')
     depends_on('mpi', when='+mpi')
 
     conflicts('%gcc@:5')

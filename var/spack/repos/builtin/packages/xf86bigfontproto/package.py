@@ -6,10 +6,10 @@
 from spack import *
 
 
-class Xf86bigfontproto(AutotoolsPackage):
+class Xf86bigfontproto(AutotoolsPackage, XorgPackage):
     """X.org XF86BigFontProto protocol headers."""
 
     homepage = "https://cgit.freedesktop.org/xorg/proto/xf86bigfontproto"
-    url      = "https://www.x.org/archive/individual/proto/xf86bigfontproto-1.2.0.tar.gz"
+    xorg_mirror_path = "proto/xf86bigfontproto-1.2.0.tar.gz"
 
     version('1.2.0', sha256='d190e6462b2bbbac6ee9a007fb8eccb9ad9f5f70544154f388266f031d4bbb23')

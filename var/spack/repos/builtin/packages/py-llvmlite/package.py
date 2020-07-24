@@ -33,4 +33,5 @@ class PyLlvmlite(PythonPackage):
 
     def setup_build_environment(self, env):
         # Need to set PIC flag since this is linking statically with LLVM
-        env.set('CXX_FLTO_FLAGS', '-flto {0}'.format(self.compiler.pic_flag))
+        env.set('CXX_FLTO_FLAGS', '-flto {0}'.format(
+            self.compiler.cxx_pic_flag))

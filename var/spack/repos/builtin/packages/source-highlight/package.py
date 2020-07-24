@@ -19,3 +19,7 @@ class SourceHighlight(AutotoolsPackage, GNUMirrorPackage):
     version('3.1.8', sha256='01336a7ea1d1ccc374201f7b81ffa94d0aecb33afc7d6903ebf9fbf33a55ada3')
 
     depends_on('boost')
+
+    def configure_args(self):
+        args = ["--with-boost={0}".format(self.spec['boost'].prefix)]
+        return args

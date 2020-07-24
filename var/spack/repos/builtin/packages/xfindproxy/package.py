@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Xfindproxy(AutotoolsPackage):
+class Xfindproxy(AutotoolsPackage, XorgPackage):
     """xfindproxy is used to locate available X11 proxy services.
 
     It utilizes the Proxy Management Protocol to communicate with a proxy
@@ -15,7 +15,7 @@ class Xfindproxy(AutotoolsPackage):
     proxies are shared whenever possible."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xfindproxy"
-    url      = "https://www.x.org/archive/individual/app/xfindproxy-1.0.4.tar.gz"
+    xorg_mirror_path = "app/xfindproxy-1.0.4.tar.gz"
 
     version('1.0.4', sha256='fa6152fcf9c16fbb2ef52259731df5df899a39a86894b0508456613f26ff924a')
 

@@ -20,6 +20,7 @@ class Mariadb(CMakePackage):
     homepage = "https://mariadb.org/about/"
     url = "http://ftp.hosteurope.de/mirror/archive.mariadb.org/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
 
+    version('10.4.12', sha256='fef1e1d38aa253dd8a51006bd15aad184912fce31c446bb69434fcde735aa208')
     version('10.4.8', sha256='10cc2c3bdb76733c9c6fd1e3c6c860d8b4282c85926da7d472d2a0e00fffca9b')
     version('10.4.7', sha256='c8e6a6d0bb4f22c416ed675d24682a3ecfa383c5283efee70c8edf131374d817')
     version('10.2.8', sha256='8dd250fe79f085e26f52ac448fbdb7af2a161f735fae3aed210680b9f2492393')
@@ -32,6 +33,7 @@ class Mariadb(CMakePackage):
             'operations in the mariadb client library.')
 
     provides('mariadb-client')
+    provides('mysql-client')
 
     depends_on('boost')
     depends_on('cmake@2.6:', type='build')

@@ -22,6 +22,7 @@ class Libnetworkit(CMakePackage):
 
     maintainers = ['fabratu']
 
+    version('7.0', sha256='4faf16c5fae3e14d3c1b6f30e25c6e093dcf6a3dbf021235f3161ac2a527f682')
     version('6.1', sha256='22c953ea1054c356663b31c77114c2f0c8fec17e0e707aeec23026241beab9b2')
 
     variant('static', default=False, description='Enables the build of shared libraries')
@@ -30,7 +31,7 @@ class Libnetworkit(CMakePackage):
     depends_on('libtlx')
     depends_on('py-sphinx', when='+doc', type='build')
 
-    patch('0001-Name-agnostic-import-of-tlx-library.patch', when='@6.1')
+    patch('0001-Name-agnostic-import-of-tlx-library.patch', when='@6.1:')
 
     def cmake_args(self):
         spec = self.spec

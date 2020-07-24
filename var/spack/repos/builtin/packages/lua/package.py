@@ -54,9 +54,9 @@ class Lua(Package):
              'MYLDFLAGS=-L%s -L%s' % (
                  spec['readline'].prefix.lib,
                  spec['ncurses'].prefix.lib),
-             'MYLIBS=-lncursesw',
+             'MYLIBS=-lncursesw -ltinfow',
              'CC=%s -std=gnu99 %s' % (spack_cc,
-                                      self.compiler.pic_flag),
+                                      self.compiler.cc_pic_flag),
              target)
         make('INSTALL_TOP=%s' % prefix,
              'install')
@@ -139,7 +139,7 @@ class Lua(Package):
 
         if dependent_spec.package.extends(self.spec):
             env.prepend_path('LUA_PATH', ';'.join(lua_patterns), separator=';')
-            if '+shared' in spec:
+            if '+shared' in self.spec:
                 env.prepend_path('LUA_CPATH', ';'.join(lua_cpatterns),
                                  separator=';')
 

@@ -8,12 +8,12 @@ import sys
 from spack import *
 
 
-class Qrupdate(MakefilePackage):
+class Qrupdate(MakefilePackage, SourceforgePackage):
     """qrupdate is a Fortran library for fast updates of QR and
     Cholesky decompositions."""
 
     homepage = "http://sourceforge.net/projects/qrupdate/"
-    url      = "https://downloads.sourceforge.net/qrupdate/qrupdate-1.1.2.tar.gz"
+    sourceforge_mirror_path = "qrupdate/qrupdate-1.1.2.tar.gz"
 
     version('1.1.2', sha256='e2a1c711dc8ebc418e21195833814cb2f84b878b90a2774365f0166402308e08')
 

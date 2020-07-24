@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Ray(CMakePackage):
+class Ray(CMakePackage, SourceforgePackage):
     """Parallel genome assemblies for parallel DNA sequencing"""
 
     homepage = "http://denovoassembler.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/denovoassembler/Ray-2.3.1.tar.bz2"
+    sourceforge_mirror_path = "denovoassembler/Ray-2.3.1.tar.bz2"
 
     version('2.3.1', sha256='3122edcdf97272af3014f959eab9a0f0e5a02c8ffc897d842b06b06ccd748036')
 

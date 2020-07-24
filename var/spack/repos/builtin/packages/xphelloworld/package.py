@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Xphelloworld(AutotoolsPackage):
+class Xphelloworld(AutotoolsPackage, XorgPackage):
     """Xprint sample applications."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xphelloworld"
-    url      = "https://www.x.org/archive/individual/app/xphelloworld-1.0.1.tar.gz"
+    xorg_mirror_path = "app/xphelloworld-1.0.1.tar.gz"
 
     version('1.0.1', sha256='ead6437c4dc9540698a41e174c9d1ac792de07baeead81935d72cb123196f866')
 

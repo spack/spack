@@ -464,6 +464,8 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
      'http://laws-green.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.1_r20171213193219.tgz'),
     ('vampirtrace', '5.14.4',
      'http://wwwpub.zih.tu-dresden.de/~mlieber/dcount/dcount.php?package=vampirtrace&get=VampirTrace-5.14.4.tar.gz'),
+    ('EvtGen', '01.07.00',
+     'https://evtgen.hepforge.org/downloads?f=EvtGen-01.07.00.tar.gz'),
     # (we don't actually look for these, they are picked up
     #  during the preliminary stem parsing)
     ('octopus', '6.0', 'http://octopus-code.org/down.php?file=6.0/octopus-6.0.tar.gz'),

@@ -4,6 +4,7 @@
 /var/spack/environments
 /var/spack/repos/*/index.yaml
 /var/spack/repos/*/lock
+__pycache__/
 *.pyc
 /opt
 *~
@@ -33,3 +34,7 @@ lib/spack/spack/test/.cache
 .project
 .cproject
 .pydevproject
+
+# VSCode files
+.vscode
+.devcontainer

@@ -33,7 +33,8 @@ class Pdt(AutotoolsPackage):
     variant('pic', default=False, description="Builds with pic")
 
     def patch(self):
-        if self.spec.satisfies('%clang'):
+        spec = self.spec
+        if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
             filter_file(r'PDT_GXX=g\+\+ ',
                         r'PDT_GXX=clang++ ', 'ductape/Makefile')
 
@@ -53,7 +54,7 @@ class Pdt(AutotoolsPackage):
             raise InstallError('Unknown/unsupported compiler family')
 
         if '+pic' in spec:
-            options.append('-useropt=' + self.compiler.pic_flag)
+            options.append('-useropt=' + self.compiler.cxx_pic_flag)
 
         configure(*options)
 

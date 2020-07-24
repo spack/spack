@@ -39,16 +39,19 @@
 # spack module files.
 ########################################################################
 
+# prevent infinite recursion when spack shells out (e.g., on cray for modules)
+if [ -n "${_sp_initializing:-}" ]; then
+    exit 0
+fi
+export _sp_initializing=true
+
 spack() {
     # Store LD_LIBRARY_PATH variables from spack shell function
     # This is necessary because MacOS System Integrity Protection clears
-    # (DY?)LD_LIBRARY_PATH variables on process start.
-    if [ -n "${LD_LIBRARY_PATH-}" ]; then
-        export SPACK_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-    fi
-    if [ -n "${DYLD_LIBRARY_PATH-}" ]; then
-        export SPACK_DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
-    fi
+    # variables that affect dyld on process start.
+    for var in LD_LIBRARY_PATH DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH; do
+        eval "if [ -n \"\${${var}-}\" ]; then export SPACK_$var=\${${var}}; fi"
+    done
 
     # Zsh does not do word splitting by default, this enables it for this
     # function only
@@ -245,6 +248,8 @@ if [ "$_sp_shell" = bash ]; then
     export -f spack
 fi
 
+alias spacktivate="spack env activate"
+
 #
 # Figure out where this file is.
 #
@@ -358,3 +363,7 @@ _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
 if [ "$_sp_shell" = bash ]; then
     source $_sp_share_dir/spack-completion.bash
 fi
+
+# done: unset sentinel variable as we're no longer initializing
+unset _sp_initializing
+export _sp_initializing

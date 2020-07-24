@@ -13,10 +13,11 @@ class Libmonitor(AutotoolsPackage):
 
     homepage = "https://github.com/HPCToolkit/libmonitor"
     git      = "https://github.com/HPCToolkit/libmonitor.git"
+    maintainers = ['mwkrentel']
 
     version('master', branch='master')
-    version('2018.07.18', commit='d28cc1d3c08c02013a68a022a57a6ac73db88166',
-            preferred=True)
+    version('2019.05.31', commit='c9767087d52e58a719aa7f149136b101e499db44')
+    version('2018.07.18', commit='d28cc1d3c08c02013a68a022a57a6ac73db88166')
     version('2013.02.18', commit='4f2311e413fd90583263d6f20453bbe552ccfef3')
 
     # Configure for Rice HPCToolkit.

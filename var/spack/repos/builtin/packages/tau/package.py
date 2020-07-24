@@ -18,6 +18,7 @@ class Tau(Package):
     Java, Python.
     """
 
+    maintainers = ['wspear', 'eugeneswalker', 'khuck', 'sameershende']
     homepage = "http://www.cs.uoregon.edu/research/tau"
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.1.tar.gz"
     git      = "https://github.com/UO-OACISS/tau2"
@@ -69,6 +70,7 @@ class Tau(Package):
     variant('io', default=True, description='Activates POSIX I/O support')
     variant('adios2', default=False, description='Activates ADIOS2 output support')
     variant('sqlite', default=False, description='Activates SQLite3 output support')
+    variant('profileparam', default=False, description='Generate profiles with parameter mapped event data')
 
     # Support cross compiling.
     # This is a _reasonable_ subset of the full set of TAU
@@ -87,7 +89,7 @@ class Tau(Package):
     depends_on('libdwarf', when='+libdwarf')
     depends_on('libelf', when='+libdwarf')
     # TAU requires the ELF header support, libiberty and demangle.
-    depends_on('binutils@:2.33.1+libiberty+headers~nls', when='+binutils')
+    depends_on('binutils@:2.33.1+libiberty+headers', when='+binutils')
     depends_on('python@2.7:', when='+python')
     depends_on('libunwind', when='+libunwind')
     depends_on('mpi', when='+mpi', type=('build', 'run', 'link'))
@@ -104,6 +106,8 @@ class Tau(Package):
     # ADIOS2, SQLite only available from 2.29.1 on
     conflicts('+adios2', when='@:2.29.1')
     conflicts('+sqlite', when='@:2.29.1')
+
+    patch('unwind.patch', when="@2.29")
 
     def set_compiler_options(self, spec):
 
@@ -142,6 +146,7 @@ class Tau(Package):
 
     def setup_build_environment(self, env):
         env.prepend_path('LIBRARY_PATH', self.spec['zlib'].prefix.lib)
+        env.prepend_path('LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
 
     def install(self, spec, prefix):
         # TAU isn't happy with directories that have '@' in the path.  Sigh.
@@ -220,6 +225,9 @@ class Tau(Package):
             options.append('-mpi')
             if '+comm' in spec:
                 options.append('-PROFILECOMMUNICATORS')
+
+        if '+profileparam' in spec:
+            options.append('-PROFILEPARAM')
 
         if '+shmem' in spec:
             options.append('-shmem')

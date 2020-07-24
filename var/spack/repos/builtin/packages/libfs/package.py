@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Libfs(AutotoolsPackage):
+class Libfs(AutotoolsPackage, XorgPackage):
     """libFS - X Font Service client library.
 
     This library is used by clients of X Font Servers (xfs), such as
     xfsinfo, fslsfonts, and the X servers themselves."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libFS"
-    url      = "https://www.x.org/archive/individual/lib/libFS-1.0.7.tar.gz"
+    xorg_mirror_path = "lib/libFS-1.0.7.tar.gz"
 
     version('1.0.7', sha256='91bf1c5ce4115b7dbf4e314fdbee54052708e8f7b6a2ec6e82c309bcbe40ef3d')
 

@@ -12,7 +12,7 @@ class Nag(Package):
     homepage = "http://www.nag.com/nagware/np.asp"
     maintainers = ['ThemosTsikas']
 
-    version('7.0', sha256='fafd97ebb58753ab5b9f13822d2e3d24c2f488ea25928c4c3a13e4e2e350ab3e')
+    version('7.0', sha256='ef65805004255881a4ed27fe7bdb5b05dbbe5fde5bad287f71258fce1f02be77')
     version('6.2', sha256='9b60f6ffa4f4be631079676963e74eea25e8824512e5c864eb06758b2a3cdd2d')
     version('6.1', sha256='32580e0004e6798abf1fa52f0070281b28abeb0da2387530a4cc41218e813c7c')
 

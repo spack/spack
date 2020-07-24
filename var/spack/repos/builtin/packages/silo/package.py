@@ -45,13 +45,25 @@ class Silo(AutotoolsPackage):
             if spec['hdf5'].satisfies('~shared'):
                 flags.append('-ldl')
             flags.append(spec['readline'].libs.search_flags)
-        elif name in ('cflags', 'cxxflags', 'fcflags'):
-            if '+pic' in spec:
-                flags.append(self.compiler.pic_flag)
+
+        if '+pic' in spec:
+            if name == 'cflags':
+                flags.append(self.compiler.cc_pic_flag)
+            elif name == 'cxxflags':
+                flags.append(self.compiler.cxx_pic_flag)
+            elif name == 'fcflags':
+                flags.append(self.compiler.fc_pic_flag)
         return (flags, None, None)
 
     @when('%clang@9:')
     def patch(self):
+        self.clang_9_patch()
+
+    @when('%apple-clang@11.0.3:')
+    def patch(self):
+        self.clang_9_patch()
+
+    def clang_9_patch(self):
         # Clang 9 and later include macro definitions in <math.h> that conflict
         # with typedefs DOMAIN and RANGE used in Silo plugins.
         # It looks like the upstream fpzip repo has been fixed, but that change

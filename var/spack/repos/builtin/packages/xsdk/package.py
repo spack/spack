@@ -43,10 +43,10 @@ class Xsdk(BundlePackage):
     depends_on('hypre@2.12.1~internal-superlu', when='@0.3.0')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
 
-    depends_on('mfem@develop+mpi+hypre+superlu-dist+petsc~sundials+examples+miniapps', when='@develop')
-    depends_on('mfem@4.0.1-xsdk+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.5.0')
-    depends_on('mfem@3.4.0+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.4.0')
-    depends_on('mfem@3.3.2+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.3.0')
+    depends_on('mfem@develop+mpi+superlu-dist+petsc~sundials+examples+miniapps', when='@develop')
+    depends_on('mfem@4.0.1-xsdk+mpi~superlu-dist+petsc+sundials+examples+miniapps', when='@0.5.0')
+    depends_on('mfem@3.4.0+mpi+superlu-dist+petsc+sundials+examples+miniapps', when='@0.4.0')
+    depends_on('mfem@3.3.2+mpi+superlu-dist+petsc+sundials+examples+miniapps', when='@0.3.0')
 
     depends_on('superlu-dist@develop', when='@develop')
     depends_on('superlu-dist@6.1.1', when='@0.5.0')
@@ -164,6 +164,7 @@ class Xsdk(BundlePackage):
 
     depends_on('py-libensemble@develop+petsc4py', type='run', when='@develop +libensemble')
     depends_on('py-libensemble@0.5.2+petsc4py', type='run', when='@0.5.0 +libensemble')
+    depends_on('py-petsc4py@3.12.0', type='run', when='@0.5.0 +libensemble')
 
     depends_on('precice ~petsc', when='platform=cray +precice')
     depends_on('precice@develop', when='@develop +precice')

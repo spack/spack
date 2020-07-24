@@ -28,7 +28,7 @@ class Margo(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
 
     depends_on('mercury')
-    depends_on('argobots@1.0rc1:')
+    depends_on('argobots@1.0:')
 
     build_directory = 'spack-build'
 

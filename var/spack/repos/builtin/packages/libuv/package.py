@@ -19,6 +19,12 @@ class Libuv(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
 
+    # Tries to build an Objective-C file with GCC's C frontend
+    # https://github.com/libuv/libuv/issues/2805
+    conflicts('%gcc platform=darwin',
+              msg='libuv does not compile with GCC on macOS yet, use clang. '
+                  'See: https://github.com/libuv/libuv/issues/2805')
+
     def autoreconf(self, spec, prefix):
         # This is needed because autogen.sh generates on-the-fly
         # an m4 macro needed during configuration

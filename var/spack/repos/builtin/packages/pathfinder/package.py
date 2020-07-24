@@ -11,7 +11,7 @@ class Pathfinder(MakefilePackage):
     """Proxy Application. Signature search."""
 
     homepage = "https://mantevo.org/packages/"
-    url      = "https://github.com/Mantevo/mantevo.github.io/raw/master/download_files/PathFinder_1.0.0.tgz"
+    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/PathFinder/PathFinder_1.0.0.tgz"
 
     tags = ['proxy-app']
 

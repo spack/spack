@@ -2,52 +2,140 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack import *
 
 
-class KokkosKernels(MakefilePackage):
-    """Kokkos C++ Performance Portability Programming EcoSystem: Math Kernels -
-    Provides BLAS, Sparse BLAS and Graph Kernels."""
+class KokkosKernels(CMakePackage, CudaPackage):
+    """Kokkos Kernels provides math kernels, often BLAS or LAPACK
+    for small matrices, that can be used in larger Kokkos parallel routines"""
 
     homepage = "https://github.com/kokkos/kokkos-kernels"
-    url      = "https://github.com/kokkos/kokkos-kernels/archive/2.7.00.tar.gz"
+    git = "https://github.com/kokkos/kokkos-kernels.git"
+    url = "https://github.com/kokkos/kokkos-kernels/archive/3.1.00.tar.gz"
 
-    version('2.7.00', sha256='adf4af44eadbdfbeb9ec69dd5fae4e2852bd1fbe4a69213efd199e49f4098254')
-    version('2.6.00', sha256='14ebf806f66b9ca73949a478b8d959be7fa1165a640935760a724d7cc0a66335')
-    version('2.5.00', sha256='2c2289da3a41dafd97726e90507debafbb9f5e49ca5b0f5c8d1e044a5796f000')
-    version('develop', git='https://github.com/kokkos/kokkos-kernels',
-            branch='develop')
+    version('develop', branch='develop')
+    version('master',  branch='master')
+    version('3.1.00', sha256="27fea241ae92f41bd5b070b1a590ba3a56a06aca750207a98bea2f64a4a40c89")
+    version('3.0.00', sha256="e4b832aed3f8e785de24298f312af71217a26067aea2de51531e8c1e597ef0e6")
 
-    # make sure kokkos kernels version matches kokkos
-    depends_on('kokkos@2.5.00', when='@2.5.00')
-    depends_on('kokkos@2.6.00', when='@2.6.00')
-    depends_on('kokkos@2.7.00', when='@2.7.00')
-    depends_on('kokkos@develop', when='@develop')
+    depends_on("kokkos")
+    depends_on("kokkos@develop", when="@develop")
+    depends_on("cmake@3.10:", type='build')
 
-    patch('makefile.patch')
+    backends = {
+        'serial': (False,  "enable Serial backend (default)"),
+        'cuda': (False,  "enable Cuda backend"),
+        'openmp': (False,  "enable OpenMP backend"),
+    }
 
-    def edit(self, spec, prefix):
-        makefile = FileFilter("src/Makefile")
-        makefile.filter('CXX = .*', 'CXX = ' + env['CXX'])
+    for backend in backends:
+        deflt, descr = backends[backend]
+        variant(backend.lower(), default=deflt, description=descr)
+        depends_on("kokkos+%s" % backend.lower(), when="+%s" % backend.lower())
 
-    def build(self, spec, prefix):
-        with working_dir('build', create=True):
-            makefile_path = '%s%s' % (self.stage.source_path, '/src/Makefile')
-            copy(makefile_path, 'Makefile')
-            make_args = [
-                'KOKKOSKERNELS_INSTALL_PATH=%s' % prefix,
-                'KOKKOSKERNELS_PATH=%s' % self.stage.source_path,
-                'KOKKOS_PATH=%s' % spec['kokkos'].prefix
-            ]
+    space_etis = {
+        "execspace_cuda": ('auto', "", "cuda"),
+        "execspace_openmp": ('auto', "", "openmp"),
+        "execspace_threads": ('auto', "", "pthread"),
+        "execspace_serial": ('auto', "", "serial"),
+        "memspace_cudauvmspace": ('auto', "", "cuda"),
+        "memspace_cudaspace": ('auto', "", "cuda"),
+    }
+    for eti in space_etis:
+        deflt, descr, backend_required = space_etis[eti]
+        variant(eti, default=deflt, description=descr)
+        depends_on("kokkos+%s" % backend_required, when="+%s" % eti)
 
-            make('build', *make_args)
+    numeric_etis = {
+        "ordinals": ("int",        "ORDINAL_",  # default, cmake name
+                     ["int", "int64_t"]),  # allowed values
+        "offsets": ("int,size_t", "OFFSET_",
+                    ["int", "size_t"]),
+        "layouts": ("left",       "LAYOUT",
+                    ["left", "right"]),
+        "scalars": ("double",     "",
+                    ["float", "double", "complex_float", "complex_double"])
+    }
+    for eti in numeric_etis:
+        deflt, cmake_name, vals = numeric_etis[eti]
+        variant(eti, default=deflt, values=vals, multi=True)
 
-    def install(self, spec, prefix):
-        with working_dir('build', create=False):
-            make_args = [
-                'KOKKOSKERNELS_INSTALL_PATH=%s' % prefix,
-                'KOKKOSKERNELS_PATH=%s' % self.stage.source_path,
-                'KOKKOS_PATH=%s' % spec['kokkos'].prefix
-            ]
-            make('install', *make_args)
+    tpls = {
+        # variant name   #deflt   #spack name   #root var name #docstring
+        "blas": (False, "blas", "BLAS", "Link to system BLAS"),
+        "lapack": (False, "lapack", "LAPACK", "Link to system LAPACK"),
+        "mkl": (False, "mkl", "MKL", "Link to system MKL"),
+        "cublas": (False, "cuda", None, "Link to CUDA BLAS library"),
+        "cusparse": (False, "cuda", None, "Link to CUDA sparse library"),
+        "superlu": (False, "superlu", "SUPERLU", "Link to SuperLU library"),
+        "cblas": (False, "cblas", "CBLAS", "Link to CBLAS library"),
+        "lapacke": (False, "clapack", "LAPACKE", "Link to LAPACKE library"),
+    }
+
+    for tpl in tpls:
+        deflt, spackname, rootname, descr = tpls[tpl]
+        variant(tpl, default=deflt, description=descr)
+        depends_on(spackname, when="+%s" % tpl)
+
+    def cmake_args(self):
+        spec = self.spec
+        options = []
+
+        isdiy = "+diy" in spec
+        if isdiy:
+            options.append("-DSpack_WORKAROUND=On")
+
+        options.append("-DKokkos_ROOT=%s" % spec["kokkos"].prefix)
+        # Compiler weirdness due to nvcc_wrapper
+        options.append("-DCMAKE_CXX_COMPILER=%s" % spec["kokkos"].kokkos_cxx)
+
+        if self.run_tests:
+            options.append("-DKokkosKernels_ENABLE_TESTS=ON")
+
+        for tpl in self.tpls:
+            on_flag = "+%s" % tpl
+            off_flag = "~%s" % tpl
+            dflt, spackname, rootname, descr = self.tpls[tpl]
+            if on_flag in self.spec:
+                options.append("-DKokkosKernels_ENABLE_TPL_%s=ON" %
+                               tpl.upper())
+                if rootname:
+                    options.append("-D%s_ROOT=%s" %
+                                   (rootname, spec[spackname].prefix))
+                else:
+                    pass  # this should get picked up automatically, we hope
+            elif off_flag in self.spec:
+                options.append(
+                    "-DKokkosKernels_ENABLE_TPL_%s=OFF" % tpl.upper())
+
+        for eti in self.numeric_etis:
+            deflt, cmake_name, vals = self.numeric_etis[eti]
+            for val in vals:
+                keyval = "%s=%s" % (eti, val)
+                cmake_option = "KokkosKernels_INST_%s%s" % (
+                    cmake_name.upper(), val.upper())
+                if keyval in spec:
+                    options.append("-D%s=ON" % cmake_option)
+                else:
+                    options.append("-D%s=OFF" % cmake_option)
+
+        for eti in self.space_etis:
+            deflt, descr, _ = self.space_etis[eti]
+            if deflt == "auto":
+                value = spec.variants[eti].value
+                # spack does these as strings, not reg booleans
+                if str(value) == "True":
+                    options.append("-DKokkosKernels_INST_%s=ON" % eti.upper())
+                elif str(value) == "False":
+                    options.append("-DKokkosKernels_INST_%s=OFF" % eti.upper())
+                else:
+                    pass  # don't pass anything, let CMake decide
+            else:  # simple option
+                on_flag = "+%s" % eti
+                off_flag = "~%s" % eti
+                if on_flag in self.spec:
+                    options.append("-DKokkosKernels_INST_%s=ON" % eti.upper())
+                elif off_flag in self.spec:
+                    options.append("-DKokkosKernels_INST_%s=OFF" % eti.upper())
+
+        return options

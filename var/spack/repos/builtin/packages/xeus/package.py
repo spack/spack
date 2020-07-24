@@ -27,7 +27,7 @@ class Xeus(CMakePackage):
     depends_on('cppzmq@4.3.0:')
     depends_on('cryptopp@7.0.0:')
     depends_on('xtl@0.4.0:')
-    depends_on('nlohmann-json@3.2.0', when='@develop@0.15.0:')
+    depends_on('nlohmann-json@3.2.0', when='@develop,0.15.0:')
     depends_on('nlohmann-json@3.1.1', when='@0.14.1')
     depends_on('libuuid')
 

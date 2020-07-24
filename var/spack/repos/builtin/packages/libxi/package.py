@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libxi(AutotoolsPackage):
+class Libxi(AutotoolsPackage, XorgPackage):
     """libXi - library for the X Input Extension."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXi"
-    url      = "https://www.x.org/archive/individual/lib/libXi-1.7.6.tar.gz"
+    xorg_mirror_path = "lib/libXi-1.7.6.tar.gz"
 
     version('1.7.6', sha256='4e88fa7decd287e58140ea72238f8d54e4791de302938c83695fc0c9ac102b7e')
 

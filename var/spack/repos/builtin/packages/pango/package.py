@@ -23,7 +23,7 @@ class Pango(AutotoolsPackage):
 
     variant('X', default=False, description="Enable an X toolkit")
 
-    depends_on("pkgconfig", type="build")
+    depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("harfbuzz")
     depends_on("cairo+ft+fc")
     depends_on("cairo~X", when='~X')
@@ -31,6 +31,14 @@ class Pango(AutotoolsPackage):
     depends_on("libxft", when='+X')
     depends_on("glib")
     depends_on('gobject-introspection')
+    depends_on('fontconfig')
+    depends_on('freetype@2:')
+    depends_on('libffi')
+
+    depends_on('harfbuzz@1.2.3:', when='@1.41.0')
+    depends_on('libxft@2.0.0:', when='@1.41.0 +X')
+    depends_on('glib@2.33.12:', when='@1.41.0')
+    depends_on('fontconfig@2.11.91:', when='@1.41.0')
 
     def url_for_version(self, version):
         url = "http://ftp.gnome.org/pub/GNOME/sources/pango/{0}/pango-{1}.tar.xz"

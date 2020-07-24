@@ -19,7 +19,10 @@ class Occa(Package):
     homepage = "http://libocca.org"
     git      = 'https://github.com/libocca/occa.git'
 
+    maintainers = ['v-dobrev', 'dmed256']
+
     version('develop')
+    version('1.0.9', tag='v1.0.9')
     version('1.0.8', tag='v1.0.8')
     version('1.0.0-alpha.5', tag='v1.0.0-alpha.5')
     version('0.2.0', tag='v0.2.0')
@@ -96,6 +99,9 @@ class Occa(Package):
             env.set('OCCA_LIBRARY_PATH', ':'.join(cuda_libs.directories))
         else:
             env.set('OCCA_CUDA_ENABLED', '0')
+
+        # Disable hip autodetection for now since it fails on some machines.
+        env.set('OCCA_HIP_ENABLED', '0')
 
         if '~opencl' in spec:
             env.set('OCCA_OPENCL_ENABLED', '0')

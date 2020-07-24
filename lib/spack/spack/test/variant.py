@@ -694,7 +694,7 @@ class TestVariantMapTest(object):
         c['foobar'] = SingleValuedVariant('foobar', 'fee')
         c['feebar'] = SingleValuedVariant('feebar', 'foo')
         c['shared'] = BoolValuedVariant('shared', True)
-        assert str(c) == ' feebar=foo foo=bar,baz foobar=fee +shared'
+        assert str(c) == '+shared feebar=foo foo=bar,baz foobar=fee'
 
 
 def test_disjoint_set_initialization_errors():

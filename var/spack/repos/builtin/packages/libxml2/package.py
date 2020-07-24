@@ -14,11 +14,12 @@ class Libxml2(AutotoolsPackage):
     homepage = "http://xmlsoft.org"
     url      = "http://xmlsoft.org/sources/libxml2-2.9.8.tar.gz"
 
-    version('2.9.9', sha256='94fb70890143e3c6549f265cee93ec064c80a84c42ad0f23e85ee1fd6540a871')
-    version('2.9.8', sha256='0b74e51595654f958148759cfef0993114ddccccbb6f31aee018f3558e8e2732')
-    version('2.9.4', sha256='ffb911191e509b966deb55de705387f14156e1a56b21824357cdf0053233633c')
-    version('2.9.2', sha256='5178c30b151d044aefb1b08bf54c3003a0ac55c59c866763997529d60770d5bc')
-    version('2.7.8', sha256='cda23bc9ebd26474ca8f3d67e7d1c4a1f1e7106364b690d822e009fdc3c417ec')
+    version('2.9.10', sha256='aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f')
+    version('2.9.9',  sha256='94fb70890143e3c6549f265cee93ec064c80a84c42ad0f23e85ee1fd6540a871')
+    version('2.9.8',  sha256='0b74e51595654f958148759cfef0993114ddccccbb6f31aee018f3558e8e2732')
+    version('2.9.4',  sha256='ffb911191e509b966deb55de705387f14156e1a56b21824357cdf0053233633c')
+    version('2.9.2',  sha256='5178c30b151d044aefb1b08bf54c3003a0ac55c59c866763997529d60770d5bc')
+    version('2.7.8',  sha256='cda23bc9ebd26474ca8f3d67e7d1c4a1f1e7106364b690d822e009fdc3c417ec')
 
     variant('python', default=False, description='Enable Python support')
 

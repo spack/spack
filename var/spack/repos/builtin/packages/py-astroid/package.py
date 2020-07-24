@@ -13,6 +13,7 @@ class PyAstroid(PythonPackage):
     homepage = "https://github.com/PyCQA/astroid"
     url      = "https://github.com/PyCQA/astroid/archive/astroid-1.4.5.tar.gz"
 
+    version('2.3.3', sha256='3a82983cf34dcbfe42ebcffeb98739e8a7bb868f03c1d9e298c530179b5075e7')
     version('2.2.0', sha256='7e289d0aa4a537b4aa798bd609fdf745de0f3c37e6b67642ed328e1482421a6d')
     version('1.6.6', sha256='3fbcc144457ba598fb48e0ddce5eacee62610ab11e6fe374b6eef5f7df2a3fbb')
     # version('1.5.3', sha256='6f65e4ea8290ec032320460905afb828') # has broken unit tests
@@ -22,10 +23,18 @@ class PyAstroid(PythonPackage):
     version('1.4.2', sha256='f9007d651f4b3514ea5812127677a4bb681ff194164290cea358987920f24ee6')
     version('1.4.1', sha256='f1ab3ee6f17f9d30981399a52b56a7a7d2747ba24f0aa504e411ee6205a01fc0')
 
-    depends_on('py-lazy-object-proxy')
-    depends_on('py-six')
-    depends_on('py-wrapt')
-    depends_on('py-enum34@1.1.3:', when='^python@:3.3.99')
-    depends_on('py-singledispatch', when='^python@:3.3.99')
-    depends_on('py-backports-functools-lru-cache', when='^python@:3.2.99')
-    depends_on('py-setuptools@17.1:')
+    # Dependencies taken from astroid/__pkginfo__.py
+    depends_on('python@2.7:2.8,3.4:', when='@:1.999', type=('build', 'run'))
+    depends_on('python@3.4:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('python@3.5:', when='@2.3.3:', type=('build', 'run'))
+    depends_on('py-lazy-object-proxy', type=('build', 'run'))
+    depends_on('py-lazy-object-proxy@1.4:1.4.999', when='@2.3.3:', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-six@1.12:1.999', when='@2.3.3:', type=('build', 'run'))
+    depends_on('py-wrapt', type=('build', 'run'))
+    depends_on('py-wrapt@1.11:1.11.999', when='@2.3.3:', type=('build', 'run'))
+    depends_on('py-enum34@1.1.3:', when='^python@:3.3.99', type=('build', 'run'))
+    depends_on('py-singledispatch', when='^python@:3.3.99', type=('build', 'run'))
+    depends_on('py-backports-functools-lru-cache', when='^python@:3.2.99', type=('build', 'run'))
+    depends_on('py-typed-ast@1.4.0:1.4.999', when='@2.3.3: ^python@:3.7.999', type=('build', 'run'))
+    depends_on('py-setuptools@17.1:', type='build')

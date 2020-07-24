@@ -17,7 +17,7 @@ class Genometools(MakefilePackage):
     version('1.5.9', sha256='bba8e043f097e7c72e823f73cb0efbd20bbd60f1ce797a0e4c0ab632b170c909')
 
     depends_on('perl', type=('build', 'run'))
-    depends_on('cairo')
+    depends_on('cairo+pdf')
     depends_on('pango')
 
     # build fails with gcc 7"

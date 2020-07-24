@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Xbitmaps(AutotoolsPackage):
+class Xbitmaps(AutotoolsPackage, XorgPackage):
     """The xbitmaps package contains bitmap images used by multiple
     applications built in Xorg."""
 
     homepage = "https://cgit.freedesktop.org/xorg/data/bitmaps/"
-    url      = "https://www.x.org/archive/individual/data/xbitmaps-1.1.1.tar.gz"
+    xorg_mirror_path = "data/xbitmaps-1.1.1.tar.gz"
 
     version('1.1.1', sha256='3bc89e05be4179ce4d3dbba1ae554da4591d41f7a489d9e2735a18cfd8378188')
 

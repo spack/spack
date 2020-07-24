@@ -29,9 +29,17 @@ class Xl(Compiler):
     version_argument = '-qversion'
     version_regex = r'([0-9]?[0-9]\.[0-9])'
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-V"
+
+    @property
+    def debug_flags(self):
+        return ['-g', '-g0', '-g1', '-g2', '-g8', '-g9']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4', '-O5', '-Ofast']
 
     @property
     def openmp_flag(self):
@@ -70,7 +78,19 @@ class Xl(Compiler):
                                       '< 12.1')
 
     @property
-    def pic_flag(self):
+    def cc_pic_flag(self):
+        return "-qpic"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-qpic"
+
+    @property
+    def f77_pic_flag(self):
+        return "-qpic"
+
+    @property
+    def fc_pic_flag(self):
         return "-qpic"
 
     @property

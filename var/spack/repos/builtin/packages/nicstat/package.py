@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Nicstat(MakefilePackage):
+class Nicstat(MakefilePackage, SourceforgePackage):
     """
     Nicstat is a Solaris and Linux command-line that prints out network
     statistics for all network interface cards (NICs), including packets,
@@ -14,7 +14,7 @@ class Nicstat(MakefilePackage):
     """
 
     homepage = "https://github.com/scotte/nicstat"
-    url      = "https://jaist.dl.sourceforge.net/project/nicstat/nicstat-1.95.tar.gz"
+    sourceforge_mirror_path = "nicstat/nicstat-1.95.tar.gz"
 
     version('1.95', sha256='c4cc33f8838f4523f27c3d7584eedbe59f4c587f0821612f5ac2201adc18b367')
 

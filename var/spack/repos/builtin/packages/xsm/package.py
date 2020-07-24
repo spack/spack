@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Xsm(AutotoolsPackage):
+class Xsm(AutotoolsPackage, XorgPackage):
     """X Session Manager."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xsm"
-    url      = "https://www.x.org/archive/individual/app/xsm-1.0.3.tar.gz"
+    xorg_mirror_path = "app/xsm-1.0.3.tar.gz"
 
     version('1.0.3', sha256='f70815139d62416dbec5915ec37db66f325932a69f6350bb1a74c0940cdc796a')
 

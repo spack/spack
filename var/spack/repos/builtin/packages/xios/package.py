@@ -31,6 +31,7 @@ class Xios(Package):
 
     # Workaround bug #17782 in llvm, where reading a double
     # followed by a character is broken (e.g. duration '1d'):
+    patch('llvm_bug_17782.patch', when='@1.1: %apple-clang')
     patch('llvm_bug_17782.patch', when='@1.1: %clang')
 
     depends_on('netcdf-c+mpi')
@@ -45,6 +46,13 @@ class Xios(Package):
 
     @when('%clang')
     def patch(self):
+        self.patch_llvm()
+
+    @when('%apple-clang')
+    def patch(self):
+        self.patch_llvm()
+
+    def patch_llvm(self):
         """Fix type references that are ambiguous for clang."""
         for dirpath, dirnames, filenames in os.walk('src'):
             for filename in filenames:
@@ -99,12 +107,13 @@ OASIS_LIB=""
         param['BOOST_LIB_DIR'] = spec['boost'].prefix.lib
         param['BLITZ_INC_DIR'] = spec['blitz'].prefix.include
         param['BLITZ_LIB_DIR'] = spec['blitz'].prefix.lib
-        if spec.satisfies('%clang platform=darwin'):
+        if spec.satisfies('%apple-clang'):
             param['LIBCXX'] = '-lc++'
         else:
             param['LIBCXX'] = '-lstdc++'
 
-        if any(map(spec.satisfies, ('%gcc', '%intel', '%clang'))):
+        if any(map(spec.satisfies,
+                   ('%gcc', '%intel', '%apple-clang', '%clang'))):
             text = r"""
 %CCOMPILER      {MPICXX}
 %FCOMPILER      {MPIFC}

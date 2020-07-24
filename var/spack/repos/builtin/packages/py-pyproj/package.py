@@ -16,6 +16,7 @@ class PyPyproj(PythonPackage):
     maintainers = ['citibeth', 'adamjstewart']
     import_modules = ['pyproj']
 
+    version('2.6.0',   sha256='977542d2f8cf2981cf3ad72cedfebcd6ac56977c7aa830d9b49fa7888b56e83d')
     version('2.2.0',   sha256='0a4f793cc93539c2292638c498e24422a2ec4b25cb47545addea07724b2a56e5')
     version('2.1.3',   sha256='99c52788b01a7bb9a88024bf4d40965c0a66a93d654600b5deacf644775f424d')
     version('1.9.6',   sha256='e0c02b1554b20c710d16d673817b2a89ff94738b0b537aead8ecb2edc4c4487b')
@@ -23,8 +24,10 @@ class PyPyproj(PythonPackage):
 
     depends_on('python@:2', when='@:1.9.5.1')
     depends_on('python@3:', when='@2.3:')
+    depends_on('python@3.5:', when='@2.6.0:')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
+    depends_on('py-cython@0.28:', when='@2.6.0:')
     depends_on('py-aenum', type=('build', 'run'), when='@2.2:^python@:3.5')
     depends_on('proj')
     depends_on('proj@:5',   when='@:1')

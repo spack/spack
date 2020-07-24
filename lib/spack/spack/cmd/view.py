@@ -33,8 +33,6 @@ All operations on views are performed via proxy objects such as
 YamlFilesystemView.
 
 '''
-import os
-
 import llnl.util.tty as tty
 from llnl.util.link_tree import MergeConflictError
 from llnl.util.tty.color import colorize
@@ -45,13 +43,15 @@ import spack.store
 import spack.schema.projections
 from spack.config import validate
 from spack.filesystem_view import YamlFilesystemView
+from spack.filesystem_view import view_symlink, view_hardlink, view_copy
 from spack.util import spack_yaml as s_yaml
 
 description = "project packages to a compact naming scheme on the filesystem."
 section = "environments"
 level = "short"
 
-actions_link = ["symlink", "add", "soft", "hardlink", "hard"]
+actions_link = ["symlink", "add", "soft", "hardlink", "hard", "copy",
+                "relocate"]
 actions_remove = ["remove", "rm"]
 actions_status = ["statlink", "status", "check"]
 
@@ -111,7 +111,10 @@ def setup_parser(sp):
             help='add package files to a filesystem view via symbolic links'),
         "hardlink": ssp.add_parser(
             'hardlink', aliases=['hard'],
-            help='add packages files to a filesystem via via hard links'),
+            help='add packages files to a filesystem view via hard links'),
+        "copy": ssp.add_parser(
+            'copy', aliases=['relocate'],
+            help='add package files to a filesystem view via copy/relocate'),
         "remove": ssp.add_parser(
             'remove', aliases=['rm'],
             help='remove packages from a filesystem view'),
@@ -125,7 +128,7 @@ def setup_parser(sp):
         act.add_argument('path', nargs=1,
                          help="path to file system view directory")
 
-        if cmd in ("symlink", "hardlink"):
+        if cmd in ("symlink", "hardlink", "copy"):
             # invalid for remove/statlink, for those commands the view needs to
             # already know its own projections.
             help_msg = "Initialize view using projections from file."
@@ -157,7 +160,7 @@ def setup_parser(sp):
             so["nargs"] = "+"
             act.add_argument('specs', **so)
 
-    for cmd in ["symlink", "hardlink"]:
+    for cmd in ["symlink", "hardlink", "copy"]:
         act = file_system_view_actions[cmd]
         act.add_argument("-i", "--ignore-conflicts", action='store_true')
 
@@ -179,11 +182,19 @@ def view(parser, args):
     else:
         ordered_projections = {}
 
+    # What method are we using for this view
+    if args.action in ("hardlink", "hard"):
+        link_fn = view_hardlink
+    elif args.action in ("copy", "relocate"):
+        link_fn = view_copy
+    else:
+        link_fn = view_symlink
+
     view = YamlFilesystemView(
         path, spack.store.layout,
         projections=ordered_projections,
         ignore_conflicts=getattr(args, "ignore_conflicts", False),
-        link=os.link if args.action in ["hardlink", "hard"] else os.symlink,
+        link=link_fn,
         verbose=args.verbose)
 
     # Process common args and specs

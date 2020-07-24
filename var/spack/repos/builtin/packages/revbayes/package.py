@@ -11,10 +11,11 @@ class Revbayes(CMakePackage):
        and an interpreted language."""
 
     homepage = "https://revbayes.github.io"
-    url      = "https://github.com/revbayes/revbayes/archive/v1.0.11.tar.gz"
+    url      = "https://github.com/revbayes/revbayes/archive/1.1.0.tar.gz"
     git      = "https://github.com/revbayes/revbayes.git"
 
     version('develop', branch='development')
+    version('1.1.0', sha256='a9f35178d8289d0dd32c9d936f6384f260e8e81e7b80a5155169064a24666012')
     version('1.0.13', sha256='e85e2e1fe182fe9f504900150d936a06d252a362c591b9d3d8272dd085aa85d9')
     version('1.0.12', sha256='80c926bb6b37288d02e36e07b44e4663841cd1fe541e2cc0b0e44c89ca929759')
     version('1.0.11', sha256='03052194baa220dde7e622a739f09f34393f67ea00a0b163b409d313d7fc7c02')
@@ -29,16 +30,26 @@ class Revbayes(CMakePackage):
 
     def url_for_version(self, version):
         if version > Version('1.0.13'):
-            return 'https://github.com/revbayes/revbayes/archive/v{0}.tar.gz'.format(version)
+            return 'https://github.com/revbayes/revbayes/archive/{0}.tar.gz'.format(version)
         else:
             return 'https://github.com/revbayes/revbayes.archive/archive/v{0}.tar.gz'.format(version)
 
     @property
     def root_cmakelists_dir(self):
-        if self.spec.version > Version('1.0.13') and '+mpi' in self.spec:
-            return 'projects/cmake/build-mpi'
+        if self.spec.version > Version('1.0.13'):
+            return 'src'
         else:
             return 'projects/cmake/build'
+
+    @when('@1.1.0:')
+    def cmake_args(self):
+        args = []
+        if '+mpi' in self.spec:
+            args.extend([
+                self.define('MPI', 'ON'),
+                self.define('RB_EXEC_NAME', 'rb-mpi'),
+            ])
+        return args
 
     @run_before('cmake')
     def regenerate(self):
@@ -49,10 +60,11 @@ class Revbayes(CMakePackage):
                 generate_version()
                 dest = join_path('..', '..', 'src', 'revlanguage', 'utils')
                 install('GitVersion.cpp', dest)
-            edit = FileFilter('regenerate.sh')
-            edit.filter('boost="true"', 'boost="false"')
-            if '+mpi' in self.spec:
-                edit.filter('mpi="false"', 'mpi="true"')
+            else:
+                edit = FileFilter('regenerate.sh')
+                edit.filter('boost="true"', 'boost="false"')
+                if '+mpi' in self.spec:
+                    edit.filter('mpi="false"', 'mpi="true"')
             regenerate = Executable('./regenerate.sh')
             regenerate()
 

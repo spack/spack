@@ -14,10 +14,11 @@ class Geos(AutotoolsPackage):
        operators, as well as specific JTS enhanced topology functions."""
 
     homepage = "http://trac.osgeo.org/geos/"
-    url      = "https://download.osgeo.org/geos/geos-3.7.2.tar.bz2"
+    url      = "https://download.osgeo.org/geos/geos-3.8.1.tar.bz2"
 
     maintainers = ['adamjstewart']
 
+    version('3.8.1', sha256='4258af4308deb9dbb5047379026b4cd9838513627cb943a44e16c40e42ae17f7')
     version('3.7.2', sha256='2166e65be6d612317115bfec07827c11b403c3f303e0a7420a2106bc999d7707')
     version('3.6.2', sha256='045a13df84d605a866602f6020fc6cbf8bf4c42fb50de237a08926e1d7d7652a')
     version('3.6.1', sha256='4a2e4e3a7a09a7cfda3211d0f4a235d9fd3176ddf64bd8db14b4ead266189fc5')

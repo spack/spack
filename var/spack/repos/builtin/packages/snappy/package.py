@@ -10,8 +10,9 @@ class Snappy(CMakePackage):
     """A fast compressor/decompressor: https://code.google.com/p/snappy"""
 
     homepage = "https://github.com/google/snappy"
-    url      = "https://github.com/google/snappy/archive/1.1.7.tar.gz"
+    url      = "https://github.com/google/snappy/archive/1.1.8.tar.gz"
 
+    version('1.1.8', sha256='16b677f07832a612b0836178db7f374e414f94657c138e6993cbfc5dcc58651f')
     version('1.1.7', sha256='3dfa02e873ff51a11ee02b9ca391807f0c8ea0529a4924afa645fbf97163f9d4')
 
     variant('shared', default=True, description='Build shared libraries')
@@ -37,8 +38,11 @@ class Snappy(CMakePackage):
 
     def flag_handler(self, name, flags):
         flags = list(flags)
-        if '+pic' in self.spec and name in ('cflags', 'cxxflags'):
-            flags.append(self.compiler.pic_flag)
+        if '+pic' in self.spec:
+            if name == 'cflags':
+                flags.append(self.compiler.cc_pic_flag)
+            elif name == 'cxxflags':
+                flags.append(self.compiler.cxx_pic_flag)
         return (None, None, flags)
 
     @run_after('install')

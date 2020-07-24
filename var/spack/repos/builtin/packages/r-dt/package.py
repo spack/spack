@@ -16,6 +16,7 @@ class RDt(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/DT_0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/DT"
 
+    version('0.13', sha256='79a073fe96980ce150d790ab76133c9e80bd463270c34d149c03934a622d63b5')
     version('0.8', sha256='90195054148806cf31c7db5c41f72d5389c75adc0b1183606a9babd2c6ae8e21')
     version('0.7', sha256='1de3f170deccd9e3aaefc057dd87c498e3b3f7f88eff645cf165ac34ffe3de2c')
     version('0.6', sha256='2ed68e9d161559171fa74b6105eee87b98acf755eae072b38ada60a83d427916')

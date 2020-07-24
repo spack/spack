@@ -37,7 +37,7 @@ In order to use it, just add another base class to your package, for example:
             if '+cuda' in spec:
                 options.append('-DWITH_CUDA=ON')
                 cuda_arch = spec.variants['cuda_arch'].value
-                if cuda_arch is not None:
+                if cuda_arch != 'none':
                     options.append('-DCUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
             else:
                 options.append('-DWITH_CUDA=OFF')

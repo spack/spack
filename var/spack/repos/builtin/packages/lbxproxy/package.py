@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Lbxproxy(AutotoolsPackage):
+class Lbxproxy(AutotoolsPackage, XorgPackage):
     """lbxproxy accepts client connections, multiplexes them over a single
     connection to the X server, and performs various optimizations on the
     X protocol to make it faster over low bandwidth and/or high latency
@@ -17,7 +17,7 @@ class Lbxproxy(AutotoolsPackage):
     X servers."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/lbxproxy"
-    url      = "https://www.x.org/archive/individual/app/lbxproxy-1.0.3.tar.gz"
+    xorg_mirror_path = "app/lbxproxy-1.0.3.tar.gz"
 
     version('1.0.3', sha256='db36251c9656c7da720f31e10df384f8946a9a5395915371b60d9423ad8f6a80')
 

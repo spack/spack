@@ -10,12 +10,10 @@ class PyXenv(PythonPackage):
     """Helpers to work with the environment in a platform independent way."""
 
     homepage = "https://gitlab.cern.ch/gaudi/xenv"
+    url      = "https://pypi.io/packages/source/x/xenv/xenv-1.0.0.tar.gz"
     git      = "https://gitlab.cern.ch/gaudi/xenv.git"
 
-    # As of 0.0.4, all released versions of xenv corrupt the system environment
-    # in a manner which breaks Spack's compiler wrappers. Therefore, we must
-    # package an un-released development version of xenv.
     version('develop',            branch='master')
-    version('develop_2018-12-20', commit='ddc3bf5e65e1689da499f639af7a27c5c4242841')
+    version('1.0.0', sha256='cea9547295f0bd07c87e68353bb9eb1c2f2d1c09a840e3196c19cbc807ee4558')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))

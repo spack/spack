@@ -6,15 +6,16 @@
 from spack import *
 
 
-class Raja(CMakePackage):
+class Raja(CMakePackage, CudaPackage):
     """RAJA Parallel Framework."""
 
     homepage = "http://software.llnl.gov/RAJA/"
     git      = "https://github.com/LLNL/RAJA.git"
 
     version('develop', branch='develop', submodules='True')
-    version('master',  branch='master',  submodules='True')
+    version('main',  branch='main',  submodules='True')
     version('0.11.0', tag='v0.11.0', submodules="True")
+    version('0.10.1', tag='v0.10.1', submodules="True")
     version('0.10.0', tag='v0.10.0', submodules="True")
     version('0.9.0', tag='v0.9.0', submodules="True")
     version('0.8.0', tag='v0.8.0', submodules="True")
@@ -27,10 +28,8 @@ class Raja(CMakePackage):
     version('0.4.1', tag='v0.4.1', submodules="True")
     version('0.4.0', tag='v0.4.0', submodules="True")
 
-    variant('cuda', default=False, description='Build with CUDA backend')
     variant('openmp', default=True, description='Build OpenMP backend')
-
-    depends_on('cuda', when='+cuda')
+    variant('shared', default=True, description='Build Shared Libs')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
@@ -46,5 +45,20 @@ class Raja(CMakePackage):
             options.extend([
                 '-DENABLE_CUDA=On',
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
+            if not spec.satisfies('cuda_arch=none'):
+                cuda_arch = spec.variants['cuda_arch'].value
+                options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
+        # shared vs static libs
+        if "+shared" in spec:
+            options.append('-DBUILD_SHARED_LIBS=ON')
+        else:
+            options.append('-DBUILD_SHARED_LIBS=OFF')
+        # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
+        # is used by the spack compiler wrapper.  This can go away when BLT
+        # removes -Werror from GTest flags
+        if self.spec.satisfies('%clang target=ppc64le:') or not self.run_tests:
+            options.append('-DENABLE_TESTS=OFF')
+        else:
+            options.append('-DENABLE_TESTS=ON')
 
         return options

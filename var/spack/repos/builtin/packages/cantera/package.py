@@ -30,7 +30,7 @@ class Cantera(SConsPackage):
     depends_on('googletest+gmock', when='@2.3.0:')
     depends_on('eigen',           when='@2.3.0:')
     depends_on('boost')
-    depends_on('sundials@:3.1.2', when='+sundials')  # must be compiled with -fPIC
+    depends_on('sundials@:3.1.2+lapack', when='+sundials')  # must be compiled with -fPIC
     depends_on('blas')
     depends_on('lapack')
 
@@ -59,7 +59,7 @@ class Cantera(SConsPackage):
             'CC={0}'.format(spack_cc),
             'CXX={0}'.format(spack_cxx),
             'FORTRAN={0}'.format(spack_fc),
-            'cc_flags={0}'.format(self.compiler.pic_flag),
+            'cc_flags={0}'.format(self.compiler.cc_pic_flag),
             # Allow Spack environment variables to propagate through to SCons
             'env_vars=all'
         ]

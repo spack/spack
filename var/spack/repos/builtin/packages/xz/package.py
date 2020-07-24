@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Xz(AutotoolsPackage):
+class Xz(AutotoolsPackage, SourceforgePackage):
     """XZ Utils is free general-purpose data compression software with
     high compression ratio. XZ Utils were written for POSIX-like systems,
     but also work on some not-so-POSIX systems. XZ Utils are the successor
     to LZMA Utils."""
 
     homepage = "http://tukaani.org/xz/"
-    url      = "http://tukaani.org/xz/xz-5.2.5.tar.bz2"
+    sourceforge_mirror_path = "lzmautils/files/xz-5.2.5.tar.bz2"
     list_url = "http://tukaani.org/xz/old.html"
 
     version('5.2.5', sha256='5117f930900b341493827d63aa910ff5e011e0b994197c3b71c08a20228a42df')

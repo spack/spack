@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Transset(AutotoolsPackage):
+class Transset(AutotoolsPackage, XorgPackage):
     """transset is an utility for setting opacity property."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/transset"
-    url      = "https://www.x.org/archive/individual/app/transset-1.0.1.tar.gz"
+    xorg_mirror_path = "app/transset-1.0.1.tar.gz"
 
     version('1.0.1', sha256='87c560e69e05ae8a5bad17ff62ac31cda43a5065508205b109c756c0ab857d55')
 

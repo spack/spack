@@ -101,9 +101,15 @@ class Hpl(AutotoolsPackage):
 
     @when('@2.3:')
     def configure_args(self):
-        config = [
-            'CFLAGS=-O3'
-        ]
+        filter_file(
+            r"^libs10=.*", "libs10=%s" % self.spec["blas"].libs.ld_flags,
+            "configure"
+        )
+
+        if '+openmp' in self.spec:
+            config = ['CFLAGS=-O3 ' + self.compiler.openmp_flag]
+        else:
+            config = ['CFLAGS=-O3']
 
         if (self.spec.satisfies('^intel-mkl') or
             self.spec.satisfies('^intel-parallel-studio+mkl')):

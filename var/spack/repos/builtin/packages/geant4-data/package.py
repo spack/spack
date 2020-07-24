@@ -15,6 +15,8 @@ class Geant4Data(BundlePackage):
 
     maintainers = ['drbenmorgan']
 
+    version('10.6.2')
+    version('10.6.1')
     version('10.6.0')
     version('10.5.1')
     version('10.4.3')
@@ -28,17 +30,18 @@ class Geant4Data(BundlePackage):
     # they generally don't change on the patch level
     # Can move to declaring on a dataset basis if needed
     # geant4@10.6.X
-    depends_on("g4ndl@4.6", when='@10.6.0')
+    depends_on("g4ndl@4.6", when='@10.6.0:10.6.9999')
     depends_on("g4emlow@7.9", when='@10.6.0')
-    depends_on("g4photonevaporation@5.5", when='@10.6.0')
-    depends_on("g4radioactivedecay@5.4", when='@10.6.0')
-    depends_on("g4particlexs@2.1", when='@10.6.0')
-    depends_on("g4pii@1.3", when='@10.6.0')
-    depends_on("g4realsurface@2.1.1", when='@10.6.0')
-    depends_on("g4saiddata@2.0", when='@10.6.0')
-    depends_on("g4abla@3.1", when='@10.6.0')
-    depends_on("g4incl@1.0", when='@10.6.0')
-    depends_on("g4ensdfstate@2.2", when='@10.6.0')
+    depends_on("g4emlow@7.9.1", when='@10.6.1:10.6.9999')
+    depends_on("g4photonevaporation@5.5", when='@10.6.0:10.6.9999')
+    depends_on("g4radioactivedecay@5.4", when='@10.6.0:10.6.9999')
+    depends_on("g4particlexs@2.1", when='@10.6.0:10.6.9999')
+    depends_on("g4pii@1.3", when='@10.6.0:10.6.9999')
+    depends_on("g4realsurface@2.1.1", when='@10.6.0:10.6.9999')
+    depends_on("g4saiddata@2.0", when='@10.6.0:10.6.9999')
+    depends_on("g4abla@3.1", when='@10.6.0:10.6.9999')
+    depends_on("g4incl@1.0", when='@10.6.0:10.6.9999')
+    depends_on("g4ensdfstate@2.2", when='@10.6.0:10.6.9999')
 
     # geant4@10.5.X
     depends_on("g4ndl@4.5", when='@10.5.0:10.5.9999')

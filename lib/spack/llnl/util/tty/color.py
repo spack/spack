@@ -215,20 +215,22 @@ def cextra(string):
     return len(''.join(re.findall(r'\033[^m]*m', string)))
 
 
-def cwrite(string, stream=sys.stdout, color=None):
+def cwrite(string, stream=None, color=None):
     """Replace all color expressions in string with ANSI control
        codes and write the result to the stream.  If color is
        False, this will write plain text with no color.  If True,
        then it will always write colored output.  If not supplied,
        then it will be set based on stream.isatty().
     """
+    stream = sys.stdout if stream is None else stream
     if color is None:
         color = get_color_when()
     stream.write(colorize(string, color=color))
 
 
-def cprint(string, stream=sys.stdout, color=None):
+def cprint(string, stream=None, color=None):
     """Same as cwrite, but writes a trailing newline to the stream."""
+    stream = sys.stdout if stream is None else stream
     cwrite(string + "\n", stream, color)
 
 

@@ -1,4 +1,7 @@
 packages:
+  all:
+    providers:
+      mpi: [openmpi, mpich]
   externaltool:
     buildable: False
     paths:

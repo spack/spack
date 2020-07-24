@@ -19,6 +19,9 @@ class Helics(CMakePackage):
 
     version('develop', branch='develop', submodules=True)
     version('master', branch='master', submodules=True)
+    version('2.5.2', sha256='81928f7e30233a07ae2bfe6c5489fdd958364c0549b2a3e6fdc6163d4b390311')
+    version('2.5.1', sha256='3fc3507f7c074ff8b6a17fe54676334158fb2ff7cc8e7f4df011938f28fdbbca')
+    version('2.5.0', sha256='6f4f9308ebb59d82d71cf068e0d9d66b6edfa7792d61d54f0a61bf20dd2a7428')
     version('2.4.2', sha256='957856f06ed6d622f05dfe53df7768bba8fe2336d841252f5fac8345070fa5cb')
     version('2.4.1', sha256='ac077e9efe466881ea366721cb31fb37ea0e72a881a717323ba4f3cdda338be4')
 
@@ -38,15 +41,17 @@ class Helics(CMakePackage):
     variant('asio', default=True, description="Compile with ASIO libraries")
     variant('swig', default=False, description="Build language bindings with SWIG")
     variant('webserver', default=True, description="Enable the integrated webserver in the HELICS broker server")
+    variant('python', default=False, description="Enable Python interface")
 
     # Build dependency
     depends_on('git', type='build', when='@master:')
     depends_on('cmake@3.4:', type='build')
-    depends_on('boost@1.70: ~atomic ~chrono ~date_time ~exception ~filesystem ~graph ~iostreams ~locale ~log ~math ~program_options ~random ~regex ~serialization ~signals ~system ~test ~thread ~timer ~wave', type='build', when='+boost')
+    depends_on('boost@1.70:', type='build', when='+boost')
     depends_on('swig@3.0:', type='build', when='+swig')
 
     depends_on('libzmq@4.3:', when='+zmq')
     depends_on('mpi@2', when='+mpi')
+    depends_on('python@3:', when='+python')
 
     # OpenMPI doesn't work with HELICS <=2.4.1
     conflicts('^openmpi', when='@:2.4.1 +mpi')
@@ -58,6 +63,8 @@ class Helics(CMakePackage):
     # ASIO (vendored in HELICS repo) is required for tcp and udp options
     conflicts('+tcp', when='~asio')
     conflicts('+udp', when='~asio')
+
+    extends('python', when='+python')
 
     def cmake_args(self):
         spec = self.spec
@@ -102,4 +109,13 @@ class Helics(CMakePackage):
         args.append('-DHELICS_ENABLE_SWIG={0}'.format(
             'ON' if '+swig' in spec else 'OFF'))
 
+        # Python
+        args.append('-DBUILD_PYTHON_INTERFACE={0}'.format(
+            'ON' if '+python' in spec else 'OFF'))
+
         return args
+
+    def setup_run_environment(self, env):
+        spec = self.spec
+        if '+python' in spec:
+            env.prepend_path('PYTHONPATH', self.prefix.python)

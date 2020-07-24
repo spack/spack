@@ -32,6 +32,7 @@ class Kahip(SConsPackage):
     depends_on('argtable')
     depends_on('mpi')  # Note: upstream package only tested on openmpi
 
+    conflicts('%apple-clang')
     conflicts('%clang')
 
     def patch(self):
