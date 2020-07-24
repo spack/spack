@@ -100,7 +100,16 @@ def _generate_pkg_config(external_pkg_entries):
             continue
 
         external_items = [('spec', str(e.spec)), ('prefix', e.base_dir)]
-        external_items.extend(e.spec.extra_attributes.items())
+        if e.spec.external_modules:
+            external_items.append(('modules', e.spec.external_modules))
+
+        if e.spec.extra_attributes:
+            external_items.append(
+                ('extra_attributes',
+                 syaml.syaml_dict(e.spec.extra_attributes.items()))
+            )
+
+        # external_items.extend(e.spec.extra_attributes.items())
         pkg_dict['externals'].append(
             syaml.syaml_dict(external_items)
         )
@@ -283,6 +292,9 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                            'not be added to packages.yaml [reason={1}]')
                     tty.warn(msg.format(spec, str(e)))
                     continue
+
+                if spec.external_path:
+                    pkg_prefix = spec.external_path
 
                 pkg_to_entries[pkg.name].append(
                     ExternalPackageEntry(spec=spec, base_dir=pkg_prefix))

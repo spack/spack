@@ -195,8 +195,20 @@ class DetectablePackageMeta(object):
                         spec_str = '{0}@{1} {2}'.format(
                             cls.name, version_str, variant_str
                         )
+
+                        # Pop a few reserved keys from extra attributes, since
+                        # they have a different semantics
+                        external_path = extra_attributes.pop('prefix', None)
+                        external_modules = extra_attributes.pop(
+                            'modules', None
+                        )
+                        spec = spack.spec.Spec(
+                            spec_str,
+                            external_path=external_path,
+                            external_modules=external_modules
+                        )
                         specs.append(spack.spec.Spec.from_detection(
-                            spec_str, extra_attributes=extra_attributes
+                            spec, extra_attributes=extra_attributes
                         ))
 
                 return sorted(specs)

@@ -340,18 +340,18 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def cc(self):
-        msg = "cannot retrieve C compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('c', None)
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
         return self.spec.prefix.bin.gcc if 'languages=c' in self.spec else None
 
     @property
     def cxx(self):
-        msg = "cannot retrieve C++ compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('cxx', None)
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
         result = None
         if 'languages=c++' in self.spec:
             result = os.path.join(self.spec.prefix.bin, 'g++')
@@ -359,10 +359,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def fortran(self):
-        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('fortran', None)
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
         result = None
         if 'languages=fortran' in self.spec:
             result = self.spec.prefix.bin.gfortran

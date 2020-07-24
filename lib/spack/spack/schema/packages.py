@@ -81,7 +81,8 @@ properties = {
                                 'spec': {'type': 'string'},
                                 'prefix': {'type': 'string'},
                                 'modules': {'type': 'array',
-                                            'items': {'type': 'string'}}
+                                            'items': {'type': 'string'}},
+                                'extra_attributes': {'type': 'object'}
                             },
                             'additionalProperties': True,
                             'required': ['spec']

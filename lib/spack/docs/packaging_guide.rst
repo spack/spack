@@ -4145,14 +4145,20 @@ would look like:
        externals:
        - spec: 'gcc@9.0.1 languages=c,c++,fortran'
          prefix: /usr
-         compilers:
-           c: /usr/bin/x86_64-linux-gnu-gcc-9
-           c++: /usr/bin/x86_64-linux-gnu-g++-9
-           fortran: /usr/bin/x86_64-linux-gnu-gfortran-9
+         extra_attributes:
+           compilers:
+             c: /usr/bin/x86_64-linux-gnu-gcc-9
+             c++: /usr/bin/x86_64-linux-gnu-g++-9
+             fortran: /usr/bin/x86_64-linux-gnu-gfortran-9
 
 This permits, for instance, to keep track of executables that would be named
 differently if built by Spack (e.g. ``x86_64-linux-gnu-gcc-9``
 instead of just ``gcc``).
+
+.. TODO: we need to gather some more experience on overriding 'prefix'
+   and other special keywords in extra attributes, but as soon as we are
+   confident that this is the way to go we should document the process.
+   See https://github.com/spack/spack/pull/16526#issuecomment-653783204
 
 """""""""""""""""""""""""""
 Filter matching executables
