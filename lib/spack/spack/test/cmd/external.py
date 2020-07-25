@@ -193,3 +193,32 @@ def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch):
     extra_attributes = external_gcc['extra_attributes']
     assert 'prefix' not in extra_attributes
     assert extra_attributes['compilers']['c'] == gcc_exe
+
+
+def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
+    # Prepare an environment to detect a fake gcc that
+    # override its external prefix
+    gcc_exe = mock_executable('gcc', output="echo 4.2.1")
+    prefix = os.path.dirname(gcc_exe)
+    monkeypatch.setenv('PATH', prefix)
+
+    @classmethod
+    def _determine_variants(cls, exes, version_str):
+        return 'languages=c', {
+            'prefix': '/opt/gcc/bin',
+            'compilers': {'c': exes[0]}
+        }
+
+    gcc_cls = spack.repo.path.get_pkg_class('gcc')
+    monkeypatch.setattr(gcc_cls, 'determine_variants', _determine_variants)
+
+    # Find the external spec
+    external('find', 'gcc')
+
+    # Check entries in 'packages.yaml'
+    packages_yaml = spack.config.get('packages')
+    assert 'gcc' in packages_yaml
+    assert 'externals' in packages_yaml['gcc']
+    externals = packages_yaml['gcc']['externals']
+    assert len(externals) == 1
+    assert externals[0]['prefix'] == '/opt/gcc/bin'
