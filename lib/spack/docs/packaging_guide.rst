@@ -4092,9 +4092,10 @@ method must be implemented:
        """
 
 This method receives as input the path to a single executable and must return
-as output its version as a string, or ``None`` if the version cannot be determined
-or the executable is not related to the package.
-Implementing the three steps above is mandatory, and gives the package the
+as output its version as a string; if the user cannot determine the version
+or determines that the executable is not an instance of the package, they can
+return None and the exe will be discarded as a candidate.
+Implementing the two steps above is mandatory, and gives the package the
 basic ability to detect if a spec is present on the system at a given version.
 
 .. note::
@@ -4105,7 +4106,7 @@ basic ability to detect if a spec is present on the system at a given version.
 Additional functionality
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Besides the three mandatory steps described above, there are also optional
+Besides the two mandatory steps described above, there are also optional
 methods that can be implemented to either increase the amount of details
 being detected or improve the robustness of the detection logic in a package.
 
