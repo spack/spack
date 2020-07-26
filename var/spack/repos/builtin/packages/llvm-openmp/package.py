@@ -19,7 +19,7 @@ class LlvmOpenmp(CMakePackage):
     depends_on('cmake@2.8:', type='build')
 
     variant('multicompat', default=False,
-            description="Support gomp as well as the Intel openMP runtime library.")
+            description="Support gomp and the Intel openMP runtime library.")
 
     def cmake_args(self):
 
