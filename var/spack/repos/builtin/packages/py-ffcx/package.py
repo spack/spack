@@ -17,6 +17,6 @@ class PyFfcx(PythonPackage):
     extends("python")
     depends_on("py-setuptools")
     depends_on("py-cffi")
-    depends_on("py-ufl")
-    depends_on("py-fiat")
+    depends_on("py-ufl@master")
+    depends_on("py-fiat@master")
     depends_on("py-numpy")
