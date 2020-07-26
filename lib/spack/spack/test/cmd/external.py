@@ -12,7 +12,6 @@ import spack
 import spack.detection.path
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec
-from spack.detection.common import ExternalPackageEntry
 from spack.main import SpackCommand
 
 
@@ -28,7 +27,7 @@ def test_find_external_single_package(mock_executable):
     pkg, entries = next(iter(pkg_to_entries.items()))
     single_entry = next(iter(entries))
 
-    assert single_entry.spec == Spec('cmake@1.foo')
+    assert single_entry == Spec('cmake@1.foo')
 
 
 def test_find_external_two_instances_same_package(mock_executable):
@@ -49,8 +48,8 @@ def test_find_external_two_instances_same_package(mock_executable):
         pkgs_to_check, system_path_to_exe
     )
 
-    pkg, entries = next(iter(pkg_to_entries.items()))
-    spec_to_path = dict((e.spec, e.base_dir) for e in entries)
+    pkg, external_specs = next(iter(pkg_to_entries.items()))
+    spec_to_path = dict((s, s.external_path) for s in external_specs)
     assert spec_to_path[Spec('cmake@1.foo')] == (
         spack.detection.path._determine_base_dir(os.path.dirname(cmake_path1)))
     assert spec_to_path[Spec('cmake@3.17.2')] == (
@@ -59,12 +58,8 @@ def test_find_external_two_instances_same_package(mock_executable):
 
 def test_find_external_update_config(mutable_config):
     entries = [
-        ExternalPackageEntry(
-            Spec.from_detection('cmake@1.foo'), '/x/y1/', modules=None
-        ),
-        ExternalPackageEntry(
-            Spec.from_detection('cmake@3.17.2'), '/x/y2/', modules=None
-        ),
+        Spec.from_detection('cmake@1.foo', external_path='/x/y1/'),
+        Spec.from_detection('cmake@3.17.2', external_path='/x/y2/'),
     ]
     pkg_to_entries = {'cmake': entries}
 
@@ -156,12 +151,8 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
 
     mutable_config.update_config('packages', pkgs_cfg_init)
     entries = [
-        ExternalPackageEntry(
-            Spec.from_detection('find-externals1@1.1'), '/x/y1/', modules=None
-        ),
-        ExternalPackageEntry(
-            Spec.from_detection('find-externals1@1.2'), '/x/y2/', modules=None
-        )
+        Spec.from_detection('find-externals1@1.1', external_path='/x/y1/'),
+        Spec.from_detection('find-externals1@1.2', external_path='/x/y2/')
     ]
     pkg_to_entries = {'find-externals1': entries}
     spack.cmd.external._update_pkg_config(pkg_to_entries, False)
@@ -305,7 +296,7 @@ def test_package_detection(mock_executable, package_name):
             entries = spack.detection.path.detect(
                 [spack.repo.get(package_name)], abs_path_to_exe
             )
-            specs = set(x.spec for x in entries[package_name])
+            specs = set(entries[package_name])
             results = test['results']
             # If no result was expected, check that nothing was detected
             if not results:
@@ -376,7 +367,7 @@ def test_package_detection_on_cray(monkeypatch, mock_executable, package_name):
                 [spack.repo.get(package_name)]
             )
             # TODO: this part of the test is the same as above
-            specs = set(x.spec for x in entries[package_name])
+            specs = set(entries[package_name])
             results = test['results']
             # If no result was expected, check that nothing was detected
             if not results:

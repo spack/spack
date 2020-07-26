@@ -7,7 +7,6 @@ import re
 
 import llnl.util.tty as tty
 import spack.architecture
-import spack.detection.common
 import spack.detection.path
 import spack.operating_systems.cray_frontend as cray_frontend
 import spack.util.module_cmd
@@ -92,16 +91,14 @@ def _detect_from_craype_modules(packages_to_check):
             spec_str_format = '{0}@{1} os={2}'
             spec = spack.spec.Spec.from_detection(
                 spec_str=spec_str_format.format(pkg.name, version, spec_os),
+                external_modules=[
+                    pkg.cray_prgenv,
+                    '{0}/{1}'.format(pkg.cray_module_name, module_version)
+                ],
                 extra_attributes=extra_attributes
             )
             # Add back-end compiler
-            item = spack.detection.common.ExternalPackageEntry(
-                spec=spec, base_dir=None, modules=[
-                    pkg.cray_prgenv,
-                    '{0}/{1}'.format(pkg.cray_module_name, module_version)
-                ]
-            )
-            pkg_to_entries[pkg.name].append(item)
+            pkg_to_entries[pkg.name].append(spec)
             msg = "[CRAY BE] Detected BE compiler [name={0}, version={1}]"
             tty.debug(msg.format(pkg.name, version))
 

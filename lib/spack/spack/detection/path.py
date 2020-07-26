@@ -91,11 +91,12 @@ def detect(packages_to_check, system_path_to_exe=None):
                 )
 
             for spec in specs:
-                pkg_prefix = _determine_base_dir(prefix)
+                spec.external_path = (spec.external_path or
+                                      _determine_base_dir(prefix))
 
-                if not pkg_prefix:
-                    tty.debug("{0} does not end with a 'bin/' directory: it"
-                              " cannot be added as a Spack package"
+                if not spec.external_path:
+                    tty.debug('{0} does not have a "bin" directory: it'
+                              ' cannot be added as a Spack package'
                               .format(prefix))
                     continue
 
@@ -117,10 +118,7 @@ def detect(packages_to_check, system_path_to_exe=None):
                            'not be added to packages.yaml [{1}]')
                     tty.warn(msg.format(spec, str(e)))
                     continue
-                item = spack.detection.common.ExternalPackageEntry(
-                    spec=spec, base_dir=pkg_prefix, modules=[]
-                )
-                pkg_to_entries[pkg.name].append(item)
+                pkg_to_entries[pkg.name].append(spec)
 
     return pkg_to_entries
 
