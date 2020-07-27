@@ -19,7 +19,8 @@ class Coreneuron(CMakePackage):
     git      = "https://github.com/BlueBrain/CoreNeuron"
 
     version('develop', branch='master', submodules=True)
-    version('0.19', tag='0.19', submodules=True, preferred=True)
+    version('0.20', tag='0.20', submodules=True, preferred=True)
+    version('0.19', tag='0.19', submodules=True)
     version('0.18', tag='0.18', submodules=True)
     version('0.17', tag='0.17', submodules=True)
     version('0.16', tag='0.16', submodules=True)

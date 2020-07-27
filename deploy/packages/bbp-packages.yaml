@@ -63,7 +63,7 @@ packages:
     specs:
       - functionalizer@3.12.2
       - parquet-converters@0.5.5
-      - synapsetool@0.5.9
+      - synapsetool@0.6.0
       - touchdetector@5.4.0
       - brayns +opendeck +brion ^brion@3.1.0 ^ospray@1.7.3%intel@19.0.4
       - brayns@1.0.1 +brion ^brion@3.1.0 ^ospray%intel@19.0.4
@@ -134,7 +134,7 @@ packages:
       - architecture
       - compiler
     specs:
-      - neurodamus-core+common@2.11.0
+      - neurodamus-core+common@2.11.1
       - ultraliser
 
   intel-stable:
@@ -165,7 +165,7 @@ packages:
       - mpi
       - python
     specs:
-      - neurodamus-core~common@2.11.0
+      - neurodamus-core~common@2.11.1
       - neurodamus-neocortex+coreneuron@0.3
       - neurodamus-hippocampus+coreneuron@0.4
       - neurodamus-thalamus+coreneuron@0.3
