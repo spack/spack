@@ -1568,9 +1568,14 @@ class PackageInstaller(object):
             except (Exception, SystemExit) as exc:
                 # Best effort installs suppress the exception and mark the
                 # package as a failure UNLESS this is the explicit package.
-                err = 'Failed to install {0} due to {1}: {2}'
-                tty.error(err.format(pkg.name, exc.__class__.__name__,
-                          str(exc)))
+                if (not isinstance(exc, spack.error.SpackError) or
+                    not exc.printed):
+                    # SpackErrors can be printed by the build process or at
+                    # lower levels -- skip printing if already printed.
+                    # TODO: sort out this and SpackEror.print_context()
+                    err = 'Failed to install {0} due to {1}: {2}'
+                    tty.error(
+                        err.format(pkg.name, exc.__class__.__name__, str(exc)))
 
                 self._update_failed(task, True, exc)
 

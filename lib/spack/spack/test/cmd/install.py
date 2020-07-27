@@ -180,10 +180,12 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
     assert install.error.pkg.name == 'build-error'
     assert 'Full build log:' in out
 
-    # Message shows up for ProcessError (1), ChildError (1), and output (1)
+    print(out)
+
+    # Message shows up for ProcessError (1) and output (1)
     errors = [line for line in out.split('\n')
               if 'configure: error: cannot run C compiled programs' in line]
-    assert len(errors) == 3
+    assert len(errors) == 2
 
 
 def test_install_overwrite(
