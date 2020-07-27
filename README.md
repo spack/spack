@@ -1,9 +1,10 @@
 # <img src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo.svg" width="64" valign="middle" alt="Spack"/> Spack
 
-[![](https://github.com/spack/spack/workflows/macos%20tests/badge.svg)](https://github.com/spack/spack/actions)
-[![Build Status](https://travis-ci.com/spack/spack.svg?branch=develop)](https://travis-ci.com/spack/spack)
+[![MacOS Tests](https://github.com/spack/spack/workflows/macos%20tests/badge.svg)](https://github.com/spack/spack/actions)
+[![Linux Tests](https://github.com/spack/spack/workflows/linux%20tests/badge.svg)](https://github.com/spack/spack/actions)
 [![Linux Builds](https://github.com/spack/spack/workflows/linux%20builds/badge.svg)](https://github.com/spack/spack/actions)
 [![macOS Builds (nightly)](https://github.com/spack/spack/workflows/macOS%20builds%20nightly/badge.svg?branch=develop)](https://github.com/spack/spack/actions?query=workflow%3A%22macOS+builds+nightly%22)
+[![Build Status](https://travis-ci.com/spack/spack.svg?branch=develop)](https://travis-ci.com/spack/spack)
 [![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
 [![Slack](https://spackpm.herokuapp.com/badge.svg)](https://spackpm.herokuapp.com)
@@ -77,11 +78,29 @@ these guidelines with [Travis CI](https://travis-ci.org/spack/spack).  To
 run these tests locally, and for helpful tips on git, see our
 [Contribution Guide](http://spack.readthedocs.io/en/latest/contribution_guide.html).
 
-Spack uses a rough approximation of the
-[Git Flow](http://nvie.com/posts/a-successful-git-branching-model/)
-branching model.  The ``develop`` branch contains the latest
-contributions, and ``master`` is always tagged and points to the latest
-stable release.
+Spack's `develop` branch has the latest contributions. Pull requests
+should target `develop`, and users who want the latest package versions,
+features, etc. can use `develop`.
+
+Releases
+--------
+
+For multi-user site deployments or other use cases that need very stable
+software installations, we recommend using Spack's
+[stable releases](https://github.com/spack/spack/releases).
+
+Each Spack release series also has a corresponding branch, e.g.
+`releases/v0.14` has `0.14.x` versions of Spack, and `releases/v0.13` has
+`0.13.x` versions. We backport important bug fixes to these branches but
+we do not advance the package versions or make other changes that would
+change the way Spack concretizes dependencies within a release branch.
+So, you can base your Spack deployment on a release branch and `git pull`
+to get fixes, without the package churn that comes with `develop`.
+
+The latest release is always available with the `releases/latest` tag.
+
+See the [docs on releases](https://spack.readthedocs.io/en/latest/developer_guide.html#releases)
+for more details.
 
 Code of Conduct
 ------------------------
@@ -122,4 +141,4 @@ See [LICENSE-MIT](https://github.com/spack/spack/blob/develop/LICENSE-MIT),
 
 SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-LLNL-CODE-647188
+LLNL-CODE-811652

@@ -7,14 +7,15 @@ from spack import *
 
 
 class Blaspp(CMakePackage):
-    """BLAS++: C++ API for the Basic Linear Algebra Subroutines (University of
-    Texas)."""
+    """C++ API for the Basic Linear Algebra Subroutines. Developed by the
+       Innovative Computing Laboratory at the University of Tennessee,
+       Knoxville."""
 
     homepage = "https://bitbucket.org/icl/blaspp"
-    hg       = "https://bitbucket.org/icl/blaspp"
-    maintainers = ['teonnik', 'Sely85']
+    git      = "https://bitbucket.org/icl/blaspp"
+    maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
-    version('develop', hg=hg, revision="5191c9d")
+    version('develop', commit='6293d96')
 
     variant('gfort',
             default=False,

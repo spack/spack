@@ -57,6 +57,13 @@ class Silo(AutotoolsPackage):
 
     @when('%clang@9:')
     def patch(self):
+        self.clang_9_patch()
+
+    @when('%apple-clang@11.0.3:')
+    def patch(self):
+        self.clang_9_patch()
+
+    def clang_9_patch(self):
         # Clang 9 and later include macro definitions in <math.h> that conflict
         # with typedefs DOMAIN and RANGE used in Silo plugins.
         # It looks like the upstream fpzip repo has been fixed, but that change

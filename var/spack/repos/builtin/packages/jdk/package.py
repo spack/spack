@@ -60,6 +60,7 @@ class Jdk(Package):
             url='https://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz')
 
     provides('java@14', when='@14.0:14.999')
+    provides('java@13', when='@13.0:13.999')
     provides('java@12', when='@12.0:12.999')
     provides('java@11', when='@11.0:11.999')
     provides('java@10', when='@10.0:10.999')

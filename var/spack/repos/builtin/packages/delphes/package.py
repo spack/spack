@@ -39,7 +39,8 @@ class Delphes(CMakePackage):
     version('3.0.5', sha256='ab64ec6d2476fbfa40562e7edb510a8ab4c4fe5be77a4353ebf315c2af181a80')
 
     depends_on('cmake', type='build')
-    depends_on('root')
+    depends_on('root cxxstd=14', when='cxxstd=14')
+    depends_on('root cxxstd=17', when='cxxstd=17')
 
     variant('build_type', default='Release',
             description='The build type to build',

@@ -21,7 +21,7 @@ class Hipsycl(CMakePackage):
 
     provides("sycl")
 
-    version("master", branch="master", submodules=True)
+    version("stable", branch="stable", submodules=True)
     version(
         "0.8.0",
         commit="2daf8407e49dd32ebd1c266e8e944e390d28b22a",

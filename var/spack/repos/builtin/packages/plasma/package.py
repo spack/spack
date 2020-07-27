@@ -58,6 +58,7 @@ class Plasma(CMakePackage):
     conflicts("%gcc@:5.99", when='@17.2:')
 
     conflicts("%cce")
+    conflicts('%apple-clang')
     conflicts("%clang")
     conflicts("%intel")
     conflicts("%nag")

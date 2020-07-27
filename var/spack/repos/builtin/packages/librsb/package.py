@@ -17,6 +17,7 @@ class Librsb(AutotoolsPackage):
     version('1.2.0.8',   '8bebd19a1866d80ade13eabfdd0f07ae7e8a485c0b975b5d15f531ac204d80cb')
 
     depends_on('zlib')
+    conflicts('%apple-clang')
     conflicts('%clang')
 
     def configure_args(self):

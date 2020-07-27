@@ -108,6 +108,8 @@ echo $PATH"""
     else:
         create_args.insert(create_args.index('-a'), '-u')
 
+    create_args.insert(create_args.index('-a'), '--rebuild-index')
+
     args = parser.parse_args(create_args)
     buildcache.buildcache(parser, args)
     # trigger overwrite warning
@@ -165,7 +167,7 @@ echo $PATH"""
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
 
-    args = parser.parse_args(['list', '-f'])
+    args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
 
     args = parser.parse_args(['list', 'trivial'])
@@ -242,9 +244,8 @@ def test_relocate_links(tmpdir):
         os.utime(new_binname, None)
         os.symlink(old_binname, new_linkname)
         os.symlink('/usr/lib/libc.so', new_linkname2)
-        relocate_links(filenames, old_layout_root, new_layout_root,
-                       old_install_prefix, new_install_prefix,
-                       {old_install_prefix: new_install_prefix})
+        relocate_links(filenames, old_layout_root,
+                       old_install_prefix, new_install_prefix)
         assert os.readlink(new_linkname) == new_binname
         assert os.readlink(new_linkname2) == '/usr/lib/libc.so'
 

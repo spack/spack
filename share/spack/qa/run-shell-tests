@@ -18,12 +18,15 @@
 ORIGINAL_PATH="$PATH"
 
 . "$(dirname $0)/setup.sh"
-check_dependencies $coverage git hg svn
+check_dependencies $coverage kcov git hg svn
 
 # Clean the environment by removing Spack from the path and getting rid of
 # the spack shell function
 export PATH="$ORIGINAL_PATH"
 unset spack
+
+# Convert QA_DIR to absolute path before changing directory
+export QA_DIR=$(realpath $QA_DIR)
 
 # Start in the spack root directory
 cd "$SPACK_ROOT"
@@ -41,3 +44,6 @@ fi
 # Run the test scripts for their output (these will print nicely)
 zsh  "$QA_DIR/setup-env-test.sh"
 dash "$QA_DIR/setup-env-test.sh"
+
+# Run fish tests
+fish "$QA_DIR/setup-env-test.fish"

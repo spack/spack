@@ -608,7 +608,7 @@ class TestConcretize(object):
         ('mpileaks%gcc@4.8', 'haswell'),
         ('mpileaks%gcc@5.3.0', 'broadwell'),
         # Apple's clang always falls back to x86-64 for now
-        ('mpileaks%clang@9.1.0-apple', 'x86_64')
+        ('mpileaks%apple-clang@9.1.0', 'x86_64')
     ])
     @pytest.mark.regression('13361')
     def test_adjusting_default_target_based_on_compiler(
@@ -633,3 +633,8 @@ class TestConcretize(object):
         s = Spec('mpileaks %gcc@4.5:')
         s.concretize()
         assert str(s.compiler.version) == '4.5.0'
+
+    def test_concretize_anonymous(self):
+        with pytest.raises(spack.error.SpecError):
+            s = Spec('+variant')
+            s.concretize()

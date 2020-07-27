@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import spack.environment as ev
-import os
 
 
 class Cardioid(CMakePackage):
@@ -31,20 +29,6 @@ class Cardioid(CMakePackage):
     depends_on('mfem+hypre+superlu-dist+lapack^hypre+cuda', when="+mfem+cuda")
     depends_on('cmake@3.1:', type='build')
     depends_on('perl', type='build')
-
-    @property
-    def build_directory(self):
-        """Returns the directory to use when building the package
-
-        :return: directory where to build the package
-        """
-        env = ev.get_env(None, 'env status')
-        if not env:
-            basename = str(self.spec.arch)
-        else:
-            basename = env.name
-
-        return os.path.join(self.stage.source_path, "build", basename)
 
     def cmake_args(self):
         spec = self.spec

@@ -593,18 +593,29 @@ def substitute_abstract_variants(spec):
     """Uses the information in `spec.package` to turn any variant that needs
     it into a SingleValuedVariant.
 
+    This method is best effort. All variants that can be substituted will be
+    substituted before any error is raised.
+
     Args:
         spec: spec on which to operate the substitution
     """
+    # This method needs to be best effort so that it works in matrix exlusion
+    # in $spack/lib/spack/spack/spec_list.py
+    failed = []
     for name, v in spec.variants.items():
         if name in spack.directives.reserved_names:
             continue
         pkg_variant = spec.package_class.variants.get(name, None)
         if not pkg_variant:
-            raise UnknownVariantError(spec, [name])
+            failed.append(name)
+            continue
         new_variant = pkg_variant.make_variant(v._original_value)
         pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
+
+    # Raise all errors at once
+    if failed:
+        raise UnknownVariantError(spec, failed)
 
 
 # The class below inherit from Sequence to disguise as a tuple and comply

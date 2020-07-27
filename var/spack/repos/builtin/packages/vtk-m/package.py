@@ -30,7 +30,11 @@ class VtkM(CMakePackage, CudaPackage):
     version('1.3.0', sha256="f88c1b0a1980f695240eeed9bcccfa420cc089e631dc2917c9728a2eb906df2e")
     version('1.2.0', sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763")
     version('1.1.0', sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18")
-
+    # version used by ascent
+    version('ascent_ver', commit="a3b8525ef97d94996ae843db0dd4f675c38e8b1e")
+    # patches, required for ascent
+    patch('vtkmdiy_fpic.patch', when='@ascent_ver')
+    patch('disable_flying_edges.patch', when='@ascent_ver')
     # use release, instead of release with debug symbols b/c vtkm libs
     # can overwhelm compilers with too many symbols
     variant('build_type', default='Release', description='CMake build type',
@@ -102,7 +106,7 @@ class VtkM(CMakePackage, CudaPackage):
 
             # logging support
             if "+logging" in spec:
-                if spec.satisfies('@:1.2.0'):
+                if not spec.satisfies('@1.3.0:,ascent_ver'):
                     raise InstallError('logging is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_LOGGING:BOOL=ON")
@@ -111,7 +115,7 @@ class VtkM(CMakePackage, CudaPackage):
 
             # mpi support
             if "+mpi" in spec:
-                if spec.satisfies('@:1.2.0'):
+                if not spec.satisfies('@1.3.0:,ascent_ver'):
                     raise InstallError('mpi is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_MPI:BOOL=ON")
@@ -121,7 +125,7 @@ class VtkM(CMakePackage, CudaPackage):
             # openmp support
             if "+openmp" in spec:
                 # openmp is added since version 1.3.0
-                if spec.satisfies('@:1.2.0'):
+                if not spec.satisfies('@1.3.0:,ascent_ver'):
                     raise InstallError('OpenMP is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_OPENMP:BOOL=ON")

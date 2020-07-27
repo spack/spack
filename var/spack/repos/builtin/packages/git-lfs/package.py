@@ -16,6 +16,8 @@ class GitLfs(MakefilePackage):
     homepage = "https://git-lfs.github.com"
     url      = "https://github.com/git-lfs/git-lfs/archive/v2.6.1.tar.gz"
 
+    version('2.11.0', sha256='8183c4cbef8cf9c2e86b0c0a9822451e2df272f89ceb357c498bfdf0ff1b36c7')
+    version('2.10.0', sha256='07fd5c57a1039d5717dc192affbe3268ec2fd03accdca462cb504c0b4194cd23')
     version('2.9.0', sha256='f1963ad88747577ffeeb854649aeacaa741c59be74683da4d46b129a72d111b7')
     version('2.8.0', sha256='10b476bb8862ebceddc6f0a55f5fb63e2c1e5bed6554f6e3b207dd0155a196ad')
     version('2.7.2', sha256='e65659f12ec557ae8c778c01ca62d921413221864b68bd93cfa41399028ae67f')

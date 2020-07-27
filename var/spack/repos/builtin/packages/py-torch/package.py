@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class PyTorch(PythonPackage, CudaPackage):
@@ -50,6 +51,7 @@ class PyTorch(PythonPackage, CudaPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.5.1', tag='v1.5.1', submodules=True)
     version('1.5.0', tag='v1.5.0', submodules=True)
     version('1.4.1', tag='v1.4.1', submodules=True)
     version('1.4.0', tag='v1.4.0', submodules=True,
@@ -67,6 +69,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
     variant('cuda', default=True, description='Build with CUDA')
     variant('cudnn', default=True, description='Enables the cuDNN build')
+    variant('rocm', default=False, description='Build with ROCm build')
     variant('magma', default=False, description='Enables the MAGMA build')
     variant('fbgemm', default=False, description='Enables the FBGEMM build')
     variant('test', default=False, description='Enables the test build')
@@ -111,6 +114,7 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')
+    conflicts('+rocm', when='+cuda')
 
     # Required dependencies
     depends_on('cmake@3.5:', type='build')
@@ -154,7 +158,7 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('nccl', when='+nccl')
     depends_on('gloo', when='+gloo')
     depends_on('opencv', when='+opencv')
-    depends_on('llvm-openmp', when='%clang platform=darwin +openmp')
+    depends_on('llvm-openmp', when='%apple-clang +openmp')
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('leveldb', when='+leveldb')
     depends_on('lmdb', when='+lmdb')
@@ -170,13 +174,20 @@ class PyTorch(PythonPackage, CudaPackage):
     # https://github.com/pytorch/pytorch/pull/35607
     # https://github.com/pytorch/pytorch/pull/37865
     # Fixes CMake configuration error when XNNPACK is disabled
-    patch('xnnpack.patch', when='@1.5.0')
+    patch('xnnpack.patch', when='@1.5.0:1.5.999')
+
+    # Fixes Build error for when ROCm is enable for pytorch-1.5 release
+    patch('rocm.patch', when='@1.5.0:1.5.999+rocm')
 
     # https://github.com/pytorch/pytorch/pull/37086
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
     patch('https://github.com/pytorch/pytorch/commit/e921cd222a8fbeabf5a3e74e83e0d8dfb01aa8b5.patch',
-          sha256='7781c7ec0a661bf5a946a659f80e90df9dba116ad168762f15b10547113ae600',
+          sha256='17561b16cd2db22f10c0fe1fdcb428aecb0ac3964ba022a41343a6bb8cba7049',
           when='@1.1:1.5')
+
+    # Fix for 'FindOpenMP.cmake'
+    # to detect openmp settings used by Fujitsu compiler.
+    patch('detect_omp_of_fujitsu_compiler.patch', when='%fj')
 
     # Both build and install run cmake/make/make install
     # Only run once to speed up build times
@@ -239,7 +250,9 @@ class PyTorch(PythonPackage, CudaPackage):
 
         enable_or_disable('fbgemm')
         enable_or_disable('test', keyword='BUILD')
-
+        enable_or_disable('rocm')
+        if '+rocm' in self.spec:
+            env.set('USE_MKLDNN', 0)
         if '+miopen' in self.spec:
             env.set('MIOPEN_LIB_DIR', self.spec['miopen'].libs.directories[0])
             env.set('MIOPEN_INCLUDE_DIR', self.spec['miopen'].prefix.include)
@@ -291,6 +304,11 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('redis', newer=True)
         enable_or_disable('zstd', newer=True)
         enable_or_disable('tbb', newer=True)
+
+    @run_before('install')
+    def build_amd(self):
+        if '+rocm' in self.spec:
+            python(os.path.join('tools', 'amd_build', 'build_amd.py'))
 
     def install_test(self):
         with working_dir('test'):

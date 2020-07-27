@@ -36,9 +36,8 @@ class Unifyfs(AutotoolsPackage):
 
     # Required dependencies
     depends_on('flatcc')
-    # Latest version of GOTCHA has API changes that break UnifyFS.
-    # Updates to UnifyFS are coming in order to fix this.
-    depends_on('gotcha@0.0.2')
+    depends_on('gotcha@0.0.2', when='@:0.9.0')
+    depends_on('gotcha@1.0.3:', when='@0.9.1:')
     depends_on('leveldb')
     depends_on('margo')
     depends_on('mercury+bmi+sm')

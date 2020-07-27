@@ -23,6 +23,7 @@ class Cabana(CMakePackage):
     variant('openmp', default=False, description="enable OpenMP backend")
     variant('cuda', default=False, description="enable Cuda backend")
     variant('shared', default=True, description='Build shared libraries')
+    variant('mpi', default=True, description='Build with mpi support')
 
     depends_on("cmake@3.9:", type='build')
     depends_on("kokkos-legacy+serial", when="@:0.2.0+serial")
@@ -31,6 +32,7 @@ class Cabana(CMakePackage):
     depends_on("kokkos@3.1:+serial", when="@0.3.0:+serial")
     depends_on("kokkos@3.1:+openmp", when="@0.3.0:+openmp")
     depends_on("kokkos@3.1:+cuda", when="@0.3.0:+cuda")
+    depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
         options = [
@@ -41,6 +43,8 @@ class Cabana(CMakePackage):
                 'On' if '+openmp'  in self.spec else 'Off'),
             '-DCabana_ENABLE_Cuda=%s'  % (
                 'On' if '+cuda'  in self.spec else 'Off'),
+            '-DCabana_ENABLE_MPI=%s'  % (
+                'On' if '+mpi'  in self.spec else 'Off'),
             '-DBUILD_SHARED_LIBS=%s' % (
                 'On' if '+shared'  in self.spec else 'Off')
         ]

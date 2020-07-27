@@ -22,6 +22,7 @@ class SnapBerkeley(MakefilePackage):
 
     conflicts('%gcc@6:')
     conflicts('%cce')
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%intel')
     conflicts('%nag')

@@ -18,6 +18,7 @@ class Julia(Package):
     maintainers = ['glennpj']
 
     version('master', branch='master')
+    version('1.4.1', sha256='b21585db55673ac0668c163678fcf2aad11eb7c64bb2aa03a43046115fab1553')
     version('1.4.0', sha256='880c73a08296ce8d94ad9605149f2a2b2b028e7202a700ef725da899300b8be9')
     version('1.3.1', sha256='053908ec2706eb76cfdc998c077de123ecb1c60c945b4b5057aa3be19147b723')
     version('1.2.0', sha256='2419b268fc5c3666dd9aeb554815fe7cf9e0e7265bc9b94a43957c31a68d9184')
@@ -46,7 +47,8 @@ class Julia(Package):
     # Python only needed to build LLVM?
     depends_on('python@2.7:2.8', type='build', when='@:1.1')
     depends_on('python@2.7:', type='build', when='@1.2:')
-    depends_on('cmake @2.8:', type='build', when='@1.0:')
+    depends_on('cmake@2.8:', type='build', when='@1.0:')
+    depends_on('cmake@:3.11', type='build', when='@:1.4')
     depends_on('git', type='build', when='@master')
 
     # Combined build-time and run-time dependencies:

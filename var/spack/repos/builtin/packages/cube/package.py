@@ -17,6 +17,7 @@ class Cube(AutotoolsPackage):
     homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
     url      = "http://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubegui-4.4.2.tar.gz"
 
+    version('4.5', sha256='ffe84108adce0adf06dca80820d941b1a60a5580a8bacc8f7c1b6989c8ab1bfa')
     version('4.4.4', sha256='9b7b96d5a64b558a9017cc3599bba93a42095534e018e3de9b1f80ab6d04cc34')
     version('4.4.3', sha256='bf4b0f2ff68507ff82ba24eb4895aed961710dae16d783c222a12f152440cf36')
     version('4.4.2', sha256='29b6479616a524f8325f5031a883963bf965fb92569de33271a020f08650ec7b')

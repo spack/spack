@@ -1,0 +1,28 @@
+--- spack-src/Geometry/kmbBucket.h.org	2020-05-28 11:42:08.438970353 +0900
++++ spack-src/Geometry/kmbBucket.h	2020-05-28 11:43:55.449496013 +0900
+@@ -348,12 +348,6 @@
+ 
+ 		int getIndex() const{ return it->first; };
+ 
+-		void getIndices(int &i,int &j,int &k) const{
+-			i = it->first / (ynum*znum);
+-			j = (it->first - i*ynum*znum) / znum;
+-			k = it->first - i*ynum*znum - j*znum;
+-		};
+-
+ 		iterator& operator++(void){ ++it; return *this; };
+ 
+ 		iterator  operator++(int n){
+@@ -391,12 +385,6 @@
+ 
+ 		int getIndex() const{ return it->first; };
+ 
+-		void getIndices(int &i,int &j,int &k) const{
+-			i = it->first / (ynum*znum);
+-			j = (it->first - i*ynum*znum) / znum;
+-			k = it->first - i*ynum*znum - j*znum;
+-		};
+-
+ 		const_iterator& operator++(void){ ++it; return *this; };
+ 
+ 		const_iterator operator++(int n){

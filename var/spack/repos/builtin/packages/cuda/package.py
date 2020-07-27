@@ -8,6 +8,7 @@ from glob import glob
 from llnl.util.filesystem import LibraryList
 import os
 import platform
+import llnl.util.tty as tty
 
 # FIXME Remove hack for polymorphic versions
 # This package uses a ugly hack to be able to dispatch, given the same
@@ -21,6 +22,9 @@ import platform
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    '11.0.2': {
+        'Linux-x86_64': ('48247ada0e3f106051029ae8f70fbd0c238040f58b0880e55026374a959a69c1', 'http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run'),
+        'Linux-ppc64le': ('db06d0f3fbf6f7aa1f106fc921ad1c86162210a26e8cb65b171c5240a3bf75da', 'http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux_ppc64le.run')},
     '10.2.89': {
         'Linux-x86_64': ('560d07fdcf4a46717f2242948cd4f92c5f9b6fc7eae10dd996614da913d5ca11', 'http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_440.33.01_linux.run'),
         'Linux-ppc64le': ('5227774fcb8b10bd2d8714f0a716a75d7a2df240a9f2a49beb76710b1c0fc619', 'http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_440.33.01_linux_ppc64le.run')},
@@ -76,6 +80,7 @@ class Cuda(Package):
     depends_on('libxml2', when='@10.1.243:')
 
     def setup_build_environment(self, env):
+        env.set('CUDAHOSTCXX', self.compiler.cxx)
         if self.spec.satisfies('@10.1.243:'):
             libxml2_home  = self.spec['libxml2'].prefix
             env.set('LIBXML2HOME', libxml2_home)
@@ -83,8 +88,17 @@ class Cuda(Package):
 
     def setup_run_environment(self, env):
         env.set('CUDA_HOME', self.prefix)
+        env.set('CUDAHOSTCXX', self.compiler.cxx)
 
     def install(self, spec, prefix):
+        if os.path.exists('/tmp/cuda-installer.log'):
+            try:
+                os.remove('/tmp/cuda-installer.log')
+            except OSError:
+                if spec.satisfies('@10.1:'):
+                    tty.die("The cuda installer will segfault due to the "
+                            "presence of /tmp/cuda-installer.log "
+                            "please remove the file and try again ")
         runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
         chmod = which('chmod')
         chmod('+x', runfile)
@@ -110,6 +124,10 @@ class Cuda(Package):
             arguments.append('--toolkitpath=%s' % prefix)   # Where to install
 
         runfile(*arguments)
+        try:
+            os.remove('/tmp/cuda-installer.log')
+        except OSError:
+            pass
 
     @property
     def libs(self):
@@ -120,6 +138,7 @@ class Cuda(Package):
         # CUDA 10.0 provides Compatability libraries for running newer versions
         # of CUDA with older drivers. These do not work with newer drivers.
         for lib in libs:
-            if 'compat' not in lib.split(os.sep):
+            parts = lib.split(os.sep)
+            if 'compat' not in parts and 'stubs' not in parts:
                 filtered_libs.append(lib)
         return LibraryList(filtered_libs)

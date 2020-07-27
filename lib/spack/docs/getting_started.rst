@@ -478,7 +478,7 @@ Fortran.
           cxx: /usr/bin/clang++
           f77: /path/to/bin/gfortran
           fc: /path/to/bin/gfortran
-        spec: clang@11.0.0-apple
+        spec: apple-clang@11.0.0
 
 
    If you used Spack to install GCC, you can get the installation prefix by
@@ -818,7 +818,7 @@ Git
 
 Some Spack packages use ``git`` to download, which might not work on
 some computers.  For example, the following error was
-encountered on a Macintosh during ``spack install julia-master``:
+encountered on a Macintosh during ``spack install julia@master``:
 
 .. code-block:: console
 

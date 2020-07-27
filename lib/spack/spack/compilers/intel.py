@@ -32,11 +32,19 @@ class Intel(Compiler):
     version_argument = '--version'
     version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
 
     required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng']
+
+    @property
+    def debug_flags(self):
+        return ['-debug', '-g', '-g0', '-g1', '-g2', '-g3']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os']
 
     @property
     def openmp_flag(self):

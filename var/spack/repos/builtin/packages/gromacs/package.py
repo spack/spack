@@ -73,9 +73,12 @@ class Gromacs(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
-    depends_on('fftw')
+    depends_on('fftw+mpi', when='+mpi')
+    depends_on('fftw~mpi', when='~mpi')
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
+    depends_on('cmake@3.13.0:3.99.99', type='build', when='@master')
+    depends_on('cmake@3.13.0:3.99.99', type='build', when='%fj')
     depends_on('cuda', when='+cuda')
 
     # TODO: openmpi constraint; remove when concretizer is fixed

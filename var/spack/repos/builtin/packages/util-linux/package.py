@@ -44,6 +44,7 @@ class UtilLinux(AutotoolsPackage):
         config_args = [
             '--disable-use-tty-group',
             '--disable-makeinstall-chown',
+            '--without-systemd'
         ]
         config_args.extend(self.enable_or_disable('libuuid'))
         return config_args

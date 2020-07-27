@@ -23,3 +23,7 @@ class Typhon(CMakePackage):
     version('3.0', sha256='b9736269ebe9c0fd7efabc4716b0543144780ed26ddaf595083354113aa2efd7')
 
     depends_on('mpi')
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%fj'):
+            env.set('LDFLAGS', '--linkfortran')

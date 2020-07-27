@@ -19,8 +19,9 @@ class Namd(MakefilePackage):
     manual_download = True
 
     version("develop", branch="master")
+    version('2.14b2', sha256='cb4bd918d2d545bb618e4b4a20023a53916f0aa362d9e57f3de1562c36240b00')
     version('2.14b1', sha256='9407e54f5271b3d3039a5a9d2eae63c7e108ce31b7481e2197c19e1125b43919')
-    version('2.13', '9e3323ed856e36e34d5c17a7b0341e38')
+    version('2.13', '9e3323ed856e36e34d5c17a7b0341e38', preferred=True)
     version('2.12', '2a1191909b1ab03bf0205971ad4d8ee9')
 
     variant('fftw', default='3', values=('none', '2', '3', 'mkl'),
@@ -74,6 +75,7 @@ class Namd(MakefilePackage):
         return '{0}-spack'.format(self.arch)
 
     def edit(self, spec, prefix):
+        m64 = '-m64 ' if not spec.satisfies('arch=aarch64:') else ''
         with working_dir('arch'):
             with open('{0}.arch'.format(self.build_directory), 'w') as fh:
                 # this options are take from the default provided
@@ -81,12 +83,12 @@ class Namd(MakefilePackage):
                 # https://github.com/UIUC-PPL/charm/pull/2778
                 if self.spec.satisfies('^charmpp@:6.10.1'):
                     optims_opts = {
-                        'gcc': '-m64 -O3 -fexpensive-optimizations \
+                        'gcc': m64 + '-O3 -fexpensive-optimizations \
                                 -ffast-math -lpthread',
                         'intel': '-O2 -ip'}
                 else:
                     optims_opts = {
-                        'gcc': '-m64 -O3 -fexpensive-optimizations \
+                        'gcc': m64 + '-O3 -fexpensive-optimizations \
                                 -ffast-math',
                         'intel': '-O2 -ip'}
 

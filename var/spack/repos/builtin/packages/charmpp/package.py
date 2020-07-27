@@ -40,6 +40,9 @@ class Charmpp(Package):
     # Patch is no longer needed in versions 6.8.0+
     patch("mpi.patch", when="@:6.7.1")
 
+    # support Fujitsu compiler
+    patch("fj.patch", when="%fj")
+
     # Ignore compiler warnings while configuring
     patch("strictpass.patch", when="@:6.8.2")
 
@@ -49,7 +52,7 @@ class Charmpp(Package):
         "build-target",
         default="LIBS",
         # AMPI also builds charm++, LIBS also builds AMPI and charm++
-        values=("charm++", "AMPI", "LIBS"),
+        values=("charm++", "AMPI", "LIBS", "ChaNGa"),
         description="Specify the target to build"
     )
 
@@ -214,7 +217,7 @@ class Charmpp(Package):
                                     present on the system")
 
         target = spec.variants["build-target"].value
-        builddir = prefix + "/" + str(self.charmarch)
+        builddir = prefix
 
         # We assume that Spack's compiler wrappers make this work. If
         # not, then we need to query the compiler vendor from Spack

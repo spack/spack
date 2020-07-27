@@ -91,6 +91,7 @@ def guess_core_compilers(store=False):
 
 class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
+    default_projections = {'all': os.path.join('{name}', '{version}')}
 
     @property
     def core_compilers(self):
@@ -109,6 +110,11 @@ class LmodConfiguration(BaseConfiguration):
             msg = 'the key "core_compilers" must be set in modules.yaml'
             raise CoreCompilersNotFoundError(msg)
         return value
+
+    @property
+    def core_specs(self):
+        """Returns the list of "Core" specs"""
+        return configuration().get('core_specs', [])
 
     @property
     def hierarchy_tokens(self):
@@ -140,6 +146,11 @@ class LmodConfiguration(BaseConfiguration):
         to the actual provider. 'compiler' is always present among the
         requirements.
         """
+        # If it's a core_spec, lie and say it requires a core compiler
+        if any(self.spec.satisfies(core_spec)
+               for core_spec in self.core_specs):
+            return {'compiler': self.core_compilers[0]}
+
         # Keep track of the requirements that this package has in terms
         # of virtual packages that participate in the hierarchical structure
         requirements = {'compiler': self.spec.compiler}
@@ -232,18 +243,6 @@ class LmodFileLayout(BaseFileLayout):
             '.'.join([self.use_name, self.extension])  # file name
         )
         return fullname
-
-    @property
-    def use_name(self):
-        """Returns the 'use' name of the module i.e. the name you have to type
-        to console to use it.
-        """
-        # Package name and version
-        base = os.path.join("{name}", "{version}")
-        name_parts = [self.spec.format(base)]
-        # The remaining elements are filename suffixes
-        name_parts.extend(self.conf.suffixes)
-        return '-'.join(name_parts)
 
     def token_to_path(self, name, value):
         """Transforms a hierarchy token into the corresponding path part.

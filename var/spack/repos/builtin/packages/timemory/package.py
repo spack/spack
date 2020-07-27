@@ -6,7 +6,6 @@
 # ----------------------------------------------------------------------------
 
 from spack import *
-from sys import platform
 
 
 class Timemory(CMakePackage):
@@ -23,28 +22,26 @@ class Timemory(CMakePackage):
     version('3.0.0', commit='b36b1673b2c6b7ff3126d8261bef0f8f176c7beb',
             submodules=True)
 
-    linux = False if platform == 'darwin' else True
-
     variant('shared', default=True, description='Build shared libraries')
     variant('static', default=False, description='Build static libraries')
-    variant('python', default=True, description='Enable Python support')
-    variant('mpi', default=True, description='Enable MPI support')
+    variant('python', default=False, description='Enable Python support')
+    variant('mpi', default=False, description='Enable MPI support')
     variant('tau', default=False, description='Enable TAU support')
-    variant('papi', default=linux, description='Enable PAPI support')
-    variant('cuda', default=linux, description='Enable CUDA support')
-    variant('cupti', default=linux, description='Enable CUPTI support')
+    variant('papi', default=False, description='Enable PAPI support')
+    variant('cuda', default=False, description='Enable CUDA support')
+    variant('cupti', default=False, description='Enable CUPTI support')
     variant('tools', default=True, description='Build/install extra tools')
     variant('vtune', default=False, description='Enable VTune support')
     variant('upcxx', default=False, description='Enable UPC++ support')
-    variant('gotcha', default=linux, description='Enable GOTCHA support')
-    variant('likwid', default=linux, description='Enable LIKWID support')
+    variant('gotcha', default=False, description='Enable GOTCHA support')
+    variant('likwid', default=False, description='Enable LIKWID support')
     variant('caliper', default=False, description='Enable Caliper support')
-    variant('dyninst', default=linux,
+    variant('dyninst', default=False,
             description='Build dynamic instrumentation tools')
     variant('examples', default=False, description='Build/install examples')
-    variant('gperftools', default=True,
+    variant('gperftools', default=False,
             description='Enable gperftools support')
-    variant('kokkos_tools', default=True,
+    variant('kokkos_tools', default=False,
             description=('Build generic kokkos-tools libraries, e.g. '
                          'kp_timemory, kp_timemory_filter'))
     variant('kokkos_build_config', default=False,
@@ -72,19 +69,19 @@ class Timemory(CMakePackage):
             description='Build timemory with extra optimization flags')
     variant('cxxstd', default='14', description='C++ language standard',
             values=('14', '17', '20'), multi=False)
-    variant('mpip_library', default=linux,
+    variant('mpip_library', default=False,
             description='Build stand-alone timemory-mpip GOTCHA library')
-    variant('ompt', default=True, description=('Enable OpenMP tools support'))
-    variant('ompt_standalone', default=True,
+    variant('ompt', default=False, description=('Enable OpenMP tools support'))
+    variant('ompt_standalone', default=False,
             description=('Enable OpenMP tools support via drop-in '
                          'replacement of libomp/libgomp/libiomp5'))
     variant('ompt_llvm', default=False,
             description='Enable OpenMP tools support as part of llvm build')
-    variant('ompt_library', default=True,
+    variant('ompt_library', default=False,
             description='Build stand-alone timemory-ompt library')
     variant('allinea_map', default=False,
             description='Enable Allinea ARM-MAP support')
-    variant('require_packages', default=False,
+    variant('require_packages', default=True,
             description=('find_package(...) resulting in NOTFOUND '
                          'generates error'))
 

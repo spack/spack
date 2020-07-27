@@ -31,6 +31,7 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.8.3',  sha256='6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90')
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
@@ -156,6 +157,22 @@ class Python(AutotoolsPackage):
         # a Mac.
         depends_on('libuuid', when='+uuid')
 
+    # Python needs to be patched to build extensions w/ mixed C/C++ code:
+    # https://github.com/NixOS/nixpkgs/pull/19585/files
+    # https://bugs.python.org/issue1222585
+    #
+    # NOTE: This patch puts Spack's default Python installation out of
+    # sync with standard Python installs. If you're using such an
+    # installation as an external and encountering build issues with mixed
+    # C/C++ modules, consider installing a Spack-managed Python with
+    # this patch instead. For more information, see:
+    # https://github.com/spack/spack/pull/16856
+    patch('python-2.7.8-distutils-C++.patch', when='@2.7.8:2.7.16')
+    patch('python-2.7.17+-distutils-C++.patch', when='@2.7.17:2.7.18')
+    patch('python-3.6.8-distutils-C++.patch', when='@3.6.8,3.7.2')
+    patch('python-3.7.3-distutils-C++.patch', when='@3.7.3')
+    patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:3.8')
+
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
@@ -251,6 +268,15 @@ class Python(AutotoolsPackage):
         if not spec.satisfies('@2.7:2.8,3.4:'):
             tty.warn(('Python v{0} may not install properly if Python '
                       'user configurations are present.').format(self.version))
+
+        # TODO: Python has incomplete support for Python modules with mixed
+        # C/C++ source, and patches are required to enable building for these
+        # modules. All Python versions without a viable patch are installed
+        # with a warning message about this potentially erroneous behavior.
+        if not spec.satisfies('@2.7.8:2.7.18,3.6.8,3.7.2:3.8.3'):
+            tty.warn(('Python v{0} does not have the C++ "distutils" patch; '
+                      'errors may occur when installing Python modules w/ '
+                      'mixed C/C++ source files.').format(self.version))
 
         # Need this to allow python build to find the Python installation.
         env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
@@ -961,7 +987,7 @@ class Python(AutotoolsPackage):
         bin_dir = self.spec.prefix.bin
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
-                view.link(src, dst)
+                view.link(src, dst, spec=self.spec)
             elif not os.path.islink(src):
                 copy(src, dst)
                 if 'script' in get_filetype(src):
@@ -987,7 +1013,7 @@ class Python(AutotoolsPackage):
                 orig_link_target = os.path.join(self.spec.prefix, realpath_rel)
 
                 new_link_target = os.path.abspath(merge_map[orig_link_target])
-                view.link(new_link_target, dst)
+                view.link(new_link_target, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin

@@ -33,7 +33,7 @@ class NetcdfFortran(AutotoolsPackage):
     # https://www.unidata.ucar.edu/software/netcdf/docs/building_netcdf_fortran.html
     depends_on('mpi', when='+mpi')
 
-    depends_on('netcdf-c~mpi', when='~mpi')
+    depends_on('netcdf-c~mpi~parallel-netcdf', when='~mpi')
     depends_on('netcdf-c+mpi', when='+mpi')
     depends_on('doxygen', when='+doc', type='build')
 
