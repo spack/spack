@@ -9,18 +9,6 @@ from spack.version import ver
 
 class Cce(Compiler):
     """Cray compiler environment compiler."""
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
-
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
-
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
-
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
-
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     suffixes = [r'-mp-\d\.\d']
 

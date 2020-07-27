@@ -2,12 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import contextlib
 import os
 import platform
 import re
-import itertools
 import shutil
 import tempfile
 
@@ -187,37 +185,6 @@ class Compiler(object):
        C++, and Fortran compilers.  Subclasses should implement
        support for specific compilers, their possible names, arguments,
        and how to identify the particular type of compiler."""
-
-    # Subclasses use possible names of C compiler
-    cc_names = []
-
-    # Subclasses use possible names of C++ compiler
-    cxx_names = []
-
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = []
-
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = []
-
-    # Optional prefix regexes for searching for this type of compiler.
-    # Prefixes are sometimes used for toolchains
-    prefixes = []
-
-    # Optional suffix regexes for searching for this type of compiler.
-    # Suffixes are used by some frameworks, e.g. macports uses an '-mp-X.Y'
-    # version suffix for gcc.
-    suffixes = [r'-.*']
-
-    #: Compiler argument that produces version information
-    version_argument = '-dumpversion'
-
-    #: Return values to ignore when invoking the compiler to get its version
-    ignore_version_errors = ()
-
-    #: Regex used to extract version from compiler's output
-    version_regex = '(.*)'
-
     # These libraries are anticipated to be required by all executables built
     # by any compiler
     _all_compiler_rpath_libraries = ['libc', 'libc++', 'libstdc++']
@@ -491,76 +458,10 @@ class Compiler(object):
         Position Independent Code (PIC)."""
         return '-fPIC'
 
+    # TODO: FIXME COMPILERS
     # Note: This is not a class method. The class methods are used to detect
     # compilers on PATH based systems, and do not set up the run environment of
     # the compiler. This method can be called on `module` based systems as well
-    def get_real_version(self):
-        """Query the compiler for its version.
-
-        This is the "real" compiler version, regardless of what is in the
-        compilers.yaml file, which the user can change to name their compiler.
-
-        Use the runtime environment of the compiler (modules and environment
-        modifications) to enable the compiler to run properly on any platform.
-        """
-        cc = spack.util.executable.Executable(self.cc)
-        with self._compiler_environment():
-            output = cc(self.version_argument,
-                        output=str, error=str,
-                        ignore_errors=tuple(self.ignore_version_errors))
-            return self.extract_version_from_output(output)
-
-    #
-    # Compiler classes have methods for querying the version of
-    # specific compiler executables.  This is used when discovering compilers.
-    #
-    # Compiler *instances* are just data objects, and can only be
-    # constructed from an actual set of executables.
-    #
-    @classmethod
-    def default_version(cls, cc):
-        """Override just this to override all compiler version functions."""
-        output = get_compiler_version_output(
-            cc, cls.version_argument, tuple(cls.ignore_version_errors))
-        return cls.extract_version_from_output(output)
-
-    @classmethod
-    @llnl.util.lang.memoized
-    def extract_version_from_output(cls, output):
-        """Extracts the version from compiler's output."""
-        match = re.search(cls.version_regex, output)
-        return match.group(1) if match else 'unknown'
-
-    @classmethod
-    def cc_version(cls, cc):
-        return cls.default_version(cc)
-
-    @classmethod
-    def cxx_version(cls, cxx):
-        return cls.default_version(cxx)
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.default_version(f77)
-
-    @classmethod
-    def fc_version(cls, fc):
-        return cls.default_version(fc)
-
-    @classmethod
-    def search_regexps(cls, language):
-        # Compile all the regular expressions used for files beforehand.
-        # This searches for any combination of <prefix><name><suffix>
-        # defined for the compiler
-        compiler_names = getattr(cls, '{0}_names'.format(language))
-        prefixes = [''] + cls.prefixes
-        suffixes = [''] + cls.suffixes
-        regexp_fmt = r'^({0}){1}({2})$'
-        return [
-            re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))
-            for prefix, name, suffix in
-            itertools.product(prefixes, compiler_names, suffixes)
-        ]
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""

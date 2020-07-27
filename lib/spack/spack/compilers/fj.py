@@ -7,18 +7,6 @@ import spack.compiler
 
 
 class Fj(spack.compiler.Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ['fcc']
-
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['FCC']
-
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['frt']
-
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['frt']
-
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'fj/fcc',
                   'cxx': 'fj/case-insensitive/FCC',

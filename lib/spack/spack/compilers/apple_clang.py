@@ -3,11 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
-import re
 import shutil
 
 import llnl.util.tty as tty
-import llnl.util.lang
 import spack.compiler
 import spack.compilers.clang
 import spack.util.executable
@@ -16,23 +14,6 @@ import spack.version
 
 class AppleClang(spack.compilers.clang.Clang):
     openmp_flag = "-Xpreprocessor -fopenmp"
-
-    @classmethod
-    @llnl.util.lang.memoized
-    def extract_version_from_output(cls, output):
-        ver = 'unknown'
-        match = re.search(
-            # Apple's LLVM compiler has its own versions, so suffix them.
-            r'^Apple (?:LLVM|clang) version ([^ )]+)',
-            output,
-            # Multi-line, since 'Apple clang' may not be on the first line
-            # in particular, when run as gcc, it seems to output
-            # "Configured with: --prefix=..." as the first line
-            re.M,
-        )
-        if match:
-            ver = match.group(match.lastindex)
-        return ver
 
     @property
     def cxx11_flag(self):

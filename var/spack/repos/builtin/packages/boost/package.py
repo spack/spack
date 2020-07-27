@@ -267,12 +267,10 @@ class Boost(Package):
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
-        for cc, toolset in toolsets.items():
-            if cc in self.compiler.cxx_names:
-                return toolset
 
-        # fallback to gcc if no toolset found
-        return 'gcc'
+        return toolsets.get(
+            os.path.basename(self.compiler.cxx), 'gcc'
+        )
 
     def bjam_python_line(self, spec):
         # avoid "ambiguous key" error

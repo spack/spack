@@ -2,12 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import re
-import sys
-
-import llnl.util.lang
-
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
@@ -32,18 +26,6 @@ fc_mapping = [
 
 
 class Clang(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ['clang']
-
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['clang++']
-
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['flang', 'gfortran', 'xlf_r']
-
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['flang', 'gfortran', 'xlf90_r']
-
     version_argument = '--version'
 
     @property
@@ -149,36 +131,3 @@ class Clang(Compiler):
         return "-fPIC"
 
     required_libs = ['libclang']
-
-    @classmethod
-    @llnl.util.lang.memoized
-    def extract_version_from_output(cls, output):
-        ver = 'unknown'
-        if 'Apple' in output:
-            return ver
-
-        match = re.search(
-            # Normal clang compiler versions are left as-is
-            r'clang version ([^ )]+)-svn[~.\w\d-]*|'
-            # Don't include hyphenated patch numbers in the version
-            # (see https://github.com/spack/spack/pull/14365 for details)
-            r'clang version ([^ )]+?)-[~.\w\d-]*|'
-            r'clang version ([^ )]+)',
-            output
-        )
-        if match:
-            ver = match.group(match.lastindex)
-        return ver
-
-    @classmethod
-    def fc_version(cls, fc):
-        # We could map from gcc/gfortran version to clang version, but on macOS
-        # we normally mix any version of gfortran with any version of clang.
-        if sys.platform == 'darwin':
-            return cls.default_version('clang')
-        else:
-            return cls.default_version(fc)
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.fc_version(f77)

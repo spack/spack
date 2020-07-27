@@ -8,13 +8,10 @@ import os.path
 import pytest
 import os
 
-import llnl.util.filesystem as fs
-
 import spack.paths
 import spack.repo
 import spack.util.spack_yaml as syaml
 
-from spack.operating_systems.cray_frontend import CrayFrontend
 import spack.util.module_cmd
 
 
@@ -53,41 +50,3 @@ def test_version_detection(
         )
         version = spack.repo.get(pkg_name).determine_version(exe)
         assert version == expected_version
-
-
-@pytest.mark.parametrize('compiler,version', [
-    ('gcc', '8.1.0'),
-    ('gcc', '1.0.0-foo'),
-    ('pgi', '19.1'),
-    ('pgi', '19.1a'),
-    ('intel', '9.0.0'),
-    ('intel', '0.0.0-foobar')
-])
-def test_cray_frontend_compiler_detection(
-        compiler, version, tmpdir, monkeypatch, working_env
-):
-    """Test that the Cray frontend properly finds compilers form modules"""
-    # setup the fake compiler directory
-    compiler_dir = tmpdir.join(compiler)
-    compiler_exe = compiler_dir.join('cc').ensure()
-    fs.set_executable(str(compiler_exe))
-
-    # mock modules
-    def _module(cmd, *args):
-        module_name = '%s/%s' % (compiler, version)
-        module_contents = 'prepend-path PATH %s' % compiler_dir
-        if cmd == 'avail':
-            return module_name if compiler in args[0] else ''
-        if cmd == 'show':
-            return module_contents if module_name in args else ''
-    monkeypatch.setattr(spack.operating_systems.cray_frontend, 'module',
-                        _module)
-
-    # remove PATH variable
-    os.environ.pop('PATH', None)
-
-    # get a CrayFrontend object
-    cray_fe_os = CrayFrontend()
-
-    paths = cray_fe_os.compiler_search_paths
-    assert paths == [str(compiler_dir)]
