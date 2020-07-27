@@ -3,10 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
-
 from spack import *
-from spack.patch import apply_patch
 
 
 class PySphinxcontribTrio(PythonPackage):
