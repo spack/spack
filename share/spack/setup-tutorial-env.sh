@@ -58,6 +58,12 @@ until sudo apt-get install -y --no-install-recommends \
 done
 
 ####
+# Upgrade boto3 python package on AWS systems
+####
+pip3 install --upgrade boto3
+
+
+####
 # Spack configuration settings for tutorial
 ####
 
