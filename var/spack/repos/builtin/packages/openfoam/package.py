@@ -773,15 +773,17 @@ class Openfoam(Package):
 
         # Having wmake and ~source is actually somewhat pointless...
         # Install 'etc' before 'bin' (for symlinks)
-        dirs = ['etc', 'bin', 'wmake']
+        # META-INFO for 1812 and later (or backported)
+        dirs = ['META-INFO', 'etc', 'bin', 'wmake']
         if '+source' in spec:
             dirs.extend(['applications', 'src', 'tutorials'])
 
         for d in dirs:
-            install_tree(
-                d,
-                join_path(self.projectdir, d),
-                symlinks=True)
+            if os.path.isdir(d):
+                install_tree(
+                    d,
+                    join_path(self.projectdir, d),
+                    symlinks=True)
 
         dirs = ['platforms']
         if '+source' in spec:

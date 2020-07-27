@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Sas(CMakePackage):
+class StaticAnalysisSuite(CMakePackage):
     """SAS (Static Analysis Suite) is a powerful tool for running static
     analysis on C++ code."""
 
