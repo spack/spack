@@ -79,6 +79,9 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('boost@:1.72.0', when='@:1.4')
 
     # COROUTINES
+    # ~generic_coroutines conflict is not fully implemented
+    # for additional information see:
+    # https://github.com/spack/spack/pull/17654
     # https://github.com/STEllAR-GROUP/hpx/issues/4829
     depends_on('boost+context', when='+generic_coroutines')
     _msg_generic_coroutines = 'This platform requires +generic_coroutines'
