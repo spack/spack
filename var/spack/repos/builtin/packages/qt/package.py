@@ -178,6 +178,7 @@ class Qt(Package):
 
     # Mapping for compilers/systems in the QT 'mkspecs'
     compiler_mapping = {'intel': ('icc',),
+                        'apple-clang': ('clang-libc++', 'clang'),
                         'clang': ('clang-libc++', 'clang'),
                         'gcc': ('g++',)}
     platform_mapping = {'darwin': 'macx'}
