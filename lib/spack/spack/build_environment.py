@@ -877,6 +877,7 @@ def fork(pkg, function, kwargs):
     """
     parent_pipe, child_pipe = multiprocessing.Pipe()
     input_fd = None
+
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):

@@ -418,6 +418,10 @@ class log_output(object):
         # OS-level pipe for redirecting output to logger
         read_fd, write_fd = os.pipe()
 
+        # Use multiprocessing.COnnection to transmit FD from the parent
+        # process to the child
+        read_wrapper = multiprocessing.Connection(read_fd)
+
         # Multiprocessing pipe for communication back from the daemon
         # Currently only used to save echo value between uses
         self.parent_pipe, child_pipe = multiprocessing.Pipe()
@@ -433,7 +437,7 @@ class log_output(object):
             self.process = multiprocessing.Process(
                 target=_writer_daemon,
                 args=(
-                    input_stream, read_fd, write_fd, self.echo, self.log_file,
+                    input_stream, read_wrapper, self.echo, self.log_file,
                     child_pipe
                 )
             )
@@ -554,7 +558,7 @@ class log_output(object):
             sys.stdout.flush()
 
 
-def _writer_daemon(stdin, read_fd, write_fd, echo, log_file, control_pipe):
+def _writer_daemon(stdin, read, echo, log_file, control_pipe):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
     The daemon receives output from the parent process and writes it both
@@ -592,9 +596,7 @@ def _writer_daemon(stdin, read_fd, write_fd, echo, log_file, control_pipe):
 
     Arguments:
         stdin (stream): input from the terminal
-        read_fd (int): pipe for reading from parent's redirected stdout
-        write_fd (int): parent's end of the pipe will write to (will be
-            immediately closed by the writer daemon)
+        read (int): pipe for reading from parent's redirected stdout
         echo (bool): initial echo setting -- controlled by user and
             preserved across multiple writer daemons
         log_file (file-like): file to log all output
@@ -604,8 +606,7 @@ def _writer_daemon(stdin, read_fd, write_fd, echo, log_file, control_pipe):
     """
     # Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
-    in_pipe = os.fdopen(read_fd, 'r', 1)
-    os.close(write_fd)
+    in_pipe = os.fdopen(read._handle, 'r', 1)
 
     # list of streams to select from
     istreams = [in_pipe, stdin] if stdin else [in_pipe]

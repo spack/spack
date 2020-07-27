@@ -1618,7 +1618,7 @@ def build_process(pkg, build_kwargs):
               .format(pre, pkg_id),
               'Fetch: {0}.  Build: {1}.  Total: {2}.'
               .format(_hms(pkg._fetch_time), _hms(build_time),
-                      _hms(pkg._total_time))
+                      _hms(pkg._total_time)))
     _print_installed_pkg(pkg.prefix)
 
     # preserve verbosity across runs
