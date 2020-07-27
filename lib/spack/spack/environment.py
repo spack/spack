@@ -463,9 +463,9 @@ def _eval_conditional(string):
 
 
 class ViewDescriptor(object):
-    def __init__(self, env, root, projections={}, select=[], exclude=[],
+    def __init__(self, base_path, root, projections={}, select=[], exclude=[],
                  link=default_view_link):
-        self.env = env
+        self.base = base_path
         self.root = root
         self.projections = projections
         self.select = select
@@ -495,8 +495,8 @@ class ViewDescriptor(object):
         return ret
 
     @staticmethod
-    def from_dict(env, d):
-        return ViewDescriptor(env,
+    def from_dict(base_path, d):
+        return ViewDescriptor(base_path,
                               d['root'],
                               d.get('projections', {}),
                               d.get('select', []),
@@ -506,7 +506,7 @@ class ViewDescriptor(object):
     def view(self):
         root = self.root
         if not os.path.isabs(root):
-            root = os.path.normpath(os.path.join(self.env.path, self.root))
+            root = os.path.normpath(os.path.join(self.base, self.root))
         return YamlFilesystemView(root, spack.store.layout,
                                   ignore_conflicts=True,
                                   projections=self.projections)
@@ -555,7 +555,7 @@ class ViewDescriptor(object):
             # sure the root directory exists for the very first time though.
             root = self.root
             if not os.path.isabs(root):
-                root = os.path.normpath(os.path.join(self.env.path, self.root))
+                root = os.path.normpath(os.path.join(self.base, self.root))
             fs.mkdirp(root)
             with fs.replace_directory_transaction(root):
                 view = self.view()
@@ -617,10 +617,11 @@ class Environment(object):
             self.views = {}
         elif with_view is True:
             self.views = {
-                default_view_name: ViewDescriptor(self,
+                default_view_name: ViewDescriptor(self.path,
                                                   self.view_path_default)}
         elif isinstance(with_view, six.string_types):
-            self.views = {default_view_name: ViewDescriptor(self, with_view)}
+            self.views = {default_view_name: ViewDescriptor(self.path,
+                                                            with_view)}
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
 
@@ -691,12 +692,14 @@ class Environment(object):
         # enable_view can be boolean, string, or None
         if enable_view is True or enable_view is None:
             self.views = {
-                default_view_name: ViewDescriptor(self,
+                default_view_name: ViewDescriptor(self.path,
                                                   self.view_path_default)}
         elif isinstance(enable_view, six.string_types):
-            self.views = {default_view_name: ViewDescriptor(self, enable_view)}
+            self.views = {default_view_name: ViewDescriptor(self.path,
+                                                            enable_view)}
         elif enable_view:
-            self.views = dict((name, ViewDescriptor.from_dict(self, values))
+            path = self.path
+            self.views = dict((name, ViewDescriptor.from_dict(path, values))
                               for name, values in enable_view.items())
         else:
             self.views = {}
@@ -1131,7 +1134,7 @@ class Environment(object):
             if name in self.views:
                 self.default_view.root = viewpath
             else:
-                self.views[name] = ViewDescriptor(self, viewpath)
+                self.views[name] = ViewDescriptor(self.path, viewpath)
         else:
             self.views.pop(name, None)
 
@@ -1542,10 +1545,10 @@ class Environment(object):
         default_name = default_view_name
         if self.views and len(self.views) == 1 and default_name in self.views:
             path = self.default_view.root
-            if self.default_view == ViewDescriptor(self,
+            if self.default_view == ViewDescriptor(self.path,
                                                    self.view_path_default):
                 view = True
-            elif self.default_view == ViewDescriptor(self, path):
+            elif self.default_view == ViewDescriptor(self.path, path):
                 view = path
             else:
                 view = dict((name, view.to_dict())
