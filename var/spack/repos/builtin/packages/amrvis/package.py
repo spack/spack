@@ -16,7 +16,7 @@ class Amrvis(MakefilePackage):
     homepage = "https://github.com/AMReX-Codes/Amrvis"
     git      = "https://github.com/AMReX-Codes/Amrvis.git"
 
-    version('master', tag='master')
+    version('main', tag='main')
 
     variant(
         'dims',
@@ -69,7 +69,7 @@ class Amrvis(MakefilePackage):
     # Need to clone AMReX into Amrvis because Amrvis uses AMReX's source
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
-             tag='master',
+             tag='development',
              placement='amrex')
 
     def edit(self, spec, prefix):
