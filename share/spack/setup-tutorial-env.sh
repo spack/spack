@@ -24,17 +24,38 @@
 ###############################################################################
 
 ####
+# Ensure we're on Ubuntu 18.04
+####
+
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+fi
+if [ x"$UBUNTU_CODENAME" != "xbionic" ]; then
+    echo "The tutorial setup script must be run on Ubuntu 18.04."
+    return 1 &>/dev/null || exit 1    # works if sourced or run
+fi
+
+####
 # Install packages needed for tutorial
 ####
 
 # compilers, basic system components, externals
-sudo apt-get update -y
-sudo apt-get install -y --no-install-recommends \
+# There are retries around these because apt fails frequently on new instances,
+# due to unattended updates running in the background and taking the lock.
+until sudo apt-get update -y; do
+    echo "==> apt-get update failed. retrying..."
+    sleep 5
+done
+
+until sudo apt-get install -y --no-install-recommends \
     autoconf make python3 python3-pip \
     build-essential ca-certificates curl git gnupg2 iproute2 emacs \
     file openssh-server tcl unzip vim wget \
     clang g++ g++-6 gcc gcc-6 gfortran gfortran-6 \
-    zlib1g zlib1g-dev mpich
+    zlib1g zlib1g-dev mpich; do
+    echo "==> apt-get install failed. retrying..."
+    sleep 5
+done
 
 ####
 # Spack configuration settings for tutorial
@@ -57,7 +78,7 @@ config:
 EOF
 
 ####
-# AWS set volume size to 30G
+# AWS set volume size to at least 30G
 ####
 
 # Hardcode the specified size to 30G
@@ -85,7 +106,7 @@ while [ \
     sleep 1
 done
 
-if [[ -d /dev/xvda ]] && [ $(readlink -f /dev/xvda) = "/dev/xvda" ]
+if [ -e /dev/xvda1 ]
 then
     # Rewrite the partition table so that the partition takes up all the space that it can.
     sudo growpart /dev/xvda 1
