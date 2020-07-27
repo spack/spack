@@ -20,6 +20,7 @@ class Aluminum(CMakePackage):
     git      = "https://github.com/LLNL/Aluminum.git"
 
     version('master', branch='master')
+    version('0.4.0', sha256='4d6fab5481cc7c994b32fb23a37e9ee44041a9f91acf78f981a97cb8ef57bb7d')
     version('0.3.3',   sha256='26e7f263f53c6c6ee0fe216e981a558dfdd7ec997d0dd2a24285a609a6c68f3b')
     version('0.3.2',   sha256='09b6d1bcc02ac54ba269b1123eee7be20f0104b93596956c014b794ba96b037f')
     version('0.2.1-1', sha256='066b750e9d1134871709a3e2414b96b166e0e24773efc7d512df2f1d96ee8eef')
