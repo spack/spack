@@ -1177,7 +1177,7 @@ def mock_executable(tmpdir):
 
     def _factory(name, output, subdir=('bin',)):
         f = tmpdir.ensure(*subdir, dir=True).join(name)
-        t = jinja2.Template('#!/bin/bash\n{{ output }}\n')
+        t = jinja2.Template('#!/bin/sh\n{{ output }}\n')
         f.write(t.render(output=output))
         f.chmod(0o755)
         return str(f)

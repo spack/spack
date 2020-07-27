@@ -2,12 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """This module contains functions related to finding compilers on the
 system and configuring Spack to use multiple compilers.
 """
 import collections
 import os
+import sys
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -520,6 +520,29 @@ def _compilers_from(specs):
             candidate.f77 = candidate.f77 or item.f77
             candidate.fc = candidate.fc or item.fc
         result.append(candidate)
+
+    # Auto-detect mixed compiler toolchains for LLVM's Clang and Apple's Clang
+    # when we are on Darwin
+    to_be_mixed = [x for x in result if x.name in ('clang', 'apple-clang')]
+    # Construct in multiple steps so that order over compilers is enforced
+    candidate_for_mix = []
+    for expected_name in ('gcc', 'xl_r', 'xl', 'pgi', 'intel'):
+        candidate_for_mix += [x for x in result if x.name == expected_name]
+        if candidate_for_mix:
+            break
+
+    # If we have both compilers that might need Fortran and candidate to be
+    # mixed with them we can proceed
+    if to_be_mixed and candidate_for_mix and sys.platform == 'darwin':
+        best_candidate = sorted(
+            candidate_for_mix,
+            key=lambda x: (bool(x.fc), bool(x.f77), x.version)
+        )[0]
+        for item in to_be_mixed:
+            if item.fc is None:
+                item.fc = best_candidate.fc
+            if item.f77 is None:
+                item.f77 = best_candidate.f77
 
     return result
 
