@@ -41,13 +41,12 @@ class Pfunit(CMakePackage):
 
     depends_on('python@2.7:', type=('build', 'run'))  # python3 too!
     depends_on('mpi', when='+mpi')
-    depends_on('m4', when='@4.1.5:4.1.9')
+    depends_on('m4', when='@4.1.5:')
 
-    conflicts("%gcc@7.2.0", when="@4.0.0:",
-              msg='pFUnit v4 cannot be built with gcc 7.2.0. Please choose a different compiler.')
+    conflicts("%gcc@:8.3.9", when="@4.0.0:", msg='Older versions of GCC do '
+              'not support the Fortran 2008 features required by new pFUnit.')
     # See https://github.com/Goddard-Fortran-Ecosystem/pFUnit/pull/179
     conflicts("+shared", when="@4.0.0:4.1.9")
-    conflicts("%gcc@:8.3.9", when="@4.0.0:")
     conflicts("use_comm_world", when="~mpi")
     patch("mpi-test.patch", when="+use_comm_world")
 
