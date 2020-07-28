@@ -73,6 +73,17 @@ class Amrvis(MakefilePackage):
              placement='amrex')
 
     def edit(self, spec, prefix):
+        # libquadmath is only available x86_64 and powerle
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85440
+        if self.spec.target.family not in ['x86_64', 'ppc64le']:
+            comps = join_path('amrex', 'Tools', 'GNUMake', 'comps')
+            maks = [
+                join_path(comps, 'gnu.mak'),
+                join_path(comps, 'llvm.mak'),
+            ]
+            for mak in maks:
+                filter_file('-lquadmath', '', mak)
+
         # Set all available makefile options to values we want
         makefile = FileFilter('GNUmakefile')
         makefile.filter(
