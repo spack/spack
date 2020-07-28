@@ -7,8 +7,8 @@ from spack import *
 
 
 class Vgm(CMakePackage):
-    """Geometry conversion tool, actually providing
-    conversion between Geant4 and ROOT TGeo geometry models."""
+    """Virtual Geometry Model (VGM) is a geometry conversion tool, actually
+    providing conversion between Geant4 and ROOT TGeo geometry models."""
 
     homepage = "http://github.com/vmc-project/vgm"
     url      = "http://github.com/vmc-project/vgm/archive/v4-8.tar.gz"
