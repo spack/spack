@@ -60,26 +60,6 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         flags: unittests,linux
-  flake8:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-    - name: Install Python packages
-      run: |
-        pip install --upgrade pip six setuptools flake8
-    - name: Setup git configuration
-      run: |
-        # Need this for the git tests to succeed.
-        git --version
-        git config --global user.email "spack@example.com"
-        git config --global user.name "Test User"
-        git fetch -u origin develop:develop
-    - name: Run flake8 tests
-      run: |
-          share/spack/qa/run-flake8-tests
   shell:
     runs-on: ubuntu-latest
     steps:
@@ -122,21 +102,3 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         flags: shelltests,linux
-  documentation:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-    - name: Install System packages
-      run: |
-        sudo apt-get -y update
-        sudo apt-get install -y coreutils ninja-build graphviz
-    - name: Install Python packages
-      run: |
-        pip install --upgrade pip six setuptools
-        pip install --upgrade -r lib/spack/docs/requirements.txt
-    - name: Build documentation
-      run: |
-          share/spack/qa/run-doc-tests
