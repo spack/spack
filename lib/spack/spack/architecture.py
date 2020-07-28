@@ -6,7 +6,7 @@
 """
 This module contains all the elements that are required to create an
 architecture object. These include, the target processor, the operating system,
-and the architecture platform (i.e. cray, darwin, linux, bgq, etc) classes.
+and the architecture platform (i.e. cray, darwin, linux, etc) classes.
 
 On a multiple architecture machine, the architecture spec field can be set to
 build a package against any target and operating system that is present on the
