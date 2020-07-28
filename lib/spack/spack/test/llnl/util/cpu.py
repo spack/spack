@@ -37,7 +37,6 @@ from llnl.util.cpu import Microarchitecture  # noqa
     'darwin-mojave-ivybridge',
     'darwin-mojave-haswell',
     'darwin-mojave-skylake',
-    'bgq-rhel6-power7'
 ])
 def expected_target(request, monkeypatch):
     cpu = llnl.util.cpu
@@ -49,7 +48,7 @@ def expected_target(request, monkeypatch):
     )
 
     # Monkeypatch for linux
-    if platform in ('linux', 'bgq'):
+    if platform == 'linux':
         monkeypatch.setattr(cpu.detect.platform, 'system', lambda: 'Linux')
 
         @contextlib.contextmanager
