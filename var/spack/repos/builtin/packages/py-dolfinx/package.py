@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyDolfinx(PythonPackage):
-    """Python interface library to Next generation FEniCS problem solving environment"""
+    """Python interface library to Next generation FEniCS problem solving
+    environment"""
 
     homepage = "https://github.com/FEniCS/dolfinx"
     url = "https://github.com/FEniCS/dolfinx/archive/master.zip"
@@ -29,4 +30,3 @@ class PyDolfinx(PythonPackage):
     @property
     def build_directory(self):
         return join_path(self.stage.source_path, 'python')
-

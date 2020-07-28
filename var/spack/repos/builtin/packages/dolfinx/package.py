@@ -45,9 +45,12 @@ class Dolfinx(CMakePackage):
     def cmake_args(self):
         args = [
             "-DDOLFINX_SKIP_BUILD_TESTS=True",
-            "-DDOLFINX_ENABLE_KAHIP=%s"%('ON' if "+kahip" in self.spec else 'OFF'),
-            "-DDOLFINX_ENABLE_PARMETIS=%s"%('ON' if "+parmetis" in self.spec else 'OFF'),
-            "-DDOLFINX_ENABLE_SLEPC=%s"%('ON' if "+slepc" in self.spec else 'OFF'),
+            "-DDOLFINX_ENABLE_KAHIP=%s" % (
+                'ON' if "+kahip" in self.spec else 'OFF'),
+            "-DDOLFINX_ENABLE_PARMETIS=%s" % (
+                'ON' if "+parmetis" in self.spec else 'OFF'),
+            "-DDOLFINX_ENABLE_SLEPC=%s" % (
+                'ON' if "+slepc" in self.spec else 'OFF'),
         ]
 
         if "platform=darwin" in self.spec:
@@ -59,4 +62,3 @@ class Dolfinx(CMakePackage):
             ]
 
         return args
-
