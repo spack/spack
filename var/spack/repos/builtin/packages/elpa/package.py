@@ -69,7 +69,7 @@ class Elpa(AutotoolsPackage):
 
         # TODO: add --enable-gpu, --disable-sse-assembly, --enable-sparc64
         # and --enable-neon-arch64
-        simd_features = ['vsx', 'sse', 'avx', 'avx2', 'avx512', 'bgp', 'bgq']
+        simd_features = ['vsx', 'sse', 'avx', 'avx2', 'avx512']
 
         for feature in simd_features:
             msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
