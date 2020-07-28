@@ -15,7 +15,6 @@ class Dolfinx(CMakePackage):
 
     version("master", branch="master")
 
-    variant("doc", default=False, description="Builds the documentation")
     variant("kahip", default=False, description="kahip support")
     variant("parmetis", default=False, description="parmetis support")
     variant("slepc", default=False, description="slepc support")
@@ -40,7 +39,6 @@ class Dolfinx(CMakePackage):
     depends_on("slepc", when="+slepc")
 
     depends_on("py-ffcx")
-    depends_on("py-sphinx@1.0.1:", when="+doc", type="build")
 
     root_cmakelists_dir = "cpp"
 
