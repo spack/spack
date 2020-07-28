@@ -22,6 +22,9 @@ class PyDolfinx(PythonPackage):
     depends_on("py-petsc4py")
     depends_on("py-scipy")
 
+    depends_on("py-pytest", type="test")
+    depends_on("py-gmsh", type="test")
+
     root_cmakelists_dir = "cpp"
 
     @property
