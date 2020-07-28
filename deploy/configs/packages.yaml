@@ -76,7 +76,7 @@ packages:
         variants: +tk
         version: [3.8.3]
     qt:
-        variants: ~sql~ssl~tools
+        variants: ~sql~tools
     slurm:
         paths:
             slurm@17.02: /usr
