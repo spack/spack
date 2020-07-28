@@ -55,6 +55,7 @@ def write_spconfig(package, dirty):
     env['CC'] = os.environ['SPACK_CC']
     env['CXX'] = os.environ['SPACK_CXX']
     env['FC'] = os.environ['SPACK_FC']
+    env['PYTHONPATH'] = os.environ['PYTHONPATH']
 
     setup_fname = 'spconfig.py'
     with open(setup_fname, 'w') as fout:
