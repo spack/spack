@@ -177,7 +177,6 @@ class Llvm(CMakePackage, CudaPackage):
 
     # code signing is only necessary on macOS",
     conflicts('+code_signing', when='platform=linux')
-    conflicts('+code_signing', when='platform=bgq')
     conflicts('+code_signing', when='platform=cray')
 
     conflicts(

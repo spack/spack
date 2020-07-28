@@ -138,7 +138,6 @@ class PyMatplotlib(PythonPackage):
 
     msg = 'MacOSX backend requires the Cocoa headers included with XCode'
     conflicts('platform=linux', when='backend=macosx', msg=msg)
-    conflicts('platform=bgq',   when='backend=macosx', msg=msg)
     conflicts('platform=cray',  when='backend=macosx', msg=msg)
 
     # Patch to pick up correct freetype headers

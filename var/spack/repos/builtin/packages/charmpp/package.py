@@ -169,9 +169,6 @@ class Charmpp(Package):
             ("win",     "x86_64",   "netlrts"):     "netlrts-win-x86_64",
             ("cnl",     "x86_64",   "gni"):         "gni-crayxc",
             ("cnl",     "x86_64",   "mpi"):         "mpi-crayxc",
-            ("cnk",     "x86_64",   "mpi"):         "mpi-bluegeneq",
-            ("cnk",     "x86_64",   "pami"):        "pami-bluegeneq",
-            ("cnk",     "x86_64",   "pamilrts"):    "pamilrts-bluegeneq",
         }
         if (plat, mach, comm) not in versions:
             raise InstallError(
