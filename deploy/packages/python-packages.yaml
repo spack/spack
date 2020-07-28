@@ -34,7 +34,7 @@ packages:
       # for Spykfunc
       - py-morpho-kit
       - py-py4j
-      - py-pyarrow+parquet@0.17.1
+      - py-pyarrow+parquet@0.15.0
       - py-pyspark@3.0.0
       - py-dask-mpi
       # Others
@@ -113,7 +113,6 @@ packages:
       - py-setuptools-scm
       - py-simplejson
       - py-six
-      - py-sparkmanager
       - py-sphinx
       # - py-sphinx-bootstrap-theme
       - py-sphinx-rtd-theme
