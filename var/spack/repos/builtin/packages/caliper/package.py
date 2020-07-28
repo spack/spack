@@ -56,8 +56,6 @@ class Caliper(CMakePackage):
 
     depends_on('adiak@0.1:0.99', when='@2.2: +adiak')
 
-    depends_on('gotcha@1.0.2:1.0.99', when='+gotcha')
-
     depends_on('dyninst@9.3.0:9.99', when='@:1.99 +dyninst')
     depends_on('dyninst@10.0:10.99', when='@2: +dyninst')
 
@@ -98,8 +96,6 @@ class Caliper(CMakePackage):
             '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off')
         ]
 
-        if '+gotcha' in spec:
-            args.append('-DUSE_EXTERNAL_GOTCHA=True')
         if '+papi' in spec:
             args.append('-DPAPI_PREFIX=%s'    % spec['papi'].prefix)
         if '+libpfm' in spec:
