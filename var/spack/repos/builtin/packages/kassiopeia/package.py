@@ -15,7 +15,6 @@ class Kassiopeia(CMakePackage):
 
     maintainers = ['wdconinc']
 
-    version('master',  branch='master')
     version('3.7.5', sha256='8f28d08c7ef51e64221e0a4705f3cee3a5d738b8cdde5ce9fa58a3a0dd14ae05')
     version('3.7.4', sha256='c1514163a084530930be10dbe487fb1950ccbc9662a4a190bdecffbd84a71fd4')
     version('3.7.3', sha256='a8753585b9fa0903e1f5f821c4ced3cddd72792ad7e6075a7e25318f81ad9eaa')
@@ -37,10 +36,10 @@ class Kassiopeia(CMakePackage):
     variant("opencl", default=False,
             description="Include OpenCL support for field calculations")
 
-    depends_on('cmake@3.2:', type='build')
+    depends_on('cmake@3.13:', type='build')
     depends_on('zlib')
-    depends_on('root', when='+root')
-    depends_on('vtk', when='+vtk')
+    depends_on('root@6.0.0:', when='+root')
+    depends_on('vtk@6.1:', when='+vtk')
     depends_on('openmpi', when='+mpi')
     depends_on('intel-tbb', when='+tbb')
     depends_on('opencl', when='+opencl')
