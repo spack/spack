@@ -497,7 +497,7 @@ def create(url, specs, skip_unstable_versions=False):
                     "Cannot create directory '%s':" % mirror_root, str(e))
 
     mirror_cache = spack.caches.MirrorCache(
-         parsed, skip_unstable_versions=skip_unstable_versions)
+        parsed, skip_unstable_versions=skip_unstable_versions)
     mirror_stats = MirrorStats()
 
     # Iterate through packages and download all safe tarballs for each
