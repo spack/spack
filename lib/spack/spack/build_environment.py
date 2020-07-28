@@ -799,12 +799,13 @@ def modifications_from_dependencies(spec, context):
     return env
 
 
-def _setup_pkg_and_run(pkg, function, kwargs, child_pipe, input_fd):
+def _setup_pkg_and_run(pkg, function, kwargs, child_pipe, input_fd_wrapper):
     # We are in the child process. Python sets sys.stdin to
     # open(os.devnull) to prevent our process and its parent from
     # simultaneously reading from the original stdin. But, we assume
     # that the parent process is not going to read from it till we
     # are done with the child, so we undo Python's precaution.
+    input_fd = input_fd_wrapper._handle
     if input_fd is not None:
         sys.stdin = os.fdopen(input_fd)
 
@@ -883,9 +884,11 @@ def fork(pkg, function, kwargs):
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
 
+        input_fd_wrapper = multiprocessing.connection.Connection(input_fd)
+
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
-            args=(pkg, function, kwargs, child_pipe, input_fd))
+            args=(pkg, function, kwargs, child_pipe, input_fd_wrapper))
         p.start()
 
     except InstallError as e:

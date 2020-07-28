@@ -420,7 +420,7 @@ class log_output(object):
 
         # Use multiprocessing.COnnection to transmit FD from the parent
         # process to the child
-        read_wrapper = multiprocessing.Connection(read_fd)
+        read_wrapper = multiprocessing.connection.Connection(read_fd)
 
         # Multiprocessing pipe for communication back from the daemon
         # Currently only used to save echo value between uses
@@ -430,14 +430,16 @@ class log_output(object):
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
             try:
-                input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
+                input_wrapper = multiprocessing.connection.Connection(
+                    os.dup(sys.stdin.fileno())
+                )
             except BaseException:
-                input_stream = None  # just don't forward input if this fails
+                input_wrapper = None  # just don't forward input if this fails
 
             self.process = multiprocessing.Process(
                 target=_writer_daemon,
                 args=(
-                    input_stream, read_wrapper, self.echo, self.log_file,
+                    input_wrapper, read_wrapper, self.echo, self.log_file,
                     child_pipe
                 )
             )
@@ -607,6 +609,9 @@ def _writer_daemon(stdin, read, echo, log_file, control_pipe):
     # Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
     in_pipe = os.fdopen(read._handle, 'r', 1)
+
+    if stdin:
+        stdin = os.fdopen(stdin._handle)
 
     # list of streams to select from
     istreams = [in_pipe, stdin] if stdin else [in_pipe]
