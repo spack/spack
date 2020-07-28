@@ -120,6 +120,7 @@ packages:
     specs:
       - nest@2.18.0
       - py-efel@3.0.80
+      - py-bluepyefe@0.3.13
       - py-bglibpy@4.2.23 ^neuron%intel@19.0.4
       - py-bluepy@0.14.8
       - py-bluepymm@0.7.15 ^neuron%intel@19.0.4
