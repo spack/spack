@@ -1481,7 +1481,8 @@ class Environment(object):
                    'is currently using a deprecated format. Please update it '
                    'using:\n\n'
                    '\tspack env update {0}\n\n'
-                   'Note that any update will not be forward-compatible')
+                   'Note that previous versions of Spack will not be able to '
+                   'use the updated configuration.')
             raise RuntimeError(msg.format(self.name))
 
         # ensure path in var/spack/environments

@@ -399,6 +399,7 @@ def env_loads(args):
 
 
 def env_update_setup_parser(subparser):
+    """update environments to the latest format"""
     subparser.add_argument(
         metavar='env', dest='env',
         help='name or directory of the environment to activate'
@@ -434,6 +435,7 @@ def env_update(args):
 
 
 def env_revert_setup_parser(subparser):
+    """restore environments to their state before update"""
     subparser.add_argument(
         metavar='env', dest='env',
         help='name or directory of the environment to activate'
