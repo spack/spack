@@ -103,7 +103,7 @@ def changed_files(base=None, untracked=True, all_files=False):
 
     git_args = [
         # Add changed files committed since branching off of develop
-        ['diff', '--name-only', '--diff-filter=ACMR', base],
+        ['diff', '--name-only', '--diff-filter=ACMR', str(base)],
         # Add changed files that have been staged but not yet committed
         ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
         # Add changed files that are unstaged
