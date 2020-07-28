@@ -1,3 +1,15 @@
+# v0.15.3 (2020-07-28)
+
+This release contains the following bugfixes:
+
+* Fix handling of relative view paths (#17721)
+* Fixes for binary relocation (#17418, #17455)
+* Fix redundant printing of error messages in build environment (#17709)
+
+It also adds a support script for Spack tutorials:
+
+* Add a tutorial setup script to share/spack (#17705, #17722)
+
 # v0.15.2 (2020-07-23)
 
 This minor release includes two new features:
