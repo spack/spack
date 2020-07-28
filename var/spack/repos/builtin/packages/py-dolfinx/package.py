@@ -22,11 +22,11 @@ class PyDolfinx(PythonPackage):
     depends_on("py-petsc4py")
     depends_on("py-scipy")
 
-    depends_on("py-pytest", type="test")
-    depends_on("py-gmsh", type="test")
-
     root_cmakelists_dir = "cpp"
+
+    import_modules = ['dolfinx']
 
     @property
     def build_directory(self):
         return join_path(self.stage.source_path, 'python')
+
