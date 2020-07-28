@@ -214,11 +214,12 @@ def mplib_content(spec, pre=None):
     """The mpi settings (from spack) for the OpenFOAM wmake includes, which
     allows later reuse within OpenFOAM.
 
-    Optional parameter 'pre' to provide alternative prefix
+    Optional parameter 'pre' to provide alternative prefix for
+    bin and lib directories.
     """
     mpi_spec = spec['mpi']
     bin = mpi_spec.prefix.bin
-    inc = mpi_spec.prefix.include
+    inc = mpi_spec.headers.directories[0]  # Currently only need first one
     lib = pkglib(mpi_spec)
 
     libname = 'mpi'
