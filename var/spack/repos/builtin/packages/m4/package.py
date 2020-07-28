@@ -5,12 +5,17 @@
 
 from spack import *
 
+import re
+import os
+
 
 class M4(AutotoolsPackage, GNUMirrorPackage):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
 
     homepage = "https://www.gnu.org/software/m4/m4.html"
     gnu_mirror_path = "m4/m4-1.4.18.tar.gz"
+
+    executables = ['m4']
 
     version('1.4.18', sha256='ab2633921a5cd38e48797bf5521ad259bdc4b979078034a3b790d7fec5493fab')
     version('1.4.17', sha256='3ce725133ee552b8b4baca7837fb772940b25e81b2a9dc92537aeaf733538c9e')
@@ -31,6 +36,21 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     depends_on('libsigsegv', when='+sigsegv')
 
     build_directory = 'spack-build'
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        exe_to_path = dict(
+            (os.path.basename(p), p) for p in exes_in_prefix
+        )
+        if cls.executables[0] not in exe_to_path:
+            return None
+
+        exe = spack.util.executable.Executable(exe_to_path[cls.executables[0]])
+        output = exe('--version', output=str)
+        if output:
+            match = re.search(r'(\d+\.\d+(?:.\d+)?)', output)
+            if match:
+                return Spec('m4@{0}'.format(match.group(0)))
 
     def configure_args(self):
         spec = self.spec
