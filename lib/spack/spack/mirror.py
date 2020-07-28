@@ -456,12 +456,12 @@ def get_matching_versions(specs, num_versions=1):
     return matching
 
 
-def create(path, specs, skip_unstable_versions=False):
-    """Create a directory to be used as a spack mirror, and fill it with
-    package archives.
+def create(url, specs, skip_unstable_versions=False):
+    """Create a directory or remote location to be used as a spack mirror, and
+    fill it with package archives.
 
     Arguments:
-        path: Path to create a mirror directory hierarchy in.
+        url: Path to create a mirror hierarchy in.
         specs: Any package versions matching these specs will be added \
             to the mirror.
         skip_unstable_versions: if true, this skips adding resources when
@@ -479,27 +479,25 @@ def create(path, specs, skip_unstable_versions=False):
     it creates specs for those versions.  If the version satisfies any spec
     in the specs list, it is downloaded and added to the mirror.
     """
-    parsed = url_util.parse(path)
+    parsed = url_util.parse(url)
     mirror_root = url_util.local_file_path(parsed)
-    if not mirror_root:
-        raise spack.error.SpackError(
-            'MirrorCaches only work with file:// URLs')
 
     # automatically spec-ify anything in the specs array.
     specs = [
         s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s)
         for s in specs]
 
-    # Get the absolute path of the root before we start jumping around.
-    if not os.path.isdir(mirror_root):
-        try:
-            mkdirp(mirror_root)
-        except OSError as e:
-            raise MirrorError(
-                "Cannot create directory '%s':" % mirror_root, str(e))
+    if mirror_root:
+        # Get the absolute path of the root before we start jumping around.
+        if not os.path.isdir(mirror_root):
+            try:
+                mkdirp(mirror_root)
+            except OSError as e:
+                raise MirrorError(
+                    "Cannot create directory '%s':" % mirror_root, str(e))
 
     mirror_cache = spack.caches.MirrorCache(
-        mirror_root, skip_unstable_versions=skip_unstable_versions)
+         parsed, skip_unstable_versions=skip_unstable_versions)
     mirror_stats = MirrorStats()
 
     # Iterate through packages and download all safe tarballs for each

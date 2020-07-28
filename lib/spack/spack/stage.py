@@ -39,6 +39,8 @@ import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
+import spack.util.web
+
 from spack.util.crypto import bit_length, prefix_bits
 
 # The well-known stage source subdirectory name.
@@ -584,10 +586,10 @@ class Stage(object):
             not fs.stable_target(self.default_fetcher)):
             return
 
-        absolute_storage_path = os.path.join(
+        absolute_storage_path = url_util.join(
             mirror.root, self.mirror_paths.storage_path)
 
-        if os.path.exists(absolute_storage_path):
+        if spack.util.web.url_exists(absolute_storage_path):
             stats.already_existed(absolute_storage_path)
         else:
             self.fetch()

@@ -13,6 +13,8 @@ from llnl.util.filesystem import resolve_link_target_relative_to_the_link
 import spack.mirror
 import spack.repo
 import spack.util.executable
+import spack.util.url
+import spack.util.web
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
@@ -201,10 +203,14 @@ class MockFetcher(object):
     """Mock fetcher object which implements the necessary functionality for
        testing MirrorCache
     """
-    @staticmethod
-    def archive(dst):
-        with open(dst, 'w'):
+    def __init__(self, tmpdir):
+        self.tmpdir = tmpdir
+
+    def archive(self, dst):
+        filename = os.path.join(self.tmpdir, 'empty-file')
+        with open(filename, 'w'):
             pass
+        spack.util.web.push_to_url(filename, dst, keep_original=False)
 
 
 @pytest.mark.regression('14067')
@@ -217,11 +223,12 @@ def test_mirror_cache_symlinks(tmpdir):
     cache = spack.caches.MirrorCache(str(tmpdir), False)
     reference = spack.mirror.MirrorReference(cosmetic_path, global_path)
 
-    cache.store(MockFetcher(), reference.storage_path)
+    cache.store(MockFetcher(tmpdir), reference.storage_path)
     cache.symlink(reference)
 
+    cache_root = spack.util.url.local_file_path(cache.root)
     link_target = resolve_link_target_relative_to_the_link(
-        os.path.join(cache.root, reference.cosmetic_path))
+        os.path.join(cache_root, reference.cosmetic_path))
     assert os.path.exists(link_target)
     assert (os.path.normpath(link_target) ==
-            os.path.join(cache.root, reference.storage_path))
+            os.path.join(cache_root, reference.storage_path))
