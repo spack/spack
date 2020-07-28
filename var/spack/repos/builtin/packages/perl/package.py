@@ -11,6 +11,7 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
+import re
 import os
 from contextlib import contextmanager
 
@@ -26,6 +27,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     homepage = "http://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
+
+    executables = ['perl']
 
     # see http://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
@@ -92,6 +95,52 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     )
 
     phases = ['configure', 'build', 'install']
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        exe_to_path = dict(
+            (os.path.basename(p), p) for p in exes_in_prefix
+        )
+        if 'perl' not in exe_to_path:
+            return None
+
+        perl = spack.util.executable.Executable(exe_to_path['perl'])
+        output = perl('--version', output=str)
+        version_str = ''
+        shared = False
+        threads = False
+        cpanm = False
+        if output:
+            match = re.search(r'perl.*\(v([0-9.]+)\)', output)
+            if match:
+                version_str = match.group(1)
+        else:
+            return None
+        output = perl('-V', output=str)
+        if output:
+            match = re.search(r'-Duseshrplib', output)
+            if match:
+                shared = True
+            match = re.search(r'-Duse.threads', output)
+            if match:
+                threads = True
+        if 'cpanm' in exe_to_path:
+            cpanm = True
+
+        def bool2str(inarg):
+            if inarg:
+                return "+"
+            else:
+                return "~"
+
+        if version_str:
+            spec_str = 'perl@{0}'.format(version_str)
+            spec_str += bool2str(shared) + "shared"
+            spec_str += bool2str(threads) + "threads"
+            spec_str += bool2str(cpanm) + "cpanm"
+            return Spec(spec_str)
+        else:
+            return None
 
     # On a lustre filesystem, patch may fail when files
     # aren't writeable so make pp.c user writeable
