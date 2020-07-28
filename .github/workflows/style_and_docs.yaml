@@ -41,9 +41,7 @@ jobs:
       run: |
         # Need this for the git tests to succeed.
         git --version
-        git config --global user.email "spack@example.com"
-        git config --global user.name "Test User"
-        git fetch -u origin develop:develop
+        . .github/workflows/setup_git.sh
     - name: Run flake8 tests
       run: |
           share/spack/qa/run-flake8-tests

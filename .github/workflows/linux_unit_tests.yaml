@@ -19,6 +19,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
@@ -35,9 +37,7 @@ jobs:
       run: |
           # Need this for the git tests to succeed.
           git --version
-          git config --global user.email "spack@example.com"
-          git config --global user.name "Test User"
-          git fetch -u origin develop:develop
+          . .github/workflows/setup_git.sh
     - name: Install kcov for bash script coverage
       env:
           KCOV_VERSION: 34
@@ -62,6 +62,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - uses: actions/setup-python@v2
       with:
         python-version: 3.8
@@ -78,9 +80,7 @@ jobs:
       run: |
           # Need this for the git tests to succeed.
           git --version
-          git config --global user.email "spack@example.com"
-          git config --global user.name "Test User"
-          git fetch -u origin develop:develop
+          . .github/workflows/setup_git.sh
     - name: Install kcov for bash script coverage
       env:
           KCOV_VERSION: 38
