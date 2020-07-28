@@ -101,11 +101,9 @@ def changed_files(base=None, untracked=True, all_files=False):
     if base is None:
         base = os.environ.get('TRAVIS_BRANCH', 'develop')
 
-    range = "{0}...".format(base)
-
     git_args = [
         # Add changed files committed since branching off of develop
-        ['diff', '--name-only', '--diff-filter=ACMR', range],
+        ['diff', '--name-only', '--diff-filter=ACMR', base],
         # Add changed files that have been staged but not yet committed
         ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
         # Add changed files that are unstaged
