@@ -6,6 +6,7 @@
 """This test does sanity checks on Spack's builtin package database."""
 import os.path
 import re
+import sys
 
 import pytest
 
@@ -163,6 +164,9 @@ def test_api_for_build_and_run_environment():
 
 @pytest.mark.skipif(
     not executable.which('git'), reason='requires git to be installed'
+)
+@pytest.mark.xfail(
+    sys.platform == 'darwin', reason='started failing on Github Actions'
 )
 def test_prs_update_old_api():
     """Ensures that every package modified in a PR doesn't contain
