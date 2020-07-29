@@ -769,6 +769,7 @@ EOF
     fi
 
     mkdir -p "${WORKSPACE:-.}/stacks/${what}"
+    rm -rf "${WORKSPACE:-.}/stacks/${what}/"*.xml
     cp "${HOME}"/stack*.xml "${WORKSPACE:-.}/stacks/${what}"
 
     spack module tcl refresh -y --delete-tree --latest --upstream-modules $(<${HOME}/specs.txt)
@@ -807,4 +808,3 @@ EOF
     log "cleaning up after a bad spack"
     spack clean -a
 }
-
