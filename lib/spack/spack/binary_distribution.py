@@ -903,34 +903,23 @@ def get_keys(install=False, trust=False, force=False):
     Get pgp public keys available on mirror
     with suffix .key or .pub
     """
-    if not spack.mirror.MirrorCollection():
+    mirror_collection = spack.mirror.MirrorCollection()
+    if not mirror_collection:
         tty.die("Please add a spack mirror to allow " +
                 "download of build caches.")
 
     keys = set()
 
-    for mirror in spack.mirror.MirrorCollection().values():
+    for mirror in mirror_collection.values():
         fetch_url_build_cache = url_util.join(
             mirror.fetch_url, _build_cache_relative_path)
 
-        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
-        if mirror_dir:
-            tty.debug('Finding public keys in {0}'.format(mirror_dir))
-            files = os.listdir(str(mirror_dir))
-            for file in files:
-                if re.search(r'\.key', file) or re.search(r'\.pub', file):
-                    link = url_util.join(fetch_url_build_cache, file)
-                    keys.add(link)
-        else:
-            tty.debug('Finding public keys at {0}'
-                      .format(url_util.format(fetch_url_build_cache)))
-            # For s3 mirror need to request index.html directly
-            p, links = web_util.spider(
-                url_util.join(fetch_url_build_cache, 'index.html'))
+        tty.debug('Finding public keys in {0}'.format(url_util.format(mirror)))
 
-            for link in links:
-                if re.search(r'\.key', link) or re.search(r'\.pub', link):
-                    keys.add(link)
+        for file in web_util.list_url(fetch_url_build_cache):
+            if file.endswith('.key') or file.endswith('.pub'):
+                link = url_util.join(fetch_url_build_cache, file)
+                keys.add(link)
 
         for link in keys:
             with Stage(link, name="build_cache", keep=True) as stage:
