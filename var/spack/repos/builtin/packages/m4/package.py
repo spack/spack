@@ -50,7 +50,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         if output:
             match = re.search(r'(\d+\.\d+(?:.\d+)?)', output)
             if match:
-                return Spec('m4@{0}'.format(match.group(0)))
+                return Spec('{0}@{1}'.format(cls.name, match.group(0)))
 
     def configure_args(self):
         spec = self.spec
