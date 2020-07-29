@@ -351,6 +351,9 @@ def env_status(args):
                     % (ev.manifest_name, env.path))
         else:
             tty.msg('In environment %s' % env.name)
+
+        # Check if environment views can be safely activated
+        env.check_views()
     else:
         tty.msg('No active environment')
 
