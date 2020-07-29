@@ -26,6 +26,7 @@ class PyDolfinx(PythonPackage):
     root_cmakelists_dir = "cpp"
 
     import_modules = ['dolfinx']
+    phases = ['build_ext', 'build', 'install']
 
     @property
     def build_directory(self):
