@@ -31,11 +31,14 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.8.5',  sha256='015115023c382eb6ab83d512762fe3c5502fa0c6c52ffebc4831c4e1a06ffc49')
+    version('3.8.4',  sha256='32c4d9817ef11793da4d0d95b3191c4db81d2e45544614e8449255ca9ae3cc18')
     version('3.8.3',  sha256='6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90')
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
-    version('3.7.7',  sha256='8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a', preferred=True)
+    version('3.7.8',  sha256='0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0', preferred=True)
+    version('3.7.7',  sha256='8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a')
     version('3.7.6',  sha256='aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114')
     version('3.7.5',  sha256='8ecc681ea0600bbfb366f2b173f727b205bb825d93d2f0b286bc4e58d37693da')
     version('3.7.4',  sha256='d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3')
@@ -43,6 +46,9 @@ class Python(AutotoolsPackage):
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
     version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
     version('3.7.0',  sha256='85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d')
+    version('3.6.11', sha256='96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c')
+    version('3.6.10', sha256='7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d')
+    version('3.6.9',  sha256='47fc92a1dcb946b9ed0abc311d3767b7215c54e655b17fd1d3f9b538195525aa')
     version('3.6.8',  sha256='7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0')
     version('3.6.7',  sha256='b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239')
     version('3.6.6',  sha256='7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58')
@@ -52,6 +58,7 @@ class Python(AutotoolsPackage):
     version('3.6.2',  sha256='7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82')
     version('3.6.1',  sha256='aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828')
     version('3.6.0',  sha256='aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b')
+    version('3.5.8',  sha256='18c88dfd260147bc7247e6356010e5d4916dfbfc480f6434917f88e61228177a')
     version('3.5.7',  sha256='542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b')
     version('3.5.2',  sha256='1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0')
     version('3.5.1',  sha256='687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7')
@@ -273,7 +280,7 @@ class Python(AutotoolsPackage):
         # C/C++ source, and patches are required to enable building for these
         # modules. All Python versions without a viable patch are installed
         # with a warning message about this potentially erroneous behavior.
-        if not spec.satisfies('@2.7.8:2.7.18,3.6.8,3.7.2:3.8.3'):
+        if not spec.satisfies('@2.7.8:2.7.18,3.6.8,3.7.2:3.8'):
             tty.warn(('Python v{0} does not have the C++ "distutils" patch; '
                       'errors may occur when installing Python modules w/ '
                       'mixed C/C++ source files.').format(self.version))
