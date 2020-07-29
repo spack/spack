@@ -1074,7 +1074,7 @@ class PackageInstaller(object):
             # Fork a child to do the actual installation.
             # Preserve verbosity settings across installs.
             spack.package.PackageBase._verbose = spack.build_environment.fork(
-                self, build_process, build_kwargs)
+                pkg, build_process, build_kwargs)
 
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
@@ -1541,6 +1541,7 @@ def build_process(pkg, build_kwargs):
 
     pid = '{0}: '.format(pkg.pid) if tty.show_pid() else ''
     pre = '{0}{1}:'.format(pid, pkg.name)
+    pkg_id = package_id(pkg)
 
     tty.debug('{0} Building {1} [{2}]'
               .format(pre, pkg_id, pkg.build_system_class))
