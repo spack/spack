@@ -12,6 +12,7 @@ class PyEntityManagement(PythonPackage):
     homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/nse/entity-management'
     git      = 'ssh://bbpcode.epfl.ch/nse/entity-management'
 
+    version('1.2.2', tag='entity-management-v1.2.2')
     version('1.1.3', tag='entity-management-v1.1.3')
     version('1.1.1', tag='entity-management-v1.1.1')
     version('1.1.0', tag='entity-management-v1.1.0')
@@ -28,3 +29,4 @@ class PyEntityManagement(PythonPackage):
     depends_on('py-rdflib-jsonld', type='run')
     depends_on('py-pyjwt', type='run')
     depends_on('py-python-keycloak', type='run')
+    depends_on('py-devtools+pygments', type='run')
