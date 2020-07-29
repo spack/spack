@@ -71,6 +71,7 @@ class Flang(CMakePackage, CudaPackage):
                 spec['python'].command.path)
         ]
 
+        # Make sure llvm-flang can find GCC's libstdc++
         if self.compiler.name == "gcc":
             gcc_prefix = ancestor(self.compiler.cc, 2)
             options.append('-DGCC_INSTALL_PREFIX=' + gcc_prefix)
