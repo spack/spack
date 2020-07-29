@@ -29,9 +29,11 @@ class PyMixedhtseq(PythonPackage):
 
         for fname in glob.glob('scripts/*.py'):
             filter_file('^#!.*', '', fname)
-            with open(fname, 'r') as orig: fdata = orig.read()
-            with open(fname, 'w') as new: new.write(shebang + fdata)
+            with open(fname, 'r') as orig:
+                fdata = orig.read()
+            with open(fname, 'w') as new:
+                new.write(shebang + fdata)
             set_executable(fname)
-        
+
         mkdirp(self.prefix.bin)
         install_tree('scripts', self.prefix.bin)
