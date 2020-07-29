@@ -30,8 +30,6 @@ modules:
       - arm-forge
       - blender
       - cmake
-      - cuda
-      - cudnn
       - darshan-runtime
       - darshan-util
       - doxygen
@@ -42,16 +40,11 @@ modules:
       - git
       - graphviz
       - hpctoolkit
+      - hpcviewer
       - hpe-mpi
-      - ior
-      - imb
       - intel-mpi
       - ispc
-      - likwid
-      - lmod
       - mvapich2
-      - openmpi
-      - osu-micro-benchmarks
       - stat
       - valgrind
     blacklist:

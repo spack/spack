@@ -743,7 +743,7 @@ EOF
         install_start=$(date "+%Y-%m-%d %H:%M:%S")
         log "running installation for all specs"
         for i in $(seq 1 6); do
-            spack install -y --log-format=junit --log-file="${HOME}/stack.xml" ${spec_list} &
+            spack install -y --log-format=junit --log-file="${HOME}/stack_${i}.xml" ${spec_list} &
         done
         wait
 
@@ -768,8 +768,8 @@ EOF
 EOF
     fi
 
-    mkdir -p "${WORKSPACE:-.}/stacks"
-    cp "${HOME}/stack.xml" "${WORKSPACE:-.}/stacks/${what}.xml"
+    mkdir -p "${WORKSPACE:-.}/stacks/${what}"
+    cp "${HOME}"/stack*.xml "${WORKSPACE:-.}/stacks/${what}"
 
     spack module tcl refresh -y --delete-tree --latest --upstream-modules $(<${HOME}/specs.txt)
 
