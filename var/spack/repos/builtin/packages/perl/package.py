@@ -106,41 +106,39 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         perl = spack.util.executable.Executable(exe_to_path['perl'])
         output = perl('--version', output=str)
-        version_str = ''
-        shared = False
-        threads = False
-        cpanm = False
+        spec = False
         if output:
             match = re.search(r'perl.*\(v([0-9.]+)\)', output)
             if match:
-                version_str = match.group(1)
-        else:
+                spec = Spec('perl')
+                spec.constrain('@{0}'.format(match.group(1)))
+        if not spec:
             return None
+        variants = {}
         output = perl('-V', output=str)
         if output:
             match = re.search(r'-Duseshrplib', output)
             if match:
-                shared = True
+                variants['shared'] = True
+            else:
+                variants['shared'] = False
             match = re.search(r'-Duse.threads', output)
             if match:
-                threads = True
-        if 'cpanm' in exe_to_path:
-            cpanm = True
-
-        def bool2str(inarg):
-            if inarg:
-                return "+"
+                variants['threads'] = True
             else:
-                return "~"
-
-        if version_str:
-            spec_str = 'perl@{0}'.format(version_str)
-            spec_str += bool2str(shared) + "shared"
-            spec_str += bool2str(threads) + "threads"
-            spec_str += bool2str(cpanm) + "cpanm"
-            return Spec(spec_str)
+                variants['threads'] = False
+        if 'cpanm' in exe_to_path:
+            variants['cpanm'] = True
         else:
-            return None
+            variants['cpanm'] = False
+
+        for (name, value) in variants.items():
+            if isinstance(value, bool):
+                convert = spack.variant.BoolValuedVariant
+            else:
+                convert = spack.variant.AbstractVariant
+            spec.variants[name] = convert(name, value)
+        return spec
 
     # On a lustre filesystem, patch may fail when files
     # aren't writeable so make pp.c user writeable
