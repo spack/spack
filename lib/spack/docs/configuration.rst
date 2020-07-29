@@ -18,6 +18,7 @@ case you want to skip directly to specific docs:
 * :ref:`modules.yaml <modules>`
 * :ref:`packages.yaml <build-settings>`
 * :ref:`repos.yaml <repositories>`
+* :ref:`include.yaml <included-scopes>`
 
 -----------
 YAML Format
@@ -118,6 +119,27 @@ If multiple scopes are provided:
 
 #. Each must be preceded with the ``--config-scope`` or ``-C`` flag.
 #. They must be ordered from lowest to highest precedence.
+
+.. _included-scopes:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Included configuration scopes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``include`` config section can pull in custom configuration scopes:
+
+.. code-block:: yaml
+   :caption: ~/myscopes/somescope/include.yaml
+
+   include:
+   - /absolute/path/to/custom/scope/
+   - relative/path/to/packages.yaml
+   - ~/tmp/config.yaml
+
+Those paths support :ref:`config-file-variables`. They can either be absolute,
+or relative to the config scope including them. And they are listed from highest
+to lowest precedence, but all have lower precedence than the scope including
+them.
 
 """""""""""""""""""""""""""""""""""""""""""
 Example: scopes for release and development

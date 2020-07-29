@@ -422,13 +422,8 @@ a ``packages.yaml`` file) could contain:
 This configuration sets the default compiler for all packages to
 ``intel``.
 
-"""""""""""""""""""""""
-Included configurations
-"""""""""""""""""""""""
-
-Spack environments allow an ``include`` heading in their yaml
-schema. This heading pulls in external configuration files and applies
-them to the Environment.
+The ``include`` config section, covered in :ref:`included-scopes`, pulls in
+external configuration files and applies them to the Environment.
 
 .. code-block:: yaml
 
@@ -437,12 +432,10 @@ them to the Environment.
      - relative/path/to/config.yaml
      - /absolute/path/to/packages.yaml
 
-Environments can include files with either relative or absolute
-paths. Inline configurations take precedence over included
-configurations, so you don't have to change shared configuration files
-to make small changes to an individual Environment. Included configs
-listed later will have higher precedence, as the included configs are
-applied in order.
+Inline configurations take precedence over included configurations, so you don't
+have to change shared configuration files to make small changes to an individual
+Environment. Included configs listed later will have higher precedence, as the
+included configs are applied in order.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Manually Editing the Specs List

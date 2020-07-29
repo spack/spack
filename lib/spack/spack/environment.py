@@ -38,7 +38,6 @@ from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
 import spack.util.lock as lk
-from spack.util.path import substitute_path_variables
 from spack.installer import PackageInstaller
 
 #: environment variable used to indicate the active environment
@@ -809,54 +808,6 @@ class Environment(object):
             self._repo = make_repo_path(self.repos_path)
         return self._repo
 
-    def included_config_scopes(self):
-        """List of included configuration scopes from the environment.
-
-        Scopes are listed in the YAML file in order from highest to
-        lowest precedence, so configuration from earlier scope will take
-        precedence over later ones.
-
-        This routine returns them in the order they should be pushed onto
-        the internal scope stack (so, in reverse, from lowest to highest).
-        """
-        scopes = []
-
-        # load config scopes added via 'include:', in reverse so that
-        # highest-precedence scopes are last.
-        includes = config_dict(self.yaml).get('include', [])
-        missing = []
-        for i, config_path in enumerate(reversed(includes)):
-            # allow paths to contain spack config/environment variables, etc.
-            config_path = substitute_path_variables(config_path)
-
-            # treat relative paths as relative to the environment
-            if not os.path.isabs(config_path):
-                config_path = os.path.join(self.path, config_path)
-                config_path = os.path.normpath(os.path.realpath(config_path))
-
-            if os.path.isdir(config_path):
-                # directories are treated as regular ConfigScopes
-                config_name = 'env:%s:%s' % (
-                    self.name, os.path.basename(config_path))
-                scope = spack.config.ConfigScope(config_name, config_path)
-            elif os.path.exists(config_path):
-                # files are assumed to be SingleFileScopes
-                config_name = 'env:%s:%s' % (self.name, config_path)
-                scope = spack.config.SingleFileScope(
-                    config_name, config_path, spack.schema.merged.schema)
-            else:
-                missing.append(config_path)
-                continue
-
-            scopes.append(scope)
-
-        if missing:
-            msg = 'Detected {0} missing include path(s):'.format(len(missing))
-            msg += '\n   {0}'.format('\n   '.join(missing))
-            tty.die('{0}\nPlease correct and try again.'.format(msg))
-
-        return scopes
-
     def env_file_config_scope_name(self):
         """Name of the config scope of this environment's manifest file."""
         return 'env:%s' % self.name
@@ -870,10 +821,6 @@ class Environment(object):
             spack.schema.env.schema,
             [spack.config.first_existing(self.raw_yaml,
                                          spack.schema.env.keys)])
-
-    def config_scopes(self):
-        """A list of all configuration scopes for this environment."""
-        return self.included_config_scopes() + [self.env_file_config_scope()]
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
@@ -1883,14 +1830,12 @@ def make_repo_path(root):
 
 def prepare_config_scope(env):
     """Add env's scope to the global configuration search path."""
-    for scope in env.config_scopes():
-        spack.config.config.push_scope(scope)
+    spack.config.config.push_scope(env.env_file_config_scope())
 
 
 def deactivate_config_scope(env):
     """Remove any scopes from env from the global config path."""
-    for scope in env.config_scopes():
-        spack.config.config.remove_scope(scope.name)
+    spack.config.config.remove_scope(env.env_file_config_scope_name())
 
 
 def manifest_file(env_name_or_dir):

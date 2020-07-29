@@ -45,6 +45,7 @@ from ruamel.yaml.error import MarkedYAMLError
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
+from spack.util.path import substitute_path_variables
 
 import spack.paths
 import spack.architecture
@@ -71,6 +72,7 @@ section_schemas = {
     'modules': spack.schema.modules.schema,
     'config': spack.schema.config.schema,
     'upstreams': spack.schema.upstreams.schema,
+    'include': spack.schema.include.schema,
 }
 
 # Same as above, but including keys for environments
@@ -140,6 +142,7 @@ class ConfigScope(object):
         self.name = name           # scope name.
         self.path = path           # path to directory containing configs.
         self.sections = syaml.syaml_dict()  # sections read from config files.
+        self.remove_chain = []
 
     @property
     def is_platform_dependent(self):
@@ -413,7 +416,50 @@ class Configuration(object):
                 # be the scope of highest precedence
                 cmd_line_scope = self.pop_scope()
 
-        self.scopes[scope.name] = scope
+        def _push_scope_rec(scope, missing):
+            """Recursively walk 'include' sections and push scopes"""
+            includes = scope.get_section('include') or dict()
+            includes = includes.get('include', [])
+            for i, config_path in enumerate(reversed(includes)):
+                # allow paths to contain spack config/environment variables
+                config_path = substitute_path_variables(config_path)
+
+                # treat relative paths as relative to the current scope
+                if not os.path.isabs(config_path):
+                    current_dir = scope.path
+                    if not os.path.isdir(current_dir):  # SingleFileScope
+                        current_dir = os.path.dirname(current_dir)
+                    config_path = os.path.join(current_dir, config_path)
+                    config_path = os.path.normpath(
+                        os.path.realpath(config_path))
+
+                if os.path.isdir(config_path):
+                    # directories are treated as regular ConfigScopes
+                    config_name = 'include:%s:%s' % (scope.name, config_path)
+                    inc_scope = spack.config.ConfigScope(
+                        config_name, config_path)
+                elif os.path.exists(config_path):
+                    # files are assumed to be SingleFileScopes
+                    config_name = 'include:%s:%s' % (scope.name, config_path)
+                    inc_scope = spack.config.SingleFileScope(
+                        config_name, config_path, spack.schema.merged.schema)
+                else:
+                    missing.append(config_path)
+                    continue
+
+                _push_scope_rec(inc_scope, missing)
+                scope.remove_chain.append(inc_scope.name)
+
+            # Current scope takes precedence over its include
+            self.scopes[scope.name] = scope
+
+        missing = []
+        _push_scope_rec(scope, missing)
+        if missing:
+            msg = 'Detected {0} missing include path(s):'.format(len(missing))
+            msg += '\n   {0}'.format('\n   '.join(missing))
+            tty.die('{0}\nPlease correct and try again.'.format(msg))
+
         if cmd_line_scope:
             self.scopes['command_line'] = cmd_line_scope
 
@@ -425,7 +471,11 @@ class Configuration(object):
 
     @_config_mutator
     def remove_scope(self, scope_name):
-        return self.scopes.pop(scope_name)
+        scope = self.scopes.pop(scope_name)
+        if scope:
+            for rm in scope.remove_chain:
+                self.remove_scope(rm)
+        return scope
 
     @property
     def file_scopes(self):
