@@ -122,7 +122,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 variants['shared'] = True
             else:
                 variants['shared'] = False
-            match = re.search(r'-Duse.threads', output)
+            match = re.search(r'-Duse.?threads', output)
             if match:
                 variants['threads'] = True
             else:
