@@ -287,6 +287,19 @@ def _file_descriptors_work(*streams):
         return False
 
 
+class FileWrapper(object):
+    def __init__(self, file_like, open):
+        self.file_like = file_like
+        self.open = open
+
+    def unwrap(self):
+        if self.open:
+            return open(self.file_like, 'w')
+        else:
+            return self.file_like
+
+
+
 class log_output(object):
     """Context manager that logs its output to a file.
 
@@ -392,17 +405,16 @@ class log_output(object):
                 "file argument must be set by either __init__ or __call__")
 
         # set up a stream for the daemon to write to
-        self.close_log_in_parent = True
+        self.close_log_in_parent = False
         self.write_log_in_parent = False
         if isinstance(self.file_like, string_types):
-            self.log_file = open(self.file_like, 'w')
+            self.log_file = FileWrapper(self.file_like, open=True)
 
         elif _file_descriptors_work(self.file_like):
-            self.log_file = self.file_like
+            self.log_file = FileWrapper(self.file_like, open=False)
             self.close_log_in_parent = False
-
         else:
-            self.log_file = StringIO()
+            self.log_file = FileWrapper(self.file_like, open=False)
             self.write_log_in_parent = True
 
         # record parent color settings before redirecting.  We do this
@@ -448,8 +460,7 @@ class log_output(object):
             os.close(read_fd)  # close in the parent process
 
         finally:
-            if input_stream:
-                input_stream.close()
+            pass
 
         # Flush immediately before redirecting so that anything buffered
         # goes to the original stream
@@ -616,6 +627,8 @@ def _writer_daemon(stdin, read, echo, log_file, control_pipe):
     # list of streams to select from
     istreams = [in_pipe, stdin] if stdin else [in_pipe]
     force_echo = False      # parent can force echo for certain output
+
+    log_file = log_file.unwrap()
 
     try:
         with keyboard_input(stdin) as kb:
