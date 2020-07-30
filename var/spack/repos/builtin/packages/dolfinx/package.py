@@ -18,19 +18,13 @@ class Dolfinx(CMakePackage):
     variant("parmetis", default=False, description="parmetis support")
     variant("slepc", default=False, description="slepc support")
 
-    variant("int64", default=False, description="use 64 bit integers for indexes")
-    variant("complex", default=False, description="use complex numbers")
-
     depends_on("cmake@3.9:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("mpi")
     depends_on("hdf5+hl+fortran")
     depends_on("boost")
     depends_on("eigen")
-    depends_on("petsc+mpi+shared+hypre+metis ~int64~complex", when="~int64~complex")
-    depends_on("petsc+mpi+shared+hypre+metis +int64~complex", when="+int64~complex")
-    depends_on("petsc+mpi+shared+hypre+metis ~int64+complex", when="~int64+complex")
-    depends_on("petsc+mpi+shared+hypre+metis +int64+complex", when="+int64+complex")
+    depends_on("petsc+mpi+shared+hypre+metis", when="~int64~complex")
     depends_on("scotch+mpi")
 
     depends_on("kahip", when="+kahip")
