@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyFiat(PythonPackage):
+class PyFenicsFiat(PythonPackage):
     """The FInite element Automatic Tabulator FIAT supports generation of
     arbitrary order instances of the Lagrange elements on lines, triangles, and
     tetrahedra. It is also capable of generating arbitrary order instances of
