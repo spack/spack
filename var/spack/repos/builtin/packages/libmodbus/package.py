@@ -22,17 +22,12 @@
 
 from spack import *
 
-
 class Libmodbus(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """libmodbus is a free software library to send/receive data according to the Modbus protocol.
+    This library is written in C and supports RTU (serial) and TCP (Ethernet) communications."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://libmodbus.org/"
     url      = "https://libmodbus.org/releases/libmodbus-3.0.8.tar.gz"
-
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
 
     version('3.1.6', sha256='d7d9fa94a16edb094e5fdf5d87ae17a0dc3f3e3d687fead81835d9572cf87c16')
     version('3.1.5', sha256='f7a9538f23a8786b1ee62a4b75879b5c0e194e728350de1b741ce7d595970f06')
@@ -45,14 +40,6 @@ class Libmodbus(AutotoolsPackage):
     version('3.0.6', sha256='046d63f10f755e2160dc56ef681e5f5ad3862a57c1955fd82e0ce036b69471b6')
     version('3.0.5', sha256='19aad5d55fa315602d6e836a858a3802f1608f9d824afba05fa12a58a1b1e656')
 
-    # FIXME: Add dependencies if required.
     depends_on('autoconf')
     depends_on('automake')
     depends_on('libtool')
-
-
-    def configure_args(self):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
