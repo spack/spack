@@ -85,7 +85,7 @@ of the installation prefixes.  The following example says that module
        - CMake/3.7.2
 
 Each ``packages.yaml`` begins with a ``packages:`` attribute, followed
-by a list of package names.  To specify externals, add an ``externals``
+by a list of package names.  To specify externals, add an ``externals:``
 attribute under the package name, which lists externals.
 Each external should specify a ``spec:`` string that should be as
 well-defined as reasonably possible.  If a

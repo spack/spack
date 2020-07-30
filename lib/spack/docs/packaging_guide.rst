@@ -4077,7 +4077,7 @@ specify a package level ``executables`` attribute:
 This attribute must be a list of strings. Each string is a regular
 expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3', 'my-weird-gcc', etc.) to
 determine a set of system executables that might be part or this package. Note
-that to match only executables named 'gcc' the regular expression ``r'^gcc$'``
+that to match only executables named 'gcc' the regular expression ``'^gcc$'``
 must be used.
 
 Finally to determine the version of each executable the ``determine_version``
@@ -4088,7 +4088,10 @@ method must be implemented:
    @classmethod
    def determine_version(cls, exe):
        """Return either the version of the executable passed as argument
-       or ``None`` if the version cannot be determined
+       or ``None`` if the version cannot be determined.
+
+       Args:
+           exe (str): absolute path to the executable being examined
        """
 
 This method receives as input the path to a single executable and must return
@@ -4124,6 +4127,12 @@ to detect additional details of the spec:
        """Return either a variant string, a tuple of a variant string
        and a dictionary of extra attributes that will be recorded in
        packages.yaml or a list of those items.
+
+       Args:
+           exes (list of str): list of executables (absolute paths) that
+               live in the same prefix and share the same version
+           version_str (str): version associated with the list of
+               executables, as detected by ``determine_version``
        """
 
 This method takes as input a list of executables that live in the same prefix and
@@ -4131,7 +4140,7 @@ share the same version string, and returns either:
 
 1. A variant string
 2. A tuple of a variant string and a dictionary of extra attributes
-3. A list of items matching either 1. or 2. (if multiple specs are detected
+3. A list of items matching either 1 or 2 (if multiple specs are detected
    from the set of executables)
 
 If extra attributes are returned, they will be recorded in ``packages.yaml``
@@ -4152,7 +4161,7 @@ would look like:
              c++: /usr/bin/x86_64-linux-gnu-g++-9
              fortran: /usr/bin/x86_64-linux-gnu-gfortran-9
 
-This permits, for instance, to keep track of executables that would be named
+This allows us, for instance, to keep track of executables that would be named
 differently if built by Spack (e.g. ``x86_64-linux-gnu-gcc-9``
 instead of just ``gcc``).
 
@@ -4242,9 +4251,9 @@ or like this:
    def validate_detected_spec(cls, spec, extra_attributes):
        """Check that 'compilers' is in the extra attributes."""
        if 'compilers' not in extra_attributes:
-         msg = ('the extra attribute "compilers" must be set for '
-                 'the detected spec "{0}"'.format(spec))
-         raise InvalidSpecDetected(msg)
+           msg = ('the extra attribute "compilers" must be set for '
+                  'the detected spec "{0}"'.format(spec))
+           raise InvalidSpecDetected(msg)
 
 .. _determine_spec_details:
 

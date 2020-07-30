@@ -309,13 +309,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     def determine_variants(cls, exes, version_str):
         languages, compilers = set(), {}
         for exe in exes:
-            if 'gcc' in exe:
+            basename = os.path.basename(exe)
+            if 'gcc' in basename:
                 languages.add('c')
                 compilers['c'] = exe
-            if 'g++' in exe:
+            elif 'g++' in basename:
                 languages.add('c++')
                 compilers['cxx'] = exe
-            if 'gfortran' in exe:
+            elif 'gfortran' in basename:
                 languages.add('fortran')
                 compilers['fortran'] = exe
         variant_str = 'languages={0}'.format(','.join(languages))
