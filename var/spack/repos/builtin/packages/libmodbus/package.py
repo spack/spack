@@ -22,9 +22,11 @@
 
 from spack import *
 
+
 class Libmodbus(AutotoolsPackage):
-    """libmodbus is a free software library to send/receive data according to the Modbus protocol.
-    This library is written in C and supports RTU (serial) and TCP (Ethernet) communications."""
+    """libmodbus is a free software library to send/receive data
+    according to the Modbus protocol.This library is written in C
+    and supports RTU (serial) and TCP (Ethernet) communications."""
 
     homepage = "https://libmodbus.org/"
     url      = "https://libmodbus.org/releases/libmodbus-3.0.8.tar.gz"
