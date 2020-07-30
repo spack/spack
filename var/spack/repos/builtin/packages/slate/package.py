@@ -25,7 +25,7 @@ class Slate(Package):
     variant('mpi',    default=True, description='Build with MPI support.')
     variant('openmp', default=True, description='Build with OpenMP support.')
 
-    depends_on('cuda@9:10.2.89', when='+cuda')
+    depends_on('cuda@9:10', when='+cuda')
     depends_on('intel-mkl')
     depends_on('mpi', when='+mpi')
 
