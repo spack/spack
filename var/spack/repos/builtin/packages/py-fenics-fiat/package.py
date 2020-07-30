@@ -29,4 +29,5 @@ class PyFenicsFiat(PythonPackage):
 
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type="build")
+    depends_on('py-numpy', type=["build", "run"])
     depends_on('py-sympy', type=["build", "run"])
