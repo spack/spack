@@ -42,7 +42,7 @@ class Slate(Package):
         f_openmp = "1" if spec.variants['openmp'].value else "0"
 
         comp_cxx = comp_for = ''
-        if spec.variants['mpi'].value:
+        if '+mpi' in spec:
             comp_cxx = 'mpicxx'
             comp_for = 'mpif90'
 
