@@ -293,7 +293,8 @@ def generate_package_index(cache_prefix):
     file_list = (
         entry
         for entry in web_util.list_url(cache_prefix)
-        if entry.endswith('.yaml'))
+        if entry.endswith('.yaml')
+        and os.sep not in entry)
 
     tty.debug('Retrieving spec.yaml files from {0} to build index'.format(
         cache_prefix))
@@ -911,10 +912,12 @@ def get_keys(install=False, trust=False, force=False):
     keys = set()
 
     for mirror in mirror_collection.values():
+        fetch_url = mirror.fetch_url
         fetch_url_build_cache = url_util.join(
-            mirror.fetch_url, _build_cache_relative_path)
+            fetch_url, _build_cache_relative_path)
 
-        tty.debug('Finding public keys in {0}'.format(url_util.format(mirror)))
+        tty.debug('Finding public keys in {0}'.format(
+            url_util.format(fetch_url)))
 
         for file in web_util.list_url(fetch_url_build_cache):
             if file.endswith('.key') or file.endswith('.pub'):
