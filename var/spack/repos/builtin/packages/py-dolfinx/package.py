@@ -23,8 +23,6 @@ class PyDolfinx(PythonPackage):
     depends_on("py-petsc4py", type=["build", "run"])
     depends_on("py-scipy", type=["build", "run"])
 
-    root_cmakelists_dir = "cpp"
-
     import_modules = ['dolfinx']
     phases = ['build_ext', 'build', 'install']
 
