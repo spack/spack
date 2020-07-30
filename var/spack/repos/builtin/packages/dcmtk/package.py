@@ -39,7 +39,7 @@ class Dcmtk(CMakePackage):
 
     def patch(self):
         # Backport 3.6.4
-        if self.spec.satisfies('%fj') and self.spec.satisfies('@:3.6.3'):
+        if self.spec.satisfies('@:3.6.3 %fj'):
             filter_file(
                 'OFintegral_constant<size_t,-1>',
                 'OFintegral_constant<size_t,~OFstatic_cast(size_t,0)>',
