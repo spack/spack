@@ -136,6 +136,10 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
     patch('intel-c-gnu11.patch', when='@3.6.0:3.6.1')
 
+    # Cannot build with Intel again, should be fixed in 3.17.4 and 3.18.1
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/21013
+    patch('intel-cxx-bootstrap.patch', when='@3.17.0:3.17.3,3.18.0')
+
     # https://gitlab.kitware.com/cmake/cmake/issues/18232
     patch('nag-response-files.patch', when='@3.7:3.12')
 
