@@ -32,6 +32,7 @@ class Trilinos(CMakePackage):
 
     # ###################### Versions ##########################
 
+    version('xsdk-0.4.0-rc1', tag='xsdk-0.4.0-rc1')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
     version('master', branch='master')
