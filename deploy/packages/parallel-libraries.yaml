@@ -49,7 +49,7 @@ packages:
       - hypre@2.18.2
       - omega-h+gmsh+trilinos@9.31.3.dev2
       - superlu-dist@5.4.0
-      - trilinos@xsdk-0.4.0-rc1
+      # - trilinos@xsdk-0.4.0-rc1
 
   gnu-stable-parallel-lapack-python:
     target_matrix:
