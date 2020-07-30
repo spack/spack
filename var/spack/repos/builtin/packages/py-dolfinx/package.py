@@ -26,6 +26,4 @@ class PyDolfinx(PythonPackage):
     import_modules = ['dolfinx']
     phases = ['build_ext', 'build', 'install']
 
-    @property
-    def build_directory(self):
-        return join_path(self.stage.source_path, 'python')
+    build_directory = 'python'
