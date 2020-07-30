@@ -1312,6 +1312,9 @@ class Environment(object):
 
                 # Don't delete dev-build stages
                 install_args['keep_stage'] = True
+
+                # Never pull dev-build packages from binary mirror
+                install_args['use_cache'] = False
                 break
 
         package.do_install(**install_args)
