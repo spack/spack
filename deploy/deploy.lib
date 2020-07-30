@@ -723,6 +723,8 @@ EOF
     log "gathering specs"
     spec_list=$(spack filter --not-installed $(< ${HOME}/specs.txt))
 
+    rm -f "${HOME}/"stack*.xml
+
     # Only perform installation for actionable items
     if [[ -n "${spec_list}" ]]; then
         log "found the following uninstalled specs"
