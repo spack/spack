@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install libmodbus
-#
-# You can edit this file again by typing:
-#
-#     spack edit libmodbus
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
@@ -41,7 +24,3 @@ class Libmodbus(AutotoolsPackage):
     version('3.0.7', sha256='6c26850cd5dedcf5dad40977ac7f2ee990a3667f6959a1e05e22959bdf537961')
     version('3.0.6', sha256='046d63f10f755e2160dc56ef681e5f5ad3862a57c1955fd82e0ce036b69471b6')
     version('3.0.5', sha256='19aad5d55fa315602d6e836a858a3802f1608f9d824afba05fa12a58a1b1e656')
-
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
