@@ -22,7 +22,7 @@ class Dolfinx(CMakePackage):
     variant("complex", default=False, description="use complex numbers")
 
     depends_on("cmake@3.9:", type="build")
-    depends_on("pkgconfig")
+    depends_on("pkgconfig", type="build")
     depends_on("mpi")
     depends_on("hdf5+hl+fortran")
     depends_on("boost")
