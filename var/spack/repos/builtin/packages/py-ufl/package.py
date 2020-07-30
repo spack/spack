@@ -26,4 +26,4 @@ class PyUfl(PythonPackage):
 
     extends("python")
     depends_on("py-setuptools", type="build")
-    depends_on("py-numpy")
+    depends_on("py-numpy", type=["build", "run"])

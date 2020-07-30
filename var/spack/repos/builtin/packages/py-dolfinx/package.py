@@ -18,10 +18,10 @@ class PyDolfinx(PythonPackage):
 
     depends_on("cmake@3.9:", type="build")
     depends_on("dolfinx@master")
-    depends_on("py-pybind11")
-    depends_on("py-mpi4py")
-    depends_on("py-petsc4py")
-    depends_on("py-scipy")
+    depends_on("py-pybind11", type=["build", "run"])
+    depends_on("py-mpi4py", type=["build", "run"])
+    depends_on("py-petsc4py", type=["build", "run"])
+    depends_on("py-scipy", type=["build", "run"])
 
     root_cmakelists_dir = "cpp"
 
