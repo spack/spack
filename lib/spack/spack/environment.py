@@ -990,26 +990,24 @@ class Environment(object):
     def develop(self, spec, path):
         """Add dev-build info for spec, set to version and path.
 
-        Returns False if it already existed.
-        Returns True if no entry existed.
-        Returns "path" if only the path was updated
+        Returns (bool): True iff the environment was changed.
         """
-        ret = True
-
-        for idx, entry in enumerate(self.dev_specs.items()):
-            e_spec, e_path = entry
-            # check string equality first for easy path
-            if spec == e_spec or Spec(e_spec) == Spec(spec):
-                same_path = e_config['source'] == path
-                if same_path:
+        for e_spec, e_path in self.dev_specs.items():
+            if Spec(e_spec) == spec:
+                if path == e_path:
+                    tty.msg("Spec %s already configured for development" %
+                            spec)
                     return False
                 else:
-                    ret = 'path'
+                    tty.msg("Updating development path for spec %s" % spec)
                     spec = e_spec  # no duplicate entries for "spelling" diffs
+                    break
+        else:
+            tty.msg("Configuring spec %s for development" % spec)
 
         # If it wasn't already in the list, append it
-        self.dev_specs[spec] = path
-        return ret
+        self.dev_specs[str(spec)] = path
+        return True
 
     def undevelop(self, spec):
         """Remove dev-build info for abstract spec ``spec``.
@@ -1645,6 +1643,8 @@ class Environment(object):
 
         if self.dev_specs:
             yaml_dict['dev-build'] = self.dev_specs
+        else:
+            yaml_dict.pop('dev-build', None)
 
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident

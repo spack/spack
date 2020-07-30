@@ -27,35 +27,29 @@ def setup_parser(subparser):
 def develop(parser, args):
     env = ev.get_env(args, 'develop', required=True)
 
+    if not args.spec:
+        raise SpackError("No spec provided to spack develop command")
+
+    specs = spack.cmd.parse_specs(args.spec)
+    if len(specs) != 1:
+        raise SpackError("spack develop requires exactly one named spec")
+
+    spec = specs[0]
+    if not spec.versions.concrete:
+        raise SpackError("Packages to develop must have a concrete version")
+
+    if args.clone:
+        path = args.path or os.path.join(os.getcwd(), spec.name)
+        # TODO: clone to path
+        raise NotImplementedError
+    else:
+        if not args.path:
+            raise SpackError("Must provide either path or clone argument")
+        elif not os.path.exists(args.path):
+            raise SpackError("Provided path %s does not exist" % args.path)
+        path = args.path
+
     with env.write_transaction():
-        if not args.spec:
-            raise SpackError("No spec provided to spack develop command")
-
-        specs = spack.cmd.parse_specs(args.spec)
-        if len(specs) != 1:
-            raise SpackError("spack develop requires exactly one named spec")
-
-        spec = str(specs[0])
-
-        if args.clone:
-            path = args.path or os.path.join(os.getcwd(), spec.name)
-            # TODO: clone to path
-            raise NotImplementedError
-        else:
-            if not args.path:
-                raise SpackError("Must provide either path or clone argument")
-            elif not os.path.exists(args.path):
-                raise SpackError("Provided path %s does not exist" % args.path)
-            path = args.path
-
-        status = env.develop(spec, path)
-        if not status:
-            tty.msg("Spec {0} already configured for development in {1}"
-                    .format(spec, env.name))
-        elif status == 'path':
-            tty.msg("Updating path for development of {0} in environment {1}"
-                    .format(spec, env.name))
-        else:
-            tty.msg('Configuring {0} for development in environment {1}'
-                    .format(spec, env.name))
-        env.write()
+        changed = env.develop(spec, path)
+        if changed:
+            env.write()

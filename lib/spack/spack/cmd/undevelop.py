@@ -25,14 +25,16 @@ def setup_parser(subparser):
 def undevelop(parser, args):
     env = ev.get_env(args, 'undevelop', required=True)
 
-    with env.write_transaction():
-        if args.all:
-            specs = env.dev_specs.keys()
-        else:
-            specs = spack.cmd.parse_specs(args.specs)
+    if args.all:
+        specs = env.dev_specs.keys()
+    else:
+        specs = spack.cmd.parse_specs(args.specs)
 
+    with env.write_transaction():
+        changed = False
         for spec in specs:
             tty.msg('Removing %s from environment %s development specs'
                     % (spec, env.name))
-            env.undevelop(spec)
-        env.write()
+            changed |= env.undevelop(spec)
+        if changed:
+            env.write()
