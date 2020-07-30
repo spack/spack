@@ -10,7 +10,6 @@ class Dolfinx(CMakePackage):
     """Next generation FEniCS problem solving environment"""
 
     homepage = "https://github.com/FEniCS/dolfinx"
-    url = "https://github.com/FEniCS/dolfinx/archive/master.zip"
     git = "https://github.com/FEniCS/dolfinx.git"
 
     version("master", branch="master")
