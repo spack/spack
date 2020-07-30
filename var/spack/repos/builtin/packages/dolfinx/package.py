@@ -24,7 +24,7 @@ class Dolfinx(CMakePackage):
     depends_on("hdf5+hl+fortran")
     depends_on("boost")
     depends_on("eigen")
-    depends_on("petsc+mpi+shared+hypre+metis", when="~int64~complex")
+    depends_on("petsc+mpi+shared+hypre+metis")
     depends_on("scotch+mpi")
 
     depends_on("kahip", when="+kahip")
