@@ -25,7 +25,3 @@ packages:
     # although the version number used here isn't critical
       apple-libunwind@35.3: /usr
     buildable: False
-  python:
-    paths:
-      python@3.7.7: /usr/local/opt/python3
-    version: [3.7.7]

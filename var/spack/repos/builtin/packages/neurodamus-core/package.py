@@ -72,6 +72,13 @@ class NeurodamusCore(SimModel):
     # Dont apply name for now for compat with neuron+binary
     mech_name = ''
 
+    # We want neurodamus-model to fully depend on core, but no modules
+    # loaded at runtime. 'link' dependency requires libraries which we
+    # dont provide so we override libs to allow an empty LibraryList
+    @property
+    def libs(self):
+        return LibraryList([])
+
     @run_before('build')
     def prepare(self):
         filter_file(r'UNKNOWN_CORE_VERSION', r'%s' % self.spec.version,

@@ -28,8 +28,8 @@ class NeurodamusModel(SimModel):
     # 'run' mode will load the same mpi module
     depends_on("mpi", type=('build', 'run'))
     depends_on('neurodamus-core', type=('build', 'run'))
-    depends_on('neurodamus-core@develop', type='build', when='@develop')
-    depends_on("hdf5+mpi")
+    depends_on('neurodamus-core@develop', type=('build', 'run'), when='@develop')
+    depends_on('hdf5+mpi')
     depends_on('reportinglib')
     depends_on('libsonata-report')
     depends_on('reportinglib+profile', when='+profile')
@@ -153,7 +153,7 @@ class NeurodamusModel(SimModel):
 
     def setup_run_environment(self, env):
         self._setup_run_environment_common(env)
-        for libnrnmech_name in find(self.prefix.lib, 'libnrnmech*.so',
+        for libnrnmech_name in find(self.prefix.lib, 'libnrnmech*',
                                     recursive=False):
             # We have the two libs and must export them in different vars
             #  - NRNMECH_LIB_PATH the combined lib (used by neurodamus-py)

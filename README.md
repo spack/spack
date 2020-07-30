@@ -209,6 +209,30 @@ The information for external packages is stored in
           zlib@1.2.11 +optimize+pic+shared: /gpfs/bbp.cscs.ch/apps/hpc/jenkins/deploy/external-libraries/2019-01-04/linux-rhel7-x86_64/gcc-6.4.0/zlib-1.2.11-w43e56tzqj
 </details>
 
+## Building software on OS X
+
+<details>
+<summary>
+Install software on OS X, using Homebrew for binary packages
+</summary>
+
+On OS X the build process is very similar to Ubuntu. To avoid building
+the whole stack from source we can likewise use another package manager to provide precompiled binaries.
+To that end we have successfully used Homebrew. We also provide a skeleton 
+`packages.yaml` that you should review and adapt to your needs.
+
+Before starting, please install brew and the required packages.
+If you require Python please install a version dowloaded from
+Python.org, as several issues have been found with Homebrew's Python
+
+    $ git clone https://github.com/BlueBrain/spack.git
+    $ mkdir ~/.spack
+    $ cp spack/sysconfig/mac_osx/*.yaml ~/.spack
+    $ . spack/share/spack/setup-env.sh
+    $ spack compiler find
+</details>
+
+
 ## Using Spack for Continuous Integration on BlueBrain5
 
 <details>
