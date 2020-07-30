@@ -11,11 +11,13 @@ import os
 class Nwchem(Package):
     """High-performance computational chemistry software"""
 
-    homepage = "http://www.nwchem-sw.org"
+    homepage = "http://nwchemgit.github.io"
     url      = "http://www.nwchem-sw.org/images/Nwchem-6.6.revision27746-src.2015-10-20.tar.gz"
 
     tags = ['ecp', 'ecp-apps']
 
+    version('7.0.0', sha256='e3c6510627345be596f4079047e5e7b59e6c20599798ecfe122e3527f8ad6eb0',
+            url='https://github.com/nwchemgit/nwchem/releases/download/v7.0.0-release/nwchem-7.0.0-release.revision-2c9a1c7c-srconly.2020-02-26.tar.bz2')
     version('6.8.1', sha256='fd20f9ca1b410270a815e77e052ec23552f828526cd252709f798f589b2a6431',
             url='https://github.com/nwchemgit/nwchem/releases/download/6.8.1-release/nwchem-6.8.1-release.revision-v6.8-133-ge032219-srconly.2018-06-14.tar.bz2')
     version('6.8', sha256='8401d9f4cce2f653a38639df61260b06be580ff0e1b8d77ed3262da159b372a6',
@@ -26,7 +28,8 @@ class Nwchem(Package):
     depends_on('mpi')
     depends_on('scalapack')
 
-    depends_on('python@2.7:2.8', type=('build', 'link', 'run'))
+#    depends_on('python@2.7:2.8', type=('build', 'link', 'run'))
+    depends_on('python@3:', type=('build', 'link', 'run'))
 
     # first hash is sha256 of the patch (required for URL patches),
     # second is sha256 for the archive.
@@ -72,15 +75,11 @@ class Nwchem(Package):
             'CC=%s' % os.path.basename(spack_cc),
             'FC=%s' % os.path.basename(spack_fc),
             'USE_MPI=y',
-            'MPI_LOC=%s' % spec['mpi'].prefix,
-            'USE_PYTHONCONFIG=y',
             'PYTHONVERSION=%s' % spec['python'].version.up_to(2),
-            'PYTHONHOME=%s' % spec['python'].home,
             'BLASOPT=%s' % ((lapack + blas).ld_flags),
             'BLAS_LIB=%s' % blas.ld_flags,
             'LAPACK_LIB=%s' % lapack.ld_flags,
-            'USE_SCALAPACK=y',
-            'SCALAPACK=%s' % scalapack.ld_flags,
+            'SCALAPACK_LIB=%s' % scalapack.ld_flags,
             'NWCHEM_MODULES=all python',
             'NWCHEM_LONG_PATHS=Y'  # by default NWCHEM_TOP is 64 char max
         ])
