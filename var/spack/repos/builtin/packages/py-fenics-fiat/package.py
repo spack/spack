@@ -27,7 +27,7 @@ class PyFenicsFiat(PythonPackage):
     version('2017.1.0.post1', sha256='1784fe1cb9479ca7cd85f63b0afa6e07634feec8d8e82fa8be4c480649cb9621')
     version('2017.1.0',       sha256='d4288401ad16c4598720f9db0810a522f7f0eadad35d8211bac7120bce5fde94')
 
-    depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('python@3.8:', type=('build', 'run'))
     depends_on('py-setuptools', type="build")
     depends_on('py-numpy', type=["build", "run"])
     depends_on('py-sympy', type=["build", "run"])
