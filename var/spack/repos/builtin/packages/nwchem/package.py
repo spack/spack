@@ -28,6 +28,9 @@ class Nwchem(Package):
 
     depends_on('python@3:', when='@7:', type=('build', 'link', 'run'))
     depends_on('python@2.7:2.8', when='@:6', type=('build', 'link', 'run'))
+    #nwchem 6.8.1 breaks with gcc 10 and later
+    depends_on('gcc@7:9', when='@:6', type=('build', 'link', 'run'))
+#    conflicts('gcc@10:12')
 
     # first hash is sha256 of the patch (required for URL patches),
     # second is sha256 for the archive.
