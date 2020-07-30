@@ -50,6 +50,9 @@ class Brion(CMakePackage):
         if self.spec.version == Version('3.1.0'):
             filter_file(r'-py36', r'36 -py36',
                         'CMake/common/ChoosePython.cmake')
+        if not self.spec.satisfies('@develop'):
+            filter_file(r'-Werror', r'# -Werror',
+                        'CMake/CompileOptions.cmake')
 
     def cmake_args(self):
         return ['-DBRION_SKIP_LIBSONATA_SUBMODULE=ON',
