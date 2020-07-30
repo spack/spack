@@ -20,16 +20,14 @@ class Nwchem(Package):
             url='https://github.com/nwchemgit/nwchem/releases/download/v7.0.0-release/nwchem-7.0.0-release.revision-2c9a1c7c-srconly.2020-02-26.tar.bz2')
     version('6.8.1', sha256='fd20f9ca1b410270a815e77e052ec23552f828526cd252709f798f589b2a6431',
             url='https://github.com/nwchemgit/nwchem/releases/download/6.8.1-release/nwchem-6.8.1-release.revision-v6.8-133-ge032219-srconly.2018-06-14.tar.bz2')
-    version('6.8', sha256='8401d9f4cce2f653a38639df61260b06be580ff0e1b8d77ed3262da159b372a6',
-            url='https://github.com/nwchemgit/nwchem/archive/v6.8-release.tar.gz')
 
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi')
     depends_on('scalapack')
 
-#    depends_on('python@2.7:2.8', type=('build', 'link', 'run'))
-    depends_on('python@3:', type=('build', 'link', 'run'))
+    depends_on('python@3:', when='@7:', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8', when='@:6', type=('build', 'link', 'run'))
 
     # first hash is sha256 of the patch (required for URL patches),
     # second is sha256 for the archive.
