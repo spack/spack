@@ -17,6 +17,6 @@ class PyFfcx(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on("py-setuptools", type=["build", "run"])
     depends_on("py-cffi", type=["build", "run"])
-    depends_on("py-ufl@master", type=["build", "run"])
+    depends_on("py-fenics-ufl@master", type=["build", "run"])
     depends_on("py-fenics-fiat@master", type=["build", "run"])
     depends_on("py-numpy", type=["build", "run"])

@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyUfl(PythonPackage):
+class PyFenicsUfl(PythonPackage):
     """The Unified Form Language (UFL) is a domain specific language for
     declaration of finite element discretizations of variational forms. More
     precisely, it defines a flexible interface for choosing finite element
