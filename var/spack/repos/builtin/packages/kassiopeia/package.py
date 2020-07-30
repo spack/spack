@@ -41,7 +41,7 @@ class Kassiopeia(CMakePackage):
     depends_on('root@6.0.0:', when='+root')
     depends_on('vtk@6.1:', when='+vtk')
     depends_on('openmpi', when='+mpi')
-    depends_on('intel-tbb', when='+tbb')
+    depends_on('tbb', when='+tbb')
     depends_on('opencl', when='+opencl')
 
     def cmake_args(self):
