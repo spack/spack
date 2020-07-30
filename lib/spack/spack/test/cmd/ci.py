@@ -778,3 +778,136 @@ spack:
             dl_dir_list = os.listdir(dl_dir.strpath)
 
             assert(len(dl_dir_list) == 3)
+
+
+def test_ci_generate_override_runner_attrs(tmpdir, mutable_mock_env_path,
+                                           env_deactivate, install_mockery,
+                                           mock_packages):
+    """Test that we get the behavior we want with respect to the provision
+       of runner attributes like tags, variables, and scripts, both when we
+       inherit them from the top level, as well as when we override one or
+       more at the runner level"""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - flatten-deps
+    - a
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    tags:
+      - toplevel
+    variables:
+      ONE: toplevelvarone
+      TWO: toplevelvartwo
+    before_script:
+      - pre step one
+      - pre step two
+    script:
+      - main step
+    after_script:
+      - post step one
+    mappings:
+      - match:
+          - flatten-deps
+        runner-attributes:
+          tags:
+            - specific-one
+          variables:
+            THREE: specificvarthree
+      - match:
+          - dependency-install
+      - match:
+          - a
+        runner-attributes:
+          tags:
+            - specific-a
+            - toplevel
+          variables:
+            ONE: specificvarone
+            TWO: specificvartwo
+          before_script:
+            - custom pre step one
+          script:
+            - custom main step
+          after_script:
+            - custom post step one
+    final-stage-rebuild-index:
+      image: donotcare
+      tags: [donotcare]
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            ci_cmd('generate', '--output-file', outputfile)
+
+        with open(outputfile) as f:
+            contents = f.read()
+            print('generated contents: ')
+            print(contents)
+            yaml_contents = syaml.load(contents)
+
+            for ci_key in yaml_contents.keys():
+                if '(specs) b' in ci_key:
+                    print('Should not have staged "b" w/out a match')
+                    assert(False)
+                if '(specs) a' in ci_key:
+                    # Make sure a's attributes override variables, and all the
+                    # scripts.  Also, make sure the 'toplevel' tag doesn't
+                    # appear twice, but that a's specific extra tag does appear
+                    the_elt = yaml_contents[ci_key]
+                    assert(the_elt['variables']['ONE'] == 'specificvarone')
+                    assert(the_elt['variables']['TWO'] == 'specificvartwo')
+                    assert('THREE' not in the_elt['variables'])
+                    assert(len(the_elt['tags']) == 2)
+                    assert('specific-a' in the_elt['tags'])
+                    assert('toplevel' in the_elt['tags'])
+                    assert(len(the_elt['before_script']) == 1)
+                    assert(the_elt['before_script'][0] ==
+                           'custom pre step one')
+                    assert(len(the_elt['script']) == 1)
+                    assert(the_elt['script'][0] == 'custom main step')
+                    assert(len(the_elt['after_script']) == 1)
+                    assert(the_elt['after_script'][0] ==
+                           'custom post step one')
+                if '(specs) dependency-install' in ci_key:
+                    # Since the dependency-install match omits any
+                    # runner-attributes, make sure it inherited all the
+                    # top-level attributes.
+                    the_elt = yaml_contents[ci_key]
+                    assert(the_elt['variables']['ONE'] == 'toplevelvarone')
+                    assert(the_elt['variables']['TWO'] == 'toplevelvartwo')
+                    assert('THREE' not in the_elt['variables'])
+                    assert(len(the_elt['tags']) == 1)
+                    assert(the_elt['tags'][0] == 'toplevel')
+                    assert(len(the_elt['before_script']) == 2)
+                    assert(the_elt['before_script'][0] == 'pre step one')
+                    assert(the_elt['before_script'][1] == 'pre step two')
+                    assert(len(the_elt['script']) == 1)
+                    assert(the_elt['script'][0] == 'main step')
+                    assert(len(the_elt['after_script']) == 1)
+                    assert(the_elt['after_script'][0] == 'post step one')
+                if '(specs) flatten-deps' in ci_key:
+                    # The flatten-deps match specifies that we keep the two
+                    # top level variables, but add a third specifc one.  It
+                    # also adds a custom tag which should be combined with
+                    # the top-level tag.
+                    the_elt = yaml_contents[ci_key]
+                    assert(the_elt['variables']['ONE'] == 'toplevelvarone')
+                    assert(the_elt['variables']['TWO'] == 'toplevelvartwo')
+                    assert(the_elt['variables']['THREE'] == 'specificvarthree')
+                    assert(len(the_elt['tags']) == 2)
+                    assert('specific-one' in the_elt['tags'])
+                    assert('toplevel' in the_elt['tags'])
+                    assert(len(the_elt['before_script']) == 2)
+                    assert(the_elt['before_script'][0] == 'pre step one')
+                    assert(the_elt['before_script'][1] == 'pre step two')
+                    assert(len(the_elt['script']) == 1)
+                    assert(the_elt['script'][0] == 'main step')
+                    assert(len(the_elt['after_script']) == 1)
+                    assert(the_elt['after_script'][0] == 'post step one')
