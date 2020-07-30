@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Lhapdf5(Package):
+class Lhapdf5(AutotoolsPackage):
     """LHAPDF is a general purpose Fortran 77/90 interpolator,
     used for evaluating PDFs from discretised data files."""
 
@@ -29,8 +29,3 @@ class Lhapdf5(Package):
 
     def setup_build_environment(self, env):
         env.append_flags('FFLAGS', '-std=legacy')
-
-    def install(self, spec, prefix):
-        configure("--prefix={0}".format(prefix))
-        make()
-        make('install')
