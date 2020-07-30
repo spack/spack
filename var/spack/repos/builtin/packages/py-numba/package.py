@@ -17,7 +17,7 @@ class PyNumba(PythonPackage):
     version('0.35.0', sha256='11564937757605bee590c5758c73cfe9fd6d569726b56d970316a6228971ecc3')
 
     depends_on('python@3.6:', type=('build', 'run'), when='@0.48.0:')
-    depends_on('python@3.3:3.7.9999', type=('build', 'run'), when='@0.40.1:')
+    depends_on('python@3.3:3.7.9999', type=('build', 'run'), when='@0.40.1:0.47.999')
     depends_on('python@3.3:3.6.9999', type=('build', 'run'), when='@:0.35.0')
     depends_on('py-numpy@1.15:', type=('build', 'run'), when='@0.48.0:')
     depends_on('py-numpy@1.10:1.99', type=('build', 'run'))
