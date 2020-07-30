@@ -23,7 +23,7 @@ class Dolfinx(CMakePackage):
     depends_on("mpi")
     depends_on("hdf5+hl+fortran")
     depends_on("boost")
-    depends_on("eigen")
+    depends_on("eigen@3.3.7:")
     depends_on("petsc+mpi+shared+hypre+metis")
     depends_on("scotch+mpi")
 
