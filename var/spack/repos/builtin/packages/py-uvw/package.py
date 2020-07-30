@@ -23,5 +23,6 @@ class PyUvw(PythonPackage):
     variant('mpi', description="Use parallel writers", default=False)
 
     depends_on('python@3:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-mpi4py', type=('build', 'run'), when="+mpi")
