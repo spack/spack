@@ -20,6 +20,9 @@ class PyTorchGeometric(PythonPackage):
 
     version('1.6.0', sha256='7d5231cdcc2ebd4444f406cbf1537eb49bf90ab6f446eaf1b7af5cdbe105f3c9')
 
+    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-pytest-runner', type='build')
     depends_on('py-torch', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
