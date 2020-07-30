@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import base64
+import copy
 import datetime
 import json
 import os
@@ -424,12 +425,53 @@ def spec_matches(spec, match_string):
     return spec.satisfies(match_string)
 
 
-def find_matching_config(spec, ci_mappings):
+def copy_attributes(attrs_list, src_dict, dest_dict):
+    for runner_attr in attrs_list:
+        if runner_attr in src_dict:
+            if runner_attr in dest_dict and runner_attr == 'tags':
+                # For 'tags', we combine the lists of tags, while
+                # avoiding duplicates
+                for tag in src_dict[runner_attr]:
+                    if tag not in dest_dict[runner_attr]:
+                        dest_dict[runner_attr].append(tag)
+            elif runner_attr in dest_dict and runner_attr == 'variables':
+                # For 'variables', we merge the dictionaries.  Any conflicts
+                # (i.e. 'runner-attributes' has same variable key as the
+                # higher level) we resolve by keeping the more specific
+                # 'runner-attributes' version.
+                for src_key, src_val in src_dict[runner_attr].items():
+                    dest_dict[runner_attr][src_key] = copy.deepcopy(
+                        src_dict[runner_attr][src_key])
+            else:
+                dest_dict[runner_attr] = copy.deepcopy(src_dict[runner_attr])
+
+
+def find_matching_config(spec, gitlab_ci):
+    runner_attributes = {}
+    overridable_attrs = [
+        'image',
+        'tags',
+        'variables',
+        'before_script',
+        'script',
+        'after_script',
+    ]
+
+    copy_attributes(overridable_attrs, gitlab_ci, runner_attributes)
+
+    ci_mappings = gitlab_ci['mappings']
     for ci_mapping in ci_mappings:
         for match_string in ci_mapping['match']:
             if spec_matches(spec, match_string):
-                return ci_mapping['runner-attributes']
-    return None
+                if 'runner-attributes' in ci_mapping:
+                    copy_attributes(overridable_attrs,
+                                    ci_mapping['runner-attributes'],
+                                    runner_attributes)
+                return runner_attributes
+    else:
+        return None
+
+    return runner_attributes
 
 
 def pkg_name_from_spec_label(spec_label):
@@ -464,7 +506,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         tty.die('Environment yaml does not have "gitlab-ci" section')
 
     gitlab_ci = yaml_root['gitlab-ci']
-    ci_mappings = gitlab_ci['mappings']
 
     final_job_config = None
     if 'final-stage-rebuild-index' in gitlab_ci:
@@ -566,7 +607,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 release_spec = root_spec[pkg_name]
 
                 runner_attribs = find_matching_config(
-                    release_spec, ci_mappings)
+                    release_spec, gitlab_ci)
 
                 if not runner_attribs:
                     tty.warn('No match found for {0}, skipping it'.format(

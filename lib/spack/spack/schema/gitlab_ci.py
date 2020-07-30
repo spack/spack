@@ -63,7 +63,7 @@ properties = {
                 'items': {
                     'type': 'object',
                     'additionalProperties': False,
-                    'required': ['match', 'runner-attributes'],
+                    'required': ['match'],
                     'properties': {
                         'match': {
                             'type': 'array',
@@ -79,12 +79,10 @@ properties = {
                                 'image': image_schema,
                                 'tags': {
                                     'type': 'array',
-                                    'default': [],
                                     'items': {'type': 'string'}
                                 },
                                 'variables': {
                                     'type': 'object',
-                                    'default': {},
                                     'patternProperties': {
                                         r'[\w\d\-_\.]+': {
                                             'type': 'string',
@@ -93,23 +91,45 @@ properties = {
                                 },
                                 'before_script': {
                                     'type': 'array',
-                                    'default': [],
                                     'items': {'type': 'string'}
                                 },
                                 'script': {
                                     'type': 'array',
-                                    'default': [],
                                     'items': {'type': 'string'}
                                 },
                                 'after_script': {
                                     'type': 'array',
-                                    'default': [],
                                     'items': {'type': 'string'}
                                 },
                             },
                         },
                     },
                 },
+            },
+            'image': image_schema,
+            'tags': {
+                'type': 'array',
+                'items': {'type': 'string'}
+            },
+            'variables': {
+                'type': 'object',
+                'patternProperties': {
+                    r'[\w\d\-_\.]+': {
+                        'type': 'string',
+                    },
+                },
+            },
+            'before_script': {
+                'type': 'array',
+                'items': {'type': 'string'}
+            },
+            'script': {
+                'type': 'array',
+                'items': {'type': 'string'}
+            },
+            'after_script': {
+                'type': 'array',
+                'items': {'type': 'string'}
             },
             'enable-artifacts-buildcache': {
                 'type': 'boolean',
