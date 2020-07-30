@@ -25,6 +25,14 @@ class Deflect(CMakePackage):
     depends_on('qt +opengl', when='+deflect-qt')
     depends_on('qt ~opengl', when='~deflect-qt')
 
+    def cmake_args(self):
+        if self.spec.satisfies('@develop'):
+            return []
+        return [
+            "-DCOMMON_WARN_DEPRECATED:BOOL=OFF",
+            "-DCOMMON_DISABLE_WERROR:BOOL=ON",
+        ]
+
     def check(self):
         with working_dir(self.build_directory):
             ninja('tests')
