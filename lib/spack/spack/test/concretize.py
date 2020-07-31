@@ -373,7 +373,7 @@ class TestConcretize(object):
 
         spec = Spec('externalmodule')
         spec.concretize()
-        assert spec['externalmodule'].external_module == 'external-module'
+        assert spec['externalmodule'].external_modules == ['external-module']
         assert 'externalprereq' not in spec
         assert spec['externalmodule'].compiler.satisfies('gcc')
 

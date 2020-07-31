@@ -712,8 +712,9 @@ an OpenMPI installed in /opt/local, one would use:
 
     packages:
         openmpi:
-            paths:
-                openmpi@1.10.1: /opt/local
+            externals:
+            - spec: openmpi@1.10.1
+              prefix: /opt/local
             buildable: False
 
 In general, Spack is easier to use and more reliable if it builds all of
@@ -775,8 +776,9 @@ Then add the following to ``~/.spack/packages.yaml``:
 
     packages:
         openssl:
-            paths:
-                openssl@1.0.2g: /usr
+            externals:
+            - spec: openssl@1.0.2g
+              prefix: /usr
             buildable: False
 
 
@@ -791,8 +793,9 @@ to add the following to ``packages.yaml``:
 
     packages:
         netlib-lapack:
-            paths:
-                netlib-lapack@3.6.1: /usr
+            externals:
+            - spec: netlib-lapack@3.6.1
+              prefix: /usr
             buildable: False
         all:
             providers:
@@ -1181,9 +1184,13 @@ Here's an example of an external configuration for cray modules:
 
    packages:
      mpich:
-       modules:
-         mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10: cray-mpich
-         mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10: cray-mpich
+       externals:
+       - spec: "mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10"
+         modules:
+         - cray-mpich
+       - spec: "mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10"
+         modules:
+         - cray-mpich
      all:
        providers:
          mpi: [mpich]
@@ -1195,7 +1202,7 @@ via module load.
 
 .. note::
 
-    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:``
+    For Cray-provided packages, it is best to use ``modules:`` instead of ``prefix:``
     in ``packages.yaml``, because the Cray Programming Environment heavily relies on
     modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the
     compiler wrapper link line).
@@ -1211,19 +1218,31 @@ Here is an example of a full packages.yaml used at NERSC
 
    packages:
      mpich:
-       modules:
-         mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-mpich
-         mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge: cray-mpich
+       externals:
+       - spec: "mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-mpich
+       - spec: "mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge"
+         modules:
+         - cray-mpich
        buildable: False
      netcdf:
-       modules:
-         netcdf@4.3.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-netcdf
-         netcdf@4.3.3.1%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-netcdf
+       externals:
+       - spec: "netcdf@4.3.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-netcdf
+       - spec: "netcdf@4.3.3.1%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-netcdf
        buildable: False
      hdf5:
-       modules:
-         hdf5@1.8.14%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-hdf5
-         hdf5@1.8.14%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-hdf5
+       externals:
+       - spec: "hdf5@1.8.14%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-hdf5
+       - spec: "hdf5@1.8.14%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-hdf5
        buildable: False
      all:
        compiler: [gcc@5.2.0, intel@16.0.0.109]

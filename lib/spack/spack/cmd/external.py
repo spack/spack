@@ -74,19 +74,28 @@ def _generate_pkg_config(external_pkg_entries):
     This does not generate the entire packages.yaml. For example, given some
     external entries for the CMake package, this could return::
 
-       { 'paths': {
-             'cmake@3.17.1': '/opt/cmake-3.17.1/',
-             'cmake@3.16.5': '/opt/cmake-3.16.5/'
-         }
+        {
+            'externals': [{
+                'spec': 'cmake@3.17.1',
+                'prefix': '/opt/cmake-3.17.1/'
+            }, {
+                'spec': 'cmake@3.16.5',
+                'prefix': '/opt/cmake-3.16.5/'
+            }]
        }
     """
-    paths_dict = syaml.syaml_dict()
+
+    pkg_dict = syaml.syaml_dict()
+    pkg_dict['externals'] = []
     for e in external_pkg_entries:
         if not _spec_is_valid(e.spec):
             continue
-        paths_dict[str(e.spec)] = e.base_dir
-    pkg_dict = syaml.syaml_dict()
-    pkg_dict['paths'] = paths_dict
+
+        external_items = [('spec', str(e.spec)), ('prefix', e.base_dir)]
+        external_items.extend(e.spec.extra_attributes.items())
+        pkg_dict['externals'].append(
+            syaml.syaml_dict(external_items)
+        )
 
     return pkg_dict
 
@@ -258,6 +267,14 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                     continue
                 else:
                     resolved_specs[spec] = prefix
+
+                try:
+                    spec.validate_detection()
+                except Exception as e:
+                    msg = ('"{0}" has been detected on the system but will '
+                           'not be added to packages.yaml [{1}]')
+                    tty.warn(msg.format(spec, str(e)))
+                    continue
 
                 pkg_to_entries[pkg.name].append(
                     ExternalPackageEntry(spec=spec, base_dir=pkg_prefix))
