@@ -15,4 +15,4 @@ class PySphinxCopybutton(PythonPackage):
     version('0.2.12', sha256='9492883786984b6179c92c07ab0410237b26efa826adfa792acfd17b91a63e5c')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-sphinx')
+    depends_on('py-sphinx@1.8:')
