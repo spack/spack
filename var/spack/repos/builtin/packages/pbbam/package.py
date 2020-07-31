@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
+
 
 class Pbbam(CMakePackage):
     """The pbbam software package provides components to create, query,
