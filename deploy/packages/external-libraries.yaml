@@ -18,8 +18,6 @@ packages:
       - architecture
       - compiler
     specs:
-      - arrow+parquet~python@0.15.0
-      - arrow+parquet~python@0.12.1
       - boost~mpi@1.70.0
       - bzip2@1.0.6
       - cgal

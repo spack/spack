@@ -17,6 +17,7 @@ class PyPyarrow(PythonPackage):
     git      = "https://github.com/apache/arrow.git"
 
     version('0.17.1', tag='apache-arrow-0.17.1')
+    version('0.15.1', sha256='7ad074690ba38313067bf3bbda1258966d38e2037c035d08b9ffe3cce07747a5')
     version('0.15.0', tag='apache-arrow-0.15.0')
     version('0.14.1', tag='apache-arrow-0.14.1')
     version('0.14.0', sha256='8f34e76b03e1c4f73c8cf31b6ed9c89bc909d34657b96271a0c45c59b4decc3d')
@@ -34,7 +35,7 @@ class PyPyarrow(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
 
     for v in ('@0.9.0', '@0.11.0', '@0.12.1', '@0.13.0', '@0.14.0',
-              '@0.14.1', '@0.15.0', '@0.17.1'):
+              '@0.14.1', '@0.15.0', '@0.15.1', '@0.17.1'):
         depends_on('arrow+python' + v, when=v)
         depends_on('arrow+python+parquet' + v, when='+parquet' + v)
 
@@ -42,7 +43,7 @@ class PyPyarrow(PythonPackage):
 
     @property
     def build_directory(self):
-        if self.spec.satisfies('@0.14.1:'):
+        if self.spec.satisfies('@0.14.1:0.15.0'):
             return 'python'
         return '.'
 

@@ -1,0 +1,15 @@
+diff --git a/spykfunc/data/default.properties b/spykfunc/data/default.properties
+index 8f1f495..45963d1 100644
+--- a/spykfunc/data/default.properties
++++ b/spykfunc/data/default.properties
+@@ -1,8 +1,10 @@
+ spark.executor.cores=18
+ spark.executor.memory=70g
++spark.executor.extraJavaOptions="-Dio.netty.tryReflectionSetAccessible=true"
+ 
+ spark.driver.memory=70g
+ spark.driver.maxResultSize=10g
++spark.driver.extraJavaOptions="-Dio.netty.tryReflectionSetAccessible=true"
+ 
+ # recommended, not the default due to backwards compatibility
+ spark.serializer=org.apache.spark.serializer.KryoSerializer

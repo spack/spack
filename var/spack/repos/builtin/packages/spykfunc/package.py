@@ -35,7 +35,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-cython', type='run', when='@:0.15.3')
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('spark+hadoop@3.0.0:', type='run')
+    depends_on('spark+hadoop@3.0.0:^openjdk', type='run')
     depends_on('hadoop@:2.999', type='run')
 
     depends_on('py-bb5', type=('build', 'run'), when='@:0.15.6')
@@ -52,11 +52,12 @@ class Spykfunc(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-progress', type=('build', 'run'))
-    depends_on('py-pyarrow+parquet@0.15.0', type=('build', 'run'))
+    depends_on('py-pyarrow+parquet@0.15.1', type=('build', 'run'))
     depends_on('py-pyspark@3.0.0', type=('build', 'run'))
     depends_on('py-sparkmanager', type=('build', 'run'))
 
     patch('setup-spark3.patch', when='@:0.15.6 ^spark@3:')
+    patch('properties-spark3.patch', when='@:0.15.6 ^spark@3:')
 
     def setup_build_environment(self, env):
         # This is a rather ugly setup to run spykfunc without having to
