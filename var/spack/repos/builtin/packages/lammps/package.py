@@ -21,6 +21,8 @@ class Lammps(CMakePackage, CudaPackage):
     tags = ['ecp', 'ecp-apps']
 
     version('master', branch='master')
+    version('20200721', sha256='845bfeddb7b667799a1a5dbc166b397d714c3d2720316604a979d3465b4190a9')
+    version('20200630', sha256='413cbfabcc1541a339c7a4ab5693fbeb768f46bb1250640ba94686c6e90922fc')
     version('20200505', sha256='c49d77fd602d28ebd8cf10f7359b9fc4d14668c72039028ed7792453d416de73')
     version('20200303', sha256='9aa56dfb8673a06e6c88588505ec1dfc01dd94f9d60e719ed0c605e48cc06c58')
     version('20200227', sha256='1aabcf38bc72285797c710b648e906151a912c36b634a9c88ac383aacf85516e')
@@ -92,11 +94,12 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('netcdf-c+mpi', when='+user-netcdf')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
-    depends_on('latte@1.0.1', when='@:20180222+latte')
-    depends_on('latte@1.1.1:', when='@20180316:20180628+latte')
     depends_on('opencl', when='+opencl')
 
-    depends_on('latte@1.2.1:', when='@20180629:+latte')
+    depends_on('latte@1.0.1', when='@:20180222+latte')
+    depends_on('latte@1.1.1:', when='@20180316:20180628+latte')
+    depends_on('latte@1.2.1:', when='@20180629:20200505+latte')
+    depends_on('latte@1.2.2:', when='@20200602:+latte')
     depends_on('blas', when='+latte')
     depends_on('lapack', when='+latte')
     depends_on('python', when='+python')
