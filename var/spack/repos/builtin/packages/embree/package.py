@@ -12,7 +12,7 @@ class Embree(CMakePackage):
     url = "https://github.com/embree/embree/archive/v3.5.1.tar.gz"
     generator = 'Ninja'
 
-    version('3.11.0', sha256='f61ecc7401b8c9444008d53201ec681516f048ee31d43d125dad917fc76c5b71')
+    version('3.11.0', sha256='2ccc365c00af4389aecc928135270aba7488e761c09d7ebbf1bf3e62731b147d')
     version('3.10.0', sha256='378783983262593e1e096d2bb9af5c626d5640aec5ca82a2d60563c1fd865420')
     version('3.9.0', sha256='8ab88965456b70553f62f08dda16dd7d87c6021d5a3a1fd4a7611b90a9f2949d')
     version('3.8.0', sha256='3153e32aca07b38b804353ae2f31ddc8d25201fcffb7b506aa7f2e8f36448fb7')
