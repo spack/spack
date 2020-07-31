@@ -7,9 +7,10 @@ from spack import *
 
 
 class PyColorspacious(PythonPackage):
-    """A powerful, accurate, and easy-to-use Python library for doing colorspace conversions.
+    """A powerful, accurate, and easy-to-use Python library for doing colorspace
+    conversions.
     """
-    
+
     homepage = "https://github.com/borntyping/python-colorlog"
     url      = "https://pypi.io/packages/source/c/colorspacious/colorspacious-1.1.2.tar.gz"
 
