@@ -50,7 +50,7 @@ class Brion(CMakePackage):
         if self.spec.version == Version('3.1.0'):
             filter_file(r'-py36', r'36 -py36',
                         'CMake/common/ChoosePython.cmake')
-        if not self.spec.satisfies('@develop'):
+        if self.spec.satisfies('@3.2.0'):
             filter_file(r'-Werror', r'# -Werror',
                         'CMake/CompileOptions.cmake')
 
