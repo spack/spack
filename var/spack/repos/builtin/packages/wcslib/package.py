@@ -47,8 +47,19 @@ class Wcslib(AutotoolsPackage):
 
         return args
 
+    def headers(self):
+        return find_headers('wcs', self.prefix.include, recursive=True) \
+          or None  # return None to indicate failure
+
     @run_after('install')
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
         if self.spec.satisfies('platform=darwin'):
             fix_darwin_install_name(self.prefix.lib)
+
+    @run_after('install') #Is this duplicate necessary?
+    def symlink_include(self):
+        os.symlink(
+            os.path.join(self.prefix, 'include', 'wcslib'),
+            os.path.join(self.prefix, 'include')
+        )

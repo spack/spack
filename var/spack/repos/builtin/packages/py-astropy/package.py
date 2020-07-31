@@ -81,7 +81,3 @@ class PyAstropy(PythonPackage):
             args.extend(['-j', str(make_jobs)])
 
         return args
-
-    def headers(self):
-        return find_headers('wcs', self.prefix.include, recursive=True) \
-          or None  # return None to indicate failure
