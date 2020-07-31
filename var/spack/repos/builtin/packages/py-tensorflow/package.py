@@ -526,10 +526,17 @@ class PyTensorflow(Package, CudaPackage):
         mkdirp(tmp_path)
         env.set('TEST_TMPDIR', tmp_path)
 
-        #env.set('TF_SYSTEM_LIBS', 'com_google_protobuf')
+        env.set('TF_SYSTEM_LIBS', 'com_google_protobuf')
         # NOTE: INCLUDEDIR is not just relevant to protobuf
         # see third_party/systemlibs/jsoncpp.BUILD
         env.set('INCLUDEDIR', spec['protobuf'].prefix.include)
+
+    def patch(self):
+        if spec.satisfies('@2.3.0'):
+            filter_file('deps = protodeps + well_known_proto_libs(),',
+                        'deps = protodeps,',
+                        'tensorflow/core/platform/default/build_config.bzl',
+                        string=True)
 
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
