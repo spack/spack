@@ -27,7 +27,7 @@ class Nwchem(Package):
     depends_on('scalapack')
     depends_on('python@3:', when='@7:', type=('build', 'link', 'run'))
     depends_on('python@2.7:2.8', when='@:6', type=('build', 'link', 'run'))
-    depends_on('gcc@7:9', when='@:6', type=('build', 'link', 'run'))
+    conflicts('%gcc@10:', when='@:6', msg='NWChem versions prior to 7.0.0 do not build with GCC 10')
 
     # first hash is sha256 of the patch (required for URL patches),
     # second is sha256 for the archive.
