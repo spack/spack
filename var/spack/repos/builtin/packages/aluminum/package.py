@@ -52,8 +52,10 @@ class Aluminum(CMakePackage, CudaPackage):
         if '@0.5:':
             args.extend([
                 '-DALUMINUM_ENABLE_HOST_TRANSFER:BOOL=%s' % ('+ht' in spec),
-                '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+mpi_gpu_rdma' in spec),
-                '-DALUMINUM_ENABLE_MPI_CUDA_RMA:BOOL=%s' % ('+mpi_gpu_rdma' in spec)])
+                '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' %
+                ('+mpi_gpu_rdma' in spec),
+                '-DALUMINUM_ENABLE_MPI_CUDA_RMA:BOOL=%s' %
+                ('+mpi_gpu_rdma' in spec)])
         else:
             args.extend([
                 '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec)])
