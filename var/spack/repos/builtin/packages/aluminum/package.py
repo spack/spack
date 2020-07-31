@@ -7,7 +7,7 @@ import os
 from spack import *
 
 
-class Aluminum(CMakePackage):
+class Aluminum(CMakePackage, CudaPackage):
     """Aluminum provides a generic interface to high-performance
     communication libraries, with a focus on allreduce
     algorithms. Blocking and non-blocking algorithms and GPU-aware
@@ -20,6 +20,8 @@ class Aluminum(CMakePackage):
     git      = "https://github.com/LLNL/Aluminum.git"
 
     version('master', branch='master')
+    version('0.5.0', sha256='dc365a5849eaba925355a8efb27005c5f22bcd1dca94aaed8d0d29c265c064c1')
+    version('0.4.0', sha256='4d6fab5481cc7c994b32fb23a37e9ee44041a9f91acf78f981a97cb8ef57bb7d')
     version('0.3.3',   sha256='26e7f263f53c6c6ee0fe216e981a558dfdd7ec997d0dd2a24285a609a6c68f3b')
     version('0.3.2',   sha256='09b6d1bcc02ac54ba269b1123eee7be20f0104b93596956c014b794ba96b037f')
     version('0.2.1-1', sha256='066b750e9d1134871709a3e2414b96b166e0e24773efc7d512df2f1d96ee8eef')
@@ -27,12 +29,13 @@ class Aluminum(CMakePackage):
     version('0.2', sha256='fc8f06c6d8faab17a2aedd408d3fe924043bf857da1094d5553f35c4d2af893b')
     version('0.1', sha256='3880b736866e439dd94e6a61eeeb5bb2abccebbac82b82d52033bc6c94950bdb')
 
-    variant('gpu', default=False, description='Builds with support for GPUs via CUDA and cuDNN')
     variant('nccl', default=False, description='Builds with support for NCCL communication lib')
-    variant('mpi_cuda', default=False, description='Builds with support for MPI-CUDA enabled library')
+    variant('ht', default=False, description='Builds with support for host-enabled MPI'
+            ' communication of accelerator data')
+    variant('mpi_gpu_rdma', default=False, description='Builds with support for using RMA'
+            ' features in a MPI-GPU RDMA enabled library')
 
-    depends_on('cmake@3.9.0:', type='build')
-    depends_on('cuda', when='+gpu')
+    depends_on('cmake@3.16.0:', type='build')
     depends_on('mpi')
     depends_on('nccl', when='+nccl')
     depends_on('hwloc')
@@ -43,9 +46,19 @@ class Aluminum(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            '-DALUMINUM_ENABLE_CUDA:BOOL=%s' % ('+gpu' in spec),
-            '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+mpi_cuda' in spec),
+            '-DALUMINUM_ENABLE_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DALUMINUM_ENABLE_NCCL:BOOL=%s' % ('+nccl' in spec)]
+
+        if '@0.5:':
+            args.extend([
+                '-DALUMINUM_ENABLE_HOST_TRANSFER:BOOL=%s' % ('+ht' in spec),
+                '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' %
+                ('+mpi_gpu_rdma' in spec),
+                '-DALUMINUM_ENABLE_MPI_CUDA_RMA:BOOL=%s' %
+                ('+mpi_gpu_rdma' in spec)])
+        else:
+            args.extend([
+                '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec)])
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
         if self.spec.satisfies('%clang platform=darwin'):
