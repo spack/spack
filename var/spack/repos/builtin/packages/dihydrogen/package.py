@@ -36,6 +36,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
             description='Enable ROCm/HIP language features.')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
+    variant('docs', default=False,
+            description='Builds with support for building documentation')
 
     # Override the default set of CUDA architectures with the relevant
     # subset from lib/spack/spack/build_systems/cuda.py
@@ -68,6 +70,9 @@ class Dihydrogen(CMakePackage, CudaPackage):
     generator = 'Ninja'
     depends_on('ninja', type='build')
     depends_on('cmake@3.14.0:', type='build')
+
+    depends_on('py-breathe', type='build', when='+docs')
+    depends_on('doxygen', type='build', when='+docs')
 
     illegal_cuda_arch_values = [
         '10', '11', '12', '13',
