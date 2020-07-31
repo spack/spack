@@ -13,7 +13,7 @@ The syntax looks like this:
 
 .. code-block:: sh
 
-    $ spack install mpileaks ^openmpi @1.2:1.4 +debug %intel @12.1 =bgqos_0
+    $ spack install mpileaks ^openmpi @1.2:1.4 +debug %intel @12.1 target=zen
                     0        1        2        3      4      5     6
 
 The first part of this is the command, 'spack install'.  The rest of the

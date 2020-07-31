@@ -201,7 +201,7 @@ class Compiler(object):
     fc_names = []
 
     # Optional prefix regexes for searching for this type of compiler.
-    # Prefixes are sometimes used for toolchains, e.g. 'powerpc-bgq-linux-'
+    # Prefixes are sometimes used for toolchains
     prefixes = []
 
     # Optional suffix regexes for searching for this type of compiler.

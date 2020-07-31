@@ -21,47 +21,48 @@ ignore_modules = [r'^\.#', '~$']
 
 def index_by(objects, *funcs):
     """Create a hierarchy of dictionaries by splitting the supplied
-       set of objects on unique values of the supplied functions.
-       Values are used as keys.  For example, suppose you have four
-       objects with attributes that look like this::
+    set of objects on unique values of the supplied functions.
 
-          a = Spec(name="boost",    compiler="gcc",   arch="bgqos_0")
-          b = Spec(name="mrnet",    compiler="intel", arch="chaos_5_x86_64_ib")
-          c = Spec(name="libelf",   compiler="xlc",   arch="bgqos_0")
-          d = Spec(name="libdwarf", compiler="intel", arch="chaos_5_x86_64_ib")
+    Values are used as keys. For example, suppose you have four
+    objects with attributes that look like this::
 
-          list_of_specs = [a,b,c,d]
-          index1 = index_by(list_of_specs, lambda s: s.arch,
-                            lambda s: s.compiler)
-          index2 = index_by(list_of_specs, lambda s: s.compiler)
+        a = Spec("boost %gcc target=skylake")
+        b = Spec("mrnet %intel target=zen2")
+        c = Spec("libelf %xlc target=skylake")
+        d = Spec("libdwarf %intel target=zen2")
 
-       ``index1`` now has two levels of dicts, with lists at the
-       leaves, like this::
+        list_of_specs = [a,b,c,d]
+        index1 = index_by(list_of_specs, lambda s: str(s.target),
+                          lambda s: s.compiler)
+        index2 = index_by(list_of_specs, lambda s: s.compiler)
 
-           { 'bgqos_0'           : { 'gcc' : [a], 'xlc' : [c] },
-             'chaos_5_x86_64_ib' : { 'intel' : [b, d] }
-           }
+    ``index1`` now has two levels of dicts, with lists at the
+    leaves, like this::
 
-       And ``index2`` is a single level dictionary of lists that looks
-       like this::
+        { 'zen2'    : { 'gcc' : [a], 'xlc' : [c] },
+          'skylake' : { 'intel' : [b, d] }
+        }
 
-           { 'gcc'    : [a],
-             'intel'  : [b,d],
-             'xlc'    : [c]
-           }
+    And ``index2`` is a single level dictionary of lists that looks
+    like this::
 
-       If any elemnts in funcs is a string, it is treated as the name
-       of an attribute, and acts like getattr(object, name).  So
-       shorthand for the above two indexes would be::
+        { 'gcc'    : [a],
+          'intel'  : [b,d],
+          'xlc'    : [c]
+        }
 
-           index1 = index_by(list_of_specs, 'arch', 'compiler')
-           index2 = index_by(list_of_specs, 'compiler')
+    If any elements in funcs is a string, it is treated as the name
+    of an attribute, and acts like getattr(object, name).  So
+    shorthand for the above two indexes would be::
 
-       You can also index by tuples by passing tuples::
+        index1 = index_by(list_of_specs, 'arch', 'compiler')
+        index2 = index_by(list_of_specs, 'compiler')
 
-           index1 = index_by(list_of_specs, ('arch', 'compiler'))
+    You can also index by tuples by passing tuples::
 
-       Keys in the resulting dict will look like ('gcc', 'bgqos_0').
+        index1 = index_by(list_of_specs, ('target', 'compiler'))
+
+    Keys in the resulting dict will look like ('gcc', 'skylake').
     """
     if not funcs:
         return objects
