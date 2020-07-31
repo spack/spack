@@ -16,12 +16,12 @@ class ProcessInProcess(Package):
 
     conflicts('%gcc@:3', when='os=centos7')
     conflicts('%gcc@5:', when='os=centos7')
-    conflicts('%gcc@:3', when='os=rhel7') 
-    conflicts('%gcc@5:', when='os=rhel7') 
+    conflicts('%gcc@:3', when='os=rhel7')
+    conflicts('%gcc@5:', when='os=rhel7')
     conflicts('%gcc@:7', when='os=centos8')
     conflicts('%gcc@9:', when='os=centos8')
-    conflicts('%gcc@:7', when='os=rhel8') 
-    conflicts('%gcc@9:', when='os=rhel8') 
+    conflicts('%gcc@:7', when='os=rhel8')
+    conflicts('%gcc@9:', when='os=rhel8')
 
     # packages required for building PiP-gdb
     depends_on('texinfo', type='build')
@@ -40,8 +40,11 @@ class ProcessInProcess(Package):
 
     def flag_handler(self, name, flags):
         arch = self.spec.architecture
+        target = self.spec.target
         if arch.os not in ['centos7', 'rhel7', 'centos8', 'rhel8']:
-            raise InstallError('Unsupported operating system.')
+            raise InstallError('PIP is only available for centos/rhel 7 and 8')
+        if target.family not in ['x86_64', 'aarch64']:
+            raise InstallError('PIP is only available for x86_64 and aarch64')
         return (flags, None, None)
 
     def install(self, spec, prefix):
