@@ -7,10 +7,9 @@ from spack import *
 
 
 class PyColorspacious(PythonPackage):
-    """`colorlog.ColoredFormatter` is a formatter for use with Python's
-    `logging` module that outputs records using terminal colors.
-     """
-
+    """A powerful, accurate, and easy-to-use Python library for doing colorspace conversions.
+    """
+    
     homepage = "https://github.com/borntyping/python-colorlog"
     url      = "https://pypi.io/packages/source/c/colorspacious/colorspacious-1.1.2.tar.gz"
 
