@@ -16,6 +16,8 @@ class Nwchem(Package):
 
     tags = ['ecp', 'ecp-apps']
 
+    version('7.0.1', sha256='f38ce2d91e20dd9e311876c332ba6fda7ad8daf7',
+            url='https://github.com/nwchemgit/nwchem/archive/75f3db2a2074e9158d605516009964d1a363e71f.tar.gz')
     version('7.0.0', sha256='e3c6510627345be596f4079047e5e7b59e6c20599798ecfe122e3527f8ad6eb0',
             url='https://github.com/nwchemgit/nwchem/releases/download/v7.0.0-release/nwchem-7.0.0-release.revision-2c9a1c7c-srconly.2020-02-26.tar.bz2')
     version('6.8.1', sha256='fd20f9ca1b410270a815e77e052ec23552f828526cd252709f798f589b2a6431',
@@ -80,6 +82,7 @@ class Nwchem(Package):
             'SCALAPACK_LIB=%s' % scalapack.ld_flags,
             'NWCHEM_MODULES=all python',
             'NWCHEM_LONG_PATHS=Y'  # by default NWCHEM_TOP is 64 char max
+            'USE_NOIO=Y'  # skip I/O algorithms
         ])
         if spec.version < Version('7.0.0'):
             args.extend([
