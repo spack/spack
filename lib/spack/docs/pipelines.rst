@@ -45,7 +45,7 @@ for setting up a build pipeline are as follows:
         tags:
           - <custom-tag>
         script:
-          - spack env activate .
+          - spack env activate --without-view .
           - spack ci generate
             --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
         artifacts:
@@ -197,15 +197,37 @@ corresponds to a known gitlab runner, where the ``match`` section is used
 in assigning a release spec to one of the runners, and the ``runner-attributes``
 section is used to configure the spec/job for that particular runner.
 
+Both the top-level ``gitlab-ci`` section as well as each ``runner-attributes``
+section can also contain the following keys: ``image``, ``tags``, ``variables``,
+``before_script``, ``script``, and ``after_script``.  If any of these keys are
+provided at the ``gitlab-ci`` level, they will be used as the defaults for any
+``runner-attributes``, unless they are overridden in those sections.  Specifying
+any of these keys at the ``runner-attributes`` level generally overrides the
+keys specified at the higher level, with a couple exceptions.  Any ``variables``
+specified at both levels result in those dictionaries getting merged in the
+resulting generated job, and any duplicate variable names get assigned the value
+provided in the specific ``runner-attributes``.  If ``tags`` are specified both
+at the ``gitlab-ci`` level as well as the ``runner-attributes`` level, then the
+lists of tags are combined, and any duplicates are removed.
+
+See the section below on using a custom spack for an example of how these keys
+could be used.
+
 There are other pipeline options you can configure within the ``gitlab-ci`` section
-as well.  The ``bootstrap`` section allows you to specify lists of specs from
+as well.
+
+The ``bootstrap`` section allows you to specify lists of specs from
 your ``definitions`` that should be staged ahead of the environment's ``specs`` (this
 section is described in more detail below).  The ``enable-artifacts-buildcache`` key
 takes a boolean and determines whether the pipeline uses artifacts to store and
 pass along the buildcaches from one stage to the next (the default if you don't
-provide this option is ``False``).  The ``enable-debug-messages`` key takes a boolean
+provide this option is ``False``).
+
+The ``enable-debug-messages`` key takes a boolean
 and allows you to choose whether the pipeline build jobs are run as ``spack -d ci rebuild``
-or just ``spack ci rebuild`` (the default is not to enable debug messages).  The
+or just ``spack ci rebuild`` (the default is not to enable debug messages).
+
+The
 ``final-stage-rebuild-index`` section controls whether an extra job is added to the
 end of your pipeline (in a stage by itself) which will regenerate the mirror's
 buildcache index.  Under normal operation, each pipeline job that rebuilds a package
@@ -227,6 +249,11 @@ to CDash.  All the jobs generated from this environment will belong to a
 progresses, this build group may have jobs added or removed. The url, project,
 and site are used to specify the CDash instance to which build results should
 be reported.
+
+Take a look at the
+`schema <https://github.com/spack/spack/blob/develop/lib/spack/spack/schema/gitlab_ci.py>`_
+for the gitlab-ci section of the spack environment file, to see precisely what
+syntax is allowed there.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Assignment of specs to runners
@@ -393,7 +420,7 @@ other reason you want to use a custom version of spack to run your pipelines,
 this section provides an example of how you could take advantage of
 user-provided pipeline scripts to accomplish this fairly simply.  First, you
 could use the GitLab user interface to create CI environment variables
-containing the url and branch/tag/SHA you want to clone (calling them, for
+containing the url and branch or tag you want to clone (calling them, for
 example, ``SPACK_REPO`` and ``SPACK_REF``), then use those in a custom shell
 script invoked both from your pipeline generation job, as well in your rebuild
 jobs.  Here's the ``generate-pipeline`` job from the top of this document,
@@ -408,7 +435,7 @@ spack:
    before_script:
      - ./cloneSpack.sh
    script:
-     - spack env activate .
+     - spack env activate --without-view .
      - spack ci generate
        --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
    after_script:
@@ -450,6 +477,7 @@ of spack, so you would update your ``spack.yaml`` from above as follows:
              before_script:
                - ./cloneSpack.sh
              script:
+               - spack env activate --without-view .
                - spack -d ci rebuild
              after_script:
                - rm -rf ./spack
@@ -458,6 +486,80 @@ Now all the generated rebuild jobs will use the same shell script to clone
 spack before running their actual workload.  Here we have also provided a
 custom ``script`` because we want to run ``spack ci rebuild`` in debug mode
 to get more information when builds fail.
+
+Now imagine you have long pipelines with many specs to be built, and you
+are worried about the branch of spack you're testing changing somewhere
+in the middle of the pipeline, resulting in half the jobs getting run
+with a different version of spack.  In this situation, you can take
+advantage of "generation-time variable interpolation" to avoid this issue.
+
+The basic idea is that before you run ``spack ci generate`` to generate
+your pipeline, you first capture the SHA of spack on the branch you want
+to test.  Then in your ``spack.yaml`` you use the ``variables`` section
+of your ``runner-attributes`` to set the SHA as a variable (interpolated
+at pipeline generation time) which will be available to your generated child
+jobs when they run.  Below we show a ``.gitlab-ci.yml`` for your environment
+repo, similar to the one above, but with the script elements right inline:
+
+.. code-block:: yaml
+
+   generate-pipeline:
+     tags:
+       - <some-other-tag>
+   before_script:
+     - git clone ${SPACK_REPO} --branch ${SPACK_REF}
+     - pushd ./spack && export CURRENT_SPACK_SHA=$(git rev-parse HEAD) && popd
+     - . "./spack/share/spack/setup-env.sh"
+     - spack --version
+   script:
+     - spack env activate --without-view .
+     - spack ci generate
+       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
+   after_script:
+     - rm -rf ./spack
+   artifacts:
+     paths:
+       - "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
+
+Above we have just set an environment variable, ``CURRENT_SPACK_SHA``, which
+will be available when the pipeline generation job is running, but otherwise
+would not be available when the child jobs run.  To make this available to
+those jobs, we can do something like this in our ``spack.yaml``:
+
+.. code-block:: yaml
+
+   spack:
+     ...
+     gitlab-ci:
+       mappings:
+         - match:
+             - os=ubuntu18.04
+           runner-attributes:
+             tags:
+               - spack-kube
+             image: spack/ubuntu-bionic
+             variables:
+               CAPTURED_SPACK_SHA: $env:CURRENT_SPACK_SHA
+             before_script:
+               - git clone ${SPACK_REPO}
+               - pushd ./spack && git checkout ${CAPTURED_SPACK_SHA} && popd
+               - . "./spack/share/spack/setup-env.sh"
+               - spack --version
+             script:
+               - spack env activate --without-view .
+               - spack -d ci rebuild
+             after_script:
+               - rm -rf ./spack
+
+The behavior of pipeline generation is just to copy your ``script`` elements
+verbatim into the job, leaving shell variable interopolation until the time
+jobs run.  In this case, we have just used the ``$env:CURRENT_SPACK_SHA``
+syntax to interpolate that variable at job generation time, and put it in
+the generated yaml of the job as a variable we can get when the child job
+runs (``CAPTURED_SPACK_SHA``).  Those variables can actually have the same name,
+but to avoid confusion, we've made them distinct here.  Now all your child
+jobs will clone the same SHA of spack used to generate the pipeline, no matter
+whether more commits are pushed to the branch during that time.
 
 .. _ci_environment_variables:
 
