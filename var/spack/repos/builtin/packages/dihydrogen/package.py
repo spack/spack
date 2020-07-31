@@ -42,16 +42,19 @@ class Dihydrogen(CMakePackage, CudaPackage):
     cuda_arch_values = [
         '60', '61', '62',
         '70', '72', '75',
+        '80'
     ]
     variant('cuda_arch',
             description='CUDA architecture',
             values=spack.variant.auto_or_any_combination_of(*cuda_arch_values))
 
+    depends_on('cmake@3.16.0:', type='build')
+
     depends_on('mpi')
     depends_on('catch2', type='test')
 
     depends_on('aluminum', when='+al ~cuda')
-    depends_on('aluminum +gpu +nccl +mpi_cuda', when='+al +cuda')
+    depends_on('aluminum +cuda +nccl +ht +mpi_gpu_rdma', when='+al +cuda')
 
     depends_on('cuda', when=('+cuda' or '+legacy'))
     depends_on('cudnn', when=('+cuda' or '+legacy'))
