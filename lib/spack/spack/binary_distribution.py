@@ -913,15 +913,13 @@ def get_keys(install=False, trust=False, force=False):
 
     for mirror in mirror_collection.values():
         fetch_url = mirror.fetch_url
-        fetch_url_build_cache = url_util.join(
-            fetch_url, _build_cache_relative_path)
 
         tty.debug('Finding public keys in {0}'.format(
             url_util.format(fetch_url)))
 
-        for file in web_util.list_url(fetch_url_build_cache):
+        for file in web_util.list_url(fetch_url):
             if file.endswith('.key') or file.endswith('.pub'):
-                link = url_util.join(fetch_url_build_cache, file)
+                link = url_util.join(fetch_url, file)
                 keys.add(link)
 
         for link in keys:
