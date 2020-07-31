@@ -12,19 +12,26 @@ class Whizard(AutotoolsPackage):
       and simulated event samples."""
 
     homepage = "whizard.hepforge.org"
-    url      = "https://whizard.hepforge.org/downloads/?f=whizard-2.8.2.tar.gz"
+    url      = "https://whizard.hepforge.org/downloads/?f=whizard-2.8.3.tar.gz"
     git      = "https://gitlab.tp.nt.uni-siegen.de/whizard/public.git"
 
     maintainers = ['vvolkl']
 
     version('master', branch="master")
     version('3.0.0_alpha', sha256='4636e5a10350bb67ccc98cd105bc891ea04f3393c2420f81be3d21240be20009')
-    version('2.8.2', sha256='32c9be342d01b3fc6f947fddce74bf2d81ece37fb39bca1f37778fb0c07e2568', prefered=True)
+    version('2.8.4', sha256='49893f077484470934a9d6e1545bbda7d398076568bceda00880d58132f26432', preferred=True)
+    version('2.8.3', sha256='96a9046682d4b992b477eb96d561c3db789207e1049b60c9bd140db40eb1e5d7')
+    version('2.8.2', sha256='32c9be342d01b3fc6f947fddce74bf2d81ece37fb39bca1f37778fb0c07e2568')
     version('2.8.1', sha256='0c759ce0598e25f38e04659f745c5963d238c4b5c12209f16449b6c0bc6dc64e')
     version('2.8.0', sha256='3b5175eafa879d1baca20237d18fb2b18bee89631e73ada499de9c082d009696')
 
-    variant('hepmc', default=True,
-            description="builds with hepmc")
+    variant(
+        'hepmc',
+        default='3',
+        description='builds with hepmc 2/3',
+        values=('off', '2', '3'),
+        multi=False
+    )
 
     variant('pythia8', default=True,
             description="builds with pythia8")
@@ -41,15 +48,23 @@ class Whizard(AutotoolsPackage):
     variant('openmp', default=False,
             description="builds with openmp")
 
+    variant('openloops', default=False,
+            description="builds with openloops")
+
     variant('latex', default=False,
             description="data visualization with latex")
 
     depends_on('ocaml', type='build', when="@3:")
     depends_on('ocaml@:4.8.2', type='build', when="@:2.99.99")
-    depends_on('hepmc', when="+hepmc")
+    depends_on('hepmc', when="hepmc=2")
+    depends_on('hepmc3', when="hepmc=3")
+    depends_on('lcio', when="+lcio")
     depends_on('pythia8', when="+pythia8")
     depends_on('lhapdf', when="+lhapdf")
     depends_on('fastjet', when="+fastjet")
+    depends_on('openloops@2.0.0: +compile_extra num_jobs=1 '
+               'processes=eett,eevvjj,ppllj,tbw',
+               when="+openloops")
     depends_on('texlive', when="+latex")
     depends_on('zlib')
 
@@ -66,21 +81,31 @@ class Whizard(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = [
-            '--enable-hepmc=%s' % ("yes" if "+hepmc" in spec else "no"),
+            '--enable-hepmc=%s' % ("no" if "hepmc=off" in spec else "yes"),
             '--enable-fastjet=%s' % ("yes" if "+fastjet" in spec else "no"),
             '--enable-pythia8=%s' % ("yes" if "+pythia8" in spec else "no"),
             '--enable-lcio=%s' % ("yes" if "+lcio" in spec else "no"),
             '--enable-lhapdf=%s' % ("yes" if "+lhapdf" in spec else "no"),
-            # todo: openloops
+            '--enable-openloops=%s' % ("yes" if "+openloops" in spec
+                                       else "no"),
+            '--with-openloops=%s' % spec['openloops'].prefix,
             # todo: hoppet
             # todo: recola
             # todo: looptools
             # todo: gosam
             # todo: pythia6
         ]
+
+        if "+lcio" in spec:
+            args.append('--with-lcio=%s' % spec['lcio'].prefix)
+
+        if "hepmc=3" in spec:
+            args.append('--with-hepmc=%s' % spec['hepmc3'].prefix)
+        if "hepmc=2" in spec:
+            args.append('--with-hepmc=%s' % spec['hepmc'].prefix)
+
         if "+openmp" not in spec:
             args.append('--disable-openmp')
-
         return args
 
     def url_for_version(self, version):

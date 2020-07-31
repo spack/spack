@@ -13,14 +13,7 @@ class Opengl(Package):
 
     homepage = "https://www.opengl.org/"
 
-    variant('glvnd',
-            default=False,
-            description="Expose Graphics APIs through libglvnd")
-
-    variant('glx', default=True, description="Enable GLX API.")
-    variant('egl', default=False, description="Enable EGL API.")
-
-    provides('gl', when='~glvnd')
+    provides('gl')
     provides('gl@:4.5', when='@4.5:')
     provides('gl@:4.4', when='@4.4:')
     provides('gl@:4.3', when='@4.3:')
@@ -40,19 +33,7 @@ class Opengl(Package):
     provides('gl@:1.0', when='@1.0:')
 
     if sys.platform != 'darwin':
-        provides('glx@1.4', when='~glvnd +glx')
-
-    # NOTE: This package should have a dependency on libglvnd, but because it
-    # is exclusively provided externally the dependency is never traversed.
-    # depends_on('libglvnd', when='+glvnd')  # don't uncomment this
-
-    provides('libglvnd-be-gl', when='+glvnd')
-    provides('libglvnd-be-glx', when='+glvnd +glx')
-    provides('libglvnd-be-egl', when='+glvnd +egl')
-
-    provides('egl@1.5', when='~glvnd +egl')
-
-    depends_on('libglvnd', when='+glvnd')
+        provides('glx@1.4')
 
     # Override the fetcher method to throw a useful error message;
     # fixes GitHub issue (#7061) in which this package threw a
@@ -99,25 +80,8 @@ class Opengl(Package):
 
     @property
     def libs(self):
-        result = LibraryList(())
-
-        # "libs" provided by glvnd; this package sets the environment variables
-        # so that glvnd, in turn, loads this package's libraries at run-time.
-        if '+glvnd' in self.spec:
-            return result
-
         for dir in ['lib64', 'lib']:
             libs = find_libraries('libGL', join_path(self.prefix, dir),
                                   shared=True, recursive=False)
             if libs:
-                result.extend(libs)
-                break
-
-        if '+egl' in self.spec:
-            for dir in ['lib64', 'lib']:
-                libs = find_libraries('libEGL', join_path(self.prefix, dir),
-                                      shared=True, recursive=False)
-                if libs:
-                    result.extend(libs)
-                    break
-        return result
+                return libs

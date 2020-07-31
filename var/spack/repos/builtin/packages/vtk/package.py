@@ -104,7 +104,7 @@ class Vtk(CMakePackage):
     depends_on('sqlite', when='@8.2.0:')
 
     # For finding Fujitsu-MPI wrapper commands
-    patch('find_fujitsu_mpi.patch', when='%fj')
+    patch('find_fujitsu_mpi.patch', when='@:8.2.0%fj')
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
@@ -159,10 +159,15 @@ class Vtk(CMakePackage):
             ])
 
         if '+mpi' in spec:
-            cmake_args.extend([
-                '-DVTK_Group_MPI:BOOL=ON',
-                '-DVTK_USE_SYSTEM_DIY2:BOOL=OFF',
-            ])
+            if spec.satisfies('@:8.2.0'):
+                cmake_args.extend([
+                    '-DVTK_Group_MPI:BOOL=ON',
+                    '-DVTK_USE_SYSTEM_DIY2:BOOL=OFF'
+                ])
+            else:
+                cmake_args.extend([
+                    '-DVTK_USE_MPI=ON'
+                ])
 
         if '+ffmpeg' in spec:
             cmake_args.extend(['-DModule_vtkIOFFMPEG:BOOL=ON'])
