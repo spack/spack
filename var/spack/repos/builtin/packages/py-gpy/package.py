@@ -21,5 +21,3 @@ class PyGpy(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-paramz@0.9.0:', type=('build', 'run'))
     depends_on('py-cython@0.29:', type=('build', 'run'))
-
-    depends_on('py-scipy@1.3.0:', when='@1.9.9:', type=('build', 'run'))
