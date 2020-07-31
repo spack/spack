@@ -3,13 +3,12 @@ name: linux tests
 on:
   push:
     branches:
-      - master
       - develop
       - releases/**
   pull_request:
     branches:
-      - master
       - develop
+      - releases/**
 jobs:
   unittests:
     runs-on: ubuntu-latest
@@ -99,3 +98,17 @@ jobs:
     - uses: codecov/codecov-action@v1
       with:
         flags: shelltests,linux
+  centos6:
+    # Test for Python2.6 run on Centos 6
+    runs-on: ubuntu-latest
+    container: spack/github-actions:centos6
+    steps:
+    - name: Run unit tests
+      env:
+          HOME: /home/spack-test
+      run: |
+          whoami && echo $HOME && cd $HOME
+          git clone https://github.com/spack/spack.git && cd spack
+          git fetch origin ${{ github.ref }}:test-branch
+          git checkout test-branch
+          share/spack/qa/run-unit-tests
