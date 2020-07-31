@@ -25,12 +25,9 @@ class Nwchem(Package):
     depends_on('lapack')
     depends_on('mpi')
     depends_on('scalapack')
-
     depends_on('python@3:', when='@7:', type=('build', 'link', 'run'))
     depends_on('python@2.7:2.8', when='@:6', type=('build', 'link', 'run'))
-    #nwchem 6.8.1 breaks with gcc 10 and later
     depends_on('gcc@7:9', when='@:6', type=('build', 'link', 'run'))
-#    conflicts('gcc@10:12')
 
     # first hash is sha256 of the patch (required for URL patches),
     # second is sha256 for the archive.
@@ -90,7 +87,6 @@ class Nwchem(Package):
                 'PYTHONHOME=%s' % spec['python'].home,
                 'USE_PYTHONCONFIG=Y',
             ])
-
 
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
@@ -164,5 +160,9 @@ class Nwchem(Package):
             install(".nwchemrc", share_path)
 
     def setup_run_environment(self, env):
-        env.set('NWCHEM_BASIS_LIBRARY', join_path(self.prefix,'share/nwchem/libraries/'))
-        env.set('NWCHEM_NWPW_LIBRARY', join_path(self.prefix,'share/nwchem/libraryps/'))
+        env.set('NWCHEM_BASIS_LIBRARY', join_path(
+            self.prefix,
+            'share/nwchem/libraries/'))
+        env.set('NWCHEM_NWPW_LIBRARY', join_path(
+            self.prefix,
+            'share/nwchem/libraryps/'))
