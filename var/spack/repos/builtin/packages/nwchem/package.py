@@ -12,7 +12,7 @@ class Nwchem(Package):
     """High-performance computational chemistry software"""
 
     homepage = "http://nwchemgit.github.io"
-    url      = "http://www.nwchem-sw.org/images/Nwchem-6.6.revision27746-src.2015-10-20.tar.gz"
+    url      = "http://https://github.com/nwchemgit/nwchem/releases/download/v7.0.0-release/nwchem-7.0.0-release.revision-2c9a1c7c-srconly.2020-02-26.tar.bz2"
 
     tags = ['ecp', 'ecp-apps']
 
@@ -84,6 +84,13 @@ class Nwchem(Package):
             'NWCHEM_MODULES=all python',
             'NWCHEM_LONG_PATHS=Y'  # by default NWCHEM_TOP is 64 char max
         ])
+        if spec.version < Version('7.0.0'):
+            args.extend([
+                'PYTHONVERSION=%s' % spec['python'].version.up_to(2),
+                'PYTHONHOME=%s' % spec['python'].home,
+                'USE_PYTHONCONFIG=Y',
+            ])
+
 
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
@@ -155,3 +162,7 @@ class Nwchem(Package):
             with open(".nwchemrc", 'w') as f:
                 f.write(nwchemrc)
             install(".nwchemrc", share_path)
+
+    def setup_run_environment(self, env):
+        env.set('NWCHEM_BASIS_LIBRARY', join_path(self.prefix,'share/nwchem/libraries/'))
+        env.set('NWCHEM_NWPW_LIBRARY', join_path(self.prefix,'share/nwchem/libraryps/'))
