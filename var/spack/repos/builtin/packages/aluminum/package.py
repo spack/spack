@@ -32,8 +32,8 @@ class Aluminum(CMakePackage, CudaPackage):
     variant('nccl', default=False, description='Builds with support for NCCL communication lib')
     variant('ht', default=False, description='Builds with support for host-enabled MPI'
             ' communication of accelerator data')
-    variant('mpi_gpu_rdma', default=False, description='Builds with support for GPU-initiated'
-            ' RDMA MPI-GPU RDMA enabled library')
+    variant('mpi_gpu_rdma', default=False, description='Builds with support for using RMA'
+            ' features in a MPI-GPU RDMA enabled library')
 
     depends_on('cmake@3.16.0:', type='build')
     depends_on('mpi')
