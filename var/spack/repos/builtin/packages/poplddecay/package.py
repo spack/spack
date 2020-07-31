@@ -32,4 +32,3 @@ class Poplddecay(MakefilePackage):
         mkdirp(prefix.bin.bin)
         install('bin/PopLDdecay', prefix.bin.bin)
         install_tree('bin', prefix.bin)
-
