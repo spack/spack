@@ -12,9 +12,11 @@ class PyYarl(PythonPackage):
 
     version('1.4.2', sha256='a400eb3f54f7596eeaba8100a8fa3d72135195423c52808dc54a43c6b100b192')
 
+    depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
-    depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('py-multidict@4.0:', type=('build', 'run'))
+    depends_on('py-idna@2.0:', type=('build', 'run'))
 
     @run_before('build')
     def fix_cython(self):

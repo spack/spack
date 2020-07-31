@@ -35,8 +35,10 @@ class PyRequests(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-chardet@3.0.2:3.0.999', type=('build', 'run'), when='@2.16.0:')
-    depends_on('py-idna@2.5:2.8', type=('build', 'run'), when='@2.16.0:')
+    depends_on('py-chardet@3.0.2:3.0.999', type=('build', 'run'), when='@2.16.0:2.22.999')
+    depends_on('py-idna@2.5:2.8', type=('build', 'run'), when='@2.16.0:2.22.999')
+    depends_on('py-chardet@3.0.2:3.999', type=('build', 'run'), when='@2.23.0:')
+    depends_on('py-idna@2.5:2.999', type=('build', 'run'), when='@2.23.0:')
     depends_on('py-urllib3@1.21.1:1.24,1.25.2:1.25.999', type=('build', 'run'), when='@2.16.0:')
     depends_on('py-certifi@2017.4.17:', type=('build', 'run'), when='@2.16.0:')
 

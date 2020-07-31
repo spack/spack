@@ -17,7 +17,7 @@ class PyGql(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-aiohttp@3.6.2', type=('build', 'run'))
-    depends_on('py-graphql-core@3.1:3.2', type=('build', 'run'))
-    depends_on('py-requests@2.23:3.0', type=('build', 'run'))
-    depends_on('py-websockets@8.1:9', type=('build', 'run'))
-    depends_on('py-yarl@1.4:2.0', type=('build', 'run'))
+    depends_on('py-graphql-core@3.1.0:3.1.999', type=('build', 'run'))
+    depends_on('py-requests@2.23:2.999', type=('build', 'run'))
+    depends_on('py-websockets@8.1:8.999', type=('build', 'run'))
+    depends_on('py-yarl@1.4:1.999', type=('build', 'run'))
