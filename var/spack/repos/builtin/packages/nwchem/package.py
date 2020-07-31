@@ -12,7 +12,7 @@ class Nwchem(Package):
     """High-performance computational chemistry software"""
 
     homepage = "http://nwchemgit.github.io"
-    url      = "http://https://github.com/nwchemgit/nwchem/releases/download/v7.0.0-release/nwchem-7.0.0-release.revision-2c9a1c7c-srconly.2020-02-26.tar.bz2"
+    url      = "https://github.com/nwchemgit/nwchem/releases/download/v7.0.0-release/nwchem-7.0.0-release.revision-2c9a1c7c-srconly.2020-02-26.tar.bz2"
 
     tags = ['ecp', 'ecp-apps']
 
