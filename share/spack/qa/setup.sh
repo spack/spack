@@ -26,14 +26,11 @@ if [[ "$COVERAGE" == "true" ]]; then
     coverage=coverage
     coverage_run="coverage run"
 
-    # bash coverage depends on some other factors -- there are issues with
-    # kcov for Python 2.6, unit tests, and build tests.
-    if [[ $TRAVIS_PYTHON_VERSION != 2.6 ]]; then
-        mkdir -p coverage
-        cc_script="$SPACK_ROOT/lib/spack/env/cc"
-        bashcov=$(realpath ${QA_DIR}/bashcov)
-        sed -i~ "s@#\!/bin/bash@#\!${bashcov}@" "$cc_script"
-    fi
+    # bash coverage depends on some other factors
+    mkdir -p coverage
+    cc_script="$SPACK_ROOT/lib/spack/env/cc"
+    bashcov=$(realpath ${QA_DIR}/bashcov)
+    sed -i~ "s@#\!/bin/bash@#\!${bashcov}@" "$cc_script"
 fi
 
 #
@@ -73,6 +70,9 @@ check_dependencies() {
                 hg)
                     spack_package=mercurial
                     pip_package=mercurial
+                    ;;
+                kcov)
+                    spack_package=kcov
                     ;;
                 svn)
                     spack_package=subversion

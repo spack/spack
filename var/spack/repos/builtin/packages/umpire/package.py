@@ -38,6 +38,7 @@ class Umpire(CMakePackage, CudaPackage):
     variant('fortran', default=False, description='Build C/Fortran API')
     variant('c', default=True, description='Build C API')
     variant('numa', default=False, description='Enable NUMA support')
+    variant('shared', default=True, description='Enable Shared libs')
     variant('openmp', default=False, description='Build with OpenMP support')
     variant('deviceconst', default=False,
             description='Enables support for constant device memory')
@@ -79,6 +80,9 @@ class Umpire(CMakePackage, CudaPackage):
 
         options.append('-DENABLE_OPENMP={0}'.format(
             'On' if '+openmp' in spec else 'Off'))
+
+        options.append('-DBUILD_SHARED_LIBS={0}'.format(
+            'On' if '+shared' in spec else 'Off'))
 
         options.append('-DENABLE_TESTS={0}'.format(
             'On' if self.run_tests else 'Off'))

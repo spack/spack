@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class PyAstropy(PythonPackage):
@@ -52,12 +53,20 @@ class PyAstropy(PythonPackage):
     depends_on('py-asdf@2.3:', when='+extras', type=('build', 'run'))
     depends_on('py-bottleneck', when='+extras', type=('build', 'run'))
     depends_on('py-pytest', when='+extras', type=('build', 'run'))
+    depends_on('py-cython', type='build')
 
     # System dependencies
     depends_on('erfa')
     depends_on('wcslib')
     depends_on('cfitsio')
     depends_on('expat')
+
+    def patch(self):
+        # forces the rebuild of files with cython
+        # avoids issues with PyCode_New() in newer
+        # versions of python in the distributed
+        # cython-ized files
+        os.remove('astropy/cython_version.py')
 
     def build_args(self, spec, prefix):
         args = [

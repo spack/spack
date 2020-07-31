@@ -15,12 +15,13 @@ class Gmt(Package):
     """
 
     homepage = "https://www.generic-mapping-tools.org/"
-    url      = "https://github.com/GenericMappingTools/gmt/archive/6.0.0.tar.gz"
+    url      = "https://github.com/GenericMappingTools/gmt/archive/6.1.0.tar.gz"
     git      = "https://github.com/GenericMappingTools/gmt.git"
 
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('6.1.0', sha256='f76ad7f444d407dfd7e5762644eec3a719c6aeb06d877bf746fe51abd79b1a9e')
     version('6.0.0', sha256='7a733e670f01d99f8fc0da51a4337320d764c06a68746621f83ccf2e3453bcb7')
     version('5.4.4', sha256='b593dfb101e6507c467619f3d2190a9f78b09d49fe2c27799750b8c4c0cd2da0')
     version('4.5.9', sha256='9b13be96ccf4bbd38c14359c05dfa7eeeb4b5f06d6f4be9c33d6c3ea276afc86',
@@ -41,7 +42,7 @@ class Gmt(Package):
     # https://github.com/GenericMappingTools/gmt/blob/master/MAINTENANCE.md
 
     # Required dependencies
-    depends_on('cmake@2.8.7:', type='build', when='@5:')
+    depends_on('cmake@2.8.12:', type='build', when='@5:')
     depends_on('netcdf-c@4:')
     depends_on('curl', when='@5.4:')
 
@@ -59,6 +60,8 @@ class Gmt(Package):
 
     depends_on('graphicsmagick', type='test')
 
+    # https://github.com/GenericMappingTools/gmt/pull/3603
+    patch('regexp.patch', when='@6.1.0')
     patch('type.patch', when='@4.5.9')
 
     @when('@5:')

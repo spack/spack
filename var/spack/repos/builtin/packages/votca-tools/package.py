@@ -30,7 +30,7 @@ class VotcaTools(CMakePackage):
     version('1.4', sha256='41638122e7e59852af61d391b4ab8c308fd2e16652f768077e13a99d206ec5d3')
 
     # https://github.com/votca/tools/pull/229, fix mkl in exported target
-    patch("https://github.com/votca/tools/pull/229.patch", sha256="250d0b679e5d3104e3c8d6adf99751b71386c7ed4cbdae1c75408717ef3f401f", when="@1.6+mkl")
+    patch("https://github.com/votca/tools/pull/229.patch", sha256="250d0b679e5d3104e3c8d6adf99751b71386c7ed4cbdae1c75408717ef3f401f", when="@1.6:1.6.0+mkl")
 
     variant('mkl', default=False, description='Build with MKL support')
     conflicts('+mkl', when='@1.4:1.5.9999')

@@ -27,6 +27,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version('master', branch='master')
 
+    version('10.2.0', sha256='b8dd4368bb9c7f0b98188317ee0254dd8cc99d1e3a18d0ff146c855fe16c1d8c')
     version('10.1.0', sha256='b6898a23844b656f1b68691c5c012036c2e694ac4b53a8918d4712ad876e7ea2')
 
     version('9.3.0', sha256='71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1')
@@ -115,7 +116,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('zstd', when='@10:')
     depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
-    depends_on('binutils~libiberty', when='+binutils')
+    depends_on('binutils~libiberty', when='+binutils', type=('build', 'link', 'run'))
     depends_on('zip', type='build', when='languages=java')
     depends_on('cuda', when='+nvptx')
 
@@ -373,8 +374,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # enable appropriate bootstrapping flags
         stage1_ldflags = str(self.rpath_args)
         boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
-        if '%gcc' in spec:
-            stage1_ldflags = boot_ldflags
         options.append('--with-stage1-ldflags=' + stage1_ldflags)
         options.append('--with-boot-ldflags=' + boot_ldflags)
 

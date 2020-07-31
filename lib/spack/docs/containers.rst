@@ -45,7 +45,7 @@ Environments:
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
-   RUN cd /opt/spack-environment && spack install && spack gc -y
+   RUN cd /opt/spack-environment && spack env activate . && spack install && spack gc -y
 
    # Strip all the binaries
    RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
@@ -267,7 +267,7 @@ following ``Dockerfile``:
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
-   RUN cd /opt/spack-environment && spack install && spack gc -y
+   RUN cd /opt/spack-environment && spack env activate . && spack install && spack gc -y
 
    # Strip all the binaries
    RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \

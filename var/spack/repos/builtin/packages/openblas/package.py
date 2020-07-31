@@ -99,6 +99,7 @@ class Openblas(MakefilePackage):
 
     # Add conditions to f_check to determine the Fujitsu compiler
     patch('openblas_fujitsu.patch', when='%fj')
+    patch('openblas_fujitsu2.patch', when='@0.3.10 %fj')
 
     # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')

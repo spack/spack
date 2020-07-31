@@ -174,6 +174,14 @@ def clean_environment():
     for v in build_system_vars:
         env.unset(v)
 
+    # Unset mpi environment vars. These flags should only be set by
+    # mpi providers for packages with mpi dependencies
+    mpi_vars = [
+        'MPICC', 'MPICXX', 'MPIFC', 'MPIF77', 'MPIF90'
+    ]
+    for v in mpi_vars:
+        env.unset(v)
+
     build_lang = spack.config.get('config:build_language')
     if build_lang:
         # Override language-related variables. This can be used to force

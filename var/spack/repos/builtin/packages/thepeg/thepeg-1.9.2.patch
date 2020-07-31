@@ -1,0 +1,83 @@
+diff -r 2d8e0f74b65e PDF/LHAPDF6.cc
+--- PDF/LHAPDF6.cc.orig	Mon Jul 07 09:16:48 2014 +0100
++++ PDF/LHAPDF6.cc	Fri Sep 26 14:41:55 2014 +0100
+@@ -54,8 +54,8 @@
+   return new_ptr(*this);
+ }
+ 
+-void ThePEG::LHAPDF::doinit() {
+-  PDFBase::doinit();
++void ThePEG::LHAPDF::initPDFptr() {
++  if ( thePDF ) return;
+   thePDF = ::LHAPDF::mkPDF(thePDFName, theMember);
+   xMin = thePDF->xMin();
+   xMax = thePDF->xMax();
+@@ -63,6 +63,11 @@
+   Q2Max = thePDF->q2Max() * GeV2;
+ }
+ 
++void ThePEG::LHAPDF::doinit() {
++  PDFBase::doinit();
++  initPDFptr();
++}
++
+ void ThePEG::LHAPDF::dofinish() {
+   PDFBase::dofinish();
+   delete thePDF;
+@@ -71,11 +76,7 @@
+ 
+ void ThePEG::LHAPDF::doinitrun() {
+   PDFBase::doinitrun();
+-  thePDF = ::LHAPDF::mkPDF(thePDFName, theMember);
+-  xMin = thePDF->xMin();
+-  xMax = thePDF->xMax();
+-  Q2Min = thePDF->q2Min() * GeV2;
+-  Q2Max = thePDF->q2Max() * GeV2;
++  initPDFptr();
+ }
+ 
+ void ThePEG::LHAPDF::setPDFName(string name) {
+@@ -387,6 +388,7 @@
+   lastQ2 = -1.0*GeV2;
+   lastX = -1.0;
+   lastP2 = -1.0*GeV2;
++  initPDFptr();
+ }
+ 
+ ThePEG::ClassDescription<ThePEG::LHAPDF> ThePEG::LHAPDF::initLHAPDF;
+diff -r 2d8e0f74b65e PDF/LHAPDF6.h
+--- PDF/LHAPDF6.h.orig	Mon Jul 07 09:16:48 2014 +0100
++++ PDF/LHAPDF6.h	Fri Sep 26 14:41:55 2014 +0100
+@@ -147,6 +147,12 @@
+   void checkUpdate(double x, Energy2 Q2, Energy2 P2) const;
+ 
+   /**
++   * Initialize the LHAPDF library for the chosen PDF set if it has
++   * not been done before.
++   */
++  void initPDFptr();
++
++  /**
+    * Used by the interface to select a set according to a file name.
+    */
+   void setPDFName(string name);
+--- Persistency/PersistentOStream.h.orig	2018-11-07 14:46:59.055432275 +0100
++++ Persistency/PersistentOStream.h	2018-11-07 14:47:20.639293703 +0100
+@@ -219,7 +219,7 @@
+    * Write a double.
+    */
+   PersistentOStream & operator<<(double d) {
+-    if ( isnan(d) || isinf(d) )
++    if ( std::isnan(d) || std::isinf(d) )
+       throw WriteError()
+ 	<< "Tried to write a NaN or Inf double to a persistent stream."
+ 	<< Exception::runerror;
+@@ -232,7 +232,7 @@
+    * Write a float.
+    */
+   PersistentOStream & operator<<(float f) {
+-    if ( isnan(f) || isinf(f) )
++    if ( std::isnan(f) || std::isinf(f) )
+       throw WriteError()
+ 	<< "Tried to write a NaN or Inf float to a persistent stream."
+ 	<< Exception::runerror;

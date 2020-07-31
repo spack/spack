@@ -18,6 +18,7 @@ class Amrex(CMakePackage):
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
+    version('20.07', sha256='c386f566f4c57ee56b5630f79ce2c6117d5a612a4aab69b7b26e48d577251165')
     version('20.06', sha256='be2f2a5107111fcb8b3928b76024b370c7cb01a9e5dd79484cf7fcf59d0b4858')
     version('20.05', sha256='97d753bb75e845a0a959ec1a044a48e6adb86dd008b5e29ce7a01d49ed276338')
     version('20.04', sha256='a7ece54d5d89cc00fd555551902a0d4d0fb50db15d2600f441353eed0dddd83b')
@@ -57,6 +58,12 @@ class Amrex(CMakePackage):
             values=('Debug', 'Release'))
     variant('sundials', default=False,
             description='Build AMReX with SUNDIALS support')
+    variant('hdf5',  default=False,
+            description='Enable HDF5-based I/O')
+    variant('hypre', default=False,
+            description='Enable Hypre interfaces')
+    variant('petsc', default=False,
+            description='Enable PETSc interfaces')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
@@ -67,6 +74,24 @@ class Amrex(CMakePackage):
     depends_on('cmake@3.14:', type='build', when='@19.04:')
     conflicts('%apple-clang')
     conflicts('%clang')
+
+    # Check options compatibility
+    conflicts('+sundials', when='~fortran',
+              msg='AMReX SUNDIALS support needs AMReX Fortran API (+fortran)')
+    conflicts('+hdf5', when='@:20.06',
+              msg='AMReX HDF5 support needs AMReX newer than version 20.06')
+    conflicts('+hypre', when='@:20.06',
+              msg='AMReX Hypre support needs AMReX newer than version 20.06')
+    conflicts('+hypre', when='~fortran',
+              msg='AMReX Hypre support needs AMReX Fortran API (+fortran)')
+    conflicts('+hypre', when='~linear_solvers',
+              msg='AMReX Hypre support needs variant +linear_solvers')
+    conflicts('+petsc', when='@:20.06',
+              msg='AMReX PETSc support needs AMReX newer than version 20.06')
+    conflicts('+petsc', when='~fortran',
+              msg='AMReX PETSc support needs AMReX Fortran API (+fortran)')
+    conflicts('+petsc', when='~linear_solvers',
+              msg='AMReX PETSc support needs variant +linear_solvers')
 
     def url_for_version(self, version):
         if version >= Version('20.05'):
@@ -89,11 +114,16 @@ class Amrex(CMakePackage):
             self.spec.variants['precision'].value.upper(),
             '-DENABLE_EB:BOOL=%s' % self.cmake_is_on('+eb'),
             '-DXSDK_ENABLE_Fortran:BOOL=%s' % self.cmake_is_on('+fortran'),
+            '-DENABLE_FORTRAN_INTERFACES:BOOL=%s'
+            % self.cmake_is_on('+fortran'),
             '-DENABLE_LINEAR_SOLVERS:BOOL=%s' %
             self.cmake_is_on('+linear_solvers'),
             '-DENABLE_AMRDATA:BOOL=%s' % self.cmake_is_on('+amrdata'),
             '-DENABLE_PARTICLES:BOOL=%s' % self.cmake_is_on('+particles'),
-            '-DENABLE_SUNDIALS:BOOL=%s' % self.cmake_is_on('+sundials')
+            '-DENABLE_SUNDIALS:BOOL=%s' % self.cmake_is_on('+sundials'),
+            '-DENABLE_HDF5:BOOL=%s' % self.cmake_is_on('+hdf5'),
+            '-DENABLE_HYPRE:BOOL=%s' % self.cmake_is_on('+hypre'),
+            '-DENABLE_PETSC:BOOL=%s' % self.cmake_is_on('+petsc'),
         ]
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')

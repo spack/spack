@@ -17,6 +17,7 @@ class Podio(CMakePackage):
     maintainers = ['vvolkl', 'drbenmorgan']
 
     version('master', branch='master')
+    version('0.11.0', sha256='4b2765566a14f0ddece2c894634e0a8e4f42f3e44392addb9110d856f6267fb6')
     version('0.10.0', sha256='b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2')
     version('0.9.2', sha256='8234d1b9636029124235ef81199a1220968dcc7fdaeab81cdc96a47af332d240')
     version('0.9.0', sha256='3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f')
@@ -43,15 +44,6 @@ class Podio(CMakePackage):
                     % self.spec['root'].variants['cxxstd'].value)
         args.append('-DBUILD_TESTING=%s' % self.run_tests)
         return args
-
-    def setup_build_environment(self, spack_env):
-        spack_env.prepend_path('LD_LIBRARY_PATH', self.spec['root'].prefix.lib)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('PODIO', self.prefix)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        env.set('PODIO', self.prefix)
 
     def url_for_version(self, version):
         # podio releases are dashes and padded with a leading zero

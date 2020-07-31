@@ -97,6 +97,9 @@ class CrayBackend(LinuxDistro):
     def _detect_crayos_version(cls):
         if os.path.isfile(_cle_release_file):
             release_attrs = read_cle_release_file()
+            if 'RELEASE' not in release_attrs:
+                # This Cray system uses a base OS not CLE/CNL
+                return None
             v = spack.version.Version(release_attrs['RELEASE'])
             return v[0]
         elif os.path.isfile(_clerelease_file):
@@ -146,7 +149,8 @@ class CrayBackend(LinuxDistro):
             compiler_cls.PrgEnv_compiler
         )
         matches = re.findall(version_regex, output)
-        version = tuple(version for _, version in matches)
+        version = tuple(version for _, version in matches
+                        if 'classic' not in version)
         compiler_id = detect_version_args.id
         value = detect_version_args._replace(
             id=compiler_id._replace(version=version)

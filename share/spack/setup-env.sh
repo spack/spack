@@ -39,6 +39,12 @@
 # spack module files.
 ########################################################################
 
+# prevent infinite recursion when spack shells out (e.g., on cray for modules)
+if [ -n "${_sp_initializing:-}" ]; then
+    exit 0
+fi
+export _sp_initializing=true
+
 spack() {
     # Store LD_LIBRARY_PATH variables from spack shell function
     # This is necessary because MacOS System Integrity Protection clears
@@ -357,3 +363,7 @@ _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
 if [ "$_sp_shell" = bash ]; then
     source $_sp_share_dir/spack-completion.bash
 fi
+
+# done: unset sentinel variable as we're no longer initializing
+unset _sp_initializing
+export _sp_initializing

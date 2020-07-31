@@ -141,8 +141,9 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-keras-preprocessing@1.1.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-keras-preprocessing@1.0.5:', type=('build', 'run'), when='@1.12:')
     depends_on('py-keras-preprocessing@1.0.3:', type=('build', 'run'), when='@1.11:')
-    depends_on('py-numpy@1.16.0:1.999',  type=('build', 'run'), when='@1.13.2,1.15:')
-    depends_on('py-numpy@1.14.5:1.999',  type=('build', 'run'), when='@1.12.1,1.14.0')
+    # https://github.com/tensorflow/tensorflow/issues/40688
+    depends_on('py-numpy@1.16.0:1.18',  type=('build', 'run'), when='@1.13.2,1.15:')
+    depends_on('py-numpy@1.14.5:1.18',  type=('build', 'run'), when='@1.12.1,1.14.0')
     depends_on('py-numpy@1.13.3:1.14.5', type=('build', 'run'), when='@1.10.0:1.10.1')
     depends_on('py-numpy@1.13.3:',       type=('build', 'run'), when='@1.6:')
     depends_on('py-numpy@1.12.1:',       type=('build', 'run'), when='@1.4:')
