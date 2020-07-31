@@ -4571,3 +4571,7 @@ class SpecDependencyNotFoundError(spack.error.SpecError):
 
 class SpecDeprecatedError(spack.error.SpecError):
     """Raised when a spec concretizes to a deprecated spec or dependency."""
+
+
+class InvalidSpecDetected(spack.error.SpecError):
+    """Raised when a detected spec doesn't pass validation checks."""

@@ -853,7 +853,7 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find"
+        SPACK_COMPREPLY="find list"
     fi
 }
 
@@ -864,6 +864,10 @@ _spack_external_find() {
     else
         _all_packages
     fi
+}
+
+_spack_external_list() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_fetch() {
