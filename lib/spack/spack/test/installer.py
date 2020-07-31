@@ -157,11 +157,11 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     monkeypatch.setattr(spack.database.Database, 'get_record', _none)
 
     spec.external_path = '/actual/external/path/not/checked'
-    spec.external_module = 'unchecked_module'
+    spec.external_modules = ['unchecked_module']
     inst._process_external_package(spec.package, False)
 
     out = capfd.readouterr()[0]
-    assert 'has external module in {0}'.format(spec.external_module) in out
+    assert 'has external module in {0}'.format(spec.external_modules) in out
 
 
 def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
@@ -257,15 +257,15 @@ def test_installer_ensure_ready_errors(install_mockery):
 
     fmt = r'cannot be installed locally.*{0}'
     # Force an external package error
-    path, module = spec.external_path, spec.external_module
+    path, modules = spec.external_path, spec.external_modules
     spec.external_path = '/actual/external/path/not/checked'
-    spec.external_module = 'unchecked_module'
+    spec.external_modules = ['unchecked_module']
     msg = fmt.format('is external')
     with pytest.raises(inst.ExternalPackageError, match=msg):
         installer._ensure_install_ready(spec.package)
 
     # Force an upstream package error
-    spec.external_path, spec.external_module = path, module
+    spec.external_path, spec.external_modules = path, modules
     spec.package._installed_upstream = True
     msg = fmt.format('is upstream')
     with pytest.raises(inst.UpstreamPackageError, match=msg):
