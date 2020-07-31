@@ -148,6 +148,10 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('%clang')
     conflicts('%nag')
 
+    # please set variants: smm=blas by configuring packages.yaml or install
+    # cp2k with option smm=blas on aarch64
+    conflicts('smm=libxsmm',  when='target=aarch64:', msg='libxsmm is not available on arm')
+
     @property
     def makefile_architecture(self):
         return '{0.architecture}-{0.compiler.name}'.format(self.spec)
