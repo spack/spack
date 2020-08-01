@@ -8,6 +8,7 @@ import shutil
 import sys
 
 import llnl.util.tty as tty
+import spack.architecture
 import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -25,6 +26,7 @@ import spack.util.url as url_util
 
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
+from spack.util.string import plural
 
 from spack.cmd import display_specs
 
@@ -288,8 +290,12 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     # List of specs that match expressions given via command line
     specs_from_cli = []
     has_errors = False
-    allarch = other_arch
-    specs = bindist.get_specs(allarch)
+
+    specs = bindist.get_specs()
+    if not other_arch:
+        arch = spack.architecture.default_arch().to_spec()
+        specs = [s for s in specs if s.satisfies(arch)]
+
     for pkg in pkgs:
         matches = []
         tty.msg("buildcache spec(s) matching %s \n" % pkg)
@@ -488,10 +494,20 @@ def install_tarball(spec, args):
 
 def listspecs(args):
     """list binary packages available from mirrors"""
-    specs = bindist.get_specs(args.allarch)
+    specs = bindist.get_specs()
+    if not args.allarch:
+        arch = spack.architecture.default_arch().to_spec()
+        specs = [s for s in specs if s.satisfies(arch)]
+
     if args.specs:
         constraints = set(args.specs)
         specs = [s for s in specs if any(s.satisfies(c) for c in constraints)]
+    if sys.stdout.isatty():
+        builds = len(specs)
+        tty.msg("%s." % plural(builds, 'cached build'))
+        if not builds and not args.allarch:
+            tty.msg("You can query all available architectures with:",
+                    "spack buildcache list --allarch")
     display_specs(specs, args, all_headers=True)
 
 
