@@ -46,12 +46,20 @@ class Kassiopeia(CMakePackage):
 
     def cmake_args(self):
         args = []
-        if self.spec.variants['vtk']:
+        if self.spec.satisfies('+vtk'):
             args.extend(['-DKASPER_USE_VTK=ON'])
-        if self.spec.variants['tbb']:
+        else:
+            args.extend(['-DKASPER_USE_VTK=OFF'])
+        if self.spec.satisfies('+tbb'):
             args.extend(['-DKASPER_USE_TBB=ON'])
-        if self.spec.variants['mpi']:
+        else:
+            args.extend(['-DKASPER_USE_TBB=OFF'])
+        if self.spec.satisfies('+mpi'):
             args.extend(['-DKEMField_USE_MPI=ON'])
-        if self.spec.variants['vtk']:
+        else:
+            args.extend(['-DKEMField_USE_MPI=OFF'])
+        if self.spec.satisfies('+opencl'):
             args.extend(['-DKEMField_USE_OPENCL=ON'])
+        else:
+            args.extend(['-DKEMField_USE_OPENCL=OFF'])
         return args
