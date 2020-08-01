@@ -86,7 +86,7 @@ class Cuda(Package):
             env.append_path('LD_LIBRARY_PATH', libxml2_home.lib)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('CUDAHOSTCXX', self.compiler.cxx)
+        env.set('CUDAHOSTCXX', dependent_spec.package.compiler.cxx)
 
     def setup_run_environment(self, env):
         env.set('CUDA_HOME', self.prefix)
