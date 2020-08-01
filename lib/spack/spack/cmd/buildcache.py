@@ -404,8 +404,7 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
                                   unsigned, allow_root, signing_key,
                                   rebuild_index)
         except Exception as e:
-            tty.warn('%s' % e)
-            pass
+            tty.warn(e)
 
 
 def createtarball(args):
