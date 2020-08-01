@@ -33,5 +33,7 @@ class Dire(Package):
         configure(*configure_args)
         make()
         # Open bug: https://gitlab.com/wdconinc/direforpythia/-/merge_requests/1
-        filter_file('-Wl,-rpath ', self.compiler.cc_rpath_arg, 'bin/dire-config')
+        filter_file('-Wl,-rpath ',
+                    self.compiler.cc_rpath_arg,
+                    'bin/dire-config')
         make('install')
