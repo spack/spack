@@ -36,6 +36,8 @@ class Cudnn(Package):
     version('7.6.5.32-10.2-linux-x64',
             sha256='600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20',
             preferred=True)
+    version('7.6.5.32-10.2-linux-ppc64le',
+            sha256='7dc08b6ab9331bfd12207d4802c61db1ad7cace7395b67a6e7b16efa0335668b')
     version('7.6.5.32-10.1-linux-x64',
             sha256='7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3')
     version('7.6.5.32-10.1-osx-x64',
