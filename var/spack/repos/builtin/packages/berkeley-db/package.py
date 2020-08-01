@@ -9,10 +9,11 @@ from spack import *
 class BerkeleyDb(AutotoolsPackage):
     """Oracle Berkeley DB"""
 
-    homepage = "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html"
-    url      = "http://download.oracle.com/berkeley-db/db-5.3.28.tar.gz"
+    homepage = "https://www.oracle.com/database/technologies/related/berkeleydb.html"
+    url      = "http://download.oracle.com/berkeley-db/db-18.1.40.tar.gz"
 
     version("18.1.40", sha256="0cecb2ef0c67b166de93732769abdeba0555086d51de1090df325e18ee8da9c8")
+    version('18.1.32', sha256='fa1fe7de9ba91ad472c25d026f931802597c29f28ae951960685cde487c8d654')
     version('6.2.32', sha256='a9c5e2b004a5777aa03510cfe5cd766a4a3b777713406b02809c17c8e0e7a8fb')
     version('6.1.29', sha256='b3c18180e4160d97dd197ba1d37c19f6ea2ec91d31bbfaf8972d99ba097af17d')
     version('6.0.35', sha256='24421affa8ae436fe427ae4f5f2d1634da83d3d55a5ad6354a98eeedb825de55')
@@ -22,16 +23,20 @@ class BerkeleyDb(AutotoolsPackage):
     build_directory = 'build_unix'
 
     def patch(self):
-        # some of the docs are missing in at least 18.1.40
-        filter_file(r'bdb-sql', '', 'dist/Makefile.in')
-        filter_file(r'gsg_db_server', '', 'dist/Makefile.in')
+        # some of the docs are missing in 18.1.40
+        if self.spec.satisfies("@18.1.40"):
+            filter_file(r'bdb-sql', '', 'dist/Makefile.in')
+            filter_file(r'gsg_db_server', '', 'dist/Makefile.in')
 
     def configure_args(self):
-        args = [
+        return [
             '--disable-static',
             '--enable-cxx',
             '--enable-dbm',
             '--enable-stl',
-            "--enable-compat185",  # compat with system berkeley-db on darwin
+            # compat with system berkeley-db on darwin
+            "--enable-compat185",
+            # SSL support requires OpenSSL, but OpenSSL depends on Perl, which
+            # depends on Berkey DB, creating a circular dependency
+            '--with-repmgr-ssl=no',
         ]
-        return args
