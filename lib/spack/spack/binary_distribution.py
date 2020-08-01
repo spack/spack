@@ -36,7 +36,6 @@ import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
-import spack.architecture as architecture
 
 _build_cache_relative_path = 'build_cache'
 
@@ -855,13 +854,11 @@ def get_spec(spec=None, force=False):
     return try_download_specs(urls=urls, force=force)
 
 
-def get_specs(allarch=False):
+def get_specs():
     """
     Get spec.yaml's for build caches available on mirror
     """
     global _cached_specs
-    arch = architecture.Arch(architecture.platform(),
-                             'default_os', 'default_target')
 
     if not spack.mirror.MirrorCollection():
         tty.debug("No Spack mirrors are currently configured")
@@ -881,8 +878,7 @@ def get_specs(allarch=False):
                 index_url, 'application/json')
             index_object = codecs.getreader('utf-8')(file_stream).read()
         except (URLError, web_util.SpackWebError) as url_err:
-            tty.error('Failed to read index {0}'.format(index_url))
-            tty.debug(url_err)
+            tty.debug('Failed to read index {0}'.format(index_url), url_err, 1)
             # Continue on to the next mirror
             continue
 
@@ -899,9 +895,7 @@ def get_specs(allarch=False):
         spec_list = db.query_local(installed=False)
 
         for indexed_spec in spec_list:
-            spec_arch = architecture.arch_for_spec(indexed_spec.architecture)
-            if (allarch is True or spec_arch == arch):
-                _cached_specs.add(indexed_spec)
+            _cached_specs.add(indexed_spec)
 
     return _cached_specs
 
