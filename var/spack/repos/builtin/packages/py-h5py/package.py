@@ -50,8 +50,7 @@ class PyH5py(PythonPackage):
 
     def configure(self, spec, prefix):
         self.setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix),
-                      '--hdf5-version={0}.{1}.{2}'.format(
-                          *list(spec['hdf5'].version[:3])))
+                      '--hdf5-version={0}'.format(spec['hdf5'].version))
 
         if '+mpi' in spec:
             env['CC'] = spec['mpi'].mpicc
