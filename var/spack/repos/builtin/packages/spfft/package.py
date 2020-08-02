@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Spfft(CMakePackage):
+class Spfft(CMakePackage, CudaPackage):
     """Sparse 3D FFT library with MPI, OpenMP, CUDA and ROCm support."""
 
     homepage = "https://github.com/eth-cscs/SpFFT"
@@ -28,9 +28,8 @@ class Spfft(CMakePackage):
     variant('fortran', default=False, description="enable fortran")
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
-    depends_on('fftw')
+    depends_on('fftw-api@3')
     depends_on('mpi', when='+mpi')
-    depends_on('cuda', when='+cuda')
 
     def cmake_args(self):
         args = []
