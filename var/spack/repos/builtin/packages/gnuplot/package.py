@@ -63,6 +63,7 @@ class Gnuplot(AutotoolsPackage):
     depends_on('cairo@1.2:', when='+cairo')
     depends_on('wxwidgets', when='+wx')
     depends_on('pango@1.10:', when='+wx')
+    depends_on('libsm', when='+wx')
     depends_on('pango@1.10:', when='+cairo')
     depends_on('libx11', when='+X')
     depends_on('qt@5.7:+opengl', when='+qt')
