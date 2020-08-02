@@ -31,7 +31,7 @@ class Spfft(CMakePackage, CudaPackage):
     depends_on('fftw-api@3')
     depends_on('mpi', when='+mpi')
 
-    conflicts('+cuda ^cuda@11:', when='@:0.9.11', msg="CUDA 11 support requires SpFFT 0.9.12")
+    depends_on('cuda@:10', when='@:0.9.11 +cuda')
 
     def cmake_args(self):
         args = []
