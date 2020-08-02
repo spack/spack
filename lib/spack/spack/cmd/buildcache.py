@@ -403,7 +403,7 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
             bindist.build_tarball(spec, outdir, force, make_relative,
                                   unsigned, allow_root, signing_key,
                                   rebuild_index)
-        except NoOverwriteException as e:
+        except bindist.NoOverwriteException as e:
             tty.warn(e)
 
 
