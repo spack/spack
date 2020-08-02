@@ -399,9 +399,12 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
 
     for spec in specs:
         tty.debug('creating binary cache file for package %s ' % spec.format())
-        bindist.build_tarball(spec, outdir, force, make_relative,
-                              unsigned, allow_root, signing_key,
-                              rebuild_index)
+        try:
+            bindist.build_tarball(spec, outdir, force, make_relative,
+                                  unsigned, allow_root, signing_key,
+                                  rebuild_index)
+        except bindist.NoOverwriteException as e:
+            tty.warn(e)
 
 
 def createtarball(args):
