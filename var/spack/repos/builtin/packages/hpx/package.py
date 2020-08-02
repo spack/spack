@@ -5,6 +5,7 @@
 
 
 from spack import *
+import sys
 
 
 class Hpx(CMakePackage, CudaPackage):
@@ -48,6 +49,14 @@ class Hpx(CMakePackage, CudaPackage):
         description="Support for networking through parcelports",
     )
 
+    default_generic_coroutines = True
+    if sys.platform.startswith('linux') or sys.platform == 'win32':
+        default_generic_coroutines = False
+    variant(
+        "generic_coroutines", default=default_generic_coroutines,
+        description='Use Boost.Context as the underlying coroutines'
+                    ' context switch implementation.')
+
     variant('tools', default=False, description='Build HPX tools')
     variant('examples', default=False, description='Build examples')
 
@@ -68,6 +77,15 @@ class Hpx(CMakePackage, CudaPackage):
     # boost 1.73.0 build problem with HPX 1.4.0 and 1.4.1
     # https://github.com/STEllAR-GROUP/hpx/issues/4728#issuecomment-640685308
     depends_on('boost@:1.72.0', when='@:1.4')
+
+    # COROUTINES
+    # ~generic_coroutines conflict is not fully implemented
+    # for additional information see:
+    # https://github.com/spack/spack/pull/17654
+    # https://github.com/STEllAR-GROUP/hpx/issues/4829
+    depends_on('boost+context', when='+generic_coroutines')
+    _msg_generic_coroutines = 'This platform requires +generic_coroutines'
+    conflicts('~generic_coroutines', when='platform=darwin', msg=_msg_generic_coroutines)
 
     # CXX Standard
     depends_on('boost cxxstd=11', when='cxxstd=11')
@@ -120,7 +138,7 @@ class Hpx(CMakePackage, CudaPackage):
         args.extend(self.instrumentation_args())
 
         if 'instrumentation=apex' in spec:
-            args += ['-DAPEX_WITH_OTF2=ON'
+            args += ['-DAPEX_WITH_OTF2=ON',
                      '-DOTF2_ROOT={0}'.format(spec['otf2'].prefix)]
 
         # Networking
@@ -153,6 +171,12 @@ class Hpx(CMakePackage, CudaPackage):
         args.append('-DHPX_WITH_MAX_CPU_COUNT={0}'.format(
             spec.variants['max_cpu_count'].value
         ))
+
+        # HPX_WITH_GENERIC_CONTEXT_COROUTINES
+        args.append(
+            self.define_with_variant(
+                'HPX_WITH_GENERIC_CONTEXT_COROUTINES', 'generic_coroutines')
+        )
 
         # Examples
         args.append('-DHPX_WITH_EXAMPLES={0}'.format(
