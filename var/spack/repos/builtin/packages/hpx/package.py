@@ -55,7 +55,7 @@ class Hpx(CMakePackage, CudaPackage):
     variant(
         "generic_coroutines", default=default_generic_coroutines,
         description='Use Boost.Context as the underlying coroutines'
-                    'context switch implementation.')
+                    ' context switch implementation.')
 
     variant('tools', default=False, description='Build HPX tools')
     variant('examples', default=False, description='Build examples')
