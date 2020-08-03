@@ -117,14 +117,14 @@ class Hpx(CMakePackage, CudaPackage):
 
             condition = 'instrumentation={0}'.format(value)
             yield self.define(
-                'HPX_WITH_{}'.format(value.upper()), condition in self.spec)
+                'HPX_WITH_{0}'.format(value.upper()), condition in self.spec)
 
     def cmake_args(self):
         spec, args = self.spec, []
 
         args += [
             self.define(
-                'HPX_WITH_CXX{}'.format(spec.variants['cxxstd'].value), True),
+                'HPX_WITH_CXX{0}'.format(spec.variants['cxxstd'].value), True),
 
             self.define_from_variant('HPX_WITH_MALLOC', 'malloc'),
             self.define_from_variant('HPX_WITH_CUDA', 'cuda'),
