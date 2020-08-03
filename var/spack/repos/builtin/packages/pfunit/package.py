@@ -13,14 +13,10 @@ class Pfunit(CMakePackage):
     serial and MPI-parallel software written in Fortran."""
 
     homepage = "http://pfunit.sourceforge.net/"
-    url      = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit/archive/3.2.9.tar.gz"
-    git      = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit.git"
 
     maintainers = ['citibeth']
 
-    version('4.1.9',  tag='v4.1.9', submodules=True)
-    version('4.1.5',  tag='v4.1.5', submodules=True)
-    version('4.0.0',  tag='v4.0.0', submodules=True)
+    version('4.1.10', sha256='051c35ad9678002943f4a4f2ab532a6b44de86ca414751616f93e69f393f5373')
     version('3.3.3',  sha256='9f673b58d20ad23148040a100227b4f876458a9d9aee0f0d84a5f0eef209ced5')
     version('3.3.2',  sha256='b1cc2e109ba602ea71bccefaa3c4a06e7ab1330db9ce6c08db89cfde497b8ab8')
     version('3.3.1',  sha256='f8f4bea7de991a518a0371b4c70b19e492aa9a0d3e6715eff9437f420b0cdb45')
@@ -46,7 +42,7 @@ class Pfunit(CMakePackage):
     conflicts("%gcc@:8.3.9", when="@4.0.0:", msg='Older versions of GCC do '
               'not support the Fortran 2008 features required by new pFUnit.')
     # See https://github.com/Goddard-Fortran-Ecosystem/pFUnit/pull/179
-    conflicts("+shared", when="@4.0.0:4.1.9")
+    conflicts("+shared", when="@4.0.0:")
     conflicts("use_comm_world", when="~mpi")
     patch("mpi-test.patch", when="+use_comm_world")
 
@@ -55,6 +51,16 @@ class Pfunit(CMakePackage):
         # spack needs to put them in a standard location:
         for file in glob.glob('*/CMakeLists.txt'):
             filter_file(r'.*/mod($|[^\w].*)', '', file)
+
+    def url_for_version(self, version):
+        # Version 4 uses a different URL syntax than previous versions
+        url_base = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit"
+        if int(str(version.up_to(1))) >= 4:
+            url = url_base + "/releases/download/v{0}/pFUnit-{0}.tar"
+        else:
+            url = url_base + "/archive/{0}.tar.gz"
+
+        return url.format(version.dotted)
 
     def cmake_args(self):
         spec = self.spec
