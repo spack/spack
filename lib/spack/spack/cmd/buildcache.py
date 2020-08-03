@@ -332,26 +332,25 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
                    signing_key=None, force=False, make_relative=False,
                    unsigned=False, allow_root=False, rebuild_index=False):
     if spec_yaml:
-        packages = set()
         with open(spec_yaml, 'r') as fd:
             yaml_text = fd.read()
             tty.debug('createtarball read spec yaml:')
             tty.debug(yaml_text)
             s = Spec.from_yaml(yaml_text)
-            packages.add('/{0}'.format(s.dag_hash()))
+            package = '/{0}'.format(s.dag_hash())
+            matches = find_matching_specs(package, env=env)
 
     elif packages:
-        packages = packages
+        matches = find_matching_specs(packages, env=env)
 
     elif env:
-        packages = env.concretized_user_specs
+        matches = [env.specs_by_hash[h] for h in env.concretized_order]
 
     else:
         tty.die("build cache file creation requires at least one" +
                 " installed package spec, an activate environment," +
                 " or else a path to a yaml file containing a spec" +
                 " to install")
-    pkgs = set(packages)
     specs = set()
 
     mirror = spack.mirror.MirrorCollection().lookup(output_location)
@@ -359,8 +358,6 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
 
     msg = 'Buildcache files will be output to %s/build_cache' % outdir
     tty.msg(msg)
-
-    matches = find_matching_specs(pkgs, env=env)
 
     if matches:
         tty.debug('Found at least one matching spec')
@@ -371,7 +368,9 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
             tty.debug('skipping external or virtual spec %s' %
                       match.format())
         else:
-            if add_spec:
+            lookup = spack.store.db.query_one(match)
+
+            if add_spec and lookup is not None:
                 tty.debug('adding matching spec %s' % match.format())
                 specs.add(match)
             else:
@@ -388,7 +387,9 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
                 if d == 0:
                     continue
 
-                if node.external or node.virtual:
+                lookup = spack.store.db.query_one(node)
+
+                if node.external or node.virtual or lookup is None:
                     tty.debug('skipping external or virtual dependency %s' %
                               node.format())
                 else:
