@@ -26,7 +26,7 @@ class Charliecloud(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
 
-    # Use skopeo and umoci for older (unsupported) ch-grow version dependencies.
+    # Use skopeo and umoci for older (unsupported) ch-grow versions.
     depends_on('skopeo',         type='run', when='@0.10:0.13')
     depends_on('umoci',          type='run', when='@0.10:0.13')
     depends_on('python+libxml2', type='run', when='@0.10:0.13')
@@ -60,12 +60,14 @@ class Charliecloud(AutotoolsPackage):
             args.append('--with-python={0}'.format(py_path))
 
         if '+docs' in self.spec:
+            sphinx_bin = '{0}'.format(self.spec['py-sphinx'].prefix.bin)
             if (self.spec.satisfies('@0.13')):
                 # 0.13 fails when we try to build it with html.
                 args.append('--disable-html')
             else:
                 args.append('--enable-html')
-                args.append('--with-sphinx-build={0}'.format(self.spec['py-sphinx'].prefix.bin.join('sphinx-build')))
+                args.append('--with-sphinx-build={0}'.format(sphinx_bin.join(
+                                                             'sphinx-build')))
         else:
             args.append('--disable-html')
 
