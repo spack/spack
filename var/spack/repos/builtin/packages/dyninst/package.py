@@ -42,7 +42,7 @@ class Dyninst(CMakePackage):
 
     # Dyninst uses elf@1 (elfutils) starting with 9.3.0, and used
     # elf@0 (libelf) before that.
-    depends_on('elf@0.178:', type='link', when='@10.2.0:')
+    depends_on('elf@0.173:', type='link', when='@10.2.0:')
     depends_on('elf@1', type='link', when='@9.3.0:10.1.99')
     depends_on('elf@0', type='link', when='@:9.2.99')
 
