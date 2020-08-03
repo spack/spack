@@ -25,8 +25,9 @@ class Ycsb(Package):
 
     def install(self, spec, prefix):
         mvn = which('mvn')
-        path = join_path(self.spec['mongodb-async-driver'].prefix,
-                         'target/mongodb-async-driver-2.0.1.jar')
+        jar_name = 'target/mongodb-async-driver-' + \
+            spec['mongodb-async-driver'].version.string + '.jar'
+        path = join_path(self.spec['mongodb-async-driver'].prefix, jar_name)
         mvn('install:install-file', '-Dfile={0}'.format(path),
             '-DgroupId=com.allanbank', '-DartifactId=mongodb-async-driver',
             '-Dversion=2.0.1', '-Dpackaging=jar')
