@@ -90,7 +90,7 @@ class Dyninst(CMakePackage):
             args.append('-DENABLE_STATIC_LIBS=YES')
         else:
             args.append('-DENABLE_STATIC_LIBS=NO')
-        
+
         # Make sure Dyninst doesn't try to build its own dependencies
         # outside of Spack
         if spec.satisfies('@10.2.0:'):
