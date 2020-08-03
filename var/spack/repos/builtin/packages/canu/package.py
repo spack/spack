@@ -22,7 +22,7 @@ class Canu(MakefilePackage):
     depends_on('java', type='run')
     depends_on('perl', type='run')
     # build fail when using boost@1.71.0:1.73.0 by canu@1.8:2.0
-    depends_on('boost@1.70.0')
+    depends_on('boost@:1.70.0')
 
     build_directory = 'src'
     build_targets = ['clean']
