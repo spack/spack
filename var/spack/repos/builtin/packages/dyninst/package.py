@@ -15,7 +15,7 @@ class Dyninst(CMakePackage):
     git      = "https://github.com/dyninst/dyninst.git"
 
     version('master', branch='master')
-    version('10.2.0', tag='10.2.0')
+    version('10.2.0', tag='v10.2.0')
     version('10.1.0', tag='v10.1.0')
     version('10.0.0', tag='v10.0.0')
     version('9.3.2', tag='v9.3.2')
