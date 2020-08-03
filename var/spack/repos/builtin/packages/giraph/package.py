@@ -24,12 +24,11 @@ class Giraph(Package):
     def install(self, spec, prefix):
         mvn = which('mvn')
         mvn('clean', 'package', '-DskipTests')
-        ver = self.version.up_to(3)
         giraph_path = join_path(self.stage.source_path,
                                 'giraph-dist', 'target',
                                 'giraph-{0}-for-hadoop-1.2.1-bin'
-                                .format(ver),
+                                .format(spec.version),
                                 'giraph-{0}-for-hadoop-1.2.1'
-                                .format(ver))
+                                .format(spec.version))
         with working_dir(giraph_path):
             install_tree('.', prefix)
