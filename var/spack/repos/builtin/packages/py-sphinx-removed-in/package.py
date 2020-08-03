@@ -17,4 +17,5 @@ class PySphinxRemovedIn(PythonPackage):
 
     version('0.2.0', sha256='bdba7f212c1abd99a9e9c2144c75a41edca02e71dfbb77653be39abe2cb19087')
 
-    depends_on('py-sphinx')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-sphinx', type=('build', 'run'))
