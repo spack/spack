@@ -174,7 +174,7 @@ class Hpx(CMakePackage, CudaPackage):
 
         # HPX_WITH_GENERIC_CONTEXT_COROUTINES
         args.append(
-            self.define_with_variant(
+            self.define_from_variant(
                 'HPX_WITH_GENERIC_CONTEXT_COROUTINES', 'generic_coroutines')
         )
 
