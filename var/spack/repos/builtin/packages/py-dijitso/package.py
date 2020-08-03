@@ -14,6 +14,7 @@ class PyDijitso(PythonPackage):
         "https://bitbucket.org/fenics-project/dijitso/downloads/dijitso-2018.1.0.tar.gz"
     )
     git = "https://bitbucket.org/fenics-project/dijitso.git"
+    maintainers = ["js947", "chrisrichardson"]
 
     version("master", branch="master")
     version("2018.1.0", sha256="2084ada1e7bd6ecec0999b15a17db98c72e26f1ccbf3fcbe240b1a035a1a2e64")

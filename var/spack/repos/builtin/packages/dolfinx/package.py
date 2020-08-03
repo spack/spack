@@ -11,6 +11,7 @@ class Dolfinx(CMakePackage):
 
     homepage = "https://github.com/FEniCS/dolfinx"
     git = "https://github.com/FEniCS/dolfinx.git"
+    maintainers = ["js947", "chrisrichardson"]
 
     version("master", branch="master")
 

@@ -11,6 +11,7 @@ class PyFfcx(PythonPackage):
 
     homepage = "https://github.com/FEniCS/ffcx"
     git = "https://github.com/FEniCS/ffcx.git"
+    maintainers = ["js947", "chrisrichardson"]
 
     version("master", branch="master")
 
