@@ -14,7 +14,8 @@ class Dyninst(CMakePackage):
     homepage = "https://dyninst.org"
     git      = "https://github.com/dyninst/dyninst.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('10.2.0', tag='10.2.0')
     version('10.1.0', tag='v10.1.0')
     version('10.0.0', tag='v10.0.0')
     version('9.3.2', tag='v9.3.2')
@@ -41,6 +42,7 @@ class Dyninst(CMakePackage):
 
     # Dyninst uses elf@1 (elfutils) starting with 9.3.0, and used
     # elf@0 (libelf) before that.
+    depends_on('elfutils@0.178:', type='link', when='@10.2.0:')
     depends_on('elf@1', type='link', when='@9.3.0:')
     depends_on('elf@0', type='link', when='@:9.2.99')
 
@@ -120,6 +122,11 @@ class Dyninst(CMakePackage):
             '-DLIBDWARF_INCLUDE_DIR=%s' % dwarf_include,
             '-DLIBDWARF_LIBRARIES=%s' % dwarf_lib,
         ]
+        
+        # Make sure Dyninst doesn't try to build its own dependencies
+        # outside of Spack
+        if spec.satisfies('@10.2.0:'):
+            args.append('-DSTERILE_BUILD=ON')
 
         # TBB include and lib directories, version 10.x or later.
         if spec.satisfies('@10.0.0:'):
