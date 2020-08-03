@@ -90,6 +90,11 @@ class Dyninst(CMakePackage):
             args.append('-DENABLE_STATIC_LIBS=YES')
         else:
             args.append('-DENABLE_STATIC_LIBS=NO')
+        
+        # Make sure Dyninst doesn't try to build its own dependencies
+        # outside of Spack
+        if spec.satisfies('@10.2.0:'):
+            args.append('-DSTERILE_BUILD=ON')
 
         return args
 
@@ -122,11 +127,6 @@ class Dyninst(CMakePackage):
             '-DLIBDWARF_INCLUDE_DIR=%s' % dwarf_include,
             '-DLIBDWARF_LIBRARIES=%s' % dwarf_lib,
         ]
-        
-        # Make sure Dyninst doesn't try to build its own dependencies
-        # outside of Spack
-        if spec.satisfies('@10.2.0:'):
-            args.append('-DSTERILE_BUILD=ON')
 
         # TBB include and lib directories, version 10.x or later.
         if spec.satisfies('@10.0.0:'):
