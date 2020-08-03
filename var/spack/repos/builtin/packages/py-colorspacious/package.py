@@ -11,7 +11,7 @@ class PyColorspacious(PythonPackage):
     conversions.
     """
 
-    homepage = "https://github.com/borntyping/python-colorlog"
+    homepage = "https://github.com/njsmith/colorspacious"
     url      = "https://pypi.io/packages/source/c/colorspacious/colorspacious-1.1.2.tar.gz"
 
     version('1.1.2', sha256='5e9072e8cdca889dac445c35c9362a22ccf758e97b00b79ff0d5a7ba3e11b618')
