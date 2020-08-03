@@ -12,7 +12,9 @@ class ProcessInProcess(Package):
     homepage = "https://github.com/RIKEN-SysSoft/PiP"
     git      = "https://github.com/RIKEN-SysSoft/PiP.git"
 
-    version('1', branch='pip-1')
+    version('1', branch='pip-1', preferred=True)
+    version('2', branch='pip-2')
+    version('3', branch='pip-3')
 
     conflicts('%gcc@:3', when='os=centos7')
     conflicts('%gcc@5:', when='os=centos7')
@@ -26,12 +28,29 @@ class ProcessInProcess(Package):
     # packages required for building PiP-gdb
     depends_on('texinfo', type='build')
 
-    resource(name='PiP-glibc', git='https://github.com/RIKEN-SysSoft/PiP-glibc.git', branch='centos/glibc-2.17-260.el7.pip.branch', destination='PiP-glibc')
+    # resources for version 1
+    resource(name='PiP-glibc', git='https://github.com/RIKEN-SysSoft/PiP-glibc.git', branch='centos/glibc-2.17-260.el7.pip.branch', destination='PiP-glibc', when='@1')
 
-    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos7', destination='PiP-gdb', when='os=centos7')
-    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos7', destination='PiP-gdb', when='os=rhel7')
-    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos8', destination='PiP-gdb', when='os=centos8')
-    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos8', destination='PiP-gdb', when='os=rhel8')
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos7', destination='PiP-gdb', when='@1 os=centos7')
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos7', destination='PiP-gdb', when='@1 os=rhel7')
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos8', destination='PiP-gdb', when='@1 os=centos8')
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos8', destination='PiP-gdb', when='@1 os=rhel8')
+
+    # resources for version 2
+    resource(name='PiP-glibc', git='https://github.com/RIKEN-SysSoft/PiP-glibc.git', branch='centos/glibc-2.17-260.el7.pip.branch', destination='PiP-glibc', when='@2')
+
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos7', destination='PiP-gdb', when='@2 os=centos7')
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos7', destination='PiP-gdb', when='@2 os=rhel7')
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos8', destination='PiP-gdb', when='@2 os=centos8')
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos8', destination='PiP-gdb', when='@2 os=rhel8')
+
+    # resources for version 3
+    resource(name='PiP-glibc', git='https://github.com/RIKEN-SysSoft/PiP-glibc.git', branch='centos/glibc-2.17-260.el7.pip.branch', destination='PiP-glibc', when='@3')
+
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos7', destination='PiP-gdb', when='@3 os=centos7')
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos7', destination='PiP-gdb', when='@3 os=rhel7')
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos8', destination='PiP-gdb', when='@3 os=centos8')
+    resource(name='PiP-gdb', git='https://github.com/RIKEN-SysSoft/PiP-gdb.git', branch='pip-centos8', destination='PiP-gdb', when='@3 os=rhel8')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
