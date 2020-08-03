@@ -23,6 +23,7 @@ import llnl.util.tty as tty
 
 _versions = {
     '11.0.2': {
+        'Linux-aarch64': ('3942f368a9afab99ced1df20168f02f5', 'http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux_sbsa.run'),
         'Linux-x86_64': ('48247ada0e3f106051029ae8f70fbd0c238040f58b0880e55026374a959a69c1', 'http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run'),
         'Linux-ppc64le': ('db06d0f3fbf6f7aa1f106fc921ad1c86162210a26e8cb65b171c5240a3bf75da', 'http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux_ppc64le.run')},
     '10.2.89': {
@@ -76,7 +77,7 @@ class Cuda(Package):
     # https://www.nvidia.com/en-us/drivers/cuda/mac-driver-archive/ mention
     # Mojave support -- only macOS High Sierra 10.13 is supported.
     conflicts('arch=darwin-mojave-x86_64')
-
+    depends_on('gcc@:9.3.2') 
     depends_on('libxml2', when='@10.1.243:')
 
     def setup_build_environment(self, env):
