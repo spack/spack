@@ -52,7 +52,7 @@ class Charliecloud(AutotoolsPackage):
     def configure_args(self):
 
         args = []
-        py_path = '{0}'.format(self.spec['python'].prefix.bin.join('python3'))
+        py_path = self.spec['python'].command.path
 
         if (self.spec.satisfies('@0.13')):
             args.append('--with-python-shebang={0}'.format(py_path))
