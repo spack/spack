@@ -20,6 +20,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('2020.08.03', commit='f5853882147d18bed81127dfeeef2f68b5c58db0')
     version('2020.07.21', commit='4e56c780cffc53875aca67d6472a2fb3678970eb')
     version('2020.06.12', commit='ac6ae1156e77d35596fea743ed8ae768f7222f19')
     version('2020.03.01', commit='94ede4e6fa1e05e6f080be8dc388240ea027f769')
@@ -121,11 +122,7 @@ class Hpctoolkit(AutotoolsPackage):
         ]
 
         if '+cuda' in spec:
-            cupti_path = join_path(spec['cuda'].prefix, 'extras', 'CUPTI')
-            args.extend([
-                '--with-cuda=%s' % spec['cuda'].prefix,
-                '--with-cupti=%s' % cupti_path,
-            ])
+            args.append('--with-cuda=%s' % spec['cuda'].prefix)
 
         if spec.target.family == 'x86_64':
             args.append('--with-xed=%s' % spec['intel-xed'].prefix)
