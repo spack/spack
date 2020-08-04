@@ -65,8 +65,8 @@ class Gpi2(AutotoolsPackage):
         "'auto' lets gpi-2 determine",
     )
 
-    depends_on('autoconf', type='build')  #autogen.sh - autoreconf
-    depends_on('automake', type='build')  #autogen.sh - automake
+    depends_on('autoconf', type='build')  # autogen.sh - autoreconf
+    depends_on('automake', type='build')  # autogen.sh - automake
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('mpi', when='+mpi')
