@@ -44,6 +44,7 @@ class Pfunit(CMakePackage):
     # See https://github.com/Goddard-Fortran-Ecosystem/pFUnit/pull/179
     conflicts("+shared", when="@4.0.0:")
     conflicts("use_comm_world", when="~mpi")
+    conflicts('+mpi', when='@:3.99.99 %gcc@10.0.0:')
     patch("mpi-test.patch", when="@:3.99.99 +use_comm_world")
 
     def patch(self):
@@ -73,10 +74,17 @@ class Pfunit(CMakePackage):
             '-DMAX_RANK=%s' % spec.variants['max_array_rank'].value]
 
         if spec.satisfies('+mpi'):
-            args.extend(['-DMPI=YES', '-DMPI_USE_MPIEXEC=YES',
+            if spec.satisfies('@4.0.0:'):
+                args.append('-DSKIP_MPI=NO')
+            else:
+                args.append('-DMPI=YES')
+            args.extend(['-DMPI_USE_MPIEXEC=YES',
                          '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc])
         else:
-            args.append('-DMPI=NO')
+            if spec.satisfies('@4.0.0:'):
+                args.append('-DSKIP_MPI=YES')
+            else:
+                args.append('-DMPI=NO')
         return args
 
     def check(self):
