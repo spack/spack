@@ -26,7 +26,8 @@ class ParquetConverters(CMakePackage):
 
     depends_on('hdf5+mpi')
     depends_on('highfive+mpi')
-    depends_on('arrow+parquet@:0.12')
+    depends_on('arrow+parquet@:0.12', when='@:0.5.5')
+    depends_on('arrow+parquet@0.15.1', when='@0.5.6:')
     depends_on('snappy~shared')
     depends_on('synapsetool+mpi')
     depends_on('synapsetool+mpi@:0.5.6', when='@:0.5.2')
