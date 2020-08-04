@@ -111,14 +111,14 @@ class Cray(Platform):
     @classmethod
     def detect(cls):
         """
-        Detect whether this system is a cray machine.
+        Detect whether this system is a Cray machine.
 
-        We detect the cray platform based on the availability through `module`
-        of the cray programming environment. If this environment is available,
-        we can use it to find compilers, target modules, etc. If the cray
+        We detect the Cray platform based on the availability through `module`
+        of the Cray programming environment. If this environment is available,
+        we can use it to find compilers, target modules, etc. If the Cray
         programming environment is not available via modules, then we will
-        treat it as a standard linux system, as the cray compiler wrappers
-        and other componenets of the cray programming environment are
+        treat it as a standard linux system, as the Cray compiler wrappers
+        and other components of the Cray programming environment are
         irrelevant without module support.
         """
         return 'opt/cray' in os.environ.get('MODULEPATH', '')

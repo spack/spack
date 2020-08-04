@@ -221,6 +221,8 @@ class Openmpi(AutotoolsPackage):
     variant('gpfs', default=True, description='Enable GPFS support (if present)')
     variant('singularity', default=False,
             description="Build support for the Singularity container")
+    variant('lustre', default=False,
+            description="Lustre filesystem library support")
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -269,6 +271,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('valgrind~mpi', when='+memchecker')
     # Singularity release 3 works better
     depends_on('singularity@3.0.0:', when='+singularity')
+    depends_on('lustre', when='+lustre')
 
     depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('rdma-core', when='fabrics=verbs')
@@ -536,8 +539,13 @@ class Openmpi(AutotoolsPackage):
 
         # Singularity container support
         if spec.satisfies('+singularity @:4.9'):
-            singularity_opt = '--with-singularity={0}'.format(spec['singularity'].prefix)
+            singularity_opt = '--with-singularity={0}'.format(
+                spec['singularity'].prefix)
             config_args.append(singularity_opt)
+        # Lustre filesystem support
+        if spec.satisfies('+lustre'):
+            lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
+            config_args.append(lustre_opt)
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))

@@ -11,7 +11,7 @@ class PySetuptools(PythonPackage):
        upgrading, installing, and uninstalling Python packages."""
 
     homepage = "https://github.com/pypa/setuptools"
-    url      = "https://pypi.io/packages/source/s/setuptools/setuptools-41.0.1.zip"
+    url      = "https://pypi.io/packages/source/s/setuptools/setuptools-49.2.0.zip"
 
     import_modules = [
         'setuptools', 'pkg_resources', 'setuptools._vendor',
@@ -21,6 +21,7 @@ class PySetuptools(PythonPackage):
         'easy_install'
     ]
 
+    version('49.2.0', sha256='afe9e81fee0270d3f60d52608549cc8ec4c46dada8c95640c1a00160f577acf2')
     version('46.1.3', sha256='795e0475ba6cd7fa082b1ee6e90d552209995627a2a227a47c6ea93282f4bfb1')
     version('44.1.0', sha256='794a96b0c1dc6f182c36b72ab70d7e90f1d59f7a132e6919bb37b4fd4d424aca')
     version('41.4.0', sha256='7eae782ccf36b790c21bde7d86a4f303a441cd77036b25c559a602cf5186ce4d')

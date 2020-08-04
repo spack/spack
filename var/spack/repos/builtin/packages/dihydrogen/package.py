@@ -14,6 +14,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
        needs of the distributed machine learning effort, LBANN."""
 
     homepage = "https://github.com/LLNL/DiHydrogen.git"
+    url      = "https://github.com/LLNL/DiHydrogen.git"
     git      = "https://github.com/LLNL/DiHydrogen.git"
 
     maintainers = ['bvanessen']
@@ -36,22 +37,27 @@ class Dihydrogen(CMakePackage, CudaPackage):
             description='Enable ROCm/HIP language features.')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
+    variant('docs', default=False,
+            description='Builds with support for building documentation')
 
     # Override the default set of CUDA architectures with the relevant
     # subset from lib/spack/spack/build_systems/cuda.py
     cuda_arch_values = [
         '60', '61', '62',
         '70', '72', '75',
+        '80'
     ]
     variant('cuda_arch',
             description='CUDA architecture',
             values=spack.variant.auto_or_any_combination_of(*cuda_arch_values))
 
+    depends_on('cmake@3.16.0:', type='build')
+
     depends_on('mpi')
     depends_on('catch2', type='test')
 
     depends_on('aluminum', when='+al ~cuda')
-    depends_on('aluminum +gpu +nccl +mpi_cuda', when='+al +cuda')
+    depends_on('aluminum +cuda +nccl +ht +mpi_gpu_rdma', when='+al +cuda')
 
     depends_on('cuda', when=('+cuda' or '+legacy'))
     depends_on('cudnn', when=('+cuda' or '+legacy'))
@@ -65,6 +71,9 @@ class Dihydrogen(CMakePackage, CudaPackage):
     generator = 'Ninja'
     depends_on('ninja', type='build')
     depends_on('cmake@3.14.0:', type='build')
+
+    depends_on('py-breathe', type='build', when='+docs')
+    depends_on('doxygen', type='build', when='+docs')
 
     illegal_cuda_arch_values = [
         '10', '11', '12', '13',

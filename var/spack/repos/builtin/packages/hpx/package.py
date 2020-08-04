@@ -5,6 +5,7 @@
 
 
 from spack import *
+import sys
 
 
 class Hpx(CMakePackage, CudaPackage):
@@ -48,6 +49,14 @@ class Hpx(CMakePackage, CudaPackage):
         description="Support for networking through parcelports",
     )
 
+    default_generic_coroutines = True
+    if sys.platform.startswith('linux') or sys.platform == 'win32':
+        default_generic_coroutines = False
+    variant(
+        "generic_coroutines", default=default_generic_coroutines,
+        description='Use Boost.Context as the underlying coroutines'
+                    ' context switch implementation.')
+
     variant('tools', default=False, description='Build HPX tools')
     variant('examples', default=False, description='Build examples')
 
@@ -68,6 +77,15 @@ class Hpx(CMakePackage, CudaPackage):
     # boost 1.73.0 build problem with HPX 1.4.0 and 1.4.1
     # https://github.com/STEllAR-GROUP/hpx/issues/4728#issuecomment-640685308
     depends_on('boost@:1.72.0', when='@:1.4')
+
+    # COROUTINES
+    # ~generic_coroutines conflict is not fully implemented
+    # for additional information see:
+    # https://github.com/spack/spack/pull/17654
+    # https://github.com/STEllAR-GROUP/hpx/issues/4829
+    depends_on('boost+context', when='+generic_coroutines')
+    _msg_generic_coroutines = 'This platform requires +generic_coroutines'
+    conflicts('~generic_coroutines', when='platform=darwin', msg=_msg_generic_coroutines)
 
     # CXX Standard
     depends_on('boost cxxstd=11', when='cxxstd=11')
@@ -92,79 +110,51 @@ class Hpx(CMakePackage, CudaPackage):
     # Patches APEX
     patch('git_external.patch', when='@1.3.0 instrumentation=apex')
 
-    def cxx_standard(self):
-        value = self.spec.variants['cxxstd'].value
-        return '-DHPX_WITH_CXX{0}=ON'.format(value)
-
     def instrumentation_args(self):
         for value in self.variants['instrumentation'].values:
             if value == 'none':
                 continue
 
             condition = 'instrumentation={0}'.format(value)
-            yield '-DHPX_WITH_{0}={1}'.format(
-                str(value).upper(), 'ON' if condition in self.spec else 'OFF'
-            )
+            yield self.define(
+                'HPX_WITH_{0}'.format(value.upper()), condition in self.spec)
 
     def cmake_args(self):
         spec, args = self.spec, []
 
-        # CXX Standard
-        args.append(self.cxx_standard())
+        args += [
+            self.define(
+                'HPX_WITH_CXX{0}'.format(spec.variants['cxxstd'].value), True),
 
-        # Malloc
-        selected_malloc = spec.variants['malloc'].value
-        args.append('-DHPX_WITH_MALLOC={0}'.format(selected_malloc))
+            self.define_from_variant('HPX_WITH_MALLOC', 'malloc'),
+            self.define_from_variant('HPX_WITH_CUDA', 'cuda'),
+            self.define_from_variant('HPX_WITH_TOOLS', 'tools'),
+            self.define_from_variant('HPX_WITH_EXAMPLES', 'examples'),
+            self.define('HPX_WITH_TESTS', self.run_tests),
+
+            self.define('HPX_WITH_NETWORKING', 'networking=none' not in spec),
+            self.define('HPX_WITH_PARCELPORT_TCP', 'networking=tcp' in spec),
+            self.define('HPX_WITH_PARCELPORT_MPI', 'networking=mpi' in spec),
+
+            self.define_from_variant(
+                'HPX_WITH_MAX_CPU_COUNT', 'max_cpu_count'),
+            self.define_from_variant(
+                'HPX_WITH_GENERIC_CONTEXT_COROUTINES', 'generic_coroutines'),
+
+            self.define('BOOST_ROOT', spec['boost'].prefix),
+            self.define('HWLOC_ROOT', spec['hwloc'].prefix),
+            self.define('HPX_WITH_BOOST_ALL_DYNAMIC_LINK', True),
+            self.define('BUILD_SHARED_LIBS', True),
+            self.define('HPX_DATASTRUCTURES_WITH_ADAPT_STD_TUPLE', False),
+        ]
 
         # Instrumentation
-        args.extend(self.instrumentation_args())
+        args += self.instrumentation_args()
 
         if 'instrumentation=apex' in spec:
-            args += ['-DAPEX_WITH_OTF2=ON'
-                     '-DOTF2_ROOT={0}'.format(spec['otf2'].prefix)]
-
-        # Networking
-        args.append('-DHPX_WITH_NETWORKING={0}'.format(
-            'OFF' if 'networking=none' in spec else 'ON'
-        ))
-        args.append('-DHPX_WITH_PARCELPORT_TCP={0}'.format(
-            'ON' if 'networking=tcp' in spec else 'OFF'
-        ))
-        args.append('-DHPX_WITH_PARCELPORT_MPI={0}'.format(
-            'ON' if 'networking=mpi' in spec else 'OFF'
-        ))
-
-        # Cuda support
-        args.append('-DHPX_WITH_CUDA={0}'.format(
-            'ON' if '+cuda' in spec else 'OFF'
-        ))
-
-        # Tests
-        args.append('-DHPX_WITH_TESTS={0}'.format(
-            'ON' if self.run_tests else 'OFF'
-        ))
-
-        # Tools
-        args.append('-DHPX_WITH_TOOLS={0}'.format(
-            'ON' if '+tools' in spec else 'OFF'
-        ))
-
-        # MAX_CPU_COUNT
-        args.append('-DHPX_WITH_MAX_CPU_COUNT={0}'.format(
-            spec.variants['max_cpu_count'].value
-        ))
-
-        # Examples
-        args.append('-DHPX_WITH_EXAMPLES={0}'.format(
-            'ON' if '+examples' in spec else 'OFF'
-        ))
-
-        args.extend([
-            '-DBOOST_ROOT={0}'.format(spec['boost'].prefix),
-            '-DHWLOC_ROOT={0}'.format(spec['hwloc'].prefix),
-            '-DHPX_WITH_BOOST_ALL_DYNAMIC_LINK=ON',
-            '-DBUILD_SHARED_LIBS=ON',
-            '-DHPX_DATASTRUCTURES_WITH_ADAPT_STD_TUPLE=OFF'
-        ])
+            args += [
+                self.define('APEX_WITH_OTF2', True),
+                self.define('OTF2_ROOT', spec['otf2'].prefix),
+            ]
 
         return args

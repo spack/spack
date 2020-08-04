@@ -12,6 +12,7 @@ import pytest
 import spack.main
 import spack.binary_distribution
 import spack.environment as ev
+import spack.spec
 from spack.spec import Spec
 
 buildcache = spack.main.SpackCommand('buildcache')
@@ -24,7 +25,22 @@ add = spack.main.SpackCommand('add')
 def mock_get_specs(database, monkeypatch):
     specs = database.query_local()
     monkeypatch.setattr(
-        spack.binary_distribution, 'get_specs', lambda x: specs
+        spack.binary_distribution, 'get_specs', lambda: specs
+    )
+
+
+@pytest.fixture()
+def mock_get_specs_multiarch(database, monkeypatch):
+    specs = [spec.copy() for spec in database.query_local()]
+
+    # make one spec that is NOT the test architecture
+    for spec in specs:
+        if spec.name == "mpileaks":
+            spec.architecture = spack.spec.ArchSpec('linux-rhel7-x86_64')
+            break
+
+    monkeypatch.setattr(
+        spack.binary_distribution, 'get_specs', lambda: specs
     )
 
 
@@ -37,10 +53,6 @@ def test_buildcache_preview_just_runs(database):
     buildcache('preview', 'mpileaks')
 
 
-@pytest.mark.skipif(
-    platform.system().lower() != 'linux',
-    reason='implementation for MacOS still missing'
-)
 @pytest.mark.db
 @pytest.mark.regression('13757')
 def test_buildcache_list_duplicates(mock_get_specs, capsys):
@@ -48,6 +60,20 @@ def test_buildcache_list_duplicates(mock_get_specs, capsys):
         output = buildcache('list', 'mpileaks', '@2.3')
 
     assert output.count('mpileaks') == 3
+
+
+@pytest.mark.db
+@pytest.mark.regression('17827')
+def test_buildcache_list_allarch(database, mock_get_specs_multiarch, capsys):
+    with capsys.disabled():
+        output = buildcache('list', '--allarch')
+
+    assert output.count('mpileaks') == 3
+
+    with capsys.disabled():
+        output = buildcache('list')
+
+    assert output.count('mpileaks') == 2
 
 
 def tests_buildcache_create(
