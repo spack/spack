@@ -55,7 +55,7 @@ class Pfunit(CMakePackage):
     def url_for_version(self, version):
         # Version 4 uses a different URL syntax than previous versions
         url_base = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit"
-        if int(str(version.up_to(1))) >= 4:
+        if version >= Version('4'):
             url = url_base + "/releases/download/v{0}/pFUnit-{0}.tar"
         else:
             url = url_base + "/archive/{0}.tar.gz"
