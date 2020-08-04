@@ -13,6 +13,7 @@ class Dyninst(CMakePackage):
 
     homepage = "https://dyninst.org"
     git      = "https://github.com/dyninst/dyninst.git"
+    maintainers = ['hainest']
 
     version('master', branch='master')
     version('10.2.0', tag='v10.2.0')
