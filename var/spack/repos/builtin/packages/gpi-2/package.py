@@ -16,8 +16,7 @@ class Gpi2(AutotoolsPackage):
     url      = "https://github.com/cc-hpc-itwm/GPI-2/archive/v1.4.0.tar.gz"
     git      = "https://github.com/cc-hpc-itwm/GPI-2.git"
 
-    version('master', branch='master')
-    version('next', branch='next')
+    version('master', branch='next')
     version('1.4.0', sha256='3b8ffb45346b2fe56aaa7ba15a515e62f9dff45a28e6a014248e20094bbe50a1')
 
     variant('mpi', default=False, description='Enable MPI support')
