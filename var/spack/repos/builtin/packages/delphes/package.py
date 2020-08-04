@@ -53,7 +53,6 @@ class Delphes(CMakePackage):
     depends_on('root cxxstd=17', when='cxxstd=17')
     depends_on('pythia8', when="+pythia8")
 
-
     def cmake_args(self):
         args = []
         # C++ Standard
