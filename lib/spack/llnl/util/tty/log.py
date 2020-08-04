@@ -299,6 +299,11 @@ class FileWrapper(object):
             return self.file_like
 
 
+class SaveStdout(object):
+    def __init__(self):
+        self._saved_stdout = os.dup(sys.stdout.fileno())
+        self._saved_stderr = os.dup(sys.stderr.fileno())
+
 
 class log_output(object):
     """Context manager that logs its output to a file.
@@ -366,6 +371,8 @@ class log_output(object):
         self.buffer = buffer
 
         self._active = False  # used to prevent re-entry
+
+        self.saved_fds = SaveStdout()
 
     def __call__(self, file_like=None, echo=None, debug=None, buffer=None):
         """This behaves the same as init. It allows a logger to be reused.
@@ -473,9 +480,12 @@ class log_output(object):
             # We try first to use OS-level file descriptors, as this
             # redirects output for subprocesses and system calls.
 
-            # Save old stdout and stderr file descriptors
-            self._saved_stdout = os.dup(sys.stdout.fileno())
-            self._saved_stderr = os.dup(sys.stderr.fileno())
+            fdstatus = os.fstat(self.saved_fds._saved_stdout)
+            tty.msg("_saved_stdout ({0}/{1}): ".format(
+                str(self.saved_fds._saved_stdout),
+                str(sys.stdout.fileno()))
+                + str(fdstatus))
+            tty.msg("Current PID: " + str(os.getpid()))
 
             # redirect to the pipe we created above
             os.dup2(write_fd, sys.stdout.fileno())
@@ -521,11 +531,11 @@ class log_output(object):
         # restore previous output settings, either the low-level way or
         # the python way
         if self.use_fds:
-            os.dup2(self._saved_stdout, sys.stdout.fileno())
-            os.close(self._saved_stdout)
+            os.dup2(self.saved_fds._saved_stdout, sys.stdout.fileno())
+            os.close(self.saved_fds._saved_stdout)
 
-            os.dup2(self._saved_stderr, sys.stderr.fileno())
-            os.close(self._saved_stderr)
+            os.dup2(self.saved_fds._saved_stderr, sys.stderr.fileno())
+            os.close(self.saved_fds._saved_stderr)
         else:
             sys.stdout = self._saved_stdout
             sys.stderr = self._saved_stderr

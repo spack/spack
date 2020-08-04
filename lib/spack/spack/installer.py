@@ -1606,7 +1606,7 @@ def build_process(pkg, build_kwargs):
                         phase(pkg.spec, pkg.prefix)
 
             echo = logger.echo
-            pkg.log()
+            log(pkg)
 
         # Run post install hooks before build stage is removed.
         spack.hooks.post_install(pkg.spec)
