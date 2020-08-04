@@ -70,10 +70,10 @@ class Madgraph5amc(Package):
 
     def build(self, spec, prefix):
         with working_dir(join_path('vendor', 'CutTools')):
-            make('-j1')
+            make(parallel=False)
 
         with working_dir(join_path('vendor', 'StdHEP')):
-            make('-j1')
+            make(parallel=False)
 
         if '+atlas' in spec:
             if os.path.exists(join_path('bin', 'compile.py')):
