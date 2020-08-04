@@ -35,7 +35,6 @@ class Wonton(CMakePackage):
 
     # wrappers to external mesh/state libraries
     variant('jali', default=False, description='Enable Jali mesh wrappers')
-    variant('flecsisp', default=False, description='Enable the Flecsi-SP mesh wrappers')
 
     conflicts('+jali ~mpi')    # Jali needs MPI
     conflicts('+thrust +cuda')  # Thrust with CUDA does not work as yet
@@ -50,10 +49,6 @@ class Wonton(CMakePackage):
     
     depends_on('jali +mstk', when='+jali')
     depends_on('mpi', when='+jali')
-    
-    # PROBABLY DOES NOT WORK
-    depends_on('flecsi-sp@e78c594 backend=mpi', when='+flecsisp +mpi')
-    depends_on('flecsi-sp@e78c594 backend=serial', when='+flecsisp ~mpi')
     
     # We need boost only when no thrust option
     depends_on('boost', when='~thrust') 
