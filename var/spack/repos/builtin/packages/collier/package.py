@@ -23,10 +23,7 @@ class Collier(CMakePackage):
 
     @property
     def parallel(self):
-        if self.spec.satisfies('@:1.2.4'):
-            return False
-
-        return True
+        return not self.spec.satisfies('@:1.2.4')
 
     def cmake_args(self):
         args = ['-Dstatic=ON']
