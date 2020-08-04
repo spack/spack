@@ -23,6 +23,7 @@ class Libglvnd(AutotoolsPackage):
 
     version('master', branch='master')
 
+    version('1.2.0', sha256='2dacbcfa47b7ffb722cbddc0a4f1bc3ecd71d2d7bb461bceb8e396dc6b81dc6d')
     version('1.1.1', sha256='71918ed1261e4eece18c0b74b50dc62c0237b8d526e83277ef078554544720b9')
 
     conflicts('platform=darwin', msg='libglvnd is linux specific')

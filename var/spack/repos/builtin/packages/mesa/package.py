@@ -73,9 +73,9 @@ class Mesa(AutotoolsPackage):
     provides('glx@1.4', when='+glx ~glvnd')
     # provides('egl@1.5', when='+egl ~glvnd')
 
-    provides('libglvnd-be-gl', when='+glvnd')
-    provides('libglvnd-be-glx', when='+glvnd +glx')
-    # provides('libglvnd-be-egl', when='+glvnd +egl')
+    provides('libglvnd-be-gl', when='+opengl +glvnd')
+    provides('libglvnd-be-glx', when='+opengl +glvnd +glx')
+    # provides('libglvnd-be-egl', when='+opengl +glvnd +egl')
 
     # Variant dependencies
     depends_on('llvm@6:', when='+llvm')
@@ -99,7 +99,6 @@ class Mesa(AutotoolsPackage):
             'LDFLAGS={0}'.format(self.spec['ncurses'].libs.search_flags),
             '--enable-shared',
             '--disable-static',
-            '--disable-libglvnd',
             '--disable-nine',
             '--disable-omx-bellagio',
             '--disable-omx-tizonia',
@@ -111,6 +110,12 @@ class Mesa(AutotoolsPackage):
             '--disable-xvmc',
             '--disable-osmesa',
             '--with-vulkan-drivers=']
+
+        if '+glvnd' in spec:
+            args.append('--enable-libglvnd')
+        else:
+            args.append('--disable-libglvnd')
+
         args_platforms = []
         args_gallium_drivers = ['swrast']
         args_dri_drivers = []

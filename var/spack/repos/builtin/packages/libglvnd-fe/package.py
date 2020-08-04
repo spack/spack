@@ -19,7 +19,8 @@ class LibglvndFe(BundlePackage):
 
     homepage = "https://github.com/NVIDIA/libglvnd"
 
-    version('1.1.1', sha256='71918ed1261e4eece18c0b74b50dc62c0237b8d526e83277ef078554544720b9')
+    version('1.2.0')
+    version('1.1.1')
 
     variant('glx', default=False, description='Provide GLX API')
     variant('egl', default=False, description='Provide EGL API')
@@ -30,8 +31,15 @@ class LibglvndFe(BundlePackage):
     depends_on('libglvnd-be-glx', when='+glx')
     depends_on('libglvnd-be-egl', when='+egl')
 
-    provides('gl')
-    provides('glx', when='+glx')
+    # https://github.com/NVIDIA/libglvnd/blob
+    #   /a4c332e3269ec5b1175f5fb63af99b070093adac
+    #   /src/generate/genCommon.py#L39-L44
+    provides('gl@1.0:1.5')
+    provides('gl@2.0:2.1')
+    provides('gl@3.0:3.3')
+    provides('gl@4.0:4.5')
+
+    provides('glx@1.4', when='+glx')
     provides('egl', when='+egl')
 
     @property

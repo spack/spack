@@ -96,7 +96,7 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('gl@3.2:', when='+opengl2')
     depends_on('gl@1.2:', when='~opengl2')
 
-    depends_on('glx', when='~osmesa platform=linux')
+    depends_on('glx', when='~osmesa ~egl platform=linux')
     depends_on('egl', when='+egl')
 
     depends_on('libxt', when='~osmesa platform=linux')

@@ -891,15 +891,15 @@ set the necessary environment variables.
             buildable: False
             variants:+glx+egl+glvnd
         libglvnd-fe:
-            variants:+gl+glx+egl
+            variants:+glx+egl
         all:
             providers:
-                glvnd-be-gl: [opengl]
-                glvnd-be-glx: [opengl]
-                glvnd-be-egl: [opengl]
+                glvnd-be-gl: [opengl+gl~glvnd]
+                glvnd-be-glx: [opengl+glx~glvnd]
+                glvnd-be-egl: [opengl+egl~glvnd]
                 gl: [libglvnd-fe]
-                glx: [libglvnd-fe]
-                egl: [libglvnd-fe]
+                glx: [libglvnd-fe+glx]
+                egl: [libglvnd-fe+egl]
       
 .. code-block:: yaml
 
