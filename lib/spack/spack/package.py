@@ -24,7 +24,7 @@ import textwrap
 import time
 import traceback
 from six import StringIO
-from six import string_types
+from six import integer_types, string_types
 from six import with_metaclass
 from ordereddict_backport import OrderedDict
 
@@ -1594,9 +1594,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         Args:
             exe (str): the name of the executable
-            options (list of str): list of options to pass to the runner
-            expected (list of str): list of expected output strings. Each
-                string is a regex expected to match part of the output.
+            options (str or list of str): list of options to pass to the runner
+            expected (str or list of str): list of expected output strings.
+                Each string is a regex expected to match part of the output.
             status (int, list of int, or None): possible passing status values
                 with 0 and None meaning the test is expected to succeed
             installed (bool): the executable must be in the install prefix
@@ -1667,7 +1667,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def _run_test_helper(self, runner, options, expected, status, installed,
                          purpose):
-        status = [status] if not isinstance(status, list) else status
+        status = [status] if isinstance(status, integer_types) else status
+        expected = [expected] if isinstance(expected, string_types) else \
+            expected
+        options = [options] if isinstance(options, string_types) else options
+
         if purpose:
             tty.msg(purpose)
         else:
@@ -1685,7 +1689,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         try:
             output = runner(*options, output=str.split, error=str.split)
 
-            can_pass = None in status or 0 in status
+            can_pass = not status or 0 in status
             assert can_pass, \
                 'Expected {0} execution to fail'.format(runner.name)
         except ProcessError as err:
