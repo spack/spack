@@ -35,7 +35,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-cython', type='run', when='@:0.15.3')
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('spark+hadoop@3.0.0:^openjdk', type='run')
+    depends_on('spark+hadoop@3.0.0:', type='run')
     depends_on('hadoop@:2.999', type='run')
 
     depends_on('py-bb5', type=('build', 'run'), when='@:0.15.6')
