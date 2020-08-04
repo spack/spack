@@ -7,6 +7,7 @@
 import os
 from spack import *
 
+
 def _verbs_dir():
     """Try to find the directory where the OpenFabrics verbs package is
     installed. Return None if not found.
@@ -64,8 +65,8 @@ class Gpi2(AutotoolsPackage):
         "'auto' lets gpi-2 determine",
     )
 
-    depends_on('autoconf', type='build') #autogen.sh - autoreconf
-    depends_on('automake', type='build') #autogen.sh - automake
+    depends_on('autoconf', type='build')  #autogen.sh - autoreconf
+    depends_on('automake', type='build')  #autogen.sh - automake
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('mpi', when='+mpi')
