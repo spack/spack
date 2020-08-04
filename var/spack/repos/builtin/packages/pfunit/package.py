@@ -73,18 +73,15 @@ class Pfunit(CMakePackage):
             '-DOPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
             '-DMAX_RANK=%s' % spec.variants['max_array_rank'].value]
 
+        if spec.satisfies('@4.0.0:'):
+            args.append('-DSKIP_MPI=%s' % ('YES' if '~mpi' in spec else 'NO'))
+        else:
+            args.append('-DMPI=%s' % ('YES' if '+mpi' in spec else 'NO'))
+
         if spec.satisfies('+mpi'):
-            if spec.satisfies('@4.0.0:'):
-                args.append('-DSKIP_MPI=NO')
-            else:
-                args.append('-DMPI=YES')
             args.extend(['-DMPI_USE_MPIEXEC=YES',
                          '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc])
-        else:
-            if spec.satisfies('@4.0.0:'):
-                args.append('-DSKIP_MPI=YES')
-            else:
-                args.append('-DMPI=NO')
+
         return args
 
     def check(self):
