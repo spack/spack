@@ -60,6 +60,10 @@ class Camx(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
+        if spec.target.family == 'aarch64':
+            makefile.filter('-mcmodel=medium', '-mcmodel=large')
+            makefile = FileFilter('./MPI/util/Makefile')
+            makefile.filter('-mcmodel=medium', '-mcmodel=large')
 
         # Support Intel MPI.
         if spec['mpi'].name == 'intel-mpi':

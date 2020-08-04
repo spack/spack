@@ -681,7 +681,6 @@ def make_compiler_list(detected_versions):
     sort_fn = lambda variation: (
         'cc' not in by_compiler_id[variation],  # None last
         'cxx' not in by_compiler_id[variation],  # None last
-
         getattr(variation, 'prefix', None),
         getattr(variation, 'suffix', None),
     )

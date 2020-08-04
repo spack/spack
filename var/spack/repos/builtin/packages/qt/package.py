@@ -178,6 +178,7 @@ class Qt(Package):
 
     # Mapping for compilers/systems in the QT 'mkspecs'
     compiler_mapping = {'intel': ('icc',),
+                        'apple-clang': ('clang-libc++', 'clang'),
                         'clang': ('clang-libc++', 'clang'),
                         'gcc': ('g++',)}
     platform_mapping = {'darwin': 'macx'}
@@ -362,7 +363,6 @@ class Qt(Package):
     @property
     def common_config_args(self):
         # incomplete list is here http://doc.qt.io/qt-5/configure-options.html
-        openssl = self.spec['openssl']
         config_args = [
             '-prefix', self.prefix,
             '-v',
@@ -388,6 +388,7 @@ class Qt(Package):
             config_args.append('-no-freetype')
 
         if '+ssl' in self.spec:
+            openssl = self.spec['openssl']
             config_args.extend([
                 '-openssl-linked',
                 openssl.libs.search_flags,

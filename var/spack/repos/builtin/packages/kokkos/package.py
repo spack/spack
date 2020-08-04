@@ -172,6 +172,8 @@ class Kokkos(CMakePackage, CudaPackage):
     conflicts("+wrapper", when="~cuda")
 
     variant("std", default="11", values=["11", "14", "17", "20"], multi=False)
+    variant("pic", default=False, description="Build position independent code")
+
     # nvcc does not currently work with C++17 or C++20
     conflicts("+cuda", when="std=17")
     conflicts("+cuda", when="std=20")
@@ -207,6 +209,9 @@ class Kokkos(CMakePackage, CudaPackage):
         isdiy = "+diy" in spec
         if isdiy:
             options.append("-DSpack_WORKAROUND=On")
+
+        if "+pic" in spec:
+            options.append("-DCMAKE_POSITION_INDEPENDENT_CODE=ON")
 
         spack_microarches = []
         if "+cuda" in spec:

@@ -89,6 +89,7 @@ class Openloops(Package):
             f.write('[OpenLoops]\n')
             f.write('import_env={0}\n'.format(spack_env))
             f.write('num_jobs = {0}\n'.format(njobs))
+            f.write('process_lib_dir = {0}\n'.format(self.spec.prefix.proclib))
             f.write('cc = {0}\n'.format(env['SPACK_CC']))
             f.write('cxx = {0}\n'.format(env['SPACK_CXX']))
             f.write('fortran_compiler = {0}\n'.format(env['SPACK_FC']))
@@ -110,7 +111,7 @@ class Openloops(Package):
     def build_processes(self, spec, prefix):
         ol = Executable('./openloops')
         processes = self.spec.variants['processes'].value
-        if 'compile_extra' in self.spec:
+        if '+compile_extra' in self.spec:
             ce = 'compile_extra=1'
         else:
             ce = ''

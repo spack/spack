@@ -4,7 +4,6 @@
 [![Linux Tests](https://github.com/spack/spack/workflows/linux%20tests/badge.svg)](https://github.com/spack/spack/actions)
 [![Linux Builds](https://github.com/spack/spack/workflows/linux%20builds/badge.svg)](https://github.com/spack/spack/actions)
 [![macOS Builds (nightly)](https://github.com/spack/spack/workflows/macOS%20builds%20nightly/badge.svg?branch=develop)](https://github.com/spack/spack/actions?query=workflow%3A%22macOS+builds+nightly%22)
-[![Build Status](https://travis-ci.com/spack/spack.svg?branch=develop)](https://travis-ci.com/spack/spack)
 [![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
 [![Slack](https://spackpm.herokuapp.com/badge.svg)](https://spackpm.herokuapp.com)
@@ -74,8 +73,8 @@ When you send your request, make ``develop`` the destination branch on the
 
 Your PR must pass Spack's unit tests and documentation tests, and must be
 [PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant.  We enforce
-these guidelines with [Travis CI](https://travis-ci.org/spack/spack).  To
-run these tests locally, and for helpful tips on git, see our
+these guidelines with our CI process. To run these tests locally, and for 
+helpful tips on git, see our
 [Contribution Guide](http://spack.readthedocs.io/en/latest/contribution_guide.html).
 
 Spack's `develop` branch has the latest contributions. Pull requests

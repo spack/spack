@@ -11,7 +11,7 @@ class PyTorchvision(PythonPackage):
     architectures, and common image transformations for computer vision."""
 
     homepage = "https://github.com/pytorch/vision"
-    url      = "https://github.com/pytorch/vision/archive/v0.6.1.tar.gz"
+    url      = "https://github.com/pytorch/vision/archive/v0.7.0.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = [
@@ -21,6 +21,7 @@ class PyTorchvision(PythonPackage):
         'torchvision.models.detection'
     ]
 
+    version('0.7.0', sha256='fa0a6f44a50451115d1499b3f2aa597e0092a07afce1068750260fa7dd2c85cb')
     version('0.6.1', sha256='8173680a976c833640ecbd0d7e6f0a11047bf8833433e2147180efc905e48656')
     version('0.6.0', sha256='02de11b3abe6882de4032ce86dab9c7794cbc84369b44d04e667486580f0f1f7')
     version('0.5.0', sha256='eb9afc93df3d174d975ee0914057a9522f5272310b4d56c150b955c287a4d74d')
@@ -29,16 +30,36 @@ class PyTorchvision(PythonPackage):
     version('0.4.0', sha256='c270d74e568bad4559fed4544f6dd1e22e2eb1c60b088e04a5bd5787c4150589')
     version('0.3.0', sha256='c205f0618c268c6ed2f8abb869ef6eb83e5339c1336c243ad321a2f2a85195f0')
 
-    depends_on('python@3:', when='@0.6:', type=('build', 'run'))
+    # See README.rst
+    depends_on('python@3.6:', when='@0.7:', type=('build', 'run'))
+    depends_on('python@3.5:', when='@0.6.0:0.6.999', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:3.8', when='@0.5.0', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:3.7', when='@:0.4', type=('build', 'run'))
+
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-six', when='@:0.5', type=('build', 'run'))
-    depends_on('py-torch@1.4:', when='@0.6:', type=('build', 'link', 'run'))
-    depends_on('py-torch@1.2:', when='@0.4:', type=('build', 'link', 'run'))
-    depends_on('py-torch@1.1:', type=('build', 'link', 'run'))
+
+    # See README.rst
+    depends_on('py-torch@1.6.0', when='@0.7.0', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.5.0', when='@0.6.0', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.4.0', when='@0.5.0', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.3.1', when='@0.4.2', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.3.0', when='@0.4.1', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.2.0', when='@0.4.0', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.1.0', when='@0.3.0', type=('build', 'link', 'run'))
+    depends_on('py-torch@:1.0.1', when='@0.2.2', type=('build', 'link', 'run'))
+
+    # TODO: Torchvision supports the following backends:
+    # * pillow
+    # * pillow-simd
+    # * accimage
+    # * libpng
+    # * libjpeg
+
     # https://github.com/pytorch/vision/issues/1712
-    depends_on('py-pillow@4.1.1:6', when='@:0.4', type=('build', 'run'))  # or py-pillow-simd
-    depends_on('py-pillow@4.1.1:',  when='@0.5:', type=('build', 'run'))  # or py-pillow-simd
+    depends_on('py-pillow@4.1.1:6', when='@:0.4', type=('build', 'run'))
+    depends_on('py-pillow@4.1.1:',  when='@0.5:', type=('build', 'run'))
 
     # Many of the datasets require additional dependencies to use.
     # These can be installed after the fact.

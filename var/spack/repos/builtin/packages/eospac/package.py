@@ -33,17 +33,22 @@ class Eospac(Package):
 
     def install(self, spec, prefix):
         with working_dir('Source'):
+            compilerArgs = []
+            compilerArgs.append('CC={0}'.format(spack_cc))
+            compilerArgs.append('CXX={0}'.format(spack_cxx))
+            compilerArgs.append('F77={0}'.format(spack_f77))
+            compilerArgs.append('F90={0}'.format(spack_fc))
+            # Eospac depends on fcommon behavior
+            #   but gcc@10 flipped to default fno-common
+            if "%gcc@10:" in spec:
+                compilerArgs.append('CFLAGS=-fcommon')
             make('install',
-                 'CC={0}'.format(spack_cc),
-                 'CXX={0}'.format(spack_cxx),
-                 'F77={0}'.format(spack_f77),
-                 'F90={0}'.format(spack_fc),
                  'prefix={0}'.format(prefix),
                  'INSTALLED_LIBRARY_DIR={0}'.format(prefix.lib),
                  'INSTALLED_INCLUDE_DIR={0}'.format(prefix.include),
                  'INSTALLED_EXAMPLE_DIR={0}'.format(prefix.example),
-                 'INSTALLED_BIN_DIR={0}'.format(prefix.bin))
-
+                 'INSTALLED_BIN_DIR={0}'.format(prefix.bin),
+                 *compilerArgs)
         # fix conflict with linux's getopt for 6.4.0beta.2
         if spec.satisfies('@6.4.0beta.2'):
             with working_dir(prefix.bin):
