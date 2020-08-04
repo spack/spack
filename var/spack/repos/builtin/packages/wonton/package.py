@@ -16,13 +16,12 @@ class Wonton(CMakePackage):
     """
 
     homepage = "https://portage.lanl.gov"
-#    git      = "https://github.com/laristra/wonton.git"
-    git      = "ssh://xcp-stash.lanl.gov:7999/laristra/wonton.git"
+    git      = "https://github.com/laristra/wonton.git"
+    url  = "https://github.com/laristra/wonton/releases/download/1.2.1/wonton-1.2.1.tar.gz"
 
     maintainers = ['raovgarimella']
-    
-    version('1.1.5', tag='v1.1.5', git='ssh://xcp-stash.lanl.gov:7999/laristra/wonton.git', git_full_repo=True, submodules=True)
-    version('1.1.4', tag='v1.1.4', git='https://github.com/laristra/wonton.git', git_full_repo=True, submodules=True)
+
+    version('1.2.1', sha256='e103844b6c086ec4326970099e9dff2d2fa55c960eb2ecb0c76fabfe3b7305e8')
 
     variant('lapacke', default=True, description='Use LAPACKE solvers')
 
