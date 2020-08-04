@@ -106,12 +106,10 @@ class NodeJs(Package):
         return args
 
     def configure(self, spec, prefix):
-        # Adapted to version 8.11.4, none configure.py script
-        if '@8.11.4' in self.spec:
-            sh = which('bash')
-            sh('./configure', *self.configure_args())
-        else:
+        if self.version >= Version('10.11.0'):
             python('configure.py', *self.configure_args())
+        else:
+            python('configure', *self.configure_args())
 
     def build(self, spec, prefix):
         make()
