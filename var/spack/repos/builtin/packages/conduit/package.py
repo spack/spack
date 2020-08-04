@@ -423,8 +423,8 @@ class Conduit(Package):
                                                 flags))
                     if "+shared" in spec:
                         flags = "${CMAKE_SHARED_LINKER_FLAGS} " + rpaths
-                        cfg.write(cmake_cache_entry("CMAKE_SHARED_LINKER_FLAGS",
-                                                    flags))
+                        cfg.write(cmake_cache_entry(
+                                  "CMAKE_SHARED_LINKER_FLAGS", flags))
 
         #######################
         # Python
