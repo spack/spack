@@ -5,7 +5,7 @@
 
 
 import os
-from spack import *
+
 
 class Gpi2(AutotoolsPackage):
     """GPI-2 is an API for the development of scalable, asynchronous and fault
