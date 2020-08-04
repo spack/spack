@@ -18,7 +18,7 @@ from spack.operating_systems.mac_os import macos_version
 # https://github.com/trilinos/Trilinos/issues/175
 
 
-class Trilinos(CMakePackage):
+class Trilinos(CMakePackage, CudaPackage):
     """The Trilinos Project is an effort to develop algorithms and enabling
     technologies within an object-oriented software framework for the solution
     of large-scale, complex multi-physics engineering and scientific problems.
@@ -288,6 +288,7 @@ class Trilinos(CMakePackage):
     conflicts('+zoltan2', when='~xpetra')
     conflicts('+zoltan2', when='~zoltan')
 
+    conflicts('+cuda', when='~tpetra')
     conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
     conflicts('+dtk', when='~kokkos')
@@ -337,6 +338,7 @@ class Trilinos(CMakePackage):
     depends_on('metis@5:', when='+metis')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('zlib', when="+zlib")
+    depends_on('kokkos-nvcc-wrapper', when='+cuda')
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
@@ -436,6 +438,17 @@ class Trilinos(CMakePackage):
                 define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
                 define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc),
                 define('MPI_BASE_DIR', spec['mpi'].prefix),
+            ])
+
+        # Cuda settings
+        options.append(define_tpl_enable('CUDA'))
+        if '+cuda' in spec:
+            cxx_flags.extend([
+                '--expt-extended-lambda'
+            ])
+            options.extend([
+                define('Kokkos_ENABLE_Cuda_Lambda', True),
+                define('Kokkos_ENABLE_Cuda_UVM', True),
             ])
 
         # ################## Trilinos Packages #####################
