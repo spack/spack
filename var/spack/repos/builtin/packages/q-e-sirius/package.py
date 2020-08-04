@@ -197,8 +197,8 @@ class QESirius(Package):
             options.append('--enable-parallel=no')
             options.append('CC={0}'.format(spack_cc))
 
-        options.append('F77={0}'.format(env['SPACK_F77']))
-        options.append('F90={0}'.format(env['SPACK_FC']))
+        options.append('F77={0}'.format(spack_f77))
+        options.append('F90={0}'.format(spack_fc))
 
         if self.spec.satisfies('%gcc@10:'):
             options.append('F90FLAGS=-cpp -fallow-argument-mismatch -I {0}/sirius'.format(sirius.headers.directories[0]))
