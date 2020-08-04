@@ -1619,7 +1619,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 be copied to the corresponding location(s) under the install
                 testing directory.
         """
-        paths = [srcs] if isinstance(srcs, string_types) else srcs
+        paths = [srcs] if isinstance(srcs, six.string_types) else srcs
 
         for path in paths:
             src_path = os.path.join(self.stage.source_path, path)
@@ -1706,9 +1706,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         Args:
             exe (str): the name of the executable
-            options (list of str): list of options to pass to the runner
-            expected (list of str): list of expected output strings. Each
-                string is a regex expected to match part of the output.
+            options (str or list of str): list of options to pass to the runner
+            expected (str or list of str): list of expected output strings.
+                Each string is a regex expected to match part of the output.
             status (int, list of int, or None): possible passing status values
                 with 0 and None meaning the test is expected to succeed
             installed (bool): the executable must be in the install prefix
@@ -1779,7 +1779,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def _run_test_helper(self, runner, options, expected, status, installed,
                          purpose):
-        status = [status] if not isinstance(status, list) else status
+        status = [status] if isinstance(status, six.integer_types) else status
+        expected = [expected] if isinstance(expected, six.string_types) else \
+            expected
+        options = [options] if isinstance(options, six.string_types) else options
+
         if purpose:
             tty.msg(purpose)
         else:
@@ -1797,7 +1801,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         try:
             output = runner(*options, output=str.split, error=str.split)
 
-            can_pass = None in status or 0 in status
+            can_pass = not status or 0 in status
             assert can_pass, \
                 'Expected {0} execution to fail'.format(runner.name)
         except ProcessError as err:
@@ -1833,7 +1837,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """This function checks whether install succeeded."""
 
         def check_paths(path_list, filetype, predicate):
-            if isinstance(path_list, string_types):
+            if isinstance(path_list, six.string_types):
                 path_list = [path_list]
 
             for path in path_list:
