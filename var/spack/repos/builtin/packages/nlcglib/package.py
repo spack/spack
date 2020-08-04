@@ -51,6 +51,10 @@ class Nlcglib(CMakePackage, CudaPackage):
 
         options.append('-DBUILD_TESTS=OFF')
 
+        if '+wrapper' in self.spec:
+            options.append('-DCMAKE_CXX_COMPILER=%s' %
+                           self.spec['kokkos-nvcc-wrapper'].kokkos_cxx)
+
         if '+cuda' in self.spec:
             cuda_arch = self.spec.variants['cuda_arch'].value
             if cuda_arch[0] != 'none':
