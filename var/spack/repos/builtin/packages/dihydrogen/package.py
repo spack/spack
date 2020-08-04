@@ -57,7 +57,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
     depends_on('catch2', type='test')
 
     depends_on('aluminum', when='+al ~cuda')
-    depends_on('aluminum +cuda +nccl +ht +mpi_gpu_rdma', when='+al +cuda')
+    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
 
     depends_on('cuda', when=('+cuda' or '+legacy'))
     depends_on('cudnn', when=('+cuda' or '+legacy'))

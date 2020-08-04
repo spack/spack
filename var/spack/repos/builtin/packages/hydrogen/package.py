@@ -86,7 +86,7 @@ class Hydrogen(CMakePackage, CudaPackage):
     depends_on('netlib-lapack +external-blas', when='blas=essl')
 
     depends_on('aluminum', when='+al ~cuda')
-    depends_on('aluminum +cuda +nccl +ht +mpi_gpu_rdma', when='+al +cuda')
+    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
