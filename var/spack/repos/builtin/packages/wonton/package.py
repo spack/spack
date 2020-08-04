@@ -38,19 +38,19 @@ class Wonton(CMakePackage):
     conflicts('+jali ~mpi')    # Jali needs MPI
     conflicts('+thrust +cuda')  # Thrust with CUDA does not work as yet
     conflicts('+thrust +kokkos')  # Don't enable Kokkos, Thrust simultaneously
- 
+
     # dependencies
     depends_on('cmake@3.13:', type='build')
 
     depends_on('netlib-lapack +lapacke', when='+lapacke')
 
     depends_on('mpi', when='+mpi')
-    
+
     depends_on('jali +mstk', when='+jali')
     depends_on('mpi', when='+jali')
-    
+
     # We need boost only when no thrust option
-    depends_on('boost', when='~thrust') 
+    depends_on('boost', when='~thrust')
 
     # NVidia thrust library
     depends_on('thrust@1.8.3', when='+thrust')
@@ -70,16 +70,26 @@ class Wonton(CMakePackage):
         if '+lapacke' in self.spec:
             options.append('-DWONTON_ENABLE_LAPACKE=ON')
             options.append('-DBLA_VENDOR=' + self.spec['blas'].name.upper())
-            options.append('-DBLAS_LIBRARIES=' + self.spec['blas'].libs.joined())
+            options.append(
+                '-DBLAS_LIBRARIES=' + self.spec['blas'].libs.joined()
+            )
 
         if '+thrust' in self.spec:
             options.append('-DWONTON_ENABLE_THRUST=ON')
             if '+cuda' in self.spec:
-                options.append('-DTHRUST_HOST_BACKEND:STRING=THRUST_HOST_SYSTEM_CPP')
-                options.append('-DTHRUST_DEVICE_BACKEND:STRING=THRUST_DEVICE_SYSTEM_CUDA')
+                options.append(
+                    '-DTHRUST_HOST_BACKEND:STRING=THRUST_HOST_SYSTEM_CPP'
+                )
+                options.append(
+                    '-DTHRUST_DEVICE_BACKEND:STRING=THRUST_DEVICE_SYSTEM_CUDA'
+                )
             else:
-                options.append('-DTHRUST_HOST_BACKEND:STRING=THRUST_HOST_SYSTEM_CPP')
-                options.append('-DTHRUST_DEVICE_BACKEND:STRING=THRUST_DEVICE_SYSTEM_OMP')
+                options.append(
+                    '-DTHRUST_HOST_BACKEND:STRING=THRUST_HOST_SYSTEM_CPP'
+                )
+                options.append(
+                    '-DTHRUST_DEVICE_BACKEND:STRING=THRUST_DEVICE_SYSTEM_OMP'
+                )
 
         if '+kokkos' in self.spec:
             options.append('-DWONTON_ENABLE_Kokkos=ON')
@@ -93,7 +103,7 @@ class Wonton(CMakePackage):
 
         if '+flecsi' in self.spec:
             options.append('-DWONTON_ENABLE_FleCSI=ON')
-            
+
         # Unit test variant
         if self.run_tests:
             options.append('-DENABLE_UNIT_TESTS=ON')
