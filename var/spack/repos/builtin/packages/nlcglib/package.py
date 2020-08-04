@@ -34,7 +34,6 @@ class Nlcglib(CMakePackage, CudaPackage):
     depends_on("cmake@3.15:", type='build')
     depends_on('kokkos+cuda~cuda_relocatable_device_code+cuda_lambda+openmp+wrapper', when='+openmp+wrapper')
 
-
     def cmake_args(self):
         options = []
 
