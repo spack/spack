@@ -7,31 +7,6 @@
 import os
 from spack import *
 
-
-def _verbs_dir():
-    """Try to find the directory where the OpenFabrics verbs package is
-    installed. Return None if not found.
-    """
-    try:
-        # Try to locate Verbs by looking for a utility in the path
-        ibv_devices = which("ibv_devices")
-        # Run it (silently) to ensure it works
-        ibv_devices(output=str, error=str)
-        # Get path to executable
-        path = ibv_devices.exe[0]
-        # Remove executable name and "bin" directory
-        path = os.path.dirname(path)
-        path = os.path.dirname(path)
-        # There's usually no "/include" on Unix; use "/usr/include" instead
-        if path == "/":
-            path = "/usr"
-        return path
-    except TypeError:
-        return None
-    except ProcessError:
-        return None
-
-
 class Gpi2(AutotoolsPackage):
     """GPI-2 is an API for the development of scalable, asynchronous and fault
     tolerant parallel applications. It implements the GASPI specification
@@ -45,8 +20,8 @@ class Gpi2(AutotoolsPackage):
     version('next', branch='next')
     version('1.4.0', sha256='3b8ffb45346b2fe56aaa7ba15a515e62f9dff45a28e6a014248e20094bbe50a1')
 
-    variant('mpi', default=False)
-    variant('fortran', default=True)
+    variant('mpi', default=False, description='Enable MPI support')
+    variant('fortran', default=True, description='Enable Fortran modules')
     variant(
         'fabrics',
         values=disjoint_sets(
@@ -75,24 +50,17 @@ class Gpi2(AutotoolsPackage):
 
     depends_on('slurm', when='schedulers=slurm')
 
-    phases = ['configure', 'build', 'install']
-
     def with_or_without_verbs(self, activated):
         opt = 'infiniband'
         # If the option has not been activated return
         # --without-infiniband
         if not activated:
             return '--without-{0}'.format(opt)
-        line = '--with-{0}'.format(opt)
-        path = _verbs_dir()
-        if (path is not None) and (path not in ('/usr', '/usr/local')):
-            line += '={0}'.format(path)
-        return line
+        return '--with-{0}={1}'.format(opt, self.spec['rdma-core'].prefix)
 
-    @run_before('configure')
-    def autogen(self):
-        autogen = Executable('./autogen.sh')
-        autogen()
+    def autoreconf(self, spec, prefix):
+        bash = which('bash')
+        bash('./autogen.sh')
 
     def configure_args(self):
         spec = self.spec
