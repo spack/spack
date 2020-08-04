@@ -18,8 +18,8 @@ class Madgraph5amc(Package):
     homepage = "https://launchpad.net/mg5amcnlo"
     url      = "https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz"
 
-    version('2.7.3', sha256='0b665356f4d9359e6e382e0f408dc11db594734567c6b2f0ec0e0697f2dbe099', preferred=True)
     version('2.7.3.py3', sha256='400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225')
+    version('2.7.3', sha256='0b665356f4d9359e6e382e0f408dc11db594734567c6b2f0ec0e0697f2dbe099')
 
     variant('atlas', default=False, description='Apply changes requested by ' + 
             "the ATLAS experimenent on LHC")
@@ -29,7 +29,7 @@ class Madgraph5amc(Package):
             'of Collier')
 
     depends_on('syscalc')
-    depends_on('ninja-mc', when='+ninja')
+    depends_on('gosam-contrib', when='+ninja')
     depends_on('collier', when='+collier')
     depends_on('lhapdf')
     depends_on('fastjet')
@@ -55,7 +55,7 @@ class Madgraph5amc(Package):
         set_parameter('syscalc_path', spec['syscalc'].prefix.bin)
 
         if '+ninja' in spec:
-            set_parameter('ninja', spec['ninja-mc'].prefix)
+            set_parameter('ninja', spec['gosam-contrib'].prefix)
 
         if '+collier' in spec:
             set_parameter('collier', spec['collier'].prefix)
