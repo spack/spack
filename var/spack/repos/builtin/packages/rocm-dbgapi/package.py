@@ -22,14 +22,8 @@ class RocmDbgapi(CMakePackage):
 
     depends_on('cmake@3.5.2', type='build')
     depends_on('hsa-rocr-dev@3.5.0:', type='build', when='@3.5.0:')
-    depends_on('comgr@3.5.0:', type='build', when='@3.5.0')
+    depends_on('comgr@3.5.0:', type=('build','link'), when='@3.5.0')
 
     def patch(self):
         filter_file(r'(<INSTALL_INTERFACE:include>)',  r'\1 {0}/include'.
                     format(self.spec['hsa-rocr-dev'].prefix), 'CMakeLists.txt')
-
-    def cmake_args(self):
-        args = ['-DCMAKE_VERBOSE_MAKEFILE=1',
-                '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE',
-                ]
-        return args
