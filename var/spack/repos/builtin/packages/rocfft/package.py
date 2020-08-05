@@ -50,11 +50,10 @@ class Rocfft(CMakePackage):
 
         args = [
             '-DHIP_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER={}/bin/hipcc'.format(
+            '-DCMAKE_CXX_COMPILER={0}/bin/hipcc'.format(
                 self.spec['hip'].prefix),
             '-DUSE_HIP_CLANG=ON',
-            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE',
-            '-DHIP_CLANG_INCLUDE_PATH={}/lib/clang/{}/include'.format(
+            '-DHIP_CLANG_INCLUDE_PATH={0}/lib/clang/{1}/include'.format(
                 self.spec['llvm-amdgpu'].prefix, version_number)
         ]
         return args
