@@ -22,12 +22,6 @@ class RocmSmiLib(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
     depends_on('cmake@3.5.2', type='build')
 
-    def cmake_args(self):
-        args = ['-DCMAKE_INSTALL_RPATH_USE_LINK_PATH="FALSE"',
-                '-DCMAKE_VERBOSE_MAKEFILE=1'
-                ]
-        return args
-
     @run_after('install')
     def post_install(self):
         popen('cp -R {}/rocm_smi/lib {}'.format(self.prefix, self.prefix))
