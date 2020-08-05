@@ -27,6 +27,8 @@ class Rocclr(CMakePackage):
     depends_on('comgr@3.5.0:', type='build', when='@3.5:')
     depends_on('mesa~llvm@18.3:', type='link', when='@3.5:')
 
+    patch('opengl.patch', when='@3.5.0')
+
     resource(name='opencl-on-vdi',
              url='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/roc-3.5.0.tar.gz',
              sha256='511b617d5192f2d4893603c1a02402b2ac9556e9806ff09dd2a91d398abf39a0',
