@@ -9,7 +9,6 @@ import shutil
 import collections
 
 import llnl.util.tty as tty
-import llnl.util.filesystem as fs
 
 import spack.caches
 import spack.cmd.test
