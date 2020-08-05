@@ -5,8 +5,6 @@
 
 from spack import *
 import sys
-import shutil
-import os
 
 
 class Llvm(CMakePackage, CudaPackage):
