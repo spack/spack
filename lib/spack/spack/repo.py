@@ -1000,7 +1000,7 @@ class Repo(object):
         names = sorted(self._pkg_checker.keys())
         if include_virtuals:
             return names
-        return list(filter(lambda x: not self.is_virtual(x), names))
+        return [x for x in names if not self.is_virtual(x)]
 
     def packages_with_tags(self, *tags):
         v = set(self.all_package_names())
