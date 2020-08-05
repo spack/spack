@@ -1563,9 +1563,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     shutil.rmtree(testdir)
                 fsys.mkdirp(testdir)
 
-                # cd to test directory
-                os.chdir(testdir)
-
                 # run test methods from the package and all virtuals it provides
                 # virtuals have to be deduped by name
                 v_names = list(set([vspec.name
@@ -1580,30 +1577,32 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
                 test_specs = [self.spec] + [spack.spec.Spec(v_name)
                                             for v_name in sorted(v_names)]
-                for spec in test_specs:
-                    # Fail gracefully if a virtual has no package/tests
-                    try:
-                        spec_pkg = spec.package
-                    except spack.repo.UnknownPackageError:
-                        continue
 
-                    # copy test data into testdir/data
-                    data_source = Prefix(spec_pkg.package_dir).test
-                    data_dir = os.path.join(testdir.data, spec.name)
-                    if os.path.isdir(data_source):
-                        shutil.copytree(data_source, data_dir)
+                with fsys.working_dir(testdir):
+                    for spec in test_specs:
+                        # Fail gracefully if a virtual has no package/tests
+                        try:
+                            spec_pkg = spec.package
+                        except spack.repo.UnknownPackageError:
+                            continue
 
-                    try:
-                        # grab the function for each method so we can call it
-                        # with this package in place of its `self` object
-                        test_fn = spec_pkg.__class__.test
-                        if not isinstance(test_fn, types.FunctionType):
-                            test_fn = test_method.__func__
-                        test_fn(self)
-                    except BaseException:
-                        # reset debug level on failfast errors
-                        tty.set_debug(old_debug)
-                        raise
+                        # copy test data into testdir/data
+                        data_source = Prefix(spec_pkg.package_dir).test
+                        data_dir = os.path.join(testdir.data, spec.name)
+                        if os.path.isdir(data_source):
+                            shutil.copytree(data_source, data_dir)
+
+                        try:
+                            # grab the function for each method so we can call it
+                            # with this package in place of its `self` object
+                            test_fn = spec_pkg.__class__.test
+                            if not isinstance(test_fn, types.FunctionType):
+                                test_fn = test_method.__func__
+                            test_fn(self)
+                        except BaseException:
+                            # reset debug level on failfast errors
+                            tty.set_debug(old_debug)
+                            raise
 
                 if self.test_failures:
                     raise TestFailure(self.test_failures)
