@@ -1594,7 +1594,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         shutil.copytree(data_source, data_dir)
 
                     try:
-                        # grab the function for each method so we can all it
+                        # grab the function for each method so we can call it
                         # with this package in place of its `self` object
                         test_fn = spec_pkg.__class__.test
                         if not isinstance(test_fn, types.FunctionType):
