@@ -20,7 +20,6 @@ class Rocfft(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    depends_on('boost')
     depends_on('fftw-api@3', type='build', when='@3.5:')
     depends_on('cmake@3.5.2', type='build')
     depends_on('rocm-cmake@3.5:', type='build', when='@3.5:')
