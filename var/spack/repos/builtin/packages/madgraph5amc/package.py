@@ -26,7 +26,7 @@ class Madgraph5amc(Package):
     variant('ninja', default=False, description='Use external installation' +
             " of Ninja")
     variant('collier', default=False, description='Use external installation' +
-            'of Collier')
+            ' of Collier')
 
     depends_on('syscalc')
     depends_on('gosam-contrib', when='+ninja')
