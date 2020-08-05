@@ -128,8 +128,8 @@ def get_version():
         git = exe.which("git")
         if git:
             with fs.working_dir(spack.paths.prefix):
-                desc = git(
-                    "describe", "--tags", output=str, fail_on_error=False)
+                desc = git("describe", "--tags", "--match", "v*",
+                           output=str, error=os.devnull, fail_on_error=False)
 
             if git.returncode == 0:
                 match = re.match(r"v([^-]+)-([^-]+)-g([a-f\d]+)", desc)
