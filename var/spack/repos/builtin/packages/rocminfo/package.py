@@ -18,8 +18,8 @@ class Rocminfo(CMakePackage):
     version('3.5.0', sha256='1d113f06b7c9b60d0e92b2c12c0c704a565696867496fe7038e5dddd510567b7')
 
     depends_on('cmake@3:', type='build')
-    depends_on('hsakmt-roct@3.5.0:', type='build', when='@3.5.0:')
-    depends_on('hsa-rocr-dev@3.5.0:', type='build', when='@3.5.0:')
+    depends_on('hsakmt-roct@3.5.0', type='build', when='@3.5.0')
+    depends_on('hsa-rocr-dev@3.5.0', type='build', when='@3.5.0')
 
     def cmake_args(self):
         args = ['-DROCM_DIR={0}'.format(self.spec['hsa-rocr-dev'].prefix)]

@@ -24,8 +24,8 @@ class Rocgdb(AutotoolsPackage):
     depends_on('libunwind')
     depends_on('expat')
     depends_on('python')
-    depends_on('rocm-dbgapi@3.5:', type='link', when='@3.5:')
-    depends_on('comgr@3.5:', type='link', when='@3.5:')
+    depends_on('rocm-dbgapi@3.5.0', type='link', when='@3.5.0')
+    depends_on('comgr@3.5.0', type='link', when='@3.5.0')
     build_directory = 'spack-build'
 
     def configure_args(self):

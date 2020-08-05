@@ -29,11 +29,11 @@ class Rocfft(CMakePackage):
 
     depends_on('fftw-api@3', type='build', when='@3.5:')
     depends_on('cmake@3:', type='build')
-    depends_on('rocm-cmake@3.5:', type='build', when='@3.5:')
-    depends_on('hip@3.5:', type='build', when='@3.5:')
-    depends_on('comgr@3.5:', type='build', when='@3.5:')
-    depends_on('rocm-device-libs@3.5:', type='build', when='@3.5:')
-    depends_on('rocminfo@3.5:', type='build', when='@3.5:')
+    depends_on('rocm-cmake@3.5.0', type='build', when='@3.5.0')
+    depends_on('hip@3.5.0', type='build', when='@3.5.0')
+    depends_on('comgr@3.5.0', type='build', when='@3.5.0')
+    depends_on('rocm-device-libs@3.5.0', type='build', when='@3.5.0')
+    depends_on('rocminfo@3.5.0', type='build', when='@3.5.0')
 
     def setup_build_environment(self, build_env):
         build_env.unset('PERL5LIB')
