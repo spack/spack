@@ -27,9 +27,7 @@ class RocmDebugAgent(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = ['-DCMAKE_VERBOSE_MAKEFILE=1',
-                '-DROCM_DIR={}'.format(spec['hsa-rocr-dev'].prefix),
-                '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE',
+        args = ['-DROCM_DIR={}'.format(spec['hsa-rocr-dev'].prefix),
                 '-DCMAKE_PREFIX_PATH={}/include/hsa;{}/hsa/lib;\
                 {}/include;{}/lib,'.format(
                     spec['hsa-rocr-dev'].prefix,
