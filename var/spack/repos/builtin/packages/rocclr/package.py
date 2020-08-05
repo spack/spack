@@ -35,12 +35,6 @@ class Rocclr(CMakePackage):
              expand=True,
              destination='',
              placement='opencl-on-vdi')
-    build_directory = '../../rocclr_build'
-
-    @run_before('cmake')
-    def buildcleanup(self):
-        build_path = os.path.join(self.stage.path, '../rocclr_build')
-        shutil.rmtree(build_path, ignore_errors=True)
 
     def cmake_args(self):
         args = ['-DUSE_COMGR_LIBRARY=yes',
