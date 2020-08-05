@@ -236,6 +236,7 @@ class keyboard_input(object):
         """If termios was available, restore old settings."""
         if self.old_cfg:
             self._restore_default_terminal_settings()
+            atexit.unregister(self._restore_default_terminal_settings)
 
         # restore SIGSTP and SIGCONT handlers
         if self.old_handlers:
@@ -464,10 +465,12 @@ class log_output(object):
             )
             self.process.daemon = True  # must set before start()
             self.process.start()
-            os.close(read_fd)  # close in the parent process
 
         finally:
             pass
+            #if input_wrapper:
+            #    input_wrapper.close()
+            #read_wrapper.close()
 
         # Flush immediately before redirecting so that anything buffered
         # goes to the original stream
@@ -581,7 +584,7 @@ class log_output(object):
             sys.stdout.flush()
 
 
-def _writer_daemon(stdin, read, echo, log_file, control_pipe):
+def _writer_daemon(stdin_wrapper, read_wrapper, echo, log_file, control_pipe):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
     The daemon receives output from the parent process and writes it both
@@ -629,10 +632,12 @@ def _writer_daemon(stdin, read, echo, log_file, control_pipe):
     """
     # Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
-    in_pipe = os.fdopen(read._handle, 'r', 1)
+    in_pipe = os.fdopen(read_wrapper._handle, 'r', 1)
 
-    if stdin:
-        stdin = os.fdopen(stdin._handle)
+    if stdin_wrapper:
+        stdin = os.fdopen(stdin_wrapper._handle)
+    else:
+        stdin = None
 
     # list of streams to select from
     istreams = [in_pipe, stdin] if stdin else [in_pipe]
@@ -701,6 +706,8 @@ def _writer_daemon(stdin, read, echo, log_file, control_pipe):
         if isinstance(log_file, StringIO):
             control_pipe.send(log_file.getvalue())
         log_file.close()
+        read_wrapper.close()
+        stdin_wrapper.close()
 
     # send echo value back to the parent so it can be preserved.
     control_pipe.send(echo)
