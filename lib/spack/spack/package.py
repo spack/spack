@@ -1579,7 +1579,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     v_names.extend(['c', 'cxx'])
 
                 test_specs = [self.spec] + [spack.spec.Spec(v_name)
-                                            for v_name in v_names]
+                                            for v_name in sorted(v_names)]
                 for spec in test_specs:
                     # Fail gracefully if a virtual has no package/tests
                     try:
