@@ -17,3 +17,4 @@ class PyDatrie(PythonPackage):
     version('0.8', 'bdd5da6ba6a97e7cd96eef2e7441c8d2ef890d04ba42694a41c7dffa3aca680c')
 
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-cython', type=('build'), when='@0.8.2:')
