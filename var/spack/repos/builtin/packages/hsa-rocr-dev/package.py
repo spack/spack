@@ -26,13 +26,6 @@ class HsaRocrDev(CMakePackage):
     depends_on("cmake@3.5.2", type="build")
     depends_on('hsakmt-roct@3.5:', type=('link', 'run'), when="@3.5:")
 
-    root_cmakelists_dir = 'src'
+    patch('0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch', when='@3.5.0')
 
-    def cmake_args(self):
-        args = [
-            '-DCMAKE_BUILD_WITH_INSTALL_RPATH=1',
-            '-DCMAKE_VERBOSE_MAKEFILE=1',
-            '-DCMAKE_PREFIX_PATH={}'.format(self.spec['hsakmt-roct'].prefix),
-            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE'
-        ]
-        return args
+    root_cmakelists_dir = 'src'
