@@ -20,7 +20,7 @@ class RocmSmiLib(CMakePackage):
     version('3.5.0', sha256='a5d2ec3570d018b60524f0e589c4917f03d26578443f94bde27a170c7bb21e6e')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
 
     @run_after('install')
     def post_install(self):

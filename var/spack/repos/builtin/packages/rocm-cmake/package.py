@@ -20,7 +20,7 @@ class RocmCmake(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
 
     def cmake_args(self):
         args = ['-DCMAKE_VERBOSE_MAKEFILE=1',
