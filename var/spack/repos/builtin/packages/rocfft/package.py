@@ -50,8 +50,10 @@ class Rocfft(CMakePackage):
         version_group = re.search(r"clang version (\S+)", version)
         version_number = version_group.group(1)
 
+        archs = ",".join(self.spec.variants['amdgpu_target'].value)
+
         args = [
-            '-DCMAKE_CXX_FLAGS=--amdgpu-target={0}'.format(self.spec.variants['amdgpu_target'].value),
+            '-DCMAKE_CXX_FLAGS=--amdgpu-target={0}'.format(archs),
             '-DHIP_COMPILER=clang',
             '-DCMAKE_CXX_COMPILER={0}/bin/hipcc'.format(
                 self.spec['hip'].prefix),
