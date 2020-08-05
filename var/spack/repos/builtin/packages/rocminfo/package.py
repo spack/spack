@@ -22,5 +22,5 @@ class Rocminfo(CMakePackage):
     depends_on('hsa-rocr-dev@3.5.0:', type='build', when='@3.5.0:')
 
     def cmake_args(self):
-        args = ['-DROCM_DIR={}'.format(self.spec['hsa-rocr-dev'].prefix)]
+        args = ['-DROCM_DIR={0}'.format(self.spec['hsa-rocr-dev'].prefix)]
         return args

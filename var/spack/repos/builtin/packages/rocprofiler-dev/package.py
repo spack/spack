@@ -35,9 +35,9 @@ class RocprofilerDev(CMakePackage):
                      /include', 'test/CMakeLists.txt', string=True)
 
     def cmake_args(self):
-        args = ['-DPROF_API_HEADER_PATH={}/roctracer/inc/ext'.format(
+        args = ['-DPROF_API_HEADER_PATH={0}/roctracer/inc/ext'.format(
                 self.stage.source_path),
-                '-DROCM_ROOT_DIR:STRING={}/include'.format(
+                '-DROCM_ROOT_DIR:STRING={0}/include'.format(
                 self.spec['hsakmt-roct'].prefix)
                 ]
         return args
