@@ -11,7 +11,6 @@ import glob
 import itertools
 import os
 import sys
-import shutil
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
