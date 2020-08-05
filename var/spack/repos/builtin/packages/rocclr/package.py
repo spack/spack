@@ -5,8 +5,6 @@
 
 
 from spack import *
-import os
-import shutil
 
 
 class Rocclr(CMakePackage):
@@ -41,7 +39,8 @@ class Rocclr(CMakePackage):
         # the amdrocclr_staticTargets.cmake file is generated but not installed
         # and when we install it by hand, we have to fix the path to the static
         # library libamdrocclr_static.a from build dir to prefix lib dir.
-        cmakefile = join_path(self.build_directory, 'amdrocclr_staticTargets.cmake')
+        cmakefile = join_path(self.build_directory,
+                              'amdrocclr_staticTargets.cmake')
         filter_file(self.build_directory, self.prefix.lib, cmakefile)
         install(cmakefile, self.prefix.lib)
 
