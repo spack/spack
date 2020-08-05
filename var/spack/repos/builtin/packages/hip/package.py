@@ -37,9 +37,6 @@ class Hip(CMakePackage):
             '-DHIP_COMPILER=clang',
             '-DHIP_PLATFORM=rocclr',
             '-DHSA_PATH={}'.format(self.spec['hsa-rocr-dev'].prefix),
-            '-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE',
-            '-DCMAKE_SKIP_BUILD_RPATH=TRUE',
-            '-DLIBROCclr_STATIC_DIR={}/../rocclr_build'.
-            format(self.stage.path)
+            '-DLIBROCclr_STATIC_DIR={0}/lib'.format(self.spec['rocclr'].prefix)
         ]
         return args
