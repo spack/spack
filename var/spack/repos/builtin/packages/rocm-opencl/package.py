@@ -16,9 +16,9 @@ class RocmOpencl(CMakePackage):
 
     version('3.5.0', sha256='511b617d5192f2d4893603c1a02402b2ac9556e9806ff09dd2a91d398abf39a0')
     depends_on('cmake@3:', type='build')
-    depends_on('rocclr@3.5.0:', type='build', when='@3.5.0:')
-    depends_on('comgr@3.5.0:', type='build', when='@3.5.0:')
-    depends_on('mesa~llvm@18.3:', type='link', when='@3.5:')
+    depends_on('rocclr@3.5.0', type='build', when='@3.5.0')
+    depends_on('comgr@3.5.0', type='build', when='@3.5.0')
+    depends_on('mesa~llvm@18.3:', type='link')
 
     def flag_handler(self, name, flags):
         # The includes are messed up in ROCm 3.5.0:

@@ -22,9 +22,9 @@ class Atmi(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
     depends_on('cmake@3:', type='build')
-    depends_on('comgr@3.5:', type='build', when='@3.5:')
-    depends_on('hsa-rocr-dev@3.5:', type='build', when='@3.5:')
-    depends_on('libelf@0.8:', type='build', when='@3.5:')
+    depends_on('comgr@3.5.0', type='build', when='@3.5.0')
+    depends_on('hsa-rocr-dev@3.5.0', type='build', when='@3.5.0')
+    depends_on('libelf@0.8:', type='build')
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
