@@ -46,6 +46,8 @@ class Rocclr(CMakePackage):
         install(cmakefile, self.prefix.lib)
 
     def cmake_args(self):
-        args = ['-DUSE_COMGR_LIBRARY=yes',
-                '-DOPENCL_DIR={}/opencl-on-vdi'.format(self.stage.source_path)]
+        args = [
+            '-DUSE_COMGR_LIBRARY=yes',
+            '-DOPENCL_DIR={0}/opencl-on-vdi'.format(self.stage.source_path)
+        ]
         return args
