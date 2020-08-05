@@ -19,6 +19,8 @@ class Rocfft(CMakePackage):
     version('3.5.0', sha256='629f02cfecb7de5ad2517b6a8aac6ed4de60d3a9c620413c4d9db46081ac2c88')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('amdgpu_target', default='gfx701', multi=True, values=('gfx701', 'gfx801', 'gfx802', 'gfx803',
+                    'gfx900', 'gfx906', 'gfx908', 'gfx1010', 'gfx1011', 'gfx1012'))
 
     depends_on('fftw-api@3', type='build', when='@3.5:')
     depends_on('cmake@3.5.2', type='build')
@@ -49,6 +51,7 @@ class Rocfft(CMakePackage):
         version_number = version_group.group(1)
 
         args = [
+            '-DCMAKE_CXX_FLAGS=--amdgpu-target={0}'.format(self.spec.variants['amdgpu_target'].value),
             '-DHIP_COMPILER=clang',
             '-DCMAKE_CXX_COMPILER={0}/bin/hipcc'.format(
                 self.spec['hip'].prefix),
