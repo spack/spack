@@ -66,6 +66,8 @@ class Wonton(CMakePackage):
         options = []
         if '+mpi' in self.spec:
             options.append('-DWONTON_ENABLE_MPI=ON')
+        else:
+            options.append('-DWONTON_ENABLE_MPI=OFF')
 
         if '+lapacke' in self.spec:
             options.append('-DWONTON_ENABLE_LAPACKE=ON')
@@ -73,6 +75,8 @@ class Wonton(CMakePackage):
             options.append(
                 '-DBLAS_LIBRARIES=' + self.spec['blas'].libs.joined()
             )
+        else:
+            options.append('-DWONTON_ENABLE_LAPACKE=OFF')
 
         if '+thrust' in self.spec:
             options.append('-DWONTON_ENABLE_THRUST=ON')
@@ -90,6 +94,8 @@ class Wonton(CMakePackage):
                 options.append(
                     '-DTHRUST_DEVICE_BACKEND:STRING=THRUST_DEVICE_SYSTEM_OMP'
                 )
+        else:
+            options.append('-DWONTON_ENABLE_THRUST=OFF')
 
         if '+kokkos' in self.spec:
             options.append('-DWONTON_ENABLE_Kokkos=ON')
@@ -97,16 +103,25 @@ class Wonton(CMakePackage):
                 options.append('-DWONTON_ENABLE_Kokkos_CUDA=ON')
             elif '+openmp' in self.spec:
                 options.append('-DWONTON_ENABLE_Kokkos_OpenMP=ON')
+        else:
+            options.append('-DWONTON_ENABLE_Kokkos=OFF')
 
         if '+jali' in self.spec:
             options.append('-DWONTON_ENABLE_Jali=ON')
+        else:
+            options.append('-DWONTON_ENABLE_Jali=OFF')
 
         if '+flecsi' in self.spec:
             options.append('-DWONTON_ENABLE_FleCSI=ON')
+        else:
+            options.append('-DWONTON_ENABLE_FleCSI=OFF')
 
         # Unit test variant
         if self.run_tests:
             options.append('-DENABLE_UNIT_TESTS=ON')
             options.append('-DENABLE_APP_TESTS=ON')
+        else:
+            options.append('-DENABLE_UNIT_TESTS=OFF')
+            options.append('-DENABLE_APP_TESTS=OFF')
 
         return options
