@@ -36,6 +36,15 @@ class Rocclr(CMakePackage):
              destination='',
              placement='opencl-on-vdi')
 
+    @run_after('install')
+    def deploy_missing_files(self):
+        # the amdrocclr_staticTargets.cmake file is generated but not installed
+        # and when we install it by hand, we have to fix the path to the static
+        # library libamdrocclr_static.a from build dir to prefix lib dir.
+        cmakefile = join_path(self.build_directory, 'amdrocclr_staticTargets.cmake')
+        filter_file(self.build_directory, self.prefix.lib, cmakefile)
+        install(cmakefile, self.prefix.lib)
+
     def cmake_args(self):
         args = ['-DUSE_COMGR_LIBRARY=yes',
                 '-DOPENCL_DIR={}/opencl-on-vdi'.format(self.stage.source_path)]
