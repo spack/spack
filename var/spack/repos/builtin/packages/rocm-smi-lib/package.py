@@ -24,6 +24,7 @@ class RocmSmiLib(CMakePackage):
 
     @run_after('install')
     def post_install(self):
-        popen('cp -R {}/rocm_smi/lib {}'.format(self.prefix, self.prefix))
-        popen('cp -R {}/rocm_smi/include {}'.format(self.prefix, self.prefix))
-        popen('rm -R {}/rocm_smi'.format(self.prefix))
+        popen('cp -R {0}/rocm_smi/lib {1}'.format(self.prefix, self.prefix))
+        popen('cp -R {0}/rocm_smi/include {1}'.format(self.prefix,
+                                                      self.prefix))
+        popen('rm -R {0}/rocm_smi'.format(self.prefix))

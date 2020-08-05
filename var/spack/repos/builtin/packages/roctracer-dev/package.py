@@ -36,9 +36,9 @@ class RoctracerDev(CMakePackage):
 
     def cmake_args(self):
         args = ['-DHIP_VDI=1',
-                '-DCMAKE_MODULE_PATH={}/cmake_modules'.format(
+                '-DCMAKE_MODULE_PATH={0}/cmake_modules'.format(
                     self.stage.source_path),
-                '-DHSA_RUNTIME_HSA_INC_PATH={}/include'.format(
+                '-DHSA_RUNTIME_HSA_INC_PATH={0}/include'.format(
                     self.spec['hsa-rocr-dev'].prefix)
                 ]
         return args
