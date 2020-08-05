@@ -26,11 +26,3 @@ class Comgr(CMakePackage):
     depends_on('rocm-device-libs@3.5:', type='build', when='@3.5:')
 
     root_cmakelists_dir = 'lib/comgr'
-
-    def cmake_args(self):
-        args = [
-            '-DCMAKE_VERBOSE_MAKEFILE=1',
-            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE'
-        ]
-
-        return args
