@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import shutil
 import sys
 
+import llnl.util.tty as tty
 from spack import *
 
 
@@ -391,10 +393,35 @@ HDF5 version {version} {version}
             self.run_test(exe, [option], spec_vers_str, None, installed=True,
                           purpose=reason, skip_missing=True)
 
+    def _test_example(self):
+        """This test performs copy, dump, and diff on an example hdf5 file."""
+        h5_file = os.path.join(self.test_dir, 'data', 'spack.h5')
+
+        reason = 'test: ensure h5dump produces expected output'
+        dump_file = os.path.join(self.test_dir, 'data', 'dump.out')
+        output = ''
+        with open(dump_file) as fd:
+            output == fd.read()
+        self.run_test('h5dump', [h5_file], output, None, installed=True,
+                      purpose=reason, skip_missing=True, work_dir='.')
+
+        reason = 'test: ensure h5copy runs'
+        options = ['-i', h5_file, '-s', 'Spack', '-o', 'test.h5', '-d', 'Spack']
+        self.run_test('h5copy', options, '', None, installed=True,
+                      purpose=reason, skip_missing=True, work_dir='.')
+
+        reason = 'test: ensure h5diff shows no differences in orig and copy'
+        options = [h5_file, 'test.h5']
+        self.run_test('h5diff', options, '', None, installed=True,
+                      purpose=reason, skip_missing=True, work_dir='.')
+
     def test(self):
         """Perform smoke tests on the installed package."""
         # Simple version check tests on known binaries
         self._test_check_versions()
+
+        # Run sequence of commands on an hdf5 file
+        self._test_example()
 
         # Run existing install check
         self.check_install()
