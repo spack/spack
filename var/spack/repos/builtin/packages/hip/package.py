@@ -32,9 +32,6 @@ class Hip(CMakePackage):
             'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"',
             'hip-config.cmake.in', string=True)
 
-    def setup_build_environment(self, build_env):
-        build_env.unset('PERL5LIB')
-
     def cmake_args(self):
         args = [
             '-DHIP_COMPILER=clang',
