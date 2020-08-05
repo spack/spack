@@ -19,7 +19,7 @@ class RocmDebugAgent(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
     depends_on('hsa-rocr-dev@3.5:', type='link', when='@3.5:')
     depends_on('hsakmt-roct@3.5:', type='link', when='@3.5:')
     depends_on("elfutils", type='link', when='@3.5:')

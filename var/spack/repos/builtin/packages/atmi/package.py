@@ -21,7 +21,7 @@ class Atmi(CMakePackage):
     version('3.5.0', sha256='3fb57d2e583fab82bd0582d0c2bccff059ca91122c18ac49a7770a8bb041a37b')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
     depends_on('comgr@3.5:', type='build', when='@3.5:')
     depends_on('hsa-rocr-dev@3.5:', type='build', when='@3.5:')
     depends_on('libelf@0.8:', type='build', when='@3.5:')

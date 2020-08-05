@@ -23,7 +23,7 @@ class Rocfft(CMakePackage):
                     'gfx900', 'gfx906', 'gfx908', 'gfx1010', 'gfx1011', 'gfx1012'))
 
     depends_on('fftw-api@3', type='build', when='@3.5:')
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
     depends_on('rocm-cmake@3.5:', type='build', when='@3.5:')
     depends_on('hip@3.5:', type='build', when='@3.5:')
     depends_on('comgr@3.5:', type='build', when='@3.5:')

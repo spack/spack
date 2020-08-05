@@ -19,7 +19,7 @@ class RoctracerDev(CMakePackage):
 
     version('3.5.0', sha256='7af5326c9ca695642b4265232ec12864a61fd6b6056aa7c4ecd9e19c817f209e')
 
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
     depends_on('hsakmt-roct@3.5.0:', type='build', when='@3.5.0:')
     depends_on('hsa-rocr-dev@3.5.0:', type='build', when='@3.5.0:')
     depends_on('rocminfo@3.5.0:', type='build', when='@3.5.0:')

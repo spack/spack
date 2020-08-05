@@ -19,7 +19,7 @@ class Hip(CMakePackage):
 
     version('3.5.0', sha256='ae8384362986b392288181bcfbe5e3a0ec91af4320c189bd83c844ed384161b3')
 
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
     depends_on('rocclr@3.5.0:',  when='@3.5.0:')
     depends_on('hsakmt-roct@3.5.0:', type='build', when='@3.5.0:')
     depends_on('hsa-rocr-dev@3.5.0:', type='link', when='@3.5.0:')

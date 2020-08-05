@@ -21,7 +21,7 @@ class Rocclr(CMakePackage):
 
     version('3.5.0', sha256='87c1ee9f02b8aa487b628c543f058198767c474cec3d21700596a73c028959e1')
 
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
     depends_on('hsakmt-roct@3.5.0:', type='build', when='@3.5:')
     depends_on('hsa-rocr-dev@3.5.0:', type='build', when='@3.5:')
     depends_on('comgr@3.5.0:', type='build', when='@3.5:')

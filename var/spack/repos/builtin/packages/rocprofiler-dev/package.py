@@ -17,7 +17,7 @@ class RocprofilerDev(CMakePackage):
 
     version('3.5.0', sha256='c42548dd467b7138be94ad68c715254eb56a9d3b670ccf993c43cd4d43659937')
 
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
     depends_on('hsakmt-roct@3.5.0:', type='build', when='@3.5.0:')
     depends_on('hsa-rocr-dev@3.5.0:', type='link', when='@3.5.0:')
     depends_on('rocminfo@3.5.0:', type='build', when='@3.5.0:')
