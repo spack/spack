@@ -11,7 +11,6 @@ class PyFenicsDolfinx(PythonPackage):
     environment"""
 
     homepage = "https://github.com/FEniCS/dolfinx"
-    url = "https://github.com/FEniCS/dolfinx/archive/master.zip"
     git = "https://github.com/FEniCS/dolfinx.git"
     maintainers = ["js947", "chrisrichardson"]
 
