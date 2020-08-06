@@ -708,6 +708,8 @@ EOF
     log "reindexing software"
     spack reindex
 
+    setup_mirror "${what}"
+
     log "starting deployment"
     install_start=$(date "+%Y-%m-%d %H:%M:%S")
     rm -f "${HOME}/"stack*.xml
@@ -718,6 +720,7 @@ EOF
 <testsuites>
 </testsuites>
 EOF
+
     populate_build_cache "${install_start}"
 
     #log "installed specs"
