@@ -32,6 +32,8 @@ class Likwid(Package):
     patch('https://github.com/RRZE-HPC/likwid/commit/e0332ace8fe8ca7dcd4b4477a25e37944f173a5c.patch', sha256='c3b8f939a46b425665577ce764d4fba080a23cab5999c53db71655fd54d7e0b1', when='@5.0.1')
     patch('https://github.com/RRZE-HPC/likwid/commit/d2d0ef333b5e0997d7c80fc6ac1a473b5e47d084.patch', sha256='636cbf40669261fdb36379d67253be2b731cfa7b6d610d232767d72fbdf08bc0', when='@4.3.4')
 
+    variant('fortran', default=True, description='with fortran interface')
+
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
     # The reason is that the internal hwloc is patched to contain extra
     # functionality and functions are prefixed with "likwid_".
@@ -95,6 +97,20 @@ class Likwid(Package):
         filter_file('^BUILDDAEMON .*',
                     'BUILDDAEMON = false',
                     'config.mk')
+
+        if '+fortran' in self.spec:
+            filter_file('^FORTRAN_INTERFACE .*',
+                        'FORTRAN_INTERFACE = true',
+                        'config.mk')
+            if self.compiler.name == 'gcc':
+                filter_file('ifort', 'gfortran',
+                            join_path('make', 'include_GCC.mk'))
+                filter_file('-module', '-I', join_path('make',
+                                                       'include_GCC.mk'))
+        else:
+            filter_file('^FORTRAN_INTERFACE .*',
+                        'FORTRAN_INTERFACE = false',
+                        'config.mk')
 
         if spec.satisfies('^lua'):
             filter_file('^#LUA_INCLUDE_DIR.*',

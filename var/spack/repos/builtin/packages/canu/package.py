@@ -19,8 +19,10 @@ class Canu(MakefilePackage):
     version('1.5', sha256='06e2c6d7b9f6d325b3b468e9c1a5de65e4689aed41154f2cee5ccd2cef0d5cf6')
 
     depends_on('gnuplot', type='run')
-    depends_on('jdk', type='run')
+    depends_on('java', type='run')
     depends_on('perl', type='run')
+    # build fail when using boost@1.71.0:1.73.0 by canu@1.8:2.0
+    depends_on('boost@:1.70.0')
 
     build_directory = 'src'
     build_targets = ['clean']
