@@ -48,13 +48,4 @@ class FenicsDolfinx(CMakePackage):
             "-DPython3_ROOT_DIR=%s" % self.spec['python'].home,
             "-DPython3_FIND_STRATEGY=LOCATION",
         ]
-
-        if "platform=darwin" in self.spec:
-            args += [
-                "-DCMAKE_SKIP_BUILD_RPATH=FALSE",
-                "-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE",
-                "-DCMAKE_INSTALL_RPATH=",
-                "-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE",
-            ]
-
         return args
