@@ -855,9 +855,9 @@ add something like the following to your ``packages`` configuration:
 For `EGL <https://www.khronos.org/egl>` support, or for certain modern drivers,
 OpenGL calls are dispatched dynamically at run time to the hardware graphics
 implementation.  This dynamic dispatch is performed using `libglvnd
-<https://github.com/NVIDIA/libglvnd>`.  In this mode, the graphics library
-(e.g.: opengl) must be built to work with libglvnd.  Applications then link
-against libglvnd instead of the underlying implementation.  Environment
+<https://gitlab.freedesktop.org/glvnd/libglvnd>`.  In this mode, the graphics
+library (e.g.: opengl) must be built to work with libglvnd.  Applications then
+link against libglvnd instead of the underlying implementation.  Environment
 variables set at run time govern the process by which libglvnd loads the
 underlying implementation and dispatches calls to it.  See `this
 <https://github.com/NVIDIA/libglvnd/issues/177#issuecomment-496562769>` comment
@@ -894,7 +894,7 @@ set the necessary environment variables.
             variants:+glx+egl
         all:
             providers:
-                glvnd-be-gl: [opengl+gl~glvnd]
+                glvnd-be-gl: [opengl~glvnd]
                 glvnd-be-glx: [opengl+glx~glvnd]
                 glvnd-be-egl: [opengl+egl~glvnd]
                 gl: [libglvnd-fe]
