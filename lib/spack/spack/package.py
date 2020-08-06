@@ -1597,7 +1597,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                             # with this package in place of its `self` object
                             test_fn = spec_pkg.__class__.test
                             if not isinstance(test_fn, types.FunctionType):
-                                test_fn = test_method.__func__
+                                test_fn = test_fn.__func__
 
                             # Run the tests
                             test_fn(self)
