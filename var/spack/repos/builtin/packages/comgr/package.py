@@ -24,5 +24,9 @@ class Comgr(CMakePackage):
     depends_on('rocm-cmake@3.5.0', type='build', when='@3.5.0')
     depends_on('llvm-amdgpu@3.5.0', type='build', when='@3.5.0')
     depends_on('rocm-device-libs@3.5.0', type='build', when='@3.5.0')
+    depends_on('zlib', type='link')
+    depends_on('z3', type='link')
+    depends_on('ncurses', type='link')
+
 
     root_cmakelists_dir = 'lib/comgr'
