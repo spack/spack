@@ -412,7 +412,8 @@ class Trilinos(CMakePackage, CudaPackage):
 
         options.extend([
             define('Trilinos_VERBOSE_CONFIGURE', False),
-            define('Trilinos_ENABLE_TESTS', False),
+            define('Trilinos_ENABLE_TESTS', (
+                True if self.run_tests else False)),
             define('Trilinos_ENABLE_EXAMPLES', False),
             define('Trilinos_ENABLE_CXX11', True),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
