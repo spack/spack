@@ -64,13 +64,15 @@ class Gromacs(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
-    variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
+    variant('rdtscp', default=True, 
+            description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version'
             ' of libgromacs and/or the mdrun program')
-    variant('openmp', default=True, description='Enables OpenMP at configure time')
+    variant('openmp', default=True, 
+            description='Enables OpenMP at configure time')
     variant('double_precision', default=False,
-            description='sets GMX_RELAXED_DOUBLE_PRECISION for Fujitsu PRIMEHPC')
+            description='GMX_RELAXED_DOUBLE_PRECISION for Fujitsu PRIMEHPC')
     variant('hwloc', default=True,
             description='Use the hwloc portable hardware locality library')
     variant('fft', default='fftw3', description="The FFT library to use",
