@@ -33,6 +33,11 @@ class Libglvnd(AutotoolsPackage):
 
     conflicts('platform=darwin', msg='libglvnd is linux specific')
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('m4', type='build')
+    depends_on('libtool', type='build')
+
     depends_on('libxext')
     depends_on('libx11')
     depends_on('glproto')
