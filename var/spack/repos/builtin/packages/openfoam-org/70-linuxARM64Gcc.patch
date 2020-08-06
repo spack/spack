@@ -1,0 +1,123 @@
+diff -uNr OpenFOAM-7/etc/config.sh/settings OpenFOAM-7-new/etc/config.sh/settings
+--- OpenFOAM-7/etc/config.sh/settings	2020-07-27 08:37:02.560000000 +0000
++++ OpenFOAM-7-new/etc/config.sh/settings	2020-07-29 07:36:05.140000000 +0000
+@@ -105,6 +105,17 @@
+         export WM_LDFLAGS='-m64'
+         ;;
+ 
++
++    aarch64)
++        WM_ARCH=linuxARM64
++        export WM_COMPILER_LIB_ARCH=64
++        export WM_CC='gcc'
++        export WM_CXX='g++'
++        export WM_CFLAGS='-fPIC'
++        export WM_CXXFLAGS='-fPIC'
++        export WM_LDFLAGS=
++        ;;
++
+     *)
+         echo Unknown processor type `uname -m` for Linux 1>&2
+         ;;
+diff -uNr OpenFOAM-7/wmake/rules/linuxARM64Gcc/c OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/c
+--- OpenFOAM-7/wmake/rules/linuxARM64Gcc/c	1970-01-01 00:00:00.000000000 +0000
++++ OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/c	2020-07-29 02:42:21.460000000 +0000
+@@ -0,0 +1,16 @@
++SUFFIXES += .c
++
++cWARN        = -Wall
++
++cc          = gcc
++
++include $(DEFAULT_RULES)/c$(WM_COMPILE_OPTION)
++
++cFLAGS      = $(GFLAGS) $(cWARN) $(cOPT) $(cDBUG) $(LIB_HEADER_DIRS) -fPIC
++
++ctoo        = $(WM_SCHEDULER) $(cc) $(cFLAGS) -c $< -o $@
++
++LINK_LIBS   = $(cDBUG)
++
++LINKLIBSO   = $(cc) -fuse-ld=bfd -shared
++LINKEXE     = $(cc) -fuse-ld=bfd -Xlinker --add-needed -Xlinker -z -Xlinker nodefs
+diff -uNr OpenFOAM-7/wmake/rules/linuxARM64Gcc/c++ OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/c++
+--- OpenFOAM-7/wmake/rules/linuxARM64Gcc/c++	1970-01-01 00:00:00.000000000 +0000
++++ OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/c++	2020-07-29 02:42:21.470000000 +0000
+@@ -0,0 +1,25 @@
++SUFFIXES += .C
++
++c++WARN     = -Wall -Wextra -Wold-style-cast -Wnon-virtual-dtor -Wno-unused-parameter \
++              -Wno-invalid-offsetof -Wno-attributes
++
++# Suppress some warnings for flex++ and CGAL
++c++LESSWARN = -Wno-old-style-cast -Wno-unused-local-typedefs -Wno-array-bounds
++
++CC          = g++ -std=c++11
++
++include $(DEFAULT_RULES)/c++$(WM_COMPILE_OPTION)
++
++ptFLAGS     = -DNoRepository -ftemplate-depth-100
++
++c++FLAGS    = $(GFLAGS) $(c++WARN) $(c++OPT) $(c++DBUG) $(ptFLAGS) $(LIB_HEADER_DIRS) -fPIC
++
++Ctoo        = $(WM_SCHEDULER) $(CC) $(c++FLAGS) -c $< -o $@
++cxxtoo      = $(Ctoo)
++cctoo       = $(Ctoo)
++cpptoo      = $(Ctoo)
++
++LINK_LIBS   = $(c++DBUG)
++
++LINKLIBSO   = $(CC) $(c++FLAGS) -fuse-ld=bfd -shared -Xlinker --add-needed -Xlinker --no-as-needed
++LINKEXE     = $(CC) $(c++FLAGS) -fuse-ld=bfd -Xlinker --add-needed -Xlinker --no-as-needed
+diff -uNr OpenFOAM-7/wmake/rules/linuxARM64Gcc/c++Debug OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/c++Debug
+--- OpenFOAM-7/wmake/rules/linuxARM64Gcc/c++Debug	1970-01-01 00:00:00.000000000 +0000
++++ OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/c++Debug	2020-07-29 02:42:21.470000000 +0000
+@@ -0,0 +1,2 @@
++c++DBUG    = -ggdb3 -DFULLDEBUG
++c++OPT      = -O0 -fdefault-inline
+diff -uNr OpenFOAM-7/wmake/rules/linuxARM64Gcc/c++Opt OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/c++Opt
+--- OpenFOAM-7/wmake/rules/linuxARM64Gcc/c++Opt	1970-01-01 00:00:00.000000000 +0000
++++ OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/c++Opt	2020-07-29 02:42:21.470000000 +0000
+@@ -0,0 +1,5 @@
++c++DBUG     =
++#c++OPT      = -O3 -floop-optimize -falign-loops -falign-labels -falign-functions -falign-jumps -fprefetch-loop-arrays -mcpu=cortex-a9 -mfpu=vfpv3-d16 -mfloat-abi=hard
++c++OPT      = -O3 -floop-optimize -falign-loops -falign-labels -falign-functions -falign-jumps -fprefetch-loop-arrays
++
++ROUNDING_MATH = -frounding-math
+diff -uNr OpenFOAM-7/wmake/rules/linuxARM64Gcc/c++Prof OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/c++Prof
+--- OpenFOAM-7/wmake/rules/linuxARM64Gcc/c++Prof	1970-01-01 00:00:00.000000000 +0000
++++ OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/c++Prof	2020-07-29 02:42:21.470000000 +0000
+@@ -0,0 +1,2 @@
++c++DBUG    = -pg
++c++OPT     = -O2
+diff -uNr OpenFOAM-7/wmake/rules/linuxARM64Gcc/cDebug OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/cDebug
+--- OpenFOAM-7/wmake/rules/linuxARM64Gcc/cDebug	1970-01-01 00:00:00.000000000 +0000
++++ OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/cDebug	2020-07-29 02:42:21.460000000 +0000
+@@ -0,0 +1,2 @@
++cDBUG       = -ggdb -DFULLDEBUG
++cOPT        = -O1 -fdefault-inline -finline-functions
+diff -uNr OpenFOAM-7/wmake/rules/linuxARM64Gcc/cOpt OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/cOpt
+--- OpenFOAM-7/wmake/rules/linuxARM64Gcc/cOpt	1970-01-01 00:00:00.000000000 +0000
++++ OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/cOpt	2020-07-29 02:42:21.470000000 +0000
+@@ -0,0 +1,3 @@
++cDBUG       =
++#cOPT        = -O3 -floop-optimize -falign-loops -falign-labels -falign-functions -falign-jumps -fprefetch-loop-arrays -mcpu=cortex-a9 -mfpu=vfpv3-d16 -mfloat-abi=hard
++cOPT        = -O3 -floop-optimize -falign-loops -falign-labels -falign-functions -falign-jumps -fprefetch-loop-arrays
+diff -uNr OpenFOAM-7/wmake/rules/linuxARM64Gcc/cProf OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/cProf
+--- OpenFOAM-7/wmake/rules/linuxARM64Gcc/cProf	1970-01-01 00:00:00.000000000 +0000
++++ OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/cProf	2020-07-29 02:42:21.470000000 +0000
+@@ -0,0 +1,2 @@
++cDBUG       = -pg
++cOPT        = -O2
+diff -uNr OpenFOAM-7/wmake/rules/linuxARM64Gcc/general OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/general
+--- OpenFOAM-7/wmake/rules/linuxARM64Gcc/general	1970-01-01 00:00:00.000000000 +0000
++++ OpenFOAM-7-new/wmake/rules/linuxARM64Gcc/general	2020-07-29 02:42:21.460000000 +0000
+@@ -0,0 +1,9 @@
++CPP        = cpp -traditional-cpp $(GFLAGS)
++LD         = ld
++
++PROJECT_LIBS = -l$(WM_PROJECT) -ldl
++
++include $(GENERAL_RULES)/standard
++
++include $(DEFAULT_RULES)/c
++include $(DEFAULT_RULES)/c++

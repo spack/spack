@@ -106,6 +106,7 @@ class OpenfoamOrg(Package):
     patch('41-etc.patch', when='@4.1')
     patch('41-site.patch', when='@4.1:')
     patch('240-etc.patch', when='@2.4.0')
+    patch('70-linuxARM64Gcc.patch', sha256='56ceca7f1cf1bf005b91a4640305edc6d21a23ea0f48b37caab080c5f7f14906', when='@7 target=aarch64:')
 
     # The openfoam architecture, compiler information etc
     _foam_arch = None
