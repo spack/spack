@@ -64,12 +64,12 @@ class Gromacs(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
-    variant('rdtscp', default=True, 
+    variant('rdtscp', default=True,
             description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version'
             ' of libgromacs and/or the mdrun program')
-    variant('openmp', default=True, 
+    variant('openmp', default=True,
             description='Enables OpenMP at configure time')
     variant('double_precision', default=False,
             description='GMX_RELAXED_DOUBLE_PRECISION for Fujitsu PRIMEHPC')
