@@ -146,7 +146,7 @@ class Executable(object):
 
         quoted_args = [arg for arg in args if re.search(r'^"|^\'|"$|\'$', arg)]
         if quoted_args:
-            tty.debug(
+            tty.warn(
                 "Quotes in command arguments can confuse scripts like"
                 " configure.",
                 "The following arguments may cause problems when executed:",
