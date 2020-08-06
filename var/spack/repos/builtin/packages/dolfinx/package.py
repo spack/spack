@@ -32,7 +32,7 @@ class Dolfinx(CMakePackage):
     depends_on("parmetis", when="+parmetis")
     depends_on("slepc", when="+slepc")
 
-    depends_on("py-ffcx", type=["build", "run"])
+    depends_on("py-fenics-ffcx", type=["build", "run"])
 
     root_cmakelists_dir = "cpp"
 

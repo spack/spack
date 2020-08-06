@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyFfcx(PythonPackage):
+class PyFenicsFfcx(PythonPackage):
     """Next generation FEniCS Form Compiler"""
 
     homepage = "https://github.com/FEniCS/ffcx"
