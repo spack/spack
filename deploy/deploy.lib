@@ -14,10 +14,10 @@ BASE_GCC_VERSION=${DEFAULT_BASE_GCC_VERSION:-9.3.0}
 BASE_ARCHITECTURE=${DEFAULT_BASE_ARCHITECTURE:-linux-rhel7-x86_64}
 
 # A list of stages in the order they will be built
-stages="compilers tools external-libraries libraries applications"
+stages="compilers externals libraries applications"
 
 # A list of all stage names ever used, to be used for module creation
-historic_stages="compilers tools external-libraries serial-libraries parallel-libraries libraries applications"
+historic_stages="compilers tools externals external-libraries serial-libraries parallel-libraries libraries applications"
 
 # Definitions for the installation spec generation. For every stage
 # mentioned above, this should be a list of filenames *without* extension
