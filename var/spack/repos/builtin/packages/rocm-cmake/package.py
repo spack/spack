@@ -23,7 +23,4 @@ class RocmCmake(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     def cmake_args(self):
-        args = ['-DCMAKE_VERBOSE_MAKEFILE=1',
-                '-DROCM_DISABLE_LDCONFIG=ON'
-                ]
-        return args
+        return ['-DROCM_DISABLE_LDCONFIG=ON']
