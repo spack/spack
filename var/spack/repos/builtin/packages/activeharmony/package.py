@@ -18,8 +18,10 @@ class Activeharmony(MakefilePackage):
 
     patch('fix_logical_bug_in_slave_list_parsing.patch', sha256='3e000616f84de80b262efcae7559d65eed0efcd53e915580dab63b0ffbbb8bf2', when='@4.6.0')
 
-    def build(self, spec, prefix):
-        make("CFLAGS=-O3")
+    cflags = ['-O3', '-fPIC']
+
+    def setup_build_environment(self, spack_env):
+        spack_env.set('CFLAGS', ' '.join(self.cflags))
 
     @when('@:4.5')
     def install(self, spec, prefix):
