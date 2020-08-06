@@ -59,6 +59,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     extendable = True
 
     depends_on('gdbm')
+    depends_on('berkeley-db')
 
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:

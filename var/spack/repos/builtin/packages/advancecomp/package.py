@@ -22,3 +22,4 @@ class Advancecomp(AutotoolsPackage):
     depends_on('automake',  type='build')
     depends_on('libtool',   type='build')
     depends_on('m4',        type='build')
+    depends_on('zlib',      type='link')
