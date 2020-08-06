@@ -308,8 +308,8 @@ class ProviderIndexer(Indexer):
         self.index = spack.provider_index.ProviderIndex.from_json(stream)
 
     def update(self, pkg_fullname):
-        shortname = pkg_fullname.split('.')[-1]
-        if spack.spec.Spec.is_virtual(shortname):
+        name = pkg_fullname.split('.')[-1]
+        if spack.repo.path.is_virtual(name, use_index=False):
             return
         self.index.remove_provider(pkg_fullname)
         self.index.update(pkg_fullname)
@@ -678,9 +678,16 @@ class RepoPath(object):
         """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
-    def is_virtual(self, pkg_name):
-        """True if the package with this name is virtual, False otherwise."""
-        return pkg_name in self.provider_index
+    def is_virtual(self, pkg_name, use_index=True):
+        """True if the package with this name is virtual, False otherwise.
+
+        Set `use_index` False when calling from a code block that could
+        be run during the computation of the provider index."""
+        if use_index:
+            return pkg_name and pkg_name in self.provider_index
+        else:
+            return pkg_name and (not self.exists(pkg_name) or
+                                 self.get_pkg_class(pkg_name).virtual)
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
@@ -1029,9 +1036,13 @@ class Repo(object):
         """Time a package file in this repo was last updated."""
         return self._pkg_checker.last_mtime()
 
-    def is_virtual(self, pkg_name):
+    def is_virtual(self, pkg_name, use_index=True):
         """True if the package with this name is virtual, False otherwise."""
-        return pkg_name in self.provider_index
+        if use_index:
+            return pkg_name and pkg_name in self.provider_index
+        else:
+            return pkg_name and (not self.exists(pkg_name) or
+                                 self.get_pkg_class(pkg_name).virtual)
 
     def _get_pkg_module(self, pkg_name):
         """Create a module for a particular package.

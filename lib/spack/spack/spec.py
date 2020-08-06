@@ -943,7 +943,7 @@ class SpecBuildInterface(lang.ObjectWrapper):
             'QueryState', ['name', 'extra_parameters', 'isvirtual']
         )
 
-        is_virtual = Spec.is_virtual(name)
+        is_virtual = spack.repo.path.is_virtual(name)
         self.last_query = QueryState(
             name=name,
             extra_parameters=query_parameters,
