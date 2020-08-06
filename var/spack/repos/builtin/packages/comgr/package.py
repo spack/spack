@@ -28,5 +28,4 @@ class Comgr(CMakePackage):
     depends_on('z3', type='link')
     depends_on('ncurses', type='link')
 
-
     root_cmakelists_dir = 'lib/comgr'
