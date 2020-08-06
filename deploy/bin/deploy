@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
-from multiprocessing import get_context
+from multiprocessing import Pool
 from subprocess import check_call
 from tempfile import NamedTemporaryFile
 import json
@@ -34,9 +34,9 @@ check_call(["concretize", "-e", args.env, args.specfile, installfile.name, args.
 with installfile as fd:
     specs = json.load(fd)
 
-with get_context("spawn").Pool(processes=args.processes)  as piscine:
-    success = all(piscine.map(install, [(i, s, args.env) for i, s in enumerate(specs.keys())]))
-    piscine.close()
-    piscine.join()
+piscine = Pool(processes=args.processes):
+success = all(piscine.map(install, [(i, s, args.env) for i, s in enumerate(specs.keys())]))
+piscine.close()
+piscine.join()
 
 sys.exit(success)
