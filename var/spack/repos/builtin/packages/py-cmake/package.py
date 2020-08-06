@@ -14,5 +14,5 @@ class PyCmake(PythonPackage):
 
     version('3.18.0', sha256='52b98c5ee70b5fa30a8623e96482227e065292f78794eb085fdf0fecb204b79b')
 
-    depends_on('cmake')
+    depends_on('cmake@3.18.0', when='@3.18.0')
     depends_on('py-scikit-build')
