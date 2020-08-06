@@ -10,9 +10,7 @@ class PyFenicsDijitso(PythonPackage):
     """A Python module for distributed just-in-time shared library building"""
 
     homepage = "https://bitbucket.org/fenics-project/dijitso"
-    url = (
-        "https://bitbucket.org/fenics-project/dijitso/downloads/dijitso-2018.1.0.tar.gz"
-    )
+    url = "https://bitbucket.org/fenics-project/dijitso/downloads/dijitso-2018.1.0.tar.gz"
     git = "https://bitbucket.org/fenics-project/dijitso.git"
     maintainers = ["js947", "chrisrichardson"]
 
