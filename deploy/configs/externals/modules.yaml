@@ -27,11 +27,31 @@ modules:
     verbose: True
     hash_length: 0
     whitelist:
+      - arm-forge
+      - blender
+      - cmake
       - cuda
       - cudnn
+      - darshan-runtime
+      - darshan-util
+      - doxygen
+      - emacs
+      - environment-modules
+      - ffmpeg
+      - gdb
+      - git
+      - graphviz
+      - hpctoolkit
+      - hpcviewer
+      - hpe-mpi
+      - intel-mpi
+      - ispc
       - julia
+      - mvapich2
       - python
       - snakemake
+      - stat
+      - valgrind
       - virtualgl
     blacklist:
       - '%gcc'

@@ -60,8 +60,7 @@ def post_process() {
 
 def deployment_stages() {
     return ['compilers',
-            'tools',
-            'external-libraries',
+            'externals',
             'libraries',
             'applications']
 }
@@ -215,44 +214,23 @@ pipeline {
             }
         }
 
-        stage('Tools') {
+        stage('External Software') {
             when {
                 expression {
-                    return 'tools' in run_stages()
+                    return 'externals' in run_stages()
                 }
             }
 
             steps {
                 dir("${BASEDIR}") {
-                    sh "./deploy.sh tools"
+                    sh "./deploy.sh externals"
                 }
             }
 
             post {
                 always {
-                    archiveArtifacts artifacts: "stacks/tools/*.xml"
-                    junit testResults: "stacks/tools/*.xml", allowEmptyResults: true
-                }
-            }
-        }
-
-        stage('External Libraries') {
-            when {
-                expression {
-                    return 'external-libraries' in run_stages()
-                }
-            }
-
-            steps {
-                dir("${BASEDIR}") {
-                    sh "./deploy.sh external-libraries"
-                }
-            }
-
-            post {
-                always {
-                    archiveArtifacts artifacts: "stacks/external-libraries/*.xml"
-                    junit testResults: "stacks/external-libraries/*.xml", allowEmptyResults: true
+                    archiveArtifacts artifacts: "stacks/externals/*.xml"
+                    junit testResults: "stacks/externals/*.xml", allowEmptyResults: true
                 }
             }
         }

@@ -1,0 +1,69 @@
+spack:
+  packages:
+    all:
+      compiler: [gcc@9.3.0]
+      providers:
+        mpi: [hpe-mpi@2.21]
+        lapack: [intel-mkl@2019.3.199]
+    python:
+      version: [3.8.3]
+    timemory:
+      variants: +mpi~cuda~cupti+caliper~gperftools~python
+  specs:
+    # Formerly "tools"
+    - arm-forge@20.0.3-Redhat-7.0-x86_64
+    - blender
+    - cmake@3.15.3
+    - darshan-runtime
+    - darshan-util
+    - doxygen@1.8.15
+    - emacs@26.1
+    - environment-modules@4.5.1
+    - ffmpeg
+    - gdb~python@8.2
+    - git@2.18.0
+    - graphviz@2.42.2
+    - hpctoolkit@2019.08.14
+    - hpcviewer@2020.05
+    - hpe-mpi@2.21
+    - intel-mpi@2018.1.163
+    - ispc@1.10.0
+    - 'mvapich2@2.3 fabrics=mrail process_managers=slurm file_systems=gpfs'
+    - stat@develop
+    - valgrind~mpi@3.15.0
+    # Formerly "external-libraries"
+    - boost~mpi@1.73.0
+    - bzip2@1.0.6
+    - cgal
+    - cuda@9.0.176
+    - cuda@9.2.88
+    - cuda@10.1.243
+    - cudnn@7.3.0.29-9.0-linux-x64
+    - glew
+    - gmsh+metis~mpi+oce+openmp+shared@4.4.1
+    - hdf5~mpi@1.10.5
+    - intel-mkl@2019.3.199
+    - jdk@1.8.0_131-b11
+    - julia
+    - libjpeg
+    - libjpeg-turbo
+    - libxml2
+    - libxslt
+    - metis+int64@5.1.0
+    - ncurses
+    - ninja@1.8.2
+    - openblas@0.3.10
+    - optix
+    - python@3.8.3
+    - qhull@2015.2
+    - qt@5.14.2 ^libjpeg-turbo
+    - readline
+    - snakemake
+    - sqlite
+    - symengine@0.3.0
+    # - timemory@3.0.1
+    - virtualgl
+    - vrpn
+    - zlib@1.2.11
+    # Should be built with Intel
+    - libzmq+libsodium@4.3.2%intel@19.1.1.217

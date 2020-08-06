@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+from argparse import ArgumentParser
+from multiprocessing import Pool
+from subprocess import check_call
+from tempfile import NamedTemporaryFile
+import json
+import sys
+
+
+def install(args):
+    idx, concretized_hash, env = args
+    try:
+        check_call(["build", "-e", env, concretized_hash])
+    except:
+        return False
+    return True
+
+
+parser = ArgumentParser()
+parser.add_argument('-e', '--env', required=True,
+                    help='environment to use')
+parser.add_argument('-j', '--processes', default=6, type=int,
+                    help='number of parallel processes to build with')
+parser.add_argument('specfile',
+                    help='spec specification to use with the environment')
+args = parser.parse_args()
+
+installfile = NamedTemporaryFile()
+check_call(["concretize", "-e", args.env, args.specfile, installfile.name])
+
+with installfile as fd:
+    specs = json.load(fd)
+
+piscine = Pool(processes=args.processes)
+success = all(piscine.map(install, [(i, s, args.env) for i, s in enumerate(specs.keys())]))
+piscine.close()
+piscine.join()
+
+sys.exit(success)

@@ -1,0 +1,32 @@
+#!/usr/bin/env spack-python
+# vim: ft=python
+
+from argparse import ArgumentParser
+import json
+import os
+import shutil
+
+import spack.environment as ev
+import spack.report
+import spack.store
+
+parser = ArgumentParser()
+parser.add_argument('-e', '--env', required=True,
+                    help='environment to use')
+parser.add_argument('concretized_hash',
+                    help='spec hash to install within the environment')
+args = parser.parse_args()
+
+env = ev.get_env(args, 'deploy', required=True)
+spec = env.specs_by_hash[args.concretized_hash]
+
+# Fake it until you make it!
+args.cdash_upload_url = None
+
+reporter = spack.report.collect_info('junit', args)
+reporter.filename = 'stack-{x.name}-{x.version}-{h}.xml'.format(x=spec, h=args.concretized_hash[:6])
+reporter.specs = [spec]
+
+if not spec.package.installed:
+    with reporter:
+        env._install(spec)

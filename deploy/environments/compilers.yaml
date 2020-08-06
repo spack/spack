@@ -1,0 +1,12 @@
+spack:
+  packages:
+    all:
+      compiler: [gcc@4.8.5]
+    intel-parallel-studio:
+      variants: +advisor+clck+daal+gdb+inspector+ipp+itac+mkl+mpi+rpath+shared+tbb+vtune
+  specs:
+    - gcc@9.3.0
+    - intel@20.0.1
+    - intel-parallel-studio@cluster.2020.1
+    # - pgi+network+nvidia+mpi@19.10
+  concretization: separately

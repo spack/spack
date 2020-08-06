@@ -1,0 +1,133 @@
+spack:
+  packages:
+    all:
+      compiler: [gcc@9.3.0, intel@19.1.1.217]
+      providers:
+        mpi: [hpe-mpi@2.21]
+        lapack: [intel-mkl@2019.3.199]
+    python:
+      version: [3.8.3]
+  specs:
+    - matrix:
+        - [hdf5+mpi@1.10.5,
+           highfive+mpi,
+           ospray@1.7.3,
+           ospray@1.8.5,
+           python,
+           py-numpy]
+        - ['%gcc', '%intel']
+    - assimp
+    - parmetis@4.0.3
+    - mvdtool+mpi
+    - hypre@2.18.2
+    - omega-h+gmsh+trilinos@9.31.3.dev2
+    - superlu-dist@5.4.0
+    - petsc+int64+mpi@3.13.1
+    - boost+python
+    - catch2
+    - deflect
+    - eigen
+    - fmt
+    - gmsh
+    - hdf5~mpi
+    - highfive~mpi
+    - libarchive
+    - morphio
+    - morpho-kit
+    - openscenegraph build_type=Release
+    - nlohmann-json +single_header
+    - pugixml
+    - random123
+    - range-v3
+    - rockets
+    - rocksdb~static
+    - spark@3.0.0
+
+    # Python
+    - py-scipy
+    - py-matplotlib
+    - python-dev
+    - py-scikit-learn
+    # for Spykfunc
+    - py-mvdtool~mpi
+    - py-morpho-kit
+    - py-py4j
+    - py-pyarrow+parquet@0.15.1
+    - py-pyspark@3.0.0
+    - py-dask-mpi
+    # Others
+    - py-munkres
+    - py-aspy-yaml
+    - py-argcomplete
+    - py-argparse
+    - py-babel
+    - py-beautifulsoup4
+    - py-breathe
+    # - py-bokeh
+    - py-cached-property
+    - py-cffi
+    - py-cfgv
+    - py-click
+    - py-cmake-format
+    - py-clustershell
+    - py-configparser
+    - py-contextlib2
+    - py-coverage
+    - py-cycler
+    - py-cython
+    - py-dateutil
+    - py-deap
+    - py-decorator
+    - py-docopt
+    - py-exhale
+    - py-flake8
+    - py-funcsigs
+    - py-future
+    - py-h5py~mpi
+    - py-hdfs
+    - py-humanize
+    - py-identify
+    - py-importlib-metadata
+    - py-importlib-resources
+    - py-ipykernel
+    - py-ipyparallel
+    - py-ipywidgets
+    - py-jinja2
+    - py-jprops
+    - py-lazy-property
+    - py-line-profiler
+    - py-lxml
+    - py-markdown
+    - py-morphio
+    - py-mpi4py
+    - py-neurom
+    - py-nodeenv
+    - py-pandas
+    - py-pathlib2
+    - py-pillow
+    - py-pip
+    - py-plotly
+    - py-ply
+    - py-pre-commit
+    - py-progress
+    - py-pylru
+    - py-pytest
+    - py-pyyaml
+    - py-regex
+    - py-requests
+    - py-seaborn
+    - py-setuptools
+    - py-setuptools-scm
+    - py-simplejson
+    - py-six
+    - py-sparkmanager
+    - py-sphinx
+    - py-sphinx-rtd-theme
+    - py-sympy
+    - py-toml
+    - py-urllib3
+    - py-virtualenv
+    - py-virtualenv-clone
+    - py-virtualenvwrapper
+    - py-wheel
+    - py-zipp

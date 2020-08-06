@@ -1,0 +1,52 @@
+#!/usr/bin/env spack-python
+# vim: ft=python
+
+from argparse import ArgumentParser
+import json
+import os
+import shutil
+
+import spack.environment as ev
+import spack.store
+
+import llnl.util.tty as tty
+
+
+parser = ArgumentParser()
+parser.add_argument('-e', '--env', required=True,
+                    help='environment to use')
+parser.add_argument('specfile',
+                    help='spec specification to use with the environment')
+parser.add_argument('installfile',
+                    help='file to write uninstalled specs into')
+args = parser.parse_args()
+
+if not os.path.exists(args.env):
+    os.makedirs(args.env)
+elif not os.path.isdir(args.env):
+    parser.error('environment "{}" must be a directory'.format(args.env))
+shutil.copy(args.specfile, os.path.join(args.env, 'spack.yaml'))
+
+
+env = ev.get_env(args, 'deploy', required=True)
+with env.write_transaction():
+    concretized_specs = env.concretize(force=True)
+    ev.display_specs(concretized_specs)
+    env.write(regenerate_views=False)
+
+specs = dict()
+with spack.store.db.read_transaction():
+    for user_spec, concretized_hash in zip(env.user_specs, env.concretized_order):
+        spec = env.specs_by_hash[concretized_hash]
+        if not spec.package.installed:
+            tty.msg(
+                'Need to install {x.name}@{x.version} /{h}'.format(
+                    x=spec,
+                    h=concretized_hash[:6]
+                )
+            )
+            specs[concretized_hash] = str(user_spec)
+
+with open(args.installfile, 'w') as fd:
+    json.dump(specs, fd)
+    fd.write('\n')
