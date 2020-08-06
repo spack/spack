@@ -17,10 +17,15 @@ class LibglvndFe(BundlePackage):
     Both GLX and EGL are supported, in any combination with OpenGL and OpenGL
     ES."""
 
-    homepage = "https://github.com/NVIDIA/libglvnd"
+    homepage = "https://gitlab.freedesktop.org/glvnd/libglvnd"
 
+    version('1.3.2')
+    version('1.3.1')
+    version('1.3.0')
     version('1.2.0')
     version('1.1.1')
+    version('1.1.0')
+    version('1.0.0')
 
     variant('glx', default=False, description='Provide GLX API')
     variant('egl', default=False, description='Provide EGL API')
