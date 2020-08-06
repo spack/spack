@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyDijitso(PythonPackage):
+class PyFenicsDijitso(PythonPackage):
     """A Python module for distributed just-in-time shared library building"""
 
     homepage = "https://bitbucket.org/fenics-project/dijitso"
