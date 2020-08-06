@@ -39,4 +39,4 @@ success = all(piscine.map(install, [(i, s, args.env) for i, s in enumerate(specs
 piscine.close()
 piscine.join()
 
-sys.exit(success)
+sys.exit(0 if success else 1)
