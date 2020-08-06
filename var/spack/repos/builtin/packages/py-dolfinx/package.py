@@ -18,7 +18,7 @@ class PyDolfinx(PythonPackage):
     version("master", branch="master")
 
     depends_on("cmake@3.9:", type="build")
-    depends_on("dolfinx@master")
+    depends_on("fenics-dolfinx@master")
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-petsc4py", type=("build", "run"))
     depends_on("py-pybind11", type=("build", "run"))

@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Dolfinx(CMakePackage):
+class FenicsDolfinx(CMakePackage):
     """Next generation FEniCS problem solving environment"""
 
     homepage = "https://github.com/FEniCS/dolfinx"
