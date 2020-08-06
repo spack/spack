@@ -32,7 +32,6 @@ class Atmi(CMakePackage):
         spec = self.spec
         args = [
             '-DROCM_VERSION=3.5.0-2588',
-            '-DCMAKE_VERBOSE_MAKEFILE = 1',
             '-DCMAKE_PREFIX_PATH={0}/include/hsa;{1}/hsa/lib;\
                 {2}/include;{3}/lib;{4}/include;{5}/lib'.format(
                 spec['hsa-rocr-dev'].prefix, spec['hsa-rocr-dev'].prefix,

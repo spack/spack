@@ -29,7 +29,6 @@ class LlvmAmdgpu(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DCMAKE_VERBOSE_MAKEFILE=1',
             '-DLLVM_ENABLE_PROJECTS=clang;lld;clang-tools-extra;compiler-rt',
             '-DLLVM_ENABLE_ASSERTIONS=1'
         ]
