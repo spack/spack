@@ -19,6 +19,8 @@ parser.add_argument('specfile',
                     help='spec specification to use with the environment')
 parser.add_argument('installfile',
                     help='file to write uninstalled specs into')
+parser.add_argument('userfile',
+                    help='file to write all "user" specs into')
 args = parser.parse_args()
 
 if not os.path.exists(args.env):
@@ -35,7 +37,9 @@ with env.write_transaction():
     env.write(regenerate_views=False)
 
 specs = dict()
+raw_specs = []
 with spack.store.db.read_transaction():
+    raw_specs = [str(s) for s in env.user_specs]
     for user_spec, concretized_hash in zip(env.user_specs, env.concretized_order):
         spec = env.specs_by_hash[concretized_hash]
         if not spec.package.installed:
@@ -50,3 +54,7 @@ with spack.store.db.read_transaction():
 with open(args.installfile, 'w') as fd:
     json.dump(specs, fd)
     fd.write('\n')
+
+with open(args.userfile, 'w') as fd:
+    for s in raw_specs:
+        fd.write('{}\n'.format(s))

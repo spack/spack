@@ -24,10 +24,12 @@ parser.add_argument('-j', '--processes', default=6, type=int,
                     help='number of parallel processes to build with')
 parser.add_argument('specfile',
                     help='spec specification to use with the environment')
+parser.add_argument('userfile',
+                    help='file to write all "user" specs into')
 args = parser.parse_args()
 
-installfile = NamedTemporaryFile()
-check_call(["concretize", "-e", args.env, args.specfile, installfile.name])
+installfile = NamedTemporaryFile(mode="w+")
+check_call(["concretize", "-e", args.env, args.specfile, installfile.name, args.userfile])
 
 with installfile as fd:
     specs = json.load(fd)
