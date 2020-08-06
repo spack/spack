@@ -156,7 +156,6 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("gmp", when="@:3.6.999 +polly")
     depends_on("isl", when="@:3.6.999 +polly")
 
-    conflicts("+clang_extra", when="~clang")
     conflicts("+lldb", when="~clang")
     conflicts("+libcxx", when="~clang")
     conflicts("+internal_unwind", when="~clang")
