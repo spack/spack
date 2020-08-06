@@ -32,3 +32,15 @@ class BerkeleyDb(AutotoolsPackage):
 
     def configure_args(self):
         return ['--disable-static', '--enable-cxx', '--enable-stl']
+
+    def test(self):
+        """Perform smoke tests on the installed package binaries."""
+        exes = [
+            'db_checkpoint', 'db_deadlock', 'db_dump', 'db_load',
+            'db_printlog', 'db_stat', 'db_upgrade', 'db_verify'
+        ]
+        for exe in exes:
+            reason = 'test version of {0} is {1}'.format(exe,
+                                                         self.spec.version)
+            self.run_test(exe, ['-V'], [self.spec.version.string], None,
+                          installed=True, purpose=reason, skip_missing=True)
