@@ -20,7 +20,8 @@ class LlvmAmdgpu(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
+    depends_on('python', type='build')
 
     root_cmakelists_dir = 'llvm'
 
@@ -28,8 +29,12 @@ class LlvmAmdgpu(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DCMAKE_VERBOSE_MAKEFILE=1',
             '-DLLVM_ENABLE_PROJECTS=clang;lld;clang-tools-extra;compiler-rt',
             '-DLLVM_ENABLE_ASSERTIONS=1'
         ]
+
+        if self.compiler.name == "gcc":
+            gcc_prefix = ancestor(self.compiler.cc, 2)
+            args.append("-DGCC_INSTALL_PREFIX=" + gcc_prefix)
+
         return args

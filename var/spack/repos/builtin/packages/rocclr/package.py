@@ -5,8 +5,6 @@
 
 
 from spack import *
-import os
-import shutil
 
 
 class Rocclr(CMakePackage):
@@ -21,11 +19,13 @@ class Rocclr(CMakePackage):
 
     version('3.5.0', sha256='87c1ee9f02b8aa487b628c543f058198767c474cec3d21700596a73c028959e1')
 
-    depends_on('cmake@3.5.2', type='build')
-    depends_on('hsakmt-roct@3.5.0:', type='build', when='@3.5:')
-    depends_on('hsa-rocr-dev@3.5.0:', type='build', when='@3.5:')
-    depends_on('comgr@3.5.0:', type='build', when='@3.5:')
-    depends_on('mesa~llvm@18.3:', type='link', when='@3.5:')
+    depends_on('cmake@3:', type='build')
+    depends_on('hsakmt-roct@3.5.0', type='build', when='@3.5.0')
+    depends_on('hsa-rocr-dev@3.5.0', type='build', when='@3.5.0')
+    depends_on('comgr@3.5.0', type='build', when='@3.5.0')
+    depends_on('mesa~llvm@18.3:', type='link')
+
+    patch('opengl.patch', when='@3.5.0')
 
     resource(name='opencl-on-vdi',
              url='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/roc-3.5.0.tar.gz',
@@ -33,14 +33,20 @@ class Rocclr(CMakePackage):
              expand=True,
              destination='',
              placement='opencl-on-vdi')
-    build_directory = '../../rocclr_build'
 
-    @run_before('cmake')
-    def buildcleanup(self):
-        build_path = os.path.join(self.stage.path, '../rocclr_build')
-        shutil.rmtree(build_path, ignore_errors=True)
+    @run_after('install')
+    def deploy_missing_files(self):
+        # the amdrocclr_staticTargets.cmake file is generated but not installed
+        # and when we install it by hand, we have to fix the path to the static
+        # library libamdrocclr_static.a from build dir to prefix lib dir.
+        cmakefile = join_path(self.build_directory,
+                              'amdrocclr_staticTargets.cmake')
+        filter_file(self.build_directory, self.prefix.lib, cmakefile)
+        install(cmakefile, self.prefix.lib)
 
     def cmake_args(self):
-        args = ['-DUSE_COMGR_LIBRARY=yes',
-                '-DOPENCL_DIR={}/opencl-on-vdi'.format(self.stage.source_path)]
+        args = [
+            '-DUSE_COMGR_LIBRARY=yes',
+            '-DOPENCL_DIR={0}/opencl-on-vdi'.format(self.stage.source_path)
+        ]
         return args

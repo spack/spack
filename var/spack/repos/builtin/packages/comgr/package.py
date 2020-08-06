@@ -20,17 +20,12 @@ class Comgr(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    depends_on('cmake@3.5.2', type='build')
-    depends_on('rocm-cmake@3.5:', type='build', when='@3.5:')
-    depends_on('llvm-amdgpu@3.5:', type='build', when='@3.5:')
-    depends_on('rocm-device-libs@3.5:', type='build', when='@3.5:')
+    depends_on('cmake@3:', type='build')
+    depends_on('rocm-cmake@3.5.0', type='build', when='@3.5.0')
+    depends_on('llvm-amdgpu@3.5.0', type='build', when='@3.5.0')
+    depends_on('rocm-device-libs@3.5.0', type='build', when='@3.5.0')
+    depends_on('zlib', type='link')
+    depends_on('z3', type='link')
+    depends_on('ncurses', type='link')
 
     root_cmakelists_dir = 'lib/comgr'
-
-    def cmake_args(self):
-        args = [
-            '-DCMAKE_VERBOSE_MAKEFILE=1',
-            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE'
-        ]
-
-        return args

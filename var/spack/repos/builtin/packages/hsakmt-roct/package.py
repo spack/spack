@@ -21,14 +21,13 @@ class HsakmtRoct(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
+    depends_on('numactl')
 
     install_targets = ['install', 'install-dev']
 
     def cmake_args(self):
         args = [
-            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH="FALSE"',
             '-DBUILD_SHARED_LIBS="on"',
-            '-DHSAKMT_WERROR=1'
         ]
         return args

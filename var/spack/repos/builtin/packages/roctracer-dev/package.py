@@ -19,7 +19,7 @@ class RoctracerDev(CMakePackage):
 
     version('3.5.0', sha256='7af5326c9ca695642b4265232ec12864a61fd6b6056aa7c4ecd9e19c817f209e')
 
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3:', type='build')
     depends_on('hsakmt-roct@3.5.0:', type='build', when='@3.5.0:')
     depends_on('hsa-rocr-dev@3.5.0:', type='build', when='@3.5.0:')
     depends_on('rocminfo@3.5.0:', type='build', when='@3.5.0:')
@@ -36,9 +36,9 @@ class RoctracerDev(CMakePackage):
 
     def cmake_args(self):
         args = ['-DHIP_VDI=1',
-                '-DCMAKE_MODULE_PATH={}/cmake_modules'.format(
+                '-DCMAKE_MODULE_PATH={0}/cmake_modules'.format(
                     self.stage.source_path),
-                '-DHSA_RUNTIME_HSA_INC_PATH={}/include'.format(
+                '-DHSA_RUNTIME_HSA_INC_PATH={0}/include'.format(
                     self.spec['hsa-rocr-dev'].prefix)
                 ]
         return args

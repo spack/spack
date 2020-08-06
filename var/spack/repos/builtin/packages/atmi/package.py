@@ -21,10 +21,10 @@ class Atmi(CMakePackage):
     version('3.5.0', sha256='3fb57d2e583fab82bd0582d0c2bccff059ca91122c18ac49a7770a8bb041a37b')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
-    depends_on('cmake@3.5.2', type='build')
-    depends_on('comgr@3.5:', type='build', when='@3.5:')
-    depends_on('hsa-rocr-dev@3.5:', type='build', when='@3.5:')
-    depends_on('libelf@0.8:', type='build', when='@3.5:')
+    depends_on('cmake@3:', type='build')
+    depends_on('comgr@3.5.0', type='build', when='@3.5.0')
+    depends_on('hsa-rocr-dev@3.5.0', type='build', when='@3.5.0')
+    depends_on('libelf@0.8:', type='build')
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
@@ -32,9 +32,8 @@ class Atmi(CMakePackage):
         spec = self.spec
         args = [
             '-DROCM_VERSION=3.5.0-2588',
-            '-DCMAKE_VERBOSE_MAKEFILE = 1',
-            '-DCMAKE_PREFIX_PATH={}/include/hsa;{}/hsa/lib;\
-                {}/include;{}/lib;{}/include;{}/lib'.format(
+            '-DCMAKE_PREFIX_PATH={0}/include/hsa;{1}/hsa/lib;\
+                {2}/include;{3}/lib;{4}/include;{5}/lib'.format(
                 spec['hsa-rocr-dev'].prefix, spec['hsa-rocr-dev'].prefix,
                 spec['hsakmt-roct'].prefix, spec['hsakmt-roct'].prefix,
                 spec['libelf'].prefix, spec['libelf'].prefix)
