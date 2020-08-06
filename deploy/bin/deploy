@@ -34,7 +34,7 @@ check_call(["concretize", "-e", args.env, args.specfile, installfile.name, args.
 with installfile as fd:
     specs = json.load(fd)
 
-piscine = Pool(processes=args.processes):
+piscine = Pool(processes=args.processes)
 success = all(piscine.map(install, [(i, s, args.env) for i, s in enumerate(specs.keys())]))
 piscine.close()
 piscine.join()
