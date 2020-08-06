@@ -21,7 +21,7 @@ class Wonton(CMakePackage):
 
     maintainers = ['raovgarimella']
 
-    version('1.2.1', sha256='e103844b6c086ec4326970099e9dff2d2fa55c960eb2ecb0c76fabfe3b7305e8')
+    version('1.2.1', sha256='4f00513d1abe86f256214d2b5171b1575b2cd464df8609307c24cbc4c595c305')
 
     variant('lapacke', default=True, description='Use LAPACKE solvers')
 
