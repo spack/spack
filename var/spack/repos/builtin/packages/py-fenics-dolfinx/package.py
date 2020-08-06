@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyDolfinx(PythonPackage):
+class PyFenicsDolfinx(PythonPackage):
     """Python interface library to Next generation FEniCS problem solving
     environment"""
 
