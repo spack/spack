@@ -223,10 +223,6 @@ takes a boolean and determines whether the pipeline uses artifacts to store and
 pass along the buildcaches from one stage to the next (the default if you don't
 provide this option is ``False``).
 
-The ``enable-debug-messages`` key takes a boolean
-and allows you to choose whether the pipeline build jobs are run as ``spack -d ci rebuild``
-or just ``spack ci rebuild`` (the default is not to enable debug messages).
-
 The
 ``final-stage-rebuild-index`` section controls whether an extra job is added to the
 end of your pipeline (in a stage by itself) which will regenerate the mirror's
@@ -281,20 +277,17 @@ as well as an ``entrypoint`` to override whatever the default for that image is)
 For other types of runners the ``variables`` key will be useful to pass any
 information on to the runner that it needs to do its work (e.g. scheduler
 parameters, etc.).  Any ``variables`` provided here will be added, verbatim, to
-each job, unless the value takes on a special form.  If the value has the form
-``$env:<var_value>``, then that variable will be inserted with ``var_value``
-first sampled from the environment during job generation.  This can be useful
-for propagating generation-time variables which normally would not be available
-child build jobs.
+each job.
 
 The ``runner-attributes`` section also allows users to supply custom ``script``,
 ``before_script``, and ``after_script`` sections to be applied to every job
 scheduled on that runner.  This allows users to do any custom preparation or
 cleanup tasks that fit their particular workflow, as well as completely
-customize the rebuilding of a spec if they so choose.  We will never generate
+customize the rebuilding of a spec if they so choose.  Spack will not generate
 a ``before_script`` or ``after_script`` for jobs, but if you do not provide
-a custom ``script``, we will generate one for you that invokes
-``spack ci rebuild``.
+a custom ``script``, spack will generate one for you that assumes your
+``spack.yaml`` is at the root of the repository, activates that environment for
+you, and invokes ``spack ci rebuild``.
 
 .. _staging_algorithm:
 
@@ -305,8 +298,8 @@ Summary of ``.gitlab-ci.yml`` generation algorithm
 All specs yielded by the matrix (or all the specs in the environment) have their
 dependencies computed, and the entire resulting set of specs are staged together
 before being run through the ``gitlab-ci/mappings`` entries, where each staged
-spec is assigned a runner.  "Staging" is the name we have given to the process
-of figuring out in what order the specs should be built, taking into consideration
+spec is assigned a runner.  "Staging" is the name given to the process of
+figuring out in what order the specs should be built, taking into consideration
 Gitlab CI rules about jobs/stages.  In the staging process the goal is to maximize
 the number of jobs in any stage of the pipeline, while ensuring that the jobs in
 any stage only depend on jobs in previous stages (since those jobs are guaranteed
@@ -317,7 +310,7 @@ a runner, the ``.gitlab-ci.yml`` is written to disk.
 
 The short example provided above would result in the ``readline``, ``ncurses``,
 and ``pkgconf`` packages getting staged and built on the runner chosen by the
-``spack-k8s`` tag.  In this example, we assume the runner is a Docker executor
+``spack-k8s`` tag.  In this example, spack assumes the runner is a Docker executor
 type runner, and thus certain jobs will be run in the ``centos7`` container,
 and others in the ``ubuntu-18.04`` container.  The resulting ``.gitlab-ci.yml``
 will contain 6 jobs in three stages.  Once the jobs have been generated, the
@@ -376,12 +369,12 @@ Here's an example of what bootstrapping some compilers might look like:
          # mappings similar to the example higher up in this description
          ...
 
-In the example above, we have added a list to the ``definitions`` called
-``compiler-pkgs`` (you can add any number of these), which lists compiler packages
-we want to be staged ahead of the full matrix of release specs (which consists
-only of readline in our example).  Then within the ``gitlab-ci`` section, we
-have added a ``bootstrap`` section, which can contain a list of items, each
-referring to a list in the ``definitions`` section.  These items can either
+The example above adds a list to the ``definitions`` called ``compiler-pkgs``
+(you can add any number of these), which lists compiler packages that should
+be staged ahead of the full matrix of release specs (in this example, only
+readline).  Then within the ``gitlab-ci`` section, note the addition of a
+``bootstrap`` section, which can contain a list of items, each referring to
+a list in the ``definitions`` section.  These items can either
 be a dictionary or a string.  If you supply a dictionary, it must have a name
 key whose value must match one of the lists in definitions and it can have a
 ``compiler-agnostic`` key whose value is a boolean.  If you supply a string,
@@ -420,9 +413,9 @@ other reason you want to use a custom version of spack to run your pipelines,
 this section provides an example of how you could take advantage of
 user-provided pipeline scripts to accomplish this fairly simply.  First, you
 could use the GitLab user interface to create CI environment variables
-containing the url and branch or tag you want to clone (calling them, for
-example, ``SPACK_REPO`` and ``SPACK_REF``), then use those in a custom shell
-script invoked both from your pipeline generation job, as well in your rebuild
+containing the url and branch or tag you want to use (calling them, for
+example, ``SPACK_REPO`` and ``SPACK_REF``), then refer to those in a custom shell
+script invoked both from your pipeline generation job, as well as in your rebuild
 jobs.  Here's the ``generate-pipeline`` job from the top of this document,
 updated to invoke a custom shell script that will clone and source a custom
 spack:
@@ -444,7 +437,7 @@ spack:
      paths:
        - "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
 
-And that script could contain:
+And the ``cloneSpack.sh`` script could contain:
 
 .. code-block:: bash
 
@@ -482,84 +475,30 @@ of spack, so you would update your ``spack.yaml`` from above as follows:
              after_script:
                - rm -rf ./spack
 
-Now all the generated rebuild jobs will use the same shell script to clone
-spack before running their actual workload.  Here we have also provided a
-custom ``script`` because we want to run ``spack ci rebuild`` in debug mode
-to get more information when builds fail.
+Now all of the generated rebuild jobs will use the same shell script to clone
+spack before running their actual workload.  Note in the above example the
+provision of a custom ``script`` section.  The reason for this is to run
+``spack ci rebuild`` in debug mode to get more information when builds fail.
 
 Now imagine you have long pipelines with many specs to be built, and you
-are worried about the branch of spack you're testing changing somewhere
-in the middle of the pipeline, resulting in half the jobs getting run
-with a different version of spack.  In this situation, you can take
-advantage of "generation-time variable interpolation" to avoid this issue.
+are pointing to a spack repository and branch that has a tendency to change
+frequently, such as the main repo and it's ``develop`` branch.  If each child
+job checks out the ``develop`` branch, that could result in some jobs running
+with one SHA of spack, while later jobs run with another.  To help avoid this
+issue, the pipeline generation process saves global variables called
+``SPACK_VERSION`` and ``SPACK_CHECKOUT_VERSION`` that capture the version
+of spack used to generate the pipeline.  While the ``SPACK_VERSION`` variable
+simply contains the human-readable value produced by ``spack -V`` at pipeline
+generation time, the ``SPACK_CHECKOUT_VERSION`` variable can be used in a
+``git checkout`` command to make sure all child jobs checkout the same version
+of spack used to generate the pipeline.  To take advantage of this, you could
+simply replace ``git checkout ${SPACK_REF}`` in the example ``cloneSpack.sh``
+script above with ``git checkout ${SPACK_CHECKOUT_VERSION}``.
 
-The basic idea is that before you run ``spack ci generate`` to generate
-your pipeline, you first capture the SHA of spack on the branch you want
-to test.  Then in your ``spack.yaml`` you use the ``variables`` section
-of your ``runner-attributes`` to set the SHA as a variable (interpolated
-at pipeline generation time) which will be available to your generated child
-jobs when they run.  Below we show a ``.gitlab-ci.yml`` for your environment
-repo, similar to the one above, but with the script elements right inline:
-
-.. code-block:: yaml
-
-   generate-pipeline:
-     tags:
-       - <some-other-tag>
-   before_script:
-     - git clone ${SPACK_REPO} --branch ${SPACK_REF}
-     - pushd ./spack && export CURRENT_SPACK_SHA=$(git rev-parse HEAD) && popd
-     - . "./spack/share/spack/setup-env.sh"
-     - spack --version
-   script:
-     - spack env activate --without-view .
-     - spack ci generate
-       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
-   after_script:
-     - rm -rf ./spack
-   artifacts:
-     paths:
-       - "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
-
-Above we have just set an environment variable, ``CURRENT_SPACK_SHA``, which
-will be available when the pipeline generation job is running, but otherwise
-would not be available when the child jobs run.  To make this available to
-those jobs, we can do something like this in our ``spack.yaml``:
-
-.. code-block:: yaml
-
-   spack:
-     ...
-     gitlab-ci:
-       mappings:
-         - match:
-             - os=ubuntu18.04
-           runner-attributes:
-             tags:
-               - spack-kube
-             image: spack/ubuntu-bionic
-             variables:
-               CAPTURED_SPACK_SHA: $env:CURRENT_SPACK_SHA
-             before_script:
-               - git clone ${SPACK_REPO}
-               - pushd ./spack && git checkout ${CAPTURED_SPACK_SHA} && popd
-               - . "./spack/share/spack/setup-env.sh"
-               - spack --version
-             script:
-               - spack env activate --without-view .
-               - spack -d ci rebuild
-             after_script:
-               - rm -rf ./spack
-
-The behavior of pipeline generation is just to copy your ``script`` elements
-verbatim into the job, leaving shell variable interopolation until the time
-jobs run.  In this case, we have just used the ``$env:CURRENT_SPACK_SHA``
-syntax to interpolate that variable at job generation time, and put it in
-the generated yaml of the job as a variable we can get when the child job
-runs (``CAPTURED_SPACK_SHA``).  Those variables can actually have the same name,
-but to avoid confusion, we've made them distinct here.  Now all your child
-jobs will clone the same SHA of spack used to generate the pipeline, no matter
-whether more commits are pushed to the branch during that time.
+On the other hand, if you're pointing to a spack repository and branch under your
+control, there may be no benefit in using the captured ``SPACK_CHECKOUT_VERSION``,
+and you can instead just clone using the project CI variables you set (in the
+earlier example these were ``SPACK_REPO`` and ``SPACK_REF``).
 
 .. _ci_environment_variables:
 
