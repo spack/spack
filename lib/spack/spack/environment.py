@@ -30,6 +30,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.config
 import spack.user_environment as uenv
+import spack.build_environment
 from spack.filesystem_view import YamlFilesystemView
 import spack.util.environment
 import spack.architecture as architecture
@@ -179,6 +180,8 @@ def activate(
         if add_view and default_view_name in env.views:
             with spack.store.db.read_transaction():
                 cmds += env.add_default_view_to_shell(shell)
+        if add_view:
+            load_external_modules(env)
     except (spack.repo.UnknownPackageError,
             spack.repo.UnknownNamespaceError) as e:
         tty.error(e)
@@ -191,6 +194,11 @@ def activate(
             '    spack -e {0} concretize --force'.format(env.name))
 
     return cmds
+
+
+def load_external_modules(env):
+    for spec in env.roots():
+        spack.build_environment.load_external_modules(spec)
 
 
 def deactivate(shell='sh'):
