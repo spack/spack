@@ -22,12 +22,15 @@ class Atmi(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
     depends_on('cmake@3:', type='build')
-    depends_on('libelf@0.8:', type='build', when='@3.5:')
+    depends_on('libelf@0.8:', type='link', when='@3.5:')
+
     for ver in ['3.5.0']:
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
+        depends_on('comgr@' + ver, type='link', when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
+
     root_cmakelists_dir = 'src'
+
+    patch('0001-Remove-relative-link-paths-to-external-libraries.patch')
 
     def cmake_args(self):
         return [
