@@ -4,6 +4,21 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.error import SpackError
+
+
+def class_validator(values):
+    """1, 2, 3, 4, 5, 6"""
+    values = int(values[0])
+    if values < 1 or values > 6:
+        error_msg = ("class: Choose one of the following:\n"
+                     "1  - 8x8x8x32 (default MPI config: 1x1x1)\n"
+                     "2  - 32x32x32x32 (default MPI config: 4x4x4)\n"
+                     "3  - 64x64x64x32 (default MPI config: 8x8x8)\n"
+                     "4  - 160x160x160x160 (default MPI config: 20x20x20)\n"
+                     "5  - 256x256x256x256 (default MPI config: 32x32x32)\n"
+                     "6  - 192x192x192x192 (default MPI config: 24x24x24)")
+        raise SpackError(error_msg)
 
 
 class CcsQcd(MakefilePackage):
@@ -19,7 +34,7 @@ class CcsQcd(MakefilePackage):
     version('master', branch='master')
     version('1.2.1', commit='d7c6b6923f35a824e997ba8db5bd12dc20dda45c')
 
-    variant('class', default=1, values=('1', '2', '3', '4', '5', '6'),
+    variant('class', default=1, values=class_validator,
             description='This miniapp has five problem classes, for which the'
             ' first three are relatively small problems just for testing'
             ' this miniapp itself. The remaining two are the target problem'
