@@ -39,7 +39,7 @@ class Brayns(CMakePackage):
     depends_on('brion', when='+brion')
     depends_on('deflect ~deflect-qt', when='+deflect')
     depends_on('freeimage')
-    depends_on('ffmpeg@4.2', when='+net')
+    depends_on('ffmpeg@4.2.2', when='+net')
     depends_on('glew', when='+viewer')
     depends_on('libarchive')
     depends_on('cgal')
