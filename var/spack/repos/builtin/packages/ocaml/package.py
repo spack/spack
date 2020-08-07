@@ -44,6 +44,13 @@ class Ocaml(Package):
         if self.spec.satisfies('~force-safe-string'):
             base_args += ['--disable-force-safe-string']
 
+        if self.spec.satisfies('%fj'):
+            filter_file(
+                'clang -c -Wno-trigraphs',
+                spack_cc + ' -c -Wno-trigraphs',
+                'configure'
+            )
+
         configure(*(base_args))
 
         make('world.opt')
