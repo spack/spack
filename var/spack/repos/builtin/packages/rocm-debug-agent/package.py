@@ -20,18 +20,19 @@ class RocmDebugAgent(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    depends_on('hsa-rocr-dev@3.5:', type='link', when='@3.5:')
-    depends_on('hsakmt-roct@3.5:', type='link', when='@3.5:')
-    depends_on("elfutils", type='link', when='@3.5:')
+    for ver in ['3.5.0']:
+        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, type='link', when='@' + ver)
+        depends_on("elfutils", type='link', when='@' + ver)
+
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
         spec = self.spec
         args = ['-DROCM_DIR={0}'.format(spec['hsa-rocr-dev'].prefix),
-                '-DCMAKE_PREFIX_PATH={0}/include/hsa;{1}/hsa/lib;\
-                {2}/include;{3}/lib,'.format(
+                '-DCMAKE_PREFIX_PATH={}/include/hsa;\
+                {}/include,'.format(
                     spec['hsa-rocr-dev'].prefix,
-                    spec['hsa-rocr-dev'].prefix, spec['hsakmt-roct'].prefix,
                     spec['hsakmt-roct'].prefix)
                 ]
         return args

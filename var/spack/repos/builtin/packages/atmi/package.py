@@ -22,21 +22,17 @@ class Atmi(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
     depends_on('cmake@3:', type='build')
-    depends_on('comgr@3.5.0', type='build', when='@3.5.0')
-    depends_on('hsa-rocr-dev@3.5.0', type='build', when='@3.5.0')
-    depends_on('libelf@0.8:', type='build')
+    depends_on('libelf@0.8:', type='build', when='@3.5:')
+    for ver in ['3.5.0']:
+        depends_on('comgr@' + ver, type='build', when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
-        # workaround for /opt/rocm/.info/version
         spec = self.spec
         args = [
-            '-DROCM_VERSION=3.5.0-2588',
-            '-DCMAKE_PREFIX_PATH={0}/include/hsa;{1}/hsa/lib;\
-                {2}/include;{3}/lib;{4}/include;{5}/lib'.format(
-                spec['hsa-rocr-dev'].prefix, spec['hsa-rocr-dev'].prefix,
-                spec['hsakmt-roct'].prefix, spec['hsakmt-roct'].prefix,
-                spec['libelf'].prefix, spec['libelf'].prefix)
+            '-DROCM_VERSION=3.5.1'
         ]
         return args
 
