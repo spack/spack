@@ -39,7 +39,7 @@ class PyAstropy(PythonPackage):
     depends_on('py-numpy@1.9:', when='@2.0:', type=('build', 'run'))
     depends_on('py-numpy@1.7:', when='@1.2:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('pkgconfig', type='build')
+    # depends_on('pkgconfig', type='build')
 
     # Optional dependencies
     depends_on('py-scipy@0.18:', when='+extras', type=('build', 'run'))
