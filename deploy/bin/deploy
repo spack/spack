@@ -12,7 +12,8 @@ import sys
 def install(args):
     try:
         check_call(["build", "-e"] + args)
-    except:
+    except Exception as e:
+        print(e)
         return False
     return True
 
