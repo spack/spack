@@ -45,7 +45,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant('assertions', default=False,
             description='Enable assertions')
     variant('parameter_checking', default=False,
-            description='Enable paramter checking')
+            description='Enable parameter checking')
     variant('pic', default=True,
             description='Builds with PIC support')
     variant('java', default=False,
