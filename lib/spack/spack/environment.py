@@ -1225,7 +1225,7 @@ class Environment(object):
 
     def load_external_modules(self):
         for spec in self.roots():
-            spack.build_environment.load_external_modules(spec)
+            spack.build_environment.load_external_modules(spec.package)
 
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.
