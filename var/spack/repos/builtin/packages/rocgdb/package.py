@@ -18,14 +18,16 @@ class Rocgdb(AutotoolsPackage):
 
     version('3.5.0', sha256='cf36d956e84c7a5711b71f281a44b0a9708e13e941d8fca0247d01567e7ee7d1')
     depends_on('cmake@3:', type='build')
-    depends_on('texinfo')
-    depends_on('bison')
-    depends_on('flex')
-    depends_on('libunwind')
-    depends_on('expat')
-    depends_on('python')
-    depends_on('rocm-dbgapi@3.5.0', type='link', when='@3.5.0')
-    depends_on('comgr@3.5.0', type='link', when='@3.5.0')
+    depends_on('texinfo', type='build')
+    depends_on('bison', type='build')
+    depends_on('flex', type='build')
+    depends_on('libunwind', type='build')
+    depends_on('expat', type='build')
+    depends_on('python', type='build')
+    for ver in ['3.5.0']:
+        depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
+        depends_on('comgr@' + ver, type='link', when='@' + ver)
+
     build_directory = 'spack-build'
 
     def configure_args(self):

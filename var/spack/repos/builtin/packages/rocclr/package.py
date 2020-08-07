@@ -20,10 +20,11 @@ class Rocclr(CMakePackage):
     version('3.5.0', sha256='87c1ee9f02b8aa487b628c543f058198767c474cec3d21700596a73c028959e1')
 
     depends_on('cmake@3:', type='build')
-    depends_on('hsakmt-roct@3.5.0', type='build', when='@3.5.0')
-    depends_on('hsa-rocr-dev@3.5.0', type='build', when='@3.5.0')
-    depends_on('comgr@3.5.0', type='build', when='@3.5.0')
-    depends_on('mesa~llvm@18.3:', type='link')
+    for ver in ['3.5.0']:
+        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
+        depends_on('comgr@' + ver, type='build', when='@' + ver)
+        depends_on('mesa~llvm@18.3:', type='link', when='@' + ver)
 
     patch('opengl.patch', when='@3.5.0')
 

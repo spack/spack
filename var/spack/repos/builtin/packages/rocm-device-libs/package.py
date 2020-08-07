@@ -20,8 +20,9 @@ class RocmDeviceLibs(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    depends_on('rocm-cmake@3.5.0', type='build', when='@3.5.0')
-    depends_on('llvm-amdgpu@3.5.0', type='build', when='@3.5.0')
+    for ver in ['3.5.0']:
+        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     def cmake_args(self):
         spec = self.spec
