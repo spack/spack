@@ -5,6 +5,7 @@ from multiprocessing import Pool
 from subprocess import check_call
 from tempfile import NamedTemporaryFile
 import json
+import os
 import sys
 
 
