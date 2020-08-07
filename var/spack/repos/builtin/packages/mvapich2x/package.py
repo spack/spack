@@ -7,13 +7,21 @@ import sys
 from spack import *
 
 class Mvapich2x(AutotoolsPackage):
-    # Mvapich2x is not installable from source and is only available through the binary mirror below
-    # http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2x/ 
-
+    """MVAPICH2-X is the advanced version of the MVAPICH2 MPI library with  enhanced features 
+    (UMR, ODP, DC, Core-Direct, SHARP, XPMEM), OSU INAM (InifniBand Network Monitoring and Analysis),
+    PGAS (OpenSHMEM, UPC, UPC++, and CAF), and MPI+PGAS programming models with unified communication runtime.
+    
+    MVAPICH2-X is not installable from source and is only available through the following binary mirror
+    http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2x/ 
+    
+    If you do not find the binary you're looking for, send us an email at mvapich@cse.ohio-state.edu
+    """
     homepage = "http://mvapich.cse.ohio-state.edu"
     url      = "http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2x/mvapich2x-2.3.tar.gz"
     
-    version('2.3', sha256='fc47070e2e9fac09b97022be2320200d732a0a4a820a2b51532b88f8ded14536')
+    maintainers = ['nithintsk', 'harisubramoni']
+
+    version('2.3', sha256='fc47070e2e9fac09b97022be2320200d732a0a4a820a2b51532b88f8ded14536', preferred=True)
     version('2.3rc3', sha256='85a9f1ea1a837d487e356f021ef6f3a4661ad270a0c5f54777b362ee4d45166f')
 
     provides('mpi')

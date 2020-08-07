@@ -7,12 +7,19 @@ import sys
 from spack import *
 
 class Mvapich2Gdr(AutotoolsPackage):
-    # Mvapich2-Gdr is not installable from source and is only available through the binary mirror below
-    # http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2-gdr/
+    """MVAPICH2-GDR is an optimized version of the MVAPICH2 MPI library for GPU-enabled HPC and Deep Learning Applications.
+    
+    MVAPICH2-GDR is not installable from source and is only available through the binary mirror below
+    http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2-gdr/
+    
+    If you do not find the binary you're looking for, send us an email at mvapich@cse.ohio-state.edu
+    """
 
     homepage = "http://mvapich.cse.ohio-state.edu"
     url      = "http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2-gdr/mvapich2-gdr-2.3.4.tar.gz"
-    
+
+    maintainers = ['nithintsk', 'harisubramoni']
+
     version('2.3.4', sha256='ed78101e6bb807e979213006ee5f20ff466369b01f96b6d1cf0c471baf7e35aa')
     version('2.3.3', sha256='9b7b5dd235dbf85099fba3b6f1ccb49bb755923efed66ddc335921f44cb1b8a8')
     
