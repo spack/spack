@@ -131,6 +131,11 @@ class FastPackageChecker(Mapping):
         #: Reference to the appropriate entry in the global cache
         self._packages_to_stats = self._paths_cache[packages_path]
 
+    def invalidate(self):
+        """Regenerate cache for this checker."""
+        self._paths_cache[self.packages_path] = self._create_new_cache()
+        self._packages_to_stats = self._paths_cache[self.packages_path]
+
     def _create_new_cache(self):
         """Create a new cache for packages in a repo.
 
