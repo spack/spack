@@ -75,8 +75,6 @@ class Gromacs(CMakePackage):
             description='GMX_RELAXED_DOUBLE_PRECISION for Fujitsu PRIMEHPC')
     variant('hwloc', default=True,
             description='Use the hwloc portable hardware locality library')
-    variant('fft', default='fftw3', description="The FFT library to use",
-            values=('fftw3', 'mkl'))
 
     depends_on('mpi', when='+mpi')
     # define matching plumed versions
@@ -90,8 +88,7 @@ class Gromacs(CMakePackage):
     depends_on('plumed@2.5.0:2.5.9~mpi', when='@2018.6+plumed~mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
-    depends_on('fftw+mpi', when='fft=fftw3 +mpi')
-    depends_on('fftw~mpi', when='fft=fftw3 ~mpi')
+    depends_on('fftw-api@3', when='~cuda')
     depends_on('mkl', when='fft=mkl')
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
@@ -195,10 +192,18 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
 
-        fft_value = self.spec.variants['fft'].value
-        if fft_value == 'fftw3':
-            options.append('-DGMX_FFT_LIBRARY=fftw3')
-        elif fft_value == 'mkl':
+        if '^mkl' in self.spec:
+            # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
+            # we use the mkl interface of gromacs
             options.append('-DGMX_FFT_LIBRARY=mkl')
+            options.append('-DMKL_INCLUDE_DIR={0}'.
+                           format(self.spec['mkl'].headers.directories[0]))
+            # The 'blas' property provides a minimal set of libraries
+            # that is sufficient for fft. Using full mkl fails the cmake test
+            options.append('-DMKL_LIBRARIES={0}'.
+                           format(self.spec['blas'].libs.joined(';')))
+        else:
+            # we rely on the fftw-api@3
+            options.append('-DGMX_FFT_LIBRARY=fftw3')
 
         return options
