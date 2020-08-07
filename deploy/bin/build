@@ -32,6 +32,5 @@ reporter.filename = os.path.join(
 )
 reporter.specs = [spec]
 
-if not spec.package.installed:
-    with reporter:
-        env._install(spec)
+with reporter:
+    env._install(spec)
