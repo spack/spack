@@ -22,26 +22,20 @@ class Tangram(CMakePackage):
     version('1.0.1', sha256='8f2f8c01bb2d726b0f64e5a5bc3aa2bd8057ccaee7a29c68f1439d16e39aaa90')
     version('master', branch='master', submodules=True)
 
-    variant('mpi', default=True,
-            description='Enable interface reconstruction with MPI')
-    variant('thrust', default=False,
-            description='Enable on-node parallelism with NVidia Thrust')
-    variant('kokkos', default=False,
-            description='Enable on-node or device parallelism with Kokkos')
-    variant('openmp', default=False,
-            description="Enable on-node parallelism using OpenMP")
-    variant('cuda', default=False,
-            description="Enable GPU parallelism using CUDA")
+    variant('mpi', default=True, description='Enable interface reconstruction on distributed meshes with MPI')
+    variant('thrust', default=False, description='Enable on-node parallelism using NVidia Thrust library')
+    variant('kokkos', default=False, description='Enable on-node or device parallelism with Kokkos')
+    variant('openmp', default=False, description="Enable on-node parallelism using OpenMP")
+    variant('cuda', default=False, description="Enable GPU parallelism using CUDA")
 
-    # wrappers to enable external mesh/state libraries (only for testing)
-    variant('jali', default=False,
-            description='Build with Jali mesh infrastructure (for testing)')
-
+    # wrappers to enable external mesh/state libraries (needed only for testing)
+    variant('jali', default=False, description='Build with Jali mesh infrastructure (for testing)')
+    
     # Don't enable Kokkos and Thrust simultaneously
     conflicts('+jali~mpi')    # Jali needs MPI
     conflicts('+thrust +cuda')  # We don't have Thrust with CUDA working yet
     conflicts('+thrust +kokkos')  # Don't enable Kokkos, Thrust simultaneously
-
+ 
     # dependencies
     depends_on('cmake@3.13:', type='build')
 
@@ -63,20 +57,15 @@ class Tangram(CMakePackage):
         else:
             options.append('-DTANGRAM_ENABLE_MPI=OFF')
 
-        if '+jali' in self.spec:
-            options.append('-DTANGRAM_ENABLE_Jali=ON')
-        else:
-            options.append('-DTANGRAM_ENABLE_Jali=OFF')
-
         if '+thrust' in self.spec:
             options.append('-DTANGRAM_ENABLE_THRUST=ON')
         else:
             options.append('-DTANGRAM_ENABLE_THRUST=OFF')
 
         if '+kokkos' in self.spec:
-            options.append('-DTANGRAM_ENABLE_Kokkos=ON')
+            options.append('-DWONTON_ENABLE_Kokkos=ON')
         else:
-            options.append('-DTANGRAM_ENABLE_Kokkos=OFF')
+            options.append('-DWONTON_ENABLE_Kokkos=OFF')
 
         # Unit test variant
         if self.run_tests:
