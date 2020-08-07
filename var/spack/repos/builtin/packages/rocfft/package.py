@@ -30,40 +30,18 @@ class Rocfft(CMakePackage):
     depends_on('fftw-api@3', type='build', when='@3.5:')
     depends_on('cmake@3:', type='build')
     depends_on('rocm-cmake@3.5.0', type='build', when='@3.5.0')
-    depends_on('hip@3.5.0', type='build', when='@3.5.0')
-    depends_on('comgr@3.5.0', type='build', when='@3.5.0')
     depends_on('rocm-device-libs@3.5.0', type='build', when='@3.5.0')
-    depends_on('rocminfo@3.5.0', type='build', when='@3.5.0')
 
-    def setup_build_environment(self, build_env):
-        build_env.unset('PERL5LIB')
-        build_env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
-        build_env.set('DEVICE_LIB_PATH', self.
-                      spec['rocm-device-libs'].prefix.lib)
+    depends_on('hip@3.5.0', type=('build', 'link'), when='@3.5.0')
+    depends_on('comgr@3.5.0', type='build', when='@3.5.0')
 
-    def setup_run_environment(self, env):
-        env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
-        env.set('ROCM_PATH', self.spec['rocminfo'].prefix)
-        env.set('HIP_COMPILER', 'clang')
-        env.set('HIP_PLATFORM', 'hip-clang')
-        env.set('DEVICE_LIB_PATH', self.spec['rocm-device-libs'].prefix.lib)
+    def setup_build_environment(self, env):
+        env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        # Finding the version of clang
-        hipcc = Executable(join_path(self.spec['hip'].prefix.bin, 'hipcc'))
-        version = hipcc('--version', output=str)
-        version_group = re.search(r"clang version (\S+)", version)
-        version_number = version_group.group(1)
-
         archs = ",".join(self.spec.variants['amdgpu_target'].value)
 
         args = [
             '-DCMAKE_CXX_FLAGS=--amdgpu-target={0}'.format(archs),
-            '-DHIP_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER={0}/bin/hipcc'.format(
-                self.spec['hip'].prefix),
-            '-DUSE_HIP_CLANG=ON',
-            '-DHIP_CLANG_INCLUDE_PATH={0}/lib/clang/{1}/include'.format(
-                self.spec['llvm-amdgpu'].prefix, version_number)
         ]
         return args
