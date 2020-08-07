@@ -30,11 +30,9 @@ class Atmi(CMakePackage):
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
-        spec = self.spec
-        args = [
-            '-DROCM_VERSION=3.5.1'
+        return [
+            '-DROCM_VERSION={0}'.format(self.spec.version)
         ]
-        return args
 
     @run_after('install')
     def install_stub(self):
