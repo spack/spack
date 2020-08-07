@@ -104,19 +104,19 @@ def test_clang_version_detection(version_str, expected_version):
 
 @pytest.mark.parametrize('version_str,expected_version', [
     # C compiler
-    ('fcc (FCC) 4.0.0 20190314\n'
+    ('fcc (FCC) 4.0.0a 20190314\n'
      'simulating gcc version 6.1\n'
      'Copyright FUJITSU LIMITED 2019',
-     '4.0.0'),
+     '4.0.0a'),
     # C++ compiler
-    ('FCC (FCC) 4.0.0 20190314\n'
+    ('FCC (FCC) 4.0.0a 20190314\n'
      'simulating gcc version 6.1\n'
      'Copyright FUJITSU LIMITED 2019',
-     '4.0.0'),
+     '4.0.0a'),
     # Fortran compiler
-    ('frt (FRT) 4.0.0 20190314\n'
+    ('frt (FRT) 4.0.0a 20190314\n'
      'Copyright FUJITSU LIMITED 2019',
-     '4.0.0')
+     '4.0.0a')
 ])
 def test_fj_version_detection(version_str, expected_version):
     version = spack.compilers.fj.Fj.extract_version_from_output(version_str)
