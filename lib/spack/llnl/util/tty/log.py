@@ -41,16 +41,6 @@ xon, xoff = '\x11\n', '\x13\n'
 control = re.compile('(\x11\n|\x13\n)')
 
 
-@contextmanager
-def ignore_signal(signum):
-    """Context manager to temporarily ignore a signal."""
-    old_handler = signal.signal(signum, signal.SIG_IGN)
-    try:
-        yield
-    finally:
-        signal.signal(signum, old_handler)
-
-
 class AltSignalHandler(object):
     def __init__(self, orig_handler, alt_handler):
         self.alt_handler = alt_handler
@@ -82,10 +72,21 @@ class SignalHandler(object):
     def can_ignore(self, signum):
         self.register_alt_handler(signum, SignalHandler.ignore_signal)
 
-    def activate_alt_handler(self, signum):
+    @contextmanager
+    def with_alt_handler(self, signum):
         self.sig_to_handler[signum].use_alt_handler()
         yield
         self.sig_to_handler[signum].use_orig_handler()
+
+    def use_alt_handler(self, signum):
+        self.sig_to_handler[signum].use_alt_handler()
+
+    def use_orig_handler(self, signum):
+        self.sig_to_handler[signum].use_orig_handler()
+
+    def restore_handlers(self):
+        for signum, handler in self.sig_to_handler.items():
+            signal.signal(signum, handler.orig_handler)
 
 
 def _is_background_tty(stream):
@@ -177,7 +178,7 @@ class keyboard_input(object):
       a TTY, ``keyboard_input`` has no effect.
 
     """
-    def __init__(self, stream):
+    def __init__(self, stream, sig_handler):
         """Create a context manager that will enable keyboard input on stream.
 
         Args:
@@ -187,6 +188,7 @@ class keyboard_input(object):
         will do nothing.
         """
         self.stream = stream
+        self.sig_handler = sig_handler
 
     def _is_background(self):
         """True iff calling process is in the background."""
@@ -208,7 +210,7 @@ class keyboard_input(object):
         new_cfg[3] &= ~termios.ECHO
 
         # Apply new settings for terminal
-        with ignore_signal(signal.SIGTTOU):
+        with self.sig_handler.with_alt_handler(signal.SIGTTOU):
             termios.tcsetattr(self.stream, termios.TCSANOW, new_cfg)
 
     def _restore_default_terminal_settings(self):
@@ -216,7 +218,7 @@ class keyboard_input(object):
         # _restore_default_terminal_settings Can be called in foreground
         # or background. When called in the background, tcsetattr triggers
         # SIGTTOU, which we must ignore, or the process will be stopped.
-        with ignore_signal(signal.SIGTTOU):
+        with self.sig_handler.with_alt_handler(signal.SIGTTOU):
             termios.tcsetattr(self.stream, termios.TCSANOW, self.old_cfg)
 
     def _tstp_handler(self, signum, frame):
@@ -246,7 +248,6 @@ class keyboard_input(object):
         do nothing.
         """
         self.old_cfg = None
-        self.old_handlers = {}
 
         # Ignore all this if the input stream is not a tty.
         if not self.stream or not self.stream.isatty():
@@ -258,8 +259,7 @@ class keyboard_input(object):
 
             # Install a signal handler to disable/enable keyboard input
             # when the process moves between foreground and background.
-            self.old_handlers[signal.SIGTSTP] = signal.signal(
-                signal.SIGTSTP, self._tstp_handler)
+            self.sig_handler.use_alt_handler(signal.SIGTSTP)
 
             # add an atexit handler to ensure the terminal is restored
             atexit.register(self._restore_default_terminal_settings)
@@ -276,10 +276,7 @@ class keyboard_input(object):
             self._restore_default_terminal_settings()
             atexit.unregister(self._restore_default_terminal_settings)
 
-        # restore SIGSTP and SIGCONT handlers
-        if self.old_handlers:
-            for signum, old_handler in self.old_handlers.items():
-                signal.signal(signum, old_handler)
+        self.sig_handler.use_orig_handler(signal.SIGTSTP)
 
 
 class Unbuffered(object):
@@ -450,6 +447,8 @@ class log_output(object):
             raise RuntimeError(
                 "file argument must be set by either __init__ or __call__")
 
+        self.sig_handler = SignalHandler()
+
         # set up a stream for the daemon to write to
         self.close_log_in_parent = False
         self.write_log_in_parent = False
@@ -491,11 +490,21 @@ class log_output(object):
 
             alt_stdout = os.fdopen(os.dup(self.saved_fds._saved_stdout), 'w')
 
+
+            self.sig_handler.can_ignore(signal.SIGTTOU)
+            self.sig_handler.can_ignore(signal.SIGTTIN)
+
+            kb = keyboard_input(input, self.sig_handler)
+
+            self.sig_handler.register_alt_handler(
+                signal.SIGTSTP, kb._tstp_handler)
+
             self.thread = threading.Thread(
                 target=_writer_daemon,
                 args=(
                     input, read, alt_stdout,
-                    self.echo, self.log_file, child_pipe
+                    self.echo, self.log_file, child_pipe,
+                    kb, self.sig_handler
                 )
             )
             self.thread.start()
@@ -596,6 +605,8 @@ class log_output(object):
 
         self._active = False  # safe to enter again
 
+        self.sig_handler.restore_handlers()
+
     @contextmanager
     def force_echo(self):
         """Context manager to force local echo, even if echo is off."""
@@ -616,7 +627,8 @@ class log_output(object):
             sys.stdout.flush()
 
 
-def _writer_daemon(stdin, read, alt_stdout, echo, log_file, control_pipe):
+def _writer_daemon(stdin, read, alt_stdout, echo, log_file, control_pipe,
+                   keyboard_input, sig_handler):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
     The daemon receives output from the parent process and writes it both
@@ -675,11 +687,11 @@ def _writer_daemon(stdin, read, alt_stdout, echo, log_file, control_pipe):
     alt_stdout.write("<<< Starting thread")
 
     try:
-        with keyboard_input(stdin) as kb:
+        with keyboard_input:
             while True:
                 # fix the terminal settings if we recently came to
                 # the foreground
-                kb.check_fg_bg()
+                keyboard_input.check_fg_bg()
 
                 # wait for input from any stream. use a coarse timeout to
                 # allow other checks while we wait for input
@@ -691,7 +703,7 @@ def _writer_daemon(stdin, read, alt_stdout, echo, log_file, control_pipe):
                 if stdin in rlist and not _is_background_tty(stdin):
                     # it's possible to be backgrounded between the above
                     # check and the read, so we ignore SIGTTIN here.
-                    with ignore_signal(signal.SIGTTIN):
+                    with sig_handler.with_alt_handler(signal.SIGTTIN):
                         try:
                             if stdin.read(1) == 'v':
                                 echo = not echo
