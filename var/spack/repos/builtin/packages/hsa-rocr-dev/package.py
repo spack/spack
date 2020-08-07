@@ -21,9 +21,11 @@ class HsaRocrDev(CMakePackage):
     version('3.5.0', sha256='52c12eec3e3404c0749c70f156229786ee0c3e6d3c979aed9bbaea500fa1f3b8')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+
     for ver in ['3.5.0']:
-         depends_on('hsakmt-roct@' + ver, type=('link', 'run'), when='@' + ver)
-         depends_on('libelf@0.8:', type='link', when="@" + ver)
+        depends_on('hsakmt-roct@' + ver, type=('link', 'run'), when='@' + ver)
+        depends_on('libelf@0.8:', type='link', when="@" + ver)
+
     depends_on('cmake@3:', type="build")
 
     patch('0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch', when='@3.5.0')
