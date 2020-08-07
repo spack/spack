@@ -37,6 +37,7 @@ class Lcio(CMakePackage):
     depends_on('openjdk', when="+jar")
     # build error with +termlib, to be investigated
     depends_on('ncurses~termlib', when="+examples")
+    depends_on('delphes', when="+examples")
     depends_on('readline', when="+examples")
 
     def cmake_args(self):
