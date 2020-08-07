@@ -774,6 +774,8 @@ EOF
 #EOF
     #fi
 
+    log "artifacts to archive"
+    ls|grep -e '.xml$'
     mkdir -p "${WORKSPACE:-.}/stacks/${what}"
     rm -rf "${WORKSPACE:-.}/stacks/${what}/"*.xml
     cp "${HOME}"/stack*.xml "${WORKSPACE:-.}/stacks/${what}"
