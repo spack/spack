@@ -26,7 +26,7 @@ spack:
     - hpctoolkit@2019.08.14
     - hpcviewer@2020.05
     - hpe-mpi@2.21
-    - intel-mpi@2018.1.163
+    - intel-mpi@2019.7.217
     - ispc@1.10.0
     - 'mvapich2@2.3 fabrics=mrail process_managers=slurm file_systems=gpfs'
     - stat@develop
