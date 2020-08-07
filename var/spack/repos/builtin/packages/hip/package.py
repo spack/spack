@@ -28,15 +28,22 @@ class Hip(CMakePackage):
     depends_on('rocm-device-libs', type='build')
     depends_on('rocminfo@3.5.0', type='build', when='@3.5.0')
 
+    # Note: the ROCm ecosystem expects `lib/` and `bin/` folders with symlinks
+    # in the parent directory of the package, which is incompatible with spack.
+    # In hipcc the ROCM_PATH variable is used to point to the parent directory
+    # of the package. With the following patch we should never hit code that
+    # uses the ROCM_PATH variable again; just to be sure we set it to an empty
+    # string.
+    patch('0001-Make-it-possible-to-specify-the-package-folder-of-ro.patch', when='@3.5.0')
+
     def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('ROCM_PATH', '')
+        env.set('HIP_PLATFORM', 'clang')
+        env.set('HIP_PLATFORM', 'hcc')
         env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
-
-        # We have directories hipcc cannot infer
         env.set('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
-        env.set('ROCM_PATH', self.spec['rocminfo'].prefix)
+        env.set('ROCMINFO_PATH', self.spec['rocminfo'].prefix)
         env.set('DEVICE_LIB_PATH', self.spec['rocm-device-libs'].prefix.lib)
-
-        # HIP_COMPILER and HIP_PLATFORM are autodetected by hipcc
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.hipcc = join_path(self.prefix.bin, 'hipcc')
