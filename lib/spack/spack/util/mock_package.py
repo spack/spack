@@ -87,7 +87,7 @@ class MockPackageMultiRepo(object):
     def exists(self, name):
         return name in self.spec_to_pkg
 
-    def is_virtual(self, name):
+    def is_virtual(self, name, use_index=True):
         return False
 
     def repo_for_pkg(self, name):

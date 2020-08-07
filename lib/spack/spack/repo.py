@@ -684,10 +684,10 @@ class RepoPath(object):
         Set `use_index` False when calling from a code block that could
         be run during the computation of the provider index."""
         if use_index:
-            return pkg_name and pkg_name in self.provider_index
+            return pkg_name is not None and pkg_name in self.provider_index
         else:
-            return pkg_name and (not self.exists(pkg_name) or
-                                 self.get_pkg_class(pkg_name).virtual)
+            return pkg_name is not None and (not self.exists(pkg_name) or
+                                             self.get_pkg_class(pkg_name).virtual)
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
@@ -1036,13 +1036,9 @@ class Repo(object):
         """Time a package file in this repo was last updated."""
         return self._pkg_checker.last_mtime()
 
-    def is_virtual(self, pkg_name, use_index=True):
+    def is_virtual(self, pkg_name):
         """True if the package with this name is virtual, False otherwise."""
-        if use_index:
-            return pkg_name and pkg_name in self.provider_index
-        else:
-            return pkg_name and (not self.exists(pkg_name) or
-                                 self.get_pkg_class(pkg_name).virtual)
+        return pkg_name in self.provider_index
 
     def _get_pkg_module(self, pkg_name):
         """Create a module for a particular package.

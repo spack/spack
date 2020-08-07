@@ -1191,14 +1191,9 @@ class Spec(object):
            Possible idea: just use conventin and make virtual deps all
            caps, e.g., MPI vs mpi.
         """
-        return Spec.is_virtual(self.name)
-
-    @staticmethod
-    def is_virtual(name):
-        """Test if a name is virtual without requiring a Spec."""
-        return (name is not None and
-                (not spack.repo.path.exists(name) or
-                 spack.repo.path.get_pkg_class(name).virtual))
+        # This method can be called while regenerating the provider index
+        # So we turn off using the index to detect virtuals
+        return spack.repo.path.is_virtual(self.name, use_index=False)
 
     @property
     def concrete(self):
