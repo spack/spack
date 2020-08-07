@@ -21,3 +21,21 @@ class Minizip(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
     depends_on('zlib')
+
+    # build minizip and miniunz
+    @run_before('autoreconf')
+    def build_minizip_binary(self):
+        print(self)
+        bash = which('bash')
+        bash('./configure')
+        make()
+        with working_dir(self.configure_directory):
+            make()
+
+    # install minizip and miniunz
+    @run_after('install')
+    def install_minizip_binary(self):
+        mkdirp(self.prefix.bin)
+        with working_dir(self.configure_directory):
+            install('minizip', self.prefix.bin)
+            install('miniunz', self.prefix.bin)
