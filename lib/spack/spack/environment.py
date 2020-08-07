@@ -180,8 +180,6 @@ def activate(
         if add_view and default_view_name in env.views:
             with spack.store.db.read_transaction():
                 cmds += env.add_default_view_to_shell(shell)
-        if add_view:
-            load_external_modules(env)
     except (spack.repo.UnknownPackageError,
             spack.repo.UnknownNamespaceError) as e:
         tty.error(e)
@@ -194,11 +192,6 @@ def activate(
             '    spack -e {0} concretize --force'.format(env.name))
 
     return cmds
-
-
-def load_external_modules(env):
-    for spec in env.roots():
-        spack.build_environment.load_external_modules(spec)
 
 
 def deactivate(shell='sh'):
@@ -1229,6 +1222,10 @@ class Environment(object):
         env_mod.extend(mods)
 
         return env_mod.shell_modifications(shell)
+
+    def load_external_modules(self):
+        for spec in self.roots():
+            spack.build_environment.load_external_modules(spec)
 
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.
