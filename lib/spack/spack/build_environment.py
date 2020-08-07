@@ -805,9 +805,8 @@ def _setup_pkg_and_run(pkg, function, kwargs, child_pipe, input_fd_wrapper):
     # simultaneously reading from the original stdin. But, we assume
     # that the parent process is not going to read from it till we
     # are done with the child, so we undo Python's precaution.
-    input_fd = input_fd_wrapper._handle
-    if input_fd is not None:
-        sys.stdin = os.fdopen(input_fd)
+    if input_fd_wrapper is not None:
+        sys.stdin = os.fdopen(input_fd_wrapper._handle)
 
     try:
         if not kwargs['fake']:
@@ -846,6 +845,7 @@ def _setup_pkg_and_run(pkg, function, kwargs, child_pipe, input_fd_wrapper):
 
     finally:
         child_pipe.close()
+        input_fd_wrapper.close()
 
 
 def fork(pkg, function, kwargs):
@@ -877,14 +877,13 @@ def fork(pkg, function, kwargs):
     expected to handle (or re-raise) the ChildError.
     """
     parent_pipe, child_pipe = multiprocessing.Pipe()
-    input_fd = None
+    input_fd_wrapper = None
 
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
-
-        input_fd_wrapper = multiprocessing.connection.Connection(input_fd)
+            input_fd_wrapper = multiprocessing.connection.Connection(input_fd)
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
@@ -897,8 +896,8 @@ def fork(pkg, function, kwargs):
 
     finally:
         # Close the input stream in the parent process
-        if input_fd is not None:
-            os.close(input_fd)
+        if input_fd_wrapper is not None:
+            input_fd_wrapper.close()
 
     child_result = parent_pipe.recv()
     p.join()
