@@ -713,8 +713,9 @@ EOF
     log "starting deployment"
     install_start=$(date "+%Y-%m-%d %H:%M:%S")
     rm -f "${HOME}/"stack*.xml
+    rm -f "${HOME}/specs.txt"
     export PATH="${SPACK_ROOT}/deploy/bin:${PATH}"
-    deploy -e spackenv -j 6 "${SPACK_ROOT}/deploy/environments/${what}.yaml" "${HOME}/specs.txt"
+    deploy -e spackenv -j 6 "${SPACK_ROOT}/deploy/environments/${what}.yaml" "${HOME}"
     cat > "${HOME}/stack.xml" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
