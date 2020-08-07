@@ -371,7 +371,7 @@ populate_build_cache() {
             log "...already in build cache: ${spec}"
         else
             log "...caching ${spec}"
-            spack buildcache create --no-deps -d "${HOME}" "/${checksum}" || true
+            spack buildcache create --only package -d "${HOME}" "/${checksum}" || true
         fi
     done
 
