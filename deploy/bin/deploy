@@ -9,9 +9,8 @@ import sys
 
 
 def install(args):
-    idx, concretized_hash, env = args
     try:
-        check_call(["build", "-e", env, concretized_hash])
+        check_call(["build", "-e"] + args])
     except:
         return False
     return True
@@ -24,18 +23,19 @@ parser.add_argument('-j', '--processes', default=6, type=int,
                     help='number of parallel processes to build with')
 parser.add_argument('specfile',
                     help='spec specification to use with the environment')
-parser.add_argument('userfile',
-                    help='file to write all "user" specs into')
+parser.add_argument('logdir',
+                    help='directory to store build data in')
 args = parser.parse_args()
 
+userfile = os.path.join(args.logdir, 'specs.txt')
 installfile = NamedTemporaryFile(mode="w+")
-check_call(["concretize", "-e", args.env, args.specfile, installfile.name, args.userfile])
+check_call(["concretize", "-e", args.env, args.specfile, installfile.name, userfile])
 
 with installfile as fd:
     specs = json.load(fd)
 
 piscine = Pool(processes=args.processes)
-success = all(piscine.map(install, [(i, s, args.env) for i, s in enumerate(specs.keys())]))
+success = all(piscine.map(install, [(args.env, s, args.logdir) for s in specs.keys()]))
 piscine.close()
 piscine.join()
 
