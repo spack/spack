@@ -36,7 +36,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     variant('thread_multiple', default=False,
             description='Enable thread support in UCP and UCT')
-    variant('optimizations', default=False,
+    variant('optimizations', default=True,
             description='Enable optimizations')
     variant('logging', default=False,
             description='Enable logging')
