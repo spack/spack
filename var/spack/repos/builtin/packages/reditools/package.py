@@ -29,4 +29,4 @@ class Reditools(PythonPackage):
     patch('REDItoolDenovo.py.patch')
     patch('interpreter.patch')
     patch('setup.py.patch')
-    patch('python2to3.patch')
+    patch('python2to3.patch', when='^python@3:')
