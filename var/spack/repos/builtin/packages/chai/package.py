@@ -23,11 +23,16 @@ class Chai(CMakePackage, CudaPackage):
     version('1.1.0', tag='v1.1.0', submodules='True')
     version('1.0', tag='v1.0', submodules='True')
 
+    variant('shared', default=True, description='Build Shared Libs')
+    variant('raja', default=False, description='Build plugin for RAJA')
+
     depends_on('cmake@3.8:', type='build')
     depends_on('umpire')
+    depends_on('raja', when="+raja")
 
     depends_on('cmake@3.9:', type='build', when="+cuda")
     depends_on('umpire+cuda', when="+cuda")
+    depends_on('raja+cuda', when="+raja+cuda")
 
     def cmake_args(self):
         spec = self.spec

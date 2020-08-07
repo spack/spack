@@ -13,7 +13,7 @@ class Raja(CMakePackage, CudaPackage):
     git      = "https://github.com/LLNL/RAJA.git"
 
     version('develop', branch='develop', submodules='True')
-    version('main',  branch='main',  submodules='True')
+    version('master',  branch='main',  submodules='True')
     version('0.11.0', tag='v0.11.0', submodules="True")
     version('0.10.1', tag='v0.10.1', submodules="True")
     version('0.10.0', tag='v0.10.0', submodules="True")
@@ -30,12 +30,9 @@ class Raja(CMakePackage, CudaPackage):
 
     variant('openmp', default=True, description='Build OpenMP backend')
     variant('shared', default=True, description='Build Shared Libs')
-    variant('chai', default=False, description='Build with CHAI support')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
-    depends_on('chai', when='+chai')
-    depends_on('chai+cuda', when='+chai+cuda')
 
     def cmake_args(self):
         spec = self.spec
