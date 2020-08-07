@@ -21,10 +21,12 @@ class Comgr(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
+
     for ver in ['3.5.0']:
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-cmake@' + ver , type='build', when='@' + ver)
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+
     depends_on('zlib', type='link')
     depends_on('z3', type='link')
     depends_on('ncurses', type='link')
