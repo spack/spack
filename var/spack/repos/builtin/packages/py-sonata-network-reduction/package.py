@@ -13,6 +13,7 @@ class PySonataNetworkReduction(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/sonata-network-reduction"
 
     version('develop', branch='master')
+    version('0.0.10', tag='sonata-network-reduction-v0.0.10')
     version('0.0.9', tag='sonata-network-reduction-v0.0.9')
     version('0.0.8', tag='sonata-network-reduction-v0.0.8')
     version('0.0.6', tag='sonata-network-reduction-v0.0.6')
@@ -29,7 +30,7 @@ class PySonataNetworkReduction(PythonPackage):
     depends_on('py-click@6.7:', type='run')
     depends_on('py-joblib@0.14:', type='run')
     depends_on('py-bluepyopt@1.8.68:', type='run')
-    depends_on('py-bglibpy@4.2:', type='run')
+    depends_on('py-bglibpy@4.3:', type='run')
     depends_on('py-morphio@2.3.9:', type='run')
     depends_on('neuron+python', type='run')
     depends_on('py-aibs-circuit-converter@0.0.3:', type='run')
