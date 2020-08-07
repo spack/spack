@@ -5,7 +5,6 @@
 
 
 from spack import *
-import re
 
 
 class Rocfft(CMakePackage):
