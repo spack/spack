@@ -14,7 +14,7 @@ import spack.ci as ci
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
-from spack.main import SpackCommand
+import spack.main
 import spack.paths as spack_paths
 import spack.repo as repo
 from spack.schema.buildcache_spec import schema as spec_yaml_schema
@@ -26,12 +26,12 @@ import spack.util.spack_yaml as syaml
 import spack.util.gpg
 
 
-ci_cmd = SpackCommand('ci')
-env_cmd = SpackCommand('env')
-mirror_cmd = SpackCommand('mirror')
-gpg_cmd = SpackCommand('gpg')
-install_cmd = SpackCommand('install')
-buildcache_cmd = SpackCommand('buildcache')
+ci_cmd = spack.main.SpackCommand('ci')
+env_cmd = spack.main.SpackCommand('env')
+mirror_cmd = spack.main.SpackCommand('mirror')
+gpg_cmd = spack.main.SpackCommand('gpg')
+install_cmd = spack.main.SpackCommand('install')
+buildcache_cmd = spack.main.SpackCommand('buildcache')
 git = exe.which('git', required=True)
 
 
@@ -390,10 +390,10 @@ spack:
             assert(filecmp.cmp(orig_file, copy_to_file) is True)
 
 
-def test_ci_generate_with_script_and_variables(tmpdir, mutable_mock_env_path,
-                                               env_deactivate, install_mockery,
-                                               mock_packages):
-    """Make sure we it doesn't break if we configure cdash"""
+def test_ci_generate_with_custom_scripts(tmpdir, mutable_mock_env_path,
+                                         env_deactivate, install_mockery,
+                                         mock_packages, monkeypatch):
+    """Test use of user-provided scripts"""
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -410,7 +410,7 @@ spack:
           tags:
             - donotcare
           variables:
-            ONE: $env:INTERP_ON_GENERATE
+            ONE: plain-string-value
             TWO: ${INTERP_ON_BUILD}
           before_script:
             - mkdir /some/path
@@ -430,7 +430,7 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
-            os.environ['INTERP_ON_GENERATE'] = 'success'
+            monkeypatch.setattr(spack.main, 'get_version', lambda: '0.15.3')
             ci_cmd('generate', '--output-file', outputfile)
 
             with open(outputfile) as f:
@@ -439,6 +439,13 @@ spack:
 
                 found_it = False
 
+                assert('variables' in yaml_contents)
+                global_vars = yaml_contents['variables']
+                assert('SPACK_VERSION' in global_vars)
+                assert(global_vars['SPACK_VERSION'] == '0.15.3')
+                assert('SPACK_CHECKOUT_VERSION' in global_vars)
+                assert(global_vars['SPACK_CHECKOUT_VERSION'] == 'v0.15.3')
+
                 for ci_key in yaml_contents.keys():
                     ci_obj = yaml_contents[ci_key]
                     if 'archive-files' in ci_key:
@@ -446,7 +453,7 @@ spack:
                         assert('variables' in ci_obj)
                         var_d = ci_obj['variables']
                         assert('ONE' in var_d)
-                        assert(var_d['ONE'] == 'success')
+                        assert(var_d['ONE'] == 'plain-string-value')
                         assert('TWO' in var_d)
                         assert(var_d['TWO'] == '${INTERP_ON_BUILD}')
 
@@ -782,7 +789,7 @@ spack:
 
 def test_ci_generate_override_runner_attrs(tmpdir, mutable_mock_env_path,
                                            env_deactivate, install_mockery,
-                                           mock_packages):
+                                           mock_packages, monkeypatch):
     """Test that we get the behavior we want with respect to the provision
        of runner attributes like tags, variables, and scripts, both when we
        inherit them from the top level, as well as when we override one or
@@ -844,6 +851,8 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
+            monkeypatch.setattr(
+                spack.main, 'get_version', lambda: '0.15.3-416-12ad69eb1')
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
@@ -851,6 +860,13 @@ spack:
             print('generated contents: ')
             print(contents)
             yaml_contents = syaml.load(contents)
+
+            assert('variables' in yaml_contents)
+            global_vars = yaml_contents['variables']
+            assert('SPACK_VERSION' in global_vars)
+            assert(global_vars['SPACK_VERSION'] == '0.15.3-416-12ad69eb1')
+            assert('SPACK_CHECKOUT_VERSION' in global_vars)
+            assert(global_vars['SPACK_CHECKOUT_VERSION'] == '12ad69eb1')
 
             for ci_key in yaml_contents.keys():
                 if '(specs) b' in ci_key:

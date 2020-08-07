@@ -28,7 +28,7 @@ import spack.config as cfg
 import spack.environment as ev
 from spack.error import SpackError
 import spack.hash_types as ht
-from spack.main import SpackCommand
+import spack.main
 import spack.repo
 from spack.spec import Spec
 import spack.util.spack_yaml as syaml
@@ -39,10 +39,8 @@ JOB_RETRY_CONDITIONS = [
     'always',
 ]
 
-spack_gpg = SpackCommand('gpg')
-spack_compiler = SpackCommand('compiler')
-
-runner_var_regex = re.compile('\\$env:(.+)$')
+spack_gpg = spack.main.SpackCommand('gpg')
+spack_compiler = spack.main.SpackCommand('compiler')
 
 
 class TemporaryDirectory(object):
@@ -619,13 +617,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 variables = {}
                 if 'variables' in runner_attribs:
                     variables.update(runner_attribs['variables'])
-                    for name, value in variables.items():
-                        m = runner_var_regex.search(value)
-                        if m:
-                            env_var = m.group(1)
-                            interp_value = os.environ.get(env_var, None)
-                            if interp_value:
-                                variables[name] = interp_value
 
                 image_name = None
                 image_entry = None
@@ -829,6 +820,26 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         stage_names.append(final_stage)
 
     output_object['stages'] = stage_names
+
+    # Capture the version of spack used to generate the pipeline, transform it
+    # into a value that can be passed to "git checkout", and save it in a
+    # global yaml variable
+    spack_version = spack.main.get_version()
+    version_to_clone = None
+    v_match = re.match(r"^\d+\.\d+\.\d+$", spack_version)
+    if v_match:
+        version_to_clone = 'v{0}'.format(v_match.group(0))
+    else:
+        v_match = re.match(r"^[^-]+-[^-]+-([a-f\d]+)$", spack_version)
+        if v_match:
+            version_to_clone = v_match.group(1)
+        else:
+            version_to_clone = spack_version
+
+    output_object['variables'] = {
+        'SPACK_VERSION': spack_version,
+        'SPACK_CHECKOUT_VERSION': version_to_clone,
+    }
 
     sorted_output = {}
     for output_key, output_value in sorted(output_object.items()):
