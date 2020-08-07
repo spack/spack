@@ -3,7 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import numbers
 from spack import *
+
+
+def is_multiple_32(x):
+    """multiple of 32 """
+    try:
+        return isinstance(int(x), numbers.Integral) and \
+            not isinstance(x, bool) and int(x) % 32 == 0
+    except ValueError:
+        return False
 
 
 class Abyss(AutotoolsPackage):
@@ -18,9 +28,8 @@ class Abyss(AutotoolsPackage):
     version('2.0.2', sha256='d87b76edeac3a6fb48f24a1d63f243d8278a324c9a5eb29027b640f7089422df')
     version('1.5.2', sha256='8a52387f963afb7b63db4c9b81c053ed83956ea0a3981edcad554a895adf84b1')
 
-    variant('maxk', values=int, default=0,
-            description='''set the maximum k-mer length.
-            This value must be a multiple of 32''')
+    variant('maxk', default=128, values=is_multiple_32,
+            description='set the maximum k-mer length.')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -48,3 +57,5 @@ class Abyss(AutotoolsPackage):
         if self.spec['mpi'].name == 'mpich':
             args.append('--enable-mpich')
         return args
+
+    patch('fix_BloomFilter.hpp.patch', when='@2.0.0:2.1.4')
