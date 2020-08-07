@@ -27,7 +27,6 @@ class Rocfft(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
     variant('amdgpu_target', default='gfx701', multi=True, values=amdgpu_targets)
 
-    depends_on('fftw-api@3', type='build', when='@3.5:')
     depends_on('cmake@3:', type='build')
     depends_on('rocm-cmake@3.5.0', type='build', when='@3.5.0')
     depends_on('rocm-device-libs@3.5.0', type='build', when='@3.5.0')
