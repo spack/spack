@@ -25,6 +25,21 @@ class Hip(CMakePackage):
     depends_on('hsa-rocr-dev@3.5.0', type='link', when='@3.5.0')
     depends_on('comgr@3.5.0', type='build', when='@3.5.0')
     depends_on('llvm-amdgpu@3.5.0', type='build', when='@3.5.0')
+    depends_on('rocm-device-libs', type='build')
+    depends_on('rocminfo@3.5.0', type='build', when='@3.5.0')
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
+
+        # We have directories hipcc cannot infer
+        env.set('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
+        env.set('ROCM_PATH', self.spec['rocminfo'].prefix)
+        env.set('DEVICE_LIB_PATH', self.spec['rocm-device-libs'].prefix.lib)
+
+        # HIP_COMPILER and HIP_PLATFORM are autodetected by hipcc
+
+    def setup_dependent_package(self, module, dependent_spec):
+        self.spec.hipcc = join_path(self.prefix.bin, 'hipcc')
 
     def patch(self):
         filter_file(
