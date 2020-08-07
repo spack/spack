@@ -44,7 +44,7 @@ class SuperluDist(CMakePackage):
     depends_on('metis@5:~int64', when='~int64')
     depends_on('metis@5:+int64', when='+int64')
 
-    patch('0001-Fix-libdir-pkgconfig-variable.patch')
+    patch('0001-Fix-libdir-pkgconfig-variable.patch', when='@:6.1.1')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
