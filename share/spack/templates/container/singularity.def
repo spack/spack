@@ -12,7 +12,7 @@ EOF
   # Install all the required software
   . /opt/spack/share/spack/setup-env.sh
   spack env activate .
-  spack install
+  spack install --fail-fast
   spack gc -y
   spack env deactivate
   spack env activate --sh -d . >> {{ paths.environment }}/environment_modifications.sh

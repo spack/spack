@@ -15,6 +15,7 @@ class Claw(CMakePackage):
     git      = 'https://github.com/claw-project/claw-compiler.git'
     maintainers = ['clementval']
 
+    version('2.0.2', commit='8c012d58484d8caf79a4fe45597dc74b4367421c', submodules=True)
     version('2.0.1', commit='f5acc929df74ce66a328aa4eda9cc9664f699b91', submodules=True)
     version('2.0',   commit='53e705b8bfce40a5c5636e8194a7622e337cf4f5', submodules=True)
     version('1.2.3', commit='eaf5e5fb39150090e51bec1763170ce5c5355198', submodules=True)

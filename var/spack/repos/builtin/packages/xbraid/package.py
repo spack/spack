@@ -12,7 +12,7 @@ class Xbraid(MakefilePackage):
     """XBraid: Parallel time integration with Multigrid"""
 
     homepage = "https://computing.llnl.gov/projects/parallel-time-integration-multigrid/software"
-    url      = "https://computing.llnl.gov/projects/parallel-time-integration-multigrid/download/braid_2.2.0.tar.gz"
+    url      = "https://github.com/XBraid/xbraid/archive/v2.2.0.tar.gz"
 
     version('2.2.0', sha256='082623b2ddcd2150b3ace65b96c1e00be637876ec6c94dc8fefda88743b35ba3')
 

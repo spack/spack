@@ -19,6 +19,7 @@ class Caliper(CMakePackage):
     git      = "https://github.com/LLNL/Caliper.git"
 
     version('master')
+    version('2.4.0', tag='v2.4.0')
     version('2.3.0', tag='v2.3.0')
     version('2.2.0', tag='v2.2.0')
     version('2.1.1', tag='v2.1.1')
@@ -45,22 +46,21 @@ class Caliper(CMakePackage):
             description='Enable PAPI service')
     variant('libpfm', default=is_linux,
             description='Enable libpfm (perf_events) service')
-    # gotcha doesn't work on Mac
-    variant('gotcha', default=sys.platform != 'darwin',
+    # Gotcha is Linux-only
+    variant('gotcha', default=is_linux,
             description='Enable GOTCHA support')
     variant('sampler', default=is_linux,
             description='Enable sampling support on Linux')
     variant('sosflow', default=False,
             description='Enable SOSflow support')
 
-    depends_on('adiak@0.1:', when='@2.2: +adiak')
-
-    depends_on('gotcha@1.0.2:1.0.99', when='+gotcha')
+    depends_on('adiak@0.1:0.99', when='@2.2: +adiak')
 
     depends_on('dyninst@9.3.0:9.99', when='@:1.99 +dyninst')
     depends_on('dyninst@10.0:10.99', when='@2: +dyninst')
 
-    depends_on('papi@5.3:5.99', when='+papi')
+    depends_on('papi@5.3:5.99', when='@:2.2 +papi')
+    depends_on('papi@5.3:6.99', when='@2.3: +papi')
 
     depends_on('libpfm4@4.8:4.99', when='+libpfm')
 
@@ -69,11 +69,11 @@ class Caliper(CMakePackage):
 
     depends_on('sosflow@spack', when='@1.0:1.99+sosflow')
 
-    depends_on('cmake', type='build')
-    depends_on('python@3:', type='build')
+    depends_on('cmake',  type='build')
+    depends_on('python', type='build')
 
     # sosflow support not yet in 2.0
-    conflicts('+sosflow', '@2.0.0:2.3.99')
+    conflicts('+sosflow', '@2.0.0:2.4.99')
     conflicts('+adiak', '@:2.1.99')
 
     def cmake_args(self):
@@ -96,8 +96,6 @@ class Caliper(CMakePackage):
             '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off')
         ]
 
-        if '+gotcha' in spec:
-            args.append('-DUSE_EXTERNAL_GOTCHA=True')
         if '+papi' in spec:
             args.append('-DPAPI_PREFIX=%s'    % spec['papi'].prefix)
         if '+libpfm' in spec:
