@@ -33,19 +33,16 @@ class PyPillow(PythonPackage):
 
     # These defaults correspond to Pillow defaults
     # https://pillow.readthedocs.io/en/stable/installation.html#external-libraries
-    variant('zlib',     default=True,  description='Compressed PNG functionality')
-    variant('jpeg',     default=True,  description='JPEG functionality')
-    variant('tiff',     default=False, description='Compressed TIFF functionality')
-    variant('freetype', default=False, description='Type related services')
-    variant('lcms',     default=False, description='Color management')
-    variant('webp',     default=False, description='WebP format')
-    variant('webpmux',  default=False, description='WebP metadata')
-    variant('jpeg2000', default=False, description='JPEG 2000 functionality')
-    variant('xcb',      default=False, description='X11 screengrab support')
-
-    # Spack does not (yet) support these modes of building
-    # variant('imagequant', default=False,
-    #         description='Improved color quantization')
+    variant('zlib',       default=True,  description='Compressed PNG functionality')
+    variant('jpeg',       default=True,  description='JPEG functionality')
+    variant('tiff',       default=False, description='Compressed TIFF functionality')
+    variant('freetype',   default=False, description='Type related services')
+    variant('lcms',       default=False, description='Color management')
+    variant('webp',       default=False, description='WebP format')
+    variant('webpmux',    default=False, description='WebP metadata')
+    variant('jpeg2000',   default=False, description='JPEG 2000 functionality')
+    variant('imagequant', default=False, description='Improved color quantization')
+    variant('xcb',        default=False, description='X11 screengrab support')
 
     # Required dependencies
     # https://pillow.readthedocs.io/en/latest/installation.html#notes
@@ -72,10 +69,8 @@ class PyPillow(PythonPackage):
     depends_on('libwebp', when='+webp')
     depends_on('libwebp+libwebpmux+libwebpdemux', when='+webpmux')
     depends_on('openjpeg', when='+jpeg2000')
+    depends_on('libimagequant', when='+imagequant')
     depends_on('libxcb', when='+xcb')
-
-    # Spack does not (yet) support these modes of building
-    # depends_on('libimagequant', when='+imagequant')
 
     conflicts('+webpmux', when='~webp', msg='Webpmux relies on WebP support')
 
@@ -107,9 +102,6 @@ class PyPillow(PythonPackage):
             setup.write('[build_ext]\n')
             for variant in self.spec.variants.keys():
                 setup.write(variant_to_cfg(setup))
-
-            # Spack does not (yet) support these modes of building
-            setup.write('disable-imagequant=1\n')
 
             setup.write('rpath={0}\n'.format(':'.join(self.rpath)))
             setup.write('[install]\n')
