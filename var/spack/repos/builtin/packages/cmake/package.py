@@ -18,6 +18,8 @@ class Cmake(Package):
 
     executables = ['cmake']
 
+    version('3.18.1',   sha256='8f4eb930b621349eef37ab2124a519c52ce5edaf8b85914e880a2042b6ff2571')
+    version('3.18.0',   sha256='a3c9b1d1d3ba0a6db791599d09716a4d8c96c1107b3123c7935fc31acd487d36')
     version('3.17.3',   sha256='0bd60d512275dc9f6ef2a2865426a184642ceb3761794e6b65bff233b91d8c40')
     version('3.17.1',   sha256='3aa9114485da39cbd9665a0bfe986894a282d5f0882b1dea960a739496620727')
     version('3.17.0',   sha256='b74c05b55115eacc4fa2b77a814981dbda05cdc95a53e279fe16b7b272f00847')
