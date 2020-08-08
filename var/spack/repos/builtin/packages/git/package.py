@@ -26,7 +26,7 @@ class Git(AutotoolsPackage):
         {
             'version': '2.28.0',
             'sha256': 'f914c60a874d466c1e18467c864a910dd4ea22281ba6d4d58077cb0c3f115170',
-            'sha256_manpages': '665a7fa41f9a39248e48422dcf533e1a0133a4a6eddfc25ee55e28e42fc07cb7'
+            'sha256_manpages': '3cfca28a88d5b8112ea42322b797a500a14d0acddea391aed0462aff1ab11bf7'
         },
         {
             'version': '2.27.0',
