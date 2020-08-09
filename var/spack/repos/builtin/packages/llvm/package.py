@@ -136,9 +136,6 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("python", when="@5:+python")
     depends_on("z3", when="@9:")
 
-    # CUDA dependency
-    depends_on("cuda", when="+cuda")
-
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"))
     depends_on("hwloc")
@@ -160,7 +157,6 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("gmp", when="@:3.6.999 +polly")
     depends_on("isl", when="@:3.6.999 +polly")
 
-    conflicts("+clang_extra", when="~clang")
     conflicts("+lldb", when="~clang")
     conflicts("+libcxx", when="~clang")
     conflicts("+internal_unwind", when="~clang")
