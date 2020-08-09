@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Blaspp(CMakePackage):
+class Blaspp(CMakePackage, CudaPackage):
     """C++ API for the Basic Linear Algebra Subroutines. Developed by the
        Innovative Computing Laboratory at the University of Tennessee,
        Knoxville."""
@@ -29,9 +29,6 @@ class Blaspp(CMakePackage):
             default=False,
             description=('Use OpenMP threaded backend. '
                          'Default is sequential. (MKL & ESSL)'))
-    variant('cuda',
-            default=True,
-            description='Use CUDA.')
 
     depends_on('blas')
     depends_on('cuda', when='+cuda')
