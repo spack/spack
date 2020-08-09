@@ -3877,22 +3877,18 @@ class Spec(object):
                     '@K{%s}  ', color=color) % node.dag_hash(hlen)
 
             if show_types:
-                types = set()
                 if cover == 'nodes':
                     # when only covering nodes, we merge dependency types
                     # from all dependents before showing them.
-                    for name, ds in node.dependents_dict().items():
-                        if ds.deptypes:
-                            types.update(set(ds.deptypes))
-                elif dep_spec.deptypes:
+                    types = [
+                        ds.deptypes for ds in node.dependents_dict().values()]
+                else:
                     # when covering edges or paths, we show dependency
                     # types only for the edge through which we visited
-                    types = set(dep_spec.deptypes)
+                    types = [dep_spec.deptypes]
 
-                out += '['
-                for t in dp.all_deptypes:
-                    out += ''.join(t[0] if t in types else ' ')
-                out += ']  '
+                type_chars = dp.deptype_chars(*types)
+                out += '[%s]  ' % type_chars
 
             out += ("    " * d)
             if d > 0:
