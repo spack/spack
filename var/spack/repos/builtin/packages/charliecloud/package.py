@@ -15,6 +15,7 @@ class Charliecloud(AutotoolsPackage):
     git      = "https://github.com/hpc/charliecloud.git"
 
     version('master', branch='master')
+    version('0.17',   sha256='9ccb34243e17cbb9c65e44fba66293ed65c39db0422c7d9bd6d1c314c3896723')
     version('0.16',   sha256='6cdc21d414b6173090ac0a4c2c62a2a038c81659a75ae8f837b332bb7e6e9090')
     version('0.15',   sha256='2163420d43c934151c4f44a188313bdb7f79e576d5a86ba64b9ea45f784b9921')
     version('0.14',   sha256='4ae23c2d6442949e16902f9d5604dbd1d6059aeb5dd461b11fc5c74d49dcb194')
@@ -25,7 +26,7 @@ class Charliecloud(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
 
-    # Use skopeo and umoci for older ch-grow version dependencies.
+    # Use skopeo and umoci for older (unsupported) ch-grow versions.
     depends_on('skopeo',         type='run', when='@0.10:0.13')
     depends_on('umoci',          type='run', when='@0.10:0.13')
     depends_on('python+libxml2', type='run', when='@0.10:0.13')
@@ -51,9 +52,22 @@ class Charliecloud(AutotoolsPackage):
     def configure_args(self):
 
         args = []
+        py_path = self.spec['python'].command.path
+
+        if (self.spec.satisfies('@0.13')):
+            args.append('--with-python-shebang={0}'.format(py_path))
+        else:
+            args.append('--with-python={0}'.format(py_path))
 
         if '+docs' in self.spec:
-            args.append('--enable-html')
+            sphinx_bin = '{0}'.format(self.spec['py-sphinx'].prefix.bin)
+            if (self.spec.satisfies('@0.13')):
+                # 0.13 fails when we try to build it with html.
+                args.append('--disable-html')
+            else:
+                args.append('--enable-html')
+                args.append('--with-sphinx-build={0}'.format(sphinx_bin.join(
+                                                             'sphinx-build')))
         else:
             args.append('--disable-html')
 
