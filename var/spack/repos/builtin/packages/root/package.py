@@ -347,6 +347,7 @@ class Root(CMakePackage):
                 ['chirp', False],
                 ['cling', True],
                 ['cocoa', 'aqua'],
+                ['dataframe', True],
                 ['davix'],
                 ['dcache', False],
                 ['fftw3', 'fftw'],
