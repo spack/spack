@@ -61,14 +61,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     conflicts('+gdrcopy', when='~cuda',
               msg='gdrcopy currently requires cuda support')
 
-    @property
-    def configure_abs_path(self):
-        # UCX docs recommend using configure-release
-        configure_abs_path = os.path.join(
-            os.path.abspath(self.configure_directory),
-            'contrib/configure-release'
-        )
-        return configure_abs_path
+    configure_abs_path = 'contrib/configure-release'
 
     def configure_args(self):
         spec = self.spec
