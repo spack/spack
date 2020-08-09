@@ -29,8 +29,12 @@ class Blaspp(CMakePackage):
             default=False,
             description=('Use OpenMP threaded backend. '
                          'Default is sequential. (MKL & ESSL)'))
+    variant('cuda',
+            default=True,
+            description='Use CUDA.')
 
     depends_on('blas')
+    depends_on('cuda', when='+cuda')
 
     # 1) The CMake options exposed by `blaspp` allow for a value called `auto`.
     #    The value is not needed here as the choice of dependency in the spec
@@ -61,6 +65,16 @@ class Blaspp(CMakePackage):
                          '-DBLAS_LIBRARY_THREADING="threaded"'])
         else:
             args.append('-DBLAS_LIBRARY_THREADING="sequential"')
+
+        # `blaspp` has an implicit CUDA detection. This disables it in cases
+        # where the `cuda` pacakge is external and marked as `buildable=false`.
+        # The issue occurs when cmake tries to find CUDA in e.g. /opt/cuda,
+        # certain paths are not are not properly set and lead to build issues.
+        # More info at [1].
+        #
+        # [1]: https://bitbucket.org/icl/blaspp/issues/6/compile-error-due-to-implicit-cuda
+        if '~cuda' in spec:
+            args.append('-DCMAKE_CUDA_COMPILER=')
 
         # Missing:
         #
