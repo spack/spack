@@ -31,7 +31,6 @@ class Blaspp(CMakePackage, CudaPackage):
                          'Default is sequential. (MKL & ESSL)'))
 
     depends_on('blas')
-    depends_on('cuda', when='+cuda')
 
     # 1) The CMake options exposed by `blaspp` allow for a value called `auto`.
     #    The value is not needed here as the choice of dependency in the spec
@@ -63,11 +62,11 @@ class Blaspp(CMakePackage, CudaPackage):
         else:
             args.append('-DBLAS_LIBRARY_THREADING="sequential"')
 
-        # `blaspp` has an implicit CUDA detection mechanism. This disables it in
-        # cases where it may backfire. One such case is when `cuda` is external
-        # and marked with `buildable=false`. `blaspp`'s CMake CUDA detection
-        # mechanism finds CUDA but doesn't set certain paths properly which
-        # leads to a build issues [1].
+        # `blaspp` has an implicit CUDA detection mechanism. This disables it
+        # in cases where it may backfire. One such case is when `cuda` is
+        # external and marked with `buildable=false`. `blaspp`'s CMake CUDA
+        # detection mechanism finds CUDA but doesn't set certain paths properly
+        # which leads to a build issues [1].
         #
         # [1]: https://bitbucket.org/icl/blaspp/issues/6/compile-error-due-to-implicit-cuda
         if '~cuda' in spec:
