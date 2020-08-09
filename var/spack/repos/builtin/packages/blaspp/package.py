@@ -66,11 +66,11 @@ class Blaspp(CMakePackage):
         else:
             args.append('-DBLAS_LIBRARY_THREADING="sequential"')
 
-        # `blaspp` has an implicit CUDA detection. This disables it in cases
-        # where the `cuda` pacakge is external and marked as `buildable=false`.
-        # The issue occurs when cmake tries to find CUDA in e.g. /opt/cuda,
-        # certain paths are not are not properly set and lead to build issues.
-        # More info at [1].
+        # `blaspp` has an implicit CUDA detection mechanism. This disables it in
+        # cases where it may backfire. One such case is when `cuda` is external
+        # and marked with `buildable=false`. `blaspp`'s CMake CUDA detection
+        # mechanism finds CUDA but doesn't set certain paths properly which
+        # leads to a build issues [1].
         #
         # [1]: https://bitbucket.org/icl/blaspp/issues/6/compile-error-due-to-implicit-cuda
         if '~cuda' in spec:
