@@ -23,8 +23,8 @@ class Sprng(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
 
     def url_for_version(self, version):
-        if version.version == (5, 0):
-            return "http://www.sprng.org/Version5.0/sprng5.tar.bz2"
+        url = "http://www.sprng.org/Version{0}/sprng{1}.tar.bz2"
+        return url.format(version, version.up_to(1))
 
     def configure_args(self):
         configure_args = []
@@ -58,7 +58,7 @@ class Sprng(AutotoolsPackage):
     # FIXME: update after features in #15702 are enabled
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def check_install(self):
+    def check_build(self):
 
         def listisclose(a, b, rel_tol=1e-09, abs_tol=1.0e-20):
             for ai, bi in zip(a, b):
