@@ -15,7 +15,7 @@ class PyFenicsFfcx(PythonPackage):
 
     version("master", branch="master")
 
-    depends_on('python@3.8:', type=('build', 'run'))
+    depends_on('python@3.5:', type=('build', 'run'))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-cffi", type=("build", "run"))
     depends_on("py-fenics-ufl@master", type=("build", "run"))
