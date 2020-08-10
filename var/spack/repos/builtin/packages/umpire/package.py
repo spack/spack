@@ -151,9 +151,9 @@ class Umpire(CMakePackage, CudaPackage):
                 ['Malloc/malloc', 'Malloc/free', 'ns',
                  'Host/allocate', 'Host/deallocate',
                  'FixedPoolHost/allocate',
-                 'FixedPoolHost/deallocate'], None),
-            'copy_benchmarks': (['benchmark_copy/host_host', 'ns'], None),
-            'debuglog_benchmarks': (['benchmark_DebugLogger', 'ns'], None),
+                 'FixedPoolHost/deallocate'], 0),
+            'copy_benchmarks': (['benchmark_copy/host_host', 'ns'], 0),
+            'debuglog_benchmarks': (['benchmark_DebugLogger', 'ns'], 0),
         }
         self._run_checks(dirs, checks)
 
@@ -175,8 +175,8 @@ class Umpire(CMakePackage, CudaPackage):
             # Versions 2.0.0:2.1.0  (spack-build/bin)
             # Versions 1.1.0        (prefix.bin/examples/cookbook)
             # Versions 2.0.0:2.1.0  (prefix.bin)
-            'recipe_dynamic_pool_heuristic': (['in the pool', 'releas'], None),
-            'recipe_no_introspection': (['has allocated', 'used'], None),
+            'recipe_dynamic_pool_heuristic': (['in the pool', 'releas'], 0),
+            'recipe_no_introspection': (['has allocated', 'used'], 0),
         }
         self._run_checks(dirs, checks)
 
@@ -202,9 +202,9 @@ class Umpire(CMakePackage, CudaPackage):
             # Versions 2.0.0:2.1.0  (spack-build/bin)
             # Version  1.1.0        (prefix.bin/examples)
             # Versions 2.0.0:2.1.0  (prefix.bin)
-            'malloc': (['99 should be 99'], None),
-            'strategy_example': (['Available allocators', 'HOST'], None),
-            'vector_allocator': ([''], None),
+            'malloc': (['99 should be 99'], 0),
+            'strategy_example': (['Available allocators', 'HOST'], 0),
+            'vector_allocator': ([''], 0),
         }
         self._run_checks(dirs, checks)
 
@@ -215,7 +215,7 @@ class Umpire(CMakePackage, CudaPackage):
         dirs = [self.prefix.bin] if self.spec.satisfies('@0.3.3:0.3.5') else []
         checks = {
             # Versions 0.3.3:0.3.5  (prefix.bin)
-            'plot_allocations': ([''], None),
+            'plot_allocations': ([''], 0),
         }
         self._run_checks(dirs, checks)
 
@@ -226,7 +226,7 @@ class Umpire(CMakePackage, CudaPackage):
         dirs = [self.prefix.bin] if self.spec.satisfies('@0.3.3:0.3.5') else []
         checks = {
             # Versions 0.3.3:0.3.5  (spack-build/bin/tools)
-            'replay': (['No input file'], None),
+            'replay': (['No input file'], 0),
         }
         self._run_checks(dirs, checks)
 
@@ -251,12 +251,12 @@ class Umpire(CMakePackage, CudaPackage):
             # Versions 2.0.0:2.1.0  (spack-build/bin)
             # Version  1.1.0        (prefix.bin/examples/tutorial)
             # Versions 2.0.0:2.1.0  (prefix.bin)
-            'tut_copy': (['Copied source data'], None),
+            'tut_copy': (['Copied source data'], 0),
             'tut_introspection': (
-                ['Allocator used is HOST', 'size of the allocation'], None),
-            'tut_memset': (['Set data from HOST'], None),
-            'tut_move': (['Moved source data', 'HOST'], None),
-            'tut_reallocate': (['Reallocated data'], None),
+                ['Allocator used is HOST', 'size of the allocation'], 0),
+            'tut_memset': (['Set data from HOST'], 0),
+            'tut_move': (['Moved source data', 'HOST'], 0),
+            'tut_reallocate': (['Reallocated data'], 0),
         }
         self._run_checks(dirs, checks)
 
