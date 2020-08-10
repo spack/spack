@@ -34,6 +34,7 @@ class Elpa(AutotoolsPackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('scalapack')
+    depends_on('libtool', type='build')
 
     def url_for_version(self, version):
         t = 'http://elpa.mpcdf.mpg.de/html/Releases/{0}/elpa-{0}.tar.gz'
