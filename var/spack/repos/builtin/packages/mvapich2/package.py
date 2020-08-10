@@ -8,10 +8,10 @@ import sys
 
 
 class Mvapich2(AutotoolsPackage):
-    """Mvapich2 is a High-Performance MPI Library for clusters with diverse 
-    networks (InfiniBand, Omni-Path, Ethernet/iWARP, and RoCE) and computing 
+    """Mvapich2 is a High-Performance MPI Library for clusters with diverse
+    networks (InfiniBand, Omni-Path, Ethernet/iWARP, and RoCE) and computing
     platforms (x86 (Intel and AMD), ARM and OpenPOWER)"""
-    
+
     homepage = "http://mvapich.cse.ohio-state.edu/"
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.4.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
