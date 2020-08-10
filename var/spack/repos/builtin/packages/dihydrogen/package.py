@@ -40,6 +40,14 @@ class Dihydrogen(CMakePackage, CudaPackage):
     variant('docs', default=False,
             description='Builds with support for building documentation')
 
+    # Variants related to BLAS
+    variant('openmp_blas', default=False,
+            description='Use OpenMP for threading in the BLAS library')
+    variant('int64_blas', default=False,
+            description='Use 64bit integers for BLAS.')
+    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl'),
+            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL')
+
     # Override the default set of CUDA architectures with the relevant
     # subset from lib/spack/spack/build_systems/cuda.py
     cuda_arch_values = [
@@ -51,8 +59,6 @@ class Dihydrogen(CMakePackage, CudaPackage):
             description='CUDA architecture',
             values=spack.variant.auto_or_any_combination_of(*cuda_arch_values))
 
-    depends_on('cmake@3.16.0:', type='build')
-
     depends_on('mpi')
     depends_on('catch2', type='test')
 
@@ -63,6 +69,26 @@ class Dihydrogen(CMakePackage, CudaPackage):
     depends_on('cudnn', when=('+cuda' or '+legacy'))
     depends_on('cub', when=('+cuda' or '+legacy'))
 
+    # Note that #1712 forces us to enumerate the different blas variants
+    depends_on('openblas', when='blas=openblas ~openmp_blas ~int64_blas')
+    depends_on('openblas +ilp64', when='blas=openblas ~openmp_blas +int64_blas')
+    depends_on('openblas threads=openmp', when='blas=openblas +openmp_blas ~int64_blas')
+    depends_on('openblas threads=openmp +lip64', when='blas=openblas +openmp_blas +int64_blas')
+
+    depends_on('intel-mkl', when="blas=mkl ~openmp_blas ~int64_blas")
+    depends_on('intel-mkl +ilp64', when="blas=mkl ~openmp_blas +int64_blas")
+    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas ~int64_blas')
+    depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
+
+    depends_on('veclibfort', when='blas=accelerate')
+    conflicts('blas=accelerate +openmp_blas')
+
+    depends_on('essl -cuda', when='blas=essl -openmp_blas ~int64_blas')
+    depends_on('essl -cuda +ilp64', when='blas=essl -openmp_blas +int64_blas')
+    depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
+    depends_on('essl threads=openmp +ilp64', when='blas=essl +openmp_blas +int64_blas')
+    depends_on('netlib-lapack +external-blas', when='blas=essl')
+
     # Legacy builds require cuda
     conflicts('~cuda', when='+legacy')
 
@@ -70,7 +96,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
-    depends_on('cmake@3.14.0:', type='build')
+    depends_on('cmake@3.16.0:', type='build')
 
     depends_on('py-breathe', type='build', when='+docs')
     depends_on('doxygen', type='build', when='+docs')
