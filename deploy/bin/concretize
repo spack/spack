@@ -12,6 +12,33 @@ import spack.store
 import llnl.util.tty as tty
 
 
+def dump_user_friendly_specs(filename, specs):
+    """Store the expanded requested specs
+    """
+    with open(filename, 'w') as fd:
+        for s in specs:
+            fd.write('{}\n'.format(s))
+
+
+def insert_into_graph(env, graph, spec, explicit=False):
+    """Construct a dependency graph for a spec
+    """
+    build_hash = spec.build_hash()
+    graph[spec.build_hash()] = dict(
+        name="{s.name}@{s.version}".format(s=spec),
+        dependents=set(),
+        dependencies=set(),
+        building=False,
+        explicit=explicit
+    )
+    for dep in spec.dependencies():
+        if not dep.package.installed:
+            dep_hash = insert_into_graph(env, graph, dep)
+            graph[dep_hash]['dependents'].add(build_hash)
+            graph[build_hash]['dependencies'].add(dep_hash)
+    return build_hash
+
+
 parser = ArgumentParser()
 parser.add_argument('-e', '--env', required=True,
                     help='environment to use')
@@ -36,25 +63,25 @@ with env.write_transaction():
     ev.display_specs(concretized_specs)
     env.write(regenerate_views=False)
 
+dump_user_friendly_specs(args.userfile, map(str, env.user_specs))
+
 specs = dict()
-raw_specs = []
 with spack.store.db.read_transaction():
-    raw_specs = [str(s) for s in env.user_specs]
     for user_spec, concretized_hash in zip(env.user_specs, env.concretized_order):
-        spec = env.specs_by_hash[concretized_hash]
-        if not spec.package.installed:
+        explicit_spec = env.specs_by_hash[concretized_hash]
+        if not explicit_spec.package.installed:
             tty.msg(
                 'Need to install {x.name}@{x.version} /{h}'.format(
-                    x=spec,
+                    x=explicit_spec,
                     h=concretized_hash[:6]
                 )
             )
-            specs[concretized_hash] = str(user_spec)
+            # specs[concretized_hash] = str(user_spec)
+            insert_into_graph(env, specs, explicit_spec, explicit=True)
 
+for k in specs.keys():
+    specs[k]['dependents'] = list(specs[k]['dependents'])
+    specs[k]['dependencies'] = list(specs[k]['dependencies'])
 with open(args.installfile, 'w') as fd:
     json.dump(specs, fd)
     fd.write('\n')
-
-with open(args.userfile, 'w') as fd:
-    for s in raw_specs:
-        fd.write('{}\n'.format(s))

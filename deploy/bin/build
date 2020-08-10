@@ -8,9 +8,10 @@ import shutil
 
 import spack.environment as ev
 import spack.report
-import spack.store
 
 parser = ArgumentParser()
+parser.add_argument('--explicit', action='store_true',
+                    help='mark installed package as explicit')
 parser.add_argument('-e', '--env', required=True,
                     help='environment to use')
 parser.add_argument('concretized_hash',
@@ -20,7 +21,14 @@ parser.add_argument('logdir',
 args = parser.parse_args()
 
 env = ev.get_env(args, 'deploy', required=True)
-spec = env.specs_by_hash[args.concretized_hash]
+specs = {}
+for spec in env.specs_by_hash.values():
+    for s in spec.traverse():
+        build_hash = s.build_hash()
+        if build_hash not in specs:
+            specs[build_hash] = s
+
+spec = specs[args.concretized_hash]
 
 # Fake it until you make it!
 args.cdash_upload_url = None
@@ -33,4 +41,4 @@ reporter.filename = os.path.join(
 reporter.specs = [spec]
 
 with reporter:
-    env._install(spec)
+    env._install(spec, explicit=args.explicit)

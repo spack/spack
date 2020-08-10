@@ -5,17 +5,112 @@ from multiprocessing import Pool
 from subprocess import check_call
 from tempfile import NamedTemporaryFile
 import json
+import logging
 import os
 import sys
+import time
 
 
-def install(args):
+logger = logging
+logger.basicConfig(
+    format='--| {message}',
+    style='{',
+    level=logging.INFO
+)
+
+
+def install(*args):
     try:
-        check_call(["build", "-e"] + list(args))
+        check_call(["build"] + list(args))
     except Exception as e:
         print(e)
         return False
     return True
+
+
+class Builder:
+    def __init__(self, graph, processes, sleeptime=5):
+        self._graph = graph
+        self._processes = processes
+        self._queue = dict()
+        self._sleeptime = sleeptime
+
+    def build_all(self, env, logdir):
+        """Builds the whole graph
+
+        Returns if the whole graph could be built successfully.
+        """
+        with Pool(processes=self._processes) as piscine:
+            while not self.done:
+                self.process_queue()
+                self.submit_unprocessed(piscine, env, logdir)
+                time.sleep(self._sleeptime)
+        self.print_remainder()
+        return len(self._graph) == 0
+
+    def print_remainder(self):
+        failed = []
+        transient = []
+        for value in self._graph.values():
+            name = value["name"]
+            if value["building"]:
+                failed.append(name)
+            else:
+                transient.append(name)
+        for name in failed:
+            logger.warning("Failed to install %s", name)
+        for name in transient:
+            logger.warning("Failed to install (due to missing dependencies) %s", name)
+
+    def submit_unprocessed(self, pool, env, logdir):
+        """Adds all unprocessed items to the build queue
+        """
+        for concretized_hash in self.unprocessed:
+            args = []
+            if self._graph[concretized_hash]["explicit"]:
+                args.append("--explicit")
+            args.extend(["-e", env, concretized_hash, logdir])
+            self._graph[concretized_hash]["building"] = True
+            self._queue[concretized_hash] = pool.apply_async(install, args)
+            logger.info("Queueing %s", self._graph[concretized_hash]["name"])
+
+    def process_queue(self):
+        """Remove and process finished builds from the queue
+        """
+        done = []
+        for concretized_hash, result in self._queue.items():
+            if result.ready():
+                self.process_result(concretized_hash, result.get())
+                done.append(concretized_hash)
+        for concretized_hash in done:
+            del self._queue[concretized_hash]
+
+    def process_result(self, concretized_hash, result):
+        """Removes successful builds from the build graph
+        """
+        if not result:
+            logger.warning("Failed to install %s", self._graph[concretized_hash]["name"])
+            return
+        logger.info("Installed %s", self._graph[concretized_hash]["name"])
+        for dependent in self._graph[concretized_hash]["dependents"]:
+            self._graph[dependent]["dependencies"].remove(concretized_hash)
+        del self._graph[concretized_hash]
+
+    @property
+    def done(self):
+        """Indicates if there is at least one unprocessed item in the graph
+        """
+        for _ in self.unprocessed:
+            return False
+        return len(self._queue) == 0
+
+    @property
+    def unprocessed(self):
+        """Generator for all items without dependencies not building
+        """
+        for k, v in self._graph.items():
+            if not v['building'] and not v['dependencies']:
+                yield k
 
 
 parser = ArgumentParser()
@@ -33,12 +128,12 @@ userfile = os.path.join(args.logdir, 'specs.txt')
 installfile = NamedTemporaryFile(mode="w+")
 check_call(["concretize", "-e", args.env, args.specfile, installfile.name, userfile])
 
-with installfile as fd:
-    specs = json.load(fd)
+try:
+    with installfile as fd:
+        graph = json.load(fd)
+except json.decoder.JSONDecodeError:
+    sys.exit(1)
 
-piscine = Pool(processes=args.processes)
-success = all(piscine.map(install, [(args.env, s, args.logdir) for s in specs.keys()]))
-piscine.close()
-piscine.join()
-
-sys.exit(0 if success else 1)
+robert = Builder(graph, args.processes)
+if not robert.build_all(args.env, args.logdir):
+    sys.exit(1)
