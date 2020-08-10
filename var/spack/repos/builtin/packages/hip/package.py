@@ -22,7 +22,7 @@ class Hip(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('perl@5.10:', type=('build', 'run'))
 
-    depends_on('rocclr@3.5.0',  when='@3.5.0')
+    depends_on('rocclr@3.5.0', when='@3.5.0')
     depends_on('hsakmt-roct@3.5.0', type='build', when='@3.5.0')
     depends_on('hsa-rocr-dev@3.5.0', type='link', when='@3.5.0')
     depends_on('comgr@3.5.0', type='build', when='@3.5.0')

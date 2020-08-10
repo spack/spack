@@ -82,13 +82,29 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('nlcglib', when='+nlcglib')
     depends_on('libvdwxc+mpi', when='+vdwxc')
     depends_on('scalapack', when='+scalapack')
-    depends_on('cuda', when='+cuda')
+    
     extends('python', when='+python')
+
+    # rocm
+
+    amdgpu_targets = (
+        'gfx701', 'gfx801', 'gfx802', 'gfx803',
+        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
+        'gfx1011', 'gfx1012'
+    )
+
+    variant('rocm', default=False, description='Use ROCm GPU support')
+    variant('amdgpu_target', default=('gfx803', 'gfx900', 'gfx906'), multi=True, values=amdgpu_targets)
+
+    depends_on('hip', when='+rocm', type=('build', 'link'))
+    depends_on('hsakmt-roct', when='+rocm', type='link')
+    depends_on('hsa-rocr-dev', when='+rocm', type='link')
+    depends_on('rocblas', when='+rocm')
 
     conflicts('+shared', when='@6.3.0:6.4.999')
 
     # TODO:
-    # add support for CRAY_LIBSCI, ROCm, testing
+    # add support for CRAY_LIBSCI, testing
 
     patch("strip-spglib-include-subfolder.patch", when='@6.1.5')
     patch("link-libraries-fortran.patch", when='@6.1.5')
@@ -143,7 +159,8 @@ class Sirius(CMakePackage, CudaPackage):
             _def('+scalapack'),
             _def('+fortran', 'CREATE_FORTRAN_BINDINGS'),
             _def('+python', 'CREATE_PYTHON_MODULE'),
-            _def('+cuda')
+            _def('+cuda'),
+            _def('+rocm')
         ]
 
         if '@:6.2.999' in self.spec:
@@ -184,5 +201,12 @@ class Sirius(CMakePackage, CudaPackage):
                 args += [
                     '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0])
                 ]
+
+        if '+rocm' in spec:
+            archs = ",".join(self.spec.variants['amdgpu_target'].value)
+            args.extend([
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(archs)
+            ])
 
         return args

@@ -25,8 +25,6 @@ class Rocblas(CMakePackage):
 
     variant('amdgpu_target', default='gfx701', multi=True, values=amdgpu_targets)
 
-    variant('tensile', default=True, description='Use the Tensile client for GEMM')
-
     depends_on('cmake@3:', type='build')
     depends_on('rocm-cmake@3.5.0', type='build', when='@3.5.0')
     depends_on('rocm-device-libs@3.5.0', type='build', when='@3.5.0')
@@ -34,16 +32,21 @@ class Rocblas(CMakePackage):
     depends_on('hip@3.5.0', type=('build', 'link'), when='@3.5.0')
     depends_on('comgr@3.5.0', type='build', when='@3.5.0')
 
-    depends_on('python', type='build', when='+tensile')
-    depends_on('py-virtualenv', type='build', when='+tensile')
-    depends_on('perl-file-which', type='build', when='+tensile')
-    depends_on('py-pyyaml', type='build', when='+tensile')
-    depends_on('py-wheel', type='build', when='+tensile')
+    depends_on('python', type='build')
+    depends_on('py-virtualenv', type='build')
+    depends_on('perl-file-which', type='build')
+    depends_on('py-pyyaml', type='build')
+    depends_on('py-wheel', type='build')
+
+    # Tensile uses LLVM
+    depends_on('llvm-amdgpu')
 
     resource(name='tensile',
             url='https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-3.5.0.tar.gz',
             sha256='71eb3eed6625b08a4cedb539dd9b596e3d4cc82a1a8063d37d94c0765b6f8257',
-            when='@3.5.0 +tensile')
+            when='@3.5.0')
+
+    patch('0001-Fix-compilation-error-with-StringRef-to-basic-string.patch')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -60,24 +63,17 @@ class Rocblas(CMakePackage):
             '-DRUN_HEADER_TESTING=OFF'
         ]
 
-        if '+tensile' in self.spec:
-            tensile = join_path(
-                self.stage.source_path,
-                'Tensile-rocm-{0}'.format(self.version)
-            )
+        tensile = join_path(
+            self.stage.source_path,
+            'Tensile-rocm-{0}'.format(self.version)
+        )
 
-            args.extend([
-                '-DBUILD_WITH_TENSILE=ON',
-                '-DTensile_TEST_LOCAL_PATH={0}'.format(tensile),
-                '-DTensile_COMPILER=hipcc',
-                '-DTensile_ARCHITECTURE={0}'.format(archs),
-                '-DTensile_LOGIC=asm_full',
-            ])
-
-        else:
-            args.extend([
-                '-DBUILD_WITH_TENSILE=OFF',
-                '-DAMDGPU_TARGETS={0}'.format(archs),
-            ]) 
+        args.extend([
+            '-DBUILD_WITH_TENSILE=ON',
+            '-DTensile_TEST_LOCAL_PATH={0}'.format(tensile),
+            '-DTensile_COMPILER=hipcc',
+            '-DTensile_ARCHITECTURE={0}'.format(archs),
+            '-DTensile_LOGIC=asm_lite',
+        ])
 
         return args
