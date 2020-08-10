@@ -2,9 +2,8 @@
 
 int main()
 {
-
 	printf ("Hello world from C++\n");
 	printf ("YES!");
 
-	return (0);
+	return 0;
 }
