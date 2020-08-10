@@ -53,6 +53,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant('gdrcopy', default=False,
             description='Enable gdrcopy support')
 
+    depends_on('binutils')
     depends_on('numactl')
     depends_on('rdma-core')
     depends_on('java@8', when='+java')
