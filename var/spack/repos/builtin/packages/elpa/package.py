@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class Elpa(AutotoolsPackage):
+class Elpa(AutotoolsPackage, CudaPackage):
     """Eigenvalue solvers for Petaflop-Applications (ELPA)"""
 
     homepage = 'http://elpa.mpcdf.mpg.de/'
@@ -62,14 +62,11 @@ class Elpa(AutotoolsPackage):
         hlist.directories = [incdir]
         return hlist
 
-    build_directory = 'spack-build'
-
     def configure_args(self):
         spec = self.spec
         options = []
 
-        # TODO: add --enable-gpu, --disable-sse-assembly, --enable-sparc64
-        # and --enable-neon-arch64
+        # TODO: --disable-sse-assembly, --enable-sparc64, --enable-neon-arch64
         simd_features = ['vsx', 'sse', 'avx', 'avx2', 'avx512']
 
         for feature in simd_features:
@@ -85,6 +82,17 @@ class Elpa(AutotoolsPackage):
                 'FCFLAGS=-O2 -ffree-line-length-none',
                 'CFLAGS=-O2'
             ])
+
+        if '+cuda' in spec:
+            options.append('--enable-gpu')
+            options.append('--with-cuda-path={0}'.format(spec['cuda'].prefix))
+            options.append('--with-cuda-sdk-path={0}'.format(spec['cuda'].prefix))
+
+            cuda_arch = spec.variants['cuda_arch'].value[0]
+            if cuda_arch != 'none':
+                options.append('--with-GPU-compute-capability=sm_{0}'.format(cuda_arch))
+        else:
+            options.append('--disable-gpu')
 
         if '+openmp' in spec:
             options.append('--enable-openmp')
