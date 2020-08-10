@@ -84,13 +84,16 @@ class Elpa(AutotoolsPackage, CudaPackage):
             ])
 
         if '+cuda' in spec:
+            prefix = spec['cuda'].prefix
             options.append('--enable-gpu')
-            options.append('--with-cuda-path={0}'.format(spec['cuda'].prefix))
-            options.append('--with-cuda-sdk-path={0}'.format(spec['cuda'].prefix))
+            options.append('--with-cuda-path={0}'.format(prefix))
+            options.append('--with-cuda-sdk-path={0}'.format(prefix))
 
             cuda_arch = spec.variants['cuda_arch'].value[0]
+
             if cuda_arch != 'none':
-                options.append('--with-GPU-compute-capability=sm_{0}'.format(cuda_arch))
+                options.append('--with-GPU-compute-capability=sm_{0}'.
+                               format(cuda_arch))
         else:
             options.append('--disable-gpu')
 
