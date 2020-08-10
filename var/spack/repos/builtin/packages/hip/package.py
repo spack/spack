@@ -38,9 +38,12 @@ class Hip(CMakePackage):
     # string.
     patch('0001-Make-it-possible-to-specify-the-package-folder-of-ro.patch', when='@3.5.0')
 
+    # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
+    patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@3.5.0')
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('ROCM_PATH', '')
-        env.set('HIP_PLATFORM', 'clang')
+        env.set('HIP_COMPILER', 'clang')
         env.set('HIP_PLATFORM', 'hcc')
         env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
         env.set('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
