@@ -18,4 +18,4 @@ class Tiptop(AutotoolsPackage):
     depends_on('byacc', type='build')
     depends_on('flex', type='build')
 
-    patch('NR_perf_counter_open_aarch64.patch', sha256='024c2263108de2033a6017eb6fcf23bdd5e2293d83ce6a890fcb84454c7d79e1', when='target=aarch64:')
+    patch('NR_perf_counter_open_aarch64.patch', when='target=aarch64:')
