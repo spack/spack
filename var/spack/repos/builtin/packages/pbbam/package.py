@@ -35,7 +35,7 @@ class Pbbam(CMakePackage):
 
     def install(self, spec, prefix):
         install_tree('include/pbbam', prefix.include.pbbam)
-        with working_dir('../spack-build'):
+        with working_dir(self.build_directory):
             install_tree('bin', prefix.bin)
             install_tree('lib', prefix.lib)
 
