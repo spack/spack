@@ -1017,6 +1017,15 @@ class IntelPackage(PackageBase):
 
         env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
 
+        if self.spec.name in ('intel', 'intel-parallel-studio'):
+            # this package provides compilers
+            # TODO: fix check above when compilers are dependencies
+            env.set('CC', self.prefix.bin.icc)
+            env.set('CXX', self.prefix.bin.icpc)
+            env.set('FC', self.prefix.bin.ifort)
+            env.set('F77', self.prefix.bin.ifort)
+            env.set('F90', self.prefix.bin.ifort)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         # NB: This function is overwritten by 'mpi' provider packages:
         #
@@ -1309,3 +1318,48 @@ class IntelPackage(PackageBase):
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
+
+    # IntelPackages have their own test methods that collate the relevant tests
+    # Tests for each component are here in IntelPackage
+    def test_compiler(self):
+        # Get compiler tests
+        compiler_test_dir = self.test_dir.join('compiler_tests')
+        shutil.copytree(os.path.join(spack.paths.tests_path, 'compilers'),
+                        compiler_test_dir)
+
+        # compile and run each test
+        langs = ('c', 'c++', 'fortran')
+        compilers = ('icc', 'icpc', 'ifort')
+        for lang, compiler in zip(langs, compilers):
+            lang_dir = os.path.join(compiler_test_dir, lang)
+            for test in os.listdir(lang_dir):
+                full_path = os.path.join(compiler_test_dir, test)
+                exe_name = '%s.exe' % test
+
+                # Get the right compiler for this test
+                compiler = test_compiler_for_source(test)
+
+                ###
+                # Compile the test
+                ###
+                # once we reconcile compilers and dependencies this should
+                # query package for appropriate cxx11 flag
+                # only the hello_cxx11 test requires c++11
+                options = ['-std=c++11'] if 'c++11' in test else []
+
+                # standard options
+                options.extend(['-o', exe_name])
+
+                # ifort requires '-Tf' flag immediately precede any *.f95 file
+                if '.f95' in test:
+                    options.append('-Tf')
+
+                # We can finally append the filename
+                options.append(full_path)
+                compiled = self.run_test(compiler, options=options,
+                                         installed=True)
+
+                # run the test to ensure it works
+                # only run it if the compile step worked
+                if compiled:
+                    self.run_test(exe_name, expected=["Hello world", "YES!"])

@@ -39,6 +39,7 @@ test_path             = os.path.join(module_path, "test")
 hooks_path            = os.path.join(module_path, "hooks")
 var_path              = os.path.join(prefix, "var", "spack")
 repos_path            = os.path.join(var_path, "repos")
+tests_path            = os.path.join(var_path, "tests")
 share_path            = os.path.join(prefix, "share", "spack")
 
 # Paths to built-in Spack repositories.
