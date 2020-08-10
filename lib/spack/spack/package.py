@@ -25,6 +25,7 @@ import textwrap
 import time
 import traceback
 import six
+import types
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -532,6 +533,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: A list or set of build time test functions to be called when tests
     #: are executed or 'None' if there are no such test functions.
     build_time_test_callbacks = None
+
+    #: By default, packages are not virtual
+    #: Virtual packages override this attribute
+    virtual = False
 
     #: Most Spack packages are used to install source or binary code while
     #: those that do not can be used to install a set of other Spack packages.
@@ -1670,14 +1675,47 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     shutil.rmtree(testdir)
                 fsys.mkdirp(testdir)
 
-                # copy test data into testdir/data
-                datadir = Prefix(self.package_dir).test
-                if os.path.isdir(datadir):
-                    shutil.copytree(datadir, testdir.data)
+                # run test methods from the package and all virtuals it provides
+                # virtuals have to be deduped by name
+                v_names = list(set([vspec.name
+                                    for vspec in self.virtuals_provided]))
+
+                # hack for compilers that are not dependencies (yet)
+                # TODO: this all eventually goes away
+                if self.name in ('gcc', 'intel', 'intel-parallel-studio', 'pgi'):
+                    v_names.extend(['c', 'cxx', 'fortran'])
+                if self.spec.satisfies('llvm+clang'):
+                    v_names.extend(['c', 'cxx'])
+
+                test_specs = [self.spec] + [spack.spec.Spec(v_name)
+                                            for v_name in sorted(v_names)]
 
                 try:
-                    os.chdir(testdir)
-                    self.test()
+                    with fsys.working_dir(testdir):
+                        for spec in test_specs:
+                            # Fail gracefully if a virtual has no package/tests
+                            try:
+                                spec_pkg = spec.package
+                            except spack.repo.UnknownPackageError:
+                                continue
+
+                            # copy test data into testdir/data
+                            data_source = Prefix(spec_pkg.package_dir).test
+                            data_dir = os.path.join(testdir.data, spec.name)
+                            if os.path.isdir(data_source):
+                                shutil.copytree(data_source, data_dir)
+
+                            # grab the function for each method so we can call it
+                            # with this package in place of its `self` object
+                            test_fn = spec_pkg.__class__.test
+                            if not isinstance(test_fn, types.FunctionType):
+                                test_fn = test_fn.__func__
+
+                            # Run the tests
+                            test_fn(self)
+
+                    # If fail-fast was on, we error out above
+                    # If we collect errors, raise them in batch here
                     if self.test_failures:
                         raise TestFailure(self.test_failures)
 
@@ -1686,6 +1724,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                         shutil.rmtree(testdir)
                         if not os.listdir(self.test_stage):
                             shutil.rmtree(self.test_stage)
+
                 finally:
                     # reset debug level
                     tty.set_debug(old_debug)
@@ -1697,7 +1736,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def test(self):
         pass
 
-    def run_test(self, exe, options=[], expected=[], status=None,
+    def run_test(self, exe, options=[], expected=[], status=0,
                  installed=False, purpose='', skip_missing=False,
                  work_dir=None):
         """Run the test and confirm the expected results are obtained
@@ -1709,8 +1748,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             options (str or list of str): list of options to pass to the runner
             expected (str or list of str): list of expected output strings.
                 Each string is a regex expected to match part of the output.
-            status (int, list of int, or None): possible passing status values
-                with 0 and None meaning the test is expected to succeed
+            status (int or list of int): possible passing status values
+                with 0 meaning the test is expected to succeed
             installed (bool): the executable must be in the install prefix
             purpose (str): message to display before running test
             skip_missing (bool): skip the test if the executable is not
@@ -1723,10 +1762,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 runner = which(exe)
                 if runner is None and skip_missing:
                     return
+                assert runner is not None, \
+                    "Failed to find executable '{0}'".format(exe)
 
                 self._run_test_helper(
                     runner, options, expected, status, installed, purpose)
                 print("PASSED")
+                return True
             except BaseException as e:
                 # print a summary of the error to the log file
                 # so that cdash and junit reporters know about it
@@ -1776,6 +1818,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     raise TestFailure([(exc, m)])
                 else:
                     self.test_failures.append((exc, m))
+                return False
 
     def _run_test_helper(self, runner, options, expected, status, installed,
                          purpose):
@@ -1789,9 +1832,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         else:
             tty.debug('test: {0}: expect command status in {1}'
                       .format(runner.name, status))
-
-        assert runner is not None, \
-            "Failed to find executable '{0}'".format(runner.name)
 
         if installed:
             msg = "Executable '{0}' expected in prefix".format(runner.name)

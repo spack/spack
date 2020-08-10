@@ -729,24 +729,25 @@ def setup_package(pkg, dirty, context='build'):
     # architecture specific setup
     pkg.architecture.platform.setup_platform_environment(pkg, env)
 
-    # recursive post-order dependency information
-    env.extend(
-        modifications_from_dependencies(pkg.spec, context=context)
-    )
-
-    if context == 'build' and (not dirty) and (not env.is_unset('CPATH')):
-        tty.debug("A dependency has updated CPATH, this may lead pkg-config"
-                  " to assume that the package is part of the system"
-                  " includes and omit it when invoked with '--cflags'.")
-
-    # setup package itself
-    set_module_variables_for_package(pkg)
     if context == 'build':
+        # recursive post-order dependency information
+        env.extend(
+            modifications_from_dependencies(pkg.spec, context=context)
+        )
+
+        if (not dirty) and (not env.is_unset('CPATH')):
+            tty.debug("A dependency has updated CPATH, this may lead pkg-config"
+                      " to assume that the package is part of the system"
+                      " includes and omit it when invoked with '--cflags'.")
+
+        # setup package itself
+        set_module_variables_for_package(pkg)
         pkg.setup_build_environment(env)
     elif context == 'test':
         import spack.user_environment as uenv  # avoid circular import
-        env.extend(inspect_path(pkg.spec.prefix,
-                                uenv.prefix_inspections(pkg.spec.platform)))
+        env.extend(uenv.environment_modifications_for_spec(pkg.spec))
+        set_module_variables_for_package(pkg)
+        env.prepend_path('PATH', '.')
 
     # Loading modules, in particular if they are meant to be used outside
     # of Spack, can change environment variables that are relevant to the

@@ -234,3 +234,7 @@ class IntelParallelStudio(IntelPackage):
 
         for name, value in self.mpi_compiler_wrappers.items():
             env.set(name, value)
+
+    def test(self):
+        self.test_compiler()
+        # TODO: test other components
