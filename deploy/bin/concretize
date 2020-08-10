@@ -25,7 +25,7 @@ def insert_into_graph(env, graph, spec, explicit=False):
     """
     build_hash = spec.build_hash()
     graph[spec.build_hash()] = dict(
-        name="{s.name}@{s.version}".format(s=spec),
+        name="{s.name}@{s.version} /{h}".format(s=spec, h=spec.build_hash(6)),
         dependents=set(),
         dependencies=set(),
         building=False,

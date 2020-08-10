@@ -57,7 +57,7 @@ class Builder:
                 failed.append(name)
             else:
                 deps = [
-                    self._graph[k]["name"]
+                    self._graph.get(k, {}).get("name", "/{}".format(k[:6]))
                     for k in value["dependencies"]
                 ]
                 transient.append((name, deps))
@@ -92,6 +92,10 @@ class Builder:
                 done.append(concretized_hash)
         for concretized_hash in done:
             del self._queue[concretized_hash]
+        if done:
+            for concretized_hash in self._queue.keys():
+                name = self._graph[concretized_hash]["name"]
+                logger.info("Queue contains: %s", name)
 
     def process_result(self, concretized_hash, result):
         """Removes successful builds from the build graph
