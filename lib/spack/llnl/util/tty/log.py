@@ -467,10 +467,9 @@ class log_output(object):
             self.process.start()
 
         finally:
-            pass
-            #if input_wrapper:
-            #    input_wrapper.close()
-            #read_wrapper.close()
+            if input_wrapper:
+                input_wrapper.close()
+            read_wrapper.close()
 
         # Flush immediately before redirecting so that anything buffered
         # goes to the original stream
