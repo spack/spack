@@ -85,20 +85,12 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
 
     def _test_check_versions(self):
         """Perform version checks on installed package binaries."""
-        spec_vers = str(self.spec.version)
-
-        checks = {
-            'ctags':        ([spec_vers], None),
-            'ebrowse':      ([spec_vers], None),
-            'emacs':        ([spec_vers], None),
-            'emacsclient':  ([spec_vers], None),
-            'etags':        ([spec_vers], None),
-        }
+        checks = ['ctags', 'ebrowse', 'emacs', 'emacsclient', 'etags']
 
         for exe in checks:
-            expected, status = checks[exe]
-            reason = 'test version of {0} is {1}'.format(exe, expected[0])
-            self.run_test(exe, ['--version'], expected, status, installed=True,
+            expected = str(self.spec.version)
+            reason = 'test version of {0} is {1}'.format(exe, expected)
+            self.run_test(exe, ['--version'], expected, installed=True,
                           purpose=reason, skip_missing=True)
 
     def test(self):

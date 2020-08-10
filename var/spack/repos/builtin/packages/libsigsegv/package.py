@@ -53,7 +53,7 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
         with open('./data/smoke_test.out', 'r') as fd:
             expected = fd.read()
         reason = 'test ability to use the library'
-        self.run_test(prog, [], expected, None, False, purpose=reason)
+        self.run_test(prog, [], expected, purpose=reason)
 
     def _run_build_tests(self):
         """Build and run selected tests pulled from the build."""
@@ -63,18 +63,16 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
         # Run the build tests to confirm the expected output
         passed = 'Test passed'
         checks = {
-            'sigsegv1': ([passed], None),
-            'sigsegv2': ([passed], None),
-            'sigsegv3': (['caught', passed], None),
-            'stackoverflow1': (['recursion', 'Stack overflow', passed], None),
-            'stackoverflow2': (['recursion', 'overflow', 'violation', passed],
-                               None),
+            'sigsegv1': [passed],
+            'sigsegv2': [passed],
+            'sigsegv3': ['caught', passed],
+            'stackoverflow1': ['recursion', 'Stack overflow', passed],
+            'stackoverflow2': ['recursion', 'overflow', 'violation', passed],
         }
 
-        for exe in checks:
-            expected, status = checks[exe]
+        for exe, expected in checks.items():
             reason = 'test {0} output'.format(exe)
-            self.run_test(exe, [], expected, status, installed=False,
+            self.run_test(exe, [], expected, installed=True,
                           purpose=reason, skip_missing=True, work_dir=work_dir)
 
     def test(self):
