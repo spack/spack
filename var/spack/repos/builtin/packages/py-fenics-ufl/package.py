@@ -25,6 +25,6 @@ class PyFenicsUfl(PythonPackage):
     version('2017.2.0',       sha256='0adff7a511185b20c38ddaccdeed6c1b2ecafe4b163c688bfd1316d5c3b1c00d')
     version('2017.1.0.post1', sha256='82c8170f44c2392c7e60aa86495df22cc209af50735af8115dc35aeda4b0ca96')
 
-    depends_on("python@3.8:", type=('build', 'run'))
+    depends_on("python@3.5:", type=('build', 'run'))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
