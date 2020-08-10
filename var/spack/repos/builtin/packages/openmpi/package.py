@@ -735,10 +735,10 @@ class Openmpi(AutotoolsPackage):
 
     def _test_bin_ops(self):
         info = ([], ['Ident string: {0}'.format(self.spec.version), 'MCA'],
-                None)
+                0)
 
         ls = (['-n', '1', 'ls', '..'],
-              ['openmpi-{0}'.format(self.spec.version)], None)
+              ['openmpi-{0}'.format(self.spec.version)], 0)
 
         checks = {
             'mpirun': ls,
@@ -760,55 +760,55 @@ class Openmpi(AutotoolsPackage):
         bad_option = 'unknown option'
         checks = {
             # Binaries available in at least versions 2.0.0 through 4.0.3
-            'mpiCC': ([comp_vers], None),
-            'mpic++': ([comp_vers], None),
-            'mpicc': ([comp_vers], None),
-            'mpicxx': ([comp_vers], None),
-            'mpiexec': ([spec_vers], None),
-            'mpif77': ([comp_vers], None),
-            'mpif90': ([comp_vers], None),
-            'mpifort': ([comp_vers], None),
-            'mpirun': ([spec_vers], None),
+            'mpiCC': ([comp_vers], 0),
+            'mpic++': ([comp_vers], 0),
+            'mpicc': ([comp_vers], 0),
+            'mpicxx': ([comp_vers], 0),
+            'mpiexec': ([spec_vers], 0),
+            'mpif77': ([comp_vers], 0),
+            'mpif90': ([comp_vers], 0),
+            'mpifort': ([comp_vers], 0),
+            'mpirun': ([spec_vers], 0),
             'ompi-clean': ([bad_option], 213),
             'ompi-server': ([bad_option], 1),
-            'ompi_info': ([spec_vers], None),
+            'ompi_info': ([spec_vers], 0),
             'opal_wrapper': (['Cannot open configuration file'], 243),
             'orte-clean': ([bad_option], 213),
             'orte-info': (['did not have enough parameters'], 1),
             'orte-server': ([bad_option], 1),
-            'ortecc': ([comp_vers], None),
+            'ortecc': ([comp_vers], 0),
             'orted': ([bad_option], 213),
-            'orterun': ([spec_vers], None),
+            'orterun': ([spec_vers], 0),
 
             # Binaries available in versions 2.0.0 through 2.1.6
-            'ompi-submit': ([spec_vers], None),
-            'orte-submit': ([spec_vers], None),
+            'ompi-submit': ([spec_vers], 0),
+            'orte-submit': ([spec_vers], 0),
 
             # Binaries available in versions 2.0.0 through 3.1.5
-            'ompi-dvm': ([spec_vers], None),
+            'ompi-dvm': ([spec_vers], 0),
             'ompi-ps': ([bad_option], 213),
             'ompi-top': ([bad_option], 1),
-            'orte-dvm': ([spec_vers], None),
+            'orte-dvm': ([spec_vers], 0),
             'orte-ps': ([bad_option], 213),
             'orte-top': ([bad_option], 1),
-            'oshcc': ([comp_vers], None),
-            'oshfort': ([comp_vers], None),
-            'oshmem_info': ([spec_vers], None),
-            'oshrun': ([spec_vers], None),
-            'shmemcc': ([comp_vers], None),
-            'shmemfort': ([comp_vers], None),
-            'shmemrun': ([spec_vers], None),
+            'oshcc': ([comp_vers], 0),
+            'oshfort': ([comp_vers], 0),
+            'oshmem_info': ([spec_vers], 0),
+            'oshrun': ([spec_vers], 0),
+            'shmemcc': ([comp_vers], 0),
+            'shmemfort': ([comp_vers], 0),
+            'shmemrun': ([spec_vers], 0),
 
             # Binary available in version 3.1.0 through 3.1.5
-            'prun': ([spec_vers], None),
+            'prun': ([spec_vers], 0),
 
             # Binaries available in versions 3.0.0 through 3.1.5
-            'oshCC': ([comp_vers], None),
-            'oshc++': ([comp_vers], None),
-            'oshcxx': ([comp_vers], None),
-            'shmemCC': ([comp_vers], None),
-            'shmemc++': ([comp_vers], None),
-            'shmemcxx': ([comp_vers], None),
+            'oshCC': ([comp_vers], 0),
+            'oshc++': ([comp_vers], 0),
+            'oshcxx': ([comp_vers], 0),
+            'shmemCC': ([comp_vers], 0),
+            'shmemc++': ([comp_vers], 0),
+            'shmemcxx': ([comp_vers], 0),
         }
 
         for exe in checks:
@@ -821,21 +821,21 @@ class Openmpi(AutotoolsPackage):
         # First build the examples
         work_dir = os.path.join(self.install_test_root,
                                 self.extra_install_tests)
-        self.run_test('make', ['all'], [], None, False,
+        self.run_test('make', ['all'], [],
                       purpose='test build the examples', work_dir=work_dir)
 
         # Now run those with known results
         have_spml = self.spec.satisfies('@2.0.0:2.1.6')
 
-        hello_world = (['Hello, world', 'I am', '0 of', '1'], None)
+        hello_world = (['Hello, world', 'I am', '0 of', '1'], 0)
 
-        max_red = (['0/1 dst = 0 1 2'], None)
+        max_red = (['0/1 dst = 0 1 2'], 0)
 
         missing_spml = (['No available spml components'], 1)
 
-        no_out = ([''], None)
+        no_out = ([''], 0)
 
-        ring_out = (['1 processes in ring', '0 exiting'], None)
+        ring_out = (['1 processes in ring', '0 exiting'], 0)
 
         strided = (['not in valid range'], 255)
 
@@ -865,7 +865,7 @@ class Openmpi(AutotoolsPackage):
         for exe in checks:
             expected, status = checks[exe]
             reason = 'test {0} output'.format(exe)
-            self.run_test(exe, [], expected, status, installed=False,
+            self.run_test(exe, [], expected, status, installed=True,
                           purpose=reason, skip_missing=True, work_dir=work_dir)
 
     def test(self):

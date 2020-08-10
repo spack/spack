@@ -390,7 +390,7 @@ HDF5 version {version} {version}
         for exe in exes:
             reason = 'test version of {0} is {1}'.format(exe, spec_vers_str)
             option = '-V' if exe in use_short_opt else '--version'
-            self.run_test(exe, [option], spec_vers_str, None, installed=True,
+            self.run_test(exe, [option], spec_vers_str, installed=True,
                           purpose=reason, skip_missing=True)
 
     def _test_example(self):
@@ -402,17 +402,17 @@ HDF5 version {version} {version}
         output = ''
         with open(dump_file) as fd:
             output == fd.read()
-        self.run_test('h5dump', [h5_file], output, None, installed=True,
+        self.run_test('h5dump', [h5_file], output, installed=True,
                       purpose=reason, skip_missing=True, work_dir='.')
 
         reason = 'test: ensure h5copy runs'
         options = ['-i', h5_file, '-s', 'Spack', '-o', 'test.h5', '-d', 'Spack']
-        self.run_test('h5copy', options, '', None, installed=True,
+        self.run_test('h5copy', options, installed=True,
                       purpose=reason, skip_missing=True, work_dir='.')
 
         reason = 'test: ensure h5diff shows no differences in orig and copy'
         options = [h5_file, 'test.h5']
-        self.run_test('h5diff', options, '', None, installed=True,
+        self.run_test('h5diff', options, installed=True,
                       purpose=reason, skip_missing=True, work_dir='.')
 
     def test(self):

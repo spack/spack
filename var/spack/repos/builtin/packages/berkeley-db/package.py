@@ -50,5 +50,5 @@ class BerkeleyDb(AutotoolsPackage):
         for exe in exes:
             reason = 'test version of {0} is {1}'.format(exe,
                                                          self.spec.version)
-            self.run_test(exe, ['-V'], [self.spec.version.string], None,
+            self.run_test(exe, ['-V'], [self.spec.version.string],
                           installed=True, purpose=reason, skip_missing=True)

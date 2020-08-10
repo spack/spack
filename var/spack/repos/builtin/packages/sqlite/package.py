@@ -147,7 +147,7 @@ class Sqlite(AutotoolsPackage):
         # Ensure the database only contains one table
         reason = 'test to ensure only table is "packages"'
         opts = ['./data/packages.db', '.tables']
-        self.run_test('sqlite3', opts, 'packages', None, installed=True,
+        self.run_test('sqlite3', opts, 'packages', installed=True,
                       purpose=reason, skip_missing=False)
 
         # Ensure the database dump matches expectations, where special
@@ -156,16 +156,16 @@ class Sqlite(AutotoolsPackage):
         reason = 'test dump output'
         opts = ['./data/packages.db', '.dump']
         expected = _get_output('dump.out')
-        self.run_test('sqlite3', opts, expected, None, installed=True,
+        self.run_test('sqlite3', opts, expected, installed=True,
                       purpose=reason, skip_missing=False)
-        
+
     def _test_version(self):
         """Perform version check on the installed package."""
         exe = 'sqlite3'
         vers_str = str(self.spec.version)
 
         reason = 'test version of {0} is {1}'.format(exe, vers_str)
-        self.run_test(exe, '-version', vers_str, None, installed=True,
+        self.run_test(exe, '-version', vers_str, installed=True,
                       purpose=reason, skip_missing=False)
 
     def test(self):
