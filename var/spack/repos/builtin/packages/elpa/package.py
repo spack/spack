@@ -108,6 +108,8 @@ class Elpa(AutotoolsPackage, CudaPackage):
             'SCALAPACK_LDFLAGS={0}'.format(spec['scalapack'].libs.joined())
         ])
 
+        options.append('--disable-silent-rules')
+
         return options
 
     def build(self, spec, prefix):
