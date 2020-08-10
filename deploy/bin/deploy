@@ -56,11 +56,19 @@ class Builder:
             if value["building"]:
                 failed.append(name)
             else:
-                transient.append(name)
+                deps = [
+                    self._graph[k]["name"]
+                    for k in value["dependencies"]
+                ]
+                transient.append((name, deps))
         for name in failed:
             logger.warning("Failed to install %s", name)
-        for name in transient:
-            logger.warning("Failed to install (due to missing dependencies) %s", name)
+        for name, deps in transient:
+            logger.warning(
+                "Failed to install %s (missing dependencies: %s)",
+                name,
+                ", ".join(deps)
+            )
 
     def submit_unprocessed(self, pool, env, logdir):
         """Adds all unprocessed items to the build queue
