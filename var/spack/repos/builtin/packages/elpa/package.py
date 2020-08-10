@@ -101,3 +101,7 @@ class Elpa(AutotoolsPackage):
         ])
 
         return options
+
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory):
+            make(*self.build_targets, parallel=False)
