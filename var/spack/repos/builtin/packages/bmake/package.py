@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Bmake(AutotoolsPackage):
+class Bmake(Package):
     """Portable version of NetBSD make(1)."""
 
     homepage = "http://www.crufty.net/help/sjg/bmake.htm"
@@ -16,32 +16,20 @@ class Bmake(AutotoolsPackage):
     version('20180512', sha256='ac3cd262065fcc20c1dec7c95f06306c8138b3e17025b949343a06a8980a5508')
     version('20171207', sha256='1703667e53a0498c0903b20612ebcbb41b886a94b238624cfeadd91a4111d39a')
 
-    depends_on('m4',       type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
+    phases = ['configure', 'build', 'install']
+
+    def patch(self):
+        # Do not pre-roff cat pages
+        filter_file('MANTARGET?', 'MANTARGET', 'mk/man.mk', string=True)
+
+    def configure(self, spec, prefix):
+        sh = which('sh')
+        sh('./configure')
 
     def build(self, spec, prefix):
-        bash = which('bash')
-        bash('./make-bootstrap.sh')
+        sh = which('sh')
+        sh('./make-bootstrap.sh')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('bmake', prefix.bin)
-#    phases = ['configure', 'build', 'install']
-
-#    def patch(self):
-        # Do not pre-roff cat pages
-#        filter_file('MANTARGET?', 'MANTARGET', 'mk/man.mk', string=True)
-
-#    def configure(self, spec, prefix):
-#        sh = which('sh')
-#        sh('boot-strap', 'op=configure')
-
-#    def build(self, spec, prefix):
-#        sh = which('sh')
-#        sh('boot-strap', 'op=build')
-
-#    def install(self, spec, prefix):
-#        sh = which('sh')
-#        sh('boot-strap', '--prefix={0}'.format(prefix), 'op=install')
