@@ -418,28 +418,49 @@ environment variables used by the pipeline infrastructure are described here.
 AWS_ACCESS_KEY_ID
 ^^^^^^^^^^^^^^^^^
 
-Needed when binary mirror is an S3 bucket.
+(Optional) Needed if binary mirror is an S3 bucket that is not publicly writable.
 
 ^^^^^^^^^^^^^^^^^^^^^
 AWS_SECRET_ACCESS_KEY
 ^^^^^^^^^^^^^^^^^^^^^
 
-Needed when binary mirror is an S3 bucket.
+(Optional) Needed if binary mirror is an S3 bucket that is not publicly writable.
 
 ^^^^^^^^^^^^^^^
 S3_ENDPOINT_URL
 ^^^^^^^^^^^^^^^
 
-Needed when binary mirror is an S3 bucket that is *not* on AWS.
+(Optional) Needed when binary mirror is an S3 bucket that is *not* on AWS.
 
 ^^^^^^^^^^^^^^^^^
 CDASH_AUTH_TOKEN
 ^^^^^^^^^^^^^^^^^
 
-Needed in order to report build groups to CDash.
+(Optional) Needed if reporting pipeline build results to CDash.
 
 ^^^^^^^^^^^^^^^^^
 SPACK_SIGNING_KEY
 ^^^^^^^^^^^^^^^^^
 
-Needed to sign/verify binary packages from the remote binary mirror.
+(Optional) Needed to sign/verify binary packages in situations where a persistent
+keystore (such as in user home directory) is not available to runners.  In situations
+where such a peristent key store is available, it is recommended instead to set up
+keys there and use ``SPACK_GNUPGHOME`` to tell spack about those keys.
+
+If ``SPACK_SIGNING_KEY`` is needed, then the desired public and secret keys should
+be exported from the appropriate keystore (in "app armored" format) and provided via
+gitlab CI variables.  Below is an example command line to export a key in the correct
+format.  Note that both the public and secret keys are needed, and typically need to
+be exported using two separate commands:
+
+.. code-block:: shell
+   (
+       gpg2 --export --armor DA88B72C8A15FAC657213CFA660C7DE4C3C87E7B \
+    && gpg2 --export-secret-keys --armor DA88B72C8A15FAC657213CFA660C7DE4C3C87E7B
+   )
+
+^^^^^^^^^^^^^^^
+SPACK_GNUPGHOME
+^^^^^^^^^^^^^^^
+
+(Optional)
