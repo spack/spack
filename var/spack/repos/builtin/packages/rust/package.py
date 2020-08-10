@@ -64,6 +64,7 @@ class Rust(Package):
     depends_on('openssl')
     depends_on('libssh2')
     depends_on('libgit2')
+    depends_on('z3')
 
     # Pre-release Versions
     version('master', branch='master', submodules=True)
