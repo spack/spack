@@ -25,7 +25,7 @@ class Ape(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('gsl')
-    depends_on('libxc@:4.999', when='@2.3.2:')
+    depends_on('libxc@:4.999', when='@2.3.0:')
     depends_on('libxc@:2.2.2', when='@:2.2.1')
 
     def configure_args(self):
