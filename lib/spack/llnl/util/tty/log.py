@@ -10,7 +10,6 @@ from __future__ import unicode_literals
 import atexit
 import errno
 import multiprocessing
-import threading
 import os
 import re
 import select
@@ -49,43 +48,6 @@ def ignore_signal(signum):
         yield
     finally:
         signal.signal(signum, old_handler)
-
-
-class AltSignalHandler(object):
-    def __init__(self, orig_handler, alt_handler):
-        self.alt_handler = alt_handler
-        self.orig_handler = orig_handler
-        self.current_handler = orig_handler
-
-    def handle(self, signum, frame):
-        self.current_handler(signum, frame)
-
-    def use_alt_handler(self):
-        self.current_handler = self.alt_handler
-
-    def use_orig_handler(self):
-        self.current_handler = self.orig_handler
-
-
-class SignalHandler(object):
-    def __init__(self):
-        self.sig_to_handler = {}
-
-    @staticmethod
-    def ignore_signal(signum, frame):
-        pass
-
-    def register_alt_handler(self, signum, fn):
-        orig_handler = signal.signal(signum, fn)
-        self.sig_to_handler[signum] = AltSignalHandler(orig_handler, fn)
-
-    def can_ignore(self, signum):
-        self.register_alt_handler(signum, SignalHandler.ignore_signal)
-
-    def activate_alt_handler(self, signum):
-        self.sig_to_handler[signum].use_alt_handler()
-        yield
-        self.sig_to_handler[signum].use_orig_handler()
 
 
 def _is_background_tty(stream):
@@ -476,33 +438,39 @@ class log_output(object):
         # OS-level pipe for redirecting output to logger
         read_fd, write_fd = os.pipe()
 
+        # Use multiprocessing.COnnection to transmit FD from the parent
+        # process to the child
+        read_wrapper = multiprocessing.connection.Connection(read_fd)
+
         # Multiprocessing pipe for communication back from the daemon
         # Currently only used to save echo value between uses
         self.parent_pipe, child_pipe = multiprocessing.Pipe()
 
         # Sets a daemon that writes to file what it reads from a pipe
         try:
+            # need to pass this b/c multiprocessing closes stdin in child.
             try:
-                input = os.fdopen(os.dup(sys.stdin.fileno()))
+                input_wrapper = multiprocessing.connection.Connection(
+                    os.dup(sys.stdin.fileno())
+                )
             except BaseException:
-                input = None  # just don't forward input if this fails
+                input_wrapper = None  # just don't forward input if this fails
 
-            read = os.fdopen(read_fd, 'r', 1)
-
-            alt_stdout = os.fdopen(os.dup(self.saved_fds._saved_stdout), 'w')
-
-            self.thread = threading.Thread(
+            self.process = multiprocessing.Process(
                 target=_writer_daemon,
                 args=(
-                    input, read, alt_stdout,
-                    self.echo, self.log_file, child_pipe
+                    input_wrapper, read_wrapper, self.echo, self.log_file,
+                    child_pipe
                 )
             )
-            self.thread.start()
+            self.process.daemon = True  # must set before start()
+            self.process.start()
 
         finally:
-            # don't close input here
             pass
+            #if input_wrapper:
+            #    input_wrapper.close()
+            #read_wrapper.close()
 
         # Flush immediately before redirecting so that anything buffered
         # goes to the original stream
@@ -588,7 +556,7 @@ class log_output(object):
 
         # join the daemon process. The daemon will quit automatically
         # when the write pipe is closed; we just wait for it here.
-        self.thread.join()
+        self.process.join()
 
         # restore old color and debug settings
         tty.color._force_color = self._saved_color
@@ -616,7 +584,7 @@ class log_output(object):
             sys.stdout.flush()
 
 
-def _writer_daemon(stdin, read, alt_stdout, echo, log_file, control_pipe):
+def _writer_daemon(stdin_wrapper, read_wrapper, echo, log_file, control_pipe):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
     The daemon receives output from the parent process and writes it both
@@ -664,15 +632,18 @@ def _writer_daemon(stdin, read, alt_stdout, echo, log_file, control_pipe):
     """
     # Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
-    in_pipe = read
+    in_pipe = os.fdopen(read_wrapper._handle, 'r', 1)
+
+    if stdin_wrapper:
+        stdin = os.fdopen(stdin_wrapper._handle)
+    else:
+        stdin = None
 
     # list of streams to select from
     istreams = [in_pipe, stdin] if stdin else [in_pipe]
     force_echo = False      # parent can force echo for certain output
 
     log_file = log_file.unwrap()
-
-    alt_stdout.write("<<< Starting thread")
 
     try:
         with keyboard_input(stdin) as kb:
@@ -714,8 +685,8 @@ def _writer_daemon(stdin, read, alt_stdout, echo, log_file, control_pipe):
 
                     # Echo to stdout if requested or forced.
                     if echo or force_echo:
-                        alt_stdout.write(line)
-                        alt_stdout.flush()
+                        sys.stdout.write(line)
+                        sys.stdout.flush()
 
                     # Stripped output to log file.
                     log_file.write(_strip(line))
@@ -728,16 +699,18 @@ def _writer_daemon(stdin, read, alt_stdout, echo, log_file, control_pipe):
 
     except BaseException:
         tty.error("Exception occurred in writer daemon!")
-        traceback.print_exc(file=alt_stdout)
+        traceback.print_exc()
 
     finally:
         # send written data back to parent if we used a StringIO
         if isinstance(log_file, StringIO):
             control_pipe.send(log_file.getvalue())
         log_file.close()
+        read_wrapper.close()
+        stdin_wrapper.close()
 
-        # send echo value back to the parent so it can be preserved.
-        control_pipe.send(echo)
+    # send echo value back to the parent so it can be preserved.
+    control_pipe.send(echo)
 
 
 def _retry(function):
