@@ -3438,9 +3438,18 @@ class Spec(object):
         """
         spec = self._autospec(spec)
 
-        # if anonymous or same name, we only have to look at the root
         if not spec.name or spec.name == self.name:
+            # If anonymous or same name, we only have to look at the root
             return self.satisfies(spec)
+        elif self._concrete and spec.virtual:
+            # For virtual dependencies we need to check edges, not nodes
+            for dspec in self.traverse_edges(
+                    deptype=all, cover='edges', root=False
+            ):
+                provides_this_virtual = spec.name in dspec.virtuals
+                if provides_this_virtual and dspec.spec.satisfies(spec):
+                    return True
+            return False
         else:
             return any(s.satisfies(spec) for s in self.traverse(root=False))
 
