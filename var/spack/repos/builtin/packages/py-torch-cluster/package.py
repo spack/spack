@@ -37,7 +37,7 @@ class PyTorchCluster(PythonPackage):
     version('1.5.7', sha256='71701d2f7f3e458ebe5904c982951349fdb60e6f1654e19c7e102a226e2de72e')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    extends('py-torch-sparse')
+    extends('py-torch')
 
     def setup_build_environment(self, env):
         cuda_arches = list(self.spec['py-torch'].variants['cuda_arch'].value)
