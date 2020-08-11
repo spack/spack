@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 import json
 import logging
 import os
+import pprint
 import sys
 import time
 
@@ -15,7 +16,7 @@ logger = logging
 logger.basicConfig(
     format='--| {message}',
     style='{',
-    level=logging.INFO
+    level=logging.DEBUG
 )
 
 
@@ -96,6 +97,7 @@ class Builder:
             for concretized_hash in self._queue.keys():
                 name = self._graph[concretized_hash]["name"]
                 logger.info("Queue contains: %s", name)
+            logger.debug("Graph:\n%s", pprint.pformat(self._graph, indent=2))
 
     def process_result(self, concretized_hash, result):
         """Removes successful builds from the build graph
