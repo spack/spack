@@ -27,32 +27,19 @@ class PkgConfig(AutotoolsPackage):
 
     parallel = False
 
-    executables = ['pkg-config']
+    executables = ['^pkg-config$']
 
     @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        """Allow ``spack external find pkg-config`` to locate
-        pkg-config installations.
-
-        Parameters:
-            prefix (str): the directory containing the executables
-            exes_in_prefix (set): the executables that match the regex
-
-        Returns:
-            spack.spec.Spec: the spec of this pkg-config installation
-        """
-        # Possible executable names:
-        # * pkg-config
-        # Take the first alphabetical executable name and hope for the best
-        pkgconfig = Executable(min(exes_in_prefix))
+    def determine_version(cls, exe):
+        exe = Executable(exe)
 
         # Make sure this is actually pkg-config, not pkgconf
-        if 'usage: pkgconf' in pkgconfig('--help', output=str):
+        if 'usage: pkgconf' in exe('--help', output=str):
             return None
 
-        version = pkgconfig('--version', output=str).rstrip()
+        version = exe('--version', output=str).rstrip()
 
-        return Spec(cls.name + '@' + version)
+        return version
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Adds the ACLOCAL path for autotools."""
