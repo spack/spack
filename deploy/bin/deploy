@@ -106,7 +106,6 @@ class Builder:
         logger.info("Installed %s", self._graph[concretized_hash]["name"])
         for dependent in self._graph[concretized_hash]["dependents"]:
             self._graph[dependent]["dependencies"].remove(concretized_hash)
-        del self._graph[concretized_hash]
 
     @property
     def done(self):
