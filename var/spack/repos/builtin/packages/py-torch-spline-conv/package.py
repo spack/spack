@@ -37,7 +37,7 @@ class PyTorchSplineConv(PythonPackage):
     version('1.2.0', sha256='ab8da41357c8a4785662366655bb6dc5e84fd0e938008194955409aefe535009')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    extends('py-torch-cluster')
+    extends('py-torch')
 
     def setup_build_environment(self, env):
         cuda_arches = list(self.spec['py-torch'].variants['cuda_arch'].value)
