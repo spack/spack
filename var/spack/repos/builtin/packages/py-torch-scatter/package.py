@@ -37,6 +37,7 @@ class PyTorchScatter(PythonPackage):
     version('2.0.5', sha256='e29b364beaa9c84a99e0e236be89ed19d4452d89010ff736184ddcce488b47f6')
 
     depends_on('python@3.6:', type=('build', 'run'))
+    extends('py-torch')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
