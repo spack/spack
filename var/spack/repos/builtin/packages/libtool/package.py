@@ -31,38 +31,13 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
-    executables = ['libtool']
+    executables = ['^g?libtool(ize)?$']
 
     @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        """Allow ``spack external find libtool`` to locate
-        libtool installations.
-
-        Parameters:
-            prefix (str): the directory containing the executables
-            exes_in_prefix (set): the executables that match the regex
-
-        Returns:
-            spack.spec.Spec: the spec of this libtool installation
-        """
-        # Possible executable names:
-        # * libtool, glibtool, libtoolize, glibtoolize
-        # Take the first alphabetical executable name and hope for the best
-        libtool = Executable(min(exes_in_prefix))
-
-        # macOS libtool does not support the `--version` flag
-        # It does support `-V`, but it returns the version of cctools,
-        # not the version of libtool
-        version = ''
-        try:
-            output = libtool('--version', output=str, error=os.devnull)
-            match = re.search(r'\(GNU libtool\) ([0-9.]+)', output)
-            if match:
-                version = '@' + match.group(1)
-        except ProcessError:
-            pass
-
-        return Spec(cls.name + version)
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=os.devnull)
+        match = re.search(r'\(GNU libtool\)\s+(\S+)', output)
+        return match.group(1) if match else None
 
     @when('@2.4.2,develop')
     def autoreconf(self, spec, prefix):
