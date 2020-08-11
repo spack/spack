@@ -33,42 +33,17 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
-    executables = ['m4']
+    executables = ['^g?m4$']
 
     @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        """Allow ``spack external find m4`` to locate m4 installations.
-
-        Parameters:
-            prefix (str): the directory containing the executables
-            exes_in_prefix (set): the executables that match the regex
-
-        Returns:
-            spack.spec.Spec: the spec of this m4 installation
-        """
-        # Possible executable names:
-        # * m4, gm4
-        # Possible read herrings:
-        # * autom4te
-        exe_to_path = dict(
-            (os.path.basename(p), p) for p in exes_in_prefix
-        )
-        if 'm4' not in exe_to_path:
-            return None
-
-        m4 = Executable(exe_to_path['m4'])
-
+    def determine_version(cls, exe):
         # Output on macOS:
         #   GNU M4 1.4.6
         # Output on Linux:
         #   m4 (GNU M4) 1.4.18
-        output = m4('--version', output=str, error=os.devnull)
-        match = re.search(r'GNU M4\)? ([0-9.]+)', output)
-        version = ''
-        if match:
-            version = '@' + match.group(1)
-
-        return Spec(cls.name + version)
+        output = Executable(exe)('--version', output=str, error=os.devnull)
+        match = re.search(r'GNU M4\)?\s+(\S+)', output)
+        return match.group(1) if match else None
 
     def configure_args(self):
         spec = self.spec
