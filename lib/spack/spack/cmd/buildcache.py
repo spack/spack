@@ -239,8 +239,9 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
        concretized specs given from cli
 
     Args:
-        specs: list of specs to be matched against installed packages
-        allow_multiple_matches : if True multiple matches are admitted
+        pkgs (string): spec to be matched against installed packages
+        allow_multiple_matches (bool): if True multiple matches are admitted
+        env (Environment): active environment, or ``None`` if there is not one
 
     Return:
         list of specs
