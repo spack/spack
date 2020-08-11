@@ -44,10 +44,7 @@ def _s3_open(url):
     s3 = s3_util.create_s3_session(parsed)
 
     bucket = parsed.netloc
-    key = parsed.path
-
-    if key.startswith('/'):
-        key = key[1:]
+    key = parsed.path.lstrip('/')
 
     obj = s3.get_object(Bucket=bucket, Key=key)
 

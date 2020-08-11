@@ -208,6 +208,8 @@ def url_exists(url):
         return os.path.exists(local_path)
 
     if url.scheme == 's3':
+        key = url.path.lstrip('/')
+
         s3 = s3_util.create_s3_session(url)
         try:
             s3.get_object(Bucket=url.netloc, Key=url.path.lstrip('/'))
