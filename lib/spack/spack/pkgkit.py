@@ -39,7 +39,7 @@ from spack.mixins import filter_compiler_wrappers
 
 from spack.version import Version, ver
 
-from spack.spec import Spec
+from spack.spec import Spec, InvalidSpecDetected
 
 from spack.dependency import all_deptypes
 

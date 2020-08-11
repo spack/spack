@@ -49,18 +49,15 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
-    variant('egl', default=False, description="Enable EGL")
 
     conflicts('+python', when='+python3')
-    conflicts('+python', when='@5.6:')
+    # Python 2 support dropped with 5.9.0
+    conflicts('+python', when='@5.9:')
     conflicts('+python3', when='@:5.5')
     conflicts('+shared', when='+cuda')
     # Legacy rendering dropped in 5.5
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
     conflicts('~opengl2', when='@5.5:')
-
-    conflicts('+egl', when='+osmesa')
-    conflicts('+egl', when='+qt')
 
     # Workaround for
     # adding the following to your packages.yaml
@@ -93,10 +90,6 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('mesa+osmesa', when='+osmesa')
     depends_on('gl@3.2:', when='+opengl2')
     depends_on('gl@1.2:', when='~opengl2')
-
-    depends_on('glx', when='~osmesa platform=linux')
-    depends_on('egl', when='+egl')
-
     depends_on('libxt', when='~osmesa platform=linux')
     conflicts('+qt', when='+osmesa')
 
@@ -117,6 +110,11 @@ class Paraview(CMakePackage, CudaPackage):
     # depends_on('sqlite') # external version not supported
     depends_on('zlib')
     depends_on('cmake@3.3:', type='build')
+
+    # Can't contretize with python2 and py-setuptools@45.0.0:
+    depends_on('py-setuptools@:44.99.99', when='+python')
+    # Can't contretize with python2 and py-pillow@7.0.0:
+    depends_on('py-pillow@:6', when='+python')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 
@@ -216,9 +214,7 @@ class Paraview(CMakePackage, CudaPackage):
         cmake_args = [
             '-DPARAVIEW_BUILD_QT_GUI:BOOL=%s' % variant_bool('+qt'),
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
-            '-DVTK_OPENGL_HAS_EGL:BOOL=%s' % variant_bool('+egl'),
-            ('-DVTK_USE_X:BOOL=%s' %
-                variant_bool('~osmesa ~egl platform=linux')),
+            '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa'),
             '-DVTK_RENDERING_BACKEND:STRING=%s' % rendering,
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s' % includes,
             '-DBUILD_TESTING:BOOL=OFF',
@@ -242,13 +238,20 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DPARAVIEW_QT_VERSION=%s' % spec['qt'].version[0],
             ])
 
+        # CMake flags for python have changed with newer ParaView versions
+        # Make sure Spack uses the right cmake flags
         if '+python' in spec or '+python3' in spec:
+            py_use_opt = 'USE' if spec.satisfies('@5.8:') else 'ENABLE'
+            py_ver_opt = 'PARAVIEW' if spec.satisfies('@5.7:') else 'VTK'
+            py_ver_val = 3 if '+python3' in spec else 2
             cmake_args.extend([
-                '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
+                '-DPARAVIEW_%s_PYTHON:BOOL=ON' % py_use_opt,
                 '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
                 spec['python'].command.path,
-                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi')
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi'),
+                '-D%s_PYTHON_VERSION:STRING=%d' % (py_ver_opt, py_ver_val)
             ])
+
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
 
@@ -282,6 +285,7 @@ class Paraview(CMakePackage, CudaPackage):
 
         if 'darwin' in spec.architecture:
             cmake_args.extend([
+                '-DVTK_USE_X:BOOL=OFF',
                 '-DPARAVIEW_DO_UNIX_STYLE_INSTALLS:BOOL=ON',
             ])
 

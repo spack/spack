@@ -13,7 +13,7 @@ class PyMatplotlib(PythonPackage):
     and interactive visualizations in Python."""
 
     homepage = "https://matplotlib.org/"
-    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.2.2.tar.gz"
+    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.3.0.tar.gz"
 
     maintainers = ['adamjstewart']
 
@@ -27,6 +27,7 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units'
     ]
 
+    version('3.3.0', sha256='24e8db94948019d531ce0bcd637ac24b1c8f6744ac86d2aa0eb6dbaeb1386f82')
     version('3.2.2', sha256='3d77a6630d093d74cbbfebaa0571d00790966be1ed204e4a8239f5cbd6835c5d')
     version('3.2.1', sha256='ffe2f9cdcea1086fc414e82f42271ecf1976700b8edd16ca9d376189c6d93aee')
     version('3.2.0', sha256='651d76daf9168250370d4befb09f79875daa2224a9096d97dfc3ed764c842be4')
@@ -77,12 +78,14 @@ class PyMatplotlib(PythonPackage):
     # https://matplotlib.org/users/installing.html#dependencies
     # Required dependencies
     extends('python', ignore=r'bin/nosetests.*$|bin/pbr$')
-    depends_on('python@2.7:2.8,3.4:', when='@:2')
-    depends_on('python@3.5:', when='@3:')
-    depends_on('python@3.6:', when='@3.1:')
-    depends_on('freetype@2.3:')
+    depends_on('python@2.7:2.8,3.4:', when='@:2', type=('build', 'link', 'run'))
+    depends_on('python@3.5:', when='@3:', type=('build', 'link', 'run'))
+    depends_on('python@3.6:', when='@3.1:', type=('build', 'link', 'run'))
+    depends_on('freetype@2.3:')  # freetype 2.6.1 needed for tests to pass
+    depends_on('qhull@2015.2:', when='@3.3:')
     depends_on('libpng@1.2:')
     depends_on('py-numpy@1.11:', type=('build', 'run'))
+    depends_on('py-numpy@1.15:', when='@3.3:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))  # See #3813
     depends_on('py-cycler@0.10:', type=('build', 'run'))
     depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
@@ -90,7 +93,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'), when='@:2')
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
-    depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@2.7')
+    depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@:2.7')
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'),
                when='@2.1.0:2.999.999 ^python@:2')
     depends_on('py-six@1.10.0:', type=('build', 'run'), when='@2.0:2.999')
@@ -135,14 +138,13 @@ class PyMatplotlib(PythonPackage):
 
     msg = 'MacOSX backend requires the Cocoa headers included with XCode'
     conflicts('platform=linux', when='backend=macosx', msg=msg)
-    conflicts('platform=bgq',   when='backend=macosx', msg=msg)
     conflicts('platform=cray',  when='backend=macosx', msg=msg)
 
     # Patch to pick up correct freetype headers
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')
 
     @run_before('build')
-    def set_backend(self):
+    def configure(self):
         """Set build options with regards to backend GUI libraries."""
 
         backend = self.spec.variants['backend'].value
@@ -151,6 +153,13 @@ class PyMatplotlib(PythonPackage):
             # Default backend
             setup.write('[rc_options]\n')
             setup.write('backend = ' + backend + '\n')
+
+            # Starting with version 3.3.0, freetype is downloaded by default
+            # Force matplotlib to use Spack installations of freetype and qhull
+            if self.version >= Version('3.3.0'):
+                setup.write('[libs]\n')
+                setup.write('system_freetype = True\n')
+                setup.write('system_qhull = True\n')
 
     def test(self):
         pytest = which('pytest')

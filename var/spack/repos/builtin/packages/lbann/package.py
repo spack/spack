@@ -8,7 +8,7 @@ import sys
 from spack import *
 
 
-class Lbann(CMakePackage):
+class Lbann(CMakePackage, CudaPackage):
     """LBANN: Livermore Big Artificial Neural Network Toolkit.  A distributed
     memory, HPC-optimized, model and data parallel training toolkit for deep
     neural networks."""
@@ -20,7 +20,8 @@ class Lbann(CMakePackage):
     maintainers = ['bvanessen']
 
     version('develop', branch='develop')
-    version('0.99', branch='develop')
+    version('0.100', sha256='d1bab4fb6f1b80ae83a7286cc536a32830890f6e5b0c3107a17c2600d0796912')
+    version('0.99',   sha256='3358d44f1bc894321ce07d733afdf6cb7de39c33e3852d73c9f31f530175b7cd')
     version('0.98.1', sha256='9a2da8f41cd8bf17d1845edf9de6d60f781204ebd37bffba96d8872036c10c66')
     version('0.98',   sha256='8d64b9ac0f1d60db553efa4e657f5ea87e790afe65336117267e9c7ae6f68239')
     version('0.97.1', sha256='2f2756126ac8bb993202cf532d72c4d4044e877f4d52de9fdf70d0babd500ce4')
@@ -32,7 +33,6 @@ class Lbann(CMakePackage):
     version('0.92', sha256='9187c5bcbc562c2828fe619d53884ab80afb1bcd627a817edb935b80affe7b84')
     version('0.91', sha256='b69f470829f434f266119a33695592f74802cff4b76b37022db00ab32de322f5')
 
-    variant('gpu', default=False, description='Builds with support for GPUs via CUDA and cuDNN')
     variant('nccl', default=False, description='Builds with support for NCCL communication lib')
     variant('opencv', default=True, description='Builds with support for image processing routines with OpenCV')
     variant('seq_init', default=False, description='Force serial initialization of weight matrices.')
@@ -51,6 +51,8 @@ class Lbann(CMakePackage):
     variant('extras', default=False, description='Add python modules for LBANN related tools')
 
     conflicts('@:0.90,0.99:', when='~conduit')
+
+    depends_on('cmake@3.16.0:', type='build')
 
     # It seems that there is a need for one statement per version bounds
     depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90,0.95: ~al')
@@ -77,12 +79,11 @@ class Lbann(CMakePackage):
                when='build_type=Debug @0.91:0.94')
 
     depends_on('aluminum', when='@:0.90,0.95: +al ~gpu')
-    depends_on('aluminum +gpu +mpi_cuda', when='@:0.90,0.95: +al +gpu ~nccl')
-    depends_on('aluminum +gpu +nccl +mpi_cuda', when='@:0.90,0.95: +al +gpu +nccl')
+    depends_on('aluminum +cuda +ht', when='@:0.90,0.95: +al +cuda ~nccl')
+    depends_on('aluminum +cuda +nccl +ht', when='@:0.90,0.95: +al +cuda +nccl')
 
-    depends_on('cuda', when='+gpu')
-    depends_on('cudnn', when='+gpu')
-    depends_on('cub', when='@0.94:0.98.2 +gpu')
+    depends_on('cudnn', when='+cuda')
+    depends_on('cub', when='@0.94:0.98.2 +cuda')
     depends_on('mpi')
     depends_on('hwloc')
 
@@ -98,7 +99,7 @@ class Lbann(CMakePackage):
                '~videostab ~videoio ~vtk', when='+opencv')
 
     depends_on('cnpy')
-    depends_on('nccl', when='@0.94:0.98.2 +gpu +nccl')
+    depends_on('nccl', when='@0.94:0.98.2 +cuda +nccl')
 
     depends_on('conduit@0.4.0: +hdf5', when='@0.94:0.99 +conduit')
     depends_on('conduit@0.4.0: +hdf5', when='@:0.90,0.99:')
@@ -118,6 +119,7 @@ class Lbann(CMakePackage):
     depends_on('py-protobuf+cpp@3.6.1:', type=('build', 'run'), when='@:0.90,0.99:')
 
     depends_on('py-breathe', type='build', when='+docs')
+    depends_on('doxygen', type='build', when='+docs')
     depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
@@ -135,7 +137,6 @@ class Lbann(CMakePackage):
         cppflags.append('-DLBANN_SET_EL_RNG -ldl')
 
         return [
-            '-DCMAKE_INSTALL_MESSAGE=LAZY',
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(cppflags),
             '-DLBANN_VERSION=spack',
             '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
@@ -148,12 +149,12 @@ class Lbann(CMakePackage):
         spec = self.spec
         args = self.common_config_args
         args.extend([
-            '-DLBANN_WITH_TOPO_AWARE:BOOL=%s' % ('+gpu +nccl' in spec),
+            '-DLBANN_WITH_TOPO_AWARE:BOOL=%s' % ('+cuda +nccl' in spec),
             '-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
-            '-DLBANN_WITH_CUDA:BOOL=%s' % ('+gpu' in spec),
-            '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
-            '-DLBANN_WITH_SOFTMAX_CUDA:BOOL=%s' % ('+gpu' in spec),
+            '-DLBANN_WITH_CUDA:BOOL=%s' % ('+cuda' in spec),
+            '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+cuda' in spec),
+            '-DLBANN_WITH_SOFTMAX_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_SEQUENTIAL_INITIALIZATION:BOOL=%s' %
             ('+seq_init' in spec),
             '-DLBANN_WITH_TBINF=OFF',
@@ -174,7 +175,8 @@ class Lbann(CMakePackage):
                     spec['elemental'].prefix)])
 
         if spec.satisfies('@0.94:0.98.2'):
-            args.extend(['-DLBANN_WITH_NCCL:BOOL=%s' % ('+gpu +nccl' in spec)])
+            args.extend(['-DLBANN_WITH_NCCL:BOOL=%s' %
+                         ('+cuda +nccl' in spec)])
 
         if '+vtune' in spec:
             args.extend(['-DVTUNE_DIR={0}'.format(spec['vtune'].prefix)])
@@ -203,7 +205,7 @@ class Lbann(CMakePackage):
             args.extend(['-DOpenCV_DIR:STRING={0}'.format(
                 spec['opencv'].prefix)])
 
-        if '+gpu' in spec:
+        if '+cuda' in spec:
             args.extend([
                 '-DCUDA_TOOLKIT_ROOT_DIR={0}'.format(
                     spec['cuda'].prefix)])
@@ -225,8 +227,8 @@ class Lbann(CMakePackage):
         spec = self.spec
         args = self.common_config_args
         args.extend([
-            '-DWITH_CUDA:BOOL=%s' % ('+gpu' in spec),
-            '-DWITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
+            '-DWITH_CUDA:BOOL=%s' % ('+cuda' in spec),
+            '-DWITH_CUDNN:BOOL=%s' % ('+cuda' in spec),
             '-DELEMENTAL_USE_CUBLAS:BOOL=%s' % (
                 '+cublas' in spec['elemental']),
             '-DWITH_TBINF=OFF',

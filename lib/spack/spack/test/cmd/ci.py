@@ -527,14 +527,10 @@ spack:
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
-            contents = f.read()
-            print('generated contents: ')
-            print(contents)
-            yaml_contents = syaml.load(contents)
-            for ci_key in yaml_contents.keys():
-                if 'externaltool' in ci_key:
-                    print('Erroneously staged "externaltool" pkg')
-                    assert(False)
+            yaml_contents = syaml.load(f)
+
+        # Check that the "externaltool" package was not erroneously staged
+        assert not any('externaltool' in key for key in yaml_contents)
 
 
 def test_ci_generate_debug_with_custom_spack(tmpdir, mutable_mock_env_path,
@@ -751,7 +747,6 @@ spack:
 
             logs_dir_list = os.listdir(logs_dir.strpath)
 
-            assert('spack-build-env.txt' in logs_dir_list)
             assert('spack-build-out.txt' in logs_dir_list)
 
             # Also just make sure that if something goes wrong with the

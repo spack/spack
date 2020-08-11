@@ -570,7 +570,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit list add remove rm"
+        SPACK_COMPREPLY="get blame edit list add remove rm update revert"
     fi
 }
 
@@ -629,6 +629,24 @@ _spack_config_rm() {
         SPACK_COMPREPLY="-h --help"
     else
         SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_config_update() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
+    else
+        _config_sections
+    fi
+}
+
+_spack_config_revert() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
+    else
+        _config_sections
     fi
 }
 
@@ -725,7 +743,7 @@ _spack_env() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view"
+        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert"
     fi
 }
 
@@ -803,6 +821,24 @@ _spack_env_view() {
     fi
 }
 
+_spack_env_update() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
+    else
+        _environments
+    fi
+}
+
+_spack_env_revert() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
+    else
+        _environments
+    fi
+}
+
 _spack_extensions() {
     if $list_options
     then
@@ -817,7 +853,7 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find"
+        SPACK_COMPREPLY="find list"
     fi
 }
 
@@ -828,6 +864,10 @@ _spack_external_find() {
     else
         _all_packages
     fi
+}
+
+_spack_external_list() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_fetch() {

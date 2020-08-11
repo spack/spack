@@ -20,6 +20,7 @@ class Hypre(Package):
     maintainers = ['ulrikeyang', 'osborn9', 'balay']
 
     version('develop', branch='master')
+    version('2.19.0', sha256='466b19d8a86c69989a237f6f03f20d35c0c63a818776d2cd071b0a084cffeba5')
     version('2.18.2', sha256='28007b5b584eaf9397f933032d8367788707a2d356d78e47b99e551ab10cc76a')
     version('2.18.1', sha256='220f9c4ad024e815add8dad8950eaa2d8f4f231104788cf2a3c5d9da8f94ba6e')
     version('2.18.0', sha256='62591ac69f9cc9728bd6d952b65bcadd2dfe52b521081612609804a413f49b07')

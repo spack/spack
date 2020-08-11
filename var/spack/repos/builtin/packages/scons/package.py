@@ -25,14 +25,7 @@ class Scons(PythonPackage):
     depends_on('python@:2', when='@:2', type=('build', 'run'))
     depends_on('py-setuptools', when='@3.0.2:', type='build')
 
-    def patch(self):
-        if self.spec.satisfies('%fj'):
-            filter_file(
-                'env[\'FORTRANMODDIRPREFIX\'] = "-J"',
-                'env[\'FORTRANMODDIRPREFIX\'] = "-M"',
-                'engine/SCons/Tool/gfortran.py',
-                string=True
-            )
+    patch('fjcompiler.patch', when='%fj')
 
     # Prevent passing --single-version-externally-managed to
     # setup.py, which it does not support.

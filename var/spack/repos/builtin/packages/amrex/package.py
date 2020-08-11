@@ -18,6 +18,7 @@ class Amrex(CMakePackage):
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
+    version('20.08', sha256='a202430cd8dbef2de29b20fe9b5881cc58ee762326556ec3c0ad9c3f85ddfc2f')
     version('20.07', sha256='c386f566f4c57ee56b5630f79ce2c6117d5a612a4aab69b7b26e48d577251165')
     version('20.06', sha256='be2f2a5107111fcb8b3928b76024b370c7cb01a9e5dd79484cf7fcf59d0b4858')
     version('20.05', sha256='97d753bb75e845a0a959ec1a044a48e6adb86dd008b5e29ce7a01d49ed276338')

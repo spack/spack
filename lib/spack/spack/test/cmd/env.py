@@ -16,7 +16,7 @@ import spack.environment as ev
 
 from spack.cmd.env import _env_create
 from spack.spec import Spec
-from spack.main import SpackCommand
+from spack.main import SpackCommand, SpackCommandError
 from spack.stage import stage_prefix
 
 from spack.util.mock_package import MockPackageMultiRepo
@@ -284,6 +284,45 @@ def test_environment_status(capsys, tmpdir):
                         assert 'in current directory' in env('status')
 
 
+def test_env_status_broken_view(
+    mutable_mock_env_path, mock_archive, mock_fetch, mock_packages,
+    install_mockery
+):
+    with ev.create('test'):
+        install('trivial-install-test-package')
+
+        # switch to a new repo that doesn't include the installed package
+        # test that Spack detects the missing package and warns the user
+        new_repo = MockPackageMultiRepo()
+        with spack.repo.swap(new_repo):
+            output = env('status')
+            assert 'In environment test' in output
+            assert 'Environment test includes out of date' in output
+
+        # Test that the warning goes away when it's fixed
+        output = env('status')
+        assert 'In environment test' in output
+        assert 'Environment test includes out of date' not in output
+
+
+def test_env_activate_broken_view(
+    mutable_mock_env_path, mock_archive, mock_fetch, mock_packages,
+    install_mockery
+):
+    with ev.create('test'):
+        install('trivial-install-test-package')
+
+    # switch to a new repo that doesn't include the installed package
+    # test that Spack detects the missing package and fails gracefully
+    new_repo = MockPackageMultiRepo()
+    with spack.repo.swap(new_repo):
+        with pytest.raises(SpackCommandError):
+            env('activate', '--sh', 'test')
+
+    # test replacing repo fixes it
+    env('activate', '--sh', 'test')
+
+
 def test_to_lockfile_dict():
     e = ev.create('test')
     e.add('mpileaks')
@@ -409,8 +448,9 @@ env:
     external_config = StringIO("""\
 packages:
   a:
-    paths:
-      a: {a_prefix}
+    externals:
+    - spec: a
+      prefix: {a_prefix}
     buildable: false
 """.format(a_prefix=str(fake_prefix)))
     external_config_dict = spack.util.spack_yaml.load_config(external_config)
@@ -2002,3 +2042,73 @@ def test_env_write_only_non_default():
         yaml = f.read()
 
     assert yaml == ev.default_manifest_yaml
+
+
+@pytest.fixture
+def packages_yaml_v015(tmpdir):
+    """Return the path to an existing manifest in the v0.15.x format
+    and the path to a non yet existing backup file.
+    """
+    raw_yaml = """
+spack:
+  specs:
+  - mpich
+  packages:
+    cmake:
+      paths:
+        cmake@3.17.3: /usr
+"""
+    manifest = tmpdir.ensure('spack.yaml')
+    backup_file = tmpdir.join('spack.yaml.bkp')
+    manifest.write(raw_yaml)
+    return manifest, backup_file
+
+
+def test_update_anonymous_env(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+    env('update', '-y', str(manifest.dirname))
+
+    # The environment is now at the latest format
+    assert ev.is_latest_format(str(manifest))
+    # A backup file has been created and it's not at the latest format
+    assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+
+
+def test_double_update(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+
+    # Update the environment
+    env('update', '-y', str(manifest.dirname))
+    # Try to read the environment (it should not error)
+    ev.create('test', str(manifest))
+    # Updating again does nothing since the manifest is up-to-date
+    env('update', '-y', str(manifest.dirname))
+
+    # The environment is at the latest format
+    assert ev.is_latest_format(str(manifest))
+    # A backup file has been created and it's not at the latest format
+    assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+
+
+def test_update_and_revert(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+
+    # Update the environment
+    env('update', '-y', str(manifest.dirname))
+    assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+    assert ev.is_latest_format(str(manifest))
+
+    # Revert to previous state
+    env('revert', '-y', str(manifest.dirname))
+    assert not os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(manifest))
+
+
+def test_old_format_cant_be_updated_implicitly(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+    env('activate', str(manifest.dirname))
+    with pytest.raises(spack.main.SpackCommandError):
+        add('hdf5')
