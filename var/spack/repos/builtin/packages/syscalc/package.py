@@ -12,7 +12,7 @@ class Syscalc(MakefilePackage):
     homepage = "https://cp3.irmp.ucl.ac.be/projects/madgraph/wiki/SysCalc"
     url      = "http://madgraph.phys.ucl.ac.be/Downloads/SysCalc_V1.1.7.tar.gz"
 
-    version('1.1.7', sha256='37b6a2990ac0edff114c593d792d2c3e9c6330a9d2bb6b40ec1b55fa74aa1e14')
+    version('1.1.7', sha256='d33219a525a54733bdfd02d8314288bdecd977fb1e97ddeaf13bf470bbbdd386')
 
     depends_on('lhapdf@6:')
 
