@@ -26,35 +26,15 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
     build_directory = 'spack-build'
 
     executables = [
-        'autoconf', 'autoheader', 'autom4te', 'autoreconf',
-        'autoscan', 'autoupdate', 'ifnames'
+        '^autoconf$', '^autoheader$', '^autom4te$', '^autoreconf$',
+        '^autoscan$', '^autoupdate$', '^ifnames$'
     ]
 
     @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        """Allow ``spack external find autoconf`` to locate
-        autoconf installations.
-
-        Parameters:
-            prefix (str): the directory containing the executables
-            exes_in_prefix (set): the executables that match the regex
-
-        Returns:
-            spack.spec.Spec: the spec of this autoconf installation
-        """
-        # Possible executable names:
-        # * autoconf, autoheader, autom4te, autoreconf, autoscan, autoupdate
-        # * ifnames
-        # Take the first alphabetical executable name and hope for the best
-        autoconf = Executable(min(exes_in_prefix))
-
-        output = autoconf('--version', output=str, error=os.devnull)
-        match = re.search(r'\(GNU Autoconf\) ([0-9.]+)', output)
-        version = ''
-        if match:
-            version = '@' + match.group(1)
-
-        return Spec(cls.name + version)
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=os.devnull)
+        match = re.search(r'\(GNU Autoconf\)\s+(\S+)', output)
+        return match.group(1) if match else None
 
     def patch(self):
         # The full perl shebang might be too long; we have to fix this here
