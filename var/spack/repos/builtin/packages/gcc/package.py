@@ -271,6 +271,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    #: Programming Environment to be loaded on Cray
+    cray_prgenv = 'PrgEnv-gnu'
+    #: Name of the module in Cray's Programming Environment
+    cray_module_name = 'gcc'
+    #: Name of the module in Cray's Programming Environment
+    cray_extra_attributes = {
+        'compilers': {'c': 'cc', 'cxx': 'CC', 'fortran': 'ftn'}
+    }
+
     @property
     def executables(self):
         names = [r'gcc', r'[^\w]?g\+\+', r'gfortran']
@@ -368,10 +377,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def cc(self):
-        msg = "cannot retrieve C compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('c', None)
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
         result = None
         if 'languages=c' in self.spec:
             result = str(self.spec.prefix.bin.gcc)
@@ -379,10 +388,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def cxx(self):
-        msg = "cannot retrieve C++ compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('cxx', None)
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
         result = None
         if 'languages=c++' in self.spec:
             result = os.path.join(self.spec.prefix.bin, 'g++')
@@ -390,10 +399,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def fortran(self):
-        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('fortran', None)
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
         result = None
         if 'languages=fortran' in self.spec:
             result = str(self.spec.prefix.bin.gfortran)
