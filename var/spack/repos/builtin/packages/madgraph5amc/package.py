@@ -35,12 +35,15 @@ class Madgraph5amc(Package):
     depends_on('collier', when='+collier')
     depends_on('lhapdf')
     depends_on('fastjet')
+    depends_on('six', when='@2.7.3.py3')
 
     depends_on('python@:2.7.999', when='@2.7.3')
     depends_on('python@3:', when='@2.7.3.py3')
 
     patch('madgraph5amc-2.7.2.patch', level=0, when='@2.7.2~atlas')
     patch('madgraph5amc-2.7.2.atlas.patch', level=0, when='@2.7.2+atlas')
+    patch('madgraph5amc-2.7.3.patch', level=0, when='@2.7.3~atlas')
+    patch('madgraph5amc-2.7.3.atlas.patch', level=0, when='@2.7.3+atlas')
 
     phases = ['edit', 'build', 'install']
 
