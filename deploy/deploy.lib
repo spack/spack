@@ -724,57 +724,6 @@ EOF
 
     populate_build_cache "${install_start}"
 
-    #log "installed specs"
-    #spack find -lv
-
-    #log "gathering specs"
-    #spec_list=$(spack filter --not-installed $(< ${HOME}/specs.txt))
-
-    ## Only perform installation for actionable items
-    #if [[ -n "${spec_list}" ]]; then
-    #    log "found the following uninstalled specs"
-    #    echo "${spec_list}"
-    #    log "checking specs"
-    #    spack spec -Il ${spec_list}
-
-    #    setup_mirror "${what}"
-    #    populate_mirror "${what}" "${spec_list}"
-
-    #    # todo : patchelf recursion issue
-    #    log "installing patchelf for buildcache"
-    #    spack install --no-cache -y patchelf
-
-    #    # INSTALL
-    #    #
-    #    # use all specs to get the right unit test setup
-    #    install_start=$(date "+%Y-%m-%d %H:%M:%S")
-    #    log "running installation for all specs"
-    #    for i in $(seq 1 6); do
-    #        spack install -y --log-format=junit --log-file="${HOME}/stack_${i}.xml" ${spec_list} &
-    #    done
-    #    wait
-
-    #    # BUILD CACHE
-    #    populate_build_cache "${install_start}"
-
-    #    # Do not activate any packages for now. Maybe with lmod…
-    #    # if [[ "${what}" = "serial-libraries" ]]; then
-    #    #     log "running activation for python"
-    #    #     while read spec; do
-    #    #         if [[ "${spec}" = py-* ]]; then
-    #    #             spack activate $spec || true
-    #    #         fi
-    #    #     done < "${HOME}/specs.txt"
-    #    # fi
-    #else
-    #    log "no specs to install?"
-    #    cat > "${HOME}/stack.xml" <<EOF
-#<?xml version="1.0" encoding="UTF-8"?>
-#<testsuites>
-#</testsuites>
-#EOF
-    #fi
-
     mkdir -p "${WORKSPACE:-.}/stacks/${what}"
     rm -rf "${WORKSPACE:-.}/stacks/${what}/"*.xml
     cp "${HOME}"/stack*.xml "${WORKSPACE:-.}/stacks/${what}"
@@ -789,7 +738,7 @@ EOF
 
     if [[ "${export_packages[${what}]}" = "yes" ]]; then
         log "augmenting packages.yaml"
-        spack export --scope=user --module tcl --explicit --exclude 'allinea|py-.*|neuron|hdf5|intel-parallel-studio|pgi' arch=${BASE_ARCHITECTURE} > "${HOME}/packages.yaml"
+        spack export --scope=user --module tcl --explicit --exclude 'allinea|py-.*|neuron|hdf5|intel-parallel-studio|pgi' $(<${HOME}/specs.txt) > "${HOME}/packages.yaml"
     else
         log "copying packages.yaml"
         cp "${HOME}/.spack/packages.yaml" "${HOME}"
