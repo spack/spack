@@ -17,6 +17,7 @@ def dump_user_friendly_specs(filename, specs):
     """
     with open(filename, 'w') as fd:
         for spec, dag_hash in specs:
+            spec = str(spec)
             if "^" in spec:
                 spec = spec[:spec.index("^")].strip()
             fd.write('{} /{}\n'.format(spec, dag_hash[:6]))
