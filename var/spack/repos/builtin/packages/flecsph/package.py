@@ -16,10 +16,10 @@ class Flecsph(CMakePackage):
 
     homepage = "http://flecsi.lanl.com"
     git      = "https://github.com/laristra/flecsph.git"
-    
+
     version('master', branch='master', submodules=True, preferred=True)
 
-    variant('test',default=True, description='Adding tests')
+    variant('test', default=True, description='Adding tests')
 
     depends_on('cmake@3.15:', type='build')
     depends_on('boost@1.70.0: cxxstd=17 +program_options')
