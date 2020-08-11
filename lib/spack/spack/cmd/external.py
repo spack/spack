@@ -260,7 +260,7 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
 
             if not specs:
                 tty.debug(
-                    'The following executables in {0} were decidedly not'
+                    'The following executables in {0} were decidedly not '
                     'part of the package {1}: {2}'
                     .format(prefix, pkg.name, ', '.join(exes_in_prefix))
                 )
