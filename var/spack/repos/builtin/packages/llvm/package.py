@@ -204,6 +204,12 @@ class Llvm(CMakePackage, CudaPackage):
     # https://bugs.llvm.org/show_bug.cgi?id=39696
     patch("thread-p9.patch", when="@develop+libcxx")
 
+    # patch for using spack's zlib and ncurses for LLVMExports.cmake
+    # see https://github.com/spack/spack/issues/17981
+    # patch might also work before 6, but not tested.
+    patch("fix-system-zlib-ncurses-from-8.patch", when="@8:")
+    patch("fix-system-zlib-ncurses-pre-8.patch", when="@6:7")
+
     @run_before('cmake')
     def codesign_check(self):
         if self.spec.satisfies("+code_signing"):
