@@ -66,7 +66,8 @@ with env.write_transaction():
     ev.display_specs(concretized_specs)
     env.write(regenerate_views=False)
 
-dump_user_friendly_specs(args.userfile, zip(env.user_specs, env.concretized_order))
+dag_hashes = [env.specs_by_hash[h].dag_hash() for h in env.concretized_order]
+dump_user_friendly_specs(args.userfile, zip(env.user_specs, dag_hashes))
 
 specs = dict()
 with spack.store.db.read_transaction():
