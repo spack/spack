@@ -20,6 +20,8 @@ class Madgraph5amc(Package):
 
     version('2.7.3.py3', sha256='400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225')
     version('2.7.3', sha256='0b665356f4d9359e6e382e0f408dc11db594734567c6b2f0ec0e0697f2dbe099')
+    # version('2.7.2', sha256='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+    # 2.7.2 is not available on launchpad
 
     variant('atlas', default=False, description='Apply changes requested by ' + 
             "the ATLAS experimenent on LHC")
