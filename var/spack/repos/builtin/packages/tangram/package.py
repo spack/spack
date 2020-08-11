@@ -57,6 +57,11 @@ class Tangram(CMakePackage):
         else:
             options.append('-DTANGRAM_ENABLE_MPI=OFF')
 
+        if '+jali' in self.spec:
+            options.append('-DTANGRAM_ENABLE_Jali=ON')
+        else:
+            options.append('-DTANGRAM_ENABLE_Jali=OFF')
+
         if '+thrust' in self.spec:
             options.append('-DTANGRAM_ENABLE_THRUST=ON')
         else:
