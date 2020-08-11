@@ -11,6 +11,7 @@ import spack.architecture
 import os
 import re
 
+
 class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     """OpenSSL is an open source project that provides a robust,
        commercial-grade, and full-featured toolkit for the Transport
