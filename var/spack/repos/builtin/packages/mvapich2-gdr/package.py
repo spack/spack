@@ -27,14 +27,6 @@ class Mvapich2Gdr(AutotoolsPackage):
     provides('mpi@:3.1')
 
     variant(
-        'cuda_version',
-        description='Currently supported for CUDA versions 9.2, 10.1 and 10.2',
-        default='10.1',
-        values=('10.2', '10.1', '9.2'),
-        multi=False
-    )
-
-    variant(
         'process_managers',
         description='The process manager to activate.',
         default='mpirun',
@@ -81,9 +73,7 @@ class Mvapich2Gdr(AutotoolsPackage):
     depends_on('bison@3.4.2')
     depends_on('libpciaccess@0.13.5', when=(sys.platform != 'darwin'))
     depends_on('libxml2@2.9.10')
-    depends_on('cuda@9.2.88', when='cuda_version=9.2')
-    depends_on('cuda@10.1.243', when='cuda_version=10.1')
-    depends_on('cuda@10.2.89', when='cuda_version=10.2')
+    depends_on('cuda@9.2.88:10.2.89')
     depends_on('pmix@3.1.3', when='pmi_version=pmix')
 
     filter_compiler_wrappers(
