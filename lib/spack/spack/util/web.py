@@ -209,6 +209,8 @@ def url_exists(url):
 
     if url.scheme == 's3':
         key = url.path.lstrip('/')
+        if not key:
+            return False
 
         s3 = s3_util.create_s3_session(url)
         try:
