@@ -5,6 +5,8 @@ spack:
       providers:
         mpi: [hpe-mpi@2.21]
         lapack: [intel-mkl@2019.3.199]
+    metis:
+      variants: +int64
     python:
       version: [3.8.3]
   specs:
