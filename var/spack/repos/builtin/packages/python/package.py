@@ -224,55 +224,23 @@ class Python(AutotoolsPackage):
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
 
-    executables = ['python']
+    executables = [r'^python[\d.]*[mw]?$']
 
     @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        """Allow ``spack external find python`` to locate Python installations.
-
-        Parameters:
-            prefix (str): the directory containing the executables
-            exes_in_prefix (set): the executables that match the regex
-
-        Returns:
-            spack.spec.Spec: the spec of this Python installation
-        """
-        # Possible executable names:
-        # * python, python3, python3.7, python3.7m
-        # Possible red herrings:
-        # * python-config, python3-config, python3.7-config
-        # * spack-python
-        # Take the first alphabetical executable name and hope for the best
-        python = Executable(min(exes_in_prefix))
-        if python.name.startswith('spack-') or python.name.endswith('-config'):
-            return None
-
-        # First, get the Python version
+    def determine_version(cls, exe):
         # Newer versions of Python support `--version`,
         # but older versions only support `-V`
         # Python 2 sends to STDERR, while Python 3 sends to STDOUT
         # Output looks like:
         #   Python 3.7.7
-        output = python('-VV', output=str, error=str)
-        match = re.match(r'Python\s+(\S+)', output)
-        version = ''
-        if match:
-            version = '@' + match.group(1)
+        output = Executable(exe)('-V', output=str, error=str)
+        match = re.search(r'Python\s+(\S+)', output)
+        return match.group(1) if match else None
 
-        # The use of `-VV` instead of `-V` above gives additional information,
-        # including which compiler was used to build the executable, at least
-        # for Python 3
-        # Output looks like:
-        #   Python 3.7.7 (default, May  5 2020, 22:46:17)
-        #   [Clang 11.0.3 (clang-1103.0.32.59)]
-        # TODO: How to make this more robust? How to differentiate between
-        # Clang and Apple Clang?
-        match = re.search(r'(Clang|GCC)\s+(\S+)', output)
-        compiler = ''
-        if match:
-            compiler = '%' + match.group(1).lower() + '@' + match.group(2)
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        python = Executable(exes[0])
 
-        # Next, see which variants are enabled
         variants = ''
         for module in ['readline', 'sqlite3', 'dbm', 'nis',
                        'zlib', 'bz2', 'lzma', 'ctypes', 'uuid']:
@@ -298,7 +266,7 @@ class Python(AutotoolsPackage):
             variants += '~pyexpat'
 
         # Some modules changed names in Python 3
-        if Version(version[1:]) > Version('3'):
+        if Version(version_str) >= Version('3'):
             try:
                 python('-c', 'import tkinter', error=os.devnull)
                 variants += '+tkinter'
@@ -323,14 +291,7 @@ class Python(AutotoolsPackage):
             except ProcessError:
                 variants += '~tix'
 
-        # Other variants
-        if Version(version[1:]) > Version('3'):
-            if python.name == 'python':
-                variants += '+pythoncmd'
-            else:
-                variants += '~pythoncmd'
-
-        return Spec('python' + version + compiler + variants)
+        return variants
 
     def url_for_version(self, version):
         url = "https://www.python.org/ftp/python/{0}/Python-{1}.tgz"
