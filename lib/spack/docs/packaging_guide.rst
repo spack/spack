@@ -4308,7 +4308,7 @@ follows:
                return
            # This implementation is lazy and only checks the first candidate
            exe_path = candidates[0]
-           exe = Executable(exe_path)
+           exe = spack.util.executable.Executable(exe_path)
            output = exe('--version', output=str, error=str)
            version_str = ...  # parse output for version string
            return Spec.from_detection(
