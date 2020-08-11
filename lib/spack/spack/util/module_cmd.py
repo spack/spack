@@ -145,6 +145,8 @@ def path_from_modules(modules):
     Returns:
         Guess of the prefix path where the package
     """
+    assert isinstance(modules, list), 'the "modules" argument must be a list'
+
     best_choice = None
     for module_name in modules:
         # Read the current module and return a candidate path
