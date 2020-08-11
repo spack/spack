@@ -16,8 +16,10 @@ def dump_user_friendly_specs(filename, specs):
     """Store the expanded requested specs
     """
     with open(filename, 'w') as fd:
-        for s, h in specs:
-            fd.write('{} /{}\n'.format(s, h[:6]))
+        for spec, dag_hash in specs:
+            if "^" in spec:
+                spec = spec[:spec.index("^")].strip()
+            fd.write('{} /{}\n'.format(spec, dag_hash[:6]))
 
 
 def insert_into_graph(env, graph, spec, explicit=False):
