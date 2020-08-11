@@ -24,13 +24,16 @@ def insert_into_graph(env, graph, spec, explicit=False):
     """Construct a dependency graph for a spec
     """
     build_hash = spec.build_hash()
-    graph[spec.build_hash()] = dict(
-        name="{s.name}@{s.version} /{h}".format(s=spec, h=spec.build_hash(6)),
-        dependents=set(),
-        dependencies=set(),
-        building=False,
-        explicit=explicit
-    )
+    if build_hash in graph:
+        graph[build_hash]["explicit"] |= explicit
+    else:
+        graph[build_hash] = dict(
+            name="{s.name}@{s.version} /{h}".format(s=spec, h=build_hash[:6]),
+            dependents=set(),
+            dependencies=set(),
+            building=False,
+            explicit=explicit
+        )
     for dep in spec.dependencies():
         if not dep.package.installed:
             dep_hash = insert_into_graph(env, graph, dep)
