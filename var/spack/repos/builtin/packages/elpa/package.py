@@ -62,6 +62,9 @@ class Elpa(AutotoolsPackage, CudaPackage):
         hlist.directories = [incdir]
         return hlist
 
+    build_directory = 'spack-build'
+    parallel = False
+
     def configure_args(self):
         spec = self.spec
         options = []
@@ -114,7 +117,3 @@ class Elpa(AutotoolsPackage, CudaPackage):
         options.append('--disable-silent-rules')
 
         return options
-
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            make(*self.build_targets, parallel=False)
