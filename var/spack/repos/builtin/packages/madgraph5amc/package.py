@@ -44,6 +44,8 @@ class Madgraph5amc(Package):
     patch('madgraph5amc-2.7.2.atlas.patch', level=0, when='@2.7.2+atlas')
     patch('madgraph5amc-2.7.3.patch', level=0, when='@2.7.3~atlas')
     patch('madgraph5amc-2.7.3.atlas.patch', level=0, when='@2.7.3+atlas')
+    patch('madgraph5amc-2.7.3.patch', level=0, when='@2.7.3.py3~atlas')
+    patch('madgraph5amc-2.7.3.atlas.patch', level=0, when='@2.7.3.py3+atlas')
 
     phases = ['edit', 'build', 'install']
 
