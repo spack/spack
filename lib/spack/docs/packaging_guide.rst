@@ -4309,7 +4309,7 @@ follows:
            # This implementation is lazy and only checks the first candidate
            exe_path = candidates[0]
            exe = spack.util.executable.Executable(exe_path)
-           output = exe('--version', output=str, error=str)
+           output = exe('--version')
            version_str = ...  # parse output for version string
            return Spec.from_detection(
                'foo-package@{0}'.format(version_str)
