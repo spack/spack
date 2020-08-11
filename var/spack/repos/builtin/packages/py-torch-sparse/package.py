@@ -38,7 +38,7 @@ class PyTorchSparse(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-torch', type=('build', 'run'))
+    extends('py-torch-scatter')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
