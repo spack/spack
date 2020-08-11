@@ -28,7 +28,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
 
-    executables = ['perl']
+    executables = [r'^perl(-?\d+.*)?$']
 
     # see http://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
@@ -97,48 +97,38 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     phases = ['configure', 'build', 'install']
 
     @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        exe_to_path = dict(
-            (os.path.basename(p), p) for p in exes_in_prefix
-        )
-        if 'perl' not in exe_to_path:
-            return None
-
-        perl = spack.util.executable.Executable(exe_to_path['perl'])
+    def determine_version(cls, exe):
+        perl = spack.util.executable.Executable(exe)
         output = perl('--version', output=str)
-        spec = False
         if output:
             match = re.search(r'perl.*\(v([0-9.]+)\)', output)
             if match:
-                spec = Spec('perl')
-                spec.constrain('@{0}'.format(match.group(1)))
-        if not spec:
-            return None
-        variants = {}
-        output = perl('-V', output=str)
-        if output:
-            match = re.search(r'-Duseshrplib', output)
-            if match:
-                variants['shared'] = True
-            else:
-                variants['shared'] = False
-            match = re.search(r'-Duse.?threads', output)
-            if match:
-                variants['threads'] = True
-            else:
-                variants['threads'] = False
-        if 'cpanm' in exe_to_path:
-            variants['cpanm'] = True
-        else:
-            variants['cpanm'] = False
+                return match.group(1)
+        return None
 
-        for (name, value) in variants.items():
-            if isinstance(value, bool):
-                convert = spack.variant.BoolValuedVariant
+    @classmethod
+    def determine_variants(cls, exes, version):
+        for exe in exes:
+            perl = spack.util.executable.Executable(exe)
+            output = perl('-V', output=str)
+            variants = ''
+            if output:
+                match = re.search(r'-Duseshrplib', output)
+                if match:
+                    variants += '+shared'
+                else:
+                    variants += '~shared'
+                match = re.search(r'-Duse.?threads', output)
+                if match:
+                    variants += '+threads'
+                else:
+                    variants += '~threads'
+            path = os.path.dirname(exe)
+            if 'cpanm' in os.listdir(path):
+                variants += '+cpanm'
             else:
-                convert = spack.variant.AbstractVariant
-            spec.variants[name] = convert(name, value)
-        return spec
+                variants += '~cpanm'
+            return variants
 
     # On a lustre filesystem, patch may fail when files
     # aren't writeable so make pp.c user writeable
