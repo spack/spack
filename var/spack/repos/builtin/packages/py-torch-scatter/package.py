@@ -36,12 +36,7 @@ class PyTorchScatter(PythonPackage):
 
     version('2.0.5', sha256='e29b364beaa9c84a99e0e236be89ed19d4452d89010ff736184ddcce488b47f6')
 
-    # FIXME: Add dependencies if required. Only add the python dependency
-    # if you need specific versions. A generic python dependency is
-    # added implicity by the PythonPackage class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
