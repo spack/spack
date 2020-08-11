@@ -36,12 +36,8 @@ class PyTorchCluster(PythonPackage):
 
     version('1.5.7', sha256='71701d2f7f3e458ebe5904c982951349fdb60e6f1654e19c7e102a226e2de72e')
 
-    # FIXME: Add dependencies if required. Only add the python dependency
-    # if you need specific versions. A generic python dependency is
-    # added implicity by the PythonPackage class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
+    extends('py-torch-sparse')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
