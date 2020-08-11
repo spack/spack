@@ -68,14 +68,10 @@ class MirrorCache(object):
 
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
-        dst = spack.util.url.local_file_path(
-            spack.util.url.join(self.root, relative_dest))
-
-        if not dst:
-            raise spack.error.SpackError(
-                'Cannot store sources into non-remote (file://) URLs')
-
-        mkdirp(os.path.dirname(dst))
+        dst = spack.util.url.join(self.root, relative_dest)
+        local_dst = spack.util.url.local_file_path(dst)
+        if local_dst:
+            mkdirp(os.path.dirname(local_dst))
         fetcher.archive(dst)
 
     def symlink(self, mirror_ref):
