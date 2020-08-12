@@ -207,6 +207,10 @@ class Llvm(CMakePackage, CudaPackage):
     # https://bugs.llvm.org/show_bug.cgi?id=39696
     patch("thread-p9.patch", when="@develop+libcxx")
 
+    # The functions and attributes below implement external package
+    # detection for LLVM. See:
+    #
+    # https://spack.readthedocs.io/en/latest/packaging_guide.html#making-a-package-discoverable-with-spack-external-find
     executables = ['clang', 'ld.lld', 'lldb']
 
     @classmethod
