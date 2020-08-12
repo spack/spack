@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """This module contains jsonschema files for all of Spack's YAML formats."""
 
 import copy
@@ -86,19 +85,18 @@ def _make_validator():
             return
 
         # Retrieve the template message
-        msg = deprecated['message']
+        msg_str_or_func = deprecated['message']
+        if isinstance(msg_str_or_func, six.string_types):
+            msg = msg_str_or_func.format(properties=deprecated_properties)
+        else:
+            msg = msg_str_or_func(instance, deprecated_properties)
+
         is_error = deprecated['error']
         if not is_error:
-            for entry in deprecated_properties:
-                llnl.util.tty.warn(
-                    msg.format(property=entry, entry=instance[entry])
-                )
+            llnl.util.tty.warn(msg)
         else:
             import jsonschema
-            for entry in deprecated_properties:
-                yield jsonschema.ValidationError(
-                    msg.format(property=entry, entry=instance[entry])
-                )
+            yield jsonschema.ValidationError(msg)
 
     return jsonschema.validators.extend(
         jsonschema.Draft4Validator, {

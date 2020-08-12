@@ -598,9 +598,6 @@ class Configuration(object):
             changed = _update_in_memory(data, section)
             if changed:
                 self.format_updates[section].append(scope)
-                msg = ('OUTDATED CONFIGURATION FILE '
-                       '[section={0}, scope={1}, dir={2}]')
-                tty.debug(msg.format(section, scope.name, scope.path))
 
             merged_section = merge_yaml(merged_section, data)
 
