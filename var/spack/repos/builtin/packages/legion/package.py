@@ -81,7 +81,7 @@ class Legion(CMakePackage):
                 '-ggdb',
             ])
 
-        if '+gpu' in self.spec:
+        if '+cuda' in self.spec:
             options.append('-DLegion_GPU_REDUCTIONS=OFF')
             options.append('-DCOMPILER_SUPPORTS_MARCH=OFF')
             options.append('-DLegion_USE_CUDA=ON')
