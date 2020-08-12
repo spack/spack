@@ -8,8 +8,8 @@ import shutil
 import sys
 
 import spack.environment as ev
+import spack.error
 import spack.report
-import spack.installer
 
 
 def run():
@@ -54,7 +54,7 @@ def run():
     with reporter:
         try:
             env._install(spec, explicit=args.explicit, fail_fast=True)
-        except spack.installer.InstallError:
+        except spack.error.SpackError:
             success = False
             raise
     return success
