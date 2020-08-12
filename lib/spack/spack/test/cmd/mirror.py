@@ -51,8 +51,11 @@ def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
 
 @pytest.mark.regression('17531')
 def test_regression_17531(tmp_scope, tmpdir, capfd, mock_packages, mock_fetch, config):
-    tmp_mirror0 = 'file://' + os.path.abspath(os.path.join(tmpdir, 'mirror-0'))
-    tmp_mirror1 = 'file://' + os.path.abspath(os.path.join(tmpdir, 'mirror-1'))
+    tmp_mirror0 = (
+        'file://' + os.path.abspath(os.path.join(str(tmpdir), 'mirror-0')))
+
+    tmp_mirror1 = (
+        'file://' + os.path.abspath(os.path.join(str(tmpdir), 'mirror-1')))
 
     with capfd.disabled():
         output = mirror('create',
