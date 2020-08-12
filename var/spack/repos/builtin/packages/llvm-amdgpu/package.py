@@ -22,10 +22,14 @@ class LlvmAmdgpu(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('python', type='build')
+    depends_on('z3', type='link')
     depends_on('zlib', type='link')
+    depends_on('ncurses+termlib', type='link')
+
+    patch('fix-system-zlib-ncurses.patch')
 
     root_cmakelists_dir = 'llvm'
-
+    
     install_targets = ['clang-tidy', 'install']
 
     def cmake_args(self):
