@@ -13,6 +13,3 @@ class Perl(Package):
     extendable = True
 
     version('0.0.0', 'hash')
-
-    def install(self, spec, prefix):
-        pass

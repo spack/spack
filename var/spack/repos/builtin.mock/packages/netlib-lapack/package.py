@@ -14,6 +14,3 @@ class NetlibLapack(Package):
 
     provides('lapack')
     depends_on('blas')
-
-    def install(self, spec, prefix):
-        pass

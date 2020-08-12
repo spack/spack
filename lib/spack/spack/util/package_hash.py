@@ -41,8 +41,23 @@ class RemoveDirectives(ast.NodeTransformer):
         self.spec = spec
 
     def is_directive(self, node):
+        """Check to determine if the node is a valid directive
+
+        Directives are assumed to be represented in the AST as a named function
+        call expression.  This means that they will NOT be represented by a
+        named function call within a function call expression (e.g., as
+        callbacks are sometimes represented).
+
+        Args:
+            node (AST): the AST node being checked
+
+        Returns:
+            (bool): ``True`` if the node represents a known directive,
+                ``False`` otherwise
+        """
         return (isinstance(node, ast.Expr) and
                 node.value and isinstance(node.value, ast.Call) and
+                isinstance(node.value.func, ast.Name) and
                 node.value.func.id in spack.directives.__all__)
 
     def is_spack_attr(self, node):

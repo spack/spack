@@ -245,7 +245,9 @@ class PythonPackageTemplate(PackageTemplate):
     base_class_name = 'PythonPackage'
 
     dependencies = """\
-    # FIXME: Add dependencies if required.
+    # FIXME: Add dependencies if required. Only add the python dependency
+    # if you need specific versions. A generic python dependency is
+    # added implicity by the PythonPackage class.
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))"""
@@ -443,6 +445,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--skip-editor', action='store_true',
         help="skip the edit session for the package (e.g., automation)")
+    subparser.add_argument(
+        '-b', '--batch', action='store_true',
+        help="don't ask which versions to checksum")
 
 
 class BuildSystemGuesser:
@@ -509,7 +514,7 @@ class BuildSystemGuesser:
         # Determine the build system based on the files contained
         # in the archive.
         for pattern, bs in clues:
-            if any(re.search(pattern, l) for l in lines):
+            if any(re.search(pattern, line) for line in lines):
                 self.build_system = bs
                 break
 
@@ -627,7 +632,8 @@ def get_versions(args, name):
 
         versions = spack.stage.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
-            keep_stage=args.keep_stage)
+            keep_stage=args.keep_stage,
+            batch=(args.batch or len(url_dict) == 1))
     else:
         versions = unhashed_versions
 

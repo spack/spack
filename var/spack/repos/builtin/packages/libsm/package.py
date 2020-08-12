@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libsm(AutotoolsPackage):
+class Libsm(AutotoolsPackage, XorgPackage):
     """libSM - X Session Management Library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libSM"
-    url      = "https://www.x.org/archive/individual/lib/libSM-1.2.2.tar.gz"
+    xorg_mirror_path = "lib/libSM-1.2.2.tar.gz"
 
     version('1.2.2', sha256='14bb7c669ce2b8ff712fbdbf48120e3742a77edcd5e025d6b3325ed30cf120f4')
 
@@ -20,3 +20,4 @@ class Libsm(AutotoolsPackage):
     depends_on('xtrans', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+    depends_on('libuuid')

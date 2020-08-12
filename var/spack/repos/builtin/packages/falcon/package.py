@@ -28,3 +28,7 @@ class Falcon(PythonPackage):
     depends_on('pacbio-daligner', type='run')
     depends_on('pacbio-dextractor', type='run')
     depends_on('pacbio-damasker', type='run')
+
+    # Python version 3 and later should return
+    # a value of PyObject type. [-Wreturn-type]
+    patch('Py_None.patch', when='^python@3:')

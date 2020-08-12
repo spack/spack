@@ -17,7 +17,8 @@ class Fairlogger(CMakePackage):
     maintainers = ['dennisklein', 'ChristianTackeGSI']
     # generator = 'Ninja'
 
-    version('develop', branch='dev')
+    version('develop', branch='dev', get_full_repo=True)
+    version('1.6.2', sha256='5c6ef0c0029eb451fee71756cb96e6c5011040a9813e8889667b6f3b6b04ed03')
     version('1.6.1', sha256='3894580f4c398d724ba408e410e50f70c9f452e8cfaf7c3ff8118c08df28eaa8')
     version('1.6.0', sha256='721e8cadfceb2f63014c2a727e098babc6deba653baab8866445a772385d0f5b')
     version('1.5.0', sha256='8e74e0b1e50ee86f4fca87a44c6b393740b32099ac3880046bf252c31c58dd42')
@@ -31,19 +32,22 @@ class Fairlogger(CMakePackage):
             values=('Debug', 'Release', 'RelWithDebInfo'),
             multi=False,
             description='CMake build type')
-    variant('cxxstd', default='11',
+    variant('cxxstd', default='default',
             values=('11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant('pretty',
             default=False,
-            description='Use BOOST_PRETTY_FUNCTION macro.')
+            description='Use BOOST_PRETTY_FUNCTION macro (Supported by 1.4+).')
     conflicts('+pretty', when='@:1.3.99')
 
     depends_on('cmake@3.9.4:', type='build')
     depends_on('git', type='build', when='@develop')
+
     depends_on('boost', when='+pretty')
-    depends_on('fmt@5.3.0:', when='@1.6.0:')
+    conflicts('^boost@1.70:', when='^cmake@:3.14')
+    depends_on('fmt@5.3.0:5.99', when='@1.6.0:1.6.1')
+    depends_on('fmt@5.3.0:', when='@1.6.2:')
 
     def patch(self):
         """FairLogger gets its version number from git.
@@ -55,9 +59,10 @@ class Fairlogger(CMakePackage):
                         'CMakeLists.txt')
 
     def cmake_args(self):
-        cxxstd = self.spec.variants['cxxstd'].value
         args = []
-        args.append('-DCMAKE_CXX_STANDARD=%s' % cxxstd)
+        cxxstd = self.spec.variants['cxxstd'].value
+        if cxxstd != 'default':
+            args.append('-DCMAKE_CXX_STANDARD=%s' % cxxstd)
         args.append('-DUSE_BOOST_PRETTY_FUNCTION=%s' %
                     ('ON' if '+pretty' in self.spec else 'OFF'))
         if self.spec.satisfies('@1.6:'):

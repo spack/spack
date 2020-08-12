@@ -23,7 +23,7 @@ import spack.schema.packages
 import spack.schema.mirrors
 import spack.schema.repos
 import spack.util.spack_yaml as syaml
-from spack.util.path import canonicalize_path
+import spack.util.path as spack_path
 
 
 # sample config data
@@ -46,7 +46,19 @@ config_merge_list = {
 
 config_override_list = {
     'config': {
-        'build_stage:': ['patha', 'pathb']}}
+        'build_stage:': ['pathd', 'pathe']}}
+
+config_merge_dict = {
+    'config': {
+        'info': {
+            'a': 3,
+            'b': 4}}}
+
+config_override_dict = {
+    'config': {
+        'info:': {
+            'a': 7,
+            'c': 9}}}
 
 
 @pytest.fixture()
@@ -260,31 +272,31 @@ def test_substitute_config_variables(mock_low_high_config):
 
     assert os.path.join(
         '/foo/bar/baz', prefix
-    ) == canonicalize_path('/foo/bar/baz/$spack')
+    ) == spack_path.canonicalize_path('/foo/bar/baz/$spack')
 
     assert os.path.join(
         spack.paths.prefix, 'foo/bar/baz'
-    ) == canonicalize_path('$spack/foo/bar/baz/')
+    ) == spack_path.canonicalize_path('$spack/foo/bar/baz/')
 
     assert os.path.join(
         '/foo/bar/baz', prefix, 'foo/bar/baz'
-    ) == canonicalize_path('/foo/bar/baz/$spack/foo/bar/baz/')
+    ) == spack_path.canonicalize_path('/foo/bar/baz/$spack/foo/bar/baz/')
 
     assert os.path.join(
         '/foo/bar/baz', prefix
-    ) == canonicalize_path('/foo/bar/baz/${spack}')
+    ) == spack_path.canonicalize_path('/foo/bar/baz/${spack}')
 
     assert os.path.join(
         spack.paths.prefix, 'foo/bar/baz'
-    ) == canonicalize_path('${spack}/foo/bar/baz/')
+    ) == spack_path.canonicalize_path('${spack}/foo/bar/baz/')
 
     assert os.path.join(
         '/foo/bar/baz', prefix, 'foo/bar/baz'
-    ) == canonicalize_path('/foo/bar/baz/${spack}/foo/bar/baz/')
+    ) == spack_path.canonicalize_path('/foo/bar/baz/${spack}/foo/bar/baz/')
 
     assert os.path.join(
         '/foo/bar/baz', prefix, 'foo/bar/baz'
-    ) != canonicalize_path('/foo/bar/baz/${spack/foo/bar/baz/')
+    ) != spack_path.canonicalize_path('/foo/bar/baz/${spack/foo/bar/baz/')
 
 
 packages_merge_low = {
@@ -333,17 +345,41 @@ def test_merge_with_defaults(mock_low_high_config, write_config_file):
 
 def test_substitute_user(mock_low_high_config):
     user = getpass.getuser()
-    assert '/foo/bar/' + user + '/baz' == canonicalize_path(
+    assert '/foo/bar/' + user + '/baz' == spack_path.canonicalize_path(
         '/foo/bar/$user/baz'
     )
 
 
 def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
-    assert tempdir == canonicalize_path('$tempdir')
-    assert tempdir + '/foo/bar/baz' == canonicalize_path(
+    assert tempdir == spack_path.canonicalize_path('$tempdir')
+    assert tempdir + '/foo/bar/baz' == spack_path.canonicalize_path(
         '$tempdir/foo/bar/baz'
     )
+
+
+def test_substitute_padding(mock_low_high_config):
+    max_system_path = spack_path.get_system_path_max()
+    expected_length = (max_system_path -
+                       spack_path.SPACK_MAX_INSTALL_PATH_LENGTH)
+
+    install_path = spack_path.canonicalize_path('/foo/bar/${padding}/baz')
+
+    assert spack_path.SPACK_PATH_PADDING_CHARS in install_path
+    assert len(install_path) == expected_length
+
+    install_path = spack_path.canonicalize_path('/foo/bar/baz/gah/$padding')
+
+    assert spack_path.SPACK_PATH_PADDING_CHARS in install_path
+    assert len(install_path) == expected_length
+
+    i_path = spack_path.canonicalize_path('/foo/$padding:10')
+    i_expect = os.path.join('/foo', spack_path.SPACK_PATH_PADDING_CHARS[:10])
+    assert i_path == i_expect
+
+    i_path = spack_path.canonicalize_path('/foo/${padding:20}')
+    i_expect = os.path.join('/foo', spack_path.SPACK_PATH_PADDING_CHARS[:20])
+    assert i_path == i_expect
 
 
 def test_read_config(mock_low_high_config, write_config_file):
@@ -382,7 +418,7 @@ def test_read_config_override_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_override_list, 'high')
     assert spack.config.get('config') == {
         'install_tree': 'install_tree_path',
-        'build_stage': ['patha', 'pathb']
+        'build_stage': config_override_list['config']['build_stage:']
     }
 
 
@@ -540,7 +576,7 @@ def get_config_error(filename, schema, yaml_string):
 
     # parse and return error, or fail.
     try:
-        spack.config._read_config_file(filename, schema)
+        spack.config.read_config_file(filename, schema)
     except spack.config.ConfigFormatError as e:
         return e
     else:
@@ -857,3 +893,74 @@ def test_dotkit_in_config_does_not_raise(
     # we throw a a deprecation warning without raising
     assert '_sp_sys_type' in captured[0]  # stdout
     assert 'Warning' in captured[1]  # stderr
+
+
+def test_internal_config_section_override(mock_low_high_config,
+                                          write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    mock_low_high_config.push_scope(spack.config.InternalConfigScope
+                                    ('high', {
+                                        'config:': {
+                                            'build_stage': wanted_list
+                                        }
+                                    }))
+    assert mock_low_high_config.get('config:build_stage') == wanted_list
+
+
+def test_internal_config_dict_override(mock_low_high_config,
+                                       write_config_file):
+    write_config_file('config', config_merge_dict, 'low')
+    wanted_dict = config_override_dict['config']['info:']
+    mock_low_high_config.push_scope(spack.config.InternalConfigScope
+                                    ('high', config_override_dict))
+    assert mock_low_high_config.get('config:info') == wanted_dict
+
+
+def test_internal_config_list_override(mock_low_high_config,
+                                       write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    mock_low_high_config.push_scope(spack.config.InternalConfigScope
+                                    ('high', config_override_list))
+    assert mock_low_high_config.get('config:build_stage') == wanted_list
+
+
+def test_set_section_override(mock_low_high_config, write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    with spack.config.override('config::build_stage', wanted_list):
+        assert mock_low_high_config.get('config:build_stage') == wanted_list
+    assert config_merge_list['config']['build_stage'] == \
+        mock_low_high_config.get('config:build_stage')
+
+
+def test_set_list_override(mock_low_high_config, write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    with spack.config.override('config:build_stage:', wanted_list):
+        assert wanted_list == mock_low_high_config.get('config:build_stage')
+    assert config_merge_list['config']['build_stage'] == \
+        mock_low_high_config.get('config:build_stage')
+
+
+def test_set_dict_override(mock_low_high_config, write_config_file):
+    write_config_file('config', config_merge_dict, 'low')
+    wanted_dict = config_override_dict['config']['info:']
+    with spack.config.override('config:info:', wanted_dict):
+        assert wanted_dict == mock_low_high_config.get('config:info')
+    assert config_merge_dict['config']['info'] == \
+        mock_low_high_config.get('config:info')
+
+
+def test_set_bad_path(config):
+    with pytest.raises(syaml.SpackYAMLError, match='Illegal leading'):
+        with spack.config.override(':bad:path', ''):
+            pass
+
+
+def test_bad_path_double_override(config):
+    with pytest.raises(syaml.SpackYAMLError,
+                       match='Meaningless second override'):
+        with spack.config.override('bad::double:override::directive', ''):
+            pass

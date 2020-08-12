@@ -11,12 +11,20 @@ class IntelMpi(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
-    version('2019.6.154', sha256='f5bad7bcc50ea3a09a6a0615ae8fce42ba8a652bc61e32e12ff7b54952e8f8c9',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16120/l_mpi_2019.6.154.tgz')
+    version('2019.8.254', sha256='fa163b4b79bd1b7509980c3e7ad81b354fc281a92f9cf2469bf4d323899567c0',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16814/l_mpi_2019.8.254.tgz') 
+    version('2019.7.217', sha256='90383b0023f84ac003a55d8bb29dbcf0c639f43a25a2d8d8698a16e770ac9c07',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16546/l_mpi_2019.7.217.tgz')
+    version('2019.6.166', sha256='119be69f1117c93a9e5e9b8b4643918e55d2a55a78ad9567f77d16cdaf18cd6e',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16120/l_mpi_2019.6.166.tgz')
+    version('2019.5.281', sha256='9c59da051f1325b221e5bc4d8b689152e85d019f143069fa39e17989306811f4',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15838/l_mpi_2019.5.281.tgz')
     version('2019.4.243', sha256='233a8660b92ecffd89fedd09f408da6ee140f97338c293146c9c080a154c5fcd',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15553/l_mpi_2019.4.243.tgz')
     version('2019.3.199', sha256='5304346c863f64de797250eeb14f51c5cfc8212ff20813b124f20e7666286990',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15260/l_mpi_2019.3.199.tgz')
+    version('2019.2.187', sha256='6a3305933b5ef9e3f7de969e394c91620f3fa4bb815a4f439577739d04778b20',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15040/l_mpi_2019.2.187.tgz')
     version('2019.1.144', sha256='dac86a5db6b86503313742b17535856a432955604f7103cb4549a9bfc256c3cd',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14879/l_mpi_2019.1.144.tgz')
     version('2019.0.117', sha256='dfb403f49c1af61b337aa952b71289c7548c3a79c32c57865eab0ea0f0e1bc08',
@@ -57,3 +65,9 @@ class IntelMpi(IntelPackage):
             'F90':  spack_fc,
             'FC':   spack_fc,
         })
+
+    def setup_run_environment(self, env):
+        super(IntelMpi, self).setup_run_environment(env)
+
+        for name, value in self.mpi_compiler_wrappers.items():
+            env.set(name, value)

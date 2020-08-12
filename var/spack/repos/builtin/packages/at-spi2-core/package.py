@@ -16,6 +16,7 @@ class AtSpi2Core(MesonPackage):
     list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core"
     list_depth = 1
 
+    version('2.36.0', sha256='88da57de0a7e3c60bc341a974a80fdba091612db3547c410d6deab039ca5c05a')
     version('2.28.0', sha256='42a2487ab11ce43c288e73b2668ef8b1ab40a0e2b4f94e80fca04ad27b6f1c87')
 
     depends_on('glib@2.56.1:')
@@ -23,12 +24,13 @@ class AtSpi2Core(MesonPackage):
     depends_on('gettext')
     depends_on('libx11')
     depends_on('libxi')
-    depends_on('libxtst', type='build')
-    depends_on('recordproto', type='build')
-    depends_on('inputproto', type='build')
-    depends_on('fixesproto', type='build')
+    depends_on('libxtst')
+    depends_on('recordproto')
+    depends_on('inputproto')
+    depends_on('fixesproto')
     depends_on('pkgconfig', type='build')
     depends_on('python', type='build')
+    depends_on('gobject-introspection')
 
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""

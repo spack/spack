@@ -11,15 +11,20 @@ class AdolC(AutotoolsPackage):
     derivatives of vector functions in C and C++ programs by operator
     overloading."""
 
-    homepage = "https://projects.coin-or.org/ADOL-C"
-    url      = "http://www.coin-or.org/download/source/ADOL-C/ADOL-C-2.6.1.tgz"
-    git      = "https://gitlab.com/adol-c/adol-c.git"
-
-    version('develop',  branch='master')
-    version('2.6.3', sha256='6ed74580695a0d2c960581e5430ebfcd380eb5da9337daf488bf2e89039e9c21')
-    version('2.6.2', sha256='f6326e7ba994d02074816132d4461915221069267c31862b31fab7020965c658')
-    version('2.6.1', sha256='037089e0f64224e5e6255b61af4fe7faac080533fd778b76fe946e52491918b5')
-    version('2.5.2', sha256='2fa514d9799989d6379738c2bcf75070d9834e4d227eb32a5b278840893b2af9')
+    homepage = "https://github.com/coin-or/ADOL-C"
+    url      = "https://github.com/coin-or/ADOL-C/archive/releases/2.7.2.tar.gz"
+    git      = "https://github.com/coin-or/ADOL-C.git"
+    version('master',  branch='master')
+    version('2.7.2', sha256='701e0856baae91b98397960d5e0a87a549988de9d4002d0e9a56fa08f5455f6e')
+    version('2.7.1', sha256='a05422cc7faff5700e134e113822d1934fb540ad247e63778524d5d6d75bb0ef')
+    version('2.7.0', sha256='a75cfa6240de8692b2a3e8e782319efefc316f1e595234fcee972ab0e7afa3cd')
+    version('2.6.3', sha256='9750a0a06dcab9a0dba2010f07872ea9057ed29781e9e7d571691c27aa559b04')
+    version('2.6.2', sha256='4ef6ff15b4691235c0ea6580917c7eb17d09ded485ac524a0a33ac7e99ab004b')
+    version('2.6.1', sha256='48b41c40d1c8437fb98eeed4b24deaf3e59da804f34ac9c848da1b049b3b071a')
+    version('2.6.0', sha256='26a1fcb8561f15781f645d245fc345c83497147ec7bb64d4bfc96e32c34c6c1c')
+    version('2.5.2', sha256='390edb1513f749b2dbf6fb90db12ce786f6532af80e589f161ff43646b3a78a6')
+    version('2.5.1', sha256='dedb93c3bb291366d799014b04b6d1ec63ca4e7216edf16167776c07961e3b4a')
+    version('2.5.0', sha256='9d51c426d831884aac8f418be410c001eb62f3a11cb8f30c66af0b842edffb96')
 
     variant('advanced_branching', default=False,
             description='Enable advanced branching to reduce retaping')

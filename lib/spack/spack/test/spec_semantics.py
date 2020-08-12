@@ -275,27 +275,27 @@ class TestSpecSematics(object):
 
     def test_satisfies_multi_value_variant(self):
         # Check quoting
-        check_satisfies('multivalue_variant foo="bar,baz"',
-                        'multivalue_variant foo="bar,baz"')
-        check_satisfies('multivalue_variant foo=bar,baz',
-                        'multivalue_variant foo=bar,baz')
-        check_satisfies('multivalue_variant foo="bar,baz"',
-                        'multivalue_variant foo=bar,baz')
+        check_satisfies('multivalue-variant foo="bar,baz"',
+                        'multivalue-variant foo="bar,baz"')
+        check_satisfies('multivalue-variant foo=bar,baz',
+                        'multivalue-variant foo=bar,baz')
+        check_satisfies('multivalue-variant foo="bar,baz"',
+                        'multivalue-variant foo=bar,baz')
 
         # A more constrained spec satisfies a less constrained one
-        check_satisfies('multivalue_variant foo="bar,baz"',
-                        'multivalue_variant foo="bar"')
+        check_satisfies('multivalue-variant foo="bar,baz"',
+                        'multivalue-variant foo="bar"')
 
-        check_satisfies('multivalue_variant foo="bar,baz"',
-                        'multivalue_variant foo="baz"')
+        check_satisfies('multivalue-variant foo="bar,baz"',
+                        'multivalue-variant foo="baz"')
 
-        check_satisfies('multivalue_variant foo="bar,baz,barbaz"',
-                        'multivalue_variant foo="bar,baz"')
+        check_satisfies('multivalue-variant foo="bar,baz,barbaz"',
+                        'multivalue-variant foo="bar,baz"')
 
-        check_satisfies('multivalue_variant foo="bar,baz"',
+        check_satisfies('multivalue-variant foo="bar,baz"',
                         'foo="bar,baz"')
 
-        check_satisfies('multivalue_variant foo="bar,baz"',
+        check_satisfies('multivalue-variant foo="bar,baz"',
                         'foo="bar"')
 
     def test_satisfies_single_valued_variant(self):
@@ -325,7 +325,7 @@ class TestSpecSematics(object):
         a.concretize()
         assert '^b' not in a
 
-        mv = Spec('multivalue_variant')
+        mv = Spec('multivalue-variant')
         mv.concretize()
         assert 'a@1.0' not in mv
 
@@ -340,9 +340,9 @@ class TestSpecSematics(object):
         # Depending on whether the spec is concrete or not
 
         a = make_spec(
-            'multivalue_variant foo="bar"', concrete=True
+            'multivalue-variant foo="bar"', concrete=True
         )
-        spec_str = 'multivalue_variant foo="bar,baz"'
+        spec_str = 'multivalue-variant foo="bar,baz"'
         b = Spec(spec_str)
         assert not a.satisfies(b)
         assert not a.satisfies(spec_str)
@@ -350,8 +350,8 @@ class TestSpecSematics(object):
         with pytest.raises(UnsatisfiableSpecError):
             a.constrain(b)
 
-        a = Spec('multivalue_variant foo="bar"')
-        spec_str = 'multivalue_variant foo="bar,baz"'
+        a = Spec('multivalue-variant foo="bar"')
+        spec_str = 'multivalue-variant foo="bar,baz"'
         b = Spec(spec_str)
         # The specs are abstract and they **could** be constrained
         assert a.satisfies(b)
@@ -360,9 +360,9 @@ class TestSpecSematics(object):
         assert a.constrain(b)
 
         a = make_spec(
-            'multivalue_variant foo="bar,baz"', concrete=True
+            'multivalue-variant foo="bar,baz"', concrete=True
         )
-        spec_str = 'multivalue_variant foo="bar,baz,quux"'
+        spec_str = 'multivalue-variant foo="bar,baz,quux"'
         b = Spec(spec_str)
         assert not a.satisfies(b)
         assert not a.satisfies(spec_str)
@@ -370,8 +370,8 @@ class TestSpecSematics(object):
         with pytest.raises(UnsatisfiableSpecError):
             a.constrain(b)
 
-        a = Spec('multivalue_variant foo="bar,baz"')
-        spec_str = 'multivalue_variant foo="bar,baz,quux"'
+        a = Spec('multivalue-variant foo="bar,baz"')
+        spec_str = 'multivalue-variant foo="bar,baz,quux"'
         b = Spec(spec_str)
         # The specs are abstract and they **could** be constrained
         assert a.satisfies(b)
@@ -384,8 +384,8 @@ class TestSpecSematics(object):
             a.concretize()
 
         # This time we'll try to set a single-valued variant
-        a = Spec('multivalue_variant fee="bar"')
-        spec_str = 'multivalue_variant fee="baz"'
+        a = Spec('multivalue-variant fee="bar"')
+        spec_str = 'multivalue-variant fee="baz"'
         b = Spec(spec_str)
         # The specs are abstract and they **could** be constrained,
         # as before concretization I don't know which type of variant
@@ -405,20 +405,20 @@ class TestSpecSematics(object):
 
         # FIXME: these needs to be checked as the new relaxed
         # FIXME: semantic makes them fail (constrain does not raise)
-        # check_unsatisfiable('multivalue_variant +foo',
-        #                     'multivalue_variant foo="bar"')
-        # check_unsatisfiable('multivalue_variant ~foo',
-        #                     'multivalue_variant foo="bar"')
+        # check_unsatisfiable('multivalue-variant +foo',
+        #                     'multivalue-variant foo="bar"')
+        # check_unsatisfiable('multivalue-variant ~foo',
+        #                     'multivalue-variant foo="bar"')
 
         check_unsatisfiable(
-            target_spec='multivalue_variant foo="bar"',
-            constraint_spec='multivalue_variant +foo',
+            target_spec='multivalue-variant foo="bar"',
+            constraint_spec='multivalue-variant +foo',
             target_concrete=True
         )
 
         check_unsatisfiable(
-            target_spec='multivalue_variant foo="bar"',
-            constraint_spec='multivalue_variant ~foo',
+            target_spec='multivalue-variant foo="bar"',
+            constraint_spec='multivalue-variant ~foo',
             target_concrete=True
         )
 
@@ -597,15 +597,15 @@ class TestSpecSematics(object):
 
     def test_constrain_multi_value_variant(self):
         check_constrain(
-            'multivalue_variant foo="bar,baz"',
-            'multivalue_variant foo="bar"',
-            'multivalue_variant foo="baz"'
+            'multivalue-variant foo="bar,baz"',
+            'multivalue-variant foo="bar"',
+            'multivalue-variant foo="baz"'
         )
 
         check_constrain(
-            'multivalue_variant foo="bar,baz,barbaz"',
-            'multivalue_variant foo="bar,barbaz"',
-            'multivalue_variant foo="baz"'
+            'multivalue-variant foo="bar,baz,barbaz"',
+            'multivalue-variant foo="bar,barbaz"',
+            'multivalue-variant foo="baz"'
         )
 
     def test_constrain_compiler_flags(self):
@@ -734,7 +734,7 @@ class TestSpecSematics(object):
             Spec('libelf foo')
 
     def test_spec_formatting(self):
-        spec = Spec("multivalue_variant cflags=-O2")
+        spec = Spec("multivalue-variant cflags=-O2")
         spec.concretize()
 
         # Since the default is the full spec see if the string rep of
@@ -806,7 +806,7 @@ class TestSpecSematics(object):
             assert expected == actual
 
     def test_spec_formatting_escapes(self):
-        spec = Spec('multivalue_variant cflags=-O2')
+        spec = Spec('multivalue-variant cflags=-O2')
         spec.concretize()
 
         sigil_mismatches = [
@@ -895,7 +895,7 @@ class TestSpecSematics(object):
 
     def test_any_combination_of(self):
         # Test that using 'none' and another value raise during concretization
-        spec = Spec('multivalue_variant foo=none,bar')
+        spec = Spec('multivalue-variant foo=none,bar')
         with pytest.raises(spack.error.SpecError) as exc_info:
             spec.concretize()
 

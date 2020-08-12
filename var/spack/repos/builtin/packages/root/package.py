@@ -5,6 +5,7 @@
 
 
 from spack import *
+from spack.util.environment import is_system_path
 import sys
 
 
@@ -14,7 +15,7 @@ class Root(CMakePackage):
     homepage = "https://root.cern.ch"
     url      = "https://root.cern/download/root_v6.16.00.source.tar.gz"
 
-    maintainers = ['chissg', 'HadrienG2']
+    maintainers = ['chissg', 'HadrienG2', 'drbenmorgan']
 
     # ###################### Versions ##########################
 
@@ -25,6 +26,10 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version('6.22.00', sha256='efd961211c0f9cd76cf4a486e4f89badbcf1d08e7535bba556862b3c1a80beed')
+    version('6.20.04', sha256='1f8c76ccdb550e64e6ddb092b4a7e9d0a10655ef80044828cba12d5e7c874472')
+    version('6.20.02', sha256='0997586bf097c0afbc6f08edbffcebf5eb6a4237262216114ba3f5c8087dcba6')
+    version('6.20.00', sha256='68421eb0434b38b66346fa8ea6053a0fdc9a6d254e4a72019f4e3633ae118bf0')
     version('6.18.04', sha256='315a85fc8363f8eb1bffa0decbf126121258f79bd273513ed64795675485cfa4',
             preferred=True)
 
@@ -109,6 +114,9 @@ class Root(CMakePackage):
     # otherwise it crashes with the internal minuit library
     variant('minuit', default=True,
             description='Automatically search for support libraries')
+    variant('mlp', default=False,
+            description="Enable support for TMultilayerPerceptron "
+            "classes' federation")
     variant('mysql', default=False)
     variant('opengl', default=True,
             description='Enable OpenGL support')
@@ -116,6 +124,8 @@ class Root(CMakePackage):
             description='Enable postgres support')
     variant('pythia6', default=False,
             description='Enable pythia6 support')
+    variant('pythia8', default=False,
+            description='Enable pythia8 support')
     variant('python', default=True,
             description='Enable Python ROOT bindings')
     variant('qt4', default=False,
@@ -140,7 +150,7 @@ class Root(CMakePackage):
             description='TBB multi-threading support')
     variant('threads', default=True,
             description='Enable using thread library')
-    variant('tmva', default=True,
+    variant('tmva', default=False,
             description='Build TMVA multi variate analysis library')
     variant('unuran', default=True,
             description='Use UNURAN for random number generation')
@@ -182,6 +192,7 @@ class Root(CMakePackage):
     depends_on('xxhash', when='@6.13.02:')  # See cmake_args, below.
     depends_on('xz')
     depends_on('zlib')
+    depends_on('zstd', when='@6.20:')
 
     # X-Graphics
     depends_on('libx11',  when="+x")
@@ -191,7 +202,7 @@ class Root(CMakePackage):
     depends_on('libsm',   when="+x")
 
     # OpenGL
-    depends_on('ftgl@2.1.3-rc5',  when="+x+opengl")
+    depends_on('ftgl@2.4.0:',  when="+x+opengl")
     depends_on('glew',  when="+x+opengl")
     depends_on('gl',    when="+x+opengl")
     depends_on('glu',   when="+x+opengl")
@@ -200,11 +211,17 @@ class Root(CMakePackage):
     # Qt4
     depends_on('qt@:4.999', when='+qt4')
 
-    # TMVA
-    depends_on('py-numpy', when='+tmva')
+    # Python
+    depends_on('python@2.7:', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'), when='+tmva')
+    # This numpy dependency was not intended and will hopefully
+    # be fixed in 6.20.06.
+    # See: https://sft.its.cern.ch/jira/browse/ROOT-10626
+    depends_on('py-numpy', type=('build', 'run'),
+               when='@6.20.00:6.20.05 +python')
 
     # Optional dependencies
-    depends_on('davix',     when='+davix')
+    depends_on('davix @0.7.1:', when='+davix')
     depends_on('cfitsio',   when='+fits')
     depends_on('fftw',      when='+fftw')
     depends_on('graphviz',  when='+graphviz')
@@ -215,10 +232,11 @@ class Root(CMakePackage):
     depends_on('openssl',   when='+davix')  # Also with davix
     depends_on('postgresql', when='+postgres')
     depends_on('pythia6+root', when='+pythia6')
-    depends_on('python@2.7:', when='+python', type=('build', 'run'))
+    depends_on('pythia8',   when='+pythia8')
     depends_on('r',         when='+r', type=('build', 'run'))
     depends_on('r-rcpp',    when='+r', type=('build', 'run'))
     depends_on('r-rinside', when='+r', type=('build', 'run'))
+    depends_on('readline',  when='+r')
     depends_on('shadow',    when='+shadow')
     depends_on('sqlite',    when='+sqlite')
     depends_on('tbb',       when='+tbb')
@@ -251,6 +269,7 @@ class Root(CMakePackage):
     # Incompatible variants
     conflicts('+opengl', when='~x', msg='OpenGL requires X')
     conflicts('+tmva', when='~gsl', msg='TVMA requires GSL')
+    conflicts('+tmva', when='~mlp', msg='TVMA requires MLP')
     conflicts('cxxstd=11', when='+root7', msg='root7 requires at least C++14')
 
     # Feature removed in 6.18:
@@ -353,6 +372,7 @@ class Root(CMakePackage):
                 ['minimal'],
                 ['minuit'],
                 ['minuit2', 'minuit'],
+                ['mlp'],
                 ['monalisa', False],
                 ['mysql'],
                 ['odbc'],
@@ -360,11 +380,10 @@ class Root(CMakePackage):
                 ['oracle', False],
                 ['pgsql', 'postgres'],
                 ['pythia6'],
-                ['pythia8', False],
-                ['python', self.spec.satisfies('+python')],
+                ['pythia8'],
                 ['qt', 'qt4'],  # See conflicts
                 ['qtgsi', 'qt4'],  # See conflicts
-                ['r', 'R'],
+                ['r', 'r'],
                 ['rfio', False],
                 ['roofit'],
                 ['root7'],  # See conflicts
@@ -391,6 +410,12 @@ class Root(CMakePackage):
             ]
 
         options = self._process_opts(control_opts, builtin_opts, feature_opts)
+
+        # Some special features
+        if self.spec.satisfies('@6.20:'):
+            options.append(self.define_from_variant('pyroot', 'python'))
+        else:
+            options.append(self.define_from_variant('python'))
 
         # #################### Compiler options ####################
 
@@ -424,10 +449,39 @@ class Root(CMakePackage):
         return options
 
     def setup_build_environment(self, env):
-        if 'lz4' in self.spec:
-            env.append_path('CMAKE_PREFIX_PATH',
-                            self.spec['lz4'].prefix)
+        spec = self.spec
+
+        if 'lz4' in spec:
+            env.append_path('CMAKE_PREFIX_PATH', spec['lz4'].prefix)
+
+        # This hack is made necessary by a header name collision between
+        # asimage's "import.h" and Python's "import.h" headers...
         env.set('SPACK_INCLUDE_DIRS', '', force=True)
+
+        # ...but it breaks header search for any ROOT dependency which does not
+        # use CMake. To resolve this, we must bring back those dependencies's
+        # include paths into SPACK_INCLUDE_DIRS.
+        #
+        # But in doing so, we must be careful not to inject system header paths
+        # into SPACK_INCLUDE_DIRS, even in a deprioritized form, because some
+        # system/compiler combinations don't like having -I/usr/include around.
+        def add_include_path(dep_name):
+            include_path = spec[dep_name].prefix.include
+            if not is_system_path(include_path):
+                env.append_path('SPACK_INCLUDE_DIRS', include_path)
+
+        # With that done, let's go fixing those deps
+        if spec.satisfies('@:6.12.99'):
+            add_include_path('zlib')
+        if '+x' in spec:
+            if spec.satisfies('@:6.08.99') or spec.satisfies('@6.22:'):
+                add_include_path('xextproto')
+            add_include_path('fontconfig')
+            add_include_path('libx11')
+            add_include_path('xproto')
+        if '+opengl' in spec:
+            add_include_path('glew')
+            add_include_path('mesa-glu')
 
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)
@@ -441,12 +495,16 @@ class Root(CMakePackage):
         env.prepend_path('PATH', self.prefix.bin)
         env.append_path('CMAKE_MODULE_PATH', '{0}/cmake'
                         .format(self.prefix))
+        if "+rpath" not in self.spec:
+            env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.set('ROOTSYS', self.prefix)
         env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
         env.prepend_path('PYTHONPATH', self.prefix.lib)
         env.prepend_path('PATH', self.prefix.bin)
+        if "+rpath" not in self.spec:
+            env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
 
     def _process_opts(self, *opt_lists):
         """Process all provided boolean option lists into CMake arguments.

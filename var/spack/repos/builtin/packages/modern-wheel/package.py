@@ -14,6 +14,7 @@ class ModernWheel(CMakePackage):
 
     homepage = "https://github.com/alalazo/modern_wheel"
     url      = "https://github.com/alalazo/modern_wheel/archive/1.2.tar.gz"
+    maintainers = ['alalazo']
 
     version('1.2', sha256='48612f698d7159f0eb10d93ddc3e2682b06a54d3a836ff227636be3261aed15e')
     version('1.1', sha256='d8ba4891257b96108e9b9406a556f8ced3b71ce85c3fcdca6bfd9cc37bf010a3')
@@ -34,6 +35,9 @@ class ModernWheel(CMakePackage):
     # ModernWheel with Boost >= 1.66.0.
     depends_on('boost           +system +filesystem', when='@:1.1.999')
     depends_on('boost@:1.65.999 +system +filesystem', when='@1.2:')
+
+    # add virtual destructor to BaseMultiParms class.
+    patch('add_virtual_destructor.patch')
 
     def cmake_args(self):
         spec = self.spec

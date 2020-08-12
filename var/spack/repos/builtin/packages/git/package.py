@@ -22,8 +22,27 @@ class Git(AutotoolsPackage):
     # * sha256_manpages: the sha256sum of the corresponding manpage from
     #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # You can find the source here: https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
-
     releases = [
+        {
+            'version': '2.28.0',
+            'sha256': 'f914c60a874d466c1e18467c864a910dd4ea22281ba6d4d58077cb0c3f115170',
+            'sha256_manpages': '3cfca28a88d5b8112ea42322b797a500a14d0acddea391aed0462aff1ab11bf7'
+        },
+        {
+            'version': '2.27.0',
+            'sha256': '77ded85cbe42b1ffdc2578b460a1ef5d23bcbc6683eabcafbb0d394dffe2e787',
+            'sha256_manpages': '414e4b17133e54d846f6bfa2479f9757c50e16c013eb76167a492ae5409b8947'
+        },
+        {
+            'version': '2.26.0',
+            'sha256': 'aa168c2318e7187cd295a645f7370cc6d71a324aafc932f80f00c780b6a26bed',
+            'sha256_manpages': 'c1ffaf0b4cd1e80a0eb0d4039e208c9d411ef94d5da44e38363804e1a7961218'
+        },
+        {
+            'version': '2.25.0',
+            'sha256': 'a98c9b96d91544b130f13bf846ff080dda2867e77fe08700b793ab14ba5346f6',
+            'sha256_manpages': '22b2380842ef75e9006c0358de250ead449e1376d7e5138070b9a3073ef61d44'
+        },
         {
             'version': '2.21.0',
             'sha256': '85eca51c7404da75e353eba587f87fea9481ba41e162206a6f70ad8118147bee',
@@ -172,12 +191,14 @@ class Git(AutotoolsPackage):
     depends_on('curl')
     depends_on('expat')
     depends_on('gettext')
-    depends_on('libiconv')
+    depends_on('iconv')
+    depends_on('libidn2')
     depends_on('openssl')
     depends_on('pcre', when='@:2.13')
-    depends_on('pcre+jit', when='@2.14:')
+    depends_on('pcre2', when='@2.14:')
     depends_on('perl')
     depends_on('zlib')
+    depends_on('openssh', type='run')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -215,13 +236,18 @@ class Git(AutotoolsPackage):
         configure_args = [
             '--with-curl={0}'.format(spec['curl'].prefix),
             '--with-expat={0}'.format(spec['expat'].prefix),
-            '--with-iconv={0}'.format(spec['libiconv'].prefix),
-            '--with-libpcre={0}'.format(spec['pcre'].prefix),
+            '--with-iconv={0}'.format(spec['iconv'].prefix),
             '--with-openssl={0}'.format(spec['openssl'].prefix),
             '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
         ]
 
+        if '^pcre' in self.spec:
+            configure_args.append('--with-libpcre={0}'.format(
+                spec['pcre'].prefix))
+        if '^pcre2' in self.spec:
+            configure_args.append('--with-libpcre2={0}'.format(
+                spec['pcre2'].prefix))
         if '+tcltk' in self.spec:
             configure_args.append('--with-tcltk={0}'.format(
                 self.spec['tk'].prefix.bin.wish))

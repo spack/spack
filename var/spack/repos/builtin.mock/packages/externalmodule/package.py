@@ -13,6 +13,3 @@ class Externalmodule(Package):
     version('1.0', '1234567890abcdef1234567890abcdef')
 
     depends_on('externalprereq')
-
-    def install(self, spec, prefix):
-        pass

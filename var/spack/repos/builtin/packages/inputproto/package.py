@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Inputproto(AutotoolsPackage):
+class Inputproto(AutotoolsPackage, XorgPackage):
     """X Input Extension.
 
     This extension defines a protocol to provide additional input devices
     management such as graphic tablets."""
 
     homepage = "http://cgit.freedesktop.org/xorg/proto/inputproto"
-    url      = "https://www.x.org/archive/individual/proto/inputproto-2.3.2.tar.gz"
+    xorg_mirror_path = "proto/inputproto-2.3.2.tar.gz"
 
     version('2.3.2', sha256='10eaadd531f38f7c92ab59ef0708ca195caf3164a75c4ed99f0c04f2913f6ef3')
 

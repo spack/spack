@@ -1,0 +1,58 @@
+--- spack-src/examples/hepmcreader/reader.cc.orig 2013-10-31 11:11:16.000000000 +0100
++++ spack-src/examples/hepmcreader/reader.cc      2013-10-31 11:11:59.000000000 +0100
+@@ -172,7 +172,7 @@
+   for (vector<baseAnalysis*>::const_iterator i(analysis.begin()); i != analysis.end(); ++i) {
+     (*i)->Finalize(f);
+   }
+-
++f->Close();
+   // clean up analysis modules and configuration
+   for (vector<baseAnalysis*>::const_iterator i(analysis.begin()); i != analysis.end(); ++i) {
+     delete (*i);
+--- spack-src/Makefile.orig	2013-09-03 16:52:14.000000000 +0200
++++ spack-src/Makefile	2013-09-03 16:54:04.000000000 +0200
+@@ -28,7 +28,7 @@
+ 	@mkdir -p $(LIBDIR) 
+ 	$(CXX) $(CXXFLAGS) $(INCLUDES) \
+ 	-shared -o $(LIBDIR)/libHepMCAnalysis.so $(OBJECTS) \
+-	$(HepMClib) $(HepPDTlib) $(FastJetlib) \
++	$(HepMClib) $(HepPDTlib) $(FastJetlib) $(CLHEPlib) \
+ 	$(ROOTGLIBS) $(LINK_LIBS)
+
+
+--- spack-src/src/baseAnalysis.cc	2013-03-04 19:19:55.000000000 +0100
++++ spack-src/src/baseAnalysis.cc	2014-10-03 07:36:47.000000000 +0200
+@@ -281,8 +281,8 @@
+     double pe = (*p)->momentum().e();
+     
+       // remove garbage 
+-    if ( isnan( px ) || isnan( py ) || isnan( pz ) || isnan( pe ) || 
+-         isinf( px ) || isinf( py ) || isinf( pz ) || isinf( pe ) ) {
++    if ( std::isnan( px ) || std::isnan( py ) || std::isnan( pz ) || std::isnan( pe ) || 
++         std::isinf( px ) || std::isinf( py ) || std::isinf( pz ) || std::isinf( pe ) ) {
+       cout << "baseAnalysis: NaN (Not A Number) found in the event record! Particle will be skipped." << endl;
+       ++m_NanNum;
+       continue;
+--- spack-src/config.mk.orig	2020-06-25 17:05:30.142357100 +0200
++++ spack-src/config.mk	2020-06-25 17:06:24.219319861 +0200
+@@ -10,16 +10,16 @@
+ #              -I$(HepPDTdir)/include -I$(ROOTSYS)/include
+ INCLUDES    = $(INCLUDEH) $(INCLUDEF)
+ 
+-ROOTGLIBS   = `root-config --glibs`
+-ROOTCFLAGS  = `root-config --cflags` -Wno-long-long
++ROOTGLIBS   = `$(ROOTSYS)/bin/root-config --glibs`
++ROOTCFLAGS  = `$(ROOTSYS)/bin/root-config --cflags` -Wno-long-long
+ 
+ #CLHEP = -L$(CLHEPdir)/lib -lCLHEP    # causes problems in HepMCAnalysis_i interface!
+-CLHEPlib    = 
++CLHEPlib    = -L$(CLHEPdir)/lib -lCLHEP
+ 
+ # common libraries
+ HepPDTlib   = 
+ #HepPDTlib   = -L$(HepPDTdir)/lib -lHepPDT -lHepPID
+-HepMClib    = $(HepMCdir)/lib/libHepMC.so $(HepMCdir)/lib/libHepMCfio.a
++HepMClib    = -L$(HepMCdir)/lib -lHepMC
+ #FastJetlib  = -L$(FastJetdir)/lib -lfastjet -lSISConePlugin -lCDFConesPlugin -lsiscone -lsiscone_spherical
+ FastJetlib  = -L$(FastJetdir)/lib -lfastjet -lfastjetplugins -lsiscone -lsiscone_spherical
+ 

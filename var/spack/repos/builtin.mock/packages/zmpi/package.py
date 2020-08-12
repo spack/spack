@@ -16,6 +16,3 @@ class Zmpi(Package):
 
     provides('mpi@:10.0')
     depends_on('fake')
-
-    def install(self, spec, prefix):
-        pass

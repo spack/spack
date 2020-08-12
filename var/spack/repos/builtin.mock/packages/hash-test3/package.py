@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
+
+from spack import *
 
 
 class HashTest3(Package):
@@ -32,9 +32,15 @@ class HashTest3(Package):
         print("install 1")
         os.listdir(os.getcwd())
 
+        # sanity_check_prefix requires something in the install directory
+        mkdirp(prefix.bin)
+
     @when('@1.5:')
     def install(self, spec, prefix):
         os.listdir(os.getcwd())
+
+        # sanity_check_prefix requires something in the install directory
+        mkdirp(prefix.bin)
 
     for _version_constraint in ['@1.5', '@1.6']:
         @when(_version_constraint)

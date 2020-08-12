@@ -19,6 +19,3 @@ class OptionalDepTest2(Package):
 
     depends_on('optional-dep-test', when='+odt')
     depends_on('optional-dep-test+mpi', when='+mpi')
-
-    def install(self, spec, prefix):
-        pass

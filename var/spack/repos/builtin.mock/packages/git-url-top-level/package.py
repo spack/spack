@@ -38,6 +38,3 @@ class GitUrlTopLevel(Package):
     version('1.2', sha512='abc12', branch='releases/v1.2')
     version('1.1', md5='abc11', tag='v1.1')
     version('1.0', 'abc11', tag='abc123')
-
-    def install(self, spec, prefix):
-        pass

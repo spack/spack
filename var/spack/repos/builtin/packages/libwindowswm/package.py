@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libwindowswm(AutotoolsPackage):
+class Libwindowswm(AutotoolsPackage, XorgPackage):
     """WindowsWM - Cygwin/X rootless window management extension.
 
     WindowsWM is a simple library designed to interface with the
@@ -15,7 +15,7 @@ class Libwindowswm(AutotoolsPackage):
     rootless mode."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libWindowsWM"
-    url      = "https://www.x.org/archive/individual/lib/libWindowsWM-1.0.1.tar.gz"
+    xorg_mirror_path = "lib/libWindowsWM-1.0.1.tar.gz"
 
     version('1.0.1', sha256='94f9c0add3bad38ebd84bc43d854207c4deaaa74fb15339276e022546124b98a')
 

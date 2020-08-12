@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Constype(AutotoolsPackage):
+class Constype(AutotoolsPackage, XorgPackage):
     """constype prints on the standard output the Sun code for the type of
     display that the specified device is.
 
@@ -14,7 +14,7 @@ class Constype(AutotoolsPackage):
     SPARC OS'es and to Solaris on both SPARC & x86."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/constype"
-    url      = "https://www.x.org/archive/individual/app/constype-1.0.4.tar.gz"
+    xorg_mirror_path = "app/constype-1.0.4.tar.gz"
 
     version('1.0.4', sha256='ec09aff369cf1d527fd5b8075fb4dd0ecf89d905190cf1a0a0145d5e523f913d')
 

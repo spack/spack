@@ -1,0 +1,11 @@
+--- spack-src/src/c/ssht_sampling.h
++++ spack-src/src/c/ssht_sampling.h
+@@ -89,7 +89,7 @@
+  */
+ static inline void ssht_sampling_ind2elm(int *el, int *m, int ind) {
+ 
+-  *el = sqrt(ind);
++  *el = lrint(floor(sqrt(ind)));
+   *m = ind - (*el)*(*el) - (*el);
+ 
+ }

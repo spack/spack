@@ -18,6 +18,3 @@ class OverrideContextTemplates(Package):
 
     tcl_template = 'extension.tcl'
     tcl_context = {'sentence': "sentence from package"}
-
-    def install(self, spec, prefix):
-        pass

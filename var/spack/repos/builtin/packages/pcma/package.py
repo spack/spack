@@ -22,3 +22,6 @@ class Pcma(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('pcma', prefix.bin)
+
+    # set return value and change return type of function [-Wreturn-type]
+    patch('fix_return_type_err.patch')

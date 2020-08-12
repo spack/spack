@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Xwininfo(AutotoolsPackage):
+class Xwininfo(AutotoolsPackage, XorgPackage):
     """xwininfo prints information about windows on an X server. Various
     information is displayed depending on which options are selected."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xwininfo"
-    url      = "https://www.x.org/archive/individual/app/xwininfo-1.1.3.tar.gz"
+    xorg_mirror_path = "app/xwininfo-1.1.3.tar.gz"
 
     version('1.1.3', sha256='784f8b9c9ddab24ce4faa65fde6430a8d7cf3c0564573582452cc99c599bd941')
 

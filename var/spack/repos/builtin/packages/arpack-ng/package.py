@@ -85,6 +85,12 @@ class ArpackNg(Package):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
+    @when('@:3.7.0 %gcc@10:')
+    def setup_build_environment(self, env):
+        # version up to and including 3.7.0 are not ported to gcc 10
+        # https://github.com/opencollab/arpack-ng/issues/242
+        env.set('FFLAGS', '-fallow-argument-mismatch')
+
     @when('@3.4.0:')
     def install(self, spec, prefix):
 
@@ -108,7 +114,11 @@ class ArpackNg(Package):
         if '+mpi' in spec:
             options.append('-DMPI=ON')
 
-        # TODO: -DINTERFACE64=ON
+        # If 64-bit BLAS is used:
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            options.append('-DINTERFACE64=1')
 
         if '+shared' in spec:
             options.append('-DBUILD_SHARED_LIBS=ON')

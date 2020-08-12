@@ -14,12 +14,16 @@ class GdkPixbuf(Package):
        preparation for the change to GTK+ 3."""
 
     homepage = "https://developer.gnome.org/gdk-pixbuf/"
-    url      = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/2.38/gdk-pixbuf-2.38.0.tar.xz"
+    url      = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/2.40/gdk-pixbuf-2.40.0.tar.xz"
     list_url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
     list_depth = 1
 
+    version('2.40.0', sha256='1582595099537ca8ff3b99c6804350b4c058bb8ad67411bbaae024ee7cead4e6')
+    version('2.38.2', sha256='73fa651ec0d89d73dd3070b129ce2203a66171dfc0bd2caa3570a9c93d2d0781')
     version('2.38.0', sha256='dd50973c7757bcde15de6bcd3a6d462a445efd552604ae6435a0532fbbadae47')
     version('2.31.2', sha256='9e467ed09894c802499fb2399cd9a89ed21c81700ce8f27f970a833efb1e47aa')
+
+    variant('x11', default=False, description="Enable X11 support")
 
     depends_on('meson@0.46.0:', type='build', when='@2.37.92:')
     depends_on('meson@0.45.0:', type='build', when='@2.37.0:')
@@ -37,6 +41,7 @@ class GdkPixbuf(Package):
     depends_on('zlib')
     depends_on('libtiff')
     depends_on('gobject-introspection')
+    depends_on('libx11', when='+x11')
 
     # Replace the docbook stylesheet URL with the one that our
     # docbook-xsl package uses/recognizes.
@@ -54,7 +59,9 @@ class GdkPixbuf(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
-            meson('..', *std_meson_args)
+            meson_args = std_meson_args
+            meson_args += ['-Dx11={0}'.format('+x11' in spec)]
+            meson('..', *meson_args)
             ninja('-v')
             if self.run_tests:
                 ninja('test')

@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Xwud(AutotoolsPackage):
+class Xwud(AutotoolsPackage, XorgPackage):
     """xwud allows X users to display in a window an image saved in a
     specially formatted dump file, such as produced by xwd."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xwud"
-    url      = "https://www.x.org/archive/individual/app/xwud-1.0.4.tar.gz"
+    xorg_mirror_path = "app/xwud-1.0.4.tar.gz"
 
     version('1.0.4', sha256='b7c124ccd87f529daedb7ef01c670ce6049fe141fd9ba7f444361de34510cd6c')
 

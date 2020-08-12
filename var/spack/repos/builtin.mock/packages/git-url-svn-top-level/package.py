@@ -16,6 +16,3 @@ class GitUrlSvnTopLevel(Package):
     svn = 'https://example.com/some/svn/repo'
 
     version('2.0')
-
-    def install(self, spec, prefix):
-        pass

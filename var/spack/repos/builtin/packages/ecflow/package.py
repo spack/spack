@@ -18,22 +18,29 @@ class Ecflow(CMakePackage):
     homepage = 'https://confluence.ecmwf.int/display/ECFLOW/'
     url      = 'https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-4.11.1-Source.tar.gz'
 
+    version('4.13.0', sha256='c743896e0ec1d705edd2abf2ee5a47f4b6f7b1818d8c159b521bdff50a403e39')
+    version('4.12.0', sha256='566b797e8d78e3eb93946b923ef540ac61f50d4a17c9203d263c4fd5c39ab1d1')
     version('4.11.1', sha256='b3bcc1255939f87b9ba18d802940e08c0cf6379ca6aeec1fef7bd169b0085d6c')
 
     variant('static_boost', default=False,
             description='Use also static boost libraries when compiling')
 
-    depends_on('boost+python')
-    depends_on('boost+pic', when='+static_boost')
-    depends_on('qt')
-    depends_on('cmake@2.8.11:', type='build')
+    variant('ui', default=False, description='Enable ecflow_ui')
+
+    # Boost-1.7X release not working well on serialization
+    depends_on('boost@1.53:1.69+python')
+    depends_on('boost@1.53:1.69+pic', when='+static_boost')
+    depends_on('qt@5:', when='+ui')
+    depends_on('cmake@2.12.11:', type='build')
 
     def cmake_args(self):
         boost_lib = self.spec['boost'].prefix.lib
         args = ['-DBoost_PYTHON_LIBRARY_RELEASE=' + boost_lib]
 
+        ecflow_ui = 'ON' if '+ui' in self.spec else 'OFF'
         # https://jira.ecmwf.int/browse/SUP-2641#comment-208943
         use_static_boost = 'ON' if '+static_boost' in self.spec else 'OFF'
         args.append('-DENABLE_STATIC_BOOST_LIBS=' + use_static_boost)
 
+        args.extend(['-DENABLE_UI=' + ecflow_ui, '-DENABLE_GUI=' + ecflow_ui])
         return args

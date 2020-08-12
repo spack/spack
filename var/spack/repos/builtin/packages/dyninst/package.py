@@ -13,8 +13,10 @@ class Dyninst(CMakePackage):
 
     homepage = "https://dyninst.org"
     git      = "https://github.com/dyninst/dyninst.git"
+    maintainers = ['hainest']
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('10.2.0', tag='v10.2.0')
     version('10.1.0', tag='v10.1.0')
     version('10.0.0', tag='v10.0.0')
     version('9.3.2', tag='v9.3.2')
@@ -88,6 +90,11 @@ class Dyninst(CMakePackage):
             args.append('-DENABLE_STATIC_LIBS=YES')
         else:
             args.append('-DENABLE_STATIC_LIBS=NO')
+
+        # Make sure Dyninst doesn't try to build its own dependencies
+        # outside of Spack
+        if spec.satisfies('@10.2.0:'):
+            args.append('-DSTERILE_BUILD=ON')
 
         return args
 

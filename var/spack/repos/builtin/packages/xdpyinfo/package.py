@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Xdpyinfo(AutotoolsPackage):
+class Xdpyinfo(AutotoolsPackage, XorgPackage):
     """xdpyinfo is a utility for displaying information about an X server.
 
     It is used to examine the capabilities of a server, the predefined
@@ -15,7 +15,7 @@ class Xdpyinfo(AutotoolsPackage):
     protocol extensions that are available."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xdpyinfo"
-    url      = "https://www.x.org/archive/individual/app/xdpyinfo-1.3.2.tar.gz"
+    xorg_mirror_path = "app/xdpyinfo-1.3.2.tar.gz"
 
     version('1.3.2', sha256='ef39935e8e9b328e54a85d6218d410d6939482da6058db1ee1b39749d98cbcf2')
 

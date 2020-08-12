@@ -11,9 +11,10 @@ class Eztrace(AutotoolsPackage):
        of HPC applications."""
 
     homepage = "http://eztrace.gforge.inria.fr"
-    url      = "https://gforge.inria.fr/frs/download.php/file/37703/eztrace-1.1-8.tar.gz"
+    url      = "https://gitlab.com/eztrace/eztrace/-/archive/eztrace-1.1-10/eztrace-eztrace-1.1-10.tar.gz"
+    maintainers = ['trahay']
 
-    version('1.1-8', sha256='d80d78a25f1eb0e6e60a3e535e3972cd178c6a8663a3d6109105dfa6a880b8ec')
+    version('1.1-10', sha256='97aba8f3b3b71e8e2f7ef47e00c262234e27b9cb4a870c85c525317a83a3f0d4')
 
     depends_on('mpi')
 

@@ -782,6 +782,9 @@ class VersionList(object):
     def __len__(self):
         return len(self.versions)
 
+    def __bool__(self):
+        return bool(self.versions)
+
     @coerced
     def __eq__(self, other):
         return other is not None and self.versions == other.versions

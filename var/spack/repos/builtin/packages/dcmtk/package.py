@@ -32,10 +32,20 @@ class Dcmtk(CMakePackage):
     depends_on('libxml2', type=('build', 'link'), when='+xml')
 
     variant('iconv', default=True, description="Charset conversion support (iconv)")
-    depends_on('libiconv', type=('build', 'link'))
+    depends_on('iconv', type=('build', 'link'))
 
     variant('cxx11', default=False, description="Enable c++11 features")
     variant('stl', default=True, description="Use native STL implementation")
+
+    def patch(self):
+        # Backport 3.6.4
+        if self.spec.satisfies('@:3.6.3 %fj'):
+            filter_file(
+                'OFintegral_constant<size_t,-1>',
+                'OFintegral_constant<size_t,~OFstatic_cast(size_t,0)>',
+                'ofstd/include/dcmtk/ofstd/variadic/helpers.h',
+                string=True
+            )
 
     def cmake_args(self):
         args = ["-DDCMTK_WITH_OPENSSL={0}".format(

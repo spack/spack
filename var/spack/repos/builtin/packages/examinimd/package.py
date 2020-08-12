@@ -34,14 +34,15 @@ class Examinimd(MakefilePackage):
 
     conflicts('+openmp', when='+pthreads')
 
-    depends_on('kokkos')
+    depends_on('kokkos-legacy')
     depends_on('mpi', when='+mpi')
 
     @property
     def build_targets(self):
         targets = []
         # Append Kokkos
-        targets.append('KOKKOS_PATH={0}'.format(self.spec['kokkos'].prefix))
+        targets.append('KOKKOS_PATH={0}'.format(
+            self.spec['kokkos-legacy'].prefix))
         # Set kokkos device
         if 'openmp' in self.spec:
             targets.append('KOKKOS_DEVICES=OpenMP')

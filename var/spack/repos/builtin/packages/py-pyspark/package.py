@@ -10,7 +10,7 @@ class PyPyspark(PythonPackage):
     """Python bindings for Apache Spark"""
 
     homepage = "http://spark.apache.org"
-    url      = "https://pypi.org/packages/source/p/pyspark/pyspark-2.3.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pyspark/pyspark-2.3.0.tar.gz"
 
     version('2.3.0', sha256='0b3536910e154c36a94239f0ba0a201f476aadc72006409e5787198ffd01986e')
 

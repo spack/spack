@@ -1,0 +1,14 @@
+--- a/src/adapters/compiler/gcc-plugin/scorep_plugin_pass_instrument.inc.c
++++ b/src/adapters/compiler/gcc-plugin/scorep_plugin_pass_instrument.inc.c
+@@ -83,7 +83,11 @@ is_instrumentable( const char* assemblerName )
+         return "in system header";
+     }
+ 
++#if SCOREP_GCC_PLUGIN_TARGET_VERSION < 10000
+     if ( node->global.inlined_to )
++#else
++    if ( node->inlined_to )
++#endif
+     {
+         return "was inlined";
+     }

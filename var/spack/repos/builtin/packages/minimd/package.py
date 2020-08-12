@@ -16,7 +16,7 @@ class Minimd(MakefilePackage):
     """
 
     homepage = "http://mantevo.org"
-    url      = "https://github.com/Mantevo/mantevo.github.io/raw/master/download_files/miniMD_1.2.tgz"
+    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/MiniMD/miniMD_1.2.tgz"
 
     tags = ['proxy-app']
 

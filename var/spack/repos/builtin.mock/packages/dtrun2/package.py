@@ -13,6 +13,3 @@ class Dtrun2(Package):
     url = "http://www.example.com/dtrun2-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
-
-    def install(self, spec, prefix):
-        pass

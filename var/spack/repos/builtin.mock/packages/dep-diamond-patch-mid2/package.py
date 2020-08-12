@@ -28,6 +28,3 @@ X   Y
         patch('http://example.com/urlpatch.patch',
               sha256='mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'),  # noqa: E501
     ])
-
-    def install(self, spec, prefix):
-        pass

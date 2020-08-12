@@ -16,7 +16,13 @@ class Icedtea(AutotoolsPackage):
     homepage = "http://icedtea.classpath.org/wiki/Main_Page"
     url      = "http://icedtea.wildebeest.org/download/source/icedtea-3.4.0.tar.gz"
 
-    version('3.4.0',  sha256='2b606bbbf4ca5bcf2c8e811ea9060da30744860f3d63e1b3149fb5550a90b92b')
+    version('3.9.0', sha256='84a63bc59f4e101ce8fa183060a59c7e8cbe270945310e90c92b8609a9b8bc88')
+    version('3.8.0', sha256='ef1a9110294d0a905833f1db30da0c8a88bd2bde8d92ddb711d72ec763cd25b0')
+    version('3.7.0', sha256='936302694e193791885e81cf72097eeadee5b68ba220889228b0aafbfb2cb654')
+    version('3.6.0', sha256='74a43c4e027c72bb1c324f8f73af21565404326c9998f534f234ec2a36ca1cdb')
+    version('3.5.1', sha256='b229f2aa5d743ff850fa695e61f65139bb6eca1a9d10af5306ad3766fcea2eb2')
+    version('3.5.0', sha256='2c92e18fa70edaf73517fcf91bc2a7cc2ec2aa8ffdf22bb974fa6f9bc3065f30')
+    version('3.4.0', sha256='2b606bbbf4ca5bcf2c8e811ea9060da30744860f3d63e1b3149fb5550a90b92b')
 
     variant('X', default=False, description="Build with GUI support.")
     variant('shenandoah', default=False,

@@ -12,15 +12,24 @@ class Catch2(CMakePackage):
 
     homepage = "https://github.com/catchorg/Catch2"
     url      = "https://github.com/catchorg/Catch2/archive/v2.9.1.tar.gz"
+    git      = "https://github.com/catchorg/Catch2.git"
+    maintainers = ["ax3l", "AndrewGaspar"]
 
-    variant('single_header', default=True,
-            description='Install a single header only.')
+    # In-Development
+    version('master', branch='master')
 
-    # - "make install" was added in 1.7.0
-    # - pkg-config package was added in 2.0.1
-    # - CMake config package was added in 2.1.2
-    conflicts('~single_header', when='@:1.6.1')
-
+    # Releases
+    version('2.12.3', sha256='78425e7055cea5bad1ff8db7ea0d6dfc0722ece156be1ccf3597c15e674e6943')
+    version('2.12.1', sha256='e5635c082282ea518a8dd7ee89796c8026af8ea9068cd7402fb1615deacd91c3')
+    version('2.12.0', sha256='6606b754363d3a4521bfecf717dc1972c50dca282bd428dfb1370ec8b9c26918')
+    version('2.11.3', sha256='9a6967138062688f04374698fce4ce65908f907d8c0fe5dfe8dc33126bd46543')
+    version('2.11.2', sha256='a96203fa531092375678ad2d81c43317ee58c684787f24b2a55748f6c6839799')
+    version('2.11.1', sha256='9af06ca5b10362620c6c9c729821367e1aeb0f76adfc7bc3a468da83db3c50c6')
+    version('2.11.0', sha256='b9957af46a04327d80833960ae51cf5e67765fd264389bd1e275294907f1a3e0')
+    version('2.10.2', sha256='79aa46ee6c5a87bc5306bfffc6ecde6a1ad6327715b208ee2e846873f282a494')
+    version('2.10.1', sha256='dcbbe0a5f4d2a4330bdf5bcb9ef6a02303d679d46596e4ed06ca462f2372d4de')
+    version('2.10.0', sha256='a3beaa8ba6238c189e1f81238ab38e585836af13204a7099e22eff6c25b98558')
+    version('2.9.2',  sha256='54bea6d80a388a80f895cd0e2343fca72b0d9093a776af40904aefce49c13bda')
     version('2.9.1', sha256='0b36488aca6265e7be14da2c2d0c748b4ddb9c70a1ea4da75736699c629f14ac')
     version('2.9.0', sha256='00040cad9b6d6bb817ebd5853ff6dda23f9957153d8c4eedf85def0c9e787c42')
     version('2.8.0', sha256='b567c37446cd22c8550bfeb7e2fe3f981b8f3ab8b2148499a522e7f61b8a481d')
@@ -38,8 +47,10 @@ class Catch2(CMakePackage):
     version('2.2.3', sha256='45e5e12cc5a98e098b0960d70c0d99b7168b711e85fb947dcd4d68ec3f8b8826')
     version('2.2.2', sha256='e93aacf012579093fe6b4e686ff0488975cabee1e6b4e4f27a0acd898e8f09fd')
     version('2.2.1', sha256='3938bc896f8de570bc56d25606fc128437ee53590a95cf3e005710176a1a1ce4')
+    # releases 2.1.2+ added a CMake config package
     version('2.1.0', sha256='a8f9805174916c23bf59ed45f72c21ce092e2848c139f4c6d396aeeb5ce2dfb3')
     version('2.0.1', sha256='5f31b93712e65d363f257ad0f0c02cfbed7a3988979d5f320ad7771e513d4cc8')
+    # releases 2.0.1+ added a pkg-config package
     version('1.12.1', sha256='9a0b4722a9864fa0728241ecca2e4c1b3de8e60a5d6fe3f92dec7b8bbfbc850d')
     version('1.12.0', sha256='adab7275bddcd8b5ba28478db513371137188beef5ef40489edb1c34fe2bf421')
     version('1.11.0', sha256='b6f30b548aa15e42d299f3fdb15f69df4777c1b20ca24d8d7dee552d76870eff')
@@ -58,6 +69,7 @@ class Catch2(CMakePackage):
     version('1.7.2', sha256='4aeca774db0ebbea0f86548e1c742fbc4c67c8cf0da550fbfe3e55efa1cc2178')
     version('1.7.1', sha256='46b289866f9b44c850cc1e48d0ead479494fd8ef0cdb9eda88b1dfd5b990556a')
     version('1.7.0', sha256='55ff8904d1215aadaa003ae50e1ad82747c655004b43bf30c656cb20e1c89050')
+    # releases 1.7.0+ added "make install"
     version('1.6.1', sha256='83ad2744529b3b507eee188dba23baf6b5c038fccbbe4b3256172c04420292e4')
     version('1.6.0', sha256='9a7aed27cc58eee0e694135503dcc7fc99c7ec254416cff44fe10166a5f1f68c')
     version('1.5.9', sha256='0ba04d0eefcf5a1d4c9e9e79f051f1f93de704ea4429a247f69ec76c2c6647cd')
@@ -66,20 +78,29 @@ class Catch2(CMakePackage):
     version('1.3.5', sha256='f15730d81b4173fb860ce3561768de7d41bbefb67dc031d7d1f5ae2c07f0a472')
     version('1.3.0', sha256='245f6ee73e2fea66311afa1da59e5087ddab8b37ce64994ad88506e8af28c6ac')
 
-    @when('+single_header')
+    def cmake_args(self):
+        spec = self.spec
+        args = []
+        # 1.7.0-1.9.3: no control over test builds
+        if spec.satisfies('@1.9.4:2.1.0'):
+            args.append('-DNO_SELFTEST={0}'.format(
+                'OFF' if self.run_tests else 'ON'))
+        elif spec.satisfies('@2.1.1:'):
+            args.append('-DBUILD_TESTING:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF'))
+        return args
+
+    @when('@:1.6.99')
     def cmake(self, spec, prefix):
         pass
 
-    @when('+single_header')
+    @when('@:1.6.99')
     def build(self, spec, prefix):
         pass
 
-    @when('+single_header')
+    @when('@:1.6.99')
     def install(self, spec, prefix):
         mkdirp(prefix.include)
-        if spec.satisfies('@2.3.0:'):
-            install_tree('single_include', prefix.include)
-        else:
-            install(join_path('single_include', 'catch.hpp'), prefix.include)
+        install(join_path('single_include', 'catch.hpp'), prefix.include)
         # fakes out spack so it installs a module file
         mkdirp(join_path(prefix, 'bin'))

@@ -69,6 +69,11 @@ def test_extensions(mock_packages, python_database, capsys):
     check_output(1, 1)
 
 
+def test_extensions_no_arguments(mock_packages):
+    out = extensions()
+    assert 'python' in out
+
+
 def test_extensions_raises_if_not_extendable(mock_packages):
     with pytest.raises(SpackCommandError):
         extensions("flake8")

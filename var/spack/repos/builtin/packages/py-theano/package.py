@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyTheano(PythonPackage):
+class PyTheano(PythonPackage, CudaPackage):
     """Optimizing compiler for evaluating mathematical expressions on CPUs
     and GPUs."""
 
@@ -20,9 +20,6 @@ class PyTheano(PythonPackage):
     version('1.0.1', sha256='88d8aba1fe2b6b75eacf455d01bc7e31e838c5a0fb8c13dde2d9472495ff4662')
     version('0.8.2', sha256='7463c8f7ed1a787bf881f36d38a38607150186697e7ce7e78bfb94b7c6af8930')
 
-    variant('gpu', default=False,
-            description='Builds with support for GPUs via CUDA and cuDNN')
-
     depends_on('python@2.6:2.8,3.3:')
 
     depends_on('py-setuptools', type=('build', 'run'))
@@ -32,10 +29,10 @@ class PyTheano(PythonPackage):
 
     depends_on('blas')
 
-    depends_on('cuda', when='+gpu')
-    depends_on('cudnn', when='+gpu')
-    depends_on('py-pygpu', when='+gpu', type=('build', 'run'))
-    depends_on('libgpuarray', when='+gpu')
+    depends_on('cuda', when='+cuda')
+    depends_on('cudnn', when='+cuda')
+    depends_on('py-pygpu', when='+cuda', type=('build', 'run'))
+    depends_on('libgpuarray', when='+cuda')
 
     depends_on('py-nose@1.3.0:', type='test')
     depends_on('py-parameterized', type='test')

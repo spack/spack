@@ -16,9 +16,21 @@ class Sirius(CMakePackage, CudaPackage):
     list_url = "https://github.com/electronic-structure/SIRIUS/releases"
     git      = "https://github.com/electronic-structure/SIRIUS.git"
 
+    maintainers = ['simonpintarelli', 'haampie', 'dev-zero']
+
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('6.5.6', sha256='c8120100bde4477545eae489ea7f9140d264a3f88696ec92728616d78f214cae')
+    version('6.5.5', sha256='0b23d3a8512682eea67aec57271031c65f465b61853a165015b38f7477651dd1')
+    version('6.5.4', sha256='5f731926b882a567d117afa5e0ed33291f1db887fce52f371ba51f014209b85d')
+    version('6.5.3', sha256='eae0c303f332425a8c792d4455dca62557931b28a5df8b4c242652d5ffddd580')
+    version('6.5.2', sha256='c18adc45b069ebae03f94eeeeed031ee99b3d8171fa6ee73c7c6fb1e42397fe7')
+    version('6.5.1', sha256='599dd0fa25a4e83db2a359257a125e855d4259188cf5b0065b8e7e66378eacf3')
+    version('6.5.0', sha256='5544f3abbb71dcd6aa08d18aceaf53c38373de4cbd0c3af44fbb39c20cfeb7cc')
+    version('6.4.4', sha256='1c5de9565781847658c3cc11edcb404e6e6d1c5a9dfc81e977de7a9a7a162c8a')
+    version('6.4.3', sha256='4d1effeadb84b3e1efd7d9ac88018ef567aa2e0aa72e1112f0abf2e493e2a189')
+    version('6.4.2', sha256='40b9b66deebb6538fc0f4cd802554d0d763ea6426b9b2f0e8db8dc617e494479')
     version('6.4.1', sha256='86f25c71517952a63e92e0a9bcf66d27e4afb2b0d67cf84af480f116b8e7f53c')
     version('6.4.0', sha256='bc61758b71dd2996e2ff515b8c3560b2c69c00931cb2811a163a31bcfea4436e')
     version('6.3.4', sha256='8839e988b4bb6ef99b6180f7fba03a5537e31fce51bb3e4c2298b513d6a07e0a')
@@ -30,10 +42,12 @@ class Sirius(CMakePackage, CudaPackage):
     variant('openmp', default=True, description="Build with OpenMP support")
     variant('fortran', default=False, description="Build Fortran bindings")
     variant('python', default=False, description="Build Python bindings")
+    variant('memory_pool', default=True, description="Build with memory pool")
     variant('elpa', default=False, description="Use ELPA")
     variant('vdwxc', default=False, description="Enable libvdwxc support")
     variant('scalapack', default=False, description="Enable scalapack support")
     variant('magma', default=False, description="Enable MAGMA support")
+    variant('nlcglib', default=False, description="enable robust wave function optimization")
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -42,7 +56,7 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('gsl')
     depends_on('lapack')
-    depends_on('fftw')  # SIRIUS does not care about MPI-support in FFTW
+    depends_on('fftw-api@3')
     depends_on('libxc')
     depends_on('spglib')
     depends_on('hdf5+hl')
@@ -57,16 +71,21 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('py-pybind11', when='+python', type=('build', 'run'))
     depends_on('magma', when='+magma')
 
-    depends_on('spfft', when='@6.4.0:~cuda')
+    depends_on('spfft', when='@6.4.0:')
+    depends_on('spfft', when='@master')
+    depends_on('spfft', when='@develop')
     depends_on('spfft+cuda', when='@6.4.0:+cuda')
+    depends_on('spfft+cuda', when='@master+cuda')
+    depends_on('spfft+cuda', when='@develop+cuda')
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
+    depends_on('nlcglib', when='+nlcglib')
     depends_on('libvdwxc+mpi', when='+vdwxc')
     depends_on('scalapack', when='+scalapack')
     depends_on('cuda', when='+cuda')
     extends('python', when='+python')
 
-    conflicts('+shared', when='@6.3.0:')  # option to build shared libraries has been removed
+    conflicts('+shared', when='@6.3.0:6.4.999')
 
     # TODO:
     # add support for CRAY_LIBSCI, ROCm, testing
@@ -84,9 +103,8 @@ class Sirius(CMakePackage, CudaPackage):
 
             return find_libraries(
                 libraries, root=self.prefix,
-                shared=False, recursive=True
+                shared='+shared' in self.spec, recursive=True
             )
-
         else:
             if '+fortran' in self.spec:
                 libraries += ['libsirius_f']
@@ -119,7 +137,9 @@ class Sirius(CMakePackage, CudaPackage):
             _def('+openmp'),
             _def('+elpa'),
             _def('+magma'),
+            _def('+nlcglib'),
             _def('+vdwxc'),
+            _def('+memory_pool'),
             _def('+scalapack'),
             _def('+fortran', 'CREATE_FORTRAN_BINDINGS'),
             _def('+python', 'CREATE_PYTHON_MODULE'),

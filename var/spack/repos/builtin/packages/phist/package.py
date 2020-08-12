@@ -26,6 +26,7 @@ class Phist(CMakePackage):
 
     version('develop', branch='devel')
     version('master', branch='master')
+    version('1.9.0', sha256='990d3308fc0083ed0f9f565d00c649ee70c3df74d44cbe5f19dfe05263d06559')
     version('1.8.0', sha256='ee42946bce187e126452053b5f5c200b57b6e40ee3f5bcf0751f3ced585adeb0')
     version('1.7.5', sha256='f11fe27f2aa13d69eb285cc0f32c33c1603fa1286b84e54c81856c6f2bdef500')
     version('1.7.4', sha256='ef0c97fda9984f53011020aff3e61523833320f5f5719af2f2ed84463cccb98b')
@@ -44,9 +45,12 @@ class Phist(CMakePackage):
                     'eigen',
                     'ghost'])
 
+    variant(name='int64', default=True,
+            description='Use 64-bit global indices.')
+
     variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
             description='verbosity. 0: errors 1: +warnings 2: +info '
-                        '3: +verbose 4: +extreme 5; +debug')
+                        '3: +verbose 4: +extreme 5: +debug')
 
     variant('host', default=True,
             description='allow PHIST to use compiler flags that lead to host-'
@@ -86,6 +90,13 @@ class Phist(CMakePackage):
     # in older versions, it is not possible to turn off the use of host-
     # specific compiler flags in Release mode.
     conflicts('~host', when='@:1.7.3')
+    # builtin always uses 64-bit indices
+    conflicts('~int64', when='kernel_lib=builtin')
+    conflicts('+int64', when='kernel_lib=eigen')
+
+    # ###################### Patches ##########################
+
+    patch('update_tpetra_gotypes.patch', when='@:1.8.99')
 
     # ###################### Dependencies ##########################
 
@@ -97,16 +108,18 @@ class Phist(CMakePackage):
     # the feature (e.g. use the '~fortran' variant)
     depends_on('python@3:', when='@1.7: +fortran', type='build')
     depends_on('mpi', when='+mpi')
-    depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
-    depends_on('trilinos@12:+tpetra', when='kernel_lib=tpetra')
+    depends_on('trilinos@12:+tpetra gotype=long_long', when='kernel_lib=tpetra +int64')
+    depends_on('trilinos@12:+tpetra gotype=int', when='kernel_lib=tpetra ~int64')
     # Epetra backend also works with older Trilinos versions
     depends_on('trilinos+epetra', when='kernel_lib=epetra')
-    depends_on('petsc', when='kernel_lib=petsc')
+    depends_on('petsc +int64', when='kernel_lib=petsc +int64')
+    depends_on('petsc ~int64', when='kernel_lib=petsc ~int64')
     depends_on('eigen', when='kernel_lib=eigen')
     depends_on('ghost', when='kernel_lib=ghost')
 
-    depends_on('trilinos', when='+trilinos')
-    depends_on('parmetis ^metis+int64', when='+parmetis')
+    depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
+    depends_on('parmetis ^metis+int64', when='+parmetis +int64')
+    depends_on('parmetis ^metis~int64', when='+parmetis ~int64')
 
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package
@@ -139,13 +152,15 @@ class Phist(CMakePackage):
                 '-DPHIST_ENABLE_SCAMAC:BOOL=%s'
                 % ('ON' if '+scamac' in spec else 'OFF'),
                 '-DPHIST_USE_TRILINOS_TPLS:BOOL=%s'
-                % ('ON' if '+trilinos' in spec else 'OFF'),
+                % ('ON' if '^trilinos' in spec else 'OFF'),
                 '-DPHIST_USE_SOLVER_TPLS:BOOL=%s'
-                % ('ON' if '+trilinos' in spec else 'OFF'),
+                % ('ON' if '^trilinos+belos+anasazi' in spec else 'OFF'),
                 '-DPHIST_USE_PRECON_TPLS:BOOL=%s'
-                % ('ON' if '+trilinos' in spec else 'OFF'),
+                % ('ON' if '^trilinos' in spec else 'OFF'),
                 '-DXSDK_ENABLE_Fortran:BOOL=%s'
                 % ('ON' if '+fortran' in spec else 'OFF'),
+                '-DXSDK_INDEX_SIZE=%s'
+                % ('64' if '+int64' in spec else '32'),
                 '-DPHIST_HOST_OPTIMIZE:BOOL=%s'
                 % ('ON' if '+host' in spec else 'OFF'),
                 ]

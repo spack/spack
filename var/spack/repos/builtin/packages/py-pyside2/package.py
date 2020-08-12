@@ -17,6 +17,7 @@ class PyPyside2(PythonPackage):
     # http://wiki.qt.io/Qt_for_Python_Development_Getting_Started
 
     version('develop', tag='dev')
+    version('5.14.2.1', tag='v5.14.2.1', submodules=True)
     version('5.13.2', tag='v5.13.2', submodules=True)
     version('5.13.1', tag='v5.13.1', submodules=True)
     version('5.13.0', tag='v5.13.0', submodules=True)

@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Xproxymanagementprotocol(AutotoolsPackage):
+class Xproxymanagementprotocol(AutotoolsPackage, XorgPackage):
     """The Proxy Management Protocol is an ICE based protocol that provides a
     way for application servers to easily locate proxy services available to
     them."""
 
     homepage = "http://cgit.freedesktop.org/xorg/proto/pmproto"
-    url      = "https://www.x.org/archive/individual/proto/xproxymanagementprotocol-1.0.3.tar.gz"
+    xorg_mirror_path = "proto/xproxymanagementprotocol-1.0.3.tar.gz"
 
     version('1.0.3', sha256='c1501045ec781f36b6f867611ab2b4e81be542f5c669b2fd0cc4ec1340c42bcf')

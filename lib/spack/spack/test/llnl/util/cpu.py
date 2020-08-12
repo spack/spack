@@ -37,7 +37,6 @@ from llnl.util.cpu import Microarchitecture  # noqa
     'darwin-mojave-ivybridge',
     'darwin-mojave-haswell',
     'darwin-mojave-skylake',
-    'bgq-rhel6-power7'
 ])
 def expected_target(request, monkeypatch):
     cpu = llnl.util.cpu
@@ -49,7 +48,7 @@ def expected_target(request, monkeypatch):
     )
 
     # Monkeypatch for linux
-    if platform in ('linux', 'bgq'):
+    if platform == 'linux':
         monkeypatch.setattr(cpu.detect.platform, 'system', lambda: 'Linux')
 
         @contextlib.contextmanager
@@ -245,7 +244,7 @@ def test_unsupported_optimization_flags(target_name, compiler, version):
     target = llnl.util.cpu.targets[target_name]
     with pytest.raises(
             llnl.util.cpu.UnsupportedMicroarchitecture,
-            matches='cannot produce optimized binary'
+            match='cannot produce optimized binary'
     ):
         target.optimization_flags(compiler, version)
 
@@ -278,3 +277,14 @@ def test_version_components(version, expected_number, expected_suffix):
     number, suffix = llnl.util.cpu.version_components(version)
     assert number == expected_number
     assert suffix == expected_suffix
+
+
+def test_invalid_family():
+    targets = llnl.util.cpu.targets
+    multi_parents = Microarchitecture(
+        name='chimera', parents=[targets['pentium4'], targets['power7']],
+        vendor='Imagination', features=[], compilers={}, generation=0
+    )
+    with pytest.raises(AssertionError,
+                       match='a target is expected to belong'):
+        multi_parents.family

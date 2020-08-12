@@ -30,7 +30,11 @@ modules:
     lib64:
       - LIBRARY_PATH
     include:
-      - CPATH
+      - C_INCLUDE_PATH
+      - CPLUS_INCLUDE_PATH
+      # The INCLUDE env variable specifies paths to look for
+      # .mod file for Intel Fortran compilers
+      - INCLUDE
     lib/pkgconfig:
       - PKG_CONFIG_PATH
     lib64/pkgconfig:

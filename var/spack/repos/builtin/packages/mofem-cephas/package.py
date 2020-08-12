@@ -42,7 +42,7 @@ class MofemCephas(CMakePackage):
     depends_on("parmetis")
     # Fixed version of hdf5, to remove some problems with dependent
     # packages, f.e. MED format
-    depends_on("hdf5@:1.8.19+hl+mpi")
+    depends_on("hdf5@:1.8.19+hl+mpi+fortran")
     depends_on("petsc@:3.9.3+mumps+mpi")
     depends_on('slepc', when='+slepc')
     depends_on("moab")

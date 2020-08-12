@@ -2,17 +2,25 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
+import re
 
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
-       tools designed to build, test and package software."""
+    tools designed to build, test and package software.
+    """
     homepage = 'https://www.cmake.org'
-    url      = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
+    url = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
     maintainers = ['chuckatkins']
 
+    executables = ['^cmake$']
+
+    version('3.18.1',   sha256='c0e3338bd37e67155b9d1e9526fec326b5c541f74857771b7ffed0c46ad62508')
+    version('3.18.0',   sha256='83b4ffcb9482a73961521d2bafe4a16df0168f03f56e6624c419c461e5317e29')
+    version('3.17.3',   sha256='0bd60d512275dc9f6ef2a2865426a184642ceb3761794e6b65bff233b91d8c40')
+    version('3.17.1',   sha256='3aa9114485da39cbd9665a0bfe986894a282d5f0882b1dea960a739496620727')
+    version('3.17.0',   sha256='b74c05b55115eacc4fa2b77a814981dbda05cdc95a53e279fe16b7b272f00847')
+    version('3.16.5',   sha256='5f760b50b8ecc9c0c37135fae5fbf00a2fef617059aa9d61c1bb91653e5a8bfc')
     version('3.16.2',   sha256='8c09786ec60ca2be354c29829072c38113de9184f29928eb9da8446a5f2ce6a9')
     version('3.16.1',   sha256='a275b3168fa8626eca4465da7bb159ff07c8c6cb0fb7179be59e12cbdfa725fd')
     version('3.16.0',   sha256='6da56556c63cab6e9a3e1656e8763ed4a841ac9859fefb63cbe79472e67e8c5f')
@@ -49,6 +57,7 @@ class Cmake(Package):
     version('3.10.0',   sha256='b3345c17609ea0f039960ef470aa099de9942135990930a57c14575aae884987')
     version('3.9.6',    sha256='7410851a783a41b521214ad987bb534a7e4a65e059651a2514e6ebfc8f46b218')
     version('3.9.4',    sha256='b5d86f12ae0072db520fdbdad67405f799eb728b610ed66043c20a92b4906ca1')
+    version('3.9.2',    sha256='954a5801a456ee48e76f01107c9a4961677dd0f3e115275bbd18410dc22ba3c1')
     version('3.9.0',    sha256='167701525183dbb722b9ffe69fb525aa2b81798cf12f5ce1c020c93394dfae0f')
     version('3.8.2',    sha256='da3072794eb4c09f2d782fcee043847b99bb4cf8d4573978d9b2024214d6e92d')
     version('3.8.1',    sha256='ce5d9161396e06501b00e52933783150a87c33080d4bdcef461b5b7fd24ac228')
@@ -77,7 +86,7 @@ class Cmake(Package):
 
     # Fix builds with XLF + Ninja generator
     # https://gitlab.kitware.com/cmake/cmake/merge_requests/4075
-    patch('https://gitlab.kitware.com/cmake/cmake/merge_requests/4075.patch', sha256="001736d791957225aadfc416b0cef915e8c8dcc04765b8e0fcbebf6058a05560", when="@3.15.5")
+    patch('fix-xlf-ninja-mr-4075.patch', sha256="42d8b2163a2f37a745800ec13a96c08a3a20d5e67af51031e51f63313d0dedd1", when="@3.15.5")
 
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
@@ -88,6 +97,13 @@ class Cmake(Package):
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
+
+    # Tries to build an Objective-C file from libuv with GCC's C frontend
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/20620
+    # https://github.com/libuv/libuv/issues/2805
+    conflicts('%gcc platform=darwin',
+              msg='CMake does not compile with GCC on macOS yet, use clang. '
+                  'See: https://gitlab.kitware.com/cmake/cmake/-/issues/20620')
 
     # Really this should conflict since it's enabling or disabling openssl for
     # CMake's internal copy of curl.  Ideally we'd want a way to have the
@@ -101,7 +117,8 @@ class Cmake(Package):
     depends_on('zlib',           when='~ownlibs')
     depends_on('bzip2',          when='~ownlibs')
     depends_on('xz',             when='~ownlibs')
-    depends_on('libarchive',     when='~ownlibs')
+    depends_on('libarchive@3.1.0:', when='~ownlibs')
+    depends_on('libarchive@3.3.3:',     when='@3.15.0:~ownlibs')
     depends_on('libuv@1.0.0:1.10.99',   when='@3.7.0:3.10.3~ownlibs')
     depends_on('libuv@1.10.0:1.10.99',  when='@3.11.0:3.11.99~ownlibs')
     depends_on('libuv@1.10.0:',  when='@3.12.0:~ownlibs')
@@ -117,8 +134,21 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
     patch('intel-c-gnu11.patch', when='@3.6.0:3.6.1')
 
+    # Cannot build with Intel again, should be fixed in 3.17.4 and 3.18.1
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/21013
+    patch('intel-cxx-bootstrap.patch', when='@3.17.0:3.17.3,3.18.0')
+
     # https://gitlab.kitware.com/cmake/cmake/issues/18232
     patch('nag-response-files.patch', when='@3.7:3.12')
+
+    # Cray libhugetlbfs and icpc warnings failing CXX tests
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4698
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4681
+    patch('ignore_crayxc_warnings.patch', when='@3.7:3.17.2')
+
+    # The Fujitsu compiler requires the '--linkfortran' option
+    # to combine C++ and Fortran programs.
+    patch('fujitsu_add_linker_option.patch', when='%fj')
 
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
@@ -128,6 +158,12 @@ class Cmake(Package):
               msg="Intel 14 has immature C++11 support")
 
     phases = ['bootstrap', 'build', 'install']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str)
+        match = re.search(r'cmake.*version\s+(\S+)', output)
+        return match.group(1) if match else None
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':
@@ -174,6 +210,10 @@ class Cmake(Package):
         # Make sure to create an optimized release build
         args.append('-DCMAKE_BUILD_TYPE=Release')
 
+        # Install CMake correctly, even if `spack install` runs
+        # inside a ctest environment
+        args.append('-DCMake_TEST_INSTALL=OFF')
+
         # When building our own private copy of curl then we need to properly
         # enable / disable oepnssl
         if '+ownlibs' in spec:
@@ -196,3 +236,9 @@ class Cmake(Package):
 
     def install(self, spec, prefix):
         make('install')
+
+        if spec.satisfies('%fj'):
+            for f in find(self.prefix, 'FindMPI.cmake', recursive=True):
+                filter_file('mpcc_r)', 'mpcc_r mpifcc)', f, string=True)
+                filter_file('mpc++_r)', 'mpc++_r mpiFCC)', f, string=True)
+                filter_file('mpifc)', 'mpifc mpifrt)', f, string=True)

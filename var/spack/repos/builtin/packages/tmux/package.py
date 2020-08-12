@@ -17,6 +17,7 @@ class Tmux(AutotoolsPackage):
     homepage = "http://tmux.github.io"
     url = "https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz"
 
+    version('3.1b', sha256='d93f351d50af05a75fe6681085670c786d9504a5da2608e481c47cf5e1486db9')
     version('3.0a', sha256='4ad1df28b4afa969e59c08061b45082fdc49ff512f30fc8e43217d7b0e5f8db9')
     version('2.9', sha256='34901232f486fd99f3a39e864575e658b5d49f43289ccc6ee57c365f2e2c2980')
     version('2.8', sha256='7f6bf335634fafecff878d78de389562ea7f73a7367f268b66d37ea13617a2ba')
@@ -29,13 +30,7 @@ class Tmux(AutotoolsPackage):
     version('2.1', sha256='31564e7bf4bcef2defb3cb34b9e596bd43a3937cad9e5438701a81a5a9af6176')
     version('1.9a', sha256='c5e3b22b901cf109b20dab54a4a651f0471abd1f79f6039d79b250d21c2733f5')
 
+    # used by configure to e.g. find libtinfo
+    depends_on('pkgconfig', type='build')
     depends_on('libevent')
     depends_on('ncurses')
-
-    def flag_handler(self, name, flags):
-        if name == 'cppflags':
-            flags.append(self.spec['ncurses'].headers.include_flags)
-        return (None, flags, None)
-
-    def configure_args(self):
-        return ['LIBTINFO_LIBS=-lncurses']

@@ -10,7 +10,7 @@
 }
 
 export FOAM_INST_DIR=$(cd $FOAM_PROJECT_DIR/.. && pwd -L) # Needed by foam-extend
-. $FOAM_PROJECT_DIR/etc/bashrc ''  # No arguments
+. "$FOAM_PROJECT_DIR"/etc/bashrc ''  # No arguments
 
 # Package-specific adjustments
 [ -f spack-config.sh ] && . ./spack-config.sh ''  # No arguments

@@ -19,6 +19,7 @@ class RROo(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/R.oo_1.21.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/R.oo"
 
+    version('1.23.0', sha256='f5124ce3dbb0a62e8ef1bfce2de2d1dc2f776e8c48fd8cac358f7f5feb592ea1')
     version('1.22.0', sha256='c0862e4608fb2b8f91ec4494d46c2f3ba7bc44999f9aa3d7b9625d3792e7dd4c')
     version('1.21.0', sha256='645ceec2f815ed39650ca72db87fb4ece7357857875a4ec73e18bfaf647f431c')
 

@@ -12,7 +12,7 @@ class PyTestinfra(PythonPackage):
     Chef and so on."""
 
     homepage = "https://testinfra.readthedocs.io"
-    url      = "https://pypi.python.org/packages/source/t/testinfra/testinfra-1.11.1.tar.gz"
+    url      = "https://pypi.io/packages/source/t/testinfra/testinfra-1.11.1.tar.gz"
 
     version('1.18.0', sha256='4a0a70355b007729d78446c86bffd80bcea4ffe9adc9571f9c9779476c49153d')
     version('1.13.0', sha256='b5afa23d71ee49ad81aed104e4a0f1c02819ef791291cd308fe27aa7f3d3b01f')

@@ -19,7 +19,6 @@ class AppleLibunwind(Package):
     # Darwin must be expressed by listing a conflict with every
     # platform that isn't Darwin/macOS
     conflicts('platform=linux')
-    conflicts('platform=bgq')
     conflicts('platform=cray')
 
     # Override the fetcher method to throw a useful error message;
@@ -43,7 +42,8 @@ class AppleLibunwind(Package):
         raise InstallError(msg)
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        mkdirp(prefix.lib)
 
     @property
     def libs(self):

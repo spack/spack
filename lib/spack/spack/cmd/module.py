@@ -11,7 +11,7 @@ import spack.cmd.modules.lmod
 import spack.cmd.modules.tcl
 
 description = "manipulate module files"
-section = "modules"
+section = "user environment"
 level = "short"
 
 

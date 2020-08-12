@@ -13,13 +13,15 @@ class Nekbone(Package):
        the spectral element method."""
 
     homepage = "https://github.com/Nek5000/Nekbone"
-    url      = "https://github.com/Nek5000/Nekbone/archive/v17.0.tar.gz"
     git      = "https://github.com/Nek5000/Nekbone.git"
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
     version('develop', branch='master')
-    version('17.0', sha256='ae361cc61368a924398a28a296f675b7f0c4a9516788a7f8fa3c09d787cdf69b')
+    version('17.0',
+            'ae361cc61368a924398a28a296f675b7f0c4a9516788a7f8fa3c09d787cdf69b',
+            url='https://github.com/Nek5000/Nekbone/archive/v17.0.tar.gz',
+            extension='.tar.gz')
 
     # Variants
     variant('mpi', default=True, description='Build with MPI')

@@ -43,7 +43,7 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on('perl@5.12.0:', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     depends_on('valgrind', type='test')
 

@@ -13,12 +13,16 @@ class Mysql(CMakePackage):
     homepage = "https://www.mysql.com/"
     url      = "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.15.tar.gz"
 
+    version('8.0.19', sha256='a62786d67b5e267eef928003967b4ccfe362d604b80f4523578e0688f5b9f834')
+    version('8.0.18', sha256='4cb39a315298eb243c25c53c184b3682b49c2a907a1d8432ba0620534806ade8')
+    version('8.0.17', sha256='c6e3f38199a77bfd8a4925ca00b252d3b6159b90e4980c7232f1c58d6ca759d6')
     version('8.0.16', sha256='8d9fe89920dc8bbbde2857b7b877ad2fa5ec2f231c68e941d484f3b72735eaea')
     version('8.0.15', sha256='bb1bca2dc2f23ee9dd395cc4db93b64561d4ac20b53be5d1dae563f7be64825e')
     version('8.0.14', sha256='bc53f4c914fb39650289700d144529121d71f38399d2d24a0f5c76e5a8abd204')
     version('8.0.13', sha256='d85eb7f98b6aa3e2c6fe38263bf40b22acb444a4ce1f4668473e9e59fb98d62e')
     version('8.0.12', sha256='69f16e20834dbc60cb28d6df7351deda323330b9de685d22415f135bcedd1b20')
     version('8.0.11', sha256='3bde3e30d5d4afcedfc6db9eed5c984237ac7db9480a9cc3bddc026d50700bf9')
+    version('5.7.27', sha256='f8b65872a358d6f5957de86715c0a3ef733b60451dad8d64a8fd1a92bf091bba')
     version('5.7.26', sha256='5f01d579a20199e06fcbc28f0801c3cb545a54a2863ed8634f17fe526480b9f1')
     version('5.7.25', sha256='53751c6243806103114567c1a8b6a3ec27f23c0e132f377a13ce1eb56c63723f')
     version('5.7.24', sha256='05bf0c92c6a97cf85b67fff1ac83ca7b3467aea2bf306374d727fa4f18431f87')
@@ -74,11 +78,16 @@ class Mysql(CMakePackage):
 
     # Each version of MySQL requires a specific version of boost
     # See BOOST_PACKAGE_NAME in cmake/boost.cmake
-    # 8.0.16+
-    depends_on('boost@1.69.0 cxxstd=98', type='build', when='@8.0.16: cxxstd=98')
-    depends_on('boost@1.69.0 cxxstd=11', type='build', when='@8.0.16: cxxstd=11')
-    depends_on('boost@1.69.0 cxxstd=14', type='build', when='@8.0.16: cxxstd=14')
-    depends_on('boost@1.69.0 cxxstd=17', type='build', when='@8.0.16: cxxstd=17')
+    # 8.0.19+
+    depends_on('boost@1.70.0 cxxstd=98', type='build', when='@8.0.19: cxxstd=98')
+    depends_on('boost@1.70.0 cxxstd=11', type='build', when='@8.0.19: cxxstd=11')
+    depends_on('boost@1.70.0 cxxstd=11', type='build', when='@8.0.19: cxxstd=14')
+    depends_on('boost@1.70.0 cxxstd=17', type='build', when='@8.0.19: cxxstd=17')
+    # 8.0.16--8.0.18
+    depends_on('boost@1.69.0 cxxstd=98', type='build', when='@8.0.16:8.0.18 cxxstd=98')
+    depends_on('boost@1.69.0 cxxstd=11', type='build', when='@8.0.16:8.0.18 cxxstd=11')
+    depends_on('boost@1.69.0 cxxstd=14', type='build', when='@8.0.16:8.0.18 cxxstd=14')
+    depends_on('boost@1.69.0 cxxstd=17', type='build', when='@8.0.16:8.0.18 cxxstd=17')
     # 8.0.14--8.0.15
     depends_on('boost@1.68.0 cxxstd=98', type='build', when='@8.0.14:8.0.15 cxxstd=98')
     depends_on('boost@1.68.0 cxxstd=11', type='build', when='@8.0.14:8.0.15 cxxstd=11')
@@ -100,9 +109,11 @@ class Mysql(CMakePackage):
     depends_on('boost@1.59.0 cxxstd=14', when='@5.7.0:5.7.999 cxxstd=14')
     depends_on('boost@1.59.0 cxxstd=17', when='@5.7.0:5.7.999 cxxstd=17')
 
+    depends_on('rpcsvc-proto')
     depends_on('ncurses')
     depends_on('openssl')
-    depends_on('libtirpc', when='@5.7.0:')
+    depends_on('libtirpc', when='@5.7.0: platform=linux')
+    depends_on('libedit', type=['build', 'run'])
     depends_on('perl', type=['build', 'test'], when='@:7.99.99')
     depends_on('bison@2.1:', type='build')
     depends_on('m4', type='build', when='@develop platform=solaris')
@@ -120,6 +131,11 @@ class Mysql(CMakePackage):
             options.append('-DBOOST_ROOT={0}'.format(spec['boost'].prefix))
         if '+client_only' in self.spec:
             options.append('-DWITHOUT_SERVER:BOOL=ON')
+        options.append('-DWITH_EDITLINE=system')
+        options.append('-Dlibedit_INCLUDE_DIR={0}'.format(
+            spec['libedit'].prefix.include))
+        options.append('-Dlibedit_LIBRARY={0}'.format(
+            spec['libedit'].libs.directories[0]))
         return options
 
     def _fix_dtrace_shebang(self, env):

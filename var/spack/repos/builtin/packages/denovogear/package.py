@@ -25,3 +25,5 @@ class Denovogear(CMakePackage):
     depends_on('zlib', type=('link'))
 
     patch('stream-open.patch', when='@:1.1.1')
+    # fix: ordered comparison between pointer and zero.
+    patch('newmat6.cpp.patch')

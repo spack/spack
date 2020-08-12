@@ -27,6 +27,3 @@ X   Y
     depends_on('patch', patches='top.patch')
     depends_on('dep-diamond-patch-mid1')
     depends_on('dep-diamond-patch-mid2')
-
-    def install(self, spec, prefix):
-        pass

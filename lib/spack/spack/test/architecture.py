@@ -1,4 +1,3 @@
-
 # Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
@@ -16,7 +15,6 @@ import spack.architecture
 from spack.spec import Spec
 from spack.platforms.cray import Cray
 from spack.platforms.linux import Linux
-from spack.platforms.bgq import Bgq
 from spack.platforms.darwin import Darwin
 
 
@@ -41,10 +39,8 @@ def test_dict_functions_for_architecture():
 
 def test_platform():
     output_platform_class = spack.architecture.real_platform()
-    if os.environ.get('CRAYPE_VERSION') is not None:
+    if os.path.exists('/opt/cray/pe'):
         my_platform_class = Cray()
-    elif os.path.exists('/bgsys'):
-        my_platform_class = Bgq()
     elif 'Linux' in py_platform.system():
         my_platform_class = Linux()
     elif 'Darwin' in py_platform.system():
@@ -177,8 +173,8 @@ def test_arch_spec_container_semantic(item, architecture_str):
     # Check mixed toolchains
     ('clang@8.0.0', 'broadwell', ''),
     ('clang@3.5', 'x86_64', '-march=x86-64 -mtune=generic'),
-    # Check clang compilers with 'apple' suffix
-    ('clang@9.1.0-apple', 'x86_64', '-march=x86-64')
+    # Check Apple's Clang compilers
+    ('apple-clang@9.1.0', 'x86_64', '-march=x86-64')
 ])
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
 def test_optimization_flags(
@@ -201,7 +197,7 @@ def test_optimization_flags(
      '-march=icelake-client -mtune=icelake-client'),
     # Check that the special case for Apple's clang is treated correctly
     # i.e. it won't try to detect the version again
-    (spack.spec.CompilerSpec('clang@9.1.0-apple'), None, 'x86_64',
+    (spack.spec.CompilerSpec('apple-clang@9.1.0'), None, 'x86_64',
      '-march=x86-64'),
 ])
 def test_optimization_flags_with_custom_versions(
@@ -210,7 +206,20 @@ def test_optimization_flags_with_custom_versions(
     target = spack.architecture.Target(target_str)
     if real_version:
         monkeypatch.setattr(
-            spack.compiler.Compiler, 'cc_version', lambda x, y: real_version
-        )
+            spack.compiler.Compiler, 'get_real_version',
+            lambda x: real_version)
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
+
+
+@pytest.mark.regression('15306')
+@pytest.mark.parametrize('architecture_tuple,constraint_tuple', [
+    (('linux', 'ubuntu18.04', None), ('linux', None, 'x86_64')),
+    (('linux', 'ubuntu18.04', None), ('linux', None, 'x86_64:')),
+])
+def test_satisfy_strict_constraint_when_not_concrete(
+        architecture_tuple, constraint_tuple
+):
+    architecture = spack.spec.ArchSpec(architecture_tuple)
+    constraint = spack.spec.ArchSpec(constraint_tuple)
+    assert not architecture.satisfies(constraint, strict=True)
