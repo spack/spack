@@ -132,7 +132,7 @@ class Cuda(Package):
 
     @property
     def libs(self):
-        libs = find_libraries('libcuda', root=self.prefix, shared=True,
+        libs = find_libraries('libcudart', root=self.prefix, shared=True,
                               recursive=True)
 
         filtered_libs = []
