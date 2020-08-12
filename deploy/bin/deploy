@@ -106,13 +106,15 @@ class Builder:
     def process_result(self, concretized_hash, result):
         """Removes successful builds from the build graph
         """
+        node = self._graph[concretized_hash]
+        name = node["name"]
         if not result:
-            logger.warning("Failed to install %s", self._graph[concretized_hash]["name"])
+            logger.warning("Failed to install %s", name)
             return
-        name = self._graph[concretized_hash]["name"]
-        yield name
+        if node["explicit"]:
+            yield name
         logger.info("Installed %s", name)
-        for dependent in self._graph[concretized_hash]["dependents"]:
+        for dependent in node["dependents"]:
             self._graph[dependent]["dependencies"].remove(concretized_hash)
         del self._graph[concretized_hash]
 
