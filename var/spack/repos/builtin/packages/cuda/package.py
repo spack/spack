@@ -84,7 +84,7 @@ class Cuda(Package):
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('--version', output=str)
+        output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'Cuda compilation tools, release .*?, V(\S+)',
                           output)
         return match.group(1) if match else None
