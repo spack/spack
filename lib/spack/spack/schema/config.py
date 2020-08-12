@@ -63,9 +63,9 @@ properties = {
                 },
                 'deprecatedProperties': {
                     'properties': ['dotkit'],
-                    'message': 'specifying a "{property}" module root has no '
-                               'effect [support for {property} module files'
-                               ' has been dropped]',
+                    'message': 'specifying a "dotkit" module root has no '
+                               'effect [support for "dotkit" has been '
+                               'dropped in v0.13.0]',
                     'error': False
                 },
             },
