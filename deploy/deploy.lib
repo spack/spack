@@ -728,7 +728,7 @@ EOF
     rm -rf "${WORKSPACE:-.}/stacks/${what}/"*.xml
     cp "${HOME}"/stack*.xml "${WORKSPACE:-.}/stacks/${what}"
 
-    spack module tcl refresh -y --delete-tree --latest --upstream-modules $(<${HOME}/specs.txt)
+    spack module tcl refresh -y --delete-tree --latest --upstream-modules $(sed 's/.*\//\//' ${HOME}/specs.txt)
 
     . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
 
