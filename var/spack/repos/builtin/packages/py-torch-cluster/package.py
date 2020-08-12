@@ -36,15 +36,24 @@ class PyTorchCluster(PythonPackage):
 
     version('1.5.7', sha256='71701d2f7f3e458ebe5904c982951349fdb60e6f1654e19c7e102a226e2de72e')
 
+    variant('cuda', default=False)
+
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
-    extends('py-torch')
+    extends('py-torch+cuda', when='+cuda')
+    extends('py-torch~cuda', when='~cuda')
 
     def setup_build_environment(self, env):
-        cuda_arches = list(self.spec['py-torch'].variants['cuda_arch'].value)
-        for i, x in enumerate(cuda_arches):
-            cuda_arches[i] = '{0}.{1}'.format(x[0:-1], x[-1])
-        env.set('TORCH_CUDA_ARCH_LIST', str.join(' ', cuda_arches))
+        if '+cuda' in self.spec:
+            cuda_arches = list(self.spec['py-torch'].variants['cuda_arch'].value)
+            for i, x in enumerate(cuda_arches):
+                cuda_arches[i] = '{0}.{1}'.format(x[0:-1], x[-1])
+            env.set('TORCH_CUDA_ARCH_LIST', str.join(' ', cuda_arches))
+
+            env.set('FORCE_CUDA', '1')
+            env.set('CUDA_HOME', self.spec['cuda'].prefix)
+        else:
+            env.set('FORCE_CUDA', '0')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
