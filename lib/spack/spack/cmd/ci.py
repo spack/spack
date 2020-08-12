@@ -237,8 +237,11 @@ def ci_rebuild(args):
 
         # Make a copy of the environment file, so we can overwrite the changed
         # version in between the two invocations of "spack install"
-        env_src_path = os.path.join(current_directory, 'spack.yaml')
-        env_dst_path = os.path.join(current_directory, 'spack.yaml_BACKUP')
+        env_src_path = env.manifest_path
+        env_dirname = os.path.dirname(env_src_path)
+        env_filename = os.path.basename(env_src_path)
+        env_copyname = '{0}_BACKUP'.format(env_filename)
+        env_dst_path = os.path.join(env_dirname, env_copyname)
         shutil.copyfile(env_src_path, env_dst_path)
 
         tty.debug('job concrete spec path: {0}'.format(job_spec_yaml_path))
@@ -327,8 +330,10 @@ def ci_rebuild(args):
                     first_pass_args))
                 spack_cmd(*first_pass_args)
 
-                # Overwrite the changed environment file so it doesn't
+                # Overwrite the changed environment file so it doesn't break
                 # the next install invocation.
+                tty.debug('Copying {0} to {1}'.format(
+                    env_dst_path, env_src_path))
                 shutil.copyfile(env_dst_path, env_src_path)
 
                 second_pass_args = install_args + [
