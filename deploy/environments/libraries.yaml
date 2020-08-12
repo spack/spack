@@ -15,7 +15,6 @@ spack:
            highfive+mpi,
            ospray@1.7.3,
            ospray@1.8.5,
-           python,
            py-numpy]
         - ['%gcc', '%intel']
     - assimp
