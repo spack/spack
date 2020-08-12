@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
+import re
 
 
 class Libtool(AutotoolsPackage, GNUMirrorPackage):
@@ -29,6 +30,14 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
     patch('flag_space.patch', when='@develop')
 
     build_directory = 'spack-build'
+
+    executables = ['^g?libtool(ize)?$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=os.devnull)
+        match = re.search(r'\(GNU libtool\)\s+(\S+)', output)
+        return match.group(1) if match else None
 
     @when('@2.4.2,develop')
     def autoreconf(self, spec, prefix):

@@ -32,6 +32,8 @@ class Scorep(AutotoolsPackage):
     variant('papi', default=True, description="Enable PAPI")
     variant('pdt', default=False, description="Enable PDT")
     variant('shmem', default=False, description='Enable shmem tracing')
+    variant('unwind', default=False,
+            description="Enable sampling via libunwind and lib wrapping")
 
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
@@ -64,6 +66,8 @@ class Scorep(AutotoolsPackage):
     depends_on('mpi', when="+mpi")
     depends_on('papi', when="+papi")
     depends_on('pdt', when="+pdt")
+    depends_on('llvm', when="+unwind")
+    depends_on('libunwind', when="+unwind")
 
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
@@ -95,6 +99,10 @@ class Scorep(AutotoolsPackage):
 
         if "+pdt" in spec:
             config_args.append("--with-pdt=%s" % spec['pdt'].prefix.bin)
+
+        if "+unwind" in spec:
+            config_args.append("--with-libunwind=%s" %
+                               spec['libunwind'].prefix)
 
         config_args += self.with_or_without('shmem')
         config_args += self.with_or_without('mpi')

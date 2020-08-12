@@ -28,7 +28,7 @@ __all__ = ['Compiler']
 
 
 @llnl.util.lang.memoized
-def get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
+def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
     """Invokes the compiler at a given path passing a single
     version argument and returns the output.
 
@@ -40,6 +40,18 @@ def get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
     output = compiler(
         version_arg, output=str, error=str, ignore_errors=ignore_errors)
     return output
+
+
+def get_compiler_version_output(compiler_path, *args, **kwargs):
+    """Wrapper for _get_compiler_version_output()."""
+    # This ensures that we memoize compiler output by *absolute path*,
+    # not just executable name. If we don't do this, and the path changes
+    # (e.g., during testing), we can get incorrect results.
+    if not os.path.isabs(compiler_path):
+        compiler_path = spack.util.executable.which_string(
+            compiler_path, required=True)
+
+    return _get_compiler_version_output(compiler_path, *args, **kwargs)
 
 
 def tokenize_flags(flags_str):
@@ -189,7 +201,7 @@ class Compiler(object):
     fc_names = []
 
     # Optional prefix regexes for searching for this type of compiler.
-    # Prefixes are sometimes used for toolchains, e.g. 'powerpc-bgq-linux-'
+    # Prefixes are sometimes used for toolchains
     prefixes = []
 
     # Optional suffix regexes for searching for this type of compiler.

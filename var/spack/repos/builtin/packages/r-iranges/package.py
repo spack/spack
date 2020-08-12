@@ -19,6 +19,7 @@ class RIranges(RPackage):
     homepage = "https://bioconductor.org/packages/IRanges"
     git      = "https://git.bioconductor.org/packages/IRanges.git"
 
+    version('2.22.2', commit='8c5e991')
     version('2.18.3', commit='c98a7ba074e72f2e5ec98252dffe9d3392711972')
     version('2.16.0', commit='26834c6868d7c279dd8ac1bb9daa16e6fef273c2')
     version('2.14.12', commit='00af02756c14771a23df9efcf379409ab6eb3041')
@@ -38,3 +39,5 @@ class RIranges(RPackage):
     depends_on('r-s4vectors@0.19.11:', when='@2.16.0:', type=('build', 'run'))
 
     depends_on('r-s4vectors@0.21.9:', when='@2.18.3:', type=('build', 'run'))
+
+    depends_on('r-s4vectors@0.25.14:', when='@2.22.2:', type=('build', 'run'))

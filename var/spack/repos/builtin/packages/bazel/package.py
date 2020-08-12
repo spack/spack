@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import platform
-
 
 class Bazel(Package):
     """Bazel is an open-source build and test tool similar to Make, Maven, and
@@ -96,14 +93,7 @@ class Bazel(Package):
 
     variant('nodepfail', default=True, description='Disable failing dependency checks due to injected absolute paths - required for most builds using bazel with spack')
 
-    # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-bazel
-    # Until https://github.com/spack/spack/issues/14058 is fixed, use jdk to build bazel
-    # Strict dependency on java@8 as per
-    # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-unix-prereq
-    if platform.machine() == 'aarch64':
-        depends_on('java@8:8.999', type=('build', 'run'))
-    else:
-        depends_on('jdk@1.8.0:1.8.999', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
     depends_on('zip', type=('build', 'run'))
 

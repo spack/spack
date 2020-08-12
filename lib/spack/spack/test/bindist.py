@@ -7,6 +7,7 @@
 This test checks creating and install buildcaches
 """
 import os
+import sys
 import py
 import pytest
 import argparse
@@ -158,8 +159,14 @@ def install_dir_non_default_layout(tmpdir):
     spack.store.layout = real_layout
 
 
-@pytest.mark.requires_executables(
-    '/usr/bin/gcc', 'patchelf', 'strings', 'file')
+args = ['strings', 'file']
+if sys.platform == 'darwin':
+    args.extend(['/usr/bin/clang++', 'install_name_tool'])
+else:
+    args.extend(['/usr/bin/g++', 'patchelf'])
+
+
+@pytest.mark.requires_executables(*args)
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.usefixtures('default_config', 'cache_directory',
@@ -177,7 +184,6 @@ def test_default_rpaths_create_install_default_layout(tmpdir,
     cspec = Spec('corge')
     cspec.concretize()
 
-    # Install patchelf needed for relocate in linux test environment
     iparser = argparse.ArgumentParser()
     install.setup_parser(iparser)
     # Install some packages with dependent packages
@@ -253,8 +259,7 @@ def test_default_rpaths_create_install_default_layout(tmpdir,
     mirror.mirror(mparser, margs)
 
 
-@pytest.mark.requires_executables(
-    '/usr/bin/gcc', 'patchelf', 'strings', 'file')
+@pytest.mark.requires_executables(*args)
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -302,8 +307,7 @@ def test_default_rpaths_install_nondefault_layout(tmpdir,
     mirror.mirror(mparser, margs)
 
 
-@pytest.mark.requires_executables(
-    '/usr/bin/gcc', 'patchelf', 'strings', 'file')
+@pytest.mark.requires_executables(*args)
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -356,8 +360,7 @@ def test_relative_rpaths_create_default_layout(tmpdir,
     spack.stage.purge()
 
 
-@pytest.mark.requires_executables(
-    '/usr/bin/gcc', 'patchelf', 'strings', 'file')
+@pytest.mark.requires_executables(*args)
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -382,7 +385,6 @@ def test_relative_rpaths_install_default_layout(tmpdir,
         ['add', '--scope', 'site', 'test-mirror-rel', 'file://%s' % mirror_path_rel])
     mirror.mirror(mparser, margs)
 
-    # Install patchelf needed for relocate in linux test environment
     iparser = argparse.ArgumentParser()
     install.setup_parser(iparser)
 
@@ -422,8 +424,7 @@ def test_relative_rpaths_install_default_layout(tmpdir,
     mirror.mirror(mparser, margs)
 
 
-@pytest.mark.requires_executables(
-    '/usr/bin/gcc', 'patchelf', 'strings', 'file')
+@pytest.mark.requires_executables(*args)
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -449,7 +450,6 @@ def test_relative_rpaths_install_nondefault(tmpdir,
         ['add', '--scope', 'site', 'test-mirror-rel', 'file://%s' % mirror_path_rel])
     mirror.mirror(mparser, margs)
 
-    # Install patchelf needed for relocate in linux test environment
     iparser = argparse.ArgumentParser()
     install.setup_parser(iparser)
 

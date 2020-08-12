@@ -25,8 +25,8 @@ class Cardioid(CMakePackage):
     depends_on('lapack')
     depends_on('mpi')
     depends_on('cuda', when="+cuda")
-    depends_on('mfem+hypre+superlu-dist+lapack', when="+mfem~cuda")
-    depends_on('mfem+hypre+superlu-dist+lapack^hypre+cuda', when="+mfem+cuda")
+    depends_on('mfem+mpi+superlu-dist+lapack', when="+mfem~cuda")
+    depends_on('mfem+mpi+superlu-dist+lapack^hypre+cuda', when="+mfem+cuda")
     depends_on('cmake@3.1:', type='build')
     depends_on('perl', type='build')
 

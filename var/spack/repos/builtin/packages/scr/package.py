@@ -80,8 +80,6 @@ class Scr(CMakePackage):
     variant('cntl_base', default='/tmp',
             description='Compile time default location for control directory.')
 
-    conflicts('platform=bgq')
-
     def get_abs_path_rel_prefix(self, path):
         # Return path if absolute, otherwise prepend prefix
         if os.path.isabs(path):
