@@ -278,7 +278,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):
-        # For GCC 'compilers' is a mandatory attribute
+        # For LLVM 'compilers' is a mandatory attribute
         msg = ('the extra attribute "compilers" must be set for '
                'the detected spec "{0}"'.format(spec))
         assert 'compilers' in extra_attributes, msg
