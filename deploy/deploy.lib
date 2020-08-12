@@ -729,7 +729,7 @@ EOF
     cp "${HOME}"/stack*.xml "${WORKSPACE:-.}/stacks/${what}"
 
     log "refreshing modules"
-    spack module tcl refresh -y --delete-tree --latest --upstream-modules $(sed 's/.*\//\//' ${HOME}/specs.txt)
+    spack module tcl refresh -y --delete-tree --latest --upstream-modules $(<${HOME}/installed.txt)
 
     . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
 

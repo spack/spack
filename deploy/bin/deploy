@@ -41,11 +41,14 @@ class Builder:
 
         Returns if the whole graph could be built successfully.
         """
-        with Pool(processes=self._processes) as piscine:
-            while not self.done:
-                self.process_queue()
-                self.submit_unprocessed(piscine, env, logdir)
-                time.sleep(self._sleeptime)
+        with open(os.path.join(logdir, "installed.txt"), "w") as fd:
+            with Pool(processes=self._processes) as piscine:
+                while not self.done:
+                    for name in self.process_queue():
+                        dag_hash = name.split("/")[-1]
+                        fd.write("/{}\n".format(dag_hash))
+                    self.submit_unprocessed(piscine, env, logdir)
+                    time.sleep(self._sleeptime)
         self.print_remainder()
         return len(self._graph) == 0
 
@@ -89,7 +92,8 @@ class Builder:
         done = []
         for concretized_hash, result in self._queue.items():
             if result.ready():
-                self.process_result(concretized_hash, result.get())
+                for name in self.process_result(concretized_hash, result.get()):
+                    yield name
                 done.append(concretized_hash)
         for concretized_hash in done:
             del self._queue[concretized_hash]
@@ -105,7 +109,9 @@ class Builder:
         if not result:
             logger.warning("Failed to install %s", self._graph[concretized_hash]["name"])
             return
-        logger.info("Installed %s", self._graph[concretized_hash]["name"])
+        name = self._graph[concretized_hash]["name"]
+        yield name
+        logger.info("Installed %s", name)
         for dependent in self._graph[concretized_hash]["dependents"]:
             self._graph[dependent]["dependencies"].remove(concretized_hash)
         del self._graph[concretized_hash]
