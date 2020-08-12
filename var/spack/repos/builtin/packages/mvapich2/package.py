@@ -240,7 +240,8 @@ class Mvapich2(AutotoolsPackage):
     def setup_compiler_environment(self, env):
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
-        if self.spec.external_modules and 'cray' in self.spec.external_modules:
+        external_modules = self.spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
             env.set('MPICC',  spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
@@ -254,7 +255,8 @@ class Mvapich2(AutotoolsPackage):
     def setup_dependent_package(self, module, dependent_spec):
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
-        if self.spec.external_modules and 'cray' in self.spec.external_modules:
+        external_modules = self.spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx
             self.spec.mpifc = spack_fc
