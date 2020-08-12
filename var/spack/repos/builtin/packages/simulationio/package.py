@@ -23,6 +23,8 @@ class Simulationio(CMakePackage):
     variant('pic', default=True,
             description="Produce position-independent code")
 
+    depends_on("asdf-cxx ~python", when='~python')
+    depends_on("asdf-cxx +python", when='+python')
     depends_on('hdf5 +cxx @1.10.1:')
     depends_on('julia', when='+julia', type=('build', 'run'))
     depends_on('py-h5py', when='+python', type=('build', 'run'))
