@@ -284,11 +284,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # On systems like Ubuntu we might get multiple executables
             # with the string "gcc" in them. See:
             # https://helpmanual.io/packages/apt/gcc/
-            #
-            # clang++ matches g++ -> clan[g++]
             basename = os.path.basename(exe)
             substring_to_be_filtered = [
-                'c99-gcc', 'c89-gcc', '-nm', '-ar', 'clang', 'ranlib'
+                'c99-gcc',
+                'c89-gcc',
+                '-nm',
+                '-ar',
+                'ranlib',
+                'clang'  # clang++ matches g++ -> clan[g++]
             ]
             if any(x in basename for x in substring_to_be_filtered):
                 continue
@@ -298,21 +301,23 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             if os.path.islink(exe) and host_platform != 'cray':
                 continue
 
-            try:
-                output = spack.compiler.get_compiler_version_output(
-                    exe, '--version'
-                )
-            except Exception:
-                output = ''
-            # Apple's gcc is actually apple clang, so skip it.
-            # Users can add it manually to compilers.yaml at their own risk.
-            if 'Apple' in output:
-                continue
             result.append(exe)
+
         return result
 
     @classmethod
     def determine_version(cls, exe):
+        try:
+            output = spack.compiler.get_compiler_version_output(
+                exe, '--version'
+            )
+        except Exception:
+            output = ''
+        # Apple's gcc is actually apple clang, so skip it.
+        # Users can add it manually to compilers.yaml at their own risk.
+        if 'Apple' in output:
+            return None
+
         version_regex = re.compile(r'([\d\.]+)')
         for vargs in ('-dumpfullversion', '-dumpversion'):
             try:
