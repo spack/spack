@@ -35,7 +35,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     variant('thread_multiple', default=False,
             description='Enable thread support in UCP and UCT')
-    variant('optimizations', default=False,
+    variant('optimizations', default=True,
             description='Enable optimizations')
     variant('logging', default=False,
             description='Enable logging')
@@ -44,7 +44,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant('assertions', default=False,
             description='Enable assertions')
     variant('parameter_checking', default=False,
-            description='Enable paramter checking')
+            description='Enable parameter checking')
     variant('pic', default=True,
             description='Builds with PIC support')
     variant('java', default=False,
@@ -66,6 +66,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
               msg='gdrcopy currently requires cuda support')
     depends_on('xpmem', when='+xpmem')
     depends_on('knem', when='+knem')
+
+    configure_abs_path = 'contrib/configure-release'
 
     def configure_args(self):
         spec = self.spec
