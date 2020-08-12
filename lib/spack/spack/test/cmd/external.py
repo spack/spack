@@ -222,3 +222,21 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     externals = packages_yaml['gcc']['externals']
     assert len(externals) == 1
     assert externals[0]['prefix'] == '/opt/gcc/bin'
+
+
+def test_new_entries_are_reported_correctly(
+        mock_executable, mutable_config, monkeypatch
+):
+    # Prepare an environment to detect a fake gcc
+    gcc_exe = mock_executable('gcc', output="echo 4.2.1")
+    prefix = os.path.dirname(gcc_exe)
+    monkeypatch.setenv('PATH', prefix)
+
+    # The first run will find and add the external gcc
+    output = external('find', 'gcc')
+    assert 'The following specs have been' in output
+
+    # The second run should report that no new external
+    # has been found
+    output = external('find', 'gcc')
+    assert 'No new external packages detected' in output

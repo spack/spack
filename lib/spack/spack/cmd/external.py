@@ -15,6 +15,7 @@ import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 import six
 import spack
+import spack.cmd
 import spack.error
 import spack.util.environment
 import spack.util.spack_yaml as syaml
@@ -146,7 +147,16 @@ def external_find(args):
         packages_to_check = spack.repo.path.all_packages()
 
     pkg_to_entries = _get_external_packages(packages_to_check)
-    _update_pkg_config(pkg_to_entries, args.not_buildable)
+    new_entries, write_scope = _update_pkg_config(
+        pkg_to_entries, args.not_buildable
+    )
+    if new_entries:
+        msg = ('The following specs have been detected on this system '
+               'and added to "packages.yaml" [scope={0}]')
+        tty.msg(msg.format(write_scope))
+        spack.cmd.display_specs(new_entries)
+    else:
+        tty.msg('No new external packages detected')
 
 
 def _group_by_prefix(paths):
@@ -188,22 +198,21 @@ def _get_predefined_externals():
     pkg_config = spack.config.get('packages')
     already_defined_specs = set()
     for pkg_name, per_pkg_cfg in pkg_config.items():
-        paths = per_pkg_cfg.get('paths', {})
-        already_defined_specs.update(spack.spec.Spec(k) for k in paths)
-        modules = per_pkg_cfg.get('modules', {})
-        already_defined_specs.update(spack.spec.Spec(k) for k in modules)
+        for item in per_pkg_cfg.get('externals', []):
+            already_defined_specs.add(spack.spec.Spec(item['spec']))
     return already_defined_specs
 
 
 def _update_pkg_config(pkg_to_entries, not_buildable):
     predefined_external_specs = _get_predefined_externals()
 
-    pkg_to_cfg = {}
+    pkg_to_cfg, all_new_specs = {}, []
     for pkg_name, ext_pkg_entries in pkg_to_entries.items():
         new_entries = list(
             e for e in ext_pkg_entries
             if (e.spec not in predefined_external_specs))
 
+        all_new_specs.extend(x.spec for x in new_entries)
         pkg_config = _generate_pkg_config(new_entries)
         if not_buildable:
             pkg_config['buildable'] = False
@@ -214,6 +223,8 @@ def _update_pkg_config(pkg_to_entries, not_buildable):
 
     spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
     spack.config.set('packages', pkgs_cfg, scope=cfg_scope)
+
+    return all_new_specs, cfg_scope
 
 
 def _get_external_packages(packages_to_check, system_path_to_exe=None):
