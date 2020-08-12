@@ -36,14 +36,23 @@ class PyTorchScatter(PythonPackage):
 
     version('2.0.5', sha256='e29b364beaa9c84a99e0e236be89ed19d4452d89010ff736184ddcce488b47f6')
 
+    variant('cuda', default=False)
+
     depends_on('python@3.6:', type=('build', 'run'))
-    extends('py-torch')
+    extends('py-torch+cuda', when='+cuda')
+    extends('py-torch~cuda', when='~cuda')
 
     def setup_build_environment(self, env):
-        cuda_arches = list(self.spec['py-torch'].variants['cuda_arch'].value)
-        for i, x in enumerate(cuda_arches):
-            cuda_arches[i] = '{0}.{1}'.format(x[0:-1], x[-1])
-        env.set('TORCH_CUDA_ARCH_LIST', str.join(' ', cuda_arches))
+        if '+cuda' in self.spec:
+            cuda_arches = list(self.spec['py-torch'].variants['cuda_arch'].value)
+            for i, x in enumerate(cuda_arches):
+                cuda_arches[i] = '{0}.{1}'.format(x[0:-1], x[-1])
+            env.set('TORCH_CUDA_ARCH_LIST', str.join(' ', cuda_arches))
+
+            env.set('FORCE_CUDA', '1')
+            env.set('CUDA_HOME', self.spec['cuda'].prefix)
+        else:
+            env.set('FORCE_CUDA', '0')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
