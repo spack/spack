@@ -16,7 +16,7 @@ logger = logging
 logger.basicConfig(
     format='--| {message}',
     style='{',
-    level=logging.DEBUG
+    level=logging.INFO
 )
 
 
