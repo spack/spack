@@ -7,6 +7,7 @@ from spack import *
 from glob import glob
 from llnl.util.filesystem import LibraryList
 import os
+import re
 import platform
 import llnl.util.tty as tty
 
@@ -60,6 +61,8 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
+    executables = ['^nvcc$']
+
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
@@ -78,6 +81,13 @@ class Cuda(Package):
     conflicts('arch=darwin-mojave-x86_64')
 
     depends_on('libxml2', when='@10.1.243:')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'Cuda compilation tools, release .*?, V(\S+)',
+                          output)
+        return match.group(1) if match else None
 
     def setup_build_environment(self, env):
         if self.spec.satisfies('@10.1.243:'):
