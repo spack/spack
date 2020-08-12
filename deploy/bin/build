@@ -5,9 +5,11 @@ from argparse import ArgumentParser
 import json
 import os
 import shutil
+import sys
 
 import spack.environment as ev
 import spack.report
+import spack.installer
 
 parser = ArgumentParser()
 parser.add_argument('--explicit', action='store_true',
@@ -40,5 +42,12 @@ reporter.filename = os.path.join(
 )
 reporter.specs = [spec]
 
+success = True
 with reporter:
-    env._install(spec, explicit=args.explicit)
+    try:
+        env._install(spec, explicit=args.explicit)
+    except spack.installer.InstallError:
+        success = False
+        raise
+
+sys.exit(0 if success else 1)
