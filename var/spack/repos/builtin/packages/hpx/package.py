@@ -101,6 +101,10 @@ class Hpx(CMakePackage, CudaPackage):
 
     # MPI
     depends_on('mpi', when='networking=mpi')
+    depends_on('mpi', when='+async_mpi')
+
+    # CUDA
+    depends_on('cuda', when='+async_cuda')
 
     # Instrumentation
     depends_on('otf2', when='instrumentation=apex')
