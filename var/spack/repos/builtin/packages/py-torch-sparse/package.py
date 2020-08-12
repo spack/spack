@@ -36,9 +36,24 @@ class PyTorchSparse(PythonPackage):
 
     version('0.6.7', sha256='0d038a1502548692972a085cd0496460b5d2050bb7328427add990f081d6c44d')
 
+    variant('cuda', default=False)
+
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
-    extends('py-torch-scatter')
+    extends('py-torch-scatter+cuda', when='+cuda')
+    extends('py-torch-scatter~cuda', when='~cuda')
+
+    def setup_build_environment(self, env):
+        if '+cuda' in self.spec:
+            cuda_arches = list(self.spec['py-torch'].variants['cuda_arch'].value)
+            for i, x in enumerate(cuda_arches):
+                cuda_arches[i] = '{0}.{1}'.format(x[0:-1], x[-1])
+            env.set('TORCH_CUDA_ARCH_LIST', str.join(' ', cuda_arches))
+
+            env.set('FORCE_CUDA', '1')
+            env.set('CUDA_HOME', self.spec['cuda'].prefix)
+        else:
+            env.set('FORCE_CUDA', '0')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
