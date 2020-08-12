@@ -5,8 +5,6 @@
 
 """Caches used by Spack to store data"""
 import os
-import shutil
-import tempfile
 
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
@@ -18,7 +16,6 @@ import spack.paths
 import spack.util.file_cache
 import spack.util.path
 import spack.util.url
-import spack.util.web
 
 
 def misc_cache_location():
@@ -75,19 +72,7 @@ class MirrorCache(object):
         local_dst = spack.util.url.local_file_path(dst)
         if local_dst:
             mkdirp(os.path.dirname(local_dst))
-            fetcher.archive(local_dst)
-        else:
-            # In the case of non-local destination, fetch to tmp dir, upload to
-            # remote destination, and then delete tmp dir
-            tmpdir = tempfile.mkdtemp(prefix='spack-mirror-cache-store')
-            try:
-                local_dst = os.path.join(tmpdir, relative_dest)
-                mkdirp(os.path.dirname(local_dst))
-                fetcher.archive(local_dst)
-
-                spack.util.web.push_to_url(local_dst, dst, keep_original=False)
-            finally:
-                shutil.rmtree(tmpdir, ignore_errors=True)
+        fetcher.archive(dst)
 
     def symlink(self, mirror_ref):
         """Symlink a human readible path in our mirror to the actual
