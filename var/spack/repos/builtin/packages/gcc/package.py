@@ -297,14 +297,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             host_platform = str(spack.architecture.platform())
             if os.path.islink(exe) and host_platform != 'cray':
                 continue
-            # Apple's gcc is actually apple clang, so skip it.
-            # Users can add it manually to compilers.yaml at their own risk.
+
             try:
                 output = spack.compiler.get_compiler_version_output(
                     exe, '--version'
                 )
             except Exception:
                 output = ''
+            # Apple's gcc is actually apple clang, so skip it.
+            # Users can add it manually to compilers.yaml at their own risk.
             if 'Apple' in output:
                 continue
             result.append(exe)
