@@ -22,9 +22,7 @@ class LlvmAmdgpu(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('python', type='build')
-    depends_on("z3")
-    depends_on("zlib")
-    depends_on("ncurses+termlib")
+    depends_on('zlib', type='link')
 
     root_cmakelists_dir = 'llvm'
 
