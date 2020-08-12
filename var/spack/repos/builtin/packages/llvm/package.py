@@ -205,8 +205,9 @@ class Llvm(CMakePackage, CudaPackage):
     patch("thread-p9.patch", when="@develop+libcxx")
 
     # patch for using spack's zlib and ncurses for LLVMExports.cmake
-    # see https://github.com/spack/spack/issues/17981
     # patch might also work before 6, but not tested.
+    # See https://reviews.llvm.org/D79219 for upstream support for non-system zlib
+    # and https://reviews.llvm.org/D85820 for ncurses
     patch("fix-system-zlib-ncurses-from-8.patch", when="@8:")
     patch("fix-system-zlib-ncurses-pre-8.patch", when="@6:7")
 
