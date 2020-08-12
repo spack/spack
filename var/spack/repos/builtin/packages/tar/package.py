@@ -32,7 +32,7 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str)
-        match = re.search(r'tar \(GNU tar\) (\d+(?:\.\d+)*)', output)
+        match = re.search(r'tar \(GNU tar\) (\S+)', output)
         return match.group(1) if match else None
 
     def configure_args(self):
