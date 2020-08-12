@@ -157,5 +157,4 @@ except json.decoder.JSONDecodeError:
     sys.exit(1)
 
 robert = Builder(graph, args.processes)
-if not robert.build_all(args.env, args.logdir):
-    sys.exit(1)
+robert.build_all(args.env, args.logdir)
