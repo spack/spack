@@ -281,8 +281,16 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     def filter_detected_exes(cls, prefix, exes_in_prefix):
         result = []
         for exe in exes_in_prefix:
+            # On systems like Ubuntu we might get multiple executables
+            # with the string "gcc" in them. See:
+            # https://helpmanual.io/packages/apt/gcc/
+            #
             # clang++ matches g++ -> clan[g++]
-            if any(x in exe for x in ('clang', 'ranlib')):
+            basename = os.path.basename(exe)
+            substring_to_be_filtered = [
+                'c99-gcc', 'c89-gcc', '-nm', '-ar', 'clang', 'ranlib'
+            ]
+            if any(x in basename for x in substring_to_be_filtered):
                 continue
             # Filter out links in favor of real executables on
             # all systems but Cray
