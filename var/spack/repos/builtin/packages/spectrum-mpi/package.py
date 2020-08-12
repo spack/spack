@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+import re
 
 
 class SpectrumMpi(Package):
@@ -12,11 +13,11 @@ class SpectrumMpi(Package):
 
     provides('mpi')
 
-    executables = ['ompi_info']
+    executables = ['^ompi_info$']
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('', output=str, error=str)
+        output = Executable(exe)(output=str, error=str)
         match = re.search(r'Spectrum MPI: (\S+)', output)
         return match.group(1) if match else None
 
