@@ -52,12 +52,14 @@ class Legion(CMakePackage):
     variant('build_type', default='Release',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'),
             description='The build type to build', multi=False)
+    variant('cuda', default='False',description='Enable cuda support with kokkos')
 
     depends_on("cmake@3.1:", type='build')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB'", when='~mpi')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB' +mpi", when='+mpi')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB' +ibv", when='+ibv')
     depends_on("hdf5", when='+hdf5')
+    depends_on("kokkos +cuda +cuda_lambda +cuda_uvm +pic",when='+cuda')
 
     def cmake_args(self):
         cmake_cxx_flags = [
@@ -78,6 +80,17 @@ class Legion(CMakePackage):
                 '-DDEBUG_LEGION',
                 '-ggdb',
             ])
+
+        if '+gpu' in self.spec:
+            options.append('-DLegion_GPU_REDUCTIONS=OFF')
+            options.append('-DCOMPILER_SUPPORTS_MARCH=OFF')
+            options.append('-DLegion_USE_CUDA=ON')
+            options.append('-DLegion_USE_Kokkos=ON')
+            options.append('-DKOKKOS_CXX_COMPILER='+'{0}'.format(spack_cxx))
+        else:
+            options.append('-DLegion_USE_CUDA=OFF')
+            options.append('-DLegion_USE_Kokkos=OFF')
+
 
         options.append('-DCMAKE_CXX_FLAGS=%s' % (" ".join(cmake_cxx_flags)))
 
