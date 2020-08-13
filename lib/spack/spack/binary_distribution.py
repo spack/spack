@@ -620,6 +620,7 @@ def relocate_package(spec, allow_root):
                                              old_prefix,
                                              new_prefix)
         if (spec.architecture.platform == 'linux' or
+            spec.architecture.platform == 'cray' or
             spec.architecture.platform == 'test' and
                 platform.system().lower() == 'linux'):
             relocate.relocate_elf_binaries(files_to_relocate,
