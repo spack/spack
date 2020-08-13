@@ -515,6 +515,42 @@ def test_updating_multiple_scopes_at_once(packages_yaml_v015):
         check_update(data)
 
 
+@pytest.mark.regression('18031')
+def test_config_update_can_handle_comments(mutable_config):
+    # Create an outdated config file with comments
+    scope = spack.config.default_modify_scope()
+    cfg_file = spack.config.config.get_config_filename(scope, 'packages')
+    with open(cfg_file, mode='w') as f:
+        f.write("""
+packages:
+  # system cmake in /usr
+  cmake:
+    paths:
+      cmake@3.14.0:  /usr
+    # Another comment after the outdated section
+    buildable: False
+""")
+
+    # Try to update it, it should not raise errors
+    config('update', '-y', 'packages')
+
+    # Check data
+    data = spack.config.get('packages', scope=scope)
+    assert 'paths' not in data['cmake']
+    assert 'externals' in data['cmake']
+    externals = data['cmake']['externals']
+    assert len(externals) == 1
+    assert externals[0]['spec'] == 'cmake@3.14.0'
+    assert externals[0]['prefix'] == '/usr'
+
+    # Check the comment is there
+    with open(cfg_file) as f:
+        text = ''.join(f.readlines())
+
+    assert '# system cmake in /usr' in text
+    assert '# Another comment after the outdated section' in text
+
+
 def check_update(data):
     """Check that the data from the packages_yaml_v015
     has been updated.
