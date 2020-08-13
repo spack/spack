@@ -371,11 +371,14 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
         else:
             lookup = spack.store.db.query_one(match)
 
-            if add_spec and lookup is not None:
+            if not add_spec:
+                tty.debug('skipping matching root spec %s' % match.format())
+            elif lookup is None:
+                tty.debug('skipping uninstalled matching spec %s' %
+                          match.format())
+            else:
                 tty.debug('adding matching spec %s' % match.format())
                 specs.add(match)
-            else:
-                tty.debug('skipping matching spec %s' % match.format())
 
             if not add_deps:
                 continue
@@ -390,8 +393,11 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
 
                 lookup = spack.store.db.query_one(node)
 
-                if node.external or node.virtual or lookup is None:
+                if node.external or node.virtual:
                     tty.debug('skipping external or virtual dependency %s' %
+                              node.format())
+                elif lookup is None:
+                    tty.debug('skipping uninstalled depenendency %s' %
                               node.format())
                 else:
                     tty.debug('adding dependency %s' % node.format())
