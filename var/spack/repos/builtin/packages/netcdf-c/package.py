@@ -26,6 +26,7 @@ class NetcdfC(AutotoolsPackage):
     maintainers = ['skosukhin', 'WardF']
 
     version('master', branch='master')
+    version('4.7.4',   sha256='0e476f00aeed95af8771ff2727b7a15b2de353fb7bb3074a0d340b55c2bd4ea8')
     version('4.7.3',   sha256='8e8c9f4ee15531debcf83788594744bd6553b8489c06a43485a15c93b4e0448b')
     version('4.7.2',   sha256='b751cc1f314ac8357df2e0a1bacf35a624df26fe90981d3ad3fa85a5bbd8989a')
     version('4.7.1',   sha256='5c537c585773e575a16b28c3973b9608a98fdc4cf7c42893aa5223024e0001fc')
