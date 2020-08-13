@@ -21,15 +21,18 @@ class Bmake(Package):
     def patch(self):
         # Do not pre-roff cat pages
         filter_file('MANTARGET?', 'MANTARGET', 'mk/man.mk', string=True)
+        # boot-strap hardcodes the directory it expects to be extracted to
+        filter_file('GetDir /bmake', 'GetDir ' + self.stage.source_path,
+                    'boot-strap', string=True)
 
     def configure(self, spec, prefix):
         sh = which('sh')
-        sh('./configure')
+        sh('boot-strap', 'op=configure')
 
     def build(self, spec, prefix):
         sh = which('sh')
-        sh('./make-bootstrap.sh')
+        sh('boot-strap', 'op=build')
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install('bmake', prefix.bin)
+        sh = which('sh')
+        sh('boot-strap', '--prefix={0}'.format(prefix), 'op=install')
