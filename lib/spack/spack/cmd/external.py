@@ -212,8 +212,10 @@ def _update_pkg_config(pkg_to_entries, not_buildable):
             e for e in ext_pkg_entries
             if (e.spec not in predefined_external_specs))
 
-        all_new_specs.extend(x.spec for x in new_entries)
         pkg_config = _generate_pkg_config(new_entries)
+        all_new_specs.extend([
+            spack.spec.Spec(x['spec']) for x in pkg_config.get('externals', [])
+        ])
         if not_buildable:
             pkg_config['buildable'] = False
         pkg_to_cfg[pkg_name] = pkg_config
