@@ -27,46 +27,47 @@ class SpectrumMpi(Package):
     @classmethod
     def determine_variants(cls, exes, version):
         compiler_suites = {
-            'xl' : { 'cc' : 'mpixlc',
-                     'cxx' : 'mpixlC',
-                     'f77' : 'mpixlf',
-                     'fc'  : 'mpixlf'},
-            'pgi' : { 'cc' : 'mpipgicc',
-                      'cxx' : 'mpipgic++',
-                      'f77' : 'mpipgifort',
-                      'fc'  : 'mpipgifort'},
-            'default' : { 'cc' : 'mpicc',
-                          'cxx' : 'mpicxx',
-                          'f77' : 'mpif77',
-                          'fc'  : 'mpif90'}}
+            'xl': {'cc': 'mpixlc',
+                   'cxx': 'mpixlC',
+                   'f77': 'mpixlf',
+                   'fc': 'mpixlf'},
+            'pgi': {'cc': 'mpipgicc',
+                    'cxx': 'mpipgic++',
+                    'f77': 'mpipgifort',
+                    'fc': 'mpipgifort'},
+            'default': {'cc': 'mpicc',
+                        'cxx': 'mpicxx',
+                        'f77': 'mpif77',
+                        'fc': 'mpif90'}}
+
         def get_host_compiler(exe):
             output = Executable(exe)("--showme", output=str, error=str)
             match = re.search(r'^(\S+)', output)
             return match.group(1) if match else None
 
         def get_spack_compiler_spec(compilers_found):
-            #check using cc for now, as everyone should have that defined.
+            # check using cc for now, as everyone should have that defined.
             path = os.path.dirname(compilers_found['cc'])
             print("path:", path)
             spack_compilers = spack.compilers.find_compilers([path])
             actual_compiler = None
-            #check if the compiler actually matches the one we want
+            # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
                 if os.path.dirname(spack_compiler.cc) == path:
                     actual_compiler = spack_compiler
                     break
             return actual_compiler.spec if actual_compiler else None
-        
+
         results = []
         for exe in exes:
             dirname = os.path.dirname(exe)
             siblings = os.listdir(dirname)
             compilers_found = {}
             for compiler_suite in compiler_suites.values():
-                for (compiler_class,compiler_name) in compiler_suite.items():
+                for (compiler_class, compiler_name) in compiler_suite.items():
                     if compiler_name in siblings:
-                        #Get the real name of the compiler
-                        full_exe = os.path.join(dirname,compiler_name)
+                        # Get the real name of the compiler
+                        full_exe = os.path.join(dirname, compiler_name)
                         host_exe = get_host_compiler(full_exe)
                         if host_exe:
                             compilers_found[compiler_class] = host_exe
@@ -76,14 +77,14 @@ class SpectrumMpi(Package):
                 print(compilers_found)
                 compiler_spec = get_spack_compiler_spec(compilers_found)
                 if compiler_spec:
-                    variant = "%"+str(compiler_spec)
+                    variant = "%" + str(compiler_spec)
                 else:
                     variant = ''
-                results.append((variant , {'compilers' : compilers_found}))
+                results.append((variant, {'compilers': compilers_found}))
             else:
                 results.append('')
         return results
-    
+
     def install(self, spec, prefix):
         raise InstallError('IBM MPI is not installable; it is vendor supplied')
 
