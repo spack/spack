@@ -167,7 +167,7 @@ class Mvapich2Gdr(AutotoolsPackage):
         env.set('MPICH_F77', spack_f77)
         env.set('MPICH_F90', spack_fc)
         env.set('MPICH_FC', spack_fc)
-        
+
     def setup_compiler_environment(self, env):
         env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
         env.set('MPICXX', join_path(self.prefix.bin, 'mpicxx'))
