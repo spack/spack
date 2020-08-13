@@ -1,0 +1,11 @@
+--- a/alphabet.cpp	2020-07-28 15:02:56.137635525 -0400
++++ b/alphabet.cpp	2020-07-28 15:05:32.385589360 -0400
+@@ -274,7 +274,7 @@
+ const char *iupacs = "!ACMGRSVTWYHKDBN!acmgrsvtwyhkdbn";
+ 
+ signed char mask2iupac[16] = {
+-	-1,
++	static_cast<char>(-1),
+ 	'A', // 0001
+ 	'C', // 0010
+ 	'M', // 0011

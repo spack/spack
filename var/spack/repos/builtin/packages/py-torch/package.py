@@ -51,6 +51,7 @@ class PyTorch(PythonPackage, CudaPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.6.0', tag='v1.6.0', submodules=True)
     version('1.5.1', tag='v1.5.1', submodules=True)
     version('1.5.0', tag='v1.5.0', submodules=True)
     version('1.4.1', tag='v1.4.1', submodules=True)
@@ -121,6 +122,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # Use Ninja generator to speed up build times
     # Automatically used if found
     depends_on('ninja@1.5:', type='build')
+    depends_on('python@3.6.1:', when='@1.6:', type=('build', 'run'))
     depends_on('python@3.5:', when='@1.5:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

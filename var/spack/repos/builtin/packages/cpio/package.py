@@ -20,6 +20,12 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
     build_directory = 'spack-build'
 
     def flag_handler(self, name, flags):
-        if self.spec.satisfies('%intel') and name == 'cflags':
+        spec = self.spec
+
+        if '%intel' in spec and name == 'cflags':
             flags.append('-no-gcc')
+
+        if '%clang' in spec and name == 'cflags':
+            flags.append('--rtlib=compiler-rt')
+
         return (flags, None, None)

@@ -6,6 +6,7 @@
 
 from spack import *
 import os
+import sys
 
 
 class Garply(Package):
@@ -73,7 +74,6 @@ main()
         garply_version_h = '''const int garply_version_major = %s;
 const int garply_version_minor = %s;
 '''
-        mkdirp(prefix.lib64)
         mkdirp('%s/garply' % prefix.include)
         mkdirp('%s/garply' % self.stage.source_path)
         with open('%s/garply_version.h' % self.stage.source_path, 'w')  as f:
@@ -86,6 +86,8 @@ const int garply_version_minor = %s;
                   self.stage.source_path, 'w') as f:
             f.write(garplinator_cc)
         gpp = which('/usr/bin/g++')
+        if sys.platform == 'darwin':
+            gpp = which('/usr/bin/clang++')
         gpp('-Dgarply_EXPORTS',
             '-I%s' % self.stage.source_path,
             '-O2', '-g', '-DNDEBUG', '-fPIC',
@@ -96,13 +98,28 @@ const int garply_version_minor = %s;
             '-O2', '-g', '-DNDEBUG', '-fPIC',
             '-o', 'garplinator.cc.o',
             '-c', '%s/garply/garplinator.cc' % self.stage.source_path)
-        gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-shared',
-            '-Wl,-soname,libgarply.so', '-o', 'libgarply.so', 'garply.cc.o')
-        gpp('-O2', '-g', '-DNDEBUG', '-rdynamic',
-            'garplinator.cc.o', '-o', 'garplinator',
-            '-Wl,-rpath,%s' % prefix.lib64,
-            'libgarply.so')
-        copy('libgarply.so', '%s/libgarply.so' % prefix.lib64)
+        if sys.platform == 'darwin':
+            gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-dynamiclib',
+                '-Wl,-headerpad_max_install_names', '-o', 'libgarply.dylib',
+                '-install_name', '@rpath/libgarply.dylib',
+                'garply.cc.o')
+            gpp('-O2', '-g', '-DNDEBUG', '-Wl,-search_paths_first',
+                '-Wl,-headerpad_max_install_names',
+                'garplinator.cc.o', '-o', 'garplinator',
+                '-Wl,-rpath,%s' % prefix.lib64,
+                'libgarply.dylib')
+            mkdirp(prefix.lib64)
+            copy('libgarply.dylib', '%s/libgarply.dylib' % prefix.lib64)
+        else:
+            gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-shared',
+                '-Wl,-soname,libgarply.so',
+                '-o', 'libgarply.so', 'garply.cc.o')
+            gpp('-O2', '-g', '-DNDEBUG', '-rdynamic',
+                'garplinator.cc.o', '-o', 'garplinator',
+                '-Wl,-rpath,%s' % prefix.lib64,
+                'libgarply.so')
+            mkdirp(prefix.lib64)
+            copy('libgarply.so', '%s/libgarply.so' % prefix.lib64)
         copy('garplinator', '%s/garplinator' % prefix.lib64)
         copy('%s/garply/garply.h' % self.stage.source_path,
              '%s/garply/garply.h' % prefix.include)

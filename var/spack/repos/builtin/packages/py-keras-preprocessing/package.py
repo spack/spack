@@ -9,15 +9,16 @@ from spack import *
 class PyKerasPreprocessing(PythonPackage):
     """Utilities for working with image data, text data, and sequence data."""
 
-    homepage = "http://keras.io"
-    url      = "https://github.com/keras-team/keras-preprocessing/archive/1.0.5.tar.gz"
+    homepage = "https://github.com/keras-team/keras-preprocessing"
+    url      = "https://pypi.io/packages/source/K/Keras-Preprocessing/Keras_Preprocessing-1.1.2.tar.gz"
 
-    version('1.1.0', sha256='26f26354370f4a08a029137630d72870e99e924cd8f6e04c2f6fc0bd86708275')
-    version('1.0.9', sha256='045a9b3faf4f6d63493cc3ca396659cc0395727b280c988fb9b6c7ff8157f09b')
-    version('1.0.5', sha256='8a1d20d8dd2204d82616648f1b40615ea9f5ff0f8f94fdc6d9fe3c2238476c89')
-    version('1.0.4', sha256='9f36ffeab4545f039880d6eaf8f8b3a6c8eba14618cec25c60d69a281398e5ea')
-    version('1.0.3', sha256='7a7da86eaae0cadfd83e644741898d1edbd6819631ff0ee36fd130bd9efd814e')
-    version('1.0.2', sha256='64212b715a435b43724ecf26be67a441cee426e3ef614a6326aba06016ba9779')
-    version('1.0.1', sha256='2e9e187afd1327d802309513cc6366d72a5c02104c6815da30d8651a4bd20699')
+    version('1.1.2', sha256='add82567c50c8bc648c14195bf544a5ce7c1f76761536956c3d2978970179ef3')
+    version('1.1.0', sha256='5a8debe01d840de93d49e05ccf1c9b81ae30e210d34dacbcc47aeb3049b528e5')
+    version('1.0.9', sha256='5e3700117981c2db762e512ed6586638124fac5842170701628088a11aeb51ac')
+    version('1.0.5', sha256='ef2e482c4336fcf7180244d06f4374939099daa3183816e82aee7755af35b754')
+    version('1.0.4', sha256='452f8af8b2865e9d7d2f0dd5a3d0afd9e2ae2c6504f235b2447831c63303449f')
+    version('1.0.3', sha256='02ba0a3b31ed89c4b0c21d55ba7d87529097d56f394e3850b6d3c9e6c63ce7ae')
+    version('1.0.2', sha256='f5306554d2b454d825b36f35e327744f5477bd2ae21017f1a93b2097bed6757e')
+    version('1.0.1', sha256='8649ba6377ecc06ea10e0a8a954df5600d115b4b626861e33c79b41ec03c5194')
 
     depends_on('py-setuptools', type='build')

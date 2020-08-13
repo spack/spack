@@ -45,6 +45,10 @@ class Cctools(AutotoolsPackage):
         f = 'dttools/src/memfdexe.c'
         kwargs = {'ignore_absent': False, 'backup': True, 'string': True}
         filter_file(before, after, f, **kwargs)
+        if self.spec.satisfies('%fj'):
+            makefiles = ['chirp/src/Makefile', 'grow/src/Makefile']
+            for m in makefiles:
+                filter_file('-fstack-protector-all', '', m)
 
     def configure_args(self):
         args = []

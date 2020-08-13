@@ -92,12 +92,6 @@ class Mfem(Package):
     # Can we make the default value for 'metis' to depend on the 'mpi' value?
     variant('metis', default=True,
             description='Enable METIS support')
-    # TODO: The 'hypre' variant is the same as 'mpi', we may want to remove it.
-    #       For now, keep the 'hypre' variant while ignoring its setting. This
-    #       is done to preserve compatibility with other packages that refer to
-    #       it, e.g. xSDK.
-    variant('hypre', default=True,
-            description='Required for MPI parallelism')
     variant('openmp', default=False,
             description='Enable OpenMP parallelism')
     variant('cuda', default=False, description='Enable CUDA support')

@@ -6,7 +6,7 @@
 """
 This module contains all the elements that are required to create an
 architecture object. These include, the target processor, the operating system,
-and the architecture platform (i.e. cray, darwin, linux, bgq, etc) classes.
+and the architecture platform (i.e. cray, darwin, linux, etc) classes.
 
 On a multiple architecture machine, the architecture spec field can be set to
 build a package against any target and operating system that is present on the
@@ -436,6 +436,12 @@ class Arch(object):
             ('target', self.target.to_dict_or_value())])
         return syaml_dict([('arch', d)])
 
+    def to_spec(self):
+        """Convert this Arch to an anonymous Spec with architecture defined."""
+        spec = spack.spec.Spec()
+        spec.architecture = spack.spec.ArchSpec(str(self))
+        return spec
+
     @staticmethod
     def from_dict(d):
         spec = spack.spec.ArchSpec.from_dict(d)
@@ -518,6 +524,14 @@ def platform():
 
 
 @memoized
+def default_arch():
+    """Default ``Arch`` object for this machine.
+
+    See ``sys_type()``.
+    """
+    return Arch(platform(), 'default_os', 'default_target')
+
+
 def sys_type():
     """Print out the "default" platform-os-target tuple for this machine.
 
@@ -530,8 +544,7 @@ def sys_type():
     architectures.
 
     """
-    arch = Arch(platform(), 'default_os', 'default_target')
-    return str(arch)
+    return str(default_arch())
 
 
 @memoized

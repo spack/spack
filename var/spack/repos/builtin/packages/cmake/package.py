@@ -2,26 +2,26 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
 import re
-import os
 
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
-       tools designed to build, test and package software."""
+    tools designed to build, test and package software.
+    """
     homepage = 'https://www.cmake.org'
-    url      = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
+    url = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
     maintainers = ['chuckatkins']
 
-    executables = ['cmake']
+    executables = ['^cmake$']
 
+    version('3.18.1',   sha256='c0e3338bd37e67155b9d1e9526fec326b5c541f74857771b7ffed0c46ad62508')
+    version('3.18.0',   sha256='83b4ffcb9482a73961521d2bafe4a16df0168f03f56e6624c419c461e5317e29')
     version('3.17.3',   sha256='0bd60d512275dc9f6ef2a2865426a184642ceb3761794e6b65bff233b91d8c40')
     version('3.17.1',   sha256='3aa9114485da39cbd9665a0bfe986894a282d5f0882b1dea960a739496620727')
     version('3.17.0',   sha256='b74c05b55115eacc4fa2b77a814981dbda05cdc95a53e279fe16b7b272f00847')
     version('3.16.5',   sha256='5f760b50b8ecc9c0c37135fae5fbf00a2fef617059aa9d61c1bb91653e5a8bfc')
+    version('3.16.3',   sha256='e54f16df9b53dac30fd626415833a6e75b0e47915393843da1825b096ee60668')
     version('3.16.2',   sha256='8c09786ec60ca2be354c29829072c38113de9184f29928eb9da8446a5f2ce6a9')
     version('3.16.1',   sha256='a275b3168fa8626eca4465da7bb159ff07c8c6cb0fb7179be59e12cbdfa725fd')
     version('3.16.0',   sha256='6da56556c63cab6e9a3e1656e8763ed4a841ac9859fefb63cbe79472e67e8c5f')
@@ -135,6 +135,10 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
     patch('intel-c-gnu11.patch', when='@3.6.0:3.6.1')
 
+    # Cannot build with Intel again, should be fixed in 3.17.4 and 3.18.1
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/21013
+    patch('intel-cxx-bootstrap.patch', when='@3.17.0:3.17.3,3.18.0')
+
     # https://gitlab.kitware.com/cmake/cmake/issues/18232
     patch('nag-response-files.patch', when='@3.7:3.12')
 
@@ -157,20 +161,10 @@ class Cmake(Package):
     phases = ['bootstrap', 'build', 'install']
 
     @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        exe_to_path = dict(
-            (os.path.basename(p), p) for p in exes_in_prefix
-        )
-        if 'cmake' not in exe_to_path:
-            return None
-
-        cmake = spack.util.executable.Executable(exe_to_path['cmake'])
-        output = cmake('--version', output=str)
-        if output:
-            match = re.search(r'cmake.*version\s+(\S+)', output)
-            if match:
-                version_str = match.group(1)
-                return Spec('cmake@{0}'.format(version_str))
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str)
+        match = re.search(r'cmake.*version\s+(\S+)', output)
+        return match.group(1) if match else None
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':

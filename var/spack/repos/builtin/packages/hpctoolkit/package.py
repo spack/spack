@@ -20,6 +20,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('2020.08.03', commit='d9d13c705d81e5de38e624254cf0875cce6add9a')
     version('2020.07.21', commit='4e56c780cffc53875aca67d6472a2fb3678970eb')
     version('2020.06.12', commit='ac6ae1156e77d35596fea743ed8ae768f7222f19')
     version('2020.03.01', commit='94ede4e6fa1e05e6f080be8dc388240ea027f769')
@@ -36,10 +37,6 @@ class Hpctoolkit(AutotoolsPackage):
     variant('cray', default=False,
             description='Build for Cray compute nodes, including '
             'hpcprof-mpi.')
-
-    variant('bgq', default=False,
-            description='Build for Blue Gene compute nodes, including '
-            'hpcprof-mpi (up to 2019.12.28 only).')
 
     variant('mpi', default=False,
             description='Build hpcprof-mpi, the MPI version of hpcprof.')
@@ -72,8 +69,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('gotcha@1.0.3:')
     depends_on('intel-tbb+shared')
     depends_on('libdwarf')
-    depends_on('libmonitor+hpctoolkit+bgq', when='+bgq')
-    depends_on('libmonitor+hpctoolkit~bgq', when='~bgq')
+    depends_on('libmonitor+hpctoolkit')
     depends_on('libunwind@1.4: +xz')
     depends_on('mbedtls+pic')
     depends_on('xerces-c transcoder=iconv')
@@ -94,9 +90,6 @@ class Hpctoolkit(AutotoolsPackage):
 
     conflicts('+cuda', when='@2018.0.0:2019.99.99',
               msg='cuda requires 2020.03.01 or later')
-
-    conflicts('+bgq', when='@2020.03.01:',
-              msg='blue gene requires 2019.12.28 or earlier')
 
     flag_handler = AutotoolsPackage.build_system_flags
 
@@ -121,11 +114,7 @@ class Hpctoolkit(AutotoolsPackage):
         ]
 
         if '+cuda' in spec:
-            cupti_path = join_path(spec['cuda'].prefix, 'extras', 'CUPTI')
-            args.extend([
-                '--with-cuda=%s' % spec['cuda'].prefix,
-                '--with-cupti=%s' % cupti_path,
-            ])
+            args.append('--with-cuda=%s' % spec['cuda'].prefix)
 
         if spec.target.family == 'x86_64':
             args.append('--with-xed=%s' % spec['intel-xed'].prefix)
@@ -140,12 +129,6 @@ class Hpctoolkit(AutotoolsPackage):
             args.extend([
                 '--enable-mpi-search=cray',
                 '--enable-all-static',
-            ])
-        elif '+bgq' in spec:
-            args.extend([
-                '--enable-mpi-search=bgq',
-                '--enable-all-static',
-                '--enable-bgq',
             ])
         elif '+mpi' in spec:
             args.append('MPICXX=%s' % spec['mpi'].mpicxx)

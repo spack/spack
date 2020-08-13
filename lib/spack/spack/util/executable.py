@@ -233,10 +233,15 @@ def which_string(*args, **kwargs):
         path = path.split(os.pathsep)
 
     for name in args:
-        for directory in path:
-            exe = os.path.join(directory, name)
+        if os.path.sep in name:
+            exe = os.path.abspath(name)
             if os.path.isfile(exe) and os.access(exe, os.X_OK):
                 return exe
+        else:
+            for directory in path:
+                exe = os.path.join(directory, name)
+                if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                    return exe
 
     if required:
         raise CommandNotFoundError(

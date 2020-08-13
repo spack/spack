@@ -81,11 +81,6 @@ class Neuron(Package):
                             '--without-memacs',
                             '--without-nmodl'])
 
-        # need to enable bg-q arch
-        if 'bgq' in self.spec.architecture:
-            options.extend(['--enable-bluegeneQ',
-                            '--host=powerpc64'])
-
         # on os-x disable building carbon 'click' utility
         if 'darwin' in self.spec.architecture:
             options.append('macdarwin=no')
@@ -119,9 +114,6 @@ class Neuron(Package):
     def get_compiler_options(self, spec):
         flags = '-O2 -g'
 
-        if 'bgq' in self.spec.architecture:
-            flags = '-O3 -qtune=qp -qarch=qp -q64 -qstrict -qnohot -g'
-
         if self.spec.satisfies('%pgi'):
             flags += ' ' + self.compiler.cc_pic_flag
 
@@ -133,11 +125,6 @@ class Neuron(Package):
         options = ['--prefix=%s' % prefix,
                    '--with-nmodl-only',
                    '--without-x']
-
-        if 'bgq' in self.spec.architecture:
-            flags = '-qarch=ppc64'
-            options.extend(['CFLAGS=%s' % flags,
-                            'CXXFLAGS=%s' % flags])
 
         if 'cray' in self.spec.architecture:
             flags = '-target-cpu=x86_64 -target-network=none'

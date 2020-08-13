@@ -29,12 +29,13 @@ class DarshanRuntime(Package):
     version('3.1.0', sha256='b847047c76759054577823fbe21075cfabb478cdafad341d480274fb1cef861c')
     version('3.0.0', sha256='95232710f5631bbf665964c0650df729c48104494e887442596128d189da43e0')
 
-    depends_on('mpi')
+    depends_on('mpi', when='+mpi')
     depends_on('zlib')
 
     variant('slurm', default=False, description='Use Slurm Job ID')
     variant('cobalt', default=False, description='Use Coblat Job Id')
     variant('pbs', default=False, description='Use PBS Job Id')
+    variant('mpi', default=True, description='Compile with MPI support')
 
     def install(self, spec, prefix):
 
@@ -47,11 +48,15 @@ class DarshanRuntime(Package):
             job_id = 'PBS_JOBID'
 
         # TODO: BG-Q and other platform configure options
-        options = ['CC=%s' % spec['mpi'].mpicc,
-                   '--with-mem-align=8',
-                   '--with-log-path-by-env=DARSHAN_LOG_DIR_PATH',
-                   '--with-jobid-env=%s' % job_id,
-                   '--with-zlib=%s' % spec['zlib'].prefix]
+        options = []
+        if '+mpi' in spec:
+            options = ['CC=%s' % spec['mpi'].mpicc]
+        else:
+            options = ['--without-mpi']
+        options.extend(['--with-mem-align=8',
+                        '--with-log-path-by-env=DARSHAN_LOG_DIR_PATH',
+                        '--with-jobid-env=%s' % job_id,
+                        '--with-zlib=%s' % spec['zlib'].prefix])
 
         with working_dir('spack-build', create=True):
             configure = Executable('../darshan-runtime/configure')
