@@ -37,7 +37,7 @@ class Pfunit(CMakePackage):
 
     depends_on('python@2.7:', type=('build', 'run'))  # python3 too!
     depends_on('mpi', when='+mpi')
-    depends_on('m4', when='@4.1.5:')
+    depends_on('m4', when='@4.1.5:', type='build')
 
     conflicts("%gcc@:8.3.9", when="@4.0.0:", msg='Older versions of GCC do '
               'not support the Fortran 2008 features required by new pFUnit.')
