@@ -212,7 +212,7 @@ class Git(AutotoolsPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('--version', output=str)
+        output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'git version (\S+)', output)
         return match.group(1) if match else None
 
