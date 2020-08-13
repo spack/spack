@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import re
 
 
@@ -41,7 +40,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         #   GNU M4 1.4.6
         # Output on Linux:
         #   m4 (GNU M4) 1.4.18
-        output = Executable(exe)('--version', output=str, error=os.devnull)
+        output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'GNU M4\)?\s+(\S+)', output)
         return match.group(1) if match else None
 
