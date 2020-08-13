@@ -68,7 +68,7 @@ class Gmt(Package):
 
     @classmethod
     def determine_version(cls, exe):
-        return Executable(exe)('--version', output=str).rstrip()
+        return Executable(exe)('--version', output=str, error=str).rstrip()
 
     @when('@5:')
     def install(self, spec, prefix):
