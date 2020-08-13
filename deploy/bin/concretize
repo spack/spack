@@ -31,7 +31,10 @@ def insert_into_graph(env, graph, spec, explicit=False):
         graph[build_hash]["explicit"] |= explicit
     else:
         graph[build_hash] = dict(
-            name="{s.name}@{s.version} /{h}".format(s=spec, h=build_hash[:6]),
+            name="{s.name}@{s.version} /{h}".format(
+                s=spec,
+                h=spec.dag_hash(6)
+            ),
             dependents=set(),
             dependencies=set(),
             building=False,
