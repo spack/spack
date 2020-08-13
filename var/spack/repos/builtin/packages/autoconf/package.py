@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import re
 
 
@@ -32,7 +31,7 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('--version', output=str, error=os.devnull)
+        output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'\(GNU Autoconf\)\s+(\S+)', output)
         return match.group(1) if match else None
 
