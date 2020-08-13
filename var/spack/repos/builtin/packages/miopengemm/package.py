@@ -19,6 +19,6 @@ class Miopengemm(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    depends_on('cmake@3.5.2')
+    depends_on('cmake@3:', type='build')
     depends_on('rocm-cmake@3.5:', type='build', when='@1.1.6')
     depends_on('rocm-opencl@3.5:', type='build', when='@1.1.6')

@@ -18,7 +18,7 @@ class Hipcub(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    depends_on('cmake@3.5.2')
+    depends_on('cmake@3:', type='build')
     for ver in ['3.5.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
@@ -33,7 +33,7 @@ class Hipcub(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DCMAKE_MODULE_PATH={}/cmake'.format(spec['hip'].prefix),
+            '-DCMAKE_MODULE_PATH={0}/cmake'.format(spec['hip'].prefix)
         ]
 
         return args
