@@ -151,9 +151,10 @@ def external_find(args):
         pkg_to_entries, args.not_buildable
     )
     if new_entries:
+        path = spack.config.config.get_config_filename(write_scope, 'packages')
         msg = ('The following specs have been detected on this system '
-               'and added to "packages.yaml" [scope={0}]')
-        tty.msg(msg.format(write_scope))
+               'and added to {0}')
+        tty.msg(msg.format(path))
         spack.cmd.display_specs(new_entries)
     else:
         tty.msg('No new external packages detected')
