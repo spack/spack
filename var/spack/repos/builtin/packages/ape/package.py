@@ -19,7 +19,6 @@ class Ape(Package):
     depends_on('libxc@:4.999', when='@2.3.0:')
     depends_on('libxc@:2.2.2', when='@:2.2.1')
 
-
     def install(self, spec, prefix):
         args = []
         args.extend([
