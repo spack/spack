@@ -526,6 +526,7 @@ def make_package_relative(workdir, spec, allow_root):
         relocate.make_macho_binaries_relative(cur_path_names, orig_path_names,
                                               old_layout_root)
     if (spec.architecture.platform == 'linux' or
+        spec.architecture.platform == 'cray' or
         spec.architecture.platform == 'test' and
             platform.system().lower() == 'linux'):
         relocate.make_elf_binaries_relative(cur_path_names, orig_path_names,
