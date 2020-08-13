@@ -6,40 +6,42 @@
 from spack import *
 
 
-class Ape(AutotoolsPackage):
+class Ape(Package):
     """A tool for generating atomic pseudopotentials within a Density-Functional
     Theory framework"""
 
     homepage = "http://www.tddft.org/programs/APE/"
-    url      = "https://gitlab.com/ape/ape/-/archive/2.3.2/ape-2.3.2.tar.gz"
+    url      = "http://www.tddft.org/programs/APE/sites/default/files/ape-2.2.1.tar.gz"
 
-    version('2.3.2', sha256='ac475d0e60ec75003d88a8221d2ad53dc28604f28ac5f64d11499991526c3aab')
-    version('2.3.1', sha256='c319a9c2a95e0f4d7a13f8ce4d148af74d13961a40fb19cc9f339a33fad51e4e')
-    version('2.3.0', sha256='d9a03eb21eee11d9f8d9889335f50ea05d39398f2527a2811872765700cb84de')
-    version('2.2.1', sha256='3f5125182e308ab49338cad791e175ce158526a56c6ca88ac6582c1e5d7435d4')
-    version('1.1.1', sha256='9f3ea37299395dae6988093cd1aeb604c81b2d1ca943435e241d4cb451b086bf')
-    version('1.0.1', sha256='a88457b22445ececde3d07c5814004b7bbf2d0bc487b6ffca5d87c534636d47b')
+    version('2.2.1', sha256='1bdb7f987fde81f8a5f335da6b59fa884e6d185d4a0995c90fde7c04376ce9e3')
 
-    depends_on('m4',       type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
     depends_on('gsl')
     depends_on('libxc@:4.999', when='@2.3.0:')
     depends_on('libxc@:2.2.2', when='@:2.2.1')
 
-    def configure_args(self):
-        spec = self.spec
-        config_args = [
+
+    def install(self, spec, prefix):
+        args = []
+        args.extend([
+            '--prefix=%s' % prefix,
             '--with-gsl-prefix=%s'   % spec['gsl'].prefix,
             '--with-libxc-prefix=%s' % spec['libxc'].prefix
-        ]
+        ])
 
+        # When preprocessor expands macros (i.e. CFLAGS) defined as quoted
+        # strings the result may be > 132 chars and is terminated.
+        # This will look to a compiler as an Unterminated character constant
+        # and produce Line truncated errors. To overcome this, add flags to
+        # let compiler know that the entire line is meaningful.
+        # TODO: For the lack of better approach, assume that clang is mixed
+        # TODO: with GNU fortran.
         if (spec.satisfies('%apple-clang') or
                 spec.satisfies('%clang') or
                 spec.satisfies('%gcc')):
-            config_args.extend([
+            args.extend([
                 'FCFLAGS=-O2 -ffree-line-length-none'
             ])
 
-        return config_args
+        configure(*args)
+        make()
+        make('install')
