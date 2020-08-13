@@ -671,7 +671,7 @@ class PackageInstaller(object):
         packages = _packages_needed_to_bootstrap_compiler(pkg)
         for (comp_pkg, is_compiler) in packages:
             if package_id(comp_pkg) not in self.build_tasks:
-                self._push_task(comp_pkg, is_compiler, 0, 0, STATUS_ADDED)
+                self._push_task(comp_pkg, pkg, is_compiler, 0, 0, STATUS_ADDED)
 
     def _check_db(self, spec):
         """Determine if the spec is flagged as installed in the database
@@ -783,7 +783,7 @@ class PackageInstaller(object):
             self._update_installed(task)
 
             # Only update the explicit entry once for the explicit package
-            if task.pkg_id == self.pkg_id:
+            if task.is_explicit:
                 _update_explicit_entry_in_db(task.pkg, rec, True)
 
             # In case the stage directory has already been created, this
@@ -1003,7 +1003,8 @@ class PackageInstaller(object):
                     self._add_bootstrap_compilers(dep_pkg)
 
                 if package_id(dep_pkg) not in self.build_tasks:
-                    self._push_task(dep_pkg, False, 0, 0, STATUS_ADDED)
+                    self._push_task(dep_pkg, self.pkg, False, 0, 0,
+                                    STATUS_ADDED)
 
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
@@ -1025,7 +1026,7 @@ class PackageInstaller(object):
                 self._check_deps_status()
 
             # Now add the package itself, if appropriate
-            self._push_task(self.pkg, False, 0, 0, STATUS_ADDED)
+            self._push_task(self.pkg, None, False, 0, 0, STATUS_ADDED)
 
     def _install_task(self, task, **kwargs):
         """
@@ -1048,7 +1049,7 @@ class PackageInstaller(object):
 
         pkg = task.pkg
         pkg_id = package_id(pkg)
-        explicit = pkg_id == self.pkg_id
+        explicit = task.is_explicit
 
         tty.msg(install_msg(pkg_id, self.pid))
         task.start = task.start or time.time()
@@ -1227,12 +1228,23 @@ class PackageInstaller(object):
                 return task
         return None
 
-    def _push_task(self, pkg, compiler, start, attempts, status):
+    def _push_task(self, pkg, parent, compiler, start, attempts, status):
         """
         Create and push (or queue) a build task for the package.
 
         Source: Customization of "add_task" function at
                 docs.python.org/2/library/heapq.html
+
+        Args:
+            pkg (Package): package to be installed
+            parent (Package or None): the package user requested or ``None`` if
+                the user explicitly requested the package
+            compiler (bool): whether task is for a bootstrap compiler
+            start (int): the initial start time for the package, in seconds
+            attempts (int): the number of attempts to install the package
+            status (str): the installation status
+            installed (list of str): the identifiers of packages that have
+                been installed so far
         """
         msg = "{0} a build task for {1} with status '{2}'"
         pkg_id = package_id(pkg)
@@ -1250,7 +1262,7 @@ class PackageInstaller(object):
         # ensure it is the last entry popped with the same priority.  This
         # is necessary in case we are re-queueing a task whose priority
         # was decremented due to the installation of one of its dependencies.
-        task = BuildTask(pkg, compiler, start, attempts, status,
+        task = BuildTask(pkg, parent, compiler, start, attempts, status,
                          self.installed)
         self.build_tasks[pkg_id] = task
         heapq.heappush(self.build_pq, (task.key, task))
@@ -1308,8 +1320,8 @@ class PackageInstaller(object):
                                      'in progress by another process'))
 
         start = task.start or time.time()
-        self._push_task(task.pkg, task.compiler, start, task.attempts,
-                        STATUS_INSTALLING)
+        self._push_task(task.pkg, task.parent_pkg, task.compiler, start,
+                        task.attempts, STATUS_INSTALLING)
 
     def _setup_install_dir(self, pkg):
         """
@@ -1393,9 +1405,9 @@ class PackageInstaller(object):
                 # up-to-date.  This will require requeueing the task.
                 dep_task = self.build_tasks[dep_id]
                 dep_task.flag_installed(self.installed)
-                self._push_task(dep_task.pkg, dep_task.compiler,
-                                dep_task.start, dep_task.attempts,
-                                dep_task.status)
+                self._push_task(dep_task.pkg, dep_task.parent_pkg,
+                                dep_task.compiler, dep_task.start,
+                                dep_task.attempts, dep_task.status)
             else:
                 tty.debug('{0} has no build task to update for {1}\'s success'
                           .format(dep_id, pkg_id))
@@ -1461,7 +1473,7 @@ class PackageInstaller(object):
             # Skip the installation if the spec is not being installed locally
             # (i.e., if external or upstream) BUT flag it as installed since
             # some package likely depends on it.
-            if pkg_id != self.pkg_id:
+            if not task.is_explicit:
                 not_local = _handle_external_and_upstream(pkg, False)
                 if not_local:
                     self._update_installed(task)
@@ -1585,7 +1597,7 @@ class PackageInstaller(object):
                     raise InstallError('{0}: {1}'
                                        .format(fail_fast_err, str(exc)))
 
-                if pkg_id == self.pkg_id:
+                if task.is_explicit:
                     raise
 
             finally:
@@ -1625,14 +1637,16 @@ class PackageInstaller(object):
 class BuildTask(object):
     """Class for representing the build task for a package."""
 
-    def __init__(self, pkg, compiler, start, attempts, status, installed):
+    def __init__(self, pkg, parent, compiler, start, attempts, status,
+                 installed):
         """
         Instantiate a build task for a package.
 
         Args:
             pkg (Package): the package to be installed and built
-            compiler (bool): ``True`` if the task is for a bootstrap compiler,
-                otherwise, ``False``
+            parent (Package or None): the package user requested or ``None`` if
+                the user explicitly requested the package
+            compiler (bool): whether task is for a bootstrap compiler
             start (int): the initial start time for the package, in seconds
             attempts (int): the number of attempts to install the package
             status (str): the installation status
@@ -1651,6 +1665,9 @@ class BuildTask(object):
 
         # The "unique" identifier for the task's package
         self.pkg_id = package_id(self.pkg)
+
+        # The associated parent, or dependent, package the user requested
+        self.parent_pkg = parent
 
         # Initialize the status to an active state.  The status is used to
         # ensure priority queue invariants when tasks are "removed" from the
@@ -1673,6 +1690,10 @@ class BuildTask(object):
         # Set of dependents
         self.dependents = set(package_id(d.package) for d
                               in self.spec.dependents())
+
+        if parent and package_id(parent) not in self.dependents:
+            tty.warn('{0} does not appear in the dependents of {1}'
+                     .format(package_id(parent), self.pkg_id))
 
         # Set of dependencies
         #
@@ -1734,6 +1755,11 @@ class BuildTask(object):
             self.uninstalled_deps.remove(pkg_id)
             tty.debug('{0}: Removed {1} from uninstalled deps list: {2}'
                       .format(self.pkg_id, pkg_id, self.uninstalled_deps))
+
+    @property
+    def is_explicit(self):
+        """The package was explicitly requested by the user."""
+        return not self.parent_pkg
 
     @property
     def key(self):

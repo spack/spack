@@ -69,7 +69,7 @@ def create_build_task(pkg):
     Return:
         (BuildTask) A basic package build task
     """
-    return inst.BuildTask(pkg, False, 0, 0, inst.STATUS_ADDED, [])
+    return inst.BuildTask(pkg, None, False, 0, 0, inst.STATUS_ADDED, [])
 
 
 def create_installer(spec_name):
