@@ -1307,6 +1307,7 @@ class Environment(object):
 
         for dev_spec, path in self.dev_specs.items():
             if spec.satisfies(dev_spec, strict=True):
+                # setup stage
                 source_path = os.path.abspath(path)
                 package.stage = spack.stage.DIYStage(source_path)
 
@@ -1315,9 +1316,28 @@ class Environment(object):
 
                 # Never pull dev-build packages from binary mirror
                 install_args['use_cache'] = False
-                break
 
-        package.do_install(**install_args)
+                # Use verbose for dev-build packages
+                install_args['verbose'] = True
+
+                # Determine whether source has changed since it was last installed
+                force = False
+                _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+                if record:
+                    source_mtime = fs.last_modification_time_recursive(source_path)
+                    install_time = record.installation_time
+                    if source_mtime > install_time:
+                        force=True
+
+                # overwrite if the source changed
+                if force:
+                    with fs.replace_directory_transaction(record.path):
+                        package.do_install(**install_args)
+                    break
+                package.do_install(**install_args)
+                break
+        else:
+            package.do_install(**install_args)
 
         if not spec.external:
             # Make sure log directory exists
@@ -1345,16 +1365,18 @@ class Environment(object):
         # a large amount of time due to repeatedly acquiring and releasing
         # locks, this does an initial check across all specs within a single
         # DB read transaction to reduce time spent in this case.
-        uninstalled_specs = []
+        specs_to_install = []
         with spack.store.db.read_transaction():
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
-                if not spec.package.installed:
-                    uninstalled_specs.append(spec)
+                if not spec.package.installed or any(
+                    spec.satisfies(d) for d in self.dev_specs
+                ):
+                    specs_to_install.append(spec)
 
         # Sort by total deps so specs have to be installed after dependencies
         # This ensures dev-builds done in appropriate order
-        for spec in sorted(uninstalled_specs,
+        for spec in sorted(specs_to_install,
                            key=lambda spec: len(list(spec.traverse()))):
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
