@@ -38,10 +38,10 @@ class Pkgconf(AutotoolsPackage):
         exe = Executable(exe)
 
         # Make sure this is actually pkgconf, not pkg-config
-        if 'usage: pkgconf' not in exe('--help', output=str):
+        if 'usage: pkgconf' not in exe('--help', output=str, error=str):
             return None
 
-        version = exe('--version', output=str).rstrip()
+        version = exe('--version', output=str, error=str).rstrip()
 
         return version
 
