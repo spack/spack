@@ -38,6 +38,9 @@ class PyTorchGeometric(PythonPackage):
     depends_on('py-ase', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-torch-sparse', type=('build', 'run'))
+    depends_on('py-torch-scatter', type=('build', 'run'))
+    depends_on('py-torch-cluster', type=('build', 'run'))
+    depends_on('py-torch-spline-conv', type=('build', 'run'))
     
     def setup_build_environment(self, env):
         cuda_arches = list(self.spec['py-torch'].variants['cuda_arch'].value)
