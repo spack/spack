@@ -78,8 +78,6 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     depends_on('perl@5.14.0:', type=('build', 'test'))
 
-    parallel = False
-
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('version', output=str)
@@ -128,8 +126,10 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
         make()
         if self.run_tests:
-            make('test')            # 'VERBOSE=1'
-        make('install')
+            make('test', parallel=False)  # 'VERBOSE=1'
+
+        # See https://github.com/openssl/openssl/issues/7466#issuecomment-432148137
+        make('install', parallel=False)
 
     @run_after('install')
     def link_system_certs(self):
