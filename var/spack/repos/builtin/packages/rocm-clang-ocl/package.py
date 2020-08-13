@@ -19,5 +19,6 @@ class RocmClangOcl(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3.5.2')
-    depends_on('rocm-cmake@3.5:', type='build', when='@3.5:')
-    depends_on('llvm-amdgpu@3.5:', type='build', when='@3.5:')
+    for ver in ['3.5.0']:
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)

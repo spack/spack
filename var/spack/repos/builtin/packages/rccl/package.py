@@ -20,22 +20,12 @@ class Rccl(CMakePackage):
     version('3.5.0', sha256='290b57a66758dce47d0bfff3f5f8317df24764e858af67f60ddcdcadb9337253')
 
     depends_on('cmake@3.5.2', type='build')
-    depends_on('rocm-cmake@3.5:', type='build', when='@3.5:')
-    depends_on('hip@3.5:', type='build', when='@3.5:')
-    depends_on('comgr@3.5:', type='build', when='@3.5:')
-    depends_on('rocm-device-libs@3.5:', type='build', when='@3.5:')
+    for ver in ['3.5.0']:
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
+        depends_on('comgr@' + ver, type='build', when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
 
-    def patch(self):
-        filter_file(
-            'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"',
-            'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"',
-            'rccl-targets.cmake', string=True)
-
-    def cmake_args(self):
-        spec = self.spec
-        args = [
-            '-DCMAKE_CXX_COMPILER={}/hipcc'.format(spec['hip'].prefix.bin),
-            '-DCMAKE_PREFIX_PATH={}'.format(spec['hip'].prefix)
-        ]
-
-        return args
+    def setup_build_environment(self, env):
+        env.set('CXX', self.spec['hip'].hipcc)
