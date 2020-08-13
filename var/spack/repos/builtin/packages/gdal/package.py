@@ -169,7 +169,7 @@ class Gdal(AutotoolsPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        return Executable(exe)('--version', output=str).rstrip()
+        return Executable(exe)('--version', output=str, error=str).rstrip()
 
     def setup_build_environment(self, env):
         # Needed to install Python bindings to GDAL installation
