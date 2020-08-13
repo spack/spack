@@ -279,35 +279,46 @@ def _list_s3_objects(client, bucket, prefix, num_entries, start_after=None):
     return iter, last_key
 
 
-def list_url(url):
+def _iter_s3_prefix(client, url, num_entries=1024):
+    key = None
+    bucket = url.netloc
+    prefix = re.sub(r'^/*', '/', url.path)
+
+    while True:
+        contents, key = _list_s3_objects(
+            client, bucket, prefix, num_entries, start_after=key)
+
+        for x in contents:
+            yield x
+
+        if not key:
+            break
+
+
+def _iter_local_prefix(path):
+    for root, _, files in os.walk(path):
+        for f in files:
+            yield os.path.relpath(os.path.join(root, f), path)
+
+
+def list_url(url, recursive=False):
     url = url_util.parse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
-        for dirname, _, filenames in os.walk(local_path):
-            relative_dirname = os.path.relpath(dirname, local_path)
-            if relative_dirname == '.':
-                relative_dirname = ''
-
-            for filename in filenames:
-                yield os.path.join(relative_dirname, filename)
+        if recursive:
+            return list(_iter_local_prefix(local_path))
+        return [subpath for subpath in os.listdir(local_path)
+                if os.path.isfile(os.path.join(local_path, subpath))]
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
+        if recursive:
+            return list(_iter_s3_prefix(s3, url))
 
-        key = None
-        bucket = url.netloc
-        prefix = re.sub(r'^/*', '/', url.path)
-
-        while True:
-            contents, key = _list_s3_objects(
-                s3, bucket, prefix, num_entries=1024, start_after=key)
-
-            for x in contents:
-                yield x
-
-            if not key:
-                break
+        return list(set(
+            key.split('/', 1)[0]
+            for key in _iter_s3_prefix(s3, url)))
 
 
 def spider(root_urls, depth=0, concurrency=32):
