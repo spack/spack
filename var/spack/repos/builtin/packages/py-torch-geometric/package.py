@@ -39,10 +39,14 @@ class PyTorchGeometric(PythonPackage):
     depends_on('py-h5py~mpi', type=('build', 'run'))
     depends_on('py-ase', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
-    depends_on('py-torch-sparse', type=('build', 'run'))
-    depends_on('py-torch-scatter', type=('build', 'run'))
-    depends_on('py-torch-cluster', type=('build', 'run'))
-    depends_on('py-torch-spline-conv', type=('build', 'run'))
+    depends_on('py-torch-sparse+cuda', when='+cuda', type=('build', 'run'))
+    depends_on('py-torch-scatter+cuda', when='+cuda', type=('build', 'run'))
+    depends_on('py-torch-cluster+cuda', when='+cuda', type=('build', 'run'))
+    depends_on('py-torch-spline-conv+cuda', when='+cuda', type=('build', 'run'))
+    depends_on('py-torch-sparse~cuda', when='~cuda', type=('build', 'run'))
+    depends_on('py-torch-scatter~cuda', when='~cuda', type=('build', 'run'))
+    depends_on('py-torch-cluster~cuda', when='~cuda', type=('build', 'run'))
+    depends_on('py-torch-spline-conv~cuda', when='~cuda', type=('build', 'run'))
     
     def setup_build_environment(self, env):
         if '+cuda' in self.spec:
