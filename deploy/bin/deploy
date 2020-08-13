@@ -49,6 +49,7 @@ class Builder:
                         fd.write("/{}\n".format(dag_hash))
                     self.submit_unprocessed(piscine, env, logdir)
                     time.sleep(self._sleeptime)
+        logger.info("Processed graph")
         self.print_remainder()
         return len(self._graph) == 0
 

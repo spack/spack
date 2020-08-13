@@ -57,7 +57,10 @@ def run():
         except spack.error.SpackError:
             success = False
             raise
-    return success
+    errors = 0
+    for spec in reporter.collector.specs:
+        errors += spec.get("nfailures", 0) + spec.get("nerrors", 0)
+    return success and errors == 0
 
 
 if __name__ == "__main__":
