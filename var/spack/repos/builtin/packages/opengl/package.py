@@ -38,7 +38,7 @@ class Opengl(Package):
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)(output=str)
+        output = Executable(exe)(output=str, error=str)
         match = re.search(r'OpenGL version string: (\S+)', output)
         return match.group(1) if match else None
 
