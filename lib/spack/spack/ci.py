@@ -134,12 +134,7 @@ def get_job_name(phase, strip_compiler, spec, osarch, build_group):
     format_str = ''
     format_args = []
 
-    if phase:
-        format_str += '({{{0}}})'.format(item_idx)
-        format_args.append(phase)
-        item_idx += 1
-
-    format_str += ' {{{0}}}'.format(item_idx)
+    format_str += '{{{0}}}'.format(item_idx)
     format_args.append(spec.name)
     item_idx += 1
 
@@ -163,6 +158,11 @@ def get_job_name(phase, strip_compiler, spec, osarch, build_group):
     if build_group:
         format_str += ' {{{0}}}'.format(item_idx)
         format_args.append(build_group)
+        item_idx += 1
+
+    if phase:
+        format_str += ' ({{{0}}})'.format(item_idx)
+        format_args.append(phase)
         item_idx += 1
 
     return format_str.format(*format_args)
