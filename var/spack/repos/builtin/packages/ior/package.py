@@ -17,6 +17,9 @@ class Ior(AutotoolsPackage):
     version('3.2.0', sha256='91a766fb9c34b5780705d0997b71b236a1120da46652763ba11d9a8c44251852')
     version('3.0.1', sha256='0cbefbcdb02fb13ba364e102f9e7cc2dcf761698533dac25de446a3a3e81390d')
 
+    version('3.3.0rc1', sha256='0e42ebf5b5adae60625bf97989c8e2519d41ea2e3d18561d7d5b945625317aa5')
+    version('develop', git='https://github.com/hpc/ior.git', branch='master')
+
     variant('hdf5',  default=False, description='support IO with HDF5 backend')
     variant('ncmpi', default=False, description='support IO with NCMPI backend')
 
