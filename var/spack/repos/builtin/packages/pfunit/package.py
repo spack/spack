@@ -13,9 +13,11 @@ class Pfunit(CMakePackage):
     serial and MPI-parallel software written in Fortran."""
 
     homepage = "http://pfunit.sourceforge.net/"
+    url = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit/releases/download/v4.1.10/pFUnit-4.1.10.tar"
 
     maintainers = ['citibeth']
 
+    version('4.1.11', sha256='16160bac223aaa3ed2b27e30287d25fdaec3cf6f2c570ebd8d61196e6aa6180f')
     version('4.1.10', sha256='051c35ad9678002943f4a4f2ab532a6b44de86ca414751616f93e69f393f5373')
     version('3.3.3',  sha256='9f673b58d20ad23148040a100227b4f876458a9d9aee0f0d84a5f0eef209ced5')
     version('3.3.2',  sha256='b1cc2e109ba602ea71bccefaa3c4a06e7ab1330db9ce6c08db89cfde497b8ab8')
