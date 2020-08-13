@@ -39,6 +39,8 @@ class Madgraph5amc(Package):
     depends_on('py-six', when='@2.7.3.py3')
 
     depends_on('python@:2.7.999', when='@2.7.3.py2')
+    conflicts('%gcc@10:', when='@2.7.3')
+
     depends_on('python@3:', when='@2.7.3.py3')
 
     patch('madgraph5amc-2.7.2.patch', level=0, when='@2.7.2~atlas')
