@@ -6,19 +6,21 @@
 import sys
 from spack import *
 
+
 class Mvapich2x(AutotoolsPackage):
-    """MVAPICH2-X is the advanced version of the MVAPICH2 MPI library with  enhanced features 
-    (UMR, ODP, DC, Core-Direct, SHARP, XPMEM), OSU INAM (InifniBand Network Monitoring and Analysis),
-    PGAS (OpenSHMEM, UPC, UPC++, and CAF), and MPI+PGAS programming models with unified communication runtime.
-    
-    MVAPICH2-X is not installable from source and is only available through the following binary mirror
-    http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2x/ 
-    
-    If you do not find the binary you're looking for, send us an email at mvapich@cse.ohio-state.edu
+    """MVAPICH2-X is the advanced version of the MVAPICH2 MPI library with
+    enhanced features (UMR, ODP, DC, Core-Direct, SHARP, XPMEM), OSU INAM
+    (InifniBand Network Monitoring and Analysis),PGAS (OpenSHMEM, UPC, UPC++,
+    and CAF), and MPI+PGAS programming models with unified communication
+    runtime. MVAPICH2-X is not installable from source and is only available
+    through a binary mirror. If you do not find the binary you're looking for,
+    send us an email at mvapich@cse.ohio-state.edu. The binary mirror url is:
+    http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2x/
     """
+
     homepage = "http://mvapich.cse.ohio-state.edu"
     url      = "http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2x/mvapich2x-2.3.tar.gz"
-    
+
     maintainers = ['nithintsk', 'harisubramoni']
 
     version('2.3', sha256='fc47070e2e9fac09b97022be2320200d732a0a4a820a2b51532b88f8ded14536', preferred=True)
@@ -29,7 +31,8 @@ class Mvapich2x(AutotoolsPackage):
 
     variant(
         'feature',
-        description='Feature descriptions are specified at: https://mvapich.cse.ohio-state.edu/downloads/',
+        description=('Feature descriptions are specified at: '
+                     'https://mvapich.cse.ohio-state.edu/downloads/'),
         default='basic',
         values=('basic', 'basic-xpmem', 'advanced', 'advanced-xpmem'),
         multi=False
@@ -42,23 +45,26 @@ class Mvapich2x(AutotoolsPackage):
         values=('slurm', 'mpirun', 'pbs', 'jsrun'),
         multi=False
     )
-    
+
     variant(
         'distribution',
         description='The type of distribution of the fabric.',
         default='stock-ofed',
-        values=('stock-ofed', 'mofed4.5', 'mofed4.6', 'mofed4.7', 'mofed5.0', 'ifs10.6', 'ifs10.9'),
+        values=('stock-ofed', 'mofed4.5', 'mofed4.6', 'mofed4.7', 'mofed5.0',
+                'ifs10.6', 'ifs10.9'),
         multi=False
     )
-     
+
     variant(
         'pmi_version',
-        description='The pmi version to be used with slurm. This variant is IGNORED if set for mpirun or jsrun. jsrun uses pmix regardless of chosen option.',
+        description=('The pmi version to be used with slurm. This variant is '
+                     'IGNORED if set for mpirun or jsrun. jsrun uses pmix '
+                     'regardless of chosen option.'),
         default='pmi1',
         values=('pmi1', 'pmi2', 'pmix'),
         multi=False
     )
-        
+
     depends_on('bison@3.4.2', type='build')
     depends_on('libpciaccess@0.13.5', when=(sys.platform != 'darwin'))
     depends_on('libxml2@2.9.10')
@@ -79,55 +85,33 @@ class Mvapich2x(AutotoolsPackage):
         return find_libraries(
             libraries, root=self.prefix, shared=True, recursive=True
         )
-    
+
     @property
     def process_feature_options(self):
         spec = self.spec
         opts = []
-        
-        if 'feature=basic' in spec:
-            opts = [
-                    '--enable-mcast',
-                    '--enable-hybrid',
-                    '--enable-mpit-tool',
-                    '--enable-mpit-pvars=mv2',
-                    ]
-        elif 'feature=basic-xpmem' in spec:
-            opts = [
-                    '--enable-mcast',
-                    '--enable-hybrid',
-                    '--enable-mpit-tool',
-                    '--enable-mpit-pvars=mv2'
-                    '--with-xpmem=/opt/xpmem/'
-                    ]
-        elif 'feature=advanced' in spec:
-            opts = [
-                    '--enable-mcast',
-                    '--enable-hybrid',
-                    '--enable-mpit-tool',
-                    '--enable-mpit-pvars=mv2'
-                    '--with-core-direct',
-                    '--enable-dc',
-                    '--enable-umr'
-                    ]
-        elif 'feature=advanced-xpmem' in spec:
-            opts = [
-                    '--enable-mcast',
-                    '--enable-hybrid',
-                    '--enable-mpit-tool',
-                    '--enable-mpit-pvars=mv2'
-                    '--with-core-direct',
-                    '--enable-dc',
-                    '--enable-umr'
-                    '--with-xpmem=/opt/xpmem/'
-                    ]
 
+        if 'feature=basic' in spec:
+            opts = ['--enable-mcast', '--enable-hybrid', '--enable-mpit-tool',
+                    '--enable-mpit-pvars=mv2']
+        elif 'feature=basic-xpmem' in spec:
+            opts = ['--enable-mcast', '--enable-hybrid', '--enable-mpit-tool',
+                    '--enable-mpit-pvars=mv2', '--with-xpmem=/opt/xpmem/']
+        elif 'feature=advanced' in spec:
+            opts = ['--enable-mcast', '--enable-hybrid', '--enable-mpit-tool',
+                    '--enable-mpit-pvars=mv2', '--with-core-direct',
+                    '--enable-dc', '--enable-umr']
+        elif 'feature=advanced-xpmem' in spec:
+            opts = ['--enable-mcast', '--enable-hybrid', '--enable-mpit-tool',
+                    '--enable-mpit-pvars=mv2', '--with-core-direct',
+                    '--enable-dc', '--enable-umr', '--with-xpmem=/opt/xpmem/']
         return opts
-    
+
     @property
     def distribution_options(self):
         opts = []
-        if ('distribution=ifs10.6' in self.spec or 'distribution=ifs10.9' in self.spec):
+        if ('distribution=ifs10.6' in self.spec or
+            'distribution=ifs10.9' in self.spec):
             opts = ["--with-device=ch3:psm"]
         else:
             opts = ["--with-device=ch3:mrail", "--with-rdma=gen2"]
@@ -151,20 +135,13 @@ class Mvapich2x(AutotoolsPackage):
                 opts.append('--with-pmi=pmix')
                 opts.append('--with-pmix={0}'.format(spec['pmix'].prefix))
         elif 'process_managers=pbs' in spec:
-            opts = [
-                '--with-ch3-rank-bits=32',
-                '--with-pbs=/opt/pbs',
-                '--with-pm=hydra',    
-            ]
+            opts = ['--with-ch3-rank-bits=32', '--with-pbs=/opt/pbs',
+                    '--with-pm=hydra']
         elif 'process_managers=jsrun' in spec:
-            opts = [
-                '--with-ch3-rank-bits=32',
-                '--with-pmi=pmix',
-                '--with-pmix={0}'.format(['pmix'].prefix),
-                '--with-pm=jsm',    
-            ]
+            opts = ['--with-ch3-rank-bits=32', '--with-pmi=pmix',
+                    '--with-pmix={0}'.format(['pmix'].prefix),
+                    '--with-pm=jsm']
         opts.append('--disable-gl')
-
         return opts
 
     @property
@@ -173,7 +150,8 @@ class Mvapich2x(AutotoolsPackage):
         spec = self.spec
         xpmem_ldflags = ''
         if ('feature=basic-xpmem' in spec or 'feature=advanced-xpmem' in spec):
-            xpmem_ldflags = ' -Wl,-rpath,/opt/xpmem/lib -L/opt/xpmem/lib -lxpmem'
+            xpmem_ldflags = (' -Wl,-rpath,/opt/xpmem/lib '
+                             '-L/opt/xpmem/lib -lxpmem')
 
         # Add default LDFLAGS and combine together
         LDFLAGS = 'LDFLAGS=-Wl,-rpath,XORIGIN/placeholder'
@@ -224,7 +202,6 @@ class Mvapich2x(AutotoolsPackage):
         ]
 
     def configure_args(self):
-        spec = self.spec
         args = [
             '--enable-ucr',
             '--disable-static',
@@ -232,10 +209,8 @@ class Mvapich2x(AutotoolsPackage):
             '--disable-rdma-cm',
             '--without-hydra-ckpointlib'
         ]
-
         args.extend(self.process_manager_options)
         args.extend(self.distribution_options)
         args.append(self.construct_cflags)
         args.append(self.construct_ldflags)
-
         return args

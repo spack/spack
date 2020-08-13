@@ -6,23 +6,25 @@
 import sys
 from spack import *
 
+
 class Mvapich2Gdr(AutotoolsPackage):
-    """MVAPICH2-GDR is an optimized version of the MVAPICH2 MPI library for GPU-enabled HPC and Deep Learning Applications.
-    
-    MVAPICH2-GDR is not installable from source and is only available through the binary mirror below
+    """MVAPICH2-GDR is an optimized version of the MVAPICH2 MPI library for
+    GPU-enabled HPC and Deep Learning Applications. MVAPICH2-GDR is not
+    installable from source and is only available through a binary mirror.
+    If you do not find the binary you're looking for, send us an email at
+    mvapich@cse.ohio-state.edu. The binary mirror url is:
     http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2-gdr/
-    
-    If you do not find the binary you're looking for, send us an email at mvapich@cse.ohio-state.edu
     """
 
-    homepage = "http://mvapich.cse.ohio-state.edu"
-    url      = "http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2-gdr/mvapich2-gdr-2.3.4.tar.gz"
+    homepage = 'http://mvapich.cse.ohio-state.edu'
+    url      = ('http://mvapich.cse.ohio-state.edu:8080/download/mvapich/'
+                'spack-mirror/mvapich2-gdr/mvapich2-gdr-2.3.4.tar.gz')
 
     maintainers = ['nithintsk', 'harisubramoni']
 
     version('2.3.4', sha256='ed78101e6bb807e979213006ee5f20ff466369b01f96b6d1cf0c471baf7e35aa')
     version('2.3.3', sha256='9b7b5dd235dbf85099fba3b6f1ccb49bb755923efed66ddc335921f44cb1b8a8')
-    
+
     provides('mpi')
     provides('mpi@:3.1')
 
@@ -33,7 +35,7 @@ class Mvapich2Gdr(AutotoolsPackage):
         values=('slurm', 'mpirun', 'pbs', 'jsrun'),
         multi=False
     )
-    
+
     variant(
         'distribution',
         description='The type of fabric distribution.',
@@ -41,11 +43,11 @@ class Mvapich2Gdr(AutotoolsPackage):
         values=('stock-ofed', 'mofed4.5', 'mofed4.6', 'mofed4.7', 'mofed5.0'),
         multi=False
     )
-     
+
     variant(
         'pmi_version',
-        description='The pmi version to be used with slurm.' \
-                    'Is ignored if set for mpirun or jsrun.' \
+        description='The pmi version to be used with slurm. '
+                    'Is ignored if set for mpirun or jsrun. '
                     'jsrun uses pmix regardless of chosen option.',
         default='pmi1',
         values=('pmi1', 'pmi2', 'pmix'),
@@ -63,7 +65,7 @@ class Mvapich2Gdr(AutotoolsPackage):
         description='Enable/Disable support for openacc',
         default=False
     )
-        
+
     variant(
         'core_direct',
         description='Enable/Disable support for core_direct',
@@ -91,22 +93,22 @@ class Mvapich2Gdr(AutotoolsPackage):
         return find_libraries(
             libraries, root=self.prefix, shared=True, recursive=True
         )
-    
+
     @property
     def process_manager_options(self):
         spec = self.spec
-        
-        opts=[]
+
+        opts = []
 
         if '~mcast' in spec:
             opts.append('--disable-mcast')
-        
+
         if '+core_direct' in spec:
             opts.append('--with-core-direct')
-        
+
         if '+openacc' in spec:
             opts.append('--enable-openacc')
-        
+
         # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if 'process_managers=slurm' in spec:
             opts.append('--with-pm=slurm')
@@ -120,7 +122,7 @@ class Mvapich2Gdr(AutotoolsPackage):
 
         elif 'process_managers=pbs' in spec:
             opts.append([
-                '--with-pm=hydra',    
+                '--with-pm=hydra',
                 '--with-pbs=/opt/pbs'
             ])
             if '~mcast' in spec:
@@ -129,7 +131,7 @@ class Mvapich2Gdr(AutotoolsPackage):
                 opts.append('--with-core-direct')
             if '+openacc' in spec:
                 opts.append('--enable-openacc')
-        
+
         elif 'process_managers=jsrun' in spec:
             opts.append([
                 '--with-pmi=pmix',
@@ -174,7 +176,6 @@ class Mvapich2Gdr(AutotoolsPackage):
         ]
 
     def configure_args(self):
-        spec = self.spec
         args = ['--enable-cuda',
                 '--disable-hybrid',
                 '--with-ch3-rank-bits=32',
