@@ -24,21 +24,14 @@ class UtilLinux(AutotoolsPackage):
 
     depends_on('python@2.7:')
     depends_on('pkgconfig')
-    depends_on('gettext', when='+libmount')
 
     # Make it possible to disable util-linux's libuuid so that you may
     # reliably depend_on(`libuuid`).
     variant('libuuid', default=True, description='Build libuuid')
-    variant('libmount', default=False, description='Build libmount.so with gettext')
 
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/util-linux/v{0}/util-linux-{1}.tar.gz"
         return url.format(version.up_to(2), version)
-
-    def setup_build_environment(self, env):
-        if '+libmount' in self.spec:
-            env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
-                self.spec['gettext'].prefix.lib))
 
     def configure_args(self):
         config_args = [
