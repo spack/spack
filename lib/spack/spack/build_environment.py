@@ -846,7 +846,8 @@ def _setup_pkg_and_run(pkg, function, kwargs, child_pipe, input_fd_wrapper):
 
     finally:
         child_pipe.close()
-        input_fd_wrapper.close()
+        if input_fd_wrapper is not None:
+            input_fd_wrapper.close()
 
 
 def fork(pkg, function, kwargs):
