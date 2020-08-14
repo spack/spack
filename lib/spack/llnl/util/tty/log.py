@@ -236,7 +236,8 @@ class keyboard_input(object):
         """If termios was available, restore old settings."""
         if self.old_cfg:
             self._restore_default_terminal_settings()
-            atexit.unregister(self._restore_default_terminal_settings)
+            if sys.version_info >= (3,):
+                atexit.unregister(self._restore_default_terminal_settings)
 
         # restore SIGSTP and SIGCONT handlers
         if self.old_handlers:
@@ -304,6 +305,24 @@ class SaveStdout(object):
     def __init__(self):
         self._saved_stdout = os.dup(sys.stdout.fileno())
         self._saved_stderr = os.dup(sys.stderr.fileno())
+
+
+class FdWrapper(object):
+    """Provide the same API as ``multiprocessing.connection.Connection`` for
+       Python versions before 3.8. This is intended to be used for file
+       descriptors that must be transmitted between processes."""
+    def __init__(self, fd):
+        self._handle = fd
+
+    def close(self):
+        os.close(self._handle)
+
+
+def fd_wrapper(fd):
+    if sys.version_info >= (3, 8):
+        return multiprocessing.connection.Connection(fd)
+    else:
+        return FdWrapper(fd)
 
 
 class log_output(object):
@@ -438,9 +457,7 @@ class log_output(object):
         # OS-level pipe for redirecting output to logger
         read_fd, write_fd = os.pipe()
 
-        # Use multiprocessing.COnnection to transmit FD from the parent
-        # process to the child
-        read_wrapper = multiprocessing.connection.Connection(read_fd)
+        read_wrapper = fd_wrapper(read_fd)
 
         # Multiprocessing pipe for communication back from the daemon
         # Currently only used to save echo value between uses
@@ -450,7 +467,7 @@ class log_output(object):
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
             try:
-                input_wrapper = multiprocessing.connection.Connection(
+                input_wrapper = fd_wrapper(
                     os.dup(sys.stdin.fileno())
                 )
             except BaseException:
@@ -550,6 +567,7 @@ class log_output(object):
         if self.close_log_in_parent:
             self.log_file.close()
 
+        self.parent_pipe.send(True)
         # recover and store echo settings from the child before it dies
         self.echo = self.parent_pipe.recv()
 
@@ -696,6 +714,11 @@ def _writer_daemon(stdin_wrapper, read_wrapper, echo, log_file, control_pipe):
                     if xoff in controls:
                         force_echo = False
 
+                if control_pipe.poll():
+                    terminate = control_pipe.recv()
+                    if terminate:
+                        break
+
     except BaseException:
         tty.error("Exception occurred in writer daemon!")
         traceback.print_exc()
@@ -708,8 +731,8 @@ def _writer_daemon(stdin_wrapper, read_wrapper, echo, log_file, control_pipe):
         read_wrapper.close()
         stdin_wrapper.close()
 
-    # send echo value back to the parent so it can be preserved.
-    control_pipe.send(echo)
+        # send echo value back to the parent so it can be preserved.
+        control_pipe.send(echo)
 
 
 def _retry(function):

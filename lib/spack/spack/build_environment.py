@@ -46,6 +46,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 from llnl.util.lang import dedupe
+from llnl.util.tty.log import fd_wrapper
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
@@ -888,7 +889,7 @@ def fork(pkg, function, kwargs):
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
-            input_fd_wrapper = multiprocessing.connection.Connection(input_fd)
+            input_fd_wrapper = fd_wrapper(input_fd)
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
