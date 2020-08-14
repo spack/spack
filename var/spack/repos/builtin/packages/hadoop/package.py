@@ -26,8 +26,8 @@ class Hadoop(Package):
     depends_on('cmake', type='build')
     depends_on('openssl')
     depends_on('libtirpc')
-    depends_on('doxygen', when='@3.2.1')
-    depends_on('cyrus-sasl', when='@3.2.1')
+    depends_on('doxygen', type='build', when='@3.2.1:')
+    depends_on('cyrus-sasl', when='@3.2.1:')
 
     def setup_build_environment(self, env):
         env.append_path('LDFLAGS', '-ldl -ltirpc')
