@@ -53,7 +53,6 @@ class Rocblas(CMakePackage):
         tensile = join_path(self.stage.source_path, 'Tensile')
 
         args = [
-            # '-DCMAKE_CXX_FLAGS=--amdgpu-target={0}'.format(archs),
             '-Damd_comgr_DIR={0}'.format(self.spec['comgr'].prefix),
             '-DBUILD_CLIENTS_TESTS=OFF',
             '-DBUILD_CLIENTS_BENCHMARKS=OFF',
