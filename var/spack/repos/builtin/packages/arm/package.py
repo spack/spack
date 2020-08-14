@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os.path
 import re
 
 import llnl.util.tty as tty
@@ -14,11 +15,13 @@ class Arm(Package):
     with a modern LLVM-based compiler framework.
     """
 
-    homepage = "https://developer.arm.com/tools-and-software/embedded/arm-compiler"
-    url = "https://developer.arm.com/-/media/Files/downloads/compiler/DS500-BN-00026-r5p0-16rel0.tgz"
+    homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/arm-allinea-studio"
+    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/20-2-1/Ubuntu16.04/arm-compiler-for-linux_20.2.1_Ubuntu-16.04_aarch64.tar"
 
-    version('6.14', sha256='0f72db76d9315550423593eecb60105914222d3dbc17f61a094c3a1ad2c23865',
-            url='https://developer.arm.com/-/media/Files/downloads/compiler/DS500-BN-00026-r5p0-16rel0.tgz')
+    # FIXME: The version is checksummed for Ubuntu 16.04, but this is not
+    # FIXME: important at the moment since the package is only meant to
+    # FIXME: provide detection
+    version('20.2.1', sha256='dc3f945b05b867809d9b507cb8ebba9cf72a6818d349207dbe1392c13dc0ad79')
 
     def install(self, spec, prefix):
         raise InstallError(
@@ -57,3 +60,27 @@ class Arm(Package):
             if 'armflang' in exe:
                 compilers['fortran'] = exe
         return '', {'compilers': compilers}
+
+    @property
+    def cc(self):
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('c', None)
+        return str(self.spec.prefix.bin.armclang)
+
+    @property
+    def cxx(self):
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('cxx', None)
+        return os.path.join(self.spec.prefix.bin, 'armclang++')
+
+    @property
+    def fortran(self):
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('fortran', None)
+        return str(self.spec.prefix.bin.armflang)
