@@ -13,6 +13,8 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/tar/"
     gnu_mirror_path = "tar/tar-1.32.tar.gz"
 
+    executables = [r'^tar$']
+
     version('1.32', sha256='b59549594d91d84ee00c99cf2541a3330fed3a42c440503326dab767f2fbb96c')
     version('1.31', sha256='b471be6cb68fd13c4878297d856aebd50551646f4e3074906b1a74549c40d5a2')
     version('1.30', sha256='4725cc2c2f5a274b12b39d1f78b3545ec9ebb06a6e48e8845e1995ac8513b088')
@@ -26,6 +28,12 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
     patch('se-selinux.patch', when='@:1.29')
     patch('argp-pgi.patch',   when='@:1.29')
     patch('gnutar-configure-xattrs.patch', when='@1.28')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'tar \(GNU tar\) (\S+)', output)
+        return match.group(1) if match else None
 
     def configure_args(self):
         return [
