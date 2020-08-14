@@ -6,6 +6,7 @@
 import os
 import argparse
 
+import spack.binary_distribution
 import spack.cmd.common.arguments as arguments
 import spack.paths
 from spack.util.gpg import Gpg
@@ -80,6 +81,32 @@ def setup_parser(subparser):
                         help='the keys to export; '
                              'all secret keys if unspecified')
     export.set_defaults(func=gpg_export)
+
+    publish = subparsers.add_parser('publish', help=gpg_publish.__doc__)
+
+    output = publish.add_mutually_exclusive_group(required=True)
+    output.add_argument('-d', '--directory',
+                        metavar='directory',
+                        type=str,
+                        help="local directory where " +
+                             "keys will be published.")
+    output.add_argument('-m', '--mirror-name',
+                        metavar='mirror-name',
+                        type=str,
+                        help="name of the mirror where " +
+                             "keys will be published.")
+    output.add_argument('--mirror-url',
+                        metavar='mirror-url',
+                        type=str,
+                        help="URL of the mirror where " +
+                             "keys will be published.")
+    publish.add_argument('--rebuild-index', action='store_true',
+                        default=False, help="Regenerate buildcache key index " +
+                                            "after publishing key(s)")
+    publish.add_argument('keys', nargs='*',
+                        help='the keys to publish; '
+                             'all public keys if unspecified')
+    publish.set_defaults(func=gpg_publish)
 
 
 def gpg_create(args):
@@ -156,6 +183,16 @@ def gpg_verify(args):
     if signature is None:
         signature = args.spec[0] + '.asc'
     Gpg.verify(signature, ' '.join(args.spec))
+
+
+def gpg_publish(args):
+    """publish public keys to a build cache"""
+
+    # TODO(opadron): switch to using the mirror args once #17547 is merged
+    mirror = args.directory
+
+    spack.binary_distribution.push_keys(
+        mirror, keys=args.keys, regenerate_index=args.rebuild_index)
 
 
 def gpg(parser, args):

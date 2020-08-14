@@ -16,7 +16,7 @@ _gnupg_version_re = r"^gpg \(GnuPG\) (.*)$"
 GNUPGHOME = os.getenv('SPACK_GNUPGHOME', spack.paths.gpg_path)
 
 
-def parse_keys_output(output):
+def parse_secret_keys_output(output):
     keys = []
     found_sec = False
     for line in output.split('\n'):
@@ -28,6 +28,21 @@ def parse_keys_output(output):
                 found_sec = False
         elif line.startswith('sec'):
             found_sec = True
+    return keys
+
+
+def parse_public_keys_output(output):
+    keys = []
+    found_pub = False
+    for line in output.split('\n'):
+        if found_pub:
+            if line.startswith('fpr'):
+                keys.append(line.split(':')[9])
+                found_pub = False
+            elif line.startswith('ssb'):
+                found_pub = False
+        elif line.startswith('pub'):
+            found_pub = True
     return keys
 
 
@@ -87,14 +102,22 @@ class Gpg(object):
         r.close()
 
     @classmethod
-    def signing_keys(cls):
+    def signing_keys(cls, *args):
         output = cls.gpg()('--list-secret-keys', '--with-colons',
-                           '--fingerprint', '--fingerprint', output=str)
-        return parse_keys_output(output)
+                           '--fingerprint', *args, output=str)
+        return parse_secret_keys_output(output)
+
+    @classmethod
+    def public_keys(cls, *args):
+        output = cls.gpg()('--list-public-keys', '--with-colons',
+                           '--fingerprint', *args, output=str)
+        return parse_public_keys_output(output)
 
     @classmethod
     def export_keys(cls, location, *keys):
-        cls.gpg()('--armor', '--export', '--output', location, *keys)
+        cls.gpg()('--batch', '--yes',
+                  '--armor', '--export',
+                  '--output', location, *keys)
 
     @classmethod
     def trust(cls, keyfile):
@@ -102,16 +125,13 @@ class Gpg(object):
 
     @classmethod
     def untrust(cls, signing, *keys):
-        args = [
-            '--yes',
-            '--batch',
-        ]
         if signing:
-            signing_args = args + ['--delete-secret-keys'] + list(keys)
-            cls.gpg()(*signing_args)
-        args.append('--delete-keys')
-        args.extend(keys)
-        cls.gpg()(*args)
+            cls.gpg()('--batch', '--yes', '--delete-secret-keys',
+                      *cls.signing_keys(*keys))
+
+        cls.gpg()('--batch', '--yes', '--delete-keys',
+                  *cls.public_keys(*keys))
+
 
     @classmethod
     def sign(cls, key, file, output, clearsign=False):

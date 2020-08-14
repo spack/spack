@@ -224,7 +224,7 @@ def url_exists(url):
     try:
         read_from_url(url)
         return True
-    except URLError:
+    except (SpackWebError, URLError):
         return False
 
 
