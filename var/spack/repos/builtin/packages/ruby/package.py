@@ -114,3 +114,14 @@ class Ruby(AutotoolsPackage):
                                             'rubygems',
                                             'ssl_certs')
             install(rubygems_updated_cert_path, rubygems_certs_path)
+
+        rbconfig = find(self.prefix, 'rbconfig.rb')[0]
+        filter_file(r'^(\s*CONFIG\["CXX"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cxx),
+                    rbconfig)
+        filter_file(r'^(\s*CONFIG\["CC"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cc),
+                    rbconfig)
+        filter_file(r'^(\s*CONFIG\["MJIT_CC"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cc),
+                    rbconfig)

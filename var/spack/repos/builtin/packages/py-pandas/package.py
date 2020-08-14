@@ -12,7 +12,7 @@ class PyPandas(PythonPackage):
     programming language."""
 
     homepage = "https://pandas.pydata.org/"
-    url = "https://pypi.io/packages/source/p/pandas/pandas-1.0.5.tar.gz"
+    url = "https://pypi.io/packages/source/p/pandas/pandas-1.1.0.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = [
@@ -29,6 +29,7 @@ class PyPandas(PythonPackage):
         'pandas.api.extensions'
     ]
 
+    version('1.1.0',  sha256='b39508562ad0bb3f384b0db24da7d68a2608b9ddc85b1d931ccaaa92d5e45273')
     version('1.0.5',  sha256='69c5d920a0b2a9838e677f78f4dde506b95ea8e4d30da25859db6469ded84fa8')
     version('1.0.4',  sha256='b35d625282baa7b51e82e52622c300a1ca9f786711b2af7cbe64f1e6831f4126')
     version('1.0.3',  sha256='32f42e322fb903d0e189a4c10b75ba70d90958cc4f66a1781ed027f1a1d14586')
@@ -56,11 +57,14 @@ class PyPandas(PythonPackage):
     depends_on('python@3.5.3:', type=('build', 'run'), when='@0.25:')
     # https://pandas.pydata.org/docs/whatsnew/v1.0.0.html#build-changes
     depends_on('py-cython@0.29.13:', type='build', when='@1:')
+    depends_on('py-cython@0.29.16:', type='build', when='@1.1:')
     depends_on('py-setuptools@24.2.0:', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numpy@1.13.3:', type=('build', 'run'), when='@0.25:')
+    depends_on('py-numpy@1.15.4:', type=('build', 'run'), when='@1.1:')
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-python-dateutil@2.6.1:', type=('build', 'run'), when='@0.25:')
+    depends_on('py-python-dateutil@2.7.3:', type=('build', 'run'), when='@1.1:')
     depends_on('py-pytz@2017.2:', type=('build', 'run'))
 
     # Recommended dependencies

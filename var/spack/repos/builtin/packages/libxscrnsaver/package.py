@@ -18,6 +18,6 @@ class Libxscrnsaver(AutotoolsPackage, XorgPackage):
     depends_on('libxext')
 
     depends_on('xextproto', type='build')
-    depends_on('scrnsaverproto@1.2:', type='build')
+    depends_on('scrnsaverproto@1.2:')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

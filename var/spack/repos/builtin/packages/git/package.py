@@ -193,6 +193,7 @@ class Git(AutotoolsPackage):
     depends_on('pcre2', when='@2.14:')
     depends_on('perl')
     depends_on('zlib')
+    depends_on('openssh', type='run')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

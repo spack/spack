@@ -22,6 +22,7 @@ class Clamav(AutotoolsPackage):
     depends_on('yara')
     depends_on('zlib')
     depends_on('bzip2')
+    depends_on('curl', type='link')
 
     def configure_args(self):
         spec = self.spec

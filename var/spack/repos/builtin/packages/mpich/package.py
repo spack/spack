@@ -67,6 +67,8 @@ spack package at this time.''',
     variant('libxml2', default=True,
             description='Use libxml2 for XML support instead of the custom '
                         'minimalistic implementation')
+    variant('argobots', default=False,
+            description='Enable Argobots support')
 
     provides('mpi')
     provides('mpi@:3.0', when='@3:')
@@ -140,6 +142,9 @@ spack package at this time.''',
     depends_on('slurm', when='+slurm')
 
     depends_on('pmix', when='pmi=pmix')
+
+    # +argobots variant requires Argobots
+    depends_on('argobots', when='+argobots')
 
     # building from git requires regenerating autotools files
     depends_on('automake@1.15:', when='@develop', type=("build"))
@@ -306,5 +311,10 @@ spack package at this time.''',
             # scripts of all instances of hwloc (there are three copies of it:
             # for hydra, for hydra2, and for MPICH itself).
             config_args += self.enable_or_disable('libxml2')
+
+        # If +argobots specified, add argobots option
+        if '+argobots' in spec:
+            config_args.append('--with-thread-package=argobots')
+            config_args.append('--with-argobots=' + spec['argobots'].prefix)
 
         return config_args

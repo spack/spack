@@ -7,12 +7,14 @@
 from spack import *
 
 
-class Spfft(CMakePackage):
+class Spfft(CMakePackage, CudaPackage):
     """Sparse 3D FFT library with MPI, OpenMP, CUDA and ROCm support."""
 
     homepage = "https://github.com/eth-cscs/SpFFT"
     url      = "https://github.com/eth-cscs/SpFFT/archive/v0.9.8.zip"
 
+    version('0.9.12', sha256='1f7bf5164dcceb0e3bbce7d6ff9faef3145ad17cf3430149d40a98c43c010acc')
+    version('0.9.11', sha256='36542a60378e8672654188dee006975ef9e10f502791459ff7ebf4b38451cb9b')
     version('0.9.10', sha256='9cbbb7ba5e53e17eeb45e809841d8272e5333f739c2442a99c3e255c1ddec3e9')
     version('0.9.9', sha256='a8fd7a2d767716bb73185ca03bf4c106c6981b79130f3e456e5d2e744a2b3ba0')
     version('0.9.8', sha256='f49fa51316bbfa68309e951d2375e1f6904120c93868cbe13bc2974c0b801a3f')
@@ -26,9 +28,10 @@ class Spfft(CMakePackage):
     variant('fortran', default=False, description="enable fortran")
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
-    depends_on('fftw')
+    depends_on('fftw-api@3')
     depends_on('mpi', when='+mpi')
-    depends_on('cuda', when='+cuda')
+
+    depends_on('cuda@:10', when='@:0.9.11 +cuda')
 
     def cmake_args(self):
         args = []

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test detection of compiler version"""
 import pytest
+import os
+
+import llnl.util.filesystem as fs
 
 import spack.compilers.arm
 import spack.compilers.cce
@@ -15,6 +18,9 @@ import spack.compilers.nag
 import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
+
+from spack.operating_systems.cray_frontend import CrayFrontend
+import spack.util.module_cmd
 
 
 @pytest.mark.parametrize('version_str,expected_version', [
@@ -98,19 +104,19 @@ def test_clang_version_detection(version_str, expected_version):
 
 @pytest.mark.parametrize('version_str,expected_version', [
     # C compiler
-    ('fcc (FCC) 4.0.0 20190314\n'
+    ('fcc (FCC) 4.0.0a 20190314\n'
      'simulating gcc version 6.1\n'
      'Copyright FUJITSU LIMITED 2019',
-     '4.0.0'),
+     '4.0.0a'),
     # C++ compiler
-    ('FCC (FCC) 4.0.0 20190314\n'
+    ('FCC (FCC) 4.0.0a 20190314\n'
      'simulating gcc version 6.1\n'
      'Copyright FUJITSU LIMITED 2019',
-     '4.0.0'),
+     '4.0.0a'),
     # Fortran compiler
-    ('frt (FRT) 4.0.0 20190314\n'
+    ('frt (FRT) 4.0.0a 20190314\n'
      'Copyright FUJITSU LIMITED 2019',
-     '4.0.0')
+     '4.0.0a')
 ])
 def test_fj_version_detection(version_str, expected_version):
     version = spack.compilers.fj.Fj.extract_version_from_output(version_str)
@@ -189,3 +195,41 @@ def test_xl_version_detection(version_str, expected_version):
 
     version = spack.compilers.xl_r.XlR.extract_version_from_output(version_str)
     assert version == expected_version
+
+
+@pytest.mark.parametrize('compiler,version', [
+    ('gcc', '8.1.0'),
+    ('gcc', '1.0.0-foo'),
+    ('pgi', '19.1'),
+    ('pgi', '19.1a'),
+    ('intel', '9.0.0'),
+    ('intel', '0.0.0-foobar')
+])
+def test_cray_frontend_compiler_detection(
+        compiler, version, tmpdir, monkeypatch, working_env
+):
+    """Test that the Cray frontend properly finds compilers form modules"""
+    # setup the fake compiler directory
+    compiler_dir = tmpdir.join(compiler)
+    compiler_exe = compiler_dir.join('cc').ensure()
+    fs.set_executable(str(compiler_exe))
+
+    # mock modules
+    def _module(cmd, *args):
+        module_name = '%s/%s' % (compiler, version)
+        module_contents = 'prepend-path PATH %s' % compiler_dir
+        if cmd == 'avail':
+            return module_name if compiler in args[0] else ''
+        if cmd == 'show':
+            return module_contents if module_name in args else ''
+    monkeypatch.setattr(spack.operating_systems.cray_frontend, 'module',
+                        _module)
+
+    # remove PATH variable
+    os.environ.pop('PATH', None)
+
+    # get a CrayFrontend object
+    cray_fe_os = CrayFrontend()
+
+    paths = cray_fe_os.compiler_search_paths
+    assert paths == [str(compiler_dir)]

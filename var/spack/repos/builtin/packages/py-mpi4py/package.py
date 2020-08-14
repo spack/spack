@@ -30,3 +30,8 @@ class PyMpi4py(PythonPackage):
 
     def build_args(self, spec, prefix):
         return ['--mpicc=%s -shared' % spec['mpi'].mpicc]
+
+    @property
+    def headers(self):
+        headers = find_all_headers(self.prefix.lib)
+        return headers

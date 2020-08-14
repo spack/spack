@@ -28,7 +28,7 @@ __all__ = ['Compiler']
 
 
 @llnl.util.lang.memoized
-def get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
+def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
     """Invokes the compiler at a given path passing a single
     version argument and returns the output.
 
@@ -40,6 +40,18 @@ def get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
     output = compiler(
         version_arg, output=str, error=str, ignore_errors=ignore_errors)
     return output
+
+
+def get_compiler_version_output(compiler_path, *args, **kwargs):
+    """Wrapper for _get_compiler_version_output()."""
+    # This ensures that we memoize compiler output by *absolute path*,
+    # not just executable name. If we don't do this, and the path changes
+    # (e.g., during testing), we can get incorrect results.
+    if not os.path.isabs(compiler_path):
+        compiler_path = spack.util.executable.which_string(
+            compiler_path, required=True)
+
+    return _get_compiler_version_output(compiler_path, *args, **kwargs)
 
 
 def tokenize_flags(flags_str):
@@ -151,6 +163,10 @@ def _parse_non_system_link_dirs(string):
         (list of str): implicit link paths parsed from the compiler output
     """
     link_dirs = _parse_link_paths(string)
+
+    # Remove directories that do not exist. Some versions of the Cray compiler
+    # report nonexistent directories
+    link_dirs = [d for d in link_dirs if os.path.isdir(d)]
 
     # Return set of directories containing needed compiler libs, minus
     # system paths. Note that 'filter_system_paths' only checks for an
@@ -297,11 +313,21 @@ class Compiler(object):
         Raises a CompilerAccessError if any of the non-null paths for the
         compiler are not accessible.
         """
-        missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
-                   if cmp and not (os.path.isfile(cmp) and
-                                   os.access(cmp, os.X_OK))]
-        if missing:
-            raise CompilerAccessError(self, missing)
+        def accessible_exe(exe):
+            # compilers may contain executable names (on Cray or user edited)
+            if not os.path.isabs(exe):
+                exe = spack.util.executable.which_string(exe)
+                if not exe:
+                    return False
+            return os.path.isfile(exe) and os.access(exe, os.X_OK)
+
+        # setup environment before verifying in case we have executable names
+        # instead of absolute paths
+        with self._compiler_environment():
+            missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
+                       if cmp and not accessible_exe(cmp)]
+            if missing:
+                raise CompilerAccessError(self, missing)
 
     @property
     def version(self):

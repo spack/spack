@@ -818,7 +818,7 @@ Git
 
 Some Spack packages use ``git`` to download, which might not work on
 some computers.  For example, the following error was
-encountered on a Macintosh during ``spack install julia-master``:
+encountered on a Macintosh during ``spack install julia@master``:
 
 .. code-block:: console
 
@@ -1247,6 +1247,6 @@ environment variables may be propagated into containers that are not
 using the Cray programming environment.
 
 To ensure that Spack does not autodetect the Cray programming
-environment, unset the environment variable ``CRAYPE_VERSION``. This
+environment, unset the environment variable ``MODULEPATH``. This
 will cause Spack to treat a linux container on a Cray system as a base
 linux distro.

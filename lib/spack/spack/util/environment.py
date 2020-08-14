@@ -32,12 +32,14 @@ system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
 _shell_set_strings = {
     'sh': 'export {0}={1};\n',
     'csh': 'setenv {0} {1};\n',
+    'fish': 'set -gx {0} {1};\n'
 }
 
 
 _shell_unset_strings = {
     'sh': 'unset {0};\n',
     'csh': 'unsetenv {0};\n',
+    'fish': 'set -e {0};\n',
 }
 
 
