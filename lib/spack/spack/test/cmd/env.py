@@ -525,6 +525,25 @@ env:
                for x in e._get_environment_specs())
 
 
+def test_with_config_bad_include(capfd):
+    test_config = """\
+spack:
+  include:
+  - /no/such/directory
+  - no/such/file.yaml
+"""
+    _env_create('test', StringIO(test_config))
+
+    e = ev.read('test')
+    with e:
+        e.concretize()
+
+    _, err = capfd.readouterr()
+    assert 'Ignoring' in err
+    assert 'include /no/such/directory' in err
+    assert 'no/such/file.yaml' in err
+
+
 def test_env_with_included_config_file():
     test_config = """\
 env:

@@ -826,12 +826,16 @@ class Environment(object):
                 config_name = 'env:%s:%s' % (
                     self.name, os.path.basename(config_path))
                 scope = spack.config.ConfigScope(config_name, config_path)
-            else:
+            elif os.path.exists(config_path):
                 # files are assumed to be SingleFileScopes
                 base, ext = os.path.splitext(os.path.basename(config_path))
                 config_name = 'env:%s:%s' % (self.name, base)
                 scope = spack.config.SingleFileScope(
                     config_name, config_path, spack.schema.merged.schema)
+            else:
+                tty.warn('Ignoring non-existent include {0}'
+                         .format(config_path))
+                continue
 
             scopes.append(scope)
 
