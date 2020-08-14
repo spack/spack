@@ -21,8 +21,6 @@ class Madgraph5amc(Package):
     version('2.7.3.py3', sha256='400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225')
     version('2.7.3.py2', sha256='0b665356f4d9359e6e382e0f408dc11db594734567c6b2f0ec0e0697f2dbe099',
             url="https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz")
-    # version('2.7.2', sha256='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
-    # 2.7.2 is not available on launchpad
 
     variant('atlas', default=False, description='Apply changes requested by ' + 
             "the ATLAS experimenent on LHC")
@@ -43,8 +41,6 @@ class Madgraph5amc(Package):
 
     depends_on('python@3:', when='@2.7.3.py3', type=('build', 'run'))
 
-    patch('madgraph5amc-2.7.2.patch', level=0, when='@2.7.2~atlas')
-    patch('madgraph5amc-2.7.2.atlas.patch', level=0, when='@2.7.2+atlas')
     patch('madgraph5amc-2.7.3.patch', level=0, when='@2.7.3.py2~atlas')
     patch('madgraph5amc-2.7.3.atlas.patch', level=0, when='@2.7.3.py2+atlas')
     patch('madgraph5amc-2.7.3.patch', level=0, when='@2.7.3.py3~atlas')
