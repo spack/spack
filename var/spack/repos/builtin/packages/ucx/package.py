@@ -16,6 +16,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     maintainers = ['hppritcha']
 
     # Current
+    version('1.8.1', sha256='a48820cb8d0761b5ccf3e7ba03a7c8c1dde6276017657178829e07ffc35b556a')
     version('1.8.0', sha256='e400f7aa5354971c8f5ac6b881dc2846143851df868088c37d432c076445628d')
     version('1.7.0', sha256='6ab81ee187bfd554fe7e549da93a11bfac420df87d99ee61ffab7bb19bdd3371')
     version('1.6.1', sha256='1425648aa03f5fa40e4bc5c4a5a83fe0292e2fe44f6054352fbebbf6d8f342a1')
@@ -34,7 +35,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     variant('thread_multiple', default=False,
             description='Enable thread support in UCP and UCT')
-    variant('optimizations', default=False,
+    variant('optimizations', default=True,
             description='Enable optimizations')
     variant('logging', default=False,
             description='Enable logging')
@@ -43,7 +44,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant('assertions', default=False,
             description='Enable assertions')
     variant('parameter_checking', default=False,
-            description='Enable paramter checking')
+            description='Enable parameter checking')
     variant('pic', default=True,
             description='Builds with PIC support')
     variant('java', default=False,
@@ -65,6 +66,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
               msg='gdrcopy currently requires cuda support')
     depends_on('xpmem', when='+xpmem')
     depends_on('knem', when='+knem')
+
+    configure_abs_path = 'contrib/configure-release'
 
     def configure_args(self):
         spec = self.spec

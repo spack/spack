@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 
 class Bazel(Package):
     """Bazel is an open-source build and test tool similar to Make, Maven, and
@@ -134,6 +136,14 @@ class Bazel(Package):
     patch('disabledepcheck_old.patch', when='@0.3.0:0.3.1+nodepfail')
 
     phases = ['bootstrap', 'install']
+
+    executables = ['^bazel$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('version', output=str, error=str)
+        match = re.search(r'Build label: ([\d.]+)', output)
+        return match.group(1) if match else None
 
     def url_for_version(self, version):
         if version >= Version('0.4.1'):

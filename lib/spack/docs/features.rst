@@ -48,8 +48,8 @@ platform, all on the command line.
    # Add compiler flags using the conventional names
    $ spack install mpileaks@1.1.2 %gcc@4.7.3 cppflags="-O3 -floop-block"
 
-   # Cross-compile for a different architecture with arch=
-   $ spack install mpileaks@1.1.2 arch=bgqos_0
+   # Cross-compile for a different micro-architecture with target=
+   $ spack install mpileaks@1.1.2 target=icelake
 
 Users can specify as many or few options as they care about. Spack
 will fill in the unspecified values with sensible defaults. The two listed

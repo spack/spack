@@ -2,22 +2,25 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from __future__ import print_function
-from collections import defaultdict, namedtuple
+
 import argparse
 import os
 import re
-import six
+import sys
+from collections import defaultdict, namedtuple
 
-import spack
-import spack.error
-import llnl.util.tty as tty
-import spack.util.spack_yaml as syaml
-import spack.util.environment
 import llnl.util.filesystem
+import llnl.util.tty as tty
+import llnl.util.tty.colify as colify
+import six
+import spack
+import spack.cmd
+import spack.error
+import spack.util.environment
+import spack.util.spack_yaml as syaml
 
-description = "add external packages to Spack configuration"
+description = "manage external packages in Spack configuration"
 section = "config"
 level = "short"
 
@@ -26,11 +29,17 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='external_command')
 
-    find_parser = sp.add_parser('find', help=external_find.__doc__)
+    find_parser = sp.add_parser(
+        'find', help='add external packages to packages.yaml'
+    )
     find_parser.add_argument(
         '--not-buildable', action='store_true', default=False,
         help="packages with detected externals won't be built with Spack")
     find_parser.add_argument('packages', nargs=argparse.REMAINDER)
+
+    sp.add_parser(
+        'list', help='list detectable packages, by repository and name'
+    )
 
 
 def is_executable(path):
@@ -74,19 +83,37 @@ def _generate_pkg_config(external_pkg_entries):
     This does not generate the entire packages.yaml. For example, given some
     external entries for the CMake package, this could return::
 
-       { 'paths': {
-             'cmake@3.17.1': '/opt/cmake-3.17.1/',
-             'cmake@3.16.5': '/opt/cmake-3.16.5/'
-         }
+        {
+            'externals': [{
+                'spec': 'cmake@3.17.1',
+                'prefix': '/opt/cmake-3.17.1/'
+            }, {
+                'spec': 'cmake@3.16.5',
+                'prefix': '/opt/cmake-3.16.5/'
+            }]
        }
     """
-    paths_dict = syaml.syaml_dict()
+
+    pkg_dict = syaml.syaml_dict()
+    pkg_dict['externals'] = []
     for e in external_pkg_entries:
         if not _spec_is_valid(e.spec):
             continue
-        paths_dict[str(e.spec)] = e.base_dir
-    pkg_dict = syaml.syaml_dict()
-    pkg_dict['paths'] = paths_dict
+
+        external_items = [('spec', str(e.spec)), ('prefix', e.base_dir)]
+        if e.spec.external_modules:
+            external_items.append(('modules', e.spec.external_modules))
+
+        if e.spec.extra_attributes:
+            external_items.append(
+                ('extra_attributes',
+                 syaml.syaml_dict(e.spec.extra_attributes.items()))
+            )
+
+        # external_items.extend(e.spec.extra_attributes.items())
+        pkg_dict['externals'].append(
+            syaml.syaml_dict(external_items)
+        )
 
     return pkg_dict
 
@@ -120,7 +147,17 @@ def external_find(args):
         packages_to_check = spack.repo.path.all_packages()
 
     pkg_to_entries = _get_external_packages(packages_to_check)
-    _update_pkg_config(pkg_to_entries, args.not_buildable)
+    new_entries, write_scope = _update_pkg_config(
+        pkg_to_entries, args.not_buildable
+    )
+    if new_entries:
+        path = spack.config.config.get_config_filename(write_scope, 'packages')
+        msg = ('The following specs have been detected on this system '
+               'and added to {0}')
+        tty.msg(msg.format(path))
+        spack.cmd.display_specs(new_entries)
+    else:
+        tty.msg('No new external packages detected')
 
 
 def _group_by_prefix(paths):
@@ -162,23 +199,24 @@ def _get_predefined_externals():
     pkg_config = spack.config.get('packages')
     already_defined_specs = set()
     for pkg_name, per_pkg_cfg in pkg_config.items():
-        paths = per_pkg_cfg.get('paths', {})
-        already_defined_specs.update(spack.spec.Spec(k) for k in paths)
-        modules = per_pkg_cfg.get('modules', {})
-        already_defined_specs.update(spack.spec.Spec(k) for k in modules)
+        for item in per_pkg_cfg.get('externals', []):
+            already_defined_specs.add(spack.spec.Spec(item['spec']))
     return already_defined_specs
 
 
 def _update_pkg_config(pkg_to_entries, not_buildable):
     predefined_external_specs = _get_predefined_externals()
 
-    pkg_to_cfg = {}
+    pkg_to_cfg, all_new_specs = {}, []
     for pkg_name, ext_pkg_entries in pkg_to_entries.items():
         new_entries = list(
             e for e in ext_pkg_entries
             if (e.spec not in predefined_external_specs))
 
         pkg_config = _generate_pkg_config(new_entries)
+        all_new_specs.extend([
+            spack.spec.Spec(x['spec']) for x in pkg_config.get('externals', [])
+        ])
         if not_buildable:
             pkg_config['buildable'] = False
         pkg_to_cfg[pkg_name] = pkg_config
@@ -188,6 +226,8 @@ def _update_pkg_config(pkg_to_entries, not_buildable):
 
     spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
     spack.config.set('packages', pkgs_cfg, scope=cfg_scope)
+
+    return all_new_specs, cfg_scope
 
 
 def _get_external_packages(packages_to_check, system_path_to_exe=None):
@@ -234,7 +274,7 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
 
             if not specs:
                 tty.debug(
-                    'The following executables in {0} were decidedly not'
+                    'The following executables in {0} were decidedly not '
                     'part of the package {1}: {2}'
                     .format(prefix, pkg.name, ', '.join(exes_in_prefix))
                 )
@@ -259,13 +299,33 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                 else:
                     resolved_specs[spec] = prefix
 
+                try:
+                    spec.validate_detection()
+                except Exception as e:
+                    msg = ('"{0}" has been detected on the system but will '
+                           'not be added to packages.yaml [reason={1}]')
+                    tty.warn(msg.format(spec, str(e)))
+                    continue
+
+                if spec.external_path:
+                    pkg_prefix = spec.external_path
+
                 pkg_to_entries[pkg.name].append(
                     ExternalPackageEntry(spec=spec, base_dir=pkg_prefix))
 
     return pkg_to_entries
 
 
-def external(parser, args):
-    action = {'find': external_find}
+def external_list(args):
+    # Trigger a read of all packages, might take a long time.
+    list(spack.repo.path.all_packages())
+    # Print all the detectable packages
+    tty.msg("Detectable packages per repository")
+    for namespace, pkgs in sorted(spack.package.detectable_packages.items()):
+        print("Repository:", namespace)
+        colify.colify(pkgs, indent=4, output=sys.stdout)
 
+
+def external(parser, args):
+    action = {'find': external_find, 'list': external_list}
     action[args.external_command](args)

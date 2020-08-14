@@ -38,10 +38,6 @@ class Hpctoolkit(AutotoolsPackage):
             description='Build for Cray compute nodes, including '
             'hpcprof-mpi.')
 
-    variant('bgq', default=False,
-            description='Build for Blue Gene compute nodes, including '
-            'hpcprof-mpi (up to 2019.12.28 only).')
-
     variant('mpi', default=False,
             description='Build hpcprof-mpi, the MPI version of hpcprof.')
 
@@ -73,8 +69,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('gotcha@1.0.3:')
     depends_on('intel-tbb+shared')
     depends_on('libdwarf')
-    depends_on('libmonitor+hpctoolkit+bgq', when='+bgq')
-    depends_on('libmonitor+hpctoolkit~bgq', when='~bgq')
+    depends_on('libmonitor+hpctoolkit')
     depends_on('libunwind@1.4: +xz')
     depends_on('mbedtls+pic')
     depends_on('xerces-c transcoder=iconv')
@@ -95,9 +90,6 @@ class Hpctoolkit(AutotoolsPackage):
 
     conflicts('+cuda', when='@2018.0.0:2019.99.99',
               msg='cuda requires 2020.03.01 or later')
-
-    conflicts('+bgq', when='@2020.03.01:',
-              msg='blue gene requires 2019.12.28 or earlier')
 
     flag_handler = AutotoolsPackage.build_system_flags
 
@@ -137,12 +129,6 @@ class Hpctoolkit(AutotoolsPackage):
             args.extend([
                 '--enable-mpi-search=cray',
                 '--enable-all-static',
-            ])
-        elif '+bgq' in spec:
-            args.extend([
-                '--enable-mpi-search=bgq',
-                '--enable-all-static',
-                '--enable-bgq',
             ])
         elif '+mpi' in spec:
             args.append('MPICXX=%s' % spec['mpi'].mpicxx)

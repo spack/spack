@@ -198,8 +198,9 @@ all:
         mpi: [mpich]
 mpich:
     buildable: false
-    paths:
-        mpich@3.0.4: /dummy/path
+    externals:
+    - spec: mpich@3.0.4
+      prefix: /dummy/path
 """)
         spack.config.set('packages', conf, scope='concretize')
 
@@ -229,8 +230,9 @@ all:
         mpi: [mpich]
 mpi:
     buildable: false
-    modules:
-        mpich@3.0.4: dummy
+    externals:
+    - spec: mpich@3.0.4
+      modules: [dummy]
 """)
         spack.config.set('packages', conf, scope='concretize')
 
