@@ -800,8 +800,7 @@ def modifications_from_dependencies(spec, context):
     return env
 
 
-def _setup_pkg_and_run(spec_dict, function, kwargs, child_pipe,
-                       input_fd_wrapper):
+def _setup_pkg_and_run(pkg, function, kwargs, child_pipe, input_fd_wrapper):
     # We are in the child process. Python sets sys.stdin to
     # open(os.devnull) to prevent our process and its parent from
     # simultaneously reading from the original stdin. But, we assume
@@ -809,8 +808,6 @@ def _setup_pkg_and_run(spec_dict, function, kwargs, child_pipe,
     # are done with the child, so we undo Python's precaution.
     if input_fd_wrapper is not None:
         sys.stdin = os.fdopen(input_fd_wrapper._handle)
-
-    pkg = spack.spec.Spec.from_dict(spec_dict).package
 
     try:
         if not kwargs['fake']:
@@ -883,8 +880,6 @@ def fork(pkg, function, kwargs):
     parent_pipe, child_pipe = multiprocessing.Pipe()
     input_fd_wrapper = None
 
-    spec_dict = pkg.spec.to_dict()
-
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
@@ -893,7 +888,7 @@ def fork(pkg, function, kwargs):
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
-            args=(spec_dict, function, kwargs, child_pipe, input_fd_wrapper))
+            args=(pkg, function, kwargs, child_pipe, input_fd_wrapper))
         p.start()
 
     except InstallError as e:
