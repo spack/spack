@@ -49,3 +49,9 @@ class Prefix(str):
             Prefix: the newly created installation prefix
         """
         return Prefix(os.path.join(self, string))
+
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, d):
+        self.__dict__.update(d)
