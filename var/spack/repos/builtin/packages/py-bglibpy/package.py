@@ -14,10 +14,11 @@ class PyBglibpy(PythonPackage):
 
     version('develop', branch='master')
 
+    version('4.3.15', commit='dccd717a2570d32776de824d864fba9dfdbf56f6')
+    version('4.3.12', commit='eb4accd2dc4ebcb01e65d6429bb8221af5aa14bf')
     version('4.3', commit='61293ef3f64a18e7a336d7a5a959020c8237b207')
     version('4.2.23', commit='4f88c9df716ca1c7b1c779ee934b28aa991a366b')
     version('4.1.4', commit='e54d294460e5bdf6b9990bc10a4606b412b76d90')
-    version('4.3.12', commit='eb4accd2dc4ebcb01e65d6429bb8221af5aa14bf')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
