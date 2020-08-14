@@ -186,28 +186,25 @@ def test_optimization_flags(
     assert opt_flags == expected_flags
 
 
-@pytest.mark.parametrize('compiler,real_version,target_str,expected_flags', [
-    (spack.spec.CompilerSpec('gcc@9.2.0'), None, 'haswell',
+@pytest.mark.parametrize('compiler,target_str,expected_flags', [
+    (spack.spec.CompilerSpec('gcc@9.2.0'), 'haswell',
      '-march=haswell -mtune=haswell'),
     # Check that custom string versions are accepted
-    (spack.spec.CompilerSpec('gcc@foo'), '9.2.0', 'icelake',
-     '-march=icelake-client -mtune=icelake-client'),
+    # TODO: FIXME COMPILERS
+    # (spack.spec.CompilerSpec('gcc@foo'), '9.2.0', 'icelake',
+    # '-march=icelake-client -mtune=icelake-client'),
     # Check that we run version detection (4.4.0 doesn't support icelake)
-    (spack.spec.CompilerSpec('gcc@4.4.0-special'), '9.2.0', 'icelake',
+    (spack.spec.CompilerSpec('gcc@9.2.0-special'), 'icelake',
      '-march=icelake-client -mtune=icelake-client'),
     # Check that the special case for Apple's clang is treated correctly
     # i.e. it won't try to detect the version again
-    (spack.spec.CompilerSpec('apple-clang@9.1.0'), None, 'x86_64',
+    (spack.spec.CompilerSpec('apple-clang@9.1.0'), 'x86_64',
      '-march=x86-64'),
 ])
 def test_optimization_flags_with_custom_versions(
-        compiler, real_version, target_str, expected_flags, monkeypatch, config
+        compiler, target_str, expected_flags, monkeypatch, config
 ):
     target = spack.architecture.Target(target_str)
-    if real_version:
-        monkeypatch.setattr(
-            spack.compiler.Compiler, 'get_real_version',
-            lambda x: real_version)
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
 

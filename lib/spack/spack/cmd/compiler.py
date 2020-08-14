@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from __future__ import print_function
 
 import argparse
@@ -10,13 +9,16 @@ import sys
 from six import iteritems
 
 import llnl.util.tty as tty
+import spack.cmd.external
 import spack.compilers
+import spack.concretize
 import spack.config
+import spack.main
 import spack.spec
 from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
-from spack.spec import CompilerSpec, ArchSpec
+from spack.spec import CompilerSpec
 
 description = "manage compilers"
 section = "system"
@@ -73,27 +75,25 @@ def compiler_find(args):
        add them to Spack's configuration.
 
     """
-    # None signals spack.compiler.find_compilers to use its default logic
-    paths = args.add_paths or None
+    # Look for system installed compilers, detected as externals
+    external = spack.main.SpackCommand('external')
+    if str(spack.architecture.platform()) == 'cray':
+        external('find', '--craype', *spack.compilers.compiler_packages)
+    else:
+        external('find', *spack.compilers.compiler_packages)
+    external_compilers = spack.compilers.from_externals()
 
-    # Don't initialize compilers config via compilers.get_compiler_config.
-    # Just let compiler_find do the
-    # entire process and return an empty config from all_compilers
-    # Default for any other process is init_config=True
-    compilers = [c for c in spack.compilers.find_compilers(paths)]
-    new_compilers = []
-    for c in compilers:
-        arch_spec = ArchSpec((None, c.operating_system, c.target))
-        same_specs = spack.compilers.compilers_for_spec(
-            c.spec, arch_spec, init_config=False)
+    # Look for whatever was Spack installed
+    spack_installed_compilers = spack.compilers.from_db()
+    compilers = external_compilers + spack_installed_compilers
 
-        if not same_specs:
-            new_compilers.append(c)
+    # Now we have a list of specs. Register them as compilers.
+    new_compilers = spack.compilers.not_registered(compilers)
 
     if new_compilers:
-        spack.compilers.add_compilers_to_config(new_compilers,
-                                                scope=args.scope,
-                                                init_config=False)
+        spack.compilers.add_compilers_to_config(
+            new_compilers, scope=args.scope
+        )
         n = len(new_compilers)
         s = 's' if n > 1 else ''
 
@@ -156,10 +156,18 @@ def compiler_info(args):
 
 
 def compiler_list(args):
-    tty.msg("Available compilers")
-    index = index_by(spack.compilers.all_compilers(scope=args.scope),
-                     lambda c: (c.spec.name, c.operating_system, c.target))
+    compilers = spack.compilers.all_compilers(scope=args.scope)
+    if not compilers:
+        msg = "No available compilers"
+        if args.scope:
+            msg += " [scope={0}]".format(args.scope)
+        tty.msg(msg)
+        return
 
+    tty.msg("Available compilers")
+    index = index_by(
+        compilers, lambda c: (c.spec.name, c.operating_system, c.target)
+    )
     # For a container, take each element which does not evaluate to false and
     # convert it to a string. For elements which evaluate to False (e.g. None)
     # convert them to '' (in which case it still evaluates to False but is a

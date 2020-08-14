@@ -30,6 +30,7 @@ check_dependencies $coverage git hg svn
 cd "$SPACK_ROOT"
 
 # Print compiler information
+spack compiler find
 spack config get compilers
 
 # Run spack help to cover command import

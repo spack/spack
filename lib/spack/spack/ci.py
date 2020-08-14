@@ -860,7 +860,7 @@ def configure_compilers(compiler_action, scope=None):
         tty.debug('Just find any available compiler')
         find_args = ['find']
         if scope:
-            find_args.extend(['--scope', scope])
+            find_args.extend(['--scope={0}'.format(scope)])
         output = spack_compiler(*find_args)
         tty.debug('spack compiler find')
         tty.debug(output)

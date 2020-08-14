@@ -2,11 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
-import re
-
-import llnl.util.tty as tty
 
 import spack.error
 import spack.version
@@ -115,58 +111,3 @@ class CrayBackend(LinuxDistro):
             # Returning None allows the calling code to test for the value
             # being "True-ish" rather than requiring a try/except block.
             return None
-
-    def arguments_to_detect_version_fn(self, paths):
-        import spack.compilers
-
-        command_arguments = []
-        for compiler_name in spack.compilers.supported_compilers():
-            cmp_cls = spack.compilers.class_for_compiler_name(compiler_name)
-
-            # If the compiler doesn't have a corresponding
-            # Programming Environment, skip to the next
-            if cmp_cls.PrgEnv is None:
-                continue
-
-            if cmp_cls.PrgEnv_compiler is None:
-                tty.die('Must supply PrgEnv_compiler with PrgEnv')
-
-            compiler_id = spack.compilers.CompilerID(self, compiler_name, None)
-            detect_version_args = spack.compilers.DetectVersionArgs(
-                id=compiler_id, variation=(None, None),
-                language='cc', path='cc'
-            )
-            command_arguments.append(detect_version_args)
-        return command_arguments
-
-    def detect_version(self, detect_version_args):
-        import spack.compilers
-        modulecmd = self.modulecmd
-        compiler_name = detect_version_args.id.compiler_name
-        compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
-        output = modulecmd('avail', compiler_cls.PrgEnv_compiler)
-        version_regex = r'({0})/([\d\.]+[\d]-?[\w]*)'.format(
-            compiler_cls.PrgEnv_compiler
-        )
-        matches = re.findall(version_regex, output)
-        version = tuple(version for _, version in matches
-                        if 'classic' not in version)
-        compiler_id = detect_version_args.id
-        value = detect_version_args._replace(
-            id=compiler_id._replace(version=version)
-        )
-        return value, None
-
-    def make_compilers(self, compiler_id, paths):
-        import spack.spec
-        name = compiler_id.compiler_name
-        cmp_cls = spack.compilers.class_for_compiler_name(name)
-        compilers = []
-        for v in compiler_id.version:
-            comp = cmp_cls(
-                spack.spec.CompilerSpec(name + '@' + v),
-                self, "any",
-                ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name + '/' + v])
-
-            compilers.append(comp)
-        return compilers

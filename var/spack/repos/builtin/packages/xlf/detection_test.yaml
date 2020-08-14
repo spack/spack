@@ -1,0 +1,15 @@
+paths:
+  - layout:
+      - subdir: [bin]
+        name: xlf
+        output: |
+          echo "IBM XL Fortran for Linux, V16.1.1 (5725-C73, 5765-J13)"
+          echo "Version: 16.01.0001.0006"
+      - subdir: [bin]
+        name: xlf_r
+        output: |
+          echo "IBM XL Fortran for Linux, V16.1.1 (5725-C73, 5765-J13)"
+          echo "Version: 16.01.0001.0006"
+    results:
+      - spec: "xlf+r@16.1"
+      - spec: "xlf~r@16.1"

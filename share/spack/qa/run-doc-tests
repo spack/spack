@@ -17,6 +17,9 @@
 . "$(dirname $0)/setup.sh"
 check_dependencies sphinx-apidoc sphinx-build dot git hg svn
 
+# Search for compilers
+spack compiler find
+
 # Move to documentation directory
 # Allows script to be run from anywhere
 cd "$SPACK_ROOT/lib/spack/docs"

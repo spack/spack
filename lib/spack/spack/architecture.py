@@ -207,8 +207,8 @@ class Target(object):
         # has an unexpected suffix. If so, treat it as a compiler with a
         # custom spec.
         compiler_version = compiler.version
-        version_number, suffix = cpu.version_components(compiler.version)
-        if not version_number or suffix not in ('', 'apple'):
+        version_number, _ = cpu.version_components(compiler.version)
+        if not version_number:
             # Try to deduce the underlying version of the compiler, regardless
             # of its name in compilers.yaml. Depending on where this function
             # is called we might get either a CompilerSpec or a fully fledged
@@ -338,9 +338,7 @@ class Platform(object):
 @key_ordering
 class OperatingSystem(object):
     """ Operating System will be like a class similar to platform extended
-        by subclasses for the specifics. Operating System will contain the
-        compiler finding logic. Instead of calling two separate methods to
-        find compilers we call find_compilers method for each operating system
+    by subclasses for the specifics.
     """
 
     def __init__(self, name, version):

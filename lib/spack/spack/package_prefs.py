@@ -174,11 +174,10 @@ def spec_externals(spec):
                 external_path = canonicalize_path(external_path)
             external_modules = entry.get('modules', None)
             external_spec = spack.spec.Spec.from_detection(
-                spack.spec.Spec(
-                    spec_str,
-                    external_path=external_path,
-                    external_modules=external_modules
-                ), extra_attributes=entry.get('extra_attributes', {})
+                spec_str,
+                external_path=external_path,
+                external_modules=external_modules,
+                extra_attributes=entry.get('extra_attributes', {})
             )
             if external_spec.satisfies(spec):
                 external_specs.append(external_spec)

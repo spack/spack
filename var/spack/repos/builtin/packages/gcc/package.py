@@ -271,6 +271,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    #: Programming Environment to be loaded on Cray
+    cray_prgenv = 'PrgEnv-gnu'
+    #: Name of the module in Cray's Programming Environment
+    cray_module_name = 'gcc'
+    #: Name of the module in Cray's Programming Environment
+    cray_extra_attributes = {
+        'compilers': {'c': 'cc', 'cxx': 'CC', 'fortran': 'ftn'}
+    }
+
     @property
     def executables(self):
         names = [r'gcc', r'[^\w]?g\+\+', r'gfortran']
@@ -368,10 +377,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def cc(self):
-        msg = "cannot retrieve C compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('c', None)
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
         result = None
         if 'languages=c' in self.spec:
             result = str(self.spec.prefix.bin.gcc)
@@ -379,10 +388,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def cxx(self):
-        msg = "cannot retrieve C++ compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('cxx', None)
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
         result = None
         if 'languages=c++' in self.spec:
             result = os.path.join(self.spec.prefix.bin, 'g++')
@@ -390,10 +399,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def fortran(self):
-        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('fortran', None)
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
         result = None
         if 'languages=fortran' in self.spec:
             result = str(self.spec.prefix.bin.gfortran)
@@ -601,31 +610,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         set_install_permissions(specs_file)
 
     def setup_run_environment(self, env):
-        # Search prefix directory for possibly modified compiler names
-        from spack.compilers.gcc import Gcc as Compiler
-
-        # Get the contents of the installed binary directory
-        bin_path = self.spec.prefix.bin
-
-        if not os.path.isdir(bin_path):
-            return
-
-        bin_contents = os.listdir(bin_path)
-
-        # Find the first non-symlink compiler binary present for each language
         for lang in ['cc', 'cxx', 'fc', 'f77']:
-            for filename, regexp in itertools.product(
-                    bin_contents,
-                    Compiler.search_regexps(lang)
-            ):
-                if not regexp.match(filename):
-                    continue
-
-                abspath = os.path.join(bin_path, filename)
-                if os.path.islink(abspath):
-                    continue
-
-                # Set the proper environment variable
-                env.set(lang.upper(), abspath)
-                # Stop searching filename/regex combos for this language
-                break
+            compiler_path = getattr(self, lang, None)
+            if compiler_path:
+                env.set(lang.upper(), compiler_path)

@@ -1974,7 +1974,8 @@ class Spec(object):
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
 
     @staticmethod
-    def from_detection(spec_str, extra_attributes=None):
+    def from_detection(spec_str, external_path=None,
+                       external_modules=None, extra_attributes=None):
         """Construct a spec from a spec string determined during external
         detection and attach extra attributes to it.
 
@@ -1985,7 +1986,11 @@ class Spec(object):
         Returns:
             spack.spec.Spec: external spec
         """
-        s = Spec(spec_str)
+        s = Spec(
+            spec_str,
+            external_path=external_path,
+            external_modules=external_modules
+        )
         extra_attributes = syaml.sorted_dict(extra_attributes or {})
         # This is needed to be able to validate multi-valued variants,
         # otherwise they'll still be abstract in the context of detection.

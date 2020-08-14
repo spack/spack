@@ -2,8 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 
-from spack import *
+import llnl.util.tty as tty
 
 
 class Intel(IntelPackage):
@@ -64,6 +65,70 @@ class Intel(IntelPackage):
               msg='SSE2 is not supported on MacOS')
     conflicts('auto_dispatch=SSE3', 'platform=darwin target=x86_64:',
               msg='SSE3 is not supported on MacOS x86_64')
+
+    executables = ['^icc$', '^icpc$', '^ifort$']
+
+    #: Programming Environment to be loaded on Cray
+    cray_prgenv = 'PrgEnv-intel'
+    #: Name of the module in Cray's Programming Environment
+    cray_module_name = 'intel'
+    #: Name of the module in Cray's Programming Environment
+    cray_extra_attributes = {
+        'compilers': {'c': 'cc', 'cxx': 'CC', 'fortran': 'ftn'}
+    }
+
+    @classmethod
+    def determine_version(cls, exe):
+        version_regex = re.compile(r'\((?:IFORT|ICC)\) ([^ ]+)')
+        try:
+            output = spack.compiler.get_compiler_version_output(
+                exe, '--version'
+            )
+            match = version_regex.search(output)
+            if match:
+                return match.group(1)
+        except spack.util.executable.ProcessError:
+            pass
+        except Exception as e:
+            tty.debug(str(e))
+
+        return None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        compilers = {}
+        for exe in exes:
+            if 'icc' in exe:
+                compilers['c'] = exe
+            if 'icpc' in exe:
+                compilers['cxx'] = exe
+            if 'ifort' in exe:
+                compilers['fortran'] = exe
+        return '', {'compilers': compilers}
+
+    @property
+    def cc(self):
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('c', None)
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        return self.spec.prefix.bin.intel64.icc
+
+    @property
+    def cxx(self):
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('cxx', None)
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        return self.spec.prefix.bin.intel64.icpc
+
+    @property
+    def fortran(self):
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('fortran', None)
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        return self.spec.prefix.bin.intel64.ifort
 
     # Since the current package is a subset of 'intel-parallel-studio',
     # all remaining Spack actions are handled in the package class.

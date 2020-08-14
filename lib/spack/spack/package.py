@@ -202,13 +202,11 @@ class DetectablePackageMeta(object):
                         external_modules = extra_attributes.pop(
                             'modules', None
                         )
-                        spec = spack.spec.Spec(
+                        specs.append(spack.spec.Spec.from_detection(
                             spec_str,
                             external_path=external_path,
-                            external_modules=external_modules
-                        )
-                        specs.append(spack.spec.Spec.from_detection(
-                            spec, extra_attributes=extra_attributes
+                            external_modules=external_modules,
+                            extra_attributes=extra_attributes
                         ))
 
                 return sorted(specs)

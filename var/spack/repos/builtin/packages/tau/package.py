@@ -2,13 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 import os
+import os.path
 import fnmatch
 import glob
 import platform
 import sys
+
 from llnl.util.filesystem import join_path
 
 
@@ -132,7 +132,9 @@ class Tau(Package):
                             '-cc=%s' % os.path.basename(self.compiler.cc)]
 
         if '+fortran' in spec and self.compiler.fc:
-            compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
+            compiler_options.append('-fortran={0}'.format(
+                os.path.basename(self.compilers.fc)
+            ))
 
         ##########
 
