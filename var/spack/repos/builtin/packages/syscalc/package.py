@@ -24,9 +24,6 @@ class Syscalc(MakefilePackage):
         return url
 
     def install(self, spec, prefix):
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
         mkdirp(prefix.bin)
         install('sys_calc', prefix.bin)
-        install_dir('include')
+        install_tree('include', join_path(prefix, 'include'))
