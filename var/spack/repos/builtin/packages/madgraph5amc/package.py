@@ -34,7 +34,7 @@ class Madgraph5amc(Package):
     depends_on('collier', when='+collier')
     depends_on('lhapdf')
     depends_on('fastjet')
-    depends_on('py-six', when='@2.7.3.py3')
+    depends_on('py-six', when='@2.7.3.py3', type=('build', 'run'))
 
     depends_on('python@:2.7.999', when='@2.7.3.py2', type=('build', 'run'))
     conflicts('%gcc@10:', when='@2.7.3')

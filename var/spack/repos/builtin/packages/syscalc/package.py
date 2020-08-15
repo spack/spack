@@ -26,4 +26,4 @@ class Syscalc(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('sys_calc', prefix.bin)
-        install_tree('include', join_path(prefix, 'include'))
+        install_tree('include', prefix.include)
