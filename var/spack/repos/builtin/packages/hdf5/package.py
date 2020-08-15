@@ -391,10 +391,10 @@ HDF5 version {version} {version}
 
     def _test_example(self):
         """This test performs copy, dump, and diff on an example hdf5 file."""
-        h5_file = os.path.join(self.test_dir, 'data', 'spack.h5')
+        h5_file = os.path.join(self.test_dir.data.hdf5, 'spack.h5')
 
         reason = 'test: ensure h5dump produces expected output'
-        dump_file = os.path.join(self.test_dir, 'data', 'dump.out')
+        dump_file = os.path.join(self.test_dir.data.hdf5, 'dump.out')
         output = ''
         with open(dump_file) as fd:
             output == fd.read()
