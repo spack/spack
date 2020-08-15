@@ -63,7 +63,7 @@ class Ffmpeg(AutotoolsPackage):
     variant('sdl2', default=False, description='sdl2 support')
     variant('shared', default=True, description='build shared libraries')
 
-    depends_on('alsa-lib')
+    depends_on('alsa-lib', when='platform=linux')
     depends_on('libiconv')
     depends_on('yasm@1.2.0:')
     depends_on('zlib')
