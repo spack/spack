@@ -24,3 +24,4 @@ class Cppzmq(CMakePackage):
 
     depends_on('cmake@3.0.0:', type='build')
     depends_on('libzmq')
+    depends_on('libzmq@4.2.2', when='@4.2.2:4.2.3')
