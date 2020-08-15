@@ -451,6 +451,13 @@ class Root(CMakePackage):
     def setup_build_environment(self, env):
         spec = self.spec
 
+        # Directly expose the compiler to ROOT's build system
+        # instead of using the compiler wrappers.
+        # Otherwise cling won't set up the proper include paths 
+        # if the compiler is in a non-standard location.
+        env.set('CC', self.compiler.cc)
+        env.set('CXX', self.compiler.cxx)
+
         if 'lz4' in spec:
             env.append_path('CMAKE_PREFIX_PATH', spec['lz4'].prefix)
 
@@ -482,6 +489,7 @@ class Root(CMakePackage):
         if '+opengl' in spec:
             add_include_path('glew')
             add_include_path('mesa-glu')
+
 
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)
