@@ -22,6 +22,14 @@ class Xz(AutotoolsPackage, SourceforgePackage):
     version('5.2.2', sha256='6ff5f57a4b9167155e35e6da8b529de69270efb2b4cf3fbabf41a4ee793840b5')
     version('5.2.0', sha256='f7357d7455a1670229b3cca021da71dd5d13b789db62743c20624bdffc9cc4a5')
 
+    variant('pic', default=False,
+            description='Compile with position independent code.')
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags' and '+pic' in self.spec:
+            flags.append(self.compiler.cc_pic_flag)
+        return (flags, None, None)
+
     @property
     def libs(self):
         return find_libraries(['liblzma'], root=self.prefix, recursive=True)
