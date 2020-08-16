@@ -9,6 +9,7 @@ import re
 import sys
 
 import llnl.util.tty as tty
+import spack.architecture
 import spack.util.executable
 
 from spack.operating_systems.mac_os import macos_version, macos_sdk_path
@@ -280,17 +281,43 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     def filter_detected_exes(cls, prefix, exes_in_prefix):
         result = []
         for exe in exes_in_prefix:
-            # clang++ matches g++ -> clan[g++]
-            if any(x in exe for x in ('clang', 'ranlib')):
+            # On systems like Ubuntu we might get multiple executables
+            # with the string "gcc" in them. See:
+            # https://helpmanual.io/packages/apt/gcc/
+            basename = os.path.basename(exe)
+            substring_to_be_filtered = [
+                'c99-gcc',
+                'c89-gcc',
+                '-nm',
+                '-ar',
+                'ranlib',
+                'clang'  # clang++ matches g++ -> clan[g++]
+            ]
+            if any(x in basename for x in substring_to_be_filtered):
                 continue
-            # Filter out links in favor of real executables
-            if os.path.islink(exe):
+            # Filter out links in favor of real executables on
+            # all systems but Cray
+            host_platform = str(spack.architecture.platform())
+            if os.path.islink(exe) and host_platform != 'cray':
                 continue
+
             result.append(exe)
+
         return result
 
     @classmethod
     def determine_version(cls, exe):
+        try:
+            output = spack.compiler.get_compiler_version_output(
+                exe, '--version'
+            )
+        except Exception:
+            output = ''
+        # Apple's gcc is actually apple clang, so skip it.
+        # Users can add it manually to compilers.yaml at their own risk.
+        if 'Apple' in output:
+            return None
+
         version_regex = re.compile(r'([\d\.]+)')
         for vargs in ('-dumpfullversion', '-dumpversion'):
             try:
@@ -310,15 +337,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         languages, compilers = set(), {}
         for exe in exes:
             basename = os.path.basename(exe)
-            if 'gcc' in basename:
-                languages.add('c')
-                compilers['c'] = exe
-            elif 'g++' in basename:
+            if 'g++' in basename:
                 languages.add('c++')
                 compilers['cxx'] = exe
             elif 'gfortran' in basename:
                 languages.add('fortran')
                 compilers['fortran'] = exe
+            elif 'gcc' in basename:
+                languages.add('c')
+                compilers['c'] = exe
         variant_str = 'languages={0}'.format(','.join(languages))
         return variant_str, {'compilers': compilers}
 
@@ -345,7 +372,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('c', None)
-        return self.spec.prefix.bin.gcc if 'languages=c' in self.spec else None
+        result = None
+        if 'languages=c' in self.spec:
+            result = str(self.spec.prefix.bin.gcc)
+        return result
 
     @property
     def cxx(self):
@@ -366,7 +396,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             return self.spec.extra_attributes['compilers'].get('fortran', None)
         result = None
         if 'languages=fortran' in self.spec:
-            result = self.spec.prefix.bin.gfortran
+            result = str(self.spec.prefix.bin.gfortran)
         return result
 
     def url_for_version(self, version):
