@@ -76,7 +76,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     @when('@1.9-dev')
     def autoreconf(self, spec, prefix):
         Executable('./autogen.sh')()
-    
+
     def configure_args(self):
         spec = self.spec
         config_args = []
