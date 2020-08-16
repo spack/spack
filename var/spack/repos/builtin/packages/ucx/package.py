@@ -12,8 +12,12 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     homepage = "http://www.openucx.org"
     url      = "https://github.com/openucx/ucx/releases/download/v1.3.1/ucx-1.3.1.tar.gz"
+    git      = "https://github.com/openucx/ucx.git"
 
     maintainers = ['hppritcha']
+
+    # Development
+    version('1.9-dev', branch='v1.9.x')
 
     # Current
     version('1.8.1', sha256='a48820cb8d0761b5ccf3e7ba03a7c8c1dde6276017657178829e07ffc35b556a')
@@ -69,6 +73,10 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     configure_abs_path = 'contrib/configure-release'
 
+    @when('@1.9-dev')
+    def autoreconf(self, spec, prefix):
+        Executable('./autogen.sh')()
+    
     def configure_args(self):
         spec = self.spec
         config_args = []
