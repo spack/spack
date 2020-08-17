@@ -95,6 +95,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('nvptx',
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
+    variant('static_stage1',
+            default=False,
+            description='Use sysroot=/ and static libstdc++,libstdc for stage1')
 
     depends_on('flex', type='build', when='@master')
 
@@ -468,11 +471,20 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if spec.satisfies('+binutils'):
             binutils = spec['binutils'].prefix.bin
             options.extend([
-                '--with-sysroot=/',
                 '--with-gnu-ld',
                 '--with-ld=' + binutils.ld,
                 '--with-gnu-as',
                 '--with-as=' + binutils.join('as'),
+            ])
+        if spec.satisfies('+static_stage1'):
+            stage1_ldflags = str(self.rpath_args)
+            boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
+            if '%gcc' in spec:
+                stage1_ldflags = boot_ldflags
+            options.extend([
+                '--with-sysroot=/',
+                '--with-stage1-ldflags=' + stage1_ldflags,
+                '--with-boot-ldflags=' + boot_ldflags,
                 '--enable-bootstrap',
             ])
 
