@@ -90,7 +90,7 @@ class Timemory(CMakePackage):
     extends('python', when='+python')
     depends_on('python@3:', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('run'))
-    depends_on('py-pillow', when='+python', type=('run'))
+    depends_on('pil', when='+python', type=('run'))
     depends_on('py-matplotlib', when='+python', type=('run'))
     depends_on('mpi', when='+mpi')
     depends_on('tau', when='+tau')
