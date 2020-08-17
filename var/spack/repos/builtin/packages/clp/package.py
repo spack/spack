@@ -16,3 +16,21 @@ class Clp(AutotoolsPackage):
     version('1.16.11', sha256='b525451423a9a09a043e6a13d9436e13e3ee7a7049f558ad41a110742fa65f39')
 
     build_directory = 'spack-build'
+
+    def configure_args(self):
+        args = []
+        for d in [join_path('BuildTools', 'config.guess'),
+                  join_path('Clp', 'config.guess'),
+                  join_path('ThirdParty', 'ASL', 'config.guess'),
+                  join_path('ThirdParty', 'Blas', 'config.guess'),
+                  join_path('ThirdParty', 'Lapack', 'config.guess'),
+                  join_path('ThirdParty', 'Metis', 'config.guess'),
+                  join_path('ThirdParty', 'Mumps', 'config.guess'),
+                  join_path('ThirdParty', 'Glpk', 'config.guess'),
+                  join_path('Data', 'Netlib', 'config.guess'),
+                  join_path('Data', 'Sample', 'config.guess'),
+                  join_path('CoinUtils', 'config.guess'),
+                  join_path('Osi', 'config.guess')]:
+            copy('config.guess', d)
+
+        return args
