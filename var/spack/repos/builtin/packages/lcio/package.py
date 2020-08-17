@@ -72,3 +72,8 @@ class Lcio(CMakePackage):
             print('Error - Wrong version format provided')
             return
         return url
+        
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.set('LCIO', self.prefix)
+        env.set('PYTHONPATH', self.prefix.python)
+
