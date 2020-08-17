@@ -22,11 +22,16 @@ class Tangram(CMakePackage):
     version('1.0.1', sha256='8f2f8c01bb2d726b0f64e5a5bc3aa2bd8057ccaee7a29c68f1439d16e39aaa90')
     version('master', branch='master', submodules=True)
 
-    variant('mpi', default=True, description='Enable interface reconstruction on distributed meshes with MPI')
-    variant('thrust', default=False, description='Enable on-node parallelism using NVidia Thrust library')
-    variant('kokkos', default=False, description='Enable on-node or device parallelism with Kokkos')
-    variant('openmp', default=False, description="Enable on-node parallelism using OpenMP")
-    variant('cuda', default=False, description="Enable GPU parallelism using CUDA")
+    variant('mpi', default=True,
+            description='Enable interface reconstruction with MPI')
+    variant('thrust', default=False,
+            description='Enable on-node parallelism with NVidia Thrust library')
+    variant('kokkos', default=False,
+            description='Enable on-node or device parallelism with Kokkos')
+    variant('openmp', default=False,
+            description="Enable on-node parallelism using OpenMP")
+    variant('cuda', default=False,
+            description="Enable GPU parallelism using CUDA")
 
     # wrappers to enable external mesh/state libraries (needed only for testing)
     variant('jali', default=False,
