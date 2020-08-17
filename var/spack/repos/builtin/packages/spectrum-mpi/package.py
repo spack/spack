@@ -78,7 +78,10 @@ class SpectrumMpi(Package):
                     variant = "%" + str(compiler_spec)
                 else:
                     variant = ''
-                results.append((variant, {'compilers': compilers_found}))
+                # Use this variant when you need to define the compilers explicitly
+                #results.append((variant, {'compilers': compilers_found}))
+                # Otherwise, use this simpler attribute
+                results.append(variant)
             else:
                 results.append('')
         return results
