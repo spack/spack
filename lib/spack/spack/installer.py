@@ -699,7 +699,7 @@ class PackageInstaller(object):
         """Check the install status of the explicit spec's dependencies"""
 
         err = 'Cannot proceed with {0}: {1}'
-        for dep in self.spec.traverse(order='post', root=False):
+        for dep in self.pkg.spec.traverse(order='post', root=False):
             dep_pkg = dep.package
             dep_id = package_id(dep_pkg)
 
@@ -995,7 +995,7 @@ class PackageInstaller(object):
             'config:install_missing_compilers', False)
 
         if install_deps:
-            for dep in self.spec.traverse(order='post', root=False):
+            for dep in self.pkg.spec.traverse(order='post', root=False):
                 dep_pkg = dep.package
 
                 # First push any missing compilers (if requested)
@@ -1366,7 +1366,7 @@ class PackageInstaller(object):
         err = '' if exc is None else ': {0}'.format(str(exc))
         tty.debug('Flagging {0} as failed{1}'.format(pkg_id, err))
         if mark:
-            self.failed[pkg_id] = spack.store.db.mark_failed(task.spec)
+            self.failed[pkg_id] = spack.store.db.mark_failed(task.pkg.spec)
         else:
             self.failed[pkg_id] = None
         task.status = STATUS_FAILED
@@ -1626,13 +1626,6 @@ class PackageInstaller(object):
 
     install.__doc__ += install_args_docstring
 
-    # Helper method to "smooth" the transition from the
-    # spack.package.PackageBase class
-    @property
-    def spec(self):
-        """The specification associated with the package."""
-        return self.pkg.spec
-
 
 class BuildTask(object):
     """Class for representing the build task for a package."""
@@ -1689,7 +1682,7 @@ class BuildTask(object):
 
         # Set of dependents
         self.dependents = set(package_id(d.package) for d
-                              in self.spec.dependents())
+                              in self.pkg.spec.dependents())
 
         if parent and package_id(parent) not in self.dependents:
             tty.warn('{0} does not appear in the dependents of {1}'
@@ -1701,15 +1694,15 @@ class BuildTask(object):
         # if use traverse for transitive dependencies, then must remove
         # transitive dependents on failure.
         self.dependencies = set(package_id(d.package) for d in
-                                self.spec.dependencies() if
+                                self.pkg.spec.dependencies() if
                                 package_id(d.package) != self.pkg_id)
 
         # Handle bootstrapped compiler
         #
         # The bootstrapped compiler is not a dependency in the spec, but it is
         # a dependency of the build task. Here we add it to self.dependencies
-        compiler_spec = self.spec.compiler
-        arch_spec = self.spec.architecture
+        compiler_spec = self.pkg.spec.compiler
+        arch_spec = self.pkg.spec.architecture
         if not spack.compilers.compilers_for_spec(compiler_spec,
                                                   arch_spec=arch_spec):
             # The compiler is in the queue, identify it as dependency
@@ -1770,11 +1763,6 @@ class BuildTask(object):
     def priority(self):
         """The priority is based on the remaining uninstalled dependencies."""
         return len(self.uninstalled_deps)
-
-    @property
-    def spec(self):
-        """The specification associated with the package."""
-        return self.pkg.spec
 
 
 class InstallError(spack.error.SpackError):
