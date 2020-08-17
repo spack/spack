@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Viennarna(AutotoolsPackage):
@@ -43,8 +42,6 @@ class Viennarna(AutotoolsPackage):
         if 'python@3:' in self.spec:
             args.append('--with-python3')
 
-        d = find('src', 'config.guess', recursive=True)
-        target = os.path.dirname(d[0])
-        copy(join_path('.', 'config.guess'), join_path(target))
+        copy('config.guess', 'src/RNAforester/g2-0.72/config.guess')
 
         return args
