@@ -104,6 +104,16 @@ class Ffmpeg(AutotoolsPackage):
     conflicts('+libssh', when='@2.0.999:')
     conflicts('+libzmq', when='@:1.999.999')
 
+    @property
+    def libs(self):
+        return find_libraries('*', self.prefix, recursive=True)
+
+    @property
+    def headers(self):
+        headers = find_all_headers(self.prefix.include)
+        headers.directories = self.prefix.include
+        return headers
+
     def enable_or_disable_meta(self, variant, options):
         switch = 'enable' if '+{0}'.format(variant) in self.spec else 'disable'
         return ['--{0}-{1}'.format(switch, option) for option in options]
