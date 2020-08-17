@@ -24,30 +24,52 @@ class Spfft(CMakePackage, CudaPackage):
     variant('single_precision', default=False, description="Sinlge precision")
     variant('gpu_direct', default=False, description="GPU aware MPI")
     variant('static', default=False, description="build static library")
-    variant('cuda', default=False, description="CUDA")
     variant('fortran', default=False, description="enable fortran")
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
     depends_on('fftw-api@3')
     depends_on('mpi', when='+mpi')
 
+    # ROCM variants + dependencies
+    variant('rocm', default=False, description="Use ROCm backend")
+
+    amdgpu_targets = (
+        'gfx701', 'gfx801', 'gfx802', 'gfx803',
+        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
+        'gfx1011', 'gfx1012'
+    )
+
+    depends_on('rocfft', when='+rocm')
+    depends_on('hip', when='+rocm')
+    depends_on('hsakmt-roct', when='+rocm', type='link')
+    depends_on('hsa-rocr-dev', when='+rocm', type='link')
+    variant('amdgpu_target', default=('gfx803', 'gfx900', 'gfx906'), multi=True, values=amdgpu_targets)
+
     depends_on('cuda@:10', when='@:0.9.11 +cuda')
 
     def cmake_args(self):
+        spec = self.spec
         args = []
-        if self.spec.satisfies('+openmp'):
+        if spec.satisfies('+openmp'):
             args += ["-DSPFFT_OMP=On"]
-        if self.spec.satisfies('+mpi'):
+        if spec.satisfies('+mpi'):
             args += ["-DSPFFT_MPI=On"]
-        if self.spec.satisfies('+single_precision'):
+        if spec.satisfies('+single_precision'):
             args += ["-DSPFFT_SINGLE_PRECISION=On"]
-        if self.spec.satisfies('+gpu_direct'):
+        if spec.satisfies('+gpu_direct'):
             args += ["-DSPFFT_GPU_DIRECT=On"]
-        if self.spec.satisfies('+cuda'):
+        if spec.satisfies('+cuda'):
             args += ["-DSPFFT_GPU_BACKEND=CUDA"]
-        if self.spec.satisfies('+fortran'):
+        if spec.satisfies('+rocm'):
+            archs = ",".join(self.spec.variants['amdgpu_target'].value)
+            args += [
+                '-DSPFFT_GPU_BACKEND=ROCM',
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(archs)
+            ]
+        if spec.satisfies('+fortran'):
             args += ["-DSPFFT_FORTAN=On"]
-        if self.spec.satisfies('+static'):
+        if spec.satisfies('+static'):
             args += ["-DSPFFT_STATIC=On"]
 
         return args

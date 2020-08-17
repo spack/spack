@@ -15,7 +15,7 @@ class Root(CMakePackage):
     homepage = "https://root.cern.ch"
     url      = "https://root.cern/download/root_v6.16.00.source.tar.gz"
 
-    maintainers = ['chissg', 'HadrienG2', 'drbenmorgan']
+    maintainers = ['chissg', 'HadrienG2', 'drbenmorgan', 'vvolkl']
 
     # ###################### Versions ##########################
 
@@ -347,6 +347,7 @@ class Root(CMakePackage):
                 ['chirp', False],
                 ['cling', True],
                 ['cocoa', 'aqua'],
+                ['dataframe', True],
                 ['davix'],
                 ['dcache', False],
                 ['fftw3', 'fftw'],

@@ -551,6 +551,27 @@ packages:
     assert '# Another comment after the outdated section' in text
 
 
+@pytest.mark.regression('18050')
+def test_config_update_works_for_empty_paths(mutable_config):
+    # Create an outdated config file with empty "paths" and "modules"
+    scope = spack.config.default_modify_scope()
+    cfg_file = spack.config.config.get_config_filename(scope, 'packages')
+    with open(cfg_file, mode='w') as f:
+        f.write("""
+packages:
+  cmake:
+    paths: {}
+    modules: {}
+    buildable: False
+""")
+
+    # Try to update it, it should not raise errors
+    output = config('update', '-y', 'packages')
+
+    # This ensures that we updated the configuration
+    assert '[backup=' in output
+
+
 def check_update(data):
     """Check that the data from the packages_yaml_v015
     has been updated.
