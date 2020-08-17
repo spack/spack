@@ -3,12 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import platform
 from spack.architecture import Platform, Target
 from spack.architecture import OperatingSystem
 
 
 class Test(Platform):
     priority    = 1000000
+
+    if platform.system().lower() == 'darwin':
+        binary_formats = ['macho']
+
     front_end   = 'x86'
     back_end    = 'x86_64'
     default     = 'x86_64'
