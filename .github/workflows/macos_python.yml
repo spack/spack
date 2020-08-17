@@ -32,7 +32,7 @@ jobs:
       run: |
         . .github/workflows/install_spack.sh
         # 9.2.0 is the latest version on which we apply homebrew patch
-        spack install -v --fail-fast gcc@9.2.0 %apple-clang
+        spack install --fail-fast gcc@9.2.0 %apple-clang
 
   install_jupyter_clang:
     name: jupyter
@@ -47,7 +47,7 @@ jobs:
       run: |
         . .github/workflows/install_spack.sh
         spack config add packages:opengl:paths:opengl@4.1:/usr/X11R6
-        spack install -v --fail-fast py-jupyter %apple-clang
+        spack install --fail-fast py-jupyter %apple-clang
 
   install_scipy_clang:
     name: scipy, mpl, pd
@@ -60,9 +60,9 @@ jobs:
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
-        spack install -v --fail-fast py-scipy %apple-clang
-        spack install -v --fail-fast py-matplotlib %apple-clang
-        spack install -v --fail-fast py-pandas %apple-clang
+        spack install --fail-fast py-scipy %apple-clang
+        spack install --fail-fast py-matplotlib %apple-clang
+        spack install --fail-fast py-pandas %apple-clang
 
   install_mpi4py_clang:
     name: mpi4py, petsc4py
@@ -75,5 +75,5 @@ jobs:
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
-        spack install -v --fail-fast py-mpi4py %apple-clang
-        spack install -v --fail-fast py-petsc4py %apple-clang
+        spack install --fail-fast py-mpi4py %apple-clang
+        spack install --fail-fast py-petsc4py %apple-clang
