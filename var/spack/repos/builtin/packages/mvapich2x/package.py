@@ -15,11 +15,11 @@ class Mvapich2x(AutotoolsPackage):
     runtime. MVAPICH2-X is not installable from source and is only available
     through a binary mirror. If you do not find the binary you're looking for,
     send us an email at mvapich@cse.ohio-state.edu. The binary mirror url is:
-    http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2x/
+    http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2x/
     """
 
     homepage = "http://mvapich.cse.ohio-state.edu"
-    url      = "http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2x/mvapich2x-2.3.tar.gz"
+    url      = "http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2x/mvapich2x-2.3.tar.gz"
 
     maintainers = ['nithintsk', 'harisubramoni']
 
@@ -174,11 +174,11 @@ class Mvapich2x(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         if 'pmi_version=pmi1' in self.spec:
-            set('SLURM_MPI_TYPE', 'pmi1')
+            env.set('SLURM_MPI_TYPE', 'pmi1')
         if 'pmi_version=pmi2' in self.spec:
-            set('SLURM_MPI_TYPE', 'pmi2')
+            env.set('SLURM_MPI_TYPE', 'pmi2')
         if 'pmi_version=pmix' in self.spec:
-            set('SLURM_MPI_TYPE', 'pmix')
+            env.set('SLURM_MPI_TYPE', 'pmix')
 
         # Because MPI functions as a compiler, we need to treat it as one and
         # add its compiler paths to the run environment.
