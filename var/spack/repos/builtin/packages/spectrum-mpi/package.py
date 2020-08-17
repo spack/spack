@@ -48,7 +48,6 @@ class SpectrumMpi(Package):
         def get_spack_compiler_spec(compilers_found):
             # check using cc for now, as everyone should have that defined.
             path = os.path.dirname(compilers_found['cc'])
-            print("path:", path)
             spack_compilers = spack.compilers.find_compilers([path])
             actual_compiler = None
             # check if the compiler actually matches the one we want
@@ -74,7 +73,6 @@ class SpectrumMpi(Package):
                 if compilers_found:
                     break
             if compilers_found:
-                print(compilers_found)
                 compiler_spec = get_spack_compiler_spec(compilers_found)
                 if compiler_spec:
                     variant = "%" + str(compiler_spec)
