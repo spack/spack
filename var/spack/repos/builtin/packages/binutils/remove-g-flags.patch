@@ -1,0 +1,524 @@
+From 2913753ecabe155916ef3813f00e5bd4fbe576a4 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Mon, 17 Aug 2020 22:53:23 +0200
+Subject: [PATCH] Remove a lot of -g flags
+
+---
+ Makefile.tpl        |  2 +-
+ bfd/configure       |  8 ++++----
+ binutils/configure  |  8 ++++----
+ config/acinclude.m4 |  8 ++++----
+ configure           | 16 ++++++++--------
+ configure.ac        |  8 ++++----
+ gas/configure       |  8 ++++----
+ gold/configure      | 12 ++++++------
+ gprof/configure     |  8 ++++----
+ intl/configure      |  4 ++--
+ ld/Makefile.am      |  8 ++++----
+ ld/Makefile.in      |  8 ++++----
+ ld/configure        | 12 ++++++------
+ libctf/configure    |  8 ++++----
+ libiberty/configure |  4 ++--
+ libtool.m4          |  2 +-
+ opcodes/configure   |  8 ++++----
+ 17 files changed, 66 insertions(+), 66 deletions(-)
+
+diff --git a/Makefile.tpl b/Makefile.tpl
+index 5b118a8b..4211a09a 100644
+--- a/Makefile.tpl
++++ b/Makefile.tpl
+@@ -510,7 +510,7 @@ CXXFLAGS_FOR_TARGET = @CXXFLAGS_FOR_TARGET@
+ LIBCFLAGS_FOR_TARGET = $(CFLAGS_FOR_TARGET)
+ LIBCXXFLAGS_FOR_TARGET = $(CXXFLAGS_FOR_TARGET) -fno-implicit-templates
+ LDFLAGS_FOR_TARGET = @LDFLAGS_FOR_TARGET@
+-GOCFLAGS_FOR_TARGET = -O2 -g
++GOCFLAGS_FOR_TARGET = -O2
+ 
+ FLAGS_FOR_TARGET = @FLAGS_FOR_TARGET@
+ SYSROOT_CFLAGS_FOR_TARGET = @SYSROOT_CFLAGS_FOR_TARGET@
+diff --git a/bfd/configure b/bfd/configure
+index 9cba0719..f3c1106b 100755
+--- a/bfd/configure
++++ b/bfd/configure
+@@ -3417,9 +3417,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+@@ -5058,9 +5058,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+diff --git a/binutils/configure b/binutils/configure
+index 7880de68..ef0073d6 100755
+--- a/binutils/configure
++++ b/binutils/configure
+@@ -3402,9 +3402,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+@@ -4826,9 +4826,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+diff --git a/config/acinclude.m4 b/config/acinclude.m4
+index 8242b2c7..f90ea490 100644
+--- a/config/acinclude.m4
++++ b/config/acinclude.m4
+@@ -24,13 +24,13 @@ dnl normal versions of a library), tasteless as that idea is.
+   if test "$ac_test_CXXFLAGS" = set; then
+     CXXFLAGS="$ac_save_CXXFLAGS"
+   elif test $ac_cv_prog_cxx_g = yes; then
+-    CXXFLAGS="-g -O2"
++    CXXFLAGS="-O2"
+   else
+     CXXFLAGS="-O2"
+   fi
+ else
+   GXX=
+-  test "${CXXFLAGS+set}" = set || CXXFLAGS="-g"
++  test "${CXXFLAGS+set}" = set || CXXFLAGS=""
+ fi
+ ])
+ 
+@@ -121,13 +121,13 @@ dnl normal versions of a library), tasteless as that idea is.
+   if test "$ac_test_CFLAGS" = set; then
+     CFLAGS="$ac_save_CFLAGS"
+   elif test $ac_cv_prog_cc_g = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+     CFLAGS="-O2"
+   fi
+ else
+   GXX=
+-  test "${CFLAGS+set}" = set || CFLAGS="-g"
++  test "${CFLAGS+set}" = set || CFLAGS=""
+ fi
+ ])
+ 
+diff --git a/configure b/configure
+index 91dc42f6..e509600c 100755
+--- a/configure
++++ b/configure
+@@ -4719,9 +4719,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+@@ -5066,9 +5066,9 @@ if test "$ac_test_CXXFLAGS" = set; then
+   CXXFLAGS=$ac_save_CXXFLAGS
+ elif test $ac_cv_prog_cxx_g = yes; then
+   if test "$GXX" = yes; then
+-    CXXFLAGS="-g -O2"
++    CXXFLAGS="-O2"
+   else
+-    CXXFLAGS="-g"
++    CXXFLAGS=""
+   fi
+ else
+   if test "$GXX" = yes; then
+@@ -6941,7 +6941,7 @@ fi
+ # CFLAGS_FOR_TARGET and CXXFLAGS_FOR_TARGET.
+ if test "x$CFLAGS_FOR_TARGET" = x; then
+   if test "x${is_cross_compiler}" = xyes; then
+-    CFLAGS_FOR_TARGET="-g -O2"
++    CFLAGS_FOR_TARGET="-O2"
+   else
+     CFLAGS_FOR_TARGET=$CFLAGS
+     case " $CFLAGS " in
+@@ -6950,7 +6950,7 @@ if test "x$CFLAGS_FOR_TARGET" = x; then
+     esac
+     case " $CFLAGS " in
+       *" -g "* | *" -g3 "*) ;;
+-      *) CFLAGS_FOR_TARGET="-g $CFLAGS_FOR_TARGET" ;;
++      *) CFLAGS_FOR_TARGET="$CFLAGS_FOR_TARGET" ;;
+     esac
+   fi
+ fi
+@@ -6958,7 +6958,7 @@ fi
+ 
+ if test "x$CXXFLAGS_FOR_TARGET" = x; then
+   if test "x${is_cross_compiler}" = xyes; then
+-    CXXFLAGS_FOR_TARGET="-g -O2"
++    CXXFLAGS_FOR_TARGET="-O2"
+   else
+     CXXFLAGS_FOR_TARGET=$CXXFLAGS
+     case " $CXXFLAGS " in
+@@ -6967,7 +6967,7 @@ if test "x$CXXFLAGS_FOR_TARGET" = x; then
+     esac
+     case " $CXXFLAGS " in
+       *" -g "* | *" -g3 "*) ;;
+-      *) CXXFLAGS_FOR_TARGET="-g $CXXFLAGS_FOR_TARGET" ;;
++      *) CXXFLAGS_FOR_TARGET="$CXXFLAGS_FOR_TARGET" ;;
+     esac
+   fi
+ fi
+diff --git a/configure.ac b/configure.ac
+index 2e19ece8..cb473ae8 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -2338,7 +2338,7 @@ AC_SUBST(DEBUG_PREFIX_CFLAGS_FOR_TARGET)
+ # CFLAGS_FOR_TARGET and CXXFLAGS_FOR_TARGET.
+ if test "x$CFLAGS_FOR_TARGET" = x; then
+   if test "x${is_cross_compiler}" = xyes; then
+-    CFLAGS_FOR_TARGET="-g -O2"
++    CFLAGS_FOR_TARGET="-O2"
+   else
+     CFLAGS_FOR_TARGET=$CFLAGS
+     case " $CFLAGS " in
+@@ -2347,7 +2347,7 @@ if test "x$CFLAGS_FOR_TARGET" = x; then
+     esac
+     case " $CFLAGS " in
+       *" -g "* | *" -g3 "*) ;;
+-      *) CFLAGS_FOR_TARGET="-g $CFLAGS_FOR_TARGET" ;;
++      *) CFLAGS_FOR_TARGET="$CFLAGS_FOR_TARGET" ;;
+     esac
+   fi
+ fi
+@@ -2355,7 +2355,7 @@ AC_SUBST(CFLAGS_FOR_TARGET)
+ 
+ if test "x$CXXFLAGS_FOR_TARGET" = x; then
+   if test "x${is_cross_compiler}" = xyes; then
+-    CXXFLAGS_FOR_TARGET="-g -O2"
++    CXXFLAGS_FOR_TARGET="-O2"
+   else
+     CXXFLAGS_FOR_TARGET=$CXXFLAGS
+     case " $CXXFLAGS " in
+@@ -2364,7 +2364,7 @@ if test "x$CXXFLAGS_FOR_TARGET" = x; then
+     esac
+     case " $CXXFLAGS " in
+       *" -g "* | *" -g3 "*) ;;
+-      *) CXXFLAGS_FOR_TARGET="-g $CXXFLAGS_FOR_TARGET" ;;
++      *) CXXFLAGS_FOR_TARGET="$CXXFLAGS_FOR_TARGET" ;;
+     esac
+   fi
+ fi
+diff --git a/gas/configure b/gas/configure
+index 148af892..dcaf69f7 100755
+--- a/gas/configure
++++ b/gas/configure
+@@ -3218,9 +3218,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+@@ -4642,9 +4642,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+diff --git a/gold/configure b/gold/configure
+index 474c69a1..1218b50b 100755
+--- a/gold/configure
++++ b/gold/configure
+@@ -4150,9 +4150,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+@@ -5928,9 +5928,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+@@ -6462,9 +6462,9 @@ if test "$ac_test_CXXFLAGS" = set; then
+   CXXFLAGS=$ac_save_CXXFLAGS
+ elif test $ac_cv_prog_cxx_g = yes; then
+   if test "$GXX" = yes; then
+-    CXXFLAGS="-g -O2"
++    CXXFLAGS="-O2"
+   else
+-    CXXFLAGS="-g"
++    CXXFLAGS=""
+   fi
+ else
+   if test "$GXX" = yes; then
+diff --git a/gprof/configure b/gprof/configure
+index 727cd725..1ee14006 100755
+--- a/gprof/configure
++++ b/gprof/configure
+@@ -3061,9 +3061,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+@@ -4488,9 +4488,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+diff --git a/intl/configure b/intl/configure
+index 2f359931..fd0c1f5a 100755
+--- a/intl/configure
++++ b/intl/configure
+@@ -2888,9 +2888,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+diff --git a/ld/Makefile.am b/ld/Makefile.am
+index 4a9b8404..ada36585 100644
+--- a/ld/Makefile.am
++++ b/ld/Makefile.am
+@@ -999,16 +999,16 @@ if ENABLE_PLUGINS
+ noinst_LTLIBRARIES = libldtestplug.la libldtestplug2.la \
+ 		     libldtestplug3.la libldtestplug4.la
+ libldtestplug_la_SOURCES = testplug.c
+-libldtestplug_la_CFLAGS= -g -O2
++libldtestplug_la_CFLAGS= -O2
+ libldtestplug_la_LDFLAGS = -no-undefined -rpath /nowhere
+ libldtestplug2_la_SOURCES = testplug2.c
+-libldtestplug2_la_CFLAGS= -g -O2
++libldtestplug2_la_CFLAGS= -O2
+ libldtestplug2_la_LDFLAGS = -no-undefined -rpath /nowhere
+ libldtestplug3_la_SOURCES = testplug3.c
+-libldtestplug3_la_CFLAGS= -g -O2
++libldtestplug3_la_CFLAGS= -O2
+ libldtestplug3_la_LDFLAGS = -no-undefined -rpath /nowhere
+ libldtestplug4_la_SOURCES = testplug4.c
+-libldtestplug4_la_CFLAGS= -g -O2
++libldtestplug4_la_CFLAGS= -O2
+ libldtestplug4_la_LDFLAGS = -no-undefined -rpath /nowhere
+ endif
+ 
+diff --git a/ld/Makefile.in b/ld/Makefile.in
+index 46d9b140..13dfd9cf 100644
+--- a/ld/Makefile.in
++++ b/ld/Makefile.in
+@@ -1019,16 +1019,16 @@ ld_new_LDADD = $(EMULATION_OFILES) $(EMUL_EXTRA_OFILES) $(BFDLIB) $(LIBCTF) $(LI
+ @ENABLE_PLUGINS_TRUE@		     libldtestplug3.la libldtestplug4.la
+ 
+ @ENABLE_PLUGINS_TRUE@libldtestplug_la_SOURCES = testplug.c
+-@ENABLE_PLUGINS_TRUE@libldtestplug_la_CFLAGS = -g -O2
++@ENABLE_PLUGINS_TRUE@libldtestplug_la_CFLAGS = -O2
+ @ENABLE_PLUGINS_TRUE@libldtestplug_la_LDFLAGS = -no-undefined -rpath /nowhere
+ @ENABLE_PLUGINS_TRUE@libldtestplug2_la_SOURCES = testplug2.c
+-@ENABLE_PLUGINS_TRUE@libldtestplug2_la_CFLAGS = -g -O2
++@ENABLE_PLUGINS_TRUE@libldtestplug2_la_CFLAGS = -O2
+ @ENABLE_PLUGINS_TRUE@libldtestplug2_la_LDFLAGS = -no-undefined -rpath /nowhere
+ @ENABLE_PLUGINS_TRUE@libldtestplug3_la_SOURCES = testplug3.c
+-@ENABLE_PLUGINS_TRUE@libldtestplug3_la_CFLAGS = -g -O2
++@ENABLE_PLUGINS_TRUE@libldtestplug3_la_CFLAGS = -O2
+ @ENABLE_PLUGINS_TRUE@libldtestplug3_la_LDFLAGS = -no-undefined -rpath /nowhere
+ @ENABLE_PLUGINS_TRUE@libldtestplug4_la_SOURCES = testplug4.c
+-@ENABLE_PLUGINS_TRUE@libldtestplug4_la_CFLAGS = -g -O2
++@ENABLE_PLUGINS_TRUE@libldtestplug4_la_CFLAGS = -O2
+ @ENABLE_PLUGINS_TRUE@libldtestplug4_la_LDFLAGS = -no-undefined -rpath /nowhere
+ MAINTAINERCLEANFILES = configdoc.texi ld.1 ld.info
+ 
+diff --git a/ld/configure b/ld/configure
+index 27b43415..fad39467 100755
+--- a/ld/configure
++++ b/ld/configure
+@@ -3497,9 +3497,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+@@ -4944,9 +4944,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+@@ -5350,9 +5350,9 @@ if test "$ac_test_CXXFLAGS" = set; then
+   CXXFLAGS=$ac_save_CXXFLAGS
+ elif test $ac_cv_prog_cxx_g = yes; then
+   if test "$GXX" = yes; then
+-    CXXFLAGS="-g -O2"
++    CXXFLAGS="-O2"
+   else
+-    CXXFLAGS="-g"
++    CXXFLAGS=""
+   fi
+ else
+   if test "$GXX" = yes; then
+diff --git a/libctf/configure b/libctf/configure
+index e5493b31..8fef1cdf 100755
+--- a/libctf/configure
++++ b/libctf/configure
+@@ -2997,9 +2997,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+@@ -4854,9 +4854,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+diff --git a/libiberty/configure b/libiberty/configure
+index 7a34dabe..008c100f 100755
+--- a/libiberty/configure
++++ b/libiberty/configure
+@@ -3691,9 +3691,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+diff --git a/libtool.m4 b/libtool.m4
+index 43453005..d1b698b3 100644
+--- a/libtool.m4
++++ b/libtool.m4
+@@ -7052,7 +7052,7 @@ AC_DEFUN([LT_PROG_GCJ],
+ [m4_ifdef([AC_PROG_GCJ], [AC_PROG_GCJ],
+   [m4_ifdef([A][M_PROG_GCJ], [A][M_PROG_GCJ],
+     [AC_CHECK_TOOL(GCJ, gcj,)
+-      test "x${GCJFLAGS+set}" = xset || GCJFLAGS="-g -O2"
++      test "x${GCJFLAGS+set}" = xset || GCJFLAGS="-O2"
+       AC_SUBST(GCJFLAGS)])])[]dnl
+ ])
+ 
+diff --git a/opcodes/configure b/opcodes/configure
+index 6bae87d2..ca34ae83 100755
+--- a/opcodes/configure
++++ b/opcodes/configure
+@@ -3127,9 +3127,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+@@ -4551,9 +4551,9 @@ if test "$ac_test_CFLAGS" = set; then
+   CFLAGS=$ac_save_CFLAGS
+ elif test $ac_cv_prog_cc_g = yes; then
+   if test "$GCC" = yes; then
+-    CFLAGS="-g -O2"
++    CFLAGS="-O2"
+   else
+-    CFLAGS="-g"
++    CFLAGS=""
+   fi
+ else
+   if test "$GCC" = yes; then
+-- 
+2.25.1
+

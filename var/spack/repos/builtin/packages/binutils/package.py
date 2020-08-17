@@ -41,6 +41,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
+    patch('remove-g-flags.patch', when='@2.33:')
 
     depends_on('zlib')
     depends_on('gettext', when='+nls')
