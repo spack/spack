@@ -97,7 +97,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             description='Target nvptx offloading to NVIDIA GPUs')
     variant('static_stage1',
             default=False,
-            description='Use sysroot=/ and static libstdc++,libstdc for stage1')
+            description='Use static libstdc++,libstdc for stage1')
 
     depends_on('flex', type='build', when='@master')
 
