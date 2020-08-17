@@ -25,7 +25,7 @@ class Tangram(CMakePackage):
     variant('mpi', default=True,
             description='Enable interface reconstruction with MPI')
     variant('thrust', default=False,
-            description='Enable on-node parallelism with NVidia Thrust library')
+            description='Enable on-node parallelism with NVidia Thrust')
     variant('kokkos', default=False,
             description='Enable on-node or device parallelism with Kokkos')
     variant('openmp', default=False,
@@ -33,7 +33,7 @@ class Tangram(CMakePackage):
     variant('cuda', default=False,
             description="Enable GPU parallelism using CUDA")
 
-    # wrappers to enable external mesh/state libraries (needed only for testing)
+    # wrappers to enable external mesh/state libraries (only for testing)
     variant('jali', default=False,
             description='Build with Jali mesh infrastructure (for testing)')
 
