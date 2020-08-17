@@ -44,11 +44,15 @@ class Ocaml(Package):
         if self.spec.satisfies('~force-safe-string'):
             base_args += ['--disable-force-safe-string']
 
+        # This patch is aarch64-linux-fj only.
+        # However, similar patch is needed for other arch/OS/compiler
+        # to use correct assembler. (See #17918)
         if self.spec.satisfies('%fj'):
             filter_file(
-                'clang -c -Wno-trigraphs',
-                spack_cc + ' -c -Wno-trigraphs',
-                'configure'
+                '${toolpref}clang -c -Wno-trigraphs',
+                spack_cc + ' -c',
+                'configure',
+                string=True
             )
 
         configure(*(base_args))
