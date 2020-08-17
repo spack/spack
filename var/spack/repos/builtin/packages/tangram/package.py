@@ -29,13 +29,14 @@ class Tangram(CMakePackage):
     variant('cuda', default=False, description="Enable GPU parallelism using CUDA")
 
     # wrappers to enable external mesh/state libraries (needed only for testing)
-    variant('jali', default=False, description='Build with Jali mesh infrastructure (for testing)')
-    
+    variant('jali', default=False,
+            description='Build with Jali mesh infrastructure (for testing)')
+
     # Don't enable Kokkos and Thrust simultaneously
     conflicts('+jali~mpi')    # Jali needs MPI
     conflicts('+thrust +cuda')  # We don't have Thrust with CUDA working yet
     conflicts('+thrust +kokkos')  # Don't enable Kokkos, Thrust simultaneously
- 
+
     # dependencies
     depends_on('cmake@3.13:', type='build')
 
