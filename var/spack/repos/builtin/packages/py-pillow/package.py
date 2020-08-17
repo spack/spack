@@ -53,6 +53,8 @@ class PyPillowBase(PythonPackage):
     depends_on('libxcb', when='+xcb')
 
     conflicts('+webpmux', when='~webp', msg='Webpmux relies on WebP support')
+    conflicts('+imagequant', when='@:3.2', msg='imagequant support was added in 3.3')
+    conflicts('+xcb', when='@:7.0', msg='XCB support was added in 7.1')
 
     phases = ['build_ext', 'install']
 
@@ -73,15 +75,21 @@ class PyPillowBase(PythonPackage):
         setup.filter('include_dirs = []',
                      'include_dirs = {0}'.format(include_dirs), string=True)
 
-        def variant_to_cfg(setup):
+        def variant_to_cfg(variant):
             able = 'enable' if '+' + variant in self.spec else 'disable'
             return '{0}-{1}=1\n'.format(able, variant)
 
         with open('setup.cfg', 'a') as setup:
-            # Default backend
             setup.write('[build_ext]\n')
-            for variant in self.spec.variants.keys():
-                setup.write(variant_to_cfg(setup))
+            variants = list(self.spec.variants)
+
+            if self.spec.satisfies('@:7.0'):
+                variants.remove('xcb')
+            if self.spec.satisfies('@:3.2'):
+                variants.remove('imagequant')
+
+            for variant in variants:
+                setup.write(variant_to_cfg(variant))
 
             setup.write('rpath={0}\n'.format(':'.join(self.rpath)))
             setup.write('[install]\n')
