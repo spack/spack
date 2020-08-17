@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+import re
+import os
 from spack import *
 
 
@@ -15,6 +17,8 @@ class Git(AutotoolsPackage):
 
     homepage = "http://git-scm.com"
     url      = "https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.12.0.tar.gz"
+
+    executables = ['^git$']
 
     # In order to add new versions here, add a new list entry with:
     # * version: {version}
@@ -205,6 +209,22 @@ class Git(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('tk',       type=('build', 'link'), when='+tcltk')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'git version (\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        prefix = os.path.dirname(exes[0])
+        variants = ''
+        if 'gitk' in os.listdir(prefix):
+            variants += '+tcltk'
+        else:
+            variants += '~tcltk'
+        return variants
 
     # See the comment in setup_build_environment re EXTLIBS.
     def patch(self):

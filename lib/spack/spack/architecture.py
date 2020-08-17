@@ -233,10 +233,14 @@ class Platform(object):
         Will return a instance of it once it is returned.
     """
 
-    priority        = None  # Subclass sets number. Controls detection order
+    priority        = None   # Subclass sets number. Controls detection order
+
+    #: binary formats used on this platform; used by relocation logic
+    binary_formats  = ['elf']
+
     front_end       = None
     back_end        = None
-    default         = None  # The default back end target. On cray ivybridge
+    default         = None   # The default back end target. On cray ivybridge
 
     front_os        = None
     back_os         = None

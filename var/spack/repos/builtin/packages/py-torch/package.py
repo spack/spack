@@ -195,6 +195,22 @@ class PyTorch(PythonPackage, CudaPackage):
     # Only run once to speed up build times
     phases = ['install']
 
+    @property
+    def libs(self):
+        root = join_path(
+            self.prefix, self.spec['python'].package.site_packages_dir,
+            'torch', 'lib')
+        return find_libraries('libtorch', root)
+
+    @property
+    def headers(self):
+        root = join_path(
+            self.prefix, self.spec['python'].package.site_packages_dir,
+            'torch', 'include')
+        headers = find_all_headers(root)
+        headers.directories = root
+        return headers
+
     def setup_build_environment(self, env):
         def enable_or_disable(variant, keyword='USE', var=None, newer=False):
             """Set environment variable to enable or disable support for a
