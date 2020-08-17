@@ -244,7 +244,7 @@ class Root(CMakePackage):
     depends_on('vc',        when='+vc')
     depends_on('vdt',       when='+vdt')
     depends_on('libxml2',   when='+xml')
-    depends_on('xrootd',    when='+xrootd')
+    depends_on('xrootd@:4.99.99',    when='+xrootd')
 
     # ###################### Conflicts ######################
 
