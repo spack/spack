@@ -10,6 +10,8 @@ class PyPillowSimd(PyPillowBase):
     """Pillow-SIMD is a SIMD-enabled fork of Pillow. It is usually 4-6x
     faster than the original Pillow in image processing benchmarks."""
 
+    # See https://github.com/spack/spack/pull/15566
+    _name = 'py-pillow-simd'
     homepage = "https://github.com/uploadcare/pillow-simd"
     url      = "https://pypi.io/packages/source/P/Pillow-SIMD/Pillow-SIMD-7.0.0.post3.tar.gz"
 
