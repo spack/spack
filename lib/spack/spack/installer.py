@@ -80,6 +80,37 @@ STATUS_DEQUEUED = 'dequeued'
 STATUS_REMOVED = 'removed'
 
 
+def _check_phase(pkg, **kwargs):
+    """
+    Ensures the specified package has a valid last phase before proceeding
+    with its installation.
+
+    The ``stop_before`` or ``stop_at`` arguments are removed from the
+    installation arguments.
+
+    The last phase is also set to None if it is the last phase of the
+    package already.
+
+    Args:
+        pkg (PackageBase): the package being installed
+        kwargs:
+          ``stop_before`` (str or None): stop before execution of this phase
+          ``stop_at`` (str or None): last installation phase to be executed
+    """
+    pkg.stop_before_phase = kwargs.pop('stop_before', None)
+    if pkg.stop_before_phase and pkg.stop_before_phase not in pkg.phases:
+        tty.die('\'{0}\' is not an allowed phase for package {1}'
+                .format(pkg.stop_before_phase, pkg.name))
+
+    pkg.last_phase = kwargs.pop('stop_at', None)
+    if pkg.last_phase and pkg.last_phase not in pkg.phases:
+        tty.die('\'{0}\' is not an allowed phase for package {1}'
+                .format(pkg.last_phase, pkg.name))
+    # If we got a last_phase, make sure it's not already last
+    if pkg.last_phase and pkg.last_phase == pkg.phases[-1]:
+        pkg.last_phase = None
+
+
 def _handle_external_and_upstream(pkg, explicit):
     """
     Determine if the package is external or upstream and register it in the
@@ -695,11 +726,16 @@ class PackageInstaller(object):
             installed_in_db = False
         return rec, installed_in_db
 
-    def _check_deps_status(self):
-        """Check the install status of the explicit spec's dependencies"""
+    def _check_deps_status(self, spec):
+        """Check the install status of the explicit spec's dependencies
+
+        Args:
+            spec (Spec): the explicit spec to be installed
+        """
+        pkg_id = package_id(spec.package)
 
         err = 'Cannot proceed with {0}: {1}'
-        for dep in self.pkg.spec.traverse(order='post', root=False):
+        for dep in spec.traverse(order='post', root=False):
             dep_pkg = dep.package
             dep_id = package_id(dep_pkg)
 
@@ -708,7 +744,7 @@ class PackageInstaller(object):
                 action = "'spack install' the dependency"
                 msg = '{0} is marked as an install failure: {1}' \
                     .format(dep_id, action)
-                raise InstallError(err.format(self.pkg_id, msg))
+                raise InstallError(err.format(pkg_id, msg))
 
             # Attempt to get a write lock to ensure another process does not
             # uninstall the dependency while the requested spec is being
@@ -716,7 +752,7 @@ class PackageInstaller(object):
             ltype, lock = self._ensure_locked('write', dep_pkg)
             if lock is None:
                 msg = '{0} is write locked by another process'.format(dep_id)
-                raise InstallError(err.format(self.pkg_id, msg))
+                raise InstallError(err.format(pkg_id, msg))
 
             # Flag external and upstream packages as being installed
             if dep_pkg.spec.external or dep_pkg.installed_upstream:
@@ -791,38 +827,6 @@ class PackageInstaller(object):
             # installed.
             if not keep_stage:
                 task.pkg.stage.destroy()
-
-    def _check_last_phase(self, **kwargs):
-        """
-        Ensures the package being installed has a valid last phase before
-        proceeding with the installation.
-
-        The ``stop_before`` or ``stop_at`` arguments are removed from the
-        installation arguments.
-
-        The last phase is also set to None if it is the last phase of the
-        package already
-
-        Args:
-            kwargs:
-              ``stop_before``': stop before execution of this phase (or None)
-              ``stop_at``': last installation phase to be executed (or None)
-        """
-        self.pkg.stop_before_phase = kwargs.pop('stop_before', None)
-        if self.pkg.stop_before_phase is not None and \
-           self.pkg.stop_before_phase not in self.pkg.phases:
-            tty.die('\'{0}\' is not an allowed phase for package {1}'
-                    .format(self.pkg.stop_before_phase, self.pkg.name))
-
-        self.pkg.last_phase = kwargs.pop('stop_at', None)
-        if self.pkg.last_phase is not None and \
-                self.pkg.last_phase not in self.pkg.phases:
-            tty.die('\'{0}\' is not an allowed phase for package {1}'
-                    .format(self.pkg.last_phase, self.pkg.name))
-        # If we got a last_phase, make sure it's not already last
-        if self.pkg.last_phase and \
-                self.pkg.last_phase == self.pkg.phases[-1]:
-            self.pkg.last_phase = None
 
     def _cleanup_all_tasks(self):
         """Cleanup all build tasks to include releasing their locks."""
@@ -980,22 +984,24 @@ class PackageInstaller(object):
         self.locks[pkg_id] = (lock_type, lock)
         return self.locks[pkg_id]
 
-    def _init_queue(self, install_deps, install_package):
+    def _init_queue(self, pkg, install_deps, install_package):
         """
         Initialize the build task priority queue and spec state.
 
         Args:
+            pkg (Package): package to be installed
             install_deps (bool): ``True`` if installing package dependencies,
                 otherwise ``False``
             install_package (bool): ``True`` if installing the package,
                 otherwise ``False``
         """
-        tty.debug('Initializing the build queue for {0}'.format(self.pkg.name))
+        tty.debug('Initializing the build queue for {0}'.format(pkg.name))
         install_compilers = spack.config.get(
             'config:install_missing_compilers', False)
 
+        pkg_id = package_id(pkg)
         if install_deps:
-            for dep in self.pkg.spec.traverse(order='post', root=False):
+            for dep in pkg.spec.traverse(order='post', root=False):
                 dep_pkg = dep.package
 
                 # First push any missing compilers (if requested)
@@ -1003,8 +1009,7 @@ class PackageInstaller(object):
                     self._add_bootstrap_compilers(dep_pkg)
 
                 if package_id(dep_pkg) not in self.build_tasks:
-                    self._push_task(dep_pkg, self.pkg, False, 0, 0,
-                                    STATUS_ADDED)
+                    self._push_task(dep_pkg, pkg, False, 0, 0, STATUS_ADDED)
 
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
@@ -1014,19 +1019,19 @@ class PackageInstaller(object):
             # Push any missing compilers (if requested) as part of the
             # package dependencies.
             if install_compilers:
-                self._add_bootstrap_compilers(self.pkg)
+                self._add_bootstrap_compilers(pkg)
 
-        if install_package and self.pkg_id not in self.build_tasks:
+        if install_package and pkg_id not in self.build_tasks:
             # Be sure to clear any previous failure
-            spack.store.db.clear_failure(self.pkg.spec, force=True)
+            spack.store.db.clear_failure(pkg.spec, force=True)
 
             # If not installing dependencies, then determine their
             # installation status before proceeding
             if not install_deps:
-                self._check_deps_status()
+                self._check_deps_status(pkg.spec)
 
             # Now add the package itself, if appropriate
-            self._push_task(self.pkg, None, False, 0, 0, STATUS_ADDED)
+            self._push_task(pkg, None, False, 0, 0, STATUS_ADDED)
 
     def _install_task(self, task, **kwargs):
         """
@@ -1432,7 +1437,7 @@ class PackageInstaller(object):
 
         # Ensure not attempting to perform an installation when user didn't
         # want to go that far.
-        self._check_last_phase(**kwargs)
+        _check_phase(self.pkg, **kwargs)
 
         # Skip out early if the spec is not being installed locally (i.e., if
         # external or upstream).
@@ -1441,7 +1446,7 @@ class PackageInstaller(object):
             return
 
         # Initialize the build task queue
-        self._init_queue(install_deps, install_package)
+        self._init_queue(self.pkg, install_deps, install_package)
 
         # Proceed with the installation
         while self.build_pq:
@@ -1510,8 +1515,7 @@ class PackageInstaller(object):
                 continue
 
             # Determine state of installation artifacts and adjust accordingly.
-            self._prepare_for_install(task, keep_prefix, keep_stage,
-                                      restage)
+            self._prepare_for_install(task, keep_prefix, keep_stage, restage)
 
             # Flag an already installed package
             if pkg_id in self.installed:

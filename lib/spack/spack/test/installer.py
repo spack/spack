@@ -240,13 +240,19 @@ def test_installer_str(install_mockery):
     assert "failed (0)" in istr
 
 
-def test_installer_last_phase_error(install_mockery, capsys):
-    spec = spack.spec.Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
+def test_check_before_phase_error(install_mockery, capsys):
+    pkg = spack.repo.get('trivial-install-test-package')
     with pytest.raises(SystemExit):
-        installer = inst.PackageInstaller(spec.package)
-        installer.install(stop_at='badphase')
+        inst._check_phase(pkg, stop_before='badphase')
+
+    captured = capsys.readouterr()
+    assert 'is not an allowed phase' in str(captured)
+
+
+def test_check_last_phase_error(install_mockery, capsys):
+    pkg = spack.repo.get('trivial-install-test-package')
+    with pytest.raises(SystemExit):
+        inst._check_phase(pkg, stop_at='badphase')
 
     captured = capsys.readouterr()
     assert 'is not an allowed phase' in str(captured)
@@ -531,7 +537,7 @@ def test_check_deps_status_install_failure(install_mockery, monkeypatch):
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
 
     with pytest.raises(inst.InstallError, match='install failure'):
-        installer._check_deps_status()
+        installer._check_deps_status(spec)
 
 
 def test_check_deps_status_write_locked(install_mockery, monkeypatch):
@@ -541,7 +547,7 @@ def test_check_deps_status_write_locked(install_mockery, monkeypatch):
     monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked', _not_locked)
 
     with pytest.raises(inst.InstallError, match='write locked by another'):
-        installer._check_deps_status()
+        installer._check_deps_status(spec)
 
 
 def test_check_deps_status_external(install_mockery, monkeypatch):
@@ -549,7 +555,7 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
 
     # Mock the known dependent, b, as external so assumed to be installed
     monkeypatch.setattr(spack.spec.Spec, 'external', True)
-    installer._check_deps_status()
+    installer._check_deps_status(spec)
     assert 'b' in installer.installed
 
 
@@ -558,7 +564,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
 
     # Mock the known dependent, b, as installed upstream
     monkeypatch.setattr(spack.package.PackageBase, 'installed_upstream', True)
-    installer._check_deps_status()
+    installer._check_deps_status(spec)
     assert 'b' in installer.installed
 
 
@@ -592,7 +598,7 @@ def test_installer_init_queue(install_mockery):
     """Test of installer queue functions."""
     with spack.config.override('config:install_missing_compilers', True):
         spec, installer = create_installer('dependent-install')
-        installer._init_queue(True, True)
+        installer._init_queue(spec.package, True, True)
 
         ids = list(installer.build_tasks)
         assert len(ids) == 2
