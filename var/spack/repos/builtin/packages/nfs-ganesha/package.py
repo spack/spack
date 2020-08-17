@@ -22,6 +22,8 @@ class NfsGanesha(CMakePackage):
     depends_on('flex',  type='build')
     depends_on('userspace-rcu')
     depends_on('ntirpc')
+    depends_on('krb5')
+    depends_on('py-stsci-distutils')
 
     root_cmakelists_dir = 'src'
 
