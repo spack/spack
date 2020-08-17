@@ -461,7 +461,7 @@ def log(pkg):
     Copy provenance into the install directory on success
 
     Args:
-        pkg (Package): the package that was installed and built
+        pkg (Package): the package that was built and installed
     """
     packages_dir = spack.store.layout.build_packages_path(pkg.spec)
 
@@ -1328,7 +1328,7 @@ class PackageInstaller(object):
         Create and ensure proper access controls for the install directory.
 
         Args:
-            pkg (Package): the package to be installed and built
+            pkg (Package): the package to be built and installed
         """
         if not os.path.exists(pkg.spec.prefix):
             tty.verbose('Creating the installation directory {0}'
@@ -1643,7 +1643,7 @@ class BuildTask(object):
         Instantiate a build task for a package.
 
         Args:
-            pkg (Package): the package to be installed and built
+            pkg (Package): the package to be built and installed
             parent (Package or None): the package user requested or ``None`` if
                 the user explicitly requested the package
             compiler (bool): whether task is for a bootstrap compiler
