@@ -26,12 +26,10 @@ class Fontconfig(AutotoolsPackage):
     def setup_build_environment(self, spack_env):
         spack_env.set(
             "FREETYPE_CFLAGS",
-            "-I{0}/include/freetype2".format(
-                self.spec['freetype'].prefix))
+            self.spec['freetype'].headers.include_flags)
         spack_env.set(
             "FREETYPE_LIBS",
-            "-L{0}/lib -lfreetype".format(
-                self.spec['freetype'].prefix))
+            self.spec['freetype'].libs.ld_flags)
 
     def configure_args(self):
         font_path = join_path(self.spec['font-util'].prefix, 'share', 'fonts')
