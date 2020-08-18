@@ -74,9 +74,9 @@ class Tangram(CMakePackage):
             options.append('-DTANGRAM_ENABLE_THRUST=OFF')
 
         if '+kokkos' in self.spec:
-            options.append('-DWONTON_ENABLE_Kokkos=ON')
+            options.append('-DTANGRAM_ENABLE_Kokkos=ON')
         else:
-            options.append('-DWONTON_ENABLE_Kokkos=OFF')
+            options.append('-DTANGRAM_ENABLE_Kokkos=OFF')
 
         # Unit test variant
         if self.run_tests:
