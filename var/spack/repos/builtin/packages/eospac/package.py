@@ -30,6 +30,7 @@ class Eospac(Package):
 
     # This patch allows the use of spack's compile wrapper 'flang'
     patch('flang.patch', when='@:6.4.0beta.2%clang')
+    patch('frt.patch', when='%fj')
 
     def install(self, spec, prefix):
         with working_dir('Source'):

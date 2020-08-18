@@ -224,6 +224,75 @@ class Python(AutotoolsPackage):
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
 
+    executables = [r'^python[\d.]*[mw]?$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        # Newer versions of Python support `--version`,
+        # but older versions only support `-V`
+        # Python 2 sends to STDERR, while Python 3 sends to STDOUT
+        # Output looks like:
+        #   Python 3.7.7
+        output = Executable(exe)('-V', output=str, error=str)
+        match = re.search(r'Python\s+(\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        python = Executable(exes[0])
+
+        variants = ''
+        for module in ['readline', 'sqlite3', 'dbm', 'nis',
+                       'zlib', 'bz2', 'lzma', 'ctypes', 'uuid']:
+            try:
+                python('-c', 'import ' + module, error=os.devnull)
+                variants += '+' + module
+            except ProcessError:
+                variants += '~' + module
+
+        # Some variants enable multiple modules
+        try:
+            python('-c', 'import ssl', error=os.devnull)
+            python('-c', 'import hashlib', error=os.devnull)
+            variants += '+ssl'
+        except ProcessError:
+            variants += '~ssl'
+
+        try:
+            python('-c', 'import xml.parsers.expat', error=os.devnull)
+            python('-c', 'import xml.etree.ElementTree', error=os.devnull)
+            variants += '+pyexpat'
+        except ProcessError:
+            variants += '~pyexpat'
+
+        # Some modules changed names in Python 3
+        if Version(version_str) >= Version('3'):
+            try:
+                python('-c', 'import tkinter', error=os.devnull)
+                variants += '+tkinter'
+            except ProcessError:
+                variants += '~tkinter'
+
+            try:
+                python('-c', 'import tkinter.tix', error=os.devnull)
+                variants += '+tix'
+            except ProcessError:
+                variants += '~tix'
+        else:
+            try:
+                python('-c', 'import Tkinter', error=os.devnull)
+                variants += '+tkinter'
+            except ProcessError:
+                variants += '~tkinter'
+
+            try:
+                python('-c', 'import Tix', error=os.devnull)
+                variants += '+tix'
+            except ProcessError:
+                variants += '~tix'
+
+        return variants
+
     def url_for_version(self, version):
         url = "https://www.python.org/ftp/python/{0}/Python-{1}.tgz"
         return url.format(re.split('[a-z]', str(version))[0], version)
@@ -605,6 +674,13 @@ class Python(AutotoolsPackage):
             # Ensure that uuid module works
             if '+uuid' in spec:
                 self.command('-c', 'import uuid')
+
+            # Ensure that tix module works
+            if '+tix' in spec:
+                if spec.satisfies('@3:'):
+                    self.command('-c', 'import tkinter.tix')
+                else:
+                    self.command('-c', 'import Tix')
 
     # ========================================================================
     # Set up environment to make install easy for python extensions.

@@ -45,6 +45,8 @@ class Umpire(CMakePackage, CudaPackage):
     variant('openmp', default=False, description='Build with OpenMP support')
     variant('deviceconst', default=False,
             description='Enables support for constant device memory')
+    variant('tests', default='none', values=('none', 'basic', 'benchmarks'),
+            multi=False, description='Tests to run')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
@@ -88,7 +90,10 @@ class Umpire(CMakePackage, CudaPackage):
         options.append('-DBUILD_SHARED_LIBS={0}'.format(
             'On' if '+shared' in spec else 'Off'))
 
+        options.append('-DENABLE_BENCHMARKS={0}'.format(
+            'On' if 'tests=benchmarks' in spec else 'Off'))
+
         options.append('-DENABLE_TESTS={0}'.format(
-            'On' if self.run_tests else 'Off'))
+            'Off' if 'tests=none' in spec else 'On'))
 
         return options

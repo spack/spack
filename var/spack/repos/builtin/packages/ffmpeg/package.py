@@ -63,7 +63,7 @@ class Ffmpeg(AutotoolsPackage):
     variant('sdl2', default=False, description='sdl2 support')
     variant('shared', default=True, description='build shared libraries')
 
-    depends_on('alsa-lib')
+    depends_on('alsa-lib', when='platform=linux')
     depends_on('libiconv')
     depends_on('yasm@1.2.0:')
     depends_on('zlib')
@@ -103,6 +103,16 @@ class Ffmpeg(AutotoolsPackage):
     conflicts('+libwebp', when='@2.1.999:')
     conflicts('+libssh', when='@2.0.999:')
     conflicts('+libzmq', when='@:1.999.999')
+
+    @property
+    def libs(self):
+        return find_libraries('*', self.prefix, recursive=True)
+
+    @property
+    def headers(self):
+        headers = find_all_headers(self.prefix.include)
+        headers.directories = self.prefix.include
+        return headers
 
     def enable_or_disable_meta(self, variant, options):
         switch = 'enable' if '+{0}'.format(variant) in self.spec else 'disable'

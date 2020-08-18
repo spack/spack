@@ -88,7 +88,6 @@ class Whizard(AutotoolsPackage):
             '--enable-lhapdf=%s' % ("yes" if "+lhapdf" in spec else "no"),
             '--enable-openloops=%s' % ("yes" if "+openloops" in spec
                                        else "no"),
-            '--with-openloops=%s' % spec['openloops'].prefix,
             # todo: hoppet
             # todo: recola
             # todo: looptools
@@ -96,14 +95,14 @@ class Whizard(AutotoolsPackage):
             # todo: pythia6
         ]
 
+        if "+openloops" in spec:
+            args.append('--with-openloops=%s' % spec['openloops'].prefix)
         if "+lcio" in spec:
             args.append('--with-lcio=%s' % spec['lcio'].prefix)
-
         if "hepmc=3" in spec:
             args.append('--with-hepmc=%s' % spec['hepmc3'].prefix)
         if "hepmc=2" in spec:
             args.append('--with-hepmc=%s' % spec['hepmc'].prefix)
-
         if "+openmp" not in spec:
             args.append('--disable-openmp')
         return args

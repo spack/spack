@@ -37,11 +37,13 @@ class PyTorchvision(PythonPackage):
     depends_on('python@2.7:2.8,3.5:3.7', when='@:0.4', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
+    depends_on('ninja', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-six', when='@:0.5', type=('build', 'run'))
 
     # See README.rst
     depends_on('py-torch@1.6.0', when='@0.7.0', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.5.1', when='@0.6.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.5.0', when='@0.6.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.4.0', when='@0.5.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.3.1', when='@0.4.2', type=('build', 'link', 'run'))
@@ -66,3 +68,23 @@ class PyTorchvision(PythonPackage):
     depends_on('py-scipy', type='test')
 
     depends_on('ffmpeg@3.1:', when='@0.4.2:')
+
+    def setup_build_environment(self, env):
+        include = []
+        library = []
+        for dep in self.spec.dependencies(deptype='link'):
+            query = self.spec[dep.name]
+            include.extend(query.headers.directories)
+            library.extend(query.libs.directories)
+
+        # README says to use TORCHVISION_INCLUDE and TORCHVISION_LIBRARY,
+        # but these do not work. Build uses a mix of Spack's compiler wrapper
+        # and the actual compiler, so this is needed to get parts of the build
+        # working. See https://github.com/pytorch/vision/issues/2591
+        env.set('CPATH', ':'.join(include))
+        env.set('LIBRARY_PATH', ':'.join(library))
+
+        if '+cuda' in self.spec['py-torch']:
+            env.set('FORCE_CUDA', 1)
+        else:
+            env.set('FORCE_CUDA', 0)

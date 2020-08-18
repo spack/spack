@@ -20,14 +20,6 @@ class ScorecCore(CMakePackage):
     depends_on('zoltan')
     depends_on('cmake@3.0:', type='build')
 
-    @property
-    def std_cmake_args(self):
-        # Default cmake RPATH options causes build failure on bg-q
-        if self.spec.satisfies('platform=bgq'):
-            return ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(self.prefix)]
-        else:
-            return self._std_args(self)
-
     def cmake_args(self):
         options = []
         options.append('-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc)

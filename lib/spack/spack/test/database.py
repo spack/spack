@@ -689,17 +689,17 @@ def test_115_reindex_with_packages_not_in_repo(mutable_database):
 def test_external_entries_in_db(mutable_database):
     rec = mutable_database.get_record('mpileaks ^zmpi')
     assert rec.spec.external_path is None
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
 
     rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
     rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
     assert rec.explicit is True
 
 

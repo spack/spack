@@ -11,6 +11,7 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
+import re
 import os
 from contextlib import contextmanager
 
@@ -26,6 +27,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     homepage = "http://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
+
+    executables = [r'^perl(-?\d+.*)?$']
 
     # see http://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
@@ -92,6 +95,40 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     )
 
     phases = ['configure', 'build', 'install']
+
+    @classmethod
+    def determine_version(cls, exe):
+        perl = spack.util.executable.Executable(exe)
+        output = perl('--version', output=str, error=str)
+        if output:
+            match = re.search(r'perl.*\(v([0-9.]+)\)', output)
+            if match:
+                return match.group(1)
+        return None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        for exe in exes:
+            perl = spack.util.executable.Executable(exe)
+            output = perl('-V', output=str, error=str)
+            variants = ''
+            if output:
+                match = re.search(r'-Duseshrplib', output)
+                if match:
+                    variants += '+shared'
+                else:
+                    variants += '~shared'
+                match = re.search(r'-Duse.?threads', output)
+                if match:
+                    variants += '+threads'
+                else:
+                    variants += '~threads'
+            path = os.path.dirname(exe)
+            if 'cpanm' in os.listdir(path):
+                variants += '+cpanm'
+            else:
+                variants += '~cpanm'
+            return variants
 
     # On a lustre filesystem, patch may fail when files
     # aren't writeable so make pp.c user writeable

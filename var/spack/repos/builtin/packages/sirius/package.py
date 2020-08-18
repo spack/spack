@@ -38,6 +38,12 @@ class Sirius(CMakePackage, CudaPackage):
     version('6.3.2', sha256='1723e5ad338dad9a816369a6957101b2cae7214425406b12e8712c82447a7ee5')
     version('6.1.5', sha256='379f0a2e5208fd6d91c2bd4939c3a5c40002975fb97652946fa1bfe4a3ef97cb')
 
+    amdgpu_targets = (
+        'gfx701', 'gfx801', 'gfx802', 'gfx803',
+        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
+        'gfx1011', 'gfx1012'
+    )
+
     variant('shared', default=False, description="Build shared libraries")
     variant('openmp', default=True, description="Build with OpenMP support")
     variant('fortran', default=False, description="Build Fortran bindings")
@@ -48,6 +54,8 @@ class Sirius(CMakePackage, CudaPackage):
     variant('scalapack', default=False, description="Enable scalapack support")
     variant('magma', default=False, description="Enable MAGMA support")
     variant('nlcglib', default=False, description="enable robust wave function optimization")
+    variant('rocm', default=False, description='Use ROCm GPU support')
+    variant('amdgpu_target', default=('gfx803', 'gfx900', 'gfx906'), multi=True, values=amdgpu_targets)
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -82,13 +90,19 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('nlcglib', when='+nlcglib')
     depends_on('libvdwxc+mpi', when='+vdwxc')
     depends_on('scalapack', when='+scalapack')
-    depends_on('cuda', when='+cuda')
+
+    # rocm
+    depends_on('hip', when='+rocm')
+    depends_on('hsakmt-roct', when='+rocm', type='link')
+    depends_on('hsa-rocr-dev', when='+rocm', type='link')
+    depends_on('rocblas', when='+rocm')
+
     extends('python', when='+python')
 
     conflicts('+shared', when='@6.3.0:6.4.999')
 
     # TODO:
-    # add support for CRAY_LIBSCI, ROCm, testing
+    # add support for CRAY_LIBSCI, testing
 
     patch("strip-spglib-include-subfolder.patch", when='@6.1.5')
     patch("link-libraries-fortran.patch", when='@6.1.5')
@@ -143,7 +157,8 @@ class Sirius(CMakePackage, CudaPackage):
             _def('+scalapack'),
             _def('+fortran', 'CREATE_FORTRAN_BINDINGS'),
             _def('+python', 'CREATE_PYTHON_MODULE'),
-            _def('+cuda')
+            _def('+cuda'),
+            _def('+rocm')
         ]
 
         if '@:6.2.999' in self.spec:
@@ -184,5 +199,12 @@ class Sirius(CMakePackage, CudaPackage):
                 args += [
                     '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0])
                 ]
+
+        if '+rocm' in spec:
+            archs = ",".join(self.spec.variants['amdgpu_target'].value)
+            args.extend([
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(archs)
+            ])
 
         return args
