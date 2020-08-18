@@ -509,13 +509,6 @@ class log_output(object):
             # We try first to use OS-level file descriptors, as this
             # redirects output for subprocesses and system calls.
 
-            fdstatus = os.fstat(self.saved_fds._saved_stdout)
-            tty.msg("_saved_stdout ({0}/{1}): ".format(
-                str(self.saved_fds._saved_stdout),
-                str(sys.stdout.fileno()))
-                + str(fdstatus))
-            tty.msg("Current PID: " + str(os.getpid()))
-
             # redirect to the pipe we created above
             os.dup2(write_fd, sys.stdout.fileno())
             os.dup2(write_fd, sys.stderr.fileno())
