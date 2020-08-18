@@ -95,9 +95,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('nvptx',
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
-    variant('static_stage1',
+    variant('enable_bootstrap',
             default=False,
-            description='Use static libstdc++,libstdc for stage1')
+            description='add --enable-bootstrap flag for stage3 build')
 
     depends_on('flex', type='build', when='@master')
 
@@ -476,13 +476,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 '--with-gnu-as',
                 '--with-as=' + binutils.join('as'),
             ])
-        if spec.satisfies('+static_stage1'):
-            stage1_ldflags = str(self.rpath_args)
-            boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
+
+        # enable_bootstrap
+        if spec.satisfies('+enable_bootstrap'):
             options.extend([
-                '--with-sysroot=/',
-                '--with-stage1-ldflags=' + stage1_ldflags,
-                '--with-boot-ldflags=' + boot_ldflags,
                 '--enable-bootstrap',
             ])
 
