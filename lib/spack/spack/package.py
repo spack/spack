@@ -1960,7 +1960,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Now that we've handled metadata, uninstall and replace with link
         Package.uninstall_by_spec(spec, force=True, deprecator=deprecator)
-        link_fn(deprecator.prefix, spec.prefix)
+        if link_fn is not None:
+            link_fn(deprecator.prefix, spec.prefix)
 
     def _check_extendable(self):
         if not self.extendable:
