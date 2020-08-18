@@ -729,7 +729,8 @@ class Trilinos(CMakePackage, CudaPackage):
             gotype = spec.variants['gotype'].value
             options.extend([
                 define('Tpetra_INST_DOUBLE', True),
-                define('Tpetra_INST_INT_INT', gotype == 'int'),
+                define('Tpetra_INST_INT_INT', gotype == 'int' or
+                      '+epetra' in spec and '+xpetra' in spec),
                 define('Tpetra_INST_INT_LONG', gotype == 'long'),
                 define('Tpetra_INST_INT_LONG_LONG', gotype == 'long_long'),
                 define('Tpetra_INST_COMPLEX_DOUBLE', complex_s),
