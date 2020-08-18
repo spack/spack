@@ -66,7 +66,7 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Enable explicit template instantiation (ETI)')
     variant('float', default=False,
             description='Enable single precision (float) numbers in Trilinos')
-    variant('gotype', default='long',
+    variant('gotype', default='long_long',
             values=('int', 'long', 'long_long'),
             multi=False,
             description='global ordinal type for Tpetra')
@@ -325,6 +325,8 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+adios2', when='@:12.14.1')
     conflicts('+adios2', when='@xsdk-0.2.0')
     conflicts('+pnetcdf', when='~netcdf')
+    # See https://github.com/trilinos/Trilinos/issues/7815
+    conflicts('gotype=long', when='+epetra+muelu')
 
     # ###################### Dependencies ##########################
 
