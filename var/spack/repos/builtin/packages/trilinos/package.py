@@ -189,6 +189,8 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Teuchos')
     variant('tpetra',       default=True,
             description='Compile with Tpetra')
+    variant('xpetra',       default=True,
+            description='Compile with Xpetra')
     variant('zoltan',       default=True,
             description='Compile with Zoltan')
     variant('zoltan2',      default=True,
