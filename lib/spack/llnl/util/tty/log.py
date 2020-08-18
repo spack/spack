@@ -569,12 +569,13 @@ class log_output(object):
             sys.stdout = self._saved_stdout
             sys.stderr = self._saved_stderr
 
+        self.parent_pipe.send(True)
+
         # print log contents in parent if needed.
         if self.write_log_in_parent:
             string = self.parent_pipe.recv()
             self.file_like.write(string)
 
-        self.parent_pipe.send(True)
         # recover and store echo settings from the child before it dies
         self.echo = self.parent_pipe.recv()
 
