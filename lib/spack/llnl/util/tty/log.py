@@ -486,8 +486,8 @@ class log_output(object):
             self.process = multiprocessing.Process(
                 target=_writer_daemon,
                 args=(
-                    input_wrapper, read_wrapper, self.echo, self.log_file,
-                    child_pipe
+                    input_wrapper, read_wrapper, write_fd, self.echo,
+                    self.log_file, child_pipe
                 )
             )
             self.process.daemon = True  # must set before start()
@@ -598,8 +598,8 @@ class log_output(object):
             sys.stdout.flush()
 
 
-def _writer_daemon(stdin_wrapper, read_wrapper, echo, log_file_wrapper,
-                   control_pipe):
+def _writer_daemon(stdin_wrapper, read_wrapper, write_fd, echo,
+                   log_file_wrapper, control_pipe):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
     The daemon receives output from the parent process and writes it both
@@ -645,6 +645,14 @@ def _writer_daemon(stdin_wrapper, read_wrapper, echo, log_file_wrapper,
             information to the parent
 
     """
+    # If this process was forked, then it will inherit file descriptors from
+    # the parent process. This process depends on closing all instances of
+    # write_fd to terminate the reading loop, so we close the file descriptor
+    # here. Forking is the process spawning method everywhere except Mac OS
+    # for Python >= 3.8
+    if sys.version_info < (3, 8) or sys.platform != 'darwin':
+        os.close(write_fd)
+
     # Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
     in_pipe = os.fdopen(read_wrapper._handle, 'r', 1)
