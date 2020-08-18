@@ -290,15 +290,28 @@ def _file_descriptors_work(*streams):
 
 
 class FileWrapper(object):
+    """Represents a file. Can be an open stream, a path to a file (not opened
+    yet), or neither. When unwrapped, it returns an open file (or file-like)
+    object.
+    """
     def __init__(self, file_like, open):
         self.file_like = file_like
         self.open = open
+        self.file = None
 
     def unwrap(self):
         if self.open:
-            return open(self.file_like, 'w')
+            if self.file_like:
+                self.file = open(self.file_like, 'w')
+            else:
+                self.file = StringIO()
+            return self.file
         else:
             return self.file_like
+
+    def close(self):
+        if self.file:
+            self.file.close()
 
 
 class SaveStdout(object):
@@ -432,16 +445,13 @@ class log_output(object):
                 "file argument must be set by either __init__ or __call__")
 
         # set up a stream for the daemon to write to
-        self.close_log_in_parent = False
         self.write_log_in_parent = False
         if isinstance(self.file_like, string_types):
             self.log_file = FileWrapper(self.file_like, open=True)
-
         elif _file_descriptors_work(self.file_like):
             self.log_file = FileWrapper(self.file_like, open=False)
-            self.close_log_in_parent = False
         else:
-            self.log_file = FileWrapper(self.file_like, open=False)
+            self.log_file = FileWrapper(None, open=True)
             self.write_log_in_parent = True
 
         # record parent color settings before redirecting.  We do this
@@ -564,15 +574,10 @@ class log_output(object):
             string = self.parent_pipe.recv()
             self.file_like.write(string)
 
-        if self.close_log_in_parent:
-            self.log_file.close()
-
         self.parent_pipe.send(True)
         # recover and store echo settings from the child before it dies
         self.echo = self.parent_pipe.recv()
 
-        # join the daemon process. The daemon will quit automatically
-        # when the write pipe is closed; we just wait for it here.
         self.process.join()
 
         # restore old color and debug settings
@@ -601,7 +606,8 @@ class log_output(object):
             sys.stdout.flush()
 
 
-def _writer_daemon(stdin_wrapper, read_wrapper, echo, log_file, control_pipe):
+def _writer_daemon(stdin_wrapper, read_wrapper, echo, log_file_wrapper,
+                   control_pipe):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
     The daemon receives output from the parent process and writes it both
@@ -660,7 +666,7 @@ def _writer_daemon(stdin_wrapper, read_wrapper, echo, log_file, control_pipe):
     istreams = [in_pipe, stdin] if stdin else [in_pipe]
     force_echo = False      # parent can force echo for certain output
 
-    log_file = log_file.unwrap()
+    log_file = log_file_wrapper.unwrap()
 
     try:
         with keyboard_input(stdin) as kb:
@@ -727,9 +733,10 @@ def _writer_daemon(stdin_wrapper, read_wrapper, echo, log_file, control_pipe):
         # send written data back to parent if we used a StringIO
         if isinstance(log_file, StringIO):
             control_pipe.send(log_file.getvalue())
-        log_file.close()
+        log_file_wrapper.close()
         read_wrapper.close()
-        stdin_wrapper.close()
+        if stdin_wrapper:
+            stdin_wrapper.close()
 
         # send echo value back to the parent so it can be preserved.
         control_pipe.send(echo)
