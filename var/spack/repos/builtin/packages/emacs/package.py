@@ -48,6 +48,8 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gnutls', when='+tls')
     depends_on('jpeg')
 
+    conflicts('@:26.3', when='platform=darwin os=catalina')
+
     @when('platform=darwin')
     def setup_build_environment(self, env):
         # on macOS, emacs' config does search hard enough for ncurses'
