@@ -108,8 +108,17 @@ class FetchStrategy(object):
         self.cache_enabled = not kwargs.pop('no_cache', False)
 
     # Subclasses need to implement these methods
+    def clone(self):
+        """Fetch source code archive or repo without a stage.
+
+        Returns:
+            bool: True on success, False on failure.
+        """
+
     def fetch(self):
         """Fetch source code archive or repo.
+
+        May be implemented in terms of self.clone when possible
 
         Returns:
             bool: True on success, False on failure.
@@ -800,6 +809,31 @@ class GitFetchStrategy(VCSFetchStrategy):
             args = ' on branch {0}'.format(self.branch)
 
         return '{0}{1}'.format(self.url, args)
+
+    def clone(self, path):
+        if os.path.exists(path):
+            tty.msg("Already fetched {0}".format(path))
+
+        tty.msg("Cloning git repository: {0}".format(self._repo_info()))
+
+        # Setup args for both clone and checkout phases
+        git = self.git
+        clone_args = ['clone', self.url]
+        checkout_args = ['checkout', self.commit or self.branch or self.tag]
+        debug = spack.config.get('config:debug')
+        if not debug:
+            clone_args.insert(1, '--quiet')
+            checkout_args.insert(1, '--quiet')
+
+        # clone
+        with temp_cwd():
+            git(*clone_args)
+            repo_name = get_single_file('.')
+            shutil.move(repo_name, path)
+
+        # checkout
+        with working_dir(path):
+            git(*checkout_args)
 
     @_needs_stage
     def fetch(self):

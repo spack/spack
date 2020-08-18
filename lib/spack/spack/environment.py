@@ -1008,11 +1008,8 @@ class Environment(object):
 
         if clone:
             # Not really cloning if it's a url-fetched version
-            package = spec.package
             abspath = path if os.path.isabs(path) else os.path.join(self.path, path)
-            package.stage.path = abspath
-            package.stage.create()
-            package.stage.fetch()
+            spec.package.fetcher.clone(abspath)
 
         # If it wasn't already in the list, append it
         self.dev_specs[str(spec)] = path
@@ -1317,7 +1314,8 @@ class Environment(object):
         for dev_spec, path in self.dev_specs.items():
             if spec.satisfies(dev_spec, strict=True):
                 # setup stage
-                source_path = os.path.abspath(path)
+                source_path = path if os.path.isabs(path) else os.path.join(
+                    self.path, path)
                 package.stage = spack.stage.DIYStage(source_path)
 
                 # Don't delete dev-build stages
