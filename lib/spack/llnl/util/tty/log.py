@@ -562,8 +562,6 @@ class log_output(object):
             sys.stdout = self._saved_stdout
             sys.stderr = self._saved_stderr
 
-        self.parent_pipe.send(True)
-
         # print log contents in parent if needed.
         if self.write_log_in_parent:
             string = self.parent_pipe.recv()
@@ -713,11 +711,6 @@ def _writer_daemon(stdin_wrapper, read_wrapper, echo, log_file_wrapper,
                         force_echo = True
                     if xoff in controls:
                         force_echo = False
-
-                if control_pipe.poll():
-                    terminate = control_pipe.recv()
-                    if terminate:
-                        break
 
     except BaseException:
         tty.error("Exception occurred in writer daemon!")
