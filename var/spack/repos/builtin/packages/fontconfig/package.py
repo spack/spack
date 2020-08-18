@@ -26,7 +26,7 @@ class Fontconfig(AutotoolsPackage):
     def setup_build_environment(self, spack_env):
         spack_env.set(
             "FREETYPE_CFLAGS",
-            self.spec['freetype'].headers.include_flags)
+            self.spec['freetype'].headers.include_flags + "/freetype2")
         spack_env.set(
             "FREETYPE_LIBS",
             self.spec['freetype'].libs.ld_flags)
