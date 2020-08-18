@@ -689,6 +689,10 @@ class StageComposite:
     def path(self):
         return self[0].path
 
+    @path.setter
+    def path(self, value):
+        self[0].path = value
+
     @property
     def archive_file(self):
         return self[0].archive_file

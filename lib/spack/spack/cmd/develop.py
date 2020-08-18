@@ -39,17 +39,16 @@ def develop(parser, args):
         raise SpackError("Packages to develop must have a concrete version")
 
     if args.clone:
-        path = args.path or os.path.join(os.getcwd(), spec.name)
-        # TODO: clone to path
-        raise NotImplementedError
+        path = args.path or spec.name
     else:
-        if not args.path:
-            raise SpackError("Must provide either path or clone argument")
-        elif not os.path.exists(args.path):
-            raise SpackError("Provided path %s does not exist" % args.path)
         path = args.path
 
+    if not path:
+        raise SpackError("Must provide either path or clone argument")
+    elif not (args.clone or os.path.exists(path)):
+        raise SpackError("Provided path %s does not exist" % args.path)
+
     with env.write_transaction():
-        changed = env.develop(spec, path)
+        changed = env.develop(spec, path, args.clone)
         if changed:
             env.write()

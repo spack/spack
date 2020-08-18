@@ -30,6 +30,7 @@ import spack.stage
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.config
+import spack.fetch_strategy as fetch
 import spack.user_environment as uenv
 from spack.filesystem_view import YamlFilesystemView
 import spack.util.environment
@@ -987,7 +988,7 @@ class Environment(object):
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
 
-    def develop(self, spec, path):
+    def develop(self, spec, path, clone=False):
         """Add dev-build info for spec, set to version and path.
 
         Returns (bool): True iff the environment was changed.
@@ -1004,6 +1005,14 @@ class Environment(object):
                     break
         else:
             tty.msg("Configuring spec %s for development" % spec)
+
+        if clone:
+            # Not really cloning if it's a url-fetched version
+            package = spec.package
+            abspath = path if os.path.isabs(path) else os.path.join(self.path, path)
+            package.stage.path = abspath
+            package.stage.create()
+            package.stage.fetch()
 
         # If it wasn't already in the list, append it
         self.dev_specs[str(spec)] = path
