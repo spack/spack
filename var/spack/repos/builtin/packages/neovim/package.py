@@ -38,7 +38,6 @@ class Neovim(CMakePackage):
     depends_on('libtermkey@0.1:', type='link', when='@0.4:')
     depends_on('libvterm@:0.0.726', type='link', when='@:0.3')
     depends_on('libvterm@0.1:0.9', type='link', when='@0.4:')
-    #depends_on('unibilium@:1.2.0', type='link', when='@:0.3.9')
     depends_on('unibilium', type='link')
     depends_on('unibilium@:1.2.0', type='link', when='@:0.2.0')
     depends_on('unibilium@2.0:', type='link', when='@0.4:')
