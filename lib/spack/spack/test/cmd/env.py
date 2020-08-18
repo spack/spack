@@ -2112,3 +2112,23 @@ def test_old_format_cant_be_updated_implicitly(packages_yaml_v015):
     env('activate', str(manifest.dirname))
     with pytest.raises(spack.main.SpackCommandError):
         add('hdf5')
+
+
+@pytest.mark.regression('18147')
+def test_can_update_attributes_with_override(tmpdir):
+    spack_yaml = """
+spack:
+  mirrors::
+    test: /foo/bar
+  packages:
+    cmake:
+      paths:
+        cmake@3.18.1: /usr
+  specs:
+  - hdf5
+"""
+    abspath = tmpdir.join('spack.yaml')
+    abspath.write(spack_yaml)
+
+    # Check that an update does not raise
+    env('update', '-y', str(abspath.dirname))
