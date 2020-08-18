@@ -41,7 +41,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
-    patch('remove-g-flags.patch', when='@2.33:')
 
     depends_on('zlib')
     depends_on('gettext', when='+nls')
@@ -126,7 +125,22 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             self.compiler.name in ('fj', 'clang', 'apple-clang')
         ):
             flags.append('-Wno-narrowing')
-        elif name == 'cflags':
+
+        # Binutils compiles with `-O2 -g` by default, but `-g`
+        # generates hundreds of megabytes of debuginfo. So we
+        # override the default to `-O2`. If debuginfo is required
+        # use `spack install binutils cflags='-O2 -g'` instead.
+
+        opt_flag_found = any(f in self.compiler.opt_flags for f in flags)
+
+        if name == 'cxxflags' and not opt_flag_found:
+            flags.append('-O2')
+
+        if name == 'cflags':
+            if not opt_flag_found:
+                flags.append('-O2')
+
             if self.spec.satisfies('@:2.34 %gcc@10:'):
                 flags.append('-fcommon')
-        return (flags, None, None)
+
+        return (None, None, flags)
