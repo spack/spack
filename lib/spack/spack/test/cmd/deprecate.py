@@ -13,6 +13,7 @@ deprecate = SpackCommand('deprecate')
 find = SpackCommand('find')
 activate = SpackCommand('activate')
 
+
 def test_hard_link_deprecate(mock_packages, mock_archive, mock_fetch,
                              install_mockery):
     install('libelf@0.8.13')
