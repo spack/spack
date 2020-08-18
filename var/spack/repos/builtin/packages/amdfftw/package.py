@@ -17,6 +17,7 @@ class Amdfftw(FftwBase):
     It is an open-source implementation of the Fast Fourier transform
     algorithm. It can compute transforms of real and complex-values
     arrays of arbitrary size and dimension.
+
     AMD Optimized FFTW is the optimized FFTW implementation targeted
     for AMD CPUs.
     """
@@ -34,7 +35,6 @@ class Amdfftw(FftwBase):
     variant('enable-single', default=False, description='Enable Single support.')
  
     depends_on('texinfo')
-
 
     def configure(self, spec, prefix):
         # Base options
@@ -126,4 +126,3 @@ class Amdfftw(FftwBase):
 
             with working_dir(precision, create=True):
                 configure(*opts)
-
