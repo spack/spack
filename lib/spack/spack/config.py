@@ -170,7 +170,6 @@ class ConfigScope(object):
 
 class SingleFileScope(ConfigScope):
     """This class represents a configuration scope in a single YAML file."""
-
     def __init__(self, name, path, schema, yaml_path=None):
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -276,7 +275,6 @@ class InternalConfigScope(ConfigScope):
     config file settings are accessed the same way, and Spack can easily
     override settings from files.
     """
-
     def __init__(self, name, data=None):
         super(InternalConfigScope, self).__init__(name, None)
         self.sections = syaml.syaml_dict()
