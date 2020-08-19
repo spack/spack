@@ -224,7 +224,6 @@ class Mvapich2(AutotoolsPackage):
                 if comp_spec:
                     variants += " %" + str(comp_spec)
             results.append(variants)
-        print(results)
         return results
 
     @property
