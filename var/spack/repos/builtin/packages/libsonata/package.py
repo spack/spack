@@ -17,6 +17,7 @@ class Libsonata(CMakePackage):
     git = "https://github.com/BlueBrain/libsonata.git"
 
     version('develop', branch='master', submodules=False, get_full_repo=True)
+    version('0.1.4', tag='v0.1.4', submodules=False, get_full_repo=True)
     version('0.1.3', tag='v0.1.3', submodules=False, get_full_repo=True)
     version('0.1.2', tag='v0.1.2', submodules=False, get_full_repo=True)
     version('0.1.0', tag='v0.1.0', submodules=False, get_full_repo=True)
@@ -36,6 +37,7 @@ class Libsonata(CMakePackage):
     def cmake_args(self):
         result = [
             '-DEXTLIB_FROM_SUBMODULES=OFF',
+            '-DSONATA_TESTS=OFF',
         ]
         if self.spec.satisfies('+mpi'):
             result.extend([

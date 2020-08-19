@@ -13,6 +13,7 @@ class PyBluepysnap(PythonPackage):
     git      = "https://github.com/BlueBrain/snap.git"
     url      = "https://pypi.io/packages/source/b/bluepysnap/bluepysnap-0.2.0.tar.gz"
 
+    version('0.6.1', sha256='f17cdd43a9f444e4825ab9578b3184fb17df76b1598852d3b74161647a096285')
     version('0.5.2', sha256='d97c3fcd05261ba68e855e828b88d37fa1a7302abd79163d2d8ee806b1aad9b3')
     version('0.5.1', sha256='81cbeab26b219b52f496ea55145e60f6b826c697265f4fe2d1effe5df249cabf')
     version('0.5.0', sha256='97a31644d1e1daccb708e92734dfb873bc0b7aa7f98939527b91cde895cdef74')
@@ -25,7 +26,7 @@ class PyBluepysnap(PythonPackage):
     depends_on('py-functools32', type='run', when='^python@:3.1.99')
     depends_on('py-cached-property@1.0:', type='run')
     depends_on('py-h5py@2.2:', type='run')
-    depends_on('py-libsonata@0.1.3:', type='run')
+    depends_on('py-libsonata@0.1.4:', type='run')
     depends_on('py-neurom@1.3:', type='run')
     depends_on('py-numpy@1.8:', type='run')
     depends_on('py-pandas@0.17:', type='run')
