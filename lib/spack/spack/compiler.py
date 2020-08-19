@@ -304,6 +304,12 @@ class Compiler(object):
             if value is not None:
                 self.flags[flag] = tokenize_flags(value)
 
+        # cache real version value for version checks
+        try:
+            self._real_version = self.get_real_version()
+        except:
+            self._real_version = self.version
+
     def verify_executables(self):
         """Raise an error if any of the compiler executables is not valid.
 
