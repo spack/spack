@@ -86,9 +86,8 @@ class Moab(AutotoolsPackage):
     patch('tools-492.patch', when='@4.9.2')
 
     @run_before('configure')
-    def filter_configure(self):
-        if self.spec.satisfies('%fj'):
-            filter_file('-march=native', '', 'configure', string=True)
+    def remove_march_native(self):
+        filter_file('-march=native', '', 'configure', string=True)
 
     def configure_args(self):
         spec = self.spec
