@@ -73,7 +73,6 @@ class Lcio(CMakePackage):
             return
         return url
         
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_run_environment(self, env):
         env.set('LCIO', self.prefix)
-        env.set('PYTHONPATH', self.prefix.python)
-
+        env.prepend_path('PYTHONPATH', self.prefix.python)
