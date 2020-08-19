@@ -316,8 +316,12 @@ class FileWrapper(object):
 
 class SaveStdout(object):
     def __init__(self):
-        self._saved_stdout = os.dup(sys.stdout.fileno())
-        self._saved_stderr = os.dup(sys.stderr.fileno())
+        if _file_descriptors_work(sys.stdout, sys.stderr):
+            self._saved_stdout = os.dup(sys.stdout.fileno())
+            self._saved_stderr = os.dup(sys.stderr.fileno())
+        else:
+            self._saved_stdout = sys.stdout
+            self._saved_stderr = sys.stderr
 
 
 class FdWrapper(object):
@@ -520,10 +524,6 @@ class log_output(object):
             # shouldn't expect any better, since *they* have apparently
             # redirected I/O the Python way.
 
-            # Save old stdout and stderr file objects
-            self._saved_stdout = sys.stdout
-            self._saved_stderr = sys.stderr
-
             # create a file object for the pipe; redirect to it.
             pipe_fd_out = os.fdopen(write_fd, 'w')
             sys.stdout = pipe_fd_out
@@ -559,8 +559,8 @@ class log_output(object):
             os.dup2(self.saved_fds._saved_stderr, sys.stderr.fileno())
             os.close(self.saved_fds._saved_stderr)
         else:
-            sys.stdout = self._saved_stdout
-            sys.stderr = self._saved_stderr
+            sys.stdout = self.saved_fds._saved_stdout
+            sys.stderr = self.saved_fds._saved_stderr
 
         # print log contents in parent if needed.
         if self.write_log_in_parent:
