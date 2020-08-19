@@ -119,7 +119,7 @@ class Intel(IntelPackage):
         assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('fortran', None)
-        return self.spec.prefix.bin.intel64.ifort
+        return str(self.spec.prefix.bin.intel64.ifort)
 
     # Since the current package is a subset of 'intel-parallel-studio',
     # all remaining Spack actions are handled in the package class.
