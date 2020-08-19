@@ -390,12 +390,21 @@ _spack_audit() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="configs packages-https packages list"
+        SPACK_COMPREPLY="configs externals packages-https packages list"
     fi
 }
 
 _spack_audit_configs() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_audit_externals() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --list"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_audit_packages_https() {

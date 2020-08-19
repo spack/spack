@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import llnl.util.tty as tty
+import llnl.util.tty.colify
 import llnl.util.tty.color as cl
 
 import spack.audit
@@ -20,6 +21,15 @@ def setup_parser(subparser):
     # Audit configuration files
     sp.add_parser('configs', help='audit configuration files')
 
+    # Audit package recipes
+    external_parser = sp.add_parser(
+        'externals', help='check external detection in packages'
+    )
+    external_parser.add_argument(
+        '--list', action='store_true', dest='list_externals',
+        help='if passed, list which packages have detection tests'
+    )
+
     # Https and other linting
     https_parser = sp.add_parser('packages-https', help='check https in packages')
     https_parser.add_argument(
@@ -33,7 +43,7 @@ def setup_parser(subparser):
     # Audit package recipes
     pkg_parser = sp.add_parser('packages', help='audit package recipes')
 
-    for group in [pkg_parser, https_parser]:
+    for group in [pkg_parser, https_parser, external_parser]:
         group.add_argument(
             'name', metavar='PKG', nargs='*',
             help='package to be analyzed (if none all packages will be processed)',
@@ -65,6 +75,20 @@ def packages_https(parser, args):
     _process_reports(reports)
 
 
+def externals(parser, args):
+    if args.list_externals:
+        msg = '@*{The following packages have detection tests:}'
+        tty.msg(cl.colorize(msg))
+        llnl.util.tty.colify.colify(
+            spack.audit.packages_with_detection_tests(), indent=2
+        )
+        return
+
+    pkgs = args.name or spack.repo.path.all_package_names()
+    reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
+    _process_reports(reports)
+
+
 def list(parser, args):
     for subcommand, check_tags in spack.audit.GROUPS.items():
         print(cl.colorize('@*b{' + subcommand + '}:'))
@@ -82,6 +106,7 @@ def audit(parser, args):
     subcommands = {
         'configs': configs,
         'packages': packages,
+        'externals': externals,
         'packages-https': packages_https,
         'list': list
     }

@@ -36,8 +36,12 @@ the decorator object, that will forward the keyword arguments passed
 as input.
 """
 import collections
+import contextlib
+import glob
 import itertools
+import os.path
 import re
+import tempfile
 
 from six.moves.urllib.request import urlopen
 
@@ -434,5 +438,144 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
             ])
 
             errors.append(err)
+
+    return errors
+
+
+#: Sanity checks on package directives
+external_detection = AuditClass(
+    group='externals',
+    tag='PKG-EXTERNALS',
+    description='Sanity checks for external software detection',
+    kwargs=('pkgs',)
+)
+
+
+def packages_with_detection_tests():
+    """Return the list of packages with a corresponding detection_test.yaml file."""
+    import spack.config
+    import spack.util.path
+
+    # Directories where we have repositories
+    repo_dirs = [spack.util.path.canonicalize_path(x)
+                 for x in spack.config.get('repos')]
+
+    # Compute which files need to be tested
+    to_be_tested = []
+    for repo_dir in repo_dirs:
+        pattern = os.path.join(
+            repo_dir, 'packages', '**', 'detection_test.yaml'
+        )
+        pkgs_with_tests = [os.path.basename(os.path.dirname(x))
+                           for x in glob.glob(pattern)]
+        to_be_tested.extend(pkgs_with_tests)
+
+    return to_be_tested
+
+
+@external_detection
+def _test_detection_by_executable(pkgs, error_cls):
+    """Test drive external detection for packages"""
+    import jinja2
+
+    import llnl.util.filesystem
+
+    import spack.detection
+    import spack.repo
+    import spack.spec
+    import spack.util.spack_yaml
+
+    errors, tmpdir = [], tempfile.mkdtemp()
+
+    def mock_executable(name, output, subdir=('bin',)):
+        file_parts = list(subdir) + [name]
+        f = os.path.join(tmpdir, *file_parts)
+        llnl.util.filesystem.mkdirp(os.path.dirname(f))
+        t = jinja2.Template('#!/bin/bash\n{{ output }}\n')
+        with open(f, "w") as fs:
+            fs.write(t.render(output=output))
+        llnl.util.filesystem.set_executable(f)
+        return f
+
+    def detection_tests_for(pkg):
+        pkg_dir = os.path.dirname(
+            spack.repo.path.filename_for_package_name(pkg)
+        )
+        detection_data = os.path.join(pkg_dir, 'detection_test.yaml')
+        with open(detection_data) as f:
+            return spack.util.spack_yaml.load(f)
+
+    @contextlib.contextmanager
+    def setup_test_layout(layout):
+        hints, to_be_removed = set(), []
+        for binary in layout:
+            exe = mock_executable(
+                binary['name'], binary['output'], subdir=binary['subdir']
+            )
+            to_be_removed.append(exe)
+            hints.add(os.path.dirname(str(exe)))
+
+        yield list(hints)
+
+        for exe in to_be_removed:
+            os.unlink(exe)
+
+    # Filter the packages and retain only the ones with detection tests
+    pkgs_with_tests = packages_with_detection_tests()
+    selected_pkgs = list(sorted(set(pkgs).intersection(pkgs_with_tests)))
+
+    if not selected_pkgs:
+        summary = 'no detection test to run'
+        details = ['"{0}" has no detection test'.format(p) for p in pkgs]
+        errors.append(error_cls(summary=summary, details=details))
+        return errors
+
+    for package_name in selected_pkgs:
+        # Retrieve detection test data for this package and cycle over each
+        # of the scenarios that are encoded
+        detection_tests = detection_tests_for(package_name)
+
+        # Detection by executable is under the "paths" keyword
+        if 'paths' not in detection_tests:
+            continue
+
+        # Run all the tests in the YAML file for each package
+        for idx, test in enumerate(detection_tests['paths']):
+
+            # The context sets up a mock layout for the detection test
+            # and cleans it on exit
+            with setup_test_layout(test['layout']) as path_hints:
+                entries = spack.detection.by_executable(
+                    [spack.repo.get(package_name)], path_hints=path_hints
+                )
+                specs = set(x.spec for x in entries[package_name])
+                results = test['results']
+
+                # If no result was expected, check that nothing was detected
+                if not results and specs:
+                    summary = package_name + ': detected a spec when expecting none'
+                    details = ['"{0}" was detected [test_id={1}]'.format(s, idx)
+                               for s in specs]
+                    errors.append(error_cls(
+                        summary=summary, details=details
+                    ))
+
+                expected_specs = [spack.spec.Spec(r['spec']) for r in results]
+
+                # Check wwe detect all the expected specs
+                not_detected = set(expected_specs) - set(specs)
+                if not_detected:
+                    summary = package_name + ': cannot detect some specs'
+                    details = ['"{0}" was not detected [test_id={1}]'.format(s, idx)
+                               for s in sorted(not_detected)]
+                    errors.append(error_cls(summary=summary, details=details))
+
+                # Check that wwe didn't detect specs that were not expected
+                not_expected = set(specs) - set(expected_specs)
+                if not_expected:
+                    summary = package_name + ': detected unexpected specs'
+                    msg = '"{0}" was detected, but was not expected [test_id={1}]'
+                    details = [msg.format(s, idx) for s in sorted(not_expected)]
+                    errors.append(error_cls(summary=summary, details=details))
 
     return errors
