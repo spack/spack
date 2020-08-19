@@ -271,15 +271,16 @@ class Compiler(object):
     PrgEnv_compiler = None
 
     def __init__(self, cspec, operating_system, target,
-                 paths, modules=[], alias=None, environment={},
-                 extra_rpaths=[], enable_implicit_rpaths=None,
+                 paths, modules=None, alias=None, environment=None,
+                 extra_rpaths=None, enable_implicit_rpaths=None,
                  **kwargs):
         self.spec = cspec
         self.operating_system = str(operating_system)
         self.target = target
         self.modules = modules or []
         self.alias = alias
-        self.extra_rpaths = extra_rpaths
+        self.environment = environment or {}
+        self.extra_rpaths = extra_rpaths or []
         self.enable_implicit_rpaths = enable_implicit_rpaths
 
         self.cc  = paths[0]
@@ -293,9 +294,6 @@ class Compiler(object):
             else:
                 self.fc  = paths[3]
 
-        self.environment = environment
-        self.extra_rpaths = extra_rpaths or []
-
         # Unfortunately have to make sure these params are accepted
         # in the same order they are returned by sorted(flags)
         # in compilers/__init__.py
@@ -305,11 +303,9 @@ class Compiler(object):
             if value is not None:
                 self.flags[flag] = tokenize_flags(value)
 
-        # cache real version value for version checks
-        try:
-            self._real_version = spack.version.Version(self.get_real_version())
-        except spack.util.executable.ProcessError:
-            self._real_version = self.version
+        # caching value for compiler reported version
+        # used for version checks for API, e.g. C++11 flag
+        self._real_version = None
 
     def verify_executables(self):
         """Raise an error if any of the compiler executables is not valid.
@@ -339,6 +335,19 @@ class Compiler(object):
     @property
     def version(self):
         return self.spec.version
+
+    @property
+    def real_version(self):
+        """Executable reported compiler version used for API-determinations
+
+        E.g. C++11 flag checks.
+        """
+        if not self._real_version:
+            try:
+                self._real_version = spack.version.Version(self.get_real_version())
+            except spack.util.executable.ProcessError:
+                self._real_version = self.version
+        return self._real_version
 
     def implicit_rpaths(self):
         if self.enable_implicit_rpaths is False:
