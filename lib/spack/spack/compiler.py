@@ -18,6 +18,7 @@ import llnl.util.tty as tty
 
 import spack.error
 import spack.spec
+import spack.version
 import spack.architecture
 import spack.util.executable
 import spack.util.module_cmd
@@ -306,7 +307,7 @@ class Compiler(object):
 
         # cache real version value for version checks
         try:
-            self._real_version = self.get_real_version()
+            self._real_version = spack.version.Version(self.get_real_version())
         except:
             self._real_version = self.version
 
