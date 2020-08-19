@@ -12,10 +12,11 @@ class PyCertifi(PythonPackage):
     hosts."""
 
     homepage = "http://certifi.io/"
-    url      = "https://pypi.io/packages/source/c/certifi/certifi-2019.6.16.tar.gz"
+    url      = "https://pypi.io/packages/source/c/certifi/certifi-2020.6.20.tar.gz"
 
     import_modules = ['certifi']
 
+    version('2020.6.20', sha256='5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3')
     version('2019.9.11', sha256='e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50')
     version('2019.6.16', sha256='945e3ba63a0b9f577b1395204e13c3a231f9bc0223888be653286534e5873695')
     version('2019.3.9',  sha256='b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae')

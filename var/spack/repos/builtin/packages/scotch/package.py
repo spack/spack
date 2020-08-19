@@ -170,8 +170,6 @@ class Scotch(Package):
         if self.spec.satisfies('platform=darwin'):
             cflags.append('-DCOMMON_PTHREAD_BARRIER')
             ldflags.append('-lm -pthread')
-        elif self.spec.satisfies('platform=bgq'):
-            ldflags.append('-lm -lrt -lpthread')
         else:
             ldflags.append('-lm -lrt -pthread')
 

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import sys
 
 
 class Hdf(AutotoolsPackage):
@@ -22,7 +22,7 @@ class Hdf(AutotoolsPackage):
     version('4.2.11', sha256='c3f7753b2fb9b27d09eced4d2164605f111f270c9a60b37a578f7de02de86d24')
 
     variant('szip', default=False, description="Enable szip support")
-    variant('external-xdr', default=True,
+    variant('external-xdr', default=sys.platform != 'darwin',
             description="Use an external XDR backend")
     variant('netcdf', default=False,
             description='Build NetCDF API (version 2.3.2)')

@@ -36,6 +36,7 @@ class Podio(CMakePackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('python', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-jinja2@2.10.1:', type=('build', 'run'), when='@0.12:')
 
     def cmake_args(self):
         args = []

@@ -13,7 +13,7 @@ class Raja(CMakePackage, CudaPackage):
     git      = "https://github.com/LLNL/RAJA.git"
 
     version('develop', branch='develop', submodules='True')
-    version('main',  branch='main',  submodules='True')
+    version('master',  branch='main',  submodules='True')
     version('0.11.0', tag='v0.11.0', submodules="True")
     version('0.10.1', tag='v0.10.1', submodules="True")
     version('0.10.0', tag='v0.10.0', submodules="True")
@@ -39,20 +39,27 @@ class Raja(CMakePackage, CudaPackage):
 
         options = []
         options.append('-DENABLE_OPENMP={0}'.format(
-            'On' if '+openmp' in spec else 'Off'))
+            'ON' if '+openmp' in spec else 'Off'))
 
         if '+cuda' in spec:
             options.extend([
-                '-DENABLE_CUDA=On',
+                '-DENABLE_CUDA=ON',
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
+
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
-        # shared vs static libs
-        if "+shared" in spec:
-            options.append('-DBUILD_SHARED_LIBS=ON')
+                flag = '-arch sm_{0}'.format(cuda_arch[0])
+                options.append('-DCMAKE_CUDA_FLAGS:STRING={0}'.format(flag))
         else:
-            options.append('-DBUILD_SHARED_LIBS=OFF')
+            options.append('-DENABLE_CUDA=OFF')
+
+        options.append('-DBUILD_SHARED_LIBS={0}'.format(
+            'ON' if '+shared' in spec else 'OFF'))
+
+        options.append('-DENABLE_CHAI={0}'.format(
+            'ON' if '+chai' in spec else 'OFF'))
+
         # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
         # is used by the spack compiler wrapper.  This can go away when BLT
         # removes -Werror from GTest flags
@@ -60,5 +67,9 @@ class Raja(CMakePackage, CudaPackage):
             options.append('-DENABLE_TESTS=OFF')
         else:
             options.append('-DENABLE_TESTS=ON')
+
+        if '+chai' in spec:
+            options.extend([
+                '-DENABLE_CHAI=ON'])
 
         return options

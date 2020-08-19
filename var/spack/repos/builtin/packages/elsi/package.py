@@ -25,7 +25,7 @@ class Elsi(CMakePackage):
     )
     variant(
         'elpa2_kernel', default="none", description="ELPA2 Kernel",
-        values=('BGQ', 'AVX', 'AVX2', 'AVX512'), multi=False
+        values=('AVX', 'AVX2', 'AVX512'), multi=False
     )
     variant(
         'enable_pexsi', default=False, description='Enable PEXSI support'

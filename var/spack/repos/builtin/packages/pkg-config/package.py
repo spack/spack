@@ -27,6 +27,20 @@ class PkgConfig(AutotoolsPackage):
 
     parallel = False
 
+    executables = ['^pkg-config$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        exe = Executable(exe)
+
+        # Make sure this is actually pkg-config, not pkgconf
+        if 'usage: pkgconf' in exe('--help', output=str, error=str):
+            return None
+
+        version = exe('--version', output=str, error=str).rstrip()
+
+        return version
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Adds the ACLOCAL path for autotools."""
         env.append_path('ACLOCAL_PATH', self.prefix.share.aclocal)

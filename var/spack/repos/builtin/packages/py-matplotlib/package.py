@@ -5,15 +5,13 @@
 
 import sys
 
-from spack import *
-
 
 class PyMatplotlib(PythonPackage):
     """Matplotlib is a comprehensive library for creating static, animated,
     and interactive visualizations in Python."""
 
     homepage = "https://matplotlib.org/"
-    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.3.0.tar.gz"
+    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.3.1.tar.gz"
 
     maintainers = ['adamjstewart']
 
@@ -27,6 +25,7 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units'
     ]
 
+    version('3.3.1', sha256='87f53bcce90772f942c2db56736788b39332d552461a5cb13f05ff45c1680f0e')
     version('3.3.0', sha256='24e8db94948019d531ce0bcd637ac24b1c8f6744ac86d2aa0eb6dbaeb1386f82')
     version('3.2.2', sha256='3d77a6630d093d74cbbfebaa0571d00790966be1ed204e4a8239f5cbd6835c5d')
     version('3.2.1', sha256='ffe2f9cdcea1086fc414e82f42271ecf1976700b8edd16ca9d376189c6d93aee')
@@ -74,6 +73,8 @@ class PyMatplotlib(PythonPackage):
             description='Enable reading/saving JPEG, BMP and TIFF files')
     variant('latex', default=False,
             description='Enable LaTeX text rendering support')
+    variant('fonts', default=False,
+            description='Enable support for system font detection')
 
     # https://matplotlib.org/users/installing.html#dependencies
     # Required dependencies
@@ -84,6 +85,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('freetype@2.3:')  # freetype 2.6.1 needed for tests to pass
     depends_on('qhull@2015.2:', when='@3.3:')
     depends_on('libpng@1.2:')
+    depends_on('py-certifi@2020.6.20:', when='@3.3.1:', type=('build', 'run'))
     depends_on('py-numpy@1.11:', type=('build', 'run'))
     depends_on('py-numpy@1.15:', when='@3.3:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))  # See #3813
@@ -91,6 +93,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
     depends_on('py-kiwisolver@1.0.1:', type=('build', 'run'), when='@2.2.0:')
     depends_on('py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:', type=('build', 'run'))
+    depends_on('py-pillow@6.2.0:', when='@3.3:', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'), when='@:2')
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
     depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@:2.7')
@@ -123,11 +126,11 @@ class PyMatplotlib(PythonPackage):
 
     # Optional dependencies
     depends_on('ffmpeg', when='+movies')
-    # depends_on('libav', when='+movies')
     depends_on('imagemagick', when='+animation')
     depends_on('py-pillow@3.4:', when='+image', type=('build', 'run'))
     depends_on('texlive', when='+latex', type='run')
     depends_on('ghostscript@0.9:', when='+latex', type='run')
+    depends_on('fontconfig@2.7:', when='+fonts')
     depends_on('pkgconfig', type='build')
 
     # Testing dependencies
@@ -138,8 +141,9 @@ class PyMatplotlib(PythonPackage):
 
     msg = 'MacOSX backend requires the Cocoa headers included with XCode'
     conflicts('platform=linux', when='backend=macosx', msg=msg)
-    conflicts('platform=bgq',   when='backend=macosx', msg=msg)
     conflicts('platform=cray',  when='backend=macosx', msg=msg)
+
+    conflicts('~image', when='@3.3:', msg='Pillow is no longer an optional dependency')
 
     # Patch to pick up correct freetype headers
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')

@@ -21,6 +21,7 @@ class Blaze(CMakePackage):
 
     # Blaze requires at least cmake 3.8.0 for C++14 features.
     depends_on('cmake@3.8.0:', type='build')
+    depends_on('blas')
 
     version('master', branch='master')
     version('3.5', sha256='f50d4a57796b8012d3e6d416667d9abe6f4d95994eb9deb86cd4491381dec624')

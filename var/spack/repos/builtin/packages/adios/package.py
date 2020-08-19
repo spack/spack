@@ -68,7 +68,7 @@ class Adios(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('m4', type='build')
-    depends_on('libtool@:2.4.2', type='build')
+    depends_on('libtool', type='build')
     depends_on('python', type='build')
 
     depends_on('mpi', when='+mpi')
@@ -104,6 +104,10 @@ class Adios(AutotoolsPackage):
     # ADIOS 1.13.1 is written for ZFP 0.5.0 interfaces
     #   https://github.com/ornladios/ADIOS/pull/204
     patch('zfp051.patch', when='@1.11.0:1.13.1')
+
+    # Fix a bug in configure.ac that causes automake issues on RHEL 7.7
+    patch('https://github.com/ornladios/ADIOS/pull/207.patch', when='@1.12.0:',
+          sha256='01113e9efb929d71c28bf33cc8b7f215d85195ec700e99cb41164e2f8f830640')
 
     def validate(self, spec):
         """Checks if incompatible variants have been activated at the same time

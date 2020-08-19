@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class M4(AutotoolsPackage, GNUMirrorPackage):
@@ -31,6 +31,18 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     depends_on('libsigsegv', when='+sigsegv')
 
     build_directory = 'spack-build'
+
+    executables = ['^g?m4$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        # Output on macOS:
+        #   GNU M4 1.4.6
+        # Output on Linux:
+        #   m4 (GNU M4) 1.4.18
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU M4\)?\s+(\S+)', output)
+        return match.group(1) if match else None
 
     def configure_args(self):
         spec = self.spec

@@ -695,11 +695,11 @@ Here is an example of a much longer spec than we've seen thus far:
 
 .. code-block:: none
 
-   mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt arch=bgq_os ^callpath @1.1 %gcc@4.7.2
+   mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt target=x86_64 ^callpath @1.1 %gcc@4.7.2
 
 If provided to ``spack install``, this will install the ``mpileaks``
 library at some version between ``1.2`` and ``1.4`` (inclusive),
-built using ``gcc`` at version 4.7.5 for the Blue Gene/Q architecture,
+built using ``gcc`` at version 4.7.5 for a generic ``x86_64`` architecture,
 with debug options enabled, and without Qt support.  Additionally, it
 says to link it with the ``callpath`` library (which it depends on),
 and to build callpath with ``gcc`` 4.7.2.  Most specs will not be as
