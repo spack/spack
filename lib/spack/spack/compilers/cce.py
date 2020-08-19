@@ -34,7 +34,7 @@ class Cce(Compiler):
 
     @property
     def is_clang_based(self):
-        version = self._real_version
+        version = getattr(self, '_real_version', self.version)
         return version >= ver('9.0') and 'classic' not in str(version)
 
     @property

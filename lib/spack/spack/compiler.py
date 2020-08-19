@@ -271,8 +271,8 @@ class Compiler(object):
     PrgEnv_compiler = None
 
     def __init__(self, cspec, operating_system, target,
-                 paths, modules=None, alias=None, environment=None,
-                 extra_rpaths=None, enable_implicit_rpaths=None,
+                 paths, modules=[], alias=None, environment={},
+                 extra_rpaths=[], enable_implicit_rpaths=None,
                  **kwargs):
         self.spec = cspec
         self.operating_system = str(operating_system)
