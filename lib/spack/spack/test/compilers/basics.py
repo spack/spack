@@ -745,7 +745,7 @@ def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
     with open(gcc, 'w') as f:
         f.write("""#!/bin/bash
 echo "4.4.4"
-""") # Version for which c++11 flag is -std=c++0x
+""")  # Version for which c++11 flag is -std=c++0x
     fs.set_executable(gcc)
 
     # Add compiler to config

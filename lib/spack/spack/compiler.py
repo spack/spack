@@ -308,7 +308,7 @@ class Compiler(object):
         # cache real version value for version checks
         try:
             self._real_version = spack.version.Version(self.get_real_version())
-        except:
+        except spack.util.executable.ProcessError:
             self._real_version = self.version
 
     def verify_executables(self):
