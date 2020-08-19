@@ -432,13 +432,13 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         spec.prefix, spack.store.layout.root)
     buildinfo['relative_rpaths'] = rel
     spec_dict['buildinfo'] = buildinfo
-    spec_dict['full_hash'] = spec.full_hash()
+    # spec_dict['full_hash'] = spec.full_hash()
 
-    tty.debug('The full_hash ({0}) of {1} will be written into {2}'.format(
-        spec_dict['full_hash'],
-        spec.name,
-        url_util.format(remote_specfile_path)))
-    tty.debug(spec.tree())
+    # tty.debug('The full_hash ({0}) of {1} will be written into {2}'.format(
+    #     spec_dict['full_hash'],
+    #     spec.name,
+    #     url_util.format(remote_specfile_path)))
+    # tty.debug(spec.tree())
 
     with open(specfile_path, 'w') as outfile:
         outfile.write(syaml.dump(spec_dict))
