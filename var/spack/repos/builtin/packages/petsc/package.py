@@ -81,8 +81,7 @@ class Petsc(Package):
     # Mumps is disabled by default, because it depends on Scalapack
     # which is not portable to all HPC systems
     variant('mumps',   default=False,
-            description='Activates support for MUMPS (only parallel'
-            ' and 32bit indices)')
+            description='Activates support for MUMPS (only parallel)')
     variant('superlu-dist', default=True,
             description='Activates support for SuperluDist (only parallel)')
     variant('trilinos', default=False,
@@ -227,6 +226,8 @@ class Petsc(Package):
     depends_on('superlu-dist@develop+int64', when='@develop+superlu-dist+mpi+int64')
     depends_on('mumps+mpi', when='+mumps+mpi~int64')
     depends_on('scalapack', when='+mumps+mpi~int64')
+    depends_on('mumps+mpi', when='@3.13:+mumps+mpi')
+    depends_on('scalapack', when='@3.13:+mumps+mpi')
     depends_on('trilinos@12.6.2:+mpi', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0+mpi', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop+mpi', when='@xdevelop+trilinos+mpi')
@@ -330,7 +331,8 @@ class Petsc(Package):
 
         # PETSc depends on scalapack when '+mumps+mpi~int64' (see depends())
         # help PETSc pick up Scalapack from MKL
-        if spec.satisfies('+mumps+mpi~int64'):
+        if (spec.satisfies('+mumps+mpi~int64') or
+                spec.satisfies('@3.13:+mumps+mpi')):
             scalapack = spec['scalapack'].libs
             options.extend([
                 '--with-scalapack-lib=%s' % scalapack.joined(),
