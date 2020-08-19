@@ -1129,6 +1129,8 @@ class Database(object):
         # TODO: ensure that spec is concrete?
         # Entire add is transactional.
         with self.write_transaction():
+            print('Adding {0} to database, full_hash = {1}'.format(
+                spec.name, spec._full_hash))
             self._add(spec, directory_layout, explicit=explicit)
 
     def _get_matching_spec_key(self, spec, **kwargs):

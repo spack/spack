@@ -1443,6 +1443,7 @@ class Spec(object):
 
         TODO: investigate whether to include build deps here.
         """
+        print(' @@@@@@@@@ Someone asked to compute full_hash for {0} @@@@@@@@@ '.format(self.name))
         return self._cached_hash(ht.full_hash, length)
 
     def dag_hash_bit_prefix(self, bits):
