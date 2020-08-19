@@ -38,6 +38,7 @@ class Zlib(Package):
         )
 
     def setup_build_environment(self, env):
+        env.append_flags('CFLAGS', '-Wall')
         if '+pic' in self.spec:
             env.append_flags('CFLAGS', self.compiler.cc_pic_flag)
         if '+optimize' in self.spec:
