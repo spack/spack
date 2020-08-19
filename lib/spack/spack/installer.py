@@ -351,6 +351,10 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False):
     if binary_spec not in specs:
         return False
 
+    print('Got spec list and it contains the target')
+    for next_spec in specs:
+        print('  {0}'.format(next_spec))
+
     return _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned)
 
 
