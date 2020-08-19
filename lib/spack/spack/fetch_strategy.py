@@ -579,7 +579,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
                 raise
 
         # Notify the user how we fetched.
-        tty.debug('Using cached archive: {0}'.format(path))
+        tty.msg('Using cached archive: {0}'.format(path))
 
 
 class VCSFetchStrategy(FetchStrategy):

@@ -175,8 +175,8 @@ def test_unknown_hash(checksum_type):
         crypto.Checker('a')
 
 
-def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch):
-    """Ensure a fetch with status bar option."""
+def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
+    """Ensure fetch with status bar option succeeds."""
     def is_true():
         return True
 
@@ -189,6 +189,9 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch):
     with Stage(fetcher, path=testpath) as stage:
         assert fetcher.archive_file is None
         stage.fetch()
+
+    status = capfd.readouterr()[1]
+    assert '##### 100.0%' in status
 
 
 def test_url_extra_fetch(tmpdir, mock_archive):
