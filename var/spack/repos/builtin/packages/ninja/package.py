@@ -40,6 +40,9 @@ class Ninja(Package):
         ninja_test = Executable('./ninja_test')
         ninja_test()
 
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.misc)
+
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('ninja', prefix.bin)
