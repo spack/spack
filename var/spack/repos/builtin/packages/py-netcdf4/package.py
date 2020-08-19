@@ -52,6 +52,6 @@ class PyNetcdf4(PythonPackage):
         env.set('HDF5_DIR', self.spec['hdf5'].prefix)
         env.set('HDF5_INCDIR', self.spec['hdf5'].prefix.include)
         env.set('HDF5_LIBDIR', self.spec['hdf5'].prefix.lib)
+        env.set('NETCDF4_DIR', self.spec['netcdf-c'].prefix)
         env.set('NETCDF4_INCDIR', self.spec['netcdf-c'].prefix.include)
         env.set('NETCDF4_LIBDIR', self.spec['netcdf-c'].prefix.lib)
-        env.set('NETCDF4_DIR', self.spec['netcdf-c'].prefix)
