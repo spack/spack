@@ -73,13 +73,22 @@ schema = {
                             'type': 'string'
                         },
                     },
-                    'dev-build': {
+                    'develop': {
                         'type': 'object',
                         'default': {},
                         'additionalProperties': False,
                         'patternProperties': {
                             r'\w[\w-]*': {
-                                'type': 'string',
+                                'type': 'object',
+                                'additionalProperties': False,
+                                'properties': {
+                                    'spec': {
+                                        'type': 'string'
+                                    },
+                                    'path': {
+                                        'type': 'string'
+                                    },
+                                },
                             },
                         },
                     },

@@ -710,13 +710,13 @@ class Environment(object):
         self.concretization = configuration.get('concretization')
 
         # Retrieve dev-build packages:
-        dev_builds = configuration['dev-build']
-        self.dev_specs = {}
-        for a_spec, path in dev_builds.items():
+        self.dev_specs = configuration['develop']
+        for name, entry in self.dev_specs.items():
             # Path must exist and spec must include version
-            assert Spec(a_spec).version
+            assert Spec(entry['spec']).version
+            path = entry['path']
+            path = path if os.path.isabs(path) else os.path.join(self.path, path)
             assert os.path.exists(path)
-            self.dev_specs[a_spec] = path
 
     @property
     def user_specs(self):
@@ -993,15 +993,26 @@ class Environment(object):
 
         Returns (bool): True iff the environment was changed.
         """
-        for e_spec, e_path in self.dev_specs.items():
-            if Spec(e_spec) == spec:
-                if path == e_path:
-                    tty.msg("Spec %s already configured for development" %
-                            spec)
-                    return False
+        if not spec.versions.concrete:
+            raise SpackEnvironmentError(
+                'Cannot develop spec %s without a concrete version' % spec)
+
+        for name, entry in self.dev_specs.items():
+            if name == spec.name:
+                e_spec = Spec(entry['spec'])
+                e_path = entry['path']
+
+                if e_spec == spec:
+                    if path == e_path:
+                        tty.msg("Spec %s already configured for development" %
+                                spec)
+                        return False
+                    else:
+                        tty.msg("Updating development path for spec %s" % spec)
+                        break
                 else:
-                    tty.msg("Updating development path for spec %s" % spec)
-                    spec = e_spec  # no duplicate entries for "spelling" diffs
+                    tty.msg("Updating development spec for package %s" %
+                            spec.name)
                     break
         else:
             tty.msg("Configuring spec %s for development" % spec)
@@ -1012,16 +1023,16 @@ class Environment(object):
             spec.package.fetcher.clone(abspath)
 
         # If it wasn't already in the list, append it
-        self.dev_specs[str(spec)] = path
+        self.dev_specs[spec.name] = {'path': path, 'spec': str(spec)}
         return True
 
     def undevelop(self, spec):
-        """Remove dev-build info for abstract spec ``spec``.
+        """Remove develop info for abstract spec ``spec``.
 
         returns True on success, False if no entry existed."""
-        spec = str(spec)  # In case it's a spec object
-        if spec in self.dev_specs:
-            del self.dev_specs[spec]
+        spec = Spec(spec)  # In case it's a spec object
+        if spec.name in self.dev_specs:
+            del self.dev_specs[spec.name]
             return True
         return False
 
@@ -1311,9 +1322,17 @@ class Environment(object):
         # "spec" must be concrete
         package = spec.package
 
-        for dev_spec, path in self.dev_specs.items():
-            if spec.satisfies(dev_spec, strict=True):
+        for dev_pkg, entry in self.dev_specs.items():
+            if spec.name == dev_pkg:
+                dev_spec = entry['spec']
+                if not spec.satisfies(dev_spec, strict=True):
+                    msg = 'Spec %s' % spec
+                    msg += ' does not match development spec %s' % dev_spec
+                    msg += ' for package %s' % spec.name
+                    raise SpackEnvironmentError(msg)
+
                 # setup stage
+                path = entry['path']
                 source_path = path if os.path.isabs(path) else os.path.join(
                     self.path, path)
                 package.stage = spack.stage.DIYStage(source_path)
@@ -1674,9 +1693,9 @@ class Environment(object):
         yaml_dict['view'] = view
 
         if self.dev_specs:
-            yaml_dict['dev-build'] = self.dev_specs
+            yaml_dict['develop'] = self.dev_specs
         else:
-            yaml_dict.pop('dev-build', None)
+            yaml_dict.pop('develop', None)
 
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident

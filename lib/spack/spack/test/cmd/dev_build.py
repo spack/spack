@@ -171,8 +171,10 @@ env:
   specs:
   - dev-build-test-install@0.0.0
 
-  dev-build:
-    dev-build-test-install@0.0.0: %s
+  develop:
+    dev-build-test-install:
+      spec: dev-build-test-install@0.0.0
+      path: %s
 """ % build_dir)
 
         env('create', 'test', './spack.yaml')
@@ -202,8 +204,10 @@ env:
   specs:
   - dev-build-test-install@0.0.0
 
-  dev-build:
-    dev-build-test-install@1.1.1: %s
+  develop:
+    dev-build-test-install:
+      spec: dev-build-test-install@1.1.1
+      path: %s
 """ % build_dir)
 
         env('create', 'test', './spack.yaml')
@@ -238,9 +242,13 @@ env:
   - dev-build-test-install@0.0.0
   - dev-build-test-dependent@0.0.0
 
-  dev-build:
-    dev-build-test-install@0.0.0: %s
-    dev-build-test-dependent@0.0.0: %s
+  develop:
+    dev-build-test-install:
+      path: %s
+      spec: dev-build-test-install@0.0.0
+    dev-build-test-dependent:
+      spec: dev-build-test-dependent@0.0.0
+      path: %s
 """ % (leaf_dir, root_dir))
 
         env('create', 'test', './spack.yaml')
