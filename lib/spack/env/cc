@@ -22,7 +22,7 @@
 
 # This is an array of environment variables that need to be set before
 # the script runs. They are set by routines in spack.build_environment
-# as part of spack.package.Package.do_install().
+# as part of the package installation process.
 parameters=(
     SPACK_ENV_PATH
     SPACK_DEBUG_LOG_DIR

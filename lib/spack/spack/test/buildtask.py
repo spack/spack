@@ -22,7 +22,8 @@ def test_build_task_errors(install_mockery):
     spec.concretize()
     assert spec.concrete
     with pytest.raises(inst.InstallError, match='Cannot create a build task'):
-        inst.BuildTask(spec.package, None, False, 0, 0, inst.STATUS_REMOVED, [])
+        inst.BuildTask(spec.package, None, False, 0, 0, inst.STATUS_REMOVED,
+                       [])
 
 
 def test_build_task_basics(install_mockery):
