@@ -478,7 +478,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             ])
 
         # enable_bootstrap
-        if spec.satisfies('+enable_bootstrap'):
+        if spec.satisfies('+bootstrap'):
             options.extend([
                 '--enable-bootstrap',
             ])
