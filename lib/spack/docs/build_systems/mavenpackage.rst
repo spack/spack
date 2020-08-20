@@ -5,9 +5,9 @@
 
 .. _mavenpackage:
 
-----------
+------------
 MavenPackage
-----------
+------------
 
 Apache Maven is a general-purpose build system that does not rely
 on Makefiles to build software. It is designed for building and

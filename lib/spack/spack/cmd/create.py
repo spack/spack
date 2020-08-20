@@ -211,7 +211,8 @@ class MavenPackageTemplate(PackageTemplate):
 
     body_def = """\
     def build(self, spec, prefix):
-        # FIXME: If not needed delete this function"""
+        # FIXME: If not needed delete this function
+        pass"""
 
 
 class SconsPackageTemplate(PackageTemplate):
