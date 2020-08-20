@@ -31,7 +31,7 @@ class Rocalution(CMakePackage):
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('rocprim@' + ver, type='build', when='@' + ver)
 
-    patch('0001-fix-hip-build-error.patch', when='@3.5.0:')
+    patch('0001-fix-hip-build-error.patch')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
