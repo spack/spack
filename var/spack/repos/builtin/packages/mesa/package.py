@@ -84,6 +84,8 @@ class Mesa(AutotoolsPackage):
     depends_on('libxext', when='+glx')
     depends_on('glproto@1.4.14:', when='+glx', type='build')
 
+    depends_on('libglvnd', when='+glvnd')
+
     # Add the necessary dri dependencies
     # for constraint in ('+egl', '+glvnd'):
     #     depends_on('...', when=constraint)
