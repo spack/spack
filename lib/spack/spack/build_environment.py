@@ -50,10 +50,6 @@ from llnl.util.filesystem import mkdirp, install, install_tree
 from llnl.util.lang import dedupe
 from llnl.util.tty.log import fd_wrapper
 
-_serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
-if _serialize:
-    import multiprocessing.reduction
-
 import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.config
@@ -72,6 +68,10 @@ from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module, module
 from spack.util.log_parse import parse_log_events, make_log_context
+
+_serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
+if _serialize:
+    import multiprocessing.reduction
 
 
 #
