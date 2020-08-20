@@ -2330,6 +2330,10 @@ class Spec(object):
         # TODO: internal configuration conflicts within one package.
         matches = []
         for x in self.traverse():
+            if x.external:
+                # external specs are already built, don't worry about whether
+                # it's possible to build that configuration with Spack
+                continue
             for conflict_spec, when_list in x.package_class.conflicts.items():
                 if x.satisfies(conflict_spec, strict=True):
                     for when_spec, msg in when_list:
