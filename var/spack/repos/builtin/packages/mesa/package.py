@@ -5,6 +5,7 @@
 
 from spack import *
 
+import itertools
 import sys
 
 
@@ -87,8 +88,10 @@ class Mesa(AutotoolsPackage):
     depends_on('libglvnd', when='+glvnd')
 
     # Add the necessary dri dependencies
-    # for constraint in ('+egl', '+glvnd'):
-    #     depends_on('...', when=constraint)
+    for dependency, constraint in itertools.product(
+            ('libdrm@2.4.75:',), 
+            ('+egl', '+glvnd')):
+        depends_on(dependency, when=constraint)
 
     # Prevent an unnecessary xcb-dri dependency
     patch('autotools-x11-nodri.patch')
