@@ -25,9 +25,6 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.7
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
@@ -40,9 +37,6 @@ jobs:
     timeout-minutes: 700
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.7
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
@@ -54,9 +48,6 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.7
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
@@ -69,9 +60,6 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.7
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
