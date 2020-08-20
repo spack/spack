@@ -92,8 +92,9 @@ class Ruby(AutotoolsPackage):
             gem('install', '<gem-name>.gem')
         """
         # Ruby extension builds have global ruby and gem functions
-        module.ruby = Executable(join_path(self.spec.prefix.bin, 'ruby'))
-        module.gem = Executable(join_path(self.spec.prefix.bin, 'gem'))
+        module.ruby = Executable(self.prefix.bin.ruby)
+        module.gem  = Executable(self.prefix.bin.gem)
+        module.rake = Executable(self.prefix.bin.rake)
 
     @run_after('install')
     def post_install(self):
