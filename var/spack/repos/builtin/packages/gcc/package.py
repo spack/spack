@@ -95,6 +95,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('nvptx',
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
+    variant('bootstrap',
+            default=False,
+            description='add --enable-bootstrap flag for stage3 build')
 
     depends_on('flex', type='build', when='@master')
 
@@ -448,9 +451,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             '--enable-languages={0}'.format(
                 ','.join(spec.variants['languages'].value)),
             # Drop gettext dependency
-            '--disable-nls',
-            '--with-mpfr={0}'.format(spec['mpfr'].prefix),
-            '--with-gmp={0}'.format(spec['gmp'].prefix),
+            '--disable-nls'
         ]
 
         # Use installed libz
@@ -468,21 +469,35 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if spec.satisfies('+binutils'):
             binutils = spec['binutils'].prefix.bin
             options.extend([
-                '--with-sysroot=/',
                 '--with-gnu-ld',
                 '--with-ld=' + binutils.ld,
                 '--with-gnu-as',
                 '--with-as=' + binutils.join('as'),
+            ])
+
+        # enable_bootstrap
+        if spec.satisfies('+bootstrap'):
+            options.extend([
                 '--enable-bootstrap',
             ])
 
-        # MPC
-        if 'mpc' in spec:
-            options.append('--with-mpc={0}'.format(spec['mpc'].prefix))
+        # Configure include and lib directories explicitly for these
+        # dependencies since the short GCC option assumes that libraries
+        # are installed in "/lib" which might not be true on all OS
+        # (see #10842)
+        #
+        # More info at: https://gcc.gnu.org/install/configure.html
+        for dep_str in ('mpfr', 'gmp', 'mpc', 'isl'):
+            if dep_str not in spec:
+                continue
 
-        # ISL
-        if 'isl' in spec:
-            options.append('--with-isl={0}'.format(spec['isl'].prefix))
+            dep_spec = spec[dep_str]
+            include_dir = dep_spec.headers.directories[0]
+            lib_dir = dep_spec.libs.directories[0]
+            options.extend([
+                '--with-{0}-include={1}'.format(dep_str, include_dir),
+                '--with-{0}-lib={1}'.format(dep_str, lib_dir)
+            ])
 
         # nvptx-none offloading for host compiler
         if spec.satisfies('+nvptx'):

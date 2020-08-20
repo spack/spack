@@ -41,13 +41,13 @@ class Dyninst(CMakePackage):
     depends_on('boost@1.61.0:1.69.99' + boost_libs, when='@:10.0.99')
     depends_on('libiberty+pic')
 
-    # Dyninst uses elf@1 (elfutils) starting with 9.3.0, and used
-    # elf@0 (libelf) before that.
-    depends_on('elf@1', type='link', when='@9.3.0:')
-    depends_on('elf@0', type='link', when='@:9.2.99')
+    # Dyninst uses elfutils starting with 9.3.0, and used libelf
+    # before that.
+    depends_on('elfutils', type='link', when='@9.3.0:')
+    depends_on('libelf', type='link', when='@:9.2.99')
 
-    # Dyninst uses libdw from elfutils (same elf@1) starting with
-    # 10.x, and used libdwarf before that.
+    # Dyninst uses libdw from elfutils starting with 10.0, and used
+    # libdwarf before that.
     depends_on('libdwarf', when='@:9.99.99')
 
     depends_on('tbb@2018.6:', when='@10.0.0:')

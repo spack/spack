@@ -1787,7 +1787,7 @@ def update_yaml(manifest, backup_file):
 
     shutil.copy(manifest, backup_file)
     with open(manifest, 'w') as f:
-        _write_yaml(data, f)
+        syaml.dump_config(data, f)
     return True
 
 

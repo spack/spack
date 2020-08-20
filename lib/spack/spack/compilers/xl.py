@@ -47,7 +47,7 @@ class Xl(Compiler):
 
     @property
     def cxx11_flag(self):
-        if self.version < ver('13.1'):
+        if self.real_version < ver('13.1'):
             raise UnsupportedCompilerFlag(self,
                                           "the C++11 standard",
                                           "cxx11_flag",
@@ -57,9 +57,9 @@ class Xl(Compiler):
 
     @property
     def c99_flag(self):
-        if self.version >= ver('13.1.1'):
+        if self.real_version >= ver('13.1.1'):
             return '-std=gnu99'
-        if self.version >= ver('10.1'):
+        if self.real_version >= ver('10.1'):
             return '-qlanglvl=extc99'
         raise UnsupportedCompilerFlag(self,
                                       'the C99 standard',
@@ -68,9 +68,9 @@ class Xl(Compiler):
 
     @property
     def c11_flag(self):
-        if self.version >= ver('13.1.2'):
+        if self.real_version >= ver('13.1.2'):
             return '-std=gnu11'
-        if self.version >= ver('12.1'):
+        if self.real_version >= ver('12.1'):
             return '-qlanglvl=extc1x'
         raise UnsupportedCompilerFlag(self,
                                       'the C11 standard',
