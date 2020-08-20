@@ -204,6 +204,16 @@ class QMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class MavenPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Maven-based packages"""
+
+    base_class_name = 'MavenPackage'
+
+    body_def = """\
+    def build(self, spec, prefix):
+        # FIXME: If not needed delete this function"""
+
+
 class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
 
@@ -402,6 +412,7 @@ templates = {
     'cmake':      CMakePackageTemplate,
     'bundle':     BundlePackageTemplate,
     'qmake':      QMakePackageTemplate,
+    'maven':      MavenPackageTemplate,
     'scons':      SconsPackageTemplate,
     'waf':        WafPackageTemplate,
     'bazel':      BazelPackageTemplate,
@@ -482,6 +493,7 @@ class BuildSystemGuesser:
             (r'/configure$',          'autotools'),
             (r'/configure\.(in|ac)$', 'autoreconf'),
             (r'/Makefile\.am$',       'autoreconf'),
+            (r'/pom.xml$',            'maven'),
             (r'/SConstruct$',         'scons'),
             (r'/waf$',                'waf'),
             (r'/setup\.py$',          'python'),
