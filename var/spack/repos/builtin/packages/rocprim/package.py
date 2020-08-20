@@ -32,7 +32,11 @@ class Rocprim(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DCMAKE_MODULE_PATH={0}/cmake'.format(spec['hip'].prefix)
+            '-DCMAKE_MODULE_PATH={0}/cmake'.format(spec['hip'].prefix),
+            '-DONLY_INSTALL=ON',
+            '-DBUILD_TEST=OFF',
+            '-DBUILD_BENCHMARK=OFF',
+            '-DBUILD_EXAMPLE=OFF'
         ]
 
         return args
