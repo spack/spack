@@ -11,7 +11,7 @@ class Charliecloud(AutotoolsPackage):
 
     maintainers = ['j-ogas', 'reidpr']
     homepage = "https://hpc.github.io/charliecloud"
-    url      = "https://github.com/hpc/charliecloud/releases/download/v0.14/charliecloud-0.18.tar.gz"
+    url      = "https://github.com/hpc/charliecloud/releases/download/v0.18/charliecloud-0.18.tar.gz"
     git      = "https://github.com/hpc/charliecloud.git"
 
     version('master', branch='master')
