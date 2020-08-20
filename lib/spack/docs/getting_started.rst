@@ -19,6 +19,9 @@ before Spack is run:
 #. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.8) to run Spack
 #. A C/C++ compiler for building
 #. The ``make`` executable for building
+#. The ``tar``, ``gzip``, ``bzip2``, ``xz`` and optionally ``zstd``
+   executables for extracting source code
+#. The ``patch`` command to apply patches
 #. The ``git`` and ``curl`` commands for fetching
 #. If using the ``gpg`` subcommand, ``gnupg2`` is required
 
