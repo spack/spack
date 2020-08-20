@@ -59,7 +59,21 @@ def _true(*args, **kwargs):
     return True
 
 
-def create_build_task(pkg):
+def create_build_request(pkg, install_args={}):
+    """
+    Create a built task for the given (concretized) package
+
+    Args:
+        pkg (PackageBase): concretized package associated with the task
+        install_args (dict): install arguments
+
+    Return:
+        (BuildRequest) A basic package build task
+    """
+    return inst.BuildRequest(pkg, install_args)
+
+
+def create_build_task(pkg, install_args={}):
     """
     Create a built task for the given (concretized) package
 
@@ -69,10 +83,11 @@ def create_build_task(pkg):
     Return:
         (BuildTask) A basic package build task
     """
-    return inst.BuildTask(pkg, None, False, 0, 0, inst.STATUS_ADDED, [])
+    request = create_build_request(pkg, install_args)
+    return inst.BuildTask(pkg, request, False, 0, 0, inst.STATUS_ADDED, [])
 
 
-def create_installer(spec_name):
+def create_installer(spec_name, kwargs=None):
     """
     Create an installer for the named spec
 
@@ -86,7 +101,7 @@ def create_installer(spec_name):
     spec = spack.spec.Spec(spec_name)
     spec.concretize()
     assert spec.concrete
-    return spec, inst.PackageInstaller(spec.package)
+    return spec, inst.PackageInstaller([spec.package, kwargs])
 
 
 @pytest.mark.parametrize('sec,result', [
@@ -240,22 +255,26 @@ def test_installer_str(install_mockery):
     assert "failed (0)" in istr
 
 
-def test_check_before_phase_error(install_mockery, capsys):
+def test_check_before_phase_error(install_mockery):
     pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(SystemExit):
-        inst._check_phase(pkg, stop_before='badphase')
+    pkg.stop_before_phase = 'beforephase'
+    with pytest.raises(inst.BadInstallPhase) as exc_info:
+        inst._check_last_phase(pkg)
 
-    captured = capsys.readouterr()
-    assert 'is not an allowed phase' in str(captured)
+    err = str(exc_info.value)
+    assert 'is not an allowed phase' in err
+    assert pkg.stop_before_phase in err
 
 
-def test_check_last_phase_error(install_mockery, capsys):
+def test_check_last_phase_error(install_mockery):
     pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(SystemExit):
-        inst._check_phase(pkg, stop_at='badphase')
+    pkg.last_phase = 'badphase'
+    with pytest.raises(inst.BadInstallPhase) as exc_info:
+        inst._check_last_phase(pkg)
 
-    captured = capsys.readouterr()
-    assert 'is not an allowed phase' in str(captured)
+    err = str(exc_info.value)
+    assert 'is not an allowed phase' in err
+    assert pkg.last_phase in err
 
 
 def test_installer_ensure_ready_errors(install_mockery):
@@ -532,39 +551,43 @@ def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
 
 def test_check_deps_status_install_failure(install_mockery, monkeypatch):
     spec, installer = create_installer('a')
+    request = installer.build_requests[0]
 
     # Make sure the package is identified as failed
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
 
     with pytest.raises(inst.InstallError, match='install failure'):
-        installer._check_deps_status(spec)
+        installer._check_deps_status(request)
 
 
 def test_check_deps_status_write_locked(install_mockery, monkeypatch):
     spec, installer = create_installer('a')
+    request = installer.build_requests[0]
 
     # Ensure the lock is not acquired
     monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked', _not_locked)
 
     with pytest.raises(inst.InstallError, match='write locked by another'):
-        installer._check_deps_status(spec)
+        installer._check_deps_status(request)
 
 
 def test_check_deps_status_external(install_mockery, monkeypatch):
     spec, installer = create_installer('a')
+    request = installer.build_requests[0]
 
     # Mock the known dependent, b, as external so assumed to be installed
     monkeypatch.setattr(spack.spec.Spec, 'external', True)
-    installer._check_deps_status(spec)
+    installer._check_deps_status(request)
     assert 'b' in installer.installed
 
 
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
     spec, installer = create_installer('a')
+    request = installer.build_requests[0]
 
     # Mock the known dependent, b, as installed upstream
     monkeypatch.setattr(spack.package.PackageBase, 'installed_upstream', True)
-    installer._check_deps_status(spec)
+    installer._check_deps_status(request)
     assert 'b' in installer.installed
 
 
@@ -574,9 +597,10 @@ def test_add_bootstrap_compilers(install_mockery, monkeypatch):
         return [(spec.package, True)]
 
     spec, installer = create_installer('trivial-install-test-package')
+    request = installer.build_requests[0]
 
     monkeypatch.setattr(inst, '_packages_needed_to_bootstrap_compiler', _pkgs)
-    installer._add_bootstrap_compilers(spec.package)
+    installer._add_bootstrap_compilers(spec.package, request)
 
     ids = list(installer.build_tasks)
     assert len(ids) == 1
@@ -587,11 +611,12 @@ def test_add_bootstrap_compilers(install_mockery, monkeypatch):
 def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
     """Test of _prepare_for_install's early return for installed task path."""
     spec, installer = create_installer('dependent-install')
-    task = create_build_task(spec.package)
+    install_args = {'keep_prefix': True, 'keep_stage': True, 'restage': False}
+    task = create_build_task(spec.package, install_args)
     installer.installed.add(task.pkg_id)
 
     monkeypatch.setattr(inst.PackageInstaller, '_ensure_install_ready', _noop)
-    installer._prepare_for_install(task, True, True, False)
+    installer._prepare_for_install(task)
 
 
 def test_installer_init_queue(install_mockery):
@@ -761,7 +786,7 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_update_failed', _noop)
 
     msg = 'Cannot proceed with dependent-install'
-    with pytest.raises(spack.installer.InstallError, match=msg):
+    with pytest.raises(inst.InstallError, match=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -779,7 +804,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
 
     msg = 'Installation of b failed'
-    with pytest.raises(spack.installer.InstallError, match=msg):
+    with pytest.raises(inst.InstallError, match=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -804,7 +829,7 @@ def test_install_fail_on_interrupt(install_mockery, monkeypatch):
 
 def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     """Test fail_fast install when an install failure is detected."""
-    spec, installer = create_installer('a')
+    spec, installer = create_installer('a', {'fail_fast': True})
 
     # Make sure the package is identified as failed
     #
@@ -812,8 +837,8 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     # to be skipped.
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
 
-    with pytest.raises(spack.installer.InstallError):
-        installer.install(fail_fast=True)
+    with pytest.raises(inst.InstallError):
+        installer.install()
 
     out = str(capsys.readouterr())
     assert 'Skipping build of a' in out
@@ -826,7 +851,7 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     def _patch(installer, task, **kwargs):
         raise RuntimeError(err_msg)
 
-    spec, installer = create_installer('a')
+    spec, installer = create_installer('a', {'fail_fast': True})
 
     # Raise a non-KeyboardInterrupt exception to trigger fast failure.
     #
@@ -834,8 +859,8 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     # to be skipped.
     monkeypatch.setattr(spack.package.PackageBase, 'do_patch', _patch)
 
-    with pytest.raises(spack.installer.InstallError, matches=err_msg):
-        installer.install(fail_fast=True)
+    with pytest.raises(inst.InstallError, matches=err_msg):
+        installer.install()
 
     out = str(capsys.readouterr())
     assert 'Skipping build of a' in out
@@ -945,7 +970,7 @@ def test_install_dir_exists(install_mockery, monkeypatch, capfd):
     """Cover capture of install directory exists error."""
     err = 'Mock directory exists error'
 
-    def _install(installer, task, **kwargs):
+    def _install(installer):
         raise dl.InstallDirectoryAlreadyExistsError(err)
 
     # Skip the actual installation though should never reach it
