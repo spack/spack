@@ -959,7 +959,8 @@ class Spec(object):
 
     def __init__(self, spec_like=None,
                  normal=False, concrete=False, external_path=None,
-                 external_modules=None, full_hash=None):
+                 external_modules=None, full_hash=None,
+                 full_hash_match_for_equals=False):
         """Create a new Spec.
 
         Arguments:
@@ -1010,6 +1011,7 @@ class Spec(object):
         self.external_path = external_path
         self.external_modules = external_modules
         self._full_hash = full_hash
+        self._match_full_hash = full_hash_match_for_equals
 
         # This attribute is used to store custom information for
         # external specs. None signal that it was not set yet.
@@ -2360,6 +2362,9 @@ class Spec(object):
             s._normal = value
             s._concrete = value
 
+    def _require_full_hash_match_for_equals(self, value=True):
+        self._match_full_hash = True
+
     def concretized(self):
         """This is a non-destructive version of concretize().  First clones,
            then returns a concrete version of this package without modifying
@@ -3352,7 +3357,9 @@ class Spec(object):
             (d.spec.name, hash(d.spec), tuple(sorted(d.deptypes)))
             for name, d in sorted(self._dependencies.items()))
 
-        key = (self._full_hash, self._cmp_node(), dep_tuple)
+        comp_one = self._full_hash if self._match_full_hash else None
+
+        key = (comp_one, self._cmp_node(), dep_tuple)
         if self._concrete:
             self._cmp_key_cache = key
         return key

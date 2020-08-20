@@ -811,6 +811,7 @@ def try_download_specs(urls=None, force=False):
                 # we need to mark this spec concrete on read-in.
                 spec = Spec.from_yaml(f)
                 spec._mark_concrete()
+                spec._require_full_hash_match_for_equals(force)
                 print('Adding {0} (full_hash={1}) from {2}'.format(
                     spec, spec._full_hash, link))
                 _cached_specs.add(spec)

@@ -345,9 +345,11 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False):
     """
     pkg_id = package_id(pkg)
     tty.debug('Searching for binary cache of {0}'.format(pkg_id))
-    specs = binary_distribution.get_spec(pkg.spec, force=True)
+    full_hash_must_match = True
+    specs = binary_distribution.get_spec(pkg.spec, force=full_hash_must_match)
     binary_spec = spack.spec.Spec.from_dict(pkg.spec.to_dict())
     binary_spec._mark_concrete()
+    binary_spec._require_full_hash_match_for_equals(full_hash_must_match)
     if binary_spec not in specs:
         return False
 
