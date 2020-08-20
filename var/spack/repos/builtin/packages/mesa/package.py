@@ -84,6 +84,10 @@ class Mesa(AutotoolsPackage):
     depends_on('libxext', when='+glx')
     depends_on('glproto@1.4.14:', when='+glx', type='build')
 
+    # Add the necessary dri dependencies
+    # for constraint in ('+egl', '+glvnd'):
+    #     depends_on('...', when=constraint)
+
     # Prevent an unnecessary xcb-dri dependency
     patch('autotools-x11-nodri.patch')
 
@@ -111,6 +115,9 @@ class Mesa(AutotoolsPackage):
             '--disable-osmesa',
             '--with-vulkan-drivers=']
 
+        use_dri = ('+egl' in spec) or ('+glvnd' in spec)
+        args.append('--enable-dri' if use_dri else '--disable-dri')
+
         if '+glvnd' in spec:
             args.append('--enable-libglvnd')
         else:
@@ -132,20 +139,21 @@ class Mesa(AutotoolsPackage):
 
         if '+glx' in spec:
             num_frontends += 1
-            if '+egl' in spec:
-                args.append('--enable-glx=dri')
-            else:
-                args.append('--enable-glx=gallium-xlib')
+
+            args.append('--enable-glx=dri'
+                        if use_dri else
+                        '--enable-gxl=gallium-xlib')
+
             args_platforms.append('x11')
         else:
             args.append('--disable-glx')
 
         if '+egl' in spec:
             num_frontends += 1
-            args.extend(['--enable-egl', '--enable-gbm', '--enable-dri'])
+            args.extend(['--enable-egl', '--enable-gbm'])
             args_platforms.append('surfaceless')
         else:
-            args.extend(['--disable-egl', '--disable-gbm', '--disable-dri'])
+            args.extend(['--disable-egl', '--disable-gbm'])
 
         if '+opengl' in spec:
             args.append('--enable-opengl')
@@ -157,7 +165,7 @@ class Mesa(AutotoolsPackage):
         else:
             args.extend(['--disable-gles1', '--disable-gles2'])
 
-        if num_frontends > 1:
+        if num_frontends > 1 or ('+glvnd' in spec):
             args.append('--enable-shared-glapi')
         else:
             args.append('--disable-shared-glapi')
