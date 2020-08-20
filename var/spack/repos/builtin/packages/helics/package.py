@@ -17,7 +17,6 @@ class Helics(CMakePackage):
 
     maintainers = ['nightlark']
 
-    version('bms', branch='install-benchmarks', submodules=True)
     version('develop', branch='develop', submodules=True)
     version('master', branch='master', submodules=True)
     version('2.6.0', sha256='450cbfc0c37b77ea051d3edc12bbc0f7cf4c1a17091ae10df5214b6176eebb42')
