@@ -3352,7 +3352,7 @@ class Spec(object):
             (d.spec.name, hash(d.spec), tuple(sorted(d.deptypes)))
             for name, d in sorted(self._dependencies.items()))
 
-        key = (self._cmp_node(), dep_tuple)
+        key = (self._full_hash, self._cmp_node(), dep_tuple)
         if self._concrete:
             self._cmp_key_cache = key
         return key
