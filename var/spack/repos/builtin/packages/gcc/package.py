@@ -95,7 +95,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('nvptx',
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
-    variant('enable_bootstrap',
+    variant('bootstrap',
             default=False,
             description='add --enable-bootstrap flag for stage3 build')
 
