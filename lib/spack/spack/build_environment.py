@@ -41,12 +41,18 @@ import sys
 import traceback
 import types
 from six import StringIO
+import pickle
+import io
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 from llnl.util.lang import dedupe
 from llnl.util.tty.log import fd_wrapper
+
+_serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
+if _serialize:
+    import multiprocessing.reduction
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
@@ -800,7 +806,8 @@ def modifications_from_dependencies(spec, context):
     return env
 
 
-def _setup_pkg_and_run(pkg, function, kwargs, child_pipe, input_fd_wrapper):
+def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
+                       input_fd_wrapper):
     # We are in the child process. Python sets sys.stdin to
     # open(os.devnull) to prevent our process and its parent from
     # simultaneously reading from the original stdin. But, we assume
@@ -808,6 +815,8 @@ def _setup_pkg_and_run(pkg, function, kwargs, child_pipe, input_fd_wrapper):
     # are done with the child, so we undo Python's precaution.
     if input_fd_wrapper is not None:
         sys.stdin = os.fdopen(input_fd_wrapper._handle)
+
+    pkg = serialized_pkg.restore()
 
     try:
         if not kwargs['fake']:
@@ -850,6 +859,28 @@ def _setup_pkg_and_run(pkg, function, kwargs, child_pipe, input_fd_wrapper):
             input_fd_wrapper.close()
 
 
+class TransmitPackage(object):
+    """The repo must be transmitted and reconstructed along with the package
+    if the new process environment was not forked.
+    """
+    def __init__(self, pkg):
+        if _serialize:
+            serialized_pkg = io.BytesIO()
+            multiprocessing.reduction.dump(pkg, serialized_pkg)
+            serialized_pkg.seek(0)
+            self.serialized_pkg = serialized_pkg
+            self.repo_dirs = list(r.root for r in spack.repo.path.repos)
+        else:
+            self.pkg = pkg
+
+    def restore(self):
+        if _serialize:
+            spack.repo.path = spack.repo._path(self.repo_dirs)
+            return pickle.load(self.serialized_pkg)
+        else:
+            return self.pkg
+
+
 def fork(pkg, function, kwargs):
     """Fork a child process to do part of a spack build.
 
@@ -881,6 +912,8 @@ def fork(pkg, function, kwargs):
     parent_pipe, child_pipe = multiprocessing.Pipe()
     input_fd_wrapper = None
 
+    serialized_pkg = TransmitPackage(pkg)
+
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
@@ -889,7 +922,8 @@ def fork(pkg, function, kwargs):
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
-            args=(pkg, function, kwargs, child_pipe, input_fd_wrapper))
+            args=(serialized_pkg, function, kwargs, child_pipe,
+                  input_fd_wrapper))
         p.start()
 
     except InstallError as e:
