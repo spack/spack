@@ -812,7 +812,7 @@ def try_download_specs(urls=None, force=False):
                 spec = Spec.from_yaml(f)
                 spec._mark_concrete()
                 print('Adding {0} (full_hash={1}) from {2}'.format(
-                    spec, spec.full_hash(), link))
+                    spec, spec._full_hash, link))
                 _cached_specs.add(spec)
 
     print('returning {0} cached specs'.format(len(_cached_specs)))
