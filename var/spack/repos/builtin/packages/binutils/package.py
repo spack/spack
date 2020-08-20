@@ -38,6 +38,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     variant('lto', default=False, description='Enable lto.')
     variant('ld', default=False, description='Enable ld.')
     variant('interwork', default=False, description='Enable interwork.')
+    variant('debug_symbols', default=False, description='Enable debug symbols.')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
@@ -126,21 +127,16 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         ):
             flags.append('-Wno-narrowing')
 
-        # Binutils compiles with `-O2 -g` by default, but `-g`
-        # generates hundreds of megabytes of debuginfo. So we
-        # override the default to `-O2`. If debuginfo is required
-        # use `spack install binutils cflags='-O2 -g'` instead.
+        if name == 'cflags' and '@:2.34 %gcc@10:' in self.spec:
+            flags.append('-fcommon')
 
         opt_flag_found = any(f in self.compiler.opt_flags for f in flags)
 
-        if name == 'cxxflags' and not opt_flag_found:
-            flags.append('-O2')
+        if name == 'cxxflags' or name == 'cflags':
+            if '+debug_symbols' in self.spec:
+                flags.append('-g')
 
-        if name == 'cflags':
             if not opt_flag_found:
                 flags.append('-O2')
-
-            if self.spec.satisfies('@:2.34 %gcc@10:'):
-                flags.append('-fcommon')
 
         return (None, None, flags)
