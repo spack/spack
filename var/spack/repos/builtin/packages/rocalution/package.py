@@ -19,7 +19,7 @@ class Rocalution(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-3.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    
+
     version('3.5.0', sha256='be2f78c10c100d7fd9df5dd2403a44700219c2cbabaacf2ea50a6e2241df7bfe')
 
     depends_on('cmake@3.5.2', type='build')
@@ -38,10 +38,9 @@ class Rocalution(CMakePackage):
 
     def cmake_args(self):
         args = [
-                '-DSUPPORT_OMP=ON',
-                '-DSUPPORT_HIP=ON',
-                '-DSUPPORT_MPI=OFF',
-                '-DBUILD_CLIENTS_SAMPLES=OFF'
-             ]
+            '-DSUPPORT_OMP=ON',
+            '-DSUPPORT_HIP=ON',
+            '-DSUPPORT_MPI=OFF',
+            '-DBUILD_CLIENTS_SAMPLES=OFF'
+        ]
         return args
- 
