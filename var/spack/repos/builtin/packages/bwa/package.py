@@ -36,6 +36,8 @@ class Bwa(Package):
                         zlib_inc_path, 'Makefile')
         filter_file(r'^LIBS=', "LIBS=-L%s " % spec['zlib'].prefix.lib,
                     'Makefile')
+        # use spack C compiler
+        filter_file('^CC=.*', 'CC={0}'.format(spack_cc), 'Makefile')
         make()
 
         mkdirp(prefix.bin)
