@@ -7,6 +7,7 @@ from spack import *
 from glob import glob
 from llnl.util.filesystem import LibraryList
 import os
+import re
 import platform
 import llnl.util.tty as tty
 
@@ -60,6 +61,8 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
+    executables = ['^nvcc$']
+
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
@@ -79,16 +82,24 @@ class Cuda(Package):
 
     depends_on('libxml2', when='@10.1.243:')
 
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'Cuda compilation tools, release .*?, V(\S+)',
+                          output)
+        return match.group(1) if match else None
+
     def setup_build_environment(self, env):
-        env.set('CUDAHOSTCXX', self.compiler.cxx)
         if self.spec.satisfies('@10.1.243:'):
             libxml2_home  = self.spec['libxml2'].prefix
             env.set('LIBXML2HOME', libxml2_home)
             env.append_path('LD_LIBRARY_PATH', libxml2_home.lib)
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('CUDAHOSTCXX', dependent_spec.package.compiler.cxx)
+
     def setup_run_environment(self, env):
         env.set('CUDA_HOME', self.prefix)
-        env.set('CUDAHOSTCXX', self.compiler.cxx)
 
     def install(self, spec, prefix):
         if os.path.exists('/tmp/cuda-installer.log'):
@@ -131,7 +142,7 @@ class Cuda(Package):
 
     @property
     def libs(self):
-        libs = find_libraries('libcuda', root=self.prefix, shared=True,
+        libs = find_libraries('libcudart', root=self.prefix, shared=True,
                               recursive=True)
 
         filtered_libs = []

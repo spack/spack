@@ -27,6 +27,7 @@ class Unifyfs(AutotoolsPackage):
     variant('fortran', default='False', description='Build with gfortran support')
     variant('pmi', default='False', description='Enable PMI2 build options')
     variant('pmix', default='False', description='Enable PMIx build options')
+    variant('spath', default='True', description='Use spath library to normalize relative paths')
 
     depends_on('autoconf',  type='build')
     depends_on('automake',  type='build')
@@ -35,7 +36,7 @@ class Unifyfs(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
 
     # Required dependencies
-    depends_on('flatcc')
+    depends_on('flatcc', when='@:0.9.0')
     depends_on('gotcha@0.0.2', when='@:0.9.0')
     depends_on('gotcha@1.0.3:', when='@0.9.1:')
     depends_on('leveldb')
@@ -46,6 +47,7 @@ class Unifyfs(AutotoolsPackage):
 
     # Optional dependencies
     depends_on('hdf5', when='+hdf5')
+    depends_on('spath', when='@0.9.1:+spath')
 
     conflicts('^mercury~bmi')
     conflicts('^mercury~sm')

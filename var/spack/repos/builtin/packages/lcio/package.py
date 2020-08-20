@@ -17,6 +17,7 @@ class Lcio(CMakePackage):
     maintainers = ['gaede', 'vvolkl']
 
     version('master', branch='master')
+    version('2.14.2', sha256='e64f4bf932edf6d6cdaf0162e5104f8fbf3e5fd9737c7a080c48859009621919')
     version('2.13.3', sha256='35aaa7989be33574a7c44ea7e6d7780ab26ef8bd4aa29d495f3831a3cd269304')
     version('2.13.2', sha256='9f153ba13e56ee16795378f9192678d40df1faca51d00aaa8fb80547bfecb8d8')
 
@@ -36,6 +37,7 @@ class Lcio(CMakePackage):
     depends_on('openjdk', when="+jar")
     # build error with +termlib, to be investigated
     depends_on('ncurses~termlib', when="+examples")
+    depends_on('delphes', when="+examples")
     depends_on('readline', when="+examples")
 
     def cmake_args(self):
@@ -70,3 +72,7 @@ class Lcio(CMakePackage):
             print('Error - Wrong version format provided')
             return
         return url
+
+    def setup_run_environment(self, env):
+        env.set('LCIO', self.prefix)
+        env.prepend_path('PYTHONPATH', self.prefix.python)

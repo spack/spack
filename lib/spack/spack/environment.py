@@ -463,8 +463,9 @@ def _eval_conditional(string):
 
 
 class ViewDescriptor(object):
-    def __init__(self, root, projections={}, select=[], exclude=[],
+    def __init__(self, base_path, root, projections={}, select=[], exclude=[],
                  link=default_view_link):
+        self.base = base_path
         self.root = root
         self.projections = projections
         self.select = select
@@ -494,15 +495,19 @@ class ViewDescriptor(object):
         return ret
 
     @staticmethod
-    def from_dict(d):
-        return ViewDescriptor(d['root'],
+    def from_dict(base_path, d):
+        return ViewDescriptor(base_path,
+                              d['root'],
                               d.get('projections', {}),
                               d.get('select', []),
                               d.get('exclude', []),
                               d.get('link', default_view_link))
 
     def view(self):
-        return YamlFilesystemView(self.root, spack.store.layout,
+        root = self.root
+        if not os.path.isabs(root):
+            root = os.path.normpath(os.path.join(self.base, self.root))
+        return YamlFilesystemView(root, spack.store.layout,
                                   ignore_conflicts=True,
                                   projections=self.projections)
 
@@ -548,8 +553,11 @@ class ViewDescriptor(object):
             # that cannot be resolved or have repos that have been removed
             # we always regenerate the view from scratch. We must first make
             # sure the root directory exists for the very first time though.
-            fs.mkdirp(self.root)
-            with fs.replace_directory_transaction(self.root):
+            root = self.root
+            if not os.path.isabs(root):
+                root = os.path.normpath(os.path.join(self.base, self.root))
+            fs.mkdirp(root)
+            with fs.replace_directory_transaction(root):
                 view = self.view()
 
                 view.clean()
@@ -609,9 +617,11 @@ class Environment(object):
             self.views = {}
         elif with_view is True:
             self.views = {
-                default_view_name: ViewDescriptor(self.view_path_default)}
+                default_view_name: ViewDescriptor(self.path,
+                                                  self.view_path_default)}
         elif isinstance(with_view, six.string_types):
-            self.views = {default_view_name: ViewDescriptor(with_view)}
+            self.views = {default_view_name: ViewDescriptor(self.path,
+                                                            with_view)}
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
 
@@ -682,11 +692,14 @@ class Environment(object):
         # enable_view can be boolean, string, or None
         if enable_view is True or enable_view is None:
             self.views = {
-                default_view_name: ViewDescriptor(self.view_path_default)}
+                default_view_name: ViewDescriptor(self.path,
+                                                  self.view_path_default)}
         elif isinstance(enable_view, six.string_types):
-            self.views = {default_view_name: ViewDescriptor(enable_view)}
+            self.views = {default_view_name: ViewDescriptor(self.path,
+                                                            enable_view)}
         elif enable_view:
-            self.views = dict((name, ViewDescriptor.from_dict(values))
+            path = self.path
+            self.views = dict((name, ViewDescriptor.from_dict(path, values))
                               for name, values in enable_view.items())
         else:
             self.views = {}
@@ -1121,7 +1134,7 @@ class Environment(object):
             if name in self.views:
                 self.default_view.root = viewpath
             else:
-                self.views[name] = ViewDescriptor(viewpath)
+                self.views[name] = ViewDescriptor(self.path, viewpath)
         else:
             self.views.pop(name, None)
 
@@ -1460,6 +1473,18 @@ class Environment(object):
                 writing if True.
 
         """
+        # Intercept environment not using the latest schema format and prevent
+        # them from being modified
+        manifest_exists = os.path.exists(self.manifest_path)
+        if manifest_exists and not is_latest_format(self.manifest_path):
+            msg = ('The environment "{0}" needs to be written to disk, but '
+                   'is currently using a deprecated format. Please update it '
+                   'using:\n\n'
+                   '\tspack env update {0}\n\n'
+                   'Note that previous versions of Spack will not be able to '
+                   'use the updated configuration.')
+            raise RuntimeError(msg.format(self.name))
+
         # ensure path in var/spack/environments
         fs.mkdirp(self.path)
 
@@ -1532,9 +1557,10 @@ class Environment(object):
         default_name = default_view_name
         if self.views and len(self.views) == 1 and default_name in self.views:
             path = self.default_view.root
-            if self.default_view == ViewDescriptor(self.view_path_default):
+            if self.default_view == ViewDescriptor(self.path,
+                                                   self.view_path_default):
                 view = True
-            elif self.default_view == ViewDescriptor(path):
+            elif self.default_view == ViewDescriptor(self.path, path):
                 view = path
             else:
                 view = dict((name, view.to_dict())
@@ -1707,6 +1733,93 @@ def deactivate_config_scope(env):
     """Remove any scopes from env from the global config path."""
     for scope in env.config_scopes():
         spack.config.config.remove_scope(scope.name)
+
+
+def manifest_file(env_name_or_dir):
+    """Return the absolute path to a manifest file given the environment
+    name or directory.
+
+    Args:
+        env_name_or_dir (str): either the name of a valid environment
+            or a directory where a manifest file resides
+
+    Raises:
+        AssertionError: if the environment is not found
+    """
+    env_dir = None
+    if is_env_dir(env_name_or_dir):
+        env_dir = os.path.abspath(env_name_or_dir)
+    elif exists(env_name_or_dir):
+        env_dir = os.path.abspath(root(env_name_or_dir))
+
+    assert env_dir, "environment not found [env={0}]".format(env_name_or_dir)
+    return os.path.join(env_dir, manifest_name)
+
+
+def update_yaml(manifest, backup_file):
+    """Update a manifest file from an old format to the current one.
+
+    Args:
+        manifest (str): path to a manifest file
+        backup_file (str): file where to copy the original manifest
+
+    Returns:
+        True if the manifest was updated, False otherwise.
+
+    Raises:
+        AssertionError: in case anything goes wrong during the update
+    """
+    # Check if the environment needs update
+    with open(manifest) as f:
+        data = syaml.load(f)
+
+    top_level_key = _top_level_key(data)
+    needs_update = spack.schema.env.update(data[top_level_key])
+    if not needs_update:
+        msg = "No update needed [manifest={0}]".format(manifest)
+        tty.debug(msg)
+        return False
+
+    # Copy environment to a backup file and update it
+    msg = ('backup file "{0}" already exists on disk. Check its content '
+           'and remove it before trying to update again.')
+    assert not os.path.exists(backup_file), msg.format(backup_file)
+
+    shutil.copy(manifest, backup_file)
+    with open(manifest, 'w') as f:
+        syaml.dump_config(data, f)
+    return True
+
+
+def _top_level_key(data):
+    """Return the top level key used in this environment
+
+    Args:
+        data (dict): raw yaml data of the environment
+
+    Returns:
+        Either 'spack' or 'env'
+    """
+    msg = ('cannot find top level attribute "spack" or "env"'
+           'in the environment')
+    assert any(x in data for x in ('spack', 'env')), msg
+    if 'spack' in data:
+        return 'spack'
+    return 'env'
+
+
+def is_latest_format(manifest):
+    """Return True if the manifest file is at the latest schema format,
+    False otherwise.
+
+    Args:
+        manifest (str): manifest file to be analyzed
+    """
+    with open(manifest) as f:
+        data = syaml.load(f)
+    top_level_key = _top_level_key(data)
+    changed = spack.schema.env.update(data[top_level_key])
+    return not changed
 
 
 class SpackEnvironmentError(spack.error.SpackError):

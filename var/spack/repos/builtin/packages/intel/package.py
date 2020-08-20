@@ -2,8 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 
-from spack import *
+import llnl.util.tty as tty
 
 
 class Intel(IntelPackage):
@@ -13,8 +14,10 @@ class Intel(IntelPackage):
 
     # Same as in ../intel-parallel-studio/package.py, Composer Edition,
     # but the version numbering in Spack differs.
+    version('20.0.2',              sha256='42af16e9a91226978bb401d9f17b628bc279aa8cb104d4a38ba0808234a79bdd', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16759/parallel_studio_xe_2020_update2_composer_edition.tgz')
     version('20.0.1',              sha256='26c7e7da87b8a83adfd408b2a354d872be97736abed837364c1bf10f4469b01e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16530/parallel_studio_xe_2020_update1_composer_edition.tgz')
     version('20.0.0',              sha256='9168045466139b8e280f50f0606b9930ffc720bbc60bc76f5576829ac15757ae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16229/parallel_studio_xe_2020_composer_edition.tgz')
+    version('19.1.2',              sha256='42af16e9a91226978bb401d9f17b628bc279aa8cb104d4a38ba0808234a79bdd', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16759/parallel_studio_xe_2020_update2_composer_edition.tgz')
     version('19.1.1',              sha256='26c7e7da87b8a83adfd408b2a354d872be97736abed837364c1bf10f4469b01e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16530/parallel_studio_xe_2020_update1_composer_edition.tgz')
     version('19.1.0',              sha256='9168045466139b8e280f50f0606b9930ffc720bbc60bc76f5576829ac15757ae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16229/parallel_studio_xe_2020_composer_edition.tgz')
     version('19.0.5',              sha256='e8c8e4b9b46826a02c49325c370c79f896858611bf33ddb7fb204614838ad56c', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15813/parallel_studio_xe_2019_update5_composer_edition.tgz')
@@ -62,6 +65,61 @@ class Intel(IntelPackage):
               msg='SSE2 is not supported on MacOS')
     conflicts('auto_dispatch=SSE3', 'platform=darwin target=x86_64:',
               msg='SSE3 is not supported on MacOS x86_64')
+
+    executables = ['^icc$', '^icpc$', '^ifort$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        version_regex = re.compile(r'\((?:IFORT|ICC)\) ([^ ]+)')
+        try:
+            output = spack.compiler.get_compiler_version_output(
+                exe, '--version'
+            )
+            match = version_regex.search(output)
+            if match:
+                return match.group(1)
+        except spack.util.executable.ProcessError:
+            pass
+        except Exception as e:
+            tty.debug(str(e))
+
+        return None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        compilers = {}
+        for exe in exes:
+            if 'icc' in exe:
+                compilers['c'] = exe
+            if 'icpc' in exe:
+                compilers['cxx'] = exe
+            if 'ifort' in exe:
+                compilers['fortran'] = exe
+        return '', {'compilers': compilers}
+
+    @property
+    def cc(self):
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('c', None)
+        return str(self.spec.prefix.bin.intel64.icc)
+
+    @property
+    def cxx(self):
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('cxx', None)
+        return str(self.spec.prefix.bin.intel64.icpc)
+
+    @property
+    def fortran(self):
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('fortran', None)
+        return str(self.spec.prefix.bin.intel64.ifort)
 
     # Since the current package is a subset of 'intel-parallel-studio',
     # all remaining Spack actions are handled in the package class.

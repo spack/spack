@@ -24,7 +24,7 @@ class Brltty(AutotoolsPackage):
     depends_on('libtool',   type='build')
     depends_on('m4',        type='build')
     depends_on('expat')
-    depends_on('alsa-lib',        type='link')
+    depends_on('alsa-lib', when='platform=linux', type='link')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')

@@ -373,7 +373,7 @@ class TestConcretize(object):
 
         spec = Spec('externalmodule')
         spec.concretize()
-        assert spec['externalmodule'].external_module == 'external-module'
+        assert spec['externalmodule'].external_modules == ['external-module']
         assert 'externalprereq' not in spec
         assert spec['externalmodule'].compiler.satisfies('gcc')
 
@@ -499,6 +499,12 @@ class TestConcretize(object):
             s = Spec(conflict_spec)
             with pytest.raises(exc_type):
                 s.concretize()
+
+    def test_no_conflixt_in_external_specs(self, conflict_spec):
+        # clear deps because external specs cannot depend on anything
+        ext = Spec(conflict_spec).copy(deps=False)
+        ext.external_path = '/fake/path'
+        ext.concretize()  # failure raises exception
 
     def test_regression_issue_4492(self):
         # Constructing a spec which has no dependencies, but is otherwise

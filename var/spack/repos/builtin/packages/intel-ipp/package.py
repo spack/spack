@@ -11,6 +11,8 @@ class IntelIpp(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-ipp"
 
+    version('2020.2.254', sha256='18266ad1eec9b5b17e76da24f1aa9a9147300e5bd345e6bdad58d7187392fa77',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16846/l_ipp_2020.2.254.tgz')
     version('2020.1.217', sha256='0bf8ac7e635e7e602cf201063a1a7dea3779b093104563fdb15e6b7ecf2f00a7',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16534/l_ipp_2020.1.217.tgz')
     version('2020.0.166', sha256='6844007892ba524e828f245355cee44e8149f4c233abbbea16f7bb55a7d6ecff',

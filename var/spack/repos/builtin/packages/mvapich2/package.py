@@ -8,10 +8,15 @@ import sys
 
 
 class Mvapich2(AutotoolsPackage):
-    """MVAPICH2 is an MPI implementation for Infiniband networks."""
+    """Mvapich2 is a High-Performance MPI Library for clusters with diverse
+    networks (InfiniBand, Omni-Path, Ethernet/iWARP, and RoCE) and computing
+    platforms (x86 (Intel and AMD), ARM and OpenPOWER)"""
+
     homepage = "http://mvapich.cse.ohio-state.edu/"
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.4.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
+
+    maintainers = ['nithintsk', 'harisubramoni']
 
     # Prefer the latest stable release
     version('2.3.4', sha256='7226a45c7c98333c8e5d2888119cce186199b430c13b7b1dca1769909e68ea7a')
@@ -235,7 +240,8 @@ class Mvapich2(AutotoolsPackage):
     def setup_compiler_environment(self, env):
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
-        if self.spec.external_module and 'cray' in self.spec.external_module:
+        external_modules = self.spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
             env.set('MPICC',  spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
@@ -249,7 +255,8 @@ class Mvapich2(AutotoolsPackage):
     def setup_dependent_package(self, module, dependent_spec):
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
-        if self.spec.external_module and 'cray' in self.spec.external_module:
+        external_modules = self.spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
             self.spec.mpicc = spack_cc
             self.spec.mpicxx = spack_cxx
             self.spec.mpifc = spack_fc

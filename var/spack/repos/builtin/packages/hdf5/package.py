@@ -57,6 +57,7 @@ class Hdf5(AutotoolsPackage):
     variant('hl', default=False, description='Enable the high-level library')
     variant('cxx', default=False, description='Enable C++ support')
     variant('fortran', default=False, description='Enable Fortran support')
+    variant('java', default=False, description='Enable Java support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
 
@@ -78,6 +79,7 @@ class Hdf5(AutotoolsPackage):
     depends_on('m4',       type='build', when='@develop')
 
     depends_on('mpi', when='+mpi')
+    depends_on('java', when='+java')
     # numactl does not currently build on darwin
     if sys.platform != 'darwin':
         depends_on('numactl', when='+mpi+fortran')
@@ -237,6 +239,7 @@ class Hdf5(AutotoolsPackage):
         extra_args += self.enable_or_disable('cxx')
         extra_args += self.enable_or_disable('hl')
         extra_args += self.enable_or_disable('fortran')
+        extra_args += self.enable_or_disable('java')
 
         api = self.spec.variants['api'].value
         if api != 'none':

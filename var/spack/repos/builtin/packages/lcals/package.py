@@ -46,7 +46,7 @@ class Lcals(MakefilePackage):
             arch = 'MIC'
         elif arch == 'x86_64' or arch == 'x86_32':
             arch = 'x86'
-        elif arch != 'bgq':
+        else:
             raise InstallError('unknown architecture.')
 
         if self.compiler.name == 'intel':
@@ -72,24 +72,7 @@ class Lcals(MakefilePackage):
                 cxxflags += '-DLCALS_PLATFORM_X86_AVX -DLCALS_COMPILER_GNU '
                 cxx_compile += '-Ofast -mavx -finline-functions'
                 ' -finline-limit=10000 -std=c++11'
-            elif arch == 'bgq':
-                cxxflags += '-DLCALS_PLATFORM_BGQ -DLCALS_COMPILER_GNU '
-                cxx_compile += '-O3 -finline-functions -finline-limit=10000'
-                ' -std=c++0x'
             cxxflags += self.compiler.openmp_flag
-        elif self.compiler.name == 'xl' and arch == 'bgp':
-            if self.compiler.version == Version('9') and arch == 'bgp':
-                cxxflags += '-DLCALS_PLATFORM_BGP -DLCALS_COMPILER_XLC9 '
-                cxx_compile += 'O3 -qarch=450d -qtune=450 -qalias=allp -qhot'
-                ' -qsmp=omp '
-            elif self.compiler.version == Version('12') and arch == 'bgq':
-                cxxflags += '-DLCALS_PLATFORM_BGQ -DLCALS_COMPILER_XLC12 '
-                cxx_compile += '-O3 -qarch=qp -qhot=novector -qsimd=auto'
-                ' -qlanglvl=extended0x -qnostrict -qinline=10000 -qsmp=omp '
-        elif self.compiler.name == 'clang':
-            if arch == 'bgq':
-                cxxflags += '-DLCALS_PLATFORM_BGQ -DLCALS_COMPILER_CLANG '
-                cxx_compile += '-O3 -finline-functions  -ffast-math -std=c++0x'
 
         targets.append('LCALS_ARCH=')
         cxx_compile += ' ' + cxxflags

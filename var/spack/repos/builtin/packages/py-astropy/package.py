@@ -12,9 +12,12 @@ class PyAstropy(PythonPackage):
     package for Astronomy in Python and foster interoperability between
     Python astronomy packages."""
 
-    homepage = 'http://www.astropy.org/'
-    url = 'https://pypi.io/packages/source/a/astropy/astropy-3.2.1.tar.gz'
+    homepage = 'https://astropy.org/'
+    url = 'https://pypi.io/packages/source/a/astropy/astropy-4.0.1.post1.tar.gz'
 
+    install_time_test_callbacks = ['install_test', 'import_module_test']
+
+    version('4.0.1.post1', sha256='5c304a6c1845ca426e7bc319412b0363fccb4928cb4ba59298acd1918eec44b5')
     version('3.2.1', sha256='706c0457789c78285e5464a5a336f5f0b058d646d60f4e5f5ba1f7d5bf424b28')
     version('2.0.14', sha256='618807068609a4d8aeb403a07624e9984f566adc0dc0f5d6b477c3658f31aeb6')
     version('1.1.2', sha256='6f0d84cd7dfb304bb437dda666406a1d42208c16204043bc920308ff8ffdfad1')
@@ -29,14 +32,17 @@ class PyAstropy(PythonPackage):
     depends_on('python@2.7:2.8,3.3:', when='@1.2:', type=('build', 'run'))
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-cython@0.29.13:', type='build')
+    depends_on('py-numpy@1.16:', when='@4.0:', type=('build', 'run'))
     depends_on('py-numpy@1.13:', when='@3.1:', type=('build', 'run'))
     depends_on('py-numpy@1.10:', when='@3.0:', type=('build', 'run'))
     depends_on('py-numpy@1.9:', when='@2.0:', type=('build', 'run'))
     depends_on('py-numpy@1.7:', when='@1.2:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
+    depends_on('pkgconfig', type='build')
 
     # Optional dependencies
-    depends_on('py-scipy', when='+extras', type=('build', 'run'))
+    depends_on('py-scipy@0.18:', when='+extras', type=('build', 'run'))
     depends_on('py-h5py', when='+extras', type=('build', 'run'))
     depends_on('py-beautifulsoup4', when='+extras', type=('build', 'run'))
     depends_on('py-html5lib', when='+extras', type=('build', 'run'))
@@ -53,7 +59,6 @@ class PyAstropy(PythonPackage):
     depends_on('py-asdf@2.3:', when='+extras', type=('build', 'run'))
     depends_on('py-bottleneck', when='+extras', type=('build', 'run'))
     depends_on('py-pytest', when='+extras', type=('build', 'run'))
-    depends_on('py-cython', type='build')
 
     # System dependencies
     depends_on('erfa')
@@ -81,3 +86,7 @@ class PyAstropy(PythonPackage):
             args.extend(['-j', str(make_jobs)])
 
         return args
+
+    def install_test(self):
+        with working_dir('spack-test', create=True):
+            python('-c', 'import astropy; astropy.test()')

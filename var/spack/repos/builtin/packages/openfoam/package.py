@@ -214,11 +214,12 @@ def mplib_content(spec, pre=None):
     """The mpi settings (from spack) for the OpenFOAM wmake includes, which
     allows later reuse within OpenFOAM.
 
-    Optional parameter 'pre' to provide alternative prefix
+    Optional parameter 'pre' to provide alternative prefix for
+    bin and lib directories.
     """
     mpi_spec = spec['mpi']
     bin = mpi_spec.prefix.bin
-    inc = mpi_spec.prefix.include
+    inc = mpi_spec.headers.directories[0]  # Currently only need first one
     lib = pkglib(mpi_spec)
 
     libname = 'mpi'
@@ -283,6 +284,8 @@ class Openfoam(Package):
 
     variant('float32', default=False,
             description='Use single-precision')
+    variant('spdp', default=False,
+            description='Use single/double mixed precision')
     variant('int64', default=False,
             description='With 64-bit labels')
     variant('knl', default=False,
@@ -317,6 +320,7 @@ class Openfoam(Package):
     # introduced by the restriction within scotch!
     depends_on('flex@:2.6.1,2.6.4:')
     depends_on('cmake', type='build')
+    depends_on('m4', type='build')
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
     depends_on('scotch~metis+mpi~int64', when='+scotch~int64')
@@ -848,7 +852,7 @@ class OpenfoamArch(object):
         self.compiler         = None   # <- %compiler
         self.arch_option      = ''     # Eg, -march=knl
         self.label_size       = None   # <- +int64
-        self.precision_option = 'DP'   # <- +float32
+        self.precision_option = 'DP'   # <- +float32 | +spdp
         self.compile_option   = kwargs.get('compile-option', '-spack')
         self.arch             = None
         self.options          = None
@@ -860,11 +864,10 @@ class OpenfoamArch(object):
         elif kwargs.get('label-size', True):
             self.label_size = '32'
 
-        if '+float32' in spec:
+        if '+spdp' in spec:
+            self.precision_option = 'SPDP'
+        elif '+float32' in spec:
             self.precision_option = 'SP'
-
-        # TDB: mixed precision?
-        # self.precision_option = 'SPDP'
 
         # Processor/architecture-specific optimizations
         if '+knl' in spec:

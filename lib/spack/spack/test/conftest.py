@@ -287,6 +287,10 @@ def _skip_if_missing_executables(request):
 # FIXME: there's some weird interaction with compilers during concretization.
 spack.architecture.real_platform = spack.architecture.platform
 spack.architecture.platform = lambda: spack.platforms.test.Test()
+# FIXME: Since we change the architecture above, we have to (re)initialize
+# FIXME: the config singleton. If it gets initialized too early with the
+# FIXME: actual architecture, tests will fail.
+spack.config.config = spack.config._config()
 
 
 #

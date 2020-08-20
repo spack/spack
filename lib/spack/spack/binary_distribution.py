@@ -11,7 +11,6 @@ import shutil
 import tempfile
 import hashlib
 import glob
-import platform
 
 from contextlib import closing
 import ruamel.yaml as yaml
@@ -36,7 +35,6 @@ import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
-import spack.architecture as architecture
 
 _build_cache_relative_path = 'build_cache'
 
@@ -521,16 +519,16 @@ def make_package_relative(workdir, spec, allow_root):
     for filename in buildinfo['relocate_binaries']:
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
-    if (spec.architecture.platform == 'darwin' or
-        spec.architecture.platform == 'test' and
-            platform.system().lower() == 'darwin'):
-        relocate.make_macho_binaries_relative(cur_path_names, orig_path_names,
-                                              old_layout_root)
-    if (spec.architecture.platform == 'linux' or
-        spec.architecture.platform == 'test' and
-            platform.system().lower() == 'linux'):
-        relocate.make_elf_binaries_relative(cur_path_names, orig_path_names,
-                                            old_layout_root)
+
+    platform = spack.architecture.get_platform(spec.platform)
+    if 'macho' in platform.binary_formats:
+        relocate.make_macho_binaries_relative(
+            cur_path_names, orig_path_names, old_layout_root)
+
+    if 'elf' in platform.binary_formats:
+        relocate.make_elf_binaries_relative(
+            cur_path_names, orig_path_names, old_layout_root)
+
     relocate.raise_if_not_relocatable(cur_path_names, allow_root)
     orig_path_names = list()
     cur_path_names = list()
@@ -610,18 +608,16 @@ def relocate_package(spec, allow_root):
                              ]
         # If the buildcache was not created with relativized rpaths
         # do the relocation of path in binaries
-        if (spec.architecture.platform == 'darwin' or
-            spec.architecture.platform == 'test' and
-                platform.system().lower() == 'darwin'):
+        platform = spack.architecture.get_platform(spec.platform)
+        if 'macho' in platform.binary_formats:
             relocate.relocate_macho_binaries(files_to_relocate,
                                              old_layout_root,
                                              new_layout_root,
                                              prefix_to_prefix, rel,
                                              old_prefix,
                                              new_prefix)
-        if (spec.architecture.platform == 'linux' or
-            spec.architecture.platform == 'test' and
-                platform.system().lower() == 'linux'):
+
+        if 'elf' in platform.binary_formats:
             relocate.relocate_elf_binaries(files_to_relocate,
                                            old_layout_root,
                                            new_layout_root,
@@ -856,13 +852,11 @@ def get_spec(spec=None, force=False):
     return try_download_specs(urls=urls, force=force)
 
 
-def get_specs(allarch=False):
+def get_specs():
     """
     Get spec.yaml's for build caches available on mirror
     """
     global _cached_specs
-    arch = architecture.Arch(architecture.platform(),
-                             'default_os', 'default_target')
 
     if not spack.mirror.MirrorCollection():
         tty.debug("No Spack mirrors are currently configured")
@@ -882,8 +876,7 @@ def get_specs(allarch=False):
                 index_url, 'application/json')
             index_object = codecs.getreader('utf-8')(file_stream).read()
         except (URLError, web_util.SpackWebError) as url_err:
-            tty.error('Failed to read index {0}'.format(index_url))
-            tty.debug(url_err)
+            tty.debug('Failed to read index {0}'.format(index_url), url_err, 1)
             # Continue on to the next mirror
             continue
 
@@ -900,9 +893,7 @@ def get_specs(allarch=False):
         spec_list = db.query_local(installed=False)
 
         for indexed_spec in spec_list:
-            spec_arch = architecture.arch_for_spec(indexed_spec.architecture)
-            if (allarch is True or spec_arch == arch):
-                _cached_specs.add(indexed_spec)
+            _cached_specs.add(indexed_spec)
 
     return _cached_specs
 

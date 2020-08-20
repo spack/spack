@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import llnl.util.tty as tty
 
 
 class Octopus(Package):
@@ -13,6 +14,7 @@ class Octopus(Package):
     homepage = "https://octopus-code.org/"
     url      = "http://octopus-code.org/down.php?file=6.0/octopus-6.0.tar.gz"
 
+    version('10.0',  sha256='ccf62200e3f37911bfff6d127ebe74220996e9c09383a10b1420c81d931dcf23')
     version('7.3',   sha256='ad843d49d4beeed63e8b9a2ca6bfb2f4c5a421f13a4f66dc7b02f6d6a5c4d742')
     version('6.0',   sha256='4a802ee86c1e06846aa7fa317bd2216c6170871632c9e03d020d7970a08a8198')
     version('5.0.1', sha256='3423049729e03f25512b1b315d9d62691cd0a6bd2722c7373a61d51bfbee14e0')
@@ -31,9 +33,13 @@ class Octopus(Package):
     depends_on('blas')
     depends_on('gsl@1.9:')
     depends_on('lapack')
-    depends_on('libxc')
+    depends_on('libxc@2:2.99', when='@:5.99')
+    depends_on('libxc@2:3.99', when='@6:7.99')
+    depends_on('libxc@2:4.99', when='@8:9.99')
+    depends_on('libxc@3:5.0.0', when='@10.0')
     depends_on('mpi')
-    depends_on('fftw@3:+mpi+openmp')
+    depends_on('fftw@3:+mpi+openmp', when='@:9.99')
+    depends_on('fftw-api@3:', when='@10.0:')
     depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when='+parmetis')
     depends_on('scalapack', when='+scalapack')
@@ -57,8 +63,25 @@ class Octopus(Package):
             'CC=%s' % spec['mpi'].mpicc,
             'FC=%s' % spec['mpi'].mpifc,
             '--enable-mpi',
-            '--with-fftw-prefix==%s' % spec['fftw'].prefix,
         ])
+        if '^fftw' in spec:
+            args.extend([
+                '--with-fftw-prefix=%s' % spec['fftw'].prefix,
+            ])
+        elif '^mkl' in spec:
+            # As of version 10.0, Octopus depends on fftw-api instead
+            # of FFTW. If FFTW is not in the dependency tree, then
+            # it ought to be MKL as it is currently the only providers
+            # available for fftw-api.
+            args.extend([
+                'FCFLAGS_FFTW=-I%s' % spec['mkl'].prefix.include.fftw
+            ])
+        else:
+            # To be foolproof, fail with a proper error message
+            # if neither FFTW nor MKL are in the dependency tree.
+            tty.die('Unsupported "fftw-api" provider, '
+                    'currently only FFTW and MKL are supported.\n'
+                    "Please report this issue on Spack's repository.")
         if '+metis' in spec:
             args.extend([
                 '--with-metis-prefix=%s' % spec['metis'].prefix,

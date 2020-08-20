@@ -272,9 +272,9 @@ def _process_external_package(pkg, explicit):
     pre = '{s.name}@{s.version} :'.format(s=pkg.spec)
     spec = pkg.spec
 
-    if spec.external_module:
+    if spec.external_modules:
         tty.msg('{0} has external module in {1}'
-                .format(pre, spec.external_module))
+                .format(pre, spec.external_modules))
         tty.debug('{0} is actually installed in {1}'
                   .format(pre, spec.external_path))
     else:

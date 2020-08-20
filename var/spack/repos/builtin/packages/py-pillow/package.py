@@ -13,11 +13,12 @@ class PyPillow(PythonPackage):
     capabilities."""
 
     homepage = "https://python-pillow.org/"
-    url      = "https://pypi.io/packages/source/P/Pillow/Pillow-7.0.0.tar.gz"
+    url      = "https://pypi.io/packages/source/P/Pillow/Pillow-7.2.0.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = ['PIL']
 
+    version('7.2.0', sha256='97f9e7953a77d5a70f49b9a48da7776dc51e9b738151b22dacf101641594a626')
     version('7.0.0', sha256='4d9ed9a64095e031435af120d3c910148067087541131e82b3e8db302f4c8946')
     version('6.2.2', sha256='db9ff0c251ed066d367f53b64827cc9e18ccea001b986d08c265e53625dab950')
     version('6.2.1', sha256='bf4e972a88f8841d8fdc6db1a75e0f8d763e66e3754b03006cbc3854d89f1cb1')
@@ -32,40 +33,44 @@ class PyPillow(PythonPackage):
 
     # These defaults correspond to Pillow defaults
     # https://pillow.readthedocs.io/en/stable/installation.html#external-libraries
-    variant('tiff',     default=False, description='Compressed TIFF functionality')
-    variant('freetype', default=False, description='Type related services')
-    variant('lcms',     default=False, description='Color management')
-    variant('webp',     default=False, description='WebP format')
-    variant('webpmux',  default=False, description='WebP metadata')
-    variant('jpeg2000', default=False, description='JPEG 2000 functionality')
-
-    # Spack does not (yet) support these modes of building
-    # variant('imagequant', default=False,
-    #         description='Improved color quantization')
+    variant('zlib',       default=True,  description='Compressed PNG functionality')
+    variant('jpeg',       default=True,  description='JPEG functionality')
+    variant('tiff',       default=False, description='Compressed TIFF functionality')
+    variant('freetype',   default=False, description='Type related services')
+    variant('lcms',       default=False, description='Color management')
+    variant('webp',       default=False, description='WebP format')
+    variant('webpmux',    default=False, description='WebP metadata')
+    variant('jpeg2000',   default=False, description='JPEG 2000 functionality')
+    variant('imagequant', default=False, description='Improved color quantization')
+    variant('xcb',        default=False, description='X11 screengrab support')
 
     # Required dependencies
-    depends_on('python@2.6:2.8,3.2:', when='@3:', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.3:', when='@4:', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.4:', when='@5:', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.5:', when='@6:', type=('build', 'run'))
-    depends_on('python@3.5:',         when='@7:', type=('build', 'run'))
+    # https://pillow.readthedocs.io/en/latest/installation.html#notes
+    depends_on('python@3.6:3.9',         when='@8:',          type=('build', 'run'))
+    depends_on('python@3.5:3.8',         when='@7.0:7.2',     type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:3.8', when='@6.2.1:6.2.2', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:3.7', when='@6.0:6.2.0',   type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:3.7', when='@5.2:5.4',     type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:3.6', when='@5.0:5.1',     type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.3:3.6', when='@4.0:4.999',   type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.2:3.5', when='@2:3',         type=('build', 'run'))
+    depends_on('python@2.4:2.7',         when='@:1',          type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('zlib')
-    depends_on('jpeg')
     depends_on('py-pytest', type='test')
     depends_on('py-pytest-runner', type='test')
+    depends_on('imagemagick', type='test')
 
     # Optional dependencies
+    depends_on('zlib', when='+zlib')
+    depends_on('jpeg', when='+jpeg')
     depends_on('libtiff', when='+tiff')
     depends_on('freetype', when='+freetype')
     depends_on('lcms@2:', when='+lcms')
     depends_on('libwebp', when='+webp')
     depends_on('libwebp+libwebpmux+libwebpdemux', when='+webpmux')
     depends_on('openjpeg', when='+jpeg2000')
-    depends_on('imagemagick', type='test')
-
-    # Spack does not (yet) support these modes of building
-    # depends_on('libimagequant', when='+imagequant')
+    depends_on('libimagequant', when='+imagequant')
+    depends_on('libxcb', when='+xcb')
 
     conflicts('+webpmux', when='~webp', msg='Webpmux relies on WebP support')
 
@@ -95,18 +100,14 @@ class PyPillow(PythonPackage):
         with open('setup.cfg', 'a') as setup:
             # Default backend
             setup.write('[build_ext]\n')
-            setup.write('enable-zlib=1\n')
-            setup.write('enable-jpeg=1\n')
-            variants = ['tiff', 'freetype', 'lcms', 'webp',
-                        'webpmux', 'jpeg2000']
-            for variant in variants:
+            for variant in self.spec.variants.keys():
                 setup.write(variant_to_cfg(setup))
-
-            # Spack does not (yet) support these modes of building
-            setup.write('disable-imagequant=1\n')
 
             setup.write('rpath={0}\n'.format(':'.join(self.rpath)))
             setup.write('[install]\n')
+
+    def setup_build_environment(self, env):
+        env.set('MAX_CONCURRENCY', str(make_jobs))
 
     # Tests need to be re-added since `phases` was overridden
     run_after('build_ext')(

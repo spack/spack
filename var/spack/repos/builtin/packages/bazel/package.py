@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import platform
+import re
 
 
 class Bazel(Package):
@@ -96,14 +95,7 @@ class Bazel(Package):
 
     variant('nodepfail', default=True, description='Disable failing dependency checks due to injected absolute paths - required for most builds using bazel with spack')
 
-    # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-bazel
-    # Until https://github.com/spack/spack/issues/14058 is fixed, use jdk to build bazel
-    # Strict dependency on java@8 as per
-    # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-unix-prereq
-    if platform.machine() == 'aarch64':
-        depends_on('java@8:8.999', type=('build', 'run'))
-    else:
-        depends_on('jdk@1.8.0:1.8.999', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
     depends_on('zip', type=('build', 'run'))
 
@@ -144,6 +136,14 @@ class Bazel(Package):
     patch('disabledepcheck_old.patch', when='@0.3.0:0.3.1+nodepfail')
 
     phases = ['bootstrap', 'install']
+
+    executables = ['^bazel$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('version', output=str, error=str)
+        match = re.search(r'Build label: ([\d.]+)', output)
+        return match.group(1) if match else None
 
     def url_for_version(self, version):
         if version >= Version('0.4.1'):

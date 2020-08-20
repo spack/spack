@@ -448,8 +448,9 @@ env:
     external_config = StringIO("""\
 packages:
   a:
-    paths:
-      a: {a_prefix}
+    externals:
+    - spec: a
+      prefix: {a_prefix}
     buildable: false
 """.format(a_prefix=str(fake_prefix)))
     external_config_dict = spack.util.spack_yaml.load_config(external_config)
@@ -2041,3 +2042,93 @@ def test_env_write_only_non_default():
         yaml = f.read()
 
     assert yaml == ev.default_manifest_yaml
+
+
+@pytest.fixture
+def packages_yaml_v015(tmpdir):
+    """Return the path to an existing manifest in the v0.15.x format
+    and the path to a non yet existing backup file.
+    """
+    raw_yaml = """
+spack:
+  specs:
+  - mpich
+  packages:
+    cmake:
+      paths:
+        cmake@3.17.3: /usr
+"""
+    manifest = tmpdir.ensure('spack.yaml')
+    backup_file = tmpdir.join('spack.yaml.bkp')
+    manifest.write(raw_yaml)
+    return manifest, backup_file
+
+
+def test_update_anonymous_env(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+    env('update', '-y', str(manifest.dirname))
+
+    # The environment is now at the latest format
+    assert ev.is_latest_format(str(manifest))
+    # A backup file has been created and it's not at the latest format
+    assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+
+
+def test_double_update(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+
+    # Update the environment
+    env('update', '-y', str(manifest.dirname))
+    # Try to read the environment (it should not error)
+    ev.create('test', str(manifest))
+    # Updating again does nothing since the manifest is up-to-date
+    env('update', '-y', str(manifest.dirname))
+
+    # The environment is at the latest format
+    assert ev.is_latest_format(str(manifest))
+    # A backup file has been created and it's not at the latest format
+    assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+
+
+def test_update_and_revert(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+
+    # Update the environment
+    env('update', '-y', str(manifest.dirname))
+    assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+    assert ev.is_latest_format(str(manifest))
+
+    # Revert to previous state
+    env('revert', '-y', str(manifest.dirname))
+    assert not os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(manifest))
+
+
+def test_old_format_cant_be_updated_implicitly(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+    env('activate', str(manifest.dirname))
+    with pytest.raises(spack.main.SpackCommandError):
+        add('hdf5')
+
+
+@pytest.mark.regression('18147')
+def test_can_update_attributes_with_override(tmpdir):
+    spack_yaml = """
+spack:
+  mirrors::
+    test: /foo/bar
+  packages:
+    cmake:
+      paths:
+        cmake@3.18.1: /usr
+  specs:
+  - hdf5
+"""
+    abspath = tmpdir.join('spack.yaml')
+    abspath.write(spack_yaml)
+
+    # Check that an update does not raise
+    env('update', '-y', str(abspath.dirname))
