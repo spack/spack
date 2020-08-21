@@ -11,7 +11,6 @@ from six.moves.urllib.parse import urlencode
 
 import llnl.util.tty as tty
 
-import spack.binary_distribution as bindist
 import spack.ci as spack_ci
 import spack.cmd.buildcache as buildcache
 import spack.environment as ev
@@ -282,7 +281,7 @@ def ci_rebuild(args):
         with open(root_spec_yaml_path, 'w') as fd:
             fd.write(spec_map['root'].to_yaml(hash=ht.build_hash))
 
-        if bindist.needs_rebuild(job_spec, remote_mirror_url, True):
+        if 1:
             # Binary on remote mirror is not up to date, we need to rebuild
             # it.
             #
