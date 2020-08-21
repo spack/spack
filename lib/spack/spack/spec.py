@@ -1389,6 +1389,7 @@ class Spec(object):
         # this when we move to using package hashing on all specs.
         yaml_text = syaml.dump(
             self.to_node_dict(hash=hash), default_flow_style=True)
+        yaml_text += 'change-all-hashes'
         sha = hashlib.sha1(yaml_text.encode('utf-8'))
         b32_hash = base64.b32encode(sha.digest()).lower()
 
