@@ -16,8 +16,8 @@ class SoapdenovoTrans(MakefilePackage):
 
     version('1.0.4', sha256='378a54cde0ebe240fb515ba67197c053cf95393645c1ae1399b3a611be2a9795')
 
-    depends_on('zlib', type='link', when='target=aarch64:')
-    depends_on('samtools@0.1.8', type='link', when='target=aarch64:')
+    depends_on('zlib', type='link')
+    depends_on('samtools@0.1.8', type='link')
 
     build_directory = 'src'
 
