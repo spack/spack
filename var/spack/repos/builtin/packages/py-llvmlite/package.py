@@ -23,6 +23,7 @@ class PyLlvmlite(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.6:2.8,3.4:', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'), when='@0.33:')
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3.99')
 
     # llvmlite compatibility information taken from https://github.com/numba/llvmlite#compatibility
