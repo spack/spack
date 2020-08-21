@@ -78,23 +78,21 @@ class Libxml2(AutotoolsPackage):
         self.import_module_test()
 
         # Now run defined tests based on expected executables
-        dtd_path = './data/info.dtd'
+        dtd_path = join_path(self.test_data_dir, 'info.dtd')
+        info_path = join_path(self.test_data_dir, 'info.xml')
         test_fn = 'test.xml'
         exec_checks = {
             'xml2-config': [
-                (['--version'], [str(self.spec.version)], None)],
+                ('--version', [str(self.spec.version)], None)],
             'xmllint': [
-                (['--version'],
-                 ['using libxml', str(self.spec.version).replace('.', '0')],
-                 None),
                 (['--auto', '-o', test_fn], [], None),
                 (['--postvalid', test_fn],
                  ['validity error', 'no DTD found', 'does not validate'], 3),
                 (['--dtdvalid', dtd_path, test_fn],
                  ['validity error', 'does not follow the DTD'], 3),
-                (['--dtdvalid', dtd_path, './data/info.xml'], [], None)],
+                (['--dtdvalid', dtd_path, info_path], [], None)],
             'xmlcatalog': [
-                (['--create'], ['<catalog xmlns', 'catalog"/>'], None)],
+                ('--create', ['<catalog xmlns', 'catalog"/>'], None)],
         }
         for exe in exec_checks:
             for options, expected, status in exec_checks[exe]:

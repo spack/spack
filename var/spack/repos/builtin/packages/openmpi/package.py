@@ -743,7 +743,7 @@ class Openmpi(AutotoolsPackage):
 
         for exe in checks:
             options, expected, status = checks[exe]
-            reason = 'test {0} output'.format(exe)
+            reason = 'test: checking {0} output'.format(exe)
             self.run_test(exe, options, expected, status, installed=True,
                           purpose=reason, skip_missing=True)
 
@@ -806,16 +806,17 @@ class Openmpi(AutotoolsPackage):
 
         for exe in checks:
             expected, status = checks[exe]
-            purpose = 'test version of {0} is {1}'.format(exe, expected[0])
+            purpose = 'test: checking version of {0} is {1}' \
+                .format(exe, expected[0])
             self.run_test(exe, ['--version'], expected, status, installed=True,
                           purpose=purpose, skip_missing=True)
 
     def _test_examples(self):
         # First build the examples
-        work_dir = os.path.join(self.install_test_root,
-                                self.extra_install_tests)
         self.run_test('make', ['all'], [],
-                      purpose='test build the examples', work_dir=work_dir)
+                      purpose='test: ensuring ability to build the examples',
+                      work_dir=join_path(self.install_test_root,
+                                         self.extra_install_tests))
 
         # Now run those with known results
         have_spml = self.spec.satisfies('@2.0.0:2.1.6')
@@ -857,9 +858,9 @@ class Openmpi(AutotoolsPackage):
 
         for exe in checks:
             expected, status = checks[exe]
-            reason = 'test {0} output'.format(exe)
+            reason = 'test: checking example {0} output'.format(exe)
             self.run_test(exe, [], expected, status, installed=True,
-                          purpose=reason, skip_missing=True, work_dir=work_dir)
+                          purpose=reason, skip_missing=True)
 
     def test(self):
         """Perform smoke tests on the installed package."""

@@ -3,19 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
-import re
-
 from spack import *
 from spack import architecture
-
-
-def _get_output(filename):
-    """Read and clean up the expected output from the specified file."""
-    output = ''
-    with open('./data/{0}'.format(filename), 'r') as fd:
-        output = fd.read()
-    return [re.escape(ln) for ln in output.split('\n')]
 
 
 class Sqlite(AutotoolsPackage):
@@ -143,19 +132,23 @@ class Sqlite(AutotoolsPackage):
     def _test_example(self):
         """Ensure a sequence of commands on example db are successful."""
 
+        db_fn = join_path(self.test_data_dir, 'packages.db')
+        exe = 'sqlite3'
+
         # Ensure the database only contains one table
-        reason = 'test to ensure only table is "packages"'
-        opts = ['./data/packages.db', '.tables']
-        self.run_test('sqlite3', opts, 'packages', installed=True,
+        expected = 'packages'
+        reason = 'test: ensuring only table is "{0}"'.format(expected)
+        self.run_test(exe, [db_fn, '.tables'], expected, installed=True,
                       purpose=reason, skip_missing=False)
 
         # Ensure the database dump matches expectations, where special
         # characters are replaced with spaces in the expected and actual
         # output to avoid pattern errors.
-        reason = 'test dump output'
-        opts = ['./data/packages.db', '.dump']
-        expected = _get_output('dump.out')
-        self.run_test('sqlite3', opts, expected, installed=True,
+        reason = 'test: ensuring expected dump output'
+        dump_fn = join_path(self.test_data_dir, 'dump.out')
+        with open(dump_fn, 'r') as fd:
+            expected = fd.read()
+        self.run_test(exe, [db_fn, '.dump'], expected, installed=True,
                       purpose=reason, skip_missing=False)
 
     def _test_version(self):
@@ -163,15 +156,12 @@ class Sqlite(AutotoolsPackage):
         exe = 'sqlite3'
         vers_str = str(self.spec.version)
 
-        reason = 'test version of {0} is {1}'.format(exe, vers_str)
+        reason = 'test: checking version of {0} is {1}'.format(exe, vers_str)
         self.run_test(exe, '-version', vers_str, installed=True,
                       purpose=reason, skip_missing=False)
 
     def test(self):
         """Perform smoke tests on the installed package."""
-        tty.debug('Expected results currently based on simple {0} builds'
-                  .format(self.name))
-
         # Perform a simple version check
         self._test_version()
 

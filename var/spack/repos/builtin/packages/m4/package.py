@@ -5,11 +5,6 @@
 
 import re
 
-import os
-import re
-
-import llnl.util.tty as tty
-
 
 class M4(AutotoolsPackage, GNUMirrorPackage):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
@@ -83,22 +78,14 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         return args
 
     def test(self):
-        m4 = which('m4')
-        assert m4 is not None
+        spec_vers = str(self.spec.version)
+        reason = 'test: checking m4 version is {0}'.format(spec_vers)
+        self.run_test('m4', '--version', spec_vers, installed=True,
+                      purpose=reason, skip_missing=False)
 
-        tty.msg('test: Ensuring use of the installed executable')
-        m4_dir = os.path.dirname(m4.path)
-        assert m4_dir == self.prefix.bin
-
-        tty.msg('test: Checking version')
-        output = m4('--version', output=str.split, error=str.split)
-        version_regex = re.compile(r'm4(.+){0}'.format(self.spec.version))
-        assert version_regex.search(output)
-
-        tty.msg('test: Ensuring m4 runs')
-        currdir = os.getcwd()
-        hello_file = os.path.join(currdir, 'data', 'hello.m4')
-        output = m4(hello_file, output=str.split, error=str.split)
-        expected_file = os.path.join(currdir, 'data', 'hello.out')
-        with open(expected_file) as fd:
-            assert output == fd.read()
+        reason = 'test: ensuring m4 example succeeds'
+        hello_file = join_path(self.test_data_dir, 'hello.m4')
+        with open(join_path(self.test_data_dir, 'hello.out'), 'r') as fd:
+            expected = fd.read()
+        self.run_test('m4', hello_file, expected, installed=True,
+                      purpose=reason, skip_missing=False)

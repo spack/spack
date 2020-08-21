@@ -1635,6 +1635,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return self.test_stage.join(
             self.spec.format('{name}-{version}-{hash}'))
 
+    @property
+    def test_data_dir(self):
+        return self.test_dir.data.join(self.spec.name)
+
     def cache_extra_test_sources(self, srcs):
         """Copy relative source paths to the corresponding install test subdir
 
@@ -1722,7 +1726,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                             except spack.repo.UnknownPackageError:
                                 continue
 
-                            # copy test data into testdir/data
+                            # copy test data into testdir/data/spec.name
                             data_source = Prefix(spec_pkg.package_dir).test
                             data_dir = os.path.join(testdir.data, spec.name)
                             if os.path.isdir(data_source):
@@ -1874,9 +1878,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise
 
         for check in expected:
+            check = re.escape(check)
             cmd = ' '.join([runner.name] + options)
-            msg = "Expected '{0}' to match output of `{1}`".format(check, cmd)
-            msg += '\n\nOutput: {0}'.format(output)
+            msg = "Expected:\n'{0}'\nto match the output of `{1}`" \
+                .format(check, cmd)
+            msg += '\nOutput:\n\'{0}\''.format(output)
             assert re.search(check, output), msg
 
     def unit_test_check(self):

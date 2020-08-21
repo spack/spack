@@ -5,23 +5,27 @@
 
 import os
 
+
 class Mpi(Package):
     """Virtual package for the Message Passing Interface."""
     homepage = 'https://www.mpi-forum.org/'
     virtual = True
 
     def test(self):
+        mpi_test_data_dir = self.test_dir.data.join('mpi')
+
         for lang in ('c', 'f'):
             filename = 'mpi_hello.' + lang
-            filepath = os.path.join(self.test_dir, 'data', 'mpi')
+            filepath = join_path(mpi_test_data_dir, filename)
 
             compiler_var = 'MPI%sC' % lang.upper()
             compiler = os.environ[compiler_var]
 
             exe_name = 'mpi_hello_%s' % lang
-            mpirun = os.path.join(self.prefix.bin, 'mpirun')
+            mpirun = join_path(self.prefix.bin, 'mpirun')
 
-            compiled = self.run_test(compiler, options=['-o', exe_name])
+            compiled = self.run_test(compiler,
+                                     options=['-o', exe_name, filepath])
             if compiled:
                 self.run_test(mpirun,
                               options=['-np', '1', exe_name],

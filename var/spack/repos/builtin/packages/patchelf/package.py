@@ -29,8 +29,8 @@ class Patchelf(AutotoolsPackage):
                       purpose=purpose_str)
 
         # Check the rpath is changed
+        hello_file = join_path(self.test_data_dir, 'hello')
         currdir = os.getcwd()
-        hello_file = os.path.join(currdir, 'data', 'hello')
         self.run_test('patchelf', ['--set-rpath', currdir, hello_file],
                       purpose='test that patchelf can change rpath')
         self.run_test('patchelf',
