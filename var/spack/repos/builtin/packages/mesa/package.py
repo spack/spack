@@ -50,11 +50,9 @@ class Mesa(AutotoolsPackage):
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
 
-    variant('glvnd',
-            default=False,
-            description="Expose Graphics APIs through libglvnd")
-
     is_linux = sys.platform.startswith('linux')
+    variant('glvnd', default=is_linux,
+            description="Expose Graphics APIs through libglvnd")
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
 
     # TODO: effectively deal with EGL.  The implications of this have not been

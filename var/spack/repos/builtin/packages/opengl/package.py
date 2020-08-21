@@ -12,12 +12,14 @@ class Opengl(Package):
 
     homepage = "https://www.opengl.org/"
 
-    variant('glvnd',
-            default=False,
-            description="Expose Graphics APIs through libglvnd")
+    # Note that this is a dummy SHA since the package is strictly external
+    version('4.5', sha256='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
 
-    variant('glx', default=True, description="Enable GLX API.")
+    is_linux = sys.platform.startswith('linux')
+    variant('glx', default=is_linux, description="Enable GLX API.")
     variant('egl', default=False, description="Enable EGL API.")
+    variant('glvnd', default=is_linux,
+            description="Expose Graphics APIs through libglvnd")
 
     provides('gl', when='~glvnd')
     provides('gl@:4.5', when='@4.5: ~glvnd')
@@ -38,8 +40,8 @@ class Opengl(Package):
     provides('gl@:1.1', when='@1.1: ~glvnd')
     provides('gl@:1.0', when='@1.0: ~glvnd')
 
-    if sys.platform != 'darwin':
-        provides('glx@1.4', when='~glvnd +glx')
+    provides('glx@1.4', when='~glvnd +glx')
+    provides('egl@1.5', when='~glvnd +egl')
 
     # NOTE: This package should have a dependency on libglvnd, but because it
     # is exclusively provided externally the dependency is never traversed.
@@ -48,8 +50,6 @@ class Opengl(Package):
     provides('libglvnd-be-gl', when='+glvnd')
     provides('libglvnd-be-glx', when='+glvnd +glx')
     provides('libglvnd-be-egl', when='+glvnd +egl')
-
-    provides('egl@1.5', when='~glvnd +egl')
 
     executables = ['^glxinfo$']
 
