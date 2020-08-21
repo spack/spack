@@ -444,18 +444,6 @@ class PackageViewMixin(object):
             view.remove_file(src, dst)
 
 
-def test_pkg_id(spec):
-    """Build the standard install test package identifier
-
-    Args:
-        spec (Spec): instance of the spec under test
-
-    Returns:
-        (str): the install test package identifier
-    """
-    return spec.format('{name}-{version}-{hash:7}')
-
-
 def test_log_pathname(test_stage, spec):
     """Build the pathname of the test log file
 
@@ -1630,11 +1618,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return 'test-{0}-out.txt' \
             .format(self.spec.format('{name}-{version}-{hash:7}'))
 
-    @property
-    def test_dir(self):
-        return self.test_stage.join(
-            self.spec.format('{name}-{version}-{hash}'))
-
     def cache_extra_test_sources(self, srcs):
         """Copy relative source paths to the corresponding install test subdir
 
@@ -1662,8 +1645,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     test_requires_compiler = False
     test_failures = None
-    test_log_file = None
-    test_stage = None
+    test_suite = None
 
     def do_test(self, name, remove_directory=False, dirty=False):
         if self.test_requires_compiler:
@@ -1678,22 +1660,20 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Clear test failures
         self.test_failures = []
-
-        self.test_stage = setup_test_stage(name)
-        self.test_log_file = test_log_pathname(self.test_stage, self.spec)
+        self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
 
         def test_process():
             with tty.log.log_output(self.test_log_file) as logger:
                 with logger.force_echo():
                     tty.msg('Testing package {0}'
-                            .format(test_pkg_id(self.spec)))
+                            .format(self.test_suite.test_pkg_id(self.spec)))
 
                 # use debug print levels for log file to record commands
                 old_debug = tty.is_debug()
                 tty.set_debug(True)
 
                 # setup test directory
-                testdir = self.test_dir
+                testdir = self.test_suite.test_dir_for_spec(self.spec)
                 if os.path.exists(testdir):
                     shutil.rmtree(testdir)
                 fsys.mkdirp(testdir)
@@ -1716,15 +1696,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 try:
                     with fsys.working_dir(testdir):
                         for spec in test_specs:
+                            self.test_suite.current_test_spec = spec
                             # Fail gracefully if a virtual has no package/tests
                             try:
                                 spec_pkg = spec.package
                             except spack.repo.UnknownPackageError:
                                 continue
 
-                            # copy test data into testdir/data
+                            # copy test data into test data dir
                             data_source = Prefix(spec_pkg.package_dir).test
-                            data_dir = os.path.join(testdir.data, spec.name)
+                            data_dir = self.test_suite.current_test_data_dir
                             if os.path.isdir(data_source):
                                 shutil.copytree(data_source, data_dir)
 
@@ -1745,8 +1726,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # cleanup test directory on success
                     if remove_directory:
                         shutil.rmtree(testdir)
-                        if not os.listdir(self.test_stage):
-                            shutil.rmtree(self.test_stage)
 
                 finally:
                     # reset debug level

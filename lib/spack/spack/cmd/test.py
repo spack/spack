@@ -15,6 +15,7 @@ import shutil
 import llnl.util.tty as tty
 import llnl.util.filesystem as fs
 
+import spack.install_test
 import spack.environment as ev
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -161,38 +162,21 @@ environment variables:
     reporter.specs = specs_to_test
 
     # test_stage_dir
-    stage = get_stage(test_name)
-    fs.mkdirp(stage)
+    test_suite = spack.install_test.TestSuite(test_name, specs_to_test)
+    test_suite.ensure_stage()
 
-    with reporter('test', stage):
+    with reporter('test', test_suite.stage):
         if args.smoke_test:
-            for spec in specs_to_test:
-                try:
-                    spec.package.do_test(
-                        name=test_name,
-                        remove_directory=not args.keep_stage,
-                        dirty=args.dirty)
-                    _write_test_result(spec, test_name, 'PASSED')
-                except BaseException as err:
-                    if isinstance(err, SyntaxError):
-                        # Create the test log file and report the error.
-                        test_stage = spack.package.setup_test_stage(test_name)
-                        logfile = spack.package.test_log_pathname(test_stage,
-                                                                  spec)
-                        msg = 'Testing package {0}\n{1}'\
-                            .format(spack.package.test_pkg_id(spec), str(err))
-                        _add_msg_to_file(logfile, msg)
-
-                    _write_test_result(spec, test_name, 'FAILED')
-                    if args.fail_first:
-                        break
+            test_suite(remove_directory=not args.keep_stage,
+                       dirty=args.dirty,
+                       fail_first=args.fail_first)
         else:
             raise NotImplementedError
 
 
 def test_list(args):
     """List tests that are running or have available results."""
-    stage_dir = get_stage()
+    stage_dir = spack.install_test.get_test_stage_dir()
     tests = os.listdir(stage_dir)
 
     # Filter tests by filter argument
@@ -205,7 +189,9 @@ def test_list(args):
 
         def match(t, f):
             return f.match(t)
-        tests = [t for t in tests if any(match(t, f) for f in filters)]
+        tests = [t for t in tests
+                 if any(match(t, f) for f in filters) and
+                 os.path.isdir(os.path.join(stage_dir, t))]
 
     if tests:
         # TODO: Make these specify results vs active
@@ -222,7 +208,7 @@ def test_list(args):
 def test_status(args):
     """Get the current status for a particular Spack test."""
     name = args.name
-    stage = get_stage(name)
+    stage = spack.install_test.get_test_stage(name)
 
     if os.path.exists(stage):
         # TODO: Make this handle capability tests too
@@ -234,12 +220,12 @@ def test_status(args):
 def test_results(args):
     """Get the results for a particular Spack test."""
     name = args.name
-    stage = get_stage(name)
+    stage = spack.install_test.get_test_stage(name)
 
     # TODO: Make this handle capability tests too
     # The results file may turn out to be a placeholder for future work
     if os.path.exists(stage):
-        results_file = _get_results_file(name)
+        results_file = spack.install_test.get_results_file(name)
         if os.path.exists(results_file):
             msg = "Results for test %s: \n" % name
             with open(results_file, 'r') as f:
@@ -263,56 +249,11 @@ def test_remove(args):
 
     Removed tests can no longer be accessed for results or status, and will not
     appear in `spack test list` results."""
-    stage_dir = get_stage(args.name)
     if args.name:
-        shutil.rmtree(stage_dir)
+        shutil.rmtree(spack.install_test.get_test_stage(args.name))
     else:
-        fs.remove_directory_contents(stage_dir)
+        fs.remove_directory_contents(spack.install_test.get_test_stage_dir())
 
 
 def test(parser, args):
     globals()['test_%s' % args.test_command](args)
-
-
-def get_stage(name=None):
-    """
-    Return the test stage for the named test or the overall test stage.
-    """
-    stage_dir = spack.util.path.canonicalize_path(
-        spack.config.get('config:test_stage', '~/.spack/test'))
-    return os.path.join(stage_dir, name) if name else stage_dir
-
-
-def _add_msg_to_file(filename, msg):
-    """Add the message to the specified file
-
-    Args:
-        filename (str): path to the file
-        msg (str): message to be appended to the file
-    """
-    with open(filename, 'a+') as f:
-        f.write('{0}\n'.format(msg))
-
-
-def _get_results_file(test_name):
-    """Return the results pathname for the test
-
-    Args:
-        test_name (str): name of the test
-
-    Returns:
-        (str): path to the test results file
-    """
-    return os.path.join(get_stage(test_name), 'results.txt')
-
-
-def _write_test_result(spec, test_name, result):
-    """Write the result to the test results file
-
-    Args:
-        spec (Spec): spec of the package under test
-        test_name (str): name of the test
-        result (str): test result (i.e., 'PASSED' or 'FAILED')
-    """
-    msg = "{0} {1}".format(spack.package.test_pkg_id(spec), result)
-    _add_msg_to_file(_get_results_file(test_name), msg)
