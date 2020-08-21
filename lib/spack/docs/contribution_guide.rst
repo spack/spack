@@ -111,7 +111,7 @@ And this would run the ``test_platform`` test from that file:
 
 .. code-block:: console
 
-   $ spack test architecture.py::test_platform
+   $ spack test lib/spack/spack/test/architecture.py::test_platform
 
 This allows you to develop iteratively: make a change, test that change,
 make another change, test that change, etc.  We use `pytest
