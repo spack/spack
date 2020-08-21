@@ -172,13 +172,18 @@ environment variables:
                         name=test_name,
                         remove_directory=not args.keep_stage,
                         dirty=args.dirty)
-                    with open(_get_results_file(test_name), 'a') as f:
-                        f.write("%s PASSED\n" %
-                                spec.format("{name}-{version}-{hash:7}"))
-                except BaseException:
-                    with open(_get_results_file(test_name), 'a') as f:
-                        f.write("%s FAILED\n" %
-                                spec.format("{name}-{version}-{hash:7}"))
+                    _write_test_result(spec, test_name, 'PASSED')
+                except BaseException as err:
+                    if isinstance(err, SyntaxError):
+                        # Create the test log file and report the error.
+                        test_stage = spack.package.setup_test_stage(test_name)
+                        logfile = spack.package.test_log_pathname(test_stage,
+                                                                  spec)
+                        msg = 'Testing package {0}\n{1}'\
+                            .format(spack.package.test_pkg_id(spec), str(err))
+                        _add_msg_to_file(logfile, msg)
+
+                    _write_test_result(spec, test_name, 'FAILED')
                     if args.fail_first:
                         break
         else:
@@ -278,9 +283,36 @@ def get_stage(name=None):
     return os.path.join(stage_dir, name) if name else stage_dir
 
 
-def _get_results_file(name):
+def _add_msg_to_file(filename, msg):
+    """Add the message to the specified file
+
+    Args:
+        filename (str): path to the file
+        msg (str): message to be appended to the file
     """
-    Return the results file for the named test.
+    with open(filename, 'a+') as f:
+        f.write('{0}\n'.format(msg))
+
+
+def _get_results_file(test_name):
+    """Return the results pathname for the test
+
+    Args:
+        test_name (str): name of the test
+
+    Returns:
+        (str): path to the test results file
     """
-    stage = get_stage(name)
-    return os.path.join(stage, 'results.txt')
+    return os.path.join(get_stage(test_name), 'results.txt')
+
+
+def _write_test_result(spec, test_name, result):
+    """Write the result to the test results file
+
+    Args:
+        spec (Spec): spec of the package under test
+        test_name (str): name of the test
+        result (str): test result (i.e., 'PASSED' or 'FAILED')
+    """
+    msg = "{0} {1}".format(spack.package.test_pkg_id(spec), result)
+    _add_msg_to_file(_get_results_file(test_name), msg)

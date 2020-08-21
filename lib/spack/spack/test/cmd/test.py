@@ -8,6 +8,8 @@ import os
 
 import pytest
 
+from llnl.util.filesystem import mkdirp
+
 import spack.config
 import spack.package
 import spack.cmd.install
@@ -30,7 +32,7 @@ def mock_test_stage(mutable_config, tmpdir):
 
 def test_test_package_not_installed(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery_mutable_config):
+        install_mockery_mutable_config, mock_test_stage):
 
     output = spack_test('run', 'libdwarf')
 
@@ -178,7 +180,7 @@ def test_cdash_upload_clean_test(
         assert '<Text>' not in content
 
 
-def test_test_help_does_not_show_cdash_options(capsys):
+def test_test_help_does_not_show_cdash_options(mock_test_stage, capsys):
     """Make sure `spack test --help` does not describe CDash arguments"""
     with pytest.raises(SystemExit):
         spack_test('run', '--help')
@@ -186,7 +188,49 @@ def test_test_help_does_not_show_cdash_options(capsys):
         assert 'CDash URL' not in captured.out
 
 
-def test_test_help_cdash():
+def test_test_help_cdash(mock_test_stage):
     """Make sure `spack test --help-cdash` describes CDash arguments"""
     out = spack_test('run', '--help-cdash')
     assert 'CDash URL' in out
+
+
+def test_test_log_pathname(mock_packages, config):
+    """Ensure test log path is reasonable."""
+    spec_name = 'libdwarf'
+    spec = spack.spec.Spec(spec_name).concretized()
+
+    test_stage = 'log_test_stage'
+    logfile = spack.package.test_log_pathname(test_stage, spec)
+    assert test_stage in logfile
+    assert spec_name in logfile
+    assert 'out.txt' in logfile
+
+
+def test_setup_test_stage(mock_test_stage):
+    """Make sure test stage directory is properly set up."""
+    test_mock_stage = mock_test_stage
+    test_name = 'test-name'
+    test_stage = spack.package.setup_test_stage(test_name)
+
+    assert os.path.exists(test_mock_stage)
+    assert test_mock_stage in test_stage
+    assert test_stage.endswith(test_name)
+
+
+def test_write_test_result(mock_packages, mock_test_stage):
+    """Ensure test results written to a results file."""
+    result = 'TEST'
+    spec_name = 'libdwarf'
+    test_name = 'write-test'
+
+    spec = spack.spec.Spec(spec_name).concretized()
+    results_fn = spack.cmd.test._get_results_file(test_name)
+    mkdirp(os.path.dirname(results_fn))
+    spack.cmd.test._write_test_result(spec, test_name, result)
+    with open(results_fn, 'r') as ifd:
+        lines = ifd.readlines()
+        assert len(lines) == 1
+
+        msg = lines[0]
+        assert result in msg
+        assert spec_name in msg
