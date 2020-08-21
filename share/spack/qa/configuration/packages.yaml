@@ -32,5 +32,5 @@ packages:
   ruby:
     buildable: False
     externals:
-    - spec: ruby@2.0.0
+    - spec: ruby@2.5.0
       prefix: /usr
