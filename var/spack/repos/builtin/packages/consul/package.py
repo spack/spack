@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Consul(Package):
+class Consul(MakefilePackage):
     """Consul is a distributed, highly available,
        and data center aware solution to connect and configure applications
        across dynamic, distributed infrastructure."""
