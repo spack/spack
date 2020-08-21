@@ -143,7 +143,7 @@ class Petsc(Package):
     conflicts('+p4est', when='~mpi', msg=mpi_msg)
     conflicts('+superlu-dist', when='~mpi', msg=mpi_msg)
     conflicts('+trilinos', when='~mpi', msg=mpi_msg)
-    
+
     # older versions of petsc did not support mumps when +int64
     conflicts('+mumps', when='@:3.12.99+int64')
 
