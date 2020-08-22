@@ -126,11 +126,6 @@ environment variables:
     if args.fail_fast:
         spack.config.set('config:fail_fast', True, scope='command_line')
 
-    # record test time; this will be default test name
-    now = datetime.datetime.now()
-    test_name = args.name or now.strftime('%Y-%m-%d_%H:%M:%S')
-    tty.msg("Spack test %s" % test_name)
-
     # Get specs to test
     env = ev.get_env(args, 'test')
     hashes = env.all_hashes() if env else None
@@ -143,8 +138,13 @@ environment variables:
             tty.warn("No installed packages match spec %s" % spec)
         specs_to_test.extend(matching)
 
+    # test_stage_dir
+    test_suite = spack.install_test.TestSuite(specs_to_test, args.name)
+    test_suite.ensure_stage()
+    tty.msg("Spack test %s" % test_suite.name)
+
     # Set up reporter
-    setattr(args, 'package', [s.format() for s in specs_to_test])
+    setattr(args, 'package', [s.format() for s in test_suite.specs])
     reporter = spack.report.collect_info(
         spack.package.PackageBase, 'do_test', args.log_format, args)
     if not reporter.filename:
@@ -157,13 +157,9 @@ environment variables:
         else:
             log_file = os.path.join(
                 os.getcwd(),
-                'test-%s' % test_name)
+                'test-%s' % test_suite.name)
         reporter.filename = log_file
     reporter.specs = specs_to_test
-
-    # test_stage_dir
-    test_suite = spack.install_test.TestSuite(test_name, specs_to_test)
-    test_suite.ensure_stage()
 
     with reporter('test', test_suite.stage):
         if args.smoke_test:

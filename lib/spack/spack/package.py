@@ -1706,7 +1706,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                             # copy test data into test data dir
                             data_source = Prefix(spec_pkg.package_dir).test
                             data_dir = self.test_suite.current_test_data_dir
-                            if os.path.isdir(data_source):
+                            if (os.path.isdir(data_source) and
+                                    not os.path.exists(data_dir)):
+                                # We assume data dir is used read-only
+                                # maybe enforce this later
                                 shutil.copytree(data_source, data_dir)
 
                             # grab the function for each method so we can call it

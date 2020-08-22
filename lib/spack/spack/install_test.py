@@ -2,9 +2,15 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import base64
+import hashlib
 import os
+import sys
+
 import llnl.util.filesystem as fs
+
 import spack.util.prefix
+import spack.util.spack_json as sjson
 
 def get_test_stage_dir():
     return spack.util.path.canonicalize_path(
@@ -17,21 +23,37 @@ def get_results_file(name):
     return get_test_stage(name).join('results.txt')
 
 def get_test_by_name(name):
-    test_suite_dir = os.path.join(get_test_stage_dir(), name)
-    if not os.path.isdir(test_suite_dir):
+    test_suite_file = get_test_stage(name).join('specs.lock')
+
+    if not os.path.isdir(test_suite_file):
         raise Exception
 
+    test_suite_data = sjson.load(test_suite_file)
+    return TestSuite.from_dict(test_suite_data, name)
 
 
 class TestSuite(object):
-    def __init__(self, name, specs):
-        self.name = name
+    def __init__(self, specs, name=None):
+        self._name = name
         # copy so that different test suites have different package objects
         # even if they contain the same spec
         self.specs = [spec.copy() for spec in specs]
         self.current_test_spec = None
 
+    @property
+    def name(self):
+        if not self._name:
+            json_text = sjson.dump(self.to_dict())
+            sha = hashlib.sha1(json_text.encode('utf-8'))
+            b32_hash = base64.b32encode(sha.digest()).lower()
+            if sys.version_info[0] >= 3:
+                b32_hash = b32_hash.decode('utf-8')
+            self._name = b32_hash
+        return self._name
+
     def __call__(self, *args, **kwargs):
+        self.write_reproducibility_data()
+
         remove_directory = kwargs.get('remove_directory', True)
         dirty = kwargs.get('dirty', False)
         fail_first = kwargs.get('fail_first', False)
@@ -105,6 +127,30 @@ class TestSuite(object):
     def write_test_result(self, spec, result):
         msg = "{0} {1}".format(self.test_pkg_id(spec), result)
         _add_msg_to_file(self.results_file, msg)
+
+    def write_reproducibility_data(self):
+        for spec in self.specs:
+            repo_cache_path = self.stage.repo.join(spec.name)
+            spack.repo.path.dump_provenance(spec, repo_cache_path)
+            for vspec in spec.package.virtuals_provided:
+                repo_cache_path = self.stage.repo.join(vspec.name)
+                if not os.path.exists(repo_cache_path):
+                    try:
+                        spack.repo.path.dump_provenance(vspec, repo_cache_path)
+                    except spack.repo.UnknownPackageError:
+                        pass  # not all virtuals have package files
+
+        with open(self.stage.join('specs.lock'), 'w') as f:
+            sjson.dump(self.to_dict(), stream=f)
+
+    def to_dict(self):
+        specs = [s.to_dict() for s in self.specs]
+        return {'specs': specs}
+
+    @staticmethod
+    def from_dict(d, name=None):
+        specs = [Spec.from_dict(spec_dict) for spec_dict in d['specs']]
+        return TestSuite(specs, name)
 
 
 def _add_msg_to_file(filename, msg):
