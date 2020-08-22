@@ -55,6 +55,7 @@ to your path and you're ready to go:
 .. code-block:: console
 
    $ . share/spack/setup-env.sh 
+   $ spack install libelf
 
 For a richer experience, use Spack's shell support:
 
