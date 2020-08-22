@@ -21,7 +21,5 @@ class Consul(MakefilePackage):
     depends_on('go@1.14:')
 
     def install(self, spec, prefix):
-        make('tools')
-        make('dev')
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)
