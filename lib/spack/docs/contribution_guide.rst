@@ -159,7 +159,7 @@ argument to ``pytest``:
 
 .. code-block:: console
 
-   $ spack test -s spack test --list-long lib/spack/spack/test/architecture.py::test_platform
+   $ spack test -s --list-long lib/spack/spack/test/architecture.py::test_platform
 
 Unit tests are crucial to making sure bugs aren't introduced into
 Spack. If you are modifying core Spack libraries or adding new
