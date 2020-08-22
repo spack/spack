@@ -1613,11 +1613,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     do_install.__doc__ += install_args_docstring
 
-    @property
-    def test_log_name(self):
-        return 'test-{0}-out.txt' \
-            .format(self.spec.format('{name}-{version}-{hash:7}'))
-
     def cache_extra_test_sources(self, srcs):
         """Copy relative source paths to the corresponding install test subdir
 

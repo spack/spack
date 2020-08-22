@@ -54,6 +54,7 @@ import spack.paths
 import spack.package
 import spack.schema.environment
 import spack.store
+import spack.install_test
 import spack.architecture as arch
 import spack.util.path
 from spack.util.string import plural
@@ -895,7 +896,7 @@ def fork(pkg, function, dirty, fake, context='build', **kwargs):
                     spack.util.path.canonicalize_path(
                         spack.config.get('config:test_stage')),
                     kwargs.get('test_name'),
-                    pkg.test_log_name)
+                    spack.install_test.TestSuite.test_log_name(pkg.spec))
 
             # make a pickleable exception to send to parent.
             msg = "%s: %s" % (exc_type.__name__, str(exc))
