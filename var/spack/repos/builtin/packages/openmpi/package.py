@@ -367,6 +367,14 @@ class Openmpi(AutotoolsPackage):
         env.set('OMPI_FC', spack_fc)
         env.set('OMPI_F77', spack_f77)
 
+        # See https://www.open-mpi.org/faq/?category=building#installdirs
+        for suffix in ['PREFIX', 'EXEC_PREFIX', 'BINDIR', 'SBINDIR',
+                       'LIBEXECDIR', 'DATAROOTDIR', 'DATADIR', 'SYSCONFDIR',
+                       'SHAREDSTATEDIR', 'LOCALSTATEDIR', 'LIBDIR',
+                       'INCLUDEDIR', 'INFODIR', 'MANDIR', 'PKGDATADIR',
+                       'PKGLIBDIR', 'PKGINCLUDEDIR']:
+            env.unset('OPAL_%s' % suffix)
+
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
