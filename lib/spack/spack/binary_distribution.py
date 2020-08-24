@@ -339,7 +339,7 @@ def generate_key_index(key_prefix, tmpdir=None):
     """Create the key index page.
 
     Creates (or replaces) the "index.json" page at the location given in
-    key_prefix.  This page contains an entry for each key (*.pub) under
+    key_prefix.  This page contains an entry for each key (.pub) under
     key_prefix.
     """
 
