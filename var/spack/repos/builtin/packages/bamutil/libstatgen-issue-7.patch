@@ -1,0 +1,22 @@
+From 2f1876e53ac6c31c8e459a4c4543ab801d1dd705 Mon Sep 17 00:00:00 2001
+From: Jonathon LeFaive <jonathonl@users.noreply.github.com>
+Date: Fri, 21 Jul 2017 10:41:10 -0400
+Subject: [PATCH] Fixes #15
+
+---
+ general/Parameters.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/general/Parameters.cpp b/general/Parameters.cpp
+index 1dc4571..ca2c946 100644
+--- a/libStatGen/general/Parameters.cpp
++++ b/libStatGen/general/Parameters.cpp
+@@ -553,7 +553,7 @@ void LongParameters::Status()
+     int  line_len = 0;
+ 
+     bool legacy_parameters = false;
+-    bool legacy_count = 0;
++    int legacy_count = 0;
+ 
+     for (LongParameterList * ptr = list + 1; ptr->description != NULL; ptr++)
+         if (ptr->type == LP_LEGACY_PARAMETERS)

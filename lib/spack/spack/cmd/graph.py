@@ -1,17 +1,16 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
 
-import argparse
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.store
-from spack.dependency import all_deptypes, canonical_deptype
 from spack.graph import graph_dot, graph_ascii
 
 description = "generate graphs of package dependency relationships"
@@ -31,29 +30,17 @@ def setup_parser(subparser):
         help="generate graph in dot format and print to stdout")
 
     subparser.add_argument(
-        '-n', '--normalize', action='store_true',
-        help="skip concretization; only print normalized spec")
-
-    subparser.add_argument(
         '-s', '--static', action='store_true',
-        help="use static information from packages, not dynamic spec info")
+        help="graph static (possible) deps, don't concretize (implies --dot)")
 
     subparser.add_argument(
         '-i', '--installed', action='store_true',
         help="graph all installed specs in dot format (implies --dot)")
 
-    subparser.add_argument(
-        '-t', '--deptype', action='store',
-        help="comma-separated list of deptypes to traverse. default=%s"
-        % ','.join(all_deptypes))
-
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER,
-        help="specs of packages to graph")
+    arguments.add_common_arguments(subparser, ['deptype', 'specs'])
 
 
 def graph(parser, args):
-    concretize = not args.normalize
     if args.installed:
         if args.specs:
             tty.die("Can't specify specs with --installed")
@@ -61,26 +48,21 @@ def graph(parser, args):
         specs = spack.store.db.query()
 
     else:
-        specs = spack.cmd.parse_specs(
-            args.specs, normalize=True, concretize=concretize)
+        specs = spack.cmd.parse_specs(args.specs, concretize=not args.static)
 
     if not specs:
         setup_parser.parser.print_help()
         return 1
 
-    deptype = all_deptypes
-    if args.deptype:
-        deptype = tuple(args.deptype.split(','))
-        if deptype == ('all',):
-            deptype = 'all'
-        deptype = canonical_deptype(deptype)
+    if args.static:
+        args.dot = True
 
-    if args.dot:  # Dot graph only if asked for.
-        graph_dot(specs, static=args.static, deptype=deptype)
+    if args.dot:
+        graph_dot(specs, static=args.static, deptype=args.deptype)
 
     elif specs:  # ascii is default: user doesn't need to provide it explicitly
         debug = spack.config.get('config:debug')
-        graph_ascii(specs[0], debug=debug, deptype=deptype)
+        graph_ascii(specs[0], debug=debug, deptype=args.deptype)
         for spec in specs[1:]:
             print()  # extra line bt/w independent graphs
             graph_ascii(spec, debug=debug)

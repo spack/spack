@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ def setup_parser(subparser):
 
 
 def concretize(parser, args):
-    env = ev.get_env(args, 'concretize')
-    env.concretize(force=args.force)
-    env.write()
+    env = ev.get_env(args, 'concretize', required=True)
+    with env.write_transaction():
+        concretized_specs = env.concretize(force=args.force)
+        ev.display_specs(concretized_specs)
+        env.write()

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,19 +10,29 @@ class PyPipits(PythonPackage):
     """Automated pipeline for analyses of fungal ITS from the Illumina"""
 
     homepage = "https://github.com/hsgweon/pipits"
-    url      = "https://github.com/hsgweon/pipits/archive/1.5.0.tar.gz"
+    url      = "https://github.com/hsgweon/pipits/archive/2.4.tar.gz"
 
-    version('1.5.0', '3f9b52bd7ffbcdb96d7bec150275070a')
+    version('2.4', sha256='b08a9d70ac6e5dd1c64d56b77384afd69e21e7d641b2fc4416feff862a2cd054')
+    version('1.5.0', sha256='6c76fff42a9db62ff4bb1d4d520ebee6cb20d5a726f12c3d5a3d42314947a659')
 
-    depends_on('python@:2.999', type=('build', 'run'))
+    # https://github.com/bioconda/bioconda-recipes/blob/master/recipes/pipits/meta.yaml
+    depends_on('python@3:', type=('build', 'run'), when='@2:')
+    depends_on('python@:2', type=('build', 'run'), when='@:1')
+    depends_on('py-setuptools', type='build', when='@2:')
+    depends_on('py-pispino@1.1:', type=('build', 'run'), when='@2:')
+    depends_on('vsearch', type='run')
+    depends_on('fastx-toolkit', type='run')
+    depends_on('hmmer', type='run')
+    depends_on('itsx', type='run')
     depends_on('py-biom-format', type=('build', 'run'))
+    depends_on('rdptools', type='run', when='@2:')
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('java', type=('build', 'run'))
-    depends_on('hmmer')
-    depends_on('fastx-toolkit')
-    depends_on('vsearch')
-    depends_on('itsx')
-    depends_on('rdp-classifier')
+    depends_on('py-pandas', type=('build', 'run'), when='@2:')
+    depends_on('py-progressbar2', type=('build', 'run'), when='@2:')
+    depends_on('py-requests', type=('build', 'run'), when='@2:')
+    depends_on('seqkit', type='run')
+    depends_on('java', type=('build', 'run'), when='@:1')
+    depends_on('rdp-classifier', type='run', when='@:1')
 
     resource(
         name='UNITE_retrained',
@@ -47,15 +57,15 @@ class PyPipits(PythonPackage):
         install_tree(join_path(self.stage.source_path, 'refdb'),
                      self.prefix.refdb)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('PIPITS_UNITE_REFERENCE_DATA_CHIMERA', join_path(
-                    self.prefix, 'refdb',
-                    'uchime_reference_dataset_01.01.2016',
-                    'uchime_reference_dataset_01.01.2016.fasta'))
-        run_env.set('PIPITS_UNITE_RETRAINED_DIR',
-                    self.prefix.refdb.UNITE_retrained)
-        run_env.set('PIPITS_WARCUP_RETRAINED_DIR',
-                    self.prefix.refdb.warcup_retrained_V2)
-        run_env.set('PIPITS_RDP_CLASSIFIER_JAR', join_path(
-                    self.spec['rdp-classifier'].prefix.bin,
-                    'classifier.jar'))
+    def setup_run_environment(self, env):
+        env.set('PIPITS_UNITE_REFERENCE_DATA_CHIMERA', join_path(
+                self.prefix, 'refdb',
+                'uchime_reference_dataset_01.01.2016',
+                'uchime_reference_dataset_01.01.2016.fasta'))
+        env.set('PIPITS_UNITE_RETRAINED_DIR',
+                self.prefix.refdb.UNITE_retrained)
+        env.set('PIPITS_WARCUP_RETRAINED_DIR',
+                self.prefix.refdb.warcup_retrained_V2)
+        env.set('PIPITS_RDP_CLASSIFIER_JAR', join_path(
+                self.spec['rdp-classifier'].prefix.bin,
+                'classifier.jar'))

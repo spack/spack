@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,23 +8,28 @@ from spack import *
 
 
 class DocbookXsl(Package):
-    """Docbook XSL vocabulary."""
-    homepage = "http://docbook.sourceforge.net/"
-    url = "https://downloads.sourceforge.net/project/docbook/docbook-xsl/1.79.1/docbook-xsl-1.79.1.tar.bz2"
+    """DocBook XSLT 1.0 Stylesheets."""
 
-    version('1.79.1', 'b48cbf929a2ad85e6672f710777ca7bc')
+    homepage = "https://github.com/docbook/xslt10-stylesheets"
+    url      = "https://github.com/docbook/xslt10-stylesheets/releases/download/release%2F1.79.2/docbook-xsl-1.79.2.tar.bz2"
+
+    version('1.79.2', sha256='316524ea444e53208a2fb90eeb676af755da96e1417835ba5f5eb719c81fa371')
 
     depends_on('docbook-xml')
 
-    def install(self, spec, prefix):
-        for item in os.listdir('.'):
-            src = os.path.abspath(item)
-            dst = os.path.join(prefix, item)
-            if os.path.isdir(item):
-                install_tree(src, dst, symlinks=True)
-            else:
-                install(src, dst)
+    patch('docbook-xsl-1.79.2-stack_fix-1.patch', when='@1.79.2')
 
-    def setup_environment(self, spack_env, run_env):
-        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
-        run_env.set('XML_CATALOG_FILES', catalog, separator=' ')
+    def install(self, spec, prefix):
+        install_tree('.', prefix)
+
+    @property
+    def catalog(self):
+        return os.path.join(self.prefix, 'catalog.xml')
+
+    def setup_run_environment(self, env):
+        catalog = self.catalog
+        env.set('XML_CATALOG_FILES', catalog, separator=' ')
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        catalog = self.catalog
+        env.prepend_path("XML_CATALOG_FILES", catalog)

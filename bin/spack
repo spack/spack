@@ -1,9 +1,25 @@
-#!/usr/bin/env python
+#!/bin/sh
+# -*- python -*-
 #
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+# This file is bilingual. The following shell code finds our preferred python.
+# Following line is a shell no-op, and starts a multi-line Python comment.
+# See https://stackoverflow.com/a/47886254
+""":"
+# prefer python3, then python, then python2
+for cmd in python3 python python2; do
+   command -v > /dev/null $cmd && exec $cmd $0 "$@"
+done
+
+echo "==> Error: spack could not find a python interpreter!" >&2
+exit 1
+":"""
+# Line above is a shell no-op, and ends a python multi-line comment.
+# The code above runs this file with our preferred python interpreter.
 
 from __future__ import print_function
 
@@ -35,7 +51,7 @@ sys.path.insert(0, spack_external_libs)
 # (see #9206 for a broader description of the issue).
 #
 # Briefly: ruamel.yaml produces a .pth file when installed with pip that
-# makes the site installed package the preferred one, even tough sys.path
+# makes the site installed package the preferred one, even though sys.path
 # is modified to point to another version of ruamel.yaml.
 if 'ruamel.yaml' in sys.modules:
     del sys.modules['ruamel.yaml']

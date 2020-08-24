@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,8 @@ from spack.pkgkit import inject_flags, env_flags, build_system_flags
 def temp_env():
     old_env = os.environ.copy()
     yield
-    os.environ = old_env
+    os.environ.clear()
+    os.environ.update(old_env)
 
 
 def add_o3_to_build_system_cflags(pkg, name, flags):

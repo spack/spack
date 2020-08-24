@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,8 +23,10 @@ class RRjsonio(RPackage):
     aim is to support other general projects by building on their work,
     providing feedback and benefit from their ongoing development."""
 
-    homepage = "https://cran.r-project.org/package=RJSONIO"
-    url      = "https://cran.r-project.org/src/contrib/RJSONIO_1.3-0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RJSONIO"
+    homepage = "https://cloud.r-project.org/package=RJSONIO"
+    url      = "https://cloud.r-project.org/src/contrib/RJSONIO_1.3-0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RJSONIO"
 
-    version('1.3-0', '72c395622ba8d1435ec43849fd32c830')
+    version('1.3-1.2', sha256='550e18f7c04186376d67747b8258f529d205bfc929da9194fe45ec384e092d7e')
+    version('1.3-1.1', sha256='c72493b441758cd1e3e9d91296b9ea31068e71104649f46ad84c854a02c09693')
+    version('1.3-0', sha256='119334b7761c6c1c3cec52fa17dbc1b72eaebb520c53e68d873dea147cf48fb7')

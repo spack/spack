@@ -1,0 +1,10 @@
+--- spack-src/CMakeLists.txt.org	2020-06-29 14:38:00.737544597 +0900
++++ spack-src/CMakeLists.txt	2020-06-29 14:40:33.758297327 +0900
+@@ -24,6 +24,6 @@
+ 
+ add_definitions(-DVERSION="git" -DHOST_NAME="cab")
+ 
+-set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
++set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "--linkfortran")
+ 
+ add_subdirectory (src)

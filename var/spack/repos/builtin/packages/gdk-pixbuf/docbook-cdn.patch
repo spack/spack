@@ -1,0 +1,11 @@
+--- a/docs/meson.build	2019-01-10 17:55:09.573701375 -0800
++++ b/docs/meson.build	2019-01-10 17:56:03.672667410 -0800
+@@ -89,7 +89,7 @@
+                     xsltproc,
+                     xlstproc_flags,
+                     '-o', '@OUTPUT@',
+-                    'http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl',
++                    'http://cdn.docbook.org/release/xsl/current/manpages/docbook.xsl',
+                     '@INPUT@',
+                   ],
+                   install: true,

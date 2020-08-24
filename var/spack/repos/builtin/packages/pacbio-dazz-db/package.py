@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,12 +23,12 @@ class PacbioDazzDb(MakefilePackage):
         mkdirp(prefix.lib)
         mkdirp(prefix.include)
         makefile = FileFilter('Makefile')
-        makefile.filter('DEST_DIR\s*=\s*~/bin', 'DEST_DIR = ' + prefix.bin)
+        makefile.filter(r'DEST_DIR\s*=\s*~/bin', 'DEST_DIR = ' + prefix.bin)
         gmf = FileFilter('GNUmakefile')
-        gmf.filter('rsync\s*-av\s*\$\{ALL\}\s*\$\{PREFIX\}/bin',
+        gmf.filter(r'rsync\s*-av\s*\$\{ALL\}\s*\$\{PREFIX\}/bin',
                    'cp ${ALL} ' + prefix.bin)
-        gmf.filter('rsync\s*-av\s*libdazzdb.*\s*\$\{PREFIX\}/lib',
+        gmf.filter(r'rsync\s*-av\s*libdazzdb.*\s*\$\{PREFIX\}/lib',
                    'cp libdazzdb.* ' + prefix.lib)
-        gmf.filter(('rsync\s*-av\s*\$\(wildcard\s*\$\{THISDIR\}/\*.h'
-                    '\)\s*\$\{PREFIX\}/include'),
+        gmf.filter((r'rsync\s*-av\s*\$\(wildcard\s*\$\{THISDIR\}/\*.h'
+                    r'\)\s*\$\{PREFIX\}/include'),
                    'cp *.h ' + prefix.include)

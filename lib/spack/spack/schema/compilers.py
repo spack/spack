@@ -1,14 +1,14 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Schema for compilers.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/compilers.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/compilers.py
    :lines: 13-
 """
-
+import spack.schema.environment
 
 #: Properties for inclusion in other schemas
 properties = {
@@ -61,50 +61,14 @@ properties = {
                         'modules': {'anyOf': [{'type': 'string'},
                                               {'type': 'null'},
                                               {'type': 'array'}]},
-                        'environment': {
-                            'type': 'object',
-                            'default': {},
-                            'additionalProperties': False,
-                            'properties': {
-                                'set': {
-                                    'type': 'object',
-                                    'patternProperties': {
-                                        # Variable name
-                                        r'\w[\w-]*': {
-                                            'anyOf': [{'type': 'string'},
-                                                      {'type': 'number'}]
-                                        }
-                                    }
-                                },
-                                'unset': {
-                                    'type': 'object',
-                                    'patternProperties': {
-                                        # Variable name
-                                        r'\w[\w-]*': {'type': 'null'}
-                                    }
-                                },
-                                'prepend-path': {
-                                    'type': 'object',
-                                    'patternProperties': {
-                                        # Variable name
-                                        r'\w[\w-]*': {
-                                            'anyOf': [{'type': 'string'},
-                                                      {'type': 'number'}]
-                                        }
-                                    }
-                                },
-                                'append-path': {
-                                    'type': 'object',
-                                    'patternProperties': {
-                                        # Variable name
-                                        r'\w[\w-]*': {
-                                            'anyOf': [{'type': 'string'},
-                                                      {'type': 'number'}]
-                                        }
-                                    }
-                                }
-                            }
+                        'implicit_rpaths': {
+                            'anyOf': [
+                                {'type': 'array',
+                                 'items': {'type': 'string'}},
+                                {'type': 'boolean'}
+                            ]
                         },
+                        'environment': spack.schema.environment.definition,
                         'extra_rpaths': {
                             'type': 'array',
                             'default': [],

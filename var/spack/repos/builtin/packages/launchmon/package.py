@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,28 +6,31 @@
 from spack import *
 
 
-class Launchmon(Package):
+class Launchmon(AutotoolsPackage):
     """Software infrastructure that enables HPC run-time tools to
        co-locate tool daemons with a parallel job."""
     homepage = "https://github.com/LLNL/LaunchMON"
     url = "https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz"
+    git      = "https://github.com/llnl/launchmon.git"
 
-    version('1.0.2', '8d6ba77a0ec2eff2fde2c5cc8fa7ff7a')
+    version('master', branch='master')
+    version('1.0.2', sha256='1d301ccccfe0873efcd66da87ed5e4d7bafc560b00aee396d8a9365f53b3a33a')
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
+    depends_on('autoconf', type='build', when='@master')
+    depends_on('automake', type='build', when='@master')
+    depends_on('libtool', type='build', when='@master')
+    depends_on('pkgconfig', type='build')
     depends_on('libgcrypt')
     depends_on('libgpg-error')
     depends_on("elf", type='link')
     depends_on("boost")
     depends_on("spectrum-mpi", when='arch=ppc64le')
 
-    def install(self, spec, prefix):
-        configure(
-            "--prefix=" + prefix,
-            "--with-bootfabric=cobo",
-            "--with-rm=slurm")
+    patch('launchmon-char-conv.patch', when='@1.0.2')
 
-        make()
-        make("install")
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('@master'):
+            # automake for launchmon requires the AM_PATH_LIBGCRYPT macro
+            # which is defined in libgcrypt.m4
+            env.prepend_path('ACLOCAL_PATH',
+                             self.spec['libgcrypt'].prefix.share.aclocal)

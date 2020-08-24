@@ -1,24 +1,32 @@
 # -*- conf -*-
 # flake8 settings for Spack core files.
 #
-# These exceptions ar for Spack core files. We're slightly more lenient
+# These exceptions are for Spack core files. We're slightly more lenient
 # with packages.  See .flake8_packages for that.
 #
-# Let people line things up nicely:
+# E1: Indentation
 # - E129: visually indented line with same indent as next logical line
+#
+# E2: Whitespace
 # - E221: multiple spaces before operator
 # - E241: multiple spaces after ','
 # - E272: multiple spaces before keyword
 #
-# Let people use terse Python features:
-# - E731: lambda expressions
+# E7: Statement
+# - E731: do not assign a lambda expression, use a def
+#
+# W5: Line break warning
+# - W503: line break before binary operator
+# - W504: line break after binary operator
 #
 # These are required to get the package.py files to test clean:
 # - F999: syntax error in doctest
 #
-# Exempt to allow decorator classes to be lowercase, but follow otherwise:
-# - N801: CapWords for class names.
+# N8: PEP8-naming
+# - N801: class names should use CapWords convention
+# - N813: camelcase imported as lowercase
+# - N814: camelcase imported as constant
 #
 [flake8]
-ignore = E129,E221,E241,E272,E731,F999,N801,W503,W504
+ignore = E129,E221,E241,E272,E731,W503,W504,F999,N801,N813,N814
 max-line-length = 79

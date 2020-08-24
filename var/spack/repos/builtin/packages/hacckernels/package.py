@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,4 +23,4 @@ class Hacckernels(CMakePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('README', prefix)
-        install('spack-build/HACCKernels', prefix.bin)
+        install('../spack-build/HACCKernels', prefix.bin)

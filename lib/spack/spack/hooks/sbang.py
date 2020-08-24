@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import os
 import stat
 import re
+import sys
 
 import llnl.util.tty as tty
 
@@ -33,8 +34,12 @@ def shebang_too_long(path):
 
 def filter_shebang(path):
     """Adds a second shebang line, using sbang, at the beginning of a file."""
-    with open(path, 'r') as original_file:
+    with open(path, 'rb') as original_file:
         original = original_file.read()
+        if sys.version_info >= (2, 7):
+            original = original.decode(encoding='UTF-8')
+        else:
+            original = original.decode('UTF-8')
 
     # This line will be prepended to file
     new_sbang_line = '#!/bin/bash %s/bin/sbang\n' % spack.paths.prefix
@@ -61,15 +66,19 @@ def filter_shebang(path):
         saved_mode = st.st_mode
         os.chmod(path, saved_mode | stat.S_IWRITE)
 
-    with open(path, 'w') as new_file:
-        new_file.write(new_sbang_line)
-        new_file.write(original)
+    with open(path, 'wb') as new_file:
+        if sys.version_info >= (2, 7):
+            new_file.write(new_sbang_line.encode(encoding='UTF-8'))
+            new_file.write(original.encode(encoding='UTF-8'))
+        else:
+            new_file.write(new_sbang_line.encode('UTF-8'))
+            new_file.write(original.encode('UTF-8'))
 
     # Restore original permissions.
     if saved_mode is not None:
         os.chmod(path, saved_mode)
 
-    tty.warn("Patched overlong shebang in %s" % path)
+    tty.debug("Patched overlong shebang in %s" % path)
 
 
 def filter_shebangs_in_directory(directory, filenames=None):

@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,8 +36,8 @@ Here is an example ``config.yaml`` file:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 Each Spack configuration file is nested under a top-level section
 corresponding to its name. So, ``config.yaml`` starts with ``config:``,
@@ -244,8 +244,8 @@ your configurations look like this:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 
 .. code-block:: yaml
@@ -269,8 +269,8 @@ command:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 
 .. _config-overrides:
@@ -312,8 +312,8 @@ Let's revisit the ``config.yaml`` example one more time. The
    :caption: $(prefix)/etc/spack/defaults/config.yaml
 
    build_stage:
-     - $tempdir
-     - /nfs/tmp2/$user
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 Suppose the user configuration adds its *own* list of ``build_stage``
@@ -323,7 +323,7 @@ paths:
    :caption: ~/.spack/config.yaml
 
    build_stage:
-     - /lustre-scratch/$user
+     - /lustre-scratch/$user/spack
      - ~/mystage
 
 
@@ -341,10 +341,10 @@ get config`` shows the result:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - /lustre-scratch/$user
+       - /lustre-scratch/$user/spack
        - ~/mystage
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 
 As in :ref:`config-overrides`, the higher-precedence scope can
@@ -356,7 +356,7 @@ user config looked like this:
    :caption: ~/.spack/config.yaml
 
    build_stage::
-     - /lustre-scratch/$user
+     - /lustre-scratch/$user/spack
      - ~/mystage
 
 
@@ -371,7 +371,7 @@ The merged configuration would look like this:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - /lustre-scratch/$user
+       - /lustre-scratch/$user/spack
        - ~/mystage
 
 
@@ -427,6 +427,33 @@ home directory, and ``~user`` will expand to a specified user's home
 directory. The ``~`` must appear at the beginning of the path, or Spack
 will not expand it.
 
+.. _configuration_environment_variables:
+
+-------------------------
+Environment Modifications
+-------------------------
+
+Spack allows to prescribe custom environment modifications in a few places
+within its configuration files. Every time these modifications are allowed
+they are specified as a dictionary, like in the following example:
+
+.. code-block:: yaml
+
+   environment:
+     set:
+       LICENSE_FILE: '/path/to/license'
+     unset:
+     - CPATH
+     - LIBRARY_PATH
+     append_path:
+       PATH: '/new/bin/dir'
+
+The possible actions that are permitted are ``set``, ``unset``, ``append_path``,
+``prepend_path`` and finally ``remove_path``. They all require a dictionary
+of variable names mapped to the values used for the modification.
+The only exception is ``unset`` that requires just a list of variable names.
+No particular order is ensured on the execution of each of these modifications.
+
 ----------------------------
 Seeing Spack's Configuration
 ----------------------------
@@ -459,14 +486,13 @@ account all scopes. For example, to see the fully merged
      install_tree: $spack/opt/spack
      template_dirs:
      - $spack/templates
-     directory_layout: ${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}
+     directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
      module_roots:
        tcl: $spack/share/spack/modules
        lmod: $spack/share/spack/lmod
-       dotkit: $spack/share/spack/dotkit
      build_stage:
-     - $tempdir
-     - /nfs/tmp2/$user
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
      - $spack/var/spack/stage
      source_cache: $spack/var/spack/cache
      misc_cache: ~/.spack/cache
@@ -510,14 +536,13 @@ down the problem:
    ./my-scope/config.yaml:2                                install_tree: /path/to/some/tree
    /home/myuser/spack/etc/spack/defaults/config.yaml:23    template_dirs:
    /home/myuser/spack/etc/spack/defaults/config.yaml:24    - $spack/templates
-   /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: ${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}
+   /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
    /home/myuser/spack/etc/spack/defaults/config.yaml:32    module_roots:
    /home/myuser/spack/etc/spack/defaults/config.yaml:33      tcl: $spack/share/spack/modules
    /home/myuser/spack/etc/spack/defaults/config.yaml:34      lmod: $spack/share/spack/lmod
-   /home/myuser/spack/etc/spack/defaults/config.yaml:35      dotkit: $spack/share/spack/dotkit
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
-   /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir
-   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - /nfs/tmp2/$user
+   /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
+   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - ~/.spack/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:52    - $spack/var/spack/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $spack/var/spack/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: ~/.spack/cache

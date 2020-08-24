@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,8 +30,7 @@ class Fasta(MakefilePackage):
     def makefile_name(self):
         if self.spec.satisfies('platform=darwin'):
             name = 'Makefile.os_x86_64'
-        elif (self.spec.satisfies('platform=linux') and
-              self.spec.satisfies('target=x86_64')):
+        elif self.spec.satisfies('platform=linux target=x86_64:'):
             name = 'Makefile.linux64_sse2'
         else:
             tty.die('''Unsupported platform/target, must be

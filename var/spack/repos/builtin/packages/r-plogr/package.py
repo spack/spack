@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,9 @@ class RPlogr(RPackage):
     'LinkingTo: plogr' to 'DESCRIPTION', and '#include <plogr.h>'
     in your C++ modules to use it."""
 
-    homepage = "https://cran.r-project.org/package=plogr"
-    url      = "https://cran.r-project.org/src/contrib/plogr_0.2.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/plogr"
+    homepage = "https://cloud.r-project.org/package=plogr"
+    url      = "https://cloud.r-project.org/src/contrib/plogr_0.2.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/plogr"
 
     version('0.2.0', sha256='0e63ba2e1f624005fe25c67cdd403636a912e063d682eca07f2f1d65e9870d29')
-    version('0.1-1', '5ee46ed21b5c571d02900219098517c0')
+    version('0.1-1', sha256='22755c93c76c26252841f43195df31681ea865e91aa89726010bd1b9288ef48f')

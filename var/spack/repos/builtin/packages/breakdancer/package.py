@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,16 +21,18 @@ class Breakdancer(CMakePackage):
     url      = "https://github.com/genome/breakdancer/archive/v1.4.5.tar.gz"
 
     version('1.4.5', sha256='5d74f3a90f5c69026ebb4cf4cb9ccc51ec8dd49ac7a88595a1efabd5a73e92b6')
-    version('master', submodules='true', 
+    version('master', submodules='true',
             git='https://github.com/genome/breakdancer.git', preferred=True)
 
     phases = ['edit', 'cmake', 'build', 'install']
 
     depends_on('zlib')
 
+    depends_on('ncurses', type='link')
+
     depends_on('perl-statistics-descriptive', type='run')
     depends_on('perl-math-cdf', type='run')
-    depends_on('perl-gd-graph', type='run')
+    depends_on('perl-gdgraph', type='run')
     depends_on('perl-gdgraph-histogram', type='run')
     depends_on('perl-list-moreutils', type='run')
     depends_on('perl-exporter-tiny', type='run')
@@ -39,9 +41,9 @@ class Breakdancer(CMakePackage):
 
     parallel = False
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # get the perl tools in the path
-        run_env.prepend_path('PATH', self.prefix.lib)
+        env.prepend_path('PATH', self.prefix.lib)
 
     def edit(self, spec, prefix):
         # perl tools end up in a silly lib subdirectory, fixing that

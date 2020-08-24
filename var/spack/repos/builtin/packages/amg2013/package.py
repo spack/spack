@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,11 @@ class Amg2013(MakefilePackage):
     in the Center for Applied Scientific Computing (CASC) at LLNL.
     """
     tags = ['proxy-app']
-    homepage = "https://computation.llnl.gov/projects/co-design/amg2013"
-    url      = "https://computation.llnl.gov/projects/co-design/download/amg2013.tgz"
+    homepage = "https://computing.llnl.gov/projects/co-design/amg2013"
+    url      = "https://computing.llnl.gov/projects/co-design/download/amg2013.tgz"
 
-    version('master', '9d918d2a69528b83e6e0aba6ba601fef',
-            url='https://computation.llnl.gov/projects/co-design/download/amg2013.tgz')
+    version('master', sha256='b03771d84a04e3dbbbe32ba5648cd7b789e5853b938dd501e17d23d43f13c50f',
+            url='https://computing.llnl.gov/projects/co-design/download/amg2013.tgz')
 
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('assumedpartition', default=False, description='Use assumed partition (for thousands of processors)')

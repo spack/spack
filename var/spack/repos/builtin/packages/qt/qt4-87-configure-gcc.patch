@@ -1,0 +1,20 @@
+--- a/configure.orig	2018-09-18 07:02:33.866633000 +1000
++++ b/configure	2018-09-18 07:05:21.935194000 +1000
+@@ -7708,7 +7708,7 @@
+ 
+ 	# Check gcc's version
+ 	case "$(${QMAKE_CONF_COMPILER} -dumpversion)" in
+-	    4*)
++	    [4-8]*)
+ 		;;
+ 	    3.4*)
+ 		canBuildQtXmlPatterns="no"
+@@ -7729,7 +7729,7 @@
+     *-g++*)
+ 	# Check gcc's version
+ 	case "$(${QMAKE_CONF_COMPILER} -dumpversion)" in
+-	    5*|4*|3.4*)
++	    [4-8]*|3.4*)
+ 		;;
+             3.3*)
+                 canBuildWebKit="no"

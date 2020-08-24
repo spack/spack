@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,14 +17,15 @@ class Hpgmg(Package):
     """
 
     homepage = "https://bitbucket.org/hpgmg/hpgmg"
-    url      = "https://hpgmg.org/static/hpgmg-0.tar.gz"
+    url      = "https://hpgmg.org/static/hpgmg-0.4.tar.gz"
     git      = "https://bitbucket.org/hpgmg/hpgmg.git"
 
     tags = ['proxy-app']
 
     version('develop', branch='master')
-    version('a0a5510df23b', 'b9c50f25e541428d4735fb07344d1d0ed9fc821bdde918d8e0defa78c0d9b4f9')
-    version('0.3',          '12a65da216fec91daea78594ae4b5a069c8f1a700f1ba21eed9f45a79a68c793')
+    version('0.4',          sha256='abdabfe09453487299500b5bd8da4e6dc3d88477199bcfa38ac41d0b3c780f6f')
+    version('a0a5510df23b', sha256='b9c50f25e541428d4735fb07344d1d0ed9fc821bdde918d8e0defa78c0d9b4f9')
+    version('0.3',          sha256='12a65da216fec91daea78594ae4b5a069c8f1a700f1ba21eed9f45a79a68c793')
 
     variant(
         'fe', default=False, description='Build finite element solver')
@@ -58,13 +59,13 @@ class Hpgmg(Package):
             args.append('--no-fv')
         else:
             # Apple's Clang doesn't support OpenMP
-            if not (self.spec.satisfies('%clang') and self.compiler.is_apple):
+            if not self.spec.satisfies('%apple-clang'):
                 cflags.append(self.compiler.openmp_flag)
 
         if '+debug' in self.spec:
             cflags.append('-g')
-        elif any(map(self.spec.satisfies, ['%gcc', '%clang', '%intel'])):
-            cflags += ['-O3', '-march=native']
+        else:
+            cflags.append('-O3')
 
         args.append('--CFLAGS=' + ' '.join(cflags))
 
@@ -75,7 +76,7 @@ class Hpgmg(Package):
         return args
 
     def configure(self, spec, prefix):
-        configure(*self.configure_args())
+        python('configure', *self.configure_args())
 
     def build(self, spec, prefix):
         make('-C', 'build')

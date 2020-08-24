@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ class RGoplot(RPackage):
        (circle plot, chord plot, cluster plot, Venn diagram, heatmap)."""
 
     homepage = "https://github.com/wencke/wencke.github.io/issues"
-    url      = "https://cran.r-project.org/src/contrib/GOplot_1.0.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/GOplot"
+    url      = "https://cloud.r-project.org/src/contrib/GOplot_1.0.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/GOplot"
 
     version('1.0.2', sha256='3ddaa2b6d1297ad6daad30d18af708adf43d86e8804b1b92fa29dfbf26d80df9')
 

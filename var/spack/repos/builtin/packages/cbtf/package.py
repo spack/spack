@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Cbtf(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf.git"
 
     version('develop', branch='master')
+    version('1.9.3', branch='1.9.3')
     version('1.9.2', branch='1.9.2')
     version('1.9.1.2', branch='1.9.1.2')
     version('1.9.1.1', branch='1.9.1.1')
@@ -33,7 +34,13 @@ class Cbtf(CMakePackage):
 
     depends_on("cmake@3.0.2:", type='build')
 
-    depends_on("boost@1.66.0:")
+    # for rpcgen
+    depends_on("rpcsvc-proto", type='build')
+
+    # for rpc
+    depends_on("libtirpc", type='link')
+
+    depends_on("boost@1.66.0:1.69.0")
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')

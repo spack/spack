@@ -1,0 +1,27 @@
+From: Ricardo Silva <ricardo.silva@epfl.ch>
+Date: Wed, 3 Oct 2018 13:42:25 +0200
+Subject: [PATCH] Always build antlr as shared library
+
+---
+ src/antlr/CMakeLists.txt | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/src/antlr/CMakeLists.txt b/src/antlr/CMakeLists.txt
+index 26a38e3..083e50d 100644
+--- a/src/antlr/CMakeLists.txt
++++ b/src/antlr/CMakeLists.txt
+@@ -2,9 +2,5 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} ANTLRSOURCES)
+ list(REMOVE_ITEM ANTLRSOURCES ${CMAKE_CURRENT_SOURCE_DIR}/dll.cpp)
+ include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src/antlr)
+ 
+-if(PYTHON_MODULE)
+-	add_library(antlr SHARED ${ANTLRSOURCES})
+-	install(TARGETS antlr DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+-else(PYTHON_MODULE)
+-	add_library(antlr STATIC ${ANTLRSOURCES})
+-endif(PYTHON_MODULE)
++add_library(antlr SHARED ${ANTLRSOURCES})
++install(TARGETS antlr DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+-- 
+1.8.3.1
+

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,8 @@ class RRematch(RPackage):
     captured groups from the match of a regular expression to a
     character vector."""
 
-    homepage = "https://cran.r-project.org/package=rematch"
-    url      = "https://cran.r-project.org/src/contrib/rematch_1.0.1.tar.gz"
+    homepage = "https://cloud.r-project.org/package=rematch"
+    url      = "https://cloud.r-project.org/src/contrib/rematch_1.0.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rematch"
 
-    version('1.0.1', '5271666295e232931f21499522489dd3')
-
-    depends_on('r-covr', type=('build', 'run'))
-    depends_on('r-testthat', type=('build', 'run'))
+    version('1.0.1', sha256='a409dec978cd02914cdddfedc974d9b45bd2975a124d8870d52cfd7d37d47578')

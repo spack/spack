@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,20 +17,22 @@ class Gplates(CMakePackage):
     homepage = 'https://www.gplates.org'
     url      = 'https://sourceforge.net/projects/gplates/files/gplates/2.0/gplates-2.0.0-unixsrc.tar.bz2/download'
 
-    version('2.1.0', '5a52242520d7e243c541e164c8417b23f4e17fcd79ed81f865b2c13628bb0e07')
-    version('2.0.0', '9e95874b35a01f4c9bff5845a1621ad5')
+    version('2.1.0', sha256='5a52242520d7e243c541e164c8417b23f4e17fcd79ed81f865b2c13628bb0e07')
+    version('2.0.0', sha256='1c27d3932a851153baee7cec48e57c2bbc87e4eea02f8a986882515ba4b44c0b')
 
-    depends_on('cmake@2.6.2:', type='build')
+    depends_on('cmake@2.8.8:', type='build')
     depends_on('ninja', type='build')
     # Qt 5 does not support (at least) the Q_WS_* constants.
     depends_on('qt+opengl@4.4.0:4.99')
     depends_on('qwt@6.0.1:')
-    depends_on('mesa-glu')
+    depends_on('glu')
     depends_on('glew')
     # GDAL's OGRSFDriverRegistrar is not compatible anymore starting with 2.0.
     depends_on('gdal@1.3.2:1.99')
     depends_on('cgal@3.5:')
-    depends_on('proj@4.6.0:')
+    # The latest release of gplates came out before PROJ.6 was released,
+    # so I'm assuming it's not supported.
+    depends_on('proj@4.6.0:5')
     # Boost's Python library has a different name starting with 1.67.
     # There were changes to Boost's optional in 1.61 that make the build fail.
     depends_on('boost+python@1.34:1.60')

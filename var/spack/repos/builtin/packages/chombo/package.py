@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,12 +24,8 @@ class Chombo(MakefilePackage):
 
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('hdf5', default=True, description='Enable HDF5 support')
-    variant('dims',
-        default='3',
-        values=('1', '2', '3', '4', '5', '6'),
-        multi=False,
-        description='Number of PDE dimensions [1-6]'
-    )
+    variant('dims', default='3', values=('1', '2', '3', '4', '5', '6'),
+            multi=False, description='Number of PDE dimensions [1-6]')
 
     patch('hdf5-16api.patch', when='@3.2', level=0)
     patch('Make.defs.local.template.patch', when='@3.2', level=0)
@@ -45,7 +41,7 @@ class Chombo(MakefilePackage):
 
         # Set fortran name mangling in Make.defs
         defs_file = FileFilter('./lib/mk/Make.defs')
-        defs_file.filter('^\s*#\s*cppcallsfort\s*=\s*',
+        defs_file.filter(r'^\s*#\s*cppcallsfort\s*=\s*',
                          'cppcallsfort = -DCH_FORT_UNDERSCORE')
 
         # Set remaining variables in Make.defs.local
@@ -57,53 +53,53 @@ class Chombo(MakefilePackage):
         defs_file = FileFilter('./lib/mk/Make.defs.local')
 
         # Unconditional settings
-        defs_file.filter('^\s*#\s*DEBUG\s*=\s*', 'DEBUG = FALSE')
-        defs_file.filter('^\s*#\s*OPT\s*=\s*', 'OPT = TRUE')
-        defs_file.filter('^\s*#\s*PIC\s*=\s*', 'PIC = TRUE')
+        defs_file.filter(r'^\s*#\s*DEBUG\s*=\s*', 'DEBUG = FALSE')
+        defs_file.filter(r'^\s*#\s*OPT\s*=\s*', 'OPT = TRUE')
+        defs_file.filter(r'^\s*#\s*PIC\s*=\s*', 'PIC = TRUE')
         # timer code frequently fails compiles. So disable it.
-        defs_file.filter('^\s*#\s*USE_TIMER\s*=\s*', 'USE_TIMER = FALSE')
+        defs_file.filter(r'^\s*#\s*USE_TIMER\s*=\s*', 'USE_TIMER = FALSE')
 
         # LAPACK setup
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
-        defs_file.filter('^\s*#\s*USE_LAPACK\s*=\s*', 'USE_LAPACK = TRUE')
+        defs_file.filter(r'^\s*#\s*USE_LAPACK\s*=\s*', 'USE_LAPACK = TRUE')
         defs_file.filter(
-            '^\s*#\s*lapackincflags\s*=\s*',
+            r'^\s*#\s*lapackincflags\s*=\s*',
             'lapackincflags = -I%s' % spec['lapack'].prefix.include)
         defs_file.filter(
-            '^\s*#\s*syslibflags\s*=\s*',
+            r'^\s*#\s*syslibflags\s*=\s*',
             'syslibflags = %s' % lapack_blas.ld_flags)
 
         # Compilers and Compiler flags
-        defs_file.filter('^\s*#\s*CXX\s*=\s*', 'CXX = %s' % spack_cxx)
-        defs_file.filter('^\s*#\s*FC\s*=\s*', 'FC = %s' % spack_fc)
+        defs_file.filter(r'^\s*#\s*CXX\s*=\s*', 'CXX = %s' % spack_cxx)
+        defs_file.filter(r'^\s*#\s*FC\s*=\s*', 'FC = %s' % spack_fc)
         if '+mpi' in spec:
             defs_file.filter(
-                '^\s*#\s*MPICXX\s*=\s*',
+                r'^\s*#\s*MPICXX\s*=\s*',
                 'MPICXX = %s' % self.spec['mpi'].mpicxx)
 
         # Conditionally determined settings
         defs_file.filter(
-            '^\s*#\s*MPI\s*=\s*',
+            r'^\s*#\s*MPI\s*=\s*',
             'MPI = %s' % ('TRUE' if '+mpi' in spec else 'FALSE'))
         defs_file.filter(
-            '^\s*#\s*DIM\s*=\s*',
+            r'^\s*#\s*DIM\s*=\s*',
             'DIM = %s' % spec.variants['dims'].value)
 
         # HDF5 settings
         if '+hdf5' in spec:
-            defs_file.filter('^\s*#\s*USE_HDF5\s*=\s*', 'USE_HDF5 = TRUE')
+            defs_file.filter(r'^\s*#\s*USE_HDF5\s*=\s*', 'USE_HDF5 = TRUE')
             defs_file.filter(
-                '^\s*#\s*HDFINCFLAGS\s*=.*',
+                r'^\s*#\s*HDFINCFLAGS\s*=.*',
                 'HDFINCFLAGS = -I%s' % spec['hdf5'].prefix.include)
             defs_file.filter(
-                '^\s*#\s*HDFLIBFLAGS\s*=.*',
+                r'^\s*#\s*HDFLIBFLAGS\s*=.*',
                 'HDFLIBFLAGS = %s' % spec['hdf5'].libs.ld_flags)
             if '+mpi' in spec:
                 defs_file.filter(
-                    '^\s*#\s*HDFMPIINCFLAGS\s*=.*',
+                    r'^\s*#\s*HDFMPIINCFLAGS\s*=.*',
                     'HDFMPIINCFLAGS = -I%s' % spec['hdf5'].prefix.include)
                 defs_file.filter(
-                    '^\s*#\s*HDFMPILIBFLAGS\s*=.*',
+                    r'^\s*#\s*HDFMPILIBFLAGS\s*=.*',
                     'HDFMPILIBFLAGS = %s' % spec['hdf5'].libs.ld_flags)
 
     def build(self, spec, prefix):

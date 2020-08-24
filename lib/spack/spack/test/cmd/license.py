@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ def test_verify(tmpdir):
     lgpl_header = source_dir.join('lgpl_header.py')
     with lgpl_header.open('w') as f:
         f.write("""\
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
@@ -48,7 +48,7 @@ def test_verify(tmpdir):
     correct_header = source_dir.join('correct_header.py')
     with correct_header.open('w') as f:
         f.write("""\
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -61,8 +61,8 @@ def test_verify(tmpdir):
     assert str(old_lgpl_header) in out
     assert str(correct_header) not in out
     assert '3 improperly licensed files' in out
-    assert re.search('files with no SPDX-License-Identifier:\s*1', out)
-    assert re.search('files with wrong SPDX-License-Identifier:\s*1', out)
-    assert re.search('files with old license header:\s*1', out)
+    assert re.search(r'files not containing expected license:\s*1', out)
+    assert re.search(r'files with wrong SPDX-License-Identifier:\s*1', out)
+    assert re.search(r'files with old license header:\s*1', out)
 
     assert license.returncode == 1

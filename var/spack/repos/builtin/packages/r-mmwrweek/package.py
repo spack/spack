@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,8 @@ class RMmwrweek(RPackage):
     functionality to convert Dates to MMWR day, week, and year and the
     reverse."""
 
-    homepage = "https://cran.r-project.org/package=MMWRweek"
-    url      = "https://cran.r-project.org/src/contrib/MMWRweek_0.1.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/MMWRweek"
+    homepage = "https://cloud.r-project.org/package=MMWRweek"
+    url      = "https://cloud.r-project.org/src/contrib/MMWRweek_0.1.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/MMWRweek"
 
-    version('0.1.1', 'a1245025126f8a96c72be8f7b06b0499')
+    version('0.1.1', sha256='969fd18535f3b78dd360d62d29d5f15409fc059f4af5d345abfde711e4adbc99')

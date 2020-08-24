@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,17 +7,20 @@ import os
 
 import pytest
 
-from llnl.util.filesystem import touch, working_dir
+from llnl.util.filesystem import touch, working_dir, mkdirp
 
 import spack.repo
 import spack.config
 from spack.spec import Spec
+from spack.stage import Stage
 from spack.version import ver
+from spack.fetch_strategy import SvnFetchStrategy
 from spack.util.executable import which
 
 
 pytestmark = pytest.mark.skipif(
-    not which('svn'), reason='requires subversion to be installed')
+    not which('svn') or not which('svnadmin'),
+    reason='requires subversion to be installed')
 
 
 @pytest.mark.parametrize("type_of_test", ['default', 'rev0'])
@@ -27,7 +30,7 @@ def test_fetch(
         secure,
         mock_svn_repository,
         config,
-        mutable_mock_packages
+        mutable_mock_repo
 ):
     """Tries to:
 
@@ -73,3 +76,19 @@ def test_fetch(
             assert os.path.isfile(file_path)
 
             assert h() == t.revision
+
+
+def test_svn_extra_fetch(tmpdir):
+    """Ensure a fetch after downloading is effectively a no-op."""
+    testpath = str(tmpdir)
+
+    fetcher = SvnFetchStrategy(svn='file:///not-a-real-svn-repo')
+    assert fetcher is not None
+
+    with Stage(fetcher, path=testpath) as stage:
+        assert stage is not None
+
+        source_path = stage.source_path
+        mkdirp(source_path)
+
+        fetcher.fetch()

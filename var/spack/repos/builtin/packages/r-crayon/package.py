@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,9 @@ class RCrayon(RPackage):
     New styles can also be created easily. This package was inspired by the
     'chalk' 'JavaScript' project."""
 
-    homepage = "https://cran.r-project.org/package=sourcetools"
-    url      = "https://cran.rstudio.com/src/contrib/crayon_1.3.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/crayon"
+    homepage = "https://github.com/r-lib/crayon#readme"
+    url      = "https://cloud.r-project.org/src/contrib/crayon_1.3.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/crayon"
 
-    version('1.3.4', '77c7c2906c59a3141306d86c89ffc7d3')
-    version('1.3.2', 'fe29c6204d2d6ff4c2f9d107a03d0cb9')
+    version('1.3.4', sha256='fc6e9bf990e9532c4fcf1a3d2ce22d8cf12d25a95e4779adfa17713ed836fa68')
+    version('1.3.2', sha256='9a6b75d63c05fe64baf222f1921330ceb727924bcc5fc2753ff0528d42555e68')

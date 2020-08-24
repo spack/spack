@@ -1,0 +1,11 @@
+--- a/qtbase/src/corelib/global/qnumeric_p.h	2018-11-25 06:51:11.000000000 -0600
++++ b/qtbase/src/corelib/global/qnumeric_p.h	2020-01-07 14:13:12.103818264 -0600
+@@ -168,7 +168,7 @@
+ // size_t. Implementations for 8- and 16-bit types will work but may not be as
+ // efficient. Implementations for 64-bit may be missing on 32-bit platforms.
+ 
+-#if (defined(Q_CC_GNU) && (Q_CC_GNU >= 500) || (defined(Q_CC_INTEL) && !defined(Q_OS_WIN))) || QT_HAS_BUILTIN(__builtin_add_overflowx)
++#if (defined(Q_CC_GNU) && (Q_CC_GNU >= 500) && !defined(Q_CC_INTEL) || (defined(Q_CC_INTEL) && (Q_CC_INTEL >= 1800) && (Q_CC_GNU >= 500) && !defined(Q_OS_WIN))) || QT_HAS_BUILTIN(__builtin_add_overflowx)
+ // GCC 5, ICC 18, and Clang 3.8 have builtins to detect overflows
+ 
+ template <typename T> inline

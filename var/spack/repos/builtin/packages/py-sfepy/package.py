@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PySfepy(PythonPackage):
     homepage = "http://sfepy.org"
     url      = "https://github.com/sfepy/sfepy/archive/release_2017.3.tar.gz"
 
-    version('2017.3', '65ab606a9fe80fccf17a7eb5ab8fd025')
+    version('2017.3', sha256='d13642b7abed63b83b7eaef4dfce6e84a5afc5798bc7ffa1c413e3e44b5e5996')
 
     variant('petsc', default=False, description='Enable PETSc support')
 
@@ -27,5 +27,5 @@ class PySfepy(PythonPackage):
     depends_on('py-matplotlib', type='run')
     depends_on('py-sympy', type='run')
     depends_on('hdf5+hl', type='run')
-    depends_on('py-pytables', type='run')
+    depends_on('py-tables', type='run')
     depends_on('py-petsc4py', type='run', when='+petsc')

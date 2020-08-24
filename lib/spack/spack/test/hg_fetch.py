@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,14 @@ import os
 
 import pytest
 
-from llnl.util.filesystem import working_dir, touch
+from llnl.util.filesystem import working_dir, touch, mkdirp
 
 import spack.repo
 import spack.config
 from spack.spec import Spec
+from spack.stage import Stage
 from spack.version import ver
+from spack.fetch_strategy import HgFetchStrategy
 from spack.util.executable import which
 
 
@@ -27,7 +29,7 @@ def test_fetch(
         secure,
         mock_hg_repository,
         config,
-        mutable_mock_packages
+        mutable_mock_repo
 ):
     """Tries to:
 
@@ -73,3 +75,14 @@ def test_fetch(
             assert os.path.isfile(file_path)
 
             assert h() == t.revision
+
+
+def test_hg_extra_fetch(tmpdir):
+    """Ensure a fetch after expanding is effectively a no-op."""
+    testpath = str(tmpdir)
+
+    fetcher = HgFetchStrategy(hg='file:///not-a-real-hg-repo')
+    with Stage(fetcher, path=testpath) as stage:
+        source_path = stage.source_path
+        mkdirp(source_path)
+        fetcher.fetch()

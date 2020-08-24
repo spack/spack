@@ -1,0 +1,26 @@
+From 20be628aeb0e2548693966b560fdde3e8d19c2d0 Mon Sep 17 00:00:00 2001
+From: Guilherme Amadio <amadio@cern.ch>
+Date: Tue, 8 May 2018 15:12:55 +0200
+Subject: [PATCH] Do not search for unuran or enable builtin_unuran if
+ unuran=OFF
+
+---
+ cmake/modules/SearchInstalledSoftware.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmake/modules/SearchInstalledSoftware.cmake b/cmake/modules/SearchInstalledSoftware.cmake
+index f69158e..b47ba34 100644
+--- a/cmake/modules/SearchInstalledSoftware.cmake
++++ b/cmake/modules/SearchInstalledSoftware.cmake
+@@ -60,7 +60,7 @@ if(builtin_zlib)
+ endif()
+ 
+ #---Check for Unuran ------------------------------------------------------------------
+-if(NOT builtin_unuran)
++if(unuran AND NOT builtin_unuran)
+   message(STATUS "Looking for Unuran")
+   find_Package(Unuran)
+   if(NOT UNURAN_FOUND)
+-- 
+1.8.3.1
+

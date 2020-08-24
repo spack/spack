@@ -1,19 +1,15 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import itertools
 import textwrap
 
-import jinja2
 import llnl.util.lang
 import six
 
 import spack.config
 from spack.util.path import canonicalize_path
-
-
-TemplateNotFound = jinja2.TemplateNotFound
 
 
 class ContextMeta(type):
@@ -72,8 +68,15 @@ def make_environment(dirs=None):
     """Returns an configured environment for template rendering."""
     if dirs is None:
         # Default directories where to search for templates
+        builtins = spack.config.get('config:template_dirs')
+        extensions = spack.extensions.get_template_dirs()
         dirs = [canonicalize_path(d)
-                for d in spack.config.get('config:template_dirs')]
+                for d in itertools.chain(builtins, extensions)]
+
+    # avoid importing this at the top level as it's used infrequently and
+    # slows down startup a bit.
+    import jinja2
+
     # Loader for the templates
     loader = jinja2.FileSystemLoader(dirs)
     # Environment of the template engine

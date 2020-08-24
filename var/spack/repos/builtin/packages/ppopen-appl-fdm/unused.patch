@@ -1,0 +1,13 @@
+diff --git a/tools/seismic_2D-tools/rwav2d.f90 b/tools/seismic_2D-tools/rwav2d.f90
+index ec08ea8..0f9543c 100644
+--- a/tools/seismic_2D-tools/rwav2d.f90
++++ b/tools/seismic_2D-tools/rwav2d.f90
+@@ -41,7 +41,7 @@ program sort_seism2d_result
+ 
+   integer :: station_num
+   integer :: ns, isx, isz
+-  integer :: i, k, ii, kk, j, IT
++  integer :: i, k, ii, kk, j
+   character(len=80) filename, filename2, tmp1
+   integer  :: istx(5000,100), istz(5000,100), stnum(5000,100)
+   real(PN) :: ntime(5000,100), vxall(5000,100), vzall(5000,100)

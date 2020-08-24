@@ -1,0 +1,13 @@
+diff --git a/fmt/CMakeLists.txt b/fmt/CMakeLists.txt
+index c0ef02e..1634924 100644
+--- a/fmt/CMakeLists.txt
++++ b/fmt/CMakeLists.txt
+@@ -14,8 +14,6 @@ if (FMT_CPPFORMAT)
+   add_library(cppformat ${FMT_SOURCES} ${FMT_HEADERS})
+ endif ()
+ 
+-# Starting with cmake 3.1 the CXX_STANDARD property can be used instead.
+-target_compile_options(fmt PUBLIC ${CPP11_FLAG})
+ if (FMT_PEDANTIC)
+   target_compile_options(fmt PRIVATE ${PEDANTIC_COMPILE_FLAGS})
+ endif ()

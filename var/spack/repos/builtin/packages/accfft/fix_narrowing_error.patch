@@ -1,0 +1,11 @@
+--- spack-src/include/parUtils.txx.org	2019-11-27 16:41:07.438799437 +0900
++++ spack-src/include/parUtils.txx	2019-11-27 16:54:51.654921619 +0900
+@@ -70,7 +70,7 @@
+     }
+     omp_par::scan(&s_cnt[0],&s_dsp[0],np+1);
+ 
+-    size_t range[2]={0,np};
++    size_t range[2]={0,(unsigned long)np};
+     for(size_t np_new=np; np_new>1; np_new/=kway){
+       double tt=omp_get_wtime();
+       if(kway>np_new) kway=np_new;

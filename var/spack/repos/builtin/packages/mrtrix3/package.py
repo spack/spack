@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Mrtrix3(Package):
 
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('mesa-glu')
+    depends_on('glu')
     depends_on('qt+opengl@4.7:')
     depends_on('eigen')
     depends_on('zlib')
@@ -35,5 +35,5 @@ class Mrtrix3(Package):
         build()
         install_tree('.', prefix)
 
-    def setup_environment(self, spac_env, run_env):
-        run_env.prepend_path('PATH', self.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix)

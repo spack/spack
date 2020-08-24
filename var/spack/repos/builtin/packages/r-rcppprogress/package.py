@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,14 +11,15 @@ class RRcppprogress(RPackage):
     computations taking place in c++ code, and support for interrupting
     those computations even in multithreaded code, typically using OpenMP."""
 
-    homepage = "https://cran.r-project.org/web/packages/RcppProgress/index.html"
-    url      = "https://cran.r-project.org/src/contrib/RcppProgress_0.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RcppProgress"
+    homepage = "https://cloud.r-project.org/package=RcppProgress"
+    url      = "https://cloud.r-project.org/src/contrib/RcppProgress_0.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppProgress"
 
-    version('0.3',   '3cd527af84bc6fcb3c77422e0ff09dba')
-    version('0.2.1', 'c9cd69759ff457acfee0b52353f9af1b')
-    version('0.2',   '9522c962ecddd4895b5636e7a499bda5')
-    version('0.1',   '34afefe0580ca42b6353533fe758d5bf')
+    version('0.4.1', sha256='11764105922f763d4c75c502599ec7dcc2fd629a029964caf53f98b41d0c607a')
+    version('0.4', sha256='706e14360dbc5976db05c2ac6692c3279c0f8c95e72bf9d4becd9e1348025e3e')
+    version('0.3',   sha256='3de5dc47cc2f9e839f92355c463289531e8c13806e54c7438f63c7c34378261d')
+    version('0.2.1', sha256='cf121d34766344d05dea77895cd2e48a977ebb28ccf7af14bb46c3744c4a50b5')
+    version('0.2',   sha256='ca32624739058f1b5aab18b09dc4c613ecfd18a3ace39f3b97790232db829481')
+    version('0.1',   sha256='04f71d3391b7dfab997afadf7ffdd87b88037f7fbc751bea544ad2a65e2872bf')
 
-    depends_on('r@3.4.0:3.4.9')
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcpp@0.9.4:', when='@:0.4', type=('build', 'run'))

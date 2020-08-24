@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,11 +21,19 @@ class Fltk(Package):
     homepage = 'http://www.fltk.org/'
     url = 'http://fltk.org/pub/fltk/1.3.3/fltk-1.3.3-source.tar.gz'
 
-    version('1.3.3', '9ccdb0d19dc104b87179bd9fd10822e3')
+    version('1.3.3', sha256='f8398d98d7221d40e77bc7b19e761adaf2f1ef8bb0c30eceb7beb4f2273d0d97')
 
     depends_on('libx11')
 
     patch('font.patch', when='@1.3.3')
+
+    # https://github.com/fltk/fltk/commits/master/src/Fl_Tree_Item.cxx
+    #  -Fix return value test, as pointed out by Albrecht.
+    patch('fix_compare_val.patch', when='@:1.3.3')
+    # https://github.com/fltk/fltk/commits/master/test/menubar.cxx
+    # -Allow compilation with -std=c++11
+    # -Add missing cast (part of patch for STR #2813).
+    patch('type_cast.patch', when='@:1.3.3')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')

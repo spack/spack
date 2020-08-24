@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,10 +23,12 @@ class RRinside(RPackage):
     available at the 'RInside' website as well."""
 
     homepage = "http://dirk.eddelbuettel.com/code/rinside.html"
-    url      = "https://cran.r-project.org/src/contrib/RInside_0.2.14.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RInside"
+    url      = "https://cloud.r-project.org/src/contrib/RInside_0.2.15.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RInside"
 
-    version('0.2.14', 'fc72761e22b1f597433eb53d6eb122ff')
-    version('0.2.13', '2e3c35a7bd648e9bef98d0afcc02cf88')
+    version('0.2.15', sha256='1e1d87a3584961f3aa4ca6acd4d2f3cda26abdab027ff5be2fd5cd76a98af02b')
+    version('0.2.14', sha256='8de5340993fe879ca00fa559c5b1b27b408ba78bfc5f67d36d6f0b8d8e8649cf')
+    version('0.2.13', sha256='be1da861f4f8c1292f0691bce05978e409a081f24ad6006ae173a6a89aa4d031')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

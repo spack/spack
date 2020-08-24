@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,21 +13,29 @@ class Scr(CMakePackage):
        Linux cluster to provide a fast, scalable checkpoint/restart
        capability for MPI codes"""
 
-    homepage = "http://computation.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
+    homepage = "http://computing.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
     url      = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
     git      = "https://github.com/llnl/scr.git"
 
-    # NOTE: scr-v1.1.8 is built with autotools and is not properly build here.
-    # scr-v1.1.8 will be deprecated with the upcoming release of v1.2.0
-    # url      = "https://github.com/LLNL/scr/releases/download/v1.1.8/scr-1.1.8.tar.gz"
-    # version('1.1.8', '6a0f11ad18e27fcfc00a271ff587b06e')
+    version('develop', branch='develop')
+    version('legacy', branch='legacy')
 
-    version('master', branch='master')
-    version('1.2.0', '060e9e9c7604c1765f3991f9cd6e9d2d')
+    version('2.0.0', sha256='471978ae0afb56a20847d3989b994fbd680d1dea21e77a5a46a964b6e3deed6b')
+    version('1.2.2', sha256='764a85638a9e8762667ec1f39fa5f7da7496fca78de379a22198607b3e027847')
+    version('1.2.1', sha256='23acab2dc7203e9514455a5168f2fd57bc590affb7a1876912b58201513628fe')
+    version('1.2.0', sha256='e3338ab2fa6e9332d2326c59092b584949a083a876adf5a19d4d5c7a1bbae047')
 
     depends_on('pdsh+static_modules', type=('build', 'run'))
     depends_on('zlib')
     depends_on('mpi')
+
+    # SCR legacy is anything 2.x.x or earlier
+    # SCR components is anything 3.x.x or later
+    depends_on('er', when="@3:")
+    depends_on('kvtree', when="@3:")
+    depends_on('rankstr', when="@3:")
+    depends_on('filo', when="@3:")
+    depends_on('spath', when="@3:")
 
     variant('dtcmp', default=True,
             description="Build with DTCMP. "
@@ -45,7 +53,7 @@ class Scr(CMakePackage):
     variant('scr_config', default='scr.conf',
             description='Location for SCR to find its system config file. '
             'May be either absolute or relative to the install prefix')
-    variant('copy_config', default=None,
+    variant('copy_config', default='none',
             description='Location from which to copy SCR system config file. '
             'Must be an absolute path.')
 
@@ -71,8 +79,6 @@ class Scr(CMakePackage):
             description='Compile time default location for checkpoint cache.')
     variant('cntl_base', default='/tmp',
             description='Compile time default location for control directory.')
-
-    conflicts('platform=bgq')
 
     def get_abs_path_rel_prefix(self, path):
         # Return path if absolute, otherwise prepend prefix
@@ -128,7 +134,7 @@ class Scr(CMakePackage):
     @run_after('install')
     def copy_config(self):
         spec = self.spec
-        if spec.variants['copy_config'].value:
+        if spec.variants['copy_config'].value != 'none':
             dest_path = self.get_abs_path_rel_prefix(
                 spec.variants['scr_config'].value)
             install(spec.variants['copy_config'].value, dest_path)

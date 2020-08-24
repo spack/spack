@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,15 @@ class PyPybigwig(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pyBigWig"
     url      = "https://pypi.io/packages/source/p/pyBigWig/pyBigWig-0.3.4.tar.gz"
 
-    version('0.3.4', '8e0a91e26e87eeaa071408a3a749bfa9')
+    version('0.3.12', sha256='e01991790ece496bf6d3f00778dcfb136dd9ca0fd28acc1b3fb43051ad9b8403')
+    version('0.3.4',  sha256='8c97a19218023190041c0e426f1544f7a4944a7bb4568faca1d85f1975af9ee2')
 
+    variant('numpy', default=True,
+            description='Enable support for numpy integers and vectors')
+
+    patch('python3_curl.patch', when='@:0.3.12 ^python@3:')
+
+    depends_on('curl', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('curl', type=('build', 'run'))
+
+    depends_on('py-numpy', type=('build', 'run'), when='+numpy')

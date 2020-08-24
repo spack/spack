@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Masa(AutotoolsPackage):
     homepage = "https://github.com/manufactured-solutions/MASA"
     git      = "https://github.com/manufactured-solutions/MASA.git"
 
-    version('master', tag='master')
+    version('master', branch='master')
 
     variant('fortran', default=True,
             description='Compile with Fortran interfaces')

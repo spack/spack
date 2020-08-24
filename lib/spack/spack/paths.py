@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,7 +38,6 @@ operating_system_path = os.path.join(module_path, 'operating_systems')
 test_path             = os.path.join(module_path, "test")
 hooks_path            = os.path.join(module_path, "hooks")
 var_path              = os.path.join(prefix, "var", "spack")
-stage_path            = os.path.join(var_path, "stage")
 repos_path            = os.path.join(var_path, "repos")
 share_path            = os.path.join(prefix, "share", "spack")
 

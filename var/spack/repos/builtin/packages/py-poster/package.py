@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,11 @@ class PyPoster(PythonPackage):
     homepage = "https://pypi.org/project/poster/"
     url      = "https://atlee.ca/software/poster/dist/0.8.1/poster-0.8.1.tar.gz"
 
-    version('0.8.1', '2db12704538781fbaa7e63f1505d6fc8')
+    version('0.8.1', sha256='af5bf45da4a916db2b638cffd9e9d6668b33020e2b8ca9f864db79b49331c6ff')
 
     depends_on('py-setuptools', type='build')
+
+    # https://bitbucket.org/chrisatlee/poster/issues/24/not-working-with-python3
+    # https://bitbucket.org/chrisatlee/poster/issues/25/poster-connot-work-in-python35
+    # Patch created using 2to3
+    patch('python3.patch', when='^python@3:')

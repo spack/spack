@@ -1,0 +1,11 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <ul>
+{% for bucket_key in top_level_keys %}
+      <li><a href="{{ bucket_key }}">{{ bucket_key }}</a></li>
+{% endfor %}
+    </ul>
+  </body>
+</html>

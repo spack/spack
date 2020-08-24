@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,6 +40,7 @@ on these ideas for each distinct build system that Spack supports:
    build_systems/cmakepackage
    build_systems/mesonpackage
    build_systems/qmakepackage
+   build_systems/sippackage
 
 .. toctree::
    :maxdepth: 1
@@ -55,6 +56,7 @@ on these ideas for each distinct build system that Spack supports:
    :maxdepth: 1
    :caption: Other
 
+   build_systems/bundlepackage
    build_systems/cudapackage
    build_systems/intelpackage
    build_systems/custompackage

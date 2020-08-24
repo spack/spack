@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,12 +35,12 @@ class RRcppblaze(RPackage):
        the most compilers and system."""
 
     homepage = "https://github.com/Chingchuan-chen/RcppBlaze"
-    url      = "https://cran.rstudio.com/src/contrib/RcppBlaze_0.2.2.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/RcppBlaze"
+    url      = "https://cloud.r-project.org/src/contrib/RcppBlaze_0.2.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppBlaze"
 
-    version('0.2.2', '22ecae73cf1bebce06ed6387d49f2c77')
+    version('0.2.2', sha256='67550ed8aea12a219047af61b41e5b9f991608a21ce9a8fbf7ac55da0f7c2742')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
     depends_on('r-matrix@1.1-0:', type=('build', 'run'))
     depends_on('r-bh@1.54.0-2:', type=('build', 'run'))
-    depends_on('r@3.0.2:')

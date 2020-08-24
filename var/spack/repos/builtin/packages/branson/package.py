@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,18 +12,22 @@ class Branson(CMakePackage):
     methods for domain decomposition."""
 
     homepage = "https://github.com/lanl/branson"
-    url      = "https://github.com/lanl/branson/archive/1.01.zip"
+    url      = "https://github.com/lanl/branson/archive/0.82.tar.gz"
     git      = "https://github.com/lanl/branson.git"
 
     tags = ['proxy-app']
 
     version('develop', branch='develop')
-    version('1.01', 'cf7095a887a8dd7d417267615bd0452a')
+
+    version('0.82', sha256='7d83d41d0c7ab9c1c906a902165af31182da4604dd0b69aec28d709fe4d7a6ec',
+            preferred=True)
+    version('0.81', sha256='493f720904791f06b49ff48c17a681532c6a4d9fa59636522cf3f9700e77efe4')
+    version('0.8',  sha256='85ffee110f89be00c37798700508b66b0d15de1d98c54328b6d02a9eb2cf1cb8')
 
     depends_on('mpi@2:')
-    depends_on('boost')
+    depends_on('boost', when='@:0.81')
     depends_on('metis')
-    depends_on('parmetis')
+    depends_on('parmetis', when='@:0.82')
 
     root_cmakelists_dir = 'src'
 
@@ -38,6 +42,6 @@ class Branson(CMakePackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         mkdir(prefix.doc)
-        install('spack-build/BRANSON', prefix.bin)
-        install('LICENSE.txt', prefix.doc)
+        install('../spack-build/BRANSON', prefix.bin)
+        install('LICENSE.md', prefix.doc)
         install('README.md', prefix.doc)

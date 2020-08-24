@@ -1,9 +1,10 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import Compiler, get_compiler_version
+from spack.compiler import Compiler, UnsupportedCompilerFlag
+from spack.version import ver
 
 
 class Pgi(Compiler):
@@ -28,6 +29,22 @@ class Pgi(Compiler):
     PrgEnv = 'PrgEnv-pgi'
     PrgEnv_compiler = 'pgi'
 
+    version_argument = '-V'
+    ignore_version_errors = [2]  # `pgcc -V` on PowerPC annoyingly returns 2
+    version_regex = r'pg[^ ]* ([0-9.]+)-[0-9]+ (LLVM )?[^ ]+ target on '
+
+    @property
+    def verbose_flag(self):
+        return "-v"
+
+    @property
+    def debug_flags(self):
+        return ['-g', '-gopt']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4']
+
     @property
     def openmp_flag(self):
         return "-mp"
@@ -37,25 +54,37 @@ class Pgi(Compiler):
         return "-std=c++11"
 
     @property
-    def pic_flag(self):
+    def cc_pic_flag(self):
         return "-fpic"
 
-    @classmethod
-    def default_version(cls, comp):
-        """The ``-V`` option works for all the PGI compilers.
-        Output looks like this::
+    @property
+    def cxx_pic_flag(self):
+        return "-fpic"
 
-            pgcc 15.10-0 64-bit target on x86-64 Linux -tp sandybridge
-            The Portland Group - PGI Compilers and Tools
-            Copyright (c) 2015, NVIDIA CORPORATION.  All rights reserved.
+    @property
+    def f77_pic_flag(self):
+        return "-fpic"
 
-        on x86-64, and::
+    @property
+    def fc_pic_flag(self):
+        return "-fpic"
 
-            pgcc 17.4-0 linuxpower target on Linuxpower
-            PGI Compilers and Tools
-            Copyright (c) 2017, NVIDIA CORPORATION.  All rights reserved.
+    required_libs = ['libpgc', 'libpgf90']
 
-        on PowerPC.
-        """
-        return get_compiler_version(
-            comp, '-V', r'pg[^ ]* ([0-9.]+)-[0-9]+ [^ ]+ target on ')
+    @property
+    def c99_flag(self):
+        if self.real_version >= ver('12.10'):
+            return '-c99'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C99 standard',
+                                      'c99_flag',
+                                      '< 12.10')
+
+    @property
+    def c11_flag(self):
+        if self.real_version >= ver('15.3'):
+            return '-c11'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C11 standard',
+                                      'c11_flag',
+                                      '< 15.3')

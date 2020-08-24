@@ -1,0 +1,22 @@
+From 58c6ac97b1938909881877ef83167f5eff0e8ab1 Mon Sep 17 00:00:00 2001
+From: Rone Charles <rone_charles@fastmail.com>
+Date: Tue, 4 Sep 2018 21:06:39 -0400
+Subject: [PATCH] Fix isa return type
+
+---
+ ebwt.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ebwt.h b/ebwt.h
+index fe6300cc..8f886b8d 100644
+--- a/ebwt.h
++++ b/ebwt.h
+@@ -862,7 +862,7 @@ class Ebwt {
+ 	TIndexOffU*   ftab() const         { return _ftab; }
+ 	TIndexOffU*   eftab() const        { return _eftab; }
+ 	TIndexOffU*   offs() const         { return _offs; }
+-	uint32_t*   isa() const          { return _isa; } /* check */
++	TIndexOffU*   isa() const          { return _isa; } /* check */
+ 	TIndexOffU*   plen() const         { return _plen; }
+ 	TIndexOffU*   rstarts() const      { return _rstarts; }
+ 	uint8_t*    ebwt() const         { return _ebwt; }

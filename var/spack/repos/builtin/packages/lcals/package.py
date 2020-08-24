@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,12 +16,12 @@ class Lcals(MakefilePackage):
         by Frank H. McMahon, UCRL-53745.). The suite contains facilities to
         generate timing statistics and reports."""
 
-    homepage = "https://computation.llnl.gov/projects/co-design/lcals"
-    url      = "https://computation.llnl.gov/projects/co-design/download/lcals-v1.0.2.tgz"
+    homepage = "https://computing.llnl.gov/projects/co-design/lcals"
+    url      = "https://computing.llnl.gov/projects/co-design/download/lcals-v1.0.2.tgz"
 
     tags = ['proxy-app']
 
-    version('1.0.2', '40c65a88f1df1436a2f72b7d3c986a21')
+    version('1.0.2', sha256='a146590f7c1e9a9311ccf74dc0bef1fb19d77429db35a33c6725529fb1b0327e')
 
     variant(
         'microarch',
@@ -46,7 +46,7 @@ class Lcals(MakefilePackage):
             arch = 'MIC'
         elif arch == 'x86_64' or arch == 'x86_32':
             arch = 'x86'
-        elif arch != 'bgq':
+        else:
             raise InstallError('unknown architecture.')
 
         if self.compiler.name == 'intel':
@@ -72,24 +72,7 @@ class Lcals(MakefilePackage):
                 cxxflags += '-DLCALS_PLATFORM_X86_AVX -DLCALS_COMPILER_GNU '
                 cxx_compile += '-Ofast -mavx -finline-functions'
                 ' -finline-limit=10000 -std=c++11'
-            elif arch == 'bgq':
-                cxxflags += '-DLCALS_PLATFORM_BGQ -DLCALS_COMPILER_GNU '
-                cxx_compile += '-O3 -finline-functions -finline-limit=10000'
-                ' -std=c++0x'
             cxxflags += self.compiler.openmp_flag
-        elif self.compiler.name == 'xl' and arch == 'bgp':
-            if self.compiler.version == Version('9') and arch == 'bgp':
-                cxxflags += '-DLCALS_PLATFORM_BGP -DLCALS_COMPILER_XLC9 '
-                cxx_compile += 'O3 -qarch=450d -qtune=450 -qalias=allp -qhot'
-                ' -qsmp=omp '
-            elif self.compiler.version == Version('12') and arch == 'bgq':
-                cxxflags += '-DLCALS_PLATFORM_BGQ -DLCALS_COMPILER_XLC12 '
-                cxx_compile += '-O3 -qarch=qp -qhot=novector -qsimd=auto'
-                ' -qlanglvl=extended0x -qnostrict -qinline=10000 -qsmp=omp '
-        elif self.compiler.name == 'clang':
-            if arch == 'bgq':
-                cxxflags += '-DLCALS_PLATFORM_BGQ -DLCALS_COMPILER_CLANG '
-                cxx_compile += '-O3 -finline-functions  -ffast-math -std=c++0x'
 
         targets.append('LCALS_ARCH=')
         cxx_compile += ' ' + cxxflags

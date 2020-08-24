@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,14 +25,14 @@ from spack.provider_index import ProviderIndex
 from spack.spec import Spec
 
 
-def test_yaml_round_trip(mock_packages):
+def test_provider_index_round_trip(mock_packages):
     p = ProviderIndex(spack.repo.all_package_names())
 
     ostream = StringIO()
-    p.to_yaml(ostream)
+    p.to_json(ostream)
 
     istream = StringIO(ostream.getvalue())
-    q = ProviderIndex.from_yaml(istream)
+    q = ProviderIndex.from_json(istream)
 
     assert p == q
 

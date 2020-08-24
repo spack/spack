@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,60 +12,57 @@ import collections
 import inspect
 from datetime import datetime, timedelta
 from six import string_types
+import sys
+
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
 
 
-class classproperty(property):
-    """classproperty decorator: like property but for classmethods."""
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
-
-
 def index_by(objects, *funcs):
     """Create a hierarchy of dictionaries by splitting the supplied
-       set of objects on unique values of the supplied functions.
-       Values are used as keys.  For example, suppose you have four
-       objects with attributes that look like this::
+    set of objects on unique values of the supplied functions.
 
-          a = Spec(name="boost",    compiler="gcc",   arch="bgqos_0")
-          b = Spec(name="mrnet",    compiler="intel", arch="chaos_5_x86_64_ib")
-          c = Spec(name="libelf",   compiler="xlc",   arch="bgqos_0")
-          d = Spec(name="libdwarf", compiler="intel", arch="chaos_5_x86_64_ib")
+    Values are used as keys. For example, suppose you have four
+    objects with attributes that look like this::
 
-          list_of_specs = [a,b,c,d]
-          index1 = index_by(list_of_specs, lambda s: s.arch,
-                            lambda s: s.compiler)
-          index2 = index_by(list_of_specs, lambda s: s.compiler)
+        a = Spec("boost %gcc target=skylake")
+        b = Spec("mrnet %intel target=zen2")
+        c = Spec("libelf %xlc target=skylake")
+        d = Spec("libdwarf %intel target=zen2")
 
-       ``index1`` now has two levels of dicts, with lists at the
-       leaves, like this::
+        list_of_specs = [a,b,c,d]
+        index1 = index_by(list_of_specs, lambda s: str(s.target),
+                          lambda s: s.compiler)
+        index2 = index_by(list_of_specs, lambda s: s.compiler)
 
-           { 'bgqos_0'           : { 'gcc' : [a], 'xlc' : [c] },
-             'chaos_5_x86_64_ib' : { 'intel' : [b, d] }
-           }
+    ``index1`` now has two levels of dicts, with lists at the
+    leaves, like this::
 
-       And ``index2`` is a single level dictionary of lists that looks
-       like this::
+        { 'zen2'    : { 'gcc' : [a], 'xlc' : [c] },
+          'skylake' : { 'intel' : [b, d] }
+        }
 
-           { 'gcc'    : [a],
-             'intel'  : [b,d],
-             'xlc'    : [c]
-           }
+    And ``index2`` is a single level dictionary of lists that looks
+    like this::
 
-       If any elemnts in funcs is a string, it is treated as the name
-       of an attribute, and acts like getattr(object, name).  So
-       shorthand for the above two indexes would be::
+        { 'gcc'    : [a],
+          'intel'  : [b,d],
+          'xlc'    : [c]
+        }
 
-           index1 = index_by(list_of_specs, 'arch', 'compiler')
-           index2 = index_by(list_of_specs, 'compiler')
+    If any elements in funcs is a string, it is treated as the name
+    of an attribute, and acts like getattr(object, name).  So
+    shorthand for the above two indexes would be::
 
-       You can also index by tuples by passing tuples::
+        index1 = index_by(list_of_specs, 'arch', 'compiler')
+        index2 = index_by(list_of_specs, 'compiler')
 
-           index1 = index_by(list_of_specs, ('arch', 'compiler'))
+    You can also index by tuples by passing tuples::
 
-       Keys in the resulting dict will look like ('gcc', 'bgqos_0').
+        index1 = index_by(list_of_specs, ('target', 'compiler'))
+
+    Keys in the resulting dict will look like ('gcc', 'skylake').
     """
     if not funcs:
         return objects
@@ -166,30 +163,24 @@ def union_dicts(*dicts):
     return result
 
 
-class memoized(object):
-    """Decorator that caches the results of a function, storing them
-       in an attribute of that function."""
+def memoized(func):
+    """Decorator that caches the results of a function, storing them in
+    an attribute of that function.
+    """
+    func.cache = {}
 
-    def __init__(self, func):
-        self.func = func
-        self.cache = {}
-
-    def __call__(self, *args):
+    @functools.wraps(func)
+    def _memoized_function(*args):
         if not isinstance(args, collections.Hashable):
             # Not hashable, so just call the function.
-            return self.func(*args)
+            return func(*args)
 
-        if args not in self.cache:
-            self.cache[args] = self.func(*args)
-        return self.cache[args]
+        if args not in func.cache:
+            func.cache[args] = func(*args)
 
-    def __get__(self, obj, objtype):
-        """Support instance methods."""
-        return functools.partial(self.__call__, obj)
+        return func.cache[args]
 
-    def clear(self):
-        """Expunge cache so that self.func will be called again."""
-        self.cache.clear()
+    return _memoized_function
 
 
 def list_modules(directory, **kwargs):
@@ -324,7 +315,7 @@ def check_kwargs(kwargs, fun):
     if kwargs:
         raise TypeError(
             "'%s' is an invalid keyword argument for function %s()."
-            % (next(kwargs.iterkeys()), fun.__name__))
+            % (next(iter(kwargs)), fun.__name__))
 
 
 def match_predicate(*args):
@@ -448,7 +439,8 @@ def pretty_string_to_date(date_str, now=None):
 
     Args:
         date_str (str): string representing a date. This string might be
-            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``)
+            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``,
+            ``YYYY-MM-DD HH:MM``, ``YYYY-MM-DD HH:MM:SS``)
             or be a *pretty date* (like ``yesterday`` or ``two months ago``)
 
     Returns:
@@ -467,6 +459,10 @@ def pretty_string_to_date(date_str, now=None):
     pattern[re.compile(r'^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
         x, '%Y-%m-%d'
     )
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')] = \
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M')
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')] = \
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
 
     pretty_regex = re.compile(
         r'(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago')
@@ -562,6 +558,9 @@ class Singleton(object):
     def __contains__(self, element):
         return element in self.instance
 
+    def __call__(self, *args, **kwargs):
+        return self.instance(*args, **kwargs)
+
     def __iter__(self):
         return iter(self.instance)
 
@@ -589,3 +588,60 @@ class LazyReference(object):
 
     def __repr__(self):
         return repr(self.ref_function())
+
+
+def load_module_from_file(module_name, module_path):
+    """Loads a python module from the path of the corresponding file.
+
+    Args:
+        module_name (str): namespace where the python module will be loaded,
+            e.g. ``foo.bar``
+        module_path (str): path of the python file containing the module
+
+    Returns:
+        A valid module object
+
+    Raises:
+        ImportError: when the module can't be loaded
+        FileNotFoundError: when module_path doesn't exist
+    """
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(  # novm
+            module_name, module_path)
+        module = importlib.util.module_from_spec(spec)  # novm
+        spec.loader.exec_module(module)
+    elif sys.version_info[0] == 3 and sys.version_info[1] < 5:
+        import importlib.machinery
+        loader = importlib.machinery.SourceFileLoader(  # novm
+            module_name, module_path)
+        module = loader.load_module()
+    elif sys.version_info[0] == 2:
+        import imp
+        module = imp.load_source(module_name, module_path)
+    return module
+
+
+def uniq(sequence):
+    """Remove strings of duplicate elements from a list.
+
+    This works like the command-line ``uniq`` tool.  It filters strings
+    of duplicate elements in a list. Adjacent matching elements are
+    merged into the first occurrence.
+
+    For example::
+
+        uniq([1, 1, 1, 1, 2, 2, 2, 3, 3]) == [1, 2, 3]
+        uniq([1, 1, 1, 1, 2, 2, 2, 1, 1]) == [1, 2, 1]
+
+    """
+    if not sequence:
+        return []
+
+    uniq_list = [sequence[0]]
+    last = sequence[0]
+    for element in sequence[1:]:
+        if element != last:
+            uniq_list.append(element)
+            last = element
+    return uniq_list

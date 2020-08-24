@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,15 +13,27 @@ class Libepoxy(AutotoolsPackage):
     url      = "https://github.com/anholt/libepoxy/releases/download/1.4.3/libepoxy-1.4.3.tar.xz"
     list_url = "https://github.com/anholt/libepoxy/releases"
 
-    version('1.4.3', 'af4c3ce0fb1143bdc4e43f85695a9bed')
-    version('1.3.1', '96f6620a9b005a503e7b44b0b528287d')
+    version('1.4.3', sha256='0b808a06c9685a62fca34b680abb8bc7fb2fda074478e329b063c1f872b826f6')
 
     depends_on('pkgconfig', type='build')
     depends_on('meson')
-    depends_on('mesa')
+    depends_on('gl')
+    depends_on('libx11', when='+glx')
+
+    variant('glx', default=True, description='enable GLX support')
 
     def configure_args(self):
         # Disable egl, otherwise configure fails with:
         # error: Package requirements (egl) were not met
         # Package 'egl', required by 'virtual:world', not found
-        return ['--enable-egl=no']
+        args = ['--enable-egl=no']
+
+        # --enable-glx defaults to auto and was failing on PPC64LE systems
+        # because libx11 was missing from the dependences. This explicitly
+        # enables/disables glx support.
+        if '+glx' in self.spec:
+            args.append('--enable-glx=yes')
+        else:
+            args.append('--enable-glx=no')
+
+        return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,16 @@ class Sox(AutotoolsPackage):
     homepage = "http://sox.sourceforge.net/Main/HomePage"
     url      = "https://downloads.sourceforge.net/project/sox/sox/14.4.2/sox-14.4.2.tar.bz2"
 
-    version('14.4.2', 'ba804bb1ce5c71dd484a102a5b27d0dd')
+    version('14.4.2', sha256='81a6956d4330e75b5827316e44ae381e6f1e8928003c6aa45896da9041ea149c')
+
+    variant('mp3',
+            default=False,
+            description='Build with mp3 support')
 
     depends_on('bzip2')
     depends_on('flac')
     depends_on('id3lib')
     depends_on('libvorbis')
     depends_on('opus')
+    depends_on('lame', when='+mp3')
+    depends_on('libmad', when='+mp3')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,11 @@ class RPlot3d(RPackage):
        slice plots, surface plots, scatter plots, etc. Includes data sets from
        oceanography."""
 
-    homepage = "https://CRAN.R-project.org/package=plot3D"
-    url      = "https://cran.r-project.org/src/contrib/plot3D_1.1.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/plot3D"
+    homepage = "https://cloud.r-project.org/package=plot3D"
+    url      = "https://cloud.r-project.org/src/contrib/plot3D_1.1.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/plot3D"
 
-    version('1.1.1', '5135aa1f3cf6106f2ded3f393a24e75d')
+    version('1.1.1', sha256='f6fe4a001387132626fc553ed1d5720d448b8064eb5a6917458a798e1d381632')
 
+    depends_on('r@2.15:', type=('build', 'run'))
     depends_on('r-misc3d', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,10 @@ class RPermute(RPackage):
     (and later) by Cajo ter Braak."""
 
     homepage = "https://github.com/gavinsimpson/permute"
-    url      = "https://cran.r-project.org/src/contrib/permute_0.9-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/permute"
+    url      = "https://cloud.r-project.org/src/contrib/permute_0.9-4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/permute"
 
-    version('0.9-4', '569fc2442d72a1e3b7e2d456019674c9')
+    version('0.9-5', sha256='d2885384a07497e8df273689d6713fc7c57a7c161f6935f3572015e16ab94865')
+    version('0.9-4', sha256='a541a5f5636ddd67fd856d3e11224f15bc068e96e23aabe3e607a7e7c2fc1cf1')
 
-    depends_on('r@2.14:')
+    depends_on('r@2.14:', type=('build', 'run'))

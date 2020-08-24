@@ -1,4 +1,4 @@
-.. Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -120,7 +120,7 @@ version numbers seen with most other Spack packages. For example, we have:
    ...
    Preferred version:
        professional.2018.3    http:...
-  
+
    Safe versions:
        professional.2018.3    http:...
        ...
@@ -418,9 +418,13 @@ Adapt the following example. Be sure to maintain the indentation:
    # other content ...
 
      intel-mkl:
-       modules:
-         intel-mkl@2018.2.199  arch=linux-centos6-x86_64:  intel-mkl/18/18.0.2
-         intel-mkl@2018.3.222  arch=linux-centos6-x86_64:  intel-mkl/18/18.0.3
+       externals:
+       - spec: "intel-mkl@2018.2.199  arch=linux-centos6-x86_64"
+         modules:
+         -  intel-mkl/18/18.0.2
+       - spec: "intel-mkl@2018.3.222  arch=linux-centos6-x86_64"
+         modules:
+         -  intel-mkl/18/18.0.3
 
 The version numbers for the ``intel-mkl`` specs defined here correspond to file
 and directory names that Intel uses for its products because they were adopted
@@ -451,12 +455,16 @@ mechanism.
 
    packages:
      intel-parallel-studio:
-       modules:
-         intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64:  intel/18/18.0.2
-         intel-parallel-studio@cluster.2018.3.222 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64:  intel/18/18.0.3
+       externals:
+       - spec: "intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64"
+         modules:
+         -  intel/18/18.0.2
+       - spec: "intel-parallel-studio@cluster.2018.3.222 +mkl+mpi+ipp+tbb+daal  arch=linux-centos6-x86_64"
+         modules:
+         -  intel/18/18.0.3
        buildable: False
 
-One additional example illustrates the use of ``paths:`` instead of
+One additional example illustrates the use of ``prefix:`` instead of
 ``modules:``, useful when external modulefiles are not available or not
 suitable:
 
@@ -464,13 +472,15 @@ suitable:
 
    packages:
      intel-parallel-studio:
-       paths:
-         intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal: /opt/intel
-         intel-parallel-studio@cluster.2018.3.222 +mkl+mpi+ipp+tbb+daal: /opt/intel
+       externals:
+       - spec: "intel-parallel-studio@cluster.2018.2.199 +mkl+mpi+ipp+tbb+daal"
+         prefix: /opt/intel
+       - spec: "intel-parallel-studio@cluster.2018.3.222 +mkl+mpi+ipp+tbb+daal"
+         prefix: /opt/intel
        buildable: False
 
 Note that for the Intel packages discussed here, the directory values in the
-``paths:`` entries must be the high-level and typically version-less
+``prefix:`` entries must be the high-level and typically version-less
 "installation directory" that has been used by Intel's product installer.
 Such a directory will typically accumulate various product versions.  Amongst
 them, Spack will select the correct version-specific product directory based on
@@ -553,7 +563,7 @@ follow `the next section <intel-install-libs_>`_ instead.
                f77:      stub
                fc:       stub
 
-      Replace ``18.0.3`` with the version that you determined in the preceeding
+      Replace ``18.0.3`` with the version that you determined in the preceding
       step. The contents under ``paths:`` do not matter yet.
 
    You are right to ask: "Why on earth is that necessary?" [fn8]_.
@@ -696,7 +706,7 @@ follow `the next section <intel-install-libs_>`_ instead.
              - /home/$user/spack-stage
 
         Do not duplicate the ``config:`` line if it already is present.
-        Adapt the location, which here is the same as in the preceeding example.
+        Adapt the location, which here is the same as in the preceding example.
 
    3. Retry installing the large package.
 
@@ -728,7 +738,7 @@ For packages that contain a compiler, follow `the previous section
 
    .. code-block:: console
 
-      $ spack install intel-mpi@2018.3.199 
+      $ spack install intel-mpi@2018.3.199
       $ spack install intel-mpi@2018.3.199  %intel@18
 
 4. To prepare the new packages for use with client packages,
@@ -802,7 +812,7 @@ by one of the following means:
   Configure the order of compilers in the appropriate ``packages.yaml`` file,
   under either an ``all:`` or client-package-specific entry, in a
   ``compiler:`` list. Consult the Spack documentation for
-  :ref:`Configuring Package Preferences <configs-tutorial-package-prefs>`
+  `Configuring Package Preferences <https://spack-tutorial.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
   and
   :ref:`Concretization Preferences <concretization-preferences>`.
 
@@ -851,7 +861,7 @@ client packages, edit the ``packages.yaml`` file.  Customize, either in the
 the virtual packages and whose values are the Spack specs that satisfy the
 virtual package, in order of decreasing preference.  To learn more about the
 ``providers:`` settings, see the Spack tutorial for
-:ref:`Configuring Package Preferences <configs-tutorial-package-prefs>`
+`Configuring Package Preferences <https://spack-tutorial.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
 and the section
 :ref:`Concretization Preferences <concretization-preferences>`.
 
@@ -965,14 +975,14 @@ a *virtual* ``mkl`` package is declared in Spack.
 
   Likewise, in a
   :ref:`MakefilePackage <makefilepackage>`
-  or similiar package that does not use AutoTools you may need to provide include
+  or similar package that does not use AutoTools you may need to provide include
   and link options for use on command lines or in environment variables.
   For example, to generate an option string of the form ``-I<dir>``, use:
 
   .. code-block:: python
 
     self.spec['blas'].headers.include_flags
-    
+
   and to generate linker options (``-L<dir> -llibname ...``), use the same as above,
 
   .. code-block:: python
@@ -1055,6 +1065,6 @@ Footnotes
    2. Set the hash length in ``install-path-scheme``, also in ``config.yaml``
       (:ref:`q.v. <config-yaml>`).
    3. You will want to set the *same* hash length for
-      :ref:`tcl module files <modules-naming-scheme>`
-      if you have Spack produce them for you, under ``naming_scheme`` in
-      ``modules.yaml``.  Other module dialects cannot be altered in this manner.
+      :ref:`module files <modules-projections>`
+      if you have Spack produce them for you, under ``projections`` in
+      ``modules.yaml``.

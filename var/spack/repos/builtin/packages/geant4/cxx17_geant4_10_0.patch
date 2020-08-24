@@ -1,0 +1,22 @@
+diff -Naur geant4/cmake/Modules/G4BuildSettings.cmake geant4/cmake/Modules/G4BuildSettings.cmake
+--- geant4/cmake/Modules/G4BuildSettings.cmake	2017-10-20 06:30:46.000000000 -0500
++++ geant4/cmake/Modules/G4BuildSettings.cmake	2018-04-16 16:48:02.194321171 -0500
+@@ -76,7 +76,7 @@
+ # Mark as advanced because most users will not need it
+ enum_option(GEANT4_BUILD_CXXSTD
+   DOC "C++ Standard to compile against"
+-  VALUES 11 14 c++11 c++14
++  VALUES 11 14 17 c++11 c++14 c++17
+   CASE_INSENSITIVE
+   )
+ 
+@@ -106,6 +106,9 @@
+ 
+ # Add Definition to flags for temporary back compatibility
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DG4USE_STD11")
++if(GEANT4_BUILD_CXXSTD GREATER 14)
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES=1")
++endif()
+ 
+ # Hold any appropriate compile flag(s) in variable for later export to
+ # config files. Needed to support late CMake 2.8 where compile features

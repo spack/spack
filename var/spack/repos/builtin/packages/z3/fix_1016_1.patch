@@ -1,0 +1,12 @@
+--- spack-src/src/util/hash.cpp.org	2019-11-14 11:12:11.233379342 +0900
++++ spack-src/src/util/hash.cpp	2019-11-14 11:15:51.356519168 +0900
+@@ -75,8 +75,8 @@
+         __fallthrough;
+     case 1 : 
+         a+=str[0];
+-        __fallthrough;
+         /* case 0: nothing left to add */
++        break;
+     }
+     mix(a,b,c);
+     /*-------------------------------------------- report the result */

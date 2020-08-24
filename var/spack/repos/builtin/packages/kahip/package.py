@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,12 +27,22 @@ class Kahip(SConsPackage):
     git       = 'https://github.com/schulzchristian/KaHIP.git'
 
     version('develop', branch='master')
-    version('2.00', '0a66b0a604ad72cfb7e3dce00e2c9fdfac82b855')
+    version('2.00', sha256='1cc9e5b12fea559288d377e8b8b701af1b2b707de8e550d0bda18b36be29d21d')
 
     depends_on('argtable')
     depends_on('mpi')  # Note: upstream package only tested on openmpi
 
+    conflicts('%apple-clang')
     conflicts('%clang')
+
+    # Fix SConstruct files to be python3 friendly (convert print from a
+    # statement to a function)
+    # Split into 2 patch files:
+    # *) first file patches Sconstruct files present in all versions (from
+    # 2.00 to 2.11)
+    # *) second is for files only present in 2.00
+    patch('fix-sconstruct-for-py3.patch', when='@2: ^python@3:')
+    patch('fix-sconstruct-for-py3-v2.00.patch', when='@2.00 ^python@3:')
 
     def patch(self):
         """Internal compile.sh scripts hardcode number of cores to build with.

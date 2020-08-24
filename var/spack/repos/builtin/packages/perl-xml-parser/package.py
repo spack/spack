@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,10 @@ class PerlXmlParser(PerlPackage):
     homepage = "http://search.cpan.org/perldoc/XML::Parser"
     url      = "http://search.cpan.org/CPAN/authors/id/T/TO/TODDR/XML-Parser-2.44.tar.gz"
 
-    version('2.44', 'af4813fe3952362451201ced6fbce379')
+    version('2.44', sha256='1ae9d07ee9c35326b3d9aad56eae71a6730a73a116b9fe9e8a4758b7cc033216')
 
     depends_on('expat')
+    depends_on('perl-libwww-perl', type=('build', 'run'))
 
     def configure_args(self):
         args = []

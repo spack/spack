@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,11 @@ class RSnowfall(RPackage):
        present or wished. Package is also designed as connector to the cluster
        management tool sfCluster, but can also used without it."""
 
-    homepage = "https://cran.r-project.org/web/packages/snowfall/index.html"
-    url      = "https://cran.r-project.org/src/contrib/snowfall_1.84-6.1.tar.gz"
+    homepage = "https://cloud.r-project.org/package=snowfall"
+    url      = "https://cloud.r-project.org/src/contrib/snowfall_1.84-6.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/snowfall"
 
-    version('1.84-6.1', '5ec38116aa9cac237d56f59ba5bd60e3')
+    version('1.84-6.1', sha256='5c446df3a931e522a8b138cf1fb7ca5815cc82fcf486dbac964dcbc0690e248d')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-snow', type=('build', 'run'))

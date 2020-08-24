@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Usearch(Package):
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.drive5.com/usearch/"
+    manual_download = True
 
     version('10.0.240', '05192b6d5e291530c190a19a3cc82b53', expand=False)
 
@@ -28,3 +29,5 @@ class Usearch(Package):
         mkdirp(prefix.bin)
         install('usearch{0}_i86linux32'.format(self.version),
                 prefix.bin.usearch)
+        chmod = which('chmod')
+        chmod('+x', prefix.bin.usearch)

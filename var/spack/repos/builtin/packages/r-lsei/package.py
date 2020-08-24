@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,8 @@ class RLsei(RPackage):
        is public domain and available at
        <http://www.netlib.org/lawson-hanson>."""
 
-    homepage = "https://cran.r-project.org/package=lsei"
-    url      = "https://cran.rstudio.com/src/contrib/lsei_1.2-0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lsei"
+    homepage = "https://cloud.r-project.org/package=lsei"
+    url      = "https://cloud.r-project.org/src/contrib/lsei_1.2-0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/lsei"
 
-    version('1.2-0', '18a9322d7a79ecb86b8788645c4b7e3c')
+    version('1.2-0', sha256='4781ebd9ef93880260d5d5f23066580ac06061e95c1048fb25e4e838963380f6')

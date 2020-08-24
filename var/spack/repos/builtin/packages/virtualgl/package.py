@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,11 +16,7 @@ class Virtualgl(CMakePackage):
     homepage = "http://www.virtualgl.org/Main/HomePage"
     url      = "http://downloads.sourceforge.net/project/virtualgl/2.5.2/VirtualGL-2.5.2.tar.gz"
 
-    version('2.5.2', '1a9f404f4a35afa9f56381cb33ed210c')
+    version('2.5.2', sha256='4f43387678b289a24139c5b7c3699740ca555a9f10011c979e51aa4df2b93238')
 
-    depends_on("libjpeg-turbo")
-    # virtualgl require OpenGL but also wants to link libglu
-    # on systems without development packages, provide with spack and depends
-    # on mesa-glu, but we do not want Mesa OpenGL sw emulation, so added
-    # variant on mesa-glu to disable dependencies on sw emulated OpenGL
-    depends_on("mesa-glu~mesa")
+    depends_on("jpeg")
+    depends_on("glu")

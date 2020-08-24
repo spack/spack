@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,7 +41,8 @@ def mock_print(monkeypatch, info_lines):
     'trilinos',
     'boost',
     'python',
-    'dealii'
+    'dealii',
+    'xsdk'  # a BundlePackage
 ])
 def test_it_just_runs(pkg):
     info(pkg)

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,8 +37,22 @@ class Templight(CMakePackage):
 
     # Templight has no stable release yet, and is supposed to be built against
     # the LLVM trunk. As this is a brittle combination, I decided to
-    # artificially create a stable release based on what works today. Please
-    # feel free to remove this version once templight has stabilized.
+    # artificially create stable releases based on what works today. Please
+    # feel free to remove these versions once templight has stabilized.
+    version('2019.01.09', commit='0899a4345607f1bb244cae477214f274ad2c52cc')
+    resource(name='llvm-r350726',
+             svn=llvm_svn.format('llvm'),
+             revision=350726,
+             destination='.',
+             placement='llvm',
+             when='@2019.01.09')
+    resource(name='clang-r350726',
+             svn=llvm_svn.format('cfe'),
+             revision=350726,
+             destination='llvm/tools',
+             placement='clang',
+             when='@2019.01.09')
+
     version('2018.07.20', commit='91589f95427620dd0a2346bd69ba922f374aa42a')
     resource(name='llvm-r337566',
              svn=llvm_svn.format('llvm'),
@@ -87,10 +101,12 @@ class Templight(CMakePackage):
         with open("tools/clang/tools/CMakeLists.txt", "a") as cmake_lists:
             cmake_lists.write("add_clang_subdirectory(templight)")
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
-        run_env.set('CC', join_path(self.spec.prefix.bin, 'templight'))
-        run_env.set('CXX', join_path(self.spec.prefix.bin, 'templight++'))
+    def setup_build_environment(self, env):
+        env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
+
+    def setup_run_environment(self, env):
+        env.set('CC', join_path(self.spec.prefix.bin, 'templight'))
+        env.set('CXX', join_path(self.spec.prefix.bin, 'templight++'))
 
     def cmake_args(self):
         spec = self.spec
@@ -121,16 +137,18 @@ class Templight(CMakePackage):
 
         targets = ['NVPTX', 'AMDGPU']
 
-        if 'x86' in spec.architecture.target.lower():
+        if spec.target.family == 'x86' or spec.target.family == 'x86_64':
             targets.append('X86')
-        elif 'arm' in spec.architecture.target.lower():
+        elif spec.target.family == 'arm':
             targets.append('ARM')
-        elif 'aarch64' in spec.architecture.target.lower():
+        elif spec.target.family == 'aarch64':
             targets.append('AArch64')
-        elif 'sparc' in spec.architecture.target.lower():
+        elif spec.target.family == 'sparc' or spec.target.family == 'sparc64':
             targets.append('Sparc')
-        elif ('ppc' in spec.architecture.target.lower() or
-              'power' in spec.architecture.target.lower()):
+        elif (spec.target.family == 'ppc64' or
+              spec.target.family == 'ppc64le' or
+              spec.target.family == 'ppc' or
+              spec.target.family == 'ppcle'):
             targets.append('PowerPC')
 
         cmake_args.append(

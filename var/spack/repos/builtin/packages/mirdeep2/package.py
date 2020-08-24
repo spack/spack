@@ -1,9 +1,10 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from os import chmod
 import glob
 
 
@@ -14,7 +15,7 @@ class Mirdeep2(Package):
     homepage = "https://www.mdc-berlin.de/8551903/en/"
     url      = "https://www.mdc-berlin.de/system/files/migrated_files/fiona/mirdeep2_0_0_8.zip"
 
-    version('0.0.8', 'a707f7d7ad4a2975fb8b2e78c5bcf483')
+    version('0.0.8', sha256='eeb24ee1b0e76b49ee2f542da3ee7d46d163c80b152709e963492b79f4fca1b8')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-pdf-api2', type=('build', 'run'))
@@ -31,6 +32,7 @@ class Mirdeep2(Package):
         with working_dir('src'):
             files = glob.iglob("*.pl")
             for file in files:
+                chmod(file, 0o755)
                 change = FileFilter(file)
                 change.filter('usr/bin/perl', 'usr/bin/env perl')
                 change.filter('perl -W', 'perl')

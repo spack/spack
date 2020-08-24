@@ -1,0 +1,34 @@
+From 750e9d9dac52af483dc556be80f1f69bc522e5be Mon Sep 17 00:00:00 2001
+From: Rob Latham <robl@mcs.anl.gov>
+Date: Tue, 8 May 2018 15:48:49 -0500
+Subject: [PATCH] make doc building explicit
+
+---
+ Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 7f2417d9..b29672b3 100644
+--- a/Makefile
++++ b/Makefile
+@@ -93,7 +93,7 @@ clean:
+ 
+ clobber:
+ 	$(MAKE) -C src $@
+-	$(MAKE) -C doc $@
++	#$(MAKE) -C doc $@
+ 	$(MAKE) -C utils $@
+ 	$(RM) -r $(RPM_BUILDDIR) $(DPKG_BUILDDIR) rpm dpkg
+ 
+@@ -142,7 +142,7 @@ rpm dpkg: pkg-clean source
+ 
+ install uninstall:
+ 	$(MAKE) -C src $@
+-	$(MAKE) -C doc $@
++	#$(MAKE) -C doc $@
+ 
+ .PHONY: all clean clobber test check cstyle check-license install uninstall\
+ 	source rpm dpkg pkg-clean pcheck check-remote format doc $(SUBDIRS)
+-- 
+2.17.0
+

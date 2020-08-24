@@ -1,0 +1,25 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -66,8 +66,10 @@
+ 
+ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/Modules")
+ 
+-cmake_policy(PUSH)
+-cmake_policy(SET CMP0074 NEW) # allows to use CBLAS_ROOT and LAPACKE_ROOT
++if(${CMAKE_VERSION} VERSION_GREATER 11.99.9)
++  cmake_policy(PUSH)
++  cmake_policy(SET CMP0074 NEW) # allows to use CBLAS_ROOT and LAPACKE_ROOT
++endif()
+ 
+ find_package( CBLAS REQUIRED )
+ include_directories(${CBLAS_INCLUDE_DIRS})
+@@ -82,7 +84,9 @@
+ find_package( LAPACKE REQUIRED )
+ include_directories(${LAPACKE_INCLUDE_DIRS})
+ 
++if(${CMAKE_VERSION} VERSION_GREATER 11.99.9)
+ cmake_policy(POP)
++endif()
+ 
+ set(PLASMA_LINALG_LIBRARIES ${LAPACKE_LIBRARIES} ${LAPACK_LIBRARIES} ${CBLAS_LIBRARIES} ${BLAS_LIBRARIES})

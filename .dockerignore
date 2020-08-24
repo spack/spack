@@ -1,6 +1,11 @@
-.git
-opt/spack
-share/spack/docker/Dockerfile
-share/spack/docker/build-image.sh
-share/spack/docker/run-image.sh
-share/spack/docker/push-image.sh
+.git/*
+opt/spack/*
+
+/etc/spack/*
+!/etc/spack/defaults
+
+share/spack/dotkit/*
+share/spack/lmod/*
+share/spack/modules/*
+lib/spack/spack/test/*
+

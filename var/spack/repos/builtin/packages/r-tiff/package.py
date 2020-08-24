@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,11 @@ class RTiff(RPackage):
        write both files and in-memory raw vectors."""
 
     homepage = "http://www.rforge.net/tiff/"
-    url      = "https://cran.rstudio.com/src/contrib/tiff_0.1-5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/tiff"
+    url      = "https://cloud.r-project.org/src/contrib/tiff_0.1-5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/tiff"
 
-    version('0.1-5', '5052990b8647c77d3e27bc0ecf064e0b')
+    version('0.1-5', sha256='9514e6a9926fcddc29ce1dd12b1072ad8265900373f738de687ef4a1f9124e2b')
 
-    depends_on("libjpeg")
+    depends_on('r@2.9.0:', type=('build', 'run'))
+    depends_on("jpeg")
     depends_on("libtiff")

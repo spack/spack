@@ -1,0 +1,28 @@
+commit 475e78d9071b34690617a85853433a9fc15da057
+Author: Chuck Atkins <chuck.atkins@kitware.com>
+Date:   Mon Jan 28 16:28:28 2019 -0500
+
+    macOS: Add missing explicit dependency on CoreServices framework
+    
+    On Apple, the implementation of cmGlobalXCodeGenerator::Open uses
+    LSOpenCFURLRef from CoreServices.  This get's transitively pulled in
+    from CMake's libuv build but ends up generating a linker error when
+    using an external libuv.  This explicitly adds the appropriate
+    dependency.
+
+diff --git a/Source/CMakeLists.txt b/Source/CMakeLists.txt
+index 311f3f4e56..8aff8f6b2f 100644
+--- a/Source/CMakeLists.txt
++++ b/Source/CMakeLists.txt
+@@ -791,9 +791,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_SYSTEM_PROCESSOR MATCHES "sparc"
+   endif()
+ endif()
+ 
+-# On Apple we need CoreFoundation
++# On Apple we need CoreFoundation and CoreServices
+ if(APPLE)
+   target_link_libraries(CMakeLib "-framework CoreFoundation")
++  target_link_libraries(CMakeLib "-framework CoreServices")
+ endif()
+ 
+ if(WIN32 AND NOT UNIX)

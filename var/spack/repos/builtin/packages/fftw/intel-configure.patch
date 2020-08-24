@@ -1,0 +1,54 @@
+--- configure	2020-08-07 15:58:51.343052000 +0200
++++ configure	2020-08-07 16:03:16.202984102 +0200
+@@ -14858,51 +14858,6 @@
+ 
+ 
+ case "${ax_cv_c_compiler_vendor}" in
+-   intel) # Stop icc from defining __GNUC__, except on MacOS where this fails
+-        case "${host_os}" in
+-            *darwin*) ;; # icc -no-gcc fails to compile some system headers
+-            *)
+-	        { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -no-gcc" >&5
+-$as_echo_n "checking whether C compiler accepts -no-gcc... " >&6; }
+-if ${ax_cv_c_flags__no_gcc+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-
+-      ax_save_FLAGS=$CFLAGS
+-      CFLAGS="-no-gcc"
+-      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-int
+-main ()
+-{
+-
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_compile "$LINENO"; then :
+-  ax_cv_c_flags__no_gcc=yes
+-else
+-  ax_cv_c_flags__no_gcc=no
+-fi
+-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+-      CFLAGS=$ax_save_FLAGS
+-fi
+-
+-eval ax_check_compiler_flags=$ax_cv_c_flags__no_gcc
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_check_compiler_flags" >&5
+-$as_echo "$ax_check_compiler_flags" >&6; }
+-if test "x$ax_check_compiler_flags" = xyes; then
+-	CC="$CC -no-gcc"
+-else
+-	:
+-fi
+-
+-               ;;
+-        esac
+-        ;;
+-
+    hp) # must (sometimes) manually increase cpp limits to handle fftw3.h
+          { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -Wp,-H128000" >&5
+ $as_echo_n "checking whether C compiler accepts -Wp,-H128000... " >&6; }

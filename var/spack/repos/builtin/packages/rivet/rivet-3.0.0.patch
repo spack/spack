@@ -1,0 +1,70 @@
+--- bin/rivet-buildplugin.in.orig	Mon Jul 08 15:16:09 2019 +0100
++++ bin/rivet-buildplugin.in	Wed Jul 10 16:15:41 2019 +0100
+@@ -172,4 +172,6 @@
+ ifastjet="@FASTJETINCPATH@"
+ test -n "$ifastjet" && mycppflags="$mycppflags -I${ifastjet}"
++ifjcontrib="@FJCONTRIBCPPFLAGS@"
++test -n "$ifjcontrib" && mycppflags="$mycppflags ${ifjcontrib}"
+ 
+ ## Get Rivet system linker flags (duplicating that in rivet-config.in)
+--- bin/rivet-config.in.orig	Mon Jul 08 15:16:09 2019 +0100
++++ bin/rivet-config.in	Wed Jul 10 16:15:41 2019 +0100
+@@ -83,4 +83,6 @@
+     ifastjet="@FASTJETINCPATH@"
+     test -n "$ifastjet" && OUT="$OUT -I${ifastjet}"
++    ifjcontrib="@FJCONTRIBCPPFLAGS@"
++    test -n "$ifjcontrib" && OUT="$OUT ${ifjcontrib}"
+ fi
+ 
+--- configure.ac.orig	Mon Jul 08 15:16:09 2019 +0100
++++ configure.ac	Wed Jul 10 16:15:41 2019 +0100
+@@ -197,10 +197,26 @@
+   FASTJETLIBADD="$FASTJETLIBADD -lEECambridgePlugin -lJadePlugin"
+ fi;
++
++## FastJet contrib (allow paths specified separately from FJ)
++AC_ARG_WITH([fjcontrib],
++            [AC_HELP_STRING(--with-fjcontrib, path to FastJet Contrib @<:@$FASTJETPATH@:>@)], [], [])
++if test -n "$with_fjcontrib"; then
++  AC_MSG_NOTICE([FastJet Contrib base path given: $with_fjcontrib])
++  FJCONTRIBINCPATH=$with_fjcontrib/include
++  FJCONTRIBLIBPATH=$with_fjcontrib/lib
++  FJCONTRIBCPPFLAGS=-I$FJCONTRIBINCPATH
++  AC_SUBST(FJCONTRIBINCPATH)
++  AC_SUBST(FJCONTRIBLIBPATH)
++  AC_SUBST(FJCONTRIBCPPFLAGS)
++  FASTJETLIBADD="-L$FJCONTRIBLIBPATH $FASTJETLIBADD"
++fi
+ FASTJETLIBADD="$FASTJETLIBADD -lfastjetcontribfragile -lfastjettools"
++
++## Test FastJet + Contrib
++## Check for FastJet headers that require the --enable-all(cxx)plugins option
+ AC_MSG_NOTICE([FastJet LIBADD = $FASTJETLIBADD])
+ AC_SUBST(FASTJETLIBADD)
+-# Check for FastJet headers that require the --enable-all(cxx)plugins option
+ oldCPPFLAGS=$CPPFLAGS
+-CPPFLAGS="$CPPFLAGS -I$FASTJETINCPATH"
++CPPFLAGS="$CPPFLAGS $FASTJETCPPFLAGS $FJCONTRIBCPPFLAGS"
+ oldLIBS=$LIBS
+ LIBS="$LIBS $FASTJETLIBADD"
+@@ -339,5 +355,4 @@
+ #AM_CPPFLAGS="$AM_CPPFLAGS -I\$(top_srcdir)/include/eigen3"
+ #AM_CPPFLAGS="$AM_CPPFLAGS \$(GSL_CPPFLAGS)"
+-dnl AM_CPPFLAGS="$AM_CPPFLAGS \$(BOOST_CPPFLAGS)"
+ AM_CPPFLAGS="$AM_CPPFLAGS -I\$(YODAINCPATH)"
+ if test x$use_hepmc2 = xyes ; then
+@@ -346,5 +361,5 @@
+ AM_CPPFLAGS="$AM_CPPFLAGS -I\$(HEPMC3INCPATH)"
+ fi
+-AM_CPPFLAGS="$AM_CPPFLAGS -I\$(FASTJETINCPATH)"
++AM_CPPFLAGS="$AM_CPPFLAGS \$(FASTJETCPPFLAGS) \$(FJCONTRIBCPPFLAGS)"
+ AC_CEDAR_CHECKCXXFLAG([-pedantic], [AM_CXXFLAGS="$AM_CXXFLAGS -pedantic"])
+ AC_CEDAR_CHECKCXXFLAG([-Wall], [AM_CXXFLAGS="$AM_CXXFLAGS -Wall"])
+--- src/AnalysisTools/Makefile.am.org	Mon Jul 08 15:16:09 2019 +0100
++++ src/AnalysisTools/Makefile.am	Wed Jul 10 16:15:41 2019 +0100
+@@ -6,4 +6,4 @@
+     MC_JetSplittings.cc
+ 
+-libRivetAnalysisTools_la_LDFLAGS = $(AM_LDFLAGS) -L$(FASTJETLIBPATH)
++libRivetAnalysisTools_la_LDFLAGS = $(AM_LDFLAGS) -L$(FASTJETLIBPATH) -L$(FJCONTRIBLIBPATH)
+ libRivetAnalysisTools_la_LIBS = $(FASTJETLIBADD)

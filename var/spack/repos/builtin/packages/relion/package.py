@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,13 +15,18 @@ class Relion(CMakePackage, CudaPackage):
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     git      = "https://github.com/3dem/relion.git"
 
-    version('3.0_beta',
-            git='https://bitbucket.org/scheres/relion-3.0_beta.git')
-    version('2.1', preferred='true', tag='2.1')
-    version('2.0.3', tag='2.0.3')
-    # relion has no develop branch though pulling from master
-    # should be considered the same as develop
-    version('develop', branch='master')
+    # 3.1 is beta but referenced in published papers
+    # prefer stable 3.0 until no longer beta
+    version('3.1_beta', branch='ver3.1')
+
+    # 3.0.8 latest release in 3.0 branch
+    # prefer for now
+    version('3.0.8', tag='3.0.8', preferred=True)
+    version('3.0.7', tag='3.0.7')
+
+    # relion master contains development code
+    # contains 3.0 branch code
+    version('master')
 
     variant('gui', default=True, description="build the gui")
     variant('cuda', default=True, description="enable compute on gpu")
@@ -37,18 +42,13 @@ class Relion(CMakePackage, CudaPackage):
                     'Profiling', 'Benchmarking'))
 
     depends_on('mpi')
-    # relion will not build with newer versions of cmake
-    # per https://github.com/3dem/relion/issues/380
-    depends_on('cmake@3:3.9.4', type='build')
-    depends_on('fftw+float+double')
+    depends_on('cmake@3:', type='build')
+    depends_on('fftw precision=float,double')
     depends_on('fltk', when='+gui')
     depends_on('libtiff')
 
-    # relion 3 supports cuda 9
-    # relion < 3 does not
     depends_on('cuda', when='+cuda')
-    depends_on('cuda@9:', when='@3: +cuda')
-    depends_on('cuda@8.0:8.99', when='@:2 +cuda')
+    depends_on('cuda@9:10.99', when='@3: +cuda')
 
     def cmake_args(self):
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,67 +20,45 @@
 import sys
 import os
 import re
-import shutil
 import subprocess
 from glob import glob
 
-# Since Sphinx 1.7, sphinx.apidoc has been moved to sphinx.ext.apidoc
-# sphinx.apidoc is deprecated and will be removed in Sphinx 2.0
-try:
-    from sphinx.ext.apidoc import main as sphinx_apidoc
-except ImportError:
-    from sphinx.apidoc import main as sphinx_apidoc
+from sphinx.ext.apidoc import main as sphinx_apidoc
 
 # -- Spack customizations -----------------------------------------------------
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('../external'))
+sys.path.insert(0, os.path.abspath('_spack_root/lib/spack/external'))
+
 if sys.version_info[0] < 3:
-    sys.path.insert(0, os.path.abspath('../external/yaml/lib'))
+    sys.path.insert(
+        0, os.path.abspath('_spack_root/lib/spack/external/yaml/lib'))
 else:
-    sys.path.insert(0, os.path.abspath('../external/yaml/lib3'))
-sys.path.append(os.path.abspath('..'))
+    sys.path.insert(
+        0, os.path.abspath('_spack_root/lib/spack/external/yaml/lib3'))
+
+sys.path.append(os.path.abspath('_spack_root/lib/spack/'))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
-spack_root = '../../..'
-os.environ['SPACK_ROOT'] = spack_root
-os.environ['PATH'] += '%s%s/bin' % (os.pathsep, spack_root)
+os.environ['SPACK_ROOT'] = os.path.abspath('_spack_root')
+os.environ['PATH'] += "%s%s" % (os.pathsep, os.path.abspath('_spack_root/bin'))
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
 os.environ['COLIFY_SIZE'] = '25x120'
-
-#
-# Generate package list using spack command
-#
-with open('package_list.html', 'w') as plist_file:
-    subprocess.Popen(
-        [spack_root + '/bin/spack', 'list', '--format=html'],
-        stdout=plist_file)
-
-#
-# Find all the `cmd-spack-*` references and add them to a command index
-#
-import spack
-import spack.cmd
-command_names = spack.cmd.all_commands()
-documented_commands = set()
-for filename in glob('*rst'):
-    with open(filename) as f:
-        for line in f:
-            match = re.match('.. _cmd-(spack-.*):', line)
-            if match:
-                documented_commands.add(match.group(1).strip())
-
 os.environ['COLUMNS'] = '120'
-shutil.copy('command_index.in', 'command_index.rst')
-with open('command_index.rst', 'a') as index:
-    subprocess.Popen(
-        [spack_root + '/bin/spack', 'commands', '--format=rst'] + list(
-            documented_commands),
-        stdout=index)
+
+# Generate full package list if needed
+subprocess.call([
+    'spack', 'list', '--format=html', '--update=package_list.html'])
+
+# Generate a command index if an update is needed
+subprocess.call([
+    'spack', 'commands',
+    '--format=rst',
+    '--header=command_index.in',
+    '--update=command_index.rst'] + glob('*rst'))
 
 #
 # Run sphinx-apidoc
@@ -90,13 +68,12 @@ with open('command_index.rst', 'a') as index:
 # Without this, the API Docs will never actually update
 #
 apidoc_args = [
-    '--force',         # Older versions of Sphinx ignore the first argument
     '--force',         # Overwrite existing files
     '--no-toc',        # Don't create a table of contents file
     '--output-dir=.',  # Directory to place all output
 ]
-sphinx_apidoc(apidoc_args + ['../spack'])
-sphinx_apidoc(apidoc_args + ['../llnl'])
+sphinx_apidoc(apidoc_args + ['_spack_root/lib/spack/spack'])
+sphinx_apidoc(apidoc_args + ['_spack_root/lib/spack/llnl'])
 
 # Enable todo items
 todo_include_todos = True
@@ -113,12 +90,12 @@ class PatchedPythonDomain(PythonDomain):
             env, fromdocname, builder, typ, target, node, contnode)
 
 def setup(sphinx):
-    sphinx.override_domain(PatchedPythonDomain)
+    sphinx.add_domain(PatchedPythonDomain, override=True)
 
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.0'
+needs_sphinx = '1.8'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -151,13 +128,14 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Spack'
-copyright = u'2013-2018, Lawrence Livermore National Laboratory.'
+copyright = u'2013-2019, Lawrence Livermore National Laboratory.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
+import spack
 version = '.'.join(str(s) for s in spack.spack_version_info[:2])
 # The full version, including alpha/beta/rc tags.
 release = spack.spack_version
@@ -165,6 +143,13 @@ release = spack.spack_version
 # The language for content autogenerated by Sphinx. Refer to documentation
 # for a list of supported languages.
 #language = None
+
+# Places to look for .po/.mo files for doc translations
+#locale_dirs = []
+
+# Sphinx gettext settings
+gettext_compact = True
+gettext_uuid = False
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -174,7 +159,7 @@ release = spack.spack_version
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ['_build', '_spack_root', '.spack-env']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -191,7 +176,25 @@ exclude_patterns = ['_build']
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+# We use our own extension of the default style with a few modifications
+from pygments.style import Style
+from pygments.styles.default import DefaultStyle
+from pygments.token import Generic, Comment, Text
+
+class SpackStyle(DefaultStyle):
+    styles = DefaultStyle.styles.copy()
+    background_color       = "#f4f4f8"
+    styles[Generic.Output] = "#355"
+    styles[Generic.Prompt] = "bold #346ec9"
+
+import pkg_resources
+dist = pkg_resources.Distribution(__file__)
+sys.path.append('.')  # make 'conf' module findable
+ep = pkg_resources.EntryPoint.parse('spack = conf:SpackStyle', dist=dist)
+dist._ep_map = {'pygments.styles': {'plugin1': ep}}
+pkg_resources.working_set.add(dist)
+
+pygments_style = 'spack'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
@@ -220,12 +223,12 @@ html_theme_options = { 'logo_only' : True }
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '../../../share/spack/logo/spack-logo-white-text.svg'
+html_logo = '_spack_root/share/spack/logo/spack-logo-white-text.svg'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = '../../../share/spack/logo/favicon.ico'
+html_favicon = '_spack_root/share/spack/logo/favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

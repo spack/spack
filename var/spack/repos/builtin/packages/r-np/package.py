@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,10 +16,14 @@ class RNp(RPackage):
     Research Computing Network (SHARCNET:www.sharcnet.ca)."""
 
     homepage = "https://github.com/JeffreyRacine/R-Package-np/"
-    url      = "https://cran.r-project.org/src/contrib/np_0.60-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/np"
+    url      = "https://cloud.r-project.org/src/contrib/np_0.60-2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/np"
 
-    version('0.60-2', 'e094d52ddff7280272b41e6cb2c74389')
+    version('0.60-9', sha256='fe31a8985f0b1a576a7775022b7131093b1c9a8337734136d5fcad85fa6592fc')
+    version('0.60-8', sha256='924c342feb2a862fa3871a45db5f8434dbbfb900cfc40c001a0872108a3a069e')
+    version('0.60-2', sha256='25d667fc1056899516584b9d5d933377e6f4694d8e5e868dd047db572b69417f')
 
     depends_on('r-boot', type=('build', 'run'))
     depends_on('r-cubature', type=('build', 'run'))
+    depends_on('r-quadprog', when='@0.60-8:', type=('build', 'run'))
+    depends_on('r-quantreg', when='@0.60-8:', type=('build', 'run'))

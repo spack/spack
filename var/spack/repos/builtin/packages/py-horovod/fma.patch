@@ -1,0 +1,52 @@
+From 717e72f91f02d1dc3c859719ef1d804b10f88017 Mon Sep 17 00:00:00 2001
+From: Nicolas V Castet <nvcastet@us.ibm.com>
+Date: Mon, 30 Mar 2020 12:47:50 -0500
+Subject: [PATCH] Add extra preprocessor guard for FMA optimization
+
+Fixes #1832
+
+Signed-off-by: Nicolas V Castet <nvcastet@us.ibm.com>
+---
+ horovod/common/ops/adasum/adasum.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/horovod/common/ops/adasum/adasum.h b/horovod/common/ops/adasum/adasum.h
+index 0330f5850..876f7f12b 100644
+--- a/horovod/common/ops/adasum/adasum.h
++++ b/horovod/common/ops/adasum/adasum.h
+@@ -19,7 +19,7 @@
+ #include <cstring>
+ #include <float.h>
+ 
+-#if __AVX__ && __F16C__
++#if __AVX__ && __F16C__ && __FMA__
+ #include <emmintrin.h>
+ #include <immintrin.h>
+ #endif
+@@ -104,7 +104,7 @@ template <typename Communicator_type> class Adasum {
+                                               int count, double& dotProduct,
+                                               double& anormsq, double& bnormsq,
+                                               int layerid) {
+-#if __AVX__ && __F16C__
++#if __AVX__ && __F16C__ && __FMA__
+     if (horovod_datatype == DataType::HOROVOD_FLOAT16) {
+       ComputeDotAndNormSqrdsfp16((uint16_t*)a, (uint16_t*)b, count, dotProduct,
+                                  anormsq, bnormsq, layerid);
+@@ -125,7 +125,7 @@ template <typename Communicator_type> class Adasum {
+                                  double acoeff, void* __restrict__ a,
+                                  double bcoeff, void* __restrict__ b,
+                                  int layerid) {
+-#if __AVX__ && __F16C__
++#if __AVX__ && __F16C__ && __FMA__
+     if (horovod_datatype == DataType::HOROVOD_FLOAT16) {
+       ScaledAddfp16(count, acoeff, (uint16_t*)a, bcoeff, (uint16_t*)b, layerid);
+     } else
+@@ -425,7 +425,7 @@ template <typename Communicator_type> class Adasum {
+   }
+ 
+ 
+-#if __AVX__ && __F16C__
++#if __AVX__ && __F16C__ && __FMA__
+   inline void ComputeDotAndNormSqrdsfp16(const uint16_t* __restrict__ a,
+                                          const uint16_t* __restrict__ b,
+                                          int len, double& dotProduct,

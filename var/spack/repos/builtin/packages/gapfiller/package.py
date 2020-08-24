@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,18 +19,21 @@ class Gapfiller(Package):
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.baseclear.com/genomics/bioinformatics/basetools/gapfiller"
+    manual_download = True
 
     version('1.10', '54d5e2ada131a1305a66e41c0d380382')
 
     def url_for_version(self, version):
         return "file://{0}/39GapFiller_v{1}_linux-x86_64.tar.gz".format(
-                os.getcwd(), version.dashed)
+            os.getcwd(),
+            version.dashed
+        )
 
     depends_on('perl+threads', type=('build', 'run'))
 
     def patch(self):
         with working_dir('.'):
-            files = glob.iglob("*.pl")
+            files = glob.glob("*.pl") + glob.glob('bwa/*.pl')
             for file in files:
                 change = FileFilter(file)
                 change.filter('usr/bin/perl', 'usr/bin/env perl')

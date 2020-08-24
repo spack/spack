@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,10 +21,11 @@ class RGsubfn(RPackage):
     sql calls that may involve strings where substitution is
     desirable."""
 
-    homepage = "https://cran.r-project.org/package=gsubfn"
-    url      = "https://cran.r-project.org/src/contrib/gsubfn_0.6-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gsubfn"
+    homepage = "https://cloud.r-project.org/package=gsubfn"
+    url      = "https://cloud.r-project.org/src/contrib/gsubfn_0.6-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/gsubfn"
 
-    version('0.6-6', '94195ff3502706c736d9c593c07252bc')
+    version('0.7', sha256='89351df9e65722d2862f26a0a3985666de3c86e8400808ced8a6eb6e165a4602')
+    version('0.6-6', sha256='bbc5d29bb48e836407f81880aeb368544a54a5513dacb3411c9838180723dda4')
 
     depends_on('r-proto', type=('build', 'run'))

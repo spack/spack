@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Igvtools(Package):
     homepage = "https://software.broadinstitute.org/software/igv/home"
     url      = "http://data.broadinstitute.org/igv/projects/downloads/2.3/igvtools_2.3.98.zip"
 
-    version('2.3.98', '17ed12a213cd9cdaeb2f2a5c56d84bc4')
+    version('2.3.98', sha256='07027c179f25960bab9919f255c0f8e08f0861861ac6dc02d92be8313e0316a4')
 
     depends_on('java@8:')
 
@@ -33,7 +33,7 @@ class Igvtools(Package):
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = spec['jdk'].prefix.bin.java
+        java = spec['java'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file(jar_file, join_path(prefix.bin, jar_file),

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,8 +43,8 @@ from spack.version import Version
 # work on paths and URLs.  There's not a good word for both of these, but
 # "path" seemed like the most generic term.
 #
-def find_list_url(url):
-    """Finds a good list URL for the supplied URL.
+def find_list_urls(url):
+    r"""Find good list URLs for the supplied URL.
 
     By default, returns the dirname of the archive path.
 
@@ -62,7 +62,7 @@ def find_list_url(url):
         url (str): The download URL for the package
 
     Returns:
-        str: The list URL for the package
+        set: One or more list URLs for the package
     """
 
     url_types = [
@@ -93,12 +93,14 @@ def find_list_url(url):
          lambda m: m.group(1) + '/Archive/' + m.group(2)),
     ]
 
+    list_urls = set([os.path.dirname(url)])
+
     for pattern, fun in url_types:
         match = re.search(pattern, url)
         if match:
-            return fun(match)
-    else:
-        return os.path.dirname(url)
+            list_urls.add(fun(match))
+
+    return list_urls
 
 
 def strip_query_and_fragment(path):
@@ -148,81 +150,96 @@ def strip_version_suffixes(path):
 
     suffix_regexes = [
         # Download type
-        '[Ii]nstall',
-        'all',
-        'code',
-        'src(_0)?',
-        '[Ss]ources?',
-        'file',
-        'full',
-        'single',
-        'public',
-        'with[a-zA-Z_-]+',
-        'bin',
-        'binary',
-        'run',
-        '[Uu]niversal',
-        'jar',
-        'complete',
-        'dynamic',
-        'oss',
-        'gem',
-        'tar',
-        'sh',
+        r'[Ii]nstall',
+        r'all',
+        r'code',
+        r'[Ss]ources?',
+        r'file',
+        r'full',
+        r'single',
+        r'with[a-zA-Z_-]+',
+        r'rock',
+        r'src(_0)?',
+        r'public',
+        r'bin',
+        r'binary',
+        r'run',
+        r'[Uu]niversal',
+        r'jar',
+        r'complete',
+        r'dynamic',
+        r'oss',
+        r'gem',
+        r'tar',
+        r'sh',
 
         # Download version
-        'release',
-        'stable',
-        '[Ff]inal',
-        'rel',
-        'orig',
-        'dist',
-        '\+',
+        r'release',
+        r'bin',
+        r'stable',
+        r'[Ff]inal',
+        r'rel',
+        r'orig',
+        r'dist',
+        r'\+',
 
         # License
-        'gpl',
+        r'gpl',
 
         # Arch
         # Needs to come before and after OS, appears in both orders
-        'ia32',
-        'intel',
-        'amd64',
-        'x64',
-        'x86[_-]64',
-        'x86',
-        'i[36]86',
-        'ppc64(le)?',
-        'armv?(7l|6l|64)',
+        r'ia32',
+        r'intel',
+        r'amd64',
+        r'linux64',
+        r'x64',
+        r'64bit',
+        r'x86[_-]64',
+        r'i586_64',
+        r'x86',
+        r'i[36]86',
+        r'ppc64(le)?',
+        r'armv?(7l|6l|64)',
+
+        # Other
+        r'cpp',
+        r'gtk',
+        r'incubating',
 
         # OS
-        '[Ll]inux(_64)?',
-        '[Uu]ni?x',
-        '[Ss]un[Oo][Ss]',
-        '[Mm]ac[Oo][Ss][Xx]?',
-        '[Oo][Ss][Xx]',
-        '[Dd]arwin(64)?',
-        '[Aa]pple',
-        '[Ww]indows',
-        '[Ww]in(64|32)?',
-        '[Cc]ygwin(64|32)?',
-        '[Mm]ingw',
+        r'[Ll]inux(_64)?',
+        r'LINUX',
+        r'[Uu]ni?x',
+        r'[Ss]un[Oo][Ss]',
+        r'[Mm]ac[Oo][Ss][Xx]?',
+        r'[Oo][Ss][Xx]',
+        r'[Dd]arwin(64)?',
+        r'[Aa]pple',
+        r'[Ww]indows',
+        r'[Ww]in(64|32)?',
+        r'[Cc]ygwin(64|32)?',
+        r'[Mm]ingw',
+        r'centos',
 
         # Arch
         # Needs to come before and after OS, appears in both orders
-        'ia32',
-        'intel',
-        'amd64',
-        'x64',
-        'x86[_-]64',
-        'x86',
-        'i[36]86',
-        'ppc64(le)?',
-        'armv?(7l|6l|64)?',
+        r'ia32',
+        r'intel',
+        r'amd64',
+        r'linux64',
+        r'x64',
+        r'64bit',
+        r'x86[_-]64',
+        r'i586_64',
+        r'x86',
+        r'i[36]86',
+        r'ppc64(le)?',
+        r'armv?(7l|6l|64)?',
 
         # PyPI
-        '[._-]py[23].*\.whl',
-        '[._-]cp[23].*\.whl',
-        '[._-]win.*\.exe',
+        r'[._-]py[23].*\.whl',
+        r'[._-]cp[23].*\.whl',
+        r'[._-]win.*\.exe',
     ]
 
     for regex in suffix_regexes:
@@ -268,28 +285,41 @@ def strip_name_suffixes(path, version):
         # name-ver
         # name_ver
         # name.ver
-        r'[._-]v?' + str(version) + '.*',
+        r'[._-][rvV]?' + str(version) + '.*',
 
         # namever
-        str(version) + '.*',
+        r'V?' + str(version) + '.*',
 
         # Download type
-        'install',
-        'src',
-        '(open)?[Ss]ources?',
-        '[._-]archive',
-        '[._-]std',
+        r'install',
+        r'[Ss]rc',
+        r'(open)?[Ss]ources?',
+        r'[._-]open',
+        r'[._-]archive',
+        r'[._-]std',
+        r'[._-]bin',
+        r'Software',
 
         # Download version
-        'release',
-        'snapshot',
-        'distrib',
+        r'release',
+        r'snapshot',
+        r'distrib',
+        r'everywhere',
+        r'latest',
+
+        # Arch
+        r'Linux(64)?',
+        r'x86_64',
 
         # VCS
-        '0\+bzr',
+        r'0\+bzr',
 
         # License
-        'gpl',
+        r'gpl',
+
+        # Needs to come before and after gpl, appears in both orders
+        r'[._-]x11',
+        r'gpl',
     ]
 
     for regex in suffix_regexes:
@@ -402,7 +432,7 @@ def parse_version_offset(path):
     # 3. names can contain A-Z, a-z, 0-9, '+', separators
     # 4. versions can contain A-Z, a-z, 0-9, separators
     # 5. versions always start with a digit
-    # 6. versions are often prefixed by a 'v' character
+    # 6. versions are often prefixed by a 'v' or 'r' character
     # 7. separators are most reliable to determine name/version boundaries
 
     # List of the following format:
@@ -445,7 +475,7 @@ def parse_version_offset(path):
         (r'^[a-zA-Z+-]*(\d[\da-zA-Z-]*)$', stem),
 
         # name_name_ver_ver
-        # e.g. tinyxml_2_6_2, boost_1_55_0, tbb2017_20161128, v1_6_3
+        # e.g. tinyxml_2_6_2, boost_1_55_0, tbb2017_20161128
         (r'^[a-zA-Z+_]*(\d[\da-zA-Z_]*)$', stem),
 
         # name.name.ver.ver
@@ -470,6 +500,10 @@ def parse_version_offset(path):
         # name_name.ver.ver
         # e.g. fer_source.v696
         (r'^[a-zA-Z\d+_]+\.v?(\d[\da-zA-Z.]*)$', stem),
+
+        # name_ver-ver
+        # e.g. Bridger_r2014-12-01
+        (r'^[a-zA-Z\d+]+_r?(\d[\da-zA-Z-]*)$', stem),
 
         # name-name-ver.ver-ver.ver
         # e.g. sowing-1.1.23-p1, bib2xhtml-v3.0-15-gf506, 4.6.3-alpha04
@@ -502,34 +536,39 @@ def parse_version_offset(path):
         # e.g. STAR-CCM+11.06.010_02
         (r'^[a-zA-Z+-]+(\d[\da-zA-Z._]*)$', stem),
 
+        # name-name_name-ver.ver
+        # e.g. PerlIO-utf8_strict-0.002
+        (r'^[a-zA-Z\d+_-]+-v?(\d[\da-zA-Z.]*)$', stem),
+
         # 7th Pass: Specific VCS
 
         # bazaar
         # e.g. libvterm-0+bzr681
         (r'bzr(\d[\da-zA-Z._-]*)$', stem),
 
-        # 8th Pass: Version in path
+        # 8th Pass: Query strings
+
+        # e.g. https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0
+        # e.g. https://gitlab.kitware.com/api/v4/projects/icet%2Ficet/repository/archive.tar.bz2?sha=IceT-2.1.1
+        # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
+        # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
+        # e.g. https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-1-0-gf15c1c3ef
+        (r'[?&](?:sha|ref|version)=[a-zA-Z\d+-]*[_-]?v?(\d[\da-zA-Z._-]*)$', suffix),  # noqa: E501
+
+        # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
+        # e.g. http://laws-green.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.1_r20171213193219.tgz
+        # e.g. https://evtgen.hepforge.org/downloads?f=EvtGen-01.07.00.tar.gz
+        # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
+        (r'[?&](?:filename|f|get)=[a-zA-Z\d+-]+[_-]v?(\d[\da-zA-Z.]*)', stem),
+
+        # 9th Pass: Version in path
 
         # github.com/repo/name/releases/download/vver/name
         # e.g. https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow
-        (r'github\.com/[^/]+/[^/]+/releases/download/[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)/', path),  # noqa
+        (r'github\.com/[^/]+/[^/]+/releases/download/[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)/', path),  # noqa: E501
 
-        # 9th Pass: Query strings
-
-        # e.g. https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0
-        (r'\?sha=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
-
-        # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
-        (r'\?ref=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
-
-        # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
-        (r'\?version=v?(\d[\da-zA-Z._-]*)$', suffix),
-
-        # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
-        (r'\?filename=[a-zA-Z\d+-]+-v?(\d[\da-zA-Z.]*)$', stem),
-
-        # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
-        (r'\?package=[a-zA-Z\d+-]+&get=[a-zA-Z\d+-]+-v?(\d[\da-zA-Z.]*)$', stem),  # noqa
+        # e.g. ftp://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/ncbi.tar.gz
+        (r'(\d[\da-zA-Z._-]*)/[^/]+$', path),
     ]
 
     for i, version_regex in enumerate(version_regexes):
@@ -653,9 +692,16 @@ def parse_name_offset(path, v=None):
         # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
         (r'\?filename=([A-Za-z\d+-]+)$', stem),
 
+        # ?f=name-ver.ver
+        # e.g. https://evtgen.hepforge.org/downloads?f=EvtGen-01.07.00.tar.gz
+        (r'\?f=([A-Za-z\d+-]+)$', stem),
+
         # ?package=name
         # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
         (r'\?package=([A-Za-z\d+-]+)', stem),
+
+        # ?package=name-version
+        (r'\?package=([A-Za-z\d]+)', suffix),
 
         # download.php
         # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
@@ -799,7 +845,7 @@ def wildcard_version(path):
 
     # Replace each version with a generic capture group to find versions
     # and escape everything else so it's not interpreted as a regex
-    result = '(\d.*)'.join(re.escape(vp) for vp in vparts)
+    result = r'(\d.*)'.join(re.escape(vp) for vp in vparts)
 
     return result
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,9 @@ class RLearnbayes(RPackage):
     for regression models, hierarchical models, Bayesian tests, and
     illustrations of Gibbs sampling."""
 
-    homepage = "https://CRAN.R-project.org/package=LearnBayes"
-    url      = "https://cran.r-project.org/src/contrib/LearnBayes_2.15.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/LearnBayes"
+    homepage = "https://cloud.r-project.org/package=LearnBayes"
+    url      = "https://cloud.r-project.org/src/contrib/LearnBayes_2.15.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/LearnBayes"
 
-    version('2.15', '213713664707bc79fd6d3a109555ef76')
+    version('2.15.1', sha256='9b110858456523ca0b2a63f22013c4e1fbda6674b9d84dc1f4de8bffc5260532')
+    version('2.15', sha256='45c91114b4aaa0314feeb4311dbe78f5b75a3b76bb2d1ca0f8adb2e0f1cbe233')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,9 @@ class RDismo(RPackage):
        entire geographic distributions form occurrences at a number of sites
        and the environment at these sites."""
 
-    homepage = "https://cran.r-project.org/package=dismo"
-    url      = "https://cran.r-project.org/src/contrib/dismo_1.1-4.tar.gz"
+    homepage = "https://cloud.r-project.org/package=dismo"
+    url      = "https://cloud.r-project.org/src/contrib/dismo_1.1-4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/dismo"
 
     version('1.1-4', sha256='f2110f716cd9e4cca5fd2b22130c6954658aaf61361d2fe688ba22bbfdfa97c8')
 

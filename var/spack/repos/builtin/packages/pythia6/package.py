@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,7 @@ def _is_integral(x):
     """Accepts only integral values."""
     try:
         return isinstance(int(x), numbers.Integral) and \
-            (not isinstance(x, bool)) and \
-            int(x) == x
+            (not isinstance(x, bool))
     except ValueError:
         return False
 
@@ -100,7 +99,7 @@ class Pythia6(CMakePackage):
            'main81.f':
            'b02fecd1cd0f9ba16eaae53e9da0ba602569fdf0e46856cccdfb4c5b7ba33e8b',
            'ttbar.lhe':
-           'fb0d43175cc392b19c2b6633dcf673d0b56229b60bec92df4aa782c7196b149c'}
+           'db772b69ab4e0300d973b57414523ac8e7fa8535eac49ee52a6b69b1c131983d'}
 
     for example, checksum in iteritems(examples):
         resource(name=example,
@@ -109,17 +108,14 @@ class Pythia6(CMakePackage):
                  sha256=checksum,
                  expand=False,
                  destination='example',
-                 placement={example: example}
-             )
+                 placement={example: example})
 
     # Docs.
-    docs \
-        = {'http://www.hepforge.org/archive/pythiasix/update_notes-6.4.28.txt':
-            'a229be4ba9a4eb65a9d53600a5f388b620038d56694c6cb4671c2be224b67751',
-           'http://home.thep.lu.se/~torbjorn/pythia6/lutp0613man2.pdf':
-           '03d637310ea80f0d7aea761492bd38452c602890d8cf913a1ec9edacd79fa43d',
-           'https://pythiasix.hepforge.org/pythia6-announcement.txt':
-           '2a52def41f0c93e32e0db58dbcf072b987ebfbd32e42ccfc1f9382fcf65f1271'}
+    docs = {
+        'http://www.hepforge.org/archive/pythiasix/update_notes-6.4.28.txt': 'a229be4ba9a4eb65a9d53600a5f388b620038d56694c6cb4671c2be224b67751',
+        'http://home.thep.lu.se/~torbjorn/pythia6/lutp0613man2.pdf': '03d637310ea80f0d7aea761492bd38452c602890d8cf913a1ec9edacd79fa43d',
+        'https://pythiasix.hepforge.org/pythia6-announcement.txt': '2a52def41f0c93e32e0db58dbcf072b987ebfbd32e42ccfc1f9382fcf65f1271'
+    }
 
     for docurl, checksum in iteritems(docs):
         doc = os.path.basename(urlparse(docurl).path)
@@ -128,8 +124,7 @@ class Pythia6(CMakePackage):
                  sha256=checksum,
                  expand=False,
                  destination='doc',
-                 placement={doc: doc}
-             )
+                 placement={doc: doc})
 
     # The included patch customizes some routines provided in dummy form
     # by the original source to be useful out of the box in the vast
