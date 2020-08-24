@@ -69,10 +69,6 @@ from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, path_from_modules, module
 from spack.util.log_parse import parse_log_events, make_log_context
 
-_serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
-if _serialize:
-    import multiprocessing.reduction
-
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -864,10 +860,13 @@ class TransmitPackage(object):
     """The repo must be transmitted and reconstructed along with the package
     if the new process environment was not forked.
     """
+
+    _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
+
     def __init__(self, pkg):
-        if _serialize:
+        if TransmitPackage._serialize:
             serialized_pkg = io.BytesIO()
-            multiprocessing.reduction.dump(pkg, serialized_pkg)
+            pickle.dump(pkg, serialized_pkg)
             serialized_pkg.seek(0)
             self.serialized_pkg = serialized_pkg
             self.repo_dirs = list(r.root for r in spack.repo.path.repos)
@@ -875,7 +874,7 @@ class TransmitPackage(object):
             self.pkg = pkg
 
     def restore(self):
-        if _serialize:
+        if TransmitPackage._serialize:
             spack.repo.path = spack.repo._path(self.repo_dirs)
             return pickle.load(self.serialized_pkg)
         else:
