@@ -53,19 +53,25 @@ in the ``SPACK_ROOT`` environment variable.  Add ``$SPACK_ROOT/bin``
 to your path and you're ready to go:
 
 .. code-block:: console
+   
+   # For bash/zsh users
+   $ export SPACK_ROOT=/path/to/spack
 
-   $ . share/spack/setup-env.sh 
+   # For tcsh or csh users (note you must set SPACK_ROOT)
+   $ setenv SPACK_ROOT /path/to/spack
+   
+
+   $ export PATH=$SPACK_ROOT/bin:$PATH
+   $ spack install libef 
 
 For a richer experience, use Spack's shell support:
 
 .. code-block:: console
 
    # For bash/zsh users
-   $ export SPACK_ROOT=/path/to/spack
    $ . $SPACK_ROOT/share/spack/setup-env.sh
 
    # For tcsh or csh users (note you must set SPACK_ROOT)
-   $ setenv SPACK_ROOT /path/to/spack
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
 
