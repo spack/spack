@@ -1007,10 +1007,13 @@ def get_keys(install=False, trust=False, force=False):
                               'Use -t to install all downloaded keys')
 
 
-def push_keys(*mirrors, keys=None, regenerate_index=False, tmpdir=None):
+def push_keys(*mirrors, **kwargs):
     """
     Upload pgp public keys to the given mirrors
     """
+    keys = kwargs.get('keys')
+    regenerate_index = kwargs.get('regenerate_index', False)
+    tmpdir = kwargs.get('tmpdir')
 
     keys = Gpg.public_keys(*(keys or []))
 
