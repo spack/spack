@@ -480,9 +480,12 @@ class Stage(object):
         else:
             print_errors(errors)
 
+            # Simplify the error name by removing the prefix when present
+            name = self.name if not self.name.startswith(stage_prefix) else \
+                self.name.replace(stage_prefix, '')
             err = 'Manual download is required' if manual_download else \
                 'All fetchers failed'
-            err_msg = '{0} for {1}'.format(err, self.name)
+            err_msg = '{0} for {1}'.format(err, name)
             self.fetcher = self.default_fetcher
             raise fs.FetchError(err_msg, None)
 
