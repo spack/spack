@@ -409,7 +409,7 @@ class log_output(object):
 
         self._active = False  # used to prevent re-entry
 
-        self.saved_fds = SaveStdout()
+        self.saved_fds = None
 
     def __call__(self, file_like=None, echo=None, debug=None, buffer=None):
         """This behaves the same as init. It allows a logger to be reused.
@@ -506,6 +506,8 @@ class log_output(object):
         # goes to the original stream
         sys.stdout.flush()
         sys.stderr.flush()
+
+        self.saved_fds = SaveStdout()
 
         # Now do the actual output rediction.
         self.use_fds = _file_descriptors_work(sys.stdout, sys.stderr)
