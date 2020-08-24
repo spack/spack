@@ -62,7 +62,7 @@ to your path and you're ready to go:
    
 
    $ export PATH=$SPACK_ROOT/bin:$PATH
-   $ spack install libef 
+   $ spack install libelf
 
 For a richer experience, use Spack's shell support:
 
