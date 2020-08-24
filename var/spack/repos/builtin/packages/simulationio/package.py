@@ -14,6 +14,8 @@ class Simulationio(CMakePackage):
     url      = "https://github.com/eschnett/SimulationIO/archive/version/9.0.1.tar.gz"
     git      = "https://github.com/eschnett/SimulationIO.git"
 
+    maintainers = ['eschnett']
+
     version('master', branch='master')
     version('9.0.1', sha256='c2f6c99417165f6eb8cbb9c44822d119586675abb34eabd553eb80f44b53e0c8')
 
