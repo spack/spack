@@ -494,7 +494,7 @@ class BuildSystemGuesser:
             (r'/configure$',          'autotools'),
             (r'/configure\.(in|ac)$', 'autoreconf'),
             (r'/Makefile\.am$',       'autoreconf'),
-            (r'/pom.xml$',            'maven'),
+            (r'/pom\.xml$',           'maven'),
             (r'/SConstruct$',         'scons'),
             (r'/waf$',                'waf'),
             (r'/setup\.py$',          'python'),
