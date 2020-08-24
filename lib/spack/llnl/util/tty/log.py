@@ -568,7 +568,12 @@ class log_output(object):
             self.file_like.write(string)
 
         # recover and store echo settings from the child before it dies
-        self.echo = self.parent_pipe.recv()
+        try:
+            self.echo = self.parent_pipe.recv()
+        except EOFError:
+            # This may occur if some exception prematurely terminates the
+            # _writer_daemon. An exception will have already been generated.
+            pass
 
         self.process.join()
 
