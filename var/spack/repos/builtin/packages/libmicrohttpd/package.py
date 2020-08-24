@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Libmicrohttpd(AutotoolsPackage):
     """GNU libmicrohttpd is a small C library that is supposed to make
        it easy to run an HTTP server as part of another application.
