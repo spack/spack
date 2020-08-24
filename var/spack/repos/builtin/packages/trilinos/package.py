@@ -430,7 +430,6 @@ class Trilinos(CMakePackage):
             # Force Trilinos to use the MPI wrappers instead of raw compilers
             # this is needed on Apple systems that require full resolution of
             # all symbols when linking shared libraries
-            mpi_bin = spec['mpi'].prefix.bin
             options.extend([
                 define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
                 define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
@@ -690,7 +689,7 @@ class Trilinos(CMakePackage):
             if '+mpi' in spec:
                 libgfortran = os.path.dirname(os.popen(
                     '%s --print-file-name libgfortran.a' %
-                    join_path(mpi_bin, 'mpif90')).read())
+                    spec['mpi'].mpifc).read())
                 options.append(define(
                     'Trilinos_EXTRA_LINK_FLAGS',
                     '-L%s/ -lgfortran' % (libgfortran),
