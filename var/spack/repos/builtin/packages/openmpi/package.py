@@ -257,7 +257,7 @@ class Openmpi(AutotoolsPackage):
 
     depends_on('pkgconfig', type='build')
 
-    depends_on('hwloc')
+    depends_on('hwloc', when='@4:')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
     depends_on('hwloc@:1.999', when='@:3.999.999')
