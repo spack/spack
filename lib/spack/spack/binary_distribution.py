@@ -290,7 +290,7 @@ def generate_package_index(cache_prefix):
     """Create the build cache index page.
 
     Creates (or replaces) the "index.json" page at the location given in
-    cache_prefix.  This page contains a link for each binary package (*.yaml)
+    cache_prefix.  This page contains a link for each binary package (.yaml)
     under cache_prefix.
     """
     tmpdir = tempfile.mkdtemp()
