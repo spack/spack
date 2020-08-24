@@ -536,10 +536,23 @@ class TestStage(object):
         with stage:
             try:
                 stage.fetch(mirror_only=False)
-            except spack.fetch_strategy.FetchError:
-                pass
+                assert False, 'Expected fetch to fail'
+            except spack.fetch_strategy.FetchError as err:
+                assert 'All fetchers failed' in str(err)
+
         check_destroy(stage, self.stage_name)
         assert search_fn.performed_search
+
+    def test_search_manual_download(self, failing_fetch_strategy, search_fn):
+        stage = Stage(failing_fetch_strategy,
+                      name=self.stage_name,
+                      search_fn=search_fn)
+        with stage:
+            try:
+                stage.fetch(mirror_only=False, manual_download=True)
+                assert False, 'Expected fetch to fail'
+            except spack.fetch_strategy.FetchError as err:
+                assert 'Manual download is required' in str(err)
 
     def test_ensure_one_stage_entry(self, mock_stage_archive):
         archive = mock_stage_archive()

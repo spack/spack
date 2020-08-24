@@ -400,7 +400,7 @@ class Stage(object):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
-    def fetch(self, mirror_only=False):
+    def fetch(self, mirror_only=False, manual_download=False):
         """Downloads an archive or checks out code from a repository."""
         fetchers = []
         if not mirror_only:
@@ -480,7 +480,9 @@ class Stage(object):
         else:
             print_errors(errors)
 
-            err_msg = 'All fetchers failed for {0}'.format(self.name)
+            err = 'Manual download is required' if manual_download else \
+                'All fetchers failed'
+            err_msg = '{0} for {1}'.format(err, self.name)
             self.fetcher = self.default_fetcher
             raise fs.FetchError(err_msg, None)
 
