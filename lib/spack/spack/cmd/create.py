@@ -523,7 +523,7 @@ class BuildSystemGuesser:
             (r'/Makefile\.PL$',       'perlmake'),
             (r'/.*\.gemspec$',        'ruby'),
             (r'/Rakefile$',           'ruby'),
-            (r'/setup.rb$',           'ruby'),
+            (r'/setup\.rb$',          'ruby'),
             (r'/.*\.pro$',            'qmake'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),
