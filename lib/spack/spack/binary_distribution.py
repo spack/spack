@@ -965,8 +965,6 @@ def get_keys(install=False, trust=False, force=False):
         tty.die("Please add a spack mirror to allow " +
                 "download of build caches.")
 
-    keys = set()
-
     for mirror in mirror_collection.values():
         fetch_url = mirror.fetch_url
         keys_url = url_util.join(fetch_url,

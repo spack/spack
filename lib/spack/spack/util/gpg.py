@@ -132,7 +132,6 @@ class Gpg(object):
         cls.gpg()('--batch', '--yes', '--delete-keys',
                   *cls.public_keys(*keys))
 
-
     @classmethod
     def sign(cls, key, file, output, clearsign=False):
         args = [

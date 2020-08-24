@@ -101,11 +101,12 @@ def setup_parser(subparser):
                         help="URL of the mirror where " +
                              "keys will be published.")
     publish.add_argument('--rebuild-index', action='store_true',
-                        default=False, help="Regenerate buildcache key index " +
-                                            "after publishing key(s)")
+                         default=False, help=(
+                             "Regenerate buildcache key index "
+                             "after publishing key(s)"))
     publish.add_argument('keys', nargs='*',
-                        help='the keys to publish; '
-                             'all public keys if unspecified')
+                         help='the keys to publish; '
+                              'all public keys if unspecified')
     publish.set_defaults(func=gpg_publish)
 
 
