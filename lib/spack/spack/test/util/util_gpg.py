@@ -17,7 +17,7 @@ fpr:::::::::YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY:
 uid:::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
 ssb::2048:1:AAAAAAAAAAAAAAAA:AAAAAAAAAA::::::::::
 """
-    keys = gpg.parse_keys_output(output)
+    keys = gpg.parse_secret_keys_output(output)
 
     assert len(keys) == 2
     assert keys[0] == 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -34,7 +34,7 @@ ssb:-:2048:1:AAAAAAAAA::::::esa:::+:::23:
 fpr:::::::::YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY:
 grp:::::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:
 """
-    keys = gpg.parse_keys_output(output)
+    keys = gpg.parse_secret_keys_output(output)
 
     assert len(keys) == 1
     assert keys[0] == 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -53,7 +53,7 @@ uid:::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
 ssb::2048:1:AAAAAAAAAAAAAAAA:AAAAAAAAAA::::::::::
 fpr:::::::::ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ:"""
 
-    keys = gpg.parse_keys_output(output)
+    keys = gpg.parse_secret_keys_output(output)
 
     assert len(keys) == 2
     assert keys[0] == 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW'

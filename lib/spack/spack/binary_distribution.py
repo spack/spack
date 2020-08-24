@@ -248,14 +248,17 @@ def checksum_tarball(file):
     return hasher.hexdigest()
 
 
-def sign_tarball(key, force, specfile_path):
-    # Sign the packages if keys available
+def ensure_gpg():
     if Gpg.gpg() is None:
         raise NoGpgException(
             "gpg2 is not available in $PATH .\n"
             "Use spack install gnupg and spack load gnupg.")
 
+
+def select_signing_key(key=None):
     if key is None:
+        ensure_gpg()
+
         keys = Gpg.signing_keys()
         if len(keys) == 1:
             key = keys[0]
@@ -264,17 +267,22 @@ def sign_tarball(key, force, specfile_path):
             raise PickKeyException(str(keys))
 
         if len(keys) == 0:
-            msg = "No default key available for signing.\n"
-            msg += "Use spack gpg init and spack gpg create"
-            msg += " to create a default key."
-            raise NoKeyException(msg)
+            raise NoKeyException(
+                "No default key available for signing.\n"
+                "Use spack gpg init and spack gpg create"
+                " to create a default key.")
+    return key
 
+
+def sign_tarball(key, force, specfile_path):
     if os.path.exists('%s.asc' % specfile_path):
         if force:
             os.remove('%s.asc' % specfile_path)
         else:
             raise NoOverwriteException('%s.asc' % specfile_path)
 
+    key = select_signing_key(key)
+    ensure_gpg()
     Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 
@@ -486,7 +494,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
 
     # sign the tarball and spec file with gpg
     if not unsigned:
+        key = select_signing_key(key)
         sign_tarball(key, force, specfile_path)
+
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name=tarfile_path, arcname='%s' % tarfile_name)
@@ -1014,6 +1024,7 @@ def push_keys(*mirrors, **kwargs):
     keys = kwargs.get('keys')
     regenerate_index = kwargs.get('regenerate_index', False)
     tmpdir = kwargs.get('tmpdir')
+    remove_tmpdir = False
 
     keys = Gpg.public_keys(*(keys or []))
 
@@ -1038,6 +1049,7 @@ def push_keys(*mirrors, **kwargs):
                 # we can avoid the need to create a tmp dir.
                 if tmpdir is None:
                     tmpdir = tempfile.mkdtemp()
+                    remove_tmpdir = True
                 prefix = tmpdir
 
             for fingerprint in keys:
@@ -1064,7 +1076,7 @@ def push_keys(*mirrors, **kwargs):
                 else:
                     generate_key_index(keys_url, tmpdir)
     finally:
-        if tmpdir is not None:
+        if remove_tmpdir:
             shutil.rmtree(tmpdir)
 
 
