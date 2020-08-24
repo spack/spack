@@ -59,7 +59,9 @@ to your path and you're ready to go:
 
    # For tcsh or csh users (note you must set SPACK_ROOT)
    $ setenv SPACK_ROOT /path/to/spack
-   
+
+   #For fish users
+   $ set SPACK_ROOT /path/to/spack
 
    $ export PATH=$SPACK_ROOT/bin:$PATH
    $ spack install libelf
@@ -74,6 +76,8 @@ For a richer experience, use Spack's shell support:
    # For tcsh or csh users (note you must set SPACK_ROOT)
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
+   # For fish users
+   $ source $SPACK_ROOT/share/spack/setup-env.fish
 
 This automatically adds Spack to your ``PATH`` and allows the ``spack``
 command to be used to execute spack :ref:`commands <shell-support>` and
