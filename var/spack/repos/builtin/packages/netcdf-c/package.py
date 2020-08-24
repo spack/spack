@@ -97,26 +97,15 @@ class NetcdfC(AutotoolsPackage):
 
     # High-level API of HDF5 1.8.9 or later is required for netCDF-4 support:
     # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
-    depends_on('hdf5@1.8.9:+hl~mpi', when='~mpi')
-    depends_on('hdf5@1.8.9:+hl+mpi', when='+mpi')
+    depends_on('hdf5@1.8.9:+hl')
 
     # Starting version 4.4.0, it became possible to disable parallel I/O even
     # if HDF5 supports it. For previous versions of the library we need
-    # HDF5 without mpi support to disable parallel I/O.
-    # The following doesn't work if hdf5+mpi by default and netcdf-c~mpi is
-    # specified in packages.yaml
-    # depends_on('hdf5~mpi', when='@:4.3~mpi')
-    # Thus, we have to introduce a conflict
-    conflicts('~mpi', when='@:4.3^hdf5+mpi',
-              msg='netcdf-c@:4.3~mpi requires hdf5~mpi')
+    # HDF5 without mpi support to disable parallel I/O:
+    depends_on('hdf5~mpi', when='@:4.3~mpi')
 
     # We need HDF5 with mpi support to enable parallel I/O.
-    # The following doesn't work if hdf5~mpi by default and netcdf-c+mpi is
-    # specified in packages.yaml
-    # depends_on('hdf5+mpi', when='+mpi')
-    # Thus, we have to introduce a conflict
-    conflicts('+mpi', when='^hdf5~mpi',
-              msg='netcdf-c+mpi requires hdf5+mpi')
+    depends_on('hdf5+mpi', when='+mpi')
 
     # NetCDF 4.4.0 and prior have compatibility issues with HDF5 1.10 and later
     # https://github.com/Unidata/netcdf-c/issues/250

@@ -260,9 +260,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
-    # Future ompi releases may support it, needs to be verified.
-    # See #7483 for context.
-    depends_on('hwloc@:1.999')
+    depends_on('hwloc@:1.999', when='@:3.999.999')
 
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('java', when='+java')
@@ -368,6 +366,14 @@ class Openmpi(AutotoolsPackage):
         env.set('OMPI_CXX', spack_cxx)
         env.set('OMPI_FC', spack_fc)
         env.set('OMPI_F77', spack_f77)
+
+        # See https://www.open-mpi.org/faq/?category=building#installdirs
+        for suffix in ['PREFIX', 'EXEC_PREFIX', 'BINDIR', 'SBINDIR',
+                       'LIBEXECDIR', 'DATAROOTDIR', 'DATADIR', 'SYSCONFDIR',
+                       'SHAREDSTATEDIR', 'LOCALSTATEDIR', 'LIBDIR',
+                       'INCLUDEDIR', 'INFODIR', 'MANDIR', 'PKGDATADIR',
+                       'PKGLIBDIR', 'PKGINCLUDEDIR']:
+            env.unset('OPAL_%s' % suffix)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')

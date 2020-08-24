@@ -13,7 +13,7 @@ class Hpx(CMakePackage, CudaPackage):
 
     homepage = "http://stellar.cct.lsu.edu/tag/hpx/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
-    maintainers = ['msimberg', 'albestro']
+    maintainers = ['msimberg', 'albestro', 'teonnik']
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('stable', git='https://github.com/STEllAR-GROUP/hpx.git', tag='stable')
@@ -59,6 +59,8 @@ class Hpx(CMakePackage, CudaPackage):
 
     variant('tools', default=False, description='Build HPX tools')
     variant('examples', default=False, description='Build examples')
+    variant('async_mpi', default=False, description='Enable MPI Futures.')
+    variant('async_cuda', default=False, description='Enable CUDA Futures.')
 
     depends_on('hwloc')
     depends_on('python', type=('build', 'test', 'run'))
@@ -91,7 +93,6 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('boost cxxstd=11', when='cxxstd=11')
     depends_on('boost cxxstd=14', when='cxxstd=14')
     depends_on('boost cxxstd=17', when='cxxstd=17')
-    depends_on('boost cxxstd=17', when='@stable')
 
     # Malloc
     depends_on('gperftools', when='malloc=tcmalloc')
@@ -100,6 +101,10 @@ class Hpx(CMakePackage, CudaPackage):
 
     # MPI
     depends_on('mpi', when='networking=mpi')
+    depends_on('mpi', when='+async_mpi')
+
+    # CUDA
+    depends_on('cuda', when='+async_cuda')
 
     # Instrumentation
     depends_on('otf2', when='instrumentation=apex')
@@ -130,6 +135,8 @@ class Hpx(CMakePackage, CudaPackage):
             self.define_from_variant('HPX_WITH_CUDA', 'cuda'),
             self.define_from_variant('HPX_WITH_TOOLS', 'tools'),
             self.define_from_variant('HPX_WITH_EXAMPLES', 'examples'),
+            self.define_from_variant('HPX_WITH_ASYNC_MPI', 'async_mpi'),
+            self.define_from_variant('HPX_WITH_ASYNC_CUDA', 'async_cuda'),
             self.define('HPX_WITH_TESTS', self.run_tests),
 
             self.define('HPX_WITH_NETWORKING', 'networking=none' not in spec),
