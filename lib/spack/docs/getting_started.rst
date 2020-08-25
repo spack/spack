@@ -60,7 +60,7 @@ to your path and you're ready to go:
    # For tcsh or csh users (note you must set SPACK_ROOT)
    $ setenv SPACK_ROOT /path/to/spack
 
-   #For fish users
+   # For fish users
    $ set -x SPACK_ROOT /path/to/spack
 
 
