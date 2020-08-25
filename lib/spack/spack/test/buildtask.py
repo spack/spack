@@ -34,7 +34,7 @@ def test_build_task_basics(install_mockery):
     # Ensure key properties match expectations
     task = inst.BuildTask(spec.package, None, False, 0, 0, inst.STATUS_ADDED,
                           [])
-    assert task.is_explicit  # package was "explicitly" requested
+    assert task.explicit  # package was "explicitly" requested
     assert task.priority == len(task.uninstalled_deps)
     assert task.key == (task.priority, task.sequence)
 

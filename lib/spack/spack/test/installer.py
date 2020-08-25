@@ -101,7 +101,7 @@ def create_installer(spec_name, kwargs=None):
     spec = spack.spec.Spec(spec_name)
     spec.concretize()
     assert spec.concrete
-    return spec, inst.PackageInstaller([spec.package, kwargs])
+    return spec, inst.PackageInstaller([(spec.package, kwargs or {})])
 
 
 @pytest.mark.parametrize('sec,result', [
@@ -227,16 +227,6 @@ def test_try_install_from_binary_cache(install_mockery, mock_packages,
     assert 'add a spack mirror to allow download' in str(captured)
 
 
-def test_installer_init_errors(install_mockery):
-    """Test to ensure cover installer constructor errors."""
-    with pytest.raises(ValueError, match='must be a package'):
-        inst.PackageInstaller('abc')
-
-    pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(ValueError, match='Can only install concrete'):
-        inst.PackageInstaller(pkg)
-
-
 def test_installer_repr(install_mockery):
     spec, installer = create_installer('trivial-install-test-package')
 
@@ -268,6 +258,7 @@ def test_check_before_phase_error(install_mockery):
 
 def test_check_last_phase_error(install_mockery):
     pkg = spack.repo.get('trivial-install-test-package')
+    pkg.stop_before_phase = None
     pkg.last_phase = 'badphase'
     with pytest.raises(inst.BadInstallPhase) as exc_info:
         inst._check_last_phase(pkg)
@@ -326,13 +317,14 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
 def test_ensure_locked_have(install_mockery, tmpdir, capsys):
     """Test _ensure_locked when already have lock."""
     spec, installer = create_installer('trivial-install-test-package')
+    pkg_id = inst.package_id(spec.package)
 
     with tmpdir.as_cwd():
         # Test "downgrade" of a read lock (to a read lock)
         lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
         lock_type = 'read'
         tpl = (lock_type, lock)
-        installer.locks[installer.pkg_id] = tpl
+        installer.locks[pkg_id] = tpl
         assert installer._ensure_locked(lock_type, spec.package) == tpl
 
         # Test "upgrade" of a read lock without read count to a write
@@ -619,16 +611,16 @@ def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
     installer._prepare_for_install(task)
 
 
-def test_installer_init_queue(install_mockery):
-    """Test of installer queue functions."""
+def test_installer_init_requests(install_mockery):
+    """Test of installer initial requests."""
+    spec_name = 'dependent-install'
     with spack.config.override('config:install_missing_compilers', True):
-        spec, installer = create_installer('dependent-install')
-        installer._init_queue(spec.package, True, True)
+        spec, installer = create_installer(spec_name)
 
-        ids = list(installer.build_tasks)
-        assert len(ids) == 2
-        assert 'dependency-install' in ids
-        assert 'dependent-install' in ids
+        # There is only one explicit request in this case
+        assert len(installer.build_requests) == 1
+        request = installer.build_requests[0]
+        assert request.pkg_id == spec_name
 
 
 def test_install_task_use_cache(install_mockery, monkeypatch):
@@ -800,12 +792,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     # Make sure the package is identified as failed
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
 
-    # Skip the actual installation though it should never get there
-    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
-
-    msg = 'Installation of b failed'
-    with pytest.raises(inst.InstallError, match=msg):
-        installer.install()
+    installer.install()
 
     out = str(capsys.readouterr())
     assert 'Warning: b failed to install' in out
@@ -848,7 +835,7 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     """Test fail_fast install when an install failure results from an error."""
     err_msg = 'mock patch failure'
 
-    def _patch(installer, task, **kwargs):
+    def _patch(installer, **kwargs):
         raise RuntimeError(err_msg)
 
     spec, installer = create_installer('a', {'fail_fast': True})
@@ -859,7 +846,7 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     # to be skipped.
     monkeypatch.setattr(spack.package.PackageBase, 'do_patch', _patch)
 
-    with pytest.raises(inst.InstallError, matches=err_msg):
+    with pytest.raises(inst.InstallError, match=err_msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -879,9 +866,6 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     # Ensure don't continually requeue the task
     monkeypatch.setattr(inst.PackageInstaller, '_requeue_task', _requeued)
 
-    # Skip the actual installation though should never reach it
-    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
-
     installer.install()
     out = capfd.readouterr()[0]
     expected = ['write locked', 'read locked', 'requeued']
@@ -891,10 +875,7 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
 
 def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     """Cover basic install handling for installed package."""
-    def _install(installer, task, **kwargs):
-        tty.msg('{0} installing'.format(task.pkg.spec.name))
-
-    def _prep(installer, task, keep_prefix, keep_stage, restage):
+    def _prep(installer, task):
         installer.installed.add('b')
         tty.msg('{0} is installed' .format(task.pkg.spec.name))
 
@@ -904,9 +885,6 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
 
     def _requeued(installer, task):
         tty.msg('requeued {0}' .format(task.pkg.spec.name))
-
-    # Skip the actual installation though should never reach it
-    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _install)
 
     # Flag the package as installed
     monkeypatch.setattr(inst.PackageInstaller, '_prepare_for_install', _prep)
@@ -929,14 +907,11 @@ def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
     """Cover basic read lock handling for uninstalled package with requeue."""
     orig_fn = inst.PackageInstaller._ensure_locked
 
-    def _install(installer, task, **kwargs):
-        tty.msg('{0} installing'.format(task.pkg.spec.name))
-
     def _read(installer, lock_type, pkg):
         tty.msg('{0}->read locked {1}' .format(lock_type, pkg.spec.name))
         return orig_fn(installer, 'read', pkg)
 
-    def _prep(installer, task, keep_prefix, keep_stage, restage):
+    def _prep(installer, task):
         tty.msg('preparing {0}' .format(task.pkg.spec.name))
         assert task.pkg.spec.name not in installer.installed
 
@@ -945,9 +920,6 @@ def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
 
     # Force a read lock
     monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked', _read)
-
-    # Skip the actual installation though should never reach it
-    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _install)
 
     # Flag the package as installed
     monkeypatch.setattr(inst.PackageInstaller, '_prepare_for_install', _prep)
@@ -970,11 +942,11 @@ def test_install_dir_exists(install_mockery, monkeypatch, capfd):
     """Cover capture of install directory exists error."""
     err = 'Mock directory exists error'
 
-    def _install(installer):
+    def _install_task(installer, task):
         raise dl.InstallDirectoryAlreadyExistsError(err)
 
     # Skip the actual installation though should never reach it
-    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _install)
+    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _install_task)
 
     spec, installer = create_installer('b')
 
@@ -986,8 +958,8 @@ def test_install_dir_exists(install_mockery, monkeypatch, capfd):
 
 def test_install_skip_patch(install_mockery, mock_fetch):
     """Test the path skip_patch install path."""
-    spec, installer = create_installer('b')
+    spec, installer = create_installer('b', {'fake': False, 'skip_patch': True})
 
-    installer.install(fake=False, skip_patch=True)
+    installer.install()
 
     assert 'b' in installer.installed

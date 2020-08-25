@@ -1585,7 +1585,9 @@ class BuildTask(object):
 
         Args:
             pkg (Package): the package to be built and installed
-            request (BuildRequest): the associated install request
+            request (BuildRequest or None): the associated install request where
+                ``None`` can be used to indicate the package was explicitly
+                requested by the user
             compiler (bool): whether task is for a bootstrap compiler
             start (int): the initial start time for the package, in seconds
             attempts (int): the number of attempts to install the package
@@ -1631,12 +1633,12 @@ class BuildTask(object):
         self.dependents = set(package_id(d.package) for d
                               in self.pkg.spec.dependents())
 
-        request_pkg_id = package_id(self.request.pkg)
-        if self.pkg != self.request.pkg and \
-                request_pkg_id not in self.dependents:
-            tty.warn('{0} does not appear in the dependents of {1} so adding'
-                     .format(request_pkg_id, self.pkg_id))
-            self.dependents.add(request_pkg_id)
+        if request and self.pkg != self.request.pkg:
+            request_pkg_id = package_id(self.request.pkg)
+            if request_pkg_id not in self.dependents:
+                tty.warn('{0} is not in the dependents of {1} so adding'
+                         .format(request_pkg_id, self.pkg_id))
+                self.dependents.add(request_pkg_id)
 
         # Set of dependencies
         #
@@ -1702,7 +1704,7 @@ class BuildTask(object):
     @property
     def explicit(self):
         """The package was explicitly requested by the user."""
-        return self.pkg == self.request.pkg
+        return not self.request or self.pkg == self.request.pkg
 
     @property
     def key(self):
@@ -1726,7 +1728,6 @@ class BuildRequest(object):
             pkg (Package): the package to be built and installed
             install_args (dict): the install arguments associated with ``pkg``
         """
-
         # Ensure dealing with a package that has a concrete spec
         if not isinstance(pkg, spack.package.PackageBase):
             raise ValueError("{0} must be a package".format(str(pkg)))
@@ -1779,7 +1780,7 @@ class BuildRequest(object):
     def __str__(self):
         """Returns a printable version of the build request."""
         return 'package={0}, install_args={1}' \
-            .format(self.pkg.name, self.install_args),
+            .format(self.pkg.name, self.install_args)
 
     @property
     def spec(self):

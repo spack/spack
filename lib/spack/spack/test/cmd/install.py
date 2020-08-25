@@ -321,15 +321,19 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
     with specfile.open('w') as f:
         spec.to_yaml(f)
 
+    err_msg = 'does not contain a concrete spec' if error_code else ''
+
     # Relative path to specfile (regression for #6906)
     with fs.working_dir(specfile.dirname):
         # A non-concrete spec will fail to be installed
-        install('-f', specfile.basename, fail_on_error=False)
+        out = install('-f', specfile.basename, fail_on_error=False)
     assert install.returncode == error_code
+    assert err_msg in out
 
     # Absolute path to specfile (regression for #6983)
-    install('-f', str(specfile), fail_on_error=False)
+    out = install('-f', str(specfile), fail_on_error=False)
     assert install.returncode == error_code
+    assert err_msg in out
 
 
 @pytest.mark.disable_clean_stage_check
@@ -615,12 +619,14 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
         assert 'foo.c:89: warning: some weird warning!' in msg
 
 
-def test_cache_only_fails(tmpdir, mock_fetch, install_mockery):
+def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
     # libelf from cache fails to install, which automatically removes the
-    # the libdwarf build task and flags the package as failed to install.
-    err_msg = 'Installation of libdwarf failed'
-    with pytest.raises(spack.installer.InstallError, match=err_msg):
-        install('--cache-only', 'libdwarf')
+    # the libdwarf build task
+    with capfd.disabled():
+        out = install('--cache-only', 'libdwarf')
+
+    assert 'Failed to install libelf' in out
+    assert 'Skipping build of libdwarf' in out
 
     # Check that failure prefix locks are still cached
     failure_lock_prefixes = ','.join(spack.store.db._prefix_failures.keys())
