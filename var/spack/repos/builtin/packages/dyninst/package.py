@@ -61,6 +61,9 @@ class Dyninst(CMakePackage):
     patch('v9.3.2-auto.patch', when='@9.3.2 %gcc@:4.7.99')
     patch('tribool.patch', when='@9.3.0:10.0.0 ^boost@1.69:')
 
+    # No Mac support (including apple-clang)
+    conflicts('platform=darwin', msg='macOS is not supported')
+
     # We currently only build with gcc
     conflicts('%clang')
     conflicts('%arm')
