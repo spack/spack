@@ -64,6 +64,9 @@ class TestSuite(object):
                 msg = "A package object cannot run in two test suites at once"
                 assert not spec.package.test_suite, msg
                 spec.package.test_suite = self
+                self.current_base_spec = spec
+                self.current_test_spec = spec
+
                 spec.package.do_test(
                     name=self.name,
                     remove_directory=remove_directory,

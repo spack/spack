@@ -1656,7 +1656,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Clear test failures
         self.test_failures = []
         self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
-        self.test_suite.current_base_spec = self.spec
 
         def test_process():
             with tty.log.log_output(self.test_log_file) as logger:
