@@ -627,6 +627,10 @@ class PackageInstaller(object):
         # Locks on specs being built, keyed on the package's unique id
         self.locks = {}
 
+        # Cache fail_fast option to ensure if one build request asks to fail
+        # fast then that option applies to all build requests.
+        self.fail_fast = False
+
     def __repr__(self):
         """Returns a formal representation of the package installer."""
         rep = '{0}('.format(self.__class__.__name__)
@@ -995,6 +999,10 @@ class PackageInstaller(object):
 
             # Now add the package itself, if appropriate
             self._push_task(request.pkg, request, False, 0, 0, STATUS_ADDED)
+
+        # Ensure if one request is to fail fast then all requests will.
+        fail_fast = request.install_args.get('fail_fast')
+        self.fail_fast = self.fail_fast or fail_fast
 
     def _install_task(self, task):
         """
@@ -1391,14 +1399,17 @@ class PackageInstaller(object):
         for request in self.build_requests:
             self._add_tasks(request)
 
-        # Proceed with the installation
+        single_explicit_spec = len(self.build_requests) == 1
+        failed_explicits = []
+        exists_errors = []
+
+        # Proceed with the installation request(s)
         while self.build_pq:
             task = self._pop_task()
             if task is None:
                 continue
 
             install_args = task.request.install_args
-            fail_fast = install_args.get('fail_fast')
             keep_prefix = install_args.get('keep_prefix')
 
             pkg, pkg_id, spec = task.pkg, task.pkg_id, task.pkg.spec
@@ -1437,7 +1448,7 @@ class PackageInstaller(object):
                 tty.warn('{0} failed to install'.format(pkg_id))
                 self._update_failed(task)
 
-                if fail_fast:
+                if self.fail_fast:
                     raise InstallError(fail_fast_err)
 
                 continue
@@ -1515,40 +1526,54 @@ class PackageInstaller(object):
                 keep_prefix = keep_prefix or \
                     (stop_before_phase is None and last_phase is None)
 
-            except spack.directory_layout.InstallDirectoryAlreadyExistsError:
-                tty.debug("Keeping existing install prefix in place.")
+            except spack.directory_layout.InstallDirectoryAlreadyExistsError \
+                    as err:
+                tty.debug('Keeping existing install prefix for {0} in place.'
+                          .format(pkg.name))
                 self._update_installed(task)
-                raise
+
+                # Only terminate at this point if a single build request was
+                # made.
+                if task.explicit and single_explicit_spec:
+                    raise
+
+                if task.explicit:
+                    exists_errors.append((pkg_id, str(err)))
 
             except KeyboardInterrupt as exc:
-                # The build has been terminated with a Ctrl-C so terminate.
+                # The build has been terminated with a Ctrl-C so terminate
+                # regardless of the number of remaining specs.
                 err = 'Failed to install {0} due to {1}: {2}'
                 tty.error(err.format(pkg.name, exc.__class__.__name__,
                           str(exc)))
                 raise
 
             except (Exception, SystemExit) as exc:
+                self._update_failed(task, True, exc)
+
                 # Best effort installs suppress the exception and mark the
-                # package as a failure UNLESS this is the explicit package.
+                # package as a failure.
                 if (not isinstance(exc, spack.error.SpackError) or
                     not exc.printed):
                     # SpackErrors can be printed by the build process or at
                     # lower levels -- skip printing if already printed.
                     # TODO: sort out this and SpackError.print_context()
-                    err = 'Failed to install {0} due to {1}: {2}'
-                    tty.error(
-                        err.format(pkg.name, exc.__class__.__name__, str(exc)))
-
-                self._update_failed(task, True, exc)
-
-                if fail_fast:
-                    # The user requested the installation to terminate on
-                    # failure.
+                    tty.error('Failed to install {0} due to {1}: {2}'
+                              .format(pkg.name, exc.__class__.__name__,
+                                      str(exc)))
+                # Terminate if requested to do so on the first failure.
+                if self.fail_fast:
                     raise InstallError('{0}: {1}'
                                        .format(fail_fast_err, str(exc)))
 
-                if task.explicit:
+                # Terminate at this point if the single explicit spec has
+                # failed to install.
+                if single_explicit_spec and task.explicit:
                     raise
+
+                # Track explicit spec id and error to summarize when done
+                if task.explicit:
+                    failed_explicits.append((pkg_id, str(exc)))
 
             finally:
                 # Remove the install prefix if anything went wrong during
@@ -1565,14 +1590,19 @@ class PackageInstaller(object):
             # include downgrading the write to a read lock
             self._cleanup_task(pkg)
 
-            # Ensure we properly report if the original/explicit pkg is failed
-            if task.explicit and task.pkg_id in self.failed:
-                msg = ('Installation of {0} failed.  Review log for details'
-                       .format(task.pkg_id))
-                raise InstallError(msg)
-
         # Cleanup, which includes releasing all of the read locks
         self._cleanup_all_tasks()
+
+        # Ensure we properly report if one or more explicit specs failed
+        if exists_errors or failed_explicits:
+            for pkg_id, err in exists_errors:
+                tty.error('{0}: {1}'.format(pkg_id, err))
+
+            for pkg_id, err in failed_explicits:
+                tty.error('{0}: {1}'.format(pkg_id, err))
+
+            raise InstallError('Installation request failed.  Refer to '
+                               'recent errors for specific packages.')
 
 
 class BuildTask(object):
