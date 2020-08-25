@@ -77,28 +77,27 @@ class Libxml2(AutotoolsPackage):
         tty.msg('test: Performing simple import test')
         self.import_module_test()
 
+        data_dir = self.test_suite.current_test_data_dir
+
         # Now run defined tests based on expected executables
-        dtd_path = './data/info.dtd'
-        test_fn = 'test.xml'
+        dtd_path = data_dir.join('info.dtd')
+        test_filename = 'test.xml'
         exec_checks = {
             'xml2-config': [
-                (['--version'], [str(self.spec.version)], None)],
+                ('--version', [str(self.spec.version)], 0)],
             'xmllint': [
-                (['--version'],
-                 ['using libxml', str(self.spec.version).replace('.', '0')],
-                 None),
-                (['--auto', '-o', test_fn], [], None),
-                (['--postvalid', test_fn],
+                (['--auto', '-o', test_filename], [], 0),
+                (['--postvalid', test_filename],
                  ['validity error', 'no DTD found', 'does not validate'], 3),
-                (['--dtdvalid', dtd_path, test_fn],
+                (['--dtdvalid', dtd_path, test_filename],
                  ['validity error', 'does not follow the DTD'], 3),
-                (['--dtdvalid', dtd_path, './data/info.xml'], [], None)],
+                (['--dtdvalid', dtd_path, data_dir.join('info.xml')], [], 0)],
             'xmlcatalog': [
-                (['--create'], ['<catalog xmlns', 'catalog"/>'], None)],
+                ('--create', ['<catalog xmlns', 'catalog"/>'], 0)],
         }
         for exe in exec_checks:
             for options, expected, status in exec_checks[exe]:
                 self.run_test(exe, options, expected, status)
 
         # Perform some cleanup
-        fs.force_remove(test_fn)
+        fs.force_remove(test_filename)

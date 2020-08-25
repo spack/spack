@@ -96,9 +96,9 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         assert version_regex.search(output)
 
         tty.msg('test: Ensuring m4 runs')
-        currdir = os.getcwd()
-        hello_file = os.path.join(currdir, 'data', 'hello.m4')
+        data_dir = self.test_suite.current_test_data_dir
+        hello_file = data_dir.join('hello.m4')
         output = m4(hello_file, output=str.split, error=str.split)
-        expected_file = os.path.join(currdir, 'data', 'hello.out')
+        expected_file = data_dir.join('hello.out')
         with open(expected_file) as fd:
             assert output == fd.read()

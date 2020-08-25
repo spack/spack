@@ -38,7 +38,8 @@ class TestSuite(object):
         # copy so that different test suites have different package objects
         # even if they contain the same spec
         self.specs = [spec.copy() for spec in specs]
-        self.current_test_spec = None
+        self.current_test_spec = None  # spec currently tested, can be virtual
+        self.current_base_spec = None  # spec currently running do_test
 
     @property
     def name(self):
@@ -83,6 +84,7 @@ class TestSuite(object):
             finally:
                 spec.package.test_suite = None
                 self.current_test_spec = None
+                self.current_base_spec = None
 
     def ensure_stage(self):
         if not os.path.exists(self.stage):
@@ -120,9 +122,10 @@ class TestSuite(object):
 
     @property
     def current_test_data_dir(self):
-        assert self.current_test_spec
-        spec = self.current_test_spec
-        return self.test_dir_for_spec(spec).data.join(spec.name)
+        assert self.current_test_spec and self.current_base_spec
+        test_spec = self.current_test_spec
+        base_spec = self.current_base_spec
+        return self.test_dir_for_spec(base_spec).data.join(test_spec.name)
 
     def write_test_result(self, spec, result):
         msg = "{0} {1}".format(self.test_pkg_id(spec), result)
