@@ -774,4 +774,3 @@ class Trilinos(CMakePackage):
         if '+exodus' in self.spec:
             env.prepend_path('PYTHONPATH',
                              self.prefix.lib)
-
