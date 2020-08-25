@@ -211,6 +211,7 @@ def is_spec_buildable(spec):
     spec_buildable = allpkgs.get(spec.name, {}).get("buildable", so_far)
     return spec_buildable
 
+
 def get_package_dir_permissions(spec):
     """Return the permissions configured for the spec.
 
