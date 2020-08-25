@@ -1585,9 +1585,9 @@ class BuildTask(object):
 
         Args:
             pkg (Package): the package to be built and installed
-            request (BuildRequest or None): the associated install request where
-                ``None`` can be used to indicate the package was explicitly
-                requested by the user
+            request (BuildRequest or None): the associated install request
+                 where ``None`` can be used to indicate the package was
+                 explicitly requested by the user
             compiler (bool): whether task is for a bootstrap compiler
             start (int): the initial start time for the package, in seconds
             attempts (int): the number of attempts to install the package
