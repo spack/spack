@@ -15,7 +15,7 @@ class PyTorchSparse(PythonPackage):
 
     version('0.6.7', sha256='0d038a1502548692972a085cd0496460b5d2050bb7328427add990f081d6c44d')
 
-    variant('cuda', default=False)
+    variant('cuda', default=False, description="Enable CUDA support")
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
