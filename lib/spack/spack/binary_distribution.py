@@ -957,10 +957,11 @@ def get_specs():
     return _cached_specs
 
 
-def get_keys(install=False, trust=False, force=False):
+def get_keys(install=False, trust=False, force=False, mirrors=None):
     """Get pgp public keys available on mirror with suffix .pub
     """
-    mirror_collection = spack.mirror.MirrorCollection()
+    mirror_collection = (mirrors or spack.mirror.MirrorCollection())
+
     if not mirror_collection:
         tty.die("Please add a spack mirror to allow " +
                 "download of build caches.")
