@@ -5,7 +5,7 @@
 import os
 import pytest
 import spack.spec
-from spack.main import SpackCommand, SpackCommandError
+from spack.main import SpackCommand
 
 dev_build = SpackCommand('dev-build')
 
@@ -86,13 +86,15 @@ def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):
             dev_build('-u', 'edit', '-b', 'edit',
                       'dev-build-test-install@0.0.0')
 
-        with pytest.raises(SpackCommandError):
-            dev_build('-u', 'phase_that_does_not_exist',
-                      'dev-build-test-install@0.0.0')
+        bad_phase = 'phase_that_does_not_exist'
+        not_allowed = 'is not an allowed phase'
+        out = dev_build('-u', bad_phase, 'dev-build-test-install@0.0.0')
+        assert bad_phase in out
+        assert not_allowed in out
 
-        with pytest.raises(SpackCommandError):
-            dev_build('-b', 'phase_that_does_not_exist',
-                      'dev-build-test-install@0.0.0')
+        out = dev_build('-b', bad_phase, 'dev-build-test-install@0.0.0')
+        assert bad_phase in out
+        assert not_allowed in out
 
 
 def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
