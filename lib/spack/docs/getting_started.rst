@@ -64,8 +64,11 @@ to your path and you're ready to go:
    $ set -x SPACK_ROOT /path/to/spack
 
 
+.. code-block:: console
+
    $ export PATH=$SPACK_ROOT/bin:$PATH
    $ spack install libelf
+
 
 For a richer experience, use Spack's shell support:
 
