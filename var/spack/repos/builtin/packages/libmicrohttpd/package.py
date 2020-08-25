@@ -46,7 +46,3 @@ class Libmicrohttpd(AutotoolsPackage):
             options.append('--with-libgcrypt-prefix={0}'.format(prefix))
 
         return options
-
-    def install(self, spec, prefix):
-        make()
-        make('install')
