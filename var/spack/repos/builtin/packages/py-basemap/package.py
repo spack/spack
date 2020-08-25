@@ -14,7 +14,6 @@ class PyBasemap(PythonPackage):
     url = 'https://github.com/matplotlib/basemap/archive/v1.2.0rel.tar.gz'
     homepage = "http://matplotlib.org/basemap/"
 
-
     version('1.2.1', sha256='3fb30424f18cd4ffd505e30fd9c810ae81b999bb92f950c76553e1abc081faa7')
     version('1.2.0', sha256='bd5bf305918a2eb675939873b735238f9e3dfe6b5c290e37c41e5b082ff3639a')
     version('1.0.7', sha256='e07ec2e0d63b24c9aed25a09fe8aff2598f82a85da8db74190bac81cbf104531')
