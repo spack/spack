@@ -146,7 +146,7 @@ you want to know about.  For example, to see just the tests in
 .. command-output:: spack test --list-long lib/spack/spack/test/architecture.py
 
 You can also combine any of these options with a ``pytest`` keyword
-search.  See the `pytest docs
+search.  See the `pytest usage docs
 <https://docs.pytest.org/en/stable/usage.html#specifying-tests-selecting-tests>`_:
 for more details on test selection syntax. For example, to see the names of all tests that have "spec"
 or "concretize" somewhere in their names:
