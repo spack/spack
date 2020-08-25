@@ -32,4 +32,6 @@ class Influxdb(Package):
         env.prepend_path('PATH', self.prefix.usr.bin)
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree('usr', prefix)
+        install_tree('etc', prefix.etc)
+        install_tree('var', prefix.var)
