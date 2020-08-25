@@ -25,6 +25,9 @@ class PkgConfig(AutotoolsPackage):
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch', when='@:0.29.1')
 
+    # https://github.com/spack/spack/issues/3525
+    conflicts('%pgi')
+
     parallel = False
 
     executables = ['^pkg-config$']

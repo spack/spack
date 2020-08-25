@@ -81,8 +81,7 @@ class Petsc(Package):
     # Mumps is disabled by default, because it depends on Scalapack
     # which is not portable to all HPC systems
     variant('mumps',   default=False,
-            description='Activates support for MUMPS (only parallel'
-            ' and 32bit indices)')
+            description='Activates support for MUMPS (only parallel)')
     variant('superlu-dist', default=True,
             description='Activates support for SuperluDist (only parallel)')
     variant('trilinos', default=False,
@@ -144,6 +143,9 @@ class Petsc(Package):
     conflicts('+p4est', when='~mpi', msg=mpi_msg)
     conflicts('+superlu-dist', when='~mpi', msg=mpi_msg)
     conflicts('+trilinos', when='~mpi', msg=mpi_msg)
+
+    # older versions of petsc did not support mumps when +int64
+    conflicts('+mumps', when='@:3.12.99+int64')
 
     filter_compiler_wrappers(
         'petscvariables', relative_root='lib/petsc/conf'
@@ -225,8 +227,8 @@ class Petsc(Package):
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
     depends_on('superlu-dist@develop+int64', when='@develop+superlu-dist+mpi+int64')
-    depends_on('mumps+mpi', when='+mumps+mpi~int64')
-    depends_on('scalapack', when='+mumps+mpi~int64')
+    depends_on('mumps+mpi~int64', when='+mumps')
+    depends_on('scalapack', when='+mumps')
     depends_on('trilinos@12.6.2:+mpi', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0+mpi', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop+mpi', when='@xdevelop+trilinos+mpi')
@@ -328,9 +330,9 @@ class Petsc(Package):
         else:
             options.append('--with-clanguage=C')
 
-        # PETSc depends on scalapack when '+mumps+mpi~int64' (see depends())
+        # PETSc depends on scalapack when '+mumps' (see depends())
         # help PETSc pick up Scalapack from MKL
-        if spec.satisfies('+mumps+mpi~int64'):
+        if spec.satisfies('+mumps'):
             scalapack = spec['scalapack'].libs
             options.extend([
                 '--with-scalapack-lib=%s' % scalapack.joined(),
