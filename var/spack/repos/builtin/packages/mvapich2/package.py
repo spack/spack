@@ -170,7 +170,7 @@ class Mvapich2(AutotoolsPackage):
 
             match = re.search(r'--enable-threads=(\S+)', output)
             if match:
-                variants += " +threads=" + match.group(1)
+                variants += " threads=" + match.group(1)
 
             match = re.search(r'--with-ch3-rank-bits=(\S+)', output)
             if match:
@@ -190,8 +190,8 @@ class Mvapich2(AutotoolsPackage):
 
             fabrics = {
                 'sock': 'ch3:sock',
-                'nemesistcpib': 'ch3:nemesis:tcp:ib',
-                'nemesisibtcp': 'ch3:nemesis:ib:tcp',
+                'nemesistcpib': 'ch3:nemesis:tcp,ib',
+                'nemesisibtcp': 'ch3:nemesis:ib,tcp',
                 'nemesisib': 'ch3:nemesis:ib',
                 'nemesis': 'ch3:nemesis',
                 'mrail': 'ch3:mrail',
