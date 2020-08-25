@@ -5,10 +5,12 @@
 import base64
 import hashlib
 import os
+import shutil
 import sys
 
 import llnl.util.filesystem as fs
 
+import spack.error
 import spack.util.prefix
 import spack.util.spack_json as sjson
 
@@ -63,15 +65,27 @@ class TestSuite(object):
             try:
                 msg = "A package object cannot run in two test suites at once"
                 assert not spec.package.test_suite, msg
+
+                # Set up the test suite to know which test is running
                 spec.package.test_suite = self
                 self.current_base_spec = spec
                 self.current_test_spec = spec
 
+                # setup per-test directory in the stage dir
+                test_dir = self.test_dir_for_spec(spec)
+                if os.path.exists(test_dir):
+                    shutil.rmtree(test_dir)
+                fs.mkdirp(test_dir)
+
+                # run the package tests
                 spec.package.do_test(
                     name=self.name,
-                    remove_directory=remove_directory,
                     dirty=dirty
                 )
+
+                # Clean up on success and log passed test
+                if remove_directory:
+                    shutil.rmtree(test_dir)
                 self.write_test_result(spec, 'PASSED')
             except BaseException as exc:
                 if isinstance(exc, SyntaxError):
@@ -130,6 +144,12 @@ class TestSuite(object):
         base_spec = self.current_base_spec
         return self.test_dir_for_spec(base_spec).data.join(test_spec.name)
 
+    def add_failure(self, exc, msg):
+        current_hash = self.current_base_spec.dag_hash()
+        current_failures = self.failures.get(current_hash, [])
+        current_failures.append((exc, msg))
+        self.failures[current_hash] = current_failures
+
     def write_test_result(self, spec, result):
         msg = "{0} {1}".format(self.test_pkg_id(spec), result)
         _add_msg_to_file(self.results_file, msg)
@@ -168,3 +188,15 @@ def _add_msg_to_file(filename, msg):
     """
     with open(filename, 'a+') as f:
         f.write('{0}\n'.format(msg))
+
+
+class TestFailure(spack.error.SpackError):
+    """Raised when package tests have failed for an installation."""
+    def __init__(self, failures):
+        # Failures are all exceptions
+        msg = "%d tests failed.\n" % len(failures)
+        for failure, message in failures:
+            msg += '\n\n%s\n' % str(failure)
+            msg += '\n%s\n' % message
+
+        super(TestFailure, self).__init__(msg)

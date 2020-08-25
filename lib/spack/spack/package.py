@@ -53,6 +53,7 @@ from ordereddict_backport import OrderedDict
 from spack.filesystem_view import YamlFilesystemView
 from spack.installer import \
     install_args_docstring, PackageInstaller, InstallError
+from spack.install_test import TestFailure
 from spack.util.executable import which, ProcessError
 from spack.util.prefix import Prefix
 from spack.stage import stage_prefix, Stage, ResourceStage, StageComposite
@@ -1667,12 +1668,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 old_debug = tty.is_debug()
                 tty.set_debug(True)
 
-                # setup test directory
-                testdir = self.test_suite.test_dir_for_spec(self.spec)
-                if os.path.exists(testdir):
-                    shutil.rmtree(testdir)
-                fsys.mkdirp(testdir)
-
                 # run test methods from the package and all virtuals it provides
                 # virtuals have to be deduped by name
                 v_names = list(set([vspec.name
@@ -1689,7 +1684,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                                             for v_name in sorted(v_names)]
 
                 try:
-                    with fsys.working_dir(testdir):
+                    with fsys.working_dir(
+                            self.test_suite.test_dir_for_spec(self.spec)):
                         for spec in test_specs:
                             self.test_suite.current_test_spec = spec
                             # Fail gracefully if a virtual has no package/tests
@@ -2670,15 +2666,3 @@ class DependencyConflictError(spack.error.SpackError):
         super(DependencyConflictError, self).__init__(
             "%s conflicts with another file in the flattened directory." % (
                 conflict))
-
-
-class TestFailure(spack.error.SpackError):
-    """Raised when package tests have failed for an installation."""
-    def __init__(self, failures):
-        # Failures are all exceptions
-        msg = "%d tests failed.\n" % len(failures)
-        for failure, message in failures:
-            msg += '\n\n%s\n' % str(failure)
-            msg += '\n%s\n' % message
-
-        super(TestFailure, self).__init__(msg)
