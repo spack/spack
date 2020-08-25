@@ -61,7 +61,7 @@ to your path and you're ready to go:
    $ setenv SPACK_ROOT /path/to/spack
 
    #For fish users
-   $ set SPACK_ROOT /path/to/spack
+   $ set -x SPACK_ROOT /path/to/spack
 
 
    $ export PATH=$SPACK_ROOT/bin:$PATH
