@@ -10,10 +10,10 @@ from spack import *
 from spack import architecture
 
 
-def _get_output(filename):
+def _read_file(filepath):
     """Read and clean up the expected output from the specified file."""
     output = ''
-    with open('./data/{0}'.format(filename), 'r') as fd:
+    with open(filepath, 'r') as fd:
         output = fd.read()
     return [re.escape(ln) for ln in output.split('\n')]
 
@@ -143,10 +143,11 @@ class Sqlite(AutotoolsPackage):
 
     def _test_example(self):
         """Ensure a sequence of commands on example db are successful."""
+        data_dir = self.test_suite.current_test_data_dir
 
         # Ensure the database only contains one table
         reason = 'test to ensure only table is "packages"'
-        opts = ['./data/packages.db', '.tables']
+        opts = [data_dir.join('packages.db'), '.tables']
         self.run_test('sqlite3', opts, 'packages', installed=True,
                       purpose=reason, skip_missing=False)
 
@@ -154,8 +155,8 @@ class Sqlite(AutotoolsPackage):
         # characters are replaced with spaces in the expected and actual
         # output to avoid pattern errors.
         reason = 'test dump output'
-        opts = ['./data/packages.db', '.dump']
-        expected = _get_output('dump.out')
+        opts = [data_dir.join('packages.db'), '.dump']
+        expected = _read_file(data_dir.join('dump.out'))
         self.run_test('sqlite3', opts, expected, installed=True,
                       purpose=reason, skip_missing=False)
 

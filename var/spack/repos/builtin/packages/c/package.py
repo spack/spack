@@ -11,10 +11,10 @@ class C(Package):
     virtual = True
 
     def test(self):
-        test_source = os.path.join(self.test_dir, 'data', 'c')
+        test_source = self.test_suite.current_test_data_dir
 
         for test in os.listdir(test_source):
-            filepath = os.path.join(test_source, test)
+            filepath = test_source.join(test)
             exe_name = '%s.exe' % test
 
             cc_exe = os.environ['CC']

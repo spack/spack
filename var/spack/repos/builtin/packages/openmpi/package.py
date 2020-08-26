@@ -865,7 +865,8 @@ class Openmpi(AutotoolsPackage):
         for exe in checks:
             expected, status = checks[exe]
             reason = 'test {0} output'.format(exe)
-            self.run_test(exe, [], expected, status, installed=True,
+            self.run_test(self.spec.prefix.bin.join(exe),
+                          [], expected, status, installed=True,
                           purpose=reason, skip_missing=True, work_dir=work_dir)
 
     def test(self):

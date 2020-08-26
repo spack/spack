@@ -921,10 +921,6 @@ class Repo(object):
            This dumps the package file and any associated patch files.
            Raises UnknownPackageError if not found.
         """
-        # Some preliminary checks.
-        if spec.virtual:
-            raise UnknownPackageError(spec.name)
-
         if spec.namespace and spec.namespace != self.namespace:
             raise UnknownPackageError(
                 "Repository %s does not contain package %s."

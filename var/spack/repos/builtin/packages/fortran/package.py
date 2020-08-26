@@ -11,7 +11,7 @@ class Fortran(Package):
     virtual = True
 
     def test(self):
-        test_source = os.path.join(self.test_dir, 'data', 'fortran')
+        test_source = self.test_suite.current_test_data_dir
 
         for test in os.listdir(test_source):
             filepath = os.path.join(test_source, test)
