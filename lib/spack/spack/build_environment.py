@@ -48,7 +48,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 from llnl.util.lang import dedupe
-from llnl.util.tty.log import fd_wrapper
+from llnl.util.tty.log import multiprocess_fd
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
@@ -804,14 +804,14 @@ def modifications_from_dependencies(spec, context):
 
 
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
-                       input_fd_wrapper):
+                       input_multiprocess_fd):
     # We are in the child process. Python sets sys.stdin to
     # open(os.devnull) to prevent our process and its parent from
     # simultaneously reading from the original stdin. But, we assume
     # that the parent process is not going to read from it till we
     # are done with the child, so we undo Python's precaution.
-    if input_fd_wrapper is not None:
-        sys.stdin = os.fdopen(input_fd_wrapper._handle)
+    if input_multiprocess_fd is not None:
+        sys.stdin = os.fdopen(input_multiprocess_fd._handle)
 
     pkg = serialized_pkg.restore()
 
@@ -852,8 +852,8 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
 
     finally:
         child_pipe.close()
-        if input_fd_wrapper is not None:
-            input_fd_wrapper.close()
+        if input_multiprocess_fd is not None:
+            input_multiprocess_fd.close()
 
 
 class TransmitPackage(object):
@@ -910,7 +910,7 @@ def fork(pkg, function, kwargs):
     expected to handle (or re-raise) the ChildError.
     """
     parent_pipe, child_pipe = multiprocessing.Pipe()
-    input_fd_wrapper = None
+    input_multiprocess_fd = None
 
     serialized_pkg = TransmitPackage(pkg)
 
@@ -918,12 +918,12 @@ def fork(pkg, function, kwargs):
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
-            input_fd_wrapper = fd_wrapper(input_fd)
+            input_multiprocess_fd = multiprocess_fd(input_fd)
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
             args=(serialized_pkg, function, kwargs, child_pipe,
-                  input_fd_wrapper))
+                  input_multiprocess_fd))
         p.start()
 
     except InstallError as e:
@@ -932,8 +932,8 @@ def fork(pkg, function, kwargs):
 
     finally:
         # Close the input stream in the parent process
-        if input_fd_wrapper is not None:
-            input_fd_wrapper.close()
+        if input_multiprocess_fd is not None:
+            input_multiprocess_fd.close()
 
     child_result = parent_pipe.recv()
     p.join()

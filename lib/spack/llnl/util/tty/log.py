@@ -324,7 +324,7 @@ class SaveStdout(object):
             self._saved_stderr = sys.stderr
 
 
-class FdWrapper(object):
+class MultiProcessFd(object):
     """Provide the same API as ``multiprocessing.connection.Connection`` for
        Python versions before 3.8. This is intended to be used for file
        descriptors that must be transmitted between processes."""
@@ -335,11 +335,15 @@ class FdWrapper(object):
         os.close(self._handle)
 
 
-def fd_wrapper(fd):
+def multiprocess_fd(fd):
+    """Return an object which stores a file descriptor and can be passed as an
+    argument to a function run with ``multiprocessing.Process``, such that the
+    file descriptor is available in the subprocess.
+    """
     if sys.version_info >= (3, 8):
         return multiprocessing.connection.Connection(fd)
     else:
-        return FdWrapper(fd)
+        return MultiProcessFd(fd)
 
 
 class log_output(object):
@@ -471,7 +475,7 @@ class log_output(object):
         # OS-level pipe for redirecting output to logger
         read_fd, write_fd = os.pipe()
 
-        read_wrapper = fd_wrapper(read_fd)
+        read_wrapper = multiprocess_fd(read_fd)
 
         # Multiprocessing pipe for communication back from the daemon
         # Currently only used to save echo value between uses
@@ -481,7 +485,7 @@ class log_output(object):
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
             try:
-                input_wrapper = fd_wrapper(
+                input_wrapper = multiprocess_fd(
                     os.dup(sys.stdin.fileno())
                 )
             except BaseException:
