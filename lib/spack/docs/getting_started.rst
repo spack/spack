@@ -71,15 +71,16 @@ to your path and you're ready to go:
 
    $ spack install libelf
 
-
 For a richer experience, use Spack's shell support:
 
 .. code-block:: console
 
+   #Note you must set SPACK_ROOT
+
    # For bash/zsh users
    $ . $SPACK_ROOT/share/spack/setup-env.sh
 
-   # For tcsh or csh users (note you must set SPACK_ROOT)
+   # For tcsh/csh users
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
    # For fish users
