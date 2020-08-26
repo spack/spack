@@ -45,6 +45,7 @@ class Thrift(Package):
 
     # Variant dependencies
     extends('python', when='+python')
+    depends_on('py-six@1.7.2:', type=('build', 'run'), when='@0.10.0:+python')
 
     depends_on('zlib', when='+c')
     depends_on('libevent', when='+c')
