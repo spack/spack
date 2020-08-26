@@ -314,16 +314,6 @@ class FileWrapper(object):
             self.file.close()
 
 
-class SaveStdout(object):
-    def __init__(self):
-        if _file_descriptors_work(sys.stdout, sys.stderr):
-            self._saved_stdout = os.dup(sys.stdout.fileno())
-            self._saved_stderr = os.dup(sys.stderr.fileno())
-        else:
-            self._saved_stdout = sys.stdout
-            self._saved_stderr = sys.stderr
-
-
 class MultiProcessFd(object):
     """Provide the same API as ``multiprocessing.connection.Connection`` for
        Python versions before 3.8. This is intended to be used for file
@@ -511,13 +501,15 @@ class log_output(object):
         sys.stdout.flush()
         sys.stderr.flush()
 
-        self.saved_fds = SaveStdout()
-
         # Now do the actual output rediction.
         self.use_fds = _file_descriptors_work(sys.stdout, sys.stderr)
         if self.use_fds:
             # We try first to use OS-level file descriptors, as this
             # redirects output for subprocesses and system calls.
+
+            # Save old stdout and stderr file descriptors
+            self._saved_stdout = os.dup(sys.stdout.fileno())
+            self._saved_stderr = os.dup(sys.stderr.fileno())
 
             # redirect to the pipe we created above
             os.dup2(write_fd, sys.stdout.fileno())
@@ -529,6 +521,10 @@ class log_output(object):
             # output, but it's the best we can do, and the caller
             # shouldn't expect any better, since *they* have apparently
             # redirected I/O the Python way.
+
+            # Save old stdout and stderr file objects
+            self._saved_stdout = sys.stdout
+            self._saved_stderr = sys.stderr
 
             # create a file object for the pipe; redirect to it.
             pipe_fd_out = os.fdopen(write_fd, 'w')
@@ -559,14 +555,14 @@ class log_output(object):
         # restore previous output settings, either the low-level way or
         # the python way
         if self.use_fds:
-            os.dup2(self.saved_fds._saved_stdout, sys.stdout.fileno())
-            os.close(self.saved_fds._saved_stdout)
+            os.dup2(self._saved_stdout, sys.stdout.fileno())
+            os.close(self._saved_stdout)
 
-            os.dup2(self.saved_fds._saved_stderr, sys.stderr.fileno())
-            os.close(self.saved_fds._saved_stderr)
+            os.dup2(self._saved_stderr, sys.stderr.fileno())
+            os.close(self._saved_stderr)
         else:
-            sys.stdout = self.saved_fds._saved_stdout
-            sys.stderr = self.saved_fds._saved_stderr
+            sys.stdout = self._saved_stdout
+            sys.stderr = self._saved_stderr
 
         # print log contents in parent if needed.
         if self.write_log_in_parent:
