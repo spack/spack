@@ -16,7 +16,7 @@ class LibsonataReport(CMakePackage):
     homepage = "https://github.com/BlueBrain/libsonata"
     git = "https://github.com/BlueBrain/libsonata.git"
 
-    version('0.1a', commit='4490b29d245ad3', submodules=True, get_full_repo=True)
+    version('0.1', commit='b84e965848c9d8', submodules=True, get_full_repo=True)
     version('develop', branch='master', submodules=False, get_full_repo=True)
 
     variant('mpi', default=True, description="Enable MPI backend")
