@@ -9,7 +9,7 @@ from spack import *
 class Jpegoptim(AutotoolsPackage):
     """jpegoptim - utility to optimize/compress JPEG files"""
 
-    homepage = "www.iki.fi/tjko/projects.html"
+    homepage = "https://www.iki.fi/tjko/projects.html"
     url      = "https://github.com/tjko/jpegoptim/archive/RELEASE.1.4.6.tar.gz"
 
     version('1.4.6', sha256='c44dcfac0a113c3bec13d0fc60faf57a0f9a31f88473ccad33ecdf210b4c0c52')
