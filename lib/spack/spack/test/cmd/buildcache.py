@@ -79,8 +79,8 @@ def tests_buildcache_save_yaml_root_spec(
     buildcache('save-yaml', '--root-spec', pkg, '-s',
                'libelf', '-y', str(tmpdir))
     buildcache('save-yaml', '--root-spec-yaml',
-               os.path.join(str(tmpdir), 'build_cache',
-               tarball), '-s', pkg, '-y', str(tmpdir))
+               os.path.join(str(tmpdir), 'build_cache', tarball),
+               '-s', pkg, '-y', str(tmpdir))
 
     assert os.path.exists(
         os.path.join(str(tmpdir), 'libelf.yaml'))
