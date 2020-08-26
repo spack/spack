@@ -3,7 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.util.gpg as gpg
+import os
+
+import spack.util.gpg
 
 
 def test_parse_gpg_output_case_one():
@@ -17,7 +19,7 @@ fpr:::::::::YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY:
 uid:::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
 ssb::2048:1:AAAAAAAAAAAAAAAA:AAAAAAAAAA::::::::::
 """
-    keys = gpg.parse_secret_keys_output(output)
+    keys = spack.util.gpg.parse_secret_keys_output(output)
 
     assert len(keys) == 2
     assert keys[0] == 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -34,7 +36,7 @@ ssb:-:2048:1:AAAAAAAAA::::::esa:::+:::23:
 fpr:::::::::YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY:
 grp:::::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:
 """
-    keys = gpg.parse_secret_keys_output(output)
+    keys = spack.util.gpg.parse_secret_keys_output(output)
 
     assert len(keys) == 1
     assert keys[0] == 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -53,8 +55,27 @@ uid:::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
 ssb::2048:1:AAAAAAAAAAAAAAAA:AAAAAAAAAA::::::::::
 fpr:::::::::ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ:"""
 
-    keys = gpg.parse_secret_keys_output(output)
+    keys = spack.util.gpg.parse_secret_keys_output(output)
 
     assert len(keys) == 2
     assert keys[0] == 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW'
     assert keys[1] == 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+
+
+def test_really_long_gnupg_home_dir(tmpdir):
+    N = 1000
+
+    tdir = str(tmpdir)
+    while len(tdir) < N:
+        tdir = os.path.join(tdir, 'filler')
+
+    tdir = tdir[:N].rstrip(os.sep)
+    tdir += '0'*(N - len(tdir))
+
+    with spack.util.gpg.gnupg_home_override(tdir):
+        spack.util.gpg.create(name='Spack testing 1',
+                              email='test@spack.io',
+                              comment='Spack testing key',
+                              expires='0')
+
+        spack.util.gpg.list(True, True)

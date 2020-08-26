@@ -3,17 +3,67 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import contextlib
+import functools
 import os
 import re
 
 import spack.error
 import spack.paths
+import spack.util.executable
 import spack.version
-from spack.util.executable import which
 
-_gnupg_version_re = r"^gpg \(GnuPG\) (.*)$"
 
-GNUPGHOME = os.getenv('SPACK_GNUPGHOME', spack.paths.gpg_path)
+_gnupg_version_re = r"^gpg(conf)? \(GnuPG\) (.*)$"
+_gnupg_home_override = None
+_global_gpg_instance = None
+
+
+def get_gnupg_home(gnupg_home=None):
+    """Returns the directory that should be used as the GNUPGHOME environment
+    variable when calling gpg.
+
+    If a [gnupg_home] is passed directly (and not None), that value will be
+    used.
+
+    Otherwise, if there is an override set (and it is not None), then that
+    value will be used.
+
+    Otherwise, if the environment variable "SPACK_GNUPGHOME" is set, then that
+    value will be used.
+
+    Otherwise, the default gpg path for Spack will be used.
+
+    See also: gnupg_home_override()
+    """
+    return (gnupg_home or
+            _gnupg_home_override or
+            os.getenv('SPACK_GNUPGHOME') or
+            spack.paths.gpg_path)
+
+
+@contextlib.contextmanager
+def gnupg_home_override(new_gnupg_home):
+    global _gnupg_home_override
+    global _global_gpg_instance
+
+    old_gnupg_home_override = _gnupg_home_override
+    old_global_gpg_instance = _global_gpg_instance
+
+    _gnupg_home_override = new_gnupg_home
+    _global_gpg_instance = None
+
+    yield
+
+    _gnupg_home_override = old_gnupg_home_override
+    _global_gpg_instance = old_global_gpg_instance
+
+
+def get_global_gpg_instance():
+    global _global_gpg_instance
+    if _global_gpg_instance is None:
+        _global_gpg_instance = Gpg()
+    return _global_gpg_instance
 
 
 def parse_secret_keys_output(output):
@@ -46,43 +96,161 @@ def parse_public_keys_output(output):
     return keys
 
 
+class GpgConstants(object):
+    @functools.cached_property
+    def target_version(self):
+        return spack.version.Version('2')
+
+    @functools.cached_property
+    def gpgconf_string(self):
+        exe_str = spack.util.executable.which_string(
+            'gpgconf', 'gpg2conf', 'gpgconf2')
+
+        no_gpgconf_msg = (
+            'Spack requires gpgconf version >= 2\n'
+            '  To install a suitable version using Spack, run\n'
+            '    spack install gnupg@2:\n'
+            '  and load it by running\n'
+            '    spack load gnupg@2:')
+
+        if not exe_str:
+            raise SpackGPGError(no_gpgconf_msg)
+
+        exe = spack.util.executable.Executable(exe_str)
+        output = exe('--version', output=str)
+        match = re.search(_gnupg_version_re, output, re.M)
+
+        if not match:
+            raise SpackGPGError('Could not determine gpgconf version')
+
+        if spack.version.Version(match.group(2)) < self.target_version:
+            raise SpackGPGError(no_gpgconf_msg)
+
+        return exe_str
+
+    @functools.cached_property
+    def gpg_string(self):
+        exe_str = spack.util.executable.which_string('gpg2', 'gpg')
+
+        no_gpg_msg = (
+            'Spack requires gpg version >= 2\n'
+            '  To install a suitable version using Spack, run\n'
+            '    spack install gnupg@2:\n'
+            '  and load it by running\n'
+            '    spack load gnupg@2:')
+
+        if not exe_str:
+            raise SpackGPGError(no_gpg_msg)
+
+        exe = spack.util.executable.Executable(exe_str)
+        output = exe('--version', output=str)
+        match = re.search(_gnupg_version_re, output, re.M)
+
+        if not match:
+            raise SpackGPGError('Could not determine gpg version')
+
+        if spack.version.Version(match.group(2)) < self.target_version:
+            raise SpackGPGError(no_gpg_msg)
+
+        return exe_str
+
+    def clear(self):
+        for attr in ('gpgconf_string', 'gpg_string'):
+            try:
+                delattr(self, attr)
+            except AttributeError:
+                pass
+
+
+GpgConstants = GpgConstants()
+
+
+def ensure_gpg(reevaluate=False):
+    if reevaluate:
+        GpgConstants.clear()
+
+    GpgConstants.gpgconf_string
+    GpgConstants.gpg_string
+    return True
+
+
+def has_gpg(*args, **kwargs):
+    try:
+        return ensure_gpg(*args, **kwargs)
+    except SpackGPGError:
+        return False
+
+
+class wrap(list):
+    def __call__(self, *args):
+        if len(args) > 2:
+            raise ValueError('too many args')
+
+        if len(args) == 0:
+            return self
+
+        if len(args) == 1:
+            name = args[0]
+            if callable(name):
+                func = name
+                name = func.__name__
+            else:
+                return (lambda func: self(func, name))
+
+        if len(args) == 2:
+            func, name = args
+
+        self.append((func, name))
+        return func
+
+
+wrap = wrap()
+
+
 class Gpg(object):
-    _gpg = None
+    def __init__(self, gnupg_home=None):
+        self.gnupg_home = get_gnupg_home(gnupg_home)
 
-    @staticmethod
-    def gpg():
-        # TODO: Support loading up a GPG environment from a built gpg.
-        if Gpg._gpg is None:
-            gpg = which('gpg2', 'gpg')
+    @functools.cached_property
+    def prep(self):
+        # Make sure that suitable versions of gpgconf and gpg are available
+        ensure_gpg()
 
-            if not gpg:
-                raise SpackGPGError("Spack requires gpg version 2 or higher.")
+        if not os.path.exists(self.gnupg_home):
+            os.makedirs(os.path.dirname(self.gnupg_home), exist_ok=True)
+            os.mkdir(self.gnupg_home, mode=0o700)
 
-            # ensure that the version is actually >= 2 if we find 'gpg'
-            if gpg.name == 'gpg':
-                output = gpg('--version', output=str)
-                match = re.search(_gnupg_version_re, output, re.M)
+        # NOTE(opadron): Make sure /var/run/user/$(id -u) exists and run
+        #                gpgconf --create-socketdir.  This action helps prevent
+        #                a large class of "file-name-too-long" errors in gpg.
+        var_run_user = '/var/run/user'
+        user_run_dir = os.path.join(var_run_user, str(os.getuid()))
+        if os.path.isdir(var_run_user) and not os.path.exists(user_run_dir):
+            os.mkdir(user_run_dir, mode=0o700)
 
-                if not match:
-                    raise SpackGPGError("Couldn't determine version of gpg")
+        self.gpgconf_exe('--create-socketdir')
 
-                v = spack.version.Version(match.group(1))
-                if v < spack.version.Version('2'):
-                    raise SpackGPGError("Spack requires GPG version >= 2")
+        return True
 
-            # make the GNU PG path if we need to
-            # TODO: does this need to be in the spack directory?
-            # we should probably just use GPG's regular conventions
-            if not os.path.exists(GNUPGHOME):
-                os.makedirs(GNUPGHOME)
-                os.chmod(GNUPGHOME, 0o700)
-            gpg.add_default_env('GNUPGHOME', GNUPGHOME)
+    @functools.cached_property
+    def gpgconf_exe(self):
+        exe = spack.util.executable.Executable(GpgConstants.gpgconf_string)
+        exe.add_default_env('GNUPGHOME', self.gnupg_home)
+        return exe
 
-            Gpg._gpg = gpg
-        return Gpg._gpg
+    @functools.cached_property
+    def gpg_exe(self):
+        exe = spack.util.executable.Executable(GpgConstants.gpg_string)
+        exe.add_default_env('GNUPGHOME', self.gnupg_home)
+        return exe
 
-    @classmethod
-    def create(cls, **kwargs):
+    @wrap('gpg')
+    def __call__(self, *args, **kwargs):
+        if self.prep:
+            return self.gpg_exe(*args, **kwargs)
+
+    @wrap
+    def create(self, **kwargs):
         r, w = os.pipe()
         r = os.fdopen(r, 'r')
         w = os.fdopen(w, 'w')
@@ -98,68 +266,102 @@ class Gpg(object):
         %%commit
         ''' % kwargs)
         w.close()
-        cls.gpg()('--gen-key', '--batch', input=r)
+        self('--gen-key', '--batch', input=r)
         r.close()
 
-    @classmethod
-    def signing_keys(cls, *args):
-        output = cls.gpg()('--list-secret-keys', '--with-colons',
-                           '--fingerprint', *args, output=str)
+    @wrap
+    def signing_keys(self, *args):
+        output = self('--list-secret-keys', '--with-colons', '--fingerprint',
+                      *args, output=str)
         return parse_secret_keys_output(output)
 
-    @classmethod
-    def public_keys(cls, *args):
-        output = cls.gpg()('--list-public-keys', '--with-colons',
-                           '--fingerprint', *args, output=str)
+    @wrap
+    def public_keys(self, *args):
+        output = self('--list-public-keys', '--with-colons', '--fingerprint',
+                      *args, output=str)
         return parse_public_keys_output(output)
 
-    @classmethod
-    def export_keys(cls, location, *keys):
-        cls.gpg()('--batch', '--yes',
-                  '--armor', '--export',
-                  '--output', location, *keys)
+    @wrap
+    def export_keys(self, location, *keys):
+        self('--batch', '--yes',
+             '--armor', '--export',
+             '--output', location, *keys)
 
-    @classmethod
-    def trust(cls, keyfile):
-        cls.gpg()('--import', keyfile)
+    @wrap
+    def trust(self, keyfile):
+        self('--import', keyfile)
 
-    @classmethod
-    def untrust(cls, signing, *keys):
+    @wrap
+    def untrust(self, signing, *keys):
         if signing:
-            cls.gpg()('--batch', '--yes', '--delete-secret-keys',
-                      *cls.signing_keys(*keys))
+            skeys = self.signing_keys(*keys)
+            self('--batch', '--yes', '--delete-secret-keys', *skeys)
 
-        cls.gpg()('--batch', '--yes', '--delete-keys',
-                  *cls.public_keys(*keys))
+        pkeys = self.public_keys(*keys)
+        self('--batch', '--yes', '--delete-keys', *pkeys)
 
-    @classmethod
-    def sign(cls, key, file, output, clearsign=False):
-        args = [
-            '--armor',
-            '--default-key', key,
-            '--output', output,
-            file,
-        ]
-        if clearsign:
-            args.insert(0, '--clearsign')
-        else:
-            args.insert(0, '--detach-sign')
-        cls.gpg()(*args)
+    @wrap
+    def sign(self, key, file, output, clearsign=False):
+        self(('--clearsign' if clearsign else '--detach-sign'),
+             '--armor', '--default-key', key,
+             '--output', output, file)
 
-    @classmethod
-    def verify(cls, signature, file, suppress_warnings=False):
-        if suppress_warnings:
-            cls.gpg()('--verify', signature, file, error=str)
-        else:
-            cls.gpg()('--verify', signature, file)
+    @wrap
+    def verify(self, signature, file, suppress_warnings=False):
+        self('--verify', signature, file,
+             **({'error': str} if suppress_warnings else {}))
 
-    @classmethod
-    def list(cls, trusted, signing):
+    @wrap
+    def list(self, trusted, signing):
         if trusted:
-            cls.gpg()('--list-public-keys')
+            self('--list-public-keys')
+
         if signing:
-            cls.gpg()('--list-secret-keys')
+            self('--list-secret-keys')
 
 
 class SpackGPGError(spack.error.SpackError):
     """Class raised when GPG errors are detected."""
+
+
+# Make wrapped versions of the Gpg instance methods for convenience
+#
+# Done so that most calling code can skip the creation of a Gpg instance.
+#
+#     Instead of this:
+#         import spack.util.gpg
+#         gpg = spack.util.gpg.Gpg(gnupg_home='...')
+#         gpg('--version')
+#         gpg.public_keys()
+#
+#     Use this:
+#         import spack.util.gpg as gpg
+#         gpg.gpg('--version')
+#         gpg.public_keys()
+#
+#     If using a non-default GNUPGHOME:
+#         with gpg.gnupg_home_override('...'):
+#             ...
+def _make_wrapped_callables(namespace):
+    def _make_wrapped_callable(func, name):
+        if func.__name__ == '__call__':
+            @functools.wraps(func)
+            def result(*args, **kwargs):
+                _callable = get_global_gpg_instance()
+                return _callable(*args, **kwargs)
+        else:
+            @functools.wraps(func)
+            def result(*args, **kwargs):
+                _callable = getattr(get_global_gpg_instance(), name)
+                return _callable(*args, **kwargs)
+
+        result.name = name
+        return result
+
+    for func, name in wrap:
+        namespace[name] = _make_wrapped_callable(func, name)
+
+_make_wrapped_callables(globals())
+
+del _make_wrapped_callables
+del wrap

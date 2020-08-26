@@ -20,9 +20,9 @@ import spack.cmd.install as install
 import spack.cmd.uninstall as uninstall
 import spack.cmd.mirror as mirror
 import spack.mirror
-import spack.util.gpg as gpg
-from spack.spec import Spec
+import spack.util.gpg
 from spack.directory_layout import YamlDirectoryLayout
+from spack.spec import Spec
 
 
 def_install_path_scheme = '${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}'  # noqa: E501
@@ -481,49 +481,30 @@ def test_push_and_fetch_keys(tmpdir):
     mirrors = spack.mirror.MirrorCollection(mirrors)
     mirror = spack.mirror.Mirror('file://' + mirror)
 
-    gpg_dir0 = os.path.join(testpath, 'gpg0')
     gpg_dir1 = os.path.join(testpath, 'gpg1')
     gpg_dir2 = os.path.join(testpath, 'gpg2')
 
-    os.mkdir(gpg_dir0)
-    os.mkdir(gpg_dir1)
-    os.mkdir(gpg_dir2)
+    # dir 1: create a new key, record its fingerprint, and push it to a new
+    #        mirror
+    with spack.util.gpg.gnupg_home_override(gpg_dir1):
+        spack.util.gpg.create(name='test-key',
+                              email='fake@test.key',
+                              expires='0',
+                              comment=None)
 
-    os.chmod(gpg_dir0, 0o700)
-    os.chmod(gpg_dir1, 0o700)
-    os.chmod(gpg_dir2, 0o700)
-
-    gnupg = gpg.Gpg
-    gnupg_exe = gnupg.gpg()
-
-    fpr = None
-    old_gpg_home = gnupg_exe.default_env['GNUPGHOME']
-    try:
-        # dir 1: create a new key, record its fingerprint, and push it to a new
-        #        mirror
-        gnupg_exe.add_default_env('GNUPGHOME', gpg_dir1)
-
-        gnupg.create(name='test-key',
-                     email='fake@test.key',
-                     expires='0',
-                     comment=None)
-
-        keys = gnupg.public_keys()
+        keys = spack.util.gpg.public_keys()
         assert len(keys) == 1
         fpr = keys[0]
 
         bindist.push_keys(mirror, keys=[fpr], regenerate_index=True)
 
-        # dir 2: import the key from the mirror, and confirm that its
-        #        fingerprint matches the one created above
-        gnupg_exe.add_default_env('GNUPGHOME', gpg_dir2)
-
-        assert len(gnupg.public_keys()) == 0
+    # dir 2: import the key from the mirror, and confirm that its fingerprint
+    #        matches the one created above
+    with spack.util.gpg.gnupg_home_override(gpg_dir2):
+        assert len(spack.util.gpg.public_keys()) == 0
 
         bindist.get_keys(mirrors=mirrors, install=True, trust=True, force=True)
 
-        new_keys = gnupg.public_keys()
+        new_keys = spack.util.gpg.public_keys()
         assert len(new_keys) == 1
         assert new_keys[0] == fpr
-    finally:
-        gnupg_exe.add_default_env('GNUPGHOME', old_gpg_home)

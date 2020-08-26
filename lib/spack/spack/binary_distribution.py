@@ -27,6 +27,7 @@ import spack.config as config
 import spack.database as spack_db
 import spack.fetch_strategy as fs
 import spack.relocate as relocate
+import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.mirror
@@ -34,7 +35,6 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.gpg import Gpg
 
 _build_cache_relative_path = 'build_cache'
 _build_cache_keys_relative_path = '_pgp'
@@ -248,18 +248,9 @@ def checksum_tarball(file):
     return hasher.hexdigest()
 
 
-def ensure_gpg():
-    if Gpg.gpg() is None:
-        raise NoGpgException(
-            "gpg2 is not available in $PATH .\n"
-            "Use spack install gnupg and spack load gnupg.")
-
-
 def select_signing_key(key=None):
     if key is None:
-        ensure_gpg()
-
-        keys = Gpg.signing_keys()
+        keys = spack.util.gpg.signing_keys()
         if len(keys) == 1:
             key = keys[0]
 
@@ -282,8 +273,7 @@ def sign_tarball(key, force, specfile_path):
             raise NoOverwriteException('%s.asc' % specfile_path)
 
     key = select_signing_key(key)
-    ensure_gpg()
-    Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
+    spack.util.gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 
 def generate_package_index(cache_prefix):
@@ -754,7 +744,8 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
         if os.path.exists('%s.asc' % specfile_path):
             try:
                 suppress = config.get('config:suppress_gpg_warnings', False)
-                Gpg.verify('%s.asc' % specfile_path, specfile_path, suppress)
+                spack.util.gpg.verify(
+                    '%s.asc' % specfile_path, specfile_path, suppress)
             except Exception as e:
                 shutil.rmtree(tmpdir)
                 raise e
@@ -1009,7 +1000,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
             tty.debug('Found key {0}'.format(fingerprint))
             if install:
                 if trust:
-                    Gpg.trust(stage.save_filename)
+                    spack.util.gpg.trust(stage.save_filename)
                     tty.debug('Added this key to trusted keys.')
                 else:
                     tty.debug('Will not add this key to trusted keys.'
@@ -1025,7 +1016,7 @@ def push_keys(*mirrors, **kwargs):
     tmpdir = kwargs.get('tmpdir')
     remove_tmpdir = False
 
-    keys = Gpg.public_keys(*(keys or []))
+    keys = spack.util.gpg.public_keys(*(keys or []))
 
     try:
         for mirror in mirrors:
@@ -1056,7 +1047,7 @@ def push_keys(*mirrors, **kwargs):
                 filename = fingerprint + '.pub'
 
                 export_target = os.path.join(prefix, filename)
-                Gpg.export_keys(export_target, fingerprint)
+                spack.util.gpg.export_keys(export_target, fingerprint)
 
                 # If mirror is local, the above export writes directly to the
                 # mirror (export_target points directly to the mirror).
