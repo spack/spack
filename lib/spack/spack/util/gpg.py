@@ -8,6 +8,8 @@ import functools
 import os
 import re
 
+import llnl.util.lang
+
 import spack.error
 import spack.paths
 import spack.util.executable
@@ -96,12 +98,28 @@ def parse_public_keys_output(output):
     return keys
 
 
+cached_property = getattr(functools, 'cached_property', None)
+
+# If older python version has no cached_property, emulate it here.
+# TODO(opadron): maybe this shim should be moved to llnl.util.lang?
+if not cached_property:
+    def cached_property(*args, **kwargs):
+        result = property(llnl.util.lang.memoized(*args, **kwargs))
+        attr = result.fget.__name__
+
+        @result.deleter
+        def result(self):
+            getattr(type(self), attr).fget.cache.pop((self,), None)
+
+        return result
+
+
 class GpgConstants(object):
-    @functools.cached_property
+    @cached_property
     def target_version(self):
         return spack.version.Version('2')
 
-    @functools.cached_property
+    @cached_property
     def gpgconf_string(self):
         exe_str = spack.util.executable.which_string(
             'gpgconf', 'gpg2conf', 'gpgconf2')
@@ -128,7 +146,7 @@ class GpgConstants(object):
 
         return exe_str
 
-    @functools.cached_property
+    @cached_property
     def gpg_string(self):
         exe_str = spack.util.executable.which_string('gpg2', 'gpg')
 
@@ -211,7 +229,7 @@ class Gpg(object):
     def __init__(self, gnupg_home=None):
         self.gnupg_home = get_gnupg_home(gnupg_home)
 
-    @functools.cached_property
+    @cached_property
     def prep(self):
         # Make sure that suitable versions of gpgconf and gpg are available
         ensure_gpg()
@@ -232,13 +250,13 @@ class Gpg(object):
 
         return True
 
-    @functools.cached_property
+    @cached_property
     def gpgconf_exe(self):
         exe = spack.util.executable.Executable(GpgConstants.gpgconf_string)
         exe.add_default_env('GNUPGHOME', self.gnupg_home)
         return exe
 
-    @functools.cached_property
+    @cached_property
     def gpg_exe(self):
         exe = spack.util.executable.Executable(GpgConstants.gpg_string)
         exe.add_default_env('GNUPGHOME', self.gnupg_home)
