@@ -245,6 +245,7 @@ class Trilinos(CMakePackage):
     conflicts('+amesos', when='~epetra')
     conflicts('+amesos', when='~teuchos')
     conflicts('+anasazi', when='~teuchos')
+    conflicts('+aztec', when='~epetra')
     conflicts('+belos', when='~teuchos')
     conflicts('+epetraext', when='~epetra')
     conflicts('+epetraext', when='~teuchos')
@@ -515,6 +516,13 @@ class Trilinos(CMakePackage):
             ])
 
         if '+stratimikos' in spec:
+            # Explicitly enable Thyra (ThyraCore is required). If you don't do
+            # this, then you get "NOT setting ${pkg}_ENABLE_Thyra=ON since
+            # Thyra is NOT enabled at this point!" leading to eventual build
+            # errors if using MueLu because `Xpetra_ENABLE_Thyra` is set to
+            # off.
+            options.append(define('Trilinos_ENABLE_Thyra', True))
+
             # Add thyra adapters based on package enables
             options.extend(
                 define_trilinos_enable('Thyra' + pkg + 'Adapters', pkg.lower())
