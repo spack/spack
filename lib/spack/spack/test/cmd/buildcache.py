@@ -59,10 +59,11 @@ def tests_buildcache_copy(
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
 
     buildcache('copy', '--spec-yaml', os.path.join(str(tmpdir), 'build_cache',
-        tarball), '--base-dir', str(tmpdir), '--destination-url', str(mirror_url))
+               tarball), '--base-dir', str(tmpdir),
+               '--destination-url', str(mirror_url))
 
     assert os.path.exists(os.path.join(str(mirror_url),
-        'build_cache', tarball_path))
+                          'build_cache', tarball_path))
 
 
 def tests_buildcache_save_yaml_root_spec(
@@ -75,10 +76,11 @@ def tests_buildcache_save_yaml_root_spec(
     spec = Spec(pkg).concretized()
     tarball = spack.binary_distribution.tarball_name(spec, '.spec.yaml')
 
-    buildcache('save-yaml', '--root-spec', pkg, '-s', 'libelf', '-y', str(tmpdir))
+    buildcache('save-yaml', '--root-spec', pkg, '-s',
+               'libelf', '-y', str(tmpdir))
     buildcache('save-yaml', '--root-spec-yaml',
-            os.path.join(str(tmpdir),'build_cache',
-                tarball), '-s', pkg, '-y', str(tmpdir))
+               os.path.join(str(tmpdir), 'build_cache',
+               tarball), '-s', pkg, '-y', str(tmpdir))
 
     assert os.path.exists(
         os.path.join(str(tmpdir), 'libelf.yaml'))
