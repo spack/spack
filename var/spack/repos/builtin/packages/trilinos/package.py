@@ -341,6 +341,7 @@ class Trilinos(CMakePackage):
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
+    depends_on('hdf5+mpi', when="+hdf5+mpi")
     depends_on('netcdf-c+mpi', when="+netcdf~pnetcdf+mpi")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
     depends_on('parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
