@@ -54,10 +54,16 @@ to your path and you're ready to go:
 
 .. code-block:: console
    
-   # For bash/zsh & tcsh/csh users
-   $ export PATH=/path/to/spack/bin:$PATH
+   # For bash/zsh users
+   $ export SPACK_ROOT=/path/to/spack
+   $ export PATH=$SPACK_ROOT/bin:$PATH
+
+   # For tsch/csh users 
+   $ setenv SPACK_ROOT /path/to/spack
+   $ export PATH=$SPACK_ROOT/bin:$PATH
 
    # For fish users
+   $ set -x SPACK_ROOT /path/to/spack
    $ set -U fish_user_paths /path/to/spack $fish_user_paths
 
 
