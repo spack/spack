@@ -60,7 +60,7 @@ to your path and you're ready to go:
 
    # For tsch/csh users 
    $ setenv SPACK_ROOT /path/to/spack
-   $ export PATH=$SPACK_ROOT/bin:$PATH
+   $ setenv PATH $SPACK_ROOT/bin:$PATH
 
    # For fish users
    $ set -x SPACK_ROOT /path/to/spack
