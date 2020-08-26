@@ -70,7 +70,7 @@ def test_really_long_gnupg_home_dir(tmpdir):
         tdir = os.path.join(tdir, 'filler')
 
     tdir = tdir[:N].rstrip(os.sep)
-    tdir += '0'*(N - len(tdir))
+    tdir += '0' * (N - len(tdir))
 
     with spack.util.gpg.gnupg_home_override(tdir):
         spack.util.gpg.create(name='Spack testing 1',

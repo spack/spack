@@ -343,6 +343,8 @@ class SpackGPGError(spack.error.SpackError):
 #         with gpg.gnupg_home_override('...'):
 #             ...
 def _make_wrapped_callables(namespace):
+    global wrap
+
     def _make_wrapped_callable(func, name):
         if func.__name__ == '__call__':
             @functools.wraps(func)
@@ -360,6 +362,7 @@ def _make_wrapped_callables(namespace):
 
     for func, name in wrap:
         namespace[name] = _make_wrapped_callable(func, name)
+
 
 _make_wrapped_callables(globals())
 
