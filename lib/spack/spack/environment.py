@@ -38,6 +38,7 @@ from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
 import spack.util.lock as lk
 from spack.util.path import substitute_path_variables
+from spack.installer import PackageInstaller
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -1257,10 +1258,7 @@ class Environment(object):
 
         self._install(concrete, **install_args)
 
-    def _install(self, spec, **install_args):
-        # "spec" must be concrete
-        spec.package.do_install(**install_args)
-
+    def _install_log_links(self, spec):
         if not spec.external:
             # Make sure log directory exists
             log_path = self.log_path
@@ -1273,6 +1271,11 @@ class Environment(object):
                 if os.path.lexists(build_log_link):
                     os.remove(build_log_link)
                 os.symlink(spec.package.build_log_path, build_log_link)
+
+    def _install(self, spec, **install_args):
+        # "spec" must be concrete
+        spec.package.do_install(**install_args)
+        self._install_log_links(spec)
 
     def install_all(self, args=None):
         """Install all concretized specs in an environment.
@@ -1294,14 +1297,21 @@ class Environment(object):
                 if not spec.package.installed:
                     uninstalled_specs.append(spec)
 
+        installs = []
         for spec in uninstalled_specs:
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
             kwargs = dict()
             if args:
                 spack.cmd.install.update_kwargs_from_args(args, kwargs)
+            installs.append((spec.package, kwargs))
+        builder = PackageInstaller(installs)
+        builder.install()
 
-            self._install(spec, **kwargs)
+        # And ensure links are set appropriately
+        # TODO: Can/should the link function be added as a post-install?
+        for spec in uninstalled_specs:
+            self._install_log_links(spec)
 
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""

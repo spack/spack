@@ -45,7 +45,7 @@ def fetch_package_log(pkg):
 
 class InfoCollector(object):
     """Decorates PackageInstaller._install_task, which is called via
-    PackageBase.do_install for each spec, to collect information
+    PackageBase.do_install for individual specs, to collect information
     on the installation of certain specs.
 
     When exiting the context this change will be rolled-back.
