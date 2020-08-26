@@ -36,30 +36,29 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
 
     def _run_smoke_tests(self):
         """Build and run the added smoke (install) test."""
-        prog = 'data/smoke_test'
+        data_dir = self.test_suite.current_test_data_dir
+        prog = 'smoke_test'
+        src = data_dir.join('%s.c' % prog)
 
         options = [
             '-I{0}'.format(self.prefix.include),
-            '{0}.c'.format(prog),
+            src,
             '-o',
             prog,
             '-L{0}'.format(self.prefix.lib),
             '-lsigsegv',
-            '-Wl,-R{0}'.format(self.prefix.lib)]
+            '{0}{1}'.format(self.compiler.cc_rpath_arg, self.prefix.lib)]
         reason = 'test ability to link to the library'
-        self.run_test('cc', options, [], None, False, purpose=reason)
+        self.run_test('cc', options, [], installed=False, purpose=reason)
 
         # Now run the program and confirm the output matches expectations
-        with open('./data/smoke_test.out', 'r') as fd:
+        with open(data_dir.join('smoke_test.out'), 'r') as fd:
             expected = fd.read()
         reason = 'test ability to use the library'
         self.run_test(prog, [], expected, purpose=reason)
 
     def _run_build_tests(self):
         """Build and run selected tests pulled from the build."""
-        work_dir = os.path.join(self.install_test_root,
-                                self.extra_install_tests)
-
         # Run the build tests to confirm the expected output
         passed = 'Test passed'
         checks = {
@@ -72,8 +71,7 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
 
         for exe, expected in checks.items():
             reason = 'test {0} output'.format(exe)
-            self.run_test(exe, [], expected, installed=True,
-                          purpose=reason, skip_missing=True, work_dir=work_dir)
+            self.run_test(exe, [], expected, purpose=reason, skip_missing=True)
 
     def test(self):
         """Perform smoke tests on the installed package."""

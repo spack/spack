@@ -43,12 +43,15 @@ handle_sigsegv(void *fault_address, int serious)
 /* "Buggy" function used to demonstrate non-local goto */
 void printit(char *m)
 {
-    if (times_called < 1)
-        /* Force SIGSEGV only on the first call. */
-        printf("%s\n", *m);
-    else
-        /* Print it correctly. */
-        printf("%s\n", m);
+  if (times_called < 1) {
+    /* Force SIGSEGV only on the first call. */
+    volatile int *fail_ptr = 0;
+    int failure = *fail_ptr;
+    printf("%s\n", m);
+  } else {
+    /* Print it correctly. */
+    printf("%s\n", m);
+  }
 }
 
 int

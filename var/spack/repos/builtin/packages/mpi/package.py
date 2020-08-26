@@ -12,17 +12,18 @@ class Mpi(Package):
 
     def test(self):
         for lang in ('c', 'f'):
-            filename = 'mpi_hello.' + lang
-            filepath = os.path.join(self.test_dir, 'data', 'mpi')
+            filename = self.test_suite.current_test_data_dir.join(
+                'mpi_hello.' + lang)
 
-            compiler_var = 'MPI%sC' % lang.upper()
+            compiler_var = 'MPICC' if lang == 'c' else 'MPIF90'
             compiler = os.environ[compiler_var]
 
             exe_name = 'mpi_hello_%s' % lang
             mpirun = os.path.join(self.prefix.bin, 'mpirun')
 
-            compiled = self.run_test(compiler, options=['-o', exe_name])
+            compiled = self.run_test(compiler,
+                                     options=['-o', exe_name, filename])
             if compiled:
                 self.run_test(mpirun,
                               options=['-np', '1', exe_name],
-                              expected=['Hello world! From rank 1 of 1'])
+                              expected=[r'Hello world! From rank \s*0 of \s*1'])

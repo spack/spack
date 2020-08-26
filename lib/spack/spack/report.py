@@ -15,6 +15,7 @@ import llnl.util.lang
 import spack.build_environment
 import spack.fetch_strategy
 import spack.package
+from spack.install_test import TestSuite
 from spack.reporter import Reporter
 from spack.reporters.cdash import CDash
 from spack.reporters.junit import JUnit
@@ -37,7 +38,7 @@ __all__ = [
 def fetch_log(pkg, do_fn, dir):
     log_files = {
         '_install_task': pkg.build_log_path,
-        'do_test': os.path.join(dir, pkg.test_log_name),
+        'do_test': os.path.join(dir, TestSuite.test_log_name(pkg.spec)),
     }
     try:
         with codecs.open(log_files[do_fn.__name__], 'r', 'utf-8') as f:
