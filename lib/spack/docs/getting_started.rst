@@ -74,7 +74,7 @@ For a richer experience, use Spack's shell support:
 
 .. code-block:: console
 
-   #Note you must set SPACK_ROOT
+   # Note you must set SPACK_ROOT
 
    # For bash/zsh users
    $ . $SPACK_ROOT/share/spack/setup-env.sh
