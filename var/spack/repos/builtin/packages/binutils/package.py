@@ -53,7 +53,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     # 2.34 needs makeinfo due to a bug, see:
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
-    depends_on('texinfo', type='build', when='@2.34')
+    depends_on('texinfo', type='build', when='@2.33.1:')
 
     conflicts('+gold', when='platform=darwin',
               msg="Binutils cannot build linkers on macOS")
