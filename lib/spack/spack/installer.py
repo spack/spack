@@ -1528,8 +1528,8 @@ class PackageInstaller(object):
 
             except spack.directory_layout.InstallDirectoryAlreadyExistsError \
                     as err:
-                tty.debug('Keeping existing install prefix for {0} in place.'
-                          .format(pkg.name))
+                tty.debug('Install prefix for {0} exists, keeping {1} in '
+                          'place.'.format(pkg.name, pkg.prefix))
                 self._update_installed(task)
 
                 # Only terminate at this point if a single build request was
@@ -1602,7 +1602,7 @@ class PackageInstaller(object):
                 tty.error('{0}: {1}'.format(pkg_id, err))
 
             raise InstallError('Installation request failed.  Refer to '
-                               'recent errors for specific packages.')
+                               'recent errors for specific package(s).')
 
 
 class BuildTask(object):
