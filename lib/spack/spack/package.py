@@ -577,7 +577,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     archive_files = []
 
     #: Boolean. Set to ``True`` for packages that require a manual download.
-    #: This is currently used by package sanity tests and fetching.
+    #: This is currently used by package sanity tests and generation of a
+    #: more meaningful fetch failure error.
     manual_download = False
 
     #: Set of additional options used when fetching package versions.
@@ -1244,7 +1245,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                  self.spec.format('{name}{@version}'), ck_msg)
 
         self.stage.create()
-        self.stage.fetch(mirror_only, self.manual_download)
+        fetch_msg = None if not self.manual_download else \
+            ('Manual download is required for {0}. Refer to {1} for '
+             'directions.'.format(self.spec.name, self.spec.package.homepage))
+        self.stage.fetch(mirror_only, error_msg=fetch_msg)
         self._fetch_time = time.time() - start_time
 
         if checksum and self.version in self.versions:

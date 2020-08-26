@@ -547,9 +547,10 @@ class TestStage(object):
         stage = Stage(failing_fetch_strategy,
                       name=self.stage_name,
                       search_fn=search_fn)
+        msg = 'Manual download is required for test'
         with stage:
             try:
-                stage.fetch(mirror_only=False, manual_download=True)
+                stage.fetch(mirror_only=False, error_msg=msg)
                 assert False, 'Expected fetch to fail'
             except spack.fetch_strategy.FetchError as err:
                 assert 'Manual download is required' in str(err)
