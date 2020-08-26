@@ -403,8 +403,6 @@ class log_output(object):
 
         self._active = False  # used to prevent re-entry
 
-        self.saved_fds = None
-
     def __call__(self, file_like=None, echo=None, debug=None, buffer=None):
         """This behaves the same as init. It allows a logger to be reused.
 
