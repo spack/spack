@@ -57,7 +57,7 @@ class QESirius(Package):
     depends_on('blas')
     depends_on('lapack')
     depends_on('fftw-api@3')
-    depends_on('sirius+fortran')
+    depends_on('sirius+fortran+shared')
     depends_on('mpi', when='+mpi')
     depends_on('scalapack', when='+scalapack+mpi')
     depends_on('elpa+openmp', when='+elpa+openmp')
@@ -172,7 +172,6 @@ class QESirius(Package):
         options = ['-prefix={0}'.format(prefix_path)]
 
         sirius = spec['sirius']
-
         options.append('LIBS={0}'.format(sirius.libs[0]))
         options.append('LD_LIBS={0}'.format(sirius.libs[0]))
 
@@ -203,7 +202,7 @@ class QESirius(Package):
         f90flags = 'F90FLAGS=-cpp -I {0}/sirius'.format(header_dir)
 
         if self.spec.satisfies('%gcc@10:'):
-            f90flags += '-fallow-argument-mismatch'
+            f90flags += ' -fallow-argument-mismatch'
 
         options.append(f90flags)
 
