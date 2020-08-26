@@ -23,7 +23,7 @@ class RocmDbgapi(CMakePackage):
     depends_on('cmake@3:', type='build')
     for ver in ['3.5.0']:
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type=('build', 'link'), when='@' + ver)
+        depends_on('comgr@' + ver, when='@' + ver)
 
     def patch(self):
         filter_file(r'(<INSTALL_INTERFACE:include>)',  r'\1 {0}/include'.
