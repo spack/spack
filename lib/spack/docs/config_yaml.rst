@@ -223,7 +223,7 @@ To build all software in serial, set ``build_jobs`` to 1.
 --------------------
 
 When set to ``true`` Spack will use ccache to cache compiles. This is
-useful specifically in two cases: (1) when using ``spack build-env``, and (2)
+useful specifically in two cases: (1) when using ``spack dev-build``, and (2)
 when building the same package with many different variants. The default is
 ``false``.
 
