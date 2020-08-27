@@ -244,7 +244,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         # retrive architecture specific optimization flags
         archopt = spec.target.optimization_flags(
-                    spec.compiler.name, spec.compiler.version)
+            spec.compiler.name, spec.compiler.version)
         cflags.append(archopt)
         cxxflags.append(archopt)
         fcflags.append(archopt)
