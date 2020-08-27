@@ -53,22 +53,37 @@ in the ``SPACK_ROOT`` environment variable.  Add ``$SPACK_ROOT/bin``
 to your path and you're ready to go:
 
 .. code-block:: console
-
+   
+   # For bash/zsh users
+   $ export SPACK_ROOT=/path/to/spack
    $ export PATH=$SPACK_ROOT/bin:$PATH
+
+   # For tsch/csh users 
+   $ setenv SPACK_ROOT /path/to/spack
+   $ setenv PATH $SPACK_ROOT/bin:$PATH
+
+   # For fish users
+   $ set -x SPACK_ROOT /path/to/spack
+   $ set -U fish_user_paths /path/to/spack $fish_user_paths
+
+.. code-block:: console
+
    $ spack install libelf
 
 For a richer experience, use Spack's shell support:
 
 .. code-block:: console
 
+   # Note you must set SPACK_ROOT
+
    # For bash/zsh users
-   $ export SPACK_ROOT=/path/to/spack
    $ . $SPACK_ROOT/share/spack/setup-env.sh
 
-   # For tcsh or csh users (note you must set SPACK_ROOT)
-   $ setenv SPACK_ROOT /path/to/spack
+   # For tcsh/csh users
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
+   # For fish users
+   $ source $SPACK_ROOT/share/spack/setup-env.fish
 
 This automatically adds Spack to your ``PATH`` and allows the ``spack``
 command to be used to execute spack :ref:`commands <shell-support>` and
