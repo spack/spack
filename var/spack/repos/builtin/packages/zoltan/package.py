@@ -133,7 +133,7 @@ class Zoltan(AutotoolsPackage):
                 '--with-mpi-libs= '
             ])
 
-        config_fcflags = config_cflags.copy()
+        config_fcflags = config_cflags[:]
         if spec.satisfies('%gcc@10:+fortran'):
             config_fcflags.append('-fallow-argument-mismatch')
         # NOTE: Early versions of Zoltan come packaged with a few embedded
