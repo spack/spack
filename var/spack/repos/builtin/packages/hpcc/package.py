@@ -129,9 +129,9 @@ class Hpcc(MakefilePackage):
                     mklroot, 'lib', 'intel64', 'libfftw2xc_double_intel.a')
                 if not (os.path.exists(libfftw2x_cdft) and
                         os.path.exists(libfftw2xc)):
-                    tty.error(
+                    raise InstallError(
                         "HPCC need fftw2 interface, "
-                        "here are brief notes how to make one:"
+                        "here are brief notes how to make one:\n"
                         "# make fftw2x_cdft interface to mkl\n"
                         "cd $MKLROOT/interfaces/fftw2x_cdft\n"
                         "make libintel64 PRECISION=MKL_DOUBLE "
@@ -140,11 +140,7 @@ class Hpcc(MakefilePackage):
                         "# make FFTW C wrapper library\n"
                         "cd $MKLROOT/interfaces/fftw2xc\n"
                         "make libintel64 PRECISION=MKL_DOUBLE "
-                        "MKLROOT=$MKLROOT\n"
-                    )
-                    raise InstallError(
-                        "HPCC need MKL's fftw2 api "
-                        "(see above how to make it).")
+                        "MKLROOT=$MKLROOT\n")
                 lin_alg_libs.append(libfftw2xc)
                 lin_alg_libs.append(libfftw2x_cdft)
 
