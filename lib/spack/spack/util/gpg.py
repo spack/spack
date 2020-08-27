@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import contextlib
+import errno
 import functools
 import os
 import re
@@ -234,19 +235,40 @@ class Gpg(object):
         # Make sure that suitable versions of gpgconf and gpg are available
         ensure_gpg()
 
+        # Make sure that the GNUPGHOME exists
         if not os.path.exists(self.gnupg_home):
             os.makedirs(os.path.dirname(self.gnupg_home), exist_ok=True)
             os.mkdir(self.gnupg_home, mode=0o700)
 
-        # NOTE(opadron): Make sure /var/run/user/$(id -u) exists and run
-        #                gpgconf --create-socketdir.  This action helps prevent
-        #                a large class of "file-name-too-long" errors in gpg.
+        # Try to ensure that /var/run/user/$(id -u) exists and run gpgconf
+        # --create-socketdir.
+        #
+        # NOTE(opadron): This action helps prevent a large class of
+        #                "file-name-too-long" errors in gpg.
         var_run_user = '/var/run/user'
         user_run_dir = os.path.join(var_run_user, str(os.getuid()))
-        if os.path.isdir(var_run_user) and not os.path.exists(user_run_dir):
-            os.mkdir(user_run_dir, mode=0o700)
+        try:
+            mkdir = (os.path.isdir(var_run_user) and
+                     not os.path.exists(user_run_dir))
+            if mkdir:
+                os.mkdir(user_run_dir, mode=0o700)
 
-        self.gpgconf_exe('--create-socketdir')
+        # If the above operation fails due to lack of permissions, then just
+        # carry on without running gpgconf and hope for the best.
+        #
+        # NOTE(opadron): Without a dir in which to create a socket for IPC,
+        #                gnupg may fail if GNUPGHOME is set to a path that is
+        #                too long, where "too long" in this context is actually
+        #                quite short; somewhere in the neighborhood of more
+        #                than 100 characters.
+        #
+        # TODO(opadron): Maybe a warning should be printed in this case?
+        except OSError as exc:
+            if exc.errno not in (errno.EPERM, errno.EACCES):
+                raise
+
+        else:
+            self.gpgconf_exe('--create-socketdir')
 
         return True
 
