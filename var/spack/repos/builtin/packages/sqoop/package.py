@@ -15,3 +15,5 @@ class Sqoop(MavenPackage):
     list_depth = 1
 
     version('1.99.7', sha256='caca533554235d9e999435be59a13b5ecae514b3c914ca3b54868fca43a3b74a')
+
+    depends_on('java@8', type=('build', 'run'))

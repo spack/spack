@@ -19,4 +19,4 @@ class Slf4j(MavenPackage):
     version('1.7.27', sha256='238883cab9808a5cd58cf5245f9f13ac645c9fca878b60d959e00fc4ac588231')
     version('1.7.26', sha256='dc422820f92e581241c4cfe796d01531d12bad3dc04225bdb315761871156942')
 
-    depends_on('java@5:', type=('build', 'run'))
+    depends_on('java@8', type=('build', 'run'))

@@ -11,3 +11,5 @@ class Mrbench(MavenPackage):
     git      = "https://github.com/marcorosi/mrbench.git"
 
     version('master', branch='master')
+
+    depends_on('java@8', type=('build', 'run'))

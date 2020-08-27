@@ -17,7 +17,7 @@ class Slider(MavenPackage):
     version('0.91.0', sha256='212a5cde6de60060c9a081f553d66940b70af4bccb469072febb554c4005bcef')
     version('0.90.2', sha256='410941f772d29f564c4bb90ca0631f29dc895f509048cb6052f8695302e3f944')
 
-    depends_on('java@7:', type=('build', 'run'))
+    depends_on('java@8', type=('build', 'run'))
     depends_on('python@2.7.0:2.7.99', type='run')
 
     def url_for_version(self, version):
