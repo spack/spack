@@ -134,7 +134,7 @@ class Zoltan(AutotoolsPackage):
             ])
 
         config_fcflags = config_cflags.copy()
-        if spec.satisfies('%gcc@10.1.0:+fortran'):
+        if spec.satisfies('%gcc@10:+fortran'):
             config_fcflags.append('-fallow-argument-mismatch')
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
