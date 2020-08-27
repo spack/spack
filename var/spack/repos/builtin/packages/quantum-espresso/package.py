@@ -10,19 +10,20 @@ from spack import *
 
 
 class QuantumEspresso(Package):
-    """Quantum-ESPRESSO is an integrated suite of Open-Source computer codes
+    """Quantum ESPRESSO is an integrated suite of Open-Source computer codes
     for electronic-structure calculations and materials modeling at the
     nanoscale. It is based on density-functional theory, plane waves, and
     pseudopotentials.
     """
 
     homepage = 'http://quantum-espresso.org'
-    url = 'https://gitlab.com/QEF/q-e/-/archive/qe-6.5/q-e-qe-6.5.tar.gz'
+    url = 'https://gitlab.com/QEF/q-e/-/archive/qe-6.6/q-e-qe-6.6.tar.gz'
     git = 'https://gitlab.com/QEF/q-e.git'
 
     maintainers = ['naromero77']
 
     version('develop', branch='develop')
+    version('6.6', sha256='924656cb083f52e5d2fe71ade05881389dac64b45316f1bdd6dee1c6170a672c', preferred=True)
     version('6.5', sha256='258b2a8a6280e86dad779e5c56356d8b35dc96d12ff33dabeee914bc03d6d602')
     version('6.4.1', sha256='b0d7e9f617b848753ad923d8c6ca5490d5d82495f82b032b71a0ff2f2e9cfa08')
     version('6.4', sha256='781366d03da75516fdcf9100a1caadb26ccdd1dedd942a6f8595ff0edca74bfe')

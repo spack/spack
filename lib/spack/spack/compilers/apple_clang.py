@@ -38,7 +38,7 @@ class AppleClang(spack.compilers.clang.Clang):
     def cxx11_flag(self):
         # Adapted from CMake's AppleClang-CXX rules
         # Spack's AppleClang detection only valid from Xcode >= 4.6
-        if self.version < spack.version.ver('4.0.0'):
+        if self.real_version < spack.version.ver('4.0.0'):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C++11 standard", "cxx11_flag", "Xcode < 4.0.0"
             )
@@ -47,11 +47,11 @@ class AppleClang(spack.compilers.clang.Clang):
     @property
     def cxx14_flag(self):
         # Adapted from CMake's rules for AppleClang
-        if self.version < spack.version.ver('5.1.0'):
+        if self.real_version < spack.version.ver('5.1.0'):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C++14 standard", "cxx14_flag", "Xcode < 5.1.0"
             )
-        elif self.version < spack.version.ver('6.1.0'):
+        elif self.real_version < spack.version.ver('6.1.0'):
             return "-std=c++1y"
 
         return "-std=c++14"
@@ -59,7 +59,7 @@ class AppleClang(spack.compilers.clang.Clang):
     @property
     def cxx17_flag(self):
         # Adapted from CMake's rules for AppleClang
-        if self.version < spack.version.ver('6.1.0'):
+        if self.real_version < spack.version.ver('6.1.0'):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C++17 standard", "cxx17_flag", "Xcode < 6.1.0"
             )

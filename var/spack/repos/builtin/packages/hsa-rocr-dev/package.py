@@ -31,3 +31,8 @@ class HsaRocrDev(CMakePackage):
     patch('0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch', when='@3.5.0')
 
     root_cmakelists_dir = 'src'
+
+    def cmake_args(self):
+        libelf_include = self.spec['libelf'].prefix.include.libelf
+        args = ['-DLIBELF_INCLUDE_DIRS=%s' % libelf_include]
+        return args

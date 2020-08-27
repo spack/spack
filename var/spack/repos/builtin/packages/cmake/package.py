@@ -15,6 +15,7 @@ class Cmake(Package):
 
     executables = ['^cmake$']
 
+    version('3.18.2',   sha256='5d4e40fc775d3d828c72e5c45906b4d9b59003c9433ff1b36a1cb552bbd51d7e')
     version('3.18.1',   sha256='c0e3338bd37e67155b9d1e9526fec326b5c541f74857771b7ffed0c46ad62508')
     version('3.18.0',   sha256='83b4ffcb9482a73961521d2bafe4a16df0168f03f56e6624c419c461e5317e29')
     version('3.17.3',   sha256='0bd60d512275dc9f6ef2a2865426a184642ceb3761794e6b65bff233b91d8c40')
@@ -99,12 +100,11 @@ class Cmake(Package):
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
-    # Tries to build an Objective-C file from libuv with GCC's C frontend
-    # https://gitlab.kitware.com/cmake/cmake/-/issues/20620
-    # https://github.com/libuv/libuv/issues/2805
+    # Does not compile and is not covered in upstream CI (yet).
     conflicts('%gcc platform=darwin',
-              msg='CMake does not compile with GCC on macOS yet, use clang. '
-                  'See: https://gitlab.kitware.com/cmake/cmake/-/issues/20620')
+              msg='CMake does not compile with GCC on macOS yet, '
+                  'please use %apple-clang. '
+                  'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
 
     # Really this should conflict since it's enabling or disabling openssl for
     # CMake's internal copy of curl.  Ideally we'd want a way to have the

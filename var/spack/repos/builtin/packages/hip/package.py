@@ -21,14 +21,15 @@ class Hip(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('perl@5.10:', type=('build', 'run'))
-
-    depends_on('rocclr@3.5.0',  when='@3.5.0')
-    depends_on('hsakmt-roct@3.5.0', type='build', when='@3.5.0')
-    depends_on('hsa-rocr-dev@3.5.0', type='link', when='@3.5.0')
-    depends_on('comgr@3.5.0', type='build', when='@3.5.0')
-    depends_on('llvm-amdgpu@3.5.0', type='build', when='@3.5.0')
-    depends_on('rocm-device-libs', type='build')
-    depends_on('rocminfo@3.5.0', type='build', when='@3.5.0')
+    for ver in ['3.5.0']:
+        depends_on('rocclr@' + ver,  type='build', when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
+        depends_on('comgr@' + ver, type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
+        depends_on('rocminfo@' + ver, type='build', when='@' + ver)
+        depends_on('mesa~llvm@18.3:', type=('build', 'link'), when='@' + ver)
 
     # Note: the ROCm ecosystem expects `lib/` and `bin/` folders with symlinks
     # in the parent directory of the package, which is incompatible with spack.

@@ -245,6 +245,7 @@ class Trilinos(CMakePackage):
     conflicts('+amesos', when='~epetra')
     conflicts('+amesos', when='~teuchos')
     conflicts('+anasazi', when='~teuchos')
+    conflicts('+aztec', when='~epetra')
     conflicts('+belos', when='~teuchos')
     conflicts('+epetraext', when='~epetra')
     conflicts('+epetraext', when='~teuchos')
@@ -340,6 +341,7 @@ class Trilinos(CMakePackage):
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
+    depends_on('hdf5+mpi', when="+hdf5+mpi")
     depends_on('netcdf-c+mpi', when="+netcdf~pnetcdf+mpi")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
     depends_on('parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
@@ -430,7 +432,6 @@ class Trilinos(CMakePackage):
             # Force Trilinos to use the MPI wrappers instead of raw compilers
             # this is needed on Apple systems that require full resolution of
             # all symbols when linking shared libraries
-            mpi_bin = spec['mpi'].prefix.bin
             options.extend([
                 define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
                 define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
@@ -516,6 +517,13 @@ class Trilinos(CMakePackage):
             ])
 
         if '+stratimikos' in spec:
+            # Explicitly enable Thyra (ThyraCore is required). If you don't do
+            # this, then you get "NOT setting ${pkg}_ENABLE_Thyra=ON since
+            # Thyra is NOT enabled at this point!" leading to eventual build
+            # errors if using MueLu because `Xpetra_ENABLE_Thyra` is set to
+            # off.
+            options.append(define('Trilinos_ENABLE_Thyra', True))
+
             # Add thyra adapters based on package enables
             options.extend(
                 define_trilinos_enable('Thyra' + pkg + 'Adapters', pkg.lower())
@@ -690,7 +698,7 @@ class Trilinos(CMakePackage):
             if '+mpi' in spec:
                 libgfortran = os.path.dirname(os.popen(
                     '%s --print-file-name libgfortran.a' %
-                    join_path(mpi_bin, 'mpif90')).read())
+                    spec['mpi'].mpifc).read())
                 options.append(define(
                     'Trilinos_EXTRA_LINK_FLAGS',
                     '-L%s/ -lgfortran' % (libgfortran),

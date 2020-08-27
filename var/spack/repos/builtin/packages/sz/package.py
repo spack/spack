@@ -12,9 +12,10 @@ class Sz(CMakePackage):
     homepage = "https://collab.cels.anl.gov/display/ESR/SZ"
     url      = "https://github.com/disheng222/SZ/archive/v2.1.8.0.tar.gz"
     git      = "https://github.com/disheng222/sz"
-    maintainers = ['disheng222']
+    maintainers = ['disheng222', 'robertu94']
 
     version('develop', branch='master')
+    version('2.1.9', sha256='491724ff1c0eaaab5e1a7a28e36aba6da9dcbeddb29d8d21a6d1388383d4891e')
     version('2.1.8.3', sha256='be94f3c8ab03d6849c59a98e0ebf80816a6b8d07a1d762a4b285498acb2f3871')
     version('2.1.8.1', sha256='a27c9c9da16c9c4232c54813ba79178945f47609043f11501d49a171e47d3f46')
     version('2.1.8.0', sha256='8d6bceb59a03d52e601e29d9b35c21b146c248abae352f9a4828e91d8d26aa24')
@@ -53,6 +54,7 @@ class Sz(CMakePackage):
     depends_on('py-numpy', when="+python", type=('build', 'link', 'run'))
     depends_on('hdf5', when="+hdf5")
     depends_on('netcdf-c', when="+netcdf")
+    depends_on('cmake@3.13:', type='build')
 
     patch('ctags-only-if-requested.patch', when='@2.1.8.1:2.1.8.3')
 

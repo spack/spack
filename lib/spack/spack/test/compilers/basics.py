@@ -739,6 +739,41 @@ fi
         assert 'SPACK_TEST_CMP_ON' not in os.environ
 
 
+def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
+    # Create compiler
+    gcc = str(tmpdir.join('gcc'))
+    with open(gcc, 'w') as f:
+        f.write("""#!/bin/bash
+echo "4.4.4"
+""")  # Version for which c++11 flag is -std=c++0x
+    fs.set_executable(gcc)
+
+    # Add compiler to config
+    compiler_info = {
+        'spec': 'gcc@foo',
+        'paths': {
+            'cc': gcc,
+            'cxx': None,
+            'f77': None,
+            'fc': None,
+        },
+        'flags': {},
+        'operating_system': 'fake',
+        'target': 'fake',
+        'modules': ['turn_on'],
+        'environment': {},
+        'extra_rpaths': [],
+    }
+    compiler_dict = {'compiler': compiler_info}
+
+    # Run and confirm output
+    compilers = spack.compilers.get_compilers([compiler_dict])
+    assert len(compilers) == 1
+    compiler = compilers[0]
+    flag = compiler.cxx11_flag
+    assert flag == '-std=c++0x'
+
+
 def test_apple_clang_setup_environment(mock_executable, monkeypatch):
     """Test a code path that is taken only if the package uses
     Xcode on MacOS.

@@ -5,7 +5,7 @@
 
 
 from spack import *
-from os import popen
+import shutil
 
 
 class RocmSmiLib(CMakePackage):
@@ -24,7 +24,6 @@ class RocmSmiLib(CMakePackage):
 
     @run_after('install')
     def post_install(self):
-        popen('cp -R {0}/rocm_smi/lib {1}'.format(self.prefix, self.prefix))
-        popen('cp -R {0}/rocm_smi/include {1}'.format(self.prefix,
-                                                      self.prefix))
-        popen('rm -R {0}/rocm_smi'.format(self.prefix))
+        shutil.rmtree(self.prefix.lib)
+        install_tree(self.prefix.rocm_smi,  self.prefix)
+        shutil.rmtree(self.prefix.rocm_smi)

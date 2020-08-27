@@ -85,7 +85,7 @@ class Conduit(Package):
     # CMake
     #######################
     # cmake 3.8.2 or newer
-    depends_on("cmake@3.8.2:3.17.9999", type='build')
+    depends_on("cmake@3.8.2:", type='build')
 
     #######################
     # Python
@@ -144,6 +144,10 @@ class Conduit(Package):
     depends_on("py-sphinx", when="+python+doc", type='build')
     depends_on("py-sphinx-rtd-theme", when="+python+doc", type='build')
     depends_on("doxygen", when="+doc+doxygen")
+
+    # Tentative patch for fj compiler
+    # Cmake will support fj compiler and this patch will be removed
+    patch('fj_flags.patch', when='%fj')
 
     # build phases used by this package
     phases = ["configure", "build", "install"]
