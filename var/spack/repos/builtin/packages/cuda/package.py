@@ -77,6 +77,7 @@ class Cuda(Package):
     # https://www.nvidia.com/en-us/drivers/cuda/mac-driver-archive/ mention
     # Mojave support -- only macOS High Sierra 10.13 is supported.
     conflicts('arch=darwin-mojave-x86_64')
+
     depends_on('libxml2', when='@10.1.243:')
 
     def setup_build_environment(self, env):
