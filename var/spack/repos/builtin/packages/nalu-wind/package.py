@@ -117,4 +117,15 @@ class NaluWind(CMakePackage):
         if 'darwin' in spec.architecture:
             options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
 
+        if self.run_tests:
+            options.append('-DENABLE_TESTS:BOOL=ON')
+        else:
+            options.append('-DENABLE_TESTS:BOOL=OFF')
+
         return options
+
+    @run_before('cmake')
+    def add_submodules(self):
+        if self.run_tests:
+            git = which('git')
+            git('submodule', 'update', '--init', '--recursive')
