@@ -278,7 +278,6 @@ spack package at this time.''',
                 os.path.dirname(match.group(1)))
             if compiler_spec:
                 variants += '%' + str(compiler_spec)
-            print(variants)
             results.append(variants)
         return results
 
