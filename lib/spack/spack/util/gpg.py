@@ -237,8 +237,12 @@ class Gpg(object):
 
         # Make sure that the GNUPGHOME exists
         if not os.path.exists(self.gnupg_home):
-            os.makedirs(os.path.dirname(self.gnupg_home), exist_ok=True)
-            os.mkdir(self.gnupg_home, mode=0o700)
+            os.makedirs(self.gnupg_home)
+
+        if not os.path.isdir(self.gnupg_home):
+            raise SpackGPGError(
+                'GNUPGHOME "{0}" exists and is not a directory'.format(
+                    self.gnupg_home))
 
         # Try to ensure that /var/run/user/$(id -u) exists and run gpgconf
         # --create-socketdir.
@@ -251,7 +255,8 @@ class Gpg(object):
             mkdir = (os.path.isdir(var_run_user) and
                      not os.path.exists(user_run_dir))
             if mkdir:
-                os.mkdir(user_run_dir, mode=0o700)
+                os.mkdir(user_run_dir)
+                os.chmod(user_run_dir, 0o700)
 
         # If the above operation fails due to lack of permissions, then just
         # carry on without running gpgconf and hope for the best.
