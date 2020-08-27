@@ -100,12 +100,11 @@ class Cmake(Package):
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
-    # Tries to build an Objective-C file from libuv with GCC's C frontend
-    # https://gitlab.kitware.com/cmake/cmake/-/issues/20620
-    # https://github.com/libuv/libuv/issues/2805
+    # Does not compile and is not covered in upstream CI (yet).
     conflicts('%gcc platform=darwin',
-              msg='CMake does not compile with GCC on macOS yet, use clang. '
-                  'See: https://gitlab.kitware.com/cmake/cmake/-/issues/20620')
+              msg='CMake does not compile with GCC on macOS yet, '
+                  'please use %apple-clang. '
+                  'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
 
     # Really this should conflict since it's enabling or disabling openssl for
     # CMake's internal copy of curl.  Ideally we'd want a way to have the
