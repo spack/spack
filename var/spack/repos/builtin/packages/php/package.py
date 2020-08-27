@@ -36,6 +36,27 @@ class Php(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('sqlite')
 
+    patch('sbang.patch')
+
+    def patch(self):
+        """
+        phar sbang is added before build phase.
+        Because phar is php script with binary data
+        (Not UTF-8 text file) And phar is embeded own sha1 checksum.
+        """
+        shebang_limit = 127
+
+        if len(self.prefix.bin.php) + 2 <= shebang_limit:
+            return
+
+        new_sbang_line = '#!/bin/bash %s/bin/sbang' % spack.paths.prefix
+        original_bang = '-b "$(PHP_PHARCMD_BANG)"'
+        makefile = join_path('ext', 'phar', 'Makefile.frag')
+        filter_file(
+            original_bang,
+            original_bang + ' -z "{0}"'.format(new_sbang_line),
+            makefile, string=True)
+
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./buildconf', '--force')

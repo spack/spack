@@ -30,6 +30,11 @@ node_line         = "#!/this/" + ('x' * 200) + "/is/node\n"
 node_in_text      = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
 node_line_patched = "//!/this/" + ('x' * 200) + "/is/node\n"
 sbang_line        = '#!/bin/bash %s/bin/sbang\n' % spack.store.layout.root
+php_line         = "#!/this/" + ('x' * 200) + "/is/php\n"
+php_in_text      = ("line\n") * 100 + "php\n" + ("line\n" * 100)
+php_line_patched = "<?php #!/this/" + ('x' * 200) + "/is/php\n"
+php_line_patched2 = "?>\n"
+sbang_line        = '#!/bin/bash %s/bin/sbang\n' % spack.store.layout.root
 last_line         = "last!\n"
 
 
@@ -77,6 +82,19 @@ class ScriptDirectory(object):
         with open(self.node_textbang, 'w') as f:
             f.write(short_line)
             f.write(node_in_text)
+            f.write(last_line)
+
+        # php script with long shebang
+        self.php_shebang = os.path.join(self.tempdir, 'php')
+        with open(self.php_shebang, 'w') as f:
+            f.write(php_line)
+            f.write(last_line)
+
+        # php script with long shebang
+        self.php_textbang = os.path.join(self.tempdir, 'php_in_text')
+        with open(self.php_textbang, 'w') as f:
+            f.write(short_line)
+            f.write(php_in_text)
             f.write(last_line)
 
         # Script already using sbang.

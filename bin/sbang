@@ -71,6 +71,17 @@
 #     3
 #     4    print "success!"
 #
+# For php, scripts the second line can't start with #!, as # is not
+# the comment character in php (even though php ignores #! on the
+# *first* line of a script).  So, instrument a php script like this,
+# using -- instead of # on the second line:
+#
+#     1    #!/bin/bash /path/to/sbang
+#     2    <?php  #/long/path/to/lua with arguments
+#     3    >?
+#     3
+#     4    <?php echo "success!" ?>
+#
 # How it works
 # -----------------------------
 # `sbang` is a very simple bash script. It looks at the first two
@@ -90,6 +101,8 @@ while read line && ((lines < 2)) ; do
         interpreter="${line#//!}"
     elif [[ "$line" = '--!'*lua* ]]; then
         interpreter="${line#--!}"
+    elif [[ "$line" = '<?php #!'*php* ]]; then
+        interpreter="${line#<?php\ \#}"
     fi
     lines=$((lines+1))
 done < "$script"
