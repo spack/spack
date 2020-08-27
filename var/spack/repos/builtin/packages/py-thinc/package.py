@@ -8,8 +8,9 @@ class PyThinc(PythonPackage):
     """Thinc: Practical Machine Learning for NLP in Python."""
 
     homepage = "https://github.com/explosion/thinc"
-    url      = "https://pypi.io/packages/source/t/thinc/thinc-7.4.0.tar.gz"
+    url      = "https://pypi.io/packages/source/t/thinc/thinc-7.4.1.tar.gz"
 
+    version('7.4.1', sha256='523e9be1bfaa3ed1d03d406ce451b6b4793a9719d5b83d2ea6b3398b96bc58b8')
     version('7.4.0', sha256='523e9be1bfaa3ed1d03d406ce451b6b4793a9719d5b83d2ea6b3398b96bc58b8')
 
     depends_on('py-setuptools', type='build')

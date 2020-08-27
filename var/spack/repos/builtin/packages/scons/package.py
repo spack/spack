@@ -32,3 +32,12 @@ class Scons(PythonPackage):
     @when('@3.0.2:')
     def install_args(self, spec, prefix):
         return ['--prefix={0}'.format(prefix), '--root=/']
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.lib.scons)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('PYTHONPATH', self.prefix.lib.scons)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path('PYTHONPATH', self.prefix.lib.scons)
