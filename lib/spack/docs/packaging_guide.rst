@@ -645,7 +645,7 @@ multiple fields based on delimiters such as ``.``, ``-`` etc. Then
 matching fields are compared using the rules below:
 
 #. The following develop-like strings are greater (newer) than all
-   numbers and are ordered as ``develop > master > head > trunk``.
+   numbers and are ordered as ``develop > main > master > head > trunk``.
 
 #. Numbers are all less than the chosen develop-like strings above,
    and are sorted numerically.
