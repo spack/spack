@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Fermi(MakefilePackage):
     homepage = "https://github.com/lh3/fermi"
     url      = "https://github.com/downloads/lh3/fermi/fermi-1.1.tar.bz2"
 
-    version('1.1', 'd5f006315652b6f18070b31474ca5ebb')
+    version('1.1', sha256='f1351b52a4ff40e5d708899e90ecf747e7af8d4eac795f6968e5b58c2ba11a67')
 
     depends_on('zlib')
     depends_on('perl', type='run')

@@ -27,8 +27,9 @@ packages:
       glx: [mesa+glx, opengl]
       glu: [mesa-glu, openglu]
       golang: [gcc]
+      iconv: [libiconv]
       ipp: [intel-ipp]
-      java: [jdk, openjdk, ibm-java]
+      java: [openjdk, jdk, ibm-java]
       jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas]
       mariadb-client: [mariadb-c-client, mariadb]
@@ -39,10 +40,13 @@ packages:
       opencl: [pocl]
       pil: [py-pillow]
       pkgconfig: [pkgconf, pkg-config]
+      rpc: [libtirpc]
       scalapack: [netlib-scalapack]
+      sycl: [hipsycl]
       szip: [libszip, libaec]
       tbb: [intel-tbb]
       unwind: [libunwind]
+      sycl: [hipsycl]
     permissions:
       read: world
       write: user

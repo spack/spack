@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Yasm(AutotoolsPackage):
     git      = "https://github.com/yasm/yasm.git"
 
     version('develop', branch='master')
-    version('1.3.0', 'fc9e586751ff789b34b1f21d572d96af')
+    version('1.3.0', sha256='3dce6601b495f5b3d45b59f7d2492a340ee7e84b5beca17e48f862502bd5603f')
 
     depends_on('autoconf', when='@develop')
     depends_on('automake', when='@develop')

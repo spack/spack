@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Albert(MakefilePackage):
     homepage = "https://people.cs.clemson.edu/~dpj/albertstuff/albert.html"
     url      = "https://github.com/kentavv/Albert/archive/v4.0a_opt4.tar.gz"
 
-    version('4.0a_opt4', '79e3d9623602f2ca5db7d84c81d4eb8c')
+    version('4.0a_opt4', sha256='80b9ee774789c9cd123072523cfb693c443c3624708a58a5af177a51f36b2c79')
 
     depends_on('readline')
 

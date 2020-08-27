@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,8 @@ from spack import *
 class Shuffile(CMakePackage):
     """Shuffle files between MPI ranks"""
 
-    homepage = "https://github.com/ECP-VeloC/shuffile"
-    url      = "https://github.com/ECP-VeloC/shuffile/archive/v0.0.2.zip"
+    homepage = "https://github.com/ecp-veloc/shuffile"
+    url      = "https://github.com/ecp-veloc/shuffile/archive/v0.0.3.zip"
     git      = "https://github.com/ecp-veloc/shuffile.git"
 
     tags = ['ecp']

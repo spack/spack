@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,8 @@ class MesaGlu(AutotoolsPackage):
     homepage = "https://www.mesa3d.org"
     url      = "https://www.mesa3d.org/archive/glu/glu-9.0.0.tar.gz"
 
-    version('9.0.0', 'bbc57d4fe3bd3fb095bdbef6fcb977c4')
+    version('9.0.1', sha256='f6f484cfcd51e489afe88031afdea1e173aa652697e4c19ddbcb8260579a10f7')
+    version('9.0.0', sha256='4387476a1933f36fec1531178ea204057bbeb04cc2d8396c9ea32720a1f7e264')
 
     depends_on('gl@3:')
 

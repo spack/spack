@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ config_file:
     [ 1, 2, 3 ]
   some_key: some_string
 """
-    return syaml.load(test_file)
+    return syaml.load_config(test_file)
 
 
 def test_parse(data):

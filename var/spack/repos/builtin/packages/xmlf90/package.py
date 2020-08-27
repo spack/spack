@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xmlf90(AutotoolsPackage):
     homepage = "https://launchpad.net/xmlf90"
     url      = "https://launchpad.net/xmlf90/trunk/1.5/+download/xmlf90-1.5.2.tgz"
 
-    version('1.5.2', '324fdcba7dafce83db26e72aab9f6656')
+    version('1.5.2', sha256='666694db793828d1d1e9aea665f75c75ee21772693465a88b43e6370862abfa6')
 
     depends_on('autoconf@2.69:', type='build')
     depends_on('automake@1.14:', type='build')

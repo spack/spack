@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyDescartes(PythonPackage):
     homepage = "https://pypi.org/project/descartes/"
     url      = "https://pypi.io/packages/source/d/descartes/descartes-1.1.0.tar.gz"
 
-    version('1.1.0', 'ac608090f3c9f6e0ce856fdc29944096')
+    version('1.1.0', sha256='135a502146af5ed6ff359975e2ebc5fa4b71b5432c355c2cafdc6dea1337035b')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-matplotlib', type=('build', 'run'))

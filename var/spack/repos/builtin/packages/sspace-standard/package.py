@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class SspaceStandard(Package):
 
     homepage = "https://www.baseclear.com/genomics/bioinformatics/basetools/SSPACE"
     url      = "file://{0}/41SSPACE-STANDARD-3.0_linux-x86_64.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('3.0', '7e171b4861b9d514e80aafc3d9cdf554')
 
@@ -47,6 +48,6 @@ class SspaceStandard(Package):
         install_tree('tools', prefix.tools)
         install(rootscript, prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('SSPACE_HOME', prefix)
-        run_env.prepend_path('PATH', prefix)
+    def setup_run_environment(self, env):
+        env.set('SSPACE_HOME', self.prefix)
+        env.prepend_path('PATH', self.prefix)

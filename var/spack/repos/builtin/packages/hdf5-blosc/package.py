@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -183,10 +183,14 @@ Done.
                 raise RuntimeError("HDF5 Blosc plugin check failed")
         shutil.rmtree(checkdir)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
-        run_env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
+    def setup_build_environment(self, env):
+        env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
-        run_env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
+    def setup_run_environment(self, env):
+        env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)

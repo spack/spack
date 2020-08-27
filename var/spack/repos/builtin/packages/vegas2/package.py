@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Vegas2(Package):
     homepage = "https://vegas2.qimrberghofer.edu.au/"
     url      = "https://vegas2.qimrberghofer.edu.au/vegas2v2"
 
-    version('2', '815d80b86e9e294f99332bb5181e897a', expand=False)
+    version('2', sha256='dc85834219141a4e9a246391b48185a739223a5e00b1b1c4d2517822388278ba', expand=False)
 
     depends_on('perl', type='run')
     depends_on('r', type='run')

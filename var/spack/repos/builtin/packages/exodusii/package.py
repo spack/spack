@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,8 +30,8 @@ class Exodusii(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     # https://github.com/gsjaardema/seacas/blob/master/NetCDF-Mapping.md
-    depends_on('netcdf@4.6.1:+mpi', when='+mpi')
-    depends_on('netcdf@4.6.1:~mpi', when='~mpi')
+    depends_on('netcdf-c@4.6.1:+mpi', when='+mpi')
+    depends_on('netcdf-c@4.6.1:~mpi', when='~mpi')
 
     def cmake_args(self):
         spec = self.spec
@@ -49,7 +49,7 @@ class Exodusii(CMakePackage):
             '-DSEACASProj_SKIP_FORTRANCINTERFACE_VERIFY_TEST:BOOL=ON',
             '-DSEACASProj_ENABLE_CXX11:BOOL=OFF',
             '-DSEACASProj_ENABLE_Zoltan:BOOL=OFF',
-            '-DNetCDF_DIR:PATH={0}'.format(spec['netcdf'].prefix),
+            '-DNetCDF_DIR:PATH={0}'.format(spec['netcdf-c'].prefix),
 
             # MPI Flags #
             '-DTPL_ENABLE_MPI={0}'.format('ON' if '+mpi' in spec else 'OFF'),

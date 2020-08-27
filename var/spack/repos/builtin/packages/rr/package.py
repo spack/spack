@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,9 @@ class Rr(CMakePackage):
     homepage = "http://rr-project.org/"
     url      = "https://github.com/mozilla/rr/archive/4.5.0.tar.gz"
 
-    version('4.5.0', '1ec0aed0559b81143f59a200eeb302ef')
-    version('4.4.0', '6d1cbb4fafbf6711114369907cf1efb1')
-    version('4.3.0', '31470564e8b7eb317f619e4ef2244082')
+    version('4.5.0', sha256='19f28259c0aa562c9518ae51207377fa93071a7dc270a0738d8d39e45ae2b1c0')
+    version('4.4.0', sha256='b2b24a3f67df47576126421746cd2942a458d2825faa76e8bb3ca43edffa03d3')
+    version('4.3.0', sha256='46933cdd706d71c3de05b55937c85ee055c08e67e5c1e6a1278c7feb187ca37a')
 
     depends_on('gdb')
     depends_on('git')

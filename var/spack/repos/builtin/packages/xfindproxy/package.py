@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Xfindproxy(AutotoolsPackage):
+class Xfindproxy(AutotoolsPackage, XorgPackage):
     """xfindproxy is used to locate available X11 proxy services.
 
     It utilizes the Proxy Management Protocol to communicate with a proxy
@@ -15,9 +15,9 @@ class Xfindproxy(AutotoolsPackage):
     proxies are shared whenever possible."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xfindproxy"
-    url      = "https://www.x.org/archive/individual/app/xfindproxy-1.0.4.tar.gz"
+    xorg_mirror_path = "app/xfindproxy-1.0.4.tar.gz"
 
-    version('1.0.4', 'd0a7b53ae5827b342bccd3ebc7ec672f')
+    version('1.0.4', sha256='fa6152fcf9c16fbb2ef52259731df5df899a39a86894b0508456613f26ff924a')
 
     depends_on('libice')
     depends_on('libxt')

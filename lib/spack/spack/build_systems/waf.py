@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -75,13 +75,14 @@ class WafPackage(PackageBase):
 
     def configure(self, spec, prefix):
         """Configures the project."""
-        args = self.configure_args()
+        args = ['--prefix={0}'.format(self.prefix)]
+        args += self.configure_args()
 
         self.waf('configure', *args)
 
     def configure_args(self):
         """Arguments to pass to configure."""
-        return ['--prefix={0}'.format(self.prefix)]
+        return []
 
     def build(self, spec, prefix):
         """Executes the build."""

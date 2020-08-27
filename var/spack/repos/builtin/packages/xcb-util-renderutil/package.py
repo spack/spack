@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class XcbUtilRenderutil(AutotoolsPackage):
     homepage = "https://xcb.freedesktop.org/"
     url      = "https://xcb.freedesktop.org/dist/xcb-util-renderutil-0.3.9.tar.gz"
 
-    version('0.3.9', 'ac18c1b70ae69845e112f1d987926436')
+    version('0.3.9', sha256='55eee797e3214fe39d0f3f4d9448cc53cffe06706d108824ea37bb79fcedcad5')
 
     depends_on('libxcb@1.4:')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,13 +12,9 @@ class Channelflow(CMakePackage):
     """
 
     homepage = 'https://github.com/epfl-ecps/channelflow'
-    url = 'https://github.com/epfl-ecps/channelflow.git'
+    git      = 'https://github.com/epfl-ecps/channelflow.git'
 
-    version(
-        'develop',
-        git='https://github.com/epfl-ecps/channelflow.git',
-        branch='master'
-    )
+    version('master', branch='master')
 
     variant('shared', default=True, description='Build shared libs')
     variant('mpi', default=True, description='Enable MPI parallelism')
@@ -38,8 +34,8 @@ class Channelflow(CMakePackage):
 
     # Support for different I/O formats
     depends_on('hdf5+cxx', when='+hdf5')
-    depends_on('netcdf', when='netcdf=serial')
-    depends_on('netcdf+mpi', when='netcdf=parallel')
+    depends_on('netcdf-c', when='netcdf=serial')
+    depends_on('netcdf-c+mpi', when='netcdf=parallel')
 
     # Python bindings
     depends_on('boost+python', when='+python')
@@ -73,7 +69,7 @@ class Channelflow(CMakePackage):
         }
 
         args.append('-DWITH_NETCDF:STRING={0}'.format(
-            netcdf_str[spec.variants['netcdf'].value]
+            netcdf_str[spec.variants['netcdf-c'].value]
         ))
 
         # Set an MPI compiler for parallel builds

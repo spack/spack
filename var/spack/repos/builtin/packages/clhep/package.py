@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,14 @@ from spack import *
 class Clhep(CMakePackage):
     """CLHEP is a C++ Class Library for High Energy Physics. """
     homepage = "http://proj-clhep.web.cern.ch/proj-clhep/"
-    url      = "http://proj-clhep.web.cern.ch/proj-clhep/DISTRIBUTION/tarFiles/clhep-2.2.0.5.tgz"
+    url      = "http://proj-clhep.web.cern.ch/proj-clhep/dist1/clhep-2.4.1.3.tgz"
     list_url = "https://proj-clhep.web.cern.ch/proj-clhep/"
     list_depth = 1
 
+    maintainers = ['drbenmorgan']
+
+    version('2.4.1.3', sha256='27c257934929f4cb1643aa60aeaad6519025d8f0a1c199bc3137ad7368245913')
+    version('2.4.1.2', sha256='ff96e7282254164380460bc8cf2dff2b58944084eadcd872b5661eb5a33fa4b8')
     version('2.4.1.0', sha256='d14736eb5c3d21f86ce831dc1afcf03d423825b35c84deb6f8fd16773528c54d')
     version('2.4.0.4', sha256='eb013841c57990befa1e977a11a552ab8328733c1c3b6cecfde86da40dc22113')
     version('2.4.0.2', sha256='1e9891c5badb718c24933e7a5c6ee4d64fd4d5cf3a40c150ad18e864ec86b8a4')

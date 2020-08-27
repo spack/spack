@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Vigra(CMakePackage):
 
     depends_on('libtiff', when='+tiff')
     depends_on('libpng', when='+png')
-    depends_on('libjpeg', when='+jpeg')
+    depends_on('jpeg', when='+jpeg')
     depends_on('hdf5', when='+hdf5')
     depends_on('fftw', when='+fftw')
     depends_on('openexr', when='+exr')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -231,7 +231,7 @@ class PythonPackage(PackageBase):
         if ('py-setuptools' == spec.name or          # this is setuptools, or
             'py-setuptools' in spec._dependencies and  # it's an immediate dep
             'build' in spec._dependencies['py-setuptools'].deptypes):
-                args += ['--single-version-externally-managed', '--root=/']
+            args += ['--single-version-externally-managed', '--root=/']
 
         return args
 

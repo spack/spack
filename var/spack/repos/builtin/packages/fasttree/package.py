@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Fasttree(Package):
     homepage = "http://www.microbesonline.org/fasttree"
     url      = "http://www.microbesonline.org/fasttree/FastTree-2.1.10.c"
 
-    version('2.1.10', '1c2c6425a638ec0c61ef064cda687987', expand=False, url='http://www.microbesonline.org/fasttree/FastTree-2.1.10.c')
+    version('2.1.10', sha256='54cb89fc1728a974a59eae7a7ee6309cdd3cddda9a4c55b700a71219fc6e926d', expand=False, url='http://www.microbesonline.org/fasttree/FastTree-2.1.10.c')
 
     phases = ['build', 'install']
 

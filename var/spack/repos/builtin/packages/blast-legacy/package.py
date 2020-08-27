@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,9 +19,10 @@ class BlastLegacy(Package):
     depends_on('tcsh', type='build')
 
     def install(self, spec, prefix):
-        filter_file('/bin/csh -f', '/bin/env tcsh', 'make/ln-if-absent',
+        filter_file('/bin/csh -f', '/usr/bin/env tcsh', 'make/ln-if-absent',
                     string=True)
 
+        symlink(self.stage.source_path, '../ncbi')
         tcsh = which('tcsh')
         with working_dir('..'):
             tcsh('./ncbi/make/makedis.csh')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,17 +14,19 @@ class Stat(AutotoolsPackage):
     git      = "https://github.com/llnl/stat.git"
 
     version('develop', branch='develop')
-    version('4.0.1', '3e21b48e7932d9a4a9efb300f0b97fa2',
+    version('4.0.2', sha256='9ece10dde8e1579c9db469ac8d2391b26e59498c0947dbb271c2d01d7ef0a65d',
+            url='https://github.com/LLNL/STAT/releases/download/v4.0.2/stat-4.0.2.tar.gz')
+    version('4.0.1', sha256='ae3fbd6946003fb16233d82d40285780a9a802da5fe30d09adb8a8b2a2cc4ad6',
             url='https://github.com/LLNL/STAT/files/2489327/stat-4.0.1.tar.gz')
-    version('4.0.0', 'b357160662ced251bc55cb1b884c3407',
+    version('4.0.0', sha256='1c4f62686645f6dc1d9ef890acc9c2839c150789dc220718775878feb41bdabf',
             url='https://github.com/LLNL/STAT/releases/download/v4.0.0/stat-4.0.0.tar.gz')
-    version('3.0.1', 'dac6f23c3639a0b21f923dc6219ba385',
+    version('3.0.1', sha256='540916ffb92026ca7aa825a2320095a89b9b4fd3426ee7657b44ac710618947e',
             url='https://github.com/LLNL/STAT/files/911503/stat-3.0.1.zip')
-    version('3.0.0', 'a97cb235c266371c4a26329112de48a2',
+    version('3.0.0', sha256='b95cac82989e273e566f16ba17a75526374ee8e0ef066a411977e1935967df57',
             url='https://github.com/LLNL/STAT/releases/download/v3.0.0/STAT-3.0.0.tar.gz')
-    version('2.2.0', '26bd69dd57a15afdd5d0ebdb0b7fb6fc')
-    version('2.1.0', 'ece26beaf057aa9134d62adcdda1ba91')
-    version('2.0.0', 'c7494210b0ba26b577171b92838e1a9b')
+    version('2.2.0', sha256='ed4732bfbe942ca8e29342f24f48e0c295989b0639a548febe7a1c1390ae1993')
+    version('2.1.0', sha256='497ed2bd1127cb2e97b32a30a4f62b6b298d18f3313c0278dd908c6ecba64f43')
+    version('2.0.0', sha256='b19587c2166b5d4d3a89a0ec5433ac61335aa7ad5cfa5a3b4406f5ea6c0bf0ac')
 
     # TODO: dysect requires Dyninst patch for version 3.0.0b
     variant('dysect', default=False, description="enable DySectAPI")
@@ -49,6 +51,7 @@ class Stat(AutotoolsPackage):
     depends_on('py-xdot', when='@4.0.1:')
     depends_on('swig')
     depends_on('mpi', when='+examples')
+    depends_on('boost')
 
     patch('configure_mpicxx.patch', when='@2.1.0')
 
@@ -60,6 +63,7 @@ class Stat(AutotoolsPackage):
             "--with-graphlib=%s"    % spec['graphlib'].prefix,
             "--with-stackwalker=%s" % spec['dyninst'].prefix,
             "--with-python=%s"      % spec['python'].command.path,
+            "--with-boost=%s"       % spec['boost'].prefix,
         ]
         if '+fgfs' in spec:
             args.append('--with-fgfs=%s'

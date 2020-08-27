@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyLatexcodec(PythonPackage):
 
     import_modules = ['latexcodec']
 
-    version('1.0.4', '72010ec2a55227a5802239cff6fd32d6')
+    version('1.0.4', sha256='62bf8a3ee298f169a4d014dad5522bc1325b54dc98789a453fd338620387cb6c')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-six@1.4.1:', type=('build', 'run'))

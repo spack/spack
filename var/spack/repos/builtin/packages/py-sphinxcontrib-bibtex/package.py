@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,8 @@ class PySphinxcontribBibtex(PythonPackage):
 
     import_modules = ['sphinxcontrib', 'sphinxcontrib.bibtex']
 
-    version('0.3.5', 'd3c86836e2f6227b55a5ca9108590b1c')
+    version('1.0.0', sha256='629612b001f86784669d65e662377a482052decfd9a0a17c46860878eef7b9e0')
+    version('0.3.5', sha256='c93e2b4a0d14f0ab726f95f0a33c1675965e9df3ed04839635577b8f978206cd')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-latexcodec@0.3.0:', type=('build', 'run'))

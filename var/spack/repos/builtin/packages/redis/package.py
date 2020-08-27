@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,3 +33,8 @@ class Redis(MakefilePackage):
             'PREFIX={0}'.format(self.spec.prefix),
             'install'
         ]
+
+    @run_after('install')
+    def install_conf(self):
+        mkdirp(self.prefix.conf)
+        install('redis.conf', self.prefix.conf)

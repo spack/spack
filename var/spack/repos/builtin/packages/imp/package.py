@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Imp(CMakePackage):
     homepage = "https://integrativemodeling.org"
     url      = "https://github.com/salilab/imp/archive/2.8.0.tar.gz"
 
-    version('2.8.0', 'bc985d40dc63bb12e09d6d7403954645')
+    version('2.8.0', sha256='0b46b8988febd7cdfc5838849007f9a547493ed4b6c752fe54571467eeb1acd2')
 
     depends_on('python@2.7:')
     depends_on('swig')

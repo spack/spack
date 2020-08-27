@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,21 +21,21 @@ class Biopieces(Package):
     depends_on('perl-module-build', type=('build', 'run'))
     depends_on('perl-bit-vector', type=('build', 'run'))
     depends_on('perl-svg', type=('build', 'run'))
-    depends_on('perl-term-readkey', type=('build', 'run'))
+    depends_on('perl-termreadkey', type=('build', 'run'))
     depends_on('perl-time-hires', type=('build', 'run'))
     depends_on('perl-dbi', type=('build', 'run'))
     depends_on('perl-xml-parser', type=('build', 'run'))
     depends_on('perl-carp-clan', type=('build', 'run'))
     depends_on('perl-class-inspector', type=('build', 'run'))
     depends_on('perl-html-parser', type=('build', 'run'))
-    depends_on('perl-lwp', type=('build', 'run'))
+    depends_on('perl-libwww-perl', type=('build', 'run'))
     depends_on('perl-soap-lite', type=('build', 'run'))
     depends_on('perl-uri', type=('build', 'run'))
     depends_on('perl-inline', type=('build', 'run'))
     depends_on('perl-inline-c', type=('build', 'run'))
     depends_on('perl-parse-recdescent', type=('build', 'run'))
-    depends_on('perl-version', type=('build', 'run'))
-    depends_on('perl-dbfile', type=('build', 'run'))
+    depends_on('perl-perl-version', type=('build', 'run'))
+    depends_on('perl-db-file', type=('build', 'run'))
     depends_on('perl-dbd-mysql', type=('build', 'run'))
 
     depends_on('ruby@1.9:')
@@ -61,10 +61,10 @@ class Biopieces(Package):
     def install(self, spec, prefix):
         install_tree('.', prefix)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # Note: user will need to set environment variables on their own,
         # dependent on where they will want data to be located:
         #    BP_DATA - Contains genomic data etc.
         #    BP_TMP - Required temporary directory
         #    BP_LOG - Required log directory
-        run_env.prepend_path('BP_DIR', prefix)
+        env.prepend_path('BP_DIR', self.prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,18 +13,16 @@ class Libsodium(AutotoolsPackage):
     url      = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.13.tar.gz"
     list_url = "https://download.libsodium.org/libsodium/releases/old"
 
-    version('1.0.17', '0f71e2680187a1558b5461e6879342c5')
-    version('1.0.16', '37b18839e57e7a62834231395c8e962b')
-    version('1.0.15', '070373e73a0b10bd96f412e1732ebc42')
-    version('1.0.13', 'f38aac160a4bd05f06f743863e54e499')
-    version('1.0.12', 'c308e3faa724b630b86cc0aaf887a5d4')
-    version('1.0.11', 'b58928d035064b2a46fb564937b83540')
-    version('1.0.10', 'ea89dcbbda0b2b6ff6a1c476231870dd')
-    version('1.0.3', 'b3bcc98e34d3250f55ae196822307fab')
-    version('1.0.2', 'dc40eb23e293448c6fc908757738003f')
-    version('1.0.1', '9a221b49fba7281ceaaf5e278d0f4430')
-    version('1.0.0', '3093dabe4e038d09f0d150cef064b2f7')
-    version('0.7.1', 'c224fe3923d1dcfe418c65c8a7246316')
+    version('1.0.18', sha256='6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1')
+    version('1.0.17', sha256='0cc3dae33e642cc187b5ceb467e0ad0e1b51dcba577de1190e9ffa17766ac2b1')
+    version('1.0.16', sha256='eeadc7e1e1bcef09680fb4837d448fbdf57224978f865ac1c16745868fbd0533')
+    version('1.0.15', sha256='fb6a9e879a2f674592e4328c5d9f79f082405ee4bb05cb6e679b90afe9e178f4')
+    version('1.0.13', sha256='9c13accb1a9e59ab3affde0e60ef9a2149ed4d6e8f99c93c7a5b97499ee323fd')
+    version('1.0.3', sha256='cbcfc63cc90c05d18a20f229a62c7e7054a73731d0aa858c0517152c549b1288')
+    version('1.0.2', sha256='961d8f10047f545ae658bcc73b8ab0bf2c312ac945968dd579d87c768e5baa19')
+    version('1.0.1', sha256='c3090887a4ef9e2d63af1c1e77f5d5a0656fadb5105ebb9fb66a302210cb3af5')
+    version('1.0.0', sha256='ced1fe3d2066953fea94f307a92f8ae41bf0643739a44309cbe43aa881dbc9a5')
+    version('0.7.1', sha256='ef46bbb5bac263ef6d3fc00ccc11d4690aea83643412919fe15369b9870280a7')
 
     def url_for_version(self, version):
         url = 'https://download.libsodium.org/libsodium/releases/'

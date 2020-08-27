@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,22 @@ class PyPy2neo(PythonPackage):
     within Python applications and from the command line."""
 
     homepage = "http://py2neo.org/"
-    url      = "https://github.com/nigelsmall/py2neo/archive/py2neo-2.0.8.tar.gz"
+    url      = "https://pypi.io/packages/source/p/py2neo/py2neo-2.0.8.tar.gz"
 
-    version('2.0.8', 'e3ec5172a9e006515ef4155688a05a55')
-    version('2.0.7', '4cfbc5b7dfd7757f3d2e324805faa639')
-    version('2.0.6', '53e4cdb1a95fbae501c66e541d5f4929')
-    version('2.0.5', '143b1f9c0aa22faf170c1b9f84c7343b')
-    version('2.0.4', 'b3f7efd3344dc3f66db4eda11e5899f7')
+    version('4.3.0', sha256='a218ccb4b636e3850faa6b74ebad80f00600217172a57f745cf223d38a219222')
+    version('2.0.8', sha256='06167f5a91a0d9b9b73431baacd876f2d507650a681fdce1fcf3b383a9b991c1')
+    version('2.0.7', sha256='9b154053eb93c7f5fb3ebd48b6a5b99df450d3f2e9c6682153c6f8d59369378c')
+    version('2.0.6', sha256='6bb828d6d3e48b4d095b3f7d79dbb690a47633f0a9812eb62f141b042bab3186')
+    version('2.0.5', sha256='2c04d4223d2d356c4800c586f30c048757334f9391553c852c29aebf2368d101')
+    version('2.0.4', sha256='727726b87268ca1e929191b960a5473409e5bd81559ee83a304951104bb6b866')
 
     depends_on("py-setuptools", type='build')
+    depends_on("py-certifi", type=('build', 'run'), when='@4.3.0:')
+    depends_on("py-click@7.0", type=('build', 'run'), when='@4.3.0:')
+    depends_on("py-colorama", type=('build', 'run'), when='@4.3.0:')
+    depends_on("py-neobolt@1.7.12:1.7.999", type=('build', 'run'), when='@4.3.0:')
+    depends_on("py-neotime@1.7.4:1.7.999", type=('build', 'run'), when='@4.3.0:')
+    depends_on("py-prompt-toolkit@2.0.7:2.0.999", type=('build', 'run'), when='@4.3.0:')
+    depends_on("py-pygments@2.3.1:2.3.999", type=('build', 'run'), when='@4.3.0:')
+    depends_on("py-pytz", type=('build', 'run'), when='@4.3.0:')
+    depends_on("py-urllib3@1.23:1.24", type=('build', 'run'), when='@4.3.0:')

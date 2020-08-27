@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyPil(PythonPackage):
     homepage = "http://www.pythonware.com/products/pil/"
     url      = "http://effbot.org/media/downloads/Imaging-1.1.7.tar.gz"
 
-    version('1.1.7', 'fc14a54e1ce02a0225be8854bfba478e')
+    version('1.1.7', sha256='895bc7c2498c8e1f9b99938f1a40dc86b3f149741f105cf7c7bd2e0725405211')
 
     provides('pil')
 

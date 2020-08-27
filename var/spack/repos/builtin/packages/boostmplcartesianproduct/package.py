@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Boostmplcartesianproduct(Package):
     homepage = "http://www.organicvectory.com/index.php?option=com_content&view=article&id=75:boostmplcartesianproduct&catid=42:boost&Itemid=78"
     url      = "https://github.com/quinoacomputing/BoostMPLCartesianProduct/tarball/20161205"
 
-    version('20161205', 'b0c8534ee807484ffd161723cbc8fc04')
+    version('20161205', sha256='1fa8e367e4dc545b34016bf57d802858ce38baf40aff20f7c93b329895a18572')
 
     def install(self, spec, prefix):
         install_tree('boost/mpl', join_path(prefix.include, 'boost', 'mpl'))

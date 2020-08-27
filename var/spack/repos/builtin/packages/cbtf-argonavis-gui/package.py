@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,19 +52,22 @@ class CbtfArgonavisGui(QMakePackage):
 
     parallel = False
 
-    def setup_environment(self, spack_env, run_env):
-        """Set up the compile and runtime environments for a package."""
-        spack_env.set('BOOSTROOT', self.spec['boost'].prefix)
-        spack_env.set('CBTF_ROOT', self.spec['cbtf'].prefix)
-        spack_env.set('CBTF_KRELL_ROOT', self.spec['cbtf-krell'].prefix)
-        spack_env.set('CBTF_ARGONAVIS_ROOT',
-                      self.spec['cbtf-argonavis'].prefix)
-        spack_env.set('OSS_CBTF_ROOT', self.spec['openspeedshop-utils'].prefix)
-        spack_env.set('GRAPHVIZ_ROOT', self.spec['graphviz'].prefix)
-        spack_env.set('QTGRAPHLIB_ROOT', self.spec['qtgraph'].prefix)
-        spack_env.set('KRELL_ROOT_MRNET', self.spec['mrnet'].prefix)
-        spack_env.set('KRELL_ROOT_XERCES', self.spec['xerces-c'].prefix)
-        spack_env.set('INSTALL_ROOT', self.spec.prefix)
+    def setup_build_environment(self, env):
+        """Set up the build environment for this package."""
+        env.set('BOOSTROOT', self.spec['boost'].prefix)
+        env.set('CBTF_ROOT', self.spec['cbtf'].prefix)
+        env.set('CBTF_KRELL_ROOT', self.spec['cbtf-krell'].prefix)
+        env.set('CBTF_ARGONAVIS_ROOT',
+                self.spec['cbtf-argonavis'].prefix)
+        env.set('OSS_CBTF_ROOT', self.spec['openspeedshop-utils'].prefix)
+        env.set('GRAPHVIZ_ROOT', self.spec['graphviz'].prefix)
+        env.set('QTGRAPHLIB_ROOT', self.spec['qtgraph'].prefix)
+        env.set('KRELL_ROOT_MRNET', self.spec['mrnet'].prefix)
+        env.set('KRELL_ROOT_XERCES', self.spec['xerces-c'].prefix)
+        env.set('INSTALL_ROOT', self.spec.prefix)
+
+    def setup_run_environment(self, env):
+        """Set up the runtime environment for this package."""
 
         # The implementor of qtgraph has set up the library and include
         # paths in a non-conventional way.  We reflect that here.
@@ -74,14 +77,14 @@ class CbtfArgonavisGui(QMakePackage):
         else:
             qtgraph_lib_dir = self.spec['qtgraph'].prefix.lib
 
-        run_env.prepend_path(
+        env.prepend_path(
             'LD_LIBRARY_PATH', join_path(
                 qtgraph_lib_dir,
                 '{0}'.format(self.spec['qt'].version.up_to(3))))
 
         # The openspeedshop libraries are needed to actually load the
         # performance information into the GUI.
-        run_env.prepend_path(
+        env.prepend_path(
             'LD_LIBRARY_PATH', self.spec['openspeedshop-utils'].prefix.lib64)
 
     def qmake_args(self):

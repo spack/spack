@@ -5,3 +5,4 @@ tcl:
     suffixes:
       '+debug': foo
       '~debug': bar
+      '^mpich': foo

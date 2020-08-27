@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,13 +21,10 @@ class PyPyside(PythonPackage):
     # https://github.com/PySide/pyside-setup/issues/58
     # Meanwhile, developers have moved onto pyside2 (for Qt5),
     # and show little interest in certifying PySide 1.2.4 for Python.
-    version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')  # rpath problems
-
-    # This is not available from pypi
-    # version('1.2.3', 'fa5d5438b045ede36104bba25a6ccc10')
+    version('1.2.4', sha256='1421bc1bf612c396070de9e1ffe227c07c1f3129278bc7d30c754b5146be2433')  # rpath problems
 
     # v1.2.2 does not work with Python3
-    version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d', preferred=True)
+    version('1.2.2', sha256='53129fd85e133ef630144c0598d25c451eab72019cdcb1012f2aec773a3f25be', preferred=True)
 
     depends_on('cmake', type='build')
 
@@ -44,6 +41,17 @@ class PyPyside(PythonPackage):
         rpath = self.rpath
         rpath.append(os.path.join(
             self.prefix, pypkg.site_packages_dir, 'PySide'))
+
+        # Fix subprocess.mswindows check for Python 3.5
+        # https://github.com/pyside/pyside-setup/pull/55
+        filter_file(
+            '^if subprocess.mswindows:',
+            'mswindows = (sys.platform == "win32")\r\nif mswindows:',
+            "popenasync.py")
+        filter_file(
+            '^    if subprocess.mswindows:',
+            '    if mswindows:',
+            "popenasync.py")
 
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyClickPlugins(PythonPackage):
     homepage = "https://pypi.org/project/click-plugins/"
     url      = "https://pypi.io/packages/source/c/click-plugins/click-plugins-1.0.4.tar.gz"
 
-    version('1.0.4', '3db73ba58271e3d9644be9b9c03a9d8d')
+    version('1.0.4', sha256='dfed74b5063546a137de99baaaf742b4de4337ad2b3e1df5ec7c8a256adc0847')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-click@3.0:', type=('build', 'run'))

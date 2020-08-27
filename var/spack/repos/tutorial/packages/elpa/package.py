@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -65,13 +65,10 @@ class Elpa(AutotoolsPackage):
         # https://src.fedoraproject.org/cgit/rpms/elpa.git/
         # https://packages.qa.debian.org/e/elpa.html
         options = []
-        # without -march=native there is configure error for 2017.05.02
-        # Could not compile test program, try with --disable-sse, or
-        # adjust the C compiler or CFLAGS
         if '+optflags' in self.spec:
             options.extend([
-                'FCFLAGS=-O2 -march=native -ffree-line-length-none',
-                'CFLAGS=-O2 -march=native'
+                'FCFLAGS=-O2 -ffree-line-length-none',
+                'CFLAGS=-O2'
             ])
         if '+openmp' in self.spec:
             options.append('--enable-openmp')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Axel(AutotoolsPackage):
     homepage = "https://github.com/axel-download-accelerator/axel"
     url      = "https://github.com/axel-download-accelerator/axel/archive/v2.16.1.tar.gz"
 
-    version('2.16.1', '3aaa7052458c66c1547bf1133609d0f2')
+    version('2.16.1', sha256='64529add74df3db828f704b42d4ec3fcdacb8142c84f051f9213637c337e706c')
 
     depends_on('m4', type='build')
     depends_on('autoconf', type='build')

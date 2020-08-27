@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Xmodmap(AutotoolsPackage):
+class Xmodmap(AutotoolsPackage, XorgPackage):
     """The xmodmap program is used to edit and display the keyboard modifier
     map and keymap table that are used by client applications to convert
     event keycodes into keysyms.  It is usually run from the user's
@@ -14,9 +14,9 @@ class Xmodmap(AutotoolsPackage):
     tastes."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xmodmap"
-    url      = "https://www.x.org/archive/individual/app/xmodmap-1.0.9.tar.gz"
+    xorg_mirror_path = "app/xmodmap-1.0.9.tar.gz"
 
-    version('1.0.9', '771cf86bcdc3589e7add2e761f675099')
+    version('1.0.9', sha256='73427a996f0fcda2a2c7ac96cfc4edd5985aeb13b48053f55ae7f63a668fadef')
 
     depends_on('libx11')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,13 +14,18 @@ class Hisat2(MakefilePackage):
        exome sequencing data) against the general human population (as well as
        against a single reference genome)."""
 
-    homepage = "http://ccb.jhu.edu/software/hisat2"
+    homepage = "https://daehwankimlab.github.io/hisat2/"
     url      = "ftp://ftp.ccb.jhu.edu/pub/infphilo/hisat2/downloads/hisat2-2.1.0-source.zip"
 
-    version('2.1.0', '8b566d1b7e6c5801c8ae9824ed2da3d0')
+    version('2.2.0', sha256='0dd55168853b82c1b085f79ed793dd029db163773f52272d7eb51b3b5e4a4cdd',
+            url='https://cloud.biohpc.swmed.edu/index.php/s/hisat2-220-source/download',
+            extension='zip')
+    version('2.1.0', sha256='89a276eed1fc07414b1601947bc9466bdeb50e8f148ad42074186fe39a1ee781')
 
     def install(self, spec, prefix):
-        install_tree('doc', prefix.doc)
+        if spec.satisfies('@:2.1.0'):
+            install_tree('doc', prefix.doc)
+
         install_tree('example', prefix.example)
         install_tree('hisatgenotype_modules', prefix.hisatgenotype_modules)
         install_tree('hisatgenotype_scripts', prefix.hisatgenotype_scripts)
@@ -40,5 +45,5 @@ class Hisat2(MakefilePackage):
             if os.path.isfile(file):
                 install(file, prefix.bin)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.spec.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.spec.prefix)

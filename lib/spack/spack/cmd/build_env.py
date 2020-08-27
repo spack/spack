@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         metavar='spec [--] [cmd]...',
-        help="specs of package environment to emulate")
+        help="spec of package environment to emulate")
     subparser.epilog\
         = 'If a command is not specified, the environment will be printed ' \
         'to standard output (cf /usr/bin/env) unless --dump and/or --pickle ' \

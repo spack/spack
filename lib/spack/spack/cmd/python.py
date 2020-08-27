@@ -1,13 +1,18 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from __future__ import print_function
 
 import os
 import sys
 import code
 import argparse
 import platform
+import runpy
+
+import llnl.util.tty as tty
 
 import spack
 
@@ -18,13 +23,31 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
+        '-V', '--version', action='store_true',
+        help='print the Python version number and exit')
+    subparser.add_argument(
         '-c', dest='python_command', help='command to execute')
+    subparser.add_argument(
+        '-m', dest='module', action='store',
+        help='run library module as a script')
     subparser.add_argument(
         'python_args', nargs=argparse.REMAINDER,
         help="file to run plus arguments")
 
 
-def python(parser, args):
+def python(parser, args, unknown_args):
+    if args.version:
+        print('Python', platform.python_version())
+        return
+
+    if args.module:
+        sys.argv = ['spack-python'] + unknown_args + args.python_args
+        runpy.run_module(args.module, run_name="__main__", alter_sys=True)
+        return
+
+    if unknown_args:
+        tty.die("Unknown arguments:", " ".join(unknown_args))
+
     # Fake a main python shell by setting __name__ to __main__.
     console = code.InteractiveConsole({'__name__': '__main__',
                                        'spack': spack})

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,11 @@ import argparse
 
 import llnl.util.tty as tty
 
-import spack.cmd.modules.dotkit
 import spack.cmd.modules.lmod
 import spack.cmd.modules.tcl
 
 description = "manipulate module files"
-section = "modules"
+section = "user environment"
 level = "short"
 
 
@@ -23,7 +22,6 @@ _deprecated_commands = ('refresh', 'find', 'rm', 'loads')
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='module_command')
-    spack.cmd.modules.dotkit.add_command(sp, _subcommands)
     spack.cmd.modules.lmod.add_command(sp, _subcommands)
     spack.cmd.modules.tcl.add_command(sp, _subcommands)
 

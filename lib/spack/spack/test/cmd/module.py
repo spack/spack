@@ -1,16 +1,30 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
+import re
 
 import pytest
 
 import spack.main
 import spack.modules
+from spack.test.conftest import use_store, use_configuration, use_repo
 
 module = spack.main.SpackCommand('module')
+
+
+#: make sure module files are generated for all the tests here
+@pytest.fixture(scope='module', autouse=True)
+def ensure_module_files_are_there(
+        mock_repo_path, mock_store, mock_configuration):
+    """Generate module files for module tests."""
+    module = spack.main.SpackCommand('module')
+    with use_store(mock_store):
+        with use_configuration(mock_configuration):
+            with use_repo(mock_repo_path):
+                module('tcl', 'refresh', '-y')
 
 
 def _module_files(module_type, *specs):
@@ -33,7 +47,7 @@ def failure_args(request):
 
 
 @pytest.fixture(
-    params=['dotkit', 'tcl', 'lmod']
+    params=['tcl', 'lmod']
 )
 def module_type(request):
     return request.param
@@ -137,6 +151,34 @@ def test_find_recursive():
     # be greater
     out = module('tcl', 'find', '-r', 'mpileaks ^zmpi')
     assert len(out.split()) > 1
+
+
+@pytest.mark.db
+def test_find_recursive_blacklisted(database, module_configuration):
+    module_configuration('blacklist')
+
+    module('lmod', 'refresh', '-y', '--delete-tree')
+    module('lmod', 'find', '-r', 'mpileaks ^mpich')
+
+
+@pytest.mark.db
+def test_loads_recursive_blacklisted(database, module_configuration):
+    module_configuration('blacklist')
+
+    module('lmod', 'refresh', '-y', '--delete-tree')
+    output = module('lmod', 'loads', '-r', 'mpileaks ^mpich')
+    lines = output.split('\n')
+
+    assert any(re.match(r'[^#]*module load.*mpileaks', ln) for ln in lines)
+    assert not any(re.match(r'[^#]module load.*callpath', ln) for ln in lines)
+    assert any(re.match(r'## blacklisted or missing.*callpath', ln)
+               for ln in lines)
+
+    # TODO: currently there is no way to separate stdout and stderr when
+    # invoking a SpackCommand. Supporting this requires refactoring
+    # SpackCommand, or log_output, or both.
+    # start_of_warning = spack.cmd.modules._missing_modules_warning[:10]
+    # assert start_of_warning not in output
 
 
 # Needed to make the 'module_configuration' fixture below work

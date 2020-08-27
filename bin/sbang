@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -103,10 +103,10 @@ interpreter_f="${interpreter_v[0]}"
 
 # Invoke any interpreter found, or raise an error if none was found.
 if [[ -n "$interpreter_f" ]]; then
-    if [[ "${interpreter_f##*/}" = "perl" ]]; then
-        exec $interpreter_v -x "$@"
+    if [[ "${interpreter_f##*/}" = "perl"* ]]; then
+        exec $interpreter -x "$@"
     else
-        exec $interpreter_v "$@"
+        exec $interpreter "$@"
     fi
 else
     echo "error: sbang found no interpreter in $script"

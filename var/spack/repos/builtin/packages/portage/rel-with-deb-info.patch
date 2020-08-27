@@ -1,0 +1,16 @@
+--- portage/cinch/cmake/globals.cmake.orig	2018-07-16 13:42:23.000000000 -0600
++++ portage/cinch/cmake/globals.cmake	2019-07-09 16:27:56.021566000 -0600
+@@ -22,11 +22,9 @@
+         "CMake build type <Debug|Release|RelWithDebInfo|MinSizeRel>" FORCE)
+ endif(NOT CMAKE_BUILD_TYPE)
+ 
+-if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" OR
+-    "${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
++if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+     add_definitions(-DDEBUG)
+-endif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" OR
+-    "${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
++endif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+ 
+ #------------------------------------------------------------------------------#
+ # Print useful information

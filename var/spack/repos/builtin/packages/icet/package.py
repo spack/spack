@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,13 +15,13 @@ class Icet(CMakePackage):
     git      = "https://gitlab.kitware.com/icet/icet.git"
 
     version('develop', branch='master')
-    version('2.1.1', '4f971c51105a64937460d482adca2a6c')
+    version('2.1.1', sha256='04cc5b7aa5b3ec95b255febdcfc2312e553ce3db5ca305526803d5737561ec32')
 
     depends_on('mpi')
 
     def cmake_args(self):
         return ['-DICET_USE_OPENGL:BOOL=OFF']
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Work-around for ill-placed CMake modules"""
-        spack_env.prepend_path('CMAKE_PREFIX_PATH', self.prefix.lib)
+        env.prepend_path('CMAKE_PREFIX_PATH', self.prefix.lib)

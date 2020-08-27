@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,4 +13,4 @@ class Sleef(CMakePackage):
     homepage = "http://sleef.org"
     url      = "https://github.com/shibatch/sleef/archive/3.2.tar.gz"
 
-    version('3.2', '459215058f2c8d55cd2b644d56c8c4f0')
+    version('3.2', sha256='3130c5966e204e6d6a3ace81e543d12b5b21f60897f1c185bfa587c1bd77bee2')

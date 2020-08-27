@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,9 @@ class Nlopt(CMakePackage):
     url      = "https://github.com/stevengj/nlopt/archive/v2.5.0.tar.gz"
     git      = "https://github.com/stevengj/nlopt.git"
 
-    version('develop', branch='master')
-    version('2.5.0', 'ada08c648bf9b52faf8729412ff6dd6d')
+    version('master', branch='master')
+    version('2.6.1', sha256='66d63a505187fb6f98642703bd0ef006fedcae2f9a6d1efa4f362ea919a02650')
+    version('2.5.0', sha256='c6dd7a5701fff8ad5ebb45a3dc8e757e61d52658de3918e38bab233e7fd3b4ae')
 
     variant('shared', default=True, description='Enables the build of shared libraries')
     variant('python', default=True, description='Build python wrappers')
@@ -28,13 +29,14 @@ class Nlopt(CMakePackage):
     # Note: matlab is licenced - spack does not download automatically
     variant("matlab", default=False, description="Build the Matlab bindings.")
 
-    depends_on('cmake@3.0:', type='build', when='@develop')
-    depends_on('python', when='+python')
+    depends_on('cmake@3.0:', type='build', when='@master')
+    depends_on('python', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
     depends_on('guile', when='+guile')
     depends_on('octave', when='+octave')
     depends_on('matlab', when='+matlab')
+    extends('python', when='+python')
 
     def cmake_args(self):
         # Add arguments other than
@@ -43,7 +45,7 @@ class Nlopt(CMakePackage):
         args = []
 
         # Specify on command line to alter defaults:
-        # eg: spack install nlopt@develop +guile -octave +cxx
+        # eg: spack install nlopt@master +guile -octave +cxx
 
         # Spack should locate python by default - but to point to a build
         if '+python' in spec:

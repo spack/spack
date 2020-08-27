@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Automaded(CMakePackage):
     homepage = "https://github.com/llnl/AutomaDeD"
     url      = "https://github.com/llnl/AutomaDeD/archive/v1.0.tar.gz"
 
-    version('1.0', '16a3d4def2c4c77d0bc4b21de8b3ab03')
+    version('1.0', sha256='600740cdd594cc6968c7bcb285d0829eb0ddbd5597c32c06c6ae5d9929a2625d')
 
     depends_on('mpi')
     depends_on('boost')

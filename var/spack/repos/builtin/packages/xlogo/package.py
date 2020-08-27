@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,13 +6,13 @@
 from spack import *
 
 
-class Xlogo(AutotoolsPackage):
+class Xlogo(AutotoolsPackage, XorgPackage):
     """The xlogo program simply displays the X Window System logo."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xlogo"
-    url      = "https://www.x.org/archive/individual/app/xlogo-1.0.4.tar.gz"
+    xorg_mirror_path = "app/xlogo-1.0.4.tar.gz"
 
-    version('1.0.4', '4c4f82c196a55a90800a77906f4353fb')
+    version('1.0.4', sha256='0072eb3b41af77d5edfafb12998c7dd875f2795dc94735a998fd2ed8fc246e57')
 
     depends_on('libsm')
     depends_on('libxaw')

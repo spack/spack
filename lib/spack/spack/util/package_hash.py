@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,8 +41,23 @@ class RemoveDirectives(ast.NodeTransformer):
         self.spec = spec
 
     def is_directive(self, node):
+        """Check to determine if the node is a valid directive
+
+        Directives are assumed to be represented in the AST as a named function
+        call expression.  This means that they will NOT be represented by a
+        named function call within a function call expression (e.g., as
+        callbacks are sometimes represented).
+
+        Args:
+            node (AST): the AST node being checked
+
+        Returns:
+            (bool): ``True`` if the node represents a known directive,
+                ``False`` otherwise
+        """
         return (isinstance(node, ast.Expr) and
                 node.value and isinstance(node.value, ast.Call) and
+                isinstance(node.value.func, ast.Name) and
                 node.value.func.id in spack.directives.__all__)
 
     def is_spack_attr(self, node):
@@ -69,8 +84,17 @@ class TagMultiMethods(ast.NodeVisitor):
         if node.decorator_list:
             dec = node.decorator_list[0]
             if isinstance(dec, ast.Call) and dec.func.id == 'when':
-                cond = dec.args[0].s
-                nodes.append((node, self.spec.satisfies(cond, strict=True)))
+                try:
+                    cond = dec.args[0].s
+                    nodes.append(
+                        (node, self.spec.satisfies(cond, strict=True)))
+                except AttributeError:
+                    # In this case the condition for the 'when' decorator is
+                    # not a string literal (for example it may be a Python
+                    # variable name). Therefore the function is added
+                    # unconditionally since we don't know whether the
+                    # constraint applies or not.
+                    nodes.append((node, None))
         else:
             nodes.append((node, None))
 

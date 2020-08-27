@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,4 +14,6 @@ class Ngmlr(CMakePackage):
     homepage = "https://github.com/philres/ngmlr"
     url      = "https://github.com/philres/ngmlr/archive/v0.2.5.tar.gz"
 
-    version('0.2.5', '1b2b1aaeb6a3accc8b9f3e5c29e77037')
+    version('0.2.5', sha256='719944a35cc7ff9c321eedbf3385a7375ce2301f609b3fd7be0a850cabbb028b')
+
+    depends_on('zlib', type='link')

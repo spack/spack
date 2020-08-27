@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class RubyTerminalTable(Package):
     homepage = "https://rubygems.org/gems/terminal-table"
     url      = "https://rubygems.org/downloads/terminal-table-1.8.0.gem"
 
-    version('1.8.0', 'd78db9d71f70aaadd7e689641078e7e7', expand=False)
+    version('1.8.0', sha256='13371f069af18e9baa4e44d404a4ada9301899ce0530c237ac1a96c19f652294', expand=False)
 
     extends('ruby')
 

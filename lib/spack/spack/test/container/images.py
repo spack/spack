@@ -1,0 +1,58 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os.path
+
+import pytest
+
+import spack.container
+
+
+@pytest.mark.parametrize('image,spack_version,expected', [
+    ('ubuntu:18.04', 'develop', ('spack/ubuntu-bionic', 'latest')),
+    ('ubuntu:18.04', '0.14.0', ('spack/ubuntu-bionic', '0.14.0')),
+])
+def test_build_info(image, spack_version, expected):
+    output = spack.container.images.build_info(image, spack_version)
+    assert output == expected
+
+
+@pytest.mark.parametrize('image,spack_version', [
+    ('ubuntu:18.04', 'doesnotexist')
+])
+def test_build_info_error(image, spack_version):
+    with pytest.raises(ValueError, match=r"has no tag for"):
+        spack.container.images.build_info(image, spack_version)
+
+
+@pytest.mark.parametrize('image', [
+    'ubuntu:18.04'
+])
+def test_package_info(image):
+    update, install, clean = spack.container.images.package_info(image)
+    assert update
+    assert install
+    assert clean
+
+
+@pytest.mark.parametrize('extra_config,expected_msg', [
+    ({'modules': {'enable': ['tcl']}}, 'the subsection "modules" in'),
+    ({'concretization': 'separately'}, 'the "concretization" attribute'),
+    ({'config': {'install_tree': '/some/dir'}},
+     'the "config:install_tree" attribute has been set'),
+    ({'view': '/some/dir'}, 'the "view" attribute has been set')
+])
+def test_validate(
+        extra_config, expected_msg, minimal_configuration, config_dumper
+):
+    minimal_configuration['spack'].update(extra_config)
+    spack_yaml_dir = config_dumper(minimal_configuration)
+    spack_yaml = os.path.join(spack_yaml_dir, 'spack.yaml')
+
+    with pytest.warns(UserWarning) as w:
+        spack.container.validate(spack_yaml)
+
+    # Tests are designed to raise only one warning
+    assert len(w) == 1
+    assert expected_msg in str(w.pop().message)

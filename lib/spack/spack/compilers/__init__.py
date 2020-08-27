@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,13 +10,12 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-
-import platform as py_platform
 import six
 
 import llnl.util.lang
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.cpu as cpu
 
 import spack.paths
 import spack.error
@@ -31,7 +30,7 @@ _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 _flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
 _other_instance_vars = ['modules', 'operating_system', 'environment',
-                        'extra_rpaths']
+                        'implicit_rpaths', 'extra_rpaths']
 _cache_config_file = []
 
 # TODO: Caches at module level make it difficult to mock configurations in
@@ -71,9 +70,11 @@ def _to_dict(compiler):
                            if hasattr(compiler, attr)))
     d['operating_system'] = str(compiler.operating_system)
     d['target'] = str(compiler.target)
-    d['modules'] = compiler.modules if compiler.modules else []
-    d['environment'] = compiler.environment if compiler.environment else {}
-    d['extra_rpaths'] = compiler.extra_rpaths if compiler.extra_rpaths else []
+    d['modules'] = compiler.modules or []
+    d['environment'] = compiler.environment or {}
+    d['extra_rpaths'] = compiler.extra_rpaths or []
+    if compiler.enable_implicit_rpaths is not None:
+        d['implicit_rpaths'] = compiler.enable_implicit_rpaths
 
     if compiler.alias:
         d['alias'] = compiler.alias
@@ -244,7 +245,9 @@ def supported_compilers():
        See available_compilers() to get a list of all the available
        versions of supported compilers.
     """
-    return sorted(name for name in
+    # Hack to be able to call the compiler `apple-clang` while still
+    # using a valid python name for the module
+    return sorted(name if name != 'apple_clang' else 'apple-clang' for name in
                   llnl.util.lang.list_modules(spack.paths.compilers_path))
 
 
@@ -278,7 +281,7 @@ def all_compilers(scope=None):
     compilers = list()
     for items in config:
         items = items['compiler']
-        compilers.append(compiler_from_config_entry(items))
+        compilers.append(_compiler_from_config_entry(items))
     return compilers
 
 
@@ -305,41 +308,78 @@ def compilers_for_arch(arch_spec, scope=None):
     return list(get_compilers(config, arch_spec=arch_spec))
 
 
-def compiler_from_config_entry(items):
-    config_id = id(items)
+class CacheReference(object):
+    """This acts as a hashable reference to any object (regardless of whether
+       the object itself is hashable) and also prevents the object from being
+       garbage-collected (so if two CacheReference objects are equal, they
+       will refer to the same object, since it will not have been gc'ed since
+       the creation of the first CacheReference).
+    """
+    def __init__(self, val):
+        self.val = val
+        self.id = id(val)
+
+    def __hash__(self):
+        return self.id
+
+    def __eq__(self, other):
+        return isinstance(other, CacheReference) and self.id == other.id
+
+
+def compiler_from_dict(items):
+    cspec = spack.spec.CompilerSpec(items['spec'])
+    os = items.get('operating_system', None)
+    target = items.get('target', None)
+
+    if not ('paths' in items and
+            all(n in items['paths'] for n in _path_instance_vars)):
+        raise InvalidCompilerConfigurationError(cspec)
+
+    cls  = class_for_compiler_name(cspec.name)
+
+    compiler_paths = []
+    for c in _path_instance_vars:
+        compiler_path = items['paths'][c]
+        if compiler_path != 'None':
+            compiler_paths.append(compiler_path)
+        else:
+            compiler_paths.append(None)
+
+    mods = items.get('modules')
+    if mods == 'None':
+        mods = []
+
+    alias = items.get('alias', None)
+    compiler_flags = items.get('flags', {})
+    environment = items.get('environment', {})
+    extra_rpaths = items.get('extra_rpaths', [])
+    implicit_rpaths = items.get('implicit_rpaths', None)
+
+    # Starting with c22a145, 'implicit_rpaths' was a list. Now it is a
+    # boolean which can be set by the user to disable all automatic
+    # RPATH insertion of compiler libraries
+    if implicit_rpaths is not None and not isinstance(implicit_rpaths, bool):
+        implicit_rpaths = None
+
+    return cls(cspec, os, target, compiler_paths, mods, alias,
+               environment, extra_rpaths,
+               enable_implicit_rpaths=implicit_rpaths,
+               **compiler_flags)
+
+
+def _compiler_from_config_entry(items):
+    """Note this is intended for internal use only. To avoid re-parsing
+       the same config dictionary this keeps track of its location in
+       memory. If you provide the same dictionary twice it will return
+       the same Compiler object (regardless of whether the dictionary
+       entries have changed).
+    """
+    config_id = CacheReference(items)
     compiler = _compiler_cache.get(config_id, None)
 
     if compiler is None:
-        cspec = spack.spec.CompilerSpec(items['spec'])
-        os = items.get('operating_system', None)
-        target = items.get('target', None)
-
-        if not ('paths' in items and
-                all(n in items['paths'] for n in _path_instance_vars)):
-            raise InvalidCompilerConfigurationError(cspec)
-
-        cls  = class_for_compiler_name(cspec.name)
-
-        compiler_paths = []
-        for c in _path_instance_vars:
-            compiler_path = items['paths'][c]
-            if compiler_path != 'None':
-                compiler_paths.append(compiler_path)
-            else:
-                compiler_paths.append(None)
-
-        mods = items.get('modules')
-        if mods == 'None':
-            mods = []
-
-        alias = items.get('alias', None)
-        compiler_flags = items.get('flags', {})
-        environment = items.get('environment', {})
-        extra_rpaths = items.get('extra_rpaths', [])
-
-        compiler = cls(cspec, os, target, compiler_paths, mods, alias,
-                       environment, extra_rpaths, **compiler_flags)
-        _compiler_cache[id(items)] = compiler
+        compiler = compiler_from_dict(items)
+        _compiler_cache[config_id] = compiler
 
     return compiler
 
@@ -363,11 +403,29 @@ def get_compilers(config, cspec=None, arch_spec=None):
         # any given arch spec. If the compiler has no assigned
         # target this is an old compiler config file, skip this logic.
         target = items.get('target', None)
-        if arch_spec and target and (target != arch_spec.target and
-                                     target != 'any'):
+
+        try:
+            current_target = llnl.util.cpu.targets[str(arch_spec.target)]
+            family = str(current_target.family)
+        except KeyError:
+            # TODO: Check if this exception handling makes sense, or if we
+            # TODO: need to change / refactor tests
+            family = arch_spec.target
+        except AttributeError:
+            assert arch_spec is None
+
+        if arch_spec and target and (target != family and target != 'any'):
+            # If the family of the target is the family we are seeking,
+            # there's an error in the underlying configuration
+            if llnl.util.cpu.targets[target].family == family:
+                msg = ('the "target" field in compilers.yaml accepts only '
+                       'target families [replace "{0}" with "{1}"'
+                       ' in "{2}" specification]')
+                msg = msg.format(str(target), family, items.get('spec', '??'))
+                raise ValueError(msg)
             continue
 
-        compilers.append(compiler_from_config_entry(items))
+        compilers.append(_compiler_from_config_entry(items))
 
     return compilers
 
@@ -383,7 +441,9 @@ def compiler_for_spec(compiler_spec, arch_spec):
     if len(compilers) < 1:
         raise NoCompilerForSpecError(compiler_spec, arch_spec.os)
     if len(compilers) > 1:
-        raise CompilerDuplicateError(compiler_spec, arch_spec)
+        msg = 'Multiple definitions of compiler %s' % compiler_spec
+        msg += 'for architecture %s:\n %s' % (arch_spec, compilers)
+        tty.debug(msg)
     return compilers[0]
 
 
@@ -411,7 +471,13 @@ def class_for_compiler_name(compiler_name):
     """Given a compiler module name, get the corresponding Compiler class."""
     assert(supported(compiler_name))
 
-    file_path = os.path.join(spack.paths.compilers_path, compiler_name + ".py")
+    # Hack to be able to call the compiler `apple-clang` while still
+    # using a valid python name for the module
+    module_name = compiler_name
+    if compiler_name == 'apple-clang':
+        module_name = compiler_name.replace('-', '_')
+
+    file_path = os.path.join(spack.paths.compilers_path, module_name + ".py")
     compiler_mod = simp.load_source(_imported_compilers_module, file_path)
     cls = getattr(compiler_mod, mod_to_class(compiler_name))
 
@@ -510,9 +576,7 @@ def arguments_to_detect_version_fn(operating_system, paths):
                         )
                         command_arguments.append(detect_version_args)
 
-        # Reverse it here so that the dict creation (last insert wins)
-        # does not spoil the intended precedence.
-        return reversed(command_arguments)
+        return command_arguments
 
     fn = getattr(
         operating_system, 'arguments_to_detect_version_fn', _default
@@ -584,45 +648,103 @@ def make_compiler_list(detected_versions):
     Returns:
         list of Compiler objects
     """
-    # We don't sort on the path of the compiler
-    sort_fn = lambda x: (x.id, x.variation, x.language)
-    compilers_s = sorted(detected_versions, key=sort_fn)
+    group_fn = lambda x: (x.id, x.variation, x.language)
+    sorted_compilers = sorted(detected_versions, key=group_fn)
 
     # Gather items in a dictionary by the id, name variation and language
     compilers_d = {}
-    for sort_key, group in itertools.groupby(compilers_s, key=sort_fn):
+    for sort_key, group in itertools.groupby(sorted_compilers, key=group_fn):
         compiler_id, name_variation, language = sort_key
         by_compiler_id = compilers_d.setdefault(compiler_id, {})
         by_name_variation = by_compiler_id.setdefault(name_variation, {})
         by_name_variation[language] = next(x.path for x in group)
 
-    # For each unique compiler id select the name variation with most entries
-    # i.e. the one that supports most languages
-    compilers = []
-
-    def _default(cmp_id, paths):
+    def _default_make_compilers(cmp_id, paths):
         operating_system, compiler_name, version = cmp_id
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-        paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
+        paths = [paths.get(x, None) for x in ('cc', 'cxx', 'f77', 'fc')]
+        target = cpu.host()
         compiler = compiler_cls(
-            spec, operating_system, py_platform.machine(), paths
+            spec, operating_system, str(target.family), paths
         )
         return [compiler]
 
-    for compiler_id, by_compiler_id in compilers_d.items():
-        _, selected_name_variation = max(
-            (len(by_compiler_id[variation]), variation)
-            for variation in by_compiler_id
-        )
+    # For compilers with the same compiler id:
+    #
+    # - Prefer with C compiler to without
+    # - Prefer with C++ compiler to without
+    # - Prefer no variations to variations (e.g., clang to clang-gpu)
+    #
+    sort_fn = lambda variation: (
+        'cc' not in by_compiler_id[variation],  # None last
+        'cxx' not in by_compiler_id[variation],  # None last
+        getattr(variation, 'prefix', None),
+        getattr(variation, 'suffix', None),
+    )
 
-        # Add it to the list of compilers
-        selected = by_compiler_id[selected_name_variation]
+    compilers = []
+    for compiler_id, by_compiler_id in compilers_d.items():
+        ordered = sorted(by_compiler_id, key=sort_fn)
+        selected_variation = ordered[0]
+        selected = by_compiler_id[selected_variation]
+
+        # fill any missing parts from subsequent entries
+        for lang in ['cxx', 'f77', 'fc']:
+            if lang not in selected:
+                next_lang = next((
+                    by_compiler_id[v][lang] for v in ordered
+                    if lang in by_compiler_id[v]), None)
+                if next_lang:
+                    selected[lang] = next_lang
+
         operating_system, _, _ = compiler_id
-        make_compilers = getattr(operating_system, 'make_compilers', _default)
+        make_compilers = getattr(
+            operating_system, 'make_compilers', _default_make_compilers)
+
         compilers.extend(make_compilers(compiler_id, selected))
 
     return compilers
+
+
+def is_mixed_toolchain(compiler):
+    """Returns True if the current compiler is a mixed toolchain,
+    False otherwise.
+
+    Args:
+        compiler (Compiler): a valid compiler object
+    """
+    cc = os.path.basename(compiler.cc or '')
+    cxx = os.path.basename(compiler.cxx or '')
+    f77 = os.path.basename(compiler.f77 or '')
+    fc = os.path.basename(compiler.fc or '')
+
+    toolchains = set()
+    for compiler_cls in all_compiler_types():
+        # Inspect all the compiler toolchain we know. If a compiler is the
+        # only compiler supported there it belongs to that toolchain.
+        def name_matches(name, name_list):
+            # This is such that 'gcc' matches variations
+            # like 'ggc-9' etc that are found in distros
+            name, _, _ = name.partition('-')
+            return len(name_list) == 1 and name and name in name_list
+
+        if any([
+            name_matches(cc, compiler_cls.cc_names),
+            name_matches(cxx, compiler_cls.cxx_names),
+            name_matches(f77, compiler_cls.f77_names),
+            name_matches(fc, compiler_cls.fc_names)
+        ]):
+            tty.debug("[TOOLCHAIN] MATCH {0}".format(compiler_cls.__name__))
+            toolchains.add(compiler_cls.__name__)
+
+    if len(toolchains) > 1:
+        if toolchains == set(['Clang', 'AppleClang']):
+            return False
+        tty.debug("[TOOLCHAINS] {0}".format(toolchains))
+        return True
+
+    return False
 
 
 class InvalidCompilerConfigurationError(spack.error.SpackError):

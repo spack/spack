@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libxtrap(AutotoolsPackage):
+class Libxtrap(AutotoolsPackage, XorgPackage):
     """libXTrap is the Xlib-based client API for the DEC-XTRAP extension.
 
     XTrap was a proposed standard extension for X11R5 which facilitated the
@@ -19,9 +19,9 @@ class Libxtrap(AutotoolsPackage):
     15 years, and uses of it should be quite rare."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXTrap"
-    url      = "https://www.x.org/archive/individual/lib/libXTrap-1.0.1.tar.gz"
+    xorg_mirror_path = "lib/libXTrap-1.0.1.tar.gz"
 
-    version('1.0.1', 'fde266b82ee14da3e4f4f81c9584c1ea')
+    version('1.0.1', sha256='db748e299dcc9af68428795b898a4a96cf806f79b75786781136503e4fce5e17')
 
     depends_on('libx11')
     depends_on('libxt')

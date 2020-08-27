@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,13 +17,19 @@ class Metis(Package):
        multilevel recursive-bisection, multilevel k-way, and multi-constraint
        partitioning schemes."""
 
-    homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
-    url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
-    list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
+    #
+    # The original metis website: http://glaros.dtc.umn.edu/gkhome/metis/metis/overview
+    # is down sometimes. This is a github mirror that provides metis 5.1.0
+    #
 
-    version('5.1.0', '5465e67079419a69e0116de24fce58fe')
-    version('5.0.2', 'acb521a4e8c2e6dd559a7f9abd0468c5')
-    version('4.0.3', 'd3848b454532ef18dc83e4fb160d1e10')
+    homepage = "https://github.com/scivision/METIS/"
+    url      = "https://github.com/scivision/METIS/raw/master/metis-5.1.0.tar.gz"
+
+    version('5.1.0', sha256='76faebe03f6c963127dbb73c13eab58c9a3faeae48779f049066a21c087c5db2')
+    # For v4.0.3, use the original metis website since this version is not
+    # mirrored at the above github location.
+    version('4.0.3', url='http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-4.0.3.tar.gz',
+            sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
     variant('gdb', default=False, description='Enables gdb support (version 5+).')
@@ -49,13 +55,6 @@ class Metis(Package):
 
     patch('install_gklib_defs_rename.patch', when='@5:')
     patch('gklib_nomisleadingindentation_warning.patch', when='@5: %gcc@6:')
-
-    def url_for_version(self, version):
-        url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis"
-        if version < Version('4.0.3'):
-            url += "/OLD"
-        url += "/metis-{0}.tar.gz".format(version)
-        return url
 
     @when('@5:')
     def patch(self):
@@ -84,7 +83,7 @@ class Metis(Package):
         # Process library spec and options
         options = []
         if '+shared' in spec:
-            options.append('COPTIONS={0}'.format(self.compiler.pic_flag))
+            options.append('COPTIONS={0}'.format(self.compiler.cc_pic_flag))
         if spec.variants['build_type'].value == 'Debug':
             options.append('OPTFLAGS=-g -O0')
         make(*options)
@@ -112,7 +111,7 @@ class Metis(Package):
             install(sharefile, prefix.share)
 
         if '+shared' in spec:
-            shared_flags = [self.compiler.pic_flag, '-shared']
+            shared_flags = [self.compiler.cc_pic_flag, '-shared']
             if sys.platform == 'darwin':
                 shared_suffix = 'dylib'
                 shared_flags.extend(['-Wl,-all_load', 'libmetis.a'])
@@ -172,11 +171,10 @@ class Metis(Package):
     @when('@5:')
     def install(self, spec, prefix):
         source_directory = self.stage.source_path
-        build_directory = join_path(source_directory, 'build')
+        build_directory = join_path(self.stage.path, 'build')
 
-        options = std_cmake_args[:]
+        options = CMakePackage._std_args(self)
         options.append('-DGKLIB_PATH:PATH=%s/GKlib' % source_directory)
-        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         # Normally this is available via the 'CMakePackage' object, but metis
         # IS-A 'Package' (not a 'CMakePackage') to support non-cmake metis@:5.

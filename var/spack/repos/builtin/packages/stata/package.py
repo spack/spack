@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,19 +27,20 @@ class Stata(Package):
     homepage = "https://www.stata.com/"
     # url      = "stata"
 
+    version('16', 'a13a6a92558eeb3c6cb3013c458a6777e54c21af43599df6b0a924f5f5c2d5d2')
     version('15', '2486f4c7db1e7b453004c7bd3f8da40ba1e30be150613065c7b82b1915259016')
 
-    # V15 depends on libpng v12 and fails with other versions of libpng
-    depends_on('libpng@1.2.57')
+    depends_on('libpng@1.2.57', when='@15', type='run')
+    depends_on('libpng@1.6:1.6.99', when='@16', type='run')
 
     # STATA is downloaded from user/pass protected ftp as Stata15Linux64.tar.gz
     def url_for_version(self, version):
         return "file://{0}/Stata{1}Linux64.tar.gz".format(os.getcwd(), version)
 
     # STATA is simple and needs really just the PATH set.
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', prefix)
-        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['libpng'].prefix.lib)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix)
+        env.prepend_path('LD_LIBRARY_PATH', self.spec['libpng'].prefix.lib)
 
     # Extracting the file provides the following:
     # ./unix/
@@ -81,6 +82,11 @@ class Stata(Package):
         bash = which('bash')
         tar = which('tar')
 
+        res_dir = 'unix/linux64/'
+
+        if self.spec.satisfies('@16:'):
+            res_dir = 'unix/linux64p/'
+
         # Step 1.
         x = datetime.now()
         with open("installed.150", "w") as fh:
@@ -89,11 +95,11 @@ class Stata(Package):
         # Step 2.
         instlist = ['ado.taz', 'base.taz', 'bins.taz', 'docs.taz']
         for instfile in instlist:
-            tar('-x', '-z', '-f', 'unix/linux64/' + instfile)
+            tar('-x', '-z', '-f', res_dir + instfile)
 
         # Step 3.
-        install('unix/linux64/setrwxp', 'setrwxp')
-        install('unix/linux64/inst2', 'inst2')
+        install(res_dir + 'setrwxp', 'setrwxp')
+        install(res_dir + 'inst2', 'inst2')
 
         # Step 4. Since the install script calls out specific permissions and
         # could change in the future (or old versions) I thought it best to

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyTetoolkit(PythonPackage):
     url      = "https://pypi.io/packages/source/T/TEToolkit/TEToolkit-1.5.1.tar.gz"
 
     version('2.0.3', sha256='1d0f5928b30c6cd9dbef8e092ae0c11e9e707faf92a19af8eed3e360da7d4e46')
-    version('1.5.1', '05745b2d5109911e95593e423446a831')
+    version('1.5.1', sha256='22c13ca45bccc89e9d9bf48d59ae6db1fa4c634def64fc56ba9bffd23aa689ac')
 
     depends_on('py-setuptools')
     depends_on('python@2.7:', type=('build', 'run'))

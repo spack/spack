@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,25 +7,25 @@ from spack import *
 
 
 class RTfbstools(RPackage):
-    """TFBSTools is a package for the analysis and manipulation of
-       transcription factor binding sites.
+    """Software Package for Transcription Factor Binding Site (TFBS) Analysis.
 
-       It includes matrices conversion between Position Frequency Matirx (PFM),
-       Position Weight Matirx (PWM) and Information Content Matrix (ICM). It
-       can also scan putative TFBS from sequence/alignment, query JASPAR
-       database and provides a wrapper of de novo motif discovery software.
        TFBSTools is a package for the analysis and manipulation of
        transcription factor binding sites. It includes matrices conversion
        between Position Frequency Matirx (PFM), Position Weight Matirx (PWM)
        and Information Content Matrix (ICM). It can also scan putative TFBS
-       from sequence/alignment, query JASPAR database and provides a wrapper
-       of de novo motif discovery software."""
+       from sequence/alignment, query JASPAR database and provides a wrapper of
+       de novo motif discovery software."""
 
-    homepage = "http://bioconductor.org/packages/TFBSTools/"
+    homepage = "https://bioconductor.org/packages/TFBSTools"
     git      = "https://git.bioconductor.org/packages/TFBSTools.git"
 
+    version('1.22.0', commit='613d3567fd662b65269bd200c5aa5f87ac6a4612')
+    version('1.20.0', commit='74035fc6beb1af82f171c11ef2b0a8817714c5bc')
+    version('1.18.0', commit='17e12b9f3dcb9059d414307ec0bc23ed1ee33294')
     version('1.16.0', commit='565436a5a674d4dea7279e796a20c5bd2034f65a')
+    version('1.14.2', commit='e429fdefb6f7ee4585dd2a8ca3d0ced7a5bed4ff')
 
+    depends_on('r@3.2.2:', type=('build', 'run'))
     depends_on('r-biobase@2.28:', type=('build', 'run'))
     depends_on('r-biostrings@2.36.4:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.14.0:', type=('build', 'run'))
@@ -46,4 +46,3 @@ class RTfbstools(RPackage):
     depends_on('r-tfmpvalue@0.0.5:', type=('build', 'run'))
     depends_on('r-xml@3.98-1.3:', type=('build', 'run'))
     depends_on('r-xvector@0.8.0:', type=('build', 'run'))
-    depends_on('r@3.4.3:3.4.9', when='@1.16.0')

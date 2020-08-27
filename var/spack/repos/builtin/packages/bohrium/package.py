@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -201,11 +201,11 @@ class Bohrium(CMakePackage, CudaPackage):
     #
     # Environment setup
     #
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # Bohrium needs an extra include dir apart from
         # the self.prefix.include dir
-        run_env.prepend_path("CPATH", self.prefix.include.bohrium)
-        run_env.set("BH_CONFIG", self.config_file)
+        env.prepend_path("CPATH", self.prefix.include.bohrium)
+        env.set("BH_CONFIG", self.config_file)
 
     #
     # Quick tests

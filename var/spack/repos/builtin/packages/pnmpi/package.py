@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Pnmpi(CMakePackage):
     homepage = "https://github.com/LLNL/PnMPI"
     url      = "https://github.com/LLNL/PnMPI/releases/download/v1.7/PnMPI-v1.7-full.tar.gz"
 
-    version('1.7', '8040c1558c0deaa3d964c35d1760f3a8')
+    version('1.7', sha256='523228bdc220ae417d6812c0766bba698a240d71c69981cb0cb2b09a75ef4a9e')
 
     variant('fortran', default=False,
             description='Configure PnMPI with Fortran support')

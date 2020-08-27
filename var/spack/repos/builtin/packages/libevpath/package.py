@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,11 +18,11 @@ class Libevpath(CMakePackage):
     git      = "https://github.com/GTkorvo/evpath.git"
 
     version('develop', branch='master')
-    version('4.4.0', 'd8630eb358ec90ae2d188e0e6c74022a')
-    version('4.2.4', '757ce010a6b7564dc62d3c79edd861d5')
-    version('4.2.1', 'f928dc0dee41668afc91634c7051ce1a')
-    version('4.1.2', '1a187f55431c991ae7040e3ff041d75c')
-    version('4.1.1', '65a8db820f396ff2926e3d31908d123d')
+    version('4.4.0', sha256='c8d20d33c84d8d826493f453760eceb792d601734ff61238662c16fa6243dc29')
+    version('4.2.4', sha256='070698a068798e2e34dd73debb936cf275af23987a4cb0d06aa3e50c481042ff')
+    version('4.2.1', sha256='c745946f2ecff65bfc80978c2038c37c3803076064cfd29ea3023d671c950770')
+    version('4.1.2', sha256='2c0d5acc0e1c5aadd32d7147d2f0ce26220e3870e21c7d5429372d8f881e519e')
+    version('4.1.1', sha256='cfc9587f98c1f057eb25712855d14311fd91d6284151eee7bd8936c4ff7ee001')
 
     variant('enet_transport', default=False, description='Build an ENET transport for EVpath')
 

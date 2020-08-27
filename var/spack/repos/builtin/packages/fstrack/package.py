@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,25 +20,25 @@ class Fstrack(MakefilePackage):
     variant('flow', default=True, description='Build the flow tracker')
 
     depends_on('gmt@4.0:4.999', when='+flow')
-    depends_on('netcdf', when='+flow')
+    depends_on('netcdf-c', when='+flow')
 
     parallel = False
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Compilers
-        spack_env.set('F90', spack_fc)
+        env.set('F90', spack_fc)
 
         # Compiler flags (assumes GCC)
-        spack_env.set('CFLAGS', '-O2')
-        spack_env.set('FFLAGS', '-ffixed-line-length-132 -x f77-cpp-input -O2')
-        spack_env.set('FFLAGS_DEBUG', '-g -x f77-cpp-input')
-        spack_env.set('F90FLAGS', '-O2 -x f95-cpp-input')
-        spack_env.set('F90FLAGS_DEBUG', '-g -x f95-cpp-input')
-        spack_env.set('LDFLAGS', '-lm')
+        env.set('CFLAGS', '-O2')
+        env.set('FFLAGS', '-ffixed-line-length-132 -x f77-cpp-input -O2')
+        env.set('FFLAGS_DEBUG', '-g -x f77-cpp-input')
+        env.set('F90FLAGS', '-O2 -x f95-cpp-input')
+        env.set('F90FLAGS_DEBUG', '-g -x f95-cpp-input')
+        env.set('LDFLAGS', '-lm')
 
         if '+flow' in self.spec:
-            spack_env.set('GMTHOME', self.spec['gmt'].prefix)
-            spack_env.set('NETCDFDIR', self.spec['netcdf'].prefix)
+            env.set('GMTHOME', self.spec['gmt'].prefix)
+            env.set('NETCDFDIR', self.spec['netcdf-c'].prefix)
 
     def build(self, spec, prefix):
         with working_dir('eispack'):

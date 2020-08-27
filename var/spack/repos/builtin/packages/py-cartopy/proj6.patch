@@ -1,0 +1,109 @@
+# Fix PROJ.6 support
+# Adapted from https://github.com/SciTools/cartopy/pull/1289
+--- a/setup.py	2020-05-02 17:50:37.000000000 -0500
++++ b/setup.py	2020-05-02 18:02:04.000000000 -0500
+@@ -16,25 +16,25 @@
+ # along with cartopy.  If not, see <https://www.gnu.org/licenses/>.
+ from __future__ import print_function
+ 
+-"""
+-Distribution definition for Cartopy.
+-
+-"""
+-
+-import setuptools
+-from setuptools import setup, Extension
+-from setuptools import Command
+-from setuptools import convert_path
+-from distutils.spawn import find_executable
+-from distutils.sysconfig import get_config_var
+ import fnmatch
+ import os
+ import subprocess
+ import sys
+ import warnings
++from collections import defaultdict
++from distutils.spawn import find_executable
++from distutils.sysconfig import get_config_var
++
++from setuptools import Command, Extension, convert_path, setup
+ 
+ import versioneer
+ 
++"""
++Distribution definition for Cartopy.
++"""
++
++
++
+ 
+ try:
+     from Cython.Distutils import build_ext
+@@ -230,6 +230,18 @@
+     return proj_version
+ 
+ 
++def get_proj_libraries():
++    """
++    This function gets the PROJ libraries to cythonize with
++    """
++    proj_libraries = ["proj"]
++    if os.name == "nt" and proj_version >= (6, 0, 0):
++        proj_libraries = [
++            "proj_{}_{}".format(proj_version[0], proj_version[1])
++        ]
++    return proj_libraries
++
++
+ conda = os.getenv('CONDA_DEFAULT_ENV')
+ if conda is not None and conda in sys.prefix:
+     # Conda does not provide pkg-config compatibility, but the search paths
+@@ -245,7 +257,7 @@
+         exit(1)
+ 
+     proj_includes = []
+-    proj_libraries = ['proj']
++    proj_libraries = get_proj_libraries()
+     proj_library_dirs = []
+ 
+ else:
+@@ -268,7 +280,7 @@
+             exit(1)
+ 
+         proj_includes = []
+-        proj_libraries = ['proj']
++        proj_libraries = get_proj_libraries()
+         proj_library_dirs = []
+     else:
+         if proj_version < PROJ_MIN_VERSION:
+@@ -284,7 +296,7 @@
+             proj_clibs = proj_clibs.decode()
+ 
+         proj_includes = [proj_include[2:] if proj_include.startswith('-I') else
+-                         proj_include for proj_include in proj_includes.split()]      
++                         proj_include for proj_include in proj_includes.split()]
+ 
+         proj_libraries = []
+         proj_library_dirs = []
+@@ -316,11 +328,16 @@
+         return '.'
+ include_dir = get_config_var('INCLUDEDIR')
+ library_dir = get_config_var('LIBDIR')
+-if sys.platform.startswith('win'):
+-    extra_extension_args = {}
+-else:
+-    extra_extension_args = dict(
+-        runtime_library_dirs=[get_config_var('LIBDIR')])
++extra_extension_args = defaultdict(list)
++if not sys.platform.startswith('win'):
++    extra_extension_args["runtime_library_dirs"].append(
++        get_config_var('LIBDIR')
++    )
++
++if proj_version >= (6, 0, 0):
++    extra_extension_args["define_macros"].append(
++        ('ACCEPT_USE_OF_DEPRECATED_PROJ_API_H', '1')
++    )
+ 
+ # Description
+ # ===========

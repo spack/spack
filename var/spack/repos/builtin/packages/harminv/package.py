@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Harminv(AutotoolsPackage):
     url      = "http://ab-initio.mit.edu/harminv/harminv-1.4.tar.gz"
     list_url = "http://ab-initio.mit.edu/harminv/old"
 
-    version('1.4', 'b95e24a9bc7e07d3d2202d1605e9e86f')
+    version('1.4', sha256='e1b923c508a565f230aac04e3feea23b888b47d8e19b08816a97ee4444233670')
 
     depends_on('blas')
     depends_on('lapack')

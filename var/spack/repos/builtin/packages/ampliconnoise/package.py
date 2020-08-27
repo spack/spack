@@ -1,9 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os.path
 
 
 class Ampliconnoise(MakefilePackage):
@@ -13,17 +13,19 @@ class Ampliconnoise(MakefilePackage):
     homepage = "https://code.google.com/archive/p/ampliconnoise/"
     url      = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/ampliconnoise/AmpliconNoiseV1.29.tar.gz"
 
-    version('1.29', 'd6723e6f9cc71d7eb6f1a65ba4643aac')
+    version('1.29', sha256='0bf946806d77ecaf0994ad8ebf9a5e98ad33c809f6def5c9340a16c367918167')
 
     depends_on('mpi@2:')
     depends_on('gsl')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix.Scripts)
-        run_env.set('PYRO_LOOKUP_FILE', join_path(self.prefix, 'Data',
-                    'LookUp_E123.dat'))
-        run_env.set('SEQ_LOOKUP_FILE', join_path(self.prefix, 'Data',
-                    'Tran.dat'))
+    patch('Fix-return-type.patch')
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix.Scripts)
+        env.set('PYRO_LOOKUP_FILE', os.path.join(self.prefix, 'Data',
+                'LookUp_E123.dat'))
+        env.set('SEQ_LOOKUP_FILE', os.path.join(self.prefix, 'Data',
+                'Tran.dat'))
 
     def install(self, spec, prefix):
         make('install')

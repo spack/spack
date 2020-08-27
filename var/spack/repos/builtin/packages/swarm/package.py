@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Swarm(MakefilePackage):
     homepage = "https://github.com/torognes/swarm"
     url      = "https://github.com/torognes/swarm/archive/v2.1.13.tar.gz"
 
-    version('2.1.13', 'ab6aff0ba5d20a53b9f13f8f3d85839f')
+    version('2.1.13', sha256='ec4b22cc1874ec6d2c89fe98e23a2fb713aec500bc4a784f0556389d22c02650')
 
     build_directory = 'src'
 

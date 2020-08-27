@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PySncosmo(PythonPackage):
     homepage = "http://sncosmo.readthedocs.io/"
     url = "https://pypi.io/packages/source/s/sncosmo/sncosmo-1.2.0.tar.gz"
 
-    version('1.2.0', '028e6d1dc84ab1c17d2f3b6378b2cb1e')
+    version('1.2.0', sha256='f3969eec5b25f60c70418dbd64765a2b4735bb53c210c61d0aab68916daea588')
 
     # Required dependencies
     # py-sncosmo binaries are duplicates of those from py-astropy

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,10 @@ spec expression syntax:
       @g{%compiler@version}             build with specific compiler version
       @g{%compiler@min:max}             specific version range (see above)
 
+    compiler flags:
+      @g{cflags="flags"}                cppflags, cflags, cxxflags,
+                                    fflags, ldflags, ldlibs
+
     variants:
       @B{+variant}                      enable <variant>
       @r{-variant} or @r{~variant}          disable <variant>
@@ -42,7 +46,7 @@ spec expression syntax:
       @B{variant=value1,value2,value3}  set multi-value <variant> values
 
     architecture variants:
-      @m{platform=platform}             linux, darwin, cray, bgq, etc.
+      @m{platform=platform}             linux, darwin, cray, etc.
       @m{os=operating_system}           specific <operating_system>
       @m{target=target}                 specific <target> processor
       @m{arch=platform-os-target}       shortcut for all three above
@@ -86,12 +90,12 @@ def setup_parser(subparser):
     help_all_group = subparser.add_mutually_exclusive_group()
     help_all_group.add_argument(
         '-a', '--all', action='store_const', const='long', default='short',
-        help='print all available commands')
+        help='list all available commands and options')
 
     help_spec_group = subparser.add_mutually_exclusive_group()
     help_spec_group.add_argument(
         '--spec', action='store_const', dest='guide', const='spec',
-        default=None, help='print all available commands')
+        default=None, help='help on the package specification syntax')
 
 
 def help(parser, args):

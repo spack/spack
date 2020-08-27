@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,10 @@ class PerlMoose(PerlPackage):
     homepage = "http://search.cpan.org/~ether/Moose-2.2006/lib/Moose.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Moose-2.2006.tar.gz"
 
-    version('2.2010', '636238ac384818ee1e92eff6b9ecc50a')
-    version('2.2009', '5527b1a5abc29b5c57fc488447e76ccd')
-    version('2.2007', 'de487ae226003f7e7f22c0fd8f0074e6')
-    version('2.2006', '929c6b3877a6054ef617cf7ef1e220b5')
+    version('2.2010', sha256='af0905b69f18c27de1177c9bc7778ee495d4ec91be1f223e8ca8333af4de08c5')
+    version('2.2009', sha256='63ba8a5e27dbcbdbac2cd8f4162fff50a31e9829d8955a196a5898240c02d194')
+    version('2.2007', sha256='bc75a320b55ba26ac9e60e11a77b3471066cb615bf7097537ed22e20df88afe8')
+    version('2.2006', sha256='a4e00ab25cc41bebc5e7a11d71375fb5e64b56d5f91159afee225d698e06392b')
 
     depends_on('perl-cpan-meta-check', type=('build', 'run'))
     depends_on('perl-test-cleannamespaces', type=('build', 'run'))

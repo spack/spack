@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ avoids overly complicated rat nests of if statements.  Obviously,
 depending on the scenario, regular old conditionals might be clearer,
 so package authors should use their judgement.
 """
+
 import functools
 import inspect
 
@@ -32,6 +33,24 @@ from llnl.util.lang import caller_locals
 import spack.architecture
 import spack.error
 from spack.spec import Spec
+
+
+class MultiMethodMeta(type):
+    """This allows us to track the class's dict during instantiation."""
+
+    #: saved dictionary of attrs on the class being constructed
+    _locals = None
+
+    @classmethod
+    def __prepare__(cls, name, bases, **kwargs):
+        """Save the dictionary that will be used for the class namespace."""
+        MultiMethodMeta._locals = dict()
+        return MultiMethodMeta._locals
+
+    def __init__(cls, name, bases, attr_dict):
+        """Clear out the cached locals dict once the class is built."""
+        MultiMethodMeta._locals = None
+        super(MultiMethodMeta, cls).__init__(name, bases, attr_dict)
 
 
 class SpecMultiMethod(object):
@@ -149,14 +168,15 @@ class when(object):
               def install(self, prefix):
                   # Do default install
 
-              @when('arch=chaos_5_x86_64_ib')
+              @when('target=x86_64:')
               def install(self, prefix):
                   # This will be executed instead of the default install if
-                  # the package's platform() is chaos_5_x86_64_ib.
+                  # the package's target is in the x86_64 family.
 
-              @when('arch=bgqos_0")
+              @when('target=ppc64:')
               def install(self, prefix):
-                  # This will be executed if the package's sys_type is bgqos_0
+                  # This will be executed if the package's target is in
+                  # the ppc64 family
 
        This allows each package to have a default version of install() AND
        specialized versions for particular platforms.  The version that is
@@ -202,11 +222,14 @@ class when(object):
             self.spec = Spec(condition)
 
     def __call__(self, method):
-        # Get the first definition of the method in the calling scope
-        original_method = caller_locals().get(method.__name__)
+        # In Python 2, Get the first definition of the method in the
+        # calling scope by looking at the caller's locals. In Python 3,
+        # we handle this using MultiMethodMeta.__prepare__.
+        if MultiMethodMeta._locals is None:
+            MultiMethodMeta._locals = caller_locals()
 
-        # Create a multimethod out of the original method if it
-        # isn't one already.
+        # Create a multimethod with this name if there is not one already
+        original_method = MultiMethodMeta._locals.get(method.__name__)
         if not type(original_method) == SpecMultiMethod:
             original_method = SpecMultiMethod(original_method)
 

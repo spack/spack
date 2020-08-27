@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyCclib(PythonPackage):
 
     homepage = "https://cclib.github.io/"
 
-    version('1.5.post1', '1a50be48e4597b1a6dabe943da82a43c',
+    version('1.5.post1', sha256='c2bf043432ab8df461d61b4289d0eb869fe134eee545ea5a78f8dea14b392f47',
             url="https://github.com/cclib/cclib/releases/download/v1.5/cclib-1.5.post1.tar.gz")
 
     depends_on('py-numpy@1.5:', type=('build', 'run'))

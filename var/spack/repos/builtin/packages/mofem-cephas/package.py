@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,8 @@ class MofemCephas(CMakePackage):
 
     # This option can be only used for development of core lib
     variant('copy_user_modules', default=True,
-        description='Copy user modules directory instead linking to source')
+            description='Copy user modules directory '
+            'instead of linking to source')
     variant('adol-c', default=True, description='Compile with ADOL-C')
     variant('tetgen', default=True, description='Compile with Tetgen')
     variant('med', default=True, description='Compile with Med')
@@ -41,7 +42,7 @@ class MofemCephas(CMakePackage):
     depends_on("parmetis")
     # Fixed version of hdf5, to remove some problems with dependent
     # packages, f.e. MED format
-    depends_on("hdf5@:1.8.19+hl+mpi")
+    depends_on("hdf5@:1.8.19+hl+mpi+fortran")
     depends_on("petsc@:3.9.3+mumps+mpi")
     depends_on('slepc', when='+slepc')
     depends_on("moab")

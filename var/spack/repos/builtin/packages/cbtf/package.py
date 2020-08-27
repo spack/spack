@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,12 @@ class Cbtf(CMakePackage):
             description='CMake build type')
 
     depends_on("cmake@3.0.2:", type='build')
+
+    # for rpcgen
+    depends_on("rpcsvc-proto", type='build')
+
+    # for rpc
+    depends_on("libtirpc", type='link')
 
     depends_on("boost@1.66.0:1.69.0")
 

@@ -1,0 +1,13 @@
+--- a/Lib/distutils/unixccompiler.py	2009-05-09 21:55:12.000000000 +1000
++++ b/Lib/distutils/unixccompiler.py	2017-05-13 14:30:18.077518999 +1000
+@@ -215,7 +211,8 @@
+         return "-L" + dir
+
+     def _is_gcc(self, compiler_name):
+-        return "gcc" in compiler_name or "g++" in compiler_name
++        return "gcc" in compiler_name or "g++" in compiler_name \
++        or "fcc" in compiler_name or "FCC" in compiler_name
+
+     def runtime_library_dir_option(self, dir):
+         # XXX Hackish, at the very least.  See Python bug #445902:
+

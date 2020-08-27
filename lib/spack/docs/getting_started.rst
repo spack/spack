@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,12 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-#. Python 2 (2.6 or 2.7) or 3 (3.4 - 3.7) to run Spack
+#. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.8) to run Spack
 #. A C/C++ compiler for building
 #. The ``make`` executable for building
+#. The ``tar``, ``gzip``, ``bzip2``, ``xz`` and optionally ``zstd``
+   executables for extracting source code
+#. The ``patch`` command to apply patches
 #. The ``git`` and ``curl`` commands for fetching
 #. If using the ``gpg`` subcommand, ``gnupg2`` is required
 
@@ -50,30 +53,41 @@ in the ``SPACK_ROOT`` environment variable.  Add ``$SPACK_ROOT/bin``
 to your path and you're ready to go:
 
 .. code-block:: console
-
+   
+   # For bash/zsh users
+   $ export SPACK_ROOT=/path/to/spack
    $ export PATH=$SPACK_ROOT/bin:$PATH
+
+   # For tsch/csh users 
+   $ setenv SPACK_ROOT /path/to/spack
+   $ setenv PATH $SPACK_ROOT/bin:$PATH
+
+   # For fish users
+   $ set -x SPACK_ROOT /path/to/spack
+   $ set -U fish_user_paths /path/to/spack $fish_user_paths
+
+.. code-block:: console
+
    $ spack install libelf
 
 For a richer experience, use Spack's shell support:
 
 .. code-block:: console
 
+   # Note you must set SPACK_ROOT
+
    # For bash/zsh users
-   $ export SPACK_ROOT=/path/to/spack
    $ . $SPACK_ROOT/share/spack/setup-env.sh
 
-   # For tcsh or csh users (note you must set SPACK_ROOT)
-   $ setenv SPACK_ROOT /path/to/spack
+   # For tcsh/csh users
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
+   # For fish users
+   $ source $SPACK_ROOT/share/spack/setup-env.fish
 
 This automatically adds Spack to your ``PATH`` and allows the ``spack``
 command to be used to execute spack :ref:`commands <shell-support>` and
 :ref:`useful packaging commands <packaging-shell-support>`.
-
-If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
-installed and available, the ``spack`` command can also load and unload
-:ref:`modules <modules>`.
 
 ^^^^^^^^^^^^^^^^^
 Clean Environment
@@ -97,7 +111,7 @@ Check Installation
 With Spack installed, you should be able to run some basic Spack
 commands.  For example:
 
-.. command-output:: spack spec netcdf
+.. command-output:: spack spec netcdf-c
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -190,7 +204,7 @@ where the compiler is installed.  For example:
 .. code-block:: console
 
    $ spack compiler find /usr/local/tools/ic-13.0.079
-   ==> Added 1 new compiler to ~/.spack/compilers.yaml
+   ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
        intel@13.0.079
 
 Or you can run ``spack compiler find`` with no arguments to force
@@ -202,7 +216,7 @@ installed, but you know that new compilers have been added to your
 
    $ module load gcc-4.9.0
    $ spack compiler find
-   ==> Added 1 new compiler to ~/.spack/compilers.yaml
+   ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
        gcc@4.9.0
 
 This loads the environment module for gcc-4.9.0 to add it to
@@ -247,7 +261,7 @@ Manual compiler configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If auto-detection fails, you can manually configure a compiler by
-editing your ``~/.spack/compilers.yaml`` file.  You can do this by running
+editing your ``~/.spack/<platform>/compilers.yaml`` file.  You can do this by running
 ``spack config edit compilers``, which will open the file in your ``$EDITOR``.
 
 Each compiler configuration in the file looks like this:
@@ -263,7 +277,7 @@ Each compiler configuration in the file looks like this:
          cxx: /usr/local/bin/icpc-15.0.024-beta
          f77: /usr/local/bin/ifort-15.0.024-beta
          fc: /usr/local/bin/ifort-15.0.024-beta
-       spec: intel@15.0.0:
+       spec: intel@15.0.0
 
 For compilers that do not support Fortran (like ``clang``), put
 ``None`` for ``f77`` and ``fc``:
@@ -469,18 +483,21 @@ Fortran.
    install GCC with Spack (``spack install gcc``) or with Homebrew
    (``brew install gcc``).
 
-#. The only thing left to do is to edit ``~/.spack/compilers.yaml`` to provide
+#. The only thing left to do is to edit ``~/.spack/darwin/compilers.yaml`` to provide
    the path to ``gfortran``:
 
    .. code-block:: yaml
 
       compilers:
-        darwin-x86_64:
-          clang@7.3.0-apple:
-            cc: /usr/bin/clang
-            cxx: /usr/bin/clang++
-            f77: /path/to/bin/gfortran
-            fc: /path/to/bin/gfortran
+      - compiler:
+        ...
+        paths:
+          cc: /usr/bin/clang
+          cxx: /usr/bin/clang++
+          f77: /path/to/bin/gfortran
+          fc: /path/to/bin/gfortran
+        spec: apple-clang@11.0.0
+
 
    If you used Spack to install GCC, you can get the installation prefix by
    ``spack location -i gcc`` (this will only work if you have a single version
@@ -591,11 +608,12 @@ flags to the ``icc`` command:
            operating_system: centos7
            paths:
              cc: /opt/intel-15.0.24/bin/icc-15.0.24-beta
-             cflags: -gcc-name ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
              cxx: /opt/intel-15.0.24/bin/icpc-15.0.24-beta
-             cxxflags: -gxx-name ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/g++
              f77: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
              fc: /opt/intel-15.0.24/bin/ifort-15.0.24-beta
+           flags:
+             cflags: -gcc-name ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
+             cxxflags: -gxx-name ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/g++
              fflags: -gcc-name ~/spack/opt/spack/linux-centos7-x86_64/gcc-4.9.3-iy4rw.../bin/gcc
            spec: intel@15.0.24.4.9.3
 
@@ -712,8 +730,9 @@ an OpenMPI installed in /opt/local, one would use:
 
     packages:
         openmpi:
-            paths:
-                openmpi@1.10.1: /opt/local
+            externals:
+            - spec: openmpi@1.10.1
+              prefix: /opt/local
             buildable: False
 
 In general, Spack is easier to use and more reliable if it builds all of
@@ -775,8 +794,9 @@ Then add the following to ``~/.spack/packages.yaml``:
 
     packages:
         openssl:
-            paths:
-                openssl@1.0.2g: /usr
+            externals:
+            - spec: openssl@1.0.2g
+              prefix: /usr
             buildable: False
 
 
@@ -791,8 +811,9 @@ to add the following to ``packages.yaml``:
 
     packages:
         netlib-lapack:
-            paths:
-                netlib-lapack@3.6.1: /usr
+            externals:
+            - spec: netlib-lapack@3.6.1
+              prefix: /usr
             buildable: False
         all:
             providers:
@@ -818,7 +839,7 @@ Git
 
 Some Spack packages use ``git`` to download, which might not work on
 some computers.  For example, the following error was
-encountered on a Macintosh during ``spack install julia-master``:
+encountered on a Macintosh during ``spack install julia@master``:
 
 .. code-block:: console
 
@@ -847,7 +868,7 @@ from websites and from git.
 
 .. warning::
 
-   This workaround should be used ONLY as a last resort!  Wihout SSL
+   This workaround should be used ONLY as a last resort!  Without SSL
    certificate verification, spack and git will download from sites you
    wouldn't normally trust.  The code you download and run may then be
    compromised!  While this is not a major issue for archives that will
@@ -896,19 +917,14 @@ Core Spack Utilities
 ^^^^^^^^^^^^^^^^^^^^
 
 Core Spack uses the following packages, mainly to download and unpack
-source code, and to load generated environment modules: ``curl``,
-``env``, ``git``, ``go``, ``hg``, ``svn``, ``tar``, ``unzip``,
-``patch``, ``environment-modules``.
+source code: ``curl``, ``env``, ``git``, ``go``, ``hg``, ``svn``,
+``tar``, ``unzip``, ``patch``
 
 As long as the user's environment is set up to successfully run these
 programs from outside of Spack, they should work inside of Spack as
 well.  They can generally be activated as in the ``curl`` example above;
 or some systems might already have an appropriate hand-built
 environment module that may be loaded.  Either way works.
-
-If you find that you are missing some of these programs, ``spack`` can
-build some of them for you with ``spack bootstrap``. Currently supported
-programs are ``environment-modules``.
 
 A few notes on specific programs in this list:
 
@@ -935,45 +951,6 @@ Some packages use source code control systems as their download method:
 a new ``curl``, then chances are the system-supplied version of these
 other programs will also not work, because they also rely on OpenSSL.
 Once ``curl`` has been installed, you can similarly install the others.
-
-
-.. _InstallEnvironmentModules:
-
-"""""""""""""""""""
-Environment Modules
-"""""""""""""""""""
-
-In order to use Spack's generated module files, you must have
-installed ``environment-modules`` or ``lmod``. The simplest way
-to get the latest version of either of these tools is installing
-it as part of Spack's bootstrap procedure:
-
-.. code-block:: console
-
-   $ spack bootstrap
-
-.. warning::
-   At the moment ``spack bootstrap`` is only able to install ``environment-modules``.
-   Extending its capabilities to prefer ``lmod`` where possible is in the roadmap,
-   and likely to happen before the next release.
-
-Alternatively, on many Linux distributions, you can install a pre-built binary
-from the vendor's repository. On Fedora/RHEL/CentOS, for example, this can be
-done with the command:
-
-.. code-block:: console
-
-   $ yum install environment-modules
-
-Once you have the tool installed and available in your path, you can source
-Spack's setup file:
-
-.. code-block:: console
-
-   $ source share/spack/setup-env.sh
-
-This activates :ref:`shell support <shell-support>` and makes commands like
-``spack load`` available for use.
 
 
 ^^^^^^^^^^^^^^^^^
@@ -1225,9 +1202,13 @@ Here's an example of an external configuration for cray modules:
 
    packages:
      mpich:
-       modules:
-         mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10: cray-mpich
-         mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10: cray-mpich
+       externals:
+       - spec: "mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10"
+         modules:
+         - cray-mpich
+       - spec: "mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10"
+         modules:
+         - cray-mpich
      all:
        providers:
          mpi: [mpich]
@@ -1239,7 +1220,7 @@ via module load.
 
 .. note::
 
-    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:``
+    For Cray-provided packages, it is best to use ``modules:`` instead of ``prefix:``
     in ``packages.yaml``, because the Cray Programming Environment heavily relies on
     modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the
     compiler wrapper link line).
@@ -1255,19 +1236,31 @@ Here is an example of a full packages.yaml used at NERSC
 
    packages:
      mpich:
-       modules:
-         mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-mpich
-         mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge: cray-mpich
+       externals:
+       - spec: "mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-mpich
+       - spec: "mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge"
+         modules:
+         - cray-mpich
        buildable: False
      netcdf:
-       modules:
-         netcdf@4.3.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-netcdf
-         netcdf@4.3.3.1%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-netcdf
+       externals:
+       - spec: "netcdf@4.3.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-netcdf
+       - spec: "netcdf@4.3.3.1%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-netcdf
        buildable: False
      hdf5:
-       modules:
-         hdf5@1.8.14%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-hdf5
-         hdf5@1.8.14%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-hdf5
+       externals:
+       - spec: "hdf5@1.8.14%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-hdf5
+       - spec: "hdf5@1.8.14%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-hdf5
        buildable: False
      all:
        compiler: [gcc@5.2.0, intel@16.0.0.109]
@@ -1291,6 +1284,6 @@ environment variables may be propagated into containers that are not
 using the Cray programming environment.
 
 To ensure that Spack does not autodetect the Cray programming
-environment, unset the environment variable ``CRAYPE_VERSION``. This
+environment, unset the environment variable ``MODULEPATH``. This
 will cause Spack to treat a linux container on a Cray system as a base
 linux distro.

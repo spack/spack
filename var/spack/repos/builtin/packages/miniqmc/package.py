@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Miniqmc(CMakePackage):
 
     version('0.4.0', sha256='41ddb5de6dcc85404344c80dc7538aedf5e1f1eb0f2a67ebac069209f7dd11e4')
     version('0.3.0', sha256='3ba494ba1055df91e157cb426d1fbe4192aa3f04b019277d9e571d057664d5a9')
-    version('0.2.0', 'b96bacaf48b8e9c0de05d04a95066bc1')
+    version('0.2.0', sha256='cdf6fc6df6ccc1e034c62f937c040bfd6a4e65a0974b95f6884edd004ae36ee4')
 
     tags = ['proxy-app', 'ecp-proxy-app']
 

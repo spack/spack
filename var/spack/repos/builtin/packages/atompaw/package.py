@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,8 @@ class Atompaw(Package):
     homepage = "http://users.wfu.edu/natalie/papers/pwpaw/man.html"
     url = "http://users.wfu.edu/natalie/papers/pwpaw/atompaw-4.0.0.13.tar.gz"
 
-    version('4.0.0.13', 'af4a042380356f6780183c4b325aad1d')
-    version('3.1.0.3', 'c996a277e11707887177f47bbb229aa6')
+    version('4.0.0.13', sha256='cbd73f11f3e9cc3ff2e5f3ec87498aeaf439555903d0b95a72f3b0a021902020')
+    version('3.1.0.3', sha256='15fe9a0369bdcc366370a0ecaa67e803ae54534b479ad63c4c7494a04fa3ea78')
 
     depends_on("lapack")
     depends_on("blas")

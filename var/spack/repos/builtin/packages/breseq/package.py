@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,19 +16,20 @@ class Breseq(AutotoolsPackage):
 
     version('0.33.2', sha256='c698d2d25cc7ed251ff916343a8c04f79b5540281288cb7c955f458255ac21de')
     version('0.33.1', sha256='e24a50e254ad026c519747313b9e42bbeb32bd766a6a06ed369bd5b9dc50e84d')
-    version('0.31.1', 'a4e602d5481f8692833ba3d5a3cd0394')
+    version('0.31.1', sha256='ffc8a7f40a5ad918234e465e9d4cdf74be02fd29091b13720c2cab1dc238cf5c')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
-    depends_on('zlib', type='build')
+    depends_on('zlib', type='link')
 
     depends_on('bedtools2', type='run')
     depends_on('r', type='run')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('LDFLAGS',
-                      "-L{0}".format(self.spec['zlib'].prefix.lib))
-        spack_env.set('CFLAGS',
-                      "-I{0}".format(self.spec['zlib'].prefix.include))
+    conflicts('%gcc@:4.8')
+    conflicts('%clang@:3.3')
+
+    def setup_build_environment(self, env):
+        env.set('LDFLAGS', "-L{0}".format(self.spec['zlib'].prefix.lib))
+        env.set('CFLAGS', "-I{0}".format(self.spec['zlib'].prefix.include))

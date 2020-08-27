@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,11 +21,11 @@ class DoubleConversion(CMakePackage):
     homepage = "https://github.com/google/double-conversion"
     url      = "https://github.com/google/double-conversion/archive/v2.0.1.zip"
 
-    version('2.0.1', '5be77f780841af528e92986d46620b1e')
-    version('2.0.0', '045f7927246c368b57dcdb844ec61211')
-    version('1.1.5', 'ddf782373e2630c07b2691c31cee0b24')
-    version('1.1.4', '5df72704406d93cd54c73d73f02e2744')
-    version('1.1.3', 'b312152c8c66c80449d5e0325b94502e')
+    version('2.0.1', sha256='476aefbdc2051bbcca0d5919ebc293c90a7ad2c0cb6c4ad877d6e665f469146b')
+    version('2.0.0', sha256='437df89059bfa6c1c0f8703693c2584a57f75289ed7020d801c9befb23f46a26')
+    version('1.1.5', sha256='496fd3354fa0ff17562907632f5560c1d444ea98b6069f1436fa573949b94fb0')
+    version('1.1.4', sha256='24b5edce8c88f0f632c83e60e0bde11252656dc3b714ba195619c1798ff28834')
+    version('1.1.3', sha256='f0d1b8621592a3cf010c04c3e1c0f08455fc0fc7ee22e1583e2a63dc6d3e3871')
 
     def cmake_args(self):
         return ['-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true']

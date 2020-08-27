@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Kraken(Package):
     homepage = "https://ccb.jhu.edu/software/kraken/"
     url      = "https://github.com/DerrickWood/kraken/archive/v1.0.tar.gz"
 
-    version('1.0', 'e790d6b09662bbd810aa34517ef66586')
+    version('1.0', sha256='bade6d83233c26226d02bd427fe0a4d6cd6dc5c0300927e30d41e885a478c378')
 
     depends_on('perl', type=('build', 'run'))
     # Does NOT support JELLYFISH 2.0. Ver 1.1.11 is the last version of

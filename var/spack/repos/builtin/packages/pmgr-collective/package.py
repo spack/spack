@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PmgrCollective(Package):
     homepage = "http://www.sourceforge.net/projects/pmgrcollective"
     url      = "http://downloads.sourceforge.net/project/pmgrcollective/pmgrcollective/PMGR_COLLECTIVE-1.0/pmgr_collective-1.0.tgz"
 
-    version('1.0', '0384d008774274cc3fc7b4d810dfd07e')
+    version('1.0', sha256='c8022d1128ce5e8f637166af6e55c13700e665550e468b8cdb1531441c6bb7f5')
 
     def install(self, spec, prefix):
         make('PREFIX="' + prefix + '"')

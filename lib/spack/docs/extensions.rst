@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,12 +8,6 @@
 =================
 Custom Extensions
 =================
-
-.. warning::
-
-   The support for extending Spack with custom commands is still experimental.
-   Users should expect APIs or prescribed directory structures to
-   change at any time.
 
 *Spack extensions* permit you to extend Spack capabilities by deploying your
 own custom commands or logic in an arbitrary location on your filesystem.

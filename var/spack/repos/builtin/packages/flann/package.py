@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,11 +21,11 @@ class Flann(CMakePackage):
     homepage = "http://www.cs.ubc.ca/research/flann/"
     url      = "https://github.com/mariusmuja/flann/archive/1.9.1.tar.gz"
 
-    version('1.9.1', '73adef1c7bf8e8b978987e7860926ea6')
-    version('1.8.5', '02a81640b1e9c11796a0413976dc11f5')
-    version('1.8.4', '774b74580e3cbc5b0d45c6ec345a64ae')
-    version('1.8.1', '1f51500e172f5e11fbda05f033858eb6')
-    version('1.8.0', '473150f592c2997e32d5ce31fd3c19a2')
+    version('1.9.1', sha256='b23b5f4e71139faa3bcb39e6bbcc76967fbaf308c4ee9d4f5bfbeceaa76cc5d3')
+    version('1.8.5', sha256='59a9925dac0705b281496ae52b5dfd79d6b69316d37015e3d3b38c859bac4f2f')
+    version('1.8.4', sha256='ed5843113150b3d6bc4c325fecb51337838a9fc09ad64bdb6aea79d6e610ee13')
+    version('1.8.1', sha256='82ff80709ca25365bca3367e87ffb4e0395fab068487314d02271bc3034591c1')
+    version('1.8.0', sha256='8a3eef79512870dec20b3a3e481e5e5e6da00d524b810a22ee186f13732f0fa1')
 
     def url_for_version(self, version):
         if version > Version('1.8.1'):
@@ -68,13 +68,13 @@ class Flann(CMakePackage):
     depends_on("boost+mpi+system+serialization+thread", when="+mpi ^hdf5+mpi")
 
     # Doc deps
-    depends_on("latex", when="+doc")
+    depends_on("texlive", when="+doc")
 
     # Example uses hdf5.
     depends_on("hdf5", when="+examples")
 
     depends_on('hdf5', type='test')
-    depends_on('gtest', type='test')
+    depends_on('googletest', type='test')
 
     # See: https://github.com/mariusmuja/flann/issues/369
     patch('linux-gcc-cmakev3.11-plus.patch', when='%gcc^cmake@3.11:')

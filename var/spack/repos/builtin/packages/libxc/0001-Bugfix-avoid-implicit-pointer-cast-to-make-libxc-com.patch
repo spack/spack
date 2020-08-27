@@ -1,0 +1,26 @@
+From 205a08a30ee0d057d173f9eaa6fc6414f6960c22 Mon Sep 17 00:00:00 2001
+From: Xavier Andrade <xavier@tddft.org>
+Date: Wed, 27 May 2020 15:42:32 -0700
+Subject: [PATCH] Bugfix: avoid implicit pointer cast to make libxc compile
+ with a C++ compiler.
+
+---
+ src/functionals.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/functionals.c b/src/functionals.c
+index 3f668292..293f7f9b 100644
+--- a/src/functionals.c
++++ b/src/functionals.c
+@@ -324,7 +324,7 @@ xc_func_set_ext_params_name(xc_func_type *p, const char *name, double par)
+ 
+   assert(p != NULL && p->info->ext_params.n > 0);
+   
+-  ext_params = libxc_malloc(p->info->ext_params.n*sizeof(double));
++  ext_params = (double *) libxc_malloc(p->info->ext_params.n*sizeof(double));
+   for(ii=0; ii<p->info->ext_params.n; ii++){
+     if(strcmp(p->info->ext_params.names[ii], name) == 0)
+       ext_params[ii] = par;
+-- 
+2.25.1
+

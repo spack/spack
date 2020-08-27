@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Xman(AutotoolsPackage):
+class Xman(AutotoolsPackage, XorgPackage):
     """xman is a graphical manual page browser using the Athena Widgets (Xaw)
     toolkit."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xman"
-    url      = "https://www.x.org/archive/individual/app/xman-1.1.4.tar.gz"
+    xorg_mirror_path = "app/xman-1.1.4.tar.gz"
 
-    version('1.1.4', 'f4238c79ee7227ea193898fc159f31e5')
+    version('1.1.4', sha256='72fd0d479624a31d9a7330e5fdd220b7aa144744781f8e78aa12deece86e05c7')
 
     depends_on('libxaw')
     depends_on('libxt')

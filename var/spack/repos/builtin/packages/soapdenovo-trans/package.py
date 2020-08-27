@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,10 @@ class SoapdenovoTrans(MakefilePackage):
     homepage = "http://soap.genomics.org.cn/SOAPdenovo-Trans.html"
     url      = "https://github.com/aquaskyline/SOAPdenovo-Trans/archive/1.0.4.tar.gz"
 
-    version('1.0.4', 'a3b00b0f743b96141c4d5f1b49f2918c')
+    version('1.0.4', sha256='378a54cde0ebe240fb515ba67197c053cf95393645c1ae1399b3a611be2a9795')
+
+    depends_on('zlib', type='link')
+    depends_on('samtools@0.1.8', type='link')
 
     build_directory = 'src'
 
@@ -23,6 +26,8 @@ class SoapdenovoTrans(MakefilePackage):
             makefile = FileFilter('Makefile')
             makefile.filter('CFLAGS=         -O3 -fomit-frame-pointer -static',
                             'CFLAGS=         -O3 -fomit-frame-pointer')
+            if spec.target.family == 'aarch64':
+                makefile.filter('ppc64 ia64', 'ppc64 ia64 aarch64')
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):

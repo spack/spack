@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Fpc(Package):
     homepage = "https://www.freepascal.org/"
     url      = "https://downloads.sourceforge.net/project/freepascal/Linux/3.0.2/fpc-3.0.2.x86_64-linux.tar"
 
-    version('3.0.2', 'e5721c1843cff301c5b46abfee17c890')
+    version('3.0.2', sha256='b5b27fdbc31b1d05b6a898f3c192d8a5083050562b29c19eb9eb018ba4482bd8')
 
     def install(self, spec, prefix):
         install = Executable('./install.sh')

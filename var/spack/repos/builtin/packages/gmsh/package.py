@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,29 +17,33 @@ class Gmsh(CMakePackage):
     """
 
     homepage = 'http://gmsh.info'
-    url = 'http://gmsh.info/src/gmsh-2.11.0-source.tgz'
+    url = 'http://gmsh.info/src/gmsh-4.4.1-source.tgz'
 
+    version('4.5.4', sha256='ccf8c74f43cbe3c371abe79862025d41642b3538a0148f018949494e3b3e2ecd')
+    version('4.4.1', sha256='853c6438fc4e4b765206e66a514b09182c56377bb4b73f1d0d26eda7eb8af0dc')
     version('4.2.2', sha256='e9ee9f5c606bbec5f2adbb8c3d6023c4e2577f487fa4e4ecfcfc94a241cc8dcc')
-    version('4.0.0',  'fb0c8afa37425c6f4315ab3b3124e9e102fcf270a35198423a4002796f04155f')
-    version('3.0.6',  '9700bcc440d7a6b16a49cbfcdcdc31db33efe60e1f5113774316b6fa4186987b')
-    version('3.0.1',  '830b5400d9f1aeca79c3745c5c9fdaa2900cdb2fa319b664a5d26f7e615c749f')
-    version('2.16.0', 'e829eaf32ea02350a385202cc749341f2a3217c464719384b18f653edd028eea')
-    version('2.15.0', '992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a')
-    version('2.12.0', '7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
+    version('4.0.0',  sha256='fb0c8afa37425c6f4315ab3b3124e9e102fcf270a35198423a4002796f04155f')
+    version('3.0.6',  sha256='9700bcc440d7a6b16a49cbfcdcdc31db33efe60e1f5113774316b6fa4186987b')
+    version('3.0.1',  sha256='830b5400d9f1aeca79c3745c5c9fdaa2900cdb2fa319b664a5d26f7e615c749f')
+    version('2.16.0', sha256='e829eaf32ea02350a385202cc749341f2a3217c464719384b18f653edd028eea')
+    version('2.15.0', sha256='992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a')
+    version('2.12.0', sha256='7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
     version('develop', branch='master', git='https://gitlab.onelab.info/gmsh/gmsh.git')
 
     variant('shared',      default=True,  description='Enables the build of shared libraries')
     variant('mpi',         default=True,  description='Builds MPI support for parser and solver')
-    variant('openmp',      default=False,  description='Enable OpenMP support')
+    variant('openmp',      default=False, description='Enable OpenMP support')
     variant('fltk',        default=False, description='Enables the build of the FLTK GUI')
     variant('hdf5',        default=False, description='Enables HDF5 support')
     variant('compression', default=True,  description='Enables IO compression through zlib')
     variant('netgen',      default=False, description='Build with Netgen')
+    variant('opencascade', default=False, description='Build with OpenCASCADE')
     variant('oce',         default=False, description='Build with OCE')
     variant('petsc',       default=False, description='Build with PETSc')
     variant('slepc',       default=False, description='Build with SLEPc (only when PETSc is enabled)')
     variant('tetgen',      default=False, description='Build with Tetgen')
-    variant('metis',       default=False,  description='Build with Metis')
+    variant('metis',       default=False, description='Build with Metis')
+    variant('privateapi',  default=False, description='Enable the private API')
 
     depends_on('blas')
     depends_on('lapack')
@@ -50,6 +54,7 @@ class Gmsh(CMakePackage):
     depends_on('fltk', when='+fltk')
     depends_on('hdf5', when='+hdf5')
     depends_on('netgen', when='+netgen')
+    depends_on('opencascade', when='+opencascade')
     depends_on('oce',  when='+oce')
     depends_on('petsc+mpi', when='+petsc+mpi')
     depends_on('petsc', when='+petsc~mpi')
@@ -59,6 +64,7 @@ class Gmsh(CMakePackage):
     depends_on('metis', when='+metis')
 
     conflicts('+slepc', when='~petsc')
+    conflicts('+oce', when='+opencascade')
 
     def cmake_args(self):
         spec = self.spec
@@ -94,6 +100,9 @@ class Gmsh(CMakePackage):
 
         if '+oce' in spec:
             env['CASROOT'] = self.spec['oce'].prefix
+            options.append('-DENABLE_OCC=ON')
+        elif '+opencascade' in spec:
+            env['CASROOT'] = self.spec['opencascade'].prefix
             options.append('-DENABLE_OCC=ON')
         else:
             options.append('-DENABLE_OCC=OFF')
@@ -140,5 +149,10 @@ class Gmsh(CMakePackage):
 
         if '+compression' in spec:
             options.append('-DENABLE_COMPRESSED_IO:BOOL=ON')
+
+        if '+privateapi' in spec:
+            options.append('-DENABLE_PRIVATE_API=ON')
+        else:
+            options.append('-DENABLE_PRIVATE_API=OFF')
 
         return options

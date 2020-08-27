@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PerlIoSocketSsl(PerlPackage):
     homepage = "http://search.cpan.org/~sullr/IO-Socket-SSL-2.052/lib/IO/Socket/SSL.pod"
     url      = "http://search.cpan.org/CPAN/authors/id/S/SU/SULLR/IO-Socket-SSL-2.052.tar.gz"
 
-    version('2.052', '26c9bcdfb4ba8763ef89264f21326a48')
+    version('2.052', sha256='e4897a9b17cb18a3c44aa683980d52cef534cdfcb8063d6877c879bfa2f26673')
 
     depends_on('perl-net-ssleay', type=('build', 'run'))
 

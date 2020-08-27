@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,11 @@ class AprUtil(AutotoolsPackage):
     """Apache Portable Runtime Utility"""
 
     homepage  = 'https://apr.apache.org/'
-    url       = 'http://archive.apache.org/dist/apr/apr-util-1.6.0.tar.gz'
+    url       = 'https://archive.apache.org/dist/apr/apr-util-1.6.1.tar.gz'
 
-    version('1.6.0', '3b03dbff60728a4f4c33f5d929e8b35a')
-    version('1.5.4', '866825c04da827c6e5f53daff5569f42')
+    version('1.6.1', sha256='b65e40713da57d004123b6319828be7f1273fbc6490e145874ee1177e112c459')
+    version('1.6.0', sha256='483ef4d59e6ac9a36c7d3fd87ad7b9db7ad8ae29c06b9dd8ff22dda1cc416389')
+    version('1.5.4', sha256='976a12a59bc286d634a21d7be0841cc74289ea9077aa1af46be19d1a6e844c19')
 
     variant('crypto', default=True,  description='Enable crypto support')
     variant('gdbm',   default=False, description='Enable GDBM support')
@@ -23,7 +24,7 @@ class AprUtil(AutotoolsPackage):
 
     depends_on('apr')
     depends_on('expat')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     depends_on('openssl', when='+crypto')
     depends_on('gdbm', when='+gdbm')
@@ -37,7 +38,7 @@ class AprUtil(AutotoolsPackage):
         args = [
             '--with-apr={0}'.format(spec['apr'].prefix),
             '--with-expat={0}'.format(spec['expat'].prefix),
-            '--with-iconv={0}'.format(spec['libiconv'].prefix),
+            '--with-iconv={0}'.format(spec['iconv'].prefix),
             # TODO: Add support for the following database managers
             '--without-ndbm',
             '--without-berkeley-db',

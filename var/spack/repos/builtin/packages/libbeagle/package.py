@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
     url      = "https://github.com/beagle-dev/beagle-lib/archive/v3.1.2.tar.gz"
 
     version('3.1.2', sha256='dd872b484a3a9f0bce369465e60ccf4e4c0cd7bd5ce41499415366019f236275')
-    version('2.1.2', '1107614e86f652f8ee45c1c92f2af3d4',
+    version('2.1.2', sha256='82ff13f4e7d7bffab6352e4551dfa13afabf82bff54ea5761d1fc1e78341d7de',
             url='https://github.com/beagle-dev/beagle-lib/archive/beagle_release_2_1_2.tar.gz')
 
     depends_on('autoconf', type='build')
@@ -44,15 +44,15 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
                         'configure.ac', string=True)
 
     def configure_args(self):
-        args = []
+        args = [
+            # Since spack will inject architecture flags turn off -march=native
+            # when building libbeagle.
+            '--disable-march-native',
+        ]
 
         if '+cuda' in self.spec:
-            args.append('--with-cuda=%s' % spec['cuda'].prefix)
+            args.append('--with-cuda=%s' % self.spec['cuda'].prefix)
         else:
             args.append('--without-cuda')
 
         return args
-
-    def setup_environment(self, spack_env, run_env):
-        prefix = self.prefix
-        run_env.prepend_path('BEAST_LIB', prefix.lib)

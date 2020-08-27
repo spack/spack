@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,10 +8,9 @@ from __future__ import print_function
 import os
 
 import llnl.util.tty as tty
-
-import spack.spec
 import spack.config
-from spack.repo import Repo, create_repo, canonicalize_path, RepoError
+import spack.repo
+import spack.util.path
 
 description = "manage package source repositories"
 section = "config"
@@ -51,8 +50,8 @@ def setup_parser(subparser):
     remove_parser = sp.add_parser(
         'remove', help=repo_remove.__doc__, aliases=['rm'])
     remove_parser.add_argument(
-        'path_or_namespace',
-        help="path or namespace of a Spack package repository")
+        'namespace_or_path',
+        help="namespace or path of a Spack package repository")
     remove_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.config.default_modify_scope(),
@@ -61,7 +60,9 @@ def setup_parser(subparser):
 
 def repo_create(args):
     """Create a new package repository."""
-    full_path, namespace = create_repo(args.directory, args.namespace)
+    full_path, namespace = spack.repo.create_repo(
+        args.directory, args.namespace
+    )
     tty.msg("Created repo with namespace '%s'." % namespace)
     tty.msg("To register it with spack, run this command:",
             'spack repo add %s' % full_path)
@@ -72,7 +73,7 @@ def repo_add(args):
     path = args.path
 
     # real_path is absolute and handles substitution.
-    canon_path = canonicalize_path(path)
+    canon_path = spack.util.path.canonicalize_path(path)
 
     # check if the path exists
     if not os.path.exists(canon_path):
@@ -83,7 +84,7 @@ def repo_add(args):
         tty.die("Not a Spack repository: %s" % path)
 
     # Make sure it's actually a spack repository by constructing it.
-    repo = Repo(canon_path)
+    repo = spack.repo.Repo(canon_path)
 
     # If that succeeds, finally add it to the configuration.
     repos = spack.config.get('repos', scope=args.scope)
@@ -101,12 +102,12 @@ def repo_add(args):
 def repo_remove(args):
     """Remove a repository from Spack's configuration."""
     repos = spack.config.get('repos', scope=args.scope)
-    path_or_namespace = args.path_or_namespace
+    namespace_or_path = args.namespace_or_path
 
     # If the argument is a path, remove that repository from config.
-    canon_path = canonicalize_path(path_or_namespace)
+    canon_path = spack.util.path.canonicalize_path(namespace_or_path)
     for repo_path in repos:
-        repo_canon_path = canonicalize_path(repo_path)
+        repo_canon_path = spack.util.path.canonicalize_path(repo_path)
         if canon_path == repo_canon_path:
             repos.remove(repo_path)
             spack.config.set('repos', repos, args.scope)
@@ -116,18 +117,18 @@ def repo_remove(args):
     # If it is a namespace, remove corresponding repo
     for path in repos:
         try:
-            repo = Repo(path)
-            if repo.namespace == path_or_namespace:
+            repo = spack.repo.Repo(path)
+            if repo.namespace == namespace_or_path:
                 repos.remove(path)
                 spack.config.set('repos', repos, args.scope)
                 tty.msg("Removed repository %s with namespace '%s'."
                         % (repo.root, repo.namespace))
                 return
-        except RepoError:
+        except spack.repo.RepoError:
             continue
 
     tty.die("No repository with path or namespace: %s"
-            % path_or_namespace)
+            % namespace_or_path)
 
 
 def repo_list(args):
@@ -136,8 +137,8 @@ def repo_list(args):
     repos = []
     for r in roots:
         try:
-            repos.append(Repo(r))
-        except RepoError:
+            repos.append(spack.repo.Repo(r))
+        except spack.repo.RepoError:
             continue
 
     msg = "%d package repositor" % len(repos)

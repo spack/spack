@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Kaiju(MakefilePackage):
     homepage = "https://github.com/bioinformatics-centre/kaiju"
     url      = "https://github.com/bioinformatics-centre/kaiju/archive/v1.6.2.zip"
 
-    version('1.6.2', '0bd85368954837aa31f3de8b87ea410b')
+    version('1.6.2', sha256='2685fed7e27ddeb26530fd60a4b388f2d5f3e29aaa79f8e2e6abcbac64075db8')
 
     build_directory = 'src'
 

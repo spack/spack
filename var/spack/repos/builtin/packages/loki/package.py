@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Loki(MakefilePackage):
     homepage = "http://loki-lib.sourceforge.net"
     url      = "https://downloads.sourceforge.net/project/loki-lib/Loki/Loki%200.1.7/loki-0.1.7.tar.bz2"
 
-    version('0.1.7', '33a24bcbb99fa2ec8fcbbab65649f3f6')
+    version('0.1.7', sha256='07553754f6be2738559947db69b0718512665bf4a34015fa3a875b6eb1111198')
 
     variant('shared', default=True, description="Build shared libraries")
 

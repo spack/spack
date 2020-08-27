@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Aspa(MakefilePackage):
     depends_on('blas')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5')
+
+    patch('fix_common_errors.patch')
 
     @property
     def build_targets(self):

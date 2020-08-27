@@ -1,0 +1,22 @@
+diff -ruN a/core/jms-implementation/pom.xml b/core/jms-implementation/pom.xml
+--- a/core/jms-implementation/pom.xml	2019-07-03 04:17:42.000000000 -0500
++++ b/core/jms-implementation/pom.xml	2019-09-21 10:20:42.710868269 -0500
+@@ -275,6 +275,7 @@
+                     <descriptors>
+                         <descriptor>assembly.xml</descriptor>
+                     </descriptors>
++		    <tarLongFileMode>posix</tarLongFileMode>
+                     <finalName>interproscan-5</finalName>
+                 </configuration>
+                 <executions>
+diff -ruN a/core/precalcmatches/berkeley/pom.xml b/core/precalcmatches/berkeley/pom.xml
+--- a/core/precalcmatches/berkeley/pom.xml	2019-07-03 04:17:42.000000000 -0500
++++ b/core/precalcmatches/berkeley/pom.xml	2019-09-21 10:21:16.874804845 -0500
+@@ -41,6 +41,7 @@
+                     <descriptors>
+                         <descriptor>assembly.xml</descriptor>
+                     </descriptors>
++		    <tarLongFileMode>posix</tarLongFileMode>
+                     <finalName>berkeley-db-builder</finalName>
+                 </configuration>
+                 <executions>

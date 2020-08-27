@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Amrvis(MakefilePackage):
     homepage = "https://github.com/AMReX-Codes/Amrvis"
     git      = "https://github.com/AMReX-Codes/Amrvis.git"
 
-    version('master', tag='master')
+    version('main', tag='main')
 
     variant(
         'dims',
@@ -69,10 +69,21 @@ class Amrvis(MakefilePackage):
     # Need to clone AMReX into Amrvis because Amrvis uses AMReX's source
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
-             tag='master',
+             tag='development',
              placement='amrex')
 
     def edit(self, spec, prefix):
+        # libquadmath is only available x86_64 and powerle
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85440
+        if self.spec.target.family not in ['x86_64', 'ppc64le']:
+            comps = join_path('amrex', 'Tools', 'GNUMake', 'comps')
+            maks = [
+                join_path(comps, 'gnu.mak'),
+                join_path(comps, 'llvm.mak'),
+            ]
+            for mak in maks:
+                filter_file('-lquadmath', '', mak)
+
         # Set all available makefile options to values we want
         makefile = FileFilter('GNUmakefile')
         makefile.filter(
@@ -173,16 +184,16 @@ class Amrvis(MakefilePackage):
         with open('GNUmakefile', 'w') as file:
             file.writelines(contents)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # We don't want an AMREX_HOME the user may have set already
-        spack_env.unset('AMREX_HOME')
+        env.unset('AMREX_HOME')
         # Help force Amrvis to not pick up random system compilers
         if '+mpi' in self.spec:
-            spack_env.set('MPI_HOME', self.spec['mpi'].prefix)
-            spack_env.set('CC', self.spec['mpi'].mpicc)
-            spack_env.set('CXX', self.spec['mpi'].mpicxx)
-            spack_env.set('F77', self.spec['mpi'].mpif77)
-            spack_env.set('FC', self.spec['mpi'].mpifc)
+            env.set('MPI_HOME', self.spec['mpi'].prefix)
+            env.set('CC', self.spec['mpi'].mpicc)
+            env.set('CXX', self.spec['mpi'].mpicxx)
+            env.set('F77', self.spec['mpi'].mpif77)
+            env.set('FC', self.spec['mpi'].mpifc)
 
     def install(self, spec, prefix):
         # Install exe manually

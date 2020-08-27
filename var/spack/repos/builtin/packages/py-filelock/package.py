@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,15 +12,14 @@ class PyFilelock(PythonPackage):
     inter-process communication"""
 
     homepage = "https://github.com/benediktschmitt/py-filelock"
-    url = "https://github.com/benediktschmitt/py-filelock/archive/v3.0.4.tar.gz"
+    url      = "https://pypi.io/packages/source/f/filelock/filelock-3.0.4.tar.gz"
 
-    version('3.0.4',  '3cafce82375c3b635f2c872acaf3a00b')
-    version('3.0.3',  'e4bd69f15ebcc6d5a3d684cea3694840')
-    version('3.0.1',  'cbf41ad3d89c89e2b752bc85b501dff6')
-    version('3.0.0',  '29d199e8998ac324d0d7cab7aa814943')
-    version('2.0.13', 'cdd0c4f3e905fbab76d1202ce8e8b454')
-    version('2.0.12', 'fffda24b6cfd459ea5d2d5c335e949e2')
-    version('2.0.11', '9e8cbbe18494d12647050bb32a7e624d')
-    version('2.0.10', '1791e72bb19e503fdd0f365fb8ce2a4d')
-    version('2.0.9',  'b0269e7f77a090cc0d5fc9cf5fbe6ac2')
-    version('2.0.8',  '939ec6d4e2ecdc353a1f27fc452d8e8c')
+    version('3.0.4',  sha256='011327d4ed939693a5b28c0fdf2fd9bda1f68614c1d6d0643a89382ce9843a71')
+    version('3.0.3',  sha256='7d8a86350736aa0efea0730e6a7f774195cbb1c2d61134c15f6be576399e87ff')
+    version('3.0.0',  sha256='b3ad481724adfb2280773edd95ce501e497e88fa4489c6e41e637ab3fd9a456c')
+    version('2.0.13', sha256='d05079e7d7cae7576e192749d3461999ca6b0843d35b0f79f1fa956b0f6fc7d8')
+    version('2.0.12', sha256='eb4314a9a032707a914b037433ce866d4ed363fce8605d45f0c9d2cd6ac52f98')
+    version('2.0.11', sha256='e9e370efe86c30b19a2c8c36dd9fcce8e5ce294ef4ed6ac86664b666eaf852ca')
+    version('2.0.10', sha256='c73bf706d8a0c5722de0b745495fed9cda0e46c0eabb44eb18ee3f00520fa85f')
+    version('2.0.9',  sha256='0f91dce339c9f25d6f2e0733a17e4f9a47b139dffda52619a0e61e013e5c6782')
+    version('2.0.8',  sha256='7e48e4906de3c9a5d64d8f235eb3ae1050dfefa63fd65eaf318cc915c935212b')

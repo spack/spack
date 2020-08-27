@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,11 +17,11 @@ class Libyogrt(AutotoolsPackage):
     version('1.22',   sha256='38e7d1ea3fa030f0169197aa96cde9f01caa595a590764ef1cb2ae07379cb711')
     version('1.21',   sha256='5f8f0942d35ee4e418273e478e632210b3fa648dcb6a2e6a92c6ba4213cdc362')
     version('1.20-7', sha256='735e9d6fa572e239ccc73e11c84b4583338b24df0fa91c48e8bc038d882003f7')
-    version('1.20-6', '478f27512842cc5f2b74a0c22b851f60')
-    version('1.20-5', 'd0fa6526fcd1f56ddb3d93f602ec72f7')
-    version('1.20-4', '092bea10de22c505ce92aa07001decbb')
-    version('1.20-3', 'd0507717009a5f8e2009e3b63594738f')
-    version('1.20-2', '780bda03268324f6b5f72631fff6e6cb')
+    version('1.20-6', sha256='ba5a2e202f995cf7ae3bf87b451943733e760ede02ca172f712cbf2eea693222')
+    version('1.20-5', sha256='1e41bc656abffb121145264bc898421c3f355d3be35f1711b7b5e3ffe7effdd9')
+    version('1.20-4', sha256='0858a729068b272d4047d79f6a5187cdbd427bdfec64db4e143524b4789a06c5')
+    version('1.20-3', sha256='61a8f28f452aef0e09d700dbaaffd91ae3855f7ac221c7ebe478a028df635e31')
+    version('1.20-2', sha256='bf22a82ab3bfede780be3fb6c132cc354234f8d57d3cccd58fe594f074ed7f95')
 
     # libyogrt supports the following schedulers:
     #     lcrm, lsf, moab, slurm, AIX+slurm
@@ -38,6 +38,9 @@ class Libyogrt(AutotoolsPackage):
 
     conflicts('scheduler=lsf', when='@:1.22')
 
+    variant('static', default='False',
+            description="build static library")
+
     def url_for_version(self, version):
         if version < Version(1.21):
             return "https://github.com/LLNL/libyogrt/archive/%s.tar.gz" % version
@@ -50,5 +53,8 @@ class Libyogrt(AutotoolsPackage):
         sched = self.spec.variants['scheduler'].value
         if sched != "system":
             args.append('--with-%s=%s' % (sched, self.spec[sched].prefix))
+
+        if '+static' in self.spec:
+            args.append('--enable-static=yes')
 
         return args

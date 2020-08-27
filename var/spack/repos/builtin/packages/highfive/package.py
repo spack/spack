@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,11 @@ class Highfive(CMakePackage):
     homepage = "https://github.com/BlueBrain/HighFive"
     url      = "https://github.com/BlueBrain/HighFive/archive/v1.2.tar.gz"
 
-    version('1.5', '5e631c91d2ea7f3677e99d6bb6db8167')
-    version('1.2', '030728d53519c7e13b5a522d34240301')
-    version('1.1', '986f0bd18c5264709688a536c02d2b2a')
-    version('1.0', 'e44e548560ea92afdb244c223b7655b6')
+    version('2.0', sha256='deee33d7f578e33dccb5d04771f4e01b89a980dd9a3ff449dd79156901ee8d25')
+    version('1.5', sha256='f194bda482ab15efa7c577ecc4fb7ee519f6d4bf83470acdb3fb455c8accb407')
+    version('1.2', sha256='4d8f84ee1002e8fd6269b62c21d6232aea3d56ce4171609e39eb0171589aab31')
+    version('1.1', sha256='430fc312fc1961605ffadbfad82b9753a5e59482e9fbc64425fb2c184123d395')
+    version('1.0', sha256='d867fe73d00817f686d286f3c69a23731c962c3e2496ca1657ea7302cd0bb944')
 
     variant('boost', default=False, description='Support Boost')
     variant('mpi', default=True, description='Support MPI')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,16 +20,12 @@ class IntelXed(Package):
     # the mbuild resource.  Xed doesn't have official releases, only
     # git commits.
 
-    version_list = [
-        ('2019.03.01',
-         'b7231de4c808db821d64f4018d15412640c34113',
-         '176544e1fb54b6bfb40f596111368981d287e951',
-        ),
-        ('2018.02.14',
-         '44d06033b69aef2c20ab01bfb518c52cd71bb537',
-         'bb9123152a330c7fa1ff1a502950dc199c83e177',
-        )
-    ]
+    version_list = [('2019.03.01',
+                     'b7231de4c808db821d64f4018d15412640c34113',
+                     '176544e1fb54b6bfb40f596111368981d287e951'),
+                    ('2018.02.14',
+                     '44d06033b69aef2c20ab01bfb518c52cd71bb537',
+                     'bb9123152a330c7fa1ff1a502950dc199c83e177')]
 
     version('develop', branch='master')
     resource(name='mbuild',
@@ -46,10 +42,11 @@ class IntelXed(Package):
 
     variant('debug', default=False, description='Enable debug symbols')
 
-    depends_on('python@2.7:', type='build')
+    # python module 'platform.linux_distribution' was removed in python 3.8
+    depends_on('python@2.7:3.7', type='build')
 
-    conflicts('target=ppc64', msg='intel-xed only runs on x86')
-    conflicts('target=ppc64le', msg='intel-xed only runs on x86')
+    conflicts('target=ppc64:', msg='intel-xed only runs on x86')
+    conflicts('target=ppc64le:', msg='intel-xed only runs on x86')
 
     mycflags = []
 
@@ -88,18 +85,22 @@ class IntelXed(Package):
 
         mkdirp(prefix.include)
         mkdirp(prefix.lib)
+        mkdirp(prefix.bin)
 
         libs = glob.glob(join_path('obj', 'lib*.a'))
         for lib in libs:
             install(lib, prefix.lib)
 
-        # Build and install shared libxed.so.
+        # Build and install shared libxed.so and examples (to get the CLI).
         mfile('--clean')
-        mfile('--shared', *args)
+        mfile('examples', '--shared', *args)
 
         libs = glob.glob(join_path('obj', 'lib*.so'))
         for lib in libs:
             install(lib, prefix.lib)
+
+        # Install the xed program
+        install(join_path('obj', 'examples', 'xed'), prefix.bin)
 
         # Install header files.
         hdrs = glob.glob(join_path('include', 'public', 'xed', '*.h'))  \

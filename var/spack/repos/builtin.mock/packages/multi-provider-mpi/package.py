@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,3 @@ class MultiProviderMpi(Package):
     provides('mpi@3.0', when='@1.10.0')
     provides('mpi@3.0', when='@1.8.8')
     provides('mpi@2.2', when='@1.6.5')
-
-    def install(self, spec, prefix):
-        pass

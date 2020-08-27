@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Lulesh(MakefilePackage):
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('visual', default=False,
-        description='Build with Visualization support (Silo, hdf5)')
+            description='Build with Visualization support (Silo, hdf5)')
 
     depends_on('mpi', when='+mpi')
     depends_on('silo', when='+visual')

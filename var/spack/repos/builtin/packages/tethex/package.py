@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Tethex(CMakePackage):
     git      = "https://github.com/martemyev/tethex.git"
 
     version('develop', branch='master')
-    version('0.0.7', '6c9e4a18a6637deb4400c6d77ec03184')
+    version('0.0.7', sha256='5f93f434c6d110be3d8d0eba69336864d0e5a26aba2d444eb25adbd2caf73645')
 
     variant('build_type', default='Release',
             description='The build type to build',

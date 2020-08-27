@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Gource(AutotoolsPackage):
     homepage = "http://gource.io"
     url = "https://github.com/acaudwell/Gource/releases/download/gource-0.44/gource-0.44.tar.gz"
 
-    version('0.44', '79cda1bfaad16027d59cce55455bfab88b57c69d')
+    version('0.44', sha256='2604ca4442305ffdc5bb1a7bac07e223d59c846f93567be067e8dfe2f42f097c')
 
     depends_on('automake',   type='build')
     depends_on('autoconf',   type='build')

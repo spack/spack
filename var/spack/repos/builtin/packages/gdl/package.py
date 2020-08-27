@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,13 +17,12 @@ class Gdl(CMakePackage):
     url      = "https://github.com/gnudatalanguage/gdl/archive/v0.9.9.tar.gz"
 
     version('0.9.9', sha256='ad5de3fec095a5c58b46338dcc7367d2565c093794ab1bbcf180bba1a712cf14')
-    version('0.9.8', '447b0362e1df5ea8af814a969e89d3ec')
+    version('0.9.8', sha256='0e22df7314feaf18a76ae39ee57eea2ac8c3633bc095acbc25e1e07277d7c98b')
 
-    variant(
-            'graphicsmagick',
+    variant('graphicsmagick',
             default=False,
-            description='Enable GraphicsMagick'
-           )
+            description='Enable GraphicsMagick')
+
     variant('hdf4', default=False, description='Enable HDF4')
     variant('hdf5', default=True, description='Enable HDF5')
     variant('openmp', default=True, description='Enable OpenMP')
@@ -48,7 +47,7 @@ class Gdl(CMakePackage):
     depends_on('proj@:5', when='+proj')
     depends_on('py-numpy', type=('build', 'run'), when='+embed_python')
     depends_on('python@2.7:2.8', type=('build', 'run'), when='+embed_python')
-    depends_on('wx', when='+wx')
+    depends_on('wxwidgets', when='+wx')
 
     depends_on('eigen')
     depends_on('fftw')
@@ -58,7 +57,7 @@ class Gdl(CMakePackage):
     depends_on('libsm')
     depends_on('libxinerama')
     depends_on('libxxf86vm')
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('pslib')
     depends_on('readline')
 

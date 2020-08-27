@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Gnat(MakefilePackage):
     # dependencies are already in Spack.
 
     # This is the GPL release for Linux x86-64
-    version('2016', '9741107cca1a6a4ddb0d5e8de824a90c', extension='tar.gz',
+    version('2016', sha256='d083c01e054d0aeda7c67967306cfa5a8df12268664f9098a2d9b331aa24dfe7', extension='tar.gz',
             url="http://mirrors.cdn.adacore.com/art/5739cefdc7a447658e0b016b")
 
     phases = ['install']

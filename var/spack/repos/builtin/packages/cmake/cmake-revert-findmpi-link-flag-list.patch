@@ -1,0 +1,29 @@
+From 89fc3b1fd22f97f9380990b521dd79f306ac18fd Mon Sep 17 00:00:00 2001
+From: Chuck Atkins <chuck.atkins@kitware.com>
+Date: Thu, 25 Jul 2019 09:37:20 -0400
+Subject: [PATCH] Revert "FindMPI: Store imported target link flags as a list
+ instead of a string"
+
+This reverts commit f7eaa342de316707d99e6ae29c693a480861560d.
+---
+ Modules/FindMPI.cmake | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/Modules/FindMPI.cmake b/Modules/FindMPI.cmake
+index a80f799..fe09764 100644
+--- a/Modules/FindMPI.cmake
++++ b/Modules/FindMPI.cmake
+@@ -1144,9 +1144,7 @@ macro(_MPI_create_imported_target LANG)
+ 
+   set_property(TARGET MPI::MPI_${LANG} PROPERTY INTERFACE_LINK_LIBRARIES "")
+   if(MPI_${LANG}_LINK_FLAGS)
+-    separate_arguments(_MPI_${LANG}_LINK_FLAGS NATIVE_COMMAND "${MPI_${LANG}_LINK_FLAGS}")
+-    set_property(TARGET MPI::MPI_${LANG} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${_MPI_${LANG}_LINK_FLAGS}")
+-    unset(_MPI_${LANG}_LINK_FLAGS)
++    set_property(TARGET MPI::MPI_${LANG} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${MPI_${LANG}_LINK_FLAGS}")
+   endif()
+   # If the compiler links MPI implicitly, no libraries will be found as they're contained within
+   # CMAKE_<LANG>_IMPLICIT_LINK_LIBRARIES already.
+-- 
+2.5.5
+

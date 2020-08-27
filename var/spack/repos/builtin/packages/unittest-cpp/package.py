@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,5 +17,5 @@ class UnittestCpp(CMakePackage):
     homepage = "https://github.com/unittest-cpp/unittest-cpp/wiki"
     url      = "https://github.com/unittest-cpp/unittest-cpp/archive/v1.6.0.tar.gz"
 
-    version('2.0.0', 'edaccca3e61d977881bdf1e0cf372243')
-    version('1.6.0', '50f2500f76efd5b9312f19186b66b329')
+    version('2.0.0', sha256='74852198877dc2fdebdc4e5e9bd074018bf8ee03a13de139bfe41f4585b2f5b9')
+    version('1.6.0', sha256='9fa7e797816e16669d68171418b0dc41ec6b7eaf8483f782441f5f159598c3c0')

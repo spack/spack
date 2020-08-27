@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ class PySeaborn(PythonPackage):
     homepage = "http://seaborn.pydata.org/"
     url      = "https://pypi.io/packages/source/s/seaborn/seaborn-0.7.1.tar.gz"
 
-    version('0.9.0', '76c83f794ca320fb6b23a7c6192d5e185a5fcf4758966a0c0a54baee46d41e2f')
-    version('0.7.1', 'ef07e29e0f8a1f2726abe506c1a36e93')
+    version('0.9.0', sha256='76c83f794ca320fb6b23a7c6192d5e185a5fcf4758966a0c0a54baee46d41e2f')
+    version('0.7.1', sha256='fa274344b1ee72f723bab751c40a5c671801d47a29ee9b5e69fcf63a18ce5c5d')
 
     depends_on('py-setuptools', type='build')
 

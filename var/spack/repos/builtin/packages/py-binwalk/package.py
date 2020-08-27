@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyBinwalk(PythonPackage):
     homepage = "https://github.com/devttys0/binwalk"
     url      = "https://pypi.io/packages/source/b/binwalk/binwalk-2.1.0.tar.gz"
 
-    version('2.1.0', '054867d9abe6a05f43200cf2591051e6')
+    version('2.1.0', sha256='218c8045c6cb3ed6e21814fb89cdb913808b02dfe5a6cc30f85f4a59e8129f6b')
 
     depends_on('python')
     depends_on('py-setuptools', type='build')

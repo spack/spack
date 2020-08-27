@@ -68,10 +68,6 @@ PackageName: py
 PackageHomePage: https://pypi.python.org/pypi/py
 PackageLicenseDeclared: MIT
 
-PackageName: pyqver
-PackageHomePage: https://github.com/ghewgill/pyqver
-PackageLicenseDeclared: BSD-3-Clause
-
 PackageName: pytest
 PackageHomePage: https://pypi.python.org/pypi/pytest
 PackageLicenseDeclared: MIT
@@ -82,4 +78,12 @@ PackageLicenseDeclared: MIT
 
 PackageName: six
 PackageHomePage: https://pypi.python.org/pypi/six
+PackageLicenseDeclared: MIT
+
+PackageName: macholib
+PackageHomePage: https://macholib.readthedocs.io/en/latest/index.html
+PackageLicenseDeclared: MIT
+
+PackageName: altgraph
+PackageHomePage: https://altgraph.readthedocs.io/en/latest/index.html
 PackageLicenseDeclared: MIT

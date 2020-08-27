@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,7 @@ class Express(CMakePackage):
     # patch from the debian package repo:
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=811859
     patch('gcc-6.patch', when='%gcc@6.0.0:')
+    patch('gcc-6.patch', when='%fj')
 
     def patch(self):
         with working_dir('src'):
@@ -40,6 +41,6 @@ class Express(CMakePackage):
             edit.filter(r'\${CMAKE_CURRENT_SOURCE_DIR}/../bamtools/lib/'
                         'libbamtools.a', '%s' % self.spec['bamtools'].libs)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.prepend_path('CPATH', self.spec[
-                               'bamtools'].prefix.include.bamtools)
+    def setup_build_environment(self, env):
+        env.prepend_path('CPATH',
+                         self.spec['bamtools'].prefix.include.bamtools)

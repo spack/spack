@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,5 +32,11 @@ class SdslLite(Package):
         tar('-xvf', self.stage.archive_file)
 
         with working_dir('sdsl-lite-{0}'.format(spec.version.dotted)):
+            if self.spec.satisfies('%fj'):
+                filter_file(
+                    'stdlib=libc',
+                    'stdlib=libstdc',
+                    './CMakeLists.txt'
+                )
             helper = Executable('./install.sh')
             helper(prefix)

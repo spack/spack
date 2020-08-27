@@ -1,10 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 from six import string_types
 
+import spack.variant
 from spack.spec import Spec
 from spack.error import SpackError
 
@@ -28,6 +29,12 @@ class SpecList(object):
         self.name = name
         self._reference = reference  # TODO: Do we need defensive copy here?
 
+        # Validate yaml_list before assigning
+        if not all(isinstance(s, string_types) or isinstance(s, (list, dict))
+                   for s in yaml_list):
+            raise ValueError(
+                "yaml_list can contain only valid YAML types!  Found:\n  %s"
+                % [type(s) for s in yaml_list])
         self.yaml_list = yaml_list[:]
 
         # Expansions can be expensive to compute and difficult to keep updated
@@ -48,16 +55,7 @@ class SpecList(object):
             constraints = []
             for item in self.specs_as_yaml_list:
                 if isinstance(item, dict):  # matrix of specs
-                    excludes = item.get('exclude', [])
-                    for combo in itertools.product(*(item['matrix'])):
-                        # Test against the excludes using a single spec
-                        ordered_combo = sorted(combo, key=spec_ordering_key)
-                        test_spec = Spec(' '.join(ordered_combo))
-                        if any(test_spec.satisfies(x) for x in excludes):
-                            continue
-
-                        # Add as list of constraints
-                        constraints.append([Spec(x) for x in ordered_combo])
+                    constraints.extend(_expand_matrix_constraints(item))
                 else:  # individual spec
                     constraints.append([Spec(item)])
             self._constraints = constraints
@@ -123,23 +121,42 @@ class SpecList(object):
         self._constraints = None
         self._specs = None
 
+    def _parse_reference(self, name):
+        sigil = ''
+        name = name[1:]
+
+        # Parse specs as constraints
+        if name.startswith('^') or name.startswith('%'):
+            sigil = name[0]
+            name = name[1:]
+
+        # Make sure the reference is valid
+        if name not in self._reference:
+            msg = 'SpecList %s refers to ' % self.name
+            msg += 'named list %s ' % name
+            msg += 'which does not appear in its reference dict'
+            raise UndefinedReferenceError(msg)
+
+        return (name, sigil)
+
     def _expand_references(self, yaml):
         if isinstance(yaml, list):
-            for idx, item in enumerate(yaml):
+            ret = []
+
+            for item in yaml:
+                # if it's a reference, expand it
                 if isinstance(item, string_types) and item.startswith('$'):
-                    name = item[1:]
-                    if name in self._reference:
-                        ret = [self._expand_references(i) for i in yaml[:idx]]
-                        ret += self._reference[name].specs_as_yaml_list
-                        ret += self._expand_references(yaml[idx + 1:])
-                        return ret
-                    else:
-                        msg = 'SpecList %s refers to ' % self.name
-                        msg += 'named list %s ' % name
-                        msg += 'which does not appear in its reference dict'
-                        raise UndefinedReferenceError(msg)
-            # No references in this
-            return [self._expand_references(item) for item in yaml]
+                    # replace the reference and apply the sigil if needed
+                    name, sigil = self._parse_reference(item)
+                    referent = [
+                        _sigilify(item, sigil)
+                        for item in self._reference[name].specs_as_yaml_list
+                    ]
+                    ret.extend(referent)
+                else:
+                    # else just recurse
+                    ret.append(self._expand_references(item))
+            return ret
         elif isinstance(yaml, dict):
             # There can't be expansions in dicts
             return dict((name, self._expand_references(val))
@@ -153,6 +170,63 @@ class SpecList(object):
 
     def __getitem__(self, key):
         return self.specs[key]
+
+
+def _expand_matrix_constraints(object, specify=True):
+    # recurse so we can handle nexted matrices
+    expanded_rows = []
+    for row in object['matrix']:
+        new_row = []
+        for r in row:
+            if isinstance(r, dict):
+                new_row.extend(
+                    [[' '.join(c)]
+                     for c in _expand_matrix_constraints(r, specify=False)])
+            else:
+                new_row.append([r])
+        expanded_rows.append(new_row)
+
+    excludes = object.get('exclude', [])  # only compute once
+    sigil = object.get('sigil', '')
+
+    results = []
+    for combo in itertools.product(*expanded_rows):
+        # Construct a combined spec to test against excludes
+        flat_combo = [constraint for list in combo for constraint in list]
+        ordered_combo = sorted(flat_combo, key=spec_ordering_key)
+
+        test_spec = Spec(' '.join(ordered_combo))
+        # Abstract variants don't have normal satisfaction semantics
+        # Convert all variants to concrete types.
+        # This method is best effort, so all existing variants will be
+        # converted before any error is raised.
+        # Catch exceptions because we want to be able to operate on
+        # abstract specs without needing package information
+        try:
+            spack.variant.substitute_abstract_variants(test_spec)
+        except spack.variant.UnknownVariantError:
+            pass
+        if any(test_spec.satisfies(x) for x in excludes):
+            continue
+
+        if sigil:  # add sigil if necessary
+            ordered_combo[0] = sigil + ordered_combo[0]
+
+        # Add to list of constraints
+        if specify:
+            results.append([Spec(x) for x in ordered_combo])
+        else:
+            results.append(ordered_combo)
+    return results
+
+
+def _sigilify(item, sigil):
+    if isinstance(item, dict):
+        if sigil:
+            item['sigil'] = sigil
+        return item
+    else:
+        return sigil + item
 
 
 class SpecListError(SpackError):

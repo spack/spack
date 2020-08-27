@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Casper(MakefilePackage):
     homepage = "http://best.snu.ac.kr/casper/index.php?name=main"
     url      = "http://best.snu.ac.kr/casper/program/casper_v0.8.2.tar.gz"
 
-    version('0.8.2', '9e83d32ff46b876f33eb1d7b545ec9c2')
+    version('0.8.2', sha256='3005e165cebf8ce4e12815b7660a833e0733441b5c7e5ecbfdccef7414b0c914')
 
     depends_on('jellyfish@2.2.3:')
     depends_on('boost')
@@ -25,5 +25,5 @@ class Casper(MakefilePackage):
     def install(self, spec, prefix):
         install_tree('.', prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.spec.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.spec.prefix)

@@ -1,0 +1,21 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -83,10 +83,6 @@ AC_CHECK_LIB([c], [ruserok],
+   [],
+   AC_CHECK_LIB(socket, ruserok)
+ )
+-AC_CHECK_LIB([c], [crypt],
+-  [],
+-  AC_CHECK_LIB(crypt, crypt)
+-)
+ AC_CHECK_LIB([c], [posix_openpt],
+   AC_DEFINE([HAVE_POSIX_OPENPT], [], [Defined whe posix_openpt is available])
+ )
+@@ -125,7 +121,6 @@ AC_CHECK_HEADERS([ \
+ 	arpa/inet.h \
+ 	asm/types.h \
+ 	assert.h \
+-	crypt.h \
+ 	ctype.h \
+ 	dirent.h \
+ 	dlfcn.h \

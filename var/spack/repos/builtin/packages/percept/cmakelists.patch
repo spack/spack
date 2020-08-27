@@ -1,0 +1,76 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b984099..fea4fdc 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -92,18 +92,7 @@ MESSAGE("   Trilinos_BUILD_SHARED_LIBS = ${Trilinos_BUILD_SHARED_LIBS}")
+ MESSAGE("   Trilinos_CXX_COMPILER_FLAGS = ${Trilinos_CXX_COMPILER_FLAGS}")
+ MESSAGE("End of Trilinos details\n")
+ 
+-# Optional Installation helpers
+-SET (INSTALL_PERCEPT FALSE)
+-IF (ENABLE_INSTALL)
+-    SET (INSTALL_PERCEPT TRUE)
+-ENDIF()
+-
+-IF (INSTALL_PERCEPT)
+-  set(BINARY_INSTALL_DIR bin)
+-  set(INCLUDE_INSTALL_DIR include)
+-  set(LIB_INSTALL_DIR lib)
+-  INCLUDE(CMakePackageConfigHelpers)
+-ENDIF ()
++INCLUDE(CMakePackageConfigHelpers)
+ 
+ MESSAGE("Setting and checking of compilers:")
+ SET(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
+@@ -229,6 +218,9 @@ FILE (GLOB HEADER
+ FILE (GLOB ADAPT_SOURCE src/adapt/main/*.cpp)
+ #MESSAGE("-- ADAPT_SOURCE = ${ADAPT_SOURCE}")
+ 
++FILE (GLOB TRANSFER_SOURCE src/percept/mesh_transfer/*.cpp)
++#MESSAGE("-- TRANSFER_SOURCE = ${TRANSFER_SOURCE}")
++
+ FILE (GLOB PERCEPT_UTEST_SOURCE test/unit_tests/*.cpp)
+ #MESSAGE("-- PERCEPT_UTEST_SOURCE = ${PERCEPT_UTEST_SOURCE}")
+ 
+@@ -251,6 +243,7 @@ SET(percept_lib_name "percept")
+ 
+ #SET(percept_ex_name "perceptX")
+ SET(adapt_ex_name "mesh_adapt")
++SET(transfer_ex_name "mesh_transfer")
+ #SET(percept_utest_name "percept_utest")
+ #SET(percept_rtest_name "percept_rtest")
+ #SET(percept_htest_name "percept_htest")
+@@ -268,6 +261,9 @@ IF (NOT STK_PERCEPT_LITE)
+   ADD_EXECUTABLE(${adapt_ex_name} ${ADAPT_MAIN} ${ADAPT_HEADER})
+   TARGET_LINK_LIBRARIES(${adapt_ex_name} ${percept_lib_name} ${YAML_LIBRARY})
+ 
++  ADD_EXECUTABLE(${transfer_ex_name} ${TRANSFER_SOURCE})
++  TARGET_LINK_LIBRARIES(${transfer_ex_name} ${percept_lib_name} ${YAML_LIBRARY})
++
+   #ADD_EXECUTABLE(${percept_utest_name} ${PERCEPT_UTEST_SOURCE} ${PERCEPT_UTEST_HEADER})
+   #TARGET_LINK_LIBRARIES(${percept_utest_name} ${percept_lib_name} ${GTEST_LIBRARY})
+ 
+@@ -281,7 +277,7 @@ IF (NOT STK_PERCEPT_LITE)
+   TARGET_LINK_LIBRARIES(${percept_lib_name} ${Trilinos_LIBRARIES} ${YAML_LIBRARY} ${OPENNURBS_LIBRARY} ${BOOST_LIBRARIES})
+ 
+   SET_PROPERTY(
+-    TARGET ${percept_lib_name} ${adapt_ex_name} #${percept_utest_name} ${percept_rtest_name}
++    TARGET ${percept_lib_name} ${adapt_ex_name} ${transfer_ex_name} #${percept_utest_name} ${percept_rtest_name}
+     PROPERTY COMPILE_DEFINITIONS STK_PERCEPT_LITE=0 STK_PERCEPT_HAS_GEOMETRY STK_PERCEPT_USE_INTREPID
+   )
+ 
+@@ -290,6 +286,14 @@ IF (NOT STK_PERCEPT_LITE)
+     PROPERTY COMPILE_DEFINITIONS STK_PERCEPT_LITE=0
+   )
+ 
++  install(TARGETS ${percept_ex_name} ${adapt_ex_name} ${transfer_ex_name}
++          ${percept_htest_name} ${percept_rtest_name} ${percept_utest_name}
++          percept
++          RUNTIME DESTINATION bin
++          ARCHIVE DESTINATION lib
++          LIBRARY DESTINATION lib)
++  include(CMakePackageConfigHelpers)
++
+ ENDIF()
+ 
+ 

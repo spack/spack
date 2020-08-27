@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,6 @@ class Macsio(CMakePackage):
     version('develop', branch='master')
 
     version('1.1', sha256='a86249b0f10647c0b631773db69568388094605ec1a0af149d9e61e95e6961ec')
-    version('1.0', '90e8e00ea84af2a47bee387ad331dbde')
 
     variant('mpi', default=True, description="Build MPI plugin")
     variant('silo', default=True, description="Build with SILO plugin")
@@ -42,6 +41,9 @@ class Macsio(CMakePackage):
     depends_on('silo', when="+pdb")
     depends_on('typhonio', when="+typhonio")
     depends_on('scr', when="+scr")
+
+    # Ref: https://github.com/LLNL/MACSio/commit/51b8c40cd9813adec5dd4dd6cee948bb9ddb7ee1
+    patch('cast.patch', when='@1.1')
 
     def cmake_args(self):
         spec = self.spec
@@ -94,6 +96,6 @@ class Macsio(CMakePackage):
                               .format(spec['exodusii'].prefix))
             # exodus requires netcdf
             cmake_args.append("-DWITH_NETCDF_PREFIX={0}"
-                              .format(spec['netcdf'].prefix))
+                              .format(spec['netcdf-c'].prefix))
 
         return cmake_args

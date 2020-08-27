@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,12 +22,12 @@ class Libsplash(CMakePackage):
 
     version('develop', branch='dev')
     version('master', branch='master')
-    version('1.7.0', '22dea94734fe4f4c5f4e875ce70900d3')
-    version('1.6.0', 'c05bce95abfe1ae4cd9d9817acf58d94')
-    version('1.5.0', 'c1efec4c20334242c8a3b6bfdc0207e3')
-    version('1.4.0', '2de37bcef6fafa1960391bf44b1b50e0')
-    version('1.3.1', '524580ba088d97253d03b4611772f37c')
-    version('1.2.4', '3fccb314293d22966beb7afd83b746d0')
+    version('1.7.0', sha256='51ab17c54233a8be86d7c5d59c755fb63a4a197315a510e5c49b20b070ebab73')
+    version('1.6.0', sha256='4d068de85504dfafb11bbaf6f2725a442c1f611e7cf962a924931a6220dad0f4')
+    version('1.5.0', sha256='a94547c416cee64bffd06736f61dd4e134f98a3da24117d52ee9f997c36d6b8d')
+    version('1.4.0', sha256='b86f2af15e5a05df30d4791c4ddb99a1db7b727d51b84706525fe247cfc70c78')
+    version('1.3.1', sha256='6ad04261e6d377a59b209f345af56405b37830f0dcfac28770b63091bff59383')
+    version('1.2.4', sha256='f5c4f792fee5609ede6a7d2fee5fa5799d3b68e8cdc23001a3aba390394d2f36')
 
     variant('mpi', default=True,
             description='Enable parallel I/O (one-file aggregation) support')

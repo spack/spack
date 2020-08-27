@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,14 +19,18 @@ class Migrate(AutotoolsPackage):
     variant('mpi', default=False,
             description='Build MPI binaries')
 
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
-    depends_on('m4')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
+    depends_on('zlib', type='link')
 
     depends_on('openmpi', type=('build', 'link', 'run'), when='+mpi')
 
     configure_directory = 'src'
+
+    def configure_args(self):
+        return ['--with-zlib=system']
 
     def build(self, spec, prefix):
         with working_dir('src'):

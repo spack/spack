@@ -1,0 +1,63 @@
+diff -ur spack-src.org/FCluster/FCluster.c spack-src/FCluster/FCluster.c
+--- spack-src.org/FCluster/FCluster.c	2013-08-01 23:37:40.000000000 +0900
++++ spack-src/FCluster/FCluster.c	2019-11-15 16:24:19.912747987 +0900
+@@ -750,7 +750,7 @@
+   return atResult;
+ }
+ 
+-int outputCluster(t_Params *ptParams, t_Node* tree, char **aszID, int nN)
++void outputCluster(t_Params *ptParams, t_Node* tree, char **aszID, int nN)
+ {
+   int i = 0, j = 0, k = 0, l = 0;
+   int nNodes = nN - 1;
+diff -ur spack-src.org/FCluster/FCluster.h spack-src/FCluster/FCluster.h
+--- spack-src.org/FCluster/FCluster.h	2013-08-01 23:37:40.000000000 +0900
++++ spack-src/FCluster/FCluster.h	2019-11-15 16:24:30.453873139 +0900
+@@ -71,7 +71,7 @@
+ 
+ void readDistanceMatrix(char ***paszID, char *szDistFile, float *** paafDist, int *pnN, t_Params *ptParams, float** pafW);
+ 
+-int outputCluster(t_Params *ptParams, t_Node* tree, char **aszID, int nN);
++void outputCluster(t_Params *ptParams, t_Node* tree, char **aszID, int nN);
+ 
+ void scaleDistances(float **aafDist, int nN);
+ 
+diff -ur spack-src.org/SplitClusterEven/SplitClusterEven.c spack-src/SplitClusterEven/SplitClusterEven.c
+--- spack-src.org/SplitClusterEven/SplitClusterEven.c	2013-08-01 23:37:39.000000000 +0900
++++ spack-src/SplitClusterEven/SplitClusterEven.c	2019-11-15 16:41:40.142569105 +0900
+@@ -366,7 +366,7 @@
+   
+ }
+ 
+-double maxDepth(t_Node* ptTree, double* pdDepth)
++void maxDepth(t_Node* ptTree, double* pdDepth)
+ {
+   double dOldDepth = *pdDepth;
+ 
+@@ -378,7 +378,7 @@
+   return;
+ }
+ 
+-double setDepth(t_Node* ptTree, double dDepth)
++void setDepth(t_Node* ptTree, double dDepth)
+ {
+   double dOldDepth = dDepth;
+ 
+diff -ur spack-src.org/SplitClusterEven/SplitClusterEven.h spack-src/SplitClusterEven/SplitClusterEven.h
+--- spack-src.org/SplitClusterEven/SplitClusterEven.h	2013-08-01 23:37:39.000000000 +0900
++++ spack-src/SplitClusterEven/SplitClusterEven.h	2019-11-15 16:42:17.936558096 +0900
+@@ -88,7 +88,7 @@
+ 
+ void treeSplit(t_Node* ptTree, double* pdDepth, double dSplit, t_Node **aptSplit,int* pnSplit);
+ 
+-double maxDepth(t_Node* ptTree, double* pdMaxDepth);
++void maxDepth(t_Node* ptTree, double* pdMaxDepth);
+ 
+ void writeIndices(t_Node* ptTree, FILE* ofp);
+ 
+@@ -116,4 +116,4 @@
+ 
+ void treeSplitEven(t_Node* ptTree, int nSplit, t_Node **aptSplit,int* pnSplit);
+ 
+-double setDepth(t_Node* ptTree, double dDepth);
++void setDepth(t_Node* ptTree, double dDepth);

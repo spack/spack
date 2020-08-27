@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class Elsi(CMakePackage):
     )
     variant(
         'elpa2_kernel', default="none", description="ELPA2 Kernel",
-        values=('BGQ', 'AVX', 'AVX2', 'AVX512'), multi=False
+        values=('AVX', 'AVX2', 'AVX512'), multi=False
     )
     variant(
         'enable_pexsi', default=False, description='Enable PEXSI support'
@@ -71,6 +71,7 @@ class Elsi(CMakePackage):
     def cmake_args(self):
         from os.path import dirname
 
+        spec = self.spec
         args = []
 
         # Compiler Information
@@ -104,5 +105,9 @@ class Elsi(CMakePackage):
             args += ["-DUSE_EXTERNAL_SUPERLU=ON"]
         if '-use_mpi_iallgather' in self.spec:
             args += ["-DUSE_MPI_IALLGATHER=OFF"]
+
+        # Only when using fujitsu compiler
+        if spec.satisfies('%fj'):
+            args += ["-DCMAKE_Fortran_MODDIR_FLAG=-M"]
 
         return args

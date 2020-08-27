@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class DeconseqStandalone(Package):
     homepage = "http://deconseq.sourceforge.net"
     url      = "https://sourceforge.net/projects/deconseq/files/standalone/deconseq-standalone-0.4.3.tar.gz"
 
-    version('0.4.3', 'cb3fddb90e584d89fd9c2b6b8f2e20a2')
+    version('0.4.3', sha256='fb4050418c26a5203220f6396263da554326657590cffd65053eb8adc465ac65')
 
     depends_on('perl@5:')
 
@@ -37,5 +37,5 @@ class DeconseqStandalone(Package):
         chmod('+x', join_path(prefix.bin, 'deconseq.pl'))
         chmod('+x', join_path(prefix.bin, 'splitFasta.pl'))
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PERL5LIB', prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PERL5LIB', self.prefix)

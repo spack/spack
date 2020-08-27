@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyWebencodings(PythonPackage):
     homepage = "https://github.com/gsnedders/python-webencodings"
     url      = "https://pypi.io/packages/source/w/webencodings/webencodings-0.5.1.tar.gz"
 
-    version('0.5.1', '32f6e261d52e57bf7e1c4d41546d15b8')
+    version('0.5.1', sha256='b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923')
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.6:2.8,3.3:',        type=('build', 'run'))

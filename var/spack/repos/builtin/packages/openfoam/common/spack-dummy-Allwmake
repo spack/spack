@@ -1,0 +1,18 @@
+#!/bin/bash
+# Build wrapper script for dummy build
+
+# Prevent influence of user/site config when building
+export FOAM_CONFIG_MODE="o"
+. "$PWD"/etc/bashrc ''                          # No arguments
+
+echo "Dummy build openfoam with SPACK ($@)"
+echo "WM_PROJECT_DIR = $WM_PROJECT_DIR"
+
+if [ -f applications/test/00-dummy/Allwmake ]
+then
+    applications/test/00-dummy/Allwmake $@
+else
+    echo "Nothing to make"
+fi
+
+# -----------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,13 +14,13 @@ class LinuxHeaders(Package):
     list_url = "https://www.kernel.org/pub/linux/kernel"
     list_depth = 2
 
-    version('4.9.10', 'ce5ab2a86c9b880617e36e84aa2deb6c')
+    version('4.9.10', sha256='bd6e05476fd8d9ea4945e11598d87bc97806bbc8d03556abbaaf809707661525')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # This variable is used in the Makefile. If it is defined on the
         # system, it can break the build if there is no build recipe for
         # that specific ARCH
-        spack_env.unset('ARCH')
+        env.unset('ARCH')
 
     def install(self, spec, prefix):
         make('headers_install', 'INSTALL_HDR_PATH={0}'.format(prefix))

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,8 @@ import collections
 
 import spack.spec
 import spack.modules.tcl
-from spack.modules.common import (
-    UpstreamModuleIndex, ModuleNotFoundError)
+from spack.modules.common import UpstreamModuleIndex
+from spack.spec import Spec
 
 import spack.error
 
@@ -133,18 +133,15 @@ module_index:
     assert m1.path == '/path/to/a'
 
     # No modules are defined for the DB associated with s2
-    with pytest.raises(ModuleNotFoundError):
-        upstream_index.upstream_module(s2, 'tcl')
+    assert not upstream_index.upstream_module(s2, 'tcl')
 
     # Modules are defined for the index associated with s1, but none are
     # defined for the requested type
-    with pytest.raises(ModuleNotFoundError):
-        upstream_index.upstream_module(s1, 'lmod')
+    assert not upstream_index.upstream_module(s1, 'lmod')
 
     # A module is registered with a DB and the associated module index has
     # modules of the specified type defined, but not for the requested spec
-    with pytest.raises(ModuleNotFoundError):
-        upstream_index.upstream_module(s3, 'tcl')
+    assert not upstream_index.upstream_module(s3, 'tcl')
 
     # The spec isn't recorded as installed in any of the DBs
     with pytest.raises(spack.error.SpackError):
@@ -187,3 +184,33 @@ module_index:
         assert m1_path == '/path/to/a'
     finally:
         spack.modules.common.upstream_module_index = old_index
+
+
+def test_load_installed_package_not_in_repo(install_mockery, mock_fetch,
+                                            monkeypatch):
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+
+    # Get the package
+    pkg = spec.package
+
+    def find_nothing(*args):
+        raise spack.repo.UnknownPackageError(
+            'Repo package access is disabled for test')
+
+    try:
+        pkg.do_install()
+
+        spec._package = None
+        monkeypatch.setattr(spack.repo, 'get', find_nothing)
+        with pytest.raises(spack.repo.UnknownPackageError):
+            spec.package
+
+        module_path = spack.modules.common.get_module('tcl', spec, True)
+        assert module_path
+        pkg.do_uninstall()
+    except Exception:
+        pkg.remove_prefix()
+        raise

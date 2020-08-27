@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Snphylo(Package):
     homepage = "http://chibba.pgml.uga.edu/snphylo/"
     url      = "http://chibba.pgml.uga.edu/snphylo/snphylo.tar.gz"
 
-    version('2016-02-04', '467660814965bc9bed6c020c05c0d3a6')
+    version('2016-02-04', sha256='d9e144021c83dbef97bebf743b92109ad0afcfe70f37c244059b43f11b8a50da')
 
     depends_on('python', type=('build', 'run'))
     depends_on('r', type=('build', 'run'))
@@ -33,5 +33,5 @@ class Snphylo(Package):
             bash('./setup.sh', input=f)
             install_tree('.', prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.spec.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.spec.prefix)

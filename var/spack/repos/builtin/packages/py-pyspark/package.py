@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPyspark(PythonPackage):
     """Python bindings for Apache Spark"""
 
     homepage = "http://spark.apache.org"
-    url      = "https://pypi.org/packages/source/p/pyspark/pyspark-2.3.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pyspark/pyspark-2.3.0.tar.gz"
 
     version('2.3.0', sha256='0b3536910e154c36a94239f0ba0a201f476aadc72006409e5787198ffd01986e')
 

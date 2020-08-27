@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ def test_inspect_path(tmpdir):
         'include': ['CPATH'],
         'lib/pkgconfig': ['PKG_CONFIG_PATH'],
         'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
+        'share/pkgconfig': ['PKG_CONFIG_PATH'],
         '': ['CMAKE_PREFIX_PATH']
     }
 
@@ -399,6 +400,7 @@ def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
     assert all(x not in after for x in deleted)
 
 
+@pytest.mark.regression('12085')
 @pytest.mark.parametrize('before,after,search_list', [
     # Set environment variables
     ({}, {'FOO': 'foo'}, [environment.SetEnv('FOO', 'foo')]),
@@ -420,7 +422,12 @@ def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
     ({'FOO_PATH': '/a/path:/b/path'}, {'FOO_PATH': '/c/path:/a/path'}, [
         environment.RemovePath('FOO_PATH', '/b/path'),
         environment.PrependPath('FOO_PATH', '/c/path')
-    ])
+    ]),
+    # Modify two variables in the same environment
+    ({'FOO': 'foo', 'BAR': 'bar'}, {'FOO': 'baz', 'BAR': 'baz'}, [
+        environment.SetEnv('FOO', 'baz'),
+        environment.SetEnv('BAR', 'baz'),
+    ]),
 ])
 def test_from_environment_diff(before, after, search_list):
 
@@ -430,3 +437,14 @@ def test_from_environment_diff(before, after, search_list):
 
     for item in search_list:
         assert item in mod
+
+
+@pytest.mark.regression('15775')
+def test_blacklist_lmod_variables():
+    # Construct the list of environment modifications
+    file = os.path.join(datadir, 'sourceme_lmod.sh')
+    env = EnvironmentModifications.from_sourcing_file(file)
+
+    # Check that variables related to lmod are not in there
+    modifications = env.group_by_name()
+    assert not any(x.startswith('LMOD_') for x in modifications)

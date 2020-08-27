@@ -1,10 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Yorick(Package):
@@ -22,7 +21,7 @@ class Yorick(Package):
     git      = "https://github.com/dhmunro/yorick.git"
 
     version('master', branch='master')
-    version('2.2.04', '1b5b0da6ad81b2d9dba64d991ec17939')
+    version('2.2.04', sha256='4a4f3a18aed533cc5fadbb3d4bafb48f04834a22cbff6ad5c19d9dba74facbda')
     version('f90-plugin', branch='f90-plugin')
 
     variant('X', default=False, description='Enable X11 support')
@@ -35,9 +34,12 @@ class Yorick(Package):
         url = "https://github.com/dhmunro/yorick/archive/y_{0}.tar.gz"
         return url.format(version.underscored)
 
-    def install(self, spec, prefix):
-        os.environ['FORTRAN_LINKAGE'] = '-Df_linkage'
+    def setup_build_environment(self, env):
+        env.set('FORTRAN_LINKAGE', '-Df_linkage')
+        if self.spec.satisfies('arch=aarch64:'):
+            env.set('FPU_IGNORE', '1')
 
+    def install(self, spec, prefix):
         make("config")
 
         filter_file(r'^CC.+',

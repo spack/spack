@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,16 +18,22 @@ class Xsbench(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
+    version('19', sha256='57cc44ae3b0a50d33fab6dd48da13368720d2aa1b91cde47d51da78bf656b97e')
     version('18', sha256='a9a544eeacd1be8d687080d2df4eeb701c04eda31d3806e7c3ea1ff36c26f4b0')
-    version('14', '94d5d28eb031fd4ef35507c9c1862169')
-    version('13', '72a92232d2f5777fb52f5ea4082aff37')
+    version('14', sha256='595afbcba8c1079067d5d17eedcb4ab0c1d115f83fd6f8c3de01d74b23015e2d')
+    version('13', sha256='b503ea468d3720a0369304924477b758b3d128c8074776233fa5d567b7ffcaa2')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=True, description='Build with OpenMP support')
 
     depends_on('mpi', when='+mpi')
 
-    build_directory = 'src'
+    @property
+    def build_directory(self):
+        if self.spec.satisfies('@:18'):
+            return 'src'
+        else:
+            return 'openmp-threading'
 
     @property
     def build_targets(self):
@@ -49,4 +55,5 @@ class Xsbench(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('src/XSBench', prefix.bin)
+        with working_dir(self.build_directory):
+            install('XSBench', prefix.bin)

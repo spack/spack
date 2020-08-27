@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,11 +27,11 @@ class GitImerge(MakefilePackage):
     homepage = "https://github.com/mhagger/git-imerge"
     url      = "https://github.com/mhagger/git-imerge/archive/v1.1.0.tar.gz"
 
-    version('1.1.0', '94a44dcbe5e764d75770a24517572a76')
-    version('1.0.0', 'e5e69a22610828cc33bf2cbd31685438')
+    version('1.1.0', sha256='62692f43591cc7d861689c60b68c55d7b10c7a201c1026096a7efc771df2ca28')
+    version('1.0.0', sha256='2ef3a49a6d54c4248ef2541efc3c860824fc8295a7226760f24f0bb2c5dd41f2')
 
     depends_on('python@2.6:')
-    depends_on('py-argparse', when='^python@2.6')
+    depends_on('py-argparse', when='^python@:2.6')
     depends_on('git')
 
     # Package copies a Python script and bash-completion files, so

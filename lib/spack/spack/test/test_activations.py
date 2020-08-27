@@ -1,7 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+"""This includes tests for customized activation logic for specific packages
+   (e.g. python and perl).
+"""
 
 import os
 import pytest
@@ -13,23 +17,23 @@ from spack.directory_layout import YamlDirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
 from spack.repo import RepoPath
 
-"""This includes tests for customized activation logic for specific packages
-   (e.g. python and perl).
-"""
 
-
-def create_ext_pkg(name, prefix, extendee_spec):
+def create_ext_pkg(name, prefix, extendee_spec, monkeypatch):
     ext_spec = spack.spec.Spec(name)
     ext_spec._concrete = True
 
     ext_spec.package.spec.prefix = prefix
     ext_pkg = ext_spec.package
-    ext_pkg.extends_spec = extendee_spec
+
+    # temporarily override extendee_spec property on the package
+    monkeypatch.setattr(ext_pkg.__class__, "extendee_spec", extendee_spec)
+
     return ext_pkg
 
 
-def create_python_ext_pkg(name, prefix, python_spec, namespace=None):
-    ext_pkg = create_ext_pkg(name, prefix, python_spec)
+def create_python_ext_pkg(name, prefix, python_spec, monkeypatch,
+                          namespace=None):
+    ext_pkg = create_ext_pkg(name, prefix, python_spec, monkeypatch)
     ext_pkg.py_namespace = namespace
     return ext_pkg
 
@@ -148,14 +152,15 @@ def namespace_extensions(tmpdir, builtin_and_mock_packages):
 
 
 def test_python_activation_with_files(tmpdir, python_and_extension_dirs,
-                                      builtin_and_mock_packages):
+                                      monkeypatch, builtin_and_mock_packages):
     python_prefix, ext_prefix = python_and_extension_dirs
 
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
     python_spec.package.spec.prefix = python_prefix
 
-    ext_pkg = create_python_ext_pkg('py-extension1', ext_prefix, python_spec)
+    ext_pkg = create_python_ext_pkg(
+        'py-extension1', ext_prefix, python_spec, monkeypatch)
 
     python_pkg = python_spec.package
     python_pkg.activate(ext_pkg, python_pkg.view())
@@ -171,14 +176,15 @@ def test_python_activation_with_files(tmpdir, python_and_extension_dirs,
 
 
 def test_python_activation_view(tmpdir, python_and_extension_dirs,
-                                builtin_and_mock_packages):
+                                builtin_and_mock_packages, monkeypatch):
     python_prefix, ext_prefix = python_and_extension_dirs
 
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
     python_spec.package.spec.prefix = python_prefix
 
-    ext_pkg = create_python_ext_pkg('py-extension1', ext_prefix, python_spec)
+    ext_pkg = create_python_ext_pkg('py-extension1', ext_prefix, python_spec,
+                                    monkeypatch)
 
     view_dir = str(tmpdir.join('view'))
     layout = YamlDirectoryLayout(view_dir)
@@ -192,8 +198,8 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs,
     assert os.path.exists(os.path.join(view_dir, 'bin/py-ext-tool'))
 
 
-def test_python_ignore_namespace_init_conflict(tmpdir, namespace_extensions,
-                                               builtin_and_mock_packages):
+def test_python_ignore_namespace_init_conflict(
+        tmpdir, namespace_extensions, builtin_and_mock_packages, monkeypatch):
     """Test the view update logic in PythonPackage ignores conflicting
        instances of __init__ for packages which are in the same namespace.
     """
@@ -203,9 +209,9 @@ def test_python_ignore_namespace_init_conflict(tmpdir, namespace_extensions,
     python_spec._concrete = True
 
     ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
-                                     py_namespace)
+                                     monkeypatch, py_namespace)
     ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
-                                     py_namespace)
+                                     monkeypatch, py_namespace)
 
     view_dir = str(tmpdir.join('view'))
     layout = YamlDirectoryLayout(view_dir)
@@ -226,8 +232,8 @@ def test_python_ignore_namespace_init_conflict(tmpdir, namespace_extensions,
     assert os.path.exists(os.path.join(view_dir, init_file))
 
 
-def test_python_keep_namespace_init(tmpdir, namespace_extensions,
-                                    builtin_and_mock_packages):
+def test_python_keep_namespace_init(
+        tmpdir, namespace_extensions, builtin_and_mock_packages, monkeypatch):
     """Test the view update logic in PythonPackage keeps the namespace
        __init__ file as long as one package in the namespace still
        exists.
@@ -238,9 +244,9 @@ def test_python_keep_namespace_init(tmpdir, namespace_extensions,
     python_spec._concrete = True
 
     ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
-                                     py_namespace)
+                                     monkeypatch, py_namespace)
     ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
-                                     py_namespace)
+                                     monkeypatch, py_namespace)
 
     view_dir = str(tmpdir.join('view'))
     layout = YamlDirectoryLayout(view_dir)
@@ -269,7 +275,7 @@ def test_python_keep_namespace_init(tmpdir, namespace_extensions,
 
 
 def test_python_namespace_conflict(tmpdir, namespace_extensions,
-                                   builtin_and_mock_packages):
+                                   monkeypatch, builtin_and_mock_packages):
     """Test the view update logic in PythonPackage reports an error when two
        python extensions with different namespaces have a conflicting __init__
        file.
@@ -281,9 +287,9 @@ def test_python_namespace_conflict(tmpdir, namespace_extensions,
     python_spec._concrete = True
 
     ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
-                                     py_namespace)
+                                     monkeypatch, py_namespace)
     ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
-                                     other_namespace)
+                                     monkeypatch, other_namespace)
 
     view_dir = str(tmpdir.join('view'))
     layout = YamlDirectoryLayout(view_dir)
@@ -342,7 +348,7 @@ def perl_and_extension_dirs(tmpdir, builtin_and_mock_packages):
     return str(perl_prefix), str(ext_prefix)
 
 
-def test_perl_activation(tmpdir, builtin_and_mock_packages):
+def test_perl_activation(tmpdir, builtin_and_mock_packages, monkeypatch):
     # Note the lib directory is based partly on the perl version
     perl_spec = spack.spec.Spec('perl@5.24.1')
     perl_spec._concrete = True
@@ -357,21 +363,23 @@ def test_perl_activation(tmpdir, builtin_and_mock_packages):
 
     ext_name = 'perl-extension'
     tmpdir.ensure(ext_name, dir=True)
-    ext_pkg = create_ext_pkg(ext_name, str(tmpdir.join(ext_name)), perl_spec)
+    ext_pkg = create_ext_pkg(
+        ext_name, str(tmpdir.join(ext_name)), perl_spec, monkeypatch)
 
     perl_pkg = perl_spec.package
     perl_pkg.activate(ext_pkg, perl_pkg.view())
 
 
 def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs,
-                                    builtin_and_mock_packages):
+                                    monkeypatch, builtin_and_mock_packages):
     perl_prefix, ext_prefix = perl_and_extension_dirs
 
     perl_spec = spack.spec.Spec('perl@5.24.1')
     perl_spec._concrete = True
     perl_spec.package.spec.prefix = perl_prefix
 
-    ext_pkg = create_ext_pkg('perl-extension', ext_prefix, perl_spec)
+    ext_pkg = create_ext_pkg(
+        'perl-extension', ext_prefix, perl_spec, monkeypatch)
 
     perl_pkg = perl_spec.package
     perl_pkg.activate(ext_pkg, perl_pkg.view())
@@ -380,14 +388,15 @@ def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs,
 
 
 def test_perl_activation_view(tmpdir, perl_and_extension_dirs,
-                              builtin_and_mock_packages):
+                              monkeypatch, builtin_and_mock_packages):
     perl_prefix, ext_prefix = perl_and_extension_dirs
 
     perl_spec = spack.spec.Spec('perl@5.24.1')
     perl_spec._concrete = True
     perl_spec.package.spec.prefix = perl_prefix
 
-    ext_pkg = create_ext_pkg('perl-extension', ext_prefix, perl_spec)
+    ext_pkg = create_ext_pkg(
+        'perl-extension', ext_prefix, perl_spec, monkeypatch)
 
     view_dir = str(tmpdir.join('view'))
     layout = YamlDirectoryLayout(view_dir)
@@ -399,3 +408,32 @@ def test_perl_activation_view(tmpdir, perl_and_extension_dirs,
     assert not os.path.exists(os.path.join(perl_prefix, 'bin/perl-ext-tool'))
 
     assert os.path.exists(os.path.join(view_dir, 'bin/perl-ext-tool'))
+
+
+def test_is_activated_upstream_extendee(tmpdir, builtin_and_mock_packages,
+                                        monkeypatch):
+    """When an extendee is installed upstream, make sure that the extension
+    spec is never considered to be globally activated for it.
+    """
+    extendee_spec = spack.spec.Spec('python')
+    extendee_spec._concrete = True
+
+    python_name = 'python'
+    tmpdir.ensure(python_name, dir=True)
+
+    python_prefix = str(tmpdir.join(python_name))
+    # Set the prefix on the package's spec reference because that is a copy of
+    # the original spec
+    extendee_spec.package.spec.prefix = python_prefix
+    monkeypatch.setattr(extendee_spec.package.__class__,
+                        'installed_upstream', True)
+
+    ext_name = 'py-extension1'
+    tmpdir.ensure(ext_name, dir=True)
+    ext_pkg = create_ext_pkg(
+        ext_name, str(tmpdir.join(ext_name)), extendee_spec, monkeypatch)
+
+    # The view should not be checked at all if the extendee is installed
+    # upstream, so use 'None' here
+    mock_view = None
+    assert not ext_pkg.is_activated(mock_view)
