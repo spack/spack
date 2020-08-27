@@ -3,22 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install rocrand
-#
-# You can edit this file again by typing:
-#
-#     spack edit rocrand
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
 
 from spack import *
 
@@ -34,7 +18,7 @@ class Rocrand(CMakePackage):
 
     version('3.5.0', sha256='592865a45e7ef55ad9d7eddc8082df69eacfd2c1f3e9c57810eb336b15cd5732')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.5.1:', type='build')
 
     for ver in ['3.5.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
