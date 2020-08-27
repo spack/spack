@@ -25,7 +25,7 @@ class Coin3d(AutotoolsPackage):
     depends_on('libsm', type='link')
     depends_on('libxext', type='link')
     depends_on('libice', type='link')
-    depends_on('libuuid', type='link')
+    depends_on('uuid', type='link')
     depends_on('libxcb', type='link')
     depends_on('libxau', type='link')
 

@@ -21,7 +21,7 @@ class Dia(Package):
     depends_on('python')
     depends_on('swig')
     depends_on('libsm')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('libxinerama')
     depends_on('libxrender')
     depends_on('libxml2')

@@ -37,7 +37,7 @@ class FluxSched(AutotoolsPackage):
     depends_on("py-pyyaml", when="@0.7.0:")
     depends_on("libxml2@2.9.1:", when="@0.6.0")
     depends_on("yaml-cpp", when="@0.7.0:")
-    depends_on("libuuid")
+    depends_on("uuid")
     depends_on("pkgconfig")
 
     depends_on("flux-core", type=('build', 'link', 'run'))

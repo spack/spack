@@ -17,5 +17,5 @@ class Babeltrace(AutotoolsPackage):
     version('1.2.4', sha256='666e3a1ad2dc7d5703059963056e7800f0eab59c8eeb6be2efe4f3acc5209eb1')
 
     depends_on('glib@2.22:', type=('build', 'link'))
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('popt')

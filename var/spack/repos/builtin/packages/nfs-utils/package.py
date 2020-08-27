@@ -25,6 +25,7 @@ class NfsUtils(AutotoolsPackage):
     depends_on('lvm2')
     depends_on('keyutils')
     depends_on('sqlite')
+    depends_on('uuid')
     depends_on('util-linux')
     depends_on('gettext')
 

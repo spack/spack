@@ -48,7 +48,7 @@ class Singularity(MakefilePackage):
 
     depends_on('pkgconfig', type='build')
     depends_on('go')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('libgpg-error')
     depends_on('libseccomp')
     depends_on('squashfs', type='run')

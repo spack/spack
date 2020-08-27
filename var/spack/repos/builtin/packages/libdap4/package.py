@@ -30,7 +30,7 @@ class Libdap4(AutotoolsPackage):
     depends_on('flex')
     depends_on('curl')
     depends_on('libxml2')
-    depends_on('libuuid')
+    depends_on('uuid')
 
     def configure_args(self):
         # libxml2 exports ./include/libxml2/ instead of ./include/, which we

@@ -19,7 +19,7 @@ class Czmq(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('libzmq')
 
     def autoreconf(self, spec, prefix):

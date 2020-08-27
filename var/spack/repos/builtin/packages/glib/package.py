@@ -60,6 +60,7 @@ class Glib(Package):
     depends_on('perl', type=('build', 'run'))
     depends_on('python', type=('build', 'run'), when='@2.53.4:')
     depends_on('pcre+utf', when='@2.48:')
+    depends_on('uuid', when='+libmount')
     depends_on('util-linux', when='+libmount')
     depends_on('iconv')
 

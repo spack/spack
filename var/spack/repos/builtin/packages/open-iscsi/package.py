@@ -20,6 +20,7 @@ class OpenIscsi(MakefilePackage):
     version('2.0.876', sha256='9f01327d5e100ed794dc5083fc18dc4a06a0c29c77b252e21abd1b8f56edd9a7')
 
     depends_on('gettext')
+    depends_on('uuid')
     depends_on('util-linux+libmount')
     depends_on('kmod')
     depends_on('open-isns')

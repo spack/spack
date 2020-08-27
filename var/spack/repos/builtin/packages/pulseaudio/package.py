@@ -42,7 +42,7 @@ class Pulseaudio(AutotoolsPackage):
     depends_on('libsndfile@1.0.18:')
     depends_on('libtool@2.4:')  # links to libltdl.so
     depends_on('libsm', when='+x11')
-    depends_on('libuuid', when='+x11')
+    depends_on('uuid', when='+x11')
     depends_on('libx11', when='+x11')
     depends_on('libxcb', when='+x11')
     depends_on('libxau', when='+x11')

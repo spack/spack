@@ -18,7 +18,7 @@ class Psm(MakefilePackage):
 
     conflicts('%gcc@6:', when='@3.3')
 
-    depends_on('libuuid')
+    depends_on('uuid')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')

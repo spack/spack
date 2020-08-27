@@ -14,7 +14,7 @@ class Taskd(CMakePackage):
 
     version('1.1.0', sha256='7b8488e687971ae56729ff4e2e5209ff8806cf8cd57718bfd7e521be130621b4')
 
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('gnutls')
     depends_on('cmake@2.8:', type='build')
 
