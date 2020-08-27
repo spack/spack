@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import llnl.util.tty as tty
+
+import spack.install_test as sit
 
 from spack import *
 
@@ -38,7 +39,7 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
         """Build and run the added smoke (install) test."""
         data_dir = self.test_suite.current_test_data_dir
         prog = 'smoke_test'
-        src = data_dir.join('%s.c' % prog)
+        src = data_dir.join('{0}.c'.format(prog))
 
         options = [
             '-I{0}'.format(self.prefix.include),
@@ -48,18 +49,16 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
             '-L{0}'.format(self.prefix.lib),
             '-lsigsegv',
             '{0}{1}'.format(self.compiler.cc_rpath_arg, self.prefix.lib)]
-        reason = 'test ability to link to the library'
+        reason = 'test: checking ability to link to the library'
         self.run_test('cc', options, [], installed=False, purpose=reason)
 
         # Now run the program and confirm the output matches expectations
-        with open(data_dir.join('smoke_test.out'), 'r') as fd:
-            expected = fd.read()
-        reason = 'test ability to use the library'
+        expected = sit.get_expected_output(data_dir.join('smoke_test.out'))
+        reason = 'test: checking ability to use the library'
         self.run_test(prog, [], expected, purpose=reason)
 
     def _run_build_tests(self):
-        """Build and run selected tests pulled from the build."""
-        # Run the build tests to confirm the expected output
+        """Run selected build tests."""
         passed = 'Test passed'
         checks = {
             'sigsegv1': [passed],
@@ -70,8 +69,9 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
         }
 
         for exe, expected in checks.items():
-            reason = 'test {0} output'.format(exe)
-            self.run_test(exe, [], expected, purpose=reason, skip_missing=True)
+            reason = 'test: checking {0} output'.format(exe)
+            self.run_test(exe, [], expected, installed=True, purpose=reason,
+                          skip_missing=True)
 
     def test(self):
         """Perform smoke tests on the installed package."""

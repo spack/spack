@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import shutil
 import sys
 
-import llnl.util.tty as tty
+import spack.install_test as sit
+
 from spack import *
 
 
@@ -388,31 +388,32 @@ HDF5 version {version} {version}
         ]
         use_short_opt = ['h52gif', 'h5repart', 'h5unjam']
         for exe in exes:
-            reason = 'test version of {0} is {1}'.format(exe, spec_vers_str)
+            reason = 'test: ensuring version of {0} is {1}' \
+                .format(exe, spec_vers_str)
             option = '-V' if exe in use_short_opt else '--version'
-            self.run_test(exe, [option], spec_vers_str, installed=True,
+            self.run_test(exe, option, spec_vers_str, installed=True,
                           purpose=reason, skip_missing=True)
 
     def _test_example(self):
         """This test performs copy, dump, and diff on an example hdf5 file."""
-        h5_file = os.path.join(self.test_dir, 'data', 'spack.h5')
+        test_data_dir = self.test_suite.current_test_data_dir
 
-        reason = 'test: ensure h5dump produces expected output'
-        dump_file = os.path.join(self.test_dir, 'data', 'dump.out')
-        output = ''
-        with open(dump_file) as fd:
-            output == fd.read()
-        self.run_test('h5dump', [h5_file], output, installed=True,
-                      purpose=reason, skip_missing=True, work_dir='.')
+        filename = 'spack.h5'
+        h5_file = test_data_dir.join(filename)
 
-        reason = 'test: ensure h5copy runs'
+        reason = 'test: ensuring h5dump produces expected output'
+        expected = sit.get_expected_output(test_data_dir.join('dump.out'))
+        self.run_test('h5dump', filename, expected, installed=True,
+                      purpose=reason, skip_missing=True,
+                      work_dir=test_data_dir)
+
+        reason = 'test: ensuring h5copy runs'
         options = ['-i', h5_file, '-s', 'Spack', '-o', 'test.h5', '-d', 'Spack']
-        self.run_test('h5copy', options, installed=True,
+        self.run_test('h5copy', options, [], installed=True,
                       purpose=reason, skip_missing=True, work_dir='.')
 
-        reason = 'test: ensure h5diff shows no differences in orig and copy'
-        options = [h5_file, 'test.h5']
-        self.run_test('h5diff', options, installed=True,
+        reason = 'test: ensuring h5diff shows no differences between orig and copy'
+        self.run_test('h5diff', [h5_file, 'test.h5'], [], installed=True,
                       purpose=reason, skip_missing=True, work_dir='.')
 
     def test(self):

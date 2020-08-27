@@ -3,19 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
-import re
+import spack.install_test as sit
 
 from spack import *
 from spack import architecture
-
-
-def _read_file(filepath):
-    """Read and clean up the expected output from the specified file."""
-    output = ''
-    with open(filepath, 'r') as fd:
-        output = fd.read()
-    return [re.escape(ln) for ln in output.split('\n')]
 
 
 class Sqlite(AutotoolsPackage):
@@ -143,21 +134,23 @@ class Sqlite(AutotoolsPackage):
 
     def _test_example(self):
         """Ensure a sequence of commands on example db are successful."""
-        data_dir = self.test_suite.current_test_data_dir
+
+        test_data_dir = self.test_suite.current_test_data_dir
+        db_filename = test_data_dir.join('packages.db')
+        exe = 'sqlite3'
 
         # Ensure the database only contains one table
-        reason = 'test to ensure only table is "packages"'
-        opts = [data_dir.join('packages.db'), '.tables']
-        self.run_test('sqlite3', opts, 'packages', installed=True,
+        expected = 'packages'
+        reason = 'test: ensuring only table is "{0}"'.format(expected)
+        self.run_test(exe, [db_filename, '.tables'], expected, installed=True,
                       purpose=reason, skip_missing=False)
 
         # Ensure the database dump matches expectations, where special
         # characters are replaced with spaces in the expected and actual
         # output to avoid pattern errors.
-        reason = 'test dump output'
-        opts = [data_dir.join('packages.db'), '.dump']
-        expected = _read_file(data_dir.join('dump.out'))
-        self.run_test('sqlite3', opts, expected, installed=True,
+        reason = 'test: checking dump output'
+        expected = sit.get_expected_output(test_data_dir.join('dump.out'))
+        self.run_test(exe, [db_filename, '.dump'], expected, installed=True,
                       purpose=reason, skip_missing=False)
 
     def _test_version(self):
@@ -165,15 +158,12 @@ class Sqlite(AutotoolsPackage):
         exe = 'sqlite3'
         vers_str = str(self.spec.version)
 
-        reason = 'test version of {0} is {1}'.format(exe, vers_str)
+        reason = 'test: ensuring version of {0} is {1}'.format(exe, vers_str)
         self.run_test(exe, '-version', vers_str, installed=True,
                       purpose=reason, skip_missing=False)
 
     def test(self):
         """Perform smoke tests on the installed package."""
-        tty.debug('Expected results currently based on simple {0} builds'
-                  .format(self.name))
-
         # Perform a simple version check
         self._test_version()
 

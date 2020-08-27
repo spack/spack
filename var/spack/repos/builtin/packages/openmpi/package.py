@@ -750,14 +750,13 @@ class Openmpi(AutotoolsPackage):
 
         for exe in checks:
             options, expected, status = checks[exe]
-            reason = 'test {0} output'.format(exe)
+            reason = 'test: checking {0} output'.format(exe)
             self.run_test(exe, options, expected, status, installed=True,
                           purpose=reason, skip_missing=True)
 
     def _test_check_versions(self):
         comp_vers = str(self.spec.compiler.version)
         spec_vers = str(self.spec.version)
-        bad_option = 'unknown option'
         checks = {
             # Binaries available in at least versions 2.0.0 through 4.0.3
             'mpiCC': ([comp_vers], 0),
@@ -769,15 +768,8 @@ class Openmpi(AutotoolsPackage):
             'mpif90': ([comp_vers], 0),
             'mpifort': ([comp_vers], 0),
             'mpirun': ([spec_vers], 0),
-            'ompi-clean': ([bad_option], 213),
-            'ompi-server': ([bad_option], 1),
             'ompi_info': ([spec_vers], 0),
-            'opal_wrapper': (['Cannot open configuration file'], 243),
-            'orte-clean': ([bad_option], 213),
-            'orte-info': (['did not have enough parameters'], 1),
-            'orte-server': ([bad_option], 1),
             'ortecc': ([comp_vers], 0),
-            'orted': ([bad_option], 213),
             'orterun': ([spec_vers], 0),
 
             # Binaries available in versions 2.0.0 through 2.1.6
@@ -786,11 +778,7 @@ class Openmpi(AutotoolsPackage):
 
             # Binaries available in versions 2.0.0 through 3.1.5
             'ompi-dvm': ([spec_vers], 0),
-            'ompi-ps': ([bad_option], 213),
-            'ompi-top': ([bad_option], 1),
             'orte-dvm': ([spec_vers], 0),
-            'orte-ps': ([bad_option], 213),
-            'orte-top': ([bad_option], 1),
             'oshcc': ([comp_vers], 0),
             'oshfort': ([comp_vers], 0),
             'oshmem_info': ([spec_vers], 0),
@@ -813,16 +801,17 @@ class Openmpi(AutotoolsPackage):
 
         for exe in checks:
             expected, status = checks[exe]
-            purpose = 'test version of {0} is {1}'.format(exe, expected[0])
+            purpose = 'test: ensuring version of {0} is {1}' \
+                .format(exe, expected[0])
             self.run_test(exe, ['--version'], expected, status, installed=True,
                           purpose=purpose, skip_missing=True)
 
     def _test_examples(self):
         # First build the examples
-        work_dir = os.path.join(self.install_test_root,
-                                self.extra_install_tests)
         self.run_test('make', ['all'], [],
-                      purpose='test build the examples', work_dir=work_dir)
+                      purpose='test: ensuring ability to build the examples',
+                      work_dir=join_path(self.install_test_root,
+                                         self.extra_install_tests))
 
         # Now run those with known results
         have_spml = self.spec.satisfies('@2.0.0:2.1.6')
@@ -864,10 +853,9 @@ class Openmpi(AutotoolsPackage):
 
         for exe in checks:
             expected, status = checks[exe]
-            reason = 'test {0} output'.format(exe)
-            self.run_test(self.spec.prefix.bin.join(exe),
-                          [], expected, status, installed=True,
-                          purpose=reason, skip_missing=True, work_dir=work_dir)
+            reason = 'test: checking example {0} output'.format(exe)
+            self.run_test(exe, [], expected, status, installed=True,
+                          purpose=reason, skip_missing=True)
 
     def test(self):
         """Perform smoke tests on the installed package."""

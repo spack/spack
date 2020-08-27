@@ -5,6 +5,7 @@
 
 import os
 
+
 class Mpi(Package):
     """Virtual package for the Message Passing Interface."""
     homepage = 'https://www.mpi-forum.org/'
@@ -19,7 +20,7 @@ class Mpi(Package):
             compiler = os.environ[compiler_var]
 
             exe_name = 'mpi_hello_%s' % lang
-            mpirun = os.path.join(self.prefix.bin, 'mpirun')
+            mpirun = join_path(self.prefix.bin, 'mpirun')
 
             compiled = self.run_test(compiler,
                                      options=['-o', exe_name, filename])

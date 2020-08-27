@@ -5,10 +5,7 @@
 
 import re
 
-import os
-import re
-
-import llnl.util.tty as tty
+import spack.install_test as sit
 
 
 class M4(AutotoolsPackage, GNUMirrorPackage):
@@ -83,22 +80,14 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         return args
 
     def test(self):
-        m4 = which('m4')
-        assert m4 is not None
+        spec_vers = str(self.spec.version)
+        reason = 'test: ensuring m4 version is {0}'.format(spec_vers)
+        self.run_test('m4', '--version', spec_vers, installed=True,
+                      purpose=reason, skip_missing=False)
 
-        tty.msg('test: Ensuring use of the installed executable')
-        m4_dir = os.path.dirname(m4.path)
-        assert m4_dir == self.prefix.bin
-
-        tty.msg('test: Checking version')
-        output = m4('--version', output=str.split, error=str.split)
-        version_regex = re.compile(r'm4(.+){0}'.format(self.spec.version))
-        assert version_regex.search(output)
-
-        tty.msg('test: Ensuring m4 runs')
-        data_dir = self.test_suite.current_test_data_dir
-        hello_file = data_dir.join('hello.m4')
-        output = m4(hello_file, output=str.split, error=str.split)
-        expected_file = data_dir.join('hello.out')
-        with open(expected_file) as fd:
-            assert output == fd.read()
+        reason = 'test: ensuring m4 example succeeds'
+        test_data_dir = self.test_suite.current_test_data_dir
+        hello_file = test_data_dir.join('hello.m4')
+        expected = sit.get_expected_output(test_data_dir.join('hello.out'))
+        self.run_test('m4', hello_file, expected, installed=True,
+                      purpose=reason, skip_missing=False)
