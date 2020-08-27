@@ -5,24 +5,49 @@
 import base64
 import hashlib
 import os
+import re
 import shutil
 import sys
 
 import llnl.util.filesystem as fs
 
+from spack.spec import Spec
+
 import spack.error
 import spack.util.prefix
 import spack.util.spack_json as sjson
+
+
+def get_expected_output(filename):
+    """Retrieve the expected output from the file
+
+    Args:
+        filename (str): path to the file
+
+    Returns:
+        (list of str): escaped text lines read from the file
+    """
+    with open(filename, 'r') as f:
+        # Ensure special characters are escaped as needed
+        expected = f.read()
+
+    # Split the lines to make it easier to debug failures when there is
+    # a lot of output
+    return [re.escape(ln) for ln in expected.split('\n')]
+
 
 def get_test_stage_dir():
     return spack.util.path.canonicalize_path(
         spack.config.get('config:test_stage', '~/.spack/test'))
 
+
 def get_test_stage(name):
     return spack.util.prefix.Prefix(os.path.join(get_test_stage_dir(), name))
 
+
 def get_results_file(name):
     return get_test_stage(name).join('results.txt')
+
 
 def get_test_by_name(name):
     test_suite_file = get_test_stage(name).join('specs.lock')
@@ -92,7 +117,7 @@ class TestSuite(object):
                     # Create the test log file and report the error.
                     self.ensure_stage()
                     msg = 'Testing package {0}\n{1}'\
-                        .format(self.test_pkg_id(spec), str(err))
+                        .format(self.test_pkg_id(spec), str(exc))
                     _add_msg_to_file(self.log_file_for_spec(spec), msg)
 
                 self.write_test_result(spec, 'FAILED')

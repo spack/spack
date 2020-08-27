@@ -20,20 +20,22 @@ class Patchelf(AutotoolsPackage):
     version('0.8',  sha256='14af06a2da688d577d64ff8dac065bb8903bbffbe01d30c62df7af9bf4ce72fe')
 
     def test(self):
-        # Check patchelf in prefix and reports correct version
-        purpose_str = 'test patchelf is in prefix and reports correct version'
+        # Check patchelf in prefix and reports the correct version
+        reason = 'test: ensuring patchelf version is {0}' \
+            .format(self.spec.version)
         self.run_test('patchelf',
-                      options=['--version'],
+                      options='--version',
                       expected=['patchelf %s' % self.spec.version],
                       installed=True,
-                      purpose=purpose_str)
+                      purpose=reason)
 
         # Check the rpath is changed
         currdir = os.getcwd()
-        hello_file = os.path.join(currdir, 'data', 'hello')
+        hello_file = self.test_suite.current_test_data_dir.join('hello')
         self.run_test('patchelf', ['--set-rpath', currdir, hello_file],
-                      purpose='test that patchelf can change rpath')
+                      purpose='test: ensuring that patchelf can change rpath')
+
         self.run_test('patchelf',
                       options=['--print-rpath', hello_file],
                       expected=[currdir],
-                      purpose='test that patchelf actually changed rpath')
+                      purpose='test: ensuring that patchelf changed rpath')
