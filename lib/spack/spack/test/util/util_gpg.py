@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pytest
 
 import spack.util.gpg
 
@@ -62,6 +63,8 @@ fpr:::::::::ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ:"""
     assert keys[1] == 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
 
 
+@pytest.mark.skipif(not spack.util.gpg.GpgConstants.user_run_dir,
+                    reason='This test requires /var/run/user/$(id -u)')
 def test_really_long_gnupg_home_dir(tmpdir):
     N = 1000
 

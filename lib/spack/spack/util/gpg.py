@@ -173,8 +173,41 @@ class GpgConstants(object):
 
         return exe_str
 
+    @cached_property
+    def user_run_dir(self):
+        # Try to ensure that /var/run/user/$(id -u) exists and run gpgconf
+        # --create-socketdir.
+        #
+        # NOTE(opadron): This action helps prevent a large class of
+        #                "file-name-too-long" errors in gpg.
+        var_run_user = '/var/run/user'
+        result = os.path.join(var_run_user, str(os.getuid()))
+        try:
+            mkdir = (os.path.isdir(var_run_user) and
+                     not os.path.exists(result))
+            if mkdir:
+                os.mkdir(result)
+                os.chmod(result, 0o700)
+
+        # If the above operation fails due to lack of permissions, then just
+        # carry on without running gpgconf and hope for the best.
+        #
+        # NOTE(opadron): Without a dir in which to create a socket for IPC,
+        #                gnupg may fail if GNUPGHOME is set to a path that is
+        #                too long, where "too long" in this context is actually
+        #                quite short; somewhere in the neighborhood of more
+        #                than 100 characters.
+        #
+        # TODO(opadron): Maybe a warning should be printed in this case?
+        except OSError as exc:
+            if exc.errno not in (errno.EPERM, errno.EACCES):
+                raise
+            result = None
+
+        return result
+
     def clear(self):
-        for attr in ('gpgconf_string', 'gpg_string'):
+        for attr in ('gpgconf_string', 'gpg_string', 'user_run_dir'):
             try:
                 delattr(self, attr)
             except AttributeError:
@@ -188,7 +221,9 @@ def ensure_gpg(reevaluate=False):
     if reevaluate:
         GpgConstants.clear()
 
-    GpgConstants.gpgconf_string
+    if GpgConstants.user_run_dir is not None:
+        GpgConstants.gpgconf_string
+
     GpgConstants.gpg_string
     return True
 
@@ -244,35 +279,7 @@ class Gpg(object):
                 'GNUPGHOME "{0}" exists and is not a directory'.format(
                     self.gnupg_home))
 
-        # Try to ensure that /var/run/user/$(id -u) exists and run gpgconf
-        # --create-socketdir.
-        #
-        # NOTE(opadron): This action helps prevent a large class of
-        #                "file-name-too-long" errors in gpg.
-        var_run_user = '/var/run/user'
-        user_run_dir = os.path.join(var_run_user, str(os.getuid()))
-        try:
-            mkdir = (os.path.isdir(var_run_user) and
-                     not os.path.exists(user_run_dir))
-            if mkdir:
-                os.mkdir(user_run_dir)
-                os.chmod(user_run_dir, 0o700)
-
-        # If the above operation fails due to lack of permissions, then just
-        # carry on without running gpgconf and hope for the best.
-        #
-        # NOTE(opadron): Without a dir in which to create a socket for IPC,
-        #                gnupg may fail if GNUPGHOME is set to a path that is
-        #                too long, where "too long" in this context is actually
-        #                quite short; somewhere in the neighborhood of more
-        #                than 100 characters.
-        #
-        # TODO(opadron): Maybe a warning should be printed in this case?
-        except OSError as exc:
-            if exc.errno not in (errno.EPERM, errno.EACCES):
-                raise
-
-        else:
+        if GpgConstants.user_run_dir is not None:
             self.gpgconf_exe('--create-socketdir')
 
         return True

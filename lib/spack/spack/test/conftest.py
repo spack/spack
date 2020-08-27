@@ -782,7 +782,7 @@ def mock_gnupghome(monkeypatch):
     # pytest makes them longer.
     short_name_tmpdir = tempfile.mkdtemp()
     with spack.util.gpg.gnupg_home_override(short_name_tmpdir):
-        yield
+        yield short_name_tmpdir
 
     # clean up, since we are doing this manually
     shutil.rmtree(short_name_tmpdir)

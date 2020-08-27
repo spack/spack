@@ -473,8 +473,8 @@ def test_relative_rpaths_install_nondefault(tmpdir,
     mirror.mirror(mparser, margs)
 
 
-def test_push_and_fetch_keys(tmpdir):
-    testpath = str(tmpdir)
+def test_push_and_fetch_keys(mock_gnupghome):
+    testpath = str(mock_gnupghome)
 
     mirror = os.path.join(testpath, 'mirror')
     mirrors = {'test-mirror': mirror}
