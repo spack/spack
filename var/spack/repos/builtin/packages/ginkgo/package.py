@@ -18,6 +18,7 @@ class Ginkgo(CMakePackage, CudaPackage):
 
     version('develop', branch='develop')
     version('master', branch='master')
+    version('1.3.0', commit='4678668c66f634169def81620a85c9a20b7cec78')  # v1.3.0
     version('1.2.0', commit='b4be2be961fd5db45c3d02b5e004d73550722e31')  # v1.2.0
     version('1.1.1', commit='08d2c5200d3c78015ac8a4fd488bafe1e4240cf5')  # v1.1.1
     version('1.1.0', commit='b9bec8225442b3eb2a85a870efa112ab767a17fb')  # v1.1.0
@@ -34,7 +35,12 @@ class Ginkgo(CMakePackage, CudaPackage):
     depends_on('cmake@3.9:', type='build')
     depends_on('cuda@9:',    when='+cuda')
 
+    depends_on('hip:',       when='+hip')
+    depends_on('hipsparse:', when='+hip')
+    depends_on('hipblas:',   when='+hip')
+
     conflicts('%gcc@:5.2.9')
+    conflicts("+hip", when="@:<1.2.0")
 
     def cmake_args(self):
         spec = self.spec
@@ -46,8 +52,7 @@ class Ginkgo(CMakePackage, CudaPackage):
                 'ON' if '+full_optimizations' in spec else 'OFF'),
             '-DGINKGO_DEVEL_TOOLS=%s' % (
                 'ON' if '+develtools' in spec else 'OFF'),
-            # Drop HIP support for now
-            '-DGINKGO_BUILD_HIP=OFF',
+            '-DGINKGO_BUILD_HIP=%s' % ('ON' if '+hip' in spec else 'OFF'),
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.
             '-DGINKGO_BUILD_BENCHMARKS=OFF',
