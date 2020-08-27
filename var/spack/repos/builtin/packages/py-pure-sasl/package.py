@@ -15,5 +15,7 @@ class PyPureSasl(PythonPackage):
 
     version('0.6.2', sha256='53c1355f5da95e2b85b2cc9a6af435518edc20c81193faa0eea65fdc835138f4')
 
+    variant('gssapi', default=True, description='build with kerberos/gssapi support')
+
     depends_on('py-setuptools', type='build')
-    depends_on('py-kerberos@1.3.0:', type=('build', 'run'))
+    depends_on('py-kerberos@1.3.0:', type=('build', 'run'), when='+gssapi')
