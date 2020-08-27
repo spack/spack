@@ -15,7 +15,11 @@ class Recorder(AutotoolsPackage):
 
     maintainers = ['wangvsa']
 
-    version('2.1.4', sha256='f66756595a7f310929c247ae03fd08a18d9843f578fffa1e3072f557bf5a158e', preferred=True)
+    version('2.1.4', sha256='f66756595a7f310929c247ae03fd08a18d9843f578fffa1e3072f557bf5a158e')
+    
+    variant('posix', default=True, description="Enable POSIX level tracing")
+    variant('mpi', default=True, description="Enable MPI level tracing. MPI is required even with this option turn off")
+    variant('hdf5', default=True, description="Enable HDF5 level tracing. HDF5 is required even with this option turn off.")
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -23,13 +27,6 @@ class Recorder(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('mpi')
     depends_on('hdf5')
-
-    variant('posix', default=True, description="Enable POSIX level tracing")
-    variant('mpi', default=True, description="Enable MPI level tracing")
-    variant('hdf5', default=True, description="Enable HDF5 level tracing")
-
-    def autoreconf(self, spec, prefix):
-        autoreconf('--install', '--verbose', '--force')
 
     def configure_args(self):
         args = []
