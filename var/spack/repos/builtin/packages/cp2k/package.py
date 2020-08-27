@@ -242,6 +242,13 @@ class Cp2k(MakefilePackage, CudaPackage):
         libs = []
         gpuver = ''
 
+        # retrive architecture specific optimization flags
+        archopt = spec.target.optimization_flags(
+                    spec.compiler.name, spec.compiler.version)
+        cflags.append(archopt)
+        cxxflags.append(archopt)
+        fcflags.append(archopt)
+
         if '%intel' in spec:
             cflags.append('-fp-model precise')
             cxxflags.append('-fp-model precise')
