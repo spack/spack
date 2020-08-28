@@ -18,10 +18,12 @@ class Rocsparse(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.7.0', sha256='db561ae5e8ee117f7c539a9ef6ee49c13b82ba9f702b22c76e741cca245386a9')
     version('3.5.0', sha256='9ca6bae7da78abbb47143c3d77ff4a8cd7d63979875fc7ebc46b400769fd9cb5')
 
     depends_on('cmake@3:', type='build')
-    for ver in ['3.5.0']:
+
+    for ver in ['3.5.0', '3.7.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)

@@ -17,13 +17,16 @@ class RoctracerDev(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.7.0', sha256='6fa5b771e990f09c242237ab334b9f01039ec7d54ccde993e719c5d6577d1518')
     version('3.5.0', sha256='7af5326c9ca695642b4265232ec12864a61fd6b6056aa7c4ecd9e19c817f209e')
 
     depends_on('cmake@3:', type='build')
-    depends_on('hsakmt-roct@3.5.0:', type='build', when='@3.5.0:')
-    depends_on('hsa-rocr-dev@3.5.0:', type='build', when='@3.5.0:')
-    depends_on('rocminfo@3.5.0:', type='build', when='@3.5.0:')
-    depends_on('hip@3.5.0:', type='build', when='@3.5.0:')
+
+    for ver in ['3.5.0', '3.7.0']:
+        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
+        depends_on('rocminfo@' + ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver, type='build', when='@' + ver)
 
     def setup_build_environment(self, build_env):
         spec = self.spec
