@@ -18,8 +18,8 @@ class PyTorchSplineConv(PythonPackage):
     variant('cuda', default=False, description="Enable CUDA support")
 
     depends_on('python@3.6:', type=('build', 'run'))
-    extends('py-torch+cuda', when='+cuda')
-    extends('py-torch~cuda', when='~cuda')
+    depends_on('py-torch+cuda', when='+cuda')
+    depends_on('py-torch~cuda', when='~cuda')
 
     def setup_build_environment(self, env):
         if '+cuda' in self.spec:
