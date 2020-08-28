@@ -1441,7 +1441,14 @@ class Environment(object):
 
         specs_by_hash = {}
         for dag_hash, node_dict in json_specs_by_hash.items():
-            specs_by_hash[dag_hash] = Spec.from_node_dict(node_dict)
+            spec = Spec.from_node_dict(node_dict)
+            check_hashes = ['os7an62k', '3easygz']
+            if any(dag_hash.startswith(p) for p in check_hashes):
+                tty.debug("[18338] Found {0}: {1}".format(
+                    dag_hash[:7], str(spec)))
+            tty.debug("[18338] Read {0}\n\t{1}".format(
+                str(spec.name), dag_hash[:7]))
+            specs_by_hash[dag_hash] = spec
 
         for dag_hash, node_dict in json_specs_by_hash.items():
             for dep_name, dep_hash, deptypes in (
@@ -1454,9 +1461,15 @@ class Environment(object):
         # concretized_order to the full hashes (preserving the order)
         old_hash_to_new = {}
         self.specs_by_hash = {}
-        for _, spec in specs_by_hash.items():
+        for spec_hash, spec in specs_by_hash.items():
             dag_hash = spec.dag_hash()
             build_hash = spec.build_hash()
+            if build_hash != spec_hash:
+                debug_msg = "{0}\n".format(spec.name)
+                debug_msg += "\tCalculated hash: {0}\n".format(build_hash)
+                debug_msg += "\tHash from file: {0}\n".format(spec_hash)
+                debug_msg += "\tHASH DIFFERENCE"
+                tty.debug(debug_msg)
             if dag_hash in root_hashes:
                 old_hash_to_new[dag_hash] = build_hash
 
