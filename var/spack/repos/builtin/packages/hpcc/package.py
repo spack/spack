@@ -100,8 +100,8 @@ class Hpcc(MakefilePackage):
 
     def edit(self, spec, prefix):
         # Message Passing library (MPI)
-        self.config['@MPINC@'] = '-I{0}'.format(spec['mpi'].prefix.include)
-        self.config['@MPLIB@'] = '-L{0}'.format(spec['mpi'].prefix.lib)
+        self.config['@MPINC@'] = spec['mpi'].headers.include_flags
+        self.config['@MPLIB@'] = spec['mpi'].libs.search_flags
 
         lin_alg_libs = []
         # FFT
