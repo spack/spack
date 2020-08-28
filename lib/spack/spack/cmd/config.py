@@ -6,7 +6,6 @@ from __future__ import print_function
 
 import collections
 import os
-import re
 import shutil
 
 import llnl.util.filesystem as fs
