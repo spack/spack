@@ -6,6 +6,8 @@
 import sys
 import os
 
+import spack.install_test as sit
+
 
 class Hdf(AutotoolsPackage):
     """HDF4 (also known as HDF) is a library and multi-object
@@ -167,7 +169,8 @@ class Hdf(AutotoolsPackage):
 
         exes = ['hdfimport', 'hrepack', 'ncdump', 'ncgen']
         for exe in exes:
-            reason = 'test version of {0} is {1}'.format(exe, spec_vers_str)
+            reason = 'test: ensuring version of {0} is {1}' \
+                .format(exe, spec_vers_str)
             self.run_test(exe, ['-V'], spec_vers_str, installed=True,
                           purpose=reason, skip_missing=True)
 
@@ -196,14 +199,13 @@ class Hdf(AutotoolsPackage):
         """This test compares low-level HDF file information to expected."""
         storm_fn = os.path.join(self.install_test_root,
                                 self.extra_install_tests, 'storm110.hdf')
+        test_data_dir = self.test_suite.current_test_data_dir
         work_dir = '.'
 
-        reason = 'test: ensure hdfls produces expected output'
-        details_file = os.path.join(self.test_dir.data.hdf, 'storm110.out')
-        output = ''
-        with open(details_file, 'r') as fd:
-            output == fd.read()
-        self.run_test('hdfls', [storm_fn], output, installed=True,
+        reason = 'test: ensuring hdfls produces expected output'
+        details_file = os.path.join(test_data_dir, 'storm110.out')
+        expected = sit.get_expected_output(details_file)
+        self.run_test('hdfls', [storm_fn], expected, installed=True,
                       purpose=reason, skip_missing=True, work_dir=work_dir)
 
     def test(self):
