@@ -6,10 +6,6 @@
 import shutil
 import sys
 
-import spack.install_test as sit
-
-from spack import *
-
 
 class Hdf5(AutotoolsPackage):
     """HDF5 is a data model, library, and file format for storing and managing
@@ -402,7 +398,7 @@ HDF5 version {version} {version}
         h5_file = test_data_dir.join(filename)
 
         reason = 'test: ensuring h5dump produces expected output'
-        expected = sit.get_expected_output(test_data_dir.join('dump.out'))
+        expected = get_escaped_text_output(test_data_dir.join('dump.out'))
         self.run_test('h5dump', filename, expected, installed=True,
                       purpose=reason, skip_missing=True,
                       work_dir=test_data_dir)

@@ -5,8 +5,6 @@
 
 import re
 
-import spack.install_test as sit
-
 
 class M4(AutotoolsPackage, GNUMirrorPackage):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
@@ -88,6 +86,6 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         reason = 'test: ensuring m4 example succeeds'
         test_data_dir = self.test_suite.current_test_data_dir
         hello_file = test_data_dir.join('hello.m4')
-        expected = sit.get_expected_output(test_data_dir.join('hello.out'))
+        expected = get_escaped_text_output(test_data_dir.join('hello.out'))
         self.run_test('m4', hello_file, expected, installed=True,
                       purpose=reason, skip_missing=False)

@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.install_test as sit
-
-from spack import *
 from spack import architecture
 
 
@@ -149,7 +146,7 @@ class Sqlite(AutotoolsPackage):
         # characters are replaced with spaces in the expected and actual
         # output to avoid pattern errors.
         reason = 'test: checking dump output'
-        expected = sit.get_expected_output(test_data_dir.join('dump.out'))
+        expected = get_escaped_text_output(test_data_dir.join('dump.out'))
         self.run_test(exe, [db_filename, '.dump'], expected, installed=True,
                       purpose=reason, skip_missing=False)
 
