@@ -142,6 +142,15 @@ class Namd(MakefilePackage):
 
         config(self.build_directory, *opts)
 
+        # patch Make.config if needed
+        # spack install charmpp straight to prefix
+        # (not to $(CHARMBASE)/$(CHARMARCH))
+        if not os.path.exists(join_path(
+                self.spec['charmpp'].prefix, self.spec['charmpp'].charmarch)):
+            filter_file(r"^CHARM = \$\(CHARMBASE\)/\$\(CHARMARCH\)",
+                        "CHARM = $(CHARMBASE)",
+                        join_path(self.build_directory, "Make.config"))
+
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             mkdirp(prefix.bin)
