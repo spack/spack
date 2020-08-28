@@ -7,7 +7,6 @@ from spack import *
 import os
 import re
 import platform
-import llnl.util.tty as tty
 
 
 class Hpcc(MakefilePackage):
