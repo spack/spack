@@ -18,8 +18,8 @@ import spack.util.prefix
 import spack.util.spack_json as sjson
 
 
-def get_expected_output(filename):
-    """Retrieve the expected output from the file
+def get_escaped_text_output(filename):
+    """Retrieve and escape the expected text output from the file
 
     Args:
         filename (str): path to the file

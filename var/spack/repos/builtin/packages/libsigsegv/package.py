@@ -5,10 +5,6 @@
 
 import llnl.util.tty as tty
 
-import spack.install_test as sit
-
-from spack import *
-
 
 class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
     """GNU libsigsegv is a library for handling page faults in user mode."""
@@ -53,7 +49,7 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
         self.run_test('cc', options, [], installed=False, purpose=reason)
 
         # Now run the program and confirm the output matches expectations
-        expected = sit.get_expected_output(data_dir.join('smoke_test.out'))
+        expected = get_escaped_text_output(data_dir.join('smoke_test.out'))
         reason = 'test: checking ability to use the library'
         self.run_test(prog, [], expected, purpose=reason)
 
