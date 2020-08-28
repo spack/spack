@@ -5,8 +5,8 @@
 import inspect
 import os
 import os.path
-import shutil
-import stat
+import sys
+import re
 from subprocess import PIPE
 from subprocess import check_call
 
@@ -121,70 +121,49 @@ class AutotoolsPackage(PackageBase):
         else:
             config_arch = 'local'
 
-        my_config_files = {'guess': None, 'sub': None}
         config_files = {'guess': None, 'sub': None}
         config_args = {'guess': [], 'sub': [config_arch]}
 
         for config_name in config_files.keys():
             config_file = 'config.{0}'.format(config_name)
-            if os.path.exists(config_file):
-                # First search the top-level source directory
-                my_config_files[config_name] = os.path.abspath(config_file)
-            else:
-                # Then search in all sub directories recursively.
-                # We would like to use AC_CONFIG_AUX_DIR, but not all packages
-                # ship with their configure.in or configure.ac.
-                config_path = next((os.path.abspath(os.path.join(r, f))
-                                    for r, ds, fs in os.walk('.') for f in fs
-                                    if f == config_file), None)
-                my_config_files[config_name] = config_path
+            my_config_file_list = find('.', config_file)
 
-            if my_config_files[config_name] is not None:
+            my_config_files = []
+            for conf in my_config_file_list:
                 try:
-                    config_path = my_config_files[config_name]
+                    config_path = conf
                     check_call([config_path] + config_args[config_name],
                                stdout=PIPE, stderr=PIPE)
                     # The package's config file already runs OK, so just use it
                     continue
                 except Exception as e:
+                    my_config_files.append(conf)
                     tty.debug(e)
-            else:
+            if not my_config_files:
                 continue
 
-            # Look for a spack-installed automake package
+            system_config_root = []
             if 'automake' in self.spec:
-                automake_dir = 'automake-' + str(self.spec['automake'].version)
-                automake_path = os.path.join(self.spec['automake'].prefix,
-                                             'share', automake_dir)
-                path = os.path.join(automake_path, config_file)
-                if os.path.exists(path):
-                    config_files[config_name] = path
-            # Look for the system's config.guess
-            if (config_files[config_name] is None and
-                    os.path.exists('/usr/share')):
-                automake_dir = [s for s in os.listdir('/usr/share') if
-                                "automake" in s]
-                if automake_dir:
-                    automake_path = os.path.join('/usr/share', automake_dir[0])
-                    path = os.path.join(automake_path, config_file)
-                    if os.path.exists(path):
-                        config_files[config_name] = path
-            if config_files[config_name] is not None:
-                try:
-                    config_path = config_files[config_name]
-                    my_config_path = my_config_files[config_name]
+                system_config_root.append(self.spec['automake'].prefix)
+            system_config_root.append('/usr/share')
+            config_path = None
+            for system_root in system_config_root:
+                for path in find(system_root, config_file):
+                    try:
+                        check_call([path] + config_args[config_name],
+                                   stdout=PIPE, stderr=PIPE)
+                        config_path = path
+                        break
+                    except Exception as e:
+                        tty.debug(e)
+                        continue
 
-                    check_call([config_path] + config_args[config_name],
-                               stdout=PIPE, stderr=PIPE)
-
-                    m = os.stat(my_config_path).st_mode & 0o777 | stat.S_IWUSR
-                    os.chmod(my_config_path, m)
-                    shutil.copyfile(config_path, my_config_path)
-                    continue
-                except Exception as e:
-                    tty.debug(e)
-
-            raise RuntimeError('Failed to find suitable ' + config_file)
+            if config_path is not None:
+                for myconf in my_config_files:
+                    copy(config_path, myconf)
+                break
+            else:
+                raise RuntimeError('Failed to find suitable ' + config_file)
 
     @run_before('configure')
     def _set_autotools_environment_variables(self):
