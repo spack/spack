@@ -44,6 +44,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     patch('update_symbol-2.26.patch', when='@2.26')
 
     depends_on('zlib')
+    depends_on('diffutils', type='build')
     depends_on('gettext', when='+nls')
 
     # Prior to 2.30, gold did not distribute the generated files and
