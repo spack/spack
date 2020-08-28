@@ -87,8 +87,6 @@ class Draco(CMakePackage):
             options.extend(['-DUSE_CUDA=OFF'])
         return options
 
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
     def check(self):
         """Run ctest after building project."""
         with working_dir(self.build_directory):
