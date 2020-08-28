@@ -8,7 +8,8 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 13-
 """
-
+from llnl.util.lang import union_dicts
+import spack.schema.projections
 
 #: Properties for inclusion in other schemas
 properties = {
@@ -20,7 +21,18 @@ properties = {
                 'type': 'string',
                 'enum': ['rpath', 'runpath']
             },
-            'install_tree': {'type': 'string'},
+            'install_tree': {
+                'anyOf': [
+                    {
+                        'type': 'object',
+                        'properties': union_dicts(
+                            {'root': {'type': 'string'}},
+                            spack.schema.projections.properties,
+                        ),
+                    },
+                    {'type': 'string',}
+                ],
+            },
             'install_hash_length': {'type': 'integer', 'minimum': 1},
             'install_path_scheme': {'type': 'string'},
             'build_stage': {
