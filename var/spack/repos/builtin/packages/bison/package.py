@@ -8,6 +8,7 @@ from spack.operating_systems.mac_os import macos_version
 import sys
 import re
 
+
 class Bison(AutotoolsPackage, GNUMirrorPackage):
     """Bison is a general-purpose parser generator that converts
     an annotated context-free grammar into a deterministic LR or
