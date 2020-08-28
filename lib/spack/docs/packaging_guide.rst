@@ -1897,6 +1897,25 @@ command line to find installed packages or to install packages with
 particular constraints, and package authors can use specs to describe
 relationships between packages.
 
+.. warning::
+
+   Although ``depends_on`` can handle any aspect of Spack's spec syntax,
+   it currently cannot handle recursive dependencies. If the ``^`` sigil
+   appears in a ``depends_on`` statement, the concretizer will hang.
+   For example, something like:
+
+   .. code-block:: python
+
+      depends_on('mfem+cuda ^hypre+cuda', when='+cuda')
+
+   should be rewritten as:
+
+   .. code-block:: python
+
+      depends_on('mfem+cuda', when='+cuda')
+      depends_on('hypre+cuda', when='+cuda')
+
+
 ^^^^^^^^^^^^^^
 Version ranges
 ^^^^^^^^^^^^^^
