@@ -185,7 +185,8 @@ def installed_specs():
 def yes_to_all():
     return Args(
         '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
-        help='assume "yes" is the answer to every confirmation request excluding --no-checksum')
+        help="""assume "yes" is the answer to every confirmation request
+excluding --no-checksum.""")
 
 
 @arg
