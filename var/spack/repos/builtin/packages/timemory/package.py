@@ -25,9 +25,9 @@ class Timemory(CMakePackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('static', default=False, description='Build static libraries')
     variant('python', default=False, description='Enable Python support')
-    variant('mpi', default=False, 
+    variant('mpi', default=False,
             description='Enable support for MPI aggregation')
-    variant('nccl', default=False, 
+    variant('nccl', default=False,
             description='Enable support for wrapping NCCL functions')
     variant('tau', default=False, description='Enable TAU support')
     variant('papi', default=False, description='Enable PAPI support')
