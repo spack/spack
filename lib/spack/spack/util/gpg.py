@@ -175,12 +175,12 @@ class GpgConstants(object):
 
     @cached_property
     def user_run_dir(self):
-        # Try to ensure that /var/run/user/$(id -u) exists and run gpgconf
-        # --create-socketdir.
+        # Try to ensure that /run/user/$(id -u) exists so that
+        #  `gpgconf --create-socketdir` can be run later.
         #
         # NOTE(opadron): This action helps prevent a large class of
         #                "file-name-too-long" errors in gpg.
-        var_run_user = '/var/run/user'
+        var_run_user = '/run/user'
         result = os.path.join(var_run_user, str(os.getuid()))
         try:
             mkdir = (os.path.isdir(var_run_user) and
