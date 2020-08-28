@@ -1347,6 +1347,14 @@ class Environment(object):
 
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
+        debug_msg = "[18338] concretized specs:\n"
+        for s, h in zip(self.concretized_user_specs, self.concretized_order):
+            debug_msg += "\tspec: {0}\n".format(str(s))
+            debug_msg += "\t\thash: {0}\n".format(h)
+            if h not in self.specs_by_hash:
+                debug_msg += "\t\tMISSING\n"
+        tty.debug(debug_msg)
+
         for s, h in zip(self.concretized_user_specs, self.concretized_order):
             yield (s, self.specs_by_hash[h])
 
