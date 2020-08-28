@@ -1967,22 +1967,29 @@ exactly what kind of a dependency you need. For example:
    depends_on('cmake', type='build')
    depends_on('py-numpy', type=('build', 'run'))
    depends_on('libelf', type=('build', 'link'))
+   depends_on('py-pytest', type='test')
 
 The following dependency types are available:
 
-* **"build"**: made available during the project's build. The package will
-  be added to ``PATH``, the compiler include paths, and ``PYTHONPATH``.
-  Other projects which depend on this one will not have these modified
-  (building project X doesn't need project Y's build dependencies).
-* **"link"**: the project is linked to by the project. The package will be
-  added to the current package's ``rpath``.
-* **"run"**: the project is used by the project at runtime. The package will
-  be added to ``PATH`` and ``PYTHONPATH``.
+* **"build"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at build-time.
+* **"link"**: the dependency will be added to Spack's compiler
+  wrappers, automatically injecting the appropriate linker flags,
+  including ``-I``, ``-L``, and RPATH/RUNPATH handling.
+* **"run"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at run-time. This is true for both ``spack load``
+  and the module files Spack writes.
+* **"test"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at build-time. The only difference between
+  "build" and "test" is that test dependencies are only built
+  if the user requests unit tests with ``spack install --test``.
 
 One of the advantages of the ``build`` dependency type is that although the
 dependency needs to be installed in order for the package to be built, it
 can be uninstalled without concern afterwards. ``link`` and ``run`` disallow
-this because uninstalling the dependency would break the package.
+this because uninstalling the dependency would break the package. Another
+consequence of this is that ``build``-only dependencies do not affect the
+hash of the package. The same is true for ``test`` dependencies.
 
 If the dependency type is not specified, Spack uses a default of
 ``('build', 'link')``. This is the common case for compiler languages.
@@ -2003,7 +2010,8 @@ package. In that case, you could say something like:
 
 .. code-block:: python
 
-   variant('mpi', default=False)
+   variant('mpi', default=False, description='Enable MPI support')
+
    depends_on('mpi', when='+mpi')
 
 ``when`` can include constraints on the variant, version, compiler, etc. and
