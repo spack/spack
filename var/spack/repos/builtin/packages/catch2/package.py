@@ -12,8 +12,14 @@ class Catch2(CMakePackage):
 
     homepage = "https://github.com/catchorg/Catch2"
     url      = "https://github.com/catchorg/Catch2/archive/v2.9.1.tar.gz"
-    maintainers = ['ax3l']
+    git      = "https://github.com/catchorg/Catch2.git"
+    maintainers = ["ax3l", "AndrewGaspar"]
 
+    # In-Development
+    version('master', branch='master')
+
+    # Releases
+    version('2.12.3', sha256='78425e7055cea5bad1ff8db7ea0d6dfc0722ece156be1ccf3597c15e674e6943')
     version('2.12.1', sha256='e5635c082282ea518a8dd7ee89796c8026af8ea9068cd7402fb1615deacd91c3')
     version('2.12.0', sha256='6606b754363d3a4521bfecf717dc1972c50dca282bd428dfb1370ec8b9c26918')
     version('2.11.3', sha256='9a6967138062688f04374698fce4ce65908f907d8c0fe5dfe8dc33126bd46543')

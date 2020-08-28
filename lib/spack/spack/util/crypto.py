@@ -133,7 +133,7 @@ class Checker(object):
     @property
     def hash_name(self):
         """Get the name of the hash function this Checker is using."""
-        return self.hash_fun().name
+        return self.hash_fun().name.lower()
 
     def check(self, filename):
         """Read the file with the specified name and check its checksum

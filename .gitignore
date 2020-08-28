@@ -4,6 +4,7 @@
 /var/spack/environments
 /var/spack/repos/*/index.yaml
 /var/spack/repos/*/lock
+__pycache__/
 *.pyc
 /opt
 *~

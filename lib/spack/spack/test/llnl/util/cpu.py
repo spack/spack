@@ -34,10 +34,10 @@ from llnl.util.cpu import Microarchitecture  # noqa
     'linux-centos7-power8le',
     'linux-centos7-thunderx2',
     'linux-centos7-cascadelake',
+    'linux-fedora32-icelake',
     'darwin-mojave-ivybridge',
     'darwin-mojave-haswell',
     'darwin-mojave-skylake',
-    'bgq-rhel6-power7'
 ])
 def expected_target(request, monkeypatch):
     cpu = llnl.util.cpu
@@ -49,7 +49,7 @@ def expected_target(request, monkeypatch):
     )
 
     # Monkeypatch for linux
-    if platform in ('linux', 'bgq'):
+    if platform == 'linux':
         monkeypatch.setattr(cpu.detect.platform, 'system', lambda: 'Linux')
 
         @contextlib.contextmanager
@@ -216,6 +216,8 @@ def test_target_json_schema():
     ('sandybridge', 'clang', '3.9.0', '-march=sandybridge -mtune=sandybridge'),
     ('icelake', 'clang', '6.0.0', '-march=icelake -mtune=icelake'),
     ('icelake', 'clang', '8.0.0',
+     '-march=icelake-client -mtune=icelake-client'),
+    ('icelake', 'gcc', '8.1.0',
      '-march=icelake-client -mtune=icelake-client'),
     ('zen2', 'clang', '9.0.0', '-march=znver2 -mtune=znver2'),
     ('power9le', 'clang', '8.0.0', '-mcpu=power9 -mtune=power9'),

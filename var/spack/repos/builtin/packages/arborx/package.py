@@ -9,42 +9,63 @@ from spack import *
 class Arborx(CMakePackage):
     """ArborX is a performance-portable library for geometric search"""
 
-    homepage = "http://github.com/arborx/arborx"
-    url      = "https://github.com/arborx/arborx/archive/v0.8-beta2.tar.gz"
+    homepage = "https://github.com/arborx/arborx"
+    url      = "https://github.com/arborx/arborx/archive/v0.9-beta.tar.gz"
     git      = "https://github.com/arborx/arborx.git"
 
-    version('master', branch='master')
-    version('0.8-beta2', sha256='e68733bc77fbb84313f3ff059f746fa79ab2ffe24a0a391126eefa47ec4fd2df')
+    maintainers = ['aprokop']
 
-    variant('cuda', default=False, description='enable Cuda backend')
-    variant('openmp', default=False, description='enable OpenMP backend')
-    variant('serial', default=True, description='enable Serial backend (default)')
+    version('master', branch='master')
+    version('0.9-beta', sha256='b349b5708d1aa00e8c20c209ac75dc2d164ff9bf1b85adb5437346d194ba6c0d')
+
+    # ArborX relies on Kokkos to provide devices, providing one-to-one matching
+    # variants. The only way to disable those devices is to make sure Kokkos
+    # does not provide them.
+    kokkos_backends = {
+        'serial': (True,  "enable Serial backend (default)"),
+        'cuda': (False,  "enable Cuda backend"),
+        'openmp': (False,  "enable OpenMP backend"),
+        'hip': (False,  "enable HIP backend")
+    }
+
     variant('mpi', default=True, description='enable MPI')
+    for backend in kokkos_backends:
+        deflt, descr = kokkos_backends[backend]
+        variant(backend.lower(), default=deflt, description=descr)
+    variant('trilinos', default=False, description='use Kokkos from Trilinos')
 
     depends_on('cmake@3.12:', type='build')
-    depends_on('cuda', when='+cuda')
     depends_on('mpi', when='+mpi')
 
-    # ArborX relies on Kokkos to provide devices, thus having one-to-one match
-    # The only way to disable those devices is to make sure Kokkos does not
-    # provide them
-    depends_on('kokkos-legacy@2.7.00:+cuda+enable_lambda cxxstd=c++14', when='+cuda')
-    depends_on('kokkos-legacy@2.7.00:+openmp cxxstd=c++14', when='+openmp')
-    depends_on('kokkos-legacy@2.7.00:+serial cxxstd=c++14', when='+serial')
+    # Standalone Kokkos
+    depends_on('kokkos@3.1.00:', when='~trilinos')
+    for backend in kokkos_backends:
+        depends_on('kokkos+%s' % backend.lower(), when='~trilinos+%s' %
+                   backend.lower())
+    depends_on('kokkos+cuda_lambda', when='~trilinos+cuda')
+
+    # Trilinos/Kokkos
+    # Notes:
+    # - there is no Trilinos release with Kokkos 3.1 yet
+    # - current version of Trilinos package does not allow disabling Serial
+    # - current version of Trilinos package does not allow enabling CUDA
+    depends_on('trilinos+kokkos@develop', when='+trilinos')
+    depends_on('trilinos+openmp', when='trilinos+openmp')
+    conflicts('~serial', when='+trilinos')
+    conflicts('+cuda', when='+trilinos')
 
     def cmake_args(self):
         spec = self.spec
 
         options = [
-            '-DCMAKE_PREFIX_PATH=%s' % spec['kokkos-legacy'].prefix,
-            '-DARBORX_ENABLE_TESTS=OFF',
-            '-DARBORX_ENABLE_EXAMPLES=OFF',
-            '-DARBORX_ENABLE_BENCHMARKS=OFF',
+            '-DKokkos_ROOT=%s' % (spec['kokkos'].prefix if '~trilinos' in spec
+                                  else spec['trilinos'].prefix),
             '-DARBORX_ENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF')
         ]
 
         if '+cuda' in spec:
-            nvcc_wrapper_path = spec['kokkos'].prefix.bin.nvcc_wrapper
-            options.append('-DCMAKE_CXX_COMPILER=%s' % nvcc_wrapper_path)
+            # Only Kokkos allows '+cuda' for now
+            options.append(
+                '-DCMAKE_CXX_COMPILER=%s' % spec["kokkos"].kokkos_cxx)
 
         return options

@@ -54,10 +54,10 @@ class Conduit(Package):
     ###########################################################################
 
     variant("shared", default=True, description="Build Conduit as shared libs")
-    variant('test', default=True, description='Enable Conduit unit tests')
+    variant("test", default=True, description='Enable Conduit unit tests')
 
     # variants for python support
-    variant("python", default=True, description="Build Conduit Python support")
+    variant("python", default=False, description="Build Conduit Python support")
     variant("fortran", default=True, description="Build Conduit Fortran support")
 
     # variants for comm and i/o
@@ -93,6 +93,7 @@ class Conduit(Package):
     depends_on("python", when="+python")
     extends("python", when="+python")
     depends_on("py-numpy", when="+python", type=('build', 'run'))
+    depends_on("py-mpi4py", when="+python+mpi", type=('build', 'run'))
 
     #######################
     # I/O Packages
@@ -144,8 +145,18 @@ class Conduit(Package):
     depends_on("py-sphinx-rtd-theme", when="+python+doc", type='build')
     depends_on("doxygen", when="+doc+doxygen")
 
+    # Tentative patch for fj compiler
+    # Cmake will support fj compiler and this patch will be removed
+    patch('fj_flags.patch', when='%fj')
+
     # build phases used by this package
     phases = ["configure", "build", "install"]
+
+    def flag_handler(self, name, flags):
+        if name in ('cflags', 'cxxflags', 'fflags'):
+            # the package manages these flags in another way
+            return (None, None, None)
+        return (flags, None, None)
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
@@ -350,6 +361,35 @@ class Conduit(Package):
         else:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
 
+        # use global spack compiler flags
+        cppflags = ' '.join(spec.compiler_flags['cppflags'])
+        if cppflags:
+            # avoid always ending up with ' ' with no flags defined
+            cppflags += ' '
+        cflags = cppflags + ' '.join(spec.compiler_flags['cflags'])
+        if cflags:
+            cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
+        cxxflags = cppflags + ' '.join(spec.compiler_flags['cxxflags'])
+        if cxxflags:
+            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
+        fflags = ' '.join(spec.compiler_flags['fflags'])
+        if fflags:
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
+
+        if ((f_compiler is not None)
+           and ("gfortran" in f_compiler)
+           and ("clang" in cpp_compiler)):
+            libdir = os.path.join(os.path.dirname(
+                                  os.path.dirname(f_compiler)), "lib")
+            flags = ""
+            for _libpath in [libdir, libdir + "64"]:
+                if os.path.exists(_libpath):
+                    flags += " -Wl,-rpath,{0}".format(_libpath)
+            description = ("Adds a missing libstdc++ rpath")
+            if flags:
+                cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
+                                            description))
+
         #######################
         # Unit Tests
         #######################
@@ -372,7 +412,7 @@ class Conduit(Package):
                     cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID",
                                                 "XL"))
 
-                if 'xl@coral' in os.getenv('SPACK_COMPILER_SPEC', ""):
+                if (f_compiler is not None) and ("xlf" in f_compiler):
                     # Fix missing std linker flag in xlc compiler
                     flags = "-WF,-C! -qxlf2003=polymorphic"
                     cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS",
@@ -380,9 +420,15 @@ class Conduit(Package):
                     # Grab lib directory for the current fortran compiler
                     libdir = os.path.join(os.path.dirname(
                                           os.path.dirname(f_compiler)), "lib")
-                    flags = "-lstdc++ -Wl,-rpath," + libdir
+                    rpaths = "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
+
+                    flags  = "${BLT_EXE_LINKER_FLAGS} -lstdc++ " + rpaths
                     cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS",
                                                 flags))
+                    if "+shared" in spec:
+                        flags = "${CMAKE_SHARED_LINKER_FLAGS} " + rpaths
+                        cfg.write(cmake_cache_entry(
+                                  "CMAKE_SHARED_LINKER_FLAGS", flags))
 
         #######################
         # Python
@@ -433,7 +479,7 @@ class Conduit(Package):
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
-            if cpp_compiler == "CC":
+            if spec['mpi'].mpicc == spack_cc:
                 mpicc_path = "cc"
                 mpicxx_path = "CC"
                 mpifc_path = "ftn"

@@ -33,36 +33,45 @@ class Cce(Compiler):
                   'fc': 'cce/ftn'}
 
     @property
+    def is_clang_based(self):
+        version = self._real_version or self.version
+        return version >= ver('9.0') and 'classic' not in str(version)
+
+    @property
     def version_argument(self):
-        if self.version >= ver('9.0'):
+        if self.is_clang_based:
             return '--version'
         return '-V'
 
     version_regex = r'[Vv]ersion.*?(\d+(\.\d+)+)'
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
 
     @property
+    def debug_flags(self):
+        return ['-g', '-G0', '-G1', '-G2', '-Gfast']
+
+    @property
     def openmp_flag(self):
-        if self.version >= ver('9.0'):
+        if self.is_clang_based:
             return '-fopenmp'
         return "-h omp"
 
     @property
     def cxx11_flag(self):
-        if self.version >= ver('9.0'):
+        if self.is_clang_based:
             return '-std=c++11'
         return "-h std=c++11"
 
     @property
     def c99_flag(self):
-        if self.version >= ver('9.0'):
+        if self.is_clang_based:
             return '-std=c99'
-        elif self.version >= ver('8.4'):
+        elif self.real_version >= ver('8.4'):
             return '-h std=c99,noconform,gnu'
-        elif self.version >= ver('8.1'):
+        elif self.real_version >= ver('8.1'):
             return '-h c99,noconform,gnu'
         raise UnsupportedCompilerFlag(self,
                                       'the C99 standard',
@@ -71,9 +80,9 @@ class Cce(Compiler):
 
     @property
     def c11_flag(self):
-        if self.version >= ver('9.0'):
+        if self.is_clang_based:
             return '-std=c11'
-        elif self.version >= ver('8.5'):
+        elif self.real_version >= ver('8.5'):
             return '-h std=c11,noconform,gnu'
         raise UnsupportedCompilerFlag(self,
                                       'the C11 standard',
@@ -82,16 +91,24 @@ class Cce(Compiler):
 
     @property
     def cc_pic_flag(self):
+        if self.is_clang_based:
+            return "-fPIC"
         return "-h PIC"
 
     @property
     def cxx_pic_flag(self):
+        if self.is_clang_based:
+            return "-fPIC"
         return "-h PIC"
 
     @property
     def f77_pic_flag(self):
+        if self.is_clang_based:
+            return "-fPIC"
         return "-h PIC"
 
     @property
     def fc_pic_flag(self):
+        if self.is_clang_based:
+            return "-fPIC"
         return "-h PIC"

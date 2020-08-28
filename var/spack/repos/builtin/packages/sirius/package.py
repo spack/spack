@@ -16,9 +16,15 @@ class Sirius(CMakePackage, CudaPackage):
     list_url = "https://github.com/electronic-structure/SIRIUS/releases"
     git      = "https://github.com/electronic-structure/SIRIUS.git"
 
+    maintainers = ['simonpintarelli', 'haampie', 'dev-zero']
+
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('6.5.6', sha256='c8120100bde4477545eae489ea7f9140d264a3f88696ec92728616d78f214cae')
+    version('6.5.5', sha256='0b23d3a8512682eea67aec57271031c65f465b61853a165015b38f7477651dd1')
+    version('6.5.4', sha256='5f731926b882a567d117afa5e0ed33291f1db887fce52f371ba51f014209b85d')
+    version('6.5.3', sha256='eae0c303f332425a8c792d4455dca62557931b28a5df8b4c242652d5ffddd580')
     version('6.5.2', sha256='c18adc45b069ebae03f94eeeeed031ee99b3d8171fa6ee73c7c6fb1e42397fe7')
     version('6.5.1', sha256='599dd0fa25a4e83db2a359257a125e855d4259188cf5b0065b8e7e66378eacf3')
     version('6.5.0', sha256='5544f3abbb71dcd6aa08d18aceaf53c38373de4cbd0c3af44fbb39c20cfeb7cc')
@@ -32,14 +38,24 @@ class Sirius(CMakePackage, CudaPackage):
     version('6.3.2', sha256='1723e5ad338dad9a816369a6957101b2cae7214425406b12e8712c82447a7ee5')
     version('6.1.5', sha256='379f0a2e5208fd6d91c2bd4939c3a5c40002975fb97652946fa1bfe4a3ef97cb')
 
-    variant('shared', default=False, description="Build shared libraries")
+    amdgpu_targets = (
+        'gfx701', 'gfx801', 'gfx802', 'gfx803',
+        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
+        'gfx1011', 'gfx1012'
+    )
+
+    variant('shared', default=True, description="Build shared libraries")
     variant('openmp', default=True, description="Build with OpenMP support")
     variant('fortran', default=False, description="Build Fortran bindings")
     variant('python', default=False, description="Build Python bindings")
+    variant('memory_pool', default=True, description="Build with memory pool")
     variant('elpa', default=False, description="Use ELPA")
     variant('vdwxc', default=False, description="Enable libvdwxc support")
     variant('scalapack', default=False, description="Enable scalapack support")
     variant('magma', default=False, description="Enable MAGMA support")
+    variant('nlcglib', default=False, description="enable robust wave function optimization")
+    variant('rocm', default=False, description='Use ROCm GPU support')
+    variant('amdgpu_target', default=('gfx803', 'gfx900', 'gfx906'), multi=True, values=amdgpu_targets)
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -48,7 +64,7 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('gsl')
     depends_on('lapack')
-    depends_on('fftw')  # SIRIUS does not care about MPI-support in FFTW
+    depends_on('fftw-api@3')
     depends_on('libxc')
     depends_on('spglib')
     depends_on('hdf5+hl')
@@ -64,18 +80,29 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('magma', when='+magma')
 
     depends_on('spfft', when='@6.4.0:')
+    depends_on('spfft', when='@master')
+    depends_on('spfft', when='@develop')
     depends_on('spfft+cuda', when='@6.4.0:+cuda')
+    depends_on('spfft+cuda', when='@master+cuda')
+    depends_on('spfft+cuda', when='@develop+cuda')
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
+    depends_on('nlcglib', when='+nlcglib')
     depends_on('libvdwxc+mpi', when='+vdwxc')
     depends_on('scalapack', when='+scalapack')
-    depends_on('cuda', when='+cuda')
+
+    # rocm
+    depends_on('hip', when='+rocm')
+    depends_on('hsakmt-roct', when='+rocm', type='link')
+    depends_on('hsa-rocr-dev', when='+rocm', type='link')
+    depends_on('rocblas', when='+rocm')
+
     extends('python', when='+python')
 
-    conflicts('+shared', when='@6.3.0:')  # option to build shared libraries has been removed
+    conflicts('+shared', when='@6.3.0:6.4.999')
 
     # TODO:
-    # add support for CRAY_LIBSCI, ROCm, testing
+    # add support for CRAY_LIBSCI, testing
 
     patch("strip-spglib-include-subfolder.patch", when='@6.1.5')
     patch("link-libraries-fortran.patch", when='@6.1.5')
@@ -90,9 +117,8 @@ class Sirius(CMakePackage, CudaPackage):
 
             return find_libraries(
                 libraries, root=self.prefix,
-                shared=False, recursive=True
+                shared='+shared' in self.spec, recursive=True
             )
-
         else:
             if '+fortran' in self.spec:
                 libraries += ['libsirius_f']
@@ -125,15 +151,17 @@ class Sirius(CMakePackage, CudaPackage):
             _def('+openmp'),
             _def('+elpa'),
             _def('+magma'),
+            _def('+nlcglib'),
             _def('+vdwxc'),
+            _def('+memory_pool'),
             _def('+scalapack'),
             _def('+fortran', 'CREATE_FORTRAN_BINDINGS'),
             _def('+python', 'CREATE_PYTHON_MODULE'),
-            _def('+cuda')
+            _def('+cuda'),
+            _def('+rocm')
         ]
 
-        if '@:6.2.999' in self.spec:
-            args += [_def('+shared', 'BUILD_SHARED_LIBS')]
+        args += [_def('+shared', 'BUILD_SHARED_LIBS')]
 
         lapack = spec['lapack']
         blas = spec['blas']
@@ -170,5 +198,12 @@ class Sirius(CMakePackage, CudaPackage):
                 args += [
                     '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0])
                 ]
+
+        if '+rocm' in spec:
+            archs = ",".join(self.spec.variants['amdgpu_target'].value)
+            args.extend([
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(archs)
+            ])
 
         return args

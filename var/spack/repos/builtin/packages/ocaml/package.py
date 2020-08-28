@@ -29,12 +29,33 @@ class Ocaml(Package):
 
     sanity_check_file = ['bin/ocaml']
 
+    variant(
+        'force-safe-string', default=True,
+        description='Enforce safe (immutable) strings'
+    )
+
     def url_for_version(self, version):
         url = "http://caml.inria.fr/pub/distrib/ocaml-{0}/ocaml-{1}.tar.gz"
         return url.format(str(version)[:-2], version)
 
     def install(self, spec, prefix):
-        configure('-prefix', '{0}'.format(prefix))
+        base_args = ['-prefix', '{0}'.format(prefix)]
+
+        if self.spec.satisfies('~force-safe-string'):
+            base_args += ['--disable-force-safe-string']
+
+        # This patch is aarch64-linux-fj only.
+        # However, similar patch is needed for other arch/OS/compiler
+        # to use correct assembler. (See #17918)
+        if self.spec.satisfies('%fj'):
+            filter_file(
+                '${toolpref}clang -c -Wno-trigraphs',
+                spack_cc + ' -c',
+                'configure',
+                string=True
+            )
+
+        configure(*(base_args))
 
         make('world.opt')
         make('install', 'PREFIX={0}'.format(prefix))

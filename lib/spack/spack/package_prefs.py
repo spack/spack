@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import stat
 
 from six import string_types
@@ -158,7 +157,7 @@ def spec_externals(spec):
     """Return a list of external specs (w/external directory path filled in),
        one for each known external installation."""
     # break circular import.
-    from spack.util.module_cmd import get_path_from_module # NOQA: ignore=F401
+    from spack.util.module_cmd import path_from_modules # NOQA: ignore=F401
 
     allpkgs = spack.config.get('packages')
     names = set([spec.name])
@@ -167,34 +166,40 @@ def spec_externals(spec):
     external_specs = []
     for name in names:
         pkg_config = allpkgs.get(name, {})
-        pkg_paths = pkg_config.get('paths', {})
-        pkg_modules = pkg_config.get('modules', {})
-        if (not pkg_paths) and (not pkg_modules):
-            continue
-
-        for external_spec, path in pkg_paths.items():
-            external_spec = spack.spec.Spec(
-                external_spec, external_path=canonicalize_path(path))
+        pkg_externals = pkg_config.get('externals', [])
+        for entry in pkg_externals:
+            spec_str = entry['spec']
+            external_path = entry.get('prefix', None)
+            if external_path:
+                external_path = canonicalize_path(external_path)
+            external_modules = entry.get('modules', None)
+            external_spec = spack.spec.Spec.from_detection(
+                spack.spec.Spec(
+                    spec_str,
+                    external_path=external_path,
+                    external_modules=external_modules
+                ), extra_attributes=entry.get('extra_attributes', {})
+            )
             if external_spec.satisfies(spec):
                 external_specs.append(external_spec)
 
-        for external_spec, module in pkg_modules.items():
-            external_spec = spack.spec.Spec(
-                external_spec, external_module=module)
-            if external_spec.satisfies(spec):
-                external_specs.append(external_spec)
-
-    # defensively copy returned specs
+    # Defensively copy returned specs
     return [s.copy() for s in external_specs]
 
 
 def is_spec_buildable(spec):
     """Return true if the spec pkgspec is configured as buildable"""
+
     allpkgs = spack.config.get('packages')
-    do_not_build = [name for name, entry in allpkgs.items()
-                    if not entry.get('buildable', True)]
-    return not (spec.name in do_not_build or
-                any(spec.package.provides(name) for name in do_not_build))
+    all_buildable = allpkgs.get('all', {}).get('buildable', True)
+
+    # Get the list of names for which all_buildable is overridden
+    reverse = [name for name, entry in allpkgs.items()
+               if entry.get('buildable', all_buildable) != all_buildable]
+    # Does this spec override all_buildable
+    spec_reversed = (spec.name in reverse or
+                     any(spec.package.provides(name) for name in reverse))
+    return not all_buildable if spec_reversed else all_buildable
 
 
 def get_package_dir_permissions(spec):
@@ -204,7 +209,7 @@ def get_package_dir_permissions(spec):
     attribute sticky for the directory. Package-specific settings take
     precedent over settings for ``all``"""
     perms = get_package_permissions(spec)
-    if perms & stat.S_IRWXG:
+    if perms & stat.S_IRWXG and spack.config.get('config:allow_sgid', True):
         perms |= stat.S_ISGID
     return perms
 

@@ -1,0 +1,25 @@
+From e4367787e3ae712217a231c9d4866e89005f053c Mon Sep 17 00:00:00 2001
+From: Harsh Bhatia <bhatia4@llnl.gov>
+Date: Fri, 17 Jul 2020 09:01:50 -0700
+Subject: [PATCH] fix 0.7.0
+
+---
+ bindings/python/CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bindings/python/CMakeLists.txt b/bindings/python/CMakeLists.txt
+index 6a203ce..7e61668 100644
+--- a/bindings/python/CMakeLists.txt
++++ b/bindings/python/CMakeLists.txt
+@@ -45,7 +45,7 @@ if (PYTHON)
+                    COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
+                    DEPENDS ${DEPS})
+ 
+-	set( INSTALL_CMD "${PYTHON} ${CMAKE_CURRENT_BINARY_DIR}/${SETUP_PY} install")
++    set( INSTALL_CMD "${PYTHON} ${CMAKE_CURRENT_BINARY_DIR}/${SETUP_PY} install --prefix ${CMAKE_INSTALL_PREFIX}")
+    
+ 	add_custom_target(pydbr ALL DEPENDS ${OUTPUT})
+ 	FILE(COPY examples DESTINATION .)
+-- 
+1.8.3.1
+

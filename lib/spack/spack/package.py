@@ -11,6 +11,7 @@ packages.
 
 """
 import base64
+import collections
 import contextlib
 import copy
 import functools
@@ -22,19 +23,15 @@ import shutil
 import sys
 import textwrap
 import time
-from six import StringIO
-from six import string_types
-from six import with_metaclass
-from ordereddict_backport import OrderedDict
+import traceback
+
+import six
 
 import llnl.util.tty as tty
-
-import spack.config
-import spack.paths
-import spack.store
 import spack.compilers
-import spack.directives
+import spack.config
 import spack.dependency
+import spack.directives
 import spack.directory_layout
 import spack.error
 import spack.fetch_strategy as fs
@@ -42,15 +39,19 @@ import spack.hooks
 import spack.mirror
 import spack.mixins
 import spack.multimethod
+import spack.paths
 import spack.repo
+import spack.store
 import spack.url
 import spack.util.environment
 import spack.util.web
-import spack.multimethod
-
 from llnl.util.filesystem import mkdirp, touch, working_dir
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
+from ordereddict_backport import OrderedDict
+from six import StringIO
+from six import string_types
+from six import with_metaclass
 from spack.filesystem_view import YamlFilesystemView
 from spack.installer import \
     install_args_docstring, PackageInstaller, InstallError
@@ -116,16 +117,17 @@ class InstallPhase(object):
 
     def _on_phase_start(self, instance):
         # If a phase has a matching stop_before_phase attribute,
-        # stop the installation process raising a StopIteration
+        # stop the installation process raising a StopPhase
         if getattr(instance, 'stop_before_phase', None) == self.name:
-            raise StopIteration('Stopping before \'{0}\' phase'
-                                .format(self.name))
+            from spack.build_environment import StopPhase
+            raise StopPhase('Stopping before \'{0}\' phase'.format(self.name))
 
     def _on_phase_exit(self, instance):
         # If a phase has a matching last_phase attribute,
-        # stop the installation process raising a StopIteration
+        # stop the installation process raising a StopPhase
         if getattr(instance, 'last_phase', None) == self.name:
-            raise StopIteration('Stopping at \'{0}\' phase'.format(self.name))
+            from spack.build_environment import StopPhase
+            raise StopPhase('Stopping at \'{0}\' phase'.format(self.name))
 
     def copy(self):
         try:
@@ -139,7 +141,104 @@ class InstallPhase(object):
             return other
 
 
+#: Registers which are the detectable packages, by repo and package name
+#: Need a pass of package repositories to be filled.
+detectable_packages = collections.defaultdict(list)
+
+
+class DetectablePackageMeta(object):
+    """Check if a package is detectable and add default implementations
+    for the detection function.
+    """
+    def __init__(cls, name, bases, attr_dict):
+        # If a package has the executables attribute then it's
+        # assumed to be detectable
+        if hasattr(cls, 'executables'):
+            @classmethod
+            def determine_spec_details(cls, prefix, exes_in_prefix):
+                """Allow ``spack external find ...`` to locate installations.
+
+                Args:
+                    prefix (str): the directory containing the executables
+                    exes_in_prefix (set): the executables that match the regex
+
+                Returns:
+                    The list of detected specs for this package
+                """
+                exes_by_version = collections.defaultdict(list)
+                # The default filter function is the identity function for the
+                # list of executables
+                filter_fn = getattr(cls, 'filter_detected_exes',
+                                    lambda x, exes: exes)
+                exes_in_prefix = filter_fn(prefix, exes_in_prefix)
+                for exe in exes_in_prefix:
+                    try:
+                        version_str = cls.determine_version(exe)
+                        if version_str:
+                            exes_by_version[version_str].append(exe)
+                    except Exception as e:
+                        msg = ('An error occurred when trying to detect '
+                               'the version of "{0}" [{1}]')
+                        tty.debug(msg.format(exe, str(e)))
+
+                specs = []
+                for version_str, exes in exes_by_version.items():
+                    variants = cls.determine_variants(exes, version_str)
+                    # Normalize output to list
+                    if not isinstance(variants, list):
+                        variants = [variants]
+
+                    for variant in variants:
+                        if isinstance(variant, six.string_types):
+                            variant = (variant, {})
+                        variant_str, extra_attributes = variant
+                        spec_str = '{0}@{1} {2}'.format(
+                            cls.name, version_str, variant_str
+                        )
+
+                        # Pop a few reserved keys from extra attributes, since
+                        # they have a different semantics
+                        external_path = extra_attributes.pop('prefix', None)
+                        external_modules = extra_attributes.pop(
+                            'modules', None
+                        )
+                        spec = spack.spec.Spec(
+                            spec_str,
+                            external_path=external_path,
+                            external_modules=external_modules
+                        )
+                        specs.append(spack.spec.Spec.from_detection(
+                            spec, extra_attributes=extra_attributes
+                        ))
+
+                return sorted(specs)
+
+            @classmethod
+            def determine_variants(cls, exes, version_str):
+                return ''
+
+            # Register the class as a detectable package
+            detectable_packages[cls.namespace].append(cls.name)
+
+            # Attach function implementations to the detectable class
+            default = False
+            if not hasattr(cls, 'determine_spec_details'):
+                default = True
+                cls.determine_spec_details = determine_spec_details
+
+            if default and not hasattr(cls, 'determine_version'):
+                msg = ('the package "{0}" in the "{1}" repo needs to define'
+                       ' the "determine_version" method to be detectable')
+                NotImplementedError(msg.format(cls.name, cls.namespace))
+
+            if default and not hasattr(cls, 'determine_variants'):
+                cls.determine_variants = determine_variants
+
+        super(DetectablePackageMeta, cls).__init__(name, bases, attr_dict)
+
+
 class PackageMeta(
+    DetectablePackageMeta,
     spack.directives.DirectiveMeta,
     spack.mixins.PackageMixinsMeta,
     spack.multimethod.MultiMethodMeta
@@ -332,7 +431,7 @@ class PackageViewMixin(object):
         """
         for src, dst in merge_map.items():
             if not os.path.exists(dst):
-                view.link(src, dst)
+                view.link(src, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
         """Given a map of package files to files currently linked in the view,
@@ -1026,6 +1125,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.is_extension:
             raise ValueError(
                 "is_activated called on package that is not an extension.")
+        if self.extendee_spec.package.installed_upstream:
+            # If this extends an upstream package, it cannot be activated for
+            # it. This bypasses construction of the extension map, which can
+            # can fail when run in the context of a downstream Spack instance
+            return False
         extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
@@ -1115,9 +1219,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise ValueError("Can only fetch concrete packages.")
 
         if not self.has_code:
-            tty.msg(
-                "No fetch required for %s: package has no code." % self.name
-            )
+            tty.debug('No fetch required for {0}: package has no code.'
+                      .format(self.name))
 
         start_time = time.time()
         checksum = spack.config.get('config:checksum')
@@ -1133,7 +1236,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 ignore_checksum = tty.get_yes_or_no("  Fetch anyway?",
                                                     default=False)
                 if ignore_checksum:
-                    tty.msg("Fetching with no checksum.", ck_msg)
+                    tty.debug('Fetching with no checksum. {0}'
+                              .format(ck_msg))
 
             if not ignore_checksum:
                 raise FetchError("Will not fetch %s" %
@@ -1189,7 +1293,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # If there are no patches, note it.
         if not patches and not has_patch_fun:
-            tty.msg("No patches needed for %s" % self.name)
+            tty.debug('No patches needed for {0}'.format(self.name))
             return
 
         # Construct paths to special files in the archive dir used to
@@ -1202,15 +1306,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
-            tty.msg("Patching failed last time. Restaging.")
+            tty.debug('Patching failed last time. Restaging.')
             self.stage.restage()
 
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
-            tty.msg("Already patched %s" % self.name)
+            tty.debug('Already patched {0}'.format(self.name))
             return
         elif os.path.isfile(no_patches_file):
-            tty.msg("No patches needed for %s" % self.name)
+            tty.debug('No patches needed for {0}'.format(self.name))
             return
 
         # Apply all the patches for specs that match this one
@@ -1219,7 +1323,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with working_dir(self.stage.source_path):
                     patch.apply(self.stage)
-                tty.msg('Applied patch %s' % patch.path_or_url)
+                tty.debug('Applied patch {0}'.format(patch.path_or_url))
                 patched = True
             except spack.error.SpackError as e:
                 tty.debug(e)
@@ -1233,7 +1337,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with working_dir(self.stage.source_path):
                     self.patch()
-                tty.msg("Ran patch() for %s" % self.name)
+                tty.debug('Ran patch() for {0}'.format(self.name))
                 patched = True
             except spack.multimethod.NoSuchMethodError:
                 # We are running a multimethod without a default case.
@@ -1243,12 +1347,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # directive, AND the patch function didn't apply, say
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
-                    tty.msg("No patches needed for %s" % self.name)
+                    tty.debug('No patches needed for {0}'.format(self.name))
             except spack.error.SpackError as e:
                 tty.debug(e)
 
                 # Touch bad file if anything goes wrong.
-                tty.msg("patch() function failed for %s" % self.name)
+                tty.msg('patch() function failed for {0}'.format(self.name))
                 touch(bad_file)
                 raise
 
@@ -1335,7 +1439,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if os.path.exists(makefile):
                 break
         else:
-            tty.msg('No Makefile found in the build directory')
+            tty.debug('No Makefile found in the build directory')
             return False
 
         # Check if 'target' is a valid target.
@@ -1366,7 +1470,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         for missing_target_msg in missing_target_msgs:
             if missing_target_msg.format(target) in stderr:
-                tty.msg("Target '" + target + "' not found in " + makefile)
+                tty.debug("Target '{0}' not found in {1}"
+                          .format(target, makefile))
                 return False
 
         return True
@@ -1394,7 +1499,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Check if we have a Ninja build script
         if not os.path.exists('build.ninja'):
-            tty.msg('No Ninja build script found in the build directory')
+            tty.debug('No Ninja build script found in the build directory')
             return False
 
         # Get a list of all targets in the Ninja build script
@@ -1406,7 +1511,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                    if line.startswith(target + ':')]
 
         if not matches:
-            tty.msg("Target '" + target + "' not found in build.ninja")
+            tty.debug("Target '{0}' not found in build.ninja"
+                      .format(target))
             return False
 
         return True
@@ -1713,11 +1819,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if specs:
                 if deprecator:
                     spack.store.db.deprecate(specs[0], deprecator)
-                    tty.msg("Deprecating stale DB entry for "
-                            "%s" % spec.short_spec)
+                    tty.debug('Deprecating stale DB entry for {0}'
+                              .format(spec.short_spec))
                 else:
                     spack.store.db.remove(specs[0])
-                    tty.msg("Removed stale DB entry for %s" % spec.short_spec)
+                    tty.debug('Removed stale DB entry for {0}'
+                              .format(spec.short_spec))
                 return
             else:
                 raise InstallError(str(spec) + " is not installed.")
@@ -1738,7 +1845,23 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         with spack.store.db.prefix_write_lock(spec):
 
             if pkg is not None:
-                spack.hooks.pre_uninstall(spec)
+                try:
+                    spack.hooks.pre_uninstall(spec)
+                except Exception as error:
+                    if force:
+                        error_msg = (
+                            "One or more pre_uninstall hooks have failed"
+                            " for {0}, but Spack is continuing with the"
+                            " uninstall".format(str(spec)))
+                        if isinstance(error, spack.error.SpackError):
+                            error_msg += (
+                                "\n\nError message: {0}".format(str(error)))
+                        tty.warn(error_msg)
+                        # Note that if the uninstall succeeds then we won't be
+                        # seeing this error again and won't have another chance
+                        # to run the hook.
+                    else:
+                        raise
 
             # Uninstalling in Spack only requires removing the prefix.
             if not spec.external:
@@ -1759,9 +1882,22 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 spack.store.db.remove(spec)
 
         if pkg is not None:
-            spack.hooks.post_uninstall(spec)
+            try:
+                spack.hooks.post_uninstall(spec)
+            except Exception:
+                # If there is a failure here, this is our only chance to do
+                # something about it: at this point the Spec has been removed
+                # from the DB and prefix, so the post-uninstallation hooks
+                # will not have another chance to run.
+                error_msg = (
+                    "One or more post-uninstallation hooks failed for"
+                    " {0}, but the prefix has been removed (if it is not"
+                    " external).".format(str(spec)))
+                tb_msg = traceback.format_exc()
+                error_msg += "\n\nThe error:\n\n{0}".format(tb_msg)
+                tty.warn(error_msg)
 
-        tty.msg("Successfully uninstalled %s" % spec.short_spec)
+        tty.msg('Successfully uninstalled {0}'.format(spec.short_spec))
 
     def do_uninstall(self, force=False):
         """Uninstall this package by spec."""
@@ -2011,12 +2147,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if hasattr(self, 'url') and self.url:
             urls.append(self.url)
 
+        # fetch from first entry in urls to save time
+        if hasattr(self, 'urls') and self.urls:
+            urls.append(self.urls[0])
+
         for args in self.versions.values():
             if 'url' in args:
                 urls.append(args['url'])
         return urls
 
-    def fetch_remote_versions(self):
+    def fetch_remote_versions(self, concurrency=128):
         """Find remote versions of this package.
 
         Uses ``list_url`` and any other URLs listed in the package file.
@@ -2029,7 +2169,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         try:
             return spack.util.web.find_versions_of_archive(
-                self.all_urls, self.list_url, self.list_depth)
+                self.all_urls, self.list_url, self.list_depth, concurrency
+            )
         except spack.util.web.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url,
                     e.message)

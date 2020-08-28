@@ -14,6 +14,7 @@ class GmapGsnap(AutotoolsPackage):
     homepage = "http://research-pub.gene.com/gmap/"
     url      = "http://research-pub.gene.com/gmap/src/gmap-gsnap-2017-06-16.tar.gz"
 
+    version('2020-06-01', sha256='7917f9f78570943f419445e371f2cc948c6741e73c3cbb063391756f4479d365')
     version('2019-05-12', sha256='3dc1b6ee4f6c049c07bcf4a5aba30eb2d732997241cdcad818dab571719f8008')
     version('2019-02-15', sha256='7e82b9867a1e561b4816fb2f2fb916294077c384c6a88bb94cce39bfe71ab3ac')
     version('2018-07-04', sha256='a9f8c1f0810df65b2a089dc10be79611026f4c95e4681dba98fea3d55d598d24')

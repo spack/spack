@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import platform
+import re
 
 
 class Bazel(Package):
@@ -94,14 +93,9 @@ class Bazel(Package):
     version('0.3.1',  sha256='218d0e28b4d1ee34585f2ac6b18d169c81404d93958815e73e60cc0368efcbb7')
     version('0.3.0',  sha256='357fd8bdf86034b93902616f0844bd52e9304cccca22971ab7007588bf9d5fb3')
 
-    # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-bazel
-    # Until https://github.com/spack/spack/issues/14058 is fixed, use jdk to build bazel
-    # Strict dependency on java@8 as per
-    # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-unix-prereq
-    if platform.machine() == 'aarch64':
-        depends_on('java@8:8.999', type=('build', 'run'))
-    else:
-        depends_on('jdk@1.8.0:1.8.999', type=('build', 'run'))
+    variant('nodepfail', default=True, description='Disable failing dependency checks due to injected absolute paths - required for most builds using bazel with spack')
+
+    depends_on('java', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
     depends_on('zip', type=('build', 'run'))
 
@@ -128,7 +122,28 @@ class Bazel(Package):
     patch('compile-0.4.patch',  when='@0.4:0.5')
     patch('compile-0.3.patch',  when='@:0.3')
 
+    # for fcc
+    patch('patch_for_fcc.patch', when='@0.29.1:%fj')
+    patch('patch_for_fcc2.patch', when='@0.25:%fj')
+    conflicts(
+        '%fj',
+        when='@:0.24.1',
+        msg='Fujitsu Compiler cannot build 0.24.1 or less, '
+        'please use a newer release.'
+    )
+
+    patch('disabledepcheck.patch', when='@0.3.2:+nodepfail')
+    patch('disabledepcheck_old.patch', when='@0.3.0:0.3.1+nodepfail')
+
     phases = ['bootstrap', 'install']
+
+    executables = ['^bazel$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('version', output=str, error=str)
+        match = re.search(r'Build label: ([\d.]+)', output)
+        return match.group(1) if match else None
 
     def url_for_version(self, version):
         if version >= Version('0.4.1'):
@@ -196,3 +211,7 @@ java_binary(
 
     def setup_dependent_package(self, module, dependent_spec):
         module.bazel = Executable('bazel')
+
+    @property
+    def parallel(self):
+        return not self.spec.satisfies('%fj')

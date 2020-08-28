@@ -21,8 +21,9 @@ class Z3(MakefilePackage):
 
     phases = ['bootstrap', 'build', 'install']
 
-    variant('python', default=False, description='Enable python binding')
+    variant('python', default=True, description='Enable python binding')
     depends_on('python', type=('build', 'run'))
+    depends_on('py-setuptools', type=('run'), when='+python')
     extends('python', when='+python')
 
     # Referenced: https://github.com/Z3Prover/z3/issues/1016

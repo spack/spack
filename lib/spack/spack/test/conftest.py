@@ -70,6 +70,25 @@ def clean_user_environment():
         ev.activate(active)
 
 
+#
+# Disable checks on compiler executable existence
+#
+@pytest.fixture(scope='function', autouse=True)
+def mock_compiler_executable_verification(request, monkeypatch):
+    """Mock the compiler executable verification to allow missing executables.
+
+    This fixture can be disabled for tests of the compiler verification
+    functionality by::
+
+        @pytest.mark.enable_compiler_verification
+
+    If a test is marked in that way this is a no-op."""
+    if 'enable_compiler_verification' not in request.keywords:
+        monkeypatch.setattr(spack.compiler.Compiler,
+                            'verify_executables',
+                            lambda x: None)
+
+
 # Hooks to add command line options or set other custom behaviors.
 # They must be placed here to be found by pytest. See:
 #
@@ -268,6 +287,10 @@ def _skip_if_missing_executables(request):
 # FIXME: there's some weird interaction with compilers during concretization.
 spack.architecture.real_platform = spack.architecture.platform
 spack.architecture.platform = lambda: spack.platforms.test.Test()
+# FIXME: Since we change the architecture above, we have to (re)initialize
+# FIXME: the config singleton. If it gets initialized too early with the
+# FIXME: actual architecture, tests will fail.
+spack.config.config = spack.config._config()
 
 
 #
@@ -375,6 +398,19 @@ def linux_os():
 
 
 @pytest.fixture(scope='session')
+def default_config():
+    """Isolates the default configuration from the user configs.
+
+    This ensures we can test the real default configuration without having
+    tests fail when the user overrides the defaults that we test against."""
+    defaults_path = os.path.join(spack.paths.etc_path, 'spack', 'defaults')
+    defaults_scope = spack.config.ConfigScope('defaults', defaults_path)
+    defaults_config = spack.config.Configuration(defaults_scope)
+    with use_configuration(defaults_config):
+        yield defaults_config
+
+
+@pytest.fixture(scope='session')
 def configuration_dir(tmpdir_factory, linux_os):
     """Copies mock configuration files in a temporary directory. Returns the
     directory path.
@@ -423,13 +459,26 @@ def config(mock_configuration):
 
 
 @pytest.fixture(scope='function')
-def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
+def mutable_config(tmpdir_factory, configuration_dir):
     """Like config, but tests can modify the configuration."""
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     configuration_dir.copy(mutable_dir)
 
     cfg = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(mutable_dir))
+        *[spack.config.ConfigScope(name, str(mutable_dir.join(name)))
+          for name in ['site', 'system', 'user']])
+
+    with use_configuration(cfg):
+        yield cfg
+
+
+@pytest.fixture(scope='function')
+def mutable_empty_config(tmpdir_factory, configuration_dir):
+    """Empty configuration that can be modified by the tests."""
+    mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
+
+    cfg = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(mutable_dir.join(name)))
           for name in ['site', 'system', 'user']])
 
     with use_configuration(cfg):
@@ -574,23 +623,61 @@ def dirs_with_libfiles(tmpdir_factory):
 
 
 @pytest.fixture(scope='function', autouse=True)
-def disable_compiler_execution(monkeypatch):
-    def noop(*args):
-        return []
+def disable_compiler_execution(monkeypatch, request):
+    """
+    This fixture can be disabled for tests of the compiler link path
+    functionality by::
 
-    # Compiler.determine_implicit_rpaths actually runs the compiler. So this
-    # replaces that function with a noop that simulates finding no implicit
-    # RPATHs
-    monkeypatch.setattr(
-        spack.compiler.Compiler,
-        '_get_compiler_link_paths',
-        noop
-    )
+        @pytest.mark.enable_compiler_link_paths
+
+    If a test is marked in that way this is a no-op."""
+    if 'enable_compiler_link_paths' not in request.keywords:
+        def noop(*args):
+            return []
+
+        # Compiler.determine_implicit_rpaths actually runs the compiler. So
+        # replace that function with a noop that simulates finding no implicit
+        # RPATHs
+        monkeypatch.setattr(
+            spack.compiler.Compiler,
+            '_get_compiler_link_paths',
+            noop
+        )
 
 
 @pytest.fixture(scope='function')
 def install_mockery(tmpdir, config, mock_packages, monkeypatch):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
+    real_store = spack.store.store
+    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
+
+    # We use a fake package, so temporarily disable checksumming
+    with spack.config.override('config:checksum', False):
+        yield
+
+    tmpdir.join('opt').remove()
+    spack.store.store = real_store
+
+    # Also wipe out any cached prefix failure locks (associated with
+    # the session-scoped mock archive).
+    for pkg_id in list(spack.store.db._prefix_failures.keys()):
+        lock = spack.store.db._prefix_failures.pop(pkg_id, None)
+        if lock:
+            try:
+                lock.release_write()
+            except Exception:
+                pass
+
+
+@pytest.fixture(scope='function')
+def install_mockery_mutable_config(
+        tmpdir, mutable_config, mock_packages, monkeypatch):
+    """Hooks a fake install directory, DB, and stage directory into Spack.
+
+    This is specifically for tests which want to use 'install_mockery' but
+    also need to modify configuration (and hence would want to use
+    'mutable config'): 'install_mockery' does not support this.
+    """
     real_store = spack.store.store
     spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
 
@@ -1079,3 +1166,20 @@ def clear_directive_functions():
     # proceeding with subsequent tests that may depend on the original
     # functions.
     spack.directives.DirectiveMeta._directives_to_be_executed = []
+
+
+@pytest.fixture
+def mock_executable(tmpdir):
+    """Factory to create a mock executable in a temporary directory that
+    output a custom string when run.
+    """
+    import jinja2
+
+    def _factory(name, output, subdir=('bin',)):
+        f = tmpdir.ensure(*subdir, dir=True).join(name)
+        t = jinja2.Template('#!/bin/bash\n{{ output }}\n')
+        f.write(t.render(output=output))
+        f.chmod(0o755)
+        return str(f)
+
+    return _factory

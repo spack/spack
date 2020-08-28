@@ -92,12 +92,6 @@ class Mfem(Package):
     # Can we make the default value for 'metis' to depend on the 'mpi' value?
     variant('metis', default=True,
             description='Enable METIS support')
-    # TODO: The 'hypre' variant is the same as 'mpi', we may want to remove it.
-    #       For now, keep the 'hypre' variant while ignoring its setting. This
-    #       is done to preserve compatibility with other packages that refer to
-    #       it, e.g. xSDK.
-    variant('hypre', default=True,
-            description='Required for MPI parallelism')
     variant('openmp', default=False,
             description='Enable OpenMP parallelism')
     variant('cuda', default=False, description='Enable CUDA support')
@@ -366,6 +360,21 @@ class Mfem(Package):
         cxxflags = spec.compiler_flags['cxxflags']
 
         if cxxflags:
+            # Add opt/debug flags if they are not present in global cxx flags
+            opt_flag_found = any(f in self.compiler.opt_flags
+                                 for f in cxxflags)
+            debug_flag_found = any(f in self.compiler.debug_flags
+                                   for f in cxxflags)
+
+            if '+debug' in spec:
+                if not debug_flag_found:
+                    cxxflags.append('-g')
+                if not opt_flag_found:
+                    cxxflags.append('-O0')
+            else:
+                if not opt_flag_found:
+                    cxxflags.append('-O2')
+
             cxxflags = [(xcompiler + flag) for flag in cxxflags]
             if '+cuda' in spec:
                 cxxflags += [

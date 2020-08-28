@@ -1,0 +1,11 @@
+--- a/src/main/java/com/google/devtools/build/lib/rules/cpp/HeaderDiscovery.java.orig  2020-03-25 08:54:37.914186251 -0400
++++ b/src/main/java/com/google/devtools/build/lib/rules/cpp/HeaderDiscovery.java       2020-03-25 08:55:01.356250657 -0400
+@@ -148,7 +148,7 @@
+         if (execPath.startsWith(execRoot)) {
+           execPathFragment = execPath.relativeTo(execRoot); // funky but tolerable path
+         } else {
+-          problems.add(execPathFragment.getPathString());
++          //          problems.add(execPathFragment.getPathString());
+           continue;
+         }
+       }

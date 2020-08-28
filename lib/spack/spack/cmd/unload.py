@@ -31,6 +31,9 @@ def setup_parser(subparser):
     shells.add_argument(
         '--csh', action='store_const', dest='shell', const='csh',
         help="print csh commands to activate the environment")
+    shells.add_argument(
+        '--fish', action='store_const', dest='shell', const='fish',
+        help="print fish commands to load the package")
 
     subparser.add_argument('-a', '--all', action='store_true',
                            help='unload all loaded Spack packages.')

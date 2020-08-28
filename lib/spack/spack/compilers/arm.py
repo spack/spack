@@ -51,9 +51,13 @@ class Arm(spack.compiler.Compiler):
                 temp = match.group(1) + "." + match.group(2)
         return temp
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-Ofast']
 
     @property
     def openmp_flag(self):

@@ -78,9 +78,10 @@ def setup_parser(subparser):
 class SpackArgparseRstWriter(ArgparseRstWriter):
     """RST writer tailored for spack documentation."""
 
-    def __init__(self, prog, out=sys.stdout, aliases=False,
+    def __init__(self, prog, out=None, aliases=False,
                  documented_commands=[],
                  rst_levels=['-', '-', '^', '~', ':', '`']):
+        out = sys.stdout if out is None else out
         super(SpackArgparseRstWriter, self).__init__(
             prog, out, aliases, rst_levels)
         self.documented = documented_commands

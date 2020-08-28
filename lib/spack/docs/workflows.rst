@@ -1405,11 +1405,12 @@ The main points that are implemented below:
      - export CXXFLAGS="-std=c++11"
 
    install:
-     - if ! which spack >/dev/null; then
+     - |
+       if ! which spack >/dev/null; then
          mkdir -p $SPACK_ROOT &&
          git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
-         echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml **
-         echo -e "packages:""\n  all:""\n    target:"" ['x86_64']"
+         printf "config:\n  build_jobs: 2\n" > $SPACK_ROOT/etc/spack/config.yaml &&
+         printf "packages:\n  all:\n    target: ['x86_64']\n" \
                  > $SPACK_ROOT/etc/spack/packages.yaml;
        fi
      - travis_wait spack install cmake@3.7.2~openssl~ncurses
@@ -1442,8 +1443,7 @@ The following functionality is prepared:
 
 #. Base image: the example starts from a minimal ubuntu.
 
-#. Pre-install the spack dependencies, including modules from the packages.
-   This avoids needing to build those from scratch via ``spack bootstrap``.
+#. Pre-install the spack dependencies.
    Package installs are followed by a clean-up of the system package index,
    to avoid outdated information and it saves space.
 
@@ -1545,8 +1545,9 @@ Avoid double-installing CUDA by adding, e.g.
 
    packages:
      cuda:
-       paths:
-         cuda@9.0.176%gcc@5.4.0 arch=linux-ubuntu16-x86_64: /usr/local/cuda
+       externals:
+       - spec: "cuda@9.0.176%gcc@5.4.0 arch=linux-ubuntu16-x86_64"
+         prefix: /usr/local/cuda
        buildable: False
 
 to your ``packages.yaml``.

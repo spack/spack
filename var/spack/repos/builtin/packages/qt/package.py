@@ -151,9 +151,14 @@ class Qt(Package):
     depends_on("double-conversion", when='@5.7:')
     depends_on("pcre2+multibyte", when='@5.9:')
 
+    # gcc@4 is not supported as of Qt@5.14
+    # https://doc.qt.io/qt-5.14/supported-platforms.html
+    conflicts('%gcc@:4.99', when='@5.14:')
+
     # Non-macOS dependencies and special macOS constraints
     if MACOS_VERSION is None:
         depends_on("fontconfig", when='freetype=spack')
+        depends_on("libsm")
         depends_on("libx11")
         depends_on("libxcb")
         depends_on("libxkbcommon")
@@ -173,6 +178,7 @@ class Qt(Package):
 
     # Mapping for compilers/systems in the QT 'mkspecs'
     compiler_mapping = {'intel': ('icc',),
+                        'apple-clang': ('clang-libc++', 'clang'),
                         'clang': ('clang-libc++', 'clang'),
                         'gcc': ('g++',)}
     platform_mapping = {'darwin': 'macx'}
@@ -222,9 +228,6 @@ class Qt(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('QTDIR', self.prefix)
-        # https://riverbankcomputing.com/pipermail/qscintilla/2015-January/001012.html
-        env.set('QMAKEFEATURES', join_path(
-            dependent_spec.stage.source_path, 'Qt4Qt5', 'features'))
 
     def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
@@ -285,7 +288,7 @@ class Qt(Package):
             "qmake/qmake.pri",
             "src/tools/bootstrap/bootstrap.pro"
         ]
-        if '%clang' in self.spec:
+        if '%clang' in self.spec or '%apple-clang' in self.spec:
             files_to_filter += [
                 "mkspecs/unsupported/macx-clang-libc++/qmake.conf",
                 "mkspecs/common/clang.conf"
@@ -360,7 +363,6 @@ class Qt(Package):
     @property
     def common_config_args(self):
         # incomplete list is here http://doc.qt.io/qt-5/configure-options.html
-        openssl = self.spec['openssl']
         config_args = [
             '-prefix', self.prefix,
             '-v',
@@ -386,6 +388,7 @@ class Qt(Package):
             config_args.append('-no-freetype')
 
         if '+ssl' in self.spec:
+            openssl = self.spec['openssl']
             config_args.extend([
                 '-openssl-linked',
                 openssl.libs.search_flags,

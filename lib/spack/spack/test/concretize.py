@@ -12,7 +12,6 @@ import spack.repo
 
 from spack.concretize import find_spec, NoValidVersionError
 from spack.error import SpecError
-from spack.package_prefs import PackagePrefs
 from spack.spec import Spec, CompilerSpec, ConflictsInSpecError
 from spack.version import ver
 from spack.util.mock_package import MockPackageMultiRepo
@@ -103,8 +102,6 @@ def current_host(request, monkeypatch):
         monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
         yield target
     else:
-        # There's a cache that needs to be cleared for unit tests
-        PackagePrefs._packages_config_cache = None
         with spack.config.override('packages:all', {'target': [cpu]}):
             yield target
 
@@ -112,7 +109,10 @@ def current_host(request, monkeypatch):
     spack.architecture.get_platform.cache.clear()
 
 
-@pytest.mark.usefixtures('config', 'mock_packages')
+# This must use the mutable_config fixture because the test
+# adjusting_default_target_based_on_compiler uses the current_host fixture,
+# which changes the config.
+@pytest.mark.usefixtures('mutable_config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
         check_concretize(spec)
@@ -373,7 +373,7 @@ class TestConcretize(object):
 
         spec = Spec('externalmodule')
         spec.concretize()
-        assert spec['externalmodule'].external_module == 'external-module'
+        assert spec['externalmodule'].external_modules == ['external-module']
         assert 'externalprereq' not in spec
         assert spec['externalmodule'].compiler.satisfies('gcc')
 
@@ -500,6 +500,12 @@ class TestConcretize(object):
             with pytest.raises(exc_type):
                 s.concretize()
 
+    def test_no_conflixt_in_external_specs(self, conflict_spec):
+        # clear deps because external specs cannot depend on anything
+        ext = Spec(conflict_spec).copy(deps=False)
+        ext.external_path = '/fake/path'
+        ext.concretize()  # failure raises exception
+
     def test_regression_issue_4492(self):
         # Constructing a spec which has no dependencies, but is otherwise
         # concrete is kind of difficult. What we will do is to concretize
@@ -608,7 +614,7 @@ class TestConcretize(object):
         ('mpileaks%gcc@4.8', 'haswell'),
         ('mpileaks%gcc@5.3.0', 'broadwell'),
         # Apple's clang always falls back to x86-64 for now
-        ('mpileaks%clang@9.1.0-apple', 'x86_64')
+        ('mpileaks%apple-clang@9.1.0', 'x86_64')
     ])
     @pytest.mark.regression('13361')
     def test_adjusting_default_target_based_on_compiler(
@@ -633,3 +639,8 @@ class TestConcretize(object):
         s = Spec('mpileaks %gcc@4.5:')
         s.concretize()
         assert str(s.compiler.version) == '4.5.0'
+
+    def test_concretize_anonymous(self):
+        with pytest.raises(spack.error.SpecError):
+            s = Spec('+variant')
+            s.concretize()

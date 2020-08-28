@@ -14,9 +14,11 @@ class Ninja(Package):
 
     homepage = "https://ninja-build.org/"
     url      = "https://github.com/ninja-build/ninja/archive/v1.7.2.tar.gz"
-    git      = "https://github.com/Kitware/ninja.git"
+    git      = "https://github.com/ninja-build/ninja.git"
 
-    version('kitware', branch='features-for-fortran')
+    version('kitware', branch='features-for-fortran', git='https://github.com/Kitware/ninja.git')
+    version('master', branch='master')
+    version('1.10.1', sha256='a6b6f7ac360d4aabd54e299cc1d8fa7b234cd81b9401693da21221c62569a23e')
     version('1.10.0', sha256='3810318b08489435f8efc19c05525e80a993af5a55baa0dfeae0465a9d45f99f')
     version('1.9.0', sha256='5d7ec75828f8d3fd1a0c2f31b5b0cea780cdfe1031359228c428c1a48bfcd5b9')
     version('1.8.2', sha256='86b8700c3d0880c2b44c2ff67ce42774aaf8c28cbf57725cb881569288c1c6f4')
@@ -37,6 +39,9 @@ class Ninja(Package):
         ninja('-j{0}'.format(make_jobs), 'ninja_test')
         ninja_test = Executable('./ninja_test')
         ninja_test()
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.misc)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)

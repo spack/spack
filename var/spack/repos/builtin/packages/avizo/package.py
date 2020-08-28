@@ -18,6 +18,10 @@ class Avizo(Package):
 
     homepage = "https://www.thermofisher.com/sa/en/home/industrial/electron-microscopy/electron-microscopy-instruments-workflow-solutions/3d-visualization-analysis-software.html"
 
+    version('2020.1',
+            sha256='9321aaa276567eebf116e268353c33a4c930d768d22793f921338e1d8cefe991',
+            url="file://{0}/Avizo-20201-Linux64-gcc48.bin".format(os.getcwd()),
+            expand=False)
     version('2019.4',
             sha256='a637720535bcbe254ab56368004a9544c64ec36186373fa24f26cee279685248',
             url="file://{0}/Avizo-20194-Linux64-gcc48.bin".format(os.getcwd()),
@@ -34,13 +38,15 @@ class Avizo(Package):
     gcc_ver = {
         "9.7.0": "44",
         "2019.3": "48",
-        "2019.4": "48"
+        "2019.4": "48",
+        "2020.1": "48"
     }
 
     install_dir = {
         "9.7.0": 'Avizo-9.7.0',
         "2019.3": join_path('..', 'Avizo'),
-        "2019.4": join_path('..', 'Avizo')
+        "2019.4": join_path('..', 'Avizo'),
+        "2020.1": join_path('..', 'Avizo')
     }
 
     # Licensing

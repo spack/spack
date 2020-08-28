@@ -146,6 +146,9 @@ class Esmf(MakefilePackage):
             # Build an optimized version of the library.
             os.environ['ESMF_BOPT'] = 'O'
 
+        if self.spec.satisfies('%gcc@10:'):
+            os.environ['ESMF_F90COMPILEOPTS'] = '-fallow-argument-mismatch'
+
         #######
         # MPI #
         #######
@@ -166,7 +169,7 @@ class Esmf(MakefilePackage):
                 os.environ['ESMF_CXXLINKLIBS'] = '-lmpifort'
             elif '^openmpi' in spec:
                 os.environ['ESMF_COMM'] = 'openmpi'
-            elif '^intel-parallel-studio+mpi' in spec:
+            elif '^intel-parallel-studio+mpi' in spec or '^intel-mpi' in spec:
                 os.environ['ESMF_COMM'] = 'intelmpi'
         else:
             # Force use of the single-processor MPI-bypass library.

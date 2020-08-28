@@ -21,6 +21,8 @@ class Xabclib(MakefilePackage):
         fc = [spack_fc, '-O3', self.compiler.openmp_flag]
         if spec.satisfies('%gcc'):
             fc.extend(['-ffixed-form', '-cpp'])
+        elif spec.satisfies('%fj'):
+            fc.extend(['-Fixed', '-Cpp'])
         filter_file(
             '^rm libOpenAT.a$',
             'rm -f libOpenAT.a',
@@ -44,6 +46,8 @@ class Xabclib(MakefilePackage):
                 'LD += .*$',
                 'LD = {0}'.format(' '.join(fc))
             )
+            if spec.satisfies('%fj') and 'samples_c' in makefile:
+                m.filter('$(LD)', '$(LD) -mlcmain=main', string=True)
 
     def build(self, spec, prefix):
         sh = which('sh')

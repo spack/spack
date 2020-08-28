@@ -1,0 +1,43 @@
+--- a/gcc/Makefile.in
++++ b/gcc/Makefile.in
+@@ -1075,7 +1075,8 @@ GNATMAKE = @GNATMAKE@
+ # Libs needed (at present) just for jcf-dump.
+ LDEXP_LIB = @LDEXP_LIB@
+ 
+-ZSTD_LIB = @ZSTD_LIB@
++ZSTD_INC = @ZSTD_CPPFLAGS@
++ZSTD_LIB = @ZSTD_LDFLAGS@ @ZSTD_LIB@
+ 
+ # Likewise, for use in the tools that must run on this machine
+ # even if we are cross-building GCC.
+@@ -2275,7 +2276,7 @@ CFLAGS-version.o += -DBASEVER=$(BASEVER_s) -DDATESTAMP=$(DATESTAMP_s) \
+ version.o: $(REVISION) $(DATESTAMP) $(BASEVER) $(DEVPHASE)
+ 
+ # lto-compress.o needs $(ZLIBINC) added to the include flags.
+-CFLAGS-lto-compress.o += $(ZLIBINC)
++CFLAGS-lto-compress.o += $(ZLIBINC) $(ZSTD_INC)
+ 
+ CFLAGS-lto-streamer-in.o += -DTARGET_MACHINE=\"$(target_noncanonical)\"
+ 
+--- a/gcc/configure
++++ b/gcc/configure
+@@ -786,6 +786,8 @@ LTLIBICONV
+ LIBICONV
+ ZSTD_LIB
+ ZSTD_INCLUDE
++ZSTD_LDFLAGS
++ZSTD_CPPFLAGS
+ DL_LIB
+ LDEXP_LIB
+ EXTRA_GCC_LIBS
+--- a/gcc/configure.ac
++++ b/gcc/configure.ac
+@@ -1339,6 +1339,8 @@ AC_SUBST(ZSTD_INCLUDE)
+ AC_SUBST(ZSTD_LIB)
+ ZSTD_CPPFLAGS=
+ ZSTD_LDFLAGS=
++AC_SUBST(ZSTD_CPPFLAGS)
++AC_SUBST(ZSTD_LDFLAGS)
+ AC_ARG_WITH(zstd,
+ 	[AS_HELP_STRING([--with-zstd=PATH],
+ 		[specify prefix directory for installed zstd library.

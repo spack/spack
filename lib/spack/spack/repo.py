@@ -759,8 +759,8 @@ class Repo(object):
 
         """
         parent = None
-        for l in range(1, len(self._names) + 1):
-            ns = '.'.join(self._names[:l])
+        for i in range(1, len(self._names) + 1):
+            ns = '.'.join(self._names[:i])
 
             if ns not in sys.modules:
                 module = SpackNamespace(ns)
@@ -773,7 +773,7 @@ class Repo(object):
                 # This ensures that we can do things like:
                 #    import spack.pkg.builtin.mpich as mpich
                 if parent:
-                    modname = self._names[l - 1]
+                    modname = self._names[i - 1]
                     setattr(parent, modname, module)
             else:
                 # no need to set up a module
@@ -882,9 +882,7 @@ class Repo(object):
             raise UnknownPackageError(spec.name)
 
         if spec.namespace and spec.namespace != self.namespace:
-            raise UnknownPackageError(
-                "Repository %s does not contain package %s"
-                % (self.namespace, spec.fullname))
+            raise UnknownPackageError(spec.name, self.namespace)
 
         package_class = self.get_pkg_class(spec.name)
         try:
@@ -1271,16 +1269,22 @@ class UnknownPackageError(UnknownEntityError):
 
     def __init__(self, name, repo=None):
         msg = None
-        if repo:
-            msg = "Package '%s' not found in repository '%s'" % (name, repo)
-        else:
-            msg = "Package '%s' not found." % name
-
-        # special handling for specs that may have been intended as filenames
-        # prompt the user to ask whether they intended to write './<name>'
         long_msg = None
-        if name.endswith(".yaml"):
-            long_msg = "Did you mean to specify a filename with './%s'?" % name
+        if name:
+            if repo:
+                msg = "Package '{0}' not found in repository '{1}'"
+                msg = msg.format(name, repo)
+            else:
+                msg = "Package '{0}' not found.".format(name)
+
+            # Special handling for specs that may have been intended as
+            # filenames: prompt the user to ask whether they intended to write
+            # './<name>'.
+            if name.endswith(".yaml"):
+                long_msg = "Did you mean to specify a filename with './{0}'?"
+                long_msg = long_msg.format(name)
+        else:
+            msg = "Attempting to retrieve anonymous package."
 
         super(UnknownPackageError, self).__init__(msg, long_msg)
         self.name = name

@@ -13,8 +13,10 @@ class Dyninst(CMakePackage):
 
     homepage = "https://dyninst.org"
     git      = "https://github.com/dyninst/dyninst.git"
+    maintainers = ['hainest']
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('10.2.0', tag='v10.2.0')
     version('10.1.0', tag='v10.1.0')
     version('10.0.0', tag='v10.0.0')
     version('9.3.2', tag='v9.3.2')
@@ -39,13 +41,13 @@ class Dyninst(CMakePackage):
     depends_on('boost@1.61.0:1.69.99' + boost_libs, when='@:10.0.99')
     depends_on('libiberty+pic')
 
-    # Dyninst uses elf@1 (elfutils) starting with 9.3.0, and used
-    # elf@0 (libelf) before that.
-    depends_on('elf@1', type='link', when='@9.3.0:')
-    depends_on('elf@0', type='link', when='@:9.2.99')
+    # Dyninst uses elfutils starting with 9.3.0, and used libelf
+    # before that.
+    depends_on('elfutils', type='link', when='@9.3.0:')
+    depends_on('libelf', type='link', when='@:9.2.99')
 
-    # Dyninst uses libdw from elfutils (same elf@1) starting with
-    # 10.x, and used libdwarf before that.
+    # Dyninst uses libdw from elfutils starting with 10.0, and used
+    # libdwarf before that.
     depends_on('libdwarf', when='@:9.99.99')
 
     depends_on('tbb@2018.6:', when='@10.0.0:')
@@ -58,6 +60,19 @@ class Dyninst(CMakePackage):
     patch('stackanalysis_h.patch', when='@9.2.0')
     patch('v9.3.2-auto.patch', when='@9.3.2 %gcc@:4.7.99')
     patch('tribool.patch', when='@9.3.0:10.0.0 ^boost@1.69:')
+
+    # No Mac support (including apple-clang)
+    conflicts('platform=darwin', msg='macOS is not supported')
+
+    # We currently only build with gcc
+    conflicts('%clang')
+    conflicts('%arm')
+    conflicts('%cce')
+    conflicts('%fj')
+    conflicts('%intel')
+    conflicts('%pgi')
+    conflicts('%xl')
+    conflicts('%xl_r')
 
     # Versions 9.3.x used cotire, but have no knob to turn it off.
     # Cotire has no real use for one-time builds and can break
@@ -88,6 +103,11 @@ class Dyninst(CMakePackage):
             args.append('-DENABLE_STATIC_LIBS=YES')
         else:
             args.append('-DENABLE_STATIC_LIBS=NO')
+
+        # Make sure Dyninst doesn't try to build its own dependencies
+        # outside of Spack
+        if spec.satisfies('@10.2.0:'):
+            args.append('-DSTERILE_BUILD=ON')
 
         return args
 
