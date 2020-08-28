@@ -5,6 +5,7 @@
 
 
 from spack import *
+import re
 
 
 class Texinfo(AutotoolsPackage, GNUMirrorPackage):
