@@ -855,15 +855,6 @@ class Environment(object):
         """A list of all configuration scopes for this environment."""
         return self.included_config_scopes() + [self.env_file_config_scope()]
 
-    def set_config(self, path, value):
-        """Set configuration for this environment"""
-        yaml = config_dict(self.yaml)
-        keys = spack.config.process_config_path(path)
-        for key in keys[:-1]:
-            yaml = yaml[key]
-        yaml[keys[-1]] = value
-        self.write()
-
     def destroy(self):
         """Remove this environment from Spack entirely."""
         shutil.rmtree(self.path)
