@@ -30,7 +30,7 @@ properties = {
                             spack.schema.projections.properties,
                         ),
                     },
-                    {'type': 'string',}
+                    {'type': 'string'}
                 ],
             },
             'install_hash_length': {'type': 'integer', 'minimum': 1},

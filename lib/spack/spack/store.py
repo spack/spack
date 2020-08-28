@@ -24,7 +24,6 @@ configuration.
 
 """
 import os
-import re
 import six
 
 import llnl.util.lang

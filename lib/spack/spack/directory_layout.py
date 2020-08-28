@@ -7,7 +7,6 @@ import os
 import shutil
 import glob
 import tempfile
-import re
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml

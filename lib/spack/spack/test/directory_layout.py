@@ -68,8 +68,8 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
     ns_scheme = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"   # NOQA: ignore=E501
     arch_ns_scheme_projections = {'all': arch_scheme,
                                   'python': ns_scheme}
-    layout_arch_ns = YamlDirectoryLayout(str(tmpdir),
-                                         projections=arch_ns_scheme_projections)
+    layout_arch_ns = YamlDirectoryLayout(
+        str(tmpdir), projections=arch_ns_scheme_projections)
 
     arch_path_spec2 = layout_arch_ns.relative_path_for_spec(spec2)
     assert(arch_path_spec2 == spec2.format(arch_scheme))
