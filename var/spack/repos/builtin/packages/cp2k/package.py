@@ -97,6 +97,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('libxc@2.2.2:', when='+libxc@:5.5999', type='build')
     depends_on('libxc@4.0.3:', when='+libxc@6.0:6.9', type='build')
     depends_on('libxc@4.0.3:', when='+libxc@7.0:')
+    depends_on('libxc@4.3.4', type='link')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
