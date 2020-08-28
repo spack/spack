@@ -834,8 +834,7 @@ class TestStage(object):
 
                 # Make sure cached stage path value was changed appropriately
                 assert spack.stage._stage_root in (
-                        test_path,
-                        os.path.join(test_path, getpass.getuser()))
+                    test_path, os.path.join(test_path, getpass.getuser()))
 
                 # Make sure the directory exists
                 assert os.path.isdir(spack.stage._stage_root)
