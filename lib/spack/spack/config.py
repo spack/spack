@@ -234,30 +234,46 @@ class SingleFileScope(ConfigScope):
             if self._raw_data is None:
                 return None
 
+            section_data = copy.deepcopy(self._raw_data)
             for key in self.yaml_path:
-                if self._raw_data is None:
+                if section_data is None:
                     return None
 
-                self._raw_data = self._raw_data[key]
+                section_data = section_data[key]
 
-            for section_key, data in self._raw_data.items():
+            for section_key, data in section_data.items():
                 self.sections[section_key] = {section_key: data}
         return self.sections.get(section, None)
 
     def write_section(self, section):
-        full_obj = syaml.syaml_dict()
-        for key, value in self.sections.items():
-            full_obj[key] = value[key]
-        for key in reversed(self.yaml_path):
-            full_obj = syaml.syaml_dict({key: full_obj})
-        validate(full_obj, self.schema)
+        data_to_write = copy.deepcopy(self._raw_data)
+        if syaml.markable(data_to_write):
+            setattr(data_to_write,
+                    yaml.comments.Comment.attrib,
+                    getattr(self._raw_data,
+                            yaml.comments.Comment.attrib,
+                            yaml.comments.Comment()))
+
+        if data_to_write is None:
+            data_to_write = {}
+            for key in self.yaml_path:
+                data_to_write = {key: data_to_write}
+
+        data_to_change = data_to_write
+        for key in self.yaml_path:
+            data_to_change = data_to_write[key]
+
+        for key, data in self.sections.items():
+            data_to_change[key] = data[key]
+
+        validate(data_to_write, self.schema)
         try:
             parent = os.path.dirname(self.path)
             mkdirp(parent)
 
             tmp = os.path.join(parent, '.%s.tmp' % os.path.basename(self.path))
             with open(tmp, 'w') as f:
-                syaml.dump_config(full_obj, stream=f,
+                syaml.dump_config(data_to_write, stream=f,
                                   default_flow_style=False)
             os.rename(tmp, self.path)
         except (yaml.YAMLError, IOError) as e:
