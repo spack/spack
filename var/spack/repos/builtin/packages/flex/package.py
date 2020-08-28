@@ -5,7 +5,7 @@
 
 from spack import *
 import os
-
+import re
 
 class Flex(AutotoolsPackage):
     """Flex is a tool for generating scanners."""
