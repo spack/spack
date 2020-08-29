@@ -15,4 +15,3 @@ class PyDeap(PythonPackage):
     version('1.2.2', sha256='7a1940201962574ec7eba34981f9db3541631b391d5f1cead80b6d7af29aa7da')
 
     depends_on('py-setuptools', type='build')
-
