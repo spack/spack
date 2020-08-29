@@ -16,4 +16,3 @@ class PyPlanet(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-click')
     depends_on('py-requests')
-
