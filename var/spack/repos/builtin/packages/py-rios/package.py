@@ -7,11 +7,12 @@ from spack import *
 
 
 class PyRios(PythonPackage):
-    """Raster I/O Simplification. A set of python modules which makes it easy to
-       write raster processing code in Python. Built on top of GDAL, it handles
-       the details of opening and closing files, checking alignment of projection
-       and raster grid, stepping through the raster in small blocks, etc., allowing
-       the programmer to concentrate on the processing involved."""
+    """Raster I/O Simplification. A set of python modules which makes it easy
+       to write raster processing code in Python. Built on top of GDAL, it
+       handles the details of opening and closing files, checking alignment of
+       projection and raster grid, stepping through the raster in small blocks,
+       etc., allowing the programmer to concentrate on the processing involved.
+    """
 
     homepage = "http://rioshome.org"
     url      = "https://github.com/ubarsc/rios/archive/rios-1.4.10.tar.gz"
