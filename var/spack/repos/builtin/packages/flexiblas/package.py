@@ -14,7 +14,7 @@ class Flexiblas(CMakePackage):
     url      = "https://csc.mpi-magdeburg.mpg.de/mpcsc/software/flexiblas/flexiblas-3.0.3.tar.gz"
 
     version('3.0.3', sha256='926ab31cf56f0618aec34da85314f3b48b6deb661b4e9d6e6a99dc37872b5341')
-    
+
     # virtual dependency
     provides('blas')
     provides('lapack')
