@@ -12,6 +12,6 @@ class PyDeap(PythonPackage):
     homepage = "http://deap.readthedocs.org/"
     url      = "https://pypi.io/packages/source/d/deap/deap-1.3.1.tar.gz"
 
-    version('1.2.2', sha256='7a1940201962574ec7eba34981f9db3541631b391d5f1cead80b6d7af29aa7da')
+    version('1.3.1', sha256='11f54493ceb54aae10dde676577ef59fc52d52f82729d5a12c90b0813c857a2f')
 
     depends_on('py-setuptools', type='build')
