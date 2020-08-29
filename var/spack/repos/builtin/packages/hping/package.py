@@ -29,7 +29,7 @@ class Hping(AutotoolsPackage):
         configure = FileFilter('configure')
         configure.filter(r'/usr/local/include/tcl\${TCL_VER}',
                          self.spec['tcl'].prefix.include)
-        configure.filter(r'/usr/local/lib/', self.spec['tcl'].prefix.lib)
+        configure.filter(r'/usr/local/lib/', self.spec['tcl'].libs.directories[0])
 
     def install(self, spec, prefix):
         mkdirp(prefix.sbin)
