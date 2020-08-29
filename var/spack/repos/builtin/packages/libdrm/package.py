@@ -28,7 +28,7 @@ class Libdrm(AutotoolsPackage):
     def configure_args(self):
         args = []
         args.append('--enable-static')
-        args.append('LIBS=-lrt') # This fixes a bug with `make check`
+        args.append('LIBS=-lrt')  # This fixes a bug with `make check`
         if self.spec.satisfies('%gcc@10.0.0:'):
             args.append('CFLAGS=-fcommon')
         return args
