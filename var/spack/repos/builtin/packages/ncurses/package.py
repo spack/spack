@@ -94,7 +94,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
 
         # fix for packages like hstr that use "#include <ncurses/ncurses.h>"
         for p_dir in ['ncurses', 'ncursesw']:
-            path = join(prefix.include, p_dir)
+            path = join_path(prefix.include, p_dir)
             mkdirp(path)
             install(prefix.include.join('*'), path)
 
