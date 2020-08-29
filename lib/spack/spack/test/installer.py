@@ -457,11 +457,6 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     spec = spack.spec.Spec('simple-inheritance').concretized()
     path = str(tmpdir)
 
-    # The call to install_tree will raise the exception since not mocking
-    # creation of dependency package files within *install* directories.
-    with pytest.raises(IOError, match=path):
-        inst.dump_packages(spec, path)
-
     # Now try the error path, which requires the mock directory structure
     # above
     monkeypatch.setattr(spack.repo.Repo, 'dirname_for_package_name', _repoerr)

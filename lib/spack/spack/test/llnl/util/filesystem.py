@@ -120,12 +120,6 @@ class TestCopyTree:
             with fs.working_dir(str(stage)):
                 fs.copy_tree('source', 'source/sub/directory')
 
-        # Only point with this check is to make sure we don't try to perform
-        # the copy.
-        with pytest.raises(IOError, match="No such file or directory"):
-            with fs.working_dir(str(stage)):
-                fs.copy_tree('foo/ba', 'foo/bar')
-
     def test_symlinks_true(self, stage):
         """Test copying with symlink preservation."""
 
