@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class PyPythonFmask(PythonPackage):
     """A set of command line utilities and Python modules that implement
        the FMASK algorithm for Landsat and Sentinel-2"""
