@@ -110,12 +110,12 @@ class Hpcc(MakefilePackage):
 
             if self.spec.variants['fft'].value == 'fftw2':
                 self.config['@LAINC@'] += \
-                    ' -I{0}'.format(spec['fftw'].prefix.include)
+                    spec['fftw-api'].headers.include_flags
                 # fftw does not set up libs for version 2
                 lin_alg_libs.append(
-                    join_path(spec['fftw'].prefix.lib, 'libsfftw_mpi.so'))
+                    join_path(spec['fftw-api'].prefix.lib, 'libsfftw_mpi.so'))
                 lin_alg_libs.append(
-                    join_path(spec['fftw'].prefix.lib, 'libsfftw.so'))
+                    join_path(spec['fftw-api'].prefix.lib, 'libsfftw.so'))
 
             elif self.spec.variants['fft'].value == 'mkl' and '^mkl' in spec:
                 mklroot = env['MKLROOT']
@@ -143,7 +143,7 @@ class Hpcc(MakefilePackage):
                 lin_alg_libs.append(libfftw2x_cdft)
 
         # Linear Algebra library (BLAS or VSIPL)
-        self.config['@LAINC@'] = '-I{0}'.format(spec['blas'].prefix.include)
+        self.config['@LAINC@'] = spec['blas'].headers.include_flags
         lin_alg_libs = lin_alg_libs + [
             lib for lib in spec['blas'].libs if lib not in lin_alg_libs]
 
