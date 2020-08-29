@@ -1398,6 +1398,10 @@ class Environment(object):
                 dag_hash_all = s.build_hash()
                 if dag_hash_all not in concrete_specs:
                     spec_dict = s.to_node_dict(hash=ht.build_hash)
+                    if s.name == 'cuda':
+                        tty.debug(
+                            "[18338] cuda dict:\n" +
+                            syaml.dump(spec_dict, default_flow_style=True))
                     spec_dict[s.name]['hash'] = s.dag_hash()
                     concrete_specs[dag_hash_all] = spec_dict
 
