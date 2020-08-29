@@ -886,7 +886,7 @@ def fork(pkg, function, dirty, fake):
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
 
-        if sys.version_info >= (3,):
+        if sys.version_info >= (3,):  # novm
             p = multiprocessing.get_context('fork').Process(
                 target=child_process, args=(child_pipe, input_stream))
         else:
