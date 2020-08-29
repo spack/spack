@@ -5,9 +5,10 @@
 
 from spack import *
 
+
 class PyPysolar(PythonPackage):
-    """Pysolar is a collection of Python libraries for simulating the 
-       irradiation of any point on earth by the sun. It includes code 
+    """Pysolar is a collection of Python libraries for simulating the
+       irradiation of any point on earth by the sun. It includes code
        for extremely precise ephemeris calculations, and more."""
 
     homepage = "http://pysolar.readthedocs.io"
@@ -16,3 +17,4 @@ class PyPysolar(PythonPackage):
     version('0.8', sha256='548c05177acd2845143d9624e670635cd3e5c3a63782449ca35e090ca755c617')
 
     depends_on('py-setuptools', type='build')
+    depends_on('python@3:', type=('build', 'run'), when='@0.8:')
