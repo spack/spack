@@ -20,7 +20,7 @@ class Hping(AutotoolsPackage):
     depends_on('tcl')
 
     def setup_build_environment(self, env):
-        env.set('TCLSH', self.spec['tcl'].prefix.bin + '/tclsh')
+        env.set('TCLSH', self.spec['tcl'].prefix.bin.tclsh)
 
     @run_before('configure')
     def filter_before_configure(self):
