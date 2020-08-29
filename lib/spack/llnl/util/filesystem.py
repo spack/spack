@@ -356,14 +356,15 @@ def copy(src, dest, _permissions=False):
 
     for src in glob.iglob(src):
         # Expand dest to its eventual full path if it is a directory.
+        dst = dest
         if os.path.isdir(dest):
-            dest = join_path(dest, os.path.basename(src))
+            dst = join_path(dest, os.path.basename(src))
 
-        shutil.copy(src, dest)
+        shutil.copy(src, dst)
 
         if _permissions:
-            set_install_permissions(dest)
-            copy_mode(src, dest)
+            set_install_permissions(dst)
+            copy_mode(src, dst)
 
 
 def install(src, dest):
@@ -421,13 +422,14 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
     else:
         tty.debug('Copying {0} to {1}'.format(src, dest))
 
+    abs_dest = os.path.abspath(dest)
+    if not abs_dest.endswith(os.path.sep):
+        abs_dest += os.path.sep
+
     for src in glob.iglob(src):
         abs_src = os.path.abspath(src)
         if not abs_src.endswith(os.path.sep):
             abs_src += os.path.sep
-        abs_dest = os.path.abspath(dest)
-        if not abs_dest.endswith(os.path.sep):
-            abs_dest += os.path.sep
 
         # Stop early to avoid unnecessary recursion if being asked to copy
         # from a parent directory.
@@ -435,7 +437,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
             raise ValueError('Cannot copy ancestor directory {0} into {1}'.
                              format(abs_src, abs_dest))
 
-        mkdirp(dest)
+        mkdirp(abs_dest)
 
         for s, d in traverse_tree(abs_src, abs_dest, order='pre',
                                   follow_symlinks=not symlinks,

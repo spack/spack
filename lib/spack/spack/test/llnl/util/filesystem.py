@@ -30,6 +30,8 @@ def stage(tmpdir_factory):
         fs.touchp('source/c/d/5')
         fs.touchp('source/c/d/6')
         fs.touchp('source/c/d/e/7')
+        fs.touchp('source/g/h/8')
+        fs.touchp('source/g/i/9')
 
         # Create symlinks
         os.symlink(os.path.abspath('source/1'), 'source/2')
@@ -61,6 +63,15 @@ class TestCopy:
 
             assert os.path.exists('dest/1')
 
+    def test_glob_src(self, stage):
+        """Test using a glob as the source."""
+
+        with fs.working_dir(str(stage)):
+            fs.copy('source/a/*/*', 'dest')
+
+            assert os.path.exists('dest/2')
+            assert os.path.exists('dest/3')
+
 
 def check_added_exe_permissions(src, dst):
     src_mode = os.stat(src).st_mode
@@ -90,6 +101,17 @@ class TestInstall:
 
             assert os.path.exists('dest/1')
             check_added_exe_permissions('source/1', 'dest/1')
+
+    def test_glob_src(self, stage):
+        """Test using a glob as the source."""
+
+        with fs.working_dir(str(stage)):
+            fs.install('source/a/*/*', 'dest')
+
+            assert os.path.exists('dest/2')
+            assert os.path.exists('dest/3')
+            check_added_exe_permissions('source/a/b/2', 'dest/2')
+            check_added_exe_permissions('source/a/b/3', 'dest/3')
 
 
 class TestCopyTree:
@@ -156,6 +178,15 @@ class TestCopyTree:
             assert os.path.exists('dest/2')
             assert not os.path.islink('dest/2')
 
+    def test_glob_src(self, stage):
+        """Test using a glob as the source."""
+
+        with fs.working_dir(str(stage)):
+            fs.copy_tree('source/g/*', 'dest')
+
+            assert os.path.exists('dest/8')
+            assert os.path.exists('dest/9')
+
 
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
@@ -193,6 +224,15 @@ class TestInstallTree:
 
             assert os.path.exists('dest/2')
             assert not os.path.islink('dest/2')
+
+    def test_glob_src(self, stage):
+        """Test using a glob as the source."""
+
+        with fs.working_dir(str(stage)):
+            fs.install_tree('source/g/*', 'dest')
+
+            assert os.path.exists('dest/8')
+            assert os.path.exists('dest/9')
 
 
 def test_paths_containing_libs(dirs_with_libfiles):
