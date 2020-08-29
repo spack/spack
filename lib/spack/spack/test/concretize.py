@@ -195,7 +195,7 @@ class TestConcretize(object):
             s.satisfies('mpich2') for s in repo.providers_for('mpi@3')
         )
 
-    def test_provides_handles_multiple_providers_of_same_vesrion(self):
+    def test_provides_handles_multiple_providers_of_same_version(self):
         """
         """
         providers = spack.repo.path.providers_for('mpi@3.0')

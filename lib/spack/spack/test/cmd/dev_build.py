@@ -156,8 +156,10 @@ def test_dev_build_fails_no_version(mock_packages):
 def test_dev_build_env(tmpdir, mock_packages, install_mockery,
                        mutable_mock_env_path):
     # setup dev-build-test-install package for dev build
+    # we can concretize outside environment because it has no dev-build deps
     build_dir = tmpdir.mkdir('build')
-    spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
+    spec = spack.spec.Spec('dev-build-test-install@0.0.0',
+                           develop=True).concretized()
     with build_dir.as_cwd():
         with open(spec.package.filename, 'w') as f:
             f.write(spec.package.original_string)
@@ -189,8 +191,10 @@ env:
 def test_dev_build_env_version_mismatch(tmpdir, mock_packages, install_mockery,
                                         mutable_mock_env_path):
     # setup dev-build-test-install package for dev build
+    # we can concretize outside environment because it has no dev-build deps
     build_dir = tmpdir.mkdir('build')
-    spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
+    spec = spack.spec.Spec('dev-build-test-install@0.0.0',
+                           develop=True).concretized()
     with build_dir.as_cwd():
         with open(spec.package.filename, 'w') as f:
             f.write(spec.package.original_string)
@@ -219,15 +223,17 @@ env:
 def test_dev_build_multiple(tmpdir, mock_packages, install_mockery,
                             mutable_mock_env_path, mock_fetch):
     # setup dev-build-test-install package for dev build
+    # don't concretize outside environment -- dev info will be wrong
     leaf_dir = tmpdir.mkdir('leaf')
-    leaf_spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
+    leaf_spec = spack.spec.Spec('dev-build-test-install@0.0.0')
     with leaf_dir.as_cwd():
         with open(leaf_spec.package.filename, 'w') as f:
             f.write(leaf_spec.package.original_string)
 
     # setup dev-build-test-dependent package for dev build
+    # don't concretize outside environment -- dev info will be wrong
     root_dir = tmpdir.mkdir('root')
-    root_spec = spack.spec.Spec('dev-build-test-dependent@0.0.0').concretized()
+    root_spec = spack.spec.Spec('dev-build-test-dependent@0.0.0')
     with root_dir.as_cwd():
         with open(root_spec.package.filename, 'w') as f:
             f.write(root_spec.package.original_string)
@@ -253,6 +259,11 @@ env:
 
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
+            # Do concretization inside environment for dev info
+            leaf_spec.concretize()
+            root_spec.concretize()
+
+            # Do install
             install()
 
     for spec in (leaf_spec, root_spec):

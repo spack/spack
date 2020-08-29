@@ -34,7 +34,6 @@ def filename_dict(file_registry, monkeypatch):
         if not mode == 'w':
             raise RuntimeError('opening mode must be "w" [stringio_open]')
 
-        file_registry[filename] = StringIO()
         try:
             yield file_registry[filename]
         finally:
@@ -63,6 +62,7 @@ def modulefile_content(filename_dict, request):
 
         # Get its filename
         filename = generator.layout.filename
+
         # Retrieve the content
         content = filename_dict[filename].split('\n')
         generator.remove()

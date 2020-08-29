@@ -61,6 +61,25 @@ class Concretizer(object):
         self.abstract_spec = abstract_spec
         self._adjust_target_answer_generator = None
 
+    def concretize_develop(self, spec):
+        if spec.develop:
+            return False
+
+        env = spack.environment.get_env(None, None)
+        dev_info = env.dev_specs if env else {}
+
+        changed = False
+        for dep in spec.traverse(root=True, order='post'):
+            if dep.develop:
+                continue
+            if dep.name in dev_info:
+                dep.develop = True
+                changed = True
+            if any(dep_dep.develop for dep_dep in dep.traverse()):
+                dep.develop = True
+                changed = True
+        return changed
+
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
            packages that coiuld be used to concretize a spec.

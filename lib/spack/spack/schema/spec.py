@@ -96,6 +96,7 @@ properties = {
                     'version': {'type': 'string'},
                 },
             },
+            'develop': {'type': 'boolean'},
             'namespace': {'type': 'string'},
             'parameters': {
                 'type': 'object',

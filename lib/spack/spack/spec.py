@@ -959,7 +959,7 @@ class Spec(object):
 
     def __init__(self, spec_like=None,
                  normal=False, concrete=False, external_path=None,
-                 external_modules=None, full_hash=None):
+                 external_modules=None, full_hash=None, develop=False):
         """Create a new Spec.
 
         Arguments:
@@ -992,6 +992,8 @@ class Spec(object):
         self._dependents = DependencyMap()
         self._dependencies = DependencyMap()
         self.namespace = None
+
+        self.develop = develop
 
         self._hash = None
         self._build_hash = None
@@ -1550,6 +1552,9 @@ class Spec(object):
                 ('extra_attributes', self.extra_attributes)
             ])
 
+        if self.develop:
+            d['develop'] = self.develop
+
         if not self._concrete:
             d['concrete'] = False
 
@@ -1689,6 +1694,8 @@ class Spec(object):
         spec.namespace = node.get('namespace', None)
         spec._hash = node.get('hash', None)
         spec._build_hash = node.get('build_hash', None)
+
+        spec.develop = node.get('develop', False)
 
         if 'version' in node or 'versions' in node:
             spec.versions = vn.VersionList.from_dict(node)
@@ -2069,7 +2076,8 @@ class Spec(object):
                      # flags must be concretized after compiler
                      concretizer.concretize_compiler_flags(self),
                      concretizer.concretize_version(self),
-                     concretizer.concretize_variants(self)))
+                     concretizer.concretize_variants(self),
+                     concretizer.concretize_develop(self)))
             presets[self.name] = self
 
         visited.add(self.name)
@@ -3112,7 +3120,8 @@ class Spec(object):
                        self.concrete != other.concrete and
                        self.external_path != other.external_path and
                        self.external_modules != other.external_modules and
-                       self.compiler_flags != other.compiler_flags)
+                       self.compiler_flags != other.compiler_flags and
+                       self.develop != other.develop)
 
         self._package = None
 
@@ -3142,6 +3151,8 @@ class Spec(object):
         self.external_modules = other.external_modules
         self.extra_attributes = other.extra_attributes
         self.namespace = other.namespace
+
+        self.develop = other.develop
 
         # Cached fields are results of expensive operations.
         # If we preserved the original structure, we can copy them
@@ -3348,7 +3359,8 @@ class Spec(object):
                 self.variants,
                 self.architecture,
                 self.compiler,
-                self.compiler_flags)
+                self.compiler_flags,
+                self.develop)
 
     def eq_node(self, other):
         """Equality with another spec, not including dependencies."""
