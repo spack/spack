@@ -3,6 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+from glob import glob
+from os.path import exists, join
+from os import makedirs
+
 
 class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     """The ncurses (new curses) library is a free software emulation of
@@ -93,10 +98,13 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             make('install')
 
         # fix for packages like hstr that use "#include <ncurses/ncurses.h>"
+        headers = glob(join(prefix.include, '*'))
         for p_dir in ['ncurses', 'ncursesw']:
-            path = join_path(prefix.include, p_dir)
-            mkdirp(path)
-            install(prefix.include.join('*'), path)
+            path = join(prefix.include, p_dir)
+            if not exists(path):
+                makedirs(path)
+            for header in headers:
+                install(header, path)
 
     @property
     def libs(self):
