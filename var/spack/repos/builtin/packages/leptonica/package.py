@@ -20,5 +20,5 @@ class Leptonica(CMakePackage):
     depends_on('zlib')
 
     def cmake_args(self):
-        args = ['-DCMAKE_C_FLAGS=-fPIC']
+        args = ['-DCMAKE_C_FLAGS=' + self.compiler.cc_pic_flag]
         return args
