@@ -436,16 +436,6 @@ def test_pkg_install_paths(install_mockery):
     shutil.rmtree(log_dir)
 
 
-def test_log_install_without_build_files(install_mockery):
-    """Test the installer log function when no build files are present."""
-    # Get a basic concrete spec for the trivial install package.
-    spec = Spec('trivial-install-test-package').concretized()
-
-    # Attempt installing log without the build log file
-    with pytest.raises(IOError, match="No such file or directory"):
-        spack.installer.log(spec.package)
-
-
 def test_log_install_with_build_files(install_mockery, monkeypatch):
     """Test the installer's log function when have build files."""
     config_log = 'config.log'
