@@ -122,7 +122,8 @@ def test_pkg_add(mock_pkg_git_repo):
     with working_dir(mock_pkg_git_repo):
         try:
             assert ('A  pkg-e/package.py' in
-                    git('status', '--short', output=str))
+                    git('-c', 'color.status=off',
+                        'status', '--short', output=str))
         finally:
             shutil.rmtree('pkg-e')
 

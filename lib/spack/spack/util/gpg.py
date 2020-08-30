@@ -199,12 +199,19 @@ class GpgConstants(object):
             return None
 
         result = None
-        for var_run_user in ('/run/user', '/var/run/user'):
+        for var_run in ('/run', '/var/run'):
+            if not os.path.exists(var_run):
+                continue
+
+            var_run_user = os.path.join(var_run, 'user')
+            if not os.path.exists(var_run_user):
+                os.mkdir(var_run_user)
+                os.chmod(var_run_user, 0o777)
+
             user_dir = os.path.join(var_run_user, str(os.getuid()))
+
             try:
-                mkdir = (os.path.isdir(var_run_user) and
-                         not os.path.exists(user_dir))
-                if mkdir:
+                if not os.path.exists(user_dir):
                     os.mkdir(user_dir)
                     os.chmod(user_dir, 0o700)
 
