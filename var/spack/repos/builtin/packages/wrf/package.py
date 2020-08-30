@@ -10,6 +10,7 @@ import tempfile
 from os.path import dirname
 import multiprocessing as mp
 
+
 class Wrf(AutotoolsPackage):
     """The Weather Research and Forecasting (WRF) Model
     is a next-generation mesoscale numerical weather prediction system designed
@@ -17,8 +18,9 @@ class Wrf(AutotoolsPackage):
     """
 
     homepage = "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
-    url      = "http://www2.mmm.ucar.edu/wrf/src/WRFV3.9.1.TAR.gz"
+    url      = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
 
+    version('4.2', sha256='c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706')
     version('4.0', sha256='a5b072492746f96a926badda7e6b44cb0af26695afdd6c029a94de5e1e5eec73')
 
     variant('build_type', default='dmpar',
@@ -33,30 +35,42 @@ class Wrf(AutotoolsPackage):
                     'em_squall2d_x', 'em_squall2d_y', 'em_grav2d_x',
                     'em_seabreeze2d_x', 'em_scm_xy'))
 
+    variant('pnetcdf', default=True,
+            description='Parallel IO support through Pnetcdf libray')
+
     # These patches deal with netcdf & netcdf-fortran being two diff things
     # Patches are based on:
     # https://github.com/easybuilders/easybuild-easyconfigs/blob/master/easybuild/easyconfigs/w/WRF/WRF-3.5_netCDF-Fortran_separate_path.patch
-    patch('patches/4.0/arch.Config.pl.patch')
-    patch('patches/4.0/arch.configure.defaults.patch')
-    patch('patches/4.0/arch.conf_tokens.patch')
-    patch('patches/4.0/arch.postamble.patch')
-    patch('patches/4.0/configure.patch')
-    patch('patches/4.0/external.io_netcdf.makefile.patch')
-    patch('patches/4.0/Makefile.patch')
+    patch('patches/4.0/arch.Config.pl.patch', when='@4.0')
+    patch('patches/4.0/arch.configure.defaults.patch', when='@4.0')
+    patch('patches/4.0/arch.conf_tokens.patch', when='@4.0')
+    patch('patches/4.0/arch.postamble.patch', when='@4.0')
+    patch('patches/4.0/configure.patch', when='@4.0')
+    patch('patches/4.0/external.io_netcdf.makefile.patch', when='@4.0')
+    patch('patches/4.0/Makefile.patch', when='@4.0')
+
+    patch('patches/4.2/arch.Config.pl.patch', when='@4.2')
+    patch('patches/4.2/arch.configure.defaults.patch', when='@4.2')
+    patch('patches/4.2/arch.conf_tokens.patch', when='@4.2')
+    patch('patches/4.2/arch.postamble.patch', when='@4.2')
+    patch('patches/4.2/configure.patch', when='@4.2')
+    patch('patches/4.2/external.io_netcdf.makefile.patch', when='@4.2')
+    patch('patches/4.2/var.gen_be.Makefile.patch', when='@4.2')
+    patch('patches/4.2/Makefile.patch', when='@4.2')
 
     depends_on('mpi')
     # According to:
     # http://www2.mmm.ucar.edu/wrf/users/docs/user_guide_v4/v4.0/users_guide_chap2.html#_Required_Compilers_and_1
     # Section: "Required/Optional Libraries to Download"
-    # parallel netcdf should not be used
-    depends_on('netcdf~parallel-netcdf')
+    depends_on('parallel-netcdf', when='+pnetcdf')
+    depends_on('netcdf-c+parallel-netcdf')
     depends_on('netcdf-fortran')
     depends_on('jasper')
     depends_on('libpng')
     depends_on('zlib')
     depends_on('perl')
     # not sure if +fortran is required, but seems like a good idea
-    depends_on('hdf5+fortran')
+    depends_on('hdf5+fortran+hl+mpi')
     # build script use csh
     depends_on('tcsh', type=('build'))
     # time is not installed on all systems b/c bash provides it
@@ -68,12 +82,22 @@ class Wrf(AutotoolsPackage):
     depends_on('m4', type='build')
     depends_on('libtool', type='build')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('NETCDF', self.spec['netcdf'].prefix)
+    def setup_build_environment(self, spack_env):
+        spack_env.set('NETCDF', self.spec['netcdf-c'].prefix)
+        if '+pnetcdf' in self.spec:
+            spack_env.set('PNETCDF', self.spec['parallel-netcdf'].prefix)
         # This gets used via the applied patch files
         spack_env.set('NETCDFF', self.spec['netcdf-fortran'].prefix)
+        spack_env.set('PHDF5', self.spec['hdf5'].prefix)
+        spack_env.set('JASPERINC', self.spec['jasper'].prefix.include)
+        spack_env.set('JASPERLIB', self.spec['jasper'].prefix.lib)
 
         spack_env.prepend_path('PATH', dirname(self.compiler.fc))
+
+        if self.spec.satisfies('%gcc@10:'):
+            args = '-w -O2 -fallow-argument-mismatch -fallow-invalid-boz'
+            spack_env.set('FCFLAGS', args)
+            spack_env.set('FFLAGS', args)
 
     def patch(self):
         # Let's not assume csh is intalled in bin
@@ -111,17 +135,19 @@ class Wrf(AutotoolsPackage):
 
         nesting_value = nesting_opts[spec.variants['nesting'].value]
 
-        with tempfile.TemporaryFile() as fp:
+        with tempfile.TemporaryFile(mode='w') as fp:
             fp.write(build_type + '\n' + nesting_value + '\n')
             fp.seek(0)
             Executable('./configure')(input=fp)
 
     def build(self, spec, prefix):
         csh = which('csh')
-        csh('./compile', '-j', str(mp.cpu_count()), spec.variants['compile_type'].value)
+        # num of processors for compile is capped at 20
+        csh('./compile', '-j', str(min(mp.cpu_count(), 20)),
+            spec.variants['compile_type'].value)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('main/wrf.exe', prefix.bin)
-        install('main/ndown.exe', prefix.bin)
-        install('main/real.exe', prefix.bin)
+        install('./main/wrf.exe', prefix.bin)
+        install('./main/ndown.exe', prefix.bin)
+        install('./main/real.exe', prefix.bin)
