@@ -16,4 +16,4 @@ class PyPlanet(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-click', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
-    depends_on('py-requests-futures', type=('build', 'run'))
+    depends_on('py-requests-futures@0.9.7', type=('build', 'run'))
