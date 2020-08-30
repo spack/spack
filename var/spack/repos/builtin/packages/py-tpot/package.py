@@ -28,3 +28,4 @@ class PyTpot(PythonPackage):
     depends_on('py-stopit@1.1.1:',          type=('build', 'run'))
     depends_on('py-pandas@0.24.2:',         type=('build', 'run'))
     depends_on('py-joblib@0.13.2:',         type=('build', 'run'))
+    depends_on('py-update-checker',         type='run')
