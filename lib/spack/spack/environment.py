@@ -30,7 +30,6 @@ import spack.stage
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.config
-import spack.fetch_strategy as fetch
 import spack.user_environment as uenv
 from spack.filesystem_view import YamlFilesystemView
 import spack.util.environment
@@ -715,7 +714,8 @@ class Environment(object):
             # Path must exist and spec must include version
             assert Spec(entry['spec']).version
             path = entry['path']
-            path = path if os.path.isabs(path) else os.path.join(self.path, path)
+            path = path if os.path.isabs(path) else os.path.join(
+                self.path, path)
             assert os.path.exists(path)
 
     @property
@@ -1019,7 +1019,8 @@ class Environment(object):
 
         if clone:
             # Not really cloning if it's a url-fetched version
-            abspath = path if os.path.isabs(path) else os.path.join(self.path, path)
+            abspath = path if os.path.isabs(path) else os.path.join(
+                self.path, path)
             spec.package.fetcher.clone(abspath)
 
         # If it wasn't already in the list, append it
@@ -1346,14 +1347,16 @@ class Environment(object):
                 # Use verbose for dev-build packages
                 install_args['verbose'] = True
 
-                # Determine whether source has changed since it was last installed
+                # Determine whether source has changed since it was last
+                # installed
                 force = False
                 _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
                 if record:
-                    source_mtime = fs.last_modification_time_recursive(source_path)
+                    source_mtime = fs.last_modification_time_recursive(
+                        source_path)
                     install_time = record.installation_time
                     if source_mtime > install_time:
-                        force=True
+                        force = True
 
                 # overwrite if the source changed
                 if force:
