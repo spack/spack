@@ -6,7 +6,7 @@
 from spack import *
 
 
-class ByteUnixbench(Package):
+class ByteUnixbench(MakefilePackage):
     """UnixBench is the original BYTE UNIX benchmark suite."""
 
     homepage = "https://code.google.com/archive/p/byte-unixbench"
@@ -17,6 +17,4 @@ class ByteUnixbench(Package):
     build_directory = 'UnixBench'
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            make()
-            install_tree('.', prefix)
+        install_tree('.', prefix)
