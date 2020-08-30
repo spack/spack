@@ -73,7 +73,8 @@ class Concretizer(object):
             if dep.develop:
                 continue
             if dep.name in dev_info:
-                dep.develop = True
+                dep.develop = dev_info[dep.name]['path']
+                dep.constrain(dev_info[dep.name]['spec'])
                 changed = True
             if any(dep_dep.develop for dep_dep in dep.traverse()):
                 dep.develop = True

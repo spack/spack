@@ -2070,14 +2070,14 @@ class Spec(object):
             # still need to select a concrete package later.
             if not self.virtual:
                 changed |= any(
-                    (concretizer.concretize_architecture(self),
+                    (concretizer.concretize_develop(self),
+                     concretizer.concretize_architecture(self),
                      concretizer.concretize_compiler(self),
                      concretizer.adjust_target(self),
                      # flags must be concretized after compiler
                      concretizer.concretize_compiler_flags(self),
                      concretizer.concretize_version(self),
-                     concretizer.concretize_variants(self),
-                     concretizer.concretize_develop(self)))
+                     concretizer.concretize_variants(self)))
             presets[self.name] = self
 
         visited.add(self.name)
