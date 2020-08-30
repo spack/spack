@@ -17,6 +17,7 @@ class PyTpot(PythonPackage):
 
     version('0.11.5', sha256='909be08b29165ce48de5e5d2e3fd73fee9aeeaf1030f2e0912ce0f0bd9c3d2f3')
 
+    depends_on('py-setuptools',     type='build')
     depends_on('python@3.5:',       type=('build', 'run'))
     depends_on('py-deap',           type=('build', 'run'))
     depends_on('py-nose',           type=('build', 'run'))
