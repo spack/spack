@@ -204,13 +204,13 @@ class GpgConstants(object):
                 continue
 
             var_run_user = os.path.join(var_run, 'user')
-            if not os.path.exists(var_run_user):
-                os.mkdir(var_run_user)
-                os.chmod(var_run_user, 0o777)
-
-            user_dir = os.path.join(var_run_user, str(os.getuid()))
-
             try:
+                if not os.path.exists(var_run_user):
+                    os.mkdir(var_run_user)
+                    os.chmod(var_run_user, 0o777)
+
+                user_dir = os.path.join(var_run_user, str(os.getuid()))
+
                 if not os.path.exists(user_dir):
                     os.mkdir(user_dir)
                     os.chmod(user_dir, 0o700)
