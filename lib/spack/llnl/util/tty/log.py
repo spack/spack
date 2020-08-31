@@ -430,7 +430,12 @@ class log_output(object):
             except BaseException:
                 input_stream = None  # just don't forward input if this fails
 
-            self.process = multiprocessing.Process(
+            if sys.version_info >= (3,):
+                process_factory = multiprocessing.get_context('fork')
+            else:
+                process_factory = multiprocessing
+
+            self.process = process_factory.Process(
                 target=_writer_daemon,
                 args=(
                     input_stream, read_fd, write_fd, self.echo, self.log_file,
