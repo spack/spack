@@ -28,6 +28,8 @@ def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
     with open(os.path.join(spec.prefix, spec.package.filename), 'r') as f:
         assert f.read() == spec.package.replacement_string
 
+    assert os.path.exists(str(tmpdir))
+
 
 def test_dev_build_before(tmpdir, mock_packages, install_mockery):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0',
@@ -81,6 +83,7 @@ def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
 
     assert os.path.exists(spec.prefix)
     assert spack.store.db.query(spec, installed=True)
+    assert os.path.exists(str(tmpdir))
 
 
 def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):

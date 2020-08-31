@@ -1309,6 +1309,26 @@ class Environment(object):
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
+    def _get_overwrite_specs(self):
+        ret = []
+        for dag_hash in self.concretized_order:
+            spec = self.specs_by_hash[dag_hash]
+
+            def needs_overwrite(spec):
+                # Overwrite the install if it's a dev build (non-transitive)
+                # and the code has been changed since the last install
+                _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+                if not record or not record.installed:
+                    return False
+                mtime = fs.last_modification_time_recursive(spec.develop)
+                return mtime > record.installation_time
+
+            ret.extend([d.dag_hash() for d in spec.traverse(root=True)
+                        if isinstance(d.develop, six.string_types) and
+                        needs_overwrite(d)])
+
+        return ret
+
     def install(self, user_spec, concrete_spec=None, **install_args):
         """Install a single spec into an environment.
 
@@ -1323,37 +1343,9 @@ class Environment(object):
         # "spec" must be concrete
         package = spec.package
 
-        for dev_pkg, entry in self.dev_specs.items():
-            if spec.name == dev_pkg:
-                # Don't delete dev-build stages
-                install_args['keep_stage'] = True
-
-                # Never pull dev-build packages from binary mirror
-                install_args['use_cache'] = False
-
-                # Use verbose for dev-build packages
-                install_args['verbose'] = True
-
-                # Determine whether source has changed since it was last
-                # installed
-                force = False
-                _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
-                if record:
-                    source_mtime = fs.last_modification_time_recursive(
-                        source_path)
-                    install_time = record.installation_time
-                    if source_mtime > install_time:
-                        force = True
-
-                # overwrite if the source changed
-                if force:
-                    with fs.replace_directory_transaction(record.path):
-                        package.do_install(**install_args)
-                    break
-                package.do_install(**install_args)
-                break
-        else:
-            package.do_install(**install_args)
+        install_args['overwrite'] = install_args.get(
+            'overwrite', []) + self._get_overwrite_specs()
+        package.do_install(**install_args)
 
         if not spec.external:
             # Make sure log directory exists

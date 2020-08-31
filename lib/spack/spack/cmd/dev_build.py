@@ -97,7 +97,6 @@ def dev_build(self, args):
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
-        keep_stage=True,   # don't remove source dir for dev build.
         dirty=args.dirty,
         stop_before=args.before,
         stop_at=args.until)

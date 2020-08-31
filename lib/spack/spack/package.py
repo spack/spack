@@ -1592,6 +1592,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         their build process.
 
         Args:"""
+        # Non-transitive dev specs need to keep the dev stage and be built from
+        # source every time
+        if isinstance(self.spec.develop, six.string_types):
+            kwargs.update({
+                'keep_stage': True,
+                'use_cache': False,
+            })
         builder = PackageInstaller(self)
         builder.install(**kwargs)
 
