@@ -154,14 +154,14 @@ class Hpcc(MakefilePackage):
         self.config['@CC@'] = '{0}'.format(spec['mpi'].mpicc)
 
         # Compiler flags for CPU architecture optimizations
-        if spec.satisfies('%intel') and \
-                (spec.satisfies('^intel-parallel-studio+mpi') or
-                 spec.satisfies('^intel-mpi')):
+        if spec.satisfies('%intel'):
             # with intel-parallel-studio+mpi the '-march' arguments
             # are not passed to icc
             arch_opt = spec.target.optimization_flags(
                 spec.compiler.name, spec.compiler.version)
-            self.config['@CCFLAGS@'] = '-O3 {0}'.format(arch_opt)
+            self.config['@CCFLAGS@'] = \
+                '-O3 -restrict -ansi-alias -ip {0}'.format(arch_opt)
+            self.config['@CCNOOPT@'] = '-restrict'
         self._write_make_arch(spec, prefix)
 
     def build(self, spec, prefix):
