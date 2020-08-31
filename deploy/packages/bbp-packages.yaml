@@ -40,7 +40,7 @@ packages:
       - py-simwriter@1.0.1
       - py-morph-tool@0.2.5
       - py-morphio@2.3.4
-      - py-neurodamus
+      - py-neurodamus@1.3.1
       - py-sonata-network-reduction@0.0.10 ^neuron%intel@19.0.4^py-ipython%gcc
 
   gnu-stable-serial-ophiophob:
