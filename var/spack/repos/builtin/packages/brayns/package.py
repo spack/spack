@@ -56,13 +56,14 @@ class Brayns(CMakePackage):
     patch('fix_forgotten_algorithm.patch', when='@0.8.0')
 
     def patch(self):
-        for cmake_filename in find(self.stage.source_path, "CMakeLists.txt"):
-            filter_file(r'\$\{GLEW_LIBRARIES\}', 'GLEW', cmake_filename)
+        if self.spec.satisfies('%gcc@9:'):
             filter_file(
                 r'-Werror',
                 '-Werror -Wno-error=deprecated-copy',
-                cmake_filename
+                'CMake/common/CommonCompiler.cmake'
             )
+        for cmake_filename in find(self.stage.source_path, "CMakeLists.txt"):
+            filter_file(r'\$\{GLEW_LIBRARIES\}', 'GLEW', cmake_filename)
         if self.spec.satisfies('@1.0:'):
             filter_file(r'cast<const uint8_t \*const',
                         'cast<const uint8_t *',
