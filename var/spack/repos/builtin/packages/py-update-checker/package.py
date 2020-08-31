@@ -16,7 +16,7 @@ class PyUpdateChecker(PythonPackage):
     version('0.17',   sha256='2def8db7f63bd45c7d19df5df570f3f3dfeb1a1f050869d7036529295db10e62')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest',     type='test')
+    depends_on('py-pytest@2.7.3:', type='test')
     depends_on('py-black',      type='test')
     depends_on('py-flake8',     type='test')
     depends_on('python@3.6:',           type=('build', 'run'), when='@0.18.0:')
