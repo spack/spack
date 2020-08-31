@@ -19,8 +19,8 @@ class PyTorchSparse(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
-    extends('py-torch-scatter+cuda', when='+cuda')
-    extends('py-torch-scatter~cuda', when='~cuda')
+    depends_on('py-torch-scatter+cuda', when='+cuda')
+    depends_on('py-torch-scatter~cuda', when='~cuda')
 
     def setup_build_environment(self, env):
         if '+cuda' in self.spec:
