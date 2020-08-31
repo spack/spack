@@ -53,6 +53,7 @@ class Brayns(CMakePackage):
     depends_on('cuda', when='+optix')
 
     patch('brion.patch', when='@develop')
+    patch('fix_forgotten_algorithm.patch', when='@0.8.0')
 
     def patch(self):
         for cmake_filename in find(self.stage.source_path, "CMakeLists.txt"):
