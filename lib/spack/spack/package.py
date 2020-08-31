@@ -916,6 +916,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return stage
 
     def _make_stage(self):
+        # If it's a dev package (not transitively), use a DIY stage object
+        if isinstance(self.spec.develop, six.string_types):
+            return spack.stage.DIYStage(self.spec.develop)
+
         # Construct a composite stage on top of the composite FetchStrategy
         composite_fetcher = self.fetcher
         composite_stage = StageComposite()

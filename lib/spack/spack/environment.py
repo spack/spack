@@ -1325,19 +1325,6 @@ class Environment(object):
 
         for dev_pkg, entry in self.dev_specs.items():
             if spec.name == dev_pkg:
-                dev_spec = entry['spec']
-                if not spec.satisfies(dev_spec, strict=True):
-                    msg = 'Spec %s' % spec
-                    msg += ' does not match development spec %s' % dev_spec
-                    msg += ' for package %s' % spec.name
-                    raise SpackEnvironmentError(msg)
-
-                # setup stage
-                path = entry['path']
-                source_path = path if os.path.isabs(path) else os.path.join(
-                    self.path, path)
-                package.stage = spack.stage.DIYStage(source_path)
-
                 # Don't delete dev-build stages
                 install_args['keep_stage'] = True
 

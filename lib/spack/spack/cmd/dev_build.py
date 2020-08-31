@@ -72,6 +72,14 @@ def dev_build(self, args):
             "spack dev-build spec must have a single, concrete version. "
             "Did you forget a package version number?")
 
+    source_path = args.source_path
+    if source_path is None:
+        source_path = os.getcwd()
+    source_path = os.path.abspath(source_path)
+
+    # Forces the build to run out of the current directory.
+    spec.develop = source_path
+
     spec.concretize()
     package = spack.repo.get(spec)
 
@@ -79,14 +87,6 @@ def dev_build(self, args):
         tty.error("Already installed in %s" % package.prefix)
         tty.msg("Uninstall or try adding a version suffix for this dev build.")
         sys.exit(1)
-
-    source_path = args.source_path
-    if source_path is None:
-        source_path = os.getcwd()
-    source_path = os.path.abspath(source_path)
-
-    # Forces the build to run out of the current directory.
-    package.stage = DIYStage(source_path)
 
     # disable checksumming if requested
     if args.no_checksum:
