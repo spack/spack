@@ -5,6 +5,8 @@
 
 from spack import *
 
+import os
+
 
 class PyTess(PythonPackage):
     """A module for calculating and analyzing Voronoi tessellations"""
@@ -17,3 +19,6 @@ class PyTess(PythonPackage):
 
     depends_on('py-cython', type='build')
     depends_on('py-setuptools', type='build')
+
+    def patch(self):
+        os.unlink("tess/_voro.cpp")
