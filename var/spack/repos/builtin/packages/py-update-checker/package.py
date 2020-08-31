@@ -21,4 +21,4 @@ class PyUpdateChecker(PythonPackage):
     depends_on('py-flake8',     type='test')
     depends_on('python@3.6:',           type=('build', 'run'), when='@0.18.0:')
     depends_on('python@2.7:2.8,3.3:',   type=('build', 'run'), when='@0.17')
-    depends_on('py-requests@2.3.0',     type=('build', 'run'))
+    depends_on('py-requests@2.3.0:',    type=('build', 'run'))
