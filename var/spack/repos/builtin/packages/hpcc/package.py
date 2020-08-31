@@ -34,9 +34,9 @@ class Hpcc(MakefilePackage):
 
     homepage = "http://icl.cs.utk.edu/hpcc"
     url = "http://icl.cs.utk.edu/projectsfiles/hpcc/download/hpcc-1.5.0.tar.gz"
-    hg = "http://hg.code.sf.net/p/hpcc/code"
+    git = "https://github.com/icl-utk-edu/hpcc.git"
 
-    version('develop', hg=hg)
+    version('develop', branch='main')
     version('1.5.0', sha256='0a6fef7ab9f3347e549fed65ebb98234feea9ee18aea0c8f59baefbe3cf7ffb8')
 
     variant(
