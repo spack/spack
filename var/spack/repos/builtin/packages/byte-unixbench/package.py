@@ -17,4 +17,5 @@ class ByteUnixbench(MakefilePackage):
     build_directory = 'UnixBench'
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        with working_dir(self.build_directory):
+            install_tree('.', prefix)
