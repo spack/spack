@@ -7,11 +7,9 @@ from spack import *
 
 import glob
 import tempfile
-from os.path import dirname
-import multiprocessing as mp
 
 
-class Wrf(AutotoolsPackage):
+class Wrf(Package):
     """The Weather Research and Forecasting (WRF) Model
     is a next-generation mesoscale numerical weather prediction system designed
     for both atmospheric research and operational forecasting applications.
@@ -81,6 +79,7 @@ class Wrf(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('m4', type='build')
     depends_on('libtool', type='build')
+    phases = ['configure', 'build', 'install']
 
     def setup_build_environment(self, spack_env):
         spack_env.set('NETCDF', self.spec['netcdf-c'].prefix)
@@ -91,8 +90,6 @@ class Wrf(AutotoolsPackage):
         spack_env.set('PHDF5', self.spec['hdf5'].prefix)
         spack_env.set('JASPERINC', self.spec['jasper'].prefix.include)
         spack_env.set('JASPERLIB', self.spec['jasper'].prefix.lib)
-
-        spack_env.prepend_path('PATH', dirname(self.compiler.fc))
 
         if self.spec.satisfies('%gcc@10:'):
             args = '-w -O2 -fallow-argument-mismatch -fallow-invalid-boz'
@@ -142,8 +139,8 @@ class Wrf(AutotoolsPackage):
 
     def build(self, spec, prefix):
         csh = which('csh')
-        # num of processors for compile is capped at 20
-        csh('./compile', '-j', str(min(mp.cpu_count(), 20)),
+        # num of comple jobs capped at 20 in wrf
+        csh('./compile', '-j', str(min(int(make_jobs), 20)),
             spec.variants['compile_type'].value)
 
     def install(self, spec, prefix):
