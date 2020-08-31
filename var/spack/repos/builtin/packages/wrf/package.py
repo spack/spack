@@ -139,7 +139,7 @@ class Wrf(Package):
 
     def build(self, spec, prefix):
         csh = which('csh')
-        # num of comple jobs capped at 20 in wrf
+        # num of compile jobs capped at 20 in wrf
         csh('./compile', '-j', str(min(int(make_jobs), 20)),
             spec.variants['compile_type'].value)
 
