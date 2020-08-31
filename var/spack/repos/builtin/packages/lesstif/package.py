@@ -20,6 +20,7 @@ class Lesstif(AutotoolsPackage):
     depends_on('libice')
     depends_on('libsm')
     depends_on('libxt')
+    depends_on('libxext')
 
     def patch(self):
         filter_file("ACLOCALDIR=.*",
