@@ -12,7 +12,6 @@ import spack.config
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.repo
-from spack.stage import DIYStage
 
 description = "developer build: build from code in current working directory"
 section = "build"

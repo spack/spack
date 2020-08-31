@@ -73,9 +73,9 @@ class Concretizer(object):
             if dep.develop:
                 continue
             if dep.name in dev_info:
-                root = env.path  # We know it exists if dev_info does
                 path = dev_info[dep.name]['path']
-                path = path if os.path.isabs(path) else os.path.join(root, path)
+                abs_path = path if os.path.isabs(path) else os.path.join(
+                    env.path, path)
                 dep.develop = path
                 dep.constrain(dev_info[dep.name]['spec'])
                 changed = True
