@@ -74,7 +74,7 @@ class Concretizer(object):
                 continue
             if dep.name in dev_info:
                 path = dev_info[dep.name]['path']
-                abs_path = path if os.path.isabs(path) else os.path.join(
+                path = path if os.path.isabs(path) else os.path.join(
                     env.path, path)
                 dep.develop = path
                 dep.constrain(dev_info[dep.name]['spec'])
