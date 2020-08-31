@@ -16,6 +16,7 @@ class Spykfunc(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
 
     version('develop', submodules=True, get_full_repo=True)
+    version('0.15.7pre3', branch='sandbox/matwolf/funcz-259', submodules=True, get_full_repo=True)
     version('0.15.6', tag='v0.15.6', submodules=True, get_full_repo=True)
     version('0.15.3', tag='v0.15.3', submodules=True, get_full_repo=True)
     version('0.15.2', tag='v0.15.2', submodules=True, get_full_repo=True)
@@ -38,7 +39,6 @@ class Spykfunc(PythonPackage):
     depends_on('spark+hadoop@3.0.0:', type='run')
     depends_on('hadoop@:2.999', type='run')
 
-    depends_on('py-bb5', type=('build', 'run'), when='@:0.15.6')
     depends_on('py-docopt', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
     depends_on('py-funcsigs', type=('build', 'run'))
@@ -54,7 +54,10 @@ class Spykfunc(PythonPackage):
     depends_on('py-progress', type=('build', 'run'))
     depends_on('py-pyarrow+parquet@0.15.1', type=('build', 'run'))
     depends_on('py-pyspark@3.0.0', type=('build', 'run'))
-    depends_on('py-sparkmanager', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'), when='@0.15.7:')
+
+    depends_on('py-bb5', type=('build', 'run'), when='@:0.15.6')
+    depends_on('py-sparkmanager', type=('build', 'run'), when='@:0.15.6')
 
     patch('setup-spark3.patch', when='@:0.15.6 ^spark@3:')
     patch('properties-spark3.patch', when='@:0.15.6 ^spark@3:')
@@ -72,8 +75,8 @@ class Spykfunc(PythonPackage):
         if self.spec.satisfies('@:0.15.6'):
             env.prepend_path('PATH',
                              os.path.join(self.spec['py-bb5'].prefix, 'bin'))
-        env.prepend_path('PATH',
-                         os.path.join(self.spec['py-sparkmanager'].prefix,
-                                      'bin'))
+            env.prepend_path('PATH',
+                             os.path.join(self.spec['py-sparkmanager'].prefix,
+                                          'bin'))
         env.prepend_path('PATH',
                          os.path.join(self.spec['spark'].prefix, 'bin'))
