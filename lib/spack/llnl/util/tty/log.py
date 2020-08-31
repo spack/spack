@@ -430,7 +430,7 @@ class log_output(object):
             except BaseException:
                 input_stream = None  # just don't forward input if this fails
 
-            if sys.version_info >= (3,):
+            if sys.version_info >= (3,):  # novm
                 process_factory = multiprocessing.get_context('fork')
             else:
                 process_factory = multiprocessing
