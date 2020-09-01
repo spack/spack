@@ -7,6 +7,7 @@ spack:
   specs:
     - gcc@9.3.0
     - intel@20.0.1
+    - llvm@10.0.0%gcc@9.3.0
     # - intel-parallel-studio@cluster.2020.1
     # - pgi+network+nvidia+mpi@19.10
   concretization: separately
