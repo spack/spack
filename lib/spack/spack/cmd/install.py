@@ -167,7 +167,6 @@ packages. If neither are chosen, don't run tests for any packages."""
     )
     
     add_cdash_args(subparser, False)
-    arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
 
 
 def add_cdash_args(subparser, add_help):
