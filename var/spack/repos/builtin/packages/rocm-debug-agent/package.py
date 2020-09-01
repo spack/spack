@@ -28,7 +28,12 @@ class RocmDebugAgent(CMakePackage):
 
     depends_on("elfutils", type='link')
 
-    root_cmakelists_dir = 'src'
+    @property
+    def root_cmakelists_dir(self):
+        if '@3.5.0' in self.spec:
+            return 'src'
+        else:
+            return self.stage.source_path
 
     def cmake_args(self):
         spec = self.spec
