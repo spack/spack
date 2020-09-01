@@ -16,7 +16,7 @@ class Spykfunc(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
 
     version('develop', submodules=True, get_full_repo=True)
-    version('0.15.7pre3', branch='sandbox/matwolf/funcz-259', submodules=True, get_full_repo=True)
+    version('0.15.7', tag='v0.15.7', submodules=True, get_full_repo=True)
     version('0.15.6', tag='v0.15.6', submodules=True, get_full_repo=True)
     version('0.15.3', tag='v0.15.3', submodules=True, get_full_repo=True)
     version('0.15.2', tag='v0.15.2', submodules=True, get_full_repo=True)
