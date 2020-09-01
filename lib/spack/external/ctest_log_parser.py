@@ -70,12 +70,14 @@ from __future__ import division
 
 import re
 import math
-import multiprocessing
 import time
 from contextlib import contextmanager
 
 from six import StringIO
 from six import string_types
+
+from llnl.util.lang import ForkContext
+
 
 class prefilter(object):
     """Make regular expressions faster with a simple prefiltering predicate.
@@ -429,7 +431,7 @@ class CTestLogParser(object):
         lines = [line for line in stream]
 
         if jobs is None:
-            jobs = multiprocessing.cpu_count()
+            jobs = ForkContext.cpu_count()
 
         # single-thread small logs
         if len(lines) < 10 * jobs:
@@ -444,7 +446,7 @@ class CTestLogParser(object):
                 offset += len(chunk)
 
             # create a pool and farm out the matching job
-            pool = multiprocessing.Pool(jobs)
+            pool = ForkContext.Pool(jobs)
             try:
                 # this is a workaround for a Python bug in Pool with ctrl-C
                 results = pool.map_async(_parse_unpack, args, 1).get(9999999)

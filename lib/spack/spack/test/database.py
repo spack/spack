@@ -23,7 +23,7 @@ from jsonschema import validate
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
-from llnl.util.lang import ForkProcess
+from llnl.util.lang import ForkContext
 
 import spack.repo
 import spack.store
@@ -524,7 +524,7 @@ def test_030_db_sanity_from_another_process(mutable_database):
         with mutable_database.write_transaction():
             _mock_remove('mpileaks ^zmpi')
 
-    p = ForkProcess(target=read_and_modify, args=())
+    p = ForkContext.Process(target=read_and_modify, args=())
     p.start()
     p.join()
 

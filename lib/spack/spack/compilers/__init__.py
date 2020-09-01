@@ -8,7 +8,6 @@ system and configuring Spack to use multiple compilers.
 """
 import collections
 import itertools
-import multiprocessing.pool
 import os
 import six
 
@@ -212,7 +211,7 @@ def find_compilers(path_hints=None):
         arguments.extend(arguments_to_detect_version_fn(o, search_paths))
 
     # Here we map the function arguments to the corresponding calls
-    tp = multiprocessing.pool.ThreadPool()
+    tp = llnl.util.lang.ForkContext.pool.ThreadPool()
     try:
         detected_versions = tp.map(detect_version, arguments)
     finally:

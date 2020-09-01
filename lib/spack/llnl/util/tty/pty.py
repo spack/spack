@@ -16,7 +16,6 @@ from __future__ import print_function
 
 import os
 import signal
-import multiprocessing
 import re
 import sys
 import termios
@@ -24,7 +23,7 @@ import time
 import traceback
 
 import llnl.util.tty.log as log
-from llnl.util.lang import ForkProcess
+from llnl.util.lang import ForkContext
 
 from spack.util.executable import which
 
@@ -234,7 +233,7 @@ class PseudoShell(object):
         ``minion_function``.
 
         """
-        self.proc = ForkProcess(
+        self.proc = ForkContext.Process(
             target=PseudoShell._set_up_and_run_controller_function,
             args=(self.controller_function, self.minion_function,
                   self.controller_timeout, self.sleep_time),
@@ -299,8 +298,8 @@ class PseudoShell(object):
         pty_fd = os.open(pty_name, os.O_RDWR)
         os.close(pty_fd)
 
-        ready = multiprocessing.Value('i', False)
-        minion_process = ForkProcess(
+        ready = ForkContext.Value('i', False)
+        minion_process = ForkContext.Process(
             target=PseudoShell._set_up_and_run_minion_function,
             args=(pty_name, sys.stdout.fileno(), sys.stderr.fileno(),
                   ready, minion_function),

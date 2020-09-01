@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import codecs
 import errno
-import multiprocessing.pool
 import os
 import os.path
 import re
@@ -32,6 +31,7 @@ except ImportError:
         pass
 
 from llnl.util.filesystem import mkdirp
+from llnl.util.lang import ForkContext
 import llnl.util.tty as tty
 
 import spack.cmd
@@ -432,7 +432,7 @@ def spider(root_urls, depth=0, concurrency=32):
         root = url_util.parse(root)
         spider_args.append((root, collect))
 
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+    tp = ForkContext.pool.ThreadPool(processes=concurrency)
     try:
         while current_depth <= depth:
             tty.debug("SPIDER: [depth={0}, max_depth={1}, urls={2}]".format(

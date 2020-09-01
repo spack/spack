@@ -8,7 +8,7 @@ This implements a parallel map operation but it can accept more values
 than multiprocessing.Pool.apply() can.  For example, apply() will fail
 to pickle functions if they're passed indirectly as parameters.
 """
-from multiprocessing import Semaphore, Value
+from llnl.util.lang import ForkContext
 
 __all__ = ['Barrier']
 
@@ -24,10 +24,10 @@ class Barrier:
     def __init__(self, n, timeout=None):
         self.n = n
         self.to = timeout
-        self.count = Value('i', 0)
-        self.mutex = Semaphore(1)
-        self.turnstile1 = Semaphore(0)
-        self.turnstile2 = Semaphore(1)
+        self.count = ForkContext.Value('i', 0)
+        self.mutex = ForkContext.Semaphore(1)
+        self.turnstile1 = ForkContext.Semaphore(0)
+        self.turnstile2 = ForkContext.Semaphore(1)
 
     def wait(self):
         if not self.mutex.acquire(timeout=self.to):
