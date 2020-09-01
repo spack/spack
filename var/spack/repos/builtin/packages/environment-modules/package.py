@@ -64,11 +64,17 @@ class EnvironmentModules(Package):
             # It looks for tclConfig.sh
             "--with-tcl=" + tcl_lib_dir,
             "--with-tcl-ver={0}.{1}".format(*tcl.version.version[0:2]),
-            '--disable-dependency-tracking',
-            '--disable-silent-rules',
             '--disable-versioning',
             '--datarootdir=' + prefix.share
         ]
+
+        # ./configure script on version 4.5.2 breaks when specific options are
+        # set (see https://github.com/cea-hpc/modules/issues/354)
+        if not spec.satisfies('@4.5.2'):
+            config_args.extend([
+                '--disable-dependency-tracking',
+                '--disable-silent-rules'
+            ])
 
         if '~X' in spec:
             config_args = ['--without-x'] + config_args
