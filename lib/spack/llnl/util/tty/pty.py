@@ -16,6 +16,7 @@ from __future__ import print_function
 
 import os
 import signal
+import multiprocessing
 import re
 import sys
 import termios
@@ -298,7 +299,7 @@ class PseudoShell(object):
         pty_fd = os.open(pty_name, os.O_RDWR)
         os.close(pty_fd)
 
-        ready = fork_context.Value('i', False)
+        ready = multiprocessing.Value('i', False)
         minion_process = fork_context.Process(
             target=PseudoShell._set_up_and_run_minion_function,
             args=(pty_name, sys.stdout.fileno(), sys.stderr.fileno(),
