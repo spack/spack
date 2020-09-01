@@ -10,12 +10,12 @@
 import os
 import sys
 import datetime
-from pathlib import Path
 
 import llnl.util.tty as tty
 
 
 class AzureBlob:
+
     def __init__(self, url):
         from azure.storage.blob import BlobServiceClient
         self.url = url
@@ -39,19 +39,17 @@ class AzureBlob:
 
     def get_container_blob_path(self):
         blob_path = self.url.path
-        p = Path(blob_path)
-        container_name = p.parts[1]
-        blob_path = str(Path(*p.parts[2:]))
+        l = blob_path.split('/')
+        container_name = l[1]
+        blob_path = os.path.join(*l[2:])
         tty.debug("container_name = {}, blob_path = {}".format(container_name, blob_path))
         return (container_name, blob_path)
-
 
     def is_https(self):
         if 'https' in self.connect_str:
             return True
         else:
             return False
-
 
     def azure_container_exists(self):
         try:
@@ -62,7 +60,6 @@ class AzureBlob:
             return False
         return True
 
-
     def azure_blob_exists(self):
         try:
            blob_client = self.blob_service_client.get_blob_client(container=self.container_name, blob=self.blob_path)
@@ -70,7 +67,6 @@ class AzureBlob:
         except Exception as ex:
             return False
         return True
-
 
     def azure_upload_to_blob(self, local_file_path):
         from azure.storage.blob import ContentSettings
@@ -85,7 +81,6 @@ class AzureBlob:
         except Exception as ex:
            tty.error("{}, Could not upload {} to azure blob storage".format(ex, local_file_path))
 
-
     def azure_list_blobs(self):
         try:
            container_client = self.blob_service_client.get_container_client(self.container_name)
@@ -97,7 +92,6 @@ class AzureBlob:
            return blob_list
         except Exception as ex:
            tty.error("{}, Could not get a list of azure blobs".format(ex))            
-
 
     def azure_url_sas(self):
         from azure.storage.blob import ResourceTypes, AccountSasPermissions, 
