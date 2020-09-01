@@ -170,15 +170,27 @@ class Cuda(Package):
             pass
 
     @property
-    def libs(self):
-        libs = find_libraries('libcudart', root=self.prefix, shared=True,
-                              recursive=True)
-
+    def driver_libs(self):
+        """
+        List of driver libraries, which are shipped as a stub library.
+        Note: typically you want to use runtime libs instead.
+        """
+        libs = find_libraries('libcuda', root=self.prefix,
+                              shared=True, recursive=True)
         filtered_libs = []
-        # CUDA 10.0 provides Compatability libraries for running newer versions
-        # of CUDA with older drivers. These do not work with newer drivers.
+
+        # Filter out compat libs
         for lib in libs:
             parts = lib.split(os.sep)
-            if 'compat' not in parts and 'stubs' not in parts:
+            if 'compat' not in parts:
                 filtered_libs.append(lib)
+
         return LibraryList(filtered_libs)
+
+    @property
+    def libs(self):
+        """
+        List of runtime libraries
+        """
+        return find_libraries('libcudart', root=self.prefix,
+                              shared=True, recursive=True)
