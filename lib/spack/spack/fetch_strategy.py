@@ -835,6 +835,14 @@ class GitFetchStrategy(VCSFetchStrategy):
         with working_dir(path):
             git(*checkout_args)
 
+        # checkout submodules if necessary
+        if self.submodules:
+            with working_dir(path):
+                args = ['submodule', 'update', '--init', '--recursive']
+                if not spack.config.get('config:debug'):
+                    args.insert(1, '--quiet')
+                git(*args)
+
     @_needs_stage
     def fetch(self):
         if self.stage.expanded:
