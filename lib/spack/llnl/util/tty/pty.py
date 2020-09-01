@@ -300,7 +300,7 @@ class PseudoShell(object):
         os.close(pty_fd)
 
         ready = multiprocessing.Value('i', False)
-        minion_process = fork_context.Process(
+        minion_process = multiprocessing.Process(
             target=PseudoShell._set_up_and_run_minion_function,
             args=(pty_name, sys.stdout.fileno(), sys.stderr.fileno(),
                   ready, minion_function),
