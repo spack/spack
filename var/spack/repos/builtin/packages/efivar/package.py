@@ -22,7 +22,5 @@ class Efivar(MakefilePackage):
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             mkdirp(prefix.lib)
-            files = glob.glob('*.so*')
-            for f in files:
-                install(f, prefix.lib)
+            install('*.so*', prefix.lib)
             install_tree('include/efivar', prefix.include)
