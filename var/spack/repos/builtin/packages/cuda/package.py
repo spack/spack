@@ -123,6 +123,20 @@ class Cuda(Package):
     def setup_run_environment(self, env):
         env.set('CUDA_HOME', self.prefix)
 
+    def setup_dependent_package(self, module, dependent_spec):
+        # define the path to the driver lib separately.
+        libs = find_libraries('libcuda', root=self.prefix,
+                              shared=True, recursive=True)
+        filtered_libs = []
+
+        # Filter out compat libs
+        for lib in libs:
+            parts = lib.split(os.sep)
+            if 'compat' not in parts:
+                filtered_libs.append(lib)
+
+        self.spec.driver_libs = LibraryList(filtered_libs)
+
     def install(self, spec, prefix):
         if os.path.exists('/tmp/cuda-installer.log'):
             try:
@@ -168,24 +182,6 @@ class Cuda(Package):
             os.remove('/tmp/cuda-installer.log')
         except OSError:
             pass
-
-    @property
-    def driver_libs(self):
-        """
-        List of driver libraries, which are shipped as a stub library.
-        Note: typically you want to use runtime libs instead.
-        """
-        libs = find_libraries('libcuda', root=self.prefix,
-                              shared=True, recursive=True)
-        filtered_libs = []
-
-        # Filter out compat libs
-        for lib in libs:
-            parts = lib.split(os.sep)
-            if 'compat' not in parts:
-                filtered_libs.append(lib)
-
-        return LibraryList(filtered_libs)
 
     @property
     def libs(self):
