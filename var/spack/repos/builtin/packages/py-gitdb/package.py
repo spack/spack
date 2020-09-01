@@ -13,7 +13,7 @@ class PyGitdb(PythonPackage):
     homepage = "https://gitdb.readthedocs.io"
     url      = "https://pypi.io/packages/source/g/gitdb/gitdb-4.0.5.tar.gz"
 
-    version('4.0.5', sha256='c9e1f2d0db7ddb9a704c2a0217be31214e91a4fe1dea1efad19ae42ba0c285c')
+    version('4.0.5', sha256='c9e1f2d0db7ddb9a704c2a0217be31214e91a4fe1dea1efad19ae42ba0c285c9')
 
     depends_on('python@3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
