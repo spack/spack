@@ -75,16 +75,11 @@ class Rocblas(CMakePackage):
             '-DTensile_COMPILER=hipcc',
             '-DTensile_ARCHITECTURE={0}'.format(archs),
             '-DTensile_LOGIC=asm_full',
-            '-DTensile_CODE_OBJECT_VERSION=V3'
+            '-DTensile_CODE_OBJECT_VERSION=V3',
+            '-DBUILD_WITH_TENSILE_HOST=OFF'
         ]
 
-        if '@3.5.0' in self.spec:
-            args.append('-DBUILD_WITH_TENSILE_HOST=OFF')
-
         if '@3.7.0' in self.spec:
-            args.extend([
-                '-DTensile_LIBRARY_FORMAT=msgpack',
-                '-DBUILD_WITH_TENSILE_HOST=ON'
-            ])
+            args.append('-DTensile_LIBRARY_FORMAT=msgpack')
 
         return args
