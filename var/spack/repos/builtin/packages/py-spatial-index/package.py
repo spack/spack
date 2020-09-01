@@ -18,7 +18,7 @@ class PySpatialIndex(PythonPackage):
     patch("fix-cmake.patch", when="@0.0.1")
 
     depends_on('cmake@3.2:', type='build')
-    depends_on('boost@1.65:', type='build')
+    depends_on('boost@1.65:1.70', type='build')
     depends_on('py-setuptools', type='build')
 
     depends_on('py-numpy@1.13.1:', type='run')
