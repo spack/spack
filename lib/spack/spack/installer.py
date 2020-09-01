@@ -1566,7 +1566,8 @@ class PackageInstaller(object):
                     if rec and rec.installed:
                         if rec.installation_time < self.overwrite_time:
                             if os.path.exists(rec.path):
-                                with fs.replace_directory_transaction(rec.path):
+                                with fs.replace_directory_transaction(
+                                        rec.path):
                                     self._install_task(task, **kwargs)
                             else:
                                 tty.debug("Missing installation to overwrite")

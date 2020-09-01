@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+import llnl.util.tty as tty
+
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
@@ -16,10 +18,11 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument('-p', '--path',
-                           help='Source location of package')
-    subparser.add_argument('--no-clone', action='store_true',
-                           help='The package already exists at the source path')
+    subparser.add_argument(
+        '-p', '--path', help='Source location of package')
+    subparser.add_argument(
+        '--no-clone', action='store_true',
+        help='Do not clone. The package already exists at the source path')
     arguments.add_common_arguments(subparser, ['spec'])
 
 
