@@ -38,7 +38,7 @@ class MiopenHip(CMakePackage):
         args = [
             '-DMIOPEN_BACKEND=HIP',
             '-DCMAKE_CXX_COMPILER={}/bin/clang++'
-                .format(self.spec['llvm-amdgpu'].prefix),
+            .format(self.spec['llvm-amdgpu'].prefix),
             '-DBoost_USE_STATIC_LIBS=Off'
         ]
         return args

@@ -38,9 +38,9 @@ class MiopenOpencl(CMakePackage):
         args = [
             '-DMIOPEN_BACKEND=OpenCL',
             '-DMIOPEN_HIP_COMPILER={}/bin/clang++'
-                .format(self.spec['llvm-amdgpu'].prefix),
+            .format(self.spec['llvm-amdgpu'].prefix),
             '-DHIP_CXX_COMPILER={}/bin/clang++'
-                .format(self.spec['llvm-amdgpu'].prefix),
+            .format(self.spec['llvm-amdgpu'].prefix),
             '-DBoost_USE_STATIC_LIBS=Off'
         ]
         return args
