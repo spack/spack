@@ -22,3 +22,11 @@ class BraynsTopologyviewer(CMakePackage):
     depends_on('ninja', type='build')
     depends_on('brayns')
     depends_on('highfive@2.1: +boost ~mpi')
+
+    def patch(self):
+        if self.spec.satisfies('%gcc@9:'):
+            filter_file(
+                r'-Werror',
+                '-Werror -Wno-error=pessimizing-move',
+                'CMake/common/CommonCompiler.cmake'
+            )
