@@ -161,11 +161,10 @@ packages. If neither are chosen, don't run tests for any packages."""
         help="Show usage instructions for CDash reporting"
     )
     subparser.add_argument(
-    '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
-    help="""assume "yes" is the answer to every confirmation request
-    to run completely non-interactively, also specify--no-checksum."""
+        '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
+        help="""assume "yes" is the answer to every confirmation request
+        to run completely non-interactively, also specify--no-checksum."""
     )
-    
     add_cdash_args(subparser, False)
 
 
