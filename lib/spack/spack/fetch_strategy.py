@@ -322,6 +322,11 @@ class URLFetchStrategy(FetchStrategy):
                 continue
 
             try:
+                if url[0:5] == 'azure':
+                    import spack.util.azure_blob as azure_blob_util
+                    parsed_url = urllib_parse.urlparse(url)
+                    azureblob = azure_blob_util.AzureBlob(parsed_url)
+                    url = azureblob.azure_url_sas()
                 partial_file, save_file = self._fetch_from_url(url)
                 if save_file and (partial_file is not None):
                     os.rename(partial_file, save_file)
@@ -1645,6 +1650,7 @@ def from_url_scheme(url, *args, **kwargs):
             'https': 'url',
             'ftp': 'url',
             'ftps': 'url',
+            'azure': 'url',
         })
 
     scheme = parsed_url.scheme
