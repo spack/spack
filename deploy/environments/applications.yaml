@@ -61,4 +61,4 @@ spack:
     - synapsetool@0.5.9
     - touchdetector@5.4.0
     - ultraliser
-    - zee@develop
+    # - zee@develop
