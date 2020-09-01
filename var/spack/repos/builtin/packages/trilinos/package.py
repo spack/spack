@@ -198,8 +198,6 @@ class Trilinos(CMakePackage):
     # External package options
     variant('dtk',          default=False,
             description='Enable DataTransferKit')
-    variant('fortrilinos',  default=False,
-            description='Enable ForTrilinos')
     variant('mesquite',     default=False,
             description='Enable Mesquite')
 
@@ -220,11 +218,6 @@ class Trilinos(CMakePackage):
              placement='DataTransferKit',
              submodules=True,
              when='+dtk @develop')
-    resource(name='fortrilinos',
-             git='https://github.com/trilinos/ForTrilinos.git',
-             tag='develop',
-             placement='packages/ForTrilinos',
-             when='+fortrilinos')
     resource(name='mesquite',
              url='https://github.com/trilinos/mesquite/archive/trilinos-release-12-12-1.tar.gz',
              sha256='e0d09b0939dbd461822477449dca611417316e8e8d8268fd795debb068edcbb5',
@@ -297,9 +290,6 @@ class Trilinos(CMakePackage):
     conflicts('+dtk', when='~tpetra')
     # Only allow DTK with Trilinos 12.14 and develop
     conflicts('+dtk', when='@0:12.12.99,master')
-    conflicts('+fortrilinos', when='~fortran')
-    conflicts('+fortrilinos', when='@:99')
-    conflicts('+fortrilinos', when='@master')
     # Only allow Mesquite with Trilinos 12.12 and up, and develop
     conflicts('+mesquite', when='@0:12.10.99,master')
     # Can only use one type of SuperLU
