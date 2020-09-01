@@ -124,14 +124,16 @@ class NaluWind(CMakePackage):
         else:
             options.append('-DENABLE_TESTS:BOOL=OFF')
 
-        if self.spec.variants['test_tol'].value is not 'default':
+        if self.spec.variants['test_tol'].value != 'default':
             try:
                 test_tol = float(self.spec.variants['test_tol'].value)
                 if test_tol <= 0.0:
-                    raise  ValueError
-                options.append('-DTEST_TOLERACE:STRING={tol}'.format(tol=test_tol))
+                    raise ValueError
+                options.append('-DTEST_TOLERACE:STRING={tol}'.format(
+                    tol=test_tol))
             except ValueError:
-                print("Specified test_tol must be a positive float. Using the default.")
+                print("Specified test_tol must be a positive float. "
+                      "Using the default.")
 
         return options
 
