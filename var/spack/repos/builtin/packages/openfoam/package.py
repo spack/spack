@@ -914,11 +914,10 @@ class OpenfoamArch(object):
         # Build WM_OPTIONS
         # ----
         # WM_LABEL_OPTION=Int$WM_LABEL_SIZE
-        # WM_OPTIONS=$WM_ARCH \
-        #     $WM_COMPILER$WM_PRECISION_OPTION \
-        #     $WM_LABEL_OPTION$WM_COMPILE_OPTION
+        # WM_OPTIONS_BASE=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION
+        # WM_OPTIONS=$WM_OPTIONS_BASE$WM_LABEL_OPTION$WM_COMPILE_OPTION
         # or
-        # WM_OPTIONS=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_COMPILE_OPTION
+        # WM_OPTIONS=$WM_OPTIONS_BASE$WM_COMPILE_OPTION
         # ----
         self.options = ''.join([
             self.arch,
