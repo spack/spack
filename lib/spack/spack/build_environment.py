@@ -45,7 +45,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, ForkProcess
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
@@ -886,12 +886,7 @@ def fork(pkg, function, dirty, fake):
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
 
-        if sys.version_info >= (3,):  # novm
-            p = multiprocessing.get_context('fork').Process(
-                target=child_process, args=(child_pipe, input_stream))
-        else:
-            p = multiprocessing.Process(
-                target=child_process, args=(child_pipe, input_stream))
+        p = ForkProcess(target=child_process, args=(child_pipe, input_stream))
         p.start()
 
     except InstallError as e:
