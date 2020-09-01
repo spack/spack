@@ -7,7 +7,7 @@ from spack import *
 
 
 class Ldak(Package):
-    """LDAK is a software package for analyzing GWAS data."""
+    """LDAK is a software package for analyzing GWAS data"""
 
     homepage = "http://dougspeed.com/ldak/"
     url      = "http://dougspeed.com/wp-content/uploads/source.zip"
