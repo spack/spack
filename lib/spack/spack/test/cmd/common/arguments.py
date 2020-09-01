@@ -8,6 +8,7 @@ import multiprocessing
 
 import pytest
 
+
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
