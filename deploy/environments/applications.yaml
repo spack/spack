@@ -10,7 +10,7 @@ spack:
   specs:
     - archngv@0.0.0
     - asciitoh5@1.0
-    - brainbuilder@0.13.1
+    - brainbuilder@0.14.0
     - brayns@1.0.1%gcc +brion ^brion@3.1.0 ^ospray%intel
     - brayns-brainatlas@0.1.0%gcc ^brayns@0.8.0 ^ospray@1.7.3%intel
     - brayns%gcc +opendeck +brion ^brion@3.1.0 ^ospray@1.7.3%intel
@@ -25,8 +25,8 @@ spack:
     - model-neocortex%intel
     - nest@2.18.0
     - nest@2.20.0
-    - neurodamus-core+common@2.11.0
-    - neurodamus-core~common@2.11.0%intel
+    - neurodamus-core+common@2.11.1
+    - neurodamus-core~common@2.11.1%intel
     - neurodamus-hippocampus+coreneuron@0.4%intel
     - neurodamus-hippocampus+coreneuron@0.4%intel^coreneuron+knl
     - neurodamus-mousify+coreneuron@0.3%intel
@@ -34,31 +34,32 @@ spack:
     - neurodamus-neocortex+coreneuron@0.3%intel^coreneuron+knl
     - neurodamus-thalamus+coreneuron@0.3%intel
     - neurodamus-thalamus+coreneuron@0.3%intel^coreneuron+knl
-    - parquet-converters@0.5.5
+    - parquet-converters@0.5.7
     - placement-algorithm@2.1.0
-    - psp-validation@0.3.0
+    - psp-validation@0.3.1
     - py-basalt@0.2.9
     - py-bbp-analysis-framework@1.6.42
     - py-bglibpy@4.2.23%gcc ^neuron%intel
     - py-bluepy@0.14.8
     - py-bluepymm@0.7.15%gcc ^neuron%intel
     - py-bluepyopt@1.9.27%gcc ^neuron%intel
+    - py-bluepysnap@0.6.1
     - py-efel@3.0.80
-    - py-entity-management@1.1.3
+    - py-entity-management@1.2.2
     - py-jupyter-notebook@4.2.3
     - py-morphio@2.3.4
     - py-morphology-repair-workflow@1.0.4
     - py-morph-tool@0.2.5
-    - py-neurodamus
+    - py-neurodamus@1.3.1
     - py-pytouchreader@1.4.6
     - py-simwriter@1.0.1
-    - py-sonata-network-reduction@0.0.9%gcc ^neuron%intel^py-ipython%gcc
+    - py-sonata-network-reduction@0.0.10%gcc ^neuron%intel^py-ipython%gcc
     - regiodesics@0.1.2
     - reportinglib%intel
     - spatial-index@0.2.1
-    - spykfunc@0.15.6 ^spark@3.0.0 ^py-pyspark@3.0.0
+    - spykfunc@0.15.7
     - steps@3.5.0b+petsc
-    - synapsetool@0.5.9
+    - synapsetool@0.6.0
     - touchdetector@5.4.0
     - ultraliser
     # - zee@develop
