@@ -154,7 +154,7 @@ check_call(["concretize", "-e", args.env, args.specfile, installfile.name, userf
 try:
     with installfile as fd:
         graph = json.load(fd)
-except json.decoder.JSONDecodeError:
+except ValueError:
     sys.exit(1)
 
 robert = Builder(graph, args.processes)
