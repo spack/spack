@@ -31,10 +31,10 @@ class AzureBlob:
                 tty.warn("The container {} does not exist, it will be created".format(self.container_name))
                 self.blob_service_client.create_container(self.container_name)
         else:
-            tty.error("Error: Environmental variable 
-                      AZURE_STORAGE_CONNECTION_STRING is not defined, it is 
-                      required if you want to use Azure Blob storage as an 
-                      spack buildcache")
+            tty.error("Error: Environmental variable \ 
+ AZURE_STORAGE_CONNECTION_STRING is not defined, it is \ 
+ required if you want to use Azure Blob storage as an \ 
+ spack buildcache")
            sys.exit(1)
 
     def get_container_blob_path(self):
@@ -42,7 +42,8 @@ class AzureBlob:
         l = blob_path.split('/')
         container_name = l[1]
         blob_path = os.path.join(*l[2:])
-        tty.debug("container_name = {}, blob_path = {}".format(container_name, blob_path))
+        tty.debug("container_name = {}, blob_path = {}".
+                   format(container_name, blob_path))
         return (container_name, blob_path)
 
     def is_https(self):
@@ -53,7 +54,8 @@ class AzureBlob:
 
     def azure_container_exists(self):
         try:
-            ttt = self.blob_service_client.get_container_client(self.container_name).list_blobs()
+            ttt = (self.blob_service_client.
+                   get_container_client(self.container_name).list_blobs())
             for blob in ttt:
                 pass
         except Exception as ex:
@@ -62,7 +64,8 @@ class AzureBlob:
 
     def azure_blob_exists(self):
         try:
-           blob_client = self.blob_service_client.get_blob_client(container=self.container_name, blob=self.blob_path)
+           blob_client = (self.blob_service_client.
+             get_blob_client(container=self.container_name, blob=self.blob_path))
            blob_properties = blob_client.get_blob_properties()
         except Exception as ex:
             return False
@@ -75,15 +78,19 @@ class AzureBlob:
         else:
            contentsettings = ContentSettings()
         try:
-           blob_client = self.blob_service_client.get_blob_client(container=self.container_name, blob=self.blob_path)
+           blob_client = (self.blob_service_client.
+              get_blob_client(container=self.container_name, blob=self.blob_path)
            with open(local_file_path, "rb") as data:
-               blob_client.upload_blob(data, overwrite=True, content_settings=contentsettings)
+               (blob_client.
+           upload_blob(data, overwrite=True, content_settings=contentsettings))
         except Exception as ex:
-           tty.error("{}, Could not upload {} to azure blob storage".format(ex, local_file_path))
+           tty.error("{}, Could not upload {} to azure blob storage".
+           format(ex, local_file_path))
 
     def azure_list_blobs(self):
         try:
-           container_client = self.blob_service_client.get_container_client(self.container_name)
+           container_client = (self.blob_service_client.
+                              get_container_client(self.container_name))
            blob_gen = container_client.list_blobs()
            blob_list=[]
            for blob in blob_gen:
@@ -105,7 +112,8 @@ class AzureBlob:
                         expiry=datetime.datetime.utcnow() + 
                         datetime.timedelta(minutes=5))
         except Exception as ex:
-            tty.error("{}, Could not generate a sas token for Azure blob storage".format(ex))
+            tty.error("{}, Could not generate a sas token for Azure blob \
+storage".format(ex))
         url_str = self.url.geturl()
         url_str = url_str.replace('azure', 'https', 1)
         url_sas_str = url_str + '?' + sas_token 
