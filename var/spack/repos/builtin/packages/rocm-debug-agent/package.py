@@ -21,12 +21,17 @@ class RocmDebugAgent(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
+    depends_on("elfutils", type='link')
 
     for ver in ['3.5.0', '3.7.0']:
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
         depends_on('hsakmt-roct@' + ver, type='link', when='@' + ver)
 
-    depends_on("elfutils", type='link')
+    depends_on('rocm-dbgapi@3.7.0', type='link', when='@3.7.0')
+    depends_on('hip@3.7.0', when='@3.7.0')
+
+    # https://github.com/ROCm-Developer-Tools/rocr_debug_agent/pull/4
+    patch('0001-Drop-overly-strict-Werror-flag.patch', when='@3.7.0')
 
     @property
     def root_cmakelists_dir(self):
@@ -37,8 +42,17 @@ class RocmDebugAgent(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = [
-            '-DCMAKE_PREFIX_PATH={0}/include/hsa;{1}/include,'.
-            format(spec['hsa-rocr-dev'].prefix, spec['hsakmt-roct'].prefix)
-        ]
+        args = []
+
+        if '@3.5.0' in spec:
+            args.append(
+                '-DCMAKE_PREFIX_PATH={0}/include/hsa;{1}/include,'.
+                format(spec['hsa-rocr-dev'].prefix, spec['hsakmt-roct'].prefix)
+            )
+
+        if '@3.7.0' in spec:
+            args.append(
+                '-DCMAKE_MODULE_PATH={0}'.
+                format(spec['hip'].prefix.cmake)
+            )
         return args
