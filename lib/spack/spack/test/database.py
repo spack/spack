@@ -13,6 +13,7 @@ import multiprocessing
 import os
 import pytest
 import json
+import sys
 try:
     import uuid
     _use_uuid = True
@@ -524,7 +525,11 @@ def test_030_db_sanity_from_another_process(mutable_database):
         with mutable_database.write_transaction():
             _mock_remove('mpileaks ^zmpi')
 
-    p = multiprocessing.Process(target=read_and_modify, args=())
+    if sys.version_info >= (3,):  # novm
+        p = multiprocessing.get_context('fork').Process(
+            target=read_and_modify, args=())
+    else:
+        p = multiprocessing.Process(target=read_and_modify, args=())
     p.start()
     p.join()
 

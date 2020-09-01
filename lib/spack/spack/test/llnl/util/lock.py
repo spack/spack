@@ -51,7 +51,8 @@ import traceback
 import glob
 import getpass
 from contextlib import contextmanager
-from multiprocessing import Process, Queue
+import multiprocessing
+import sys
 
 import pytest
 
@@ -214,8 +215,14 @@ def local_multiproc_test(*functions, **kwargs):
     b = mp.Barrier(len(functions), timeout=barrier_timeout)
 
     args = (b,) + tuple(kwargs.get('extra_args', ()))
-    procs = [Process(target=f, args=args, name=f.__name__)
-             for f in functions]
+    if sys.version_info >= (3,):  # novm
+        procs = [
+            multiprocessing.get_context('fork').Process(
+                target=f, args=args, name=f.__name__) for f in functions]
+    else:
+        procs = [
+            multiprocessing.Process(
+                target=f, args=args, name=f.__name__) for f in functions]
 
     for p in procs:
         p.start()
@@ -1210,7 +1217,7 @@ def test_lock_debug_output(lock_path):
         # wait for p1 to verify pid/host info
         barrier.wait()  # ---------------------------------------- 4
 
-    q1, q2 = Queue(), Queue()
+    q1, q2 = multiprocessing.Queue(), multiprocessing.Queue()
     local_multiproc_test(p2, p1, extra_args=(q1, q2))
 
 

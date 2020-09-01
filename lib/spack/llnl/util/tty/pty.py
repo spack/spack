@@ -233,12 +233,20 @@ class PseudoShell(object):
         ``minion_function``.
 
         """
-        self.proc = multiprocessing.Process(
-            target=PseudoShell._set_up_and_run_controller_function,
-            args=(self.controller_function, self.minion_function,
-                  self.controller_timeout, self.sleep_time),
-            kwargs=kwargs,
-        )
+        if sys.version_info >= (3,):  # novm
+            self.proc = multiprocessing.get_context('fork').Process(
+                target=PseudoShell._set_up_and_run_controller_function,
+                args=(self.controller_function, self.minion_function,
+                      self.controller_timeout, self.sleep_time),
+                kwargs=kwargs,
+            )
+        else:
+            self.proc = multiprocessing.Process(
+                target=PseudoShell._set_up_and_run_controller_function,
+                args=(self.controller_function, self.minion_function,
+                      self.controller_timeout, self.sleep_time),
+                kwargs=kwargs,
+            )
         self.proc.start()
 
     def join(self):
@@ -299,12 +307,20 @@ class PseudoShell(object):
         os.close(pty_fd)
 
         ready = multiprocessing.Value('i', False)
-        minion_process = multiprocessing.Process(
-            target=PseudoShell._set_up_and_run_minion_function,
-            args=(pty_name, sys.stdout.fileno(), sys.stderr.fileno(),
-                  ready, minion_function),
-            kwargs=kwargs,
-        )
+        if sys.version_info >= (3,):  # novm
+            minion_process = multiprocessing.get_context('fork').Process(
+                target=PseudoShell._set_up_and_run_minion_function,
+                args=(pty_name, sys.stdout.fileno(), sys.stderr.fileno(),
+                      ready, minion_function),
+                kwargs=kwargs,
+            )
+        else:
+            minion_process = multiprocessing.Process(
+                target=PseudoShell._set_up_and_run_minion_function,
+                args=(pty_name, sys.stdout.fileno(), sys.stderr.fileno(),
+                      ready, minion_function),
+                kwargs=kwargs,
+            )
         minion_process.start()
 
         # wait for subprocess to be running and connected.
