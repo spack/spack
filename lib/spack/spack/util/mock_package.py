@@ -77,6 +77,8 @@ class MockPackageMultiRepo(object):
     def get(self, spec):
         if not isinstance(spec, spack.spec.Spec):
             spec = Spec(spec)
+        if spec.name not in self.spec_to_pkg:
+            raise spack.repo.UnknownPackageError(spec.fullname)
         return self.spec_to_pkg[spec.name]
 
     def get_pkg_class(self, name):

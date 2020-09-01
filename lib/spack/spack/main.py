@@ -128,8 +128,8 @@ def get_version():
         git = exe.which("git")
         if git:
             with fs.working_dir(spack.paths.prefix):
-                desc = git(
-                    "describe", "--tags", output=str, fail_on_error=False)
+                desc = git("describe", "--tags", "--match", "v*",
+                           output=str, error=os.devnull, fail_on_error=False)
 
             if git.returncode == 0:
                 match = re.match(r"v([^-]+)-([^-]+)-g([a-f\d]+)", desc)
@@ -362,8 +362,9 @@ def make_argument_parser(**kwargs):
         '-C', '--config-scope', dest='config_scopes', action='append',
         metavar='DIR', help="add a custom configuration scope")
     parser.add_argument(
-        '-d', '--debug', action='store_true',
-        help="write out debug logs during compile")
+        '-d', '--debug', action='count', default=0,
+        help="write out debug messages "
+             "(more d's for more verbosity: -d, -dd, -ddd, etc.)")
     parser.add_argument(
         '--timestamp', action='store_true',
         help="Add a timestamp to tty output")
@@ -438,7 +439,7 @@ def setup_main_options(args):
     tty.set_debug(args.debug)
     tty.set_stacktrace(args.stacktrace)
 
-    # debug must be set first so that it can even affect behvaior of
+    # debug must be set first so that it can even affect behavior of
     # errors raised by spack.config.
     if args.debug:
         spack.error.debug = True
@@ -705,7 +706,7 @@ def main(argv=None):
     if not args.no_env:
         env = ev.find_environment(args)
         if env:
-            ev.activate(env, args.use_env_repo)
+            ev.activate(env, args.use_env_repo, add_view=False)
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:

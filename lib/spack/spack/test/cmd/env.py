@@ -16,7 +16,7 @@ import spack.environment as ev
 
 from spack.cmd.env import _env_create
 from spack.spec import Spec
-from spack.main import SpackCommand
+from spack.main import SpackCommand, SpackCommandError
 from spack.stage import stage_prefix
 
 from spack.util.mock_package import MockPackageMultiRepo
@@ -282,6 +282,45 @@ def test_environment_status(capsys, tmpdir):
                 with e:
                     with capsys.disabled():
                         assert 'in current directory' in env('status')
+
+
+def test_env_status_broken_view(
+    mutable_mock_env_path, mock_archive, mock_fetch, mock_packages,
+    install_mockery
+):
+    with ev.create('test'):
+        install('trivial-install-test-package')
+
+        # switch to a new repo that doesn't include the installed package
+        # test that Spack detects the missing package and warns the user
+        new_repo = MockPackageMultiRepo()
+        with spack.repo.swap(new_repo):
+            output = env('status')
+            assert 'In environment test' in output
+            assert 'Environment test includes out of date' in output
+
+        # Test that the warning goes away when it's fixed
+        output = env('status')
+        assert 'In environment test' in output
+        assert 'Environment test includes out of date' not in output
+
+
+def test_env_activate_broken_view(
+    mutable_mock_env_path, mock_archive, mock_fetch, mock_packages,
+    install_mockery
+):
+    with ev.create('test'):
+        install('trivial-install-test-package')
+
+    # switch to a new repo that doesn't include the installed package
+    # test that Spack detects the missing package and fails gracefully
+    new_repo = MockPackageMultiRepo()
+    with spack.repo.swap(new_repo):
+        with pytest.raises(SpackCommandError):
+            env('activate', '--sh', 'test')
+
+    # test replacing repo fixes it
+    env('activate', '--sh', 'test')
 
 
 def test_to_lockfile_dict():
