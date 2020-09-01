@@ -243,6 +243,7 @@ class Trilinos(CMakePackage):
     conflicts('+belos', when='~teuchos')
     conflicts('+epetraext', when='~epetra')
     conflicts('+epetraext', when='~teuchos')
+    conflicts('+exodus', when='~netcdf')
     conflicts('+ifpack2', when='~belos')
     conflicts('+ifpack2', when='~teuchos')
     conflicts('+ifpack2', when='~tpetra')
