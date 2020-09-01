@@ -187,6 +187,7 @@ def yes_to_all():
         '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
         help='assume "yes" is the answer to every confirmation request')
 
+
 @arg
 def recurse_dependencies():
     return Args(
