@@ -711,12 +711,10 @@ class Environment(object):
         # Retrieve dev-build packages:
         self.dev_specs = configuration['develop']
         for name, entry in self.dev_specs.items():
-            # Path must exist and spec must include version
+            # spec must include a concrete version
             assert Spec(entry['spec']).version
-            path = entry['path']
-            path = path if os.path.isabs(path) else os.path.join(
-                self.path, path)
-            assert os.path.exists(path)
+            # do not check paths because `spack develop` will clone all develop
+            # specs when run with no args
 
     @property
     def user_specs(self):
