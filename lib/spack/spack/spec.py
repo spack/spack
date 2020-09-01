@@ -1007,6 +1007,14 @@ class Spec(object):
         # have package.py files for.
         self._normal = normal
         self._concrete = concrete
+
+        # Normalize external modules, to ensure they are never set from
+        # anything that is not a built-in Python list. This is needed
+        # because when hashes are computed there can be discrepancies
+        # depending on the type use to represent a sequence and round trip
+        # to YAML representation. See #18338
+        if external_modules:
+            external_modules = list(external_modules)
         self.external_path = external_path
         self.external_modules = external_modules
         self._full_hash = full_hash
@@ -1383,8 +1391,8 @@ class Spec(object):
         """
         # TODO: curently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
-        yaml_text = syaml.dump(
-            self.to_node_dict(hash=hash), default_flow_style=True)
+        node_dict = self.to_node_dict(hash=hash)
+        yaml_text = syaml.dump(node_dict, default_flow_style=True)
         sha = hashlib.sha1(yaml_text.encode('utf-8'))
         b32_hash = base64.b32encode(sha.digest()).lower()
 
