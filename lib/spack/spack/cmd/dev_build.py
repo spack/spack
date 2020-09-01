@@ -77,7 +77,7 @@ def dev_build(self, args):
     source_path = os.path.abspath(source_path)
 
     # Forces the build to run out of the current directory.
-    spec.develop = source_path
+    spec.constrain('dev_build=true dev_path=%s' % source_path)
 
     spec.concretize()
     package = spack.repo.get(spec)

@@ -1318,15 +1318,18 @@ class Environment(object):
             def needs_overwrite(spec):
                 # Overwrite the install if it's a dev build (non-transitive)
                 # and the code has been changed since the last install
+                dev_path_var = spec.variants.get('dev_path', None)
+                if not dev_path_var:
+                    # if the variant exists, it is a path
+                    return False
                 _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
                 if not record or not record.installed:
                     return False
-                mtime = fs.last_modification_time_recursive(spec.develop)
+                mtime = fs.last_modification_time_recursive(dev_path_var.value)
                 return mtime > record.installation_time
 
             ret.extend([d.dag_hash() for d in spec.traverse(root=True)
-                        if isinstance(d.develop, six.string_types) and
-                        needs_overwrite(d)])
+                        if needs_overwrite(d)])
 
         return ret
 

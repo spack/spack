@@ -917,8 +917,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def _make_stage(self):
         # If it's a dev package (not transitively), use a DIY stage object
-        if isinstance(self.spec.develop, six.string_types):
-            return spack.stage.DIYStage(self.spec.develop)
+        dev_path_var = self.spec.variants.get('dev_path', None)
+        if dev_path_var:
+            return spack.stage.DIYStage(dev_path_var.value)
 
         # Construct a composite stage on top of the composite FetchStrategy
         composite_fetcher = self.fetcher
@@ -1593,12 +1594,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         Args:"""
         # Non-transitive dev specs need to keep the dev stage and be built from
-        # source every time
-        if isinstance(self.spec.develop, six.string_types):
-            kwargs.update({
-                'keep_stage': True,
-                'use_cache': False,
-            })
+        # source every time. Transitive ones just need to be built from source.
+        dev_path_var = self.spec.variants.get('dev_path', None)
+        if dev_path_var:
+            kwargs['keep_stage'] = True
+        dev_build_var = self.spec.variants.get('dev_build', None)
+        if dev_build_var:
+            kwargs['use_cache'] = False
+
         builder = PackageInstaller(self)
         builder.install(**kwargs)
 

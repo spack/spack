@@ -36,6 +36,7 @@ import spack.compilers
 import spack.architecture
 import spack.error
 import spack.tengine
+import spack.variant as vt
 from spack.config import config
 from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
@@ -62,25 +63,35 @@ class Concretizer(object):
         self._adjust_target_answer_generator = None
 
     def concretize_develop(self, spec):
-        if spec.develop:
-            return False
-
         env = spack.environment.get_env(None, None)
         dev_info = env.dev_specs if env else {}
 
         changed = False
         for dep in spec.traverse(root=True, order='post'):
-            if dep.develop:
+            if 'dev_path' in dep.variants and 'dev_build' in dep.variants:
+                # there's nothing more to do
                 continue
+            elif 'dev_path' in dep.variants:
+                var = dep.variants.setdefault(
+                    'dev_build', vt.BoolValuedVariant('dev_build', True))
+                changed = True
+                continue
+
             if dep.name in dev_info:
                 path = dev_info[dep.name]['path']
                 path = path if os.path.isabs(path) else os.path.join(
                     env.path, path)
-                dep.develop = path
+
+                path_var = dep.variants.setdefault(
+                    'dev_path', vt.SingleValuedVariant('dev_path', path))
+                dev_var = dep.variants.setdefault(
+                    'dev_build', vt.BoolValuedVariant('dev_build', True))
                 dep.constrain(dev_info[dep.name]['spec'])
                 changed = True
-            elif any(dep_dep.develop for dep_dep in dep.traverse()):
-                dep.develop = True
+            elif any('develop' in dep_dep.variants
+                     for dep_dep in dep.traverse()):
+                var = dep.variants.setdefault(
+                    'dev_build', vt.BoolValuedVariant('dev_build', True))
                 changed = True
         return changed
 

@@ -604,6 +604,9 @@ def substitute_abstract_variants(spec):
     failed = []
     for name, v in spec.variants.items():
         if name in spack.directives.reserved_names:
+            if name == 'dev_path':
+                new_variant = SingleValuedVariant(name, v._original_value)
+                spec.variants.substitute(new_variant)
             continue
         pkg_variant = spec.package_class.variants.get(name, None)
         if not pkg_variant:
