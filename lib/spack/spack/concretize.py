@@ -72,7 +72,7 @@ class Concretizer(object):
                 # there's nothing more to do
                 continue
             elif 'dev_path' in dep.variants:
-                var = dep.variants.setdefault(
+                dep.variants.setdefault(
                     'dev_build', vt.BoolValuedVariant('dev_build', True))
                 changed = True
                 continue
@@ -82,15 +82,15 @@ class Concretizer(object):
                 path = path if os.path.isabs(path) else os.path.join(
                     env.path, path)
 
-                path_var = dep.variants.setdefault(
+                dep.variants.setdefault(
                     'dev_path', vt.SingleValuedVariant('dev_path', path))
-                dev_var = dep.variants.setdefault(
+                dep.variants.setdefault(
                     'dev_build', vt.BoolValuedVariant('dev_build', True))
                 dep.constrain(dev_info[dep.name]['spec'])
                 changed = True
             elif any('develop' in dep_dep.variants
                      for dep_dep in dep.traverse()):
-                var = dep.variants.setdefault(
+                dep.variants.setdefault(
                     'dev_build', vt.BoolValuedVariant('dev_build', True))
                 changed = True
         return changed
