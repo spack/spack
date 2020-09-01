@@ -33,6 +33,9 @@ class Hip(CMakePackage):
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('rocminfo@' + ver, type='build', when='@' + ver)
 
+    # Notice: most likely this will only be a hard dependency on 3.7.0
+    depends_on('numactl', when='@3.7.0')
+
     # Note: the ROCm ecosystem expects `lib/` and `bin/` folders with symlinks
     # in the parent directory of the package, which is incompatible with spack.
     # In hipcc the ROCM_PATH variable is used to point to the parent directory
