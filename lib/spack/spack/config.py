@@ -35,6 +35,7 @@ import copy
 import os
 import re
 import sys
+import multiprocessing
 from contextlib import contextmanager
 from six import iteritems
 from ordereddict_backport import OrderedDict
@@ -107,7 +108,7 @@ config_defaults = {
         'verify_ssl': True,
         'checksum': True,
         'dirty': False,
-        'build_jobs': min(16, llnl.util.lang.fork_context.cpu_count()),
+        'build_jobs': min(16, multiprocessing.cpu_count()),
         'build_stage': '$tempdir/spack-stage',
     }
 }

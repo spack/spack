@@ -51,6 +51,7 @@ import traceback
 import glob
 import getpass
 from contextlib import contextmanager
+from multiprocessing import Queue
 
 import pytest
 
@@ -1210,7 +1211,7 @@ def test_lock_debug_output(lock_path):
         # wait for p1 to verify pid/host info
         barrier.wait()  # ---------------------------------------- 4
 
-    q1, q2 = fork_context.Queue(), fork_context.Queue()
+    q1, q2 = Queue(), Queue()
     local_multiproc_test(p2, p1, extra_args=(q1, q2))
 
 

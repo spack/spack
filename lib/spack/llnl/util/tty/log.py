@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 
 import atexit
 import errno
+import multiprocessing
 import os
 import re
 import select
@@ -420,7 +421,7 @@ class log_output(object):
 
         # Multiprocessing pipe for communication back from the daemon
         # Currently only used to save echo value between uses
-        self.parent_pipe, child_pipe = fork_context.Pipe()
+        self.parent_pipe, child_pipe = multiprocessing.Pipe()
 
         # Sets a daemon that writes to file what it reads from a pipe
         try:

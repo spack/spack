@@ -34,6 +34,7 @@ calls you can make from within the install() function.
 """
 import re
 import inspect
+import multiprocessing
 import os
 import shutil
 import sys
@@ -449,7 +450,7 @@ def _set_variables_for_single_module(pkg, module):
         return
 
     jobs = spack.config.get('config:build_jobs', 16) if pkg.parallel else 1
-    jobs = min(jobs, fork_context.cpu_count())
+    jobs = min(jobs, multiprocessing.cpu_count())
     assert jobs is not None, "no default set for config:build_jobs"
 
     m = module
@@ -878,7 +879,7 @@ def fork(pkg, function, dirty, fake):
         finally:
             child_pipe.close()
 
-    parent_pipe, child_pipe = fork_context.Pipe()
+    parent_pipe, child_pipe = multiprocessing.Pipe()
     input_stream = None
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
