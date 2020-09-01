@@ -24,7 +24,8 @@ spack:
     - omega-h+gmsh+trilinos@9.31.3.dev2
     - superlu-dist@5.4.0
     - petsc+int64+mpi@3.13.1
-    - boost+python
+    - boost+python@1.73.0
+    - boost+python@1.70.0
     - catch2
     - deflect
     - eigen
