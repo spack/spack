@@ -432,7 +432,7 @@ def spider(root_urls, depth=0, concurrency=32):
         root = url_util.parse(root)
         spider_args.append((root, collect))
 
-    tp = ForkContext.pool.ThreadPool(processes=concurrency)
+    tp = ForkContext.Pool(processes=concurrency)
     try:
         while current_depth <= depth:
             tty.debug("SPIDER: [depth={0}, max_depth={1}, urls={2}]".format(
