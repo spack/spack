@@ -386,7 +386,6 @@ class Openfoam(Package):
         corresponding unpatched directories (eg '1906').
         Older versions (eg, v1612+) had additional '+' in naming
         """
-        tty.info('openfoam: {0}'.format(version))
         if version <= Version('1612'):
             fmt = 'v{0}+/OpenFOAM-v{1}+.tgz'
         else:
@@ -584,10 +583,10 @@ class Openfoam(Package):
                     backup=False, string=True)
 
     def configure(self, spec, prefix):
-        """Make adjustments to the OpenFOAM configuration files in their various
-        locations: etc/bashrc, etc/config.sh/FEATURE and customizations that
-        don't properly fit get placed in the etc/prefs.sh file (similiarly for
-        csh).
+        """Make adjustments to the OpenFOAM configuration files in their
+        various locations: etc/bashrc, etc/config.sh/FEATURE and
+        customizations that don't properly fit get placed in the etc/prefs.sh
+        file (similiarly for csh).
         """
         # Filtering bashrc, cshrc
         edits = {}
@@ -915,9 +914,10 @@ class OpenfoamArch(object):
         # Build WM_OPTIONS
         # ----
         # WM_LABEL_OPTION=Int$WM_LABEL_SIZE
-        # WM_OPTIONS=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_LABEL_OPTION$WM_COMPILE_OPTION
+        # WM_OPTIONS_BASE=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION
+        # WM_OPTIONS=$WM_OPTIONS_BASE$WM_LABEL_OPTION$WM_COMPILE_OPTION
         # or
-        # WM_OPTIONS=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_COMPILE_OPTION
+        # WM_OPTIONS=$WM_OPTIONS_BASE$WM_COMPILE_OPTION
         # ----
         self.options = ''.join([
             self.arch,
