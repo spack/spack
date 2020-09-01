@@ -715,6 +715,9 @@ class Environment(object):
             assert Spec(entry['spec']).version
             # do not check paths because `spack develop` will clone all develop
             # specs when run with no args
+            # default path is the spec name
+            if 'path' not in entry:
+                self.dev_specs[name]['path'] = name
 
     @property
     def user_specs(self):
@@ -1673,7 +1676,12 @@ class Environment(object):
         yaml_dict['view'] = view
 
         if self.dev_specs:
-            yaml_dict['develop'] = self.dev_specs
+            # Remove entries that are mirroring defaults
+            write_dev_specs = copy.deepcopy(self.dev_specs)
+            for name, entry in write_dev_specs.items():
+                if entry['path'] == name:
+                    del entry['path']
+            yaml_dict['develop'] = write_dev_specs
         else:
             yaml_dict.pop('develop', None)
 
