@@ -18,7 +18,7 @@ except ImportError:
 import pytest
 
 import llnl.util.tty.log
-from llnl.util.lang import uniq, ForkContext
+from llnl.util.lang import uniq, fork_context
 from llnl.util.tty.log import log_output
 from llnl.util.tty.pty import PseudoShell
 
@@ -399,8 +399,8 @@ def test_foreground_background_output(
     log_path = str(tmpdir.join("log.txt"))
 
     # Locks for synchronizing with minion
-    write_lock = ForkContext.Lock()  # must be held by minion to write
-    v_lock = ForkContext.Lock()  # held while controller is in v mode
+    write_lock = fork_context.Lock()  # must be held by minion to write
+    v_lock = fork_context.Lock()  # held while controller is in v mode
 
     with termios_on_or_off():
         shell.start(

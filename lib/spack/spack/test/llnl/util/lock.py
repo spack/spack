@@ -57,7 +57,7 @@ import pytest
 import llnl.util.lock as lk
 import llnl.util.multiproc as mp
 from llnl.util.filesystem import touch
-from llnl.util.lang import ForkContext
+from llnl.util.lang import fork_context
 
 
 #
@@ -214,7 +214,7 @@ def local_multiproc_test(*functions, **kwargs):
     b = mp.Barrier(len(functions), timeout=barrier_timeout)
 
     args = (b,) + tuple(kwargs.get('extra_args', ()))
-    procs = [ForkContext.Process(target=f, args=args, name=f.__name__)
+    procs = [fork_context.Process(target=f, args=args, name=f.__name__)
              for f in functions]
 
     for p in procs:
@@ -1210,7 +1210,7 @@ def test_lock_debug_output(lock_path):
         # wait for p1 to verify pid/host info
         barrier.wait()  # ---------------------------------------- 4
 
-    q1, q2 = ForkContext.Queue(), ForkContext.Queue()
+    q1, q2 = fork_context.Queue(), fork_context.Queue()
     local_multiproc_test(p2, p1, extra_args=(q1, q2))
 
 

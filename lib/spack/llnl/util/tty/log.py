@@ -20,7 +20,7 @@ from six import string_types
 from six import StringIO
 
 import llnl.util.tty as tty
-from llnl.util.lang import ForkContext
+from llnl.util.lang import fork_context
 
 try:
     import termios
@@ -420,7 +420,7 @@ class log_output(object):
 
         # Multiprocessing pipe for communication back from the daemon
         # Currently only used to save echo value between uses
-        self.parent_pipe, child_pipe = ForkContext.Pipe()
+        self.parent_pipe, child_pipe = fork_context.Pipe()
 
         # Sets a daemon that writes to file what it reads from a pipe
         try:
@@ -430,7 +430,7 @@ class log_output(object):
             except BaseException:
                 input_stream = None  # just don't forward input if this fails
 
-            self.process = ForkContext.Process(
+            self.process = fork_context.Process(
                 target=_writer_daemon,
                 args=(
                     input_stream, read_fd, write_fd, self.echo, self.log_file,

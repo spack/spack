@@ -32,9 +32,9 @@ ignore_modules = [r'^\.#', '~$']
 # * https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods  # noqa: E501
 # * https://bugs.python.org/issue33725
 if sys.version_info >= (3,):  # novm
-    ForkContext = multiprocessing.get_context('fork')
+    fork_context = multiprocessing.get_context('fork')
 else:
-    ForkContext = multiprocessing
+    fork_context = multiprocessing
 
 
 def index_by(objects, *funcs):

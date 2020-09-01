@@ -44,7 +44,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
-from llnl.util.lang import dedupe, ForkContext
+from llnl.util.lang import dedupe, fork_context
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
@@ -449,7 +449,7 @@ def _set_variables_for_single_module(pkg, module):
         return
 
     jobs = spack.config.get('config:build_jobs', 16) if pkg.parallel else 1
-    jobs = min(jobs, ForkContext.cpu_count())
+    jobs = min(jobs, fork_context.cpu_count())
     assert jobs is not None, "no default set for config:build_jobs"
 
     m = module
@@ -878,14 +878,14 @@ def fork(pkg, function, dirty, fake):
         finally:
             child_pipe.close()
 
-    parent_pipe, child_pipe = ForkContext.Pipe()
+    parent_pipe, child_pipe = fork_context.Pipe()
     input_stream = None
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
 
-        p = ForkContext.Process(
+        p = fork_context.Process(
             target=child_process, args=(child_pipe, input_stream))
         p.start()
 

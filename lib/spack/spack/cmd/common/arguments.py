@@ -15,7 +15,7 @@ import spack.spec
 import spack.store
 from spack.util.pattern import Args
 
-from llnl.util.lang import ForkContext
+from llnl.util.lang import fork_context
 
 __all__ = ['add_common_arguments']
 
@@ -103,7 +103,7 @@ class SetParallelJobs(argparse.Action):
                   '[expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, jobs))
 
-        jobs = min(jobs, ForkContext.cpu_count())
+        jobs = min(jobs, fork_context.cpu_count())
         spack.config.set('config:build_jobs', jobs, scope='command_line')
 
         setattr(namespace, 'jobs', jobs)
@@ -113,7 +113,7 @@ class SetParallelJobs(argparse.Action):
         # This default is coded as a property so that look-up
         # of this value is done only on demand
         return min(spack.config.get('config:build_jobs', 16),
-                   ForkContext.cpu_count())
+                   fork_context.cpu_count())
 
     @default.setter
     def default(self, value):

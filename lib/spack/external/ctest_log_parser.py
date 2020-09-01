@@ -76,7 +76,7 @@ from contextlib import contextmanager
 from six import StringIO
 from six import string_types
 
-from llnl.util.lang import ForkContext
+from llnl.util.lang import fork_context
 
 
 class prefilter(object):
@@ -431,7 +431,7 @@ class CTestLogParser(object):
         lines = [line for line in stream]
 
         if jobs is None:
-            jobs = ForkContext.cpu_count()
+            jobs = fork_context.cpu_count()
 
         # single-thread small logs
         if len(lines) < 10 * jobs:
@@ -446,7 +446,7 @@ class CTestLogParser(object):
                 offset += len(chunk)
 
             # create a pool and farm out the matching job
-            pool = ForkContext.Pool(jobs)
+            pool = fork_context.Pool(jobs)
             try:
                 # this is a workaround for a Python bug in Pool with ctrl-C
                 results = pool.map_async(_parse_unpack, args, 1).get(9999999)
