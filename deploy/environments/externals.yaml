@@ -5,6 +5,9 @@ spack:
       providers:
         mpi: [hpe-mpi@2.21]
         lapack: [intel-mkl@2019.3.199]
+    mvapich2:
+      compiler: [gcc@9.3.0]
+      variants: fabrics=mrail process_managers=slurm file_systems=gpfs
     python:
       version: [3.8.3]
     timemory:
@@ -28,7 +31,7 @@ spack:
     - hpe-mpi@2.21
     - intel-mpi@2019.7.217
     - ispc@1.10.0
-    - 'mvapich2@2.3 fabrics=mrail process_managers=slurm file_systems=gpfs'
+    - mvapich2@2.3
     - stat@develop
     - valgrind~mpi@3.15.0
     # Formerly "external-libraries"
