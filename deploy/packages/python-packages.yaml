@@ -109,7 +109,6 @@ packages:
       - py-setuptools-scm
       - py-simplejson
       - py-six
-      - py-sparkmanager
       - py-sphinx
       - py-sphinx-rtd-theme
       - py-sympy

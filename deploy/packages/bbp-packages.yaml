@@ -23,24 +23,25 @@ packages:
     specs:
       - archngv@0.0.0
       - asciitoh5@1.0
-      - brainbuilder@0.13.1
+      - brainbuilder@0.14.0
       - brion@3.1.0 +python
       - brion@3.2.0 +python
       - connectome-tools@0.3.2
       - spatial-index@0.2.1
-      - spykfunc@0.15.6 ^spark@3.0.0 ^py-pyspark@3.0.0 ^openjdk@11:11.999
-      - psp-validation@0.3.0
+      - spykfunc@0.15.7
+      - psp-validation@0.3.1
       - py-pytouchreader@1.4.6
       - py-basalt@0.2.9
-      - py-entity-management@1.1.3
+      - py-entity-management@1.2.2
       - py-jupyter-notebook@4.2.3
       - py-bbp-analysis-framework@1.6.42
+      - py-bluepysnap@0.6.1
       - py-morphology-repair-workflow@1.0.4
       - py-simwriter@1.0.1
       - py-morph-tool@0.2.5
       - py-morphio@2.3.4
-      - py-neurodamus
-      - py-sonata-network-reduction@0.0.9 ^neuron%intel@19.1.1.217^py-ipython%gcc
+      - py-neurodamus@1.3.1
+      - py-sonata-network-reduction@0.0.10 ^neuron%intel@19.0.4^py-ipython%gcc
 
   gnu-stable-serial-ophiophob:
     target_matrix:
@@ -62,8 +63,8 @@ packages:
       - mpi
     specs:
       - functionalizer@3.12.2
-      - parquet-converters@0.5.5
-      - synapsetool@0.5.9
+      - parquet-converters@0.5.7
+      - synapsetool@0.6.0
       - touchdetector@5.4.0
       - brayns +opendeck +brion ^brion@3.1.0 ^ospray@1.7.3%intel@19.1.1.217
       - brayns@1.0.1 +brion ^brion@3.1.0 ^ospray%intel@19.1.1.217
@@ -120,10 +121,11 @@ packages:
     specs:
       - nest@2.18.0
       - py-efel@3.0.80
-      - py-bglibpy@4.2.23 ^neuron%intel@19.1.1.217
-      - py-bluepy@0.14.8
-      - py-bluepymm@0.7.15 ^neuron%intel@19.1.1.217
-      - py-bluepyopt@1.9.27 ^neuron%intel@19.1.1.217
+      - py-bluepyefe@0.3.13
+      - py-bglibpy@4.3.12 ^neuron%intel@19.0.4
+      - py-bluepy@0.14.14
+      - py-bluepymm@0.7.49 ^neuron%intel@19.0.4
+      - py-bluepyopt@1.9.27 ^neuron%intel@19.0.4
 
   #### cellular ####
 
@@ -134,7 +136,7 @@ packages:
       - architecture
       - compiler
     specs:
-      - neurodamus-core+common@2.11.0
+      - neurodamus-core+common@2.11.1
       - ultraliser
 
   intel-stable:
@@ -165,7 +167,7 @@ packages:
       - mpi
       - python
     specs:
-      - neurodamus-core~common@2.11.0
+      - neurodamus-core~common@2.11.1
       - neurodamus-neocortex+coreneuron@0.3
       - neurodamus-hippocampus+coreneuron@0.4
       - neurodamus-thalamus+coreneuron@0.3

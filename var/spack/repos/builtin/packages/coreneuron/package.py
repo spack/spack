@@ -19,7 +19,9 @@ class Coreneuron(CMakePackage):
     git      = "https://github.com/BlueBrain/CoreNeuron"
 
     version('develop', branch='master', submodules=True)
-    version('0.19', tag='0.19', submodules=True, preferred=True)
+    version('0.21a', commit="bf3c823", preferred=True)
+    version('0.20', tag='0.20', submodules=True)
+    version('0.19', tag='0.19', submodules=True)
     version('0.18', tag='0.18', submodules=True)
     version('0.17', tag='0.17', submodules=True)
     version('0.16', tag='0.16', submodules=True)
@@ -39,6 +41,7 @@ class Coreneuron(CMakePackage):
 
     # nmodl specific options
     variant('nmodl', default=False, description="Use NMODL instead of MOD2C")
+    variant('codegenopt', default=False, description="Use NMODL with codedgen ionvar copies optimizations")
     variant('sympy', default=False, description="Use NMODL with SymPy to solve ODEs")
     variant('sympyopt', default=False, description="Use NMODL with SymPy Optimizations")
     variant('ispc', default=False, description="Enable ISPC backend")
@@ -72,10 +75,11 @@ class Coreneuron(CMakePackage):
     depends_on('neurodamus-base@plasticity', when='@plasticity')
     depends_on('neurodamus-base@hippocampus', when='@hippocampus')
 
-    # sympy and ispc options are only usable with nmodl
+    # sympy, codegen and ispc options are only usable with nmodl
     conflicts('+sympyopt', when='~sympy')
     conflicts('+sympy', when='~nmodl')
     conflicts('+sympy', when='coreneuron@0.17')  # issue with include directories
+    conflicts('+codegenopt', when='~nmodl')
     conflicts('+ispc', when='~nmodl')
 
     # raise conflict when trying to install '+gpu' without PGI compiler
@@ -151,6 +155,9 @@ class Coreneuron(CMakePackage):
 
         nmodl_options = 'codegen --force'
 
+        if spec.satisfies('+codegenopt'):
+            nmodl_options += ' --opt-ionvar-copy=TRUE'
+
         if spec.satisfies('+ispc'):
             options.append('-DCORENRN_ENABLE_ISPC=ON')
             if '+knl' in spec:
@@ -211,6 +218,9 @@ class Coreneuron(CMakePackage):
                                      spec['eigen'].prefix.include.eigen3)
 
         nmodl_options = 'codegen --force passes --verbatim-rename --inline'
+
+        if spec.satisfies('+codegenopt'):
+            nmodl_options += ' --opt-ionvar-copy=TRUE'
 
         if spec.satisfies('+ispc'):
             options.append('-DENABLE_ISPC_TARGET=ON')

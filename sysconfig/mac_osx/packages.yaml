@@ -1,0 +1,111 @@
+packages:
+    autoconf:
+        paths:
+            autoconf@2.69: /usr/local/opt/autoconf
+        version: [2.69]
+    automake:
+        paths:
+            automake@1.16.1: /usr/local/opt/automake
+        version: [1.16.1]
+    bison:
+        paths:
+            bison@3.4: /usr/local/opt/bison
+        version: [3.4]
+    boost:
+        paths:
+            boost@1.68.0: /usr/local/opt/boost
+        buildable: False
+    bzip2:
+        paths:
+            bzip2@1.0.6: /usr/local/opt/bzip
+        version: [1.0.6]
+    cairo:
+        paths:
+            cairo@1.8.10: /usr/local/opt/cairo
+        version: [1.8.10]
+    catch:
+        paths:
+            catch~single_header@2.x: /usr/local/opt/catch2
+        version: [2.x]
+    cmake:
+        paths:
+            cmake@3.13.3: /usr/local/opt/cmake
+        buildable: False
+    curl:
+        paths:
+            curl@7.29.0: /usr/local/opt/curl
+        version: [7.29.0]
+    environment-modules:
+        paths:
+            environment-modules@4.1.4: /usr/local/opt/modules
+        buildable: False
+    flex:
+        paths:
+            flex@2.6.4: /usr/local/opt/flex
+        version: [2.6.4]
+    fontconfig:
+        paths:
+            fontconfig@2.10.95: /usr/local/opt/fontconfig
+        version: [2.10.95]
+    gettext:
+        paths:
+            gettext@0.20.1: /usr/local/opt/gettext
+        version: [0.20.1]
+    hdf5:
+        paths:
+            hdf5@1.12.0+mpi: /usr/local/opt/hdf5-parallel
+        version: [1.12]
+        buildable: False
+    hdf5:
+        paths:
+            hdf5@1.12.0~mpi: /usr/local/opt/hdf5
+        version: [1.12]
+    hwloc:
+        paths:
+            hwloc@1.11.2: /usr/local/opt/hwloc
+        version: [1.11.2]
+    openblas:
+        paths:
+            openblas@0.3.5: /usr/local/opt/openblas
+        version: [0.3.5]
+    openmpi:
+        paths:
+            openmpi@4.0.1: /usr/local/opt/openmpi
+        buildable: False
+    openssl:
+        paths:
+            openssl@1.0.2k: /usr/local/opt/openssl
+        version: [1.0.2k]
+    pcre:
+        paths:
+            pcre@8.32+jit+utf: /usr/local/opt/pcre
+        version: [8.32]
+    petsc:
+        variants: +patchmpi64
+    pkg-config:
+        paths:
+            pkg-config@0.29.2: /usr/local/opt/pkg-config
+        version: [0.29.2]
+    python:
+        paths:
+            python@3.7.5+shared: /Library/Frameworks/Python.framework/Versions/3.7
+        version: [3.7.5]
+    tcl:
+        paths:
+            tcl@8.5.13: /usr
+        version: [8.5.13]
+    trilinos:
+        variants: +kokkos+teuchos~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
+        version: [xsdk-0.4.0-rc1]
+    tk:
+        paths:
+            tk@8.5.13: /usr
+        version: [8.5.13]
+    xz:
+        paths:
+            xz@5.2: /usr/local/opt/xz
+        version: [5.2]
+    zlib:
+        paths:
+            zlib@1.2.11: /usr/local/opt/zlib
+        version: [1.2.11]

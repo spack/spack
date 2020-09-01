@@ -54,6 +54,7 @@ modules:
       - py-bluepy
       - py-bluepymm
       - py-bluepyopt
+      - py-bluepysnap
       - py-efel
       - py-entity-management
       - py-jupyter-notebook
