@@ -44,15 +44,11 @@ class Jali(CMakePackage):
 
     def cmake_args(self):
         options = []
-        if '+mstk' in self.spec:
-            options.append('-DENABLE_MSTK_Mesh=ON')
-        else:
-            options.append('-DENABLE_MSTK_Mesh=OFF')
+
+        # Turn MSTK ON/OFF
+        options.append(self.define_from_variant('ENABLE_MSTK_Mesh', 'mstk'))
 
         # Unit test variant
-        if self.run_tests:
-            options.append('-DENABLE_TESTS=ON')
-        else:
-            options.append('-DENABLE_TESTS=OFF')
+        options.append(self.define('ENABLE_TESTS', self.run_tests))
 
         return options
