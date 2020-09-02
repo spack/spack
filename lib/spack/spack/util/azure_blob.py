@@ -97,29 +97,29 @@ class AzureBlob:
             container_client = (self.blob_service_client.
                                get_container_client(self.container_name))
             blob_gen = container_client.list_blobs()
-            blob_list=[]
+            blob_list = []
             for blob in blob_gen:
                 p = blob.name.split('/')
                 blob_list.append(os.path.join(*p[2:]))
             return blob_list
         except Exception as ex:
-            tty.error("%s, Could not get a list of azure blobs" % (ex))            
+            tty.error("%s, Could not get a list of azure blobs" % (ex))
 
     def azure_url_sas(self):
         from azure.storage.blob import ResourceTypes, AccountSasPermissions, \
-generate_account_sas
+            generate_account_sas
         try:
             sas_token = generate_account_sas(
-self.blob_service_client.account_name, account_key=
-self.blob_service_client.credential.account_key, 
-resource_types=ResourceTypes(object=True), 
-permission=AccountSasPermissions(read=True), 
-expiry=datetime.datetime.utcnow() + 
-datetime.timedelta(minutes=5))
+    self.blob_service_client.account_name, account_key=
+    self.blob_service_client.credential.account_key, 
+    resource_types=ResourceTypes(object=True), 
+    permission=AccountSasPermissions(read=True), 
+    expiry=datetime.datetime.utcnow() + 
+    datetime.timedelta(minutes=5))
         except Exception as ex:
             tty.error("%s, Could not generate a sas token for Azure blob \
 storage" % (ex))
         url_str = self.url.geturl()
         url_str = url_str.replace('azure', 'https', 1)
-        url_sas_str = url_str + '?' + sas_token 
+        url_sas_str = url_str + '?' + sas_token
         return url_sas_str
