@@ -67,7 +67,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
 
     depends_on('cuda', when=('+cuda' or '+legacy'))
     depends_on('cudnn', when=('+cuda' or '+legacy'))
-    depends_on('cub', when=('+cuda' or '+legacy'))
+    depends_on('cub', when='^cuda@:10.99')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('openblas', when='blas=openblas ~openmp_blas ~int64_blas')
