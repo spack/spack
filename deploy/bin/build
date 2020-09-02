@@ -7,6 +7,8 @@ import os
 import shutil
 import sys
 
+import llnl.util.tty as tty
+
 import spack.environment as ev
 import spack.error
 import spack.report
@@ -67,5 +69,7 @@ if __name__ == "__main__":
     no_fail = False
     try:
         no_fail = run()
+    except e:
+        tty.die(e)
     finally:
         sys.exit(0 if no_fail else 1)

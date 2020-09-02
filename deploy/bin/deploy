@@ -41,14 +41,15 @@ class Builder:
 
         Returns if the whole graph could be built successfully.
         """
-        with open(os.path.join(logdir, "installed.txt"), "w") as fd:
-            with Pool(processes=self._processes) as piscine:
-                while not self.done:
-                    for name in self.process_queue():
-                        dag_hash = name.split("/")[-1]
+        installfile = os.path.join(logdir, "installed.txt")
+        with Pool(processes=self._processes) as piscine:
+            while not self.done:
+                for name in self.process_queue():
+                    dag_hash = name.split("/")[-1]
+                    with open(installfile, "a") as fd:
                         fd.write("/{}\n".format(dag_hash))
-                    self.submit_unprocessed(piscine, env, logdir)
-                    time.sleep(self._sleeptime)
+                self.submit_unprocessed(piscine, env, logdir)
+                time.sleep(self._sleeptime)
         logger.info("Processed graph")
         self.print_remainder()
         return len(self._graph) == 0
@@ -136,26 +137,41 @@ class Builder:
                 yield k
 
 
-parser = ArgumentParser()
-parser.add_argument('-e', '--env', required=True,
-                    help='environment to use')
-parser.add_argument('-j', '--processes', default=6, type=int,
-                    help='number of parallel processes to build with')
-parser.add_argument('specfile',
-                    help='spec specification to use with the environment')
-parser.add_argument('logdir',
-                    help='directory to store build data in')
-args = parser.parse_args()
+def run():
+    parser = ArgumentParser()
+    parser.add_argument('-e', '--env', required=True,
+                        help='environment to use')
+    parser.add_argument('-j', '--processes', default=6, type=int,
+                        help='number of parallel processes to build with')
+    parser.add_argument('specfile',
+                        help='spec specification to use with the environment')
+    parser.add_argument('logdir',
+                        help='directory to store build data in')
+    args = parser.parse_args()
 
-userfile = os.path.join(args.logdir, 'specs.txt')
-installfile = NamedTemporaryFile(mode="w+")
-check_call(["concretize", "-e", args.env, args.specfile, installfile.name, userfile])
+    userfile = os.path.join(args.logdir, 'specs.txt')
+    installfile = NamedTemporaryFile(mode="w+")
+    check_call(["concretize", "-e", args.env, args.specfile, installfile.name, userfile])
 
-try:
-    with installfile as fd:
-        graph = json.load(fd)
-except ValueError:
-    sys.exit(1)
+    try:
+        with installfile as fd:
+            graph = json.load(fd)
+    except ValueError:
+        sys.exit(1)
 
-robert = Builder(graph, args.processes)
-robert.build_all(args.env, args.logdir)
+    uninstalled_hashes = set(n['name'].rsplit(' ', 1)[1]
+                             for n in graph.values())
+    installfile = os.path.join(args.logdir, "installed.txt")
+    with open(installfile, 'w') as fd:
+        with open(userfile, 'r') as ifd:
+            for line in ifd:
+                install_hash = line.strip().rsplit(' ', 1)[1]
+                if install_hash not in uninstalled_hashes:
+                    fd.write('{}\n'.format(install_hash))
+
+    robert = Builder(graph, args.processes)
+    robert.build_all(args.env, args.logdir)
+
+
+if __name__ == '__main__':
+    run()
