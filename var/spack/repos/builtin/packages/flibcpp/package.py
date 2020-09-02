@@ -31,6 +31,14 @@ class Flibcpp(CMakePackage):
     depends_on('swig@fortran', type='build', when="+swig")
     depends_on('py-sphinx', type='build', when="+doc")
 
+    @run_before('cmake')
+    def die_without_fortran(self):
+        # Until we can pass compiler requirements through virtual
+        # dependencies, explicitly check for Fortran compiler instead of
+        # waiting for configure error.
+        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+            raise InstallError('Flibcpp requires a Fortran compiler')
+
     def cmake_args(self):
         return [
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
