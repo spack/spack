@@ -228,6 +228,19 @@ class SimModel(Package):
                                     recursive=False):
             env.prepend_path('BGLIBPY_MOD_LIBRARY_PATH', libnrnmech_name)
 
+    @property
+    def name(self):
+        """Override the default implementation.
+
+        Caching the name (as done by default) for this package and its
+        descendants in the class hierarchy will mess with the build system
+        and result in no descendant packages installed.
+        """
+        name = self.module.__name__
+        if '.' in name:
+            name = name[name.rindex('.') + 1:]
+        return name
+
 
 @contextmanager
 def profiling_wrapper_on():
