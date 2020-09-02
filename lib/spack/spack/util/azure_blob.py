@@ -35,7 +35,6 @@ class AzureBlob:
  AZURE_STORAGE_CONNECTION_STRING is not defined, it is \
  required if you want to use Azure Blob storage as an \
  spack buildcache")
-           sys.exit(1)
 
     def get_container_blob_path(self):
         blob_path = self.url.path
