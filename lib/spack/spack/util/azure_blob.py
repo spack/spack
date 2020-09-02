@@ -27,7 +27,7 @@ class AzureBlob:
             self.connect_str = (os.environ.
                                 get('AZURE_STORAGE_CONNECTION_STRING'))
             self.blob_service_client = (BlobServiceClient.
-                                        from_connection_string(self.connect_str))
+                                      from_connection_string(self.connect_str))
             if not self.azure_container_exists():
                 tty.warn("The container %s does not exist, it will be created"
                          % (self.container_name))
@@ -83,7 +83,7 @@ class AzureBlob:
         try:
             blob_client = (self.blob_service_client.
                            get_blob_client(container=self.container_name,
-                           blob=self.blob_path))
+                                           blob=self.blob_path))
             with open(local_file_path, "rb") as data:
                 (blob_client.upload_blob(data, overwrite=True,
                                          content_settings=contentsettings))
@@ -109,11 +109,11 @@ class AzureBlob:
             generate_account_sas
         try:
             sas_token = generate_account_sas(
-                self.blob_service_client.account_name, account_key =
+                self.blob_service_client.account_name, account_key=
                 self.blob_service_client.credential.account_key,
-                resource_types = ResourceTypes(object=True),
-                permission = AccountSasPermissions(read=True),
-                expiry = datetime.datetime.utcnow() +
+                resource_types=ResourceTypes(object=True),
+                permission=AccountSasPermissions(read=True),
+                expiry=datetime.datetime.utcnow() +
                 datetime.timedelta(minutes=5))
         except Exception as ex:
             tty.error("%s, Could not generate a sas token for Azure blob \
