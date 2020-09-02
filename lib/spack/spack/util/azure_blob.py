@@ -24,7 +24,8 @@ class AzureBlob:
             'Can not create Azure blob connection from URL with scheme: %s'
             % (url.scheme))
         if "AZURE_STORAGE_CONNECTION_STRING" in os.environ:
-            self.connect_str = os.environ.get('AZURE_STORAGE_CONNECTION_STRING')
+            self.connect_str = (os.environ.
+            get('AZURE_STORAGE_CONNECTION_STRING'))
             self.blob_service_client = (BlobServiceClient.
             from_connection_string(self.connect_str))
             if not self.azure_container_exists():
@@ -42,7 +43,7 @@ class AzureBlob:
         path_list = blob_path.split('/')
         container_name = path_list[1]
         blob_path = os.path.join(*path_list[2:])
-        tty.debug("container_name = {}, blob_path = {}"
+        tty.debug("container_name = %s, blob_path = %s"
         % (container_name, blob_path))
         return (container_name, blob_path)
 
@@ -58,16 +59,17 @@ class AzureBlob:
                    get_container_client(self.container_name).list_blobs())
             for blob in ttt:
                 pass
-        except Exception as ex:
+        except Exception:
             return False
         return True
 
     def azure_blob_exists(self):
         try:
-           blob_client = (self.blob_service_client.
-             get_blob_client(container=self.container_name, blob=self.blob_path))
-           blob_properties = blob_client.get_blob_properties()
-        except Exception as ex:
+            blob_client = (self.blob_service_client.
+            get_blob_client(container=self.container_name,
+            blob=self.blob_path))
+            blob_properties = blob_client.get_blob_properties()
+        except Exception:
             return False
         return True
 
@@ -75,35 +77,35 @@ class AzureBlob:
         from azure.storage.blob import ContentSettings
         filename, file_extension = os.path.splitext(self.blob_path)
         if file_extension == '.json':
-           contentsettings = ContentSettings(content_type="application/json")
+            contentsettings = ContentSettings(content_type="application/json")
         else:
-           contentsettings = ContentSettings()
+            contentsettings = ContentSettings()
         try:
-           blob_client = (self.blob_service_client.
-              get_blob_client(container=self.container_name, blob=self.blob_path))
-           with open(local_file_path, "rb") as data:
-               (blob_client.
-           upload_blob(data, overwrite=True, content_settings=contentsettings))
+            blob_client = (self.blob_service_client.
+            get_blob_client(container=self.container_name, blob=self.blob_path))
+            with open(local_file_path, "rb") as data:
+                (blob_client.
+                upload_blob(data, overwrite=True, content_settings=contentsettings))
         except Exception as ex:
-           tty.error("%s, Could not upload %s to azure blob storage"
-           % (ex, local_file_path))
+            tty.error("%s, Could not upload %s to azure blob storage"
+            % (ex, local_file_path))
 
     def azure_list_blobs(self):
         try:
-           container_client = (self.blob_service_client.
-                              get_container_client(self.container_name))
-           blob_gen = container_client.list_blobs()
-           blob_list=[]
-           for blob in blob_gen:
-               p = blob.name.split('/')
-               blob_list.append(os.path.join(*p[2:]))
-           return blob_list
+            container_client = (self.blob_service_client.
+                               get_container_client(self.container_name))
+            blob_gen = container_client.list_blobs()
+            blob_list=[]
+            for blob in blob_gen:
+                p = blob.name.split('/')
+                blob_list.append(os.path.join(*p[2:]))
+            return blob_list
         except Exception as ex:
-           tty.error("%s, Could not get a list of azure blobs" % (ex))            
+            tty.error("%s, Could not get a list of azure blobs" % (ex))            
 
     def azure_url_sas(self):
         from azure.storage.blob import ResourceTypes, AccountSasPermissions, \
-             generate_account_sas
+            generate_account_sas
         try:
             sas_token = generate_account_sas(
                         self.blob_service_client.account_name, account_key=
