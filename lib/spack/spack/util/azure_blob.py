@@ -31,9 +31,9 @@ class AzureBlob:
                 tty.warn("The container {} does not exist, it will be created".format(self.container_name))
                 self.blob_service_client.create_container(self.container_name)
         else:
-            tty.error("Error: Environmental variable \ 
- AZURE_STORAGE_CONNECTION_STRING is not defined, it is \ 
- required if you want to use Azure Blob storage as an \ 
+            tty.error("Error: Environmental variable \
+ AZURE_STORAGE_CONNECTION_STRING is not defined, it is \
+ required if you want to use Azure Blob storage as an \
  spack buildcache")
            sys.exit(1)
 
