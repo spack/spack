@@ -62,7 +62,7 @@ class Coreneuron(CMakePackage):
     # nmodl specific dependency
     depends_on('nmodl@0.3b:', when='@0.17:+nmodl')
     depends_on('nmodl@0.3a', when='@0:0.16+nmodl')
-    depends_on('eigen@3.3.4:~metis~scotch~fftw~suitesparse~mpfr', when='+nmodl')
+    depends_on('eigen@3.3.4:', when='+nmodl')
     depends_on('ispc', when='+ispc')
 
     # Old versions. Required by previous neurodamus package.
