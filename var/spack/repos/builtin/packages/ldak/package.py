@@ -19,7 +19,7 @@ class Ldak(Package):
     depends_on('zlib')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('intel-mkl', when='+mkl')
+    depends_on('mkl', when='+mkl')
 
     def setup_build_environment(self, env):
         env.append_flags('LDLIBS', '-lm')
@@ -39,4 +39,4 @@ class Ldak(Package):
         else:
             make('ldak_slow')
             mkdirp(prefix.bin)
-            install('ldak_slow', join_path(prefix.bin, 'ldak'))
+            install('ldak_slow', prefix.bin.ldak)
