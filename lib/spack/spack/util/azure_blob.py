@@ -3,12 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""This file contains the definition of the Azure Blob storage Class used to 
+"""This file contains the definition of the Azure Blob storage Class used to
    integrate Azure Blob storage with spack buildcache.
 """
 
 import os
-import sys
 import datetime
 
 import llnl.util.tty as tty
@@ -22,13 +21,15 @@ class AzureBlob:
         (self.container_name, self.blob_path) = self.get_container_blob_path()
         if url.scheme != 'azure':
             raise ValueError(
-            'Can not create Azure blob connection from URL with scheme: {SCHEME}'.format(
-                SCHEME=url.scheme))
+            'Can not create Azure blob connection from URL with scheme: {SCHEME}'
+            % (SCHEME=url.scheme))
         if "AZURE_STORAGE_CONNECTION_STRING" in os.environ:
             self.connect_str = os.environ.get('AZURE_STORAGE_CONNECTION_STRING')
-            self.blob_service_client = BlobServiceClient.from_connection_string(self.connect_str)
+            self.blob_service_client = (BlobServiceClient.
+            from_connection_string(self.connect_str))
             if not self.azure_container_exists():
-                tty.warn("The container {} does not exist, it will be created".format(self.container_name))
+                tty.warn("The container %s does not exist, it will be created"
+                % (self.container_name))
                 self.blob_service_client.create_container(self.container_name)
         else:
             tty.error("Error: Environmental variable \
@@ -38,11 +39,11 @@ class AzureBlob:
 
     def get_container_blob_path(self):
         blob_path = self.url.path
-        l = blob_path.split('/')
-        container_name = l[1]
-        blob_path = os.path.join(*l[2:])
-        tty.debug("container_name = {}, blob_path = {}".
-                   format(container_name, blob_path))
+        path_list = blob_path.split('/')
+        container_name = path_list[1]
+        blob_path = os.path.join(*path_list[2:])
+        tty.debug("container_name = {}, blob_path = {}"
+        % (container_name, blob_path))
         return (container_name, blob_path)
 
     def is_https(self):
@@ -72,7 +73,8 @@ class AzureBlob:
 
     def azure_upload_to_blob(self, local_file_path):
         from azure.storage.blob import ContentSettings
-        if Path(self.blob_path).suffix == '.json':
+        filename, file_extension = os.path.splitext(self.blob_path)
+        if file_extension == '.json':
            contentsettings = ContentSettings(content_type="application/json")
         else:
            contentsettings = ContentSettings()
@@ -83,8 +85,8 @@ class AzureBlob:
                (blob_client.
            upload_blob(data, overwrite=True, content_settings=contentsettings))
         except Exception as ex:
-           tty.error("{}, Could not upload {} to azure blob storage".
-           format(ex, local_file_path))
+           tty.error("%s, Could not upload %s to azure blob storage"
+           % (ex, local_file_path))
 
     def azure_list_blobs(self):
         try:
@@ -93,11 +95,11 @@ class AzureBlob:
            blob_gen = container_client.list_blobs()
            blob_list=[]
            for blob in blob_gen:
-               p = Path(blob.name)
-               blob_list.append(str(Path(*p.parts[2:])))
+               p = blob.name.split('/')
+               blob_list.append(os.path.join(*p[2:]))
            return blob_list
         except Exception as ex:
-           tty.error("{}, Could not get a list of azure blobs".format(ex))            
+           tty.error("%s, Could not get a list of azure blobs" % (ex))            
 
     def azure_url_sas(self):
         from azure.storage.blob import ResourceTypes, AccountSasPermissions, \
@@ -111,8 +113,8 @@ class AzureBlob:
                         expiry=datetime.datetime.utcnow() + 
                         datetime.timedelta(minutes=5))
         except Exception as ex:
-            tty.error("{}, Could not generate a sas token for Azure blob \
-storage".format(ex))
+            tty.error("%s, Could not generate a sas token for Azure blob \
+storage" % (ex))
         url_str = self.url.geturl()
         url_str = url_str.replace('azure', 'https', 1)
         url_sas_str = url_str + '?' + sas_token 
