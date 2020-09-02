@@ -79,3 +79,7 @@ class PyPandas(PythonPackage):
     depends_on('py-pytest-xdist', type='test')
     depends_on('py-hypothesis@3.58:', type='test')
     depends_on('py-pyarrow@0.10.0:', type='test')
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%intel'):
+            env.set('LDSHARED', '%s -shared' % spack_cc)
