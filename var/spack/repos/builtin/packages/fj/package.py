@@ -15,7 +15,7 @@ class Fj(Package):
     computing workloads.
     """
 
-    homepage = "https://www.fujitsu.com/global/Images/openmp-compiler-datasheet-v5.pdf"
+    homepage = "https://www.fujitsu.com/global/us"
 
     maintainers = ['t-karatsu']
 
@@ -25,11 +25,11 @@ class Fj(Package):
             'detected on a system where they are supplied by vendor'
         )
 
-    executables = ['fcc', 'FCC', 'frt']
+    executables = ['^fcc', '^FCC', '^frt']
 
     @classmethod
     def determine_version(cls, exe):
-        version_regex = re.compile(r'\((?:FCC|FRT)\) ([\d.]+)')
+        version_regex = re.compile(r'\((?:FCC|FRT)\) ([a-z\d.]+)')
         try:
             output = spack.compiler.get_compiler_version_output(
                 exe, '--version'
