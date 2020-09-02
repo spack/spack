@@ -74,6 +74,12 @@ class AzureBlob:
             return False
         return True
 
+    def azure_delete_blob(self):
+        blob_client = (self.blob_service_client.
+                       get_blob_client(container=self.container_name,
+                                       blob=self.blob_path))
+        blob_client.delete_blob()
+
     def azure_upload_to_blob(self, local_file_path):
         from azure.storage.blob import ContentSettings
         filename, file_extension = os.path.splitext(self.blob_path)
@@ -100,7 +106,8 @@ class AzureBlob:
             blob_list = []
             for blob in blob_gen:
                 p = blob.name.split('/')
-                blob_list.append(os.path.join(*p[2:]))
+                build_cache_index = p.index('build_cache')
+                blob_list.append(os.path.join(*p[build_cache_index + 1:]))
             return blob_list
         except Exception as ex:
             tty.error("%s, Could not get a list of azure blobs" % (ex))
