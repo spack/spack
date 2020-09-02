@@ -21,8 +21,8 @@ class AzureBlob:
         (self.container_name, self.blob_path) = self.get_container_blob_path()
         if url.scheme != 'azure':
             raise ValueError(
-            'Can not create Azure blob connection from URL with scheme: {SCHEME}'
-            % (SCHEME=url.scheme))
+            'Can not create Azure blob connection from URL with scheme: %s'
+            % (url.scheme))
         if "AZURE_STORAGE_CONNECTION_STRING" in os.environ:
             self.connect_str = os.environ.get('AZURE_STORAGE_CONNECTION_STRING')
             self.blob_service_client = (BlobServiceClient.
