@@ -109,9 +109,9 @@ class AzureBlob:
         from azure.storage.blob import ResourceTypes, AccountSasPermissions, \
             generate_account_sas
         try:
-            sas_token=generate_account_sas(
-                self.blob_service_client.account_name, account_key=
-                self.blob_service_client.credential.account_key,
+            sas_token = generate_account_sas(
+                self.blob_service_client.account_name, account_key=self.
+                blob_service_client.credential.account_key,
                 resource_types=ResourceTypes(object=True),
                 permission=AccountSasPermissions(read=True),
                 expiry=datetime.datetime.utcnow() +
