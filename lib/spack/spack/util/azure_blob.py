@@ -25,7 +25,7 @@ class AzureBlob:
                 % (url.scheme))
         if "AZURE_STORAGE_CONNECTION_STRING" in os.environ:
             self.connect_str = (os.environ.
-                 get('AZURE_STORAGE_CONNECTION_STRING'))
+                                get('AZURE_STORAGE_CONNECTION_STRING'))
             self.blob_service_client = (BlobServiceClient.
                 from_connection_string(self.connect_str))
             if not self.azure_container_exists():
