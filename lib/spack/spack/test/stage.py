@@ -530,15 +530,14 @@ class TestStage(object):
         check_destroy(stage, self.stage_name)
 
     def test_search_if_default_fails(self, failing_fetch_strategy, search_fn):
+        err = 'All fetchers failed'
         stage = Stage(failing_fetch_strategy,
                       name=self.stage_name,
                       search_fn=search_fn)
+
         with stage:
-            try:
+            with pytest.raises(spack.fetch_strategy.FetchError, match=err):
                 stage.fetch(mirror_only=False)
-                assert False, 'Expected fetch to fail'
-            except spack.fetch_strategy.FetchError as err:
-                assert 'All fetchers failed' in str(err)
 
         check_destroy(stage, self.stage_name)
         assert search_fn.performed_search
@@ -547,13 +546,11 @@ class TestStage(object):
         stage = Stage(failing_fetch_strategy,
                       name=self.stage_name,
                       search_fn=search_fn)
+
         msg = 'Manual download is required for test'
         with stage:
-            try:
+            with pytest.raises(spack.fetch_strategy.FetchError, match=msg):
                 stage.fetch(mirror_only=False, error_msg=msg)
-                assert False, 'Expected fetch to fail'
-            except spack.fetch_strategy.FetchError as err:
-                assert 'Manual download is required' in str(err)
 
     def test_ensure_one_stage_entry(self, mock_stage_archive):
         archive = mock_stage_archive()
