@@ -10,10 +10,12 @@ class Scotch(Package):
     """Scotch is a software package for graph and mesh/hypergraph
        partitioning, graph clustering, and sparse matrix ordering."""
 
-    homepage = "http://www.labri.fr/perso/pelegrin/scotch/"
+    homepage = "http://scotch.gforge.inria.fr/"
+    git      = "https://gitlab.inria.fr/scotch/scotch.git"
     url      = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.4.tar.gz"
     list_url = "http://gforge.inria.fr/frs/?group_id=248"
 
+    version('6.0.10', sha256='fd8b707b8200823312a1571d97d3776ff3dfd3280cfa4b6e38987153cea5dbda')
     version('6.0.9', sha256='622b4143cf01c480bb15708b3651b29c25e4aeb00c8c6447ff196aca2eca5c93')
     version('6.0.8', sha256='0ba3f145026174304f910c8770a3cbb034f213c91d939573751cfbb4fd46d45e')
     version('6.0.6', sha256='686f0cad88d033fe71c8b781735ff742b73a1d82a65b8b1586526d69729ac4cf')
