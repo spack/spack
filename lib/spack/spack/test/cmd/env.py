@@ -525,22 +525,25 @@ env:
                for x in e._get_environment_specs())
 
 
-def test_with_config_bad_include(capfd):
+def test_with_config_bad_include(env_deactivate, capfd):
+    env_name = 'test_bad_include'
     test_config = """\
 spack:
   include:
   - /no/such/directory
   - no/such/file.yaml
 """
-    _env_create('test', StringIO(test_config))
+    _env_create(env_name, StringIO(test_config))
 
-    e = ev.read('test')
-    with e:
-        e.concretize()
+    e = ev.read(env_name)
+    with pytest.raises(SystemExit):
+        with e:
+            e.concretize()
 
-    _, err = capfd.readouterr()
-    assert 'Ignoring' in err
-    assert 'include /no/such/directory' in err
+    out, err = capfd.readouterr()
+
+    assert 'missing include' in err
+    assert '/no/such/directory' in err
     assert 'no/such/file.yaml' in err
 
 
