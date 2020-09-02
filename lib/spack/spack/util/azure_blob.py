@@ -27,10 +27,10 @@ class AzureBlob:
             self.connect_str = (os.environ.
                                 get('AZURE_STORAGE_CONNECTION_STRING'))
             self.blob_service_client = (BlobServiceClient.
-                from_connection_string(self.connect_str))
+                                        from_connection_string(self.connect_str))
             if not self.azure_container_exists():
                 tty.warn("The container %s does not exist, it will be created"
-                    % (self.container_name))
+                         % (self.container_name))
                 self.blob_service_client.create_container(self.container_name)
         else:
             tty.error("Error: Environmental variable \
@@ -44,7 +44,7 @@ class AzureBlob:
         container_name = path_list[1]
         blob_path = os.path.join(*path_list[2:])
         tty.debug("container_name = %s, blob_path = %s"
-            % (container_name, blob_path))
+                  % (container_name, blob_path))
         return (container_name, blob_path)
 
     def is_https(self):
@@ -66,8 +66,8 @@ class AzureBlob:
     def azure_blob_exists(self):
         try:
             blob_client = (self.blob_service_client.
-                get_blob_client(container=self.container_name,
-                blob=self.blob_path))
+                           get_blob_client(container=self.container_name,
+                           blob=self.blob_path))
             blob_client.get_blob_properties()
         except Exception:
             return False
@@ -82,20 +82,19 @@ class AzureBlob:
             contentsettings = ContentSettings()
         try:
             blob_client = (self.blob_service_client.
-                get_blob_client(container=self.container_name,
-                blob=self.blob_path))
+                           get_blob_client(container=self.container_name,
+                           blob=self.blob_path))
             with open(local_file_path, "rb") as data:
-                (blob_client.
-                upload_blob(data, overwrite=True,
-                content_settings=contentsettings))
+                (blob_client.upload_blob(data, overwrite=True,
+                                         content_settings=contentsettings))
         except Exception as ex:
             tty.error("%s, Could not upload %s to azure blob storage"
-                % (ex, local_file_path))
+                      % (ex, local_file_path))
 
     def azure_list_blobs(self):
         try:
             container_client = (self.blob_service_client.
-                               get_container_client(self.container_name))
+                                get_container_client(self.container_name))
             blob_gen = container_client.list_blobs()
             blob_list = []
             for blob in blob_gen:
@@ -110,11 +109,11 @@ class AzureBlob:
             generate_account_sas
         try:
             sas_token = generate_account_sas(
-                self.blob_service_client.account_name, account_key=
+                self.blob_service_client.account_name, account_key =
                 self.blob_service_client.credential.account_key,
-                resource_types=ResourceTypes(object=True),
-                permission=AccountSasPermissions(read=True),
-                expiry=datetime.datetime.utcnow() +
+                resource_types = ResourceTypes(object=True),
+                permission = AccountSasPermissions(read=True),
+                expiry = datetime.datetime.utcnow() +
                 datetime.timedelta(minutes=5))
         except Exception as ex:
             tty.error("%s, Could not generate a sas token for Azure blob \
