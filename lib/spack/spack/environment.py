@@ -812,6 +812,7 @@ class Environment(object):
         # load config scopes added via 'include:', in reverse so that
         # highest-precedence scopes are last.
         includes = config_dict(self.yaml).get('include', [])
+        missing = []
         for i, config_path in enumerate(reversed(includes)):
             # allow paths to contain spack config/environment variables, etc.
             config_path = substitute_path_variables(config_path)
@@ -833,11 +834,15 @@ class Environment(object):
                 scope = spack.config.SingleFileScope(
                     config_name, config_path, spack.schema.merged.schema)
             else:
-                tty.warn('Ignoring non-existent include {0}'
-                         .format(config_path))
+                missing.append(config_path)
                 continue
 
             scopes.append(scope)
+
+        if missing:
+            msg = 'Detected {0} missing include path(s):'.format(len(missing))
+            msg += '\n   {0}'.format('\n   '.join(missing))
+            tty.die('{0}\nPlease correct and try again.'.format(msg))
 
         return scopes
 
