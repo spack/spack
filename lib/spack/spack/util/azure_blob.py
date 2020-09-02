@@ -78,7 +78,7 @@ class AzureBlob:
            contentsettings = ContentSettings()
         try:
            blob_client = (self.blob_service_client.
-              get_blob_client(container=self.container_name, blob=self.blob_path)
+              get_blob_client(container=self.container_name, blob=self.blob_path))
            with open(local_file_path, "rb") as data:
                (blob_client.
            upload_blob(data, overwrite=True, content_settings=contentsettings))
