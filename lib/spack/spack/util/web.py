@@ -121,7 +121,7 @@ def read_from_url(url, accept_content_type=None):
     if url.scheme == 'azure':
         azureblob = azure_blob_util.AzureBlob(url)
         azure_url_sas = azureblob.azure_url_sas()
-        tty.debug("(read_from_url) azure_url_sas = {}".format(azure_url_sas))
+        tty.debug("(read_from_url) azure_url_sas = %s" % (azure_url_sas))
         req = Request(azureblob.azure_url_sas())
     else:
         req = Request(url_util.format(url))
