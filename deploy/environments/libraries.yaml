@@ -36,6 +36,7 @@ spack:
     - libarchive
     - morphio
     - morpho-kit
+    - neuron+mpi~debug%intel
     - openscenegraph build_type=Release
     - nlohmann-json +single_header
     - pugixml
