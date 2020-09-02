@@ -86,5 +86,6 @@ class PyTorchvision(PythonPackage):
 
         if '+cuda' in self.spec['py-torch']:
             env.set('FORCE_CUDA', 1)
+            env.set('CUDA_HOME', self.spec['cuda'].prefix)
         else:
             env.set('FORCE_CUDA', 0)
