@@ -100,7 +100,7 @@ class AzureBlob:
            tty.error("{}, Could not get a list of azure blobs".format(ex))            
 
     def azure_url_sas(self):
-        from azure.storage.blob import ResourceTypes, AccountSasPermissions, 
+        from azure.storage.blob import ResourceTypes, AccountSasPermissions, \
              generate_account_sas
         try:
             sas_token = generate_account_sas(
