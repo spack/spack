@@ -73,6 +73,13 @@ class TestCopy:
             assert os.path.exists('dest/2')
             assert os.path.exists('dest/3')
 
+    def test_non_existing_src(self, stage):
+        """Test using a non-existing source."""
+
+        with fs.working_dir(str(stage)):
+            with pytest.raises(OSError, match='No such file or directory'):
+                fs.copy('source/none', 'dest')
+
 
 def check_added_exe_permissions(src, dst):
     src_mode = os.stat(src).st_mode
@@ -113,6 +120,13 @@ class TestInstall:
             assert os.path.exists('dest/3')
             check_added_exe_permissions('source/a/b/2', 'dest/2')
             check_added_exe_permissions('source/a/b/3', 'dest/3')
+
+    def test_non_existing_src(self, stage):
+        """Test using a non-existing source."""
+
+        with fs.working_dir(str(stage)):
+            with pytest.raises(OSError, match='No such file or directory'):
+                fs.install('source/none', 'dest')
 
 
 class TestCopyTree:
@@ -189,6 +203,13 @@ class TestCopyTree:
             assert os.path.exists('dest/i/9')
             assert os.path.exists('dest/j/10')
 
+    def test_non_existing_src(self, stage):
+        """Test using a non-existing source."""
+
+        with fs.working_dir(str(stage)):
+            with pytest.raises(OSError, match='No such file or directory'):
+                fs.copy_tree('source/none', 'dest')
+
 
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
@@ -244,6 +265,13 @@ class TestInstallTree:
             check_added_exe_permissions('source/g/h/i/8', 'dest/i/8')
             check_added_exe_permissions('source/g/h/i/9', 'dest/i/9')
             check_added_exe_permissions('source/g/i/j/10', 'dest/j/10')
+
+    def test_non_existing_src(self, stage):
+        """Test using a non-existing source."""
+
+        with fs.working_dir(str(stage)):
+            with pytest.raises(OSError, match='No such file or directory'):
+                fs.install_tree('source/none', 'dest')
 
 
 def test_paths_containing_libs(dirs_with_libfiles):

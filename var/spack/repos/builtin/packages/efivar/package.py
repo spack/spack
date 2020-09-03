@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Efivar(MakefilePackage):
     """Tools and libraries to work with EFI variables"""

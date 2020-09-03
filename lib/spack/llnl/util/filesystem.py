@@ -354,7 +354,11 @@ def copy(src, dest, _permissions=False):
     else:
         tty.debug('Copying {0} to {1}'.format(src, dest))
 
-    for src in glob.iglob(src):
+    files = glob.glob(src)
+    if not files:
+        raise OSError("No such file or directory: '{0}'".format(src))
+
+    for src in files:
         # Expand dest to its eventual full path if it is a directory.
         dst = dest
         if os.path.isdir(dest):
@@ -426,7 +430,11 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
     if not abs_dest.endswith(os.path.sep):
         abs_dest += os.path.sep
 
-    for src in glob.iglob(src):
+    files = glob.glob(src)
+    if not files:
+        raise OSError("No such file or directory: '{0}'".format(src))
+
+    for src in files:
         abs_src = os.path.abspath(src)
         if not abs_src.endswith(os.path.sep):
             abs_src += os.path.sep
