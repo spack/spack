@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import sys
-
 
 class Gdal(AutotoolsPackage):
     """GDAL (Geospatial Data Abstraction Library) is a translator library for
@@ -149,7 +146,8 @@ class Gdal(AutotoolsPackage):
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
-    depends_on('java', type=('build', 'link', 'run'), when='+java')
+    depends_on('java@4:', type=('build', 'link', 'run'), when='+java')
+    depends_on('swig', type='build', when='+java')
     depends_on('jackcess@1.2.0:1.2.999', type='run', when='+mdb')
     depends_on('armadillo', when='+armadillo')
     depends_on('cryptopp', when='+cryptopp @2.1:')
@@ -177,6 +175,10 @@ class Gdal(AutotoolsPackage):
         # See swig/python/GNUmakefile for more details.
         env.set('PREFIX', self.prefix)
         env.set('DESTDIR', '/')
+
+    def patch(self):
+        if '+java platform=darwin' in self.spec:
+            filter_file('linux', 'darwin', 'swig/java/java.opt', string=True)
 
     # https://trac.osgeo.org/gdal/wiki/BuildHints
     def configure_args(self):
@@ -406,6 +408,7 @@ class Gdal(AutotoolsPackage):
             args.append('--with-python=no')
 
         # https://trac.osgeo.org/gdal/wiki/GdalOgrInJava
+        # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
         if '+java' in spec:
             args.extend([
                 '--with-java={0}'.format(spec['java'].home),
@@ -498,6 +501,25 @@ class Gdal(AutotoolsPackage):
 
         return args
 
+    # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
+    def build(self, spec, prefix):
+        make()
+        if '+java' in spec:
+            with working_dir('swig/java'):
+                make()
+
+    def check(self):
+        # no top-level test target
+        if '+java' in self.spec:
+            with working_dir('swig/java'):
+                make('test')
+
+    def install(self, spec, prefix):
+        make('install')
+        if '+java' in spec:
+            with working_dir('swig/java'):
+                make('install')
+
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def import_module_test(self):
@@ -509,5 +531,5 @@ class Gdal(AutotoolsPackage):
     @run_after('install')
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
-        if sys.platform == 'darwin':
+        if 'platform=darwin' in self.spec:
             fix_darwin_install_name(self.prefix.lib)
