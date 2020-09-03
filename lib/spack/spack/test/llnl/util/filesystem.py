@@ -166,15 +166,6 @@ class TestCopyTree:
 
             assert os.path.exists('dest/sub/directory/a/b/2')
 
-    def test_parent_dir(self, stage):
-        """Test copying to from a parent directory."""
-
-        # Make sure we get the right error if we try to copy a parent into
-        # a descendent directory.
-        with pytest.raises(ValueError, match="Cannot copy"):
-            with fs.working_dir(str(stage)):
-                fs.copy_tree('source', 'source/sub/directory')
-
     def test_symlinks_true(self, stage):
         """Test copying with symlink preservation."""
 
@@ -228,13 +219,13 @@ class TestCopyTree:
             with pytest.raises(IOError, match='No such file or directory'):
                 fs.copy_tree('source/none', 'dest')
 
-    def test_ancestor_directory(self, stage):
+    def test_parent_dir(self, stage):
         """Test source as a parent directory of destination."""
 
         with fs.working_dir(str(stage)):
             match = 'Cannot copy ancestor directory'
             with pytest.raises(ValueError, match=match):
-                fs.copy_tree('source', 'source/a')
+                fs.copy_tree('source', 'source/sub/directory')
 
 
 class TestInstallTree:
@@ -299,13 +290,13 @@ class TestInstallTree:
             with pytest.raises(IOError, match='No such file or directory'):
                 fs.install_tree('source/none', 'dest')
 
-    def test_ancestor_directory(self, stage):
+    def test_parent_dir(self, stage):
         """Test source as a parent directory of destination."""
 
         with fs.working_dir(str(stage)):
             match = 'Cannot copy ancestor directory'
             with pytest.raises(ValueError, match=match):
-                fs.install_tree('source', 'source/a')
+                fs.install_tree('source', 'source/sub/directory')
 
 
 def test_paths_containing_libs(dirs_with_libfiles):
