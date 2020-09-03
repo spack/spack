@@ -339,9 +339,9 @@ pipeline {
         failure {
             script {
                 if (!env.ghprbPullId) {
-                    mail to: 'bbp-deployment@groupes.epfl.ch',
-                         subject: "Failed Deployment Build: ${currentBuild.fullDisplayName}",
-                         body: "See ${env.BUILD_URL}"
+                    // mail to: 'bbp-deployment@groupes.epfl.ch',
+                    //      subject: "Failed Deployment Build: ${currentBuild.fullDisplayName}",
+                    //      body: "See ${env.BUILD_URL}"
                 }
             }
         }
