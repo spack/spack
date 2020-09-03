@@ -437,7 +437,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
 
     Raises:
         IOError: if *src* does not match any files or directories
-        ValueError: if *src* is a parent directory of *dst*
+        ValueError: if *src* is a parent directory of *dest*
     """
     if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
@@ -510,7 +510,7 @@ def install_tree(src, dest, symlinks=True, ignore=None):
 
     Raises:
         IOError: if *src* does not match any files or directories
-        ValueError: if *src* is a parent directory of *dst*
+        ValueError: if *src* is a parent directory of *dest*
     """
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 
