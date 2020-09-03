@@ -1,0 +1,11 @@
+--- spack-src/trimadap/ksw.c.bak	2020-01-06 19:27:20.000000000 +0900
++++ spack-src/trimadap/ksw.c	2020-09-02 16:45:07.375298449 +0900
+@@ -26,7 +26,7 @@
+ #include <stdlib.h>
+ #include <stdint.h>
+ #include <string.h>
+-#include <emmintrin.h>
++#include <SSE2NEON.h>
+ #include "ksw.h"
+ 
+ #ifdef __GNUC__
