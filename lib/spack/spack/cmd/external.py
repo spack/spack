@@ -230,7 +230,7 @@ def _update_pkg_config(scope, pkg_to_entries, not_buildable):
 
     pkgs_cfg = spack.config.get('packages', scope=scope)
 
-    spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
+    pkgs_cfg = spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
     spack.config.set('packages', pkgs_cfg, scope=scope)
 
     return all_new_specs
