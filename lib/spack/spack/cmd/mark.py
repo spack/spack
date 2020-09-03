@@ -5,6 +5,8 @@
 
 from __future__ import print_function
 
+import sys
+
 import spack.cmd
 import spack.error
 import spack.package
@@ -73,9 +75,11 @@ def find_matching_specs(specs, allow_multiple_matches=False):
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
             tty.error('{0} matches multiple packages:'.format(spec))
-            print()
-            spack.cmd.display_specs(matching, **display_args)
-            print()
+            sys.stderr.write('\n')
+            spack.cmd.display_specs(matching, output=sys.stderr,
+                                    **display_args)
+            sys.stderr.write('\n')
+            sys.stderr.flush()
             has_errors = True
 
         # No installed package matches the query
