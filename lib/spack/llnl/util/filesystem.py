@@ -350,7 +350,7 @@ def copy(src, dest, _permissions=False):
         _permissions (bool): for internal use only
 
     Raises:
-        OSError: if src does not match any files or directories
+        IOError: if src does not match any files or directories
     """
     if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
@@ -359,7 +359,7 @@ def copy(src, dest, _permissions=False):
 
     files = glob.glob(src)
     if not files:
-        raise OSError("No such file or directory: '{0}'".format(src))
+        raise IOError("No such file or directory: '{0}'".format(src))
 
     for src in files:
         # Expand dest to its eventual full path if it is a directory.
@@ -385,7 +385,7 @@ def install(src, dest):
         dest (str): the destination file or directory
 
     Raises:
-        OSError: if src does not match any files or directories
+        IOError: if src does not match any files or directories
     """
     copy(src, dest, _permissions=True)
 
@@ -428,7 +428,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
         _permissions (bool): for internal use only
 
     Raises:
-        OSError: if src does not match any files or directories
+        IOError: if src does not match any files or directories
     """
     if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
@@ -441,7 +441,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
 
     files = glob.glob(src)
     if not files:
-        raise OSError("No such file or directory: '{0}'".format(src))
+        raise IOError("No such file or directory: '{0}'".format(src))
 
     for src in files:
         abs_src = os.path.abspath(src)
@@ -500,7 +500,7 @@ def install_tree(src, dest, symlinks=True, ignore=None):
         ignore (function): function indicating which files to ignore
 
     Raises:
-        OSError: if src does not match any files or directories
+        IOError: if src does not match any files or directories
     """
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 

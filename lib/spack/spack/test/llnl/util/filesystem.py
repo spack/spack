@@ -77,7 +77,7 @@ class TestCopy:
         """Test using a non-existing source."""
 
         with fs.working_dir(str(stage)):
-            with pytest.raises(OSError, match='No such file or directory'):
+            with pytest.raises(IOError, match='No such file or directory'):
                 fs.copy('source/none', 'dest')
 
 
@@ -125,7 +125,7 @@ class TestInstall:
         """Test using a non-existing source."""
 
         with fs.working_dir(str(stage)):
-            with pytest.raises(OSError, match='No such file or directory'):
+            with pytest.raises(IOError, match='No such file or directory'):
                 fs.install('source/none', 'dest')
 
 
@@ -207,7 +207,7 @@ class TestCopyTree:
         """Test using a non-existing source."""
 
         with fs.working_dir(str(stage)):
-            with pytest.raises(OSError, match='No such file or directory'):
+            with pytest.raises(IOError, match='No such file or directory'):
                 fs.copy_tree('source/none', 'dest')
 
 
@@ -270,7 +270,7 @@ class TestInstallTree:
         """Test using a non-existing source."""
 
         with fs.working_dir(str(stage)):
-            with pytest.raises(OSError, match='No such file or directory'):
+            with pytest.raises(IOError, match='No such file or directory'):
                 fs.install_tree('source/none', 'dest')
 
 
