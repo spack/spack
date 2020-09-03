@@ -16,6 +16,7 @@ import spack.stage
         ('configure',      'autotools'),
         ('CMakeLists.txt', 'cmake'),
         ('project.pro',    'qmake'),
+        ('pom.xml',        'maven'),
         ('SConstruct',     'scons'),
         ('waf',            'waf'),
         ('setup.py',       'python'),

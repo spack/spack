@@ -21,6 +21,7 @@ from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.cuda import CudaPackage
 from spack.build_systems.qmake import QMakePackage
+from spack.build_systems.maven import MavenPackage
 from spack.build_systems.scons import SConsPackage
 from spack.build_systems.waf import WafPackage
 from spack.build_systems.octave import OctavePackage
