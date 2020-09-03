@@ -18,4 +18,4 @@ class PyPillowSimd(PyPillowBase):
     version('7.0.0.post3', sha256='c27907af0e7ede1ceed281719e722e7dbf3e1dbfe561373978654a6b64896cb7')
 
     for ver in ['7.0.0.post3']:
-        provides('pil@' + ver, when='@' + str(Version(ver).up_to(3)))
+        provides('pil@' + ver, when='@' + ver)
