@@ -1211,6 +1211,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         spack.store.layout.remove_install_directory(self.spec)
 
+    @property
+    def download_instr(self):
+        """
+        Defines the default manual download instructions.  Packages can
+        override the property to provide more information.
+
+        Returns:
+            (str):  default manual download instructions
+        """
+        required = ('Manual download is required for {0}. '
+                    .format(self.spec.name) if self.manual_download else '')
+        return ('{0}Refer to {1} for download instructions.'
+                .format(required, self.spec.package.homepage))
+
     def do_fetch(self, mirror_only=False):
         """
         Creates a stage directory and downloads the tarball for this package.
@@ -1245,10 +1259,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                  self.spec.format('{name}{@version}'), ck_msg)
 
         self.stage.create()
-        fetch_msg = None if not self.manual_download else \
-            ('Manual download is required for {0}. Refer to {1} for '
-             'directions.'.format(self.spec.name, self.spec.package.homepage))
-        self.stage.fetch(mirror_only, error_msg=fetch_msg)
+        err_msg = None if not self.manual_download else self.download_instr
+        self.stage.fetch(mirror_only, err_msg=err_msg)
         self._fetch_time = time.time() - start_time
 
         if checksum and self.version in self.versions:

@@ -400,13 +400,13 @@ class Stage(object):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
-    def fetch(self, mirror_only=False, error_msg=None):
+    def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
 
         Args:
             mirror_only (bool): only fetch from a mirror
-            error_msg (str or None): error message to use if all fetchers fail
-                or ``None`` for the default message
+            err_msg (str or None): the error message to display if all fetchers
+                fail or ``None`` for the default fetch failure message
         """
         fetchers = []
         if not mirror_only:
@@ -487,7 +487,7 @@ class Stage(object):
             print_errors(errors)
 
             self.fetcher = self.default_fetcher
-            raise fs.FetchError(error_msg or 'All fetchers failed', None)
+            raise fs.FetchError(err_msg or 'All fetchers failed', None)
 
         print_errors(errors)
 
