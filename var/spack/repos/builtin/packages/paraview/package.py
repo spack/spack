@@ -115,7 +115,7 @@ class Paraview(CMakePackage, CudaPackage):
     # Can't contretize with python2 and py-setuptools@45.0.0:
     depends_on('py-setuptools@:44.99.99', when='+python')
     # Can't contretize with python2 and py-pillow@7.0.0:
-    depends_on('py-pillow@:6', when='+python')
+    depends_on('pil@:6', when='+python')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 

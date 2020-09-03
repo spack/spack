@@ -60,8 +60,8 @@ class PyTorchvision(PythonPackage):
     # * libjpeg
 
     # https://github.com/pytorch/vision/issues/1712
-    depends_on('py-pillow@4.1.1:6', when='@:0.4', type=('build', 'run'))
-    depends_on('py-pillow@4.1.1:',  when='@0.5:', type=('build', 'run'))
+    depends_on('pil@4.1.1:6', when='@:0.4', type=('build', 'run'))
+    depends_on('pil@4.1.1:',  when='@0.5:', type=('build', 'run'))
 
     # Many of the datasets require additional dependencies to use.
     # These can be installed after the fact.
