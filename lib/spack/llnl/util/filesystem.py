@@ -350,7 +350,9 @@ def copy(src, dest, _permissions=False):
         _permissions (bool): for internal use only
 
     Raises:
-        IOError: if src does not match any files or directories
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* matches multiple files but *dest* is
+            not a directory
     """
     if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
@@ -360,6 +362,10 @@ def copy(src, dest, _permissions=False):
     files = glob.glob(src)
     if not files:
         raise IOError("No such file or directory: '{0}'".format(src))
+    if len(files) > 1 and not os.path.isdir(dest):
+        raise ValueError(
+            "'{0}' matches multiple files but '{1}' is not a directory".format(
+                src, dest))
 
     for src in files:
         # Expand dest to its eventual full path if it is a directory.
@@ -385,7 +391,9 @@ def install(src, dest):
         dest (str): the destination file or directory
 
     Raises:
-        IOError: if src does not match any files or directories
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* matches multiple files but *dest* is
+            not a directory
     """
     copy(src, dest, _permissions=True)
 
@@ -428,7 +436,8 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
         _permissions (bool): for internal use only
 
     Raises:
-        IOError: if src does not match any files or directories
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* is a parent directory of *dst*
     """
     if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
@@ -500,7 +509,8 @@ def install_tree(src, dest, symlinks=True, ignore=None):
         ignore (function): function indicating which files to ignore
 
     Raises:
-        IOError: if src does not match any files or directories
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* is a parent directory of *dst*
     """
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 

@@ -80,6 +80,15 @@ class TestCopy:
             with pytest.raises(IOError, match='No such file or directory'):
                 fs.copy('source/none', 'dest')
 
+    def test_multiple_src_file_dest(self, stage):
+        """Test a glob that matches multiple source files and a dest
+        that is not a directory."""
+
+        with fs.working_dir(str(stage)):
+            match = '.* matches multiple files but .* is not a directory'
+            with pytest.raises(ValueError, match=match):
+                fs.copy('source/a/*/*', 'dest/1')
+
 
 def check_added_exe_permissions(src, dst):
     src_mode = os.stat(src).st_mode
@@ -127,6 +136,15 @@ class TestInstall:
         with fs.working_dir(str(stage)):
             with pytest.raises(IOError, match='No such file or directory'):
                 fs.install('source/none', 'dest')
+
+    def test_multiple_src_file_dest(self, stage):
+        """Test a glob that matches multiple source files and a dest
+        that is not a directory."""
+
+        with fs.working_dir(str(stage)):
+            match = '.* matches multiple files but .* is not a directory'
+            with pytest.raises(ValueError, match=match):
+                fs.install('source/a/*/*', 'dest/1')
 
 
 class TestCopyTree:
@@ -210,6 +228,14 @@ class TestCopyTree:
             with pytest.raises(IOError, match='No such file or directory'):
                 fs.copy_tree('source/none', 'dest')
 
+    def test_ancestor_directory(self, stage):
+        """Test source as a parent directory of destination."""
+
+        with fs.working_dir(str(stage)):
+            match = 'Cannot copy ancestor directory'
+            with pytest.raises(ValueError, match=match):
+                fs.copy_tree('source', 'source/a')
+
 
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
@@ -272,6 +298,14 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             with pytest.raises(IOError, match='No such file or directory'):
                 fs.install_tree('source/none', 'dest')
+
+    def test_ancestor_directory(self, stage):
+        """Test source as a parent directory of destination."""
+
+        with fs.working_dir(str(stage)):
+            match = 'Cannot copy ancestor directory'
+            with pytest.raises(ValueError, match=match):
+                fs.install_tree('source', 'source/a')
 
 
 def test_paths_containing_libs(dirs_with_libfiles):
