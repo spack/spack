@@ -26,17 +26,19 @@ class Aomp(Package):
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
     version('3.5.0', sha256=aomp_sha)
 
-    depends_on('cmake@3.5.2', type='build')
+    depends_on('cmake@3.5.2:3.13.4', type='build')
     depends_on('binutils', type='build')
-    depends_on('rocm-device-libs@3.5:', type='build', when='@3.5:')
-    depends_on('hsakmt-roct@3.5:', type='build', when='@3.5:')
-    depends_on('hsa-rocr-dev@3.5:', type='build', when='@3.5:')
-    depends_on('comgr@3.5:', type='build', when='@3.5:')
-    depends_on('mesa~llvm@18.3:', type=('build', 'link'), when='@3.5:')
-    depends_on('py-setuptools@44.1.0', when='@3.5:')
-    depends_on('python@2.7.18', when='@3.5:')
-    depends_on('perl-data-dumper', type='build', when='@3.5:')
-    depends_on('gawk', type='build', when='@3.5:')
+    depends_on('rocm-device-libs@3.5:', type='build')
+    depends_on('hsakmt-roct@3.5:', type='build')
+    depends_on('hsa-rocr-dev@3.5:', type='build')
+    depends_on('comgr@3.5:', type='build')
+    depends_on('mesa~llvm@18.3:', type=('build', 'link'))
+    depends_on('py-setuptools@44.1.0', type='build')
+    depends_on('python@2.7.18', type='build')
+    depends_on('perl-data-dumper', type='build')
+    depends_on('awk', type='build')
+    depends_on('libelf', type=('build', 'link'))
+    depends_on('libffi', type=('build', 'link'))
 
     resource(
         name='rocm-device-libs',
@@ -107,6 +109,7 @@ class Aomp(Package):
         src = self.stage.source_path
         libomptarget = '{0}/aomp-dir/amd-llvm-project/openmp/libomptarget'
         aomp_extras = '{0}/aomp-dir/aomp-extras/aomp-device-libs'
+
         filter_file(
             '{ROCM_DIR}/lib/bitcode', '{DEVICE_LIBS_DIR}',
             aomp_extras.format(src) + '/aompextras/CMakeLists.txt',
@@ -116,7 +119,7 @@ class Aomp(Package):
             string=True)
 
         filter_file(
-            '\${ROCM_DIR}/hsa/include \${ROCM_DIR}/hsa/include/hsa',
+            r'\${ROCM_DIR}/hsa/include \${ROCM_DIR}/hsa/include/hsa',
             '${HSA_INCLUDE}/hsa/include ${HSA_INCLUDE}/hsa/include/hsa',
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
 
@@ -125,17 +128,17 @@ class Aomp(Package):
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
 
         filter_file(
-            '{ROCM_DIR}/lib\)',
+            r'{ROCM_DIR}/lib\)',
             '{HSAKMT_LIB})\nset(HSAKMT_LIB64 ${HSAKMT_LIB64})',
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
 
         filter_file(
-            '-L\${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}',
+            r'-L\${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}',
             '-L${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS} -L${HSAKMT_LIB64}',
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
 
         filter_file(
-            '-rpath,\${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}',
+            r'-rpath,\${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}',
             '-rpath,${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}' +
             ',-rpath,${HSAKMT_LIB64}',
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
@@ -149,21 +152,21 @@ class Aomp(Package):
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
 
         filter_file(
-            '-L\${LLVM_LIBDIR}\${OPENMP_LIBDIR_SUFFIX}',
+            r'-L\${LLVM_LIBDIR}\${OPENMP_LIBDIR_SUFFIX}',
             '-L${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX} -L${COMGR_LIB}',
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
 
         filter_file(
-            'rpath,\${LLVM_LIBDIR}\${OPENMP_LIBDIR_SUFFIX}',
+            r'rpath,\${LLVM_LIBDIR}\${OPENMP_LIBDIR_SUFFIX}',
             'rpath,${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX}' +
             '-Wl,-rpath,${COMGR_LIB}',
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
 
-    def setup_build_environment(self, build_env):
+    def setup_build_environment(self, env):
         aomp_prefix = self.spec['aomp'].prefix
-        build_env.set('AOMP', '{0}'.format(format(aomp_prefix)))
-        build_env.set('FC', '{0}/bin/flang'.format(format(aomp_prefix)))
-        build_env.set(
+        env.set('AOMP', '{0}'.format(format(aomp_prefix)))
+        env.set('FC', '{0}/bin/flang'.format(format(aomp_prefix)))
+        env.set(
             'GFXLIST',
             'gfx700 gfx701 gfx801 gfx803 gfx900 gfx902 gfx906 gfx908')
 
