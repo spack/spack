@@ -2154,3 +2154,38 @@ spack:
 
     # Check that an update does not raise
     env('update', '-y', str(abspath.dirname))
+
+
+@pytest.mark.regression('18338')
+def test_newline_in_commented_sequence_is_not_an_issue(tmpdir):
+    spack_yaml = """
+spack:
+  specs:
+  - dyninst
+  packages:
+    libelf:
+      externals:
+      - spec: libelf@0.8.13
+        modules:
+        - libelf/3.18.1
+
+  concretization: together
+"""
+    abspath = tmpdir.join('spack.yaml')
+    abspath.write(spack_yaml)
+
+    def extract_build_hash(environment):
+        _, dyninst = next(iter(environment.specs_by_hash.items()))
+        return dyninst['libelf'].build_hash()
+
+    # Concretize a first time and create a lockfile
+    with ev.Environment(str(tmpdir)) as e:
+        concretize()
+        libelf_first_hash = extract_build_hash(e)
+
+    # Check that a second run won't error
+    with ev.Environment(str(tmpdir)) as e:
+        concretize()
+        libelf_second_hash = extract_build_hash(e)
+
+    assert libelf_first_hash == libelf_second_hash
