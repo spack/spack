@@ -348,6 +348,9 @@ def copy(src, dest, _permissions=False):
         src (str): the file(s) to copy
         dest (str): the destination file or directory
         _permissions (bool): for internal use only
+
+    Raises:
+        OSError: if src does not match any files or directories
     """
     if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
@@ -380,6 +383,9 @@ def install(src, dest):
     Parameters:
         src (str): the file(s) to install
         dest (str): the destination file or directory
+
+    Raises:
+        OSError: if src does not match any files or directories
     """
     copy(src, dest, _permissions=True)
 
@@ -420,6 +426,9 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
         symlinks (bool): whether or not to preserve symlinks
         ignore (function): function indicating which files to ignore
         _permissions (bool): for internal use only
+
+    Raises:
+        OSError: if src does not match any files or directories
     """
     if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
@@ -489,6 +498,9 @@ def install_tree(src, dest, symlinks=True, ignore=None):
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
         ignore (function): function indicating which files to ignore
+
+    Raises:
+        OSError: if src does not match any files or directories
     """
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 
