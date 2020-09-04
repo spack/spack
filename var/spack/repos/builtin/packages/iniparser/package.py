@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Iniparser(MakefilePackage):
     """This modules offers parsing of ini files from the C level."""
@@ -20,9 +17,6 @@ class Iniparser(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)
-        with working_dir('src'):
-            for files in glob.glob('*.h'):
-                install(files, prefix.include)
         mkdirp(prefix.lib)
-        for files in glob.glob('libiniparser.*'):
-            install(files, prefix.lib)
+        install('src/*.h', prefix.include)
+        install('libiniparser.*', prefix.lib)

@@ -118,8 +118,8 @@ class Phist(CMakePackage):
     depends_on('ghost', when='kernel_lib=ghost')
 
     depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
-    depends_on('parmetis ^metis+int64', when='+parmetis +int64')
-    depends_on('parmetis ^metis~int64', when='+parmetis ~int64')
+    depends_on('parmetis+int64', when='+parmetis+int64')
+    depends_on('parmetis~int64', when='+parmetis~int64')
 
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package

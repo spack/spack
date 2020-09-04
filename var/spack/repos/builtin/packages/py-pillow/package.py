@@ -3,31 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
-
-class PyPillow(PythonPackage):
-    """Pillow is a fork of the Python Imaging Library (PIL). It adds image
-    processing capabilities to your Python interpreter. This library supports
-    many file formats, and provides powerful image processing and graphics
-    capabilities."""
-
-    homepage = "https://python-pillow.org/"
-    url      = "https://pypi.io/packages/source/P/Pillow/Pillow-7.2.0.tar.gz"
+class PyPillowBase(PythonPackage):
+    """Base class for Pillow and its fork Pillow-SIMD."""
 
     maintainers = ['adamjstewart']
     import_modules = ['PIL']
-
-    version('7.2.0', sha256='97f9e7953a77d5a70f49b9a48da7776dc51e9b738151b22dacf101641594a626')
-    version('7.0.0', sha256='4d9ed9a64095e031435af120d3c910148067087541131e82b3e8db302f4c8946')
-    version('6.2.2', sha256='db9ff0c251ed066d367f53b64827cc9e18ccea001b986d08c265e53625dab950')
-    version('6.2.1', sha256='bf4e972a88f8841d8fdc6db1a75e0f8d763e66e3754b03006cbc3854d89f1cb1')
-    version('6.2.0', sha256='4548236844327a718ce3bb182ab32a16fa2050c61e334e959f554cac052fb0df')
-    version('6.0.0', sha256='809c0a2ce9032cbcd7b5313f71af4bdc5c8c771cb86eb7559afd954cab82ebb5')
-    version('5.4.1', sha256='5233664eadfa342c639b9b9977190d64ad7aca4edc51a966394d7e08e7f38a9f')
-    version('5.1.0', sha256='cee9bc75bff455d317b6947081df0824a8f118de2786dc3d74a3503fd631f4ef')
-    version('3.2.0', sha256='64b0a057210c480aea99406c9391180cd866fc0fd8f0b53367e3af21b195784a')
-    version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb')
 
     provides('pil')
 
@@ -73,6 +53,8 @@ class PyPillow(PythonPackage):
     depends_on('libxcb', when='+xcb')
 
     conflicts('+webpmux', when='~webp', msg='Webpmux relies on WebP support')
+    conflicts('+imagequant', when='@:3.2', msg='imagequant support was added in 3.3')
+    conflicts('+xcb', when='@:7.0', msg='XCB support was added in 7.1')
 
     phases = ['build_ext', 'install']
 
@@ -93,15 +75,21 @@ class PyPillow(PythonPackage):
         setup.filter('include_dirs = []',
                      'include_dirs = {0}'.format(include_dirs), string=True)
 
-        def variant_to_cfg(setup):
+        def variant_to_cfg(variant):
             able = 'enable' if '+' + variant in self.spec else 'disable'
             return '{0}-{1}=1\n'.format(able, variant)
 
         with open('setup.cfg', 'a') as setup:
-            # Default backend
             setup.write('[build_ext]\n')
-            for variant in self.spec.variants.keys():
-                setup.write(variant_to_cfg(setup))
+            variants = list(self.spec.variants)
+
+            if self.spec.satisfies('@:7.0'):
+                variants.remove('xcb')
+            if self.spec.satisfies('@:3.2'):
+                variants.remove('imagequant')
+
+            for variant in variants:
+                setup.write(variant_to_cfg(variant))
 
             setup.write('rpath={0}\n'.format(':'.join(self.rpath)))
             setup.write('[install]\n')
@@ -115,3 +103,30 @@ class PyPillow(PythonPackage):
     run_after('install')(
         PythonPackage._run_default_install_time_test_callbacks)
     run_after('install')(PythonPackage.sanity_check_prefix)
+
+
+class PyPillow(PyPillowBase):
+    """Pillow is a fork of the Python Imaging Library (PIL). It adds image
+    processing capabilities to your Python interpreter. This library supports
+    many file formats, and provides powerful image processing and graphics
+    capabilities."""
+
+    homepage = "https://python-pillow.org/"
+    url      = "https://pypi.io/packages/source/P/Pillow/Pillow-7.2.0.tar.gz"
+
+    version('7.2.0', sha256='97f9e7953a77d5a70f49b9a48da7776dc51e9b738151b22dacf101641594a626')
+    version('7.0.0', sha256='4d9ed9a64095e031435af120d3c910148067087541131e82b3e8db302f4c8946')
+    version('6.2.2', sha256='db9ff0c251ed066d367f53b64827cc9e18ccea001b986d08c265e53625dab950')
+    version('6.2.1', sha256='bf4e972a88f8841d8fdc6db1a75e0f8d763e66e3754b03006cbc3854d89f1cb1')
+    version('6.2.0', sha256='4548236844327a718ce3bb182ab32a16fa2050c61e334e959f554cac052fb0df')
+    version('6.0.0', sha256='809c0a2ce9032cbcd7b5313f71af4bdc5c8c771cb86eb7559afd954cab82ebb5')
+    version('5.4.1', sha256='5233664eadfa342c639b9b9977190d64ad7aca4edc51a966394d7e08e7f38a9f')
+    version('5.1.0', sha256='cee9bc75bff455d317b6947081df0824a8f118de2786dc3d74a3503fd631f4ef')
+    version('3.2.0', sha256='64b0a057210c480aea99406c9391180cd866fc0fd8f0b53367e3af21b195784a')
+    version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb')
+
+    for ver in [
+        '7.2.0', '7.0.0', '6.2.2', '6.2.1', '6.2.0', '6.0.0',
+        '5.4.1', '5.1.0', '3.2.0', '3.0.0'
+    ]:
+        provides('pil@' + ver, when='@' + ver)

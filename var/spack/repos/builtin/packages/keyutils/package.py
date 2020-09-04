@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Keyutils(MakefilePackage):
     """These tools are used to control the key management system built
@@ -22,6 +19,4 @@ class Keyutils(MakefilePackage):
     def install(self, spec, prefix):
         install_tree('.', prefix)
         mkdirp(prefix.include)
-        headers = glob.glob(join_path(prefix, '*.h'))
-        for h in headers:
-            install(h, prefix.include)
+        install(join_path(prefix, '*.h'), prefix.include)
