@@ -47,10 +47,7 @@ def setup_parser(subparser):
         '-p', '--python-cache', action='store_true',
         help="remove .pyc, .pyo files and __pycache__ folders")
     subparser.add_argument(
-        '-t', '--test-stage', action='store_true',
-        help="remove all files in Spack test stage")
-    subparser.add_argument(
-        '-a', '--all', action=AllClean, help="equivalent to -sdfmpt", nargs=0
+        '-a', '--all', action=AllClean, help="equivalent to -sdfmp", nargs=0
     )
     arguments.add_common_arguments(subparser, ['specs'])
 
@@ -58,7 +55,7 @@ def setup_parser(subparser):
 def clean(parser, args):
     # If nothing was set, activate the default
     if not any([args.specs, args.stage, args.downloads, args.failures,
-                args.misc_cache, args.test_stage, args.python_cache]):
+                args.misc_cache, args.python_cache]):
         args.stage = True
 
     # Then do the cleaning falling through the cases
@@ -85,11 +82,6 @@ def clean(parser, args):
     if args.misc_cache:
         tty.msg('Removing cached information on repositories')
         spack.caches.misc_cache.destroy()
-
-    if args.test_stage:
-        tty.msg("Removing files in test stage")
-        test_remove_args = collections.namedtuple('args', ['name'])(None)
-        spack.cmd.test.test_remove(test_remove_args)
 
     if args.python_cache:
         tty.msg('Removing python cache files')
