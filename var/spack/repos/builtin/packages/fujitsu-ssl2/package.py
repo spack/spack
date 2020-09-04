@@ -7,7 +7,8 @@ from spack import *
 
 
 class FujitsuSsl2(Package):
-    """Fujitsu SSL2 (Scientific Subroutine Library II) is Math library for Fujitsu compiler.
+    """Fujitsu SSL2 (Scientific Subroutine Library II) is Math library
+    for Fujitsu compiler.
     Fujitsu SSL2 implementation only for Fujitsu compiler.
     Fujitsu SSL2 provides the function of blas, lapack and scalapack.
     """
@@ -30,7 +31,8 @@ class FujitsuSsl2(Package):
     provides("scalapack")
 
     def install(self, spec, prefix):
-        raise InstallError("Fujitsu SSL2 is not installable; it is vendor supplied")
+        raise InstallError(
+            "Fujitsu SSL2 is not installable; it is vendor supplied")
 
     @property
     def libs(self):
@@ -44,7 +46,7 @@ class FujitsuSsl2(Package):
             ],
             self.prefix.lib64,
             shared=True,
-            recursive=False
+            recursive=False,
         )
         staticlibs = find_libraries(
             [
@@ -55,7 +57,7 @@ class FujitsuSsl2(Package):
             ],
             self.prefix.lib64,
             shared=False,
-            recursive=False
+            recursive=False,
         )
         libs = sharedlibs + staticlibs
         return libs
