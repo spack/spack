@@ -18,7 +18,7 @@ class Hipblas(CMakePackage):
     for ver in ['3.5.0', '3.7.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, type='build', when='@' + ver)
-        depends_on('rocblas@' + ver, type='build', when='@' + ver)
+        depends_on('rocblas@' + ver, type='link', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
 
