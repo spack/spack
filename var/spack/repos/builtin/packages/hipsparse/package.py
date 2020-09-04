@@ -12,7 +12,7 @@ class Hipsparse(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipSPARSE"
     git      = "https://github.com/ROCmSoftwarePlatform/hipSPARSE.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-3.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-3.7.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 

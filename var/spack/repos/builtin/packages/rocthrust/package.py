@@ -13,7 +13,7 @@ class Rocthrust(CMakePackage):
        library works on HIP/ROCm platforms"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocThrust"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-3.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-3.7.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 

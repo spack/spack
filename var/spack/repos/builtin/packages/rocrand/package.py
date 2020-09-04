@@ -12,7 +12,7 @@ class Rocrand(CMakePackage):
        pseudo-random and quasi-random numbers."""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-3.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-3.7.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
