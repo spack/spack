@@ -31,6 +31,8 @@ class DarshanUtil(Package):
     depends_on('zlib')
     depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
 
+    patch('retvoid.patch')
+
     def install(self, spec, prefix):
 
         options = ['CC=%s' % self.compiler.cc,
