@@ -12,10 +12,11 @@ class Rocgdb(AutotoolsPackage):
         based on GDB, the GNU source-level debugger."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCgdb/"
-    url      = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-3.5.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-3.7.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.7.0', sha256='7a29ef584fd7b6c66bb03aaf8ec2f5a8c758370672a28a4d0d95066e5f6fbdc1')
     version('3.5.0', sha256='cf36d956e84c7a5711b71f281a44b0a9708e13e941d8fca0247d01567e7ee7d1')
     depends_on('cmake@3:', type='build')
     depends_on('texinfo', type='build')
@@ -25,7 +26,7 @@ class Rocgdb(AutotoolsPackage):
     depends_on('expat', type='build')
     depends_on('python', type='build')
     depends_on('zlib', type='link')
-    for ver in ['3.5.0']:
+    for ver in ['3.5.0', '3.7.0']:
         depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
         depends_on('comgr@' + ver, type='link', when='@' + ver)
 
@@ -52,6 +53,7 @@ class Rocgdb(AutotoolsPackage):
             '--without-guile',
             '--with-babeltrace',
             '--with-lzma',
-            '--with-python'
+            '--with-python',
+            '--with-rocm-dbgapi={0}'.format(self.spec['rocm-dbgapi'].prefix)
         ]
         return options

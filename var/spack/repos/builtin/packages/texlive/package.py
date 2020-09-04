@@ -3,10 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import platform
-import glob
 
 
 class Texlive(AutotoolsPackage):
@@ -152,8 +150,7 @@ class Texlive(AutotoolsPackage):
     def setup_texlive(self):
         if not self.spec.satisfies('@live'):
             mkdirp(self.prefix.tlpkg.TeXLive)
-            for files in glob.glob('texk/tests/TeXLive/*'):
-                install(files, self.prefix.tlpkg.TeXLive)
+            install('texk/tests/TeXLive/*', self.prefix.tlpkg.TeXLive)
 
             with working_dir('spack-build'):
                 make('texlinks')

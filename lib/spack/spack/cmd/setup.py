@@ -37,6 +37,7 @@ def setup_parser(subparser):
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
+    subparser.epilog = 'DEPRECATED: use `spack dev-build` instead'
 
 
 def write_spconfig(package, dirty):
@@ -98,6 +99,8 @@ env = dict(os.environ)
 
 
 def setup(self, args):
+    tty.warn('DEPRECATED: use `spack dev-build` instead')
+
     if not args.spec:
         tty.die("spack setup requires a package spec argument.")
 

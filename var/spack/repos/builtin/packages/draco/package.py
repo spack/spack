@@ -18,6 +18,7 @@ class Draco(CMakePackage):
     maintainers = ['KineticTheory']
 
     version('develop', branch='develop')
+    version('7.7.0',  sha256='eb7fffbcba48e16524f619d261192ead129f968c59f3581f3217b89590812ddf')
     version('7.6.0',  sha256='c2c6b329620d7bcb0f2fc14371f105dfb80a84e7c5adbb34620777034b15c7c9')
     version('7.5.0',  sha256='0bb12b5f5ff60ba3087310c07da42e8d4f481ec4259daaa24ec240815a2e9dec')
     version('7.4.0',  sha256='61da2c3feace0e92c5410c9e9e613708fdf8954b1367cdc62c415329b0ddab6e')
@@ -33,6 +34,7 @@ class Draco(CMakePackage):
 
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant('cuda',     default=False, description='Enable Cuda/GPU support')
     variant('eospac',   default=True, description='Enable EOSPAC support')
     variant('lapack',   default=True, description='Enable LAPACK wrapper')
     variant('libquo',   default=True, description='Enable Quo wrapper')
@@ -41,28 +43,35 @@ class Draco(CMakePackage):
     variant('superlu_dist', default=True, description='Enable SuperLU-DIST support')
 
     depends_on('gsl')
-    depends_on('mpi@3:',      type=('build', 'link', 'run'))
-    depends_on('numdiff',     type='build')
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('random123',   type='build')
+    depends_on('mpi@3:',                            type=('build', 'link', 'run'))
+    depends_on('numdiff',                           type='build')
+    depends_on('python@2.7:', when='@:7.6.99',      type=('build', 'run'))
+    depends_on('python@3.5:', when='@7.7.0:',       type=('build', 'run', 'test'))
+    depends_on('random123@1.09',                    type='build')
 
     depends_on('cmake@3.9:',  when='@:6.99',        type='build')
     depends_on('cmake@3.11:', when='@7.0.0:7.1.99', type='build')
-    depends_on('cmake@3.14:', when='@7.2:',         type='build')
+    depends_on('cmake@3.14:', when='@7.2:7.6.99',   type='build')
+    depends_on('cmake@3.17:', when='@7.7:',         type='build')
+    depends_on('cuda@10.1:',  when='+cuda')
     depends_on('eospac@6.3:', when='+eospac')
     depends_on('lapack',      when='+lapack')
-    depends_on('libquo',      when='@7.4.0:+libquo')
+    depends_on('libquo@1.3.1:', when='@7.4.0:+libquo')
     depends_on('metis',       when='+parmetis')
     depends_on('parmetis',    when='+parmetis')
     depends_on('qt',          when='+qt',
                type=('build', 'link', 'run'))
-    depends_on('superlu-dist@:5.99', when='+superlu_dist')
+    depends_on('superlu-dist@:5.99', when='@:7.6.99+superlu_dist')
+
+    conflicts('+cuda', when='@:7.6.99')
 
     # Fix python discovery.
     patch('d710.patch', when='@7.1.0^python@3:')
     patch('d710-python2.patch', when='@7.1.0^python@2.7:2.99')
     patch('d730.patch', when='@7.3.0:7.3.99')
     patch('d740.patch', when='@7.4.0:7.4.99')
+    patch('smpi.patch', when='@:7.6.99')
+    patch('d770-nocuda.patch', when='@7.7.0')
 
     def url_for_version(self, version):
         url = "https://github.com/lanl/Draco/archive/draco-{0}.zip"
@@ -74,4 +83,11 @@ class Draco(CMakePackage):
             '-Wno-dev',
             '-DBUILD_TESTING={0}'.format('ON' if self.run_tests else 'OFF')
         ])
+        if '~cuda' in self.spec:
+            options.extend(['-DUSE_CUDA=OFF'])
         return options
+
+    def check(self):
+        """Run ctest after building project."""
+        with working_dir(self.build_directory):
+            ctest('--output-on-failure')

@@ -9,18 +9,22 @@ class PySpacy(PythonPackage):
     Python and Cython."""
 
     homepage = "https://spacy.io/"
-    url      = "https://pypi.io/packages/source/s/spacy/spacy-2.2.4.tar.gz"
+    url      = "https://pypi.io/packages/source/s/spacy/spacy-2.3.2.tar.gz"
 
+    version('2.3.2', sha256='818de26e0e383f64ccbe3db185574920de05923d8deac8bbb12113b9e33cee1f')
     version('2.2.4', sha256='f0f3a67c5841e6e35d62c98f40ebb3d132587d3aba4f4dccac5056c4e90ff5b9')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@2.2.4:2.2.999')
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@2.3.0:')
     depends_on('py-wheel', type='build')
     depends_on('py-cython@0.25:', type='build')
-    depends_on('py-murmurhash@0.28:1.0', type=('build', 'run'))
     depends_on('py-cymem@2.0.2:2.0.999', type=('build', 'run'))
     depends_on('py-preshed@3.0.2:3.0.999', type=('build', 'run'))
-    depends_on('py-thinc@7.4.0', type=('build', 'run'))
+    depends_on('py-murmurhash@0.28:1.0', type=('build', 'run'))
+    depends_on('py-thinc@7.4.0', type=('build', 'run'), when='@2.2.4:2.2.999')
+    depends_on('py-thinc@7.4.1', type=('build', 'run'), when='@2.3.0:')
     depends_on('py-blis@0.4.0:0.4.999', type=('build', 'run'))
+    depends_on('py-wasabi@0.4.0:1.0.999', type=('build', 'run'))
     depends_on('py-srsly@1.0.2:1.0.999', type=('build', 'run'))
     depends_on('py-catalogue@0.0.7:1.0', type=('build', 'run'))
     depends_on('py-tqdm@4.38:4.999', type=('build', 'run'))

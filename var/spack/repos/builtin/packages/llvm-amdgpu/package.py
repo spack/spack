@@ -16,6 +16,7 @@ class LlvmAmdgpu(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.7.0', sha256='3e2542ce54b91b5c841f33d542143e0e43eae95e8785731405af29f08ace725b')
     version('3.5.0', sha256='4878fa85473b24d88edcc89938441edc85d2e8a785e567b7bd7ce274ecc2fd9c')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
@@ -26,6 +27,7 @@ class LlvmAmdgpu(CMakePackage):
     depends_on('zlib', type='link')
     depends_on('ncurses+termlib', type='link')
 
+    # Will likely only be fixed in LLVM 12 upstream
     patch('fix-system-zlib-ncurses.patch')
 
     root_cmakelists_dir = 'llvm'

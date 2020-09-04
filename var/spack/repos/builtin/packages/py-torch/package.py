@@ -208,7 +208,7 @@ class PyTorch(PythonPackage, CudaPackage):
             self.prefix, self.spec['python'].package.site_packages_dir,
             'torch', 'include')
         headers = find_all_headers(root)
-        headers.directories = root
+        headers.directories = [root]
         return headers
 
     def setup_build_environment(self, env):

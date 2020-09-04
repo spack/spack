@@ -35,6 +35,7 @@ class Trilinos(CMakePackage):
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
     version('master', branch='master')
+    version('13.0.0', commit='9fec35276d846a667bc668ff4cbdfd8be0dfea08')  # tag trilinos-release-13-0-0
     version('12.18.1', commit='55a75997332636a28afc9db1aee4ae46fe8d93e7')  # tag trilinos-release-12-8-1
     version('12.14.1', sha256='52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
     version('12.12.1', sha256='5474c5329c6309224a7e1726cf6f0d855025b2042959e4e2be2748bd6bb49e18')
@@ -197,8 +198,6 @@ class Trilinos(CMakePackage):
     # External package options
     variant('dtk',          default=False,
             description='Enable DataTransferKit')
-    variant('fortrilinos',  default=False,
-            description='Enable ForTrilinos')
     variant('mesquite',     default=False,
             description='Enable Mesquite')
 
@@ -219,11 +218,6 @@ class Trilinos(CMakePackage):
              placement='DataTransferKit',
              submodules=True,
              when='+dtk @develop')
-    resource(name='fortrilinos',
-             git='https://github.com/trilinos/ForTrilinos.git',
-             tag='develop',
-             placement='packages/ForTrilinos',
-             when='+fortrilinos')
     resource(name='mesquite',
              url='https://github.com/trilinos/mesquite/archive/trilinos-release-12-12-1.tar.gz',
              sha256='e0d09b0939dbd461822477449dca611417316e8e8d8268fd795debb068edcbb5',
@@ -249,6 +243,7 @@ class Trilinos(CMakePackage):
     conflicts('+belos', when='~teuchos')
     conflicts('+epetraext', when='~epetra')
     conflicts('+epetraext', when='~teuchos')
+    conflicts('+exodus', when='~netcdf')
     conflicts('+ifpack2', when='~belos')
     conflicts('+ifpack2', when='~teuchos')
     conflicts('+ifpack2', when='~tpetra')
@@ -296,9 +291,6 @@ class Trilinos(CMakePackage):
     conflicts('+dtk', when='~tpetra')
     # Only allow DTK with Trilinos 12.14 and develop
     conflicts('+dtk', when='@0:12.12.99,master')
-    conflicts('+fortrilinos', when='~fortran')
-    conflicts('+fortrilinos', when='@:99')
-    conflicts('+fortrilinos', when='@master')
     # Only allow Mesquite with Trilinos 12.12 and up, and develop
     conflicts('+mesquite', when='@0:12.10.99,master')
     # Can only use one type of SuperLU
@@ -777,3 +769,8 @@ class Trilinos(CMakePackage):
                         (r'\1\3'),
                         '%s/cmake/Trilinos/TrilinosConfig.cmake' %
                         self.prefix.lib)
+
+    def setup_run_environment(self, env):
+        if '+exodus' in self.spec:
+            env.prepend_path('PYTHONPATH',
+                             self.prefix.lib)

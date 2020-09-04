@@ -7,7 +7,8 @@ from spack import *
 from spack.error import SpackError
 
 
-def class_validator(pkg_name, variant_name, values):
+def class_validator(values):
+    """1, 2, 3, 4, 5, 6"""
     values = int(values[0])
     if values < 1 or values > 6:
         error_msg = ("class: Choose one of the following:\n"
@@ -33,24 +34,33 @@ class CcsQcd(MakefilePackage):
     version('master', branch='master')
     version('1.2.1', commit='d7c6b6923f35a824e997ba8db5bd12dc20dda45c')
 
-    variant('class', values=int, default=1,
+    variant('class', default=1, values=class_validator,
             description='This miniapp has five problem classes, for which the'
             ' first three are relatively small problems just for testing'
             ' this miniapp itself. The remaining two are the target problem'
             ' sizes for the HPCI FS evaluation.',
-            multi=False, validator=class_validator)
+            multi=False)
 
     depends_on('mpi')
 
     parallel = False
 
     def edit(self, spec, prefix):
+        if spec.satisfies('%gcc') and spec.satisfies('arch=aarch64:'):
+            chgopt = 'FFLAGS  =-O3 -ffixed-line-length-132 -g -fopenmp' \
+                     ' -mcmodel=large -funderscoring'
+            filter_file('FFLAGS  =.*', chgopt, join_path(
+                self.stage.source_path, 'src', 'make.gfortran.inc'))
         if '%fj' in spec:
-            filter_file('mpifrtpx', spec['mpi'].mpifc, './src/make.fx10.inc')
-            filter_file('mpifccpx', spec['mpi'].mpicc, './src/make.fx10.inc')
+            filter_file('mpifrtpx', spec['mpi'].mpifc, join_path(
+                        self.stage.source_path, 'src', 'make.fx10.inc'))
+            filter_file('mpifccpx', spec['mpi'].mpicc, join_path(
+                        self.stage.source_path, 'src', 'make.fx10.inc'))
         else:
-            filter_file('mpif90', spec['mpi'].mpifc, './src/make.gfortran.inc')
-            filter_file('mpicc', spec['mpi'].mpicc, './src/make.gfortran.inc')
+            filter_file('mpif90', spec['mpi'].mpifc, join_path(
+                        self.stage.source_path, 'src', 'make.gfortran.inc'))
+            filter_file('mpicc', spec['mpi'].mpicc, join_path(
+                        self.stage.source_path, 'src', 'make.gfortran.inc'))
 
     def build(self, spec, prefix):
         ccs_class = 'CLASS=' + spec.variants['class'].value

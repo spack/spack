@@ -113,10 +113,8 @@ class Libxsmm(MakefilePackage):
             install_tree('bin', prefix.bin)
 
         mkdirp(prefix.doc)
-        for doc_file in glob(join_path('documentation', '*.md')):
-            install(doc_file, prefix.doc)
-        for doc_file in glob(join_path('documentation', '*.pdf')):
-            install(doc_file, prefix.doc)
+        install(join_path('documentation', '*.md'), prefix.doc)
+        install(join_path('documentation', '*.pdf'), prefix.doc)
         if '@1.8.2:' in spec:
             install('LICENSE.md', prefix.doc)
         else:

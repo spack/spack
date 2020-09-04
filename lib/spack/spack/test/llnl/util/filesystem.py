@@ -30,6 +30,9 @@ def stage(tmpdir_factory):
         fs.touchp('source/c/d/5')
         fs.touchp('source/c/d/6')
         fs.touchp('source/c/d/e/7')
+        fs.touchp('source/g/h/i/8')
+        fs.touchp('source/g/h/i/9')
+        fs.touchp('source/g/i/j/10')
 
         # Create symlinks
         os.symlink(os.path.abspath('source/1'), 'source/2')
@@ -61,6 +64,31 @@ class TestCopy:
 
             assert os.path.exists('dest/1')
 
+    def test_glob_src(self, stage):
+        """Test using a glob as the source."""
+
+        with fs.working_dir(str(stage)):
+            fs.copy('source/a/*/*', 'dest')
+
+            assert os.path.exists('dest/2')
+            assert os.path.exists('dest/3')
+
+    def test_non_existing_src(self, stage):
+        """Test using a non-existing source."""
+
+        with fs.working_dir(str(stage)):
+            with pytest.raises(IOError, match='No such file or directory'):
+                fs.copy('source/none', 'dest')
+
+    def test_multiple_src_file_dest(self, stage):
+        """Test a glob that matches multiple source files and a dest
+        that is not a directory."""
+
+        with fs.working_dir(str(stage)):
+            match = '.* matches multiple files but .* is not a directory'
+            with pytest.raises(ValueError, match=match):
+                fs.copy('source/a/*/*', 'dest/1')
+
 
 def check_added_exe_permissions(src, dst):
     src_mode = os.stat(src).st_mode
@@ -91,6 +119,33 @@ class TestInstall:
             assert os.path.exists('dest/1')
             check_added_exe_permissions('source/1', 'dest/1')
 
+    def test_glob_src(self, stage):
+        """Test using a glob as the source."""
+
+        with fs.working_dir(str(stage)):
+            fs.install('source/a/*/*', 'dest')
+
+            assert os.path.exists('dest/2')
+            assert os.path.exists('dest/3')
+            check_added_exe_permissions('source/a/b/2', 'dest/2')
+            check_added_exe_permissions('source/a/b/3', 'dest/3')
+
+    def test_non_existing_src(self, stage):
+        """Test using a non-existing source."""
+
+        with fs.working_dir(str(stage)):
+            with pytest.raises(IOError, match='No such file or directory'):
+                fs.install('source/none', 'dest')
+
+    def test_multiple_src_file_dest(self, stage):
+        """Test a glob that matches multiple source files and a dest
+        that is not a directory."""
+
+        with fs.working_dir(str(stage)):
+            match = '.* matches multiple files but .* is not a directory'
+            with pytest.raises(ValueError, match=match):
+                fs.install('source/a/*/*', 'dest/1')
+
 
 class TestCopyTree:
     """Tests for ``filesystem.copy_tree``"""
@@ -110,21 +165,6 @@ class TestCopyTree:
             fs.copy_tree('source', 'dest/sub/directory')
 
             assert os.path.exists('dest/sub/directory/a/b/2')
-
-    def test_parent_dir(self, stage):
-        """Test copying to from a parent directory."""
-
-        # Make sure we get the right error if we try to copy a parent into
-        # a descendent directory.
-        with pytest.raises(ValueError, match="Cannot copy"):
-            with fs.working_dir(str(stage)):
-                fs.copy_tree('source', 'source/sub/directory')
-
-        # Only point with this check is to make sure we don't try to perform
-        # the copy.
-        with pytest.raises(IOError, match="No such file or directory"):
-            with fs.working_dir(str(stage)):
-                fs.copy_tree('foo/ba', 'foo/bar')
 
     def test_symlinks_true(self, stage):
         """Test copying with symlink preservation."""
@@ -162,6 +202,31 @@ class TestCopyTree:
             assert os.path.exists('dest/2')
             assert not os.path.islink('dest/2')
 
+    def test_glob_src(self, stage):
+        """Test using a glob as the source."""
+
+        with fs.working_dir(str(stage)):
+            fs.copy_tree('source/g/*', 'dest')
+
+            assert os.path.exists('dest/i/8')
+            assert os.path.exists('dest/i/9')
+            assert os.path.exists('dest/j/10')
+
+    def test_non_existing_src(self, stage):
+        """Test using a non-existing source."""
+
+        with fs.working_dir(str(stage)):
+            with pytest.raises(IOError, match='No such file or directory'):
+                fs.copy_tree('source/none', 'dest')
+
+    def test_parent_dir(self, stage):
+        """Test source as a parent directory of destination."""
+
+        with fs.working_dir(str(stage)):
+            match = 'Cannot copy ancestor directory'
+            with pytest.raises(ValueError, match=match):
+                fs.copy_tree('source', 'source/sub/directory')
+
 
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
@@ -173,6 +238,7 @@ class TestInstallTree:
             fs.install_tree('source', 'dest')
 
             assert os.path.exists('dest/a/b/2')
+            check_added_exe_permissions('source/a/b/2', 'dest/a/b/2')
 
     def test_non_existing_dir(self, stage):
         """Test installing to a non-existing directory."""
@@ -181,6 +247,8 @@ class TestInstallTree:
             fs.install_tree('source', 'dest/sub/directory')
 
             assert os.path.exists('dest/sub/directory/a/b/2')
+            check_added_exe_permissions(
+                'source/a/b/2', 'dest/sub/directory/a/b/2')
 
     def test_symlinks_true(self, stage):
         """Test installing with symlink preservation."""
@@ -190,6 +258,7 @@ class TestInstallTree:
 
             assert os.path.exists('dest/2')
             assert os.path.islink('dest/2')
+            check_added_exe_permissions('source/2', 'dest/2')
 
     def test_symlinks_false(self, stage):
         """Test installing without symlink preservation."""
@@ -199,6 +268,35 @@ class TestInstallTree:
 
             assert os.path.exists('dest/2')
             assert not os.path.islink('dest/2')
+            check_added_exe_permissions('source/2', 'dest/2')
+
+    def test_glob_src(self, stage):
+        """Test using a glob as the source."""
+
+        with fs.working_dir(str(stage)):
+            fs.install_tree('source/g/*', 'dest')
+
+            assert os.path.exists('dest/i/8')
+            assert os.path.exists('dest/i/9')
+            assert os.path.exists('dest/j/10')
+            check_added_exe_permissions('source/g/h/i/8', 'dest/i/8')
+            check_added_exe_permissions('source/g/h/i/9', 'dest/i/9')
+            check_added_exe_permissions('source/g/i/j/10', 'dest/j/10')
+
+    def test_non_existing_src(self, stage):
+        """Test using a non-existing source."""
+
+        with fs.working_dir(str(stage)):
+            with pytest.raises(IOError, match='No such file or directory'):
+                fs.install_tree('source/none', 'dest')
+
+    def test_parent_dir(self, stage):
+        """Test source as a parent directory of destination."""
+
+        with fs.working_dir(str(stage)):
+            match = 'Cannot copy ancestor directory'
+            with pytest.raises(ValueError, match=match):
+                fs.install_tree('source', 'source/sub/directory')
 
 
 def test_paths_containing_libs(dirs_with_libfiles):

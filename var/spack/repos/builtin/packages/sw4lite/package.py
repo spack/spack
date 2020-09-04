@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Sw4lite(MakefilePackage):
     """Sw4lite is a bare bone version of SW4 intended for testing
@@ -75,6 +72,5 @@ class Sw4lite(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        exe_name = glob.glob('*/sw4lite')[0]
-        install(exe_name, prefix.bin)
+        install('*/sw4lite', prefix.bin)
         install_tree('tests', prefix.tests)

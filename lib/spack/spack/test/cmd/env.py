@@ -525,6 +525,28 @@ env:
                for x in e._get_environment_specs())
 
 
+def test_with_config_bad_include(env_deactivate, capfd):
+    env_name = 'test_bad_include'
+    test_config = """\
+spack:
+  include:
+  - /no/such/directory
+  - no/such/file.yaml
+"""
+    _env_create(env_name, StringIO(test_config))
+
+    e = ev.read(env_name)
+    with pytest.raises(SystemExit):
+        with e:
+            e.concretize()
+
+    out, err = capfd.readouterr()
+
+    assert 'missing include' in err
+    assert '/no/such/directory' in err
+    assert 'no/such/file.yaml' in err
+
+
 def test_env_with_included_config_file():
     test_config = """\
 env:
@@ -2132,3 +2154,38 @@ spack:
 
     # Check that an update does not raise
     env('update', '-y', str(abspath.dirname))
+
+
+@pytest.mark.regression('18338')
+def test_newline_in_commented_sequence_is_not_an_issue(tmpdir):
+    spack_yaml = """
+spack:
+  specs:
+  - dyninst
+  packages:
+    libelf:
+      externals:
+      - spec: libelf@0.8.13
+        modules:
+        - libelf/3.18.1
+
+  concretization: together
+"""
+    abspath = tmpdir.join('spack.yaml')
+    abspath.write(spack_yaml)
+
+    def extract_build_hash(environment):
+        _, dyninst = next(iter(environment.specs_by_hash.items()))
+        return dyninst['libelf'].build_hash()
+
+    # Concretize a first time and create a lockfile
+    with ev.Environment(str(tmpdir)) as e:
+        concretize()
+        libelf_first_hash = extract_build_hash(e)
+
+    # Check that a second run won't error
+    with ev.Environment(str(tmpdir)) as e:
+        concretize()
+        libelf_second_hash = extract_build_hash(e)
+
+    assert libelf_first_hash == libelf_second_hash
