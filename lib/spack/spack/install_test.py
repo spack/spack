@@ -18,6 +18,10 @@ import spack.util.prefix
 import spack.util.spack_json as sjson
 
 
+test_suite_filename = 'test_suite.lock'
+results_filename = 'results.txt'
+
+
 def get_escaped_text_output(filename):
     """Retrieve and escape the expected text output from the file
 
@@ -41,43 +45,61 @@ def get_test_stage_dir():
         spack.config.get('config:test_stage', '~/.spack/test'))
 
 
-def get_test_stage(name):
-    return spack.util.prefix.Prefix(os.path.join(get_test_stage_dir(), name))
+def get_all_test_suites():
+    stage_root = get_test_stage_dir()
+
+    def valid_stage(d):
+        dirpath = os.path.join(stage_root, d)
+        return (os.path.isdir(dirpath) and
+                test_suite_filename in os.listdir(dirpath))
+
+    candidates = [
+        os.path.join(stage_root, d, test_suite_filename)
+        for d in os.listdir(stage_root)
+        if valid_stage(d)
+    ]
+
+    test_suites = [TestSuite.from_file(c) for c in candidates]
+    return test_suites
 
 
-def get_results_file(name):
-    return get_test_stage(name).join('results.txt')
+def get_test_suite(name):
+    assert name, "Cannot search for empty test name or 'None'"
+    test_suites = get_all_test_suites()
+    names = [ts for ts in test_suites
+             if ts.name == name]
+    assert len(names) < 2, "alias shadows test suite hash"
 
-
-def get_test_by_name(name):
-    test_suite_file = get_test_stage(name).join('specs.lock')
-
-    if not os.path.isdir(test_suite_file):
-        raise Exception
-
-    test_suite_data = sjson.load(test_suite_file)
-    return TestSuite.from_dict(test_suite_data, name)
+    if not names:
+        return None
+    return names[0]
 
 
 class TestSuite(object):
-    def __init__(self, specs, name=None):
-        self._name = name
+    def __init__(self, specs, alias=None):
         # copy so that different test suites have different package objects
         # even if they contain the same spec
         self.specs = [spec.copy() for spec in specs]
         self.current_test_spec = None  # spec currently tested, can be virtual
         self.current_base_spec = None  # spec currently running do_test
 
+        self.alias = alias
+        self._hash = None
+
     @property
     def name(self):
-        if not self._name:
+        return self.alias if self.alias else self.content_hash
+
+    @property
+    def content_hash(self):
+        if not self._hash:
             json_text = sjson.dump(self.to_dict())
             sha = hashlib.sha1(json_text.encode('utf-8'))
             b32_hash = base64.b32encode(sha.digest()).lower()
             if sys.version_info[0] >= 3:
                 b32_hash = b32_hash.decode('utf-8')
-            self._name = b32_hash
-        return self._name
+            self._hash = b32_hash
+        return self._hash
 
     def __call__(self, *args, **kwargs):
         self.write_reproducibility_data()
@@ -104,7 +126,6 @@ class TestSuite(object):
 
                 # run the package tests
                 spec.package.do_test(
-                    name=self.name,
                     dirty=dirty
                 )
 
@@ -134,11 +155,12 @@ class TestSuite(object):
 
     @property
     def stage(self):
-        return get_test_stage(self.name)
+        return spack.util.prefix.Prefix(
+            os.path.join(get_test_stage_dir(), self.content_hash))
 
     @property
     def results_file(self):
-        return get_results_file(self.name)
+        return self.stage.join(results_filename)
 
     @classmethod
     def test_pkg_id(cls, spec):
@@ -191,17 +213,31 @@ class TestSuite(object):
                     except spack.repo.UnknownPackageError:
                         pass  # not all virtuals have package files
 
-        with open(self.stage.join('specs.lock'), 'w') as f:
+        with open(self.stage.join(test_suite_filename), 'w') as f:
             sjson.dump(self.to_dict(), stream=f)
 
     def to_dict(self):
         specs = [s.to_dict() for s in self.specs]
-        return {'specs': specs}
+        d = {'specs': specs}
+        if self.alias:
+            d['alias'] = self.alias
+        return d
 
     @staticmethod
-    def from_dict(d, name=None):
+    def from_dict(d):
         specs = [Spec.from_dict(spec_dict) for spec_dict in d['specs']]
-        return TestSuite(specs, name)
+        alias = d.get('alias', None)
+        return TestSuite(specs, alias)
+
+    @staticmethod
+    def from_file(filename):
+        try:
+            with open(filename, 'r') as f:
+                data = sjson.load(f)
+                return TestSuite.from_dict(data)
+        except Exception as e:
+            tty.debug(e)
+            raise sjson.SpackJSONError("error parsing JSON TestSuite:", str(e))
 
 
 def _add_msg_to_file(filename, msg):
