@@ -17,6 +17,9 @@ class Fermikit(MakefilePackage):
             submodules=True)
 
     depends_on('zlib')
+    depends_on('sse2neon', when='target=aarch64:')
+
+    patch('ksw_for_aarch64.patch', when='target=aarch64:')
 
     def install(self, spec, prefix):
         install_tree('fermi.kit', prefix.bin)
