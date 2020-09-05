@@ -5,6 +5,7 @@
 
 import os
 import platform
+import re
 import llnl.util.tty as tty
 from spack import *
 
@@ -35,7 +36,9 @@ class Go(Package):
     url = 'https://dl.google.com/go/go1.12.6.src.tar.gz'
 
     extendable = True
+    executables = ['^go$']
 
+    version('1.15', sha256='69438f7ed4f532154ffaf878f3dfd83747e7a00b70b3556eddabf7aaee28ac3a')
     version('1.14.6', sha256='73fc9d781815d411928eccb92bf20d5b4264797be69410eac854babe44c94c09')
     version('1.14.5', sha256='ca4c080c90735e56152ac52cd77ae57fe573d1debb1a58e03da9cc362440315c')
     version('1.14.4', sha256='7011af3bbc2ac108d1b82ea8abb87b2e63f78844f0259be20cde4d42c5c40584')
@@ -107,6 +110,12 @@ class Go(Package):
     # https://github.com/golang/go/issues/17986
     # The fix for this issue has been merged into the 1.8 tree.
     patch('misc-cgo-testcshared.patch', level=0, when='@1.6.4:1.7.5')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('version', output=str, error=str)
+        match = re.search(r'go version go(\S+)', output)
+        return match.group(1) if match else None
 
     # NOTE: Older versions of Go attempt to download external files that have
     # since been moved while running the test suite.  This patch modifies the

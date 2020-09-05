@@ -90,7 +90,7 @@ class Clang(Compiler):
 
     @property
     def cxx11_flag(self):
-        if self.version < ver('3.3'):
+        if self.real_version < ver('3.3'):
             raise UnsupportedCompilerFlag(
                 self, "the C++11 standard", "cxx11_flag", "< 3.3"
             )
@@ -98,22 +98,22 @@ class Clang(Compiler):
 
     @property
     def cxx14_flag(self):
-        if self.version < ver('3.4'):
+        if self.real_version < ver('3.4'):
             raise UnsupportedCompilerFlag(
                 self, "the C++14 standard", "cxx14_flag", "< 3.5"
             )
-        elif self.version < ver('3.5'):
+        elif self.real_version < ver('3.5'):
             return "-std=c++1y"
 
         return "-std=c++14"
 
     @property
     def cxx17_flag(self):
-        if self.version < ver('3.5'):
+        if self.real_version < ver('3.5'):
             raise UnsupportedCompilerFlag(
                 self, "the C++17 standard", "cxx17_flag", "< 3.5"
             )
-        elif self.version < ver('5.0'):
+        elif self.real_version < ver('5.0'):
             return "-std=c++1z"
 
         return "-std=c++17"
@@ -124,7 +124,7 @@ class Clang(Compiler):
 
     @property
     def c11_flag(self):
-        if self.version < ver('6.1.0'):
+        if self.real_version < ver('6.1.0'):
             raise UnsupportedCompilerFlag(self,
                                           "the C11 standard",
                                           "c11_flag",

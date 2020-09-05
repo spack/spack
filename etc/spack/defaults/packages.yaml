@@ -38,7 +38,7 @@ packages:
       mpi: [openmpi, mpich]
       mysql-client: [mysql, mariadb-c-client]
       opencl: [pocl]
-      pil: [py-pillow]
+      pil: [py-pillow-simd]
       pkgconfig: [pkgconf, pkg-config]
       rpc: [libtirpc]
       scalapack: [netlib-scalapack]

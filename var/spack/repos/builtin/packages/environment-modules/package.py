@@ -12,10 +12,11 @@ class EnvironmentModules(Package):
     """
 
     homepage = 'https://cea-hpc.github.io/modules/'
-    url = 'https://github.com/cea-hpc/modules/releases/download/v4.5.2/modules-4.5.2.tar.gz'
+    url = 'https://github.com/cea-hpc/modules/releases/download/v4.5.3/modules-4.5.3.tar.gz'
 
     maintainers = ['xdelaruelle']
 
+    version('4.5.3', sha256='7cbd9c61e6dcd82a3f81b5ced92c3cf84ecc5489639bdfc94869256383a2c915')
     version('4.5.2', sha256='74ccc9ab0fea0064ff3f4c5841435cef13cc6d9869b3c2b25e5ca4efa64a69a1')
     version('4.5.1', sha256='7d4bcc8559e7fbbc52e526fc86a15b161ff4422aa49eee37897ee7a48eb64ac2')
     version('4.5.0', sha256='5f46336f612553af5553d99347f387f733de0aaa0d80d4572e67615289382ec8')
@@ -64,11 +65,17 @@ class EnvironmentModules(Package):
             # It looks for tclConfig.sh
             "--with-tcl=" + tcl_lib_dir,
             "--with-tcl-ver={0}.{1}".format(*tcl.version.version[0:2]),
-            '--disable-dependency-tracking',
-            '--disable-silent-rules',
             '--disable-versioning',
             '--datarootdir=' + prefix.share
         ]
+
+        # ./configure script on version 4.5.2 breaks when specific options are
+        # set (see https://github.com/cea-hpc/modules/issues/354)
+        if not spec.satisfies('@4.5.2'):
+            config_args.extend([
+                '--disable-dependency-tracking',
+                '--disable-silent-rules'
+            ])
 
         if '~X' in spec:
             config_args = ['--without-x'] + config_args

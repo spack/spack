@@ -1,0 +1,12 @@
+--- spack-src/CMakeLists.txt.bak	2019-11-12 20:59:54.000000000 +0900
++++ spack-src/CMakeLists.txt	2020-08-07 16:37:11.600570176 +0900
+@@ -559,7 +559,8 @@
+         if ((${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86") OR
+             (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i686"))
+                 set (PLATFORM "LINUX")
+-        elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
++	elseif ((${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64") OR
++                (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64"))
+                 set (PLATFORM "LINUX64")
+         elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "ia64")
+                 set (PLATFORM "LINUX64_IA")

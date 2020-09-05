@@ -62,4 +62,4 @@ class Delphes(CMakePackage):
 
     def setup_run_environment(self, env):
         # make the cards distributed with delphes more easily accessible
-        env.set('DELPHESCARDS', self.prefix.cards)
+        env.set('DELPHES_DIR', self.prefix)

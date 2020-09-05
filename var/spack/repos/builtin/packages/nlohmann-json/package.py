@@ -13,6 +13,8 @@ class NlohmannJson(CMakePackage):
     url      = "https://github.com/nlohmann/json/archive/v3.1.2.tar.gz"
     maintainers = ['ax3l']
 
+    version('3.9.1', sha256='4cf0df69731494668bdd6460ed8cb269b68de9c19ad8c27abc24cd72605b2d5b')
+    version('3.8.0', sha256='7d0edf65f2ac7390af5e5a0b323b31202a6c11d744a74b588dc30f5a8c9865ba')
     version('3.7.2', sha256='914c4af3f14bb98ff084172685fba5d32e8ce4390ec8ba5da45c63daa305df4d')
     version('3.7.0', sha256='d51a3a8d3efbb1139d7608e28782ea9efea7e7933157e8ff8184901efd8ee760')
     version('3.6.1', sha256='80c45b090e40bf3d7a7f2a6e9f36206d3ff710acfa8d8cc1f8c763bb3075e22e')
@@ -38,12 +40,11 @@ class NlohmannJson(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        define = CMakePackage.define
 
         args = [
-            '-DJSON_MultipleHeaders:BOOL={0}'.format(
-                'ON' if '~single_header' in spec else 'OFF'),
-            '-DBUILD_TESTING:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF')
+            define('JSON_MultipleHeaders', '~single_header' in spec),
+            define('BUILD_TESTING', self.run_tests),
         ]
 
         return args

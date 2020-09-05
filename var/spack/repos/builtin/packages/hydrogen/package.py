@@ -99,7 +99,7 @@ class Hydrogen(CMakePackage, CudaPackage):
     depends_on('mpfr', when='+mpfr')
 
     depends_on('cuda', when='+cuda')
-    depends_on('cub', when='+cuda')
+    depends_on('cub', when='^cuda@:10.99')
     depends_on('half', when='+half')
 
     conflicts('@0:0.98', msg="Hydrogen did not exist before v0.99. " +

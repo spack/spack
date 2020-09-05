@@ -44,7 +44,7 @@ class Sirius(CMakePackage, CudaPackage):
         'gfx1011', 'gfx1012'
     )
 
-    variant('shared', default=False, description="Build shared libraries")
+    variant('shared', default=True, description="Build shared libraries")
     variant('openmp', default=True, description="Build with OpenMP support")
     variant('fortran', default=False, description="Build Fortran bindings")
     variant('python', default=False, description="Build Python bindings")
@@ -161,8 +161,7 @@ class Sirius(CMakePackage, CudaPackage):
             _def('+rocm')
         ]
 
-        if '@:6.2.999' in self.spec:
-            args += [_def('+shared', 'BUILD_SHARED_LIBS')]
+        args += [_def('+shared', 'BUILD_SHARED_LIBS')]
 
         lapack = spec['lapack']
         blas = spec['blas']

@@ -812,6 +812,7 @@ class Environment(object):
         # load config scopes added via 'include:', in reverse so that
         # highest-precedence scopes are last.
         includes = config_dict(self.yaml).get('include', [])
+        missing = []
         for i, config_path in enumerate(reversed(includes)):
             # allow paths to contain spack config/environment variables, etc.
             config_path = substitute_path_variables(config_path)
@@ -826,14 +827,22 @@ class Environment(object):
                 config_name = 'env:%s:%s' % (
                     self.name, os.path.basename(config_path))
                 scope = spack.config.ConfigScope(config_name, config_path)
-            else:
+            elif os.path.exists(config_path):
                 # files are assumed to be SingleFileScopes
                 base, ext = os.path.splitext(os.path.basename(config_path))
                 config_name = 'env:%s:%s' % (self.name, base)
                 scope = spack.config.SingleFileScope(
                     config_name, config_path, spack.schema.merged.schema)
+            else:
+                missing.append(config_path)
+                continue
 
             scopes.append(scope)
+
+        if missing:
+            msg = 'Detected {0} missing include path(s):'.format(len(missing))
+            msg += '\n   {0}'.format('\n   '.join(missing))
+            tty.die('{0}\nPlease correct and try again.'.format(msg))
 
         return scopes
 
@@ -844,23 +853,16 @@ class Environment(object):
     def env_file_config_scope(self):
         """Get the configuration scope for the environment's manifest file."""
         config_name = self.env_file_config_scope_name()
-        return spack.config.SingleFileScope(config_name,
-                                            self.manifest_path,
-                                            spack.schema.env.schema,
-                                            [spack.schema.env.keys])
+        return spack.config.SingleFileScope(
+            config_name,
+            self.manifest_path,
+            spack.schema.env.schema,
+            [spack.config.first_existing(self.raw_yaml,
+                                         spack.schema.env.keys)])
 
     def config_scopes(self):
         """A list of all configuration scopes for this environment."""
         return self.included_config_scopes() + [self.env_file_config_scope()]
-
-    def set_config(self, path, value):
-        """Set configuration for this environment"""
-        yaml = config_dict(self.yaml)
-        keys = spack.config.process_config_path(path)
-        for key in keys[:-1]:
-            yaml = yaml[key]
-        yaml[keys[-1]] = value
-        self.write()
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
@@ -1787,7 +1789,7 @@ def update_yaml(manifest, backup_file):
 
     shutil.copy(manifest, backup_file)
     with open(manifest, 'w') as f:
-        _write_yaml(data, f)
+        syaml.dump_config(data, f)
     return True
 
 

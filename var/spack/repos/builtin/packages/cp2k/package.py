@@ -94,9 +94,9 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on('libint@2.6.0:+fortran tune=cp2k-lmax-{0}'.format(lmax),
                    when='+libint@7.0: lmax={0}'.format(lmax))
 
-    depends_on('libxc@2.2.2:', when='+libxc@:5.5999', type='build')
-    depends_on('libxc@4.0.3:', when='+libxc@6.0:6.9', type='build')
-    depends_on('libxc@4.0.3:', when='+libxc@7.0:')
+    depends_on('libxc@2.2.2:3.99.0', when='+libxc@:5.5999', type='build')
+    depends_on('libxc@4.0.3:4.99.0', when='+libxc@6.0:6.9', type='build')
+    depends_on('libxc@4.0.3:4.99.0', when='+libxc@7.0:')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
