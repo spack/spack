@@ -397,6 +397,20 @@ def test_remove_list(mutable_empty_config):
 """
 
 
+def test_config_add_to_env_preserve_comments(mutable_empty_config,
+                                             mutable_mock_env_path):
+    env = ev.create('test')
+    with ev.read('test'):
+        config('add', 'config:dirty:true')
+        output = config('get')
+
+    expected = """  config:
+    dirty: true
+
+"""
+    assert expected in output
+
+
 def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
     env = ev.create('test')
     env.write()  # We can only preserve comments on a written environment
