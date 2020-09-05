@@ -247,18 +247,33 @@ class SingleFileScope(ConfigScope):
     def write_section(self, section):
         data_to_write = self._raw_data
 
+        # If there is no existing data, this section SingleFileScope has never
+        # been written to disk. We need to construct the portion of the data
+        # from the root of self._raw_data to the level at which the config
+        # sections are defined. That requires creating keys for every entry in
+        # self.yaml_path
         if not data_to_write:
             data_to_write = {}
-            for key in self.yaml_path:
+            # reverse because we construct it from the inside out
+            for key in reversed(self.yaml_path):
                 data_to_write = {key: data_to_write}
 
-        data_to_change = data_to_write
+        # data_update_pointer is a pointer to the part of data_to_write
+        # that we are currently updating.
+        # We start by traversing into the data to the point at which the
+        # config sections are defined. This means popping the keys from
+        # self.yaml_path
+        data_update_pointer = data_to_write
         for key in self.yaml_path:
-            data_to_change = data_to_write[key]
+            data_update_pointer = data_update_pointer[key]
 
+        # For each section, update the data at the level of our pointer
+        # with the data from the section
         for key, data in self.sections.items():
-            data_to_change[key] = data[key]
+            data_update_pointer[key] = data[key]
 
+        # validate on a copy of the data so we don't add defaults
+        data_to_validate = copy.deepcopy(data_to_write)
         validate(data_to_write, self.schema)
         try:
             parent = os.path.dirname(self.path)
