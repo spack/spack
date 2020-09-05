@@ -925,7 +925,7 @@ class Python(AutotoolsPackage):
                 # See issues #18520 and #17126
                 for lib in ['lib', 'lib64']:
                     python_paths.append(join_path(
-                        d.prefix, lib, 'python' + self.version.up_to(2),
+                        d.prefix, lib, 'python' + str(self.version.up_to(2)),
                         'site-packages'))
 
         pythonpath = ':'.join(python_paths)
@@ -938,7 +938,7 @@ class Python(AutotoolsPackage):
             for lib in ['lib', 'lib64']:
                 env.prepend_path('PYTHONPATH', join_path(
                     dependent_spec.prefix, lib,
-                    'python' + self.version.up_to(2), 'site-packages'))
+                    'python' + str(self.version.up_to(2)), 'site-packages'))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods.
