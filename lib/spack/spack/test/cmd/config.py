@@ -414,12 +414,23 @@ def test_config_add_to_env_preserve_comments(mutable_empty_config,
                                              mutable_mock_env_path,
                                              tmpdir):
     filepath = str(tmpdir.join('spack.yaml'))
-    manifest = '# Added a comment\n' + ev.default_manifest_yaml
+    manifest = """# comment
+spack:  # comment
+  # comment
+  specs:  # comment
+    - foo  # comment
+  # comment
+  view: true  # comment
+  packages:  # comment
+    # comment
+    all: # comment
+      # comment
+      compiler: [gcc] # comment
+"""
     with open(filepath, 'w') as f:
         f.write(manifest)
-    env = ev.create('test', filepath)
-    env.write()  # We can only preserve comments on a written environment
-    with ev.read('test'):
+    env = ev.Environment(str(tmpdir))
+    with env:
         config('add', 'config:dirty:true')
         output = config('get')
 

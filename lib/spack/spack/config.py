@@ -234,11 +234,10 @@ class SingleFileScope(ConfigScope):
             if self._raw_data is None:
                 return None
 
-            section_data = copy.deepcopy(self._raw_data)
+            section_data = self._raw_data
             for key in self.yaml_path:
                 if section_data is None:
                     return None
-
                 section_data = section_data[key]
 
             for section_key, data in section_data.items():
@@ -246,15 +245,9 @@ class SingleFileScope(ConfigScope):
         return self.sections.get(section, None)
 
     def write_section(self, section):
-        data_to_write = copy.deepcopy(self._raw_data)
-        if syaml.markable(data_to_write):
-            setattr(data_to_write,
-                    yaml.comments.Comment.attrib,
-                    getattr(self._raw_data,
-                            yaml.comments.Comment.attrib,
-                            yaml.comments.Comment()))
+        data_to_write = self._raw_data
 
-        if data_to_write is None:
+        if not data_to_write:
             data_to_write = {}
             for key in self.yaml_path:
                 data_to_write = {key: data_to_write}
