@@ -272,8 +272,6 @@ class SingleFileScope(ConfigScope):
         for key, data in self.sections.items():
             data_update_pointer[key] = data[key]
 
-        # validate on a copy of the data so we don't add defaults
-        data_to_validate = copy.deepcopy(data_to_write)
         validate(data_to_write, self.schema)
         try:
             parent = os.path.dirname(self.path)
