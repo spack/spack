@@ -797,7 +797,7 @@ def test_write_empty_single_file_scope(tmpdir):
         'test', str(tmpdir.ensure('config.yaml')), env_schema, ['spack'])
     scope.write_section('config')
     # confirm we can write empty config
-    assert scope.get_section('config') is None
+    assert not scope.get_section('config')
 
 
 def check_schema(name, file_contents):
