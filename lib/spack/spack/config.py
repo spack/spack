@@ -188,8 +188,17 @@ class SingleFileScope(ConfigScope):
 
         Arguments:
             schema (dict): jsonschema for the file to read
-            yaml_path (list): list of dict keys in the schema where
-                config data can be found
+            yaml_path (list): path in the schema where config data can be
+                found.
+                If the schema accepts the following yaml data, the yaml_path
+                would be ['outer', 'inner']
+
+                .. code-block:: yaml
+
+                   outer:
+                     inner:
+                       config:
+                         install_tree: $spack/opt/spack
         """
         super(SingleFileScope, self).__init__(name, path)
         self._raw_data = None
