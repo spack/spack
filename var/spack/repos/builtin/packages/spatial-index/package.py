@@ -13,7 +13,7 @@ class SpatialIndex(PythonPackage):
 
     depends_on("py-setuptools")
     depends_on("cmake")
-    depends_on("boost")
+    depends_on("boost@:1.70.0")
 
     version('0.2.1', tag='0.2.1', submodules=True)
     version('0.1.0', tag='0.1.0', submodules=True)
