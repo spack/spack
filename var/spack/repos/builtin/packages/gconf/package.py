@@ -20,4 +20,4 @@ class Gconf(AutotoolsPackage):
     depends_on('dbus')
     depends_on('dbus-glib')
     depends_on('orbit2')
-    depends_on('perl-xml-parser')
+    depends_on('perl-xml-parser', type=('build', 'run'))
