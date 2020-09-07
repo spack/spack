@@ -830,6 +830,7 @@ class Python(AutotoolsPackage):
 
         if self.spec.satisfies('%intel'):
             env.set('LDSHARED', '%s -shared' % spack_cc)
+            env.set('LDCXXSHARED', '%s -shared' % spack_cxx)
 
         # If we set PYTHONHOME, we must also ensure that the corresponding
         # python is found in the build environment. This to prevent cases

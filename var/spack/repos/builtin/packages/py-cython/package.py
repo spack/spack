@@ -46,10 +46,6 @@ class PyCython(PythonPackage):
         """Returns the Cython command"""
         return Executable(self.prefix.bin.cython)
 
-    def setup_environment(self, spack_env, run_env):
-        if self.spec.satisfies('%intel'):
-            spack_env.set('LDSHARED', '%s -shared' % spack_cc)
-
     def test(self):
         # Warning: full suite of unit tests takes a very long time
         python('runtests.py', '-j', str(make_jobs))
