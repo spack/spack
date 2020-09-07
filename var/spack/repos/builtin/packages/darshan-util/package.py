@@ -31,7 +31,7 @@ class DarshanUtil(Package):
     depends_on('zlib')
     depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
 
-    patch('retvoid.patch')
+    patch('retvoid.patch', when='@:3.2.1')
 
     def install(self, spec, prefix):
 
