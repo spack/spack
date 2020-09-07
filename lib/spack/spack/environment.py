@@ -1514,11 +1514,10 @@ class Environment(object):
             # write the lock file last
             with fs.write_tmp_and_move(self.lock_path) as f:
                 sjson.dump(self._to_lockfile_dict(), stream=f)
+            self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
         else:
-            if os.path.exists(self.lock_path):
-                os.unlink(self.lock_path)
-
-        self._write_helper(raw_yaml_dict, yaml_dict)
+            with fs.safe_remove(self.lock_path):
+                self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
 
         # TODO: rethink where this needs to happen along with
         # writing. For some of the commands (like install, which write
@@ -1529,13 +1528,9 @@ class Environment(object):
         if regenerate_views:
             self.regenerate_views()
 
-    def _write_helper(self, raw_yaml_dict, yaml_dict):
-        """Helper function to write an environment after all the prerequisite
-        checks have been successful.
-
-        Args:
-            raw_yaml_dict: raw YAML dictionary
-            yaml_dict: YAML dictionary
+    def _update_and_write_manifest(self, raw_yaml_dict, yaml_dict):
+        """Update YAML manifest for this environment based on changes to
+        spec lists and views and write it.
         """
         # invalidate _repo cache
         self._repo = None

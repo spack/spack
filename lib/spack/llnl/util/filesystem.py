@@ -974,6 +974,43 @@ def remove_linked_tree(path):
             shutil.rmtree(path, True)
 
 
+@contextmanager
+def safe_remove(*files_or_dirs):
+    """Context manager to remove the files passed as input, but restore
+    them in case any exception is raised in the context block.
+
+    Filenames clash from single files in different directories are currently
+    not handled.
+
+    Args:
+        *files_or_dirs: glob expressions for files or directories
+            to be removed
+
+    Returns:
+        Dictionary that maps deleted files to their temporary copy
+        within the context block.
+    """
+    # Find all the files or directories that match
+    glob_matches = [glob.glob(x) for x in files_or_dirs]
+
+    # Copy them in a temporary location
+    removed, dst_root = {}, tempfile.mkdtemp()
+
+    try:
+        for file_or_dir in itertools.chain(*glob_matches):
+            src = os.path.abspath(file_or_dir)
+            basename = os.path.basename(file_or_dir)
+            dst = os.path.join(dst_root, basename)
+            shutil.move(src, dst_root)
+            removed[src] = dst
+        yield removed
+    except Exception:
+        # Restore the files that were removed
+        for src, dst in removed.items():
+            shutil.move(dst, src)
+        raise
+
+
 def fix_darwin_install_name(path):
     """Fix install name of dynamic libraries on Darwin to have full path.
 

@@ -2217,7 +2217,9 @@ spack:
     def _write_helper_raise(self, x, y):
         raise RuntimeError('some error')
 
-    monkeypatch.setattr(ev.Environment, '_write_helper', _write_helper_raise)
+    monkeypatch.setattr(
+        ev.Environment, '_update_and_write_manifest', _write_helper_raise
+    )
     with ev.Environment(str(tmpdir)) as e:
         e.concretize(force=True)
         with pytest.raises(RuntimeError):
