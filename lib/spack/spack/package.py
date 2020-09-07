@@ -30,7 +30,8 @@ from typing import Optional, List, Dict, Any, Callable  # novm
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-
+import llnl.util.cpu as cpu
+import spack.architecture as architecture
 import spack.compilers
 import spack.config
 import spack.dependency
@@ -172,6 +173,10 @@ class DetectablePackageMeta(object):
                 filter_fn = getattr(cls, 'filter_detected_exes',
                                     lambda x, exes: exes)
                 exes_in_prefix = filter_fn(prefix, exes_in_prefix)
+                arch = architecture.Arch(
+                    architecture.platform(),
+                    'default_os', cpu.host().family)
+                archstr = 'arch={0}'.format(arch)
                 for exe in exes_in_prefix:
                     try:
                         version_str = cls.determine_version(exe)
@@ -193,8 +198,8 @@ class DetectablePackageMeta(object):
                         if isinstance(variant, six.string_types):
                             variant = (variant, {})
                         variant_str, extra_attributes = variant
-                        spec_str = '{0}@{1} {2}'.format(
-                            cls.name, version_str, variant_str
+                        spec_str = '{0}@{1} {2} {3}'.format(
+                            cls.name, version_str, variant_str, archstr
                         )
 
                         # Pop a few reserved keys from extra attributes, since

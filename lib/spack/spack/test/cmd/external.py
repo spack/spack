@@ -11,6 +11,16 @@ import spack
 from spack.spec import Spec
 from spack.cmd.external import ExternalPackageEntry
 from spack.main import SpackCommand
+import spack.architecture as architecture
+import llnl.util.cpu as cpu
+
+target = cpu.host()
+arch = architecture.Arch(architecture.platform(), 'default_os', target.family)
+archstr = 'arch={0}'.format(arch)
+
+
+def addarch(specstr):
+    return specstr + ' ' + archstr
 
 
 def test_find_external_single_package(mock_executable):
@@ -25,7 +35,7 @@ def test_find_external_single_package(mock_executable):
     pkg, entries = next(iter(pkg_to_entries.items()))
     single_entry = next(iter(entries))
 
-    assert single_entry.spec == Spec('cmake@1.foo')
+    assert single_entry.spec == Spec(addarch('cmake@1.foo'))
 
 
 def test_find_external_two_instances_same_package(mock_executable):
@@ -47,9 +57,9 @@ def test_find_external_two_instances_same_package(mock_executable):
 
     pkg, entries = next(iter(pkg_to_entries.items()))
     spec_to_path = dict((e.spec, e.base_dir) for e in entries)
-    assert spec_to_path[Spec('cmake@1.foo')] == (
+    assert spec_to_path[Spec(addarch('cmake@1.foo'))] == (
         spack.cmd.external._determine_base_dir(os.path.dirname(cmake_path1)))
-    assert spec_to_path[Spec('cmake@3.17.2')] == (
+    assert spec_to_path[Spec(addarch('cmake@3.17.2'))] == (
         spack.cmd.external._determine_base_dir(os.path.dirname(cmake_path2)))
 
 
@@ -96,7 +106,8 @@ def test_find_external_cmd(mutable_config, working_env, mock_executable):
     cmake_cfg = pkgs_cfg['cmake']
     cmake_externals = cmake_cfg['externals']
 
-    assert {'spec': 'cmake@1.foo', 'prefix': prefix} in cmake_externals
+    assert {'spec': addarch('cmake@1.foo'),
+            'prefix': prefix} in cmake_externals
 
 
 def test_find_external_cmd_not_buildable(
@@ -191,7 +202,7 @@ def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch):
     externals = packages_yaml['gcc']['externals']
     assert len(externals) == 1
     external_gcc = externals[0]
-    assert external_gcc['spec'] == 'gcc@4.2.1 languages=c'
+    assert external_gcc['spec'] == addarch('gcc@4.2.1 languages=c')
     assert external_gcc['prefix'] == os.path.dirname(prefix)
     assert 'extra_attributes' in external_gcc
     extra_attributes = external_gcc['extra_attributes']
