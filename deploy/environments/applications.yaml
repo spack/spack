@@ -41,7 +41,7 @@ spack:
     - py-bbp-analysis-framework@1.6.42
     - py-bglibpy@4.2.23%gcc ^neuron%intel
     - py-bluepy@0.14.8
-    - py-bluepymm@0.7.15%gcc ^neuron%intel
+    - py-bluepymm@0.7.49%gcc ^neuron%intel
     - py-bluepyopt@1.9.27%gcc ^neuron%intel
     - py-bluepysnap@0.6.1
     - py-efel@3.0.80
