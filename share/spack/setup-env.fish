@@ -248,7 +248,7 @@ end
 
 function match_flag -d "checks all combinations of flags ocurring inside of a string"
 
-    # Remove leading and traling spaces -- but we need to insert a "guard" (x)
+    # Remove leading and trailing spaces -- but we need to insert a "guard" (x)
     # so that eg. `string trim -h` doesn't trigger the help string for `string trim`
     set -l _a (string sub -s 2 (string trim "x$argv[1]"))
     set -l _b (string sub -s 2 (string trim "x$argv[2]"))
