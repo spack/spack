@@ -15,7 +15,7 @@ class Gdal(AutotoolsPackage):
     """
 
     homepage   = "https://www.gdal.org/"
-    url        = "https://download.osgeo.org/gdal/3.1.2/gdal-3.1.2.tar.xz"
+    url        = "https://download.osgeo.org/gdal/3.1.3/gdal-3.1.3.tar.xz"
     list_url   = "https://download.osgeo.org/gdal/"
     list_depth = 1
 
@@ -26,6 +26,7 @@ class Gdal(AutotoolsPackage):
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
+    version('3.1.3',  sha256='161cf55371a143826f1d76ce566db1f0a666496eeb4371aed78b1642f219d51d')
     version('3.1.2',  sha256='767c8d0dfa20ba3283de05d23a1d1c03a7e805d0ce2936beaff0bb7d11450641')
     version('3.1.1',  sha256='97154a606339a6c1d87c80fb354d7456fe49828b2ef9a3bc9ed91771a03d2a04')
     version('3.1.0',  sha256='e754a22242ccbec731aacdb2333b567d4c95b9b02d3ba1ea12f70508d244fcda')
