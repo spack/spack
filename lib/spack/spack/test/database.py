@@ -9,7 +9,6 @@ both in memory and in its file
 """
 import datetime
 import functools
-import multiprocessing
 import os
 import pytest
 import json
@@ -24,6 +23,7 @@ from jsonschema import validate
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
+from llnl.util.lang import fork_context
 
 import spack.repo
 import spack.store
@@ -524,7 +524,7 @@ def test_030_db_sanity_from_another_process(mutable_database):
         with mutable_database.write_transaction():
             _mock_remove('mpileaks ^zmpi')
 
-    p = multiprocessing.Process(target=read_and_modify, args=())
+    p = fork_context.Process(target=read_and_modify, args=())
     p.start()
     p.join()
 

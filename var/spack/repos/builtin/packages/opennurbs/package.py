@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Opennurbs(Package):
     """OpenNURBS is an open-source NURBS-based geometric modeling library
@@ -49,6 +46,4 @@ class Opennurbs(Package):
         mkdir(prefix.include)
         install('libopenNURBS.a', prefix.lib)
         install_tree('zlib', join_path(prefix.include, 'zlib'))
-        headers = glob.glob(join_path('.', '*.h'))
-        for h in headers:
-            install(h, prefix.include)
+        install('*.h', prefix.include)

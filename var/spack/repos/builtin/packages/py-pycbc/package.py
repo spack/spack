@@ -26,7 +26,7 @@ class PyPycbc(PythonPackage):
     depends_on('py-decorator@3.4.2:', type=('build', 'run'))
     depends_on('py-scipy@0.16.0:', type=('build', 'run'))
     depends_on('py-matplotlib@1.5.1:', type=('build', 'run'))
-    depends_on('py-pillow', type=('build', 'run'))
+    depends_on('pil', type=('build', 'run'))
     depends_on('py-h5py@2.5:', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-astropy@2.0.3:', type=('build', 'run'))

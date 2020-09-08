@@ -15,6 +15,7 @@ class Rocfft(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.7.0', sha256='94462e4bd19c2c749fcf6903adbee66d4d3bd345c0246861ff8f40b9d08a6ead')
     version('3.5.0', sha256='629f02cfecb7de5ad2517b6a8aac6ed4de60d3a9c620413c4d9db46081ac2c88')
 
     amdgpu_targets = (
@@ -27,11 +28,12 @@ class Rocfft(CMakePackage):
     variant('amdgpu_target', default='gfx701', multi=True, values=amdgpu_targets)
 
     depends_on('cmake@3:', type='build')
-    depends_on('rocm-cmake@3.5.0', type='build', when='@3.5.0')
-    depends_on('rocm-device-libs@3.5.0', type='build', when='@3.5.0')
 
-    depends_on('hip@3.5.0', type=('build', 'link'), when='@3.5.0')
-    depends_on('comgr@3.5.0', type='build', when='@3.5.0')
+    for ver in ['3.5.0', '3.7.0']:
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver, when='@' + ver)
+        depends_on('comgr@' + ver, type='build', when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)

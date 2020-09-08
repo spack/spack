@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Vardictjava(Package):
     """VarDictJava is a variant discovery program written in Java.
@@ -23,6 +20,4 @@ class Vardictjava(Package):
         install('bin/VarDict', prefix.bin)
 
         mkdirp(prefix.lib)
-        files = [x for x in glob.glob("lib/*jar")]
-        for f in files:
-            install(f, prefix.lib)
+        install('lib/*.jar', prefix.lib)
