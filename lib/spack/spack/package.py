@@ -173,10 +173,16 @@ class DetectablePackageMeta(object):
                 filter_fn = getattr(cls, 'filter_detected_exes',
                                     lambda x, exes: exes)
                 exes_in_prefix = filter_fn(prefix, exes_in_prefix)
-                arch = architecture.Arch(
-                    architecture.platform(),
-                    'default_os', cpu.host().family)
-                archstr = 'arch={0}'.format(arch)
+                default_architecture = architecture.default_arch()
+                default_arch = {}
+                default_arch['platform'] = default_architecture.platform
+                default_arch['os'] = default_architecture.os
+                default_arch['target'] = cpu.host().family
+
+                def arch_str(arch):
+                    return '{0}-{1}-{2}'.format(
+                        arch['platform'], arch['os'], arch['target'])
+
                 for exe in exes_in_prefix:
                     try:
                         version_str = cls.determine_version(exe)
@@ -198,9 +204,20 @@ class DetectablePackageMeta(object):
                         if isinstance(variant, six.string_types):
                             variant = (variant, {})
                         variant_str, extra_attributes = variant
-                        spec_str = '{0}@{1} {2} {3}'.format(
-                            cls.name, version_str, variant_str, archstr
+                        spec_str = '{0}@{1} {2}'.format(
+                            cls.name, version_str, variant_str
                         )
+                        if not re.search(r'(platform|arch)=', spec_str):
+                            arch = default_arch
+                            m = re.search(r'target=(\S+)', spec_str)
+                            if m:
+                                arch['target'] = m.group(1)
+                                spec_str = spec_str.replace(m.group(0), '')
+                            m = re.search(r'os=(\S+)', spec_str)
+                            if m:
+                                arch['os'] = m.group(1)
+                                spec_str = spec_str.replace(m.group(0), '')
+                            spec_str += ' arch={0}'.format(arch_str(arch))
 
                         # Pop a few reserved keys from extra attributes, since
                         # they have a different semantics
