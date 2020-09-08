@@ -145,12 +145,15 @@ class Gromacs(CMakePackage):
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
-        if target >= llnl.util.cpu.targets['bulldozer']:
+        if target >= llnl.util.cpu.targets['zen2']:
+            # AMD Family 17h (EPYC Rome)
+            options.append('-DGMX_SIMD=AVX2_256')
+        elif target >= llnl.util.cpu.targets['zen']:
+            # AMD Family 17h (EPYC Naples)
+            options.append('-DGMX_SIMD=AVX2_128')
+        elif target >= llnl.util.cpu.targets['bulldozer']:
             # AMD Family 15h
             options.append('-DGMX_SIMD=AVX_128_FMA')
-        elif target >= llnl.util.cpu.targets['zen']:
-            # AMD Family 17h
-            options.append('-DGMX_SIMD=AVX2_128')
         elif target >= llnl.util.cpu.targets['power7']:
             # IBM Power 7 and beyond
             options.append('-DGMX_SIMD=IBM_VSX')
