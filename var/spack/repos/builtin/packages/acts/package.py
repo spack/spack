@@ -192,7 +192,7 @@ class Acts(CMakePackage, CudaPackage):
 
         if spec.satisfies('@0.33: +json'):
             args.append("-DACTS_USE_SYSTEM_NLOHMANN_JSON=ON")
-        else if spec.satisfies('@0.14.0: +json'):
+        elif spec.satisfies('@0.14.0: +json'):
             args.append("-DACTS_USE_BUNDLED_NLOHMANN_JSON=OFF")
 
         return args
