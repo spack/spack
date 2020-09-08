@@ -791,6 +791,15 @@ env:
             '/x/y/z', '$spack/var/spack/repos/builtin']
 
 
+def test_write_empty_single_file_scope(tmpdir):
+    env_schema = spack.schema.env.schema
+    scope = spack.config.SingleFileScope(
+        'test', str(tmpdir.ensure('config.yaml')), env_schema, ['spack'])
+    scope.write_section('config')
+    # confirm we can write empty config
+    assert not scope.get_section('config')
+
+
 def check_schema(name, file_contents):
     """Check a Spack YAML schema against some data"""
     f = StringIO(file_contents)

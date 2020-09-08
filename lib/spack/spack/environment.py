@@ -853,23 +853,16 @@ class Environment(object):
     def env_file_config_scope(self):
         """Get the configuration scope for the environment's manifest file."""
         config_name = self.env_file_config_scope_name()
-        return spack.config.SingleFileScope(config_name,
-                                            self.manifest_path,
-                                            spack.schema.env.schema,
-                                            [spack.schema.env.keys])
+        return spack.config.SingleFileScope(
+            config_name,
+            self.manifest_path,
+            spack.schema.env.schema,
+            [spack.config.first_existing(self.raw_yaml,
+                                         spack.schema.env.keys)])
 
     def config_scopes(self):
         """A list of all configuration scopes for this environment."""
         return self.included_config_scopes() + [self.env_file_config_scope()]
-
-    def set_config(self, path, value):
-        """Set configuration for this environment"""
-        yaml = config_dict(self.yaml)
-        keys = spack.config.process_config_path(path)
-        for key in keys[:-1]:
-            yaml = yaml[key]
-        yaml[keys[-1]] = value
-        self.write()
 
     def destroy(self):
         """Remove this environment from Spack entirely."""

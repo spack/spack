@@ -18,6 +18,8 @@ class Madgraph5amc(Package):
     homepage = "https://launchpad.net/mg5amcnlo"
     url      = "https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz"
 
+    version('2.8.0', sha256='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            url="https://launchpad.net/mg5amcnlo/2.0/2.8.x/+download/MG5_aMC_v2.8.0.tar.gz")
     version('2.7.3.py3', sha256='400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225')
     version('2.7.3.py2', sha256='0b665356f4d9359e6e382e0f408dc11db594734567c6b2f0ec0e0697f2dbe099',
             url="https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz")
@@ -29,22 +31,25 @@ class Madgraph5amc(Package):
     variant('collier', default=False, description='Use external installation' +
             ' of Collier')
 
+    conflicts('%gcc@10:', when='@2.7.3')
+
     depends_on('syscalc')
     depends_on('gosam-contrib', when='+ninja')
     depends_on('collier', when='+collier')
     depends_on('lhapdf')
     depends_on('fastjet')
-    depends_on('py-six', when='@2.7.3.py3', type=('build', 'run'))
+    depends_on('py-six', when='@2.7.3.py3,2.8.0:', type=('build', 'run'))
 
-    depends_on('python@:2.7.999', when='@2.7.3.py2', type=('build', 'run'))
-    conflicts('%gcc@10:', when='@2.7.3')
-
-    depends_on('python@3:', when='@2.7.3.py3', type=('build', 'run'))
+    depends_on('python@2.7.0:2.8.0', when='@2.7.3.py2', type=('build', 'run'))
+    depends_on('python@3.7:', when='@2.7.3.py3', type=('build', 'run'))
+    depends_on('python@2.7.0:2.8.0,3.7:', when='@2.8.0:', type=('build', 'run'))
 
     patch('madgraph5amc-2.7.3.patch', level=0, when='@2.7.3.py2~atlas')
     patch('madgraph5amc-2.7.3.atlas.patch', level=0, when='@2.7.3.py2+atlas')
     patch('madgraph5amc-2.7.3.patch', level=0, when='@2.7.3.py3~atlas')
     patch('madgraph5amc-2.7.3.atlas.patch', level=0, when='@2.7.3.py3+atlas')
+    patch('madgraph5amc-2.7.3.patch', level=0, when='@2.8.0~atlas')
+    patch('madgraph5amc-2.8.0.atlas.patch', level=0, when='@2.8.0+atlas')
 
     phases = ['edit', 'build', 'install']
 
@@ -64,7 +69,7 @@ class Madgraph5amc(Package):
             set_parameter('ninja', spec['gosam-contrib'].prefix)
 
         if '+collier' in spec:
-            set_parameter('collier', spec['collier'].prefix)
+            set_parameter('collier', spec['collier'].prefix.lib)
 
         set_parameter('output_dependencies', 'internal')
         set_parameter('lhapdf', join_path(spec['lhapdf'].prefix.bin,
