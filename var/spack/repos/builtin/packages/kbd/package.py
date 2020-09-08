@@ -8,7 +8,7 @@ from spack import *
 
 class Kbd(AutotoolsPackage):
     """The kbd project contains tools for managing Linux console
-    (Linux console, virtual terminals, keyboard, etc.) – mainly,
+    (Linux console, virtual terminals, keyboard, etc.) - mainly,
     what they do is loading console fonts and keyboard maps."""
 
     homepage = "http://kbd-project.org/"
