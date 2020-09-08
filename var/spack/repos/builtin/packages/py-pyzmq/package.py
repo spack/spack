@@ -26,3 +26,7 @@ class PyPyzmq(PythonPackage):
     depends_on('py-py', type=('build', 'run'))
     depends_on('py-cffi', type=('build', 'run'))
     depends_on('libzmq')
+
+    def configure(self, spec, prefix):
+        """ Provide zeromq directory explicitly especially when external"""
+        self.setup_py('configure',  '--zmq=%s' % spec['libzmq'].prefix)
