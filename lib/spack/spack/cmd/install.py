@@ -164,8 +164,8 @@ packages. If neither are chosen, don't run tests for any packages."""
         '-y', '--yes-to-all',
         action='store_true',
         dest='yes_to_all',
-        help="""assume "yes" is the answer to every confirmation request
-to run completely non-interactively, also specify '--no-checksum'."""
+        help="""assume "yes" is the answer to every confirmation request.
+To run completely non-interactively, also specify '--no-checksum'."""
     )
     add_cdash_args(subparser, False)
     arguments.add_common_arguments(subparser, ['spec'])
