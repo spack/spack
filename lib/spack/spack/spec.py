@@ -3009,8 +3009,9 @@ class Spec(object):
             if not self._dependencies:
                 return False
 
-            selfdeps = self.traverse(root=False)
-            otherdeps = other.traverse(root=False)
+            # use list to prevent double-iteration
+            selfdeps = list(self.traverse(root=False))
+            otherdeps = list(other.traverse(root=False))
             if not all(any(d.satisfies(dep, strict=True) for d in selfdeps)
                        for dep in otherdeps):
                 return False
