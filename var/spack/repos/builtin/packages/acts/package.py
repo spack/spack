@@ -157,7 +157,7 @@ class Acts(CMakePackage, CudaPackage):
         integration_tests_label = "INTEGRATIONTESTS"
         unit_tests_label = "UNITTESTS"
         legacy_plugin_label = "LEGACY_PLUGIN"
-        if spec.satisfies('@:0.15.99'):
+        if spec.satisfies('@:0.15'):
             integration_tests_label = "INTEGRATION_TESTS"
             unit_tests_label = "TESTS"
         if spec.satisfies('@:0.32'):
