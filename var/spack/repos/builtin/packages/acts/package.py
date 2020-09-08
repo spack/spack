@@ -92,6 +92,7 @@ class Acts(CMakePackage, CudaPackage):
     variant('identification', default=False, description='Build the Identification plugin')
     variant('json', default=False, description='Build the Json plugin')
     variant('legacy', default=False, description='Build the Legacy package')
+    # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
     variant('tgeo', default=False, description='Build the TGeo plugin')
 
     # Variants that only affect Acts examples for now
