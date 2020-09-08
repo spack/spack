@@ -289,7 +289,7 @@ def test_overriding_arch2(mock_executable, mutable_config, monkeypatch):
 
     # Check entries in 'packages.yaml'
     packages_yaml = spack.config.get('packages')
-    archstr = 'arch=test-centos7-core2'.format(architecture.platform())
+    archstr = 'arch=test-centos7-core2'
     assert 'gcc' in packages_yaml
     assert 'externals' in packages_yaml['gcc']
     externals = packages_yaml['gcc']['externals']
