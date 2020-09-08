@@ -24,6 +24,8 @@ class NaluWind(CMakePackage):
             description='Build dependencies as shared libraries')
     variant('pic', default=True,
             description='Position independent code')
+    variant('test_tol', default='default',
+            description='Tolerance for regression tests')
     # Third party libraries
     variant('openfast', default=False,
             description='Compile with OpenFAST support')
@@ -121,6 +123,17 @@ class NaluWind(CMakePackage):
             options.append('-DENABLE_TESTS:BOOL=ON')
         else:
             options.append('-DENABLE_TESTS:BOOL=OFF')
+
+        if self.spec.variants['test_tol'].value != 'default':
+            try:
+                test_tol = float(self.spec.variants['test_tol'].value)
+                if test_tol <= 0.0:
+                    raise ValueError
+                options.append('-DTEST_TOLERACE:STRING={tol}'.format(
+                    tol=test_tol))
+            except ValueError:
+                print("Specified test_tol must be a positive float. "
+                      "Using the default.")
 
         return options
 

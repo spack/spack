@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class Maven(Package):
@@ -19,7 +19,15 @@ class Maven(Package):
     version('3.5.0', sha256='beb91419245395bd69a4a6edad5ca3ec1a8b64e41457672dc687c173a495f034')
     version('3.3.9', sha256='6e3e9c949ab4695a204f74038717aa7b2689b1be94875899ac1b3fe42800ff82')
 
-    depends_on('java')
+    depends_on('java', type='run')
+
+    executables = ['^mvn$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'Apache Maven (\S+)', output)
+        return match.group(1) if match else None
 
     def install(self, spec, prefix):
         # install pre-built distribution

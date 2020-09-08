@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Exasp2(MakefilePackage):
     """ExaSP2 is a reference implementation of typical linear algebra algorithms
@@ -70,7 +67,6 @@ class Exasp2(MakefilePackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         mkdir(prefix.doc)
-        for files in glob.glob('bin/ExaSP2-*'):
-            install(files, prefix.bin)
+        install('bin/ExaSP2-*', prefix.bin)
         install('LICENSE.md', prefix.doc)
         install('README.md', prefix.doc)

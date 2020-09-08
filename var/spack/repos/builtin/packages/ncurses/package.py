@@ -73,7 +73,8 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             opts.extend(('--with-termlib',
                          '--enable-termcap',
                          '--enable-getcap',
-                         '--enable-tcap-names'))
+                         '--enable-tcap-names',
+                         '--with-versioned-syms'))
 
         prefix = '--prefix={0}'.format(prefix)
 

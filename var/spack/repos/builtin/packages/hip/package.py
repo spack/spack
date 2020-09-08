@@ -17,11 +17,14 @@ class Hip(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.7.0', sha256='757b392c3beb29beea27640832fbad86681dbd585284c19a4c2053891673babd')
     version('3.5.0', sha256='ae8384362986b392288181bcfbe5e3a0ec91af4320c189bd83c844ed384161b3')
 
     depends_on('cmake@3:', type='build')
     depends_on('perl@5.10:', type=('build', 'run'))
-    for ver in ['3.5.0']:
+    depends_on('mesa~llvm@18.3:')
+
+    for ver in ['3.5.0', '3.7.0']:
         depends_on('rocclr@' + ver,  type='build', when='@' + ver)
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
@@ -29,7 +32,9 @@ class Hip(CMakePackage):
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('rocminfo@' + ver, type='build', when='@' + ver)
-        depends_on('mesa~llvm@18.3:', type=('build', 'link'), when='@' + ver)
+
+    # Notice: most likely this will only be a hard dependency on 3.7.0
+    depends_on('numactl', when='@3.7.0')
 
     # Note: the ROCm ecosystem expects `lib/` and `bin/` folders with symlinks
     # in the parent directory of the package, which is incompatible with spack.
@@ -37,10 +42,10 @@ class Hip(CMakePackage):
     # of the package. With the following patch we should never hit code that
     # uses the ROCM_PATH variable again; just to be sure we set it to an empty
     # string.
-    patch('0001-Make-it-possible-to-specify-the-package-folder-of-ro.patch', when='@3.5.0')
+    patch('0001-Make-it-possible-to-specify-the-package-folder-of-ro.patch', when='@3.5.0:')
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
-    patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@3.5.0')
+    patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@3.5.0:')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('ROCM_PATH', '')
@@ -59,6 +64,13 @@ class Hip(CMakePackage):
             'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"',
             'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"',
             'hip-config.cmake.in', string=True)
+
+    def flag_handler(self, name, flags):
+        if name == 'cxxflags' and '@3.7.0' in self.spec:
+            incl = self.spec['rocclr'].prefix.include
+            flags.append('-I {0}/compiler/lib/include'.format(incl))
+
+        return (flags, None, None)
 
     @run_before('install')
     def filter_sbang(self):
