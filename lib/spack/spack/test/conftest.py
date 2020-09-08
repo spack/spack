@@ -16,7 +16,6 @@ import xml.etree.ElementTree
 
 import py
 import pytest
-import ruamel.yaml as yaml
 
 from llnl.util.filesystem import mkdirp, remove_linked_tree
 
@@ -35,6 +34,7 @@ import spack.repo
 import spack.stage
 import spack.util.executable
 import spack.util.gpg
+import spack.util.spack_yaml as syaml
 
 from spack.util.pattern import Bunch
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
@@ -748,7 +748,7 @@ def module_configuration(monkeypatch, request):
 
         file = os.path.join(root_for_conf, filename + '.yaml')
         with open(file) as f:
-            configuration = yaml.load(f)
+            configuration = syaml.load_config(f)
 
         def mock_config_function():
             return configuration

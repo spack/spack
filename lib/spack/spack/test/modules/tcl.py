@@ -272,7 +272,11 @@ class TestTcl(object):
         assert 'foo-foo' not in writer.layout.use_name
 
         writer, spec = factory('mpileaks~debug arch=x86-linux')
-        assert 'bar-foo' in writer.layout.use_name
+        assert 'foo-bar' in writer.layout.use_name
+        assert 'baz' not in writer.layout.use_name
+
+        writer, spec = factory('mpileaks~debug+opt arch=x86-linux')
+        assert 'baz-foo-bar' in writer.layout.use_name
 
     def test_setup_environment(self, modulefile_content, module_configuration):
         """Tests the internal set-up of run-time environment."""
