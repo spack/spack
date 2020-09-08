@@ -268,6 +268,35 @@ def test_overriding_arch(mock_executable, mutable_config, monkeypatch):
     assert archstr in externals[0]['spec']
 
 
+def test_overriding_arch2(mock_executable, mutable_config, monkeypatch):
+    # Prepare an environment to detect a fake gcc that
+    # override its external prefix
+    gcc_exe = mock_executable('gcc', output="echo 4.2.1")
+    prefix = os.path.dirname(gcc_exe)
+    monkeypatch.setenv('PATH', prefix)
+
+    @classmethod
+    def _determine_variants(cls, exes, version_str):
+        return 'arch=test-centos7-core2 languages=c', {
+            'compilers': {'c': exes[0]}
+        }
+
+    gcc_cls = spack.repo.path.get_pkg_class('gcc')
+    monkeypatch.setattr(gcc_cls, 'determine_variants', _determine_variants)
+
+    # Find the external spec
+    external('find', 'gcc')
+
+    # Check entries in 'packages.yaml'
+    packages_yaml = spack.config.get('packages')
+    archstr = 'arch=test-centos7-core2'.format(architecture.platform())
+    assert 'gcc' in packages_yaml
+    assert 'externals' in packages_yaml['gcc']
+    externals = packages_yaml['gcc']['externals']
+    assert len(externals) == 1
+    assert archstr in externals[0]['spec']
+
+
 def test_new_entries_are_reported_correctly(
         mock_executable, mutable_config, monkeypatch
 ):
