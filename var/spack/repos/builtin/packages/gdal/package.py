@@ -89,6 +89,7 @@ class Gdal(AutotoolsPackage):
 
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
+    # extends('jdk', when='+java')
     # extends('perl', when='+perl')
     extends('python', when='+python')
 
@@ -147,7 +148,8 @@ class Gdal(AutotoolsPackage):
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
-    depends_on('java@4:', type=('build', 'link', 'run'), when='+java')
+    depends_on('java@4:8', type=('build', 'link', 'run'), when='+java')
+    depends_on('ant', type='build', when='+java')
     depends_on('swig', type='build', when='+java')
     depends_on('jackcess@1.2.0:1.2.999', type='run', when='+mdb')
     depends_on('armadillo', when='+armadillo')
@@ -176,6 +178,12 @@ class Gdal(AutotoolsPackage):
         # See swig/python/GNUmakefile for more details.
         env.set('PREFIX', self.prefix)
         env.set('DESTDIR', '/')
+
+    def setup_run_environment(self, env):
+        if '+java' in self.spec:
+            class_paths = find(self.prefix, '*.jar')
+            classpath = os.pathsep.join(class_paths)
+            env.prepend_path('CLASSPATH', classpath)
 
     def patch(self):
         if '+java platform=darwin' in self.spec:
@@ -520,6 +528,7 @@ class Gdal(AutotoolsPackage):
         if '+java' in spec:
             with working_dir('swig/java'):
                 make('install')
+                install('*.jar', prefix)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
