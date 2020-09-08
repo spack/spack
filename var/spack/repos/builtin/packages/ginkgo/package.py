@@ -31,16 +31,17 @@ class Ginkgo(CMakePackage, CudaPackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
+    variant('hip', default=False, description='Compile Ginkgo with HIP support')
 
     depends_on('cmake@3.9:', type='build')
     depends_on('cuda@9:',    when='+cuda')
 
-    depends_on('hip:',       when='+hip')
-    depends_on('hipsparse:', when='+hip')
-    depends_on('hipblas:',   when='+hip')
+    depends_on('hip',       when='+hip')
+    depends_on('hipsparse', when='+hip')
+    depends_on('hipblas',   when='+hip')
 
     conflicts('%gcc@:5.2.9')
-    conflicts("+hip", when="@:<1.2.0")
+    conflicts("+hip", when="@:1.1.1")
 
     def cmake_args(self):
         spec = self.spec
