@@ -979,9 +979,6 @@ def safe_remove(*files_or_dirs):
     """Context manager to remove the files passed as input, but restore
     them in case any exception is raised in the context block.
 
-    Filenames clash from single files in different directories are currently
-    not handled.
-
     Args:
         *files_or_dirs: glob expressions for files or directories
             to be removed
@@ -997,14 +994,23 @@ def safe_remove(*files_or_dirs):
     removed, dst_root = {}, tempfile.mkdtemp()
 
     try:
-        for file_or_dir in itertools.chain(*glob_matches):
+        for id, file_or_dir in enumerate(itertools.chain(*glob_matches)):
             src = os.path.abspath(file_or_dir)
-            basename = os.path.basename(file_or_dir)
+            # The glob expression at the top ensures that the file/dir exists
+            # at the time we enter the loop. Double check here since it might
+            # happen that a previous iteration of the loop already removed it.
+            # This is the case, for instance, if we remove the directory
+            # "/foo/bar" before the file "/foo/bar/baz.yaml".
+            if not os.path.exists(src):
+                continue
+            # The monotonic ID is a simple way to make the filename
+            # or directory name unique in the temporary folder
+            basename = os.path.basename(file_or_dir) + '-{0}'.format(id)
             dst = os.path.join(dst_root, basename)
-            shutil.move(src, dst_root)
+            shutil.move(src, dst)
             removed[src] = dst
         yield removed
-    except Exception:
+    except BaseException:
         # Restore the files that were removed
         for src, dst in removed.items():
             shutil.move(dst, src)
