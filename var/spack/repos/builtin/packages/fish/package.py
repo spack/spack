@@ -30,6 +30,9 @@ class Fish(CMakePackage):
     depends_on('python@3.3:', type='test')
     depends_on('py-pexpect', type='test')
 
+    # https://github.com/fish-shell/fish-shell/issues/7310
+    patch('codesign.patch', when='@3.1.2 platform=darwin')
+
     executables = ['^fish$']
 
     @classmethod
