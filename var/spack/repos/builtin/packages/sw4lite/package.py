@@ -58,7 +58,8 @@ class Sw4lite(MakefilePackage, CudaPackage):
             targets.append('HOSTCOMP = {0}'.format(self.compiler.cxx))
             targets.append('MPIPATH= {0} '.format(self.spec['mpi'].prefix))
             targets.append('gpuarch= {0}'.format(self.cuda_flags(cuda_arch)))
-            targets.append('MPIINC = {0}'.format(self.spec['mpi'].headers.directories[0]))
+            targets.append('MPIINC = {0}'.format(
+                self.spec['mpi'].headers.directories[0]))
 
         targets.append('FC=' + spec['mpi'].mpifc)
         targets.append('CXX=' + spec['mpi'].mpicxx)
