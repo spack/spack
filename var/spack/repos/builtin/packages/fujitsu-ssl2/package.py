@@ -32,7 +32,9 @@ class FujitsuSsl2(Package):
 
     def install(self, spec, prefix):
         raise InstallError(
-            "Fujitsu SSL2 is not installable; it is vendor supplied")
+            "Fujitsu SSL2 is not installable; it is vendor supplied"
+            self.spec.format('{name} is not installable, you need to specify '
+                             'it as an external package in packages.yaml')))
 
     @property
     def libs(self):
