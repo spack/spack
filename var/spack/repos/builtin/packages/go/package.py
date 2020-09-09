@@ -38,7 +38,9 @@ class Go(Package):
     extendable = True
     executables = ['^go$']
 
+    version('1.15.1', sha256='d3743752a421881b5cc007c76b4b68becc3ad053e61275567edab1c99e154d30')
     version('1.15', sha256='69438f7ed4f532154ffaf878f3dfd83747e7a00b70b3556eddabf7aaee28ac3a')
+    version('1.14.8', sha256='d9a613fb55f508cf84e753456a7c6a113c8265839d5b7fe060da335c93d6e36a')
     version('1.14.6', sha256='73fc9d781815d411928eccb92bf20d5b4264797be69410eac854babe44c94c09')
     version('1.14.5', sha256='ca4c080c90735e56152ac52cd77ae57fe573d1debb1a58e03da9cc362440315c')
     version('1.14.4', sha256='7011af3bbc2ac108d1b82ea8abb87b2e63f78844f0259be20cde4d42c5c40584')
