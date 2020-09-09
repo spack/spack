@@ -14,7 +14,7 @@ class FujitsuSsl2(Package):
     """
 
     homepage = "https://www.fujitsu.com/us/"
-
+    has_code = False
     conflicts("%arm")
     conflicts("%cce")
     conflicts("%apple-clang")
