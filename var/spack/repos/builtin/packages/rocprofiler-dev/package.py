@@ -22,7 +22,7 @@ class RocprofilerDev(CMakePackage):
     for ver in ['3.5.0', '3.7.0']:
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('rocminfo@' + ver , type='build', when='@' + ver)
+        depends_on('rocminfo@' + ver, type='build', when='@' + ver)
 
     resource(name='roctracer-dev',
              url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-3.5.0.tar.gz',
@@ -37,7 +37,8 @@ class RocprofilerDev(CMakePackage):
              expand=True,
              destination='',
              placement='roctracer',
-             when='@3.7.0') 
+             when='@3.7.0')
+
     def patch(self):
         filter_file('${HSA_RUNTIME_LIB_PATH}/../include',
                     '${HSA_RUNTIME_LIB_PATH}/../include ${HSA_KMT_LIB_PATH}/..\
