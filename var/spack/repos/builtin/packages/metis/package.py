@@ -219,3 +219,9 @@ class Metis(Package):
             Executable(join_path(prefix.bin, 'gpmetis'))(graph, '2')
             graph = join_path(source_directory, 'graphs', 'metis.mesh')
             Executable(join_path(prefix.bin, 'mpmetis'))(graph, '2')
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if (sys.platform == 'darwin') and ('+shared' in self.spec):
+            fix_darwin_install_name(prefix.lib)
