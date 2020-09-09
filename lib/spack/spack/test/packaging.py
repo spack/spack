@@ -560,3 +560,52 @@ def test_macho_make_paths():
                    '/Users/Shared/spack/pkgB/libB.dylib',
                    '/usr/local/lib/libloco.dylib':
                    '/usr/local/lib/libloco.dylib'}
+
+
+@pytest.fixture()
+def mock_download():
+    """Mock a failing download strategy."""
+    class FailedDownloadStrategy(spack.fetch_strategy.FetchStrategy):
+        def mirror_id(self):
+            return None
+
+        def fetch(self):
+            raise spack.fetch_strategy.FailedDownloadError(
+                "<non-existent URL>", "This FetchStrategy always fails")
+
+    fetcher = FetchStrategyComposite()
+    fetcher.append(FailedDownloadStrategy())
+
+    @property
+    def fake_fn(self):
+        return fetcher
+
+    orig_fn = spack.package.PackageBase.fetcher
+    spack.package.PackageBase.fetcher = fake_fn
+    yield
+    spack.package.PackageBase.fetcher = orig_fn
+
+
+@pytest.mark.parametrize("manual,instr", [(False, False), (False, True),
+                                          (True, False), (True, True)])
+@pytest.mark.disable_clean_stage_check
+def test_manual_download(install_mockery, mock_download, monkeypatch, manual,
+                         instr):
+    """
+    Ensure expected fetcher fail message based on manual download and instr.
+    """
+    @property
+    def _instr(pkg):
+        return 'Download instructions for {0}'.format(pkg.spec.name)
+
+    spec = Spec('a').concretized()
+    pkg = spec.package
+
+    pkg.manual_download = manual
+    if instr:
+        monkeypatch.setattr(spack.package.PackageBase, 'download_instr',
+                            _instr)
+
+    expected = pkg.download_instr if manual else 'All fetchers failed'
+    with pytest.raises(spack.fetch_strategy.FetchError, match=expected):
+        pkg.do_fetch()
