@@ -829,12 +829,10 @@ class Environment(object):
                 scope = spack.config.ConfigScope(config_name, config_path)
             elif os.path.exists(config_path):
                 # files are assumed to be SingleFileScopes
-        	
                 from datetime import datetime
-                tmstamp = datetime.now()
-        
+                tmstamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S.%f")
                 base, ext = os.path.splitext(os.path.basename(config_path))
-                config_name = 'env:%s:%s' % (self.name, base + tmstamp.strftime("%d/%m/%Y %H:%M:%S.%f"))
+                config_name = 'env:%s:%s' % (self.name, base + tmstamp)
                 scope = spack.config.SingleFileScope(
                     config_name, config_path, spack.schema.merged.schema)
             else:
