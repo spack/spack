@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class Efivar(MakefilePackage):
     """Tools and libraries to work with EFI variables"""
@@ -14,10 +16,5 @@ class Efivar(MakefilePackage):
     version('36', sha256='24ed0cafbaf6d913e8f60e5da3cbbac1a1578e16cf5c95b21f2eb6753c13173f')
     version('35', sha256='747bc4d97b4bd74979e5356c44a172534a8a07184f130349fd201742e683d292')
 
-    build_directory = 'src'
-
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            mkdirp(prefix.lib)
-            install('*.so*', prefix.lib)
-            install_tree('include/efivar', prefix.include)
+        make('PREFIX={0}'.format(prefix), 'install')

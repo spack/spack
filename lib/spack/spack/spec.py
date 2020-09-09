@@ -2584,6 +2584,8 @@ class Spec(object):
         else:
             # merge package/vdep information into spec
             try:
+                tty.debug(
+                    "{0} applying constraint {1}".format(self.name, str(dep)))
                 changed |= spec_deps[dep.name].constrain(dep)
             except spack.error.UnsatisfiableSpecError as e:
                 fmt = 'An unsatisfiable {0}'.format(e.constraint_type)

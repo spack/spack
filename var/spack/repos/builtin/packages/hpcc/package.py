@@ -205,3 +205,9 @@ class Hpcc(MakefilePackage):
         mkdirp(self.prefix.doc.hpcc)
         install('README.html', self.prefix.doc.hpcc)
         install('README.txt', self.prefix.doc.hpcc)
+
+    def flag_handler(self, name, flags):
+        # old GCC defaults to -std=c90 but C99 is required for "restrict"
+        if self.spec.satisfies('%gcc@:5.1') and name == 'cflags':
+            flags.append(self.compiler.c99_flag)
+        return (flags, None, None)

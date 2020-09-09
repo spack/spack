@@ -172,6 +172,9 @@ class Texlive(AutotoolsPackage):
         else:
             pass
 
+    def setup_build_environment(self, env):
+        env.prepend_path('PATH', join_path(self.prefix.bin, self.tex_arch()))
+
     def setup_run_environment(self, env):
         env.prepend_path('PATH', join_path(self.prefix.bin, self.tex_arch()))
 
