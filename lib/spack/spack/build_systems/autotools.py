@@ -16,6 +16,7 @@ import llnl.util.tty as tty
 import llnl.util.filesystem as fs
 from llnl.util.filesystem import working_dir, force_remove
 from spack.package import PackageBase, run_after, run_before
+from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
 
@@ -239,6 +240,14 @@ class AutotoolsPackage(PackageBase):
     def delete_configure_to_force_update(self):
         if self.force_autoreconf:
             force_remove(self.configure_abs_path)
+
+    @run_before('autoreconf')
+    def add_aclocal_path(self):
+        env = EnvironmentModifications()
+        for dep in self.spec.dependencies(deptype='build'):
+            if os.path.exists(dep.prefix.share.aclocal):
+                env.append_path('ACLOCAL_PATH', dep.prefix.share.aclocal)
+        env.apply_modifications()
 
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
