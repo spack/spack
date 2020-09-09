@@ -1318,13 +1318,38 @@ class Environment(object):
             def needs_overwrite(spec):
                 # Overwrite the install if it's a dev build (non-transitive)
                 # and the code has been changed since the last install
+                # or one of the dependencies has been reinstalled since
+                # the last install
+
+                # if it's not installed, we don't need to overwrite it
+                if not spec.package.installed:
+                    return False
+
+                # if it's not a dev build, we don't need to overwrite it
                 dev_path_var = spec.variants.get('dev_path', None)
+                dev_build_var = spec.variants.get('dev_build', None)
+                if not dev_build_var:
+                    return False
+
+                # if a dep is not installed, then it will be changed
+                deps = list(spec.traverse(root=False))
+                all_installed = all(dep.package.installed for dep in deps)
+                if not all_installed:
+                    return True
+
+                # if any dep needs overwrite, then overwrite this package
+                any_rebuild = any(needs_overwite(dep) for dep in deps)
+                if any_rebuild:
+                    return True
+
+                # if it's not a direct dev build and its dependencies haven't
+                # changed, it hasn't changed
                 if not dev_path_var:
-                    # if the variant exists, it is a path
                     return False
+
+                # if it is a direct dev build, check whether the code changed
+                # we already know it is installed
                 _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
-                if not record or not record.installed:
-                    return False
                 mtime = fs.last_modification_time_recursive(dev_path_var.value)
                 return mtime > record.installation_time
 
