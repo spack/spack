@@ -22,17 +22,17 @@ class FenicsDolfinx(CMakePackage):
     depends_on("cmake@3.9:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("mpi")
-    depends_on("hdf5+hl+fortran")
-    depends_on("boost")
+    depends_on("hdf5")
+    depends_on("boost@1.7.0:+filesystem+program_options+timer")
     depends_on("eigen@3.3.7:")
-    depends_on("petsc+mpi+shared+hypre+metis")
+    depends_on("petsc+mpi+shared")
     depends_on("scotch+mpi")
 
     depends_on("kahip", when="+kahip")
     depends_on("parmetis", when="+parmetis")
     depends_on("slepc", when="+slepc")
 
-    depends_on("py-fenics-ffcx", type=["build", "run"])
+    depends_on("py-fenics-ffcx", type=("build", "run"))
 
     conflicts('%gcc@:6', msg='C++17 support required')
 
@@ -41,12 +41,9 @@ class FenicsDolfinx(CMakePackage):
     def cmake_args(self):
         args = [
             "-DDOLFINX_SKIP_BUILD_TESTS=True",
-            "-DDOLFINX_ENABLE_KAHIP=%s" % (
-                'ON' if "+kahip" in self.spec else 'OFF'),
-            "-DDOLFINX_ENABLE_PARMETIS=%s" % (
-                'ON' if "+parmetis" in self.spec else 'OFF'),
-            "-DDOLFINX_ENABLE_SLEPC=%s" % (
-                'ON' if "+slepc" in self.spec else 'OFF'),
+            "-DDOLFINX_ENABLE_KAHIP=%s" % ('ON' if "+kahip" in self.spec else 'OFF'),
+            "-DDOLFINX_ENABLE_PARMETIS=%s" % ('ON' if "+parmetis" in self.spec else 'OFF'),
+            "-DDOLFINX_ENABLE_SLEPC=%s" % ('ON' if "+slepc" in self.spec else 'OFF'),
             "-DPython3_ROOT_DIR=%s" % self.spec['python'].home,
             "-DPython3_FIND_STRATEGY=LOCATION",
         ]
