@@ -27,5 +27,5 @@ class RocmSmiLib(CMakePackage):
     @run_after('install')
     def post_install(self):
         shutil.rmtree(self.prefix.lib)
-        copy_tree(self.prefix.rocm_smi,  self.prefix)
+        install_tree(self.prefix.rocm_smi,  self.prefix)
         shutil.rmtree(self.prefix.rocm_smi)
