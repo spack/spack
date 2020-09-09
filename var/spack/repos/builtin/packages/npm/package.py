@@ -12,10 +12,11 @@ from spack import *
 class Npm(Package):
     """npm: A package manager for javascript."""
 
-    homepage = "https://github.com/npm/npm"
+    homepage = "https://github.com/npm/cli"
     # base http://www.npmjs.com/
     url      = "https://registry.npmjs.org/npm/-/npm-6.13.4.tgz"
 
+    version('6.14.8', sha256='fe8e873cb606c06f67f666b4725eb9122c8927f677c8c0baf1477f0ff81f5a2c')
     version('6.13.7', sha256='6adf71c198d61a5790cf0e057f4ab72c6ef6c345d72bed8bb7212cb9db969494')
     version('6.13.4', sha256='a063290bd5fa06a8753de14169b7b243750432f42d01213fbd699e6b85916de7')
     version('3.10.9', sha256='fb0871b1aebf4b74717a72289fade356aedca83ee54e7386e38cb51874501dd6')
