@@ -30,7 +30,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     version('master', branch='master', submodules="True")
 
     variant('mpi', default=True, description='Enable MPI support')
-    variant('openmp', default=False, description='Enable OpenMP support')
+    variant('openmp', default=True, description='Enable OpenMP support')
     variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'blas'),
             description='Library for small matrix multiplications')
     variant('plumed', default=False, description='Enable PLUMED support')
@@ -151,6 +151,8 @@ class Cp2k(MakefilePackage, CudaPackage):
     # please set variants: smm=blas by configuring packages.yaml or install
     # cp2k with option smm=blas on aarch64
     conflicts('smm=libxsmm',  when='target=aarch64:', msg='libxsmm is not available on arm')
+
+    conflicts('~openmp', when='@8:', msg='Building without OpenMP is not supported in CP2K 8+')
 
     @property
     def makefile_architecture(self):
