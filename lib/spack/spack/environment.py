@@ -829,7 +829,6 @@ class Environment(object):
                 scope = spack.config.ConfigScope(config_name, config_path)
             elif os.path.exists(config_path):
                 # files are assumed to be SingleFileScopes
-                base, ext = os.path.splitext(os.path.basename(config_path))
                 config_name = 'env:%s:%s' % (self.name, config_path)
                 scope = spack.config.SingleFileScope(
                     config_name, config_path, spack.schema.merged.schema)
