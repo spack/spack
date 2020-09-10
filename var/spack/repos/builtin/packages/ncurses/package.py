@@ -4,10 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from glob import glob
-from os.path import exists, join
-from os import makedirs
-import re
+import glob
 import os
 
 
@@ -134,11 +131,11 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             make('install')
 
         # fix for packages like hstr that use "#include <ncurses/ncurses.h>"
-        headers = glob(join(prefix.include, '*'))
+        headers = glob.glob(os.path.join(prefix.include, '*'))
         for p_dir in ['ncurses', 'ncursesw']:
-            path = join(prefix.include, p_dir)
-            if not exists(path):
-                makedirs(path)
+            path = os.path.join(prefix.include, p_dir)
+            if not os.path.exists(path):
+                os.makedirs(path)
             for header in headers:
                 install(header, path)
 
