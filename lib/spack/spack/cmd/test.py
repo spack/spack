@@ -7,13 +7,12 @@ from __future__ import print_function
 import os
 import argparse
 import textwrap
-import datetime
 import fnmatch
 import re
 import shutil
+import sys
 
 import llnl.util.tty as tty
-import llnl.util.filesystem as fs
 
 import spack.install_test
 import spack.environment as ev
@@ -33,10 +32,9 @@ def setup_parser(subparser):
     # Run
     run_parser = sp.add_parser('run', help=test_run.__doc__)
 
-    name_help_msg = "Name the test for subsequent access."
-    name_help_msg += " Default is the timestamp of the run formatted"
-    name_help_msg += " 'YYYY-MM-DD_HH:MM:SS'"
-    run_parser.add_argument('-n', '--name', help=name_help_msg)
+    alias_help_msg = "Provide an alias for this test-suite"
+    alias_help_msg += " for subsequent access."
+    run_parser.add_argument('--alias', help=alias_help_msg)
 
     run_parser.add_argument(
         '--fail-fast', action='store_true',
@@ -88,19 +86,30 @@ def setup_parser(subparser):
         'filter', nargs=argparse.REMAINDER,
         help='optional case-insensitive glob patterns to filter results.')
 
+    # Find
+    find_parser = sp.add_parser('find', help=test_find.__doc__)
+    find_parser.add_argument(
+        'filter', nargs=argparse.REMAINDER,
+        help='optional case-insensitive glob patterns to filter results.')
+
     # Status
     status_parser = sp.add_parser('status', help=test_status.__doc__)
-    status_parser.add_argument('name', help="Test for which to provide status")
+    status_parser.add_argument(
+        'names', nargs=argparse.REMAINDER,
+        help="Test suites for which to print status")
 
     # Results
     results_parser = sp.add_parser('results', help=test_results.__doc__)
-    results_parser.add_argument('name', help="Test for which to print results")
+    results_parser.add_argument(
+        'names', nargs=argparse.REMAINDER,
+        help="Test suites for which to print results")
 
     # Remove
     remove_parser = sp.add_parser('remove', help=test_remove.__doc__)
+    arguments.add_common_arguments(remove_parser, ['yes_to_all'])
     remove_parser.add_argument(
-        'name', nargs='?',
-        help="Test to remove from test stage")
+        'names', nargs=argparse.REMAINDER,
+        help="Test suites to remove from test stage")
 
 
 def test_run(args):
@@ -139,7 +148,7 @@ environment variables:
         specs_to_test.extend(matching)
 
     # test_stage_dir
-    test_suite = spack.install_test.TestSuite(specs_to_test, args.name)
+    test_suite = spack.install_test.TestSuite(specs_to_test, args.alias)
     test_suite.ensure_stage()
     tty.msg("Spack test %s" % test_suite.name)
 
@@ -171,9 +180,16 @@ environment variables:
 
 
 def test_list(args):
-    """List tests that are running or have available results."""
-    stage_dir = spack.install_test.get_test_stage_dir()
-    tests = os.listdir(stage_dir)
+    """List all installed packages with available tests."""
+    raise NotImplementedError
+
+
+def test_find(args): # TODO: merge with status (noargs)
+    """Find tests that are running or have available results.
+
+    Displays aliases for tests that have them, otherwise test suite content
+    hashes."""
+    test_suites = spack.install_test.get_all_test_suites()
 
     # Filter tests by filter argument
     if args.filter:
@@ -185,14 +201,16 @@ def test_list(args):
 
         def match(t, f):
             return f.match(t)
-        tests = [t for t in tests
-                 if any(match(t, f) for f in filters) and
-                 os.path.isdir(os.path.join(stage_dir, t))]
+        test_suites = [t for t in test_suites
+                       if any(match(t.alias, f) for f in filters) and
+                       os.path.isdir(os.path.join(stage_dir, t))]
 
-    if tests:
+    names = [t.name for t in test_suites]
+
+    if names:
         # TODO: Make these specify results vs active
         msg = "Spack test results available for the following tests:\n"
-        msg += "        %s\n" % ' '.join(tests)
+        msg += "        %s\n" % ' '.join(names)
         msg += "    Run `spack test remove` to remove all tests"
         tty.msg(msg)
     else:
@@ -202,40 +220,57 @@ def test_list(args):
 
 
 def test_status(args):
-    """Get the current status for a particular Spack test."""
-    name = args.name
-    stage = spack.install_test.get_test_stage(name)
-
-    if os.path.exists(stage):
-        # TODO: Make this handle capability tests too
-        tty.msg("Test %s completed" % name)
+    """Get the current status for a particular Spack test suites."""
+    if args.names:
+        test_suites = []
+        for name in args.names:
+            test_suite = spack.install_test.get_test_suite(name)
+            if test_suite:
+                test_suites.append(test_suite)
+            else:
+                tty.msg("No test suite %s found in test stage" % name)
     else:
-        tty.msg("Test %s no longer available" % name)
+        test_suites = spack.install_test.get_all_test_suites()
+        if not test_suites:
+            tty.msg("No test suites with status to report")
+
+    for test_suite in test_suites:
+        # TODO: Make this handle capability tests too
+        # TODO: Make this handle tests running in another process
+        tty.msg("Test suite %s completed" % test_suite.name)
 
 
 def test_results(args):
-    """Get the results for a particular Spack test."""
-    name = args.name
-    stage = spack.install_test.get_test_stage(name)
+    """Get the results from Spack test suites (default all)."""
+    if args.names:
+        test_suites = []
+        for name in args.names:
+            test_suite = spack.install_test.get_test_suite(name)
+            if test_suite:
+                test_suites.append(test_suite)
+            else:
+                tty.msg("No test suite %s found in test stage" % name)
+    else:
+        test_suites = spack.install_test.get_all_test_suites()
+        if not test_suites:
+            tty.msg("No test suites with results to report")
 
     # TODO: Make this handle capability tests too
     # The results file may turn out to be a placeholder for future work
-    if os.path.exists(stage):
-        results_file = spack.install_test.get_results_file(name)
+    for test_suite in test_suites:
+        results_file = test_suite.results_file
         if os.path.exists(results_file):
-            msg = "Results for test %s: \n" % name
+            msg = "Results for test suite %s: \n" % test_suite.name
             with open(results_file, 'r') as f:
                 lines = f.readlines()
             for line in lines:
                 msg += "        %s" % line
             tty.msg(msg)
         else:
-            msg = "Test %s has no results.\n" % name
-            msg += "        Check if it is active with "
-            msg += "`spack test status %s`" % name
+            msg = "Test %s has no results.\n" % test_suite.name
+            msg += "        Check if it is running with "
+            msg += "`spack test status %s`" % test_suite.name
             tty.msg(msg)
-    else:
-        tty.msg("No test %s found in test stage" % name)
 
 
 def test_remove(args):
@@ -245,11 +280,32 @@ def test_remove(args):
 
     Removed tests can no longer be accessed for results or status, and will not
     appear in `spack test list` results."""
-    if args.name:
-        shutil.rmtree(spack.install_test.get_test_stage(args.name))
+    if args.names:
+        test_suites = []
+        for name in args.names:
+            test_suite = spack.install_test.get_test_suite(name)
+            if test_suite:
+                test_suites.append(test_suite)
+            else:
+                tty.msg("No test suite %s found in test stage" % name)
     else:
-        fs.remove_directory_contents(spack.install_test.get_test_stage_dir())
+        test_suites = spack.install_test.get_all_test_suites()
 
+    if not test_suites:
+        tty.msg("No test suites to remove")
+        return
+
+    if not args.yes_to_all:
+        msg = 'The following test suites will be removed'
+        msg += '\n\n    ' + '   '.join(test.name for test in test_suites) + '\n'
+        tty.msg(msg)
+        answer = tty.get_yes_or_no('Do you want to proceed?', default=False)
+        if not answer:
+            tty.msg('Aborting removal of test suites')
+            return
+
+    for test_suite in test_suites:
+        shutil.rmtree(test_suite.stage)
 
 def test(parser, args):
     globals()['test_%s' % args.test_command](args)

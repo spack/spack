@@ -1659,7 +1659,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     test_failures = None
     test_suite = None
 
-    def do_test(self, name, remove_directory=False, dirty=False):
+    def do_test(self, dirty=False):
         if self.test_requires_compiler:
             compilers = spack.compilers.compilers_for_spec(
                 self.spec.compiler, arch_spec=self.spec.architecture)
@@ -1733,17 +1733,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     if self.test_failures:
                         raise TestFailure(self.test_failures)
 
-                    # cleanup test directory on success
-                    if remove_directory:
-                        shutil.rmtree(testdir)
-
                 finally:
                     # reset debug level
                     tty.set_debug(old_debug)
 
         spack.build_environment.fork(
-            self, test_process, dirty=dirty, fake=False, context='test',
-            test_name=name)
+            self, test_process, dirty=dirty, fake=False, context='test')
 
     def test(self):
         pass

@@ -33,7 +33,6 @@ def mock_calls_for_clean(monkeypatch):
         spack.caches.misc_cache, 'destroy', Counter('caches'))
     monkeypatch.setattr(
         spack.installer, 'clear_failures', Counter('failures'))
-    monkeypatch.setattr(fs, 'remove_directory_contents', Counter('tests'))
 
     yield counts
 
@@ -50,7 +49,6 @@ all_effects = ['stages', 'downloads', 'caches', 'failures', 'tests']
     ('-sd',      ['stages', 'downloads']),
     ('-m',       ['caches']),
     ('-f',       ['failures']),
-    ('-t',       ['tests']),
     ('-a',       all_effects),
     ('',         []),
 ])
