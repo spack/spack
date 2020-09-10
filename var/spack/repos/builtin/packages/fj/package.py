@@ -15,7 +15,7 @@ class Fj(Package):
     computing workloads.
     """
 
-    homepage = "https://www.fujitsu.com/global/us"
+    homepage = "https://www.fujitsu.com/us/"
 
     maintainers = ['t-karatsu']
 
