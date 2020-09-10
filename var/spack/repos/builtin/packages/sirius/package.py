@@ -89,6 +89,10 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('spfft+rocm', when='@master+rocm')
     depends_on('spfft+rocm', when='@develop+rocm')
 
+    depends_on('spla@1.1.0:', when='@develop')
+    depends_on('spla@1.1.0:+cuda', when='@develop+cuda')
+    depends_on('spla@1.1.0:+rocm', when='@develop+rocm')
+
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
 
