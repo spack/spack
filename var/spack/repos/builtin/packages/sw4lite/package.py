@@ -55,7 +55,7 @@ class Sw4lite(MakefilePackage, CudaPackage):
         if '+cuda' in self.spec:
             targets.append('NVCC = {0}'.format(
                 self.spec['cuda'].prefix.bin.nvcc))
-            targets.append('HOSTCOMP = {0}'.format(self.compiler.cxx))
+            targets.append('HOSTCOMP = {0}'.format(spack_cxx))
             targets.append('MPIPATH= {0} '.format(self.spec['mpi'].prefix))
             targets.append('gpuarch= {0}'.format(self.cuda_flags(cuda_arch)))
             targets.append('MPIINC = {0}'.format(
