@@ -13,17 +13,19 @@ class Rocthrust(CMakePackage):
        library works on HIP/ROCm platforms"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocThrust"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-3.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-3.7.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.7.0', sha256='4cb923dde5eec150a566cb10d23ee5c7ce3aa892c4dea94886a89d95b90f3bdd')
     version('3.5.0', sha256='0d1bac1129d17bb1259fd06f5c9cb4c1620d1790b5c295b866fb3442d18923cb')
 
     variant('build_type', default='Release', values=("Release", "Debug"),
             description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    for ver in ['3.5.0']:
+    depends_on('numactl', when='@3.7.0')
+    for ver in ['3.5.0', '3.7.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
