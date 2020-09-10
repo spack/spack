@@ -40,6 +40,7 @@ class FujitsuSsl2(Package):
     def libs(self):
         sharedlibs = find_libraries(
             [
+                "libfjscalapack",
                 "libfjlapack",
                 "libfj90i",
                 "libfj90f",
