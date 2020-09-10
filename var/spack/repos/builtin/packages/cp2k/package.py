@@ -119,8 +119,10 @@ class Cp2k(MakefilePackage, CudaPackage):
     # only OpenMP should be consistenly used, all other common things
     # like ELPA, SCALAPACK are independent and Spack will ensure that
     # a consistent/compat. combination is pulled in to the dependency graph.
-    depends_on('sirius+fortran+vdwxc+shared+openmp', when='+sirius+openmp')
-    depends_on('sirius+fortran+vdwxc+shared~openmp', when='+sirius~openmp')
+    depends_on('sirius@:6.999+fortran+vdwxc+shared+openmp', when='@:7.999+sirius+openmp')
+    depends_on('sirius@:6.999+fortran+vdwxc+shared~openmp', when='@:7.999+sirius~openmp')
+
+    depends_on('sirius@7:+fortran+vdwxc+shared+openmp', when='@8:+sirius+openmp')
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
     # which is written using Python 3
