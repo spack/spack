@@ -1338,7 +1338,7 @@ class Environment(object):
                     return True
 
                 # if any dep needs overwrite, then overwrite this package
-                any_rebuild = any(needs_overwite(dep) for dep in deps)
+                any_rebuild = any(needs_overwrite(dep) for dep in deps)
                 if any_rebuild:
                     return True
 
