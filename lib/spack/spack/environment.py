@@ -832,7 +832,7 @@ class Environment(object):
                 from datetime import datetime
                 tmstamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S.%f")
                 base, ext = os.path.splitext(os.path.basename(config_path))
-                config_name = 'env:%s:%s' % (self.name, base + tmstamp)
+                config_name = 'env:%s:%s' % (self.name, config_path)
                 scope = spack.config.SingleFileScope(
                     config_name, config_path, spack.schema.merged.schema)
             else:
