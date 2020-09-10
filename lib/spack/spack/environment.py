@@ -1248,16 +1248,6 @@ class Environment(object):
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
-    def install(self, user_spec, concrete_spec=None, **install_args):
-        """Install a single spec into an environment.
-
-        This will automatically concretize the single spec, but it won't
-        affect other as-yet unconcretized specs.
-        """
-        concrete = self.concretize_and_add(user_spec, concrete_spec)
-
-        self._install(concrete, **install_args)
-
     def _install_log_links(self, spec):
         if not spec.external:
             # Make sure log directory exists
@@ -1272,11 +1262,6 @@ class Environment(object):
                     os.remove(build_log_link)
                 os.symlink(spec.package.build_log_path, build_log_link)
 
-    def _install(self, spec, **install_args):
-        # "spec" must be concrete
-        spec.package.do_install(**install_args)
-        self._install_log_links(spec)
-
     def install_all(self, args=None):
         """Install all concretized specs in an environment.
 
@@ -1284,6 +1269,11 @@ class Environment(object):
         that needs to be done separately with a call to write().
 
         """
+
+        # TODO: Assess whether pre-determining installed packages is still
+        # TODO:   appropriate in the parallel build case since doing so
+        # TODO:   precludes holding locks on installed packages to prevent
+        # TODO:   them from being uninstalled during the install process.
 
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
@@ -1300,18 +1290,21 @@ class Environment(object):
         installs = []
         for spec in uninstalled_specs:
             # Parse cli arguments and construct a dictionary
-            # that will be passed to Package.do_install API
+            # that will be passed to the package installer
             kwargs = dict()
             if args:
                 spack.cmd.install.update_kwargs_from_args(args, kwargs)
-            installs.append((spec.package, kwargs))
-        builder = PackageInstaller(installs)
-        builder.install()
 
-        # And ensure links are set appropriately
-        # TODO: Can/should the link function be added as a post-install?
-        for spec in uninstalled_specs:
-            self._install_log_links(spec)
+            installs.append((spec.package, kwargs))
+
+        try:
+            builder = PackageInstaller(installs)
+            builder.install()
+        finally:
+            # Ensure links are set appropriately
+            for spec in uninstalled_specs:
+                if spec.package.installed:
+                    self._install_log_links(spec)
 
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""

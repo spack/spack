@@ -208,7 +208,9 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     spec = spack.spec.Spec('a').concretized()
     assert inst._process_binary_cache_tarball(spec.package, spec, False, False)
 
-    assert 'Extracting a from binary cache' in capfd.readouterr()[0]
+    out = capfd.readouterr()[0]
+    assert 'Extracting a' in out
+    assert 'from binary cache' in out
 
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
@@ -588,7 +590,7 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
     # Mock the known dependent, b, as external so assumed to be installed
     monkeypatch.setattr(spack.spec.Spec, 'external', True)
     installer._check_deps_status(request)
-    assert 'b' in installer.installed
+    assert list(installer.installed)[0].startswith('b')
 
 
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
@@ -599,7 +601,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     # Mock the known dependent, b, as installed upstream
     monkeypatch.setattr(spack.package.PackageBase, 'installed_upstream', True)
     installer._check_deps_status(request)
-    assert 'b' in installer.installed
+    assert list(installer.installed)[0].startswith('b')
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
@@ -650,12 +652,12 @@ def test_installer_init_requests(install_mockery):
 def test_install_task_use_cache(install_mockery, monkeypatch):
     const_arg = installer_args(['trivial-install-test-package'], {})
     installer = create_installer(const_arg)
-    spec = installer.build_requests[0].pkg.spec
-    task = create_build_task(spec.package)
+    request = installer.build_requests[0]
+    task = create_build_task(request.pkg)
 
     monkeypatch.setattr(inst, '_install_from_cache', _true)
     installer._install_task(task)
-    assert spec.package.name in installer.installed
+    assert request.pkg_id in installer.installed
 
 
 def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
@@ -713,7 +715,8 @@ def test_requeue_task(install_mockery, capfd):
     assert qtask.status == inst.STATUS_INSTALLING
 
     out = capfd.readouterr()[0]
-    assert 'Installing a in progress by another process' in out
+    assert 'Installing a' in out
+    assert ' in progress by another process' in out
 
 
 def test_cleanup_all_tasks(install_mockery, monkeypatch):
@@ -833,7 +836,8 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     installer.install()
 
     out = str(capsys.readouterr())
-    assert 'Warning: b failed to install' in out
+    assert installer.build_requests[0].pkg_id in out
+    assert 'failed to install' in out
 
 
 def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
@@ -847,7 +851,7 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     installer.install()
 
     out = str(capsys.readouterr())
-    assert 'b failed to install' in out
+    assert 'failed to install' in out
     assert 'Skipping build of a' in out
 
 
@@ -934,6 +938,7 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     const_arg = installer_args(['b'], {'fail_fast': False})
     const_arg.extend(installer_args(['c'], {'fail_fast': True}))
     installer = create_installer(const_arg)
+    pkg_ids = [inst.package_id(spec.package) for spec, _ in const_arg]
 
     # Make sure all packages are identified as failed
     #
@@ -944,11 +949,13 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     with pytest.raises(inst.InstallError, match='after first install failure'):
         installer.install()
 
-    assert 'b' in installer.failed, 'Expected b to be marked as failed'
-    assert 'c' not in installer.failed, 'Expected no attempt to install c'
+    failed = installer.failed
+    requests = installer.build_requests
+    assert pkg_ids[0] in installer.failed, 'Expected b to be marked as failed'
+    assert pkg_ids[1] not in installer.failed, 'Expected no attempt to install c'
 
     out = capsys.readouterr()[1]
-    assert 'b failed to install' in out
+    assert '{0} failed to install'.format(pkg_ids[0]) in out
 
 
 def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
@@ -997,16 +1004,21 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
 
 def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     """Cover basic install handling for installed package."""
+    const_arg = installer_args(['b'], {})
+    b, _ = const_arg[0]
+    installer = create_installer(const_arg)
+    b_pkg_id = inst.package_id(b.package)
+
     def _prep(installer, task):
-        installer.installed.add('b')
-        tty.msg('{0} is installed' .format(task.pkg.spec.name))
+        installer.installed.add(b_pkg_id)
+        tty.msg('{0} is installed' .format(b_pkg_id))
 
         # also do not allow the package to be locked again
         monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked',
                             _not_locked)
 
     def _requeued(installer, task):
-        tty.msg('requeued {0}' .format(task.pkg.spec.name))
+        tty.msg('requeued {0}' .format(inst.package_id(task.pkg)))
 
     # Flag the package as installed
     monkeypatch.setattr(inst.PackageInstaller, '_prepare_for_install', _prep)
@@ -1014,11 +1026,9 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     # Ensure don't continually requeue the task
     monkeypatch.setattr(inst.PackageInstaller, '_requeue_task', _requeued)
 
-    const_arg = installer_args(['b'], {})
-    installer = create_installer(const_arg)
 
     installer.install()
-    assert 'b' not in installer.installed
+    assert b_pkg_id not in installer.installed
 
     out = capfd.readouterr()[0]
     expected = ['is installed', 'read locked', 'requeued']
@@ -1077,7 +1087,8 @@ def test_install_dir_exists(install_mockery, monkeypatch):
     with pytest.raises(dl.InstallDirectoryAlreadyExistsError, match=err):
         installer.install()
 
-    assert 'b' in installer.installed
+    b, _ = const_arg[0]
+    assert inst.package_id(b.package) in installer.installed
 
 
 def test_install_dir_exists_multi(install_mockery, monkeypatch, capfd):
@@ -1097,15 +1108,18 @@ def test_install_dir_exists_multi(install_mockery, monkeypatch, capfd):
 
     err = capfd.readouterr()[1]
     assert 'already exists' in err
-    assert 'b' in installer.installed
-    assert 'c' in installer.installed
+    for spec, install_args in const_arg:
+        pkg_id = inst.package_id(spec.package)
+        assert pkg_id in installer.installed
 
 
 def test_install_skip_patch(install_mockery, mock_fetch):
     """Test the path skip_patch install path."""
-    const_arg = installer_args(['b'], {'fake': False, 'skip_patch': True})
+    spec_name = 'b'
+    const_arg = installer_args([spec_name], {'fake': False, 'skip_patch': True})
     installer = create_installer(const_arg)
 
     installer.install()
 
-    assert 'b' in installer.installed
+    spec, install_args = const_arg[0]
+    assert inst.package_id(spec.package) in installer.installed

@@ -559,27 +559,17 @@ def package_id(pkg):
     The identifier is used to track build tasks, locks, install, and
     failure statuses.
 
+    The identifier needs to distinguish between combinations of compilers
+    and packages for combinatorial environments.
+
     Args:
         pkg (PackageBase): the package from which the identifier is derived
     """
     if not pkg.spec.concrete:
         raise ValueError("Cannot provide a unique, readable id when "
                          "the spec is not concretized.")
-    # TODO: Restore use of the dag hash once resolve issues with different
-    # TODO: hashes being associated with dependents of different packages
-    # TODO: within the same install, such as the hash for callpath being
-    # TODO: different for mpich and dyninst in the
-    # TODO: test_force_uninstall_and_reinstall_by_hash` test.
 
-    # TODO: Is the extra "readability" of the version worth keeping?
-    # return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
-
-    # TODO: Including the version causes some installs to fail.  Specifically
-    # TODO: failures occur when the version of a dependent of one of the
-    # TODO: packages does not match the version that is installed.
-    # return "{0}-{1}".format(pkg.name, pkg.version)
-
-    return pkg.name
+    return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
 
 
 class PackageInstaller(object):

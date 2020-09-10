@@ -20,6 +20,7 @@ import spack.fetch_strategy
 import spack.paths
 import spack.report
 from spack.error import SpackError
+from spack.installer import PackageInstaller
 
 
 description = "build and install packages"
@@ -29,7 +30,7 @@ level = "short"
 
 def update_kwargs_from_args(args, kwargs):
     """Parse cli arguments and construct a dictionary
-    that will be passed to Package.do_install API"""
+    that will be passed to the package installer."""
 
     kwargs.update({
         'fail_fast': args.fail_fast,
@@ -225,23 +226,29 @@ def default_log_file(spec):
     return fs.os.path.join(dirname, basename)
 
 
-def install_spec(cli_args, kwargs, abstract_spec, spec):
-    """Do the actual installation."""
+def install_specs(cli_args, kwargs, specs):
+    """Do the actual installation.
+
+    Args:
+        cli_args (Namespace): argparse namespace with command arguments
+        kwargs (dict):  keyword arguments
+        specs (list of tuples):  list of (abstract, concrete) spec tuples
+    """
+
+    # handle active environment, if any
+    env = ev.get_env(cli_args, 'install')
 
     try:
-        # handle active environment, if any
-        env = ev.get_env(cli_args, 'install')
         if env:
-            with env.write_transaction():
-                concrete = env.concretize_and_add(
-                    abstract_spec, spec)
-                env.write(regenerate_views=False)
-            env._install(concrete, **kwargs)
-            with env.write_transaction():
-                env.regenerate_views()
+            for abstract, concrete in specs:
+                with env.write_transaction():
+                    concrete = env.concretize_and_add(abstract, concrete)
+                    env.write(regenerate_views=False)
+            env.install_all(**kwargs)
         else:
-            spec.package.do_install(**kwargs)
-
+            installs = [(concrete.package, kwargs) for _, concrete in specs]
+            builder = PackageInstaller(installs)
+            builder.install()
     except spack.build_environment.InstallError as e:
         if cli_args.show_log_on_error:
             e.print_context()
@@ -252,6 +259,11 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
                 with open(e.pkg.build_log_path) as log:
                     shutil.copyfileobj(log, sys.stderr)
         raise
+
+    finally:
+        if env:
+            with env.write_transaction():
+                env.regenerate_views()
 
 
 def install(parser, args, **kwargs):
@@ -306,7 +318,7 @@ environment variables:
         spack.config.set('config:checksum', False, scope='command_line')
 
     # Parse cli arguments and construct a dictionary
-    # that will be passed to Package.do_install API
+    # that will be passed to the package installer
     update_kwargs_from_args(args, kwargs)
 
     if args.run_tests:
@@ -385,13 +397,15 @@ environment variables:
                 if not answer:
                     tty.die('Reinstallation aborted.')
 
-            for abstract, concrete in zip(abstract_specs, specs):
-                if concrete in installed:
-                    with fs.replace_directory_transaction(concrete.prefix):
-                        install_spec(args, kwargs, abstract, concrete)
-                else:
-                    install_spec(args, kwargs, abstract, concrete)
-
+            if any([concrete in installed for concrete in specs]):
+                # Preserve ordering if force replacement of any installed specs
+                for abstract, concrete in zip(abstract_specs, specs):
+                    if concrete in installed:
+                        with fs.replace_directory_transaction(concrete.prefix):
+                            install_specs(args, kwargs, [abstract, concrete])
+                    else:
+                        install_specs(args, kwargs, [abstract, concrete])
+            else:
+                install_specs(args, kwargs, zip(abstract_specs, specs))
         else:
-            for abstract, concrete in zip(abstract_specs, specs):
-                install_spec(args, kwargs, abstract, concrete)
+            install_specs(args, kwargs, zip(abstract_specs, specs))

@@ -2019,7 +2019,8 @@ def test_cant_install_single_spec_when_concretizing_together():
     e.concretization = 'together'
 
     with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
-        e.install('zlib')
+        e.concretize_and_add('zlib')
+        e.install_all()
 
 
 def test_duplicate_packages_raise_when_concretizing_together():
