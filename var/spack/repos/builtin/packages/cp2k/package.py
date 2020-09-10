@@ -436,7 +436,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         if spec.satisfies('+sirius'):
             sirius = spec['sirius']
             cppflags.append('-D__SIRIUS')
-            fcflags += ['-I{0}'.format(os.path.join(sirius.prefix, 'fortran'))]
+            fcflags += ['-I{0}'.format(sirius.prefix.include.sirius)]
             libs += list(sirius.libs)
 
         if spec.satisfies('+cuda'):
