@@ -33,15 +33,3 @@
  	BIN_TARGETS=prism.linux xprism.linux
  	JFLAGS = -encoding UTF8
  	SHARED = -shared
---- spack-src/prism/ext/lp_solve_5.5_java/lib/build.bak	2019-04-19 07:53:32.000000000 +0900
-+++ spack-src/prism/ext/lp_solve_5.5_java/lib/build	2020-09-08 14:55:14.255718111 +0900
-@@ -29,6 +29,9 @@
- if [ "$ARCH" = "ia64" ]; then
- 	CFLAGS="-fPIC -DPIC"
- fi
-+if [ "$ARCH" = "aarch64" ]; then
-+	CFLAGS="-fPIC -DPIC"
-+fi
- 
- #determine platform (32/64 bit)
- >/tmp/platform.c
