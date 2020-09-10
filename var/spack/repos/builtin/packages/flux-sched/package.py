@@ -95,9 +95,13 @@ class FluxSched(AutotoolsPackage):
             bash('./autogen.sh')
 
     def configure_args(self):
+        args = []
+        if self.spec.satisfies('@0.9.0:'):
+            args.append('CXXFLAGS=-Wno-maybe-uninitialized')
         # flux-sched's ax_boost is sometimes weird about non-system locations
         # explicitly setting the path guarantees success
-        return ['--with-boost={0}'.format(self.spec['boost'].prefix)]
+        args.append('--with-boost={0}'.format(self.spec['boost'].prefix))
+        return args
 
     @property
     def lua_version(self):
