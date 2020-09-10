@@ -404,7 +404,10 @@ class Openfoam(Package):
     def setup_build_environment(self, env):
         """Sets the build environment (prior to unpacking the sources).
         """
-        pass
+        # Avoid the exception that occurs at runtime
+        # when building with the Fujitsu compiler.
+        if self.spec.satisfies('%fj'):
+            env.set('FOAM_SIGFPE', 'false')
 
     def setup_run_environment(self, env):
         """Sets the run environment (post-installation).
