@@ -33,4 +33,6 @@ class Davix(CMakePackage):
     def cmake_args(self):
         cmake_args = ['-DCMAKE_CXX_STANDARD={0}'.format(
                       self.spec.variants['cxxstd'].value)]
+        if 'darwin' in self.spec.architecture:
+            cmake_args.append('-DCMAKE_MACOSX_RPATH=ON')
         return cmake_args

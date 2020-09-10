@@ -144,7 +144,9 @@ class Ncl(Package):
             c2f_flags.extend(['-lgfortran', '-lm'])
         elif self.compiler.name == 'intel':
             fc_flags.append('-fp-model precise')
-            cc_flags.append('-fp-model precise')
+            cc_flags.append('-fp-model precise'
+                            ' -std=c99'
+                            ' -D_POSIX_C_SOURCE=2 -D_GNU_SOURCE')
             c2f_flags.extend(['-lifcore', '-lifport'])
 
         if self.spec.satisfies('%gcc@10:'):
@@ -237,8 +239,7 @@ class Ncl(Package):
             self.spec['bzip2'].prefix.lib + '\n',
             # Enter local include search path(s) :
             # All other paths will be passed by the Spack wrapper.
-            join_path(self.spec['freetype'].prefix.include, 'freetype2') +
-            '\n',
+            self.spec['freetype'].headers.directories[0] + '\n',
             # Go back and make more changes or review?
             'n\n',
             # Save current configuration?

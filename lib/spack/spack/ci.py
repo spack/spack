@@ -345,18 +345,18 @@ def compute_spec_deps(spec_list):
            ],
            "specs": [
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "readline@7.0%clang@9.1.0-apple arch=darwin-highs...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-highs...",
                  "label": "readline/ip6aiun"
                },
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "ncurses@6.1%clang@9.1.0-apple arch=darwin-highsi...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "ncurses@6.1%apple-clang@9.1.0 arch=darwin-highsi...",
                  "label": "ncurses/y43rifz"
                },
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "pkgconf@1.5.4%clang@9.1.0-apple arch=darwin-high...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "pkgconf@1.5.4%apple-clang@9.1.0 arch=darwin-high...",
                  "label": "pkgconf/eg355zb"
                }
            ]
@@ -449,7 +449,8 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
 
 
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
-                            custom_spack_repo=None, custom_spack_ref=None):
+                            custom_spack_repo=None, custom_spack_ref=None,
+                            run_optimizer=False, use_dependencies=False):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
     with spack.concretize.disable_compiler_existence_check():
@@ -492,7 +493,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     after_script = None
     if custom_spack_repo:
         if not custom_spack_ref:
-            custom_spack_ref = 'master'
+            custom_spack_ref = 'develop'
         before_script = [
             ('git clone "{0}"'.format(custom_spack_repo)),
             'pushd ./spack && git checkout "{0}" && popd'.format(
@@ -611,7 +612,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 if 'enable-debug-messages' in gitlab_ci:
                     debug_flag = '-d '
 
-                job_scripts = ['spack {0}ci rebuild'.format(debug_flag)]
+                job_scripts = [
+                    'spack env activate --without-view .',
+                    'spack {0}ci rebuild'.format(debug_flag),
+                ]
 
                 compiler_action = 'NONE'
                 if len(phases) > 1:
@@ -787,6 +791,16 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     sorted_output = {}
     for output_key, output_value in sorted(output_object.items()):
         sorted_output[output_key] = output_value
+
+    # TODO(opadron): remove this or refactor
+    if run_optimizer:
+        import spack.ci_optimization as ci_opt
+        sorted_output = ci_opt.optimizer(sorted_output)
+
+    # TODO(opadron): remove this or refactor
+    if use_dependencies:
+        import spack.ci_needs_workaround as cinw
+        sorted_output = cinw.needs_to_dependencies(sorted_output)
 
     with open(output_file, 'w') as outf:
         outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
@@ -1014,9 +1028,9 @@ def read_cdashid_from_mirror(spec, mirror_url):
 def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id):
     if mirror_url:
         tty.debug('Creating buildcache')
-        buildcache._createtarball(env, yaml_path, None, True, False,
-                                  mirror_url, None, True, False, False, True,
-                                  False)
+        buildcache._createtarball(env, spec_yaml=yaml_path, add_deps=False,
+                                  output_location=mirror_url, force=True,
+                                  allow_root=True)
         if build_id:
             tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
                 build_id, mirror_url))
@@ -1029,17 +1043,10 @@ def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
         tty.debug('job package: {0}'.format(job_pkg))
         stage_dir = job_pkg.stage.path
         tty.debug('stage dir: {0}'.format(stage_dir))
-        build_env_src = os.path.join(stage_dir, 'spack-build-env.txt')
         build_out_src = os.path.join(stage_dir, 'spack-build-out.txt')
-        build_env_dst = os.path.join(
-            job_log_dir, 'spack-build-env.txt')
         build_out_dst = os.path.join(
             job_log_dir, 'spack-build-out.txt')
-        tty.debug('Copying logs to artifacts:')
-        tty.debug('  1: {0} -> {1}'.format(
-            build_env_src, build_env_dst))
-        shutil.copyfile(build_env_src, build_env_dst)
-        tty.debug('  2: {0} -> {1}'.format(
+        tty.debug('Copying build log ({0}) to artifacts ({1})'.format(
             build_out_src, build_out_dst))
         shutil.copyfile(build_out_src, build_out_dst)
     except Exception as inst:

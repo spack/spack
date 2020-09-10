@@ -40,6 +40,21 @@ def test_view_link_type(
     assert os.path.islink(package_prefix) == is_link_cmd
 
 
+@pytest.mark.parametrize('add_cmd', ['hardlink', 'symlink', 'hard', 'add',
+                                     'copy', 'relocate'])
+def test_view_link_type_remove(
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
+        install_mockery, add_cmd):
+    install('needs-relocation')
+    viewpath = str(tmpdir.mkdir('view_{0}'.format(add_cmd)))
+    view(add_cmd, viewpath, 'needs-relocation')
+    bindir = os.path.join(viewpath, 'bin')
+    assert os.path.exists(bindir)
+
+    view('remove', viewpath, 'needs-relocation')
+    assert not os.path.exists(bindir)
+
+
 @pytest.mark.parametrize('cmd', ['hardlink', 'symlink', 'hard', 'add',
                                  'copy', 'relocate'])
 def test_view_projections(

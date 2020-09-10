@@ -9,6 +9,7 @@ from spack import *
 import spack.architecture
 
 import os
+import re
 
 
 class Openssl(Package):   # Uses Fake Autotools, should subclass Package
@@ -22,6 +23,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     url = "http://www.openssl.org/source/openssl-1.1.1d.tar.gz"
     list_url = "http://www.openssl.org/source/old/"
     list_depth = 1
+
+    executables = ['openssl']
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
@@ -75,7 +78,11 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     depends_on('perl@5.14.0:', type=('build', 'test'))
 
-    parallel = False
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('version', output=str, error=str)
+        match = re.search(r'OpenSSL.(\S+)*', output)
+        return match.group(1) if match else None
 
     @property
     def libs(self):
@@ -119,8 +126,10 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
         make()
         if self.run_tests:
-            make('test')            # 'VERBOSE=1'
-        make('install')
+            make('test', parallel=False)  # 'VERBOSE=1'
+
+        # See https://github.com/openssl/openssl/issues/7466#issuecomment-432148137
+        make('install', parallel=False)
 
     @run_after('install')
     def link_system_certs(self):

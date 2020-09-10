@@ -36,6 +36,7 @@ import os.path
 import re
 
 import llnl.util.filesystem
+from llnl.util.lang import dedupe
 import llnl.util.tty as tty
 import spack.build_environment as build_environment
 import spack.error
@@ -173,12 +174,8 @@ def merge_config_rules(configuration, spec):
     # evaluated in order of appearance in the module file
     spec_configuration = module_specific_configuration.pop('all', {})
     for constraint, action in module_specific_configuration.items():
-        override = False
-        if constraint.endswith(':'):
-            constraint = constraint.strip(':')
-            override = True
         if spec.satisfies(constraint, strict=True):
-            if override:
+            if hasattr(constraint, 'override') and constraint.override:
                 spec_configuration = {}
             update_dictionary_extending_lists(spec_configuration, action)
 
@@ -221,8 +218,15 @@ def root_path(name):
     return spack.util.path.canonicalize_path(path)
 
 
-def generate_module_index(root, modules):
-    entries = syaml.syaml_dict()
+def generate_module_index(root, modules, overwrite=False):
+    index_path = os.path.join(root, 'module-index.yaml')
+    if overwrite or not os.path.exists(index_path):
+        entries = syaml.syaml_dict()
+    else:
+        with open(index_path) as index_file:
+            yaml_content = syaml.load(index_file)
+            entries = yaml_content['module_index']
+
     for m in modules:
         entry = {
             'path': m.layout.filename,
@@ -230,7 +234,6 @@ def generate_module_index(root, modules):
         }
         entries[m.spec.dag_hash()] = entry
     index = {'module_index': entries}
-    index_path = os.path.join(root, 'module-index.yaml')
     llnl.util.filesystem.mkdirp(root)
     with open(index_path, 'w') as index_file:
         syaml.dump(index, default_flow_style=False, stream=index_file)
@@ -436,7 +439,7 @@ class BaseConfiguration(object):
         for constraint, suffix in self.conf.get('suffixes', {}).items():
             if constraint in self.spec:
                 suffixes.append(suffix)
-        suffixes = sorted(set(suffixes))
+        suffixes = list(dedupe(suffixes))
         if self.hash:
             suffixes.append(self.hash)
         return suffixes

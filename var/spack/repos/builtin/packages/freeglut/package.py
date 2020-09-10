@@ -11,10 +11,10 @@ class Freeglut(CMakePackage, SourceforgePackage):
        Utility Toolkit (GLUT) library"""
 
     homepage = "http://freeglut.sourceforge.net/"
-    sourceforge_mirror_path = "freeglut/freeglut-3.0.0.tar.gz"
-
+    sourceforge_mirror_path = "freeglut/freeglut-3.2.1.tar.gz"
+    version('3.2.1', sha256='d4000e02102acaf259998c870e25214739d1f16f67f99cb35e4f46841399da68')
     version('3.0.0', sha256='2a43be8515b01ea82bcfa17d29ae0d40bd128342f0930cd1f375f1ff999f76a2')
-
+    patch('common-gcc10.patch', when="@3.2.1: %gcc@10.0:")
     depends_on('gl')
     depends_on('glu')
     depends_on('libx11')

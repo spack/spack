@@ -21,6 +21,10 @@ class Swfft(MakefilePackage):
     depends_on('mpi')
     depends_on('fftw')
 
+    # fix error
+    #     TimingStats.h:94:35: error: 'printf' was not declared in this scope
+    patch('include-stdio_h.patch')
+
     tags = ['proxy-app', 'ecp-proxy-app']
 
     @property

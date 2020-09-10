@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
 from spack import *
 
 
@@ -26,36 +25,26 @@ class Neovim(CMakePackage):
     version('0.2.0', sha256='72e263f9d23fe60403d53a52d4c95026b0be428c1b9c02b80ab55166ea3f62b5')
 
     depends_on('cmake@3.0:', type='build')
-
-    depends_on('lua@5.1:5.2', when='@:0.4.0')
-    depends_on('lua-lpeg', when='@:0.4.0')
-    depends_on('lua-mpack', when='@:0.4.0')
-    depends_on('lua-bitlib', when='@:0.4.0')
-    depends_on('libuv', when='@:0.4.0')
-    depends_on('jemalloc', when='@:0.4.0')
-    depends_on('libtermkey', when='@:0.4.0')
-    depends_on('libvterm', when='@:0.4.0')
-    depends_on('unibilium', when='@:0.4.0')
-    depends_on('msgpack-c', when='@:0.4.0')
-    depends_on('gperf', when='@:0.4.0')
-
-    @run_before('cmake')
-    def build_dependencies(self):
-        if self.version < Version('0.4.0'):
-            return
-
-        deps_build_dir = '.deps'
-        options = [
-            '-G', self.generator,
-            os.path.join(os.path.abspath(self.root_cmakelists_dir),
-                         'third-party'),
-        ]
-        with working_dir(deps_build_dir, create=True):
-            cmake(*options)
-            make()
+    depends_on('pkgconfig', type='build')
+    depends_on('gettext', type=('build', 'link'))
+    depends_on('lua@5.1:5.2', type=('build', 'link'))
+    depends_on('lua-lpeg', type='link')
+    depends_on('lua-mpack', type='link')
+    depends_on('lua-bitlib', type='link')
+    depends_on('libuv', type='link')
+    depends_on('libuv@1.28:', type='link', when='@0.4:')
+    depends_on('jemalloc', type='link')
+    depends_on('libtermkey', type='link')
+    depends_on('libtermkey@0.18:', type='link', when='@0.3.4:')
+    depends_on('libvterm@0.0', type='link', when='@:0.3')
+    depends_on('libvterm@0.1:', type='link', when='@0.4:')
+    depends_on('unibilium', type='link')
+    depends_on('unibilium@:1.2.0', type='link', when='@:0.2.0')
+    depends_on('unibilium@2.0:', type='link', when='@0.4:')
+    depends_on('msgpack-c', type='link')
+    depends_on('msgpack-c@1.0.0:', type='link', when='@0.4:')
+    depends_on('gperf', type='link')
+    depends_on('libluv@1.30.0:', type='link', when='@0.4:')
 
     def cmake_args(self):
-        args = []
-        if Version('0.2.1') <= self.version < Version('0.4.0'):
-            args = ['-DPREFER_LUA=ON']
-        return args
+        return ['-DPREFER_LUA=ON']

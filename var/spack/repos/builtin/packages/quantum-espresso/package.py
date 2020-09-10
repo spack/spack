@@ -3,26 +3,22 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
-import os.path
-
-from spack import *
-
 
 class QuantumEspresso(Package):
-    """Quantum-ESPRESSO is an integrated suite of Open-Source computer codes
+    """Quantum ESPRESSO is an integrated suite of Open-Source computer codes
     for electronic-structure calculations and materials modeling at the
     nanoscale. It is based on density-functional theory, plane waves, and
     pseudopotentials.
     """
 
     homepage = 'http://quantum-espresso.org'
-    url = 'https://gitlab.com/QEF/q-e/-/archive/qe-6.5/q-e-qe-6.5.tar.gz'
+    url = 'https://gitlab.com/QEF/q-e/-/archive/qe-6.6/q-e-qe-6.6.tar.gz'
     git = 'https://gitlab.com/QEF/q-e.git'
 
     maintainers = ['naromero77']
 
     version('develop', branch='develop')
+    version('6.6', sha256='924656cb083f52e5d2fe71ade05881389dac64b45316f1bdd6dee1c6170a672c', preferred=True)
     version('6.5', sha256='258b2a8a6280e86dad779e5c56356d8b35dc96d12ff33dabeee914bc03d6d602')
     version('6.4.1', sha256='b0d7e9f617b848753ad923d8c6ca5490d5d82495f82b032b71a0ff2f2e9cfa08')
     version('6.4', sha256='781366d03da75516fdcf9100a1caadb26ccdd1dedd942a6f8595ff0edca74bfe')
@@ -224,6 +220,19 @@ class QuantumEspresso(Package):
         prefix_path = prefix.bin if '@:5.4.0' in spec else prefix
         options = ['-prefix={0}'.format(prefix_path)]
 
+        # This additional flag is needed anytime the target architecture
+        # does not match the host architecture, which results in a binary that
+        # configure cannot execute on the login node. This is how we detect
+        # cross compilation: If the platform is NOT either Linux or Darwin
+        # and the target=backend, that we are in the cross-compile scenario
+        # scenario. This should cover Cray, BG/Q, and other custom platforms.
+        # The other option is to list out all the platform where you would be
+        # cross compiling explicitly.
+        if not (spec.satisfies('platform=linux') or
+                spec.satisfies('platform=darwin')):
+            if spec.satisfies('target=backend'):
+                options.append('--host')
+
         # QE autoconf compiler variables has some limitations:
         # 1. There is no explicit MPICC variable so we must re-purpose
         #    CC for the case of MPI.
@@ -294,7 +303,13 @@ class QuantumEspresso(Package):
             options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
 
         if '+scalapack' in spec:
-            scalapack_option = 'intel' if '^mkl' in spec else 'yes'
+            if '^mkl' in spec:
+                if '^openmpi' in spec:
+                    scalapack_option = 'yes'
+                else:  # mpich, intel-mpi
+                    scalapack_option = 'intel'
+            else:
+                scalapack_option = 'yes'
             options.append('--with-scalapack={0}'.format(scalapack_option))
 
         if '+elpa' in spec:
@@ -305,7 +320,7 @@ class QuantumEspresso(Package):
             # Compute the include directory from there: versions
             # of espresso prior to 6.1 requires -I in front of the directory
             elpa_include = '' if '@6.1:' in spec else '-I'
-            elpa_include += os.path.join(
+            elpa_include += join_path(
                 elpa.headers.directories[0],
                 'modules'
             )
@@ -349,7 +364,6 @@ class QuantumEspresso(Package):
 
         if 'platform=darwin' in spec:
             mkdirp(prefix.bin)
-            for filename in glob.glob("bin/*.x"):
-                install(filename, prefix.bin)
+            install('bin/*.x', prefix.bin)
         else:
             make('install')

@@ -57,6 +57,7 @@ class Hdf5(AutotoolsPackage):
     variant('hl', default=False, description='Enable the high-level library')
     variant('cxx', default=False, description='Enable C++ support')
     variant('fortran', default=False, description='Enable Fortran support')
+    variant('java', default=False, description='Enable Java support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
 
@@ -78,6 +79,7 @@ class Hdf5(AutotoolsPackage):
     depends_on('m4',       type='build', when='@develop')
 
     depends_on('mpi', when='+mpi')
+    depends_on('java', when='+java')
     # numactl does not currently build on darwin
     if sys.platform != 'darwin':
         depends_on('numactl', when='+mpi+fortran')
@@ -237,13 +239,26 @@ class Hdf5(AutotoolsPackage):
         extra_args += self.enable_or_disable('cxx')
         extra_args += self.enable_or_disable('hl')
         extra_args += self.enable_or_disable('fortran')
+        extra_args += self.enable_or_disable('java')
 
         api = self.spec.variants['api'].value
         if api != 'none':
             extra_args.append('--with-default-api-version=' + api)
 
         if '+szip' in self.spec:
-            extra_args.append('--with-szlib=%s' % self.spec['szip'].prefix)
+            szip_spec = self.spec['szip']
+            # The configure script of HDF5 accepts a comma-separated tuple of
+            # two paths: the first one points to the directory with include
+            # files, the second one points to the directory with library files.
+            # If the second path is not specified, the configure script assumes
+            # that it equals to prefix/lib. However, the correct directory
+            # might be prefix/lib64. It is not a problem when the building is
+            # done with Spack's compiler wrapper but it makes the Libtool
+            # files (*.la) invalid, which makes it problematic to use the
+            # installed library outside of Spack environment.
+            extra_args.append('--with-szlib=%s,%s' %
+                              (szip_spec.headers.directories[0],
+                               szip_spec.libs.directories[0]))
         else:
             extra_args.append('--without-szlib')
 

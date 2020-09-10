@@ -804,15 +804,17 @@ def relocate_text(
             where they should be relocated
     """
     # TODO: reduce the number of arguments (8 seems too much)
-    sbang_regex = r'#!/bin/bash {0}/bin/sbang'.format(orig_spack)
-    new_sbang = r'#!/bin/bash {0}/bin/sbang'.format(new_spack)
+    orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
+    new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
 
     for file in files:
         _replace_prefix_text(file, orig_install_prefix, new_install_prefix)
         for orig_dep_prefix, new_dep_prefix in new_prefixes.items():
             _replace_prefix_text(file, orig_dep_prefix, new_dep_prefix)
         _replace_prefix_text(file, orig_layout_root, new_layout_root)
-        _replace_prefix_text(file, sbang_regex, new_sbang)
+        # relocate the sbang location only if the spack directory changed
+        if orig_spack != new_spack:
+            _replace_prefix_text(file, orig_sbang, new_sbang)
 
 
 def relocate_text_bin(
@@ -846,7 +848,11 @@ def relocate_text_bin(
         for old_dep_prefix, new_dep_prefix in new_prefixes.items():
             if len(new_dep_prefix) <= len(old_dep_prefix):
                 _replace_prefix_bin(binary, old_dep_prefix, new_dep_prefix)
-        _replace_prefix_bin(binary, orig_spack, new_spack)
+        _replace_prefix_bin(binary, orig_install_prefix, new_install_prefix)
+
+    # Note: Replacement of spack directory should not be done. This causes
+    # an incorrect replacement path in the case where the install root is a
+    # subdirectory of the spack directory.
 
 
 def is_relocatable(spec):

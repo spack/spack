@@ -1,0 +1,10 @@
+diff --git a/third_party/CMakeLists.txt b/third_party/CMakeLists.txt
+index 884e50bf6..40618311a 100644
+--- a/third_party/CMakeLists.txt
++++ b/third_party/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-if(GINKGO_BUILD_CUDA)
++if(GINKGO_BUILD_CUDA OR (GINKGO_BUILD_HIP AND GINKGO_HIP_PLATFORM STREQUAL "nvcc"))
+     enable_language(CUDA)
+     if (GINKGO_USE_EXTERNAL_CAS)
+         include(CudaArchitectureSelector RESULT_VARIABLE GINKGO_CAS_FILE)

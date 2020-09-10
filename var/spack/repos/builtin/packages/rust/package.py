@@ -55,6 +55,12 @@ class Rust(Package):
         default=True,
         description='Install Rust source files'
     )
+    variant(
+        'extra_targets',
+        default=(),
+        multi=True,
+        description='Triples for extra targets to enable. For supported targets, see: https://doc.rust-lang.org/nightly/rustc/platform-support.html'
+    )
 
     depends_on('python@2.7:', type='build')
     depends_on('python@2.7:2.8', when='@:1.43', type='build')
@@ -85,6 +91,9 @@ class Rust(Package):
     # The `x.py` bootstrapping script did not exist prior to Rust 1.17. It
     # would be possible to support both, but for simplicitly, we only support
     # Rust 1.17 and newer
+    version('1.45.1', sha256='ea53e6424e3d1fe56c6d77a00e72c5d594b509ec920c5a779a7b8e1dbd74219b')
+    version('1.44.1', sha256='7e2e64cb298dd5d5aea52eafe943ba0458fa82f2987fdcda1ff6f537b6f88473')
+    version('1.44.0', sha256='bf2df62317e533e84167c5bc7d4351a99fdab1f9cd6e6ba09f51996ad8561100')
     version('1.43.1', sha256='cde177b4a8c687da96f20de27630a1eb55c9d146a15e4c900d5c31cd3c3ac41d')
     version('1.43.0', sha256='75f6ac6c9da9f897f4634d5a07be4084692f7ccc2d2bb89337be86cfc18453a1')
     version('1.42.0', sha256='d2e8f931d16a0539faaaacd801e0d92c58df190269014b2360c6ab2a90ee3475')
@@ -126,6 +135,24 @@ class Rust(Package):
     # This dictionary contains a version: hash dictionary for each supported
     # Rust target.
     rust_releases = {
+        '1.45.1': {
+            'x86_64-unknown-linux-gnu':      '76dc9f05b3bfd0465d6e6d22bc9fd5db0b473e3548e8b3d266ecfe4d9e5dca16',
+            'powerpc64le-unknown-linux-gnu': '271846e4f5adc9a33754794c2ffab851f9e0313c8c1315264e7db5c8f63ab7ab',
+            'aarch64-unknown-linux-gnu':     'd17fd560e8d5d12304835b71a7e22ac2c3babf4b9768db6a0e89868b4444f728',
+            'x86_64-apple-darwin':           '7334c927e4d2d12d209bf941b97ba309e548413e241d2d263c39c6e12b3ce154'
+        },
+        '1.44.1': {
+            'x86_64-unknown-linux-gnu':      'a41df89a461a580536aeb42755e43037556fba2e527dd13a1e1bb0749de28202',
+            'powerpc64le-unknown-linux-gnu': '22deeca259459db31065af7c862fcab7fbfb623200520c65002ed2ba93d87ad2',
+            'aarch64-unknown-linux-gnu':     'a2d74ebeec0b6778026b6c37814cdc91d14db3b0d8b6d69d036216f4d9cf7e49',
+            'x86_64-apple-darwin':           'a5464e7bcbce9647607904a4afa8362382f1fc55d39e7bbaf4483ac00eb5d56a'
+        },
+        '1.44.0': {
+            'x86_64-unknown-linux-gnu':      'eaa34271b4ac4d2c281831117d4d335eed0b37fe7a34477d9855a6f1d930a624',
+            'powerpc64le-unknown-linux-gnu': '97038ea935c7a5b21f5aaaaad409c514e2b2ae8ea55994ba39645f453e98bc9f',
+            'aarch64-unknown-linux-gnu':     'bcc916003cb9c7ff44f5f9af348020b422dbc5bd4fe49bdbda2de6ce0a1bb745',
+            'x86_64-apple-darwin':           'f20388b80b2b0a8b122d89058f785a2cf3b14e93bcac53471d60fdb4106ffa35'
+        },
         '1.43.1': {
             'x86_64-unknown-linux-gnu':      '25cd71b95bba0daef56bad8c943a87368c4185b90983f4412f46e3e2418c0505',
             'powerpc64le-unknown-linux-gnu': '1670f00b00cc1bed38d523a25dba7420de3c06986c15a0248e06299f80ce6124',
@@ -370,11 +397,11 @@ class Rust(Package):
                     sha256='0000000000000000000000000000000000000000000000000000000000000000',
                     destination='spack_bootstrap_stage',
                     when='@{version} platform={platform} target={target}'\
-                        .format(
-                            version=prerelease_version,
-                            platform=rust_arch['platform'],
-                            target=rust_arch['target']
-                        )
+                    .format(
+                        version=prerelease_version,
+                        platform=rust_arch['platform'],
+                        target=rust_arch['target']
+                    )
                 )
 
     # This loop generates resources for each binary distribution, and maps
@@ -401,11 +428,11 @@ class Rust(Package):
                     sha256=rust_sha256,
                     destination='spack_bootstrap_stage',
                     when='@{version} platform={platform} target={target}'\
-                        .format(
-                            version=rust_version,
-                            platform=rust_arch['platform'],
-                            target=rust_arch['target']
-                        )
+                    .format(
+                        version=rust_version,
+                        platform=rust_arch['platform'],
+                        target=rust_arch['target']
+                    )
                 )
 
     # This routine returns the target architecture we intend to build for.
@@ -475,6 +502,14 @@ class Rust(Package):
 
         ar = which('ar', required=True)
 
+        extra_targets = list(self.spec.variants['extra_targets'].value)
+        targets = [self.get_rust_target()] + extra_targets
+        target_spec = 'target=[' + \
+            ','.join('"{0}"'.format(target) for target in targets) + ']'
+        target_specs = '\n'.join(
+            '[target.{0}]\nar = "{1}"\n'.format(target, ar.path)
+            for target in targets)
+
         # build.tools was introduced in Rust 1.25
         tools_spec = \
             'tools={0}'.format(tools) if self.check_newer('1.25') else ''
@@ -508,6 +543,7 @@ docs = false
 vendor = true
 extended = true
 verbose = 2
+{target_spec}
 {tools_spec}
 {rustfmt_spec}
 
@@ -516,8 +552,7 @@ channel = "stable"
 rpath = true
 {deny_warnings_spec}
 
-[target.{target}]
-ar = "{ar}"
+{target_specs}
 
 [install]
 prefix = "{prefix}"
@@ -526,9 +561,9 @@ sysconfdir = "etc"
                 cargo=join_path(boot_bin, 'cargo'),
                 rustc=join_path(boot_bin, 'rustc'),
                 prefix=prefix,
-                target=target,
                 deny_warnings_spec=deny_warnings_spec,
-                ar=ar.path,
+                target_spec=target_spec,
+                target_specs=target_specs,
                 tools_spec=tools_spec,
                 rustfmt_spec=rustfmt_spec
             )

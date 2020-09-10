@@ -22,7 +22,6 @@ class Exampm(CMakePackage):
     depends_on('kokkos@3.0:')
     depends_on('silo')
     depends_on('cabana+mpi@master')
-    depends_on('cajita@master')
 
     def cmake_args(self):
         options = [

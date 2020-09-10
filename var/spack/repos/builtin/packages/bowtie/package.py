@@ -13,6 +13,7 @@ class Bowtie(MakefilePackage):
     homepage = "https://sourceforge.net/projects/bowtie-bio/"
     url      = "https://github.com/BenLangmead/bowtie/archive/v1.2.0.tar.gz"
 
+    version('1.3.0', sha256='d7c2d982a67884909f284a0ff150b56b20127cd7a1ced461c3c4c03e6a6374c5')
     version('1.2.3', sha256='86402114caeacbb3a3030509cb59f0b7e96361c7b3ee2dd50e2cd68200898823')
     # The bowtie project git tagged and GitHub released a v1.2.2,
     # discovered/fixed a bug, git tagged a v1.2.2_p1 and moved the
@@ -50,7 +51,8 @@ class Bowtie(MakefilePackage):
     patch('for_aarch64.patch', when='target=aarch64:')
 
     # measures for narrowing error
-    patch('fix_narrowing_err.patch')
+    patch('fix_narrowing_err.patch', when='@:1.2.3')
+    patch('fix_narrowing_err_1.3.0.patch', when='@1.3.0:')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')

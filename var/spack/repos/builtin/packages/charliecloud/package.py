@@ -11,29 +11,20 @@ class Charliecloud(AutotoolsPackage):
 
     maintainers = ['j-ogas', 'reidpr']
     homepage = "https://hpc.github.io/charliecloud"
-    url      = "https://github.com/hpc/charliecloud/releases/download/v0.14/charliecloud-0.14.tar.gz"
+    url      = "https://github.com/hpc/charliecloud/releases/download/v0.18/charliecloud-0.18.tar.gz"
     git      = "https://github.com/hpc/charliecloud.git"
 
     version('master', branch='master')
-    version('0.16',   sha256='6cdc21d414b6173090ac0a4c2c62a2a038c81659a75ae8f837b332bb7e6e9090')
-    version('0.15',   sha256='2163420d43c934151c4f44a188313bdb7f79e576d5a86ba64b9ea45f784b9921')
-    version('0.14',   sha256='4ae23c2d6442949e16902f9d5604dbd1d6059aeb5dd461b11fc5c74d49dcb194')
-    version('0.13',   sha256='5740bff6e410ca99484c1bdf3dbe834c0f753c846d55c19d6162967a3e2718e0')
+    version('0.18',   sha256='15ce63353afe1fc6bcc10979496a54fcd5628f997cb13c827c9fc7afb795bdc5')
 
     depends_on('m4',       type='build')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
 
-    # Use skopeo and umoci for older ch-grow version dependencies.
-    depends_on('skopeo',         type='run', when='@0.10:0.13')
-    depends_on('umoci',          type='run', when='@0.10:0.13')
-    depends_on('python+libxml2', type='run', when='@0.10:0.13')
-
-    # Use python for ch-grow 0.14 and above version dependencies.
-    depends_on('python@3.5:',    type='run', when='@0.14:')
-    depends_on('py-lark-parser', type='run', when='@0.14:')
-    depends_on('py-requests',    type='run', when='@0.14:')
+    depends_on('python@3.5:',    type='run')
+    depends_on('py-lark-parser', type='run')
+    depends_on('py-requests',    type='run')
 
     # Man pages and html docs variant.
     variant('docs', default=False, description='Build man pages and html docs')
@@ -46,14 +37,18 @@ class Charliecloud(AutotoolsPackage):
 
     # Bash automated testing harness (bats).
     depends_on('bats@0.4.0', type='test')
-    depends_on('python@3.5:', type='test')
 
     def configure_args(self):
 
         args = []
+        py_path = self.spec['python'].command.path
+        args.append('--with-python={0}'.format(py_path))
 
         if '+docs' in self.spec:
+            sphinx_bin = '{0}'.format(self.spec['py-sphinx'].prefix.bin)
             args.append('--enable-html')
+            args.append('--with-sphinx-build={0}'.format(sphinx_bin.join(
+                                                         'sphinx-build')))
         else:
             args.append('--disable-html')
 

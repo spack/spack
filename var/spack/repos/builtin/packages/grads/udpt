@@ -1,0 +1,2 @@
+gxdisplay    Cairo    {lib}/libgxdCairo.so
+gxprint      Cairo    {lib}/libgxpCairo.so

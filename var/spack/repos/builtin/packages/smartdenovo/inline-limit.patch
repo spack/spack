@@ -1,0 +1,24 @@
+diff -Nur smartdenovo/wtlay.h smartdenovo-new/wtlay.h
+--- smartdenovo/wtlay.h	2020-07-09 02:47:13.503412360 +0800
++++ smartdenovo-new/wtlay.h	2020-07-09 02:49:02.775412360 +0800
+@@ -503,17 +503,17 @@
+ 	return e2;
+ }
+ 
+-inline int cut_biedge_strgraph_core(StringGraph *g, uint32_t node_id, int dir, uint32_t eidx, int closed){
++static inline int cut_biedge_strgraph_core(StringGraph *g, uint32_t node_id, int dir, uint32_t eidx, int closed){
+ 	edge_strgraph(g, node_id, dir, eidx)->closed = closed;
+ 	edge_partner_strgraph(g, node_id, dir, eidx)->closed = closed;
+ 	return 1;
+ }
+ 
+-inline int cut_biedge_strgraph(StringGraph *g, uint32_t node_id, int dir, uint32_t eidx){
++static inline int cut_biedge_strgraph(StringGraph *g, uint32_t node_id, int dir, uint32_t eidx){
+ 	return cut_biedge_strgraph_core(g, node_id, dir, eidx, 1);
+ }
+ 
+-inline int cut_biedge_strgraph2(StringGraph *g, uint32_t node_id, int dir, uint32_t eidx){
++static inline int cut_biedge_strgraph2(StringGraph *g, uint32_t node_id, int dir, uint32_t eidx){
+ 	return cut_biedge_strgraph_core(g, node_id, dir, eidx, 2);
+ }
+ 

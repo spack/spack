@@ -19,3 +19,6 @@ class Openslide(AutotoolsPackage):
     depends_on('libtiff')
     depends_on('libxml2')
     depends_on('sqlite@3.6:')
+    depends_on('glib')
+    depends_on('cairo+pdf')
+    depends_on('gdk-pixbuf')

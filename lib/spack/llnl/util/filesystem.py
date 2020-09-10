@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import collections
 import errno
 import hashlib
@@ -338,56 +337,78 @@ def unset_executable_mode(path):
 
 
 def copy(src, dest, _permissions=False):
-    """Copies the file *src* to the file or directory *dest*.
+    """Copy the file(s) *src* to the file or directory *dest*.
 
     If *dest* specifies a directory, the file will be copied into *dest*
     using the base filename from *src*.
 
+    *src* may contain glob characters.
+
     Parameters:
-        src (str): the file to copy
+        src (str): the file(s) to copy
         dest (str): the destination file or directory
         _permissions (bool): for internal use only
+
+    Raises:
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* matches multiple files but *dest* is
+            not a directory
     """
     if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
     else:
         tty.debug('Copying {0} to {1}'.format(src, dest))
 
-    # Expand dest to its eventual full path if it is a directory.
-    if os.path.isdir(dest):
-        dest = join_path(dest, os.path.basename(src))
+    files = glob.glob(src)
+    if not files:
+        raise IOError("No such file or directory: '{0}'".format(src))
+    if len(files) > 1 and not os.path.isdir(dest):
+        raise ValueError(
+            "'{0}' matches multiple files but '{1}' is not a directory".format(
+                src, dest))
 
-    shutil.copy(src, dest)
+    for src in files:
+        # Expand dest to its eventual full path if it is a directory.
+        dst = dest
+        if os.path.isdir(dest):
+            dst = join_path(dest, os.path.basename(src))
 
-    if _permissions:
-        set_install_permissions(dest)
-        copy_mode(src, dest)
+        shutil.copy(src, dst)
+
+        if _permissions:
+            set_install_permissions(dst)
+            copy_mode(src, dst)
 
 
 def install(src, dest):
-    """Installs the file *src* to the file or directory *dest*.
+    """Install the file(s) *src* to the file or directory *dest*.
 
     Same as :py:func:`copy` with the addition of setting proper
     permissions on the installed file.
 
     Parameters:
-        src (str): the file to install
+        src (str): the file(s) to install
         dest (str): the destination file or directory
+
+    Raises:
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* matches multiple files but *dest* is
+            not a directory
     """
     copy(src, dest, _permissions=True)
 
 
-def resolve_link_target_relative_to_the_link(l):
+def resolve_link_target_relative_to_the_link(link):
     """
     os.path.isdir uses os.path.exists, which for links will check
     the existence of the link target. If the link target is relative to
     the link, we need to construct a pathname that is valid from
     our cwd (which may not be the same as the link's directory)
     """
-    target = os.readlink(l)
+    target = os.readlink(link)
     if os.path.isabs(target):
         return target
-    link_dir = os.path.dirname(os.path.abspath(l))
+    link_dir = os.path.dirname(os.path.abspath(link))
     return os.path.join(link_dir, target)
 
 
@@ -396,6 +417,8 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
 
     If the destination directory *dest* does not already exist, it will
     be created as well as missing parent directories.
+
+    *src* may contain glob characters.
 
     If *symlinks* is true, symbolic links in the source tree are represented
     as symbolic links in the new tree and the metadata of the original links
@@ -411,56 +434,66 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
         symlinks (bool): whether or not to preserve symlinks
         ignore (function): function indicating which files to ignore
         _permissions (bool): for internal use only
+
+    Raises:
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* is a parent directory of *dest*
     """
     if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
     else:
         tty.debug('Copying {0} to {1}'.format(src, dest))
 
-    abs_src = os.path.abspath(src)
-    if not abs_src.endswith(os.path.sep):
-        abs_src += os.path.sep
     abs_dest = os.path.abspath(dest)
     if not abs_dest.endswith(os.path.sep):
         abs_dest += os.path.sep
 
-    # Stop early to avoid unnecessary recursion if being asked to copy from a
-    # parent directory.
-    if abs_dest.startswith(abs_src):
-        raise ValueError('Cannot copy ancestor directory {0} into {1}'.
-                         format(abs_src, abs_dest))
+    files = glob.glob(src)
+    if not files:
+        raise IOError("No such file or directory: '{0}'".format(src))
 
-    mkdirp(dest)
+    for src in files:
+        abs_src = os.path.abspath(src)
+        if not abs_src.endswith(os.path.sep):
+            abs_src += os.path.sep
 
-    for s, d in traverse_tree(abs_src, abs_dest, order='pre',
-                              follow_symlinks=not symlinks,
-                              ignore=ignore,
-                              follow_nonexisting=True):
-        if os.path.islink(s):
-            link_target = resolve_link_target_relative_to_the_link(s)
-            if symlinks:
-                target = os.readlink(s)
-                if os.path.isabs(target):
-                    new_target = re.sub(abs_src, abs_dest, target)
-                    if new_target != target:
-                        tty.debug("Redirecting link {0} to {1}"
-                                  .format(target, new_target))
-                        target = new_target
+        # Stop early to avoid unnecessary recursion if being asked to copy
+        # from a parent directory.
+        if abs_dest.startswith(abs_src):
+            raise ValueError('Cannot copy ancestor directory {0} into {1}'.
+                             format(abs_src, abs_dest))
 
-                os.symlink(target, d)
-            elif os.path.isdir(link_target):
-                mkdirp(d)
+        mkdirp(abs_dest)
+
+        for s, d in traverse_tree(abs_src, abs_dest, order='pre',
+                                  follow_symlinks=not symlinks,
+                                  ignore=ignore,
+                                  follow_nonexisting=True):
+            if os.path.islink(s):
+                link_target = resolve_link_target_relative_to_the_link(s)
+                if symlinks:
+                    target = os.readlink(s)
+                    if os.path.isabs(target):
+                        new_target = re.sub(abs_src, abs_dest, target)
+                        if new_target != target:
+                            tty.debug("Redirecting link {0} to {1}"
+                                      .format(target, new_target))
+                            target = new_target
+
+                    os.symlink(target, d)
+                elif os.path.isdir(link_target):
+                    mkdirp(d)
+                else:
+                    shutil.copyfile(s, d)
             else:
-                shutil.copyfile(s, d)
-        else:
-            if os.path.isdir(s):
-                mkdirp(d)
-            else:
-                shutil.copy2(s, d)
+                if os.path.isdir(s):
+                    mkdirp(d)
+                else:
+                    shutil.copy2(s, d)
 
-        if _permissions:
-            set_install_permissions(d)
-            copy_mode(s, d)
+            if _permissions:
+                set_install_permissions(d)
+                copy_mode(s, d)
 
 
 def install_tree(src, dest, symlinks=True, ignore=None):
@@ -474,6 +507,10 @@ def install_tree(src, dest, symlinks=True, ignore=None):
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
         ignore (function): function indicating which files to ignore
+
+    Raises:
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* is a parent directory of *dest*
     """
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 
@@ -1571,6 +1608,19 @@ def can_access_dir(path):
 
 
 @memoized
+def can_write_to_dir(path):
+    """Return True if the argument is a directory in which we can write.
+
+    Args:
+        path: path to be tested
+
+    Returns:
+        True if ``path`` is an writeable directory, else False
+    """
+    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK | os.W_OK)
+
+
+@memoized
 def files_in(*search_paths):
     """Returns all the files in paths passed as arguments.
 
@@ -1683,3 +1733,18 @@ def prefixes(path):
         pass
 
     return paths
+
+
+def md5sum(file):
+    """Compute the MD5 sum of a file.
+
+    Args:
+        file (str): file to be checksummed
+
+    Returns:
+        MD5 sum of the file's content
+    """
+    md5 = hashlib.md5()
+    with open(file, "rb") as f:
+        md5.update(f.read())
+    return md5.digest()

@@ -56,6 +56,9 @@ class Abinit(AutotoolsPackage):
     variant('hdf5', default=False,
             description='Enables HDF5+Netcdf4 with MPI. WARNING: experimental')
 
+    variant('wannier90', default=False,
+            description='Enables the Wannier90 library')
+
     # Add dependencies
     # currently one cannot forward options to virtual packages, see #1712.
     # depends_on('blas', when='~openmp')
@@ -84,6 +87,8 @@ class Abinit(AutotoolsPackage):
     # Cannot ask for +scalapack if it does not depend on MPI
     conflicts('+scalapack', when='~mpi')
 
+    depends_on("wannier90+shared", when='+wannier90')
+
     # Elpa is a substitute for scalapack and needs mpi
     # conflicts('+elpa', when='~mpi')
     # conflicts('+elpa', when='+scalapack')
@@ -95,12 +100,25 @@ class Abinit(AutotoolsPackage):
         options = []
         oapp = options.append
 
+        if '+wannier90' in spec:
+            oapp('--with-wannier90-libs=-L{0}'
+                 .format(spec['wannier90'].prefix.lib + ' -lwannier -lm'))
+            oapp('--with-wannier90-incs=-I{0}'
+                 .format(spec['wannier90'].prefix.modules))
+            oapp('--with-wannier90-bins={0}'
+                 .format(spec['wannier90'].prefix.bin))
+            oapp('--enable-connectors')
+            oapp('--with-dft-flavor=wannier90')
+
         if '+mpi' in spec:
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
             oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
             oapp('--enable-mpi=yes')
             oapp('--enable-mpi-io=yes')
+            oapp('MPIFC={0}/mpifc'.format(spec['mpi'].prefix.bin))
+            if '~wannier90' in spec:
+                oapp('--with-dft-flavor=atompaw+libxc')
 
         # Activate OpenMP in Abinit Fortran code.
         if '+openmp' in spec:
@@ -129,7 +147,6 @@ class Abinit(AutotoolsPackage):
             '--with-fft-incs=-I%s' % spec['fftw'].prefix.include,
             '--with-fft-libs=-L%s %s' % (spec['fftw'].prefix.lib, fftlibs),
         ])
-        oapp('--with-dft-flavor=atompaw+libxc')
 
         # LibXC library
         libxc = spec['libxc:fortran']

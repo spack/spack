@@ -63,6 +63,15 @@ class Slurm(AutotoolsPackage):
     depends_on('mariadb', when='+mariadb')
     depends_on('pmix', when='+pmix')
 
+    def flag_handler(self, name, flags):
+        wrapper_flags = None
+
+        if name == 'cflags':
+            if self.spec.satisfies('@:20-02-1 %gcc@10:'):
+                wrapper_flags = ['-fcommon']
+
+        return (wrapper_flags, None, flags)
+
     def configure_args(self):
 
         spec = self.spec

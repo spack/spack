@@ -54,6 +54,25 @@ def test_dev_build_until(tmpdir, mock_packages, install_mockery):
             assert f.read() == spec.package.replacement_string
 
     assert not os.path.exists(spec.prefix)
+    assert not spack.store.db.query(spec, installed=True)
+
+
+def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
+    # Test that we ignore the last_phase argument if it is already last
+    spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
+
+    with tmpdir.as_cwd():
+        with open(spec.package.filename, 'w') as f:
+            f.write(spec.package.original_string)
+
+        dev_build('-u', 'install', 'dev-build-test-install@0.0.0')
+
+        assert spec.package.filename in os.listdir(os.getcwd())
+        with open(spec.package.filename, 'r') as f:
+            assert f.read() == spec.package.replacement_string
+
+    assert os.path.exists(spec.prefix)
+    assert spack.store.db.query(spec, installed=True)
 
 
 def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):
@@ -91,9 +110,10 @@ def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
         pass
     monkeypatch.setattr(spack.build_environment, 'module', module)
 
-    output = dev_build('-b', 'edit', '--drop-in', 'sh',
-                       'dev-build-test-install@0.0.0')
-    assert "lib/spack/env" in output
+    with tmpdir.as_cwd():
+        output = dev_build('-b', 'edit', '--drop-in', 'sh',
+                           'dev-build-test-install@0.0.0')
+        assert "lib/spack/env" in output
 
 
 def test_dev_build_fails_already_installed(tmpdir, mock_packages,

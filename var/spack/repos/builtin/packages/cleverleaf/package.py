@@ -24,6 +24,10 @@ class Cleverleaf(CMakePackage):
     depends_on('boost')
     depends_on('cmake@3.1:', type='build')
 
+    # The Fujitsu compiler requires the '--linkfortran'
+    # option to combine C++ and Fortran programs.
+    patch('fujitsu_add_link_flags.patch', when='%fj')
+
     def flag_handler(self, name, flags):
         if self.spec.satisfies('%intel') and name in ['cppflags', 'cxxflags']:
             flags.append(self.compiler.cxx11_flag)

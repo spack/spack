@@ -18,6 +18,7 @@ class Libgit2(CMakePackage):
 
     maintainers = ["AndrewGaspar"]
 
+    version('1.0.1',   sha256='1775427a6098f441ddbaa5bd4e9b8a043c7401e450ed761e69a415530fea81d2')
     version('1.0.0',   sha256='6a1fa16a7f6335ce8b2630fbdbb5e57c4027929ebc56fcd1ac55edb141b409b4')
     version('0.99.0',  sha256='174024310c1563097a6613a0d3f7539d11a9a86517cd67ce533849065de08a11')
     version('0.28.5',  sha256='2b7b68aee6f123bc84cc502a9c12738435b8054e7d628962e091cd2a25be4f42')

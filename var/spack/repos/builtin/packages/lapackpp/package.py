@@ -11,10 +11,10 @@ class Lapackpp(CMakePackage):
     of Tennessee)"""
 
     homepage = "https://bitbucket.org/icl/lapackpp"
-    hg       = "https://bitbucket.org/icl/lapackpp"
+    git      = "https://bitbucket.org/icl/lapackpp"
     maintainers = ['teonnik', 'Sely85']
 
-    version('develop', hg=hg, revision="7ffa486")
+    version('develop', commit="f878fad")
 
     variant('shared', default=True,
             description='Build a shared version of the library')

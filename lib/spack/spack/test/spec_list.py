@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pytest
 import itertools
 from spack.spec_list import SpecList
 from spack.spec import Spec
@@ -156,6 +157,22 @@ class TestSpecList(object):
                                                 ['+shared', '~shared'])
         expected = [Spec(' '.join(combo)) for combo in expected_components]
         assert set(speclist.specs) == set(expected)
+
+    @pytest.mark.regression('16897')
+    def test_spec_list_recursion_specs_as_constraints(self):
+        input = ['mpileaks', '$mpis',
+                 {'matrix': [['hypre'], ['$%gccs', '$%clangs']]},
+                 'libelf']
+
+        reference = {'gccs': SpecList('gccs', ['gcc@4.5.0']),
+                     'clangs': SpecList('clangs', ['clang@3.3']),
+                     'mpis': SpecList('mpis', ['zmpi@1.0', 'mpich@3.0'])}
+
+        speclist = SpecList('specs', input, reference)
+
+        assert speclist.specs_as_yaml_list == self.default_expansion
+        assert speclist.specs_as_constraints == self.default_constraints
+        assert speclist.specs == self.default_specs
 
     def test_spec_list_matrix_exclude(self, mock_packages):
         # Test on non-boolean variants for regression for #16841

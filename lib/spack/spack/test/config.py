@@ -576,7 +576,7 @@ def get_config_error(filename, schema, yaml_string):
 
     # parse and return error, or fail.
     try:
-        spack.config._read_config_file(filename, schema)
+        spack.config.read_config_file(filename, schema)
     except spack.config.ConfigFormatError as e:
         return e
     else:
@@ -789,6 +789,15 @@ env:
         assert not spack.config.get('packages:externalmodule')
         assert spack.config.get('repos') == [
             '/x/y/z', '$spack/var/spack/repos/builtin']
+
+
+def test_write_empty_single_file_scope(tmpdir):
+    env_schema = spack.schema.env.schema
+    scope = spack.config.SingleFileScope(
+        'test', str(tmpdir.ensure('config.yaml')), env_schema, ['spack'])
+    scope.write_section('config')
+    # confirm we can write empty config
+    assert not scope.get_section('config')
 
 
 def check_schema(name, file_contents):

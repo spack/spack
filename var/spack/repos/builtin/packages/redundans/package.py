@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Redundans(Package):
     """Redundans pipeline assists an assembly of heterozygous genomes."""
@@ -38,7 +35,6 @@ class Redundans(Package):
                     'redundans.py')
 
         binfiles = ['redundans.py', 'bin/filterReads.py']
-        binfiles.extend(glob.glob('bin/fast?2*.py'))
 
         # new internal dep with 0.14a
         if spec.satisfies('@0.14a:'):
@@ -47,3 +43,5 @@ class Redundans(Package):
         mkdirp(prefix.bin)
         for f in binfiles:
             install(f, prefix.bin)
+
+        install('bin/fast?2*.py', prefix.bin)
