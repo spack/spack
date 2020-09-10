@@ -496,41 +496,45 @@ def test_filter_files_multiple(tmpdir):
       'files': ['spack.lock', 'spack.yaml'],
       'remove': ['spack.lock']}],
     # Remove the entire directory where two files are stored
-    [{'subdirs': ['myenv'],
+    [{'subdirs': 'myenv',
       'files': ['spack.lock', 'spack.yaml'],
-     'remove': ['myenv']}],
+      'remove': ['myenv']}],
     # Combine a mix of directories and files
     [{'subdirs': None,
       'files': ['spack.lock', 'spack.yaml'],
       'remove': ['spack.lock']},
-     {'subdirs': ['myenv'],
+     {'subdirs': 'myenv',
       'files': ['spack.lock', 'spack.yaml'],
-     'remove': ['myenv']}],
+      'remove': ['myenv']}],
     # Multiple subdirectories, remove root
-    [{'subdirs': ['work', 'myenv1'],
+    [{'subdirs': 'work/myenv1',
       'files': ['spack.lock', 'spack.yaml'],
       'remove': []},
-     {'subdirs': ['work', 'myenv2'],
+     {'subdirs': 'work/myenv2',
       'files': ['spack.lock', 'spack.yaml'],
-     'remove': ['work']}],
+      'remove': ['work']}],
     # Multiple subdirectories, remove each one
-    [{'subdirs': ['work', 'myenv1'],
+    [{'subdirs': 'work/myenv1',
       'files': ['spack.lock', 'spack.yaml'],
       'remove': ['work/myenv1']},
-     {'subdirs': ['work', 'myenv2'],
+     {'subdirs': 'work/myenv2',
       'files': ['spack.lock', 'spack.yaml'],
-     'remove': ['work/myenv2']}],
+      'remove': ['work/myenv2']}],
     # Remove files with the same name in different directories
-    [{'subdirs': ['work', 'myenv1'],
+    [{'subdirs': 'work/myenv1',
       'files': ['spack.lock', 'spack.yaml'],
       'remove': ['work/myenv1/spack.lock']},
-     {'subdirs': ['work', 'myenv2'],
+     {'subdirs': 'work/myenv2',
       'files': ['spack.lock', 'spack.yaml'],
-     'remove': ['work/myenv2/spack.lock']}],
+      'remove': ['work/myenv2/spack.lock']}],
     # Remove first the directory, then a file within the directory
-    [{'subdirs': ['myenv'],
+    [{'subdirs': 'myenv',
       'files': ['spack.lock', 'spack.yaml'],
       'remove': ['myenv', 'myenv/spack.lock']}],
+    # Remove first a file within a directory, then the directory
+    [{'subdirs': 'myenv',
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['myenv/spack.lock', 'myenv']}],
 ])
 @pytest.mark.regression('18441')
 def test_safe_remove(files_or_dirs, tmpdir):
@@ -539,7 +543,9 @@ def test_safe_remove(files_or_dirs, tmpdir):
     for entry in files_or_dirs:
         # Create relative dir
         subdirs = entry['subdirs']
-        dir = tmpdir if not subdirs else tmpdir.ensure(*subdirs, dir=True)
+        dir = tmpdir if not subdirs else tmpdir.ensure(
+            *subdirs.split('/'), dir=True
+        )
 
         # Create files in the directory
         files = entry['files']
