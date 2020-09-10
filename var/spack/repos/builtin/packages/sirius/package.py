@@ -85,10 +85,17 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('spfft+cuda', when='@6.4.0:+cuda')
     depends_on('spfft+cuda', when='@master+cuda')
     depends_on('spfft+cuda', when='@develop+cuda')
+    depends_on('spfft+rocm', when='@6.4.0:+rocm')
+    depends_on('spfft+rocm', when='@master+rocm')
+    depends_on('spfft+rocm', when='@develop+rocm')
+
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
+
     depends_on('nlcglib', when='+nlcglib')
+
     depends_on('libvdwxc+mpi', when='+vdwxc')
+
     depends_on('scalapack', when='+scalapack')
 
     # rocm
