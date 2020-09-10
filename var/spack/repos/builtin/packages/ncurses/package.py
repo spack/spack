@@ -51,7 +51,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             variants = ''
             output = Executable(exe)('--libs', output=str, error=str)
 
-            if re.search(r'-ltinfo', output):
+            if '-ltinfo' in output:
                 variants += "+termlib"
 
             output = Executable(exe)('--terminfo-dirs', output=str, error=str)
