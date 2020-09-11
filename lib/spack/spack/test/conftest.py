@@ -35,6 +35,7 @@ import spack.repo
 import spack.stage
 import spack.util.executable
 import spack.util.gpg
+import spack.test_state
 
 from spack.util.pattern import Bunch
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
@@ -42,11 +43,30 @@ from spack.fetch_strategy import FetchError
 
 
 @pytest.fixture
-def no_path_access(monkeypatch):
-    def _can_access(path, perms):
-        return False
+def record_monkeypatch(monkeypatch):
+    spack.test_state.append_patch(monkeypatch)
+    yield monkeypatch
+    spack.test_state.clear_patches()
 
-    monkeypatch.setattr(os, 'access', _can_access)
+
+@pytest.fixture(scope='session', autouse=True)
+def update_monkeypatch():
+    import _pytest
+    saved = _pytest.monkeypatch.monkeypatch
+    _pytest.monkeypatch.monkeypatch = record_monkeypatch
+    try:
+        yield
+    finally:
+        _pytest.monkeypatch.monkeypatch = saved
+
+
+def _can_access(path, perms):
+    return False
+
+
+@pytest.fixture
+def no_path_access(record_monkeypatch):
+    record_monkeypatch.setattr(os, 'access', _can_access)
 
 
 #
@@ -70,11 +90,15 @@ def clean_user_environment():
         ev.activate(active)
 
 
+def _verify_executables_noop(*args):
+    return None
+
+
 #
 # Disable checks on compiler executable existence
 #
 @pytest.fixture(scope='function', autouse=True)
-def mock_compiler_executable_verification(request, monkeypatch):
+def mock_compiler_executable_verification(request, record_monkeypatch):
     """Mock the compiler executable verification to allow missing executables.
 
     This fixture can be disabled for tests of the compiler verification
@@ -84,9 +108,9 @@ def mock_compiler_executable_verification(request, monkeypatch):
 
     If a test is marked in that way this is a no-op."""
     if 'enable_compiler_verification' not in request.keywords:
-        monkeypatch.setattr(spack.compiler.Compiler,
+        record_monkeypatch.setattr(spack.compiler.Compiler,
                             'verify_executables',
-                            lambda x: None)
+                            _verify_executables_noop)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -150,7 +174,7 @@ def reset_compiler_cache():
 
 
 @pytest.fixture(scope='function', autouse=True)
-def mock_stage(tmpdir_factory, monkeypatch, request):
+def mock_stage(tmpdir_factory, record_monkeypatch, request):
     """Establish the temporary build_stage for the mock archive."""
     # The approach with this autouse fixture is to set the stage root
     # instead of using spack.config.override() to avoid configuration
@@ -166,7 +190,7 @@ def mock_stage(tmpdir_factory, monkeypatch, request):
                                    spack.stage._source_path_subdir)
         mkdirp(source_path)
 
-        monkeypatch.setattr(spack.stage, '_stage_root', new_stage_path)
+        record_monkeypatch.setattr(spack.stage, '_stage_root', new_stage_path)
 
         yield new_stage_path
 
@@ -245,26 +269,27 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
         assert not files_in_stage
 
 
+class MockCache(object):
+    def store(self, copy_cmd, relative_dest):
+        pass
+
+    def fetcher(self, target_path, digest, **kwargs):
+        return MockCacheFetcher()
+
+class MockCacheFetcher(object):
+    def fetch(self):
+        raise FetchError('Mock cache always fails for tests')
+
+    def __str__(self):
+        return "[mock fetch cache]"
+
+
 @pytest.fixture(autouse=True)
-def mock_fetch_cache(monkeypatch):
+def mock_fetch_cache(record_monkeypatch):
     """Substitutes spack.paths.fetch_cache with a mock object that does nothing
     and raises on fetch.
     """
-    class MockCache(object):
-        def store(self, copy_cmd, relative_dest):
-            pass
-
-        def fetcher(self, target_path, digest, **kwargs):
-            return MockCacheFetcher()
-
-    class MockCacheFetcher(object):
-        def fetch(self):
-            raise FetchError('Mock cache always fails for tests')
-
-        def __str__(self):
-            return "[mock fetch cache]"
-
-    monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
+    record_monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
 
 @pytest.fixture(autouse=True)
@@ -286,7 +311,9 @@ def _skip_if_missing_executables(request):
 # FIXME: session-scope. Anyhow doing it is not easy, as it seems
 # FIXME: there's some weird interaction with compilers during concretization.
 spack.architecture.real_platform = spack.architecture.platform
-spack.architecture.platform = lambda: spack.platforms.test.Test()
+def test_platform():
+    return spack.platforms.test.Test()
+spack.architecture.platform = test_platform
 # FIXME: Since we change the architecture above, we have to (re)initialize
 # FIXME: the config singleton. If it gets initialized too early with the
 # FIXME: actual architecture, tests will fail.
@@ -357,13 +384,14 @@ def mock_repo_path():
     yield spack.repo.RepoPath(spack.paths.mock_packages_path)
 
 
-@pytest.fixture
-def mock_pkg_install(monkeypatch):
-    def _pkg_install_fn(pkg, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)
+def _pkg_install_fn(pkg, spec, prefix):
+    # sanity_check_prefix requires something in the install directory
+    mkdirp(prefix.bin)
 
-    monkeypatch.setattr(spack.package.PackageBase, 'install', _pkg_install_fn,
+
+@pytest.fixture
+def mock_pkg_install(record_monkeypatch):
+    record_monkeypatch.setattr(spack.package.PackageBase, 'install', _pkg_install_fn,
                         raising=False)
 
 
@@ -622,8 +650,12 @@ def dirs_with_libfiles(tmpdir_factory):
     yield lib_to_dirs, all_dirs
 
 
+def _compiler_link_paths_noop(*args):
+    return []
+
+
 @pytest.fixture(scope='function', autouse=True)
-def disable_compiler_execution(monkeypatch, request):
+def disable_compiler_execution(record_monkeypatch, request):
     """
     This fixture can be disabled for tests of the compiler link path
     functionality by::
@@ -632,31 +664,27 @@ def disable_compiler_execution(monkeypatch, request):
 
     If a test is marked in that way this is a no-op."""
     if 'enable_compiler_link_paths' not in request.keywords:
-        def noop(*args):
-            return []
-
         # Compiler.determine_implicit_rpaths actually runs the compiler. So
         # replace that function with a noop that simulates finding no implicit
         # RPATHs
-        monkeypatch.setattr(
+        record_monkeypatch.setattr(
             spack.compiler.Compiler,
             '_get_compiler_link_paths',
-            noop
+            _compiler_link_paths_noop
         )
 
 
 @pytest.fixture(scope='function')
-def install_mockery(tmpdir, config, mock_packages, monkeypatch):
+def install_mockery(tmpdir, config, mock_packages, record_monkeypatch):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
-    real_store = spack.store.store
-    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
+    record_monkeypatch.setattr(
+        spack.store, 'store', spack.store.Store(str(tmpdir.join('opt'))))
 
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override('config:checksum', False):
         yield
 
     tmpdir.join('opt').remove()
-    spack.store.store = real_store
 
     # Also wipe out any cached prefix failure locks (associated with
     # the session-scoped mock archive).
@@ -671,38 +699,31 @@ def install_mockery(tmpdir, config, mock_packages, monkeypatch):
 
 @pytest.fixture(scope='function')
 def install_mockery_mutable_config(
-        tmpdir, mutable_config, mock_packages, monkeypatch):
+        tmpdir, mutable_config, mock_packages, record_monkeypatch):
     """Hooks a fake install directory, DB, and stage directory into Spack.
 
     This is specifically for tests which want to use 'install_mockery' but
     also need to modify configuration (and hence would want to use
     'mutable config'): 'install_mockery' does not support this.
     """
-    real_store = spack.store.store
-    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
+    record_monkeypatch.setattr(
+        spack.store, 'store', spack.store.Store(str(tmpdir.join('opt'))))
 
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override('config:checksum', False):
         yield
 
     tmpdir.join('opt').remove()
-    spack.store.store = real_store
 
 
 @pytest.fixture()
-def mock_fetch(mock_archive):
+def mock_fetch(mock_archive, record_monkeypatch):
     """Fake the URL for a package so it downloads from a file."""
-    fetcher = FetchStrategyComposite()
-    fetcher.append(URLFetchStrategy(mock_archive.url))
+    mock_fetcher = FetchStrategyComposite()
+    mock_fetcher.append(URLFetchStrategy(mock_archive.url))
 
-    @property
-    def fake_fn(self):
-        return fetcher
-
-    orig_fn = spack.package.PackageBase.fetcher
-    spack.package.PackageBase.fetcher = fake_fn
-    yield
-    spack.package.PackageBase.fetcher = orig_fn
+    record_monkeypatch.setattr(
+        spack.package.PackageBase, 'fetcher', mock_fetcher)
 
 
 class MockLayout(object):
@@ -729,7 +750,7 @@ def gen_mock_layout(tmpdir):
 
 
 @pytest.fixture()
-def module_configuration(monkeypatch, request):
+def module_configuration(record_monkeypatch, request):
     """Reads the module configuration file from the mock ones prepared
     for tests and monkeypatches the right classes to hook it in.
     """
@@ -756,17 +777,17 @@ def module_configuration(monkeypatch, request):
         def writer_key_function():
             return mock_config_function()[writer_key]
 
-        monkeypatch.setattr(
+        record_monkeypatch.setattr(
             spack.modules.common,
             'configuration',
             mock_config_function
         )
-        monkeypatch.setattr(
+        record_monkeypatch.setattr(
             writer_mod,
             'configuration',
             writer_key_function
         )
-        monkeypatch.setattr(
+        record_monkeypatch.setattr(
             writer_mod,
             'configuration_registry',
             {}
@@ -775,14 +796,14 @@ def module_configuration(monkeypatch, request):
 
 
 @pytest.fixture()
-def mock_gnupghome(monkeypatch):
+def mock_gnupghome(record_monkeypatch):
     # GNU PGP can't handle paths longer than 108 characters (wtf!@#$) so we
     # have to make our own tmpdir with a shorter name than pytest's.
     # This comes up because tmp paths on macOS are already long-ish, and
     # pytest makes them longer.
     short_name_tmpdir = tempfile.mkdtemp()
-    monkeypatch.setattr(spack.util.gpg, 'GNUPGHOME', short_name_tmpdir)
-    monkeypatch.setattr(spack.util.gpg.Gpg, '_gpg', None)
+    record_monkeypatch.setattr(spack.util.gpg, 'GNUPGHOME', short_name_tmpdir)
+    record_monkeypatch.setattr(spack.util.gpg.Gpg, '_gpg', None)
 
     yield
 

@@ -1373,33 +1373,35 @@ def from_url_scheme(url, *args, **kwargs):
             SCHEME=parsed_url.scheme))
 
 
-def from_list_url(pkg):
+def from_list_url(downloader):
     """If a package provides a URL which lists URLs for resources by
        version, this can can create a fetcher for a URL discovered for
        the specified package's version."""
 
-    if pkg.list_url:
+    if downloader.list_url:
         try:
-            versions = pkg.fetch_remote_versions()
+            versions = downloader.fetch_remote_versions()
             try:
                 # get a URL, and a checksum if we have it
-                url_from_list = versions[pkg.version]
+                url_from_list = versions[downloader.version]
                 checksum = None
 
                 # try to find a known checksum for version, from the package
-                version = pkg.version
-                if version in pkg.versions:
-                    args = pkg.versions[version]
+                version = downloader.version
+                if downloader.version_args:
+                    args = downloader.version_args
                     checksum = next(
                         (v for k, v in args.items() if k in crypto.hashes),
                         args.get('checksum'))
 
                 # construct a fetcher
-                return URLFetchStrategy(url_from_list, checksum,
-                                        fetch_options=pkg.fetch_options)
+                return URLFetchStrategy(
+                    url_from_list, checksum,
+                    fetch_options=downloader.fetch_options)
             except KeyError as e:
                 tty.debug(e)
-                tty.msg("Cannot find version %s in url_list" % pkg.version)
+                tty.msg("Cannot find version %s in url_list" %
+                        downloader.version)
 
         except BaseException as e:
             # TODO: Don't catch BaseException here! Be more specific.

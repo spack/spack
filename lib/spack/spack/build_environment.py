@@ -805,17 +805,18 @@ def modifications_from_dependencies(spec, context):
 
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
                        input_multiprocess_fd):
-    # We are in the child process. Python sets sys.stdin to
-    # open(os.devnull) to prevent our process and its parent from
-    # simultaneously reading from the original stdin. But, we assume
-    # that the parent process is not going to read from it till we
-    # are done with the child, so we undo Python's precaution.
-    if input_multiprocess_fd is not None:
-        sys.stdin = os.fdopen(input_multiprocess_fd._handle)
-
-    pkg = serialized_pkg.restore()
 
     try:
+        # We are in the child process. Python sets sys.stdin to
+        # open(os.devnull) to prevent our process and its parent from
+        # simultaneously reading from the original stdin. But, we assume
+        # that the parent process is not going to read from it till we
+        # are done with the child, so we undo Python's precaution.
+        if input_multiprocess_fd is not None:
+            sys.stdin = os.fdopen(input_multiprocess_fd._handle)
+
+        pkg = serialized_pkg.restore()
+
         if not kwargs['fake']:
             setup_package(pkg, dirty=kwargs['dirty'])
         return_value = function(pkg, kwargs)
@@ -838,8 +839,12 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
         package_context = get_package_context(tb)
 
         build_log = None
-        if hasattr(pkg, 'log_path'):
-            build_log = pkg.log_path
+        try:
+            if hasattr(pkg, 'log_path'):
+                build_log = pkg.log_path
+        except:
+            # 'pkg' is not defined yet
+            pass
 
         # make a pickleable exception to send to parent.
         msg = "%s: %s" % (exc_type.__name__, str(exc))
@@ -856,6 +861,33 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
             input_multiprocess_fd.close()
 
 
+import inspect
+
+def check_type(obj, classtype):
+    if isinstance(obj, classtype):
+        import pdb; pdb.set_trace()
+    if 'pkg' in obj.__class__.__name__:
+        import pdb; pdb.set_trace()
+
+def search_obj(obj, classtype, visited=None):
+    visited = visited or set()
+    if id(obj) in visited:
+        return
+    visited.add(id(obj))
+    check_type(obj, classtype)
+    attrs = list((name, val) for (name, val) in inspect.getmembers(obj)
+                 if not name.startswith('__'))
+    #attrs = list(inspect.getmembers(obj))
+    for name, val in attrs:
+        check_type(val, classtype)
+        search_obj(val, classtype, visited)
+    try:
+        for item in obj:
+            search_obj(item, classtype, visited)
+    except:
+        pass
+
+
 class TransmitPackage(object):
     """The repo must be transmitted and reconstructed along with the package
     if the new process environment was not forked.
@@ -869,13 +901,32 @@ class TransmitPackage(object):
             pickle.dump(pkg, serialized_pkg)
             serialized_pkg.seek(0)
             self.serialized_pkg = serialized_pkg
-            self.repo_dirs = list(r.root for r in spack.repo.path.repos)
+
+            if pkg.spec.name == 'flatten-deps':
+                self.repo_dirs = list(r.root for r in spack.repo.path.repos)
+                self.config = spack.config.config
+                self.platform = spack.architecture.platform
+                self.test_patches = spack.test_state.store_patches()
+                import pdb; pdb.set_trace()
+                self.test_patches.class_patches = self.test_patches.class_patches[:4]
+                #search_obj(self.test_patches.class_patches[3][2], spack.fetch_strategy.FetchStrategy)
+                #search_obj(self.test_patches.class_patches[3][2], spack.package.PackageBase)
+                #search_obj(self.test_patches.class_patches, spack.package.PackageBase)
+                #self.test_patches.class_patches[3][2][0].stage = None
+            else:
+                self.repo_dirs = list(r.root for r in spack.repo.path.repos)
+                self.config = spack.config.config
+                self.platform = spack.architecture.platform
+                self.test_patches = spack.test_state.store_patches()
         else:
             self.pkg = pkg
 
     def restore(self):
         if TransmitPackage._serialize:
             spack.repo.path = spack.repo._path(self.repo_dirs)
+            spack.config.config = self.config
+            spack.architecture.platform = self.platform
+            self.test_patches.apply()
             return pickle.load(self.serialized_pkg)
         else:
             return self.pkg
