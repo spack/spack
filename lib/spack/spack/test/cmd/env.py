@@ -547,6 +547,48 @@ spack:
     assert 'no/such/file.yaml' in err
 
 
+def test_env_with_include_config_files_same_basename():
+    test_config = """\
+        env:
+            include:
+                - ./path/to/included-config.yaml
+                - ./second/path/to/include-config.yaml
+            specs:
+                [libelf, mpileaks]
+            """
+
+    _env_create('test', StringIO(test_config))
+    e = ev.read('test')
+
+    fs.mkdirp(os.path.join(e.path, 'path', 'to'))
+    with open(os.path.join(
+            e.path,
+            './path/to/included-config.yaml'), 'w') as f:
+        f.write("""\
+        packages:
+          libelf:
+              version: [0.8.10]
+        """)
+
+    fs.mkdirp(os.path.join(e.path, 'second', 'path', 'to'))
+    with open(os.path.join(
+            e.path,
+            './second/path/to/include-config.yaml'), 'w') as f:
+        f.write("""\
+        packages:
+          mpileaks:
+              version: [2.2]
+        """)
+
+    with e:
+        e.concretize()
+
+    environment_specs = e._get_environment_specs(False)
+
+    assert(environment_specs[0].satisfies('libelf@0.8.10'))
+    assert(environment_specs[1].satisfies('mpileaks@2.2'))
+
+
 def test_env_with_included_config_file():
     test_config = """\
 env:
