@@ -949,10 +949,9 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     with pytest.raises(inst.InstallError, match='after first install failure'):
         installer.install()
 
-    failed = installer.failed
-    requests = installer.build_requests
     assert pkg_ids[0] in installer.failed, 'Expected b to be marked as failed'
-    assert pkg_ids[1] not in installer.failed, 'Expected no attempt to install c'
+    assert pkg_ids[1] not in installer.failed, \
+        'Expected no attempt to install c'
 
     out = capsys.readouterr()[1]
     assert '{0} failed to install'.format(pkg_ids[0]) in out
@@ -1025,7 +1024,6 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
 
     # Ensure don't continually requeue the task
     monkeypatch.setattr(inst.PackageInstaller, '_requeue_task', _requeued)
-
 
     installer.install()
     assert b_pkg_id not in installer.installed
@@ -1116,7 +1114,8 @@ def test_install_dir_exists_multi(install_mockery, monkeypatch, capfd):
 def test_install_skip_patch(install_mockery, mock_fetch):
     """Test the path skip_patch install path."""
     spec_name = 'b'
-    const_arg = installer_args([spec_name], {'fake': False, 'skip_patch': True})
+    const_arg = installer_args([spec_name],
+                               {'fake': False, 'skip_patch': True})
     installer = create_installer(const_arg)
 
     installer.install()
