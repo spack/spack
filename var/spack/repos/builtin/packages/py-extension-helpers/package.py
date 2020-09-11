@@ -13,6 +13,8 @@ class PyExtensionHelpers(PythonPackage):
     homepage = 'https://github.com/astropy/astropy-helpers'
     url = 'https://pypi.io/packages/source/e/extension-helpers/extension-helpers-0.1.tar.gz'
 
-    depends_on('py-setuptools', type='build')
-
     version('0.1', sha256='ac8a6fe91c6d98986a51a9f08ca0c7945f8fd70d95b662ced4040ae5eb973882')
+
+    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-setuptools@30.3:', type='build')
+    depends_on('py-setuptools', type='build')
