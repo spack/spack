@@ -1656,8 +1656,8 @@ class BuildTask(object):
         if request and self.pkg != self.request.pkg:
             request_pkg_id = package_id(self.request.pkg)
             if request_pkg_id not in self.dependents:
-                tty.warn('{0} is not in the dependents of {1} so adding'
-                         .format(request_pkg_id, self.pkg_id))
+                tty.debug('{0} is not in the dependents of {1} so adding'
+                          .format(request_pkg_id, self.pkg_id))
                 self.dependents.add(request_pkg_id)
 
         # Set of dependencies

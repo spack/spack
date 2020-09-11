@@ -38,7 +38,7 @@ buildcache = SpackCommand('buildcache')
 def noop_install(monkeypatch):
     def noop(*args, **kwargs):
         pass
-    monkeypatch.setattr(spack.package.PackageBase, 'do_install', noop)
+    monkeypatch.setattr(spack.installer.PackageInstaller, 'install', noop)
 
 
 def test_install_package_and_dependency(

@@ -244,7 +244,7 @@ def install_specs(cli_args, kwargs, specs):
                 with env.write_transaction():
                     concrete = env.concretize_and_add(abstract, concrete)
                     env.write(regenerate_views=False)
-            env.install_all(**kwargs)
+            env.install_all(cli_args, **kwargs)
         else:
             installs = [(concrete.package, kwargs) for _, concrete in specs]
             builder = PackageInstaller(installs)
@@ -294,7 +294,7 @@ environment variables:
                     env.write(regenerate_views=False)
 
             tty.msg("Installing environment %s" % env.name)
-            env.install_all(args)
+            env.install_all(args, **kwargs)
             with env.write_transaction():
                 # It is not strictly required to synchronize view regeneration
                 # but doing so can prevent redundant work in the filesystem.
@@ -402,9 +402,9 @@ environment variables:
                 for abstract, concrete in zip(abstract_specs, specs):
                     if concrete in installed:
                         with fs.replace_directory_transaction(concrete.prefix):
-                            install_specs(args, kwargs, [abstract, concrete])
+                            install_specs(args, kwargs, [(abstract, concrete)])
                     else:
-                        install_specs(args, kwargs, [abstract, concrete])
+                        install_specs(args, kwargs, [(abstract, concrete)])
             else:
                 install_specs(args, kwargs, zip(abstract_specs, specs))
         else:
