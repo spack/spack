@@ -1,0 +1,22 @@
+--- spack-src/src/ConvexAlignFast.cpp.bak	2017-06-27 02:01:12.000000000 +0900
++++ spack-src/src/ConvexAlignFast.cpp	2020-09-07 17:03:29.325279688 +0900
+@@ -8,7 +8,7 @@
+ #include <string.h>
+ #include <stdio.h>
+ #include <algorithm>
+-#include <x86intrin.h>
++#include <SSE2NEON.h>
+ 
+ #include "IConfig.h"
+ 
+--- spack-src/src/AlignmentBuffer.cpp.bak	2017-06-27 02:01:12.000000000 +0900
++++ spack-src/src/AlignmentBuffer.cpp	2020-09-08 11:38:24.075464116 +0900
+@@ -2365,7 +2365,7 @@
+ 		va_list args;
+ 
+ 		va_start(args, s);
+-		if (args != 0)
++		if (va_arg(args, char *) != 0)
+ 			vfprintf(stderr, s, args);
+ 		else
+ 			fprintf(stderr, "%s", s);

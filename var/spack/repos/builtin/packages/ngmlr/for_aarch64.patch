@@ -1,0 +1,33 @@
+--- spack-src/lib/Complete-Striped-Smith-Waterman-Library/src/ssw.h.bak	2017-06-27 02:01:12.000000000 +0900
++++ spack-src/lib/Complete-Striped-Smith-Waterman-Library/src/ssw.h	2020-09-02 16:16:01.835283173 +0900
+@@ -14,7 +14,7 @@
+ #include <stdio.h>
+ #include <stdint.h>
+ #include <string.h>
+-#include <emmintrin.h>
++#include <SSE2NEON.h>
+ 
+ #ifdef __cplusplus
+ extern "C" {
+--- spack-src/lib/Complete-Striped-Smith-Waterman-Library/src/ssw.c.bak	2017-06-27 02:01:12.000000000 +0900
++++ spack-src/lib/Complete-Striped-Smith-Waterman-Library/src/ssw.c	2020-09-08 11:44:57.995497574 +0900
+@@ -35,7 +35,7 @@
+  *
+  */
+ 
+-#include <emmintrin.h>
++#include <SSE2NEON.h>
+ #include <stdint.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+--- spack-src/src/Logging.cpp.bak	2020-09-08 11:30:20.915422258 +0900
++++ spack-src/src/Logging.cpp	2020-09-08 11:32:33.125437676 +0900
+@@ -94,7 +94,7 @@
+ 
+ 	if (color)
+ 		SetConsoleColor((ConsoleColor) (Message + (lvl * 2)));
+-	if (args != 0)
++	if (va_arg(args, char *) != 0)
+ 		vfprintf(stderr, s, args);
+ 	else
+ 		fprintf(stderr, "%s", s);
