@@ -397,7 +397,7 @@ class Openmpi(AutotoolsPackage):
             match = re.search(r'Memory debugging support: (\S+)', output)
             if match and is_enabled(match.group(1)):
                 variants += '+memchecker'
-            if re.search(r'\bMCA ess: pmi', output):
+            if re.search(r'\bMCA (?:ess|prrte): pmi', output):
                 variants += '+pmi'
 
             # This code gets all the fabric names from the variants list
@@ -411,7 +411,7 @@ class Openmpi(AutotoolsPackage):
             fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
             for fabric in fabrics:
-                match = re.search(r'\bMCA mtl: %s\b' % fabric, output)
+                match = re.search(r'\bMCA (?:mtl|btl|pml): %s\b' % fabric, output)
                 if match:
                     used_fabrics.append(fabric)
             if used_fabrics:
@@ -420,7 +420,7 @@ class Openmpi(AutotoolsPackage):
             schedulers = get_options_from_variant(cls, "schedulers")
             used_schedulers = []
             for scheduler in schedulers:
-                match = re.search(r'\bMCA ras: %s\b' % scheduler, output)
+                match = re.search(r'\bMCA (?:prrte|ras): %s\b' % scheduler, output)
                 if match:
                     used_schedulers.append(scheduler)
             if used_schedulers:
