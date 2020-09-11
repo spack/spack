@@ -37,4 +37,4 @@ class PyPymol(PythonPackage):
             include.extend(query.headers.directories)
 
         env.set('CPATH', ':'.join(include))
-        env.set('LIBRARY_PATH', ':'.join(library)
+        env.set('LIBRARY_PATH', ':'.join(library))
