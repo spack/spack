@@ -362,12 +362,28 @@ class Concretizer(object):
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
         pkg_cls = spec.package_class
         for name, variant in pkg_cls.variants.items():
+            any_set = False
+            var = spec.variants.get(name, None)
+            if var and 'any' in var:
+                # remove 'any' variant before concretizing
+                # a variant cannot have 'any' and other values
+                # and 'any' concretizes to any value.
+                spec.variants.pop(name)
+                any_set = True
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:
                     spec.variants[name] = preferred_variants.get(name)
                 else:
                     spec.variants[name] = variant.make_default()
+
+            var = spec.variants[name]
+            if any_set and 'none' in var or None in var:
+                msg = "Attempted non-deterministic setting of variant"
+                msg += " '%s' set to 'any' and preference is." % name
+                msg += "'%s'. Set the variant to a non 'any'" % var.value
+                msg += " value or set a preference for variant '%s'." % name
+                raise UnsatisfiableVariantSpecError(msg)
 
         return changed
 

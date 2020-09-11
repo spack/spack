@@ -25,6 +25,7 @@ try:
 except ImportError:
     from collections import Sequence
 
+special_variant_values = [None, 'none', 'any']
 
 class Variant(object):
     """Represents a variant in a package, as declared in the
@@ -119,7 +120,8 @@ class Variant(object):
 
         # Check and record the values that are not allowed
         not_allowed_values = [
-            x for x in value if self.single_value_validator(x) is False
+            x for x in value
+            if x != 'any' and self.single_value_validator(x) is False
         ]
         if not_allowed_values:
             raise InvalidVariantValueError(self, not_allowed_values, pkg)
@@ -267,6 +269,14 @@ class AbstractVariant(object):
             # Tuple is necessary here instead of list because the
             # values need to be hashed
             value = re.split(r'\s*,\s*', str(value))
+            value = list(map(lambda x: 'any' if str(x).upper() == 'ANY' else x,
+                        value))
+
+        for val in special_variant_values:
+            if val in value and len(value) > 1:
+                msg = "'%s' cannot be combined with other variant" % val
+                msg += " values."
+                raise InvalidVariantValueCombinationError(msg)
 
         # With multi-value variants it is necessary
         # to remove duplicates and give an order
@@ -302,7 +312,15 @@ class AbstractVariant(object):
         """
         # If names are different then `self` does not satisfy `other`
         # (`foo=bar` will never satisfy `baz=bar`)
-        return other.name == self.name
+        if other.name != self.name:
+            return False
+        # If the variant is already set to none, it can't satisfy any
+        if ('none' in self or None in self) and 'any' in other:
+            return False
+        # If the variant is set to any, it can't be constrained by none
+        if 'any' in self and ('none' in other or None in other):
+            return False
+        return True
 
     @implicit_variant_conversion
     def compatible(self, other):
@@ -317,8 +335,17 @@ class AbstractVariant(object):
         Returns:
             bool: True or False
         """
-        # If names are different then they are not compatible
-        return other.name == self.name
+        # If names are different then `self` is not compatible with `other`
+        # (`foo=bar` is incompatible with `baz=bar`)
+        if other.name != self.name:
+            return False
+        # If the variant is already set to none, incompatible with any
+        if ('none' in self or None in self) and 'any' in other:
+            return False
+        # If the variant is set to any, it can't be compatible with none
+        if 'any' in self and ('none' in other or None in other):
+            return False
+        return True
 
     @implicit_variant_conversion
     def constrain(self, other):
@@ -336,7 +363,13 @@ class AbstractVariant(object):
             raise ValueError('variants must have the same name')
 
         old_value = self.value
-        self.value = ','.join(sorted(set(self.value + other.value)))
+
+        values = list(sorted(set(self.value + other.value)))
+        # If we constraint any by another value, just take value
+        if 'any' in values and len(values) > 1:
+            values.remove('any')
+
+        self.value = ','.join(values)
         return old_value != self.value
 
     def __contains__(self, item):
@@ -367,13 +400,13 @@ class MultiValuedVariant(AbstractVariant):
         Returns:
             bool: True or False
         """
-        # If names are different then `self` does not satisfy `other`
-        # (`foo=bar` does not satisfy `baz=bar`)
-        if other.name != self.name:
-            return False
+        # If the superclass doesn't satisfy the superclass, it doesn't satisfy
+        # this handles conflicts between none and any
+        super_sat = super(MultiValuedVariant, self).satisfies(other)
 
         # Otherwise we want all the values in `other` to be also in `self`
-        return all(v in self.value for v in other.value)
+        return super_sat and (all(v in self.value for v in other.value) or
+                              'any' in other or 'any' in self)
 
 
 class SingleValuedVariant(MultiValuedVariant):
@@ -393,12 +426,13 @@ class SingleValuedVariant(MultiValuedVariant):
 
     @implicit_variant_conversion
     def satisfies(self, other):
-        # If names are different then `self` does not satisfy `other`
-        # (`foo=bar` does not satisfy `baz=bar`)
-        if other.name != self.name:
-            return False
+        # If it doesn't satisfy as an abstract variant, it doesn't satisfy
+        # This handles conflicts between none and any
+        # Notice we're skipping a level in the MRO
+        abstract_sat = super(MultiValuedVariant, self).satisfies(other)
 
-        return self.value == other.value
+        return abstract_sat and (self.value == other.value or
+                                 other.value == 'any' or self.value == 'any')
 
     def compatible(self, other):
         return self.satisfies(other)
@@ -407,6 +441,13 @@ class SingleValuedVariant(MultiValuedVariant):
     def constrain(self, other):
         if self.name != other.name:
             raise ValueError('variants must have the same name')
+
+        if self.value == 'any':
+            self.value = other.value
+            return self.value != other.value
+
+        if other.value == 'any' and self.value not in ('none', None):
+            return False
 
         if self.value != other.value:
             raise UnsatisfiableVariantSpecError(other.value, self.value)
@@ -420,7 +461,10 @@ class SingleValuedVariant(MultiValuedVariant):
 
 
 class BoolValuedVariant(SingleValuedVariant):
-    """A variant that can hold either True or False."""
+    """A variant that can hold either True or False.
+
+    BoolValuedVariant can also hold the value 'any', for coerced
+    comparisons between ``foo=any`` and ``+foo`` or ``~foo``."""
 
     def _value_setter(self, value):
         # Check the string representation of the value and turn
@@ -431,6 +475,9 @@ class BoolValuedVariant(SingleValuedVariant):
         elif str(value).upper() == 'FALSE':
             self._original_value = value
             self._value = False
+        elif str(value).upper() == 'ANY':
+            self._original_value = value
+            self._value = 'any'
         else:
             msg = 'cannot construct a BoolValuedVariant for "{0}" from '
             msg += 'a value that does not represent a bool'
@@ -824,6 +871,10 @@ class MultipleValuesInExclusiveVariantError(error.SpecError, ValueError):
         super(MultipleValuesInExclusiveVariantError, self).__init__(
             msg.format(variant, pkg_info)
         )
+
+
+class InvalidVariantValueCombinationError(error.SpecError):
+    """Raised when a variant has values 'any' or 'none' with other values."""
 
 
 class InvalidVariantValueError(error.SpecError):
