@@ -411,7 +411,8 @@ class Openmpi(AutotoolsPackage):
             fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
             for fabric in fabrics:
-                match = re.search(r'\bMCA (?:mtl|btl|pml): %s\b' % fabric, output)
+                match = re.search(r'\bMCA (?:mtl|btl|pml): %s\b' % fabric,
+                                  output)
                 if match:
                     used_fabrics.append(fabric)
             if used_fabrics:
@@ -420,7 +421,8 @@ class Openmpi(AutotoolsPackage):
             schedulers = get_options_from_variant(cls, "schedulers")
             used_schedulers = []
             for scheduler in schedulers:
-                match = re.search(r'\bMCA (?:prrte|ras): %s\b' % scheduler, output)
+                match = re.search(r'\bMCA (?:prrte|ras): %s\b' % scheduler,
+                                  output)
                 if match:
                     used_schedulers.append(scheduler)
             if used_schedulers:
