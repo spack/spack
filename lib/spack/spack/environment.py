@@ -1273,25 +1273,9 @@ class Environment(object):
             install_args (dict): keyword install arguments
         """
 
-        # TODO: Assess whether pre-determining installed packages is still
-        # TODO:   appropriate in the parallel build case since doing so
-        # TODO:   precludes holding locks on installed packages to prevent
-        # TODO:   them from being uninstalled during the install process.
-
-        # If "spack install" is invoked repeatedly for a large environment
-        # where all specs are already installed, the operation can take
-        # a large amount of time due to repeatedly acquiring and releasing
-        # locks, this does an initial check across all specs within a single
-        # DB read transaction to reduce time spent in this case.
-        uninstalled_specs = []
-        with spack.store.db.read_transaction():
-            for concretized_hash in self.concretized_order:
-                spec = self.specs_by_hash[concretized_hash]
-                if not spec.package.installed:
-                    uninstalled_specs.append(spec)
-
         installs = []
-        for spec in uninstalled_specs:
+        ordered_specs = [self.specs_by_hash[c] for c in self.concretized_order]
+        for spec in ordered_specs:
             # Parse cli arguments and construct a dictionary
             # that will be passed to the package installer
             kwargs = dict()
@@ -1307,7 +1291,7 @@ class Environment(object):
             builder.install()
         finally:
             # Ensure links are set appropriately
-            for spec in uninstalled_specs:
+            for spec in ordered_specs:
                 if spec.package.installed:
                     self._install_log_links(spec)
 

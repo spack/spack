@@ -121,6 +121,8 @@ def _handle_external_and_upstream(pkg, explicit):
     # consists in module file generation and registration in the DB.
     if pkg.spec.external:
         _process_external_package(pkg, explicit)
+        _print_installed_pkg('{p} (external {s.name}@{s.version})'
+                             .format(p=pkg.prefix, s=pkg.spec))
         return True
 
     if pkg.installed_upstream:
@@ -303,8 +305,8 @@ def _process_external_package(pkg, explicit):
         tty.debug('{0} is actually installed in {1}'
                   .format(pre, spec.external_path))
     else:
-        tty.msg('{0} externally installed in {1}'
-                .format(pre, spec.external_path))
+        tty.debug('{0} externally installed in {1}'
+                  .format(pre, spec.external_path))
 
     try:
         # Check if the package was already registered in the DB.
@@ -1429,7 +1431,6 @@ class PackageInstaller(object):
                 not_local = _handle_external_and_upstream(pkg, False)
                 if not_local:
                     self._update_installed(task)
-                    _print_installed_pkg(pkg.prefix)
                     continue
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
