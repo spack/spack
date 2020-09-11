@@ -561,17 +561,19 @@ def test_env_with_include_config_files_same_basename():
     e = ev.read('test')
 
     fs.mkdirp(os.path.join(e.path, 'path', 'to'))
-    with open(os.path.join(e.path,
-        './path/to/included-config.yaml'), 'w') as f:
+    with open(os.path.join(
+            e.path,
+            './path/to/included-config.yaml'), 'w') as f:
         f.write("""\
         packages:
           libelf:
               version: [0.8.10]
         """)
-    fs.mkdirp(os.path.join(e.path, 'second', 'path', 'to'))
-    with open(os.path.join(e.path,
-                        './second/path/to/include-config.yaml'), 'w') as f:
 
+    fs.mkdirp(os.path.join(e.path, 'second', 'path', 'to'))
+    with open(os.path.join(
+            e.path,
+            './second/path/to/include-config.yaml'), 'w') as f:
         f.write("""\
         packages:
           mpileaks:
