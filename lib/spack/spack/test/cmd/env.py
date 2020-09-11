@@ -583,17 +583,10 @@ def test_env_with_include_config_files_same_basename():
     with e:
         e.concretize()
 
-    mpileaks_found = False
-    libelf_found = False
+    environment_specs = e._get_environment_specs(False)
 
-    for x in e._get_environment_specs():
-        if mpileaks_found and libelf_found:
-            break
-        if x.satisfies('mpileaks@2.2'):
-            mpileaks_found = True
-        elif x.satisfies('libelf@0.8.10'):
-            libelf_found = True
-    assert(mpileaks_found and libelf_found)
+    assert(environment_specs[0].satisfies('libelf@0.8.10'))
+    assert(environment_specs[1].satisfies('mpileaks@2.2'))
 
 
 def test_env_with_included_config_file():
