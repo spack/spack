@@ -918,10 +918,11 @@ class TestSpecSematics(object):
     def test_combination_of_any_or_none(self):
         # Test that using 'none' and another value raises
         with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
-            spec = Spec('multivalue-variant foo=none,bar')
+            Spec('multivalue-variant foo=none,bar')
 
+        # Test that using 'any' and another value raises
         with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
-            spec = Spec('multivalue-variant foo=any,bar')
+            Spec('multivalue-variant foo=any,bar')
 
     @pytest.mark.skipif(
         sys.version_info[0] == 2, reason='__wrapped__ requires python 3'

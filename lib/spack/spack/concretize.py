@@ -383,7 +383,7 @@ class Concretizer(object):
                 msg += " '%s' set to 'any' and preference is." % name
                 msg += "'%s'. Set the variant to a non 'any'" % var.value
                 msg += " value or set a preference for variant '%s'." % name
-                raise UnsatisfiableVariantSpecError(msg)
+                raise vt.UnsatisfiableVariantSpecError(msg)
 
         return changed
 

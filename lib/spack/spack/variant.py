@@ -27,6 +27,7 @@ except ImportError:
 
 special_variant_values = [None, 'none', 'any']
 
+
 class Variant(object):
     """Represents a variant in a package, as declared in the
     variant directive.
@@ -270,7 +271,7 @@ class AbstractVariant(object):
             # values need to be hashed
             value = re.split(r'\s*,\s*', str(value))
             value = list(map(lambda x: 'any' if str(x).upper() == 'ANY' else x,
-                        value))
+                             value))
 
         for val in special_variant_values:
             if val in value and len(value) > 1:
