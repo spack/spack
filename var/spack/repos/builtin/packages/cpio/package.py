@@ -28,4 +28,7 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
         if '%clang' in spec and name == 'cflags':
             flags.append('--rtlib=compiler-rt')
 
+        if '%fj' in spec and name == 'cflags':
+            flags.append('--rtlib=compiler-rt')
+
         return (flags, None, None)
