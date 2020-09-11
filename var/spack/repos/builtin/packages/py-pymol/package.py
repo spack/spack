@@ -15,9 +15,7 @@ class PyPymol(PythonPackage):
     homepage = "https://pymol.org"
     url      = "https://github.com/schrodinger/pymol-open-source/archive/v2.4.0.tar.gz"
 
-
     version('2.4.0', sha256='5ede4ce2e8f53713c5ee64f5905b2d29bf01e4391da7e536ce8909d6b9116581')
-
 
     depends_on('python+tkinter', type=('build', 'run'))
     depends_on('freetype', type=('build', 'run'))
@@ -40,4 +38,4 @@ class PyPymol(PythonPackage):
 
         env.set('CPATH', ':'.join(include))
         env.set('LIBRARY_PATH', ':'.join(library)
-)
+
