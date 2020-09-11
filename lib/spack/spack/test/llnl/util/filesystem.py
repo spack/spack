@@ -569,3 +569,22 @@ def test_safe_remove(files_or_dirs, tmpdir):
     # Assert that files are restored
     for entry in to_be_checked:
         assert os.path.exists(entry)
+
+
+@pytest.mark.regression('18441')
+def test_content_of_files_with_same_name(tmpdir):
+    # Create two subdirectories containing a file with the same name,
+    # differentiate the files by their content
+    file1 = tmpdir.ensure('myenv1/spack.lock')
+    file2 = tmpdir.ensure('myenv2/spack.lock')
+    file1.write('file1'), file2.write('file2')
+
+    # Use 'safe_remove' to remove the two files
+    with pytest.raises(RuntimeError):
+        with fs.safe_remove(str(file1), str(file2)):
+            raise RuntimeError('Mock a failure')
+
+    # Check both files have been restored correctly
+    # and have not been mixed
+    assert file1.read().strip() == 'file1'
+    assert file2.read().strip() == 'file2'
