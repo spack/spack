@@ -16,7 +16,7 @@ from subprocess import PIPE
 from subprocess import check_call
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir, force_remove
+from llnl.util.filesystem import working_dir, force_remove, find
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 
@@ -196,20 +196,21 @@ class AutotoolsPackage(PackageBase):
         detect the compiler (and patch_libtool is set), patch in the correct
         flags for the Arm, Clang/Flang, and Fujitsu compilers."""
 
-        libtool = os.path.join(self.build_directory, "libtool")
-        if self.patch_libtool and os.path.exists(libtool):
-            if self.spec.satisfies('%arm') or self.spec.satisfies('%clang') \
-                    or self.spec.satisfies('%fj'):
-                for line in fileinput.input(libtool, inplace=True):
-                    # Replace missing flags with those for Arm/Clang
-                    if line == 'wl=""\n':
-                        line = 'wl="-Wl,"\n'
-                    if line == 'pic_flag=""\n':
-                        line = 'pic_flag="{0}"\n'\
-                               .format(self.compiler.cc_pic_flag)
-                    if self.spec.satisfies('%fj') and 'fjhpctag.o' in line:
-                        line = re.sub(r'/\S*/fjhpctag.o', '', line)
-                    sys.stdout.write(line)
+        for libtool in find(self.build_directory, 'libtool', recursive=True):
+            if self.patch_libtool:
+                if self.spec.satisfies('%arm')\
+                        or self.spec.satisfies('%clang')\
+                        or self.spec.satisfies('%fj'):
+                    for line in fileinput.input(libtool, inplace=True):
+                        # Replace missing flags with those for Arm/Clang
+                        if line == 'wl=""\n':
+                            line = 'wl="-Wl,"\n'
+                        if line == 'pic_flag=""\n':
+                            line = 'pic_flag="{0}"\n'\
+                                   .format(self.compiler.cc_pic_flag)
+                        if self.spec.satisfies('%fj') and 'fjhpctag.o' in line:
+                            line = re.sub(r'/\S*/fjhpctag.o', '', line)
+                        sys.stdout.write(line)
 
     @property
     def configure_directory(self):
