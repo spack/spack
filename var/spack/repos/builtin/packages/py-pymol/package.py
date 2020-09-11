@@ -38,4 +38,3 @@ class PyPymol(PythonPackage):
 
         env.set('CPATH', ':'.join(include))
         env.set('LIBRARY_PATH', ':'.join(library)
-
