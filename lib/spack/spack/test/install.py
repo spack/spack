@@ -84,24 +84,25 @@ class MockStage(object):
         self.wrapped_stage.create()
 
     def __getattr__(self, attr):
+        if attr == 'wrapped_stage':
+            # This attribute may not be defined at some point during unpickling
+            raise AttributeError()
         return getattr(self.wrapped_stage, attr)
 
 
-@pytest.mark.skipif(True, reason='Freezes')
 def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
-    remove_prefix = spack.package.Package.remove_prefix
     instance_rm_prefix = pkg.remove_prefix
 
     try:
         pkg.succeed = False
-        spack.package.Package.remove_prefix = mock_remove_prefix
+        pkg.remove_prefix = mock_remove_prefix
         with pytest.raises(MockInstallError):
             pkg.do_install()
         assert os.path.isdir(pkg.prefix)
         rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
-        spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
+        pkg.remove_prefix = rm_prefix_checker.remove_prefix
 
         # must clear failure markings for the package before re-installing it
         spack.store.db.clear_failure(spec, True)
@@ -115,7 +116,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
         assert pkg.installed
 
     finally:
-        spack.package.Package.remove_prefix = remove_prefix
+        pkg.remove_prefix = instance_rm_prefix
 
 
 def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
