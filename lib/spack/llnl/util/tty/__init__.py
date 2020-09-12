@@ -239,6 +239,41 @@ def die(message, *args, **kwargs):
     sys.exit(1)
 
 
+def get_answer(prompt, **kwargs):
+    options = kwargs.get('options', [])
+    default = kwargs.get('default', None)
+    abort = kwargs.get('abort', None)
+
+    explain = ''
+    if default is not None:
+        assert default in options
+        explain += 'default is \'{0}\''.format(default)
+
+    if abort is not None:
+        if explain:
+            explain += ', '
+        explain += '\'{0}\' to abort'.format(abort)
+
+    if explain:
+        prompt = '{0} ({1}) '.format(prompt, explain)
+
+    val = None
+    while val is None:
+        msg(prompt, newline=False)
+        ans = input()
+        if ans == abort:
+            return None
+
+        if ans:
+            if ans in options:
+                val = ans
+            else:
+                msg('Please enter one of: {0}'.format(', '.join(options)))
+        elif default is not None:
+            val = default
+    return val
+
+
 def get_number(prompt, **kwargs):
     default = kwargs.get('default', None)
     abort = kwargs.get('abort', None)

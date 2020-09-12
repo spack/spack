@@ -92,6 +92,12 @@ def setup_parser(subparser):
         'filter', nargs=argparse.REMAINDER,
         help='optional case-insensitive glob patterns to filter results.')
 
+    # Show
+    show_parser = sp.add_parser('show', help=test_show.__doc__)
+    show_parser.add_argument(
+        'names', nargs=argparse.REMAINDER,
+        help="Test suites for which to show test logs")
+
     # Status
     status_parser = sp.add_parser('status', help=test_status.__doc__)
     status_parser.add_argument(
@@ -219,6 +225,42 @@ def test_find(args): # TODO: merge with status (noargs)
         tty.msg(msg)
 
 
+def test_show(args):
+    """Provide ability to view test logs for particular Spack test suites."""
+    if args.names:
+        test_suites = []
+        for name in args.names:
+            test_suite = spack.install_test.get_test_suite(name)
+            if test_suite:
+                test_suites.append(test_suite)
+            else:
+                tty.msg("No test suite %s found in test stage" % name)
+    else:
+        test_suites = spack.install_test.get_all_test_suites()
+        if not test_suites:
+            tty.msg("No test suites with status to report")
+
+    for test_suite in test_suites:
+        for spec in test_suite.specs:
+            log_file = test_suite.log_file_for_spec(spec)
+            if os.path.exists(log_file):
+                filename = os.path.basename(log_file)
+                msg = 'Show {0}?\n\t'.format(filename)
+                answer = tty.get_answer(msg, options=['y', 'n', 'q'],
+                                        default='y', abort='q')
+                if not answer:
+                    tty.msg('Aborting show of test suite logs')
+                    return
+
+                if answer == 'y':
+                    with open(log_file, 'r') as ifd:
+                        lines = ifd.readlines()
+
+                    for ln in lines:
+                        print(ln.strip())
+                    print()  # Add a blank line for readability if multiple
+
+
 def test_status(args):
     """Get the current status for a particular Spack test suites."""
     if args.names:
@@ -306,6 +348,7 @@ def test_remove(args):
 
     for test_suite in test_suites:
         shutil.rmtree(test_suite.stage)
+
 
 def test(parser, args):
     globals()['test_%s' % args.test_command](args)
