@@ -17,4 +17,4 @@ class JettyProject(MavenPackage):
     version('9.4.30.v20200611', sha256='fac8bb95f8e8de245b284d359607b414893992ebb4e2b6e3ee40161297ea2111')
 
     depends_on('java@8', type=('build', 'run'))
-    depends_on('maven@3.6.0:', type='build')
+    depends_on('maven@3:', type='build')
