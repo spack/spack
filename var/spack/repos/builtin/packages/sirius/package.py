@@ -16,7 +16,7 @@ class Sirius(CMakePackage, CudaPackage):
     list_url = "https://github.com/electronic-structure/SIRIUS/releases"
     git      = "https://github.com/electronic-structure/SIRIUS.git"
 
-    maintainers = ['simonpintarelli', 'haampie', 'dev-zero']
+    maintainers = ['simonpintarelli', 'haampie', 'dev-zero', 'AdhocMan']
 
     version('develop', branch='develop')
     version('master', branch='master')
