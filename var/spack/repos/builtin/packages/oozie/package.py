@@ -16,3 +16,4 @@ class Oozie(MavenPackage):
     version('5.2.0', sha256='998741fb64b0badef917586685f8da90c5f037da9ed187361ac8db888780bf14')
 
     depends_on('java@8', type=('build', 'run'))
+    depends_on('maven@3:', type='build')
