@@ -69,6 +69,7 @@ spack package at this time.''',
                         'minimalistic implementation')
     variant('argobots', default=False,
             description='Enable Argobots support')
+    variant('fortran', default=True, description='Enable Fortran support')
 
     provides('mpi')
     provides('mpi@:3.0', when='@3:')
@@ -187,7 +188,8 @@ spack package at this time.''',
         # their run environments the code to make the compilers available.
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.external_module and 'cray' in self.spec.external_module:
+        external_modules = self.spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
             env.set('MPICC', spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
@@ -208,20 +210,25 @@ spack package at this time.''',
         env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
+        spec = self.spec
+
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.external_module and 'cray' in self.spec.external_module:
-            self.spec.mpicc = spack_cc
-            self.spec.mpicxx = spack_cxx
-            self.spec.mpifc = spack_fc
-            self.spec.mpif77 = spack_f77
+        external_modules = spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
+            spec.mpicc = spack_cc
+            spec.mpicxx = spack_cxx
+            spec.mpifc = spack_fc
+            spec.mpif77 = spack_f77
         else:
-            self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
-            self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
-            self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
-            self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+            spec.mpicc = join_path(self.prefix.bin, 'mpicc')
+            spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
 
-        self.spec.mpicxx_shared_libs = [
+            if '+fortran' in spec:
+                spec.mpifc = join_path(self.prefix.bin, 'mpif90')
+                spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+
+        spec.mpicxx_shared_libs = [
             join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
@@ -241,9 +248,18 @@ spack package at this time.''',
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
         # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+        # The user can work around this by disabling Fortran explicitly
+        # with ~fortran
+
+        f77 = self.compiler.f77
+        fc = self.compiler.fc
+
+        fortran_missing = f77 is None or fc is None
+
+        if '+fortran' in self.spec and fortran_missing:
             raise InstallError(
-                'MPICH requires both C and Fortran compilers!'
+                'mpich +fortran requires Fortran compilers. Configure '
+                'Fortran compiler or disable Fortran support with ~fortran'
             )
 
     def configure_args(self):
@@ -259,6 +275,9 @@ spack package at this time.''',
             '--enable-wrapper-rpath={0}'.format('no' if '~wrapperrpath' in
                                                 spec else 'yes')
         ]
+
+        if '~fortran' in spec:
+            config_args.append('--disable-fortran')
 
         if '+slurm' in spec:
             config_args.append('--with-slurm=yes')

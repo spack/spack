@@ -7,6 +7,7 @@ from spack import *
 from glob import glob
 from llnl.util.filesystem import LibraryList
 import os
+import re
 import platform
 import llnl.util.tty as tty
 
@@ -23,13 +24,15 @@ import llnl.util.tty as tty
 
 _versions = {
     '11.0.2': {
+        'Linux-aarch64': ('23851e30f7c47a1baad92891abde0adbc783de5962c7480b9725198ceacda4a0', 'http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux_sbsa.run'),
         'Linux-x86_64': ('48247ada0e3f106051029ae8f70fbd0c238040f58b0880e55026374a959a69c1', 'http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run'),
         'Linux-ppc64le': ('db06d0f3fbf6f7aa1f106fc921ad1c86162210a26e8cb65b171c5240a3bf75da', 'http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux_ppc64le.run')},
     '10.2.89': {
         'Linux-x86_64': ('560d07fdcf4a46717f2242948cd4f92c5f9b6fc7eae10dd996614da913d5ca11', 'http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_440.33.01_linux.run'),
         'Linux-ppc64le': ('5227774fcb8b10bd2d8714f0a716a75d7a2df240a9f2a49beb76710b1c0fc619', 'http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_440.33.01_linux_ppc64le.run')},
     '10.1.243': {
-        'Linux-x86_64': ('e7c22dc21278eb1b82f34a60ad7640b41ad3943d929bebda3008b72536855d31', 'https://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda_10.1.243_418.87.00_linux.run')},
+        'Linux-x86_64': ('e7c22dc21278eb1b82f34a60ad7640b41ad3943d929bebda3008b72536855d31', 'https://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda_10.1.243_418.87.00_linux.run'),
+        'Linux-ppc64le': ('b198002eef010bab9e745ae98e47567c955d00cf34cc8f8d2f0a6feb810523bf', 'https://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda_10.1.243_418.87.00_linux_ppc64le.run')},
     '10.0.130': {
         'Linux-x86_64': ('92351f0e4346694d0fcb4ea1539856c9eb82060c25654463bfd8574ec35ee39a', 'https://developer.nvidia.com/compute/cuda/10.0/Prod/local_installers/cuda_10.0.130_410.48_linux')},
     '9.2.88': {
@@ -60,6 +63,8 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
+    executables = ['^nvcc$']
+
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
@@ -78,6 +83,13 @@ class Cuda(Package):
     conflicts('arch=darwin-mojave-x86_64')
 
     depends_on('libxml2', when='@10.1.243:')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'Cuda compilation tools, release .*?, V(\S+)',
+                          output)
+        return match.group(1) if match else None
 
     def setup_build_environment(self, env):
         if self.spec.satisfies('@10.1.243:'):
@@ -132,7 +144,7 @@ class Cuda(Package):
 
     @property
     def libs(self):
-        libs = find_libraries('libcuda', root=self.prefix, shared=True,
+        libs = find_libraries('libcudart', root=self.prefix, shared=True,
                               recursive=True)
 
         filtered_libs = []

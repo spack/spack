@@ -15,7 +15,8 @@ class Umpire(CMakePackage, CudaPackage):
     git      = 'https://github.com/LLNL/Umpire.git'
 
     version('develop', branch='develop', submodules='True')
-    version('main', branch='main', submodules='True')
+    version('master', branch='main', submodules='True')
+    version('3.0.0', tag='v3.0.0', submodules='True')
     version('2.1.0', tag='v2.1.0', submodules='True')
     version('2.0.0', tag='v2.0.0', submodules='True')
     version('1.1.0', tag='v1.1.0', submodules='True')
@@ -35,6 +36,8 @@ class Umpire(CMakePackage, CudaPackage):
     version('0.1.4', tag='v0.1.4', submodules='True')
     version('0.1.3', tag='v0.1.3', submodules='True')
 
+    patch('camp_target_umpire_3.0.0.patch', when='@3.0.0')
+
     variant('fortran', default=False, description='Build C/Fortran API')
     variant('c', default=True, description='Build C API')
     variant('numa', default=False, description='Enable NUMA support')
@@ -42,6 +45,8 @@ class Umpire(CMakePackage, CudaPackage):
     variant('openmp', default=False, description='Build with OpenMP support')
     variant('deviceconst', default=False,
             description='Enables support for constant device memory')
+    variant('tests', default='none', values=('none', 'basic', 'benchmarks'),
+            multi=False, description='Tests to run')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
@@ -61,6 +66,7 @@ class Umpire(CMakePackage, CudaPackage):
 
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
+                options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
                 flag = '-arch sm_{0}'.format(cuda_arch[0])
                 options.append('-DCMAKE_CUDA_FLAGS:STRING={0}'.format(flag))
 
@@ -84,7 +90,10 @@ class Umpire(CMakePackage, CudaPackage):
         options.append('-DBUILD_SHARED_LIBS={0}'.format(
             'On' if '+shared' in spec else 'Off'))
 
+        options.append('-DENABLE_BENCHMARKS={0}'.format(
+            'On' if 'tests=benchmarks' in spec else 'Off'))
+
         options.append('-DENABLE_TESTS={0}'.format(
-            'On' if self.run_tests else 'Off'))
+            'Off' if 'tests=none' in spec else 'On'))
 
         return options

@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class Elpa(AutotoolsPackage):
+class Elpa(AutotoolsPackage, CudaPackage):
     """Eigenvalue solvers for Petaflop-Applications (ELPA)"""
 
     homepage = 'http://elpa.mpcdf.mpg.de/'
@@ -34,6 +34,7 @@ class Elpa(AutotoolsPackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('scalapack')
+    depends_on('libtool', type='build')
 
     def url_for_version(self, version):
         t = 'http://elpa.mpcdf.mpg.de/html/Releases/{0}/elpa-{0}.tar.gz'
@@ -62,14 +63,14 @@ class Elpa(AutotoolsPackage):
         return hlist
 
     build_directory = 'spack-build'
+    parallel = False
 
     def configure_args(self):
         spec = self.spec
         options = []
 
-        # TODO: add --enable-gpu, --disable-sse-assembly, --enable-sparc64
-        # and --enable-neon-arch64
-        simd_features = ['vsx', 'sse', 'avx', 'avx2', 'avx512', 'bgp', 'bgq']
+        # TODO: --disable-sse-assembly, --enable-sparc64, --enable-neon-arch64
+        simd_features = ['vsx', 'sse', 'avx', 'avx2', 'avx512']
 
         for feature in simd_features:
             msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
@@ -85,6 +86,20 @@ class Elpa(AutotoolsPackage):
                 'CFLAGS=-O2'
             ])
 
+        if '+cuda' in spec:
+            prefix = spec['cuda'].prefix
+            options.append('--enable-gpu')
+            options.append('--with-cuda-path={0}'.format(prefix))
+            options.append('--with-cuda-sdk-path={0}'.format(prefix))
+
+            cuda_arch = spec.variants['cuda_arch'].value[0]
+
+            if cuda_arch != 'none':
+                options.append('--with-GPU-compute-capability=sm_{0}'.
+                               format(cuda_arch))
+        else:
+            options.append('--disable-gpu')
+
         if '+openmp' in spec:
             options.append('--enable-openmp')
         else:
@@ -98,5 +113,7 @@ class Elpa(AutotoolsPackage):
             'LIBS={0}'.format(spec['lapack'].libs.link_flags),
             'SCALAPACK_LDFLAGS={0}'.format(spec['scalapack'].libs.joined())
         ])
+
+        options.append('--disable-silent-rules')
 
         return options

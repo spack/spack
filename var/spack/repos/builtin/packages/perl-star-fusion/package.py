@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from glob import glob
-
 
 class PerlStarFusion(Package):
     """STAR-Fusion is a component of the Trinity Cancer Transcriptome Analysis
@@ -29,12 +26,7 @@ class PerlStarFusion(Package):
     depends_on('perl-uri', type=('build', 'run'))
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install('STAR-Fusion', prefix.bin)
         mkdirp(perl_lib_dir)
-        with working_dir('PerlLib'):
-            for pm in glob("*.pm"):
-                install(pm, perl_lib_dir)
-        with working_dir('util'):
-            for files in glob("*"):
-                install(files, prefix.bin)
+        install(join_path('PerlLib', '*.pm'), perl_lib_dir)
+        install_tree('util', prefix.bin)
+        install('STAR-Fusion', prefix.bin)

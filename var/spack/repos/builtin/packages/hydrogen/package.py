@@ -86,7 +86,7 @@ class Hydrogen(CMakePackage, CudaPackage):
     depends_on('netlib-lapack +external-blas', when='blas=essl')
 
     depends_on('aluminum', when='+al ~cuda')
-    depends_on('aluminum +cuda +nccl +ht +mpi_gpu_rdma', when='+al +cuda')
+    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
@@ -99,7 +99,7 @@ class Hydrogen(CMakePackage, CudaPackage):
     depends_on('mpfr', when='+mpfr')
 
     depends_on('cuda', when='+cuda')
-    depends_on('cub', when='+cuda')
+    depends_on('cub', when='^cuda@:10.99')
     depends_on('half', when='+half')
 
     conflicts('@0:0.98', msg="Hydrogen did not exist before v0.99. " +

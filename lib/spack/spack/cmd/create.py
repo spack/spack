@@ -276,6 +276,17 @@ class QMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class MavenPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Maven-based packages"""
+
+    base_class_name = 'MavenPackage'
+
+    body_def = """\
+    def build(self, spec, prefix):
+        # FIXME: If not needed delete this function
+        pass"""
+
+
 class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
 
@@ -424,6 +435,34 @@ class OctavePackageTemplate(PackageTemplate):
         super(OctavePackageTemplate, self).__init__(name, *args, **kwargs)
 
 
+class RubyPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Ruby packages"""
+
+    base_class_name = 'RubyPackage'
+
+    dependencies = """\
+    # FIXME: Add dependencies if required. Only add the ruby dependency
+    # if you need specific versions. A generic ruby dependency is
+    # added implicity by the RubyPackage class.
+    # depends_on('ruby@X.Y.Z:', type=('build', 'run'))
+    # depends_on('ruby-foo', type=('build', 'run'))"""
+
+    body_def = """\
+    def build(self, spec, prefix):
+        # FIXME: If not needed delete this function
+        pass"""
+
+    def __init__(self, name, *args, **kwargs):
+        # If the user provided `--name ruby-numpy`, don't rename it
+        # ruby-ruby-numpy
+        if not name.startswith('ruby-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to ruby-{0}".format(name))
+            name = 'ruby-{0}'.format(name)
+
+        super(RubyPackageTemplate, self).__init__(name, *args, **kwargs)
+
+
 class MakefilePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Makefile packages"""
 
@@ -476,6 +515,7 @@ templates = {
     'crates_io':  CratesIOPackageTemplate,
     'bundle':     BundlePackageTemplate,
     'qmake':      QMakePackageTemplate,
+    'maven':      MavenPackageTemplate,
     'scons':      SconsPackageTemplate,
     'waf':        WafPackageTemplate,
     'bazel':      BazelPackageTemplate,
@@ -484,6 +524,7 @@ templates = {
     'perlmake':   PerlmakePackageTemplate,
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
+    'ruby':       RubyPackageTemplate,
     'makefile':   MakefilePackageTemplate,
     'intel':      IntelPackageTemplate,
     'meson':      MesonPackageTemplate,
@@ -538,12 +579,16 @@ class BuildSystemGuesser:
         """Try to guess the type of build system used by a project based on
         the contents of its archive or the URL it was downloaded from."""
 
-        # Most octave extensions are hosted on Octave-Forge:
-        #     https://octave.sourceforge.net/index.html
-        # They all have the same base URL.
-        if url is not None and 'downloads.sourceforge.net/octave/' in url:
-            self.build_system = 'octave'
-            return
+        if url is not None:
+            # Most octave extensions are hosted on Octave-Forge:
+            #     https://octave.sourceforge.net/index.html
+            # They all have the same base URL.
+            if 'downloads.sourceforge.net/octave/' in url:
+                self.build_system = 'octave'
+                return
+            if url.endswith('.gem'):
+                self.build_system = 'ruby'
+                return
 
         # crates.io and lib.rs serve up cargo packages
         if url is not None and 'crates.io' in url or 'lib.rs' in url:
@@ -562,12 +607,16 @@ class BuildSystemGuesser:
             (r'/configure$',          'autotools'),
             (r'/configure\.(in|ac)$', 'autoreconf'),
             (r'/Makefile\.am$',       'autoreconf'),
+            (r'/pom\.xml$',           'maven'),
             (r'/SConstruct$',         'scons'),
             (r'/waf$',                'waf'),
             (r'/setup\.py$',          'python'),
             (r'/WORKSPACE$',          'bazel'),
             (r'/Build\.PL$',          'perlbuild'),
             (r'/Makefile\.PL$',       'perlmake'),
+            (r'/.*\.gemspec$',        'ruby'),
+            (r'/Rakefile$',           'ruby'),
+            (r'/setup\.rb$',          'ruby'),
             (r'/.*\.pro$',            'qmake'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),

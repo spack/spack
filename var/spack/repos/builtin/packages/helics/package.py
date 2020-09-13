@@ -19,6 +19,7 @@ class Helics(CMakePackage):
 
     version('develop', branch='develop', submodules=True)
     version('master', branch='master', submodules=True)
+    version('2.6.0', sha256='450cbfc0c37b77ea051d3edc12bbc0f7cf4c1a17091ae10df5214b6176eebb42')
     version('2.5.2', sha256='81928f7e30233a07ae2bfe6c5489fdd958364c0549b2a3e6fdc6163d4b390311')
     version('2.5.1', sha256='3fc3507f7c074ff8b6a17fe54676334158fb2ff7cc8e7f4df011938f28fdbbca')
     version('2.5.0', sha256='6f4f9308ebb59d82d71cf068e0d9d66b6edfa7792d61d54f0a61bf20dd2a7428')
@@ -29,6 +30,7 @@ class Helics(CMakePackage):
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
     variant('apps', default=True, description="Install the HELICS apps")
+    variant('benchmarks', default=False, description="Install the HELICS benchmarks")
     variant('c_shared', default=True, description="Install the C shared library")
     variant('cxx_shared', default=True, description="Install the CXX shared library")
     variant('zmq', default=True, description="Enable ZeroMQ core types")
@@ -98,6 +100,8 @@ class Helics(CMakePackage):
             'ON' if '+apps' in spec else 'OFF'))
         args.append('-DHELICS_DISABLE_WEBSERVER={0}'.format(
             'OFF' if '+webserver' in spec else 'ON'))
+        args.append('-DHELICS_BUILD_BENCHMARKS={0}'.format(
+            'ON' if '+benchmarks' in spec else 'OFF'))
 
         # Extra HELICS library dependencies
         args.append('-DHELICS_DISABLE_BOOST={0}'.format(

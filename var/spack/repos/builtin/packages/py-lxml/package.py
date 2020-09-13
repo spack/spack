@@ -13,6 +13,7 @@ class PyLxml(PythonPackage):
     homepage = "http://lxml.de/"
     url      = "https://pypi.io/packages/source/l/lxml/lxml-4.4.1.tar.gz"
 
+    version('4.5.2', sha256='cdc13a1682b2a6241080745b1953719e7fe0850b40a5c71ca574f090a1391df6')
     version('4.4.1', sha256='c81cb40bff373ab7a7446d6bbca0190bccc5be3448b47b51d729e37799bb5692')
     version('4.3.3', sha256='4a03dd682f8e35a10234904e0b9508d705ff98cf962c5851ed052e9340df3d90')
     version('4.2.5', sha256='36720698c29e7a9626a0dc802ef8885f8f0239bfd1689628ecd459a061f2807f')
@@ -25,8 +26,8 @@ class PyLxml(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('libxml2', type=('build', 'run'))
-    depends_on('libxslt', type=('build', 'run'))
+    depends_on('libxml2', type=('build', 'link', 'run'))
+    depends_on('libxslt', type=('build', 'link', 'run'))
     depends_on('py-html5lib', when='+html5', type=('build', 'run'))
     depends_on('py-beautifulsoup4', when='+htmlsoup', type=('build', 'run'))
     depends_on('py-cssselect@0.7:', when='+cssselect', type=('build', 'run'))

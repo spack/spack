@@ -18,6 +18,8 @@ class Fairlogger(CMakePackage):
     # generator = 'Ninja'
 
     version('develop', branch='dev', get_full_repo=True)
+    version('1.8.0', sha256='3f0a38dba1411b542d998e02badcc099c057b33a402954fc5c2ab74947a0c42c')
+    version('1.7.0', sha256='ef467f0a70afc0549442323d70b165fa0b0b4b4e6f17834573ca15e8e0b007e4')
     version('1.6.2', sha256='5c6ef0c0029eb451fee71756cb96e6c5011040a9813e8889667b6f3b6b04ed03')
     version('1.6.1', sha256='3894580f4c398d724ba408e410e50f70c9f452e8cfaf7c3ff8118c08df28eaa8')
     version('1.6.0', sha256='721e8cadfceb2f63014c2a727e098babc6deba653baab8866445a772385d0f5b')
@@ -60,11 +62,15 @@ class Fairlogger(CMakePackage):
 
     def cmake_args(self):
         args = []
+        args.append('-DDISABLE_COLOR=ON')
         cxxstd = self.spec.variants['cxxstd'].value
         if cxxstd != 'default':
             args.append('-DCMAKE_CXX_STANDARD=%s' % cxxstd)
-        args.append('-DUSE_BOOST_PRETTY_FUNCTION=%s' %
-                    ('ON' if '+pretty' in self.spec else 'OFF'))
+        if self.spec.satisfies('@1.4:'):
+            args.append('-DUSE_BOOST_PRETTY_FUNCTION=%s' %
+                        ('ON' if '+pretty' in self.spec else 'OFF'))
         if self.spec.satisfies('@1.6:'):
             args.append('-DUSE_EXTERNAL_FMT=ON')
+        if self.spec.satisfies('^boost@:1.69.99'):
+            args.append('-DBoost_NO_BOOST_CMAKE=ON')
         return args

@@ -2,9 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
+import os.path
+import re
 import sys
+
+import llnl.util.tty as tty
+import spack.util.executable
 
 
 class Llvm(CMakePackage, CudaPackage):
@@ -25,6 +28,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('master', branch='master')
+    version('10.0.1', sha256='c7ccb735c37b4ec470f66a6c35fbae4f029c0f88038f6977180b1a8ddc255637')
     version('10.0.0', sha256='b81c96d2f8f40dc61b14a167513d87c0d813aae0251e06e11ae8a4384ca15451')
     version('9.0.1', sha256='be7b034641a5fda51ffca7f5d840b1a768737779f75f7c4fd18fe2d37820289a')
     version('9.0.0', sha256='7807fac25330e24e9955ca46cd855dd34bbc9cc4fdba8322366206654d1036f2')
@@ -135,9 +139,6 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("python", when="@5:+python")
     depends_on("z3", when="@9:")
 
-    # CUDA dependency
-    depends_on("cuda", when="+cuda")
-
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"))
     depends_on("hwloc")
@@ -159,7 +160,6 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("gmp", when="@:3.6.999 +polly")
     depends_on("isl", when="@:3.6.999 +polly")
 
-    conflicts("+clang_extra", when="~clang")
     conflicts("+lldb", when="~clang")
     conflicts("+libcxx", when="~clang")
     conflicts("+internal_unwind", when="~clang")
@@ -180,7 +180,6 @@ class Llvm(CMakePackage, CudaPackage):
 
     # code signing is only necessary on macOS",
     conflicts('+code_signing', when='platform=linux')
-    conflicts('+code_signing', when='platform=bgq')
     conflicts('+code_signing', when='platform=cray')
 
     conflicts(
@@ -207,6 +206,108 @@ class Llvm(CMakePackage, CudaPackage):
 
     # https://bugs.llvm.org/show_bug.cgi?id=39696
     patch("thread-p9.patch", when="@develop+libcxx")
+
+    # The functions and attributes below implement external package
+    # detection for LLVM. See:
+    #
+    # https://spack.readthedocs.io/en/latest/packaging_guide.html#making-a-package-discoverable-with-spack-external-find
+    executables = ['clang', 'ld.lld', 'lldb']
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        result = []
+        for exe in exes_in_prefix:
+            # Executables like lldb-vscode-X are daemon listening
+            # on some port and would hang Spack during detection.
+            # clang-cl and clang-cpp are dev tools that we don't
+            # need to test
+            if any(x in exe for x in ('vscode', 'cpp', '-cl', '-gpu')):
+                continue
+            result.append(exe)
+        return result
+
+    @classmethod
+    def determine_version(cls, exe):
+        version_regex = re.compile(
+            # Normal clang compiler versions are left as-is
+            r'clang version ([^ )]+)-svn[~.\w\d-]*|'
+            # Don't include hyphenated patch numbers in the version
+            # (see https://github.com/spack/spack/pull/14365 for details)
+            r'clang version ([^ )]+?)-[~.\w\d-]*|'
+            r'clang version ([^ )]+)|'
+            # LLDB
+            r'lldb version ([^ )\n]+)|'
+            # LLD
+            r'LLD ([^ )\n]+) \(compatible with GNU linkers\)'
+        )
+        try:
+            compiler = Executable(exe)
+            output = compiler('--version', output=str, error=str)
+            if 'Apple' in output:
+                return None
+            match = version_regex.search(output)
+            if match:
+                return match.group(match.lastindex)
+        except spack.util.executable.ProcessError:
+            pass
+        except Exception as e:
+            tty.debug(e)
+
+        return None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        variants, compilers = ['+clang'], {}
+        lld_found, lldb_found = False, False
+        for exe in exes:
+            if 'clang++' in exe:
+                compilers['cxx'] = exe
+            elif 'clang' in exe:
+                compilers['c'] = exe
+            elif 'ld.lld' in exe:
+                lld_found = True
+                compilers['ld'] = exe
+            elif 'lldb' in exe:
+                lldb_found = True
+                compilers['lldb'] = exe
+
+        variants.append('+lld' if lld_found else '~lld')
+        variants.append('+lldb' if lldb_found else '~lldb')
+
+        return ''.join(variants), {'compilers': compilers}
+
+    @classmethod
+    def validate_detected_spec(cls, spec, extra_attributes):
+        # For LLVM 'compilers' is a mandatory attribute
+        msg = ('the extra attribute "compilers" must be set for '
+               'the detected spec "{0}"'.format(spec))
+        assert 'compilers' in extra_attributes, msg
+        compilers = extra_attributes['compilers']
+        for key in ('c', 'cxx'):
+            msg = '{0} compiler not found for {1}'
+            assert key in compilers, msg.format(key, spec)
+
+    @property
+    def cc(self):
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('c', None)
+        result = None
+        if '+clang' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'clang')
+        return result
+
+    @property
+    def cxx(self):
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('cxx', None)
+        result = None
+        if '+clang' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'clang++')
+        return result
 
     @run_before('cmake')
     def codesign_check(self):

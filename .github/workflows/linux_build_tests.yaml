@@ -20,6 +20,7 @@ on:
       - '!var/spack/repos/builtin/packages/r-rcpp/**'
       - '!var/spack/repos/builtin/packages/rust/**'
       - '!var/spack/repos/builtin/packages/ripgrep/**'
+      - '!var/spack/repos/builtin/packages/ruby-rake/**'
       # Don't run if we only modified documentation
       - 'lib/spack/docs/**'
 
@@ -28,7 +29,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: [lz4, mpich, tut, py-setuptools, openjpeg, r-rcpp, ripgrep]
+        package:
+        - lz4  # MakefilePackage
+        - mpich  # AutotoolsPackage
+        - tut  # WafPackage
+        - py-setuptools  # PythonPackage
+        - openjpeg  # CMakePackage
+        - r-rcpp  # RPackage
+        - ripgrep # CargoPackage
+        - ruby-rake  # RubyPackage
     steps:
     - uses: actions/checkout@v2
     - uses: actions/cache@v2
@@ -43,9 +52,10 @@ jobs:
     - name: Install System Packages
       run: |
         sudo apt-get update
-        sudo apt-get -yqq install ccache gfortran perl perl-base r-base r-base-core r-base-dev findutils openssl libssl-dev libpciaccess-dev
+        sudo apt-get -yqq install ccache gfortran perl perl-base r-base r-base-core r-base-dev ruby findutils openssl libssl-dev libpciaccess-dev
         R --version
         perl --version
+        ruby --version
     - name: Install Rust 1.44.1
       uses: actions-rs/toolchain@v1
       with:

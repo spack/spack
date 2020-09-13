@@ -25,6 +25,7 @@ class Ocaml(Package):
     version('4.06.0', sha256='c17578e243c4b889fe53a104d8927eb8749c7be2e6b622db8b3c7b386723bf50')
     version('4.03.0', sha256='7fdf280cc6c0a2de4fc9891d0bf4633ea417046ece619f011fd44540fcfc8da2')
 
+    patch('fix-duplicate-defs.patch', when="@4.08.0:4.09.0 %gcc@10.0:")
     depends_on('ncurses')
 
     sanity_check_file = ['bin/ocaml']
@@ -43,6 +44,17 @@ class Ocaml(Package):
 
         if self.spec.satisfies('~force-safe-string'):
             base_args += ['--disable-force-safe-string']
+
+        # This patch is aarch64-linux-fj only.
+        # However, similar patch is needed for other arch/OS/compiler
+        # to use correct assembler. (See #17918)
+        if self.spec.satisfies('%fj'):
+            filter_file(
+                '${toolpref}clang -c -Wno-trigraphs',
+                spack_cc + ' -c',
+                'configure',
+                string=True
+            )
 
         configure(*(base_args))
 

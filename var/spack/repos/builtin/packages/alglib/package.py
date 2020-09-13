@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
 import os
 import sys
 
@@ -34,9 +32,7 @@ class Alglib(MakefilePackage):
             mkdirp(prefix.lib)
             install(name, prefix.lib)
             mkdirp(prefix.include)
-            headers = glob.glob('*.h')
-            for h in headers:
-                install(h, prefix.include)
+            install('*.h', prefix.include)
 
     @run_after('install')
     def fix_darwin_install(self):

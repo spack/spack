@@ -5,7 +5,6 @@
 
 
 from spack import *
-import glob
 import sys
 import os
 
@@ -101,8 +100,7 @@ class Metis(Package):
         install('libmetis.a', prefix.lib)
 
         mkdir(prefix.include)
-        for h in glob.glob(join_path('Lib', '*.h')):
-            install(h, prefix.include)
+        install(join_path('Lib', '*.h'), prefix.include)
 
         mkdir(prefix.share)
         sharefiles = (('Graphs', '4elt.graph'), ('Graphs', 'metis.mesh'),
@@ -203,9 +201,7 @@ class Metis(Package):
             # install GKlib headers, which will be needed for ParMETIS
             gklib_dist = join_path(prefix.include, 'GKlib')
             mkdirp(gklib_dist)
-            hfiles = glob.glob(join_path(source_directory, 'GKlib', '*.h'))
-            for hfile in hfiles:
-                install(hfile, gklib_dist)
+            install(join_path(source_directory, 'GKlib', '*.h'), gklib_dist)
 
         if self.run_tests:
             # FIXME: On some systems, the installed binaries for METIS cannot
@@ -223,3 +219,9 @@ class Metis(Package):
             Executable(join_path(prefix.bin, 'gpmetis'))(graph, '2')
             graph = join_path(source_directory, 'graphs', 'metis.mesh')
             Executable(join_path(prefix.bin, 'mpmetis'))(graph, '2')
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if (sys.platform == 'darwin') and ('+shared' in self.spec):
+            fix_darwin_install_name(prefix.lib)
