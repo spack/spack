@@ -24,4 +24,4 @@ class Jql(CargoPackage):
     )
 
     version('master', branch='master')
-    version('2.6.1', sha256='849810db82ae770c9e9c64ee5a739ef624b67cf5e37ae806ce62fccee0cb8220')
+    version('2.7.2', sha256='dd14894364600cc6667801b01ad93eb665610e9de81fc64734de074ab1f1b2e5')

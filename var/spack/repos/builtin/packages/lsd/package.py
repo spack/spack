@@ -20,4 +20,4 @@ class Lsd(CargoPackage):
     maintainers = ['AndrewGaspar']
 
     version('master', branch='master')
-    version('0.17.0', sha256='d1e376b5db9c01304b4545f03d642ac5fa480289f060d014b1cec3a0df2c3990')
+    version('0.18.0', sha256='6f3536fe6731d70f967286669c5d1acb13f2d95cf481bee1064e2a81a50b774d')

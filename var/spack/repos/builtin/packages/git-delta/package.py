@@ -19,7 +19,7 @@ class GitDelta(CargoPackage):
     depends_on('oniguruma')
 
     version('master', branch='master')
-    version('0.1.1',  sha256='beb08a0607517a9b16b42c1956ab46e4b12e6bf1f32f6b14306d2b2fefafe24d')
+    version('0.4.3', sha256='6fe5636682428510a29198a056cb032cdcec2b18ed0ceba8f1854ee097d65d8e')
 
     # delta has a dependency on libclang - specify path to llvm-config
     def setup_build_environment(self, env):

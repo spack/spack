@@ -16,4 +16,4 @@ class DuDust(CargoPackage):
     maintainers = ['AndrewGaspar']
 
     version('master', branch='master')
-    version('0.5.1', sha256='ddfcace4556c7318114307915452698c0aec64465f982c5cac0cdae01630b7a4')
+    version('0.5.3', sha256='9b05a4cb93aa6d06d473bfd6e5d13392bdb417cd63b5b86608884c4878e09aa6')

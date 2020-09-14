@@ -25,4 +25,4 @@ class RustBindgen(CargoPackage):
             join_path(self.spec['llvm'].prefix.bin, 'llvm-config'))
 
     version('master', branch='master')
-    version('0.54.0', sha256='66c0bb6167449588ff70803f4127f0684f9063097eca5016f37eb52b92c2cf36')
+    version('0.55.1', sha256='75b13ce559e6433d360c26305643803cb52cfbabbc2b9c47ce04a58493dfb443')

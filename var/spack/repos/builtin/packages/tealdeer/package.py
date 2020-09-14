@@ -17,4 +17,4 @@ class Tealdeer(CargoPackage):
     maintainers = ['AndrewGaspar']
 
     version('master', branch='master')
-    version('1.3.0', sha256='39d280123d74716028e5298110568cb7186636793e47350c0505b94703259329')
+    version('1.4.1', sha256='07b2cea274043201ba04aa4a7d741df93db81ba9562a9c9bbfeceb2ca6218e33')
