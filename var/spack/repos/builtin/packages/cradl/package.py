@@ -15,6 +15,8 @@ class Cradl(Package):
     url      = "https://github.com/LLNL/CRADL/archive/master.zip"
     git      = "https://github.com/LLNL/CRADL.git"
 
+    tags = ['proxy-app']
+
     version('master', branch='master')
 
     depends_on('py-pandas')
