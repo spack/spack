@@ -46,7 +46,7 @@ class Qbox(MakefilePackage):
     depends_on('python@:2.999', type='run')
     depends_on('gnuplot', type='run')
 
-    #Change /usr/bin/python shebangs to /usr/bin/env python
+    # Change /usr/bin/python shebangs to /usr/bin/env python
     patch('qbox-python-shebang-path.patch')
 
     build_directory = 'src'
