@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyApex(PythonPackage):
-    """apex: Pyramid toolkit to add Velruse, Flash Messages,CSRF, 
+    """apex: Pyramid toolkit to add Velruse, Flash Messages,CSRF,
     ReCaptcha and Sessions."""
 
     homepage = "https://pypi.org/project/apex/"
