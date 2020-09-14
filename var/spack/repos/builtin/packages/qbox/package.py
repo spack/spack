@@ -69,6 +69,9 @@ class Qbox(MakefilePackage):
             ))))
         filter_file('$(TARGET)', 'spack', 'src/Makefile', string=True)
 
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix.util)
+
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('src/qb', prefix.bin)
