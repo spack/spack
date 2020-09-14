@@ -67,6 +67,7 @@ class Qbox(MakefilePackage):
     def install(self, spec, prefix):
         mkdir(prefix.src)
         install('src/qb', prefix.src)
-        install_tree('test', prefix)
-        install_tree('xml', prefix)
-        install_tree('util', prefix)
+        install_tree('test', prefix.test)
+        install_tree('xml', prefix.xml)
+        install_tree('util', prefix.util)
+
