@@ -21,7 +21,7 @@ class Webbench(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
-        makefile.filter('$(DESTDIR)/usr/local/man/man1', self.prefix.man,
+        makefile.filter('$(DESTDIR)/usr/local/man/man1', self.prefix.man.man1,
                         string=True)
 
     def install(self, spec, prefix):
