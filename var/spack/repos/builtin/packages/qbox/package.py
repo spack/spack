@@ -44,6 +44,9 @@ class Qbox(MakefilePackage):
     depends_on('fftw')
     depends_on('xerces-c')
 
+    #Change /usr/bin/python shebangs to /usr/bin/env python
+    patch('qbox-python-shebang-path.patch')
+
     build_directory = 'src'
 
     def edit(self, spec, prefix):
@@ -70,4 +73,3 @@ class Qbox(MakefilePackage):
         install_tree('test', prefix.test)
         install_tree('xml', prefix.xml)
         install_tree('util', prefix.util)
-
