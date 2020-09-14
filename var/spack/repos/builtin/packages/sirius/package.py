@@ -16,7 +16,7 @@ class Sirius(CMakePackage, CudaPackage):
     list_url = "https://github.com/electronic-structure/SIRIUS/releases"
     git      = "https://github.com/electronic-structure/SIRIUS.git"
 
-    maintainers = ['simonpintarelli', 'haampie', 'dev-zero']
+    maintainers = ['simonpintarelli', 'haampie', 'dev-zero', 'AdhocMan']
 
     version('develop', branch='develop')
     version('master', branch='master')
@@ -87,10 +87,21 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('spfft+cuda', when='@6.4.0:+cuda')
     depends_on('spfft+cuda', when='@master+cuda')
     depends_on('spfft+cuda', when='@develop+cuda')
+    depends_on('spfft+rocm', when='@6.4.0:+rocm')
+    depends_on('spfft+rocm', when='@master+rocm')
+    depends_on('spfft+rocm', when='@develop+rocm')
+
+    depends_on('spla@1.1.0:', when='@develop')
+    depends_on('spla@1.1.0:+cuda', when='@develop+cuda')
+    depends_on('spla@1.1.0:+rocm', when='@develop+rocm')
+
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
+
     depends_on('nlcglib', when='+nlcglib')
+
     depends_on('libvdwxc+mpi', when='+vdwxc')
+
     depends_on('scalapack', when='+scalapack')
 
     # rocm
