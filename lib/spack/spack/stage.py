@@ -816,7 +816,7 @@ class CargoStage(object):
         return join_path(
             self.package_stage.path, _cargo_vendor_subdir)
 
-    def fetch(self, mirror_only=False):
+    def fetch(self, mirror_only=False, err_msg=None):
         """Vendors dependencies or unpacks cache of the dependencies."""
         fetchers = []
         if not mirror_only:
@@ -856,10 +856,11 @@ class CargoStage(object):
                 tty.debug(e)
                 continue
         else:
-            err_msg = "All fetchers failed for %s cargo dependencies" % \
+            default_err_msg = \
+                "All fetchers failed for %s cargo dependencies" % \
                 self.package_stage.name
             self.fetcher = self.default_fetcher
-            raise fs.FetchError(err_msg, None)
+            raise fs.FetchError(err_msg or default_err_msg, None)
 
     # The Cargo depenedencies are checked during the 'fetch' stage
     def check(self):
