@@ -13,7 +13,7 @@ import spack.concretize
 import spack.repo
 
 from spack.concretize import find_spec, NoValidVersionError
-from spack.error import SpecError
+from spack.error import SpecError, SpackError
 from spack.spec import Spec, CompilerSpec, ConflictsInSpecError
 from spack.version import ver
 from spack.util.mock_package import MockPackageMultiRepo
@@ -608,7 +608,7 @@ class TestConcretize(object):
     @pytest.mark.parametrize('spec', ['noversion', 'noversion-bundle'])
     def test_noversion_pkg(self, spec):
         """Test concretization failures for no-version packages."""
-        with pytest.raises(NoValidVersionError, match="no valid versions"):
+        with pytest.raises(SpackError):
             Spec(spec).concretized()
 
     @pytest.mark.parametrize('spec, best_achievable', [
