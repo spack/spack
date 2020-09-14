@@ -65,8 +65,8 @@ class Qbox(MakefilePackage):
         filter_file('$(TARGET)', 'spack', 'src/Makefile', string=True)
 
     def install(self, spec, prefix):
-        mkdir(prefix.src)
-        install('src/qb', prefix.src)
+        mkdir(prefix.bin)
+        install('src/qb', prefix.bin)
         install_tree('test', prefix.test)
         install_tree('xml', prefix.xml)
         install_tree('util', prefix.util)
