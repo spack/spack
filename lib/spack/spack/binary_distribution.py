@@ -6,6 +6,7 @@
 import codecs
 import os
 import re
+import sys
 import tarfile
 import shutil
 import tempfile
@@ -181,9 +182,9 @@ def write_buildinfo_file(spec, workdir, rel=False):
 
             if relocate.needs_binary_relocation(m_type, m_subtype):
                 if ((m_subtype in ('x-executable', 'x-sharedlib')
-                    and platform.sys != 'Darwin') or
+                    and sys.platform != 'Darwin') or
                    (m_subtype in ('x-mach-binary')
-                    and platform.sys == 'Darwin') or
+                    and sys.platform == 'Darwin') or
                    (not filename.endswith('.o'))):
                     rel_path_name = os.path.relpath(path_name, prefix)
                     binary_to_relocate.append(rel_path_name)
