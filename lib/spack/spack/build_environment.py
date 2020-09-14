@@ -895,29 +895,27 @@ class TransmitPackage(object):
 
     _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
 
+    @staticmethod
+    def serialize(obj):
+        serialized_obj = io.BytesIO()
+        pickle.dump(obj, serialized_obj)
+        serialized_obj.seek(0)
+        return serialized_obj
+
     def __init__(self, pkg):
         if TransmitPackage._serialize:
-            serialized_pkg = io.BytesIO()
-            pickle.dump(pkg, serialized_pkg)
-            serialized_pkg.seek(0)
-            self.serialized_pkg = serialized_pkg
+            self.serialized_pkg = TransmitPackage.serialize(pkg)
 
-            if pkg.spec.name == 'flatten-deps':
-                self.repo_dirs = list(r.root for r in spack.repo.path.repos)
-                self.config = spack.config.config
-                self.platform = spack.architecture.platform
-                self.test_patches = spack.test_state.store_patches()
-                import pdb; pdb.set_trace()
-                self.test_patches.class_patches = self.test_patches.class_patches[:4]
-                #search_obj(self.test_patches.class_patches[3][2], spack.fetch_strategy.FetchStrategy)
-                #search_obj(self.test_patches.class_patches[3][2], spack.package.PackageBase)
-                #search_obj(self.test_patches.class_patches, spack.package.PackageBase)
-                #self.test_patches.class_patches[3][2][0].stage = None
-            else:
-                self.repo_dirs = list(r.root for r in spack.repo.path.repos)
-                self.config = spack.config.config
-                self.platform = spack.architecture.platform
-                self.test_patches = spack.test_state.store_patches()
+            self.repo_dirs = list(r.root for r in spack.repo.path.repos)
+            self.config = spack.config.config
+            self.platform = spack.architecture.platform
+            self.test_patches = spack.test_state.store_patches()
+
+            # TODO: transfer spack.store.store? note that you should not
+            # transfer spack.store.store and spack.store.db: 'db' is a
+            # shortcut that accesses the store (so transferring both can
+            # create an inconsistency). Some tests set 'db' directly, and
+            # others set 'store'
         else:
             self.pkg = pkg
 

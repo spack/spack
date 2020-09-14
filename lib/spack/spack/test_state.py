@@ -2,6 +2,7 @@ from types import ModuleType
 
 import pickle
 import pydoc
+import io
 
 
 patches = None
@@ -14,19 +15,27 @@ def append_patch(patch):
     patches.append(patch)
 
 
+def serialize(obj):
+    serialized_obj = io.BytesIO()
+    pickle.dump(obj, serialized_obj)
+    serialized_obj.seek(0)
+    return serialized_obj
+
+
 class TransmitPatches(object):
     def __init__(self, module_patches, class_patches):
-        for class_fqn, name, val in class_patches:
-            if 'spack.pkg' in class_fqn:
-                import pdb; pdb.set_trace()
-        self.module_patches = module_patches
-        self.class_patches = class_patches
+        self.module_patches = list(
+            (x, y, serialize(z)) for (x, y, z) in module_patches)
+        self.class_patches = list(
+            (x, y, serialize(z)) for (x, y, z) in class_patches)
 
     def apply(self):
         for module_name, attr_name, value in self.module_patches:
+            value = pickle.load(value)
             module = __import__(module_name)
             setattr(module, attr_name, value)
         for class_fqn, attr_name, value in self.class_patches:
+            value = pickle.load(value)
             cls = pydoc.locate(class_fqn)
             setattr(cls, attr_name, value)
 

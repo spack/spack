@@ -923,6 +923,12 @@ class ForwardQueryToPackage(object):
         raise AttributeError(msg.format(cls_name, self.attribute_name))
 
 
+# Represents a query state in a BuildInterface object
+QueryState = collections.namedtuple(
+    'QueryState', ['name', 'extra_parameters', 'isvirtual']
+)
+
+
 class SpecBuildInterface(lang.ObjectWrapper):
     command = ForwardQueryToPackage(
         'command',
@@ -941,11 +947,6 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
     def __init__(self, spec, name, query_parameters):
         super(SpecBuildInterface, self).__init__(spec)
-
-        # Represents a query state in a BuildInterface object
-        QueryState = collections.namedtuple(
-            'QueryState', ['name', 'extra_parameters', 'isvirtual']
-        )
 
         is_virtual = Spec.is_virtual(name)
         self.last_query = QueryState(

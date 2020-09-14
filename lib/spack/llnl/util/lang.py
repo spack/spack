@@ -578,6 +578,8 @@ class LazyReference(object):
         self.ref_function = ref_function
 
     def __getattr__(self, name):
+        if name == 'ref_function':
+            raise AttributeError()
         return getattr(self.ref_function(), name)
 
     def __getitem__(self, name):
