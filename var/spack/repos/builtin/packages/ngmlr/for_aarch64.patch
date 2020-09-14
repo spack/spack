@@ -20,14 +20,14 @@
  #include <stdint.h>
  #include <stdlib.h>
  #include <stdio.h>
---- spack-src/src/Logging.cpp.bak	2020-09-08 11:30:20.915422258 +0900
-+++ spack-src/src/Logging.cpp	2020-09-08 11:32:33.125437676 +0900
-@@ -94,7 +94,7 @@
+--- spack-src/src/ConvexAlignFast.cpp.bak	2017-06-27 02:01:12.000000000 +0900
++++ spack-src/src/ConvexAlignFast.cpp	2020-09-07 17:03:29.325279688 +0900
+@@ -8,7 +8,7 @@
+ #include <string.h>
+ #include <stdio.h>
+ #include <algorithm>
+-#include <x86intrin.h>
++#include <SSE2NEON.h>
  
- 	if (color)
- 		SetConsoleColor((ConsoleColor) (Message + (lvl * 2)));
--	if (args != 0)
-+	if (va_arg(args, char *) != 0)
- 		vfprintf(stderr, s, args);
- 	else
- 		fprintf(stderr, "%s", s);
+ #include "IConfig.h"
+ 
