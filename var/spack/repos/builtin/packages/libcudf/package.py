@@ -38,6 +38,7 @@ class Libcudf(CMakePackage):
 
     # FIXME: Add dependencies if required.
     # depends_on('foo')
+    depends_on('cuda@10.0:')
 
     def cmake_args(self):
         # FIXME: Add arguments other than
