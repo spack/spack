@@ -20,7 +20,7 @@ class Rocrand(CMakePackage):
     version('3.5.0', sha256='592865a45e7ef55ad9d7eddc8082df69eacfd2c1f3e9c57810eb336b15cd5732')
 
     depends_on('cmake@3.5.1:', type='build')
-    depends_on('numactl', when='@3.7.0')
+    depends_on('numactl', when='^hip@3.7.0')
     for ver in ['3.5.0', '3.7.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)

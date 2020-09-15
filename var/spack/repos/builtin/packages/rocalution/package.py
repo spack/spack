@@ -23,6 +23,8 @@ class Rocalution(CMakePackage):
     version('3.5.0', sha256='be2f78c10c100d7fd9df5dd2403a44700219c2cbabaacf2ea50a6e2241df7bfe')
 
     depends_on('cmake@3.5.2', type='build')
+    depends_on('numactl', when='^hip@3.7.0')
+
     for ver in ['3.5.0']:
         depends_on('hip@' + ver,  when='@' + ver)
         depends_on('rocblas@' + ver, type='build', when='@' + ver)

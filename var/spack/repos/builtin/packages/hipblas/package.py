@@ -15,6 +15,9 @@ class Hipblas(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-3.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+
+    depends_on('numactl', when='^hip@3.7.0')
+
     for ver in ['3.5.0', '3.7.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, type='build', when='@' + ver)

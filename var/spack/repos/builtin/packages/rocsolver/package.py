@@ -20,7 +20,7 @@ class Rocsolver(CMakePackage):
     version('3.5.0', sha256='d655e8c762fb9e123b9fd7200b4258512ceef69973de4d0588c815bc666cb358')
 
     depends_on('cmake@3:', type='build')
-    depends_on('numactl', when='@3.7.0')
+    depends_on('numactl', when='^hip@3.7.0')
     depends_on('hsa-rocr-dev@3.7.0', type='build', when='@3.7.0')
 
     for ver in ['3.5.0', '3.7.0']:

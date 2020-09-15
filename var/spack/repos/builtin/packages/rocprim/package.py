@@ -20,7 +20,7 @@ class Rocprim(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    depends_on('numactl', when='@3.7.0')
+    depends_on('numactl', when='^hip@3.7.0')
     for ver in ['3.5.0', '3.7.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
