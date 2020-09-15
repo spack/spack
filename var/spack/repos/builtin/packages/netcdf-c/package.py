@@ -104,8 +104,9 @@ class NetcdfC(AutotoolsPackage):
     # HDF5 without mpi support to disable parallel I/O:
     depends_on('hdf5~mpi', when='@:4.3~mpi')
 
-    # We need HDF5 with mpi support to enable parallel I/O.
+    # We need HDF5 with mpi support to enable parallel I/O. And HDF5 without mpi on a non-parallel build
     depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5~mpi', when='~mpi')
 
     # NetCDF 4.4.0 and prior have compatibility issues with HDF5 1.10 and later
     # https://github.com/Unidata/netcdf-c/issues/250
