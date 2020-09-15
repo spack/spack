@@ -453,6 +453,7 @@ class DownloadSearcher(object):
         self.version_args = (pkg.versions[pkg.version]
                              if pkg.version in pkg.versions
                              else None)
+        self.fetch_options = pkg.fetch_options
 
     def fetch_remote_versions(self, concurrency=128):
         """Find remote versions of this package.

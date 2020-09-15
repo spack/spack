@@ -129,13 +129,13 @@ def test_from_list_url(mock_packages, config, spec, url, digest):
     """
     specification = Spec(spec).concretized()
     pkg = spack.repo.get(specification)
-    fetch_strategy = fs.from_list_url(pkg)
+    fetch_strategy = fs.from_list_url(spack.package.DownloadSearcher(pkg))
     assert isinstance(fetch_strategy, fs.URLFetchStrategy)
     assert os.path.basename(fetch_strategy.url) == url
     assert fetch_strategy.digest == digest
     assert fetch_strategy.extra_options == {}
     pkg.fetch_options = {'timeout': 60}
-    fetch_strategy = fs.from_list_url(pkg)
+    fetch_strategy = fs.from_list_url(spack.package.DownloadSearcher(pkg))
     assert fetch_strategy.extra_options == {'timeout': 60}
 
 
@@ -145,13 +145,13 @@ def test_from_list_url_unspecified(mock_packages, config):
 
     spec = Spec('url-list-test @2.0.0').concretized()
     pkg = spack.repo.get(spec)
-    fetch_strategy = fs.from_list_url(pkg)
+    fetch_strategy = fs.from_list_url(spack.package.DownloadSearcher(pkg))
     assert isinstance(fetch_strategy, fs.URLFetchStrategy)
     assert os.path.basename(fetch_strategy.url) == 'foo-2.0.0.tar.gz'
     assert fetch_strategy.digest is None
     assert fetch_strategy.extra_options == {}
     pkg.fetch_options = {'timeout': 60}
-    fetch_strategy = fs.from_list_url(pkg)
+    fetch_strategy = fs.from_list_url(spack.package.DownloadSearcher(pkg))
     assert fetch_strategy.extra_options == {'timeout': 60}
 
 
