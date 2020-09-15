@@ -22,4 +22,4 @@ class HipifyClang(CMakePackage):
 
     depends_on('cmake@3.5.1:', type='build')
     for ver in ['3.5.0', '3.7.0']:
-        depends_on('llvm-amdgpu@3.5:', when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, when='@' + ver)
