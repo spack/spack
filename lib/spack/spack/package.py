@@ -444,41 +444,6 @@ class PackageViewMixin(object):
             view.remove_file(src, dst)
 
 
-class DownloadSearcher(object):
-    def __init__(self, pkg):
-        self.list_url = pkg.list_url
-        self.all_urls = pkg.all_urls
-        self.list_depth = pkg.list_depth
-        self.version = pkg.version
-        self.version_args = (pkg.versions[pkg.version]
-                             if pkg.version in pkg.versions
-                             else None)
-        self.fetch_options = pkg.fetch_options
-
-    def fetch_remote_versions(self, concurrency=128):
-        """Find remote versions of this package.
-
-        Uses ``list_url`` and any other URLs listed in the package file.
-
-        Returns:
-            dict: a dictionary mapping versions to URLs
-        """
-        if not self.all_urls:
-            return {}
-
-        try:
-            return spack.util.web.find_versions_of_archive(
-                self.all_urls, self.list_url, self.list_depth, concurrency
-            )
-        except spack.util.web.NoNetworkConnectionError as e:
-            tty.die("Package.fetch_versions couldn't connect to:", e.url,
-                    e.message)
-
-    def __call__(self):
-        dynamic_fetcher = fs.from_list_url(self)
-        return [dynamic_fetcher] if dynamic_fetcher else []
-
-
 class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     """This is the superclass for all spack packages.
 
@@ -947,7 +912,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                              s.dag_hash())
 
         stage = Stage(fetcher, mirror_paths=mirror_paths, name=stage_name,
-                      path=self.path, search_fn=DownloadSearcher(self))
+                      path=self.path, search_fn=self._download_search)
         return stage
 
     def _make_stage(self):
@@ -2206,6 +2171,25 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if 'url' in args:
                 urls.append(args['url'])
         return urls
+
+    def fetch_remote_versions(self, concurrency=128):
+        """Find remote versions of this package.
+
+        Uses ``list_url`` and any other URLs listed in the package file.
+
+        Returns:
+            dict: a dictionary mapping versions to URLs
+        """
+        if not self.all_urls:
+            return {}
+
+        try:
+            return spack.util.web.find_versions_of_archive(
+                self.all_urls, self.list_url, self.list_depth, concurrency
+            )
+        except spack.util.web.NoNetworkConnectionError as e:
+            tty.die("Package.fetch_versions couldn't connect to:", e.url,
+                    e.message)
 
     @property
     def rpath(self):
