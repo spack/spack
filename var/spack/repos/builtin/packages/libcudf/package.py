@@ -40,6 +40,7 @@ class Libcudf(CMakePackage):
     # depends_on('foo')
     depends_on('cuda@10.0:')
     depends_on('boost')
+    depends_on('py-pyarrow')
 
     root_cmakelists_dir = 'cpp'
 
