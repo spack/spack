@@ -46,7 +46,8 @@ jobs:
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
-        spack config add packages:opengl:paths:opengl@4.1:/usr/X11R6
+        brew install glfw
+        spack external find opengl
         spack install -v --fail-fast py-jupyter %apple-clang
 
   install_scipy_clang:
