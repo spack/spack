@@ -26,7 +26,7 @@ class Jemalloc(AutotoolsPackage):
     variant('prof', default=False, description='Enable heap profiling')
     variant(
         'jemalloc_prefix', default='none',
-        description='prefix',
+        description='Prefix to prepend to all public APIs',
         values=None,
         multi=False
     )
