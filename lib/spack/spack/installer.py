@@ -121,8 +121,8 @@ def _handle_external_and_upstream(pkg, explicit):
     # consists in module file generation and registration in the DB.
     if pkg.spec.external:
         _process_external_package(pkg, explicit)
-        _print_installed_pkg('{p} (external {s.name}@{s.version})'
-                             .format(p=pkg.prefix, s=pkg.spec))
+        _print_installed_pkg('{p} (external {i})'
+                             .format(p=pkg.prefix, i=package_id(pkg)))
         return True
 
     if pkg.installed_upstream:
@@ -466,6 +466,19 @@ def dump_packages(spec, path):
             spack.repo.path.dump_provenance(node, dest_pkg_dir)
         elif source_pkg_dir:
             fs.install_tree(source_pkg_dir, dest_pkg_dir)
+
+
+def get_dependent_ids(spec):
+    """
+    Return a list of package ids for the spec's dependents
+
+    Args:
+        spec (Spec): Concretized spec
+
+    Returns:
+        (list of str): list of package ids
+    """
+    return [package_id(d.package) for d in spec.dependents()]
 
 
 def install_msg(name, pid):
@@ -949,8 +962,13 @@ class PackageInstaller(object):
 
         # Skip out early if the spec is not being installed locally (i.e., if
         # external or upstream).
+        #
+        # External and upstream packages need to get flagged as installed to
+        # ensure proper status tracking for environment build.
         not_local = _handle_external_and_upstream(request.pkg, True)
         if not_local:
+            self._flag_installed(request.pkg,
+                                 get_dependent_ids(request.pkg.spec))
             return
 
         install_compilers = spack.config.get(
@@ -1212,11 +1230,18 @@ class PackageInstaller(object):
                 been installed so far
         """
         msg = "{0} a build task for {1} with status '{2}'"
+        skip = 'Skipping requeue of task for {0}: {1}'
         pkg_id = package_id(pkg)
 
-        # Ensure do not (re-)queue installed or failed packages.
-        assert pkg_id not in self.installed
-        assert pkg_id not in self.failed
+        # Ensure do not (re-)queue installed or failed packages whose status
+        # may have been determined by a separate process.
+        if pkg_id in self.installed:
+            tty.debug(skip.format(pkg_id, 'installed'))
+            return
+
+        if pkg_id in self.failed:
+            tty.debug(skip.format(pkg_id, 'failed'))
+            return
 
         # Remove any associated build task since its sequence will change
         self._remove_task(pkg_id)
@@ -1351,18 +1376,29 @@ class PackageInstaller(object):
 
     def _update_installed(self, task):
         """
-        Mark the task's spec as installed and update the dependencies of its
-        dependents.
+        Mark the task as installed and ensure dependent build tasks are aware.
 
         Args:
             task (BuildTask): the build task for the installed package
         """
-        pkg_id = task.pkg_id
+        task.status = STATUS_INSTALLED
+        self._flag_installed(task.pkg, task.dependents)
+
+    def _flag_installed(self, pkg, dependent_ids):
+        """
+        Flag the package as installed and ensure known by all build tasks of
+        known dependents.
+
+        Args:
+            pkg (Package): Package that has been installed locally, externally
+               or upstream
+            dependent_ids (list of str): list of the package's dependent ids
+        """
+        pkg_id = package_id(pkg)
         tty.debug('Flagging {0} as installed'.format(pkg_id))
 
         self.installed.add(pkg_id)
-        task.status = STATUS_INSTALLED
-        for dep_id in task.dependents:
+        for dep_id in dependent_ids:
             tty.debug('Removing {0} from {1}\'s uninstalled dependencies.'
                       .format(pkg_id, dep_id))
             if dep_id in self.build_tasks:
@@ -1418,6 +1454,11 @@ class PackageInstaller(object):
             if task.priority != 0:
                 tty.error('Detected uninstalled dependencies for {0}: {1}'
                           .format(pkg_id, task.uninstalled_deps))
+                left = [dep_id for dep_id in task.uninstalled_deps if
+                        dep_id not in self.installed]
+                if not left:
+                    tty.warn('{0} does NOT actually have any uninstalled deps'
+                             ' left'.format(pkg_id))
                 dep_str = 'dependencies' if task.priority > 1 else 'dependency'
                 raise InstallError(
                     'Cannot proceed with {0}: {1} uninstalled {2}: {3}'
@@ -1430,7 +1471,7 @@ class PackageInstaller(object):
             if not task.explicit:
                 not_local = _handle_external_and_upstream(pkg, False)
                 if not_local:
-                    self._update_installed(task)
+                    self._flag_installed(pkg, get_dependent_ids(spec))
                     continue
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
@@ -1651,8 +1692,7 @@ class BuildTask(object):
         self.attempts = attempts + 1
 
         # Set of dependents
-        self.dependents = set(package_id(d.package) for d
-                              in self.pkg.spec.dependents())
+        self.dependents = set(get_dependent_ids(self.pkg.spec))
 
         if request and self.pkg != self.request.pkg:
             request_pkg_id = package_id(self.request.pkg)
@@ -1666,9 +1706,10 @@ class BuildTask(object):
         # Be consistent wrt use of dependents and dependencies.  That is,
         # if use traverse for transitive dependencies, then must remove
         # transitive dependents on failure.
+        deptypes = ('build', 'link')
         self.dependencies = set(package_id(d.package) for d in
-                                self.pkg.spec.dependencies() if
-                                package_id(d.package) != self.pkg_id)
+                                self.pkg.spec.dependencies(deptype=deptypes)
+                                if package_id(d.package) != self.pkg_id)
 
         # Handle bootstrapped compiler
         #

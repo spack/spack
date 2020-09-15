@@ -117,6 +117,21 @@ def test_hms(sec, result):
     assert inst._hms(sec) == result
 
 
+def test_get_dependent_ids(install_mockery, mock_packages):
+    # Concretize the parent package, which handle dependency too
+    spec = spack.spec.Spec('a')
+    spec.concretize()
+    assert spec.concrete
+
+    pkg_id = inst.package_id(spec.package)
+
+    # Grab the sole dependency of 'a', which is 'b'
+    dep = spec.dependencies()[0]
+
+    # Ensure the parent package is a dependent of the dependency package
+    assert pkg_id in inst.get_dependent_ids(dep)
+
+
 def test_install_msg(monkeypatch):
     """Test results of call to install_msg based on debug level."""
     name = 'some-package'
