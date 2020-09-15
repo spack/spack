@@ -88,8 +88,10 @@ class Concretizer(object):
                     'dev_build', vt.BoolValuedVariant('dev_build', True))
                 dep.constrain(dev_info[dep.name]['spec'])
                 changed = True
-            elif any('develop' in dep_dep.variants
-                     for dep_dep in dep.traverse()):
+            elif 'dev_build' in dep.variants:
+                # Not direct dev build and already set transitively
+                continue
+            elif any('dev_build' in dd.variants for dd in dep.traverse()):
                 dep.variants.setdefault(
                     'dev_build', vt.BoolValuedVariant('dev_build', True))
                 changed = True

@@ -282,3 +282,49 @@ env:
         assert spec.package.filename in os.listdir(spec.prefix)
         with open(os.path.join(spec.prefix, spec.package.filename), 'r') as f:
             assert f.read() == spec.package.replacement_string
+
+
+def test_dev_build_env_dependency(tmpdir, mock_packages, install_mockery,
+                                  mock_fetch, mutable_mock_env_path):
+    # setup dev-build-test-install package for dev build
+    # we can concretize outside environment because it has no dev-build deps
+    build_dir = tmpdir.mkdir('build')
+    spec = spack.spec.Spec('dependent-of-dev-build@0.0.0')
+    dep_spec = spack.spec.Spec('dev-build-test-install')
+
+    with build_dir.as_cwd():
+        with open(dep_spec.package.filename, 'w') as f:
+            f.write(dep_spec.package.original_string)
+
+    # setup environment
+    envdir = tmpdir.mkdir('env')
+    with envdir.as_cwd():
+        with open('spack.yaml', 'w') as f:
+            f.write("""\
+env:
+  specs:
+  - dependent-of-dev-build@0.0.0
+
+  develop:
+    dev-build-test-install:
+      spec: dev-build-test-install@0.0.0
+      path: %s
+""" % build_dir)
+
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            # concretize in the environment to get the dev build info
+            # equivalent to setting dev_build and dev_path variants
+            # on all specs above
+            spec.concretize()
+            dep_spec.concretize()
+            install()
+
+    # Ensure that both specs installed properly
+    assert dep_spec.package.filename in os.listdir(dep_spec.prefix)
+    assert os.path.exists(spec.prefix)
+
+    # Ensure variants set properly
+    for dep in (dep_spec, spec['dev-build-test-install']):
+        assert dep.satisfies('+dev_build dev_path=%s' % build_dir)
+    assert spec.satisfies('+dev_build')
