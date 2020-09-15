@@ -19,8 +19,8 @@ class Rocmvalidationsuite(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
-    version('3.5.0', sha256='273e67ecce7e32939341679362b649f3361a36a22fab5f64cefe94b49e6f1e46')
     version('3.7.0', sha256='bb42d7fb7ee877b80ce53b0cd1f04b0c8301197b6777d2edddcb44732bf8c9e2')
+    version('3.5.0', sha256='273e67ecce7e32939341679362b649f3361a36a22fab5f64cefe94b49e6f1e46')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
@@ -46,7 +46,7 @@ class Rocmvalidationsuite(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = ['-DHIP_INC_DIR={}'.format(spec['hip'].prefix),
-                '-DROCM_SMI_DIR={}'.format(spec['rocm-smi-lib'].prefix),
-                '-DROCBLAS_DIR={}'.format(spec['rocblas'].prefix)]
+        args = ['-DHIP_INC_DIR={0}'.format(spec['hip'].prefix),
+                '-DROCM_SMI_DIR={0}'.format(spec['rocm-smi-lib'].prefix),
+                '-DROCBLAS_DIR={0}'.format(spec['rocblas'].prefix)]
         return args
