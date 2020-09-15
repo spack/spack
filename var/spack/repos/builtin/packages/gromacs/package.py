@@ -59,6 +59,7 @@ class Gromacs(CMakePackage):
         description='Produces a double precision version of the executables')
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('opencl', default=False, description='Enable OpenCL support')
     variant('nosuffix', default=False, description='Disable default suffixes')
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
@@ -130,21 +131,29 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_HWLOC:BOOL=OFF')
 
-        if '+cuda' in self.spec:
+        if '+cuda' in self.spec or '+opencl' in self.spec:
             options.append('-DGMX_GPU:BOOL=ON')
-            options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
-                           self.spec['cuda'].prefix)
         else:
             options.append('-DGMX_GPU:BOOL=OFF')
 
+        if '+cuda' in self.spec:
+            options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
+                           self.spec['cuda'].prefix)
+
+        if '+opencl' in self.spec:
+            options.append('-DGMX_USE_OPENCL=on')
+
         # Activate SIMD based on properties of the target
         target = self.spec.target
-        if target >= llnl.util.cpu.targets['bulldozer']:
+        if target >= llnl.util.cpu.targets['zen2']:
+            # AMD Family 17h (EPYC Rome)
+            options.append('-DGMX_SIMD=AVX2_256')
+        elif target >= llnl.util.cpu.targets['zen']:
+            # AMD Family 17h (EPYC Naples)
+            options.append('-DGMX_SIMD=AVX2_128')
+        elif target >= llnl.util.cpu.targets['bulldozer']:
             # AMD Family 15h
             options.append('-DGMX_SIMD=AVX_128_FMA')
-        elif target >= llnl.util.cpu.targets['zen']:
-            # AMD Family 17h
-            options.append('-DGMX_SIMD=AVX2_128')
         elif target >= llnl.util.cpu.targets['power7']:
             # IBM Power 7 and beyond
             options.append('-DGMX_SIMD=IBM_VSX')

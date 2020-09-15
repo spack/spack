@@ -35,6 +35,7 @@ class Trilinos(CMakePackage):
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
     version('master', branch='master')
+    version('13.0.0', commit='9fec35276d846a667bc668ff4cbdfd8be0dfea08')  # tag trilinos-release-13-0-0
     version('12.18.1', commit='55a75997332636a28afc9db1aee4ae46fe8d93e7')  # tag trilinos-release-12-8-1
     version('12.14.1', sha256='52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
     version('12.12.1', sha256='5474c5329c6309224a7e1726cf6f0d855025b2042959e4e2be2748bd6bb49e18')
@@ -197,8 +198,6 @@ class Trilinos(CMakePackage):
     # External package options
     variant('dtk',          default=False,
             description='Enable DataTransferKit')
-    variant('fortrilinos',  default=False,
-            description='Enable ForTrilinos')
     variant('mesquite',     default=False,
             description='Enable Mesquite')
 
@@ -219,11 +218,6 @@ class Trilinos(CMakePackage):
              placement='DataTransferKit',
              submodules=True,
              when='+dtk @develop')
-    resource(name='fortrilinos',
-             git='https://github.com/trilinos/ForTrilinos.git',
-             tag='develop',
-             placement='packages/ForTrilinos',
-             when='+fortrilinos')
     resource(name='mesquite',
              url='https://github.com/trilinos/mesquite/archive/trilinos-release-12-12-1.tar.gz',
              sha256='e0d09b0939dbd461822477449dca611417316e8e8d8268fd795debb068edcbb5',
@@ -245,9 +239,11 @@ class Trilinos(CMakePackage):
     conflicts('+amesos', when='~epetra')
     conflicts('+amesos', when='~teuchos')
     conflicts('+anasazi', when='~teuchos')
+    conflicts('+aztec', when='~epetra')
     conflicts('+belos', when='~teuchos')
     conflicts('+epetraext', when='~epetra')
     conflicts('+epetraext', when='~teuchos')
+    conflicts('+exodus', when='~netcdf')
     conflicts('+ifpack2', when='~belos')
     conflicts('+ifpack2', when='~teuchos')
     conflicts('+ifpack2', when='~tpetra')
@@ -295,9 +291,6 @@ class Trilinos(CMakePackage):
     conflicts('+dtk', when='~tpetra')
     # Only allow DTK with Trilinos 12.14 and develop
     conflicts('+dtk', when='@0:12.12.99,master')
-    conflicts('+fortrilinos', when='~fortran')
-    conflicts('+fortrilinos', when='@:99')
-    conflicts('+fortrilinos', when='@master')
     # Only allow Mesquite with Trilinos 12.12 and up, and develop
     conflicts('+mesquite', when='@0:12.10.99,master')
     # Can only use one type of SuperLU
@@ -340,6 +333,7 @@ class Trilinos(CMakePackage):
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
+    depends_on('hdf5+mpi', when="+hdf5+mpi")
     depends_on('netcdf-c+mpi', when="+netcdf~pnetcdf+mpi")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
     depends_on('parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
@@ -430,7 +424,6 @@ class Trilinos(CMakePackage):
             # Force Trilinos to use the MPI wrappers instead of raw compilers
             # this is needed on Apple systems that require full resolution of
             # all symbols when linking shared libraries
-            mpi_bin = spec['mpi'].prefix.bin
             options.extend([
                 define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
                 define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
@@ -516,6 +509,13 @@ class Trilinos(CMakePackage):
             ])
 
         if '+stratimikos' in spec:
+            # Explicitly enable Thyra (ThyraCore is required). If you don't do
+            # this, then you get "NOT setting ${pkg}_ENABLE_Thyra=ON since
+            # Thyra is NOT enabled at this point!" leading to eventual build
+            # errors if using MueLu because `Xpetra_ENABLE_Thyra` is set to
+            # off.
+            options.append(define('Trilinos_ENABLE_Thyra', True))
+
             # Add thyra adapters based on package enables
             options.extend(
                 define_trilinos_enable('Thyra' + pkg + 'Adapters', pkg.lower())
@@ -690,7 +690,7 @@ class Trilinos(CMakePackage):
             if '+mpi' in spec:
                 libgfortran = os.path.dirname(os.popen(
                     '%s --print-file-name libgfortran.a' %
-                    join_path(mpi_bin, 'mpif90')).read())
+                    spec['mpi'].mpifc).read())
                 options.append(define(
                     'Trilinos_EXTRA_LINK_FLAGS',
                     '-L%s/ -lgfortran' % (libgfortran),
@@ -769,3 +769,8 @@ class Trilinos(CMakePackage):
                         (r'\1\3'),
                         '%s/cmake/Trilinos/TrilinosConfig.cmake' %
                         self.prefix.lib)
+
+    def setup_run_environment(self, env):
+        if '+exodus' in self.spec:
+            env.prepend_path('PYTHONPATH',
+                             self.prefix.lib)

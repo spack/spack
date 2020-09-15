@@ -114,8 +114,8 @@ class Glvis(MakefilePackage):
         args.append('USE_FREETYPE={0}'.format(yes_no('+fonts')))
         if '+fonts' in spec:
             args += [
-                'FT_OPTS=-DGLVIS_USE_FREETYPE -I{0} -I{1}'.format(
-                    spec['freetype'].prefix.include.freetype2,
+                'FT_OPTS=-DGLVIS_USE_FREETYPE {0} -I{1}'.format(
+                    spec['freetype'].headers.include_flags,
                     spec['fontconfig'].prefix.include),
                 'FT_LIBS={0} {1}'.format(
                     spec['freetype'].libs.ld_flags,

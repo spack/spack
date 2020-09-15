@@ -16,7 +16,6 @@ import xml.etree.ElementTree
 
 import py
 import pytest
-import ruamel.yaml as yaml
 
 from llnl.util.filesystem import mkdirp, remove_linked_tree
 
@@ -36,6 +35,7 @@ import spack.stage
 import spack.util.executable
 import spack.util.gpg
 import spack.test_state
+import spack.util.spack_yaml as syaml
 
 from spack.util.pattern import Bunch
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
@@ -769,7 +769,7 @@ def module_configuration(record_monkeypatch, request):
 
         file = os.path.join(root_for_conf, filename + '.yaml')
         with open(file) as f:
-            configuration = yaml.load(f)
+            configuration = syaml.load_config(f)
 
         def mock_config_function():
             return configuration
@@ -888,7 +888,8 @@ def mock_git_repository(tmpdir_factory):
             submodule_file = 'r0_file_{0}'.format(submodule_count)
             repodir.ensure(submodule_file)
             git('add', submodule_file)
-            git('commit', '-m', 'mock-git-repo r0 {0}'.format(submodule_count))
+            git('-c', 'commit.gpgsign=false', 'commit',
+                '-m', 'mock-git-repo r0 {0}'.format(submodule_count))
 
     tmpdir = tmpdir_factory.mktemp('mock-git-repo-dir')
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
@@ -908,7 +909,7 @@ def mock_git_repository(tmpdir_factory):
         r0_file = 'r0_file'
         repodir.ensure(r0_file)
         git('add', r0_file)
-        git('commit', '-m', 'mock-git-repo r0')
+        git('-c', 'commit.gpgsign=false', 'commit', '-m', 'mock-git-repo r0')
 
         branch = 'test-branch'
         branch_file = 'branch_file'
@@ -922,13 +923,13 @@ def mock_git_repository(tmpdir_factory):
         git('checkout', branch)
         repodir.ensure(branch_file)
         git('add', branch_file)
-        git('commit', '-m' 'r1 test branch')
+        git('-c', 'commit.gpgsign=false', 'commit', '-m' 'r1 test branch')
 
         # Check out a second branch and tag it
         git('checkout', tag_branch)
         repodir.ensure(tag_file)
         git('add', tag_file)
-        git('commit', '-m' 'tag test branch')
+        git('-c', 'commit.gpgsign=false', 'commit', '-m' 'tag test branch')
 
         tag = 'test-tag'
         git('tag', tag)

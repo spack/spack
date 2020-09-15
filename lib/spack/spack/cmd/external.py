@@ -29,12 +29,19 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='external_command')
 
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
+
     find_parser = sp.add_parser(
         'find', help='add external packages to packages.yaml'
     )
     find_parser.add_argument(
         '--not-buildable', action='store_true', default=False,
         help="packages with detected externals won't be built with Spack")
+    find_parser.add_argument(
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_modify_scope('packages'),
+        help="configuration scope to modify")
     find_parser.add_argument('packages', nargs=argparse.REMAINDER)
 
     sp.add_parser(
@@ -147,11 +154,11 @@ def external_find(args):
         packages_to_check = spack.repo.path.all_packages()
 
     pkg_to_entries = _get_external_packages(packages_to_check)
-    new_entries, write_scope = _update_pkg_config(
-        pkg_to_entries, args.not_buildable
+    new_entries = _update_pkg_config(
+        args.scope, pkg_to_entries, args.not_buildable
     )
     if new_entries:
-        path = spack.config.config.get_config_filename(write_scope, 'packages')
+        path = spack.config.config.get_config_filename(args.scope, 'packages')
         msg = ('The following specs have been detected on this system '
                'and added to {0}')
         tty.msg(msg.format(path))
@@ -204,7 +211,7 @@ def _get_predefined_externals():
     return already_defined_specs
 
 
-def _update_pkg_config(pkg_to_entries, not_buildable):
+def _update_pkg_config(scope, pkg_to_entries, not_buildable):
     predefined_external_specs = _get_predefined_externals()
 
     pkg_to_cfg, all_new_specs = {}, []
@@ -221,13 +228,12 @@ def _update_pkg_config(pkg_to_entries, not_buildable):
             pkg_config['buildable'] = False
         pkg_to_cfg[pkg_name] = pkg_config
 
-    cfg_scope = spack.config.default_modify_scope()
-    pkgs_cfg = spack.config.get('packages', scope=cfg_scope)
+    pkgs_cfg = spack.config.get('packages', scope=scope)
 
     spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
-    spack.config.set('packages', pkgs_cfg, scope=cfg_scope)
+    spack.config.set('packages', pkgs_cfg, scope=scope)
 
-    return all_new_specs, cfg_scope
+    return all_new_specs
 
 
 def _get_external_packages(packages_to_check, system_path_to_exe=None):

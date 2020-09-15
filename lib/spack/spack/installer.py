@@ -466,7 +466,6 @@ def log(pkg):
     packages_dir = spack.store.layout.build_packages_path(pkg.spec)
 
     # Remove first if we're overwriting another build
-    # (can happen with spack setup)
     try:
         # log and env install paths are inside this
         shutil.rmtree(packages_dir)

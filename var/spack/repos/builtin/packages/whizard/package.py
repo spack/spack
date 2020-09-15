@@ -55,7 +55,7 @@ class Whizard(AutotoolsPackage):
             description="data visualization with latex")
 
     depends_on('ocaml', type='build', when="@3:")
-    depends_on('ocaml@:4.8.2', type='build', when="@:2.99.99")
+    depends_on('ocaml~force-safe-string', type='build', when="@:2.99.99")
     depends_on('hepmc', when="hepmc=2")
     depends_on('hepmc3', when="hepmc=3")
     depends_on('lcio', when="+lcio")

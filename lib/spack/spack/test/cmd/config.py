@@ -398,12 +398,43 @@ def test_remove_list(mutable_empty_config):
 
 
 def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
-    env = ev.create('test')
+    ev.create('test')
+    with ev.read('test'):
+        config('add', 'config:dirty:true')
+        output = config('get')
+
+    expected = """  config:
+    dirty: true
+
+"""
+    assert expected in output
+
+
+def test_config_add_to_env_preserve_comments(mutable_empty_config,
+                                             mutable_mock_env_path,
+                                             tmpdir):
+    filepath = str(tmpdir.join('spack.yaml'))
+    manifest = """# comment
+spack:  # comment
+  # comment
+  specs:  # comment
+    - foo  # comment
+  # comment
+  view: true  # comment
+  packages:  # comment
+    # comment
+    all: # comment
+      # comment
+      compiler: [gcc] # comment
+"""
+    with open(filepath, 'w') as f:
+        f.write(manifest)
+    env = ev.Environment(str(tmpdir))
     with env:
         config('add', 'config:dirty:true')
         output = config('get')
 
-    expected = ev.default_manifest_yaml
+    expected = manifest
     expected += """  config:
     dirty: true
 

@@ -22,7 +22,9 @@ class Audacious(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
-    depends_on('glib')
+    depends_on('gettext')
+    depends_on('iconv',    type='link')
+    depends_on('glib',     type='link')
     depends_on('qt')
 
     def autoreconf(self, spec, prefix):

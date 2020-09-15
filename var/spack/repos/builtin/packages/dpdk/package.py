@@ -21,6 +21,14 @@ class Dpdk(MakefilePackage):
 
     depends_on('numactl')
 
+    @when('%gcc target=aarch64:')
+    def patch(self):
+        filter_file(
+            r'^MACHINE_CFLAGS',
+            '#MACHINE_CFLAGS',
+            join_path('mk', 'machine', 'armv8a', 'rte.vars.mk')
+        )
+
     def build(self, spec, prefix):
         make('defconfig')
         make()

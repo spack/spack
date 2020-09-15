@@ -16,6 +16,7 @@ class Dyninst(CMakePackage):
     maintainers = ['hainest']
 
     version('master', branch='master')
+    version('10.2.1', tag='v10.2.1')
     version('10.2.0', tag='v10.2.0')
     version('10.1.0', tag='v10.1.0')
     version('10.0.0', tag='v10.0.0')
@@ -60,6 +61,19 @@ class Dyninst(CMakePackage):
     patch('stackanalysis_h.patch', when='@9.2.0')
     patch('v9.3.2-auto.patch', when='@9.3.2 %gcc@:4.7.99')
     patch('tribool.patch', when='@9.3.0:10.0.0 ^boost@1.69:')
+
+    # No Mac support (including apple-clang)
+    conflicts('platform=darwin', msg='macOS is not supported')
+
+    # We currently only build with gcc
+    conflicts('%clang')
+    conflicts('%arm')
+    conflicts('%cce')
+    conflicts('%fj')
+    conflicts('%intel')
+    conflicts('%pgi')
+    conflicts('%xl')
+    conflicts('%xl_r')
 
     # Versions 9.3.x used cotire, but have no knob to turn it off.
     # Cotire has no real use for one-time builds and can break

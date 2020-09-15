@@ -15,12 +15,13 @@ class RocmDeviceLibs(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.7.0', sha256='b3a114180bf184b3b829c356067bc6a98021d52c1c6f9db6bc57272ebafc5f1d')
     version('3.5.0', sha256='dce3a4ba672c4a2da4c2260ee4dc96ff6dd51877f5e7e1993cb107372a35a378')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    for ver in ['3.5.0']:
+    for ver in ['3.5.0', '3.7.0']:
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 

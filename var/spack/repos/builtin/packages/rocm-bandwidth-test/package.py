@@ -15,12 +15,14 @@ class RocmBandwidthTest(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.7.0', sha256='9aa1d4b7b01ee4d443effc76ed5f6f43a051fd815692b59dfccf0ecbfeaeed03')
     version('3.5.0', sha256='fbb63fb8713617fd167d9c1501acbd92a6b189ee8e1a8aed668fa6666baae389')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    for ver in ['3.5.0']:
+
+    for ver in ['3.5.0', '3.7.0']:
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
 

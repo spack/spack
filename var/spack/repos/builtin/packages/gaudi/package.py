@@ -34,11 +34,11 @@ class Gaudi(CMakePackage):
             description='Build with Intel VTune profiler support')
 
     # only build subdirectory GaudiExamples when +optional
-    patch("build_testing.patch", when="@:33.2")
+    patch("build_testing.patch", when="@:34.99")
     # fix for the new cmake config, should be merged in branch
     patch('python2.patch', when="@develop")
     # fixes for the cmake config which could not find newer boost versions
-    patch("link_target_fixes.patch", when="@33.0:33.2")
+    patch("link_target_fixes.patch", when="@33.0:34.99")
     patch("link_target_fixes32.patch", when="@:32.2")
 
     # These dependencies are needed for a minimal Gaudi build

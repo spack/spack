@@ -5,7 +5,7 @@
 
 
 from spack import *
-from os import popen
+import os
 
 
 class RocmSmi(MakefilePackage):
@@ -13,22 +13,21 @@ class RocmSmi(MakefilePackage):
        management of your ROCm enabled system"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROC-smi"
-    url      = "https://github.com/RadeonOpenCompute/ROC-smi/archive/rocm-3.5.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROC-smi/archive/rocm-3.7.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+
+    version('3.7.0', sha256='4e34b3b4e409bb89677882f47d9988d56bc2d9bb9893f0712c22a4b73789e06a')
     version('3.5.0', sha256='4f46e947c415a4ac12b9f6989f15a42afe32551706b4f48476fba3abf92e8e7c')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    depends_on('python@3:', type='run')
 
-    phases = ['edit', 'build']
-
-    @run_after('build')
-    def post_build(self):
-        popen('cp -R {0}/rocm_smi.py {1}'.format(self.build_directory, prefix))
-        popen('ln -srf {0}/rocm_smi.py {1}/rocm-smi'.format(prefix, prefix))
-
-        popen('mkdir -p {0}/smi-test/tests'.format(prefix))
-        popen('cp -R {0}/tests/ {1}/smi-test/'.format(self.build_directory,
-                                                      prefix))
-        popen('cp -R {0}/test-rocm-smi.sh {1}/smi-test'.format(
-              self.build_directory, prefix))
+    def install(self, spec, prefix):
+        filter_file(
+            '^#!/usr/bin/python3',
+            '#!/usr/bin/env {0}'.format(
+                os.path.basename(self.spec['python'].command.path)),
+            'rocm_smi.py'
+        )
+        copy('rocm_smi.py', prefix)
+        symlink('rocm_smi.py', prefix.rocm_smi)
