@@ -6,7 +6,7 @@
 from spack import *
 
 
-class CosmoflowBenchmark(Package):
+class CosmoflowBenchmark(Package, CudaPackage):
     """This is a an implementation of the CosmoFlow 3D convolutional neural
     network for benchmarking. It is written in TensorFlow with the Keras API
     and uses Horovod for distributed training."""
@@ -20,13 +20,19 @@ class CosmoflowBenchmark(Package):
     version('master', branch='master')
 
     depends_on('python@3:', type=('build', 'run'))
-    depends_on('py-tensorflow')
+
     depends_on('py-h5py')
     depends_on('py-numpy')
     depends_on('py-pandas')
     depends_on('py-pyyaml')
     depends_on('py-horovod')
     depends_on('py-mpi4py')
+
+    depends_on('py-tensorflow+cuda', when='+cuda')
+    depends_on('py-tensorflow~cuda~nccl', when='~cuda')
+    depends_on('py-torch+cuda', when='+cuda')
+    depends_on('py-torch~cuda~cudnn~nccl', when='~cuda')
+    depends_on('py-horovod tensor_ops=mpi', when='~cuda')
 
     def install(self, spec, prefix):
         # Mostly  about providing an environment so just copy everything
