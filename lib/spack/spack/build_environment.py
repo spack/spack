@@ -842,7 +842,7 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
         try:
             if hasattr(pkg, 'log_path'):
                 build_log = pkg.log_path
-        except:
+        except NameError:
             # 'pkg' is not defined yet
             pass
 
@@ -859,33 +859,6 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
         child_pipe.close()
         if input_multiprocess_fd is not None:
             input_multiprocess_fd.close()
-
-
-import inspect
-
-def check_type(obj, classtype):
-    if isinstance(obj, classtype):
-        import pdb; pdb.set_trace()
-    if 'pkg' in obj.__class__.__name__:
-        import pdb; pdb.set_trace()
-
-def search_obj(obj, classtype, visited=None):
-    visited = visited or set()
-    if id(obj) in visited:
-        return
-    visited.add(id(obj))
-    check_type(obj, classtype)
-    attrs = list((name, val) for (name, val) in inspect.getmembers(obj)
-                 if not name.startswith('__'))
-    #attrs = list(inspect.getmembers(obj))
-    for name, val in attrs:
-        check_type(val, classtype)
-        search_obj(val, classtype, visited)
-    try:
-        for item in obj:
-            search_obj(item, classtype, visited)
-    except:
-        pass
 
 
 class TransmitPackage(object):

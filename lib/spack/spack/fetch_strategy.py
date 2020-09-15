@@ -1387,7 +1387,6 @@ def from_list_url(downloader):
                 checksum = None
 
                 # try to find a known checksum for version, from the package
-                version = downloader.version
                 if downloader.version_args:
                     args = downloader.version_args
                     checksum = next(

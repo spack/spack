@@ -109,8 +109,8 @@ def mock_compiler_executable_verification(request, record_monkeypatch):
     If a test is marked in that way this is a no-op."""
     if 'enable_compiler_verification' not in request.keywords:
         record_monkeypatch.setattr(spack.compiler.Compiler,
-                            'verify_executables',
-                            _verify_executables_noop)
+                                   'verify_executables',
+                                   _verify_executables_noop)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -276,6 +276,7 @@ class MockCache(object):
     def fetcher(self, target_path, digest, **kwargs):
         return MockCacheFetcher()
 
+
 class MockCacheFetcher(object):
     def fetch(self):
         raise FetchError('Mock cache always fails for tests')
@@ -311,9 +312,15 @@ def _skip_if_missing_executables(request):
 # FIXME: session-scope. Anyhow doing it is not easy, as it seems
 # FIXME: there's some weird interaction with compilers during concretization.
 spack.architecture.real_platform = spack.architecture.platform
+
+
 def test_platform():
     return spack.platforms.test.Test()
+
+
 spack.architecture.platform = test_platform
+
+
 # FIXME: Since we change the architecture above, we have to (re)initialize
 # FIXME: the config singleton. If it gets initialized too early with the
 # FIXME: actual architecture, tests will fail.
@@ -391,8 +398,8 @@ def _pkg_install_fn(pkg, spec, prefix):
 
 @pytest.fixture
 def mock_pkg_install(record_monkeypatch):
-    record_monkeypatch.setattr(spack.package.PackageBase, 'install', _pkg_install_fn,
-                        raising=False)
+    record_monkeypatch.setattr(spack.package.PackageBase, 'install',
+                               _pkg_install_fn, raising=False)
 
 
 @pytest.fixture(scope='function')
