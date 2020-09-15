@@ -42,6 +42,7 @@ class Libcudf(CMakePackage):
     depends_on('boost')
     depends_on('py-pyarrow')
     depends_on('librmm')
+    depends_on('dlpack')
 
     root_cmakelists_dir = 'cpp'
 
