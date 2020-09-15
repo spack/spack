@@ -38,9 +38,15 @@ class Libcudf(CMakePackage):
 
     # FIXME: Add dependencies if required.
     # depends_on('foo')
+    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-cython', type='build')
+    depends_on('cmake@3.14:', type='build')
+    depends_on('py-numba@0.40.0:', type=('build', 'run'))
+    depends_on('py-numpy@1.14.3:', type=('build', 'run'))
+    depends_on('py-pandas@0.23.4:', type=('build', 'run'))
     depends_on('cuda@10.0:')
     depends_on('boost')
-    depends_on('py-pyarrow')
+    depends_on('py-pyarrow+cuda')
     depends_on('librmm')
     depends_on('dlpack')
 
