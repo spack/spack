@@ -2,5 +2,5 @@ merge_pipeline:
   only:
   - develop
   trigger:
-    project: ecpcitest/ascent-e4s
+    project: ecpcitest/e4s
     strategy: depend
