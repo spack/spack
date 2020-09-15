@@ -11,6 +11,7 @@ undevelop = SpackCommand('undevelop')
 env = SpackCommand('env')
 concretize = SpackCommand('concretize')
 
+
 def test_undevelop(tmpdir, mock_packages, mutable_mock_env_path):
     # setup environment
     envdir = tmpdir.mkdir('env')
