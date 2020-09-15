@@ -759,51 +759,51 @@ class Openmpi(AutotoolsPackage):
         spec_vers = str(self.spec.version)
         checks = {
             # Binaries available in at least versions 2.0.0 through 4.0.3
-            'mpiCC': ([comp_vers], 0),
-            'mpic++': ([comp_vers], 0),
-            'mpicc': ([comp_vers], 0),
-            'mpicxx': ([comp_vers], 0),
-            'mpiexec': ([spec_vers], 0),
-            'mpif77': ([comp_vers], 0),
-            'mpif90': ([comp_vers], 0),
-            'mpifort': ([comp_vers], 0),
-            'mpirun': ([spec_vers], 0),
-            'ompi_info': ([spec_vers], 0),
-            'ortecc': ([comp_vers], 0),
-            'orterun': ([spec_vers], 0),
+            'mpiCC': comp_vers,
+            'mpic++': comp_vers,
+            'mpicc': comp_vers,
+            'mpicxx': comp_vers,
+            'mpiexec': spec_vers,
+            'mpif77': comp_vers,
+            'mpif90': comp_vers,
+            'mpifort': comp_vers,
+            'mpirun': spec_vers,
+            'ompi_info': spec_vers,
+            'ortecc': comp_vers,
+            'orterun': spec_vers,
 
             # Binaries available in versions 2.0.0 through 2.1.6
-            'ompi-submit': ([spec_vers], 0),
-            'orte-submit': ([spec_vers], 0),
+            'ompi-submit': spec_vers,
+            'orte-submit': spec_vers,
 
             # Binaries available in versions 2.0.0 through 3.1.5
-            'ompi-dvm': ([spec_vers], 0),
-            'orte-dvm': ([spec_vers], 0),
-            'oshcc': ([comp_vers], 0),
-            'oshfort': ([comp_vers], 0),
-            'oshmem_info': ([spec_vers], 0),
-            'oshrun': ([spec_vers], 0),
-            'shmemcc': ([comp_vers], 0),
-            'shmemfort': ([comp_vers], 0),
-            'shmemrun': ([spec_vers], 0),
+            'ompi-dvm': spec_vers,
+            'orte-dvm': spec_vers,
+            'oshcc': comp_vers,
+            'oshfort': comp_vers,
+            'oshmem_info': spec_vers,
+            'oshrun': spec_vers,
+            'shmemcc': comp_vers,
+            'shmemfort': comp_vers,
+            'shmemrun': spec_vers,
 
             # Binary available in version 3.1.0 through 3.1.5
-            'prun': ([spec_vers], 0),
+            'prun': spec_vers,
 
             # Binaries available in versions 3.0.0 through 3.1.5
-            'oshCC': ([comp_vers], 0),
-            'oshc++': ([comp_vers], 0),
-            'oshcxx': ([comp_vers], 0),
-            'shmemCC': ([comp_vers], 0),
-            'shmemc++': ([comp_vers], 0),
-            'shmemcxx': ([comp_vers], 0),
+            'oshCC': comp_vers,
+            'oshc++': comp_vers,
+            'oshcxx': comp_vers,
+            'shmemCC': comp_vers,
+            'shmemc++': comp_vers,
+            'shmemcxx': comp_vers,
         }
 
         for exe in checks:
-            expected, status = checks[exe]
+            expected = checks[exe]
             purpose = 'test: ensuring version of {0} is {1}' \
-                .format(exe, expected[0])
-            self.run_test(exe, ['--version'], expected, status, installed=True,
+                .format(exe, expected)
+            self.run_test(exe, '--version', expected, installed=True,
                           purpose=purpose, skip_missing=True)
 
     def _test_examples(self):
@@ -852,19 +852,13 @@ class Openmpi(AutotoolsPackage):
         }
 
         for exe in checks:
-            expected, status = checks[exe]
+            expected = checks[exe]
             reason = 'test: checking example {0} output'.format(exe)
-            self.run_test(exe, [], expected, status, installed=True,
+            self.run_test(exe, [], expected, 0, installed=True,
                           purpose=reason, skip_missing=True)
 
     def test(self):
         """Perform smoke tests on the installed package."""
-        tty.debug('Expected results currently based on simple openmpi builds')
-
-        if not self.spec.satisfies('@2.0.0:4.0.3'):
-            tty.debug('Expected results have not been confirmed for {0} {1}'
-                      .format(self.name, self.spec.version))
-
         # Simple version check tests on known packages
         self._test_check_versions()
 
