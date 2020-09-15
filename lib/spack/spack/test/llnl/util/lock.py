@@ -51,14 +51,13 @@ import traceback
 import glob
 import getpass
 from contextlib import contextmanager
-from multiprocessing import Queue
+from multiprocessing import Process, Queue
 
 import pytest
 
 import llnl.util.lock as lk
 import llnl.util.multiproc as mp
 from llnl.util.filesystem import touch
-from llnl.util.lang import fork_context
 
 
 #
@@ -215,7 +214,7 @@ def local_multiproc_test(*functions, **kwargs):
     b = mp.Barrier(len(functions), timeout=barrier_timeout)
 
     args = (b,) + tuple(kwargs.get('extra_args', ()))
-    procs = [fork_context.Process(target=f, args=args, name=f.__name__)
+    procs = [Process(target=f, args=args, name=f.__name__)
              for f in functions]
 
     for p in procs:
