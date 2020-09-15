@@ -121,8 +121,8 @@ def _handle_external_and_upstream(pkg, explicit):
     # consists in module file generation and registration in the DB.
     if pkg.spec.external:
         _process_external_package(pkg, explicit)
-        _print_installed_pkg('{p} (external {i})'
-                             .format(p=pkg.prefix, i=package_id(pkg)))
+        _print_installed_pkg('{0} (external {1})'
+                             .format(pkg.prefix, package_id(pkg)))
         return True
 
     if pkg.installed_upstream:
@@ -717,18 +717,16 @@ class PackageInstaller(object):
 
             # Flag external and upstream packages as being installed
             if dep_pkg.spec.external or dep_pkg.installed_upstream:
-                form = 'external' if dep_pkg.spec.external else 'upstream'
-                tty.debug('Flagging {0} {1} as installed'.format(form, dep_id))
-                self.installed.add(dep_id)
+                self._flag_installed(dep_pkg,
+                                     get_dependent_ids(dep_pkg.spec))
                 continue
 
             # Check the database to see if the dependency has been installed
             # and flag as such if appropriate
             rec, installed_in_db = self._check_db(dep)
             if installed_in_db:
-                tty.debug('Flagging {0} as installed per the database'
-                          .format(dep_id))
-                self.installed.add(dep_id)
+                self._flag_installed(dep_pkg,
+                                     get_dependent_ids(dep_pkg.spec))
 
     def _prepare_for_install(self, task):
         """
@@ -1395,10 +1393,24 @@ class PackageInstaller(object):
             dependent_ids (list of str): list of the package's dependent ids
         """
         pkg_id = package_id(pkg)
+
+        if pkg_id in self.installed:
+            # Already determined the package has been installed
+            return
+
         tty.debug('Flagging {0} as installed'.format(pkg_id))
 
         self.installed.add(pkg_id)
-        for dep_id in dependent_ids:
+
+        # Update affected dependents
+        #
+        # TODO: Remove iteration over build requests once package dependents
+        # TODO: are complete wrt the DAGs of all packages being installed.
+        dependents = set(r.pkg_id for r in self.build_requests if
+                         r.has_dependency(pkg_id))
+        all_dependents = dependents | set(dependent_ids)
+
+        for dep_id in all_dependents:
             tty.debug('Removing {0} from {1}\'s uninstalled dependencies.'
                       .format(pkg_id, dep_id))
             if dep_id in self.build_tasks:
@@ -1469,8 +1481,7 @@ class PackageInstaller(object):
             # (i.e., if external or upstream) BUT flag it as installed since
             # some package likely depends on it.
             if not task.explicit:
-                not_local = _handle_external_and_upstream(pkg, False)
-                if not_local:
+                if _handle_external_and_upstream(pkg, False):
                     self._flag_installed(pkg, get_dependent_ids(spec))
                     continue
 
@@ -1813,6 +1824,14 @@ class BuildRequest(object):
         self.install_args = install_args if install_args else {}
         self._add_default_args()
 
+        # Save off dependency package ids for quick checks since traversals
+        # are not able to return full dependents for all packages across
+        # environment specs.
+        deptypes = ('build', 'link')
+        self.dependencies = set(package_id(d.package) for d in
+                                self.pkg.spec.dependencies(deptype=deptypes)
+                                if package_id(d.package) != self.pkg_id)
+
     def _add_default_args(self):
         """Ensure standard install options are set to at least the default."""
         for arg, default in [('cache_only', False),
@@ -1848,6 +1867,11 @@ class BuildRequest(object):
     def spec(self):
         """The specification associated with the package."""
         return self.pkg.spec
+
+    def has_dependency(self, dep_id):
+        """Returns ``True`` if the package id represents a known dependency
+           of the requested package, ``False`` otherwise."""
+        return dep_id in self.dependencies
 
 
 class InstallError(spack.error.SpackError):
