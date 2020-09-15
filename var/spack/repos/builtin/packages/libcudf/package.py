@@ -40,6 +40,8 @@ class Libcudf(CMakePackage):
     # depends_on('foo')
     depends_on('cuda@10.0:')
 
+    root_cmakelists_dir = 'cpp'
+
     def cmake_args(self):
         # FIXME: Add arguments other than
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
