@@ -39,6 +39,7 @@ class Libcudf(CMakePackage):
     # FIXME: Add dependencies if required.
     # depends_on('foo')
     depends_on('cuda@10.0:')
+    depends_on('boost')
 
     root_cmakelists_dir = 'cpp'
 
