@@ -31,7 +31,7 @@ class UtilLinux(AutotoolsPackage):
     variant('libuuid', default=True, description='Build libuuid')
     variant('bash', default=False, description='Install bash completion scripts')
 
-    depends_on('bash', when="+bash")
+    depends_on('bash', when="+bash", type='run')
     depends_on('libuuid', when="+libuuid")
 
     def url_for_version(self, version):
