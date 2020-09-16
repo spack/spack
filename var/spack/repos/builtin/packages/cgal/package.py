@@ -77,7 +77,8 @@ class Cgal(CMakePackage):
     # depends_on('intel-tbb')
 
     conflicts('~header_only', when='@:4.9',
-            msg="Header only builds became optional in 4.9, default thereafter")
+              msg="Header only builds became optional in 4.9,\
+                      default thereafter")
 
     def setup_build_environment(self, env):
         spec = self.spec
