@@ -78,7 +78,7 @@ class Cgal(CMakePackage):
 
     conflicts('~header_only', when='@:4.9',
               msg="Header only builds became optional in 4.9,"
-                  "default thereafter")
+                  " default thereafter")
 
     def setup_build_environment(self, env):
         spec = self.spec
