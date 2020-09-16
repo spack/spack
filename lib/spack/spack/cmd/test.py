@@ -10,7 +10,6 @@ import textwrap
 import fnmatch
 import re
 import shutil
-import sys
 
 import llnl.util.tty as tty
 
@@ -184,7 +183,7 @@ def test_list(args):
     raise NotImplementedError
 
 
-def test_find(args): # TODO: merge with status (noargs)
+def test_find(args):  # TODO: merge with status (noargs)
     """Find tests that are running or have available results.
 
     Displays aliases for tests that have them, otherwise test suite content
@@ -203,7 +202,7 @@ def test_find(args): # TODO: merge with status (noargs)
             return f.match(t)
         test_suites = [t for t in test_suites
                        if any(match(t.alias, f) for f in filters) and
-                       os.path.isdir(os.path.join(stage_dir, t))]
+                       os.path.isdir(t.stage)]
 
     names = [t.name for t in test_suites]
 
@@ -296,8 +295,8 @@ def test_remove(args):
         return
 
     if not args.yes_to_all:
-        msg = 'The following test suites will be removed'
-        msg += '\n\n    ' + '   '.join(test.name for test in test_suites) + '\n'
+        msg = 'The following test suites will be removed:\n\n'
+        msg += '    ' + '   '.join(test.name for test in test_suites) + '\n'
         tty.msg(msg)
         answer = tty.get_yes_or_no('Do you want to proceed?', default=False)
         if not answer:
@@ -306,6 +305,7 @@ def test_remove(args):
 
     for test_suite in test_suites:
         shutil.rmtree(test_suite.stage)
+
 
 def test(parser, args):
     globals()['test_%s' % args.test_command](args)
