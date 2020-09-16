@@ -76,14 +76,14 @@ class Cgal(CMakePackage):
     # depends_on('esbtl')
     # depends_on('intel-tbb')
 
-    # Header only builds became optimal in 4.9, default thereafter
-    conflicts('~header_only', when='@:4.9')
+    conflicts('~header_only', when='@:4.9',
+            msg="Header only builds became optional in 4.9, default thereafter")
 
     def setup_build_environment(self, env):
         spec = self.spec
 
         env.set('BOOST_INCLUDEDIR', spec['boost'].headers.directories[0])
-        env.set('BOOST_LIBRARYDIR', spec['boost'].prefix.lib64)
+        env.set('BOOST_LIBRARYDIR', spec['boost'].libs.directories[0])
 
         if '+eigen' in spec:
             env.set('EIGEN3_INC_DIR', spec['eigen'].headers.directories[0])
