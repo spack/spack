@@ -533,7 +533,7 @@ class PyTensorflow(Package, CudaPackage):
         env.set('INCLUDEDIR', spec['protobuf'].prefix.include)
 
     def patch(self):
-        if self.spec.satisfies('@2.3.0'):
+        if self.spec.satisfies('@2.3.0:2.3.1'):
             filter_file('deps = protodeps + well_known_proto_libs(),',
                         'deps = protodeps,',
                         'tensorflow/core/platform/default/build_config.bzl',
