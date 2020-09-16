@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class UtilLinux(AutotoolsPackage):
@@ -46,7 +47,9 @@ class UtilLinux(AutotoolsPackage):
         if "+bash" in self.spec:
             config_args.extend(
                 ['--enable-bash-completion',
-                 '--bash-completion-dir=' + self.spec['bash'].prefix])
+                 '--with-bashcompletiondir=' + os.path.join(
+                     self.spec['bash'].prefix,"share","bash-completion","completions"
+                     )])
         else:
             config_args.append('--disable-bash-completion')
         config_args.extend(self.enable_or_disable('libuuid'))
