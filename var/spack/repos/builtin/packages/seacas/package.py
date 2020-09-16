@@ -79,6 +79,7 @@ class Seacas(CMakePackage):
 
     depends_on('netcdf-c@4.6.2:+mpi+parallel-netcdf', when='+mpi')
     depends_on('netcdf-c@4.6.2:~mpi', when='~mpi')
+    depends_on('hdf5+hl~mpi', when='~mpi')
     depends_on('cgns@develop+mpi+scoping', when='+cgns +mpi')
     depends_on('cgns@develop~mpi+scoping', when='+cgns ~mpi')
     depends_on('adios2@develop~mpi', when='+adios2 ~mpi')
