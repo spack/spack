@@ -368,6 +368,10 @@ class Openmpi(AutotoolsPackage):
                 variants += "+static"
             elif re.search(r'--disable-static', output):
                 variants += "~static"
+            elif re.search(r'\bMCA (?:coll|oca|pml): monitoring', output):
+                #Built multiple variants of openmpi and ran diff.
+                #This seems to be the distinguishing feature.
+                variants += "~static"
             if re.search(r'--with-sqlite3', output):
                 variants += "+sqlite3"
             if re.search(r'--enable-contrib-no-build=vt', output):
