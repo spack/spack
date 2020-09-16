@@ -43,8 +43,9 @@ class UtilLinux(AutotoolsPackage):
             '--without-systemd',
         ]
         if "+bash" in self.spec:
-            config_args.extend(['--enable-bash-completion',
-                                '--bash-completion-dir=',+self.spec['bash'].prefix])
+            config_args.extend(
+                ['--enable-bash-completion',
+                 '--bash-completion-dir=' + self.spec['bash'].prefix])
         else:
             config_args.append('--disable-bash-completion')
         config_args.extend(self.enable_or_disable('libuuid'))
