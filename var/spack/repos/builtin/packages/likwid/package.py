@@ -38,8 +38,8 @@ class Likwid(Package):
     # The reason is that the internal hwloc is patched to contain extra
     # functionality and functions are prefixed with "likwid_".
 
-    depends_on('lua', when='@4.2.0:4.9.9')
-    depends_on('lua@5.2.0', when='@5.0.0:')
+    depends_on('lua', when='@:4')
+    depends_on('lua@5.2:', when='@5:')
 
     # TODO: check
     # depends_on('gnuplot', type='run')
