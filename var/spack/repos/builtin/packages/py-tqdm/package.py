@@ -17,7 +17,7 @@ class PyTqdm(PythonPackage):
     version('4.8.4',  sha256='bab05f8bb6efd2702ab6c532e5e6a758a66c0d2f443e09784b73e4066e6b3a37')
 
     depends_on('python@2.6:2.8,3.2:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-nose', type='test')
     depends_on('py-flake8', type='test')
     depends_on('py-coverage', type='test')

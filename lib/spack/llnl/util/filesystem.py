@@ -974,6 +974,53 @@ def remove_linked_tree(path):
             shutil.rmtree(path, True)
 
 
+@contextmanager
+def safe_remove(*files_or_dirs):
+    """Context manager to remove the files passed as input, but restore
+    them in case any exception is raised in the context block.
+
+    Args:
+        *files_or_dirs: glob expressions for files or directories
+            to be removed
+
+    Returns:
+        Dictionary that maps deleted files to their temporary copy
+        within the context block.
+    """
+    # Find all the files or directories that match
+    glob_matches = [glob.glob(x) for x in files_or_dirs]
+    # Sort them so that shorter paths like "/foo/bar" come before
+    # nested paths like "/foo/bar/baz.yaml". This simplifies the
+    # handling of temporary copies below
+    sorted_matches = sorted([
+        os.path.abspath(x) for x in itertools.chain(*glob_matches)
+    ], key=len)
+
+    # Copy files and directories in a temporary location
+    removed, dst_root = {}, tempfile.mkdtemp()
+    try:
+        for id, file_or_dir in enumerate(sorted_matches):
+            # The glob expression at the top ensures that the file/dir exists
+            # at the time we enter the loop. Double check here since it might
+            # happen that a previous iteration of the loop already removed it.
+            # This is the case, for instance, if we remove the directory
+            # "/foo/bar" before the file "/foo/bar/baz.yaml".
+            if not os.path.exists(file_or_dir):
+                continue
+            # The monotonic ID is a simple way to make the filename
+            # or directory name unique in the temporary folder
+            basename = os.path.basename(file_or_dir) + '-{0}'.format(id)
+            temporary_path = os.path.join(dst_root, basename)
+            shutil.move(file_or_dir, temporary_path)
+            removed[file_or_dir] = temporary_path
+        yield removed
+    except BaseException:
+        # Restore the files that were removed
+        for original_path, temporary_path in removed.items():
+            shutil.move(temporary_path, original_path)
+        raise
+
+
 def fix_darwin_install_name(path):
     """Fix install name of dynamic libraries on Darwin to have full path.
 

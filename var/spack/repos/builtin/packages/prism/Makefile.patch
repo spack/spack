@@ -1,0 +1,35 @@
+--- spack-src/prism/Makefile.bak	2019-04-19 07:53:32.000000000 +0900
++++ spack-src/prism/Makefile	2020-09-08 15:22:09.775733701 +0900
+@@ -66,6 +66,9 @@
+ 	ifneq (,$(findstring ia64, $(shell uname -m)))
+ 		ARCH = ia64
+ 	endif
++	ifneq (,$(findstring aarch64, $(shell uname -m)))
++		ARCH = aarch64
++	endif
+ endif
+ # For Mac/Windows, we decide whether to build in 64-bit mode based on
+ # whether java is 32/64-bit (since these need to match)
+@@ -173,6 +176,14 @@
+ 		LDFLAGS = $(CUDD_XCFLAGS) $(OPTIMISE)
+ 		BINDISTSUFFIX = linux64
+ 	else
++	ifeq ($(ARCH),aarch64)
++		# Position Independent Code required on Aarch64
++		CUDD_XCFLAGS = -fPIC -DPIC -DHAVE_IEEE_754 -DBSD -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 $(DEBUG) $(WARNINGS)
++		CFLAGS = $(CUDD_XCFLAGS) $(OPTIMISE)
++		CPPFLAGS = --std=c++11 $(CUDD_XCFLAGS) $(OPTIMISE)
++		LDFLAGS = $(CUDD_XCFLAGS) $(OPTIMISE)
++		BINDISTSUFFIX = linux64
++	else
+ 		CUDD_XCFLAGS = -m32 -malign-double -DHAVE_IEEE_754 -DBSD $(DEBUG) $(WARNINGS)
+ 		CFLAGS = $(CUDD_XCFLAGS) $(OPTIMISE)
+ 		CPPFLAGS = --std=c++11 $(CUDD_XCFLAGS) $(OPTIMISE)
+@@ -180,6 +191,7 @@
+ 		BINDISTSUFFIX = linux32
+ 	endif
+ 	endif
++	endif
+ 	BIN_TARGETS=prism.linux xprism.linux
+ 	JFLAGS = -encoding UTF8
+ 	SHARED = -shared
