@@ -16,6 +16,7 @@ class Opium(Package):
 
     depends_on('blas')
     depends_on('lapack')
+    patch('for_aarch64.patch', when='target=aarch64:')
 
     def install(self, spec, prefix):
         libs = spec['lapack'].libs + spec['blas'].libs
