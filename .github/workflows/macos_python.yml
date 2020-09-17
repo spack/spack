@@ -48,7 +48,7 @@ jobs:
         . .github/workflows/install_spack.sh
         brew install glfw
         spack external find opengl
-        spack install -v --fail-fast py-jupyter %apple-clang
+        spack install --fail-fast py-jupyter %apple-clang
 
   install_scipy_clang:
     name: scipy, mpl, pd
