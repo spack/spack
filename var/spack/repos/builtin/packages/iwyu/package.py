@@ -23,10 +23,10 @@ class Iwyu(CMakePackage):
 
     patch('iwyu-013-cmake.patch', when='@0.13:0.14')
 
-    depends_on('llvm+clang@10.0:10.999', when='@0.14')
-    depends_on('llvm+clang@9.0:9.999', when='@0.13')
-    depends_on('llvm+clang@8.0:8.999', when='@0.12')
-    depends_on('llvm+clang@7.0:7.999', when='@0.11')
+    depends_on('llvm+clang@10.0:10.999 +all_targets', when='@0.14')
+    depends_on('llvm+clang@9.0:9.999 +all_targets', when='@0.13')
+    depends_on('llvm+clang@8.0:8.999 +all_targets', when='@0.12')
+    depends_on('llvm+clang@7.0:7.999 +all_targets', when='@0.11')
 
     @when('@0.14:')
     def cmake_args(self):
