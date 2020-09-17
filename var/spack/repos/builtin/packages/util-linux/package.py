@@ -48,8 +48,8 @@ class UtilLinux(AutotoolsPackage):
             config_args.extend(
                 ['--enable-bash-completion',
                  '--with-bashcompletiondir=' + os.path.join(
-                     self.spec['bash'].prefix,"share","bash-completion","completions"
-                     )])
+                     self.spec['bash'].prefix,
+                     "share", "bash-completion", "completions")])
         else:
             config_args.append('--disable-bash-completion')
         config_args.extend(self.enable_or_disable('libuuid'))
