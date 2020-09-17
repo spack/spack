@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Opium(Package):
+class Opium(AutotoolsPackage):
     """DFT pseudopotential generation project"""
 
     homepage = "https://opium.sourceforge.net/index.html"
@@ -16,7 +16,7 @@ class Opium(Package):
 
     depends_on('blas')
     depends_on('lapack')
-    patch('for_aarch64.patch', when='target=aarch64:')
+    build_targets = ['clean']
 
     def install(self, spec, prefix):
         libs = spec['lapack'].libs + spec['blas'].libs
