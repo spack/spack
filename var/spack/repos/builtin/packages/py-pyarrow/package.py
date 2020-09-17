@@ -43,8 +43,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
     for v in ('@0.9.0', '@0.11.0', '@0.12.1', '@0.15.1', '@0.17.1'):
         depends_on('arrow+python' + v, when=v)
         depends_on('arrow+parquet+python' + v, when='+parquet' + v)
-        depends_on('arrow+python+cuda' + v, when='+cuda' + v)
-        depends_on('arrow+parquet+python+cuda' + v, when='+parquet+cuda' + v)
+        depends_on('arrow+cuda' + v, when='+cuda' + v)
 
     phases = ['build_ext', 'install']
 
