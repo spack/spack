@@ -465,6 +465,13 @@ class EnvironmentModifications(object):
         item = PruneDuplicatePaths(name, **kwargs)
         self.env_modifications.append(item)
 
+    def prune_duplicate_additional_paths(self, name, **kwargs):
+        #print("Prune_dups_add")
+        mods = self.group_by_name()
+        for var, modification in mods.items():
+            if isinstance(modification, (AppendPath, PrependPath)):
+                dedupe(mods[var])
+
     def group_by_name(self):
         """Returns a dict of the modifications grouped by variable name.
 
