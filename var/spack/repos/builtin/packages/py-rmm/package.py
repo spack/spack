@@ -49,6 +49,8 @@ class PyRmm(PythonPackage):
 
     depends_on('librmm@0.15.0', when='@0.15.0')
 
+    build_directory = 'python'
+
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
