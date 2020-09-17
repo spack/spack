@@ -19,6 +19,9 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.13.4', sha256='8d470cba1ceb9638694550134a2f23aac85ed7249cb74992581210597d978b94')
+    version('3.13.3', sha256='dc744895ee6b9c4491ff817bef0d3abd680c5e3c25e601be44240ce65ab4f337')
+    version('3.13.2', sha256='6083422a7c5b8e89e5e4ccf64acade9bf8ab70245e25bca3a3da03caf74602f1')
     version('3.13.1', sha256='74a895e44e2ff1146838aaccb7613e7626d99e0eed64ca032c87c72d084efac3')
     version('3.13.0', sha256='f0ea543a54145c5d1387e25b121c3fd1b1ca834032c5a33f6f1d929e95bdf0e5')
     version('3.12.5', sha256='d676eb67e79314d6cca6422d7c477d2b192c830b89d5edc6b46934f7453bcfc0')
@@ -78,8 +81,7 @@ class Petsc(Package):
     # Mumps is disabled by default, because it depends on Scalapack
     # which is not portable to all HPC systems
     variant('mumps',   default=False,
-            description='Activates support for MUMPS (only parallel'
-            ' and 32bit indices)')
+            description='Activates support for MUMPS (only parallel)')
     variant('superlu-dist', default=True,
             description='Activates support for SuperluDist (only parallel)')
     variant('trilinos', default=False,
@@ -101,9 +103,49 @@ class Petsc(Package):
             description='Enable when mpiexec is not available to run binaries')
     variant('valgrind', default=False,
             description='Enable Valgrind Client Request mechanism')
+    variant('jpeg', default=False,
+            description='Activates support for JPEG')
+    variant('libpng', default=False,
+            description='Activates support for PNG')
+    variant('giflib', default=False,
+            description='Activates support for GIF')
+    variant('mpfr', default=False,
+            description='Activates support for MPFR')
+    variant('moab', default=False,
+            description='Acivates support for MOAB (only parallel)')
+    variant('random123', default=False,
+            description='Activates support for Random123')
+    variant('exodusii', default=False,
+            description='Activates support for ExodusII (only parallel)')
+    variant('cgns', default=False,
+            description='Activates support for CGNS (only parallel)')
+    variant('memkind', default=False,
+            description='Activates support for Memkind')
+    variant('p4est', default=False,
+            description='Activates support for P4Est (only parallel)')
+    variant('saws', default=False,
+            description='Activates support for Saws')
+    variant('libyaml', default=False,
+            description='Activates support for YAML')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
+
+    # These require +mpi
+    mpi_msg = 'Requires +mpi'
+    conflicts('+cgns', when='~mpi', msg=mpi_msg)
+    conflicts('+exodusii', when='~mpi', msg=mpi_msg)
+    conflicts('+fftw', when='~mpi', msg=mpi_msg)
+    conflicts('+hdf5', when='~mpi', msg=mpi_msg)
+    conflicts('+hypre', when='~mpi', msg=mpi_msg)
+    conflicts('+moab', when='~mpi', msg=mpi_msg)
+    conflicts('+mumps', when='~mpi', msg=mpi_msg)
+    conflicts('+p4est', when='~mpi', msg=mpi_msg)
+    conflicts('+superlu-dist', when='~mpi', msg=mpi_msg)
+    conflicts('+trilinos', when='~mpi', msg=mpi_msg)
+
+    # older versions of petsc did not support mumps when +int64
+    conflicts('+mumps', when='@:3.12.99+int64')
 
     filter_compiler_wrappers(
         'petscvariables', relative_root='lib/petsc/conf'
@@ -118,6 +160,8 @@ class Petsc(Package):
     patch('xcode_stub_out_of_sync.patch', when='@:3.10.4')
 
     patch('xlf_fix-dup-petscfecreate.patch', when='@3.11.0')
+
+    depends_on('diffutils', type='build')
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
@@ -146,21 +190,27 @@ class Petsc(Package):
 
     depends_on('hdf5@:1.10.99+mpi', when='@:3.12.99+hdf5+mpi')
     depends_on('hdf5+mpi', when='@3.13:+hdf5+mpi')
+    depends_on('hdf5+mpi', when='+exodusii+mpi')
+    depends_on('hdf5+mpi', when='+cgns+mpi')
     depends_on('zlib', when='+hdf5')
+    depends_on('zlib', when='+libpng')
+    depends_on('zlib', when='+p4est')
     depends_on('parmetis', when='+metis+mpi')
     depends_on('valgrind', when='+valgrind')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on('hypre@:2.13.99~internal-superlu~int64', when='@:3.8.99+hypre+mpi~complex~int64')
-    depends_on('hypre@:2.13.99~internal-superlu+int64', when='@:3.8.99+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:~internal-superlu~int64', when='@3.9:+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:~internal-superlu+int64', when='@3.9:+hypre+mpi~complex+int64')
-    depends_on('hypre@xsdk-0.2.0~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
-    depends_on('hypre@xsdk-0.2.0~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
-    depends_on('hypre@develop~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
-    depends_on('hypre@develop~internal-superlu~int64', when='@develop+hypre+mpi~complex~int64')
+    depends_on('hypre@:2.13.99+mpi~internal-superlu~int64', when='@:3.8.99+hypre+mpi~complex~int64')
+    depends_on('hypre@:2.13.99+mpi~internal-superlu+int64', when='@:3.8.99+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu~int64', when='@3.9:3.13.99+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu+int64', when='@3.9:3.13.99+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.14:+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.14:+hypre+mpi~complex+int64')
+    depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
+    depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
+    depends_on('hypre@develop+mpi~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
+    depends_on('hypre@develop+mpi~internal-superlu~int64', when='@develop+hypre+mpi~complex~int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.0.0:5.1.3~int64', when='@3.7:3.7.99+superlu-dist+mpi~int64')
@@ -177,14 +227,29 @@ class Petsc(Package):
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
     depends_on('superlu-dist@develop+int64', when='@develop+superlu-dist+mpi+int64')
-    depends_on('mumps+mpi', when='+mumps+mpi~int64')
-    depends_on('scalapack', when='+mumps+mpi~int64')
-    depends_on('trilinos@12.6.2:', when='@3.7.0:+trilinos+mpi')
-    depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
-    depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
+    depends_on('mumps+mpi~int64', when='+mumps')
+    depends_on('scalapack', when='+mumps')
+    depends_on('trilinos@12.6.2:+mpi', when='@3.7.0:+trilinos+mpi')
+    depends_on('trilinos@xsdk-0.2.0+mpi', when='@xsdk-0.2.0+trilinos+mpi')
+    depends_on('trilinos@develop+mpi', when='@xdevelop+trilinos+mpi')
     depends_on('fftw+mpi', when='+fftw+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('libx11', when='+X')
+    depends_on('mpfr', when='+mpfr')
+    depends_on('gmp', when='+mpfr')
+    depends_on('jpeg', when='+jpeg')
+    depends_on('libpng', when='+libpng')
+    depends_on('giflib', when='+giflib')
+    depends_on('exodusii+mpi', when='+exodusii+mpi')
+    depends_on('netcdf-c+mpi', when='+exodusii+mpi')
+    depends_on('parallel-netcdf', when='+exodusii+mpi')
+    depends_on('random123', when='+random123')
+    depends_on('moab+mpi', when='+moab+mpi')
+    depends_on('cgns+mpi', when='+cgns+mpi')
+    depends_on('memkind', when='+memkind')
+    depends_on('p4est+mpi', when='+p4est+mpi')
+    depends_on('saws', when='+saws')
+    depends_on('libyaml', when='+libyaml')
 
     def url_for_version(self, version):
         if version >= Version('3.13.0'):
@@ -203,18 +268,6 @@ class Petsc(Package):
                                   if self.compiler.fc is not None else '0'),
                 '--with-mpi=0'
             ]
-            error_message_fmt = \
-                '\t{library} support requires "+mpi" to be activated'
-
-            # If mpi is disabled (~mpi), it's an error to have any of these
-            # enabled. This generates a list of any such errors.
-            errors = [
-                error_message_fmt.format(library=x)
-                for x in ('hdf5', 'hypre', 'mumps', 'superlu-dist')
-                if ('+' + x) in self.spec]
-            if errors:
-                errors = ['incompatible variants given'] + errors
-                raise RuntimeError('\n'.join(errors))
         else:
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
@@ -277,9 +330,9 @@ class Petsc(Package):
         else:
             options.append('--with-clanguage=C')
 
-        # PETSc depends on scalapack when '+mumps+mpi~int64' (see depends())
+        # PETSc depends on scalapack when '+mumps' (see depends())
         # help PETSc pick up Scalapack from MKL
-        if spec.satisfies('+mumps+mpi~int64'):
+        if spec.satisfies('+mumps'):
             scalapack = spec['scalapack'].libs
             options.extend([
                 '--with-scalapack-lib=%s' % scalapack.joined(),
@@ -291,20 +344,36 @@ class Petsc(Package):
             ])
 
         # Activates library support if needed (i.e. direct dependency)
-        for library in ('cuda', 'metis', 'hypre', 'parmetis',
-                        'mumps', 'trilinos', 'fftw', 'valgrind'):
+        if '^libjpeg-turbo' in spec:
+            jpeg_library = 'libjpeg-turbo'
+        else:
+            jpeg_library = 'libjpeg'
+
+        for library in ('cuda', 'metis', 'hypre', 'parmetis', 'mumps',
+                        'trilinos', 'fftw', 'valgrind', 'gmp', 'libpng',
+                        'giflib', 'mpfr', 'netcdf-c', 'parallel-netcdf',
+                        'moab', 'random123', 'exodusii', 'cgns', 'memkind',
+                        'p4est', 'saws', 'libyaml', jpeg_library):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
             library_requested = library in spec.dependencies_dict()
             options.append(
                 '--with-{library}={value}'.format(
-                    library=library,
+                    library=('libjpeg' if library == 'libjpeg-turbo'
+                             else 'netcdf' if library == 'netcdf-c'
+                             else 'pnetcdf' if library == 'parallel-netcdf'
+                             else 'yaml' if library == 'libyaml'
+                             else library),
                     value=('1' if library_requested else '0'))
             )
             if library_requested:
                 options.append(
                     '--with-{library}-dir={path}'.format(
-                        library=library, path=spec[library].prefix)
+                        library=('libjpeg' if library == 'libjpeg-turbo'
+                                 else 'netcdf' if library == 'netcdf-c'
+                                 else 'pnetcdf' if library == 'parallel-netcdf'
+                                 else 'yaml' if library == 'libyaml'
+                                 else library), path=spec[library].prefix)
                 )
 
         # PETSc does not pick up SuperluDist from the dir as they look for

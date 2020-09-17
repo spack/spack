@@ -11,12 +11,13 @@ import sys
 class Hpx(CMakePackage, CudaPackage):
     """C++ runtime system for parallel and distributed applications."""
 
-    homepage = "http://stellar.cct.lsu.edu/tag/hpx/"
+    homepage = "https://hpx.stellar-group.org/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
-    maintainers = ['msimberg', 'albestro']
+    maintainers = ['msimberg', 'albestro', 'teonnik']
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('stable', git='https://github.com/STEllAR-GROUP/hpx.git', tag='stable')
+    version('1.5.0', sha256='de2901d8ae017592c513e0af9cf58de295abc9802e55ece00424cbd8a3801920')
     version('1.4.1', sha256='965dabe44d17480e326d92da4eec56722d98b33943c53d2b0f8f4655cb208023')
     version('1.4.0', sha256='241a1c47fafba751848fac12446e7bf4ad3d342d5eb2fa1ef94dd904acc329ed')
     version('1.3.0', sha256='cd34da674064c4cc4a331402edbd65c5a1f8058fb46003314ca18fa08423c5ad')
@@ -59,6 +60,8 @@ class Hpx(CMakePackage, CudaPackage):
 
     variant('tools', default=False, description='Build HPX tools')
     variant('examples', default=False, description='Build examples')
+    variant('async_mpi', default=False, description='Enable MPI Futures.')
+    variant('async_cuda', default=False, description='Enable CUDA Futures.')
 
     depends_on('hwloc')
     depends_on('python', type=('build', 'test', 'run'))
@@ -91,7 +94,6 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('boost cxxstd=11', when='cxxstd=11')
     depends_on('boost cxxstd=14', when='cxxstd=14')
     depends_on('boost cxxstd=17', when='cxxstd=17')
-    depends_on('boost cxxstd=17', when='@stable')
 
     # Malloc
     depends_on('gperftools', when='malloc=tcmalloc')
@@ -100,6 +102,10 @@ class Hpx(CMakePackage, CudaPackage):
 
     # MPI
     depends_on('mpi', when='networking=mpi')
+    depends_on('mpi', when='+async_mpi')
+
+    # CUDA
+    depends_on('cuda', when='+async_cuda')
 
     # Instrumentation
     depends_on('otf2', when='instrumentation=apex')
@@ -130,6 +136,8 @@ class Hpx(CMakePackage, CudaPackage):
             self.define_from_variant('HPX_WITH_CUDA', 'cuda'),
             self.define_from_variant('HPX_WITH_TOOLS', 'tools'),
             self.define_from_variant('HPX_WITH_EXAMPLES', 'examples'),
+            self.define_from_variant('HPX_WITH_ASYNC_MPI', 'async_mpi'),
+            self.define_from_variant('HPX_WITH_ASYNC_CUDA', 'async_cuda'),
             self.define('HPX_WITH_TESTS', self.run_tests),
 
             self.define('HPX_WITH_NETWORKING', 'networking=none' not in spec),

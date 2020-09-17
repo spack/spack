@@ -55,7 +55,7 @@ class Whizard(AutotoolsPackage):
             description="data visualization with latex")
 
     depends_on('ocaml', type='build', when="@3:")
-    depends_on('ocaml@:4.8.2', type='build', when="@:2.99.99")
+    depends_on('ocaml~force-safe-string', type='build', when="@:2.99.99")
     depends_on('hepmc', when="hepmc=2")
     depends_on('hepmc3', when="hepmc=3")
     depends_on('lcio', when="+lcio")
@@ -88,7 +88,6 @@ class Whizard(AutotoolsPackage):
             '--enable-lhapdf=%s' % ("yes" if "+lhapdf" in spec else "no"),
             '--enable-openloops=%s' % ("yes" if "+openloops" in spec
                                        else "no"),
-            '--with-openloops=%s' % spec['openloops'].prefix,
             # todo: hoppet
             # todo: recola
             # todo: looptools
@@ -96,14 +95,14 @@ class Whizard(AutotoolsPackage):
             # todo: pythia6
         ]
 
+        if "+openloops" in spec:
+            args.append('--with-openloops=%s' % spec['openloops'].prefix)
         if "+lcio" in spec:
             args.append('--with-lcio=%s' % spec['lcio'].prefix)
-
         if "hepmc=3" in spec:
             args.append('--with-hepmc=%s' % spec['hepmc3'].prefix)
         if "hepmc=2" in spec:
             args.append('--with-hepmc=%s' % spec['hepmc'].prefix)
-
         if "+openmp" not in spec:
             args.append('--disable-openmp')
         return args

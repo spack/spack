@@ -2,15 +2,17 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-from spack.operating_systems.mac_os import macos_version, macos_sdk_path
-from llnl.util import tty
-
 import glob
 import itertools
 import os
+import re
 import sys
+
+import llnl.util.tty as tty
+import spack.architecture
+import spack.util.executable
+
+from spack.operating_systems.mac_os import macos_version, macos_sdk_path
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
@@ -93,6 +95,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('nvptx',
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
+    variant('bootstrap',
+            default=False,
+            description='add --enable-bootstrap flag for stage3 build')
 
     depends_on('flex', type='build', when='@master')
 
@@ -269,6 +274,134 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    @property
+    def executables(self):
+        names = [r'gcc', r'[^\w]?g\+\+', r'gfortran']
+        suffixes = [r'', r'-mp-\d+\.\d', r'-\d+\.\d', r'-\d+', r'\d\d']
+        return [r''.join(x) for x in itertools.product(names, suffixes)]
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        result = []
+        for exe in exes_in_prefix:
+            # On systems like Ubuntu we might get multiple executables
+            # with the string "gcc" in them. See:
+            # https://helpmanual.io/packages/apt/gcc/
+            basename = os.path.basename(exe)
+            substring_to_be_filtered = [
+                'c99-gcc',
+                'c89-gcc',
+                '-nm',
+                '-ar',
+                'ranlib',
+                'clang'  # clang++ matches g++ -> clan[g++]
+            ]
+            if any(x in basename for x in substring_to_be_filtered):
+                continue
+            # Filter out links in favor of real executables on
+            # all systems but Cray
+            host_platform = str(spack.architecture.platform())
+            if os.path.islink(exe) and host_platform != 'cray':
+                continue
+
+            result.append(exe)
+
+        return result
+
+    @classmethod
+    def determine_version(cls, exe):
+        try:
+            output = spack.compiler.get_compiler_version_output(
+                exe, '--version'
+            )
+        except Exception:
+            output = ''
+        # Apple's gcc is actually apple clang, so skip it.
+        # Users can add it manually to compilers.yaml at their own risk.
+        if 'Apple' in output:
+            return None
+
+        version_regex = re.compile(r'([\d\.]+)')
+        for vargs in ('-dumpfullversion', '-dumpversion'):
+            try:
+                output = spack.compiler.get_compiler_version_output(exe, vargs)
+                match = version_regex.search(output)
+                if match:
+                    return match.group(1)
+            except spack.util.executable.ProcessError:
+                pass
+            except Exception as e:
+                tty.debug(e)
+
+        return None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        languages, compilers = set(), {}
+        for exe in exes:
+            basename = os.path.basename(exe)
+            if 'g++' in basename:
+                languages.add('c++')
+                compilers['cxx'] = exe
+            elif 'gfortran' in basename:
+                languages.add('fortran')
+                compilers['fortran'] = exe
+            elif 'gcc' in basename:
+                languages.add('c')
+                compilers['c'] = exe
+        variant_str = 'languages={0}'.format(','.join(languages))
+        return variant_str, {'compilers': compilers}
+
+    @classmethod
+    def validate_detected_spec(cls, spec, extra_attributes):
+        # For GCC 'compilers' is a mandatory attribute
+        msg = ('the extra attribute "compilers" must be set for '
+               'the detected spec "{0}"'.format(spec))
+        assert 'compilers' in extra_attributes, msg
+
+        compilers = extra_attributes['compilers']
+        for constraint, key in {
+            'languages=c': 'c',
+            'languages=c++': 'cxx',
+            'languages=fortran': 'fortran'
+        }.items():
+            if spec.satisfies(constraint, strict=True):
+                msg = '{0} not in {1}'
+                assert key in compilers, msg.format(key, spec)
+
+    @property
+    def cc(self):
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('c', None)
+        result = None
+        if 'languages=c' in self.spec:
+            result = str(self.spec.prefix.bin.gcc)
+        return result
+
+    @property
+    def cxx(self):
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('cxx', None)
+        result = None
+        if 'languages=c++' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'g++')
+        return result
+
+    @property
+    def fortran(self):
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('fortran', None)
+        result = None
+        if 'languages=fortran' in self.spec:
+            result = str(self.spec.prefix.bin.gfortran)
+        return result
+
     def url_for_version(self, version):
         # This function will be called when trying to fetch from url, before
         # mirrors are tried. It takes care of modifying the suffix of gnu
@@ -318,9 +451,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             '--enable-languages={0}'.format(
                 ','.join(spec.variants['languages'].value)),
             # Drop gettext dependency
-            '--disable-nls',
-            '--with-mpfr={0}'.format(spec['mpfr'].prefix),
-            '--with-gmp={0}'.format(spec['gmp'].prefix),
+            '--disable-nls'
         ]
 
         # Use installed libz
@@ -338,21 +469,35 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if spec.satisfies('+binutils'):
             binutils = spec['binutils'].prefix.bin
             options.extend([
-                '--with-sysroot=/',
                 '--with-gnu-ld',
                 '--with-ld=' + binutils.ld,
                 '--with-gnu-as',
                 '--with-as=' + binutils.join('as'),
+            ])
+
+        # enable_bootstrap
+        if spec.satisfies('+bootstrap'):
+            options.extend([
                 '--enable-bootstrap',
             ])
 
-        # MPC
-        if 'mpc' in spec:
-            options.append('--with-mpc={0}'.format(spec['mpc'].prefix))
+        # Configure include and lib directories explicitly for these
+        # dependencies since the short GCC option assumes that libraries
+        # are installed in "/lib" which might not be true on all OS
+        # (see #10842)
+        #
+        # More info at: https://gcc.gnu.org/install/configure.html
+        for dep_str in ('mpfr', 'gmp', 'mpc', 'isl'):
+            if dep_str not in spec:
+                continue
 
-        # ISL
-        if 'isl' in spec:
-            options.append('--with-isl={0}'.format(spec['isl'].prefix))
+            dep_spec = spec[dep_str]
+            include_dir = dep_spec.headers.directories[0]
+            lib_dir = dep_spec.libs.directories[0]
+            options.extend([
+                '--with-{0}-include={1}'.format(dep_str, include_dir),
+                '--with-{0}-lib={1}'.format(dep_str, lib_dir)
+            ])
 
         # nvptx-none offloading for host compiler
         if spec.satisfies('+nvptx'):

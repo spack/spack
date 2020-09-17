@@ -20,8 +20,10 @@ class NfsGanesha(CMakePackage):
 
     depends_on('bison', type='build')
     depends_on('flex',  type='build')
+    depends_on('py-stsci-distutils', type='build')
     depends_on('userspace-rcu')
     depends_on('ntirpc')
+    depends_on('krb5')
 
     root_cmakelists_dir = 'src'
 

@@ -26,7 +26,6 @@ class Libglvnd(AutotoolsPackage):
     version('1.1.1', sha256='71918ed1261e4eece18c0b74b50dc62c0237b8d526e83277ef078554544720b9')
 
     conflicts('platform=darwin', msg='libglvnd is linux specific')
-    conflicts('platform=bgq', msg='libglvnd is linux specific')
 
     depends_on('libxext')
     depends_on('libx11')

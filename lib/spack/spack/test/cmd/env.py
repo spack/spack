@@ -448,8 +448,9 @@ env:
     external_config = StringIO("""\
 packages:
   a:
-    paths:
-      a: {a_prefix}
+    externals:
+    - spec: a
+      prefix: {a_prefix}
     buildable: false
 """.format(a_prefix=str(fake_prefix)))
     external_config_dict = spack.util.spack_yaml.load_config(external_config)
@@ -522,6 +523,70 @@ env:
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
+
+
+def test_with_config_bad_include(env_deactivate, capfd):
+    env_name = 'test_bad_include'
+    test_config = """\
+spack:
+  include:
+  - /no/such/directory
+  - no/such/file.yaml
+"""
+    _env_create(env_name, StringIO(test_config))
+
+    e = ev.read(env_name)
+    with pytest.raises(SystemExit):
+        with e:
+            e.concretize()
+
+    out, err = capfd.readouterr()
+
+    assert 'missing include' in err
+    assert '/no/such/directory' in err
+    assert 'no/such/file.yaml' in err
+
+
+def test_env_with_include_config_files_same_basename():
+    test_config = """\
+        env:
+            include:
+                - ./path/to/included-config.yaml
+                - ./second/path/to/include-config.yaml
+            specs:
+                [libelf, mpileaks]
+            """
+
+    _env_create('test', StringIO(test_config))
+    e = ev.read('test')
+
+    fs.mkdirp(os.path.join(e.path, 'path', 'to'))
+    with open(os.path.join(
+            e.path,
+            './path/to/included-config.yaml'), 'w') as f:
+        f.write("""\
+        packages:
+          libelf:
+              version: [0.8.10]
+        """)
+
+    fs.mkdirp(os.path.join(e.path, 'second', 'path', 'to'))
+    with open(os.path.join(
+            e.path,
+            './second/path/to/include-config.yaml'), 'w') as f:
+        f.write("""\
+        packages:
+          mpileaks:
+              version: [2.2]
+        """)
+
+    with e:
+        e.concretize()
+
+    environment_specs = e._get_environment_specs(False)
+
+    assert(environment_specs[0].satisfies('libelf@0.8.10'))
+    assert(environment_specs[1].satisfies('mpileaks@2.2'))
 
 
 def test_env_with_included_config_file():
@@ -2041,3 +2106,165 @@ def test_env_write_only_non_default():
         yaml = f.read()
 
     assert yaml == ev.default_manifest_yaml
+
+
+@pytest.fixture
+def packages_yaml_v015(tmpdir):
+    """Return the path to an existing manifest in the v0.15.x format
+    and the path to a non yet existing backup file.
+    """
+    raw_yaml = """
+spack:
+  specs:
+  - mpich
+  packages:
+    cmake:
+      paths:
+        cmake@3.17.3: /usr
+"""
+    manifest = tmpdir.ensure('spack.yaml')
+    backup_file = tmpdir.join('spack.yaml.bkp')
+    manifest.write(raw_yaml)
+    return manifest, backup_file
+
+
+def test_update_anonymous_env(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+    env('update', '-y', str(manifest.dirname))
+
+    # The environment is now at the latest format
+    assert ev.is_latest_format(str(manifest))
+    # A backup file has been created and it's not at the latest format
+    assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+
+
+def test_double_update(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+
+    # Update the environment
+    env('update', '-y', str(manifest.dirname))
+    # Try to read the environment (it should not error)
+    ev.create('test', str(manifest))
+    # Updating again does nothing since the manifest is up-to-date
+    env('update', '-y', str(manifest.dirname))
+
+    # The environment is at the latest format
+    assert ev.is_latest_format(str(manifest))
+    # A backup file has been created and it's not at the latest format
+    assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+
+
+def test_update_and_revert(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+
+    # Update the environment
+    env('update', '-y', str(manifest.dirname))
+    assert os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(backup_file))
+    assert ev.is_latest_format(str(manifest))
+
+    # Revert to previous state
+    env('revert', '-y', str(manifest.dirname))
+    assert not os.path.exists(str(backup_file))
+    assert not ev.is_latest_format(str(manifest))
+
+
+def test_old_format_cant_be_updated_implicitly(packages_yaml_v015):
+    manifest, backup_file = packages_yaml_v015
+    env('activate', str(manifest.dirname))
+    with pytest.raises(spack.main.SpackCommandError):
+        add('hdf5')
+
+
+@pytest.mark.regression('18147')
+def test_can_update_attributes_with_override(tmpdir):
+    spack_yaml = """
+spack:
+  mirrors::
+    test: /foo/bar
+  packages:
+    cmake:
+      paths:
+        cmake@3.18.1: /usr
+  specs:
+  - hdf5
+"""
+    abspath = tmpdir.join('spack.yaml')
+    abspath.write(spack_yaml)
+
+    # Check that an update does not raise
+    env('update', '-y', str(abspath.dirname))
+
+
+@pytest.mark.regression('18338')
+def test_newline_in_commented_sequence_is_not_an_issue(tmpdir):
+    spack_yaml = """
+spack:
+  specs:
+  - dyninst
+  packages:
+    libelf:
+      externals:
+      - spec: libelf@0.8.13
+        modules:
+        - libelf/3.18.1
+
+  concretization: together
+"""
+    abspath = tmpdir.join('spack.yaml')
+    abspath.write(spack_yaml)
+
+    def extract_build_hash(environment):
+        _, dyninst = next(iter(environment.specs_by_hash.items()))
+        return dyninst['libelf'].build_hash()
+
+    # Concretize a first time and create a lockfile
+    with ev.Environment(str(tmpdir)) as e:
+        concretize()
+        libelf_first_hash = extract_build_hash(e)
+
+    # Check that a second run won't error
+    with ev.Environment(str(tmpdir)) as e:
+        concretize()
+        libelf_second_hash = extract_build_hash(e)
+
+    assert libelf_first_hash == libelf_second_hash
+
+
+@pytest.mark.regression('18441')
+def test_lockfile_not_deleted_on_write_error(tmpdir, monkeypatch):
+    raw_yaml = """
+spack:
+  specs:
+  - dyninst
+  packages:
+    libelf:
+      externals:
+      - spec: libelf@0.8.13
+        prefix: /usr
+"""
+    spack_yaml = tmpdir.join('spack.yaml')
+    spack_yaml.write(raw_yaml)
+    spack_lock = tmpdir.join('spack.lock')
+
+    # Concretize a first time and create a lockfile
+    with ev.Environment(str(tmpdir)):
+        concretize()
+    assert os.path.exists(str(spack_lock))
+
+    # If I run concretize again and there's an error during write,
+    # the spack.lock file shouldn't disappear from disk
+    def _write_helper_raise(self, x, y):
+        raise RuntimeError('some error')
+
+    monkeypatch.setattr(
+        ev.Environment, '_update_and_write_manifest', _write_helper_raise
+    )
+    with ev.Environment(str(tmpdir)) as e:
+        e.concretize(force=True)
+        with pytest.raises(RuntimeError):
+            e.clear()
+            e.write()
+    assert os.path.exists(str(spack_lock))

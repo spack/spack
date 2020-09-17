@@ -32,8 +32,8 @@ class Aluminum(CMakePackage, CudaPackage):
     variant('nccl', default=False, description='Builds with support for NCCL communication lib')
     variant('ht', default=False, description='Builds with support for host-enabled MPI'
             ' communication of accelerator data')
-    variant('mpi_gpu_rdma', default=False, description='Builds with support for using RMA'
-            ' features in a MPI-GPU RDMA enabled library')
+    variant('cuda_rma', default=False, description='Builds with support for CUDA intra-node '
+            ' Put/Get and IPC RMA functionality')
 
     depends_on('cmake@3.16.0:', type='build')
     depends_on('mpi')
@@ -53,9 +53,9 @@ class Aluminum(CMakePackage, CudaPackage):
             args.extend([
                 '-DALUMINUM_ENABLE_HOST_TRANSFER:BOOL=%s' % ('+ht' in spec),
                 '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' %
-                ('+mpi_gpu_rdma' in spec),
+                ('+cuda_rma' in spec),
                 '-DALUMINUM_ENABLE_MPI_CUDA_RMA:BOOL=%s' %
-                ('+mpi_gpu_rdma' in spec)])
+                ('+cuda_rma' in spec)])
         else:
             args.extend([
                 '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec)])

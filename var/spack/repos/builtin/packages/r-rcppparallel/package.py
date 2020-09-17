@@ -20,3 +20,5 @@ class RRcppparallel(RPackage):
 
     depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('gmake', type='build')
+
+    patch('asclang.patch', when='%fj')

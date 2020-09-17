@@ -16,6 +16,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     maintainers = ['hppritcha']
 
     # Current
+    version('1.8.1', sha256='a48820cb8d0761b5ccf3e7ba03a7c8c1dde6276017657178829e07ffc35b556a')
     version('1.8.0', sha256='e400f7aa5354971c8f5ac6b881dc2846143851df868088c37d432c076445628d')
     version('1.7.0', sha256='6ab81ee187bfd554fe7e549da93a11bfac420df87d99ee61ffab7bb19bdd3371')
     version('1.6.1', sha256='1425648aa03f5fa40e4bc5c4a5a83fe0292e2fe44f6054352fbebbf6d8f342a1')
@@ -34,7 +35,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     variant('thread_multiple', default=False,
             description='Enable thread support in UCP and UCT')
-    variant('optimizations', default=False,
+    variant('optimizations', default=True,
             description='Enable optimizations')
     variant('logging', default=False,
             description='Enable logging')
@@ -43,70 +44,59 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant('assertions', default=False,
             description='Enable assertions')
     variant('parameter_checking', default=False,
-            description='Enable paramter checking')
+            description='Enable parameter checking')
     variant('pic', default=True,
             description='Builds with PIC support')
     variant('java', default=False,
             description='Builds with Java bindings')
     variant('gdrcopy', default=False,
             description='Enable gdrcopy support')
+    variant('knem', default=False,
+            description='Enable KNEM support')
+    variant('xpmem', default=False,
+            description='Enable XPMEM support')
 
     depends_on('numactl')
     depends_on('rdma-core')
+    depends_on('pkgconfig', type='build')
     depends_on('java@8', when='+java')
     depends_on('maven', when='+java')
     depends_on('gdrcopy@1.3', when='+gdrcopy')
     conflicts('+gdrcopy', when='~cuda',
               msg='gdrcopy currently requires cuda support')
+    depends_on('xpmem', when='+xpmem')
+    depends_on('knem', when='+knem')
+
+    configure_abs_path = 'contrib/configure-release'
 
     def configure_args(self):
         spec = self.spec
         config_args = []
+
         if '+thread_multiple' in spec:
             config_args.append('--enable-mt')
         else:
             config_args.append('--disable-mt')
-
-        if '+optimizations' in spec:
-            config_args.append('--enable-optimizations')
-        else:
-            config_args.append('--disable-optimizations')
-
-        if '+logging' in spec:
-            config_args.append('--enable-logging')
-        else:
-            config_args.append('--disable-logging')
-
-        if '+assertions' in spec:
-            config_args.append('--enable-assertions')
-        else:
-            config_args.append('--disable-assertions')
 
         if '+paramter_checking' in spec:
             config_args.append('--enable-params-check')
         else:
             config_args.append('--disable-params-check')
 
-        if '+pic' in spec:
-            config_args.append('--with-pic')
-        else:
-            config_args.append('--without-pic')
+        config_args.extend(self.enable_or_disable('optimizations'))
+        config_args.extend(self.enable_or_disable('assertions'))
+        config_args.extend(self.enable_or_disable('logging'))
 
-        if '+java' in spec:
-            config_args.append('--with-java=%s' % spec['java'].prefix)
-        else:
-            config_args.append('--without-java')
-
-        if '+cuda' in spec:
-            config_args.append('--with-cuda={0}'.format(
-                self.spec['cuda'].prefix))
-        else:
-            config_args.append('--without-cuda')
-
-        if '+gdrcopy' in spec:
-            config_args.append('--with-gdrcopy={0}'.format(
-                self.spec['gdrcopy'].prefix))
-        else:
-            config_args.append('--without-gdrcopy')
+        config_args.extend(self.with_or_without('pic'))
+        config_args.extend(self.with_or_without('java',
+                                                activation_value='prefix'))
+        config_args.extend(self.with_or_without('cuda',
+                                                activation_value='prefix'))
+        config_args.extend(self.with_or_without('gdrcopy',
+                                                activation_value='prefix'))
+        config_args.extend(self.with_or_without('knem',
+                                                activation_value='prefix'))
+        config_args.extend(self.with_or_without('xpmem',
+                                                activation_value='prefix'))
 
         return config_args

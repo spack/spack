@@ -11,7 +11,6 @@ import shutil
 import tempfile
 import hashlib
 import glob
-import platform
 
 from contextlib import closing
 import ruamel.yaml as yaml
@@ -520,16 +519,16 @@ def make_package_relative(workdir, spec, allow_root):
     for filename in buildinfo['relocate_binaries']:
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
-    if (spec.architecture.platform == 'darwin' or
-        spec.architecture.platform == 'test' and
-            platform.system().lower() == 'darwin'):
-        relocate.make_macho_binaries_relative(cur_path_names, orig_path_names,
-                                              old_layout_root)
-    if (spec.architecture.platform == 'linux' or
-        spec.architecture.platform == 'test' and
-            platform.system().lower() == 'linux'):
-        relocate.make_elf_binaries_relative(cur_path_names, orig_path_names,
-                                            old_layout_root)
+
+    platform = spack.architecture.get_platform(spec.platform)
+    if 'macho' in platform.binary_formats:
+        relocate.make_macho_binaries_relative(
+            cur_path_names, orig_path_names, old_layout_root)
+
+    if 'elf' in platform.binary_formats:
+        relocate.make_elf_binaries_relative(
+            cur_path_names, orig_path_names, old_layout_root)
+
     relocate.raise_if_not_relocatable(cur_path_names, allow_root)
     orig_path_names = list()
     cur_path_names = list()
@@ -609,18 +608,16 @@ def relocate_package(spec, allow_root):
                              ]
         # If the buildcache was not created with relativized rpaths
         # do the relocation of path in binaries
-        if (spec.architecture.platform == 'darwin' or
-            spec.architecture.platform == 'test' and
-                platform.system().lower() == 'darwin'):
+        platform = spack.architecture.get_platform(spec.platform)
+        if 'macho' in platform.binary_formats:
             relocate.relocate_macho_binaries(files_to_relocate,
                                              old_layout_root,
                                              new_layout_root,
                                              prefix_to_prefix, rel,
                                              old_prefix,
                                              new_prefix)
-        if (spec.architecture.platform == 'linux' or
-            spec.architecture.platform == 'test' and
-                platform.system().lower() == 'linux'):
+
+        if 'elf' in platform.binary_formats:
             relocate.relocate_elf_binaries(files_to_relocate,
                                            old_layout_root,
                                            new_layout_root,

@@ -15,7 +15,7 @@ class Root(CMakePackage):
     homepage = "https://root.cern.ch"
     url      = "https://root.cern/download/root_v6.16.00.source.tar.gz"
 
-    maintainers = ['chissg', 'HadrienG2', 'drbenmorgan']
+    maintainers = ['chissg', 'HadrienG2', 'drbenmorgan', 'vvolkl']
 
     # ###################### Versions ##########################
 
@@ -244,7 +244,7 @@ class Root(CMakePackage):
     depends_on('vc',        when='+vc')
     depends_on('vdt',       when='+vdt')
     depends_on('libxml2',   when='+xml')
-    depends_on('xrootd',    when='+xrootd')
+    depends_on('xrootd@:4.99.99',    when='+xrootd')
 
     # ###################### Conflicts ######################
 
@@ -347,6 +347,7 @@ class Root(CMakePackage):
                 ['chirp', False],
                 ['cling', True],
                 ['cocoa', 'aqua'],
+                ['dataframe', True],
                 ['davix'],
                 ['dcache', False],
                 ['fftw3', 'fftw'],

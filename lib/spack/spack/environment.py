@@ -812,6 +812,7 @@ class Environment(object):
         # load config scopes added via 'include:', in reverse so that
         # highest-precedence scopes are last.
         includes = config_dict(self.yaml).get('include', [])
+        missing = []
         for i, config_path in enumerate(reversed(includes)):
             # allow paths to contain spack config/environment variables, etc.
             config_path = substitute_path_variables(config_path)
@@ -826,14 +827,21 @@ class Environment(object):
                 config_name = 'env:%s:%s' % (
                     self.name, os.path.basename(config_path))
                 scope = spack.config.ConfigScope(config_name, config_path)
-            else:
+            elif os.path.exists(config_path):
                 # files are assumed to be SingleFileScopes
-                base, ext = os.path.splitext(os.path.basename(config_path))
-                config_name = 'env:%s:%s' % (self.name, base)
+                config_name = 'env:%s:%s' % (self.name, config_path)
                 scope = spack.config.SingleFileScope(
                     config_name, config_path, spack.schema.merged.schema)
+            else:
+                missing.append(config_path)
+                continue
 
             scopes.append(scope)
+
+        if missing:
+            msg = 'Detected {0} missing include path(s):'.format(len(missing))
+            msg += '\n   {0}'.format('\n   '.join(missing))
+            tty.die('{0}\nPlease correct and try again.'.format(msg))
 
         return scopes
 
@@ -844,23 +852,16 @@ class Environment(object):
     def env_file_config_scope(self):
         """Get the configuration scope for the environment's manifest file."""
         config_name = self.env_file_config_scope_name()
-        return spack.config.SingleFileScope(config_name,
-                                            self.manifest_path,
-                                            spack.schema.env.schema,
-                                            [spack.schema.env.keys])
+        return spack.config.SingleFileScope(
+            config_name,
+            self.manifest_path,
+            spack.schema.env.schema,
+            [spack.config.first_existing(self.raw_yaml,
+                                         spack.schema.env.keys)])
 
     def config_scopes(self):
         """A list of all configuration scopes for this environment."""
         return self.included_config_scopes() + [self.env_file_config_scope()]
-
-    def set_config(self, path, value):
-        """Set configuration for this environment"""
-        yaml = config_dict(self.yaml)
-        keys = spack.config.process_config_path(path)
-        for key in keys[:-1]:
-            yaml = yaml[key]
-        yaml[keys[-1]] = value
-        self.write()
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
@@ -1473,6 +1474,18 @@ class Environment(object):
                 writing if True.
 
         """
+        # Intercept environment not using the latest schema format and prevent
+        # them from being modified
+        manifest_exists = os.path.exists(self.manifest_path)
+        if manifest_exists and not is_latest_format(self.manifest_path):
+            msg = ('The environment "{0}" needs to be written to disk, but '
+                   'is currently using a deprecated format. Please update it '
+                   'using:\n\n'
+                   '\tspack env update {0}\n\n'
+                   'Note that previous versions of Spack will not be able to '
+                   'use the updated configuration.')
+            raise RuntimeError(msg.format(self.name))
+
         # ensure path in var/spack/environments
         fs.mkdirp(self.path)
 
@@ -1500,13 +1513,26 @@ class Environment(object):
             # write the lock file last
             with fs.write_tmp_and_move(self.lock_path) as f:
                 sjson.dump(self._to_lockfile_dict(), stream=f)
+            self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
         else:
-            if os.path.exists(self.lock_path):
-                os.unlink(self.lock_path)
+            with fs.safe_remove(self.lock_path):
+                self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
 
+        # TODO: rethink where this needs to happen along with
+        # writing. For some of the commands (like install, which write
+        # concrete specs AND regen) this might as well be a separate
+        # call.  But, having it here makes the views consistent witht the
+        # concretized environment for most operations.  Which is the
+        # special case?
+        if regenerate_views:
+            self.regenerate_views()
+
+    def _update_and_write_manifest(self, raw_yaml_dict, yaml_dict):
+        """Update YAML manifest for this environment based on changes to
+        spec lists and views and write it.
+        """
         # invalidate _repo cache
         self._repo = None
-
         # put any changes in the definitions in the YAML
         for name, speclist in self.spec_lists.items():
             if name == user_speclist_name:
@@ -1533,14 +1559,12 @@ class Environment(object):
                                  for ayl in active_yaml_lists)]
             list_for_new_specs = active_yaml_lists[0].setdefault(name, [])
             list_for_new_specs[:] = list_for_new_specs + new_specs
-
         # put the new user specs in the YAML.
         # This can be done directly because there can't be multiple definitions
         # nor when clauses for `specs` list.
         yaml_spec_list = yaml_dict.setdefault(user_speclist_name,
                                               [])
         yaml_spec_list[:] = self.user_specs.yaml_list
-
         # Construct YAML representation of view
         default_name = default_view_name
         if self.views and len(self.views) == 1 and default_name in self.views:
@@ -1558,9 +1582,7 @@ class Environment(object):
                         for name, view in self.views.items())
         else:
             view = False
-
         yaml_dict['view'] = view
-
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident
         with fs.temp_cwd() as env_dir:
@@ -1570,7 +1592,6 @@ class Environment(object):
                 if yaml_dict[key] == config_dict(bare_env.yaml).get(key, None):
                     if key not in raw_yaml_dict:
                         del yaml_dict[key]
-
         # if all that worked, write out the manifest file at the top level
         # (we used to check whether the yaml had changed and not write it out
         # if it hadn't. We can't do that anymore because it could be the only
@@ -1583,15 +1604,6 @@ class Environment(object):
             self.raw_yaml = copy.deepcopy(self.yaml)
             with fs.write_tmp_and_move(self.manifest_path) as f:
                 _write_yaml(self.yaml, f)
-
-        # TODO: rethink where this needs to happen along with
-        # writing. For some of the commands (like install, which write
-        # concrete specs AND regen) this might as well be a separate
-        # call.  But, having it here makes the views consistent witht the
-        # concretized environment for most operations.  Which is the
-        # special case?
-        if regenerate_views:
-            self.regenerate_views()
 
     def __enter__(self):
         self._previous_active = _active_environment
@@ -1721,6 +1733,93 @@ def deactivate_config_scope(env):
     """Remove any scopes from env from the global config path."""
     for scope in env.config_scopes():
         spack.config.config.remove_scope(scope.name)
+
+
+def manifest_file(env_name_or_dir):
+    """Return the absolute path to a manifest file given the environment
+    name or directory.
+
+    Args:
+        env_name_or_dir (str): either the name of a valid environment
+            or a directory where a manifest file resides
+
+    Raises:
+        AssertionError: if the environment is not found
+    """
+    env_dir = None
+    if is_env_dir(env_name_or_dir):
+        env_dir = os.path.abspath(env_name_or_dir)
+    elif exists(env_name_or_dir):
+        env_dir = os.path.abspath(root(env_name_or_dir))
+
+    assert env_dir, "environment not found [env={0}]".format(env_name_or_dir)
+    return os.path.join(env_dir, manifest_name)
+
+
+def update_yaml(manifest, backup_file):
+    """Update a manifest file from an old format to the current one.
+
+    Args:
+        manifest (str): path to a manifest file
+        backup_file (str): file where to copy the original manifest
+
+    Returns:
+        True if the manifest was updated, False otherwise.
+
+    Raises:
+        AssertionError: in case anything goes wrong during the update
+    """
+    # Check if the environment needs update
+    with open(manifest) as f:
+        data = syaml.load(f)
+
+    top_level_key = _top_level_key(data)
+    needs_update = spack.schema.env.update(data[top_level_key])
+    if not needs_update:
+        msg = "No update needed [manifest={0}]".format(manifest)
+        tty.debug(msg)
+        return False
+
+    # Copy environment to a backup file and update it
+    msg = ('backup file "{0}" already exists on disk. Check its content '
+           'and remove it before trying to update again.')
+    assert not os.path.exists(backup_file), msg.format(backup_file)
+
+    shutil.copy(manifest, backup_file)
+    with open(manifest, 'w') as f:
+        syaml.dump_config(data, f)
+    return True
+
+
+def _top_level_key(data):
+    """Return the top level key used in this environment
+
+    Args:
+        data (dict): raw yaml data of the environment
+
+    Returns:
+        Either 'spack' or 'env'
+    """
+    msg = ('cannot find top level attribute "spack" or "env"'
+           'in the environment')
+    assert any(x in data for x in ('spack', 'env')), msg
+    if 'spack' in data:
+        return 'spack'
+    return 'env'
+
+
+def is_latest_format(manifest):
+    """Return True if the manifest file is at the latest schema format,
+    False otherwise.
+
+    Args:
+        manifest (str): manifest file to be analyzed
+    """
+    with open(manifest) as f:
+        data = syaml.load(f)
+    top_level_key = _top_level_key(data)
+    changed = spack.schema.env.update(data[top_level_key])
+    return not changed
 
 
 class SpackEnvironmentError(spack.error.SpackError):
