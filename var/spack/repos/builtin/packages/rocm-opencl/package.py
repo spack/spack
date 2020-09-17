@@ -37,8 +37,7 @@ class RocmOpencl(CMakePackage):
         # commented out. So instead we provide
         # all the includes...
 
-        if (self.spec.satisfies('@3.5.0') or self.spec.satisfies('@3.7.0')) \
-                and name in ('cflags', 'cxxflags'):
+        if name in ('cflags', 'cxxflags'):
             rocclr = self.spec['rocclr'].prefix.include
             extra_includes = [
                 'include',
