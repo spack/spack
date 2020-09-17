@@ -4,6 +4,9 @@
 #
 # DEPLOYMENT_ROOT: path to deploy to
 
+# Make sure that no modules interfere with the build
+module purge all
+
 set -o errexit
 set -o nounset
 

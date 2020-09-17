@@ -11,7 +11,6 @@
 DEFAULT_DEPLOYMENT_DATE=${DEFAULT_DEPLOYMENT_DATE:-$(date +%Y-%m-%d)}
 
 BASE_GCC_VERSION=${DEFAULT_BASE_GCC_VERSION:-9.3.0}
-BASE_ARCHITECTURE=${DEFAULT_BASE_ARCHITECTURE:-linux-rhel7-x86_64}
 
 # A list of stages in the order they will be built
 stages="compilers externals libraries applications"
@@ -580,14 +579,9 @@ EOF
 
     cat << EOF > "${target}/config.yaml"
 config:
-  install_tree: \$SPACK_INSTALL_PREFIX/install
-  source_cache: \$SPACK_INSTALL_PREFIX/.cache
-  module_roots:
-    tcl: \$SPACK_INSTALL_PREFIX/modules/tcl
-  build_stage:
-    - \$tempdir
-    - \$SPACK_INSTALL_PREFIX/.stage
-  install_path_scheme: '\${ARCHITECTURE}/\${COMPILERNAME}-\${COMPILERVER}/\${PACKAGE}-\${VERSION}-\${HASH:6}'
+  install_tree:
+    projections:
+      all: \${ARCHITECTURE}/\${COMPILERNAME}-\${COMPILERVER}/\${PACKAGE}-\${VERSION}-\${HASH:6}
   build_jobs: 36
 EOF
 }

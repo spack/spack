@@ -70,12 +70,13 @@ modules:
           MPICXX_CXX: 'nvc++'
           MPIF90_F90: 'nvfortran'
   tcl:
+    verbose: True
+    hash_length: 0
     all:
       filter:
         environment_blacklist: ['CPATH', 'LIBRARY_PATH']
-    naming_scheme: '${PACKAGE}/${VERSION}'
-    verbose: True
-    hash_length: 0
+    projections:
+      all: '{name}/{version}'
     whitelist:
       - 'gcc'
       - 'pgi'

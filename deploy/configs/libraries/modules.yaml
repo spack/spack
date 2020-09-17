@@ -48,7 +48,8 @@ modules:
       - '%intel'
       - '%clang'
       - '%pgi'
-    naming_scheme: '${PACKAGE}/${VERSION}'
+    projections:
+      all: '{name}/{version}'
     all:
       autoload: 'all'
       environment:

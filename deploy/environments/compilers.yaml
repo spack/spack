@@ -8,6 +8,6 @@ spack:
       variants: +advisor+clck+daal+gdb+inspector+ipp+itac+mkl+mpi+rpath+shared+tbb+vtune
   specs:
     - gcc@9.3.0
-    - gcc@10.1.0
-    - intel@20.0.1
-    - intel-parallel-studio@cluster.2020.1
+    - gcc@10.2.0
+    - intel@20.0.2
+    - intel-parallel-studio@professional.2020.1

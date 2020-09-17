@@ -61,11 +61,11 @@ modules:
       - '%intel'
       - '%clang'
       - '%pgi'
-    naming_scheme: '${PACKAGE}/${VERSION}'
+    projections:
+      all: '{name}/{version}'
+      ~mpi: '{name}/{version}-serial'
     all:
       autoload: 'all'
-      suffixes:
-        '~mpi': 'serial'
       environment:
         set:
           '${PACKAGE}_ROOT': '${PREFIX}'

@@ -6,7 +6,7 @@ spack:
       compiler: [gcc@9.3.0]
       providers:
         jpeg: [libjpeg-turbo]
-        mpi: [hpe-mpi@2.21]
+        mpi: [hpe-mpi]
         lapack: [intel-mkl@2019.3.199]
     cairo:
       variants: +pdf+png
@@ -21,8 +21,7 @@ spack:
     timemory:
       variants: +mpi~cuda~cupti+caliper~gperftools~python
   specs:
-    - llvm@11.0.0
-    - pgi@19.10
+    - llvm@11.0.0 +cuda cuda_arch=70 +omp_tsan +python ^cuda@11.1.0
     - nvhpc@20.9 install_type=network
     - arm-forge@20.0.3-Redhat-7.0-x86_64
     - blender
@@ -39,7 +38,7 @@ spack:
     - help2man@1.47.4
     - hpctoolkit@2019.08.14
     - hpcviewer@2020.05
-    - hpe-mpi@2.21
+    - hpe-mpi@2.22.hmpt
     - intel-mpi@2019.7.217
     - ispc@1.12.0
     - mvapich2@2.3
@@ -48,8 +47,6 @@ spack:
     - boost~mpi@1.73.0
     - bzip2@1.0.6
     - cgal
-    - cuda@9.0.176
-    - cuda@9.2.88
     - cuda@10.1.243
     - cuda@11.1.0
     - cudnn@7.3.0.29-9.0-linux-x64
