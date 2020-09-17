@@ -1206,6 +1206,11 @@ class Environment(object):
         for env_var in env_mod.group_by_name():
             env_mod.prune_duplicate_paths(env_var)
 
+        # Record which parts of the path have been changed
+        """ Pseudo code
+            env_mod.set("SPACK_CHANGES").split by colon
+        """
+
         return env_mod.shell_modifications(shell)
 
     def rm_default_view_from_shell(self, shell):
@@ -1220,6 +1225,11 @@ class Environment(object):
 
         mods, _ = self._env_modifications_for_default_view(reverse=True)
         env_mod.extend(mods)
+
+        # Filter the parts the path that have been modified by the activation
+        """ Pseudo code
+            modified = os.environ.get("SPACK_CHANGES"). split by colon
+        """
 
         return env_mod.shell_modifications(shell)
 
