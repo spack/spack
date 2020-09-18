@@ -52,4 +52,10 @@ class Libcudf(CMakePackage):
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
         # FIXME: If not needed delete this function
         args = []
+
+        #args.append('-DGPU_ARCHES')
+        args.append('-DUSE_NVTX=ON')
+        args.append('-DBUILD_BENCHMARKS=OFF')
+        args.append('-DDISABLE_DEPRICATION_WARNING=ON')
+        args.append('-DPER_THREAD_DEFAULT_STREAM=OFF')
         return args
