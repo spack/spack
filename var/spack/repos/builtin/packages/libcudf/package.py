@@ -28,7 +28,7 @@ class Libcudf(CMakePackage):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
-    url      = "https://github.com/rapidsai/libcudf/archive/v0.15.0.tar.gz"
+    url      = "https://github.com/rapidsai/cudf/archive/v0.15.0.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
