@@ -41,3 +41,6 @@ class UtilLinux(AutotoolsPackage):
         ]
         config_args.extend(self.enable_or_disable('libuuid'))
         return config_args
+
+    def install(self, spec, prefix):
+        make('install', parallel=False)
