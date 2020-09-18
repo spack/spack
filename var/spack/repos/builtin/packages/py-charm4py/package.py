@@ -61,13 +61,9 @@ class PyCharm4py(PythonPackage):
     # This sets the SPACK_CHARM4PY_EXTRALIBS env var which the
     # py-charm4py.makefile.patch adds to the build/link command for
     # libcharm.so.
-    def setup_environment(self, spack_env, run_env):
-        if '^cuda' in self.spec:
-            cudalib = self.spec['cuda'].prefix.lib
-            if not os.path.isdir(cudalib):
-                cudalib = self.spec['cuda'].prefix.lib64
-            spack_env.set('SPACK_CHARM4PY_EXTRALIBS',
-                          '-L{} -lcudart'.format(cudalib))
+    def setup_build_environment(self, env):
+        env.set('SPACK_CHARM4PY_EXTRALIBS',
+                self.spec['cuda'].libs.ld_flags)
 
     def install_args(self, spec, prefix):
         # Have the parent class version set prefix
