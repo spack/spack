@@ -16,7 +16,6 @@ class LlvmFlang(CMakePackage, CudaPackage):
 
     maintainer = ['naromero77']
 
-    version('master', branch='master')
     version('release_70', branch='release_70')
     version('release_60', branch='release_60')
     version('20190329', tag='flang_20190329')
@@ -50,10 +49,8 @@ class LlvmFlang(CMakePackage, CudaPackage):
     # LLVM-Flang Componentes: Driver, OpenMP
     resource(name='flang-driver',
              git='https://github.com/flang-compiler/flang-driver.git',
-             branch='master',
              destination='tools',
              placement='clang',
-             when='@master')
 
     resource(name='flang-driver',
              git='https://github.com/flang-compiler/flang-driver.git',
@@ -106,10 +103,8 @@ class LlvmFlang(CMakePackage, CudaPackage):
 
     resource(name='openmp',
              git='https://github.com/flang-compiler/openmp.git',
-             branch='master',
              destination='projects',
              placement='openmp',
-             when='@master')
 
     resource(name='openmp',
              git='https://github.com/flang-compiler/openmp.git',
