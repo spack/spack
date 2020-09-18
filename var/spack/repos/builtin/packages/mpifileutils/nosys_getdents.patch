@@ -1,0 +1,12 @@
+--- spack-src/src/common/mfu_flist_walk.c.old   2020-09-15 16:08:24.587662032 +0900
++++ spack-src/src/common/mfu_flist_walk.c       2020-09-15 16:31:49.825204748 +0900
+@@ -162,6 +162,9 @@
+     /* Read all directory entries */
+     while (1) {
+         /* execute system call to get block of directory entries */
++#ifndef SYS_getdents
++#define SYS_getdents SYS_getdents64
++#endif
+         int nread = syscall(SYS_getdents, fd, buf, (int) BUF_SIZE);
+         if (nread == -1) {
+             MFU_LOG(MFU_LOG_ERR, "syscall to getdents failed when reading `%s' (errno=%d %s)", dir, errno, strerror(errno));
