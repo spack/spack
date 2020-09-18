@@ -18,6 +18,9 @@ class Julia(Package):
     maintainers = ['glennpj']
 
     version('master', branch='master')
+    version('1.5.1', tag='v1.5.1')
+    version('1.5.0', tag='v1.5.0')
+    version('1.4.2', tag='v1.4.2')
     version('1.4.1', sha256='b21585db55673ac0668c163678fcf2aad11eb7c64bb2aa03a43046115fab1553')
     version('1.4.0', sha256='880c73a08296ce8d94ad9605149f2a2b2b028e7202a700ef725da899300b8be9')
     version('1.3.1', sha256='053908ec2706eb76cfdc998c077de123ecb1c60c945b4b5057aa3be19147b723')
@@ -159,8 +162,10 @@ class Julia(Package):
                     'JULIA_CPU_TARGET=generic'
                 ]
             else:
+                target_str = str(spec.target).replace('_', '-')
                 options += [
-                    'JULIA_CPU_TARGET={0}'.format(spec.target)
+                    'MARCH={0}'.format(target_str),
+                    'JULIA_CPU_TARGET={0}'.format(target_str)
                 ]
 
         if '%intel' in spec:
