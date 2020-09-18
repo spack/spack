@@ -24,7 +24,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
 
     version('master', git='https://github.com/swig/swig.git')
     version('4.0.2', sha256='d53be9730d8d58a16bf0cbd1f8ac0c0c3e1090573168bfa151b01eb47fa906fc',
-        preferred=True)
+            preferred=True)
     version('4.0.1', sha256='7a00b4d0d53ad97a14316135e2d702091cd5f193bb58bcfcd8bc59d41e7887a9')
     version('4.0.0', sha256='e8a39cd6437e342cdcbd5af27a9bf11b62dc9efec9248065debcb8276fcbb925')
     version('3.0.12', sha256='7cf9f447ae7ed1c51722efc45e7f14418d15d7a1e143ac9f09a668999f4fc94d')
@@ -38,7 +38,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     version('fortran', branch='master',
             git='https://github.com/swig-fortran/swig.git')
     version('4.0.2-fortran', sha256='2d65ebe82274da294709254703f9ac2333fd39286b9375b0d89182385aac548e',
-        url='https://github.com/swig-fortran/swig/archive/v4.0.2+fortran.tar.gz')
+            url='https://github.com/swig-fortran/swig/archive/v4.0.2+fortran.tar.gz')
 
     depends_on('pcre')
 
