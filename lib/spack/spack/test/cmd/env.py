@@ -1030,6 +1030,18 @@ def test_store_different_build_deps():
         assert x_read['z'] != y_read['z']
 
 
+"""
+def test_env_dir_remains_after_deactivated() #TODO: fix later
+    #create env with view in fake dir
+    #activate env
+        #assert fake dir is in PATH
+    #add fake dir to PATH manually
+        #assert fake dir is in PATH twice
+    #deactivate env
+        #assert dir is in the PATH once
+"""
+
+
 def test_env_updates_view_install(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.mkdir('view')

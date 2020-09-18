@@ -1169,6 +1169,7 @@ class Environment(object):
 
     def _env_modifications_for_default_view(self, reverse=False):
         all_mods = spack.util.environment.EnvironmentModifications()
+
         errors = []
         for _, spec in self.concretized_specs():
             if spec in self.default_view and spec.package.installed:
@@ -1182,6 +1183,7 @@ class Environment(object):
                     continue
 
                 all_mods.extend(mods.reversed() if reverse else mods)
+
         return all_mods, errors
 
     def add_default_view_to_shell(self, shell):
@@ -1229,6 +1231,7 @@ class Environment(object):
         """ Pseudo code
             modified = os.environ.get("SPACK_CHANGES"). split by colon
         """
+        modified = os.environ.get("SPACK_ENV_ACTIVATED_PATHS")
 
         return env_mod.shell_modifications(shell)
 
