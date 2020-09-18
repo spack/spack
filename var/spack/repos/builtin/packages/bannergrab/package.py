@@ -8,9 +8,9 @@ from spack import *
 
 class Bannergrab(MakefilePackage):
     """Bannergrab is a simple tool, designed to collect information
-   from network services. It can do this using two different methods;
-   grab the connection banners and send triggers and collect the
-   responses. Bannergrab defaults to sending triggers."""
+    from network services. It can do this using two different methods;
+    grab the connection banners and send triggers and collect the
+    responses. Bannergrab defaults to sending triggers."""
 
     homepage = "https://github.com/johanburati/bannergrab"
     git      = "https://github.com/johanburati/bannergrab.git"
@@ -21,5 +21,5 @@ class Bannergrab(MakefilePackage):
         mkdirp(prefix.bin)
         mkdirp(prefix.man1)
         make('BINPATH={0}'.format(prefix.bin),
-             'MANPATH={0}/'.format(prefix.man1),
+             'MANPATH={0}/'.format(prefix),
              'install')
