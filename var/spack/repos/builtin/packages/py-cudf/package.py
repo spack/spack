@@ -44,6 +44,18 @@ class PyCudf(PythonPackage):
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('python@3.6:3.7', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cython', type='build')
+    depends_on('py-numba@0.40.0:', type=('build', 'run'))
+    depends_on('py-numpy@1.14.4:', type=('build', 'run'))
+    depends_on('py-pyarrow+cuda', type=('build', 'run'))
+    depends_on('py-pandas@0.23.4:', type=('build', 'run'))
+    depends_on('py-rmm', type=('build', 'run'))
+    depends_on('cuda@10:')
+    
+    for v in ('@0.15.0',):
+        depends_on('libcudf' + v, when=v)
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
