@@ -25,8 +25,6 @@ class UtilLinux(AutotoolsPackage):
     depends_on('python@2.7:')
     depends_on('pkgconfig')
 
-    parallel = False
-
     # Make it possible to disable util-linux's libuuid so that you may
     # reliably depend_on(`libuuid`).
     variant('libuuid', default=True, description='Build libuuid')
@@ -43,3 +41,6 @@ class UtilLinux(AutotoolsPackage):
         ]
         config_args.extend(self.enable_or_disable('libuuid'))
         return config_args
+
+    def install(self, spec, prefix):
+        make('install', parallel=False)
