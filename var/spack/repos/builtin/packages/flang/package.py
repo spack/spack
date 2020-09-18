@@ -33,7 +33,7 @@ class Flang(CMakePackage, CudaPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('python@2.7:', type='build')
 
-    depends_on('llvm-flang@release_70', when='@master')
+    depends_on('llvm-flang@release_90', when='@master')
     depends_on('llvm-flang@20190329', when='@20190329')
     depends_on('llvm-flang@20181226_70', when='@20181226')
     depends_on('llvm-flang@20180921', when='@20180921')
