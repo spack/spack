@@ -102,7 +102,8 @@ class SetParallelJobs(argparse.Action):
                   '[expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, jobs))
 
-        jobs = min(jobs, multiprocessing.cpu_count())
+        if not spack.config.get('config:override_cpu_limit', False):
+            jobs = min(jobs, multiprocessing.cpu_count())
         spack.config.set('config:build_jobs', jobs, scope='command_line')
 
         setattr(namespace, 'jobs', jobs)
