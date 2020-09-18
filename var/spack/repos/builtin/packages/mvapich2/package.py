@@ -15,16 +15,16 @@ class Mvapich2(AutotoolsPackage):
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
     # Prefer the latest stable release
-    version('2.3.1', sha256='314e12829f75f3ed83cd4779a972572d1787aac6543a3d024ea7c6080e0ee3bf', preferred=True)
+    version('2.3.4', sha256='7226a45c7c98333c8e5d2888119cce186199b430c13b7b1dca1769909e68ea7a', preferred=True)
+    version('2.3.3', sha256='41d3261be57e5bc8aabf4e32981543c015c5443ff032a26f18205985e18c2b73')
+    version('2.3.2', sha256='30cc0d7bcaa075d204692f76bca4d65a539e0f661c7460ffa9f835d6249e1ebf')
+    version('2.3.1', sha256='314e12829f75f3ed83cd4779a972572d1787aac6543a3d024ea7c6080e0ee3bf')
     version('2.3', sha256='01d5fb592454ddd9ecc17e91c8983b6aea0e7559aa38f410b111c8ef385b50dd')
     version('2.3rc2', sha256='dc3801f879a54358d17002a56afd45186e2e83edc5b8367b5c317e282eb6d6bf')
     version('2.3rc1', sha256='607d309c864a6d57f5fa78fe6dd02368919736b8be0f4ddb938aba303ef9c45c')
     version('2.3a', sha256='7f0bc94265de9f66af567a263b1be6ef01755f7f6aedd25303d640cc4d8b1cff')
     version('2.2', sha256='791a6fc2b23de63b430b3e598bf05b1b25b82ba8bf7e0622fc81ba593b3bb131')
     version('2.1', sha256='49f3225ad17d2f3b6b127236a0abdc979ca8a3efb8d47ab4b6cd4f5252d05d29')
-
-    # hpe-ddn specific external versions for ime
-    version('ime', sha256='deadbeef000deadbeef000deadbeef000deadbeef000deadbeef000deadbeef0')
 
     provides('mpi')
     provides('mpi@:3.0')
@@ -91,7 +91,9 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'file_systems',
         description='List of the ROMIO file systems to activate',
-        values=auto_or_any_combination_of('lustre', 'gpfs', 'nfs', 'ufs'),
+        values=auto_or_any_combination_of(
+            'ime', 'lustre', 'gpfs', 'nfs', 'ufs'
+        ),
     )
 
     depends_on('findutils', type='build')
@@ -186,13 +188,18 @@ class Mvapich2(AutotoolsPackage):
     @property
     def file_system_options(self):
         spec = self.spec
+        opts = []
 
         fs = []
-        for x in ('lustre', 'gpfs', 'nfs', 'ufs'):
+        for x in ('ime', 'lustre', 'gpfs', 'nfs', 'ufs'):
             if 'file_systems={0}'.format(x) in spec:
                 fs.append(x)
+                # TODO : when IME package will be added, replace these paths
+                if x == 'ime':
+                    opts = ["CFLAGS=-I/opt/ddn/ime/include",
+                            "LDFLAGS=-L/opt/ddn/ime/lib",
+                            "LIBS=-lim_client"]
 
-        opts = []
         if len(fs) > 0:
             opts.append('--with-file-system=%s' % '+'.join(fs))
 

@@ -58,6 +58,9 @@ packages:
         paths:
             m4@1.4.16: /usr
         version: [1.4.16]
+    mvapich2:
+        variants: fabrics=mrail file_systems=ime,gpfs process_managers=slurm
+        version: [2.3.2]
     # can not be installed with python 3
     node-js:
         paths:
