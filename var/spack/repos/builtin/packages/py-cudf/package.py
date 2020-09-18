@@ -57,6 +57,8 @@ class PyCudf(PythonPackage):
     for v in ('@0.15.0',):
         depends_on('libcudf' + v, when=v)
 
+    phases = [ 'build_ext', 'install' ]
+
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
