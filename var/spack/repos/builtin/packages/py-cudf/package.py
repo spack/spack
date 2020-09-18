@@ -36,6 +36,8 @@ class PyCudf(PythonPackage):
 
     version('0.15.0',  sha256='57b8036134368daa8a967eae971ee121cdc58c8678a03eba1358ed2b927dc16e')
 
+    build_directory = 'python/cudf'
+
     # FIXME: Add dependencies if required. Only add the python dependency
     # if you need specific versions. A generic python dependency is
     # added implicity by the PythonPackage class.
