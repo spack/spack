@@ -25,11 +25,17 @@ section = "administrator"
 level = "long"
 
 
+def first_line(docstring):
+    """Return the first line of the docstring."""
+    return docstring.split('\n')[0]
+
+
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='test_command')
 
     # Run
-    run_parser = sp.add_parser('run', description=test_run.__doc__)
+    run_parser = sp.add_parser('run', description=test_run.__doc__,
+                               help=first_line(test_run.__doc__))
 
     alias_help_msg = "Provide an alias for this test-suite"
     alias_help_msg += " for subsequent access."
@@ -80,31 +86,36 @@ def setup_parser(subparser):
     arguments.add_common_arguments(run_parser, ['installed_specs'])
 
     # List
-    list_parser = sp.add_parser('list', description=test_list.__doc__)
+    list_parser = sp.add_parser('list', description=test_list.__doc__,
+                                help=first_line(test_list.__doc__))
     list_parser.add_argument(
         'filter', nargs=argparse.REMAINDER,
         help='optional case-insensitive glob patterns to filter results.')
 
     # Find
-    find_parser = sp.add_parser('find', description=test_find.__doc__)
+    find_parser = sp.add_parser('find', description=test_find.__doc__,
+                                help=first_line(test_find.__doc__))
     find_parser.add_argument(
         'filter', nargs=argparse.REMAINDER,
         help='optional case-insensitive glob patterns to filter results.')
 
     # Status
-    status_parser = sp.add_parser('status', description=test_status.__doc__)
+    status_parser = sp.add_parser('status', description=test_status.__doc__,
+                                  help=first_line(test_status.__doc__))
     status_parser.add_argument(
         'names', nargs=argparse.REMAINDER,
         help="Test suites for which to print status")
 
     # Results
-    results_parser = sp.add_parser('results', description=test_results.__doc__)
+    results_parser = sp.add_parser('results', description=test_results.__doc__,
+                                   help=first_line(test_results.__doc__))
     results_parser.add_argument(
         'names', nargs=argparse.REMAINDER,
         help="Test suites for which to print results")
 
     # Remove
-    remove_parser = sp.add_parser('remove', description=test_remove.__doc__)
+    remove_parser = sp.add_parser('remove', description=test_remove.__doc__,
+                                  help=first_line(test_remove.__doc__))
     arguments.add_common_arguments(remove_parser, ['yes_to_all'])
     remove_parser.add_argument(
         'names', nargs=argparse.REMAINDER,
@@ -112,7 +123,7 @@ def setup_parser(subparser):
 
 
 def test_run(args):
-    """Run tests for the specified installed packages
+    """Run tests for the specified installed packages.
 
     If no specs are listed, run tests for all packages in the current
     environment or all installed packages if there is no active environment.
