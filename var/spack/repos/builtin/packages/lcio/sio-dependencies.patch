@@ -1,0 +1,15 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2d6d02ba..6c557691 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -276,7 +276,9 @@ OPTION( BUILD_LCIO_EXAMPLES "Set to ON to build LCIO examples" ON )
+ # lcio library
+ ADD_SUBDIRECTORY( ./src/cpp lcio )
+ 
+-
++IF( NOT SIO_FOUND )
++  ADD_DEPENDENCIES( lcio sio )
++ENDIF()
+ 
+ # fortran examples
+ OPTION( BUILD_F77_TESTJOBS "Set to ON to build LCIO F77 testjobs" OFF )

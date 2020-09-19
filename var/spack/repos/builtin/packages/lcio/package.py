@@ -40,6 +40,8 @@ class Lcio(CMakePackage):
     depends_on('delphes', when="+examples")
     depends_on('readline', when="+examples")
 
+    patch('sio-dependencies.patch')
+
     def cmake_args(self):
         args = [
             self.define('CMAKE_CXX_STANDARD',
