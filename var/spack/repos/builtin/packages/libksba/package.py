@@ -18,6 +18,8 @@ class Libksba(AutotoolsPackage):
 
     depends_on('libgpg-error@1.8:')
 
+    conflicts('%apple-clang@12:', when='@:1.3')
+
     def configure_args(self):
         return [
             '--with-libgpg-error-prefix=' + self.spec['libgpg-error'].prefix
