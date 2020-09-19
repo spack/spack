@@ -71,6 +71,10 @@ class PyScipy(PythonPackage):
     depends_on('blas')
     depends_on('lapack')
 
+    # https://github.com/scipy/scipy/issues/12860
+    patch('https://git.sagemath.org/sage.git/plain/build/pkgs/scipy/patches/extern_decls.patch?id=711fe05025795e44b84233e065d240859ccae5bd',
+          sha256='5433f60831cb554101520a8f8871ac5a32c95f7a971ccd68b69049535b106780', when='@1.2:1.5')
+
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/11611
         if self.spec.satisfies('@:1.4 %gcc@10:'):
