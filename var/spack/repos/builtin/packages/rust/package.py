@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 from six import iteritems
 
 
@@ -56,9 +54,7 @@ class Rust(Package):
         description='Install Rust source files'
     )
     variant(
-        'extra_targets',
-        default=(),
-        multi=True,
+        'extra_targets', default='none', multi=True,
         description='Triples for extra targets to enable. For supported targets, see: https://doc.rust-lang.org/nightly/rustc/platform-support.html'
     )
 
@@ -502,7 +498,10 @@ class Rust(Package):
 
         ar = which('ar', required=True)
 
-        extra_targets = list(self.spec.variants['extra_targets'].value)
+        extra_targets = []
+        if self.spec.variants['extra_targets'].value != 'none':
+            extra_targets = list(self.spec.variants['extra_targets'].value)
+
         targets = [self.get_rust_target()] + extra_targets
         target_spec = 'target=[' + \
             ','.join('"{0}"'.format(target) for target in targets) + ']'
