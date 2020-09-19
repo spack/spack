@@ -28,12 +28,4 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     patch('readline-6.3-upstream_fixes-1.patch', when='@6.3')
 
     def build(self, spec, prefix):
-        options = [
-            'SHLIB_LIBS=-L{0} -lncursesw'.format(
-                spec['ncurses'].prefix.lib)
-        ]
-
-        if '+termlib' in spec['ncurses']:
-            options[0] += ' -ltinfo'
-
-        make(*options)
+        make('SHLIB_LIBS=' + spec['ncurses'].libs.ld_flags)
