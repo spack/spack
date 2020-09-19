@@ -13,7 +13,7 @@ class Xcfun(CMakePackage):
     url = "https://github.com/dftlibs/xcfun/archive/v2.1.0.tar.gz"
 
     maintainers = ['robertodr', 'bast']
-    
+
     version('2.1.0',
             sha256='64aac8c933cc129ce6326f3827e342abfd10b94ea4a302aaca9f10d342ad7656')
     version('2.0.2',
