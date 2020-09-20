@@ -117,6 +117,9 @@ class Graphviz(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('libtool', type='build')
+    # required to build docs
+    depends_on('groff', type='build')
+    depends_on('ghostscript', type='build')
 
     parallel = False
 
