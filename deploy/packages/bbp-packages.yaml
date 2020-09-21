@@ -65,7 +65,7 @@ packages:
     specs:
       - functionalizer@3.12.2
       - parquet-converters@0.5.7
-      - synapsetool@0.6.0
+      - synapsetool@0.6.1
       - touchdetector@5.4.0
       - brayns +opendeck +brion ^brion@3.1.0 ^ospray@1.7.3%intel@19.0.4
       - brayns@1.0.1 +brion ^brion@3.1.0 ^ospray%intel@19.0.4
