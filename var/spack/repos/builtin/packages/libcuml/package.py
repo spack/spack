@@ -61,7 +61,6 @@ class Libcuml(CMakePackage):
         #-DSINGLEGPU=${SINGLEGPU_CPP_FLAG}
         #-DBUILD_CUML_MPI_COMMS=${BUILD_CPP_MG_TESTS}
         #-DBUILD_CUML_MG_TESTS=${BUILD_CPP_MG_TESTS}
-        #-DBUILD_STATIC_FAISS=${BUILD_STATIC_FAISS}
         #-DPARALLEL_LEVEL=${PARALLEL_LEVEL}
         #-DDISABLE_DEPRECATION_WARNING=${BUILD_DISABLE_DEPRECATION_WARNING}
         #-DCMAKE_PREFIX_PATH=${INSTALL_PREFIX}
@@ -71,5 +70,6 @@ class Libcuml(CMakePackage):
         args.append("-DNVTX=OFF")
         # FIXME
         args.append("-DENABLE_CUMLPRIMS_MG=OFF")
+        args.append("-DBUILD_STATIC_FAISS=ON")
 
         return args
