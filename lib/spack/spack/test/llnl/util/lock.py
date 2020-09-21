@@ -275,42 +275,74 @@ multiproc_test = mpi_multiproc_test if mpi else local_multiproc_test
 #
 # Process snippets below can be composed into tests.
 #
-def acquire_write(lock_path, start=0, length=0):
-    def fn(barrier):
-        lock = lk.Lock(lock_path, start, length)
+class AcquireWrite(object):
+    def __init__(self, lock_path, start=0, length=0):
+        self.lock_path = lock_path
+        self.start = start
+        self.length = length
+
+    @property
+    def __name__(self):
+        return self.__class__.__name__
+
+    def __call__(self, barrier):
+        lock = lk.Lock(self.lock_path, self.start, self.length)
         lock.acquire_write()  # grab exclusive lock
         barrier.wait()
         barrier.wait()  # hold the lock until timeout in other procs.
-    return fn
 
 
-def acquire_read(lock_path, start=0, length=0):
-    def fn(barrier):
-        lock = lk.Lock(lock_path, start, length)
+class AcquireRead(object):
+    def __init__(self, lock_path, start=0, length=0):
+        self.lock_path = lock_path
+        self.start = start
+        self.length = length
+
+    @property
+    def __name__(self):
+        return self.__class__.__name__
+
+    def __call__(self, barrier):
+        lock = lk.Lock(self.lock_path, self.start, self.length)
         lock.acquire_read()  # grab shared lock
         barrier.wait()
         barrier.wait()  # hold the lock until timeout in other procs.
-    return fn
 
 
-def timeout_write(lock_path, start=0, length=0):
-    def fn(barrier):
-        lock = lk.Lock(lock_path, start, length)
+class TimeoutWrite(object):
+    def __init__(self, lock_path, start=0, length=0):
+        self.lock_path = lock_path
+        self.start = start
+        self.length = length
+
+    @property
+    def __name__(self):
+        return self.__class__.__name__
+
+    def __call__(self, barrier):
+        lock = lk.Lock(self.lock_path, self.start, self.length)
         barrier.wait()  # wait for lock acquire in first process
         with pytest.raises(lk.LockTimeoutError):
             lock.acquire_write(lock_fail_timeout)
         barrier.wait()
-    return fn
 
 
-def timeout_read(lock_path, start=0, length=0):
-    def fn(barrier):
-        lock = lk.Lock(lock_path, start, length)
+class TimeoutRead(object):
+    def __init__(self, lock_path, start=0, length=0):
+        self.lock_path = lock_path
+        self.start = start
+        self.length = length
+
+    @property
+    def __name__(self):
+        return self.__class__.__name__
+
+    def __call__(self, barrier):
+        lock = lk.Lock(self.lock_path, self.start, self.length)
         barrier.wait()  # wait for lock acquire in first process
         with pytest.raises(lk.LockTimeoutError):
             lock.acquire_read(lock_fail_timeout)
         barrier.wait()
-    return fn
 
 
 #
@@ -319,57 +351,57 @@ def timeout_read(lock_path, start=0, length=0):
 #
 def test_write_lock_timeout_on_write(lock_path):
     multiproc_test(
-        acquire_write(lock_path),
-        timeout_write(lock_path))
+        AcquireWrite(lock_path),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_on_write_2(lock_path):
     multiproc_test(
-        acquire_write(lock_path),
-        timeout_write(lock_path),
-        timeout_write(lock_path))
+        AcquireWrite(lock_path),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_on_write_3(lock_path):
     multiproc_test(
-        acquire_write(lock_path),
-        timeout_write(lock_path),
-        timeout_write(lock_path),
-        timeout_write(lock_path))
+        AcquireWrite(lock_path),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_on_write_ranges(lock_path):
     multiproc_test(
-        acquire_write(lock_path, 0, 1),
-        timeout_write(lock_path, 0, 1))
+        AcquireWrite(lock_path, 0, 1),
+        TimeoutWrite(lock_path, 0, 1))
 
 
 def test_write_lock_timeout_on_write_ranges_2(lock_path):
     multiproc_test(
-        acquire_write(lock_path, 0, 64),
-        acquire_write(lock_path, 65, 1),
-        timeout_write(lock_path, 0, 1),
-        timeout_write(lock_path, 63, 1))
+        AcquireWrite(lock_path, 0, 64),
+        AcquireWrite(lock_path, 65, 1),
+        TimeoutWrite(lock_path, 0, 1),
+        TimeoutWrite(lock_path, 63, 1))
 
 
 def test_write_lock_timeout_on_write_ranges_3(lock_path):
     multiproc_test(
-        acquire_write(lock_path, 0, 1),
-        acquire_write(lock_path, 1, 1),
-        timeout_write(lock_path),
-        timeout_write(lock_path),
-        timeout_write(lock_path))
+        AcquireWrite(lock_path, 0, 1),
+        AcquireWrite(lock_path, 1, 1),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_on_write_ranges_4(lock_path):
     multiproc_test(
-        acquire_write(lock_path, 0, 1),
-        acquire_write(lock_path, 1, 1),
-        acquire_write(lock_path, 2, 456),
-        acquire_write(lock_path, 500, 64),
-        timeout_write(lock_path),
-        timeout_write(lock_path),
-        timeout_write(lock_path))
+        AcquireWrite(lock_path, 0, 1),
+        AcquireWrite(lock_path, 1, 1),
+        AcquireWrite(lock_path, 2, 456),
+        AcquireWrite(lock_path, 500, 64),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path))
 
 
 #
@@ -378,46 +410,46 @@ def test_write_lock_timeout_on_write_ranges_4(lock_path):
 #
 def test_read_lock_timeout_on_write(lock_path):
     multiproc_test(
-        acquire_write(lock_path),
-        timeout_read(lock_path))
+        AcquireWrite(lock_path),
+        TimeoutRead(lock_path))
 
 
 def test_read_lock_timeout_on_write_2(lock_path):
     multiproc_test(
-        acquire_write(lock_path),
-        timeout_read(lock_path),
-        timeout_read(lock_path))
+        AcquireWrite(lock_path),
+        TimeoutRead(lock_path),
+        TimeoutRead(lock_path))
 
 
 def test_read_lock_timeout_on_write_3(lock_path):
     multiproc_test(
-        acquire_write(lock_path),
-        timeout_read(lock_path),
-        timeout_read(lock_path),
-        timeout_read(lock_path))
+        AcquireWrite(lock_path),
+        TimeoutRead(lock_path),
+        TimeoutRead(lock_path),
+        TimeoutRead(lock_path))
 
 
 def test_read_lock_timeout_on_write_ranges(lock_path):
     """small write lock, read whole file."""
     multiproc_test(
-        acquire_write(lock_path, 0, 1),
-        timeout_read(lock_path))
+        AcquireWrite(lock_path, 0, 1),
+        TimeoutRead(lock_path))
 
 
 def test_read_lock_timeout_on_write_ranges_2(lock_path):
     """small write lock, small read lock"""
     multiproc_test(
-        acquire_write(lock_path, 0, 1),
-        timeout_read(lock_path, 0, 1))
+        AcquireWrite(lock_path, 0, 1),
+        TimeoutRead(lock_path, 0, 1))
 
 
 def test_read_lock_timeout_on_write_ranges_3(lock_path):
     """two write locks, overlapping read locks"""
     multiproc_test(
-        acquire_write(lock_path, 0, 1),
-        acquire_write(lock_path, 64, 128),
-        timeout_read(lock_path, 0, 1),
-        timeout_read(lock_path, 128, 256))
+        AcquireWrite(lock_path, 0, 1),
+        AcquireWrite(lock_path, 64, 128),
+        TimeoutRead(lock_path, 0, 1),
+        TimeoutRead(lock_path, 128, 256))
 
 
 #
@@ -425,58 +457,58 @@ def test_read_lock_timeout_on_write_ranges_3(lock_path):
 #
 def test_write_lock_timeout_on_read(lock_path):
     multiproc_test(
-        acquire_read(lock_path),
-        timeout_write(lock_path))
+        AcquireRead(lock_path),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_on_read_2(lock_path):
     multiproc_test(
-        acquire_read(lock_path),
-        timeout_write(lock_path),
-        timeout_write(lock_path))
+        AcquireRead(lock_path),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_on_read_3(lock_path):
     multiproc_test(
-        acquire_read(lock_path),
-        timeout_write(lock_path),
-        timeout_write(lock_path),
-        timeout_write(lock_path))
+        AcquireRead(lock_path),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_on_read_ranges(lock_path):
     multiproc_test(
-        acquire_read(lock_path, 0, 1),
-        timeout_write(lock_path))
+        AcquireRead(lock_path, 0, 1),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_on_read_ranges_2(lock_path):
     multiproc_test(
-        acquire_read(lock_path, 0, 1),
-        timeout_write(lock_path, 0, 1))
+        AcquireRead(lock_path, 0, 1),
+        TimeoutWrite(lock_path, 0, 1))
 
 
 def test_write_lock_timeout_on_read_ranges_3(lock_path):
     multiproc_test(
-        acquire_read(lock_path, 0, 1),
-        acquire_read(lock_path, 10, 1),
-        timeout_write(lock_path, 0, 1),
-        timeout_write(lock_path, 10, 1))
+        AcquireRead(lock_path, 0, 1),
+        AcquireRead(lock_path, 10, 1),
+        TimeoutWrite(lock_path, 0, 1),
+        TimeoutWrite(lock_path, 10, 1))
 
 
 def test_write_lock_timeout_on_read_ranges_4(lock_path):
     multiproc_test(
-        acquire_read(lock_path, 0, 64),
-        timeout_write(lock_path, 10, 1),
-        timeout_write(lock_path, 32, 1))
+        AcquireRead(lock_path, 0, 64),
+        TimeoutWrite(lock_path, 10, 1),
+        TimeoutWrite(lock_path, 32, 1))
 
 
 def test_write_lock_timeout_on_read_ranges_5(lock_path):
     multiproc_test(
-        acquire_read(lock_path, 64, 128),
-        timeout_write(lock_path, 65, 1),
-        timeout_write(lock_path, 127, 1),
-        timeout_write(lock_path, 90, 10))
+        AcquireRead(lock_path, 64, 128),
+        TimeoutWrite(lock_path, 65, 1),
+        TimeoutWrite(lock_path, 127, 1),
+        TimeoutWrite(lock_path, 90, 10))
 
 
 #
@@ -484,67 +516,67 @@ def test_write_lock_timeout_on_read_ranges_5(lock_path):
 #
 def test_write_lock_timeout_with_multiple_readers_2_1(lock_path):
     multiproc_test(
-        acquire_read(lock_path),
-        acquire_read(lock_path),
-        timeout_write(lock_path))
+        AcquireRead(lock_path),
+        AcquireRead(lock_path),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_with_multiple_readers_2_2(lock_path):
     multiproc_test(
-        acquire_read(lock_path),
-        acquire_read(lock_path),
-        timeout_write(lock_path),
-        timeout_write(lock_path))
+        AcquireRead(lock_path),
+        AcquireRead(lock_path),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_with_multiple_readers_3_1(lock_path):
     multiproc_test(
-        acquire_read(lock_path),
-        acquire_read(lock_path),
-        acquire_read(lock_path),
-        timeout_write(lock_path))
+        AcquireRead(lock_path),
+        AcquireRead(lock_path),
+        AcquireRead(lock_path),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_with_multiple_readers_3_2(lock_path):
     multiproc_test(
-        acquire_read(lock_path),
-        acquire_read(lock_path),
-        acquire_read(lock_path),
-        timeout_write(lock_path),
-        timeout_write(lock_path))
+        AcquireRead(lock_path),
+        AcquireRead(lock_path),
+        AcquireRead(lock_path),
+        TimeoutWrite(lock_path),
+        TimeoutWrite(lock_path))
 
 
 def test_write_lock_timeout_with_multiple_readers_2_1_ranges(lock_path):
     multiproc_test(
-        acquire_read(lock_path, 0, 10),
-        acquire_read(lock_path, 0.5, 10),
-        timeout_write(lock_path, 5, 5))
+        AcquireRead(lock_path, 0, 10),
+        AcquireRead(lock_path, 0.5, 10),
+        TimeoutWrite(lock_path, 5, 5))
 
 
 def test_write_lock_timeout_with_multiple_readers_2_3_ranges(lock_path):
     multiproc_test(
-        acquire_read(lock_path, 0, 10),
-        acquire_read(lock_path, 5, 15),
-        timeout_write(lock_path, 0, 1),
-        timeout_write(lock_path, 11, 3),
-        timeout_write(lock_path, 7, 1))
+        AcquireRead(lock_path, 0, 10),
+        AcquireRead(lock_path, 5, 15),
+        TimeoutWrite(lock_path, 0, 1),
+        TimeoutWrite(lock_path, 11, 3),
+        TimeoutWrite(lock_path, 7, 1))
 
 
 def test_write_lock_timeout_with_multiple_readers_3_1_ranges(lock_path):
     multiproc_test(
-        acquire_read(lock_path, 0, 5),
-        acquire_read(lock_path, 5, 5),
-        acquire_read(lock_path, 10, 5),
-        timeout_write(lock_path, 0, 15))
+        AcquireRead(lock_path, 0, 5),
+        AcquireRead(lock_path, 5, 5),
+        AcquireRead(lock_path, 10, 5),
+        TimeoutWrite(lock_path, 0, 15))
 
 
 def test_write_lock_timeout_with_multiple_readers_3_2_ranges(lock_path):
     multiproc_test(
-        acquire_read(lock_path, 0, 5),
-        acquire_read(lock_path, 5, 5),
-        acquire_read(lock_path, 10, 5),
-        timeout_write(lock_path, 3, 10),
-        timeout_write(lock_path, 5, 1))
+        AcquireRead(lock_path, 0, 5),
+        AcquireRead(lock_path, 5, 5),
+        AcquireRead(lock_path, 10, 5),
+        TimeoutWrite(lock_path, 3, 10),
+        TimeoutWrite(lock_path, 5, 1))
 
 
 @pytest.mark.skipif(os.getuid() == 0, reason='user is root')
