@@ -39,6 +39,6 @@ class Nut(CMakePackage):
         mkdirp(prefix.bin)
         mkdirp(prefix.lib)
         install(join_path(self.build_directory, 'apps/bh-3'), prefix.bin)
-        install(join_path(self.build_directory,'lib/libnut.a'), prefix.lib)
+        install(join_path(self.build_directory, 'lib/libnut.a'), prefix.lib)
         install_tree('test/data', prefix.data)
         install_tree('lib', prefix.include)
