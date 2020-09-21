@@ -3343,7 +3343,7 @@ class Spec(object):
     def _cmp_node(self):
         """Comparison key for just *this node* and not its deps."""
         return (self.name,
-                self.namespace,
+                self.namespace or '',
                 tuple(self.versions),
                 self.variants,
                 self.architecture,

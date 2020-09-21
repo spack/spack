@@ -1003,3 +1003,10 @@ def test_is_extension_after_round_trip_to_dict(config, spec_str):
     # Using 'y' since the round-trip make us lose build dependencies
     for d in y.traverse():
         assert x[d.name].package.is_extension == y[d.name].package.is_extension
+
+
+def test_spec_sort_namespace():
+    # Check that it is possible to compare two specs, one of which has a
+    # namespace and another one does not.
+    s = [Spec('builtin.mpich'), Spec('mpich')]
+    assert s[::-1] == sorted(s)
