@@ -40,7 +40,7 @@ class HsaRocrDev(CMakePackage):
         libelf_include = self.spec['libelf'].prefix.include.libelf
         args = ['-DLIBELF_INCLUDE_DIRS=%s' % libelf_include]
 
-        if not ('@3.5.0' in self.spec):
+        if '@3.7.0:' in self.spec:
             args.append('-DIMAGE_SUPPORT=OFF')
 
         return args

@@ -67,7 +67,7 @@ class Hip(CMakePackage):
             'hip-config.cmake.in', string=True)
 
     def flag_handler(self, name, flags):
-        if name == 'cxxflags' and not ('@3.5.0' in self.spec):
+        if name == 'cxxflags' and '@3.7.0:' in self.spec:
             incl = self.spec['rocclr'].prefix.include
             flags.append('-I {0}/compiler/lib/include'.format(incl))
 
