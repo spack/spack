@@ -1312,51 +1312,50 @@ class Environment(object):
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
+    def _spec_needs_overwrite(self, spec):
+        # Overwrite the install if it's a dev build (non-transitive)
+        # and the code has been changed since the last install
+        # or one of the dependencies has been reinstalled since
+        # the last install
+
+        # if it's not installed, we don't need to overwrite it
+        if not spec.package.installed:
+            return False
+
+        # if it's not a dev build, we don't need to overwrite it
+        dev_path_var = spec.variants.get('dev_path', None)
+        dev_build_var = spec.variants.get('dev_build', None)
+        if not dev_build_var:
+            return False
+
+        # if a dep is not installed, then it will be changed
+        deps = list(spec.traverse(root=False))
+        all_installed = all(dep.package.installed for dep in deps)
+        if not all_installed:
+            return True
+
+        # if any dep needs overwrite, then overwrite this package
+        any_rebuild = any(self._spec_needs_overwrite(dep) for dep in deps)
+        if any_rebuild:
+            return True
+
+        # if it's not a direct dev build and its dependencies haven't
+        # changed, it hasn't changed
+        if not dev_path_var:
+            return False
+
+        # if it is a direct dev build, check whether the code changed
+        # we already know it is installed
+        _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+        mtime = fs.last_modification_time_recursive(dev_path_var.value)
+        return mtime > record.installation_time
+
     def _get_overwrite_specs(self):
         ret = []
         for dag_hash in self.concretized_order:
             spec = self.specs_by_hash[dag_hash]
-
-            def needs_overwrite(spec):
-                # Overwrite the install if it's a dev build (non-transitive)
-                # and the code has been changed since the last install
-                # or one of the dependencies has been reinstalled since
-                # the last install
-
-                # if it's not installed, we don't need to overwrite it
-                if not spec.package.installed:
-                    return False
-
-                # if it's not a dev build, we don't need to overwrite it
-                dev_path_var = spec.variants.get('dev_path', None)
-                dev_build_var = spec.variants.get('dev_build', None)
-                if not dev_build_var:
-                    return False
-
-                # if a dep is not installed, then it will be changed
-                deps = list(spec.traverse(root=False))
-                all_installed = all(dep.package.installed for dep in deps)
-                if not all_installed:
-                    return True
-
-                # if any dep needs overwrite, then overwrite this package
-                any_rebuild = any(needs_overwrite(dep) for dep in deps)
-                if any_rebuild:
-                    return True
-
-                # if it's not a direct dev build and its dependencies haven't
-                # changed, it hasn't changed
-                if not dev_path_var:
-                    return False
-
-                # if it is a direct dev build, check whether the code changed
-                # we already know it is installed
-                _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
-                mtime = fs.last_modification_time_recursive(dev_path_var.value)
-                return mtime > record.installation_time
-
             ret.extend([d.dag_hash() for d in spec.traverse(root=True)
-                        if needs_overwrite(d)])
+                        if self._spec_needs_overwrite(d)])
 
         return ret
 
