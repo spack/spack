@@ -44,6 +44,7 @@ class Libcuml(CMakePackage):
     depends_on('cuda@9.2:')
     depends_on('blas')
     depends_on('nccl@2.4:')
+    depends_on('treelite')
 
     root_cmakelists_dir = 'cpp'
 
