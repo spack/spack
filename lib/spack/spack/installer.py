@@ -565,7 +565,6 @@ install_args_docstring = """
                 otherwise, the default is to install as many dependencies as
                 possible (i.e., best effort installation).
             fake (bool): Don't really build; install fake stub files instead.
-            force (bool): Install again, even if already installed.
             install_deps (bool): Install dependencies before installing this
                 package
             install_source (bool): By default, source is not installed, but
