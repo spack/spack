@@ -39,6 +39,8 @@ class Libcuml(CMakePackage):
     # FIXME: Add dependencies if required.
     # depends_on('foo')
 
+    root_cmakelists_dir = 'cpp'
+
     def cmake_args(self):
         # FIXME: Add arguments other than
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
