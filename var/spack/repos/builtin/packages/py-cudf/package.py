@@ -20,6 +20,7 @@
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
+import os
 from spack import *
 
 
@@ -44,6 +45,7 @@ class PyCudf(PythonPackage):
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('cmake@3.14:', type='build')
     depends_on('python@3.6:3.7', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
@@ -57,7 +59,15 @@ class PyCudf(PythonPackage):
     for v in ('@0.15.0',):
         depends_on('libcudf' + v, when=v)
 
-    phases = [ 'build_ext', 'install' ]
+    phases = [ 'cmake', 'build_ext', 'install' ]
+
+    def cmake(self, spec, prefix):
+        cmake = which('cmake')
+
+        build_dir = os.path.join(self.stage.source_path, 'cpp', 'build')
+
+        with working_dir(build_dir, create=True):
+            cmake('..')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
