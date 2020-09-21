@@ -33,6 +33,10 @@ class MlperfDeepcam(Package):
     depends_on('py-argparse', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-apex', type=('build', 'run'))
+    depends_on('py-wandb', type=('build', 'run'))
+    depends_on('py-apex', type=('build', 'run'))
+    depends_on('py-mlperf_logging', type=('build', 'run'))
+    depends_on('py-pytorch-gradual-warmup-lr', type=('build', 'run'))
 
     def install(self, spec, prefix):
         # Mostly  about providing an environment so just copy everything
