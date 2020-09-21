@@ -15,8 +15,8 @@ class Hdf5(AutotoolsPackage):
     flexible and efficient I/O and for high volume and complex data.
     """
 
-    homepage = "https://support.hdfgroup.org/HDF5/"
-    url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/hdf5-1.10.1.tar.gz"
+    homepage = "https://portal.hdfgroup.org"
+    url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.gz"
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
@@ -29,7 +29,8 @@ class Hdf5(AutotoolsPackage):
     # HDF5 1.12 broke API compatibility, so we currently prefer the latest
     # 1.10 release.  packages that want later versions of HDF5 should specify,
     # e.g., depends_on("hdf5@1.12:") to get 1.12 or higher.
-    version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa', preferred=True)
+    version('1.10.7', sha256='7a1a0a54371275ce2dfc5cd093775bb025c365846512961e7e5ceaecb437ef15', preferred=True)
+    version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa')
     version('1.10.5', sha256='6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8')
     version('1.10.4', sha256='8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
     version('1.10.3', sha256='b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')
