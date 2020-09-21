@@ -1030,16 +1030,26 @@ def test_store_different_build_deps():
         assert x_read['z'] != y_read['z']
 
 
-"""
-def test_env_dir_remains_after_deactivated() #TODO: fix later
+def test_env_dir_remains_after_deactivation(): #TODO: fix later
     #create env with view in fake dir
+    e = ev.create('test', with_view=True)
+
     #activate env
-        #assert fake dir is in PATH
+    var = env('activate', '--sh', 'test')
+
+    #assert fake dir is in PATH
+    assert e.manifest_path in var
+
     #add fake dir to PATH manually
-        #assert fake dir is in PATH twice
+#    print("HELLO", e.manifest_path)
+#    assert False
+
+    #os.path.join(fakePath)
+
+    #assert fake dir is in PATH twice
+
     #deactivate env
-        #assert dir is in the PATH once
-"""
+    #assert dir is in the PATH once
 
 
 def test_env_updates_view_install(
