@@ -314,7 +314,7 @@ class CMakePackage(PackageBase):
 
         :return: directory where to build the package
         """
-        dirname = 'spack-build=%s' % self.spec.dag_hash(7)
+        dirname = 'spack-build-%s' % self.spec.dag_hash(7)
         return os.path.join(self.stage.path, dirname)
 
     def cmake_args(self):
