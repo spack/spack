@@ -981,9 +981,18 @@ class PackageInstaller(object):
                 if install_compilers:
                     self._add_bootstrap_compilers(dep_pkg, request)
 
-                if package_id(dep_pkg) not in self.build_tasks:
+                dep_id = package_id(dep_pkg)
+                if dep_id not in self.build_tasks:
                     self._push_task(dep_pkg, request, False, 0, 0,
                                     STATUS_ADDED)
+                else:
+                    # A task has already been created for the dependency.
+                    #
+                    # Make sure the requested package is included in the
+                    # dependency's dependents to ensure it gets updated when
+                    # this dependency is installed.
+                    task = self.build_tasks[dep_id]
+                    task.add_dependent(request.pkg_id)
 
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
@@ -1403,14 +1412,7 @@ class PackageInstaller(object):
         self.installed.add(pkg_id)
 
         # Update affected dependents
-        #
-        # TODO: Remove iteration over build requests once package dependents
-        # TODO: are complete wrt the DAGs of all packages being installed.
-        dependents = set(r.pkg_id for r in self.build_requests if
-                         r.has_dependency(pkg_id))
-        all_dependents = dependents | set(dependent_ids)
-
-        for dep_id in all_dependents:
+        for dep_id in set(dependent_ids):
             tty.debug('Removing {0} from {1}\'s uninstalled dependencies.'
                       .format(pkg_id, dep_id))
             if dep_id in self.build_tasks:
@@ -1702,15 +1704,10 @@ class BuildTask(object):
         # Number of times the task has been queued
         self.attempts = attempts + 1
 
-        # Set of dependents
+        # Set of dependents, which needs to include the requesting package
         self.dependents = set(get_dependent_ids(self.pkg.spec))
-
-        if request and self.pkg != self.request.pkg:
-            request_pkg_id = package_id(self.request.pkg)
-            if request_pkg_id not in self.dependents:
-                tty.debug('{0} is not in the dependents of {1} so adding'
-                          .format(request_pkg_id, self.pkg_id))
-                self.dependents.add(request_pkg_id)
+        if request:
+            self.add_dependent(request.pkg_id)
 
         # Set of dependencies
         #
@@ -1759,6 +1756,19 @@ class BuildTask(object):
         dependencies = '#dependencies={0}'.format(len(self.dependencies))
         return ('priority={0}, status={1}, start={2}, {3}'
                 .format(self.priority, self.status, self.start, dependencies))
+
+    def add_dependent(self, pkg_id):
+        """
+        Ensure the dependent package id is in the task's list so it will be
+        properly updated when this package is installed.
+
+        Args:
+            pkg_id (str):  package identifier of the dependent package
+        """
+        if pkg_id != self.pkg_id and pkg_id not in self.dependents:
+            tty.debug('{0} is not in the dependents of {1} so adding'
+                      .format(pkg_id, self.pkg_id))
+            self.dependents.add(pkg_id)
 
     def flag_installed(self, installed):
         """

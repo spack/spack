@@ -198,6 +198,32 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
             assert 'Updating view at' in out
 
 
+def test_env_install_two_specs_same_dep(install_mockery, mock_fetch, tmpdir):
+    """Test installation of two packages that share a dependency with no
+    connection and the second specifying the dependency as a 'build'
+    dependency.
+    """
+    path = tmpdir.join('spack.yaml')
+
+    with tmpdir.as_cwd():
+        with open(str(path), 'w') as f:
+            f.write("""\
+env:
+  specs:
+  - a
+  - depb
+""")
+
+        env('create', 'test', 'spack.yaml')
+
+    with ev.read('test'):
+        out = install()
+
+    # Ensure both packages reach install phase processing
+    assert 'depb: Executing phase:' in out
+    assert 'a: Executing phase:' in out
+
+
 def test_remove_after_concretize():
     e = ev.create('test')
 
