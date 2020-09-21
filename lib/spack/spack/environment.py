@@ -1406,15 +1406,11 @@ class Environment(object):
         with spack.store.db.read_transaction():
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
-                if not spec.package.installed or any(
-                    spec.satisfies(d) for d in self.dev_specs
-                ):
+                if not spec.package.installed or spec.satisfies('+dev_build'):
+                    # If it's a dev build it could need to be reinstalled
                     specs_to_install.append(spec)
 
-        # Sort by total deps so specs have to be installed after dependencies
-        # This ensures dev-builds done in appropriate order
-        for spec in sorted(specs_to_install,
-                           key=lambda spec: len(list(spec.traverse()))):
+        for spec in specs_to_install:
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
             kwargs = dict()
