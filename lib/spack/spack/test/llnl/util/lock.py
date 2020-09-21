@@ -680,13 +680,12 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
             lock.acquire_write()
 
 
-#
-# Longer test case that ensures locks are reusable. Ordering is
-# enforced by barriers throughout -- steps are shown with numbers.
-#
-def test_complex_acquire_and_release_chain(lock_path):
-    def p1(barrier):
-        lock = lk.Lock(lock_path)
+class ComplexAcquireAndRelease(object):
+    def __init__(self, lock_path):
+        self.lock_path = lock_path
+
+    def p1(self, barrier):
+        lock = lk.Lock(self.lock_path)
 
         lock.acquire_write()
         barrier.wait()  # ---------------------------------------- 1
@@ -726,8 +725,8 @@ def test_complex_acquire_and_release_chain(lock_path):
         barrier.wait()  # ---------------------------------------- 13
         lock.release_read()
 
-    def p2(barrier):
-        lock = lk.Lock(lock_path)
+    def p2(self, barrier):
+        lock = lk.Lock(self.lock_path)
 
         # p1 acquires write
         barrier.wait()  # ---------------------------------------- 1
@@ -766,8 +765,8 @@ def test_complex_acquire_and_release_chain(lock_path):
         barrier.wait()  # ---------------------------------------- 13
         lock.release_read()
 
-    def p3(barrier):
-        lock = lk.Lock(lock_path)
+    def p3(self, barrier):
+        lock = lk.Lock(self.lock_path)
 
         # p1 acquires write
         barrier.wait()  # ---------------------------------------- 1
@@ -806,7 +805,15 @@ def test_complex_acquire_and_release_chain(lock_path):
         barrier.wait()  # ---------------------------------------- 13
         lock.release_read()
 
-    multiproc_test(p1, p2, p3)
+#
+# Longer test case that ensures locks are reusable. Ordering is
+# enforced by barriers throughout -- steps are shown with numbers.
+#
+def test_complex_acquire_and_release_chain(lock_path):
+    test_chain = ComplexAcquireAndRelease(lock_path)
+    multiproc_test(test_chain.p1,
+                   test_chain.p2,
+                   test_chain.p3)
 
 
 class AssertLock(lk.Lock):
@@ -1175,24 +1182,26 @@ def test_nested_reads(lock_path):
                     assert vals['read'] == 1
 
 
-def test_lock_debug_output(lock_path):
-    host = socket.getfqdn()
+class LockDebugOutput(object):
+    def __init__(self, lock_path):
+        self.lock_path = lock_path
+        self.host = socket.getfqdn()
 
-    def p1(barrier, q1, q2):
+    def p1(self, barrier, q1, q2):
         # exchange pids
         p1_pid = os.getpid()
         q1.put(p1_pid)
         p2_pid = q2.get()
 
         # set up lock
-        lock = lk.Lock(lock_path, debug=True)
+        lock = lk.Lock(self.lock_path, debug=True)
 
         with lk.WriteTransaction(lock):
             # p1 takes write lock and writes pid/host to file
             barrier.wait()  # ------------------------------------ 1
 
         assert lock.pid == p1_pid
-        assert lock.host == host
+        assert lock.host == self.host
 
         # wait for p2 to verify contents of file
         barrier.wait()  # ---------------------------------------- 2
@@ -1203,21 +1212,21 @@ def test_lock_debug_output(lock_path):
         # verify pid/host info again
         with lk.ReadTransaction(lock):
             assert lock.old_pid == p1_pid
-            assert lock.old_host == host
+            assert lock.old_host == self.host
 
             assert lock.pid == p2_pid
-            assert lock.host == host
+            assert lock.host == self.host
 
         barrier.wait()  # ---------------------------------------- 4
 
-    def p2(barrier, q1, q2):
+    def p2(self, barrier, q1, q2):
         # exchange pids
         p2_pid = os.getpid()
         p1_pid = q1.get()
         q2.put(p2_pid)
 
         # set up lock
-        lock = lk.Lock(lock_path, debug=True)
+        lock = lk.Lock(self.lock_path, debug=True)
 
         # p1 takes write lock and writes pid/host to file
         barrier.wait()  # ---------------------------------------- 1
@@ -1225,25 +1234,28 @@ def test_lock_debug_output(lock_path):
         # verify that p1 wrote information to lock file
         with lk.ReadTransaction(lock):
             assert lock.pid == p1_pid
-            assert lock.host == host
+            assert lock.host == self.host
 
         barrier.wait()  # ---------------------------------------- 2
 
         # take a write lock on the file and verify pid/host info
         with lk.WriteTransaction(lock):
             assert lock.old_pid == p1_pid
-            assert lock.old_host == host
+            assert lock.old_host == self.host
 
             assert lock.pid == p2_pid
-            assert lock.host == host
+            assert lock.host == self.host
 
             barrier.wait()  # ------------------------------------ 3
 
         # wait for p1 to verify pid/host info
         barrier.wait()  # ---------------------------------------- 4
 
+
+def test_lock_debug_output(lock_path):
+    test_debug = LockDebugOutput(lock_path)
     q1, q2 = Queue(), Queue()
-    local_multiproc_test(p2, p1, extra_args=(q1, q2))
+    local_multiproc_test(test_debug.p2, test_debug.p1, extra_args=(q1, q2))
 
 
 def test_lock_with_no_parent_directory(tmpdir):
