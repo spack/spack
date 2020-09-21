@@ -7,7 +7,7 @@ from spack import *
 
 
 class Timedatex(MakefilePackage):
-    """timedatex is a D-Bus service that implements the 
+    """timedatex is a D-Bus service that implements the
     org.freedesktop.timedate1 interface. It can be used to
     read and set the system clock, the real-time clock (RTC),
     the system timezone, get a list of valid timezones, and
