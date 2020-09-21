@@ -63,6 +63,16 @@ class Concretizer(object):
         self._adjust_target_answer_generator = None
 
     def concretize_develop(self, spec):
+        """
+        Add ``dev_build=True`` and ``dev_path=*`` variables as required.
+
+        Add ``dev_build=True`` variable to any spec with a direct or transitive
+        dependency (including itself) that is being built from local source.
+        Add ``dev_path=/path/to/local/source`` to any spec for a package that
+        is specified for developer builds by the active environment, and
+        constrain the spec by the develop spec if one is specified for the
+        package.
+        """
         env = spack.environment.get_env(None, None)
         dev_info = env.dev_specs if env else {}
 
@@ -368,8 +378,12 @@ class Concretizer(object):
             var = spec.variants.get(name, None)
             if var and 'any' in var:
                 # remove 'any' variant before concretizing
-                # a variant cannot have 'any' and other values
-                # and 'any' concretizes to any value.
+                # 'any' cannot be combined with other variables in a
+                # multivalue variant, a concrete variant cannot have the value
+                # 'any', and 'any' does not constrain a variant except to
+                # preclude the values 'none' and None. We track `any_set` to
+                # avoid replacing 'any' with None, and remove it to continue
+                # concretization.
                 spec.variants.pop(name)
                 any_set = True
             if name not in spec.variants:
