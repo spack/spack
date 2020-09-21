@@ -10,13 +10,14 @@ class PyJoblib(PythonPackage):
     """Python function as pipeline jobs"""
 
     homepage = "https://joblib.readthedocs.io"
-    url      = "https://pypi.io/packages/source/j/joblib/joblib-0.14.0.tar.gz"
+    url      = "https://pypi.io/packages/source/j/joblib/joblib-0.16.0.tar.gz"
 
     import_modules = [
         'joblib', 'joblib.externals', 'joblib.externals.cloudpickle',
         'joblib.externals.loky', 'joblib.externals.loky.backend'
     ]
 
+    version('0.16.0', sha256='8f52bf24c64b608bf0b2563e0e47d6fcf516abc8cfafe10cfd98ad66d94f92d6')
     version('0.14.1', sha256='0630eea4f5664c463f23fbf5dcfc54a2bc6168902719fa8e19daf033022786c8')
     version('0.14.0', sha256='6fcc57aacb4e89451fd449e9412687c51817c3f48662c3d8f38ba3f8a0a193ff')
     version('0.13.2', sha256='315d6b19643ec4afd4c41c671f9f2d65ea9d787da093487a81ead7b0bac94524')
