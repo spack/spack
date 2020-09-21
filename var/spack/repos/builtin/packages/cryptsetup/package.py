@@ -25,7 +25,7 @@ class Cryptsetup(AutotoolsPackage):
     depends_on('lvm2', type=('build', 'link'))
     depends_on('popt', type=('build', 'link'))
     depends_on('json-c', type=('build', 'link'))
-    depends_on('util-linux', type=('build', 'link'))
+    depends_on('util-linux~libuuid', type=('build', 'link'))
     depends_on('gettext', type=('build', 'link'))
 
     depends_on('pkgconfig', type='build')
