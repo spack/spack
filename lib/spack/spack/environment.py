@@ -1012,11 +1012,13 @@ class Environment(object):
                         tty.msg("Updating development path for spec %s" % spec)
                         break
                 else:
-                    tty.msg("Updating development spec for package %s" %
-                            spec.name)
+                    msg = "Updating development spec for package "
+                    msg += "%s with path %s" % (spec.name, path)
+                    tty.msg(msg)
                     break
         else:
-            tty.msg("Configuring spec %s for development" % spec)
+            tty.msg("Configuring spec %s for development at path %s" %
+                    (spec, path))
 
         if clone:
             # Not really cloning if it's a url-fetched version
