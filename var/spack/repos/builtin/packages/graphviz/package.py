@@ -19,6 +19,8 @@ class Graphviz(AutotoolsPackage):
     homepage = 'http://www.graphviz.org'
     git      = 'https://gitlab.com/graphviz/graphviz.git'
 
+    # This commit hash is tag='stable_release_2.44.1'
+    version('2.44.1', commit='771bc4dbff3e6f358fa75cdc7774a413ccacad51')
     # This commit hash is tag='stable_release_2.42.2'
     version('2.42.2', commit='da4c2ec6f24ca1b6d1752c6b5bc4389e55682147')
     # This commit hash is tag='stable_release_2.40.1'
@@ -74,6 +76,7 @@ class Graphviz(AutotoolsPackage):
     patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.40.1_icc_vmalloc.patch',
           sha256='813e6529e79161a18b0f24a969b7de22f8417b2e942239e658b5402884541bc2',
           when='@:2.40%intel')
+    patch('ps2pdf.patch')
 
     if not MACOS_VERSION:
         conflicts('+quartz',

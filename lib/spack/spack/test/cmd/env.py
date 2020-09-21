@@ -1041,6 +1041,17 @@ def test_env_updates_view_install(
     check_mpileaks_and_deps_in_view(view_dir)
 
 
+def test_env_view_fails(
+        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        add('libelf')
+        add('libelf cflags=-g')
+        with pytest.raises(RuntimeError, match='merge blocked by file'):
+            install('--fake')
+
+
 def test_env_without_view_install(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     # Test enabling a view after installing specs

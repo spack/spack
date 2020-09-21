@@ -11,7 +11,7 @@ class PyMatplotlib(PythonPackage):
     and interactive visualizations in Python."""
 
     homepage = "https://matplotlib.org/"
-    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.3.1.tar.gz"
+    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.3.2.tar.gz"
 
     maintainers = ['adamjstewart']
 
@@ -25,6 +25,7 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units'
     ]
 
+    version('3.3.2', sha256='3d2edbf59367f03cd9daf42939ca06383a7d7803e3993eb5ff1bee8e8a3fbb6b')
     version('3.3.1', sha256='87f53bcce90772f942c2db56736788b39332d552461a5cb13f05ff45c1680f0e')
     version('3.3.0', sha256='24e8db94948019d531ce0bcd637ac24b1c8f6744ac86d2aa0eb6dbaeb1386f82')
     version('3.2.2', sha256='3d77a6630d093d74cbbfebaa0571d00790966be1ed204e4a8239f5cbd6835c5d')
@@ -48,7 +49,7 @@ class PyMatplotlib(PythonPackage):
     version('1.4.2', sha256='17a3c7154f152d8dfed1f37517c0a8c5db6ade4f6334f684989c36dab84ddb54')
 
     # https://matplotlib.org/tutorials/introductory/usage.html#backends
-    # From `matplotlib.rcsetup`:
+    # From `lib/matplotlib/rcsetup.py`:
     interactive_bk = [
         'gtk3agg', 'gtk3cairo', 'macosx', 'nbagg', 'qt4agg', 'qt4cairo',
         'qt5agg', 'qt5cairo', 'tkagg', 'tkcairo', 'webagg', 'wx', 'wxagg',
