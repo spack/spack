@@ -76,7 +76,7 @@ def dev_build(self, args):
         source_path = os.getcwd()
     source_path = os.path.abspath(source_path)
 
-    # Forces the build to run out of the current directory.
+    # Forces the build to run out of the source directory.
     spec.constrain('dev_build=true dev_path=%s' % source_path)
 
     spec.concretize()
