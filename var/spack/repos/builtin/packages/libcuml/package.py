@@ -43,6 +43,7 @@ class Libcuml(CMakePackage):
     depends_on('libcudf@0.8:')
     depends_on('cuda@9.2:')
     depends_on('blas')
+    depends_on('nccl@2.4:')
 
     root_cmakelists_dir = 'cpp'
 
