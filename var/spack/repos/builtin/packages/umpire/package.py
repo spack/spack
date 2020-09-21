@@ -15,7 +15,7 @@ class Umpire(CMakePackage, CudaPackage):
     git      = 'https://github.com/LLNL/Umpire.git'
 
     version('develop', branch='develop', submodules='True')
-    version('master', branch='main', submodules='True')
+    version('main', branch='main', submodules='True')
     version('4.0.1', tag='v4.0.0', submodules='True')
     version('4.0.0', tag='v4.0.0', submodules='True')
     version('3.0.0', tag='v3.0.0', submodules='True')
