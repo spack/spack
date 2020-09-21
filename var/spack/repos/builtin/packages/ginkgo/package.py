@@ -37,15 +37,36 @@ class Ginkgo(CMakePackage, CudaPackage):
     depends_on('cuda@9:',    when='+cuda')
 
     depends_on('hip',       when='+hip')
-    depends_on('hipsparse', when='+hip')
-    depends_on('hipblas',   when='+hip')
+    depends_on('hipsparse', type="link", when='+hip')
+    depends_on('hipblas',   type="link", when='+hip')
+    depends_on('rocrand',   type="link", when='@develop+hip')
+    depends_on('rocthrust',   type="build", when='+hip')
+
+    # Somehow, these dependencies not propagated by the HIP stack?
+    depends_on('rocm-device-libs',   type="link", when='+hip')
+    depends_on('comgr',   type="link", when='+hip')
 
     conflicts('%gcc@:5.2.9')
     conflicts("+hip", when="@:1.1.1")
+    # The HIP packages from spack doen't seem to work well with CUDA
+    # backend for now, so disable HIP with CUDA backend.
+    conflicts("+cuda", when="+hip")
 
     def cmake_args(self):
+        # Check that the have the correct C++ standard is available
+        if self.spec.satisfies('@:1.2.0'):
+            try:
+                self.compiler.cxx11_flag
+            except UnsupportedCompilerFlag:
+                InstallError('Ginkgo requires a C++11-compliant C++ compiler')
+        else:
+            try:
+                self.compiler.cxx14_flag
+            except UnsupportedCompilerFlag:
+                InstallError('Ginkgo requires a C++14-compliant C++ compiler')
+
         spec = self.spec
-        return [
+        args = [
             '-DGINKGO_BUILD_CUDA=%s' % ('ON' if '+cuda' in spec else 'OFF'),
             '-DGINKGO_BUILD_OMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
             '-DBUILD_SHARED_LIBS=%s' % ('ON' if '+shared' in spec else 'OFF'),
@@ -61,3 +82,14 @@ class Ginkgo(CMakePackage, CudaPackage):
             '-DGINKGO_BUILD_EXAMPLES=OFF',
             '-DGINKGO_BUILD_TESTS=OFF'
         ]
+        if '+hip' in spec:
+            args.append('-DHIP_PATH={0}'. format(spec['hip'].prefix))
+            args.append('-DHIP_CLANG_PATH={0}/bin'.
+                        format(spec['llvm-amdgpu'].prefix))
+            args.append('-DHIP_CLANG_INCLUDE_PATH={0}/include'.
+                        format(spec['llvm-amdgpu'].prefix))
+            args.append('-DHIPSPARSE_PATH={0}'.
+                        format(spec['hipsparse'].prefix))
+            args.append('-DHIPBLAS_PATH={0}'.
+                        format(spec['hipblas'].prefix))
+        return args
