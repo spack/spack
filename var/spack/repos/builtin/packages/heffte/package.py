@@ -26,16 +26,20 @@ class Heffte(CMakePackage):
     variant('fftw', default=False, description='Builds with support for FFTW backend')
     variant('mkl',  default=False, description='Builds with support for MKL backend')
     variant('cuda', default=False, description='Builds with support for GPUs via CUDA')
+    variant('magma', default=False, description='Use helper methods from the UTK MAGMA library')
 
     conflicts('~fftw', when='~mkl~cuda')  # requires at least one backend
-    conflicts('+fftw', when='+mkl')  # old API supports at most one CPU backend
+    conflicts('+fftw', when='+mkl@:1.0')  # old API supports at most one CPU backend
     conflicts('openmpi~cuda', when='+cuda')  # +cuda requires CUDA enabled OpenMPI
+    conflicts('~cuda', when='+magma')  # magma requires CUDA or HIP
+    conflicts('+magma', when="@:1.0")  # magma support was added post v1.0
 
     depends_on('mpi', type=('build', 'run'))
 
     depends_on('fftw@3.3.8:', when="+fftw", type=('build', 'run'))
     depends_on('intel@16.0:', when="+mkl", type=('build', 'run'))
     depends_on('cuda@8.0:', when="+cuda", type=('build', 'run'))
+    depends_on('magma@2.5.3:', when="+cuda+magma", type=('build', 'run'))
 
     def cmake_args(self):
         return [
@@ -49,4 +53,6 @@ class Heffte(CMakePackage):
             '-DHeffte_ENABLE_FFTW={0:1s}'.format(
                 'ON' if '+fftw' in self.spec else 'OFF'),
             '-DHeffte_ENABLE_MKL={0:1s}'.format(
-                'ON' if '+mkl' in self.spec else 'OFF'), ]
+                'ON' if '+mkl' in self.spec else 'OFF'),
+            '-DHeffte_ENABLE_MAGMA={0:1s}'.format(
+                'ON' if '+magma' in self.spec else 'OFF'), ]
