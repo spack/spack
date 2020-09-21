@@ -69,5 +69,7 @@ class Libcuml(CMakePackage):
         args.append("-DBUILD_CUML_C_LIBRARY=ON")
         args.append("-DWITH_UCX=ON")
         args.append("-DNVTX=OFF")
+        # FIXME
+        args.append("-DENABLE_CUMLPRIMS_MG=OFF")
 
         return args
