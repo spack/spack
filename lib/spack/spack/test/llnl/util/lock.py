@@ -805,6 +805,7 @@ class ComplexAcquireAndRelease(object):
         barrier.wait()  # ---------------------------------------- 13
         lock.release_read()
 
+
 #
 # Longer test case that ensures locks are reusable. Ordering is
 # enforced by barriers throughout -- steps are shown with numbers.
