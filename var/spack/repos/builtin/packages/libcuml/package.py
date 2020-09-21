@@ -51,4 +51,22 @@ class Libcuml(CMakePackage):
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
         # FIXME: If not needed delete this function
         args = []
+
+        #-DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+        #-DCMAKE_CXX11_ABI=${BUILD_ABI} \
+        #-DBLAS_LIBRARIES=${INSTALL_PREFIX}/lib/libopenblas.so.0 \
+        #${GPU_ARCH} \
+        #-DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+        #-DSINGLEGPU=${SINGLEGPU_CPP_FLAG}
+        #-DBUILD_CUML_MPI_COMMS=${BUILD_CPP_MG_TESTS}
+        #-DBUILD_CUML_MG_TESTS=${BUILD_CPP_MG_TESTS}
+        #-DBUILD_STATIC_FAISS=${BUILD_STATIC_FAISS}
+        #-DPARALLEL_LEVEL=${PARALLEL_LEVEL}
+        #-DDISABLE_DEPRECATION_WARNING=${BUILD_DISABLE_DEPRECATION_WARNING}
+        #-DCMAKE_PREFIX_PATH=${INSTALL_PREFIX}
+        args.append("-DNCCL_PATH={0}".format(self.spec['nccl'].prefix))
+        args.append("-DBUILD_CUML_C_LIBRARY=ON")
+        args.append("-DWITH_UCX=ON")
+        args.append("-DNVTX=OFF")
+
         return args
