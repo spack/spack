@@ -16,3 +16,7 @@ class PySentryPython(PythonPackage):
 
     depends_on('python@2.7,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-urllib3@1.10.0:', type=('build', 'run'))
+    depends_on('py-certifi', type=('build', 'run'))
+    depends_on('py-flask@0.11:', type=('build', 'run'))
+    
