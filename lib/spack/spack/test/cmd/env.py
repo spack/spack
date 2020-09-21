@@ -1037,12 +1037,10 @@ def test_env_dir_remains_after_deactivation(): #TODO: fix later
     #activate env
     var = env('activate', '--sh', 'test')
 
-    #assert fake dir is in PATH
-    assert e.manifest_path in var
+    #assert dir is in PATH
+    assert e.path in var
 
     #add fake dir to PATH manually
-#    print("HELLO", e.manifest_path)
-#    assert False
 
     #os.path.join(fakePath)
 
