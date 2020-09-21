@@ -38,6 +38,11 @@ class Libcuml(CMakePackage):
 
     # FIXME: Add dependencies if required.
     # depends_on('foo')
+    depends_on('cmake@3.14:', type='build')
+    depends_on('zlib')
+    depends_on('libcudf@0.8:')
+    depends_on('cuda@9.2:')
+    depends_on('blas')
 
     root_cmakelists_dir = 'cpp'
 
