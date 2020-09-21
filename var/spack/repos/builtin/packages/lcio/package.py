@@ -22,8 +22,11 @@ class Lcio(CMakePackage):
     version('2.15.1', sha256='32921feb162408357d00a81cdd489c374b3ed8ab6f442d798b22835de7243d32')
     version('2.15',   sha256='27ea161a36ca93bf6b11381b63e90d100d3aeda3a00377bebcf2972c436aa3a7')
     version('2.14.2', sha256='e64f4bf932edf6d6cdaf0162e5104f8fbf3e5fd9737c7a080c48859009621919')
+    version('2.14.1', sha256='ef670b10b6a01649fd4f3afcf38cbbee4cd83133612f922977260a6fea2bf30f')
+    version('2.14',   sha256='85a7da4873b3501887d371cb8d993cb9f373323b190a8d523ad91b900a5f1284')
     version('2.13.3', sha256='35aaa7989be33574a7c44ea7e6d7780ab26ef8bd4aa29d495f3831a3cd269304')
     version('2.13.2', sha256='9f153ba13e56ee16795378f9192678d40df1faca51d00aaa8fb80547bfecb8d8')
+    version('2.13.1', sha256='aa572e2ba38c0cadd6a92fa933c3ed97e21d016c7982578d3f293901169f4ec0')
 
     variant('cxxstd',
             default='17',
