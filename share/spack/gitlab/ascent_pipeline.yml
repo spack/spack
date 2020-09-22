@@ -1,6 +1,6 @@
 merge_pipeline:
   only:
-  - develop
+  - e4s-trigger
   trigger:
     project: ecpcitest/e4s
     strategy: depend
