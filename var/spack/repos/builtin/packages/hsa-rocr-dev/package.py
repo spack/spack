@@ -28,11 +28,12 @@ class HsaRocrDev(CMakePackage):
     depends_on('libelf@0.8:', type='link')
     for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('hsakmt-roct@' + ver, type=('link', 'run'), when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type=('link', 'run'), when='@' + ver)
+        if '@3.7.0:' in ver:
+            depends_on('llvm-amdgpu@' + ver, type=('link', 'run'), when='@' + ver)
 
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways
     patch('0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch', when='@3.5.0')
-    patch('0002-Remove-explicit-RPATH-again.patch', when='@3.7.0:3.8.0')
+    patch('0002-Remove-explicit-RPATH-again.patch', when='@3.7.0:')
 
     root_cmakelists_dir = 'src'
 
