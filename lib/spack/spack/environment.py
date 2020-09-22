@@ -994,6 +994,8 @@ class Environment(object):
 
         Returns (bool): True iff the environment was changed.
         """
+        spec = spec.copy()  # defensive copy since we access cached attributes
+
         if not spec.versions.concrete:
             raise SpackEnvironmentError(
                 'Cannot develop spec %s without a concrete version' % spec)
@@ -1024,7 +1026,15 @@ class Environment(object):
             # Not really cloning if it's a url-fetched version
             abspath = path if os.path.isabs(path) else os.path.join(
                 self.path, path)
-            spec.package.fetcher.clone(abspath)
+
+            # Iterate over composite strategy to update path
+            # This will include resources in what we clone
+            for stage_obj in spec.package.stage:
+                stage_obj.path = abspath
+                stage_obj.source_path = abspath
+            spec.package.stage.create()
+            spec.package.stage.fetch()
+            spec.package.stage.expand_archive()
 
         # If it wasn't already in the list, append it
         self.dev_specs[spec.name] = {'path': path, 'spec': str(spec)}

@@ -39,7 +39,7 @@ def mock_spec():
 
     # Make it look like the source was actually expanded.
     source_path = pkg.stage.source_path
-    mkdirp(source_path)
+    mkdirp(os.path.join(source_path, 'test'))
     yield spec, pkg
 
     # Remove the spec from the mock stage area.
