@@ -13,10 +13,11 @@ class RocmSmiLib(CMakePackage):
        for applications to monitor and control GPU applications."""
 
     homepage = "https://github.com/RadeonOpenCompute/rocm_smi_lib"
-    url      = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-3.7.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-3.8.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.8.0', sha256='86250c9ae9dfb18d4f7259a5f2f09b21574d4996fe5034a739ce63a27acd0082')
     version('3.7.0', sha256='72d2a3deda0b55a2d92833cd648f50c7cb64f8341b254a0badac0152b26f1391')
     version('3.5.0', sha256='a5d2ec3570d018b60524f0e589c4917f03d26578443f94bde27a170c7bb21e6e')
 
