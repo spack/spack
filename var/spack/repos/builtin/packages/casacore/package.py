@@ -35,7 +35,7 @@ class Casacore(CMakePackage):
     depends_on('lapack')
     depends_on('cfitsio@3.181:')
     depends_on('wcslib@4.20:+cfitsio')
-    depends_on('fftw~mpi@3.0.0:', when='+fftw')
+    depends_on('fftw@3.0.0:~mpi precision=float,double', when='+fftw')
     # SOFA dependency suffers the same problem in CMakeLists.txt as readline;
     # however, as SOFA is far less likely to be present on most systems, and as
     # it's an unneeded dependency except for testing, for now we leave out the
