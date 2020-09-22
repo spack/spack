@@ -11,10 +11,11 @@ class MiopenOpencl(CMakePackage):
     """AMD's library for high performance machine learning primitives."""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-3.5.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-3.7.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.7.0', sha256='f6a6ddd8d39bb76b7f7d91e68ade3b45e0201181145658c43b967065a354b103')
     version('3.5.0', sha256='aa362e69c4dce7f5751f0ee04c745735ea5454c8101050e9b92cc60fa3c0fb82')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
@@ -25,7 +26,7 @@ class MiopenOpencl(CMakePackage):
     depends_on('bzip2', type='link')
     depends_on('sqlite', type='link')
     depends_on('half', type='build')
-    for ver in ['3.5.0']:
+    for ver in ['3.5.0', '3.7.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='link', when='@' + ver)
@@ -33,6 +34,7 @@ class MiopenOpencl(CMakePackage):
         depends_on('rocm-opencl@' + ver, type='build', when='@' + ver)
         depends_on('miopengemm@1.1.6:', type='link', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='link', when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
 
     def cmake_args(self):
         args = [
