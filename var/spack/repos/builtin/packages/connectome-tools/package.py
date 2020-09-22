@@ -13,12 +13,13 @@ class ConnectomeTools(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/connectome-tools"
 
     version('develop', branch='master')
-    version('0.3.2', tag='connectome-tools-v0.3.2', preferred=True)
+    version('0.3.3', tag='connectome-tools-v0.3.3', preferred=True)
 
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-click@7.0:7.999', type='run')
     depends_on('py-equation@1.2:', type='run')
+    depends_on('py-joblib@0.16.0:', type='run')
     depends_on('py-lxml@3.3:', type='run')
     depends_on('py-numpy@1.9:', type='run')
     depends_on('py-pandas@0.17:', type='run')
