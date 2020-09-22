@@ -45,6 +45,7 @@ class Libcuml(CMakePackage):
     depends_on('blas')
     depends_on('nccl@2.4:')
     depends_on('treelite')
+    depends_on('googletest')
 
     root_cmakelists_dir = 'cpp'
 
