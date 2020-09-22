@@ -14,6 +14,7 @@ class PyBglibpy(PythonPackage):
 
     version('develop', branch='master')
 
+    version('4.4', commit='4597bf81374f4041f689a4e73e4319bf5c13947b')
     version('4.3.19', commit='bce00a1ddedb605a5ed5225989192eb5f7e133ae')
     version('4.3.15', commit='dccd717a2570d32776de824d864fba9dfdbf56f6')
     version('4.3.12', commit='eb4accd2dc4ebcb01e65d6429bb8221af5aa14bf')
