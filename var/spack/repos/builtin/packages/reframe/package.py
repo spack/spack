@@ -43,6 +43,8 @@ class Reframe(Package):
     depends_on("py-pygelf", when="+gelf", type="run")
     depends_on("py-sphinx", when="+docs", type="build")
     depends_on("py-sphinx-rtd-theme", when="+docs", type="build")
+    # ReFrame requires git up to version 3.1, see:
+    # https://github.com/eth-cscs/reframe/issues/1464
     depends_on("git", when="@2.0:3.1", type="run")
 
     def install(self, spec, prefix):
