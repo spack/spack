@@ -13,7 +13,9 @@ class Raja(CMakePackage, CudaPackage):
     git      = "https://github.com/LLNL/RAJA.git"
 
     version('develop', branch='develop', submodules='True')
-    version('master',  branch='main',  submodules='True')
+    version('main',  branch='main',  submodules='True')
+    version('0.12.1', tag='v0.12.1', submodules="True")
+    version('0.12.0', tag='v0.12.0', submodules="True")
     version('0.11.0', tag='v0.11.0', submodules="True")
     version('0.10.1', tag='v0.10.1', submodules="True")
     version('0.10.0', tag='v0.10.0', submodules="True")
