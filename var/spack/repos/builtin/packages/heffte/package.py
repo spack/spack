@@ -43,16 +43,11 @@ class Heffte(CMakePackage):
 
     def cmake_args(self):
         return [
-            '-DBUILD_SHARED_LIBS={0:1s}'.format(
-                'ON' if '+shared' in self.spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('Heffte_ENABLE_CUDA', 'cuda'),
+            self.define_from_variant('Heffte_ENABLE_FFTW', 'fftw'),
+            self.define_from_variant('Heffte_ENABLE_MKL', 'mkl'),
+            self.define_from_variant('Heffte_ENABLE_MAGMA', 'magma'),
             '-DBUILD_GPU={0:1s}'.format(
                 'ON' if ('+cuda' in self.spec and
-                         '+fftw' in self.spec) else 'OFF'),
-            '-DHeffte_ENABLE_CUDA={0:1s}'.format(
-                'ON' if '+cuda' in self.spec else 'OFF'),
-            '-DHeffte_ENABLE_FFTW={0:1s}'.format(
-                'ON' if '+fftw' in self.spec else 'OFF'),
-            '-DHeffte_ENABLE_MKL={0:1s}'.format(
-                'ON' if '+mkl' in self.spec else 'OFF'),
-            '-DHeffte_ENABLE_MAGMA={0:1s}'.format(
-                'ON' if '+magma' in self.spec else 'OFF'), ]
+                         '+fftw' in self.spec) else 'OFF'), ]
