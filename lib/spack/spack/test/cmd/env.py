@@ -1035,20 +1035,25 @@ def test_env_dir_remains_after_deactivation(): #TODO: fix later
     e = ev.create('test', with_view=True)
 
     #activate env
-    var = env('activate', '--sh', 'test')
+    shell = env('activate', '--sh', 'test')
 
     #assert dir is in PATH
-    assert e.path in var
+    assert e.path in shell
 
     #add dir to PATH manually
-    idx = var.index("export PATH=") + 12
-    var = var[:idx] + e.path + ":" + var[idx:]
+    idx = shell.index("export PATH=") + len("export PATH=")
+    shell = shell[:idx] + e.path + ":" + shell[idx:]
 
     #assert dir is in PATH twice
     string = e.path + ":" + e.path
-    assert string in var
+    assert string in shell
 
+    print(shell)
 #    deactivate env
+    env_deactivate()
+    print(shell)
+
+    assert False
 #    assert dir is in the PATH once
 
 
