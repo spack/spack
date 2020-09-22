@@ -57,30 +57,11 @@ class Casacore(CMakePackage):
         args = []
         spec = self.spec
 
-        if '+shared' in spec:
-            args.append('-DENABLE_SHARED=YES')
-        else:
-            args.append('-DENABLE_SHARED=NO')
-
-        if '+openmp' in spec:
-            args.append('-DUSE_OPENMP=YES')
-        else:
-            args.append('-DUSE_OPENMP=NO')
-
-        if '+readline' in spec:
-            args.append('-DUSE_READLINE=YES')
-        else:
-            args.append('-DUSE_READLINE=NO')
-
-        if '+hdf5' in spec:
-            args.append('-DUSE_HDF5=YES')
-        else:
-            args.append('-DUSE_HDF5=NO')
-
-        if '+fftw' in spec:
-            args.append('-DUSE_FFTW3=YES')
-        else:
-            args.append('-DUSE_FFTW3=NO')
+        args.append(self.define_from_variant('ENABLE_SHARED', 'shared'))
+        args.append(self.define_from_variant('USE_OPENMP', 'openmp'))
+        args.append(self.define_from_variant('USE_READLINE', 'readline'))
+        args.append(self.define_from_variant('USE_HDF5', 'hdf5'))
+        args.append(self.define_from_variant('USE_FFTW3', 'fftw'))
 
         # Python2 and Python3 binding
         if '+python' not in spec:
