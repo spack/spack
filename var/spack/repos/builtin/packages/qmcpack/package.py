@@ -102,6 +102,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('+afqmc', when='@:3.6.0', msg='AFQMC not recommended before v3.7')
     conflicts('+afqmc', when='~mpi', msg='AFQMC requires building with +mpi')
     conflicts('+afqmc', when='%gcc@:6.0', msg='AFQMC code requires gcc@6.1 or greater')
+    conflicts('+afqmc', when='%apple-clang@:9.2', msg='AFQMC code requires clang 4.1 or greater')
     conflicts('+afqmc', when='%clang@:4.0', msg='AFQMC code requires clang 4.1 or greater')
     conflicts('+afqmc', when='%intel@:18', msg='AFQMC code requires intel19 or greater')
 

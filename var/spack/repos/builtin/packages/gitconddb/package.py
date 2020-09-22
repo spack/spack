@@ -40,4 +40,5 @@ class Gitconddb(CMakePackage):
 
     # Known conflicts on C++17 compatibility (aggressive for now)
     conflicts('%gcc@:7.9.999', msg="GitCondDB requires GCC 8 or newer for C++17 support")
+    conflicts('%apple-clang', when="@:0.1.99", msg="No Darwin support for clang in older versions")
     conflicts('%clang platform=darwin', when="@:0.1.99", msg="No Darwin support for clang in older versions")

@@ -22,7 +22,7 @@ class Bolt(CMakePackage):
     git      = "https://github.com/pmodels/bolt.git"
     maintainers = ['shintaro-iwasaki']
 
-    version("master", branch="master")
+    version("main", branch="main")
     version("1.0", sha256="1c0d2f75597485ca36335d313a73736594e75c8a36123c5a6f54d01b5ba5c384")
 
     depends_on('argobots')

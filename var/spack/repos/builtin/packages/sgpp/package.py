@@ -97,6 +97,7 @@ class Sgpp(SConsPackage):
 
     # Compiler with C++11 support is required
     conflicts('%gcc@:4.8.4', msg='Compiler with c++11 support is required!')
+    conflicts('%apple-clang@:3.9', msg='Compiler with c++11 support is required!')
     conflicts('%clang@:3.2', msg='Compiler with c++11 support is required!')
     conflicts('%intel@:14', msg='Compiler with c++11 support is required!')
     # Solver python bindings are actually using the pde module at one point:

@@ -128,8 +128,8 @@ def get_version():
         git = exe.which("git")
         if git:
             with fs.working_dir(spack.paths.prefix):
-                desc = git(
-                    "describe", "--tags", output=str, fail_on_error=False)
+                desc = git("describe", "--tags", "--match", "v*",
+                           output=str, error=os.devnull, fail_on_error=False)
 
             if git.returncode == 0:
                 match = re.match(r"v([^-]+)-([^-]+)-g([a-f\d]+)", desc)
@@ -281,7 +281,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
   spack help --all       list all commands and options
   spack help <command>   help on a specific command
   spack help --spec      help on the package specification syntax
-  spack docs             open http://spack.rtfd.io/ in a browser
+  spack docs             open https://spack.rtfd.io/ in a browser
 """.format(help=section_descriptions['help']))
 
         # determine help from format above
@@ -362,8 +362,9 @@ def make_argument_parser(**kwargs):
         '-C', '--config-scope', dest='config_scopes', action='append',
         metavar='DIR', help="add a custom configuration scope")
     parser.add_argument(
-        '-d', '--debug', action='store_true',
-        help="write out debug logs during compile")
+        '-d', '--debug', action='count', default=0,
+        help="write out debug messages "
+             "(more d's for more verbosity: -d, -dd, -ddd, etc.)")
     parser.add_argument(
         '--timestamp', action='store_true',
         help="Add a timestamp to tty output")
@@ -438,7 +439,7 @@ def setup_main_options(args):
     tty.set_debug(args.debug)
     tty.set_stacktrace(args.stacktrace)
 
-    # debug must be set first so that it can even affect behvaior of
+    # debug must be set first so that it can even affect behavior of
     # errors raised by spack.config.
     if args.debug:
         spack.error.debug = True
@@ -701,15 +702,15 @@ def main(argv=None):
         if stored_var_name in os.environ:
             os.environ[var] = os.environ[stored_var_name]
 
+    # make spack.config aware of any command line configuration scopes
+    if args.config_scopes:
+        spack.config.command_line_scopes = args.config_scopes
+
     # activate an environment if one was specified on the command line
     if not args.no_env:
         env = ev.find_environment(args)
         if env:
-            ev.activate(env, args.use_env_repo)
-
-    # make spack.config aware of any command line configuration scopes
-    if args.config_scopes:
-        spack.config.command_line_scopes = args.config_scopes
+            ev.activate(env, args.use_env_repo, add_view=False)
 
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(','))

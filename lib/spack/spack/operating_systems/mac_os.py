@@ -54,6 +54,7 @@ class MacOs(OperatingSystem):
             '10.13': 'highsierra',
             '10.14': 'mojave',
             '10.15': 'catalina',
+            '11.0':  'bigsur',
         }
 
         mac_ver = str(macos_version().up_to(2))

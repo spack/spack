@@ -25,3 +25,11 @@ class Libffi(AutotoolsPackage, SourcewarePackage):
     def headers(self):
         # The headers are probably in self.prefix.lib but we search everywhere
         return find_headers('ffi', self.prefix, recursive=True)
+
+    def configure_args(self):
+        args = []
+        if self.spec.version >= Version('3.3'):
+            # Spack adds its own target flags, so tell libffi not to
+            # second-guess us
+            args.append('--without-gcc-arch')
+        return args

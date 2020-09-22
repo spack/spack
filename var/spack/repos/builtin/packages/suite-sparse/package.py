@@ -115,7 +115,7 @@ class SuiteSparse(Package):
         # CFLAGS, but not all compilers use the same flags for these
         # optimizations
         if any([x in spec
-                for x in ('%clang', '%gcc', '%intel')]):
+                for x in ('%apple-clang', '%clang', '%gcc', '%intel')]):
             make_args += ['CFLAGS+=-fno-common -fexceptions']
         elif '%pgi' in spec:
             make_args += ['CFLAGS+=--exceptions']

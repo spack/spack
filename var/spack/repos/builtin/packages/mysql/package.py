@@ -112,7 +112,8 @@ class Mysql(CMakePackage):
     depends_on('rpcsvc-proto')
     depends_on('ncurses')
     depends_on('openssl')
-    depends_on('libtirpc', when='@5.7.0:')
+    depends_on('libtirpc', when='@5.7.0: platform=linux')
+    depends_on('libedit', type=['build', 'run'])
     depends_on('perl', type=['build', 'test'], when='@:7.99.99')
     depends_on('bison@2.1:', type='build')
     depends_on('m4', type='build', when='@develop platform=solaris')
@@ -130,6 +131,11 @@ class Mysql(CMakePackage):
             options.append('-DBOOST_ROOT={0}'.format(spec['boost'].prefix))
         if '+client_only' in self.spec:
             options.append('-DWITHOUT_SERVER:BOOL=ON')
+        options.append('-DWITH_EDITLINE=system')
+        options.append('-Dlibedit_INCLUDE_DIR={0}'.format(
+            spec['libedit'].prefix.include))
+        options.append('-Dlibedit_LIBRARY={0}'.format(
+            spec['libedit'].libs.directories[0]))
         return options
 
     def _fix_dtrace_shebang(self, env):

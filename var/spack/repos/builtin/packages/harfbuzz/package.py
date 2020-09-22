@@ -8,9 +8,11 @@ from spack import *
 
 class Harfbuzz(AutotoolsPackage):
     """The Harfbuzz package contains an OpenType text shaping engine."""
-    homepage = "http://www.freedesktop.org/wiki/Software/HarfBuzz/"
+    homepage = "https://github.com/harfbuzz/harfbuzz"
     url      = "http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-0.9.37.tar.bz2"
+    git      = "https://github.com/harfbuzz/harfbuzz.git"
 
+    version('2.6.8', sha256='6648a571a27f186e47094121f0095e1b809e918b3037c630c7f38ffad86e3035')
     version('2.3.1', sha256='f205699d5b91374008d6f8e36c59e419ae2d9a7bb8c5d9f34041b9a5abcae468')
     version('2.1.3', sha256='613264460bb6814c3894e3953225c5357402915853a652d40b4230ce5faf0bee')
     version('1.9.0', sha256='11eca62bf0ac549b8d6be55f4e130946399939cdfe7a562fdaee711190248b00')
@@ -29,6 +31,14 @@ class Harfbuzz(AutotoolsPackage):
 
     conflicts('%intel', when='@2.3.1:',
               msg='harfbuzz-2.3.1 does not build with the Intel compiler')
+
+    def url_for_version(self, version):
+        if version > Version('2.3.1'):
+            url = "https://github.com/harfbuzz/harfbuzz/releases/download/{0}/harfbuzz-{0}.tar.xz"
+        else:
+            url = "http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-{0}.tar.bz2"
+
+        return url.format(version)
 
     def configure_args(self):
         args = []

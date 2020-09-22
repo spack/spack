@@ -18,6 +18,7 @@ import llnl.util.tty as tty
 
 import spack.error
 import spack.spec
+import spack.version
 import spack.architecture
 import spack.util.executable
 import spack.util.module_cmd
@@ -27,14 +28,8 @@ from spack.util.environment import filter_system_paths
 __all__ = ['Compiler']
 
 
-def _verify_executables(*paths):
-    for path in paths:
-        if not os.path.isfile(path) and os.access(path, os.X_OK):
-            raise CompilerAccessError(path)
-
-
 @llnl.util.lang.memoized
-def get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
+def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
     """Invokes the compiler at a given path passing a single
     version argument and returns the output.
 
@@ -46,6 +41,18 @@ def get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
     output = compiler(
         version_arg, output=str, error=str, ignore_errors=ignore_errors)
     return output
+
+
+def get_compiler_version_output(compiler_path, *args, **kwargs):
+    """Wrapper for _get_compiler_version_output()."""
+    # This ensures that we memoize compiler output by *absolute path*,
+    # not just executable name. If we don't do this, and the path changes
+    # (e.g., during testing), we can get incorrect results.
+    if not os.path.isabs(compiler_path):
+        compiler_path = spack.util.executable.which_string(
+            compiler_path, required=True)
+
+    return _get_compiler_version_output(compiler_path, *args, **kwargs)
 
 
 def tokenize_flags(flags_str):
@@ -158,6 +165,10 @@ def _parse_non_system_link_dirs(string):
     """
     link_dirs = _parse_link_paths(string)
 
+    # Remove directories that do not exist. Some versions of the Cray compiler
+    # report nonexistent directories
+    link_dirs = [d for d in link_dirs if os.path.isdir(d)]
+
     # Return set of directories containing needed compiler libs, minus
     # system paths. Note that 'filter_system_paths' only checks for an
     # exact match, while 'in_system_subdirectory' checks if a path contains
@@ -191,7 +202,7 @@ class Compiler(object):
     fc_names = []
 
     # Optional prefix regexes for searching for this type of compiler.
-    # Prefixes are sometimes used for toolchains, e.g. 'powerpc-bgq-linux-'
+    # Prefixes are sometimes used for toolchains
     prefixes = []
 
     # Optional suffix regexes for searching for this type of compiler.
@@ -268,26 +279,20 @@ class Compiler(object):
         self.target = target
         self.modules = modules or []
         self.alias = alias
-        self.extra_rpaths = extra_rpaths
+        self.environment = environment or {}
+        self.extra_rpaths = extra_rpaths or []
         self.enable_implicit_rpaths = enable_implicit_rpaths
 
-        def check(exe):
-            if exe is None:
-                return None
-            _verify_executables(exe)
-            return exe
-
-        self.cc  = check(paths[0])
-        self.cxx = check(paths[1])
+        self.cc  = paths[0]
+        self.cxx = paths[1]
+        self.f77 = None
+        self.fc = None
         if len(paths) > 2:
-            self.f77 = check(paths[2])
+            self.f77 = paths[2]
             if len(paths) == 3:
                 self.fc = self.f77
             else:
-                self.fc  = check(paths[3])
-
-        self.environment = environment
-        self.extra_rpaths = extra_rpaths or []
+                self.fc  = paths[3]
 
         # Unfortunately have to make sure these params are accepted
         # in the same order they are returned by sorted(flags)
@@ -298,9 +303,52 @@ class Compiler(object):
             if value is not None:
                 self.flags[flag] = tokenize_flags(value)
 
+        # caching value for compiler reported version
+        # used for version checks for API, e.g. C++11 flag
+        self._real_version = None
+
+    def verify_executables(self):
+        """Raise an error if any of the compiler executables is not valid.
+
+        This method confirms that for all of the compilers (cc, cxx, f77, fc)
+        that have paths, those paths exist and are executable by the current
+        user.
+        Raises a CompilerAccessError if any of the non-null paths for the
+        compiler are not accessible.
+        """
+        def accessible_exe(exe):
+            # compilers may contain executable names (on Cray or user edited)
+            if not os.path.isabs(exe):
+                exe = spack.util.executable.which_string(exe)
+                if not exe:
+                    return False
+            return os.path.isfile(exe) and os.access(exe, os.X_OK)
+
+        # setup environment before verifying in case we have executable names
+        # instead of absolute paths
+        with self._compiler_environment():
+            missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
+                       if cmp and not accessible_exe(cmp)]
+            if missing:
+                raise CompilerAccessError(self, missing)
+
     @property
     def version(self):
         return self.spec.version
+
+    @property
+    def real_version(self):
+        """Executable reported compiler version used for API-determinations
+
+        E.g. C++11 flag checks.
+        """
+        if not self._real_version:
+            try:
+                self._real_version = spack.version.Version(
+                    self.get_real_version())
+            except spack.util.executable.ProcessError:
+                self._real_version = self.version
+        return self._real_version
 
     def implicit_rpaths(self):
         if self.enable_implicit_rpaths is False:
@@ -355,11 +403,13 @@ class Compiler(object):
             for flag_type in flags:
                 for flag in self.flags.get(flag_type, []):
                     compiler_exe.add_default_arg(flag)
+
+            output = ''
             with self._compiler_environment():
                 output = str(compiler_exe(
                     self.verbose_flag, fin, '-o', fout,
                     output=str, error=str))  # str for py2
-                return _parse_non_system_link_dirs(output)
+            return _parse_non_system_link_dirs(output)
         except spack.util.executable.ProcessError as pe:
             tty.debug('ProcessError: Command exited with non-zero status: ' +
                       pe.long_message)
@@ -549,31 +599,34 @@ class Compiler(object):
         # store environment to replace later
         backup_env = os.environ.copy()
 
-        # load modules and set env variables
-        for module in self.modules:
-            # On cray, mic-knl module cannot be loaded without cce module
-            # See: https://github.com/spack/spack/issues/3153
-            if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
-                spack.util.module_cmd.load_module('cce')
-            spack.util.module_cmd.load_module(module)
+        try:
+            # load modules and set env variables
+            for module in self.modules:
+                # On cray, mic-knl module cannot be loaded without cce module
+                # See: https://github.com/spack/spack/issues/3153
+                if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
+                    spack.util.module_cmd.load_module('cce')
+                spack.util.module_cmd.load_module(module)
 
-        # apply other compiler environment changes
-        env = spack.util.environment.EnvironmentModifications()
-        env.extend(spack.schema.environment.parse(self.environment))
-        env.apply_modifications()
+            # apply other compiler environment changes
+            env = spack.util.environment.EnvironmentModifications()
+            env.extend(spack.schema.environment.parse(self.environment))
+            env.apply_modifications()
 
-        yield
-
-        # Restore environment
-        os.environ.clear()
-        os.environ.update(backup_env)
+            yield
+        except BaseException:
+            raise
+        finally:
+            # Restore environment regardless of whether inner code succeeded
+            os.environ.clear()
+            os.environ.update(backup_env)
 
 
 class CompilerAccessError(spack.error.SpackError):
-
-    def __init__(self, path):
-        super(CompilerAccessError, self).__init__(
-            "'%s' is not a valid compiler." % path)
+    def __init__(self, compiler, paths):
+        msg = "Compiler '%s' has executables that are missing" % compiler.spec
+        msg += " or are not executable: %s" % paths
+        super(CompilerAccessError, self).__init__(msg)
 
 
 class InvalidCompilerError(spack.error.SpackError):

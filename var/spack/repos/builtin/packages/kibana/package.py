@@ -15,7 +15,7 @@ class Kibana(Package):
 
     version('6.4.0', sha256='df2056105a08c206a1adf9caed09a152a53429a0f1efc1ba3ccd616092d78aee')
 
-    depends_on('jdk', type='run')
+    depends_on('java', type='run')
 
     def install(self, spec, prefix):
         install_tree('.', join_path(prefix, '.'))

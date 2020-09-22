@@ -174,8 +174,9 @@ class Lock(object):
             # If the file were writable, we'd have opened it 'r+'
             raise LockROFileError(self.path)
 
-        tty.debug("{0} locking [{1}:{2}]: timeout {3} sec"
-                  .format(lock_type[op], self._start, self._length, timeout))
+        self._log_debug("{0} locking [{1}:{2}]: timeout {3} sec"
+                        .format(lock_type[op], self._start, self._length,
+                                timeout))
 
         poll_intervals = iter(Lock._poll_interval_generator())
         start_time = time.time()
@@ -211,14 +212,14 @@ class Lock(object):
             # help for debugging distributed locking
             if self.debug:
                 # All locks read the owner PID and host
-                self._read_debug_data()
-                tty.debug('{0} locked {1} [{2}:{3}] (owner={4})'
-                          .format(lock_type[op], self.path,
-                                  self._start, self._length, self.pid))
+                self._read_log_debug_data()
+                self._log_debug('{0} locked {1} [{2}:{3}] (owner={4})'
+                                .format(lock_type[op], self.path,
+                                        self._start, self._length, self.pid))
 
                 # Exclusive locks write their PID/host
                 if op == fcntl.LOCK_EX:
-                    self._write_debug_data()
+                    self._write_log_debug_data()
 
             return True
 
@@ -245,7 +246,7 @@ class Lock(object):
                 raise
         return parent
 
-    def _read_debug_data(self):
+    def _read_log_debug_data(self):
         """Read PID and host data out of the file if it is there."""
         self.old_pid = self.pid
         self.old_host = self.host
@@ -257,7 +258,7 @@ class Lock(object):
             _, _, self.host = host.rpartition('=')
             self.pid = int(self.pid)
 
-    def _write_debug_data(self):
+    def _write_log_debug_data(self):
         """Write PID and host data to the file, recording old values."""
         self.old_pid = self.pid
         self.old_host = self.host
@@ -473,9 +474,6 @@ class Lock(object):
             else:
                 return False
 
-    def _debug(self, *args):
-        tty.debug(*args)
-
     def _get_counts_desc(self):
         return '(reads {0}, writes {1})'.format(self._reads, self._writes) \
             if tty.is_verbose() else ''
@@ -484,57 +482,49 @@ class Lock(object):
         attempts_part = _attempts_str(wait_time, nattempts)
         now = datetime.now()
         desc = 'Acquired at %s' % now.strftime("%H:%M:%S.%f")
-        self._debug(self._status_msg(locktype, '{0}{1}'.
-                                     format(desc, attempts_part)))
+        self._log_debug(self._status_msg(locktype, '{0}{1}'
+                        .format(desc, attempts_part)))
 
     def _log_acquiring(self, locktype):
-        self._debug2(self._status_msg(locktype, 'Acquiring'))
+        self._log_debug(self._status_msg(locktype, 'Acquiring'), level=3)
+
+    def _log_debug(self, *args, **kwargs):
+        """Output lock debug messages."""
+        kwargs['level'] = kwargs.get('level', 2)
+        tty.debug(*args, **kwargs)
 
     def _log_downgraded(self, wait_time, nattempts):
         attempts_part = _attempts_str(wait_time, nattempts)
         now = datetime.now()
         desc = 'Downgraded at %s' % now.strftime("%H:%M:%S.%f")
-        self._debug(self._status_msg('READ LOCK', '{0}{1}'
-                                     .format(desc, attempts_part)))
+        self._log_debug(self._status_msg('READ LOCK', '{0}{1}'
+                        .format(desc, attempts_part)))
 
     def _log_downgrading(self):
-        self._debug2(self._status_msg('WRITE LOCK', 'Downgrading'))
+        self._log_debug(self._status_msg('WRITE LOCK', 'Downgrading'), level=3)
 
     def _log_released(self, locktype):
         now = datetime.now()
         desc = 'Released at %s' % now.strftime("%H:%M:%S.%f")
-        self._debug(self._status_msg(locktype, desc))
+        self._log_debug(self._status_msg(locktype, desc))
 
     def _log_releasing(self, locktype):
-        self._debug2(self._status_msg(locktype, 'Releasing'))
+        self._log_debug(self._status_msg(locktype, 'Releasing'), level=3)
 
     def _log_upgraded(self, wait_time, nattempts):
         attempts_part = _attempts_str(wait_time, nattempts)
         now = datetime.now()
         desc = 'Upgraded at %s' % now.strftime("%H:%M:%S.%f")
-        self._debug(self._status_msg('WRITE LOCK', '{0}{1}'.
-                                     format(desc, attempts_part)))
+        self._log_debug(self._status_msg('WRITE LOCK', '{0}{1}'.
+                        format(desc, attempts_part)))
 
     def _log_upgrading(self):
-        self._debug2(self._status_msg('READ LOCK', 'Upgrading'))
+        self._log_debug(self._status_msg('READ LOCK', 'Upgrading'), level=3)
 
     def _status_msg(self, locktype, status):
         status_desc = '[{0}] {1}'.format(status, self._get_counts_desc())
         return '{0}{1.desc}: {1.path}[{1._start}:{1._length}] {2}'.format(
             locktype, self, status_desc)
-
-    def _debug2(self, *args):
-        # TODO: Easy place to make a single, temporary change to the
-        # TODO:   debug level associated with the more detailed messages.
-        # TODO:
-        # TODO:   Someday it would be great if we could switch this to
-        # TODO:   another level, perhaps _between_ debug and verbose, or
-        # TODO:   some other form of filtering so the first level of
-        # TODO:   debugging doesn't have to generate these messages.  Using
-        # TODO:   verbose here did not work as expected because tests like
-        # TODO:   test_spec_json will write the verbose messages to the
-        # TODO:   output that is used to check test correctness.
-        tty.debug(*args)
 
 
 class LockTransaction(object):

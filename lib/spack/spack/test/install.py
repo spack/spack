@@ -344,10 +344,9 @@ def test_nosource_pkg_install(
 
     # Make sure install works even though there is no associated code.
     pkg.do_install()
-
-    # Also make sure an error is raised if `do_fetch` is called.
-    pkg.do_fetch()
-    assert "No fetch required for nosource" in capfd.readouterr()[0]
+    out = capfd.readouterr()
+    assert "Installing dependency-install" in out[0]
+    assert "Missing a source id for nosource" in out[1]
 
 
 def test_nosource_pkg_install_post_install(

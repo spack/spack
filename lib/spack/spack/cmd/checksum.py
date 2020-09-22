@@ -65,7 +65,7 @@ def checksum(parser, args):
 
     version_lines = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage,
-        batch=(args.batch or len(args.versions) > 0),
+        batch=(args.batch or len(args.versions) > 0 or len(url_dict) == 1),
         fetch_options=pkg.fetch_options)
 
     print()

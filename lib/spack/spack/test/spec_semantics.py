@@ -987,3 +987,19 @@ class TestSpecSematics(object):
         s = Spec('mpileaks +unknown')
         with pytest.raises(UnknownVariantError, match=r'package has no such'):
             s.concretize()
+
+
+@pytest.mark.regression('3887')
+@pytest.mark.parametrize('spec_str', [
+    'git', 'hdf5', 'py-flake8'
+])
+def test_is_extension_after_round_trip_to_dict(config, spec_str):
+    # x is constructed directly from string, y from a
+    # round-trip to dict representation
+    x = Spec(spec_str)
+    x.concretize()
+    y = Spec.from_dict(x.to_dict())
+
+    # Using 'y' since the round-trip make us lose build dependencies
+    for d in y.traverse():
+        assert x[d.name].package.is_extension == y[d.name].package.is_extension

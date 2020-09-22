@@ -23,6 +23,7 @@ class IntelTbb(Package):
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
 
+    version('2020.3', sha256='ebc4f6aa47972daed1f7bf71d100ae5bf6931c2e3144cf299c8cc7d041dca2f3')
     version('2020.2', sha256='4804320e1e6cbe3a5421997b52199e3c1a3829b2ecb6489641da4b8e32faf500')
     version('2020.1', sha256='7c96a150ed22bc3c6628bc3fef9ed475c00887b26d37bca61518d76a56510971')
     version('2020.0', sha256='57714f2d2cf33935db33cee93af57eb3ecd5a7bef40c1fb7ca4a41d79684b118')
@@ -69,6 +70,8 @@ class IntelTbb(Package):
     #
     #    See https://github.com/intel/tbb/pull/147 for details.
     #
+    conflicts('%apple-clang', when='@:2019.6',
+              msg='2019.7 or later required for clang')
     conflicts('%clang', when='@:2019.6',
               msg='2019.7 or later required for clang')
 
@@ -163,7 +166,7 @@ class IntelTbb(Package):
         #
         self.coerce_to_spack("build")
 
-        if spec.satisfies('%clang'):
+        if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
             tbb_compiler = "clang"
         elif spec.satisfies('%intel'):
             tbb_compiler = "icc"
@@ -202,13 +205,11 @@ class IntelTbb(Package):
 
         for lib_name in tbb_lib_names:
             # install release libs
-            fs = glob.glob(join_path("build", "*release", lib_name + ".*"))
-            for f in fs:
-                install(f, prefix.lib)
+            install(join_path("build", "*release", lib_name + ".*"),
+                    prefix.lib)
             # install debug libs if they exist
-            fs = glob.glob(join_path("build", "*debug", lib_name + "_debug.*"))
-            for f in fs:
-                install(f, prefix.lib)
+            install(join_path("build", "*debug", lib_name + "_debug.*"),
+                    prefix.lib)
 
         if spec.satisfies('@2017.8,2018.1:', strict=True):
             # Generate and install the CMake Config file.

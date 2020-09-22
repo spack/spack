@@ -18,4 +18,4 @@ class PyCoverage(PythonPackage):
     version('4.0a6', sha256='85c7f3efceb3724ab066a3fcccc05b9b89afcaefa5b669a7e2222d31eac4728d')
 
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))

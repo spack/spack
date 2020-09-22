@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import pytest
 import os
 
 import spack.paths
@@ -11,6 +11,13 @@ from spack.compiler import _parse_non_system_link_dirs
 #: directory with sample compiler data
 datadir = os.path.join(spack.paths.test_path, 'data',
                        'compiler_verbose_output')
+
+
+@pytest.fixture(autouse=True)
+def allow_nonexistent_paths(monkeypatch):
+    # Allow nonexistent paths to be detected as part of the output
+    # for testing purposes.
+    monkeypatch.setattr(os.path, 'isdir', lambda x: True)
 
 
 def check_link_paths(filename, paths):

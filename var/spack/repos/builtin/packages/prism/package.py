@@ -19,6 +19,8 @@ class Prism(MakefilePackage):
 
     depends_on('java', type=('build', 'run'))
 
+    patch('Makefile.patch', when='target=aarch64:')
+
     def setup_run_environment(self, env):
         env.set('PRISM_DIR', self.prefix)
 

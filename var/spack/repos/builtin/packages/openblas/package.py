@@ -18,6 +18,7 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.10', sha256='0484d275f87e9b8641ff2eecaa9df2830cbe276ac79ad80494822721de6e1693')
     version('0.3.9', sha256='17d4677264dfbc4433e97076220adc79b050e4f8a083ea3f853a53af253bc380')
     version('0.3.8', sha256='8f86ade36f0dbed9ac90eb62575137388359d97d8f93093b38abe166ad7ef3a8')
     version('0.3.7', sha256='bde136122cef3dd6efe2de1c6f65c10955bbb0cc01a520c2342f5287c28f9379')
@@ -61,7 +62,7 @@ class Openblas(MakefilePackage):
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
     # See https://github.com/spack/spack/issues/15385
-    patch('lapack-0.3.9-xerbl.patch', when='@0.3.8: %intel')
+    patch('lapack-0.3.9-xerbl.patch', when='@0.3.8:0.3.9 %intel')
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/xianyi/OpenBLAS/pull/1098
@@ -94,15 +95,19 @@ class Openblas(MakefilePackage):
     patch('openblas-0.3.8-darwin.patch', when='@0.3.8 platform=darwin')
     # Fix ICE in LLVM 9.0.0 https://github.com/xianyi/OpenBLAS/pull/2329
     # Patch as in https://github.com/xianyi/OpenBLAS/pull/2597
-    patch('openblas_appleclang11.patch', when='@0.3.8:0.3.9 %clang@11.0.3-apple')
+    patch('openblas_appleclang11.patch', when='@0.3.8:0.3.9 %apple-clang@11.0.3')
 
     # Add conditions to f_check to determine the Fujitsu compiler
     patch('openblas_fujitsu.patch', when='%fj')
+    patch('openblas_fujitsu2.patch', when='@0.3.10 %fj')
 
     # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')
     conflicts('+consistent_fpcsr', when='threads=none',
               msg='FPCSR consistency only applies to multithreading')
+
+    conflicts('threads=openmp', when='%apple-clang', msg="Apple's clang does not support OpenMP")
+    conflicts('threads=openmp @:0.2.19', when='%clang', msg='OpenBLAS @:0.2.19 does not support OpenMP with clang!')
 
     @property
     def parallel(self):
@@ -118,18 +123,6 @@ class Openblas(MakefilePackage):
             raise InstallError(
                 'OpenBLAS requires both C and Fortran compilers!'
             )
-
-        # Add support for OpenMP
-        if (self.spec.satisfies('threads=openmp') and
-            self.spec.satisfies('%clang')):
-            if str(self.spec.compiler.version).endswith('-apple'):
-                raise InstallError("Apple's clang does not support OpenMP")
-            if '@:0.2.19' in self.spec:
-                # Openblas (as of 0.2.19) hardcoded that OpenMP cannot
-                # be used with any (!) compiler named clang, bummer.
-                raise InstallError(
-                    'OpenBLAS @:0.2.19 does not support OpenMP with clang!'
-                )
 
     @staticmethod
     def _read_targets(target_file):

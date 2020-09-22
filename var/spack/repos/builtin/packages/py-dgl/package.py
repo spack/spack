@@ -29,7 +29,7 @@ class PyDgl(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
     depends_on('cuda', when='+cuda')
-    depends_on('llvm-openmp', when='%clang platform=darwin +openmp')
+    depends_on('llvm-openmp', when='%apple-clang +openmp')
 
     # Python dependencies
     # See python/setup.py
@@ -66,7 +66,7 @@ class PyDgl(CMakePackage):
         if '+openmp' in self.spec:
             args.append('-DUSE_OPENMP=ON')
 
-            if self.spec.satisfies('%clang platform=darwin'):
+            if self.spec.satisfies('%apple-clang'):
                 args.extend([
                     '-DOpenMP_CXX_FLAGS=' +
                     self.spec['llvm-openmp'].headers.include_flags,

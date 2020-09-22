@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Sse2neon(Package):
     """A C/C++ header file that converts Intel SSE intrinsics to ARN NEON
@@ -18,6 +15,4 @@ class Sse2neon(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)
-        headers = glob.glob('*.h')
-        for f in headers:
-            install(f, prefix.include)
+        install('*.h', prefix.include)

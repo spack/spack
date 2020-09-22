@@ -22,10 +22,36 @@ class Cudnn(Package):
 
     maintainers = ['adamjstewart']
 
+    # cuDNN 8.0.2
+    version('8.0.2.39-11.0-linux-x64',
+            sha256='672f46288b8edd98f8d156a4f1ff518201ca6de0cff67915ceaa37f6d6d86345')
+    version('8.0.2.39-11.0-linux-ppc64le',
+            sha256='b7c1ce5b1191eb007ba3455ea5f497fdce293a646545d8a6ed93e9bb06d7f057')
+    version('8.0.2.39-10.2-linux-x64',
+            sha256='c9cbe5c211360f3cfbc0fb104f0e9096b37e53f89392525679f049276b2f701f')
+    version('8.0.2.39-10.2-linux-ppc64le',
+            sha256='c32325ff84a8123491f2e58b3694885a9a672005bc21764b38874688c0e43262')
+    version('8.0.2.39-10.1-linux-x64',
+            sha256='82148a68bd6bdaab93af5e05bb1842b8ccb3ab7de7bed41f609a7616c102213d')
+    version('8.0.2.39-10.1-linux-ppc64le',
+            sha256='8196ec4f031356317baeccefbc4f61c8fccb2cf0bdef0a6431438918ddf68fb9')
+
+    # cuDNN 8.0
+    version('8.0.0.180-11.0-linux-x64',
+            sha256='9e75ea70280a77de815e0bdc85d08b67e081bc99a708b574092142344d2ba07e')
+    version('8.0.0.180-11.0-linux-ppc64le',
+            sha256='1229e94731bbca63ee7f5a239f4e1838a51a301d896f3097fbf7377d74704060')
+    version('8.0.0.180-10.2-linux-x64',
+            sha256='0c87c12358ee2b99d57c2a8c7560e3bb93e54bb929f5f8bec4964a72a2bb261d')
+    version('8.0.0.180-10.2-linux-ppc64le',
+            sha256='59e4ad6db15fcc374976e8052fe39e3f30f34079710fb3c7751a64c853d9243f')
+
     # cuDNN 7.6.5
     version('7.6.5.32-10.2-linux-x64',
             sha256='600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20',
             preferred=True)
+    version('7.6.5.32-10.2-linux-ppc64le',
+            sha256='7dc08b6ab9331bfd12207d4802c61db1ad7cace7395b67a6e7b16efa0335668b')
     version('7.6.5.32-10.1-linux-x64',
             sha256='7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3')
     version('7.6.5.32-10.1-osx-x64',

@@ -29,15 +29,23 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
     def patch(self):
         # update cuda architecture if necessary
         if '+cuda' in self.spec:
-            arch = self.spec.variants['cuda_arch'].value
+            cuda_arch = self.spec.variants['cuda_arch'].value
             archflag = ''
 
-            if arch[0] != 'none':
-                archflag = '-arch=%s' % arch[0]
+            if cuda_arch != 'none':
+                if len(cuda_arch) > 1:
+                    raise InstallError(
+                        'libbeagle only supports compilation for a single GPU'
+                        'type.'
+                    )
+                archflag = '-arch compute_{0}'.format(cuda_arch[0])
 
-            filter_file('-arch compute_13', archflag,
+            filter_file('-arch compute_13', '',
                         'libhmsbeagle/GPU/kernels/Makefile.am',
                         string=True)
+
+            filter_file(r'(NVCCFLAGS="-O3).*(")',
+                        r'\1 {0}\2'.format(archflag), 'configure.ac')
 
             # point CUDA_LIBS to libcuda.so
             filter_file('-L$with_cuda/lib', '-L$with_cuda/lib64/stubs',

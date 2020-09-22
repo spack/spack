@@ -38,7 +38,7 @@ def setup_parser(subparser):
     generate = subparsers.add_parser('generate', help=ci_generate.__doc__)
     generate.add_argument(
         '--output-file', default=None,
-        help="Absolute path to file where generated jobs file should be " +
+        help="Path to file where generated jobs file should be " +
              "written.  The default is .gitlab-ci.yml in the root of the " +
              "repository.")
     generate.add_argument(
@@ -46,14 +46,14 @@ def setup_parser(subparser):
         help="Absolute path of additional location where generated jobs " +
              "yaml file should be copied.  Default is not to copy.")
     generate.add_argument(
-        '--spack-repo', default=None,
-        help="Provide a url for this argument if a custom spack repo " +
-             "should be cloned as a step in each generated job.")
+        '--optimize', action='store_true', default=False,
+        help="(Experimental) run the generated document through a series of "
+             "optimization passes designed to reduce the size of the "
+             "generated file.")
     generate.add_argument(
-        '--spack-ref', default=None,
-        help="Provide a git branch or tag if a custom spack branch " +
-             "should be checked out as a step in each generated job.  " +
-             "This argument is ignored if no --spack-repo is provided.")
+        '--dependencies', action='store_true', default=False,
+        help="(Experimental) disable DAG scheduling; use "
+             ' "plain" dependencies.')
     generate.set_defaults(func=ci_generate)
 
     # Check a spec against mirror. Rebuild, create buildcache and push to
@@ -73,20 +73,21 @@ def ci_generate(args):
 
     output_file = args.output_file
     copy_yaml_to = args.copy_to
-    spack_repo = args.spack_repo
-    spack_ref = args.spack_ref
+    run_optimizer = args.optimize
+    use_dependencies = args.dependencies
 
     if not output_file:
-        gen_ci_dir = os.getcwd()
-        output_file = os.path.join(gen_ci_dir, '.gitlab-ci.yml')
+        output_file = os.path.abspath(".gitlab-ci.yml")
     else:
-        gen_ci_dir = os.path.dirname(output_file)
+        output_file_path = os.path.abspath(output_file)
+        gen_ci_dir = os.path.dirname(output_file_path)
         if not os.path.exists(gen_ci_dir):
             os.makedirs(gen_ci_dir)
 
     # Generate the jobs
     spack_ci.generate_gitlab_ci_yaml(
-        env, True, output_file, spack_repo, spack_ref)
+        env, True, output_file, run_optimizer=run_optimizer,
+        use_dependencies=use_dependencies)
 
     if copy_yaml_to:
         copy_to_dir = os.path.dirname(copy_yaml_to)
@@ -236,8 +237,11 @@ def ci_rebuild(args):
 
         # Make a copy of the environment file, so we can overwrite the changed
         # version in between the two invocations of "spack install"
-        env_src_path = os.path.join(current_directory, 'spack.yaml')
-        env_dst_path = os.path.join(current_directory, 'spack.yaml_BACKUP')
+        env_src_path = env.manifest_path
+        env_dirname = os.path.dirname(env_src_path)
+        env_filename = os.path.basename(env_src_path)
+        env_copyname = '{0}_BACKUP'.format(env_filename)
+        env_dst_path = os.path.join(env_dirname, env_copyname)
         shutil.copyfile(env_src_path, env_dst_path)
 
         tty.debug('job concrete spec path: {0}'.format(job_spec_yaml_path))
@@ -326,8 +330,10 @@ def ci_rebuild(args):
                     first_pass_args))
                 spack_cmd(*first_pass_args)
 
-                # Overwrite the changed environment file so it doesn't
+                # Overwrite the changed environment file so it doesn't break
                 # the next install invocation.
+                tty.debug('Copying {0} to {1}'.format(
+                    env_dst_path, env_src_path))
                 shutil.copyfile(env_dst_path, env_src_path)
 
                 second_pass_args = install_args + [

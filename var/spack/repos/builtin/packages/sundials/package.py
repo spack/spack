@@ -13,7 +13,8 @@ class Sundials(CMakePackage):
     Solvers)"""
 
     homepage = "https://computing.llnl.gov/projects/sundials"
-    url = "https://computing.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz"
+    urls = ["https://computing.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz",
+            "https://github.com/LLNL/sundials/releases/download/v2.7.0/sundials-2.7.0.tar.gz"]
     git = "https://github.com/llnl/sundials.git"
     maintainers = ['cswoodward', 'gardner48', 'balos1']
 
@@ -214,7 +215,7 @@ class Sundials(CMakePackage):
             return 'ON' if varstr in self.spec else 'OFF'
 
         fortran_flag = self.compiler.f77_pic_flag
-        if (spec.satisfies('%clang platform=darwin')) and ('+fcmix' in spec):
+        if (spec.satisfies('%apple-clang')) and ('+fcmix' in spec):
             f77 = Executable(self.compiler.f77)
             libgfortran = LibraryList(f77('--print-file-name',
                                           'libgfortran.a', output=str))

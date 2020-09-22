@@ -21,6 +21,26 @@ class Eztrace(AutotoolsPackage):
     # Does not work on Darwin due to MAP_POPULATE
     conflicts('platform=darwin')
 
+    def patch(self):
+        filter_file(
+            '"DEFAULT_OUTFILE"',
+            '" DEFAULT_OUTFILE "',
+            'extlib/gtg/extlib/otf/tools/otfshrink/otfshrink.cpp',
+            string=True
+        )
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%fj'):
+            env.set('LDFLAGS', '--linkfortran')
+
     def configure_args(self):
         args = ["--with-mpi={0}".format(self.spec["mpi"].prefix)]
         return args
+
+    @run_before('build')
+    def fix_libtool(self):
+        if self.spec.satisfies('%fj'):
+            libtools = ['extlib/gtg/libtool',
+                        'extlib/opari2/build-frontend/libtool']
+            for f in libtools:
+                filter_file('wl=""', 'wl="-Wl,"', f, string=True)

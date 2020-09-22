@@ -40,7 +40,7 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
     variant('ubsan', default=sys.platform != 'darwin',
             description='Activates ubsan support for valgrind')
 
-    conflicts('+ubsan', when='platform=darwin %clang',
+    conflicts('+ubsan', when='%apple-clang',
               msg="""
 Cannot build libubsan with clang on macOS.
 Otherwise with (Apple's) clang there is a linker error:

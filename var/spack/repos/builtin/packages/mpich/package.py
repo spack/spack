@@ -31,6 +31,7 @@ class Mpich(AutotoolsPackage):
     version('3.1',   sha256='fcf96dbddb504a64d33833dc455be3dda1e71c7b3df411dfcf9df066d7c32c39')
     version('3.0.4', sha256='cf638c85660300af48b6f776e5ecd35b5378d5905ec5d34c3da7a27da0acf0b3')
 
+    variant('hwloc', default=True,  description='Use external hwloc package')
     variant('hydra', default=True,  description='Build the hydra process manager')
     variant('romio', default=True,  description='Enable ROMIO MPI I/O implementation')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
@@ -66,6 +67,9 @@ spack package at this time.''',
     variant('libxml2', default=True,
             description='Use libxml2 for XML support instead of the custom '
                         'minimalistic implementation')
+    variant('argobots', default=False,
+            description='Enable Argobots support')
+    variant('fortran', default=True, description='Enable Fortran support')
 
     provides('mpi')
     provides('mpi@:3.0', when='@3:')
@@ -75,10 +79,18 @@ spack package at this time.''',
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
     )
 
+    # Fix using an external hwloc
+    # See https://github.com/pmodels/mpich/issues/4038
+    # and https://github.com/pmodels/mpich/pull/3540
+    patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
+          sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
+          when='@3.3 +hwloc')
+
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
     patch('mpich32_clang.patch', when='@3.2:3.2.0%clang')
+    patch('mpich32_clang.patch', when='@3.2:3.2.0%apple-clang')
 
     # Fix SLURM node list parsing
     # See https://github.com/pmodels/mpich/issues/3572
@@ -109,6 +121,8 @@ spack package at this time.''',
     depends_on('findutils', type='build')
     depends_on('pkgconfig', type='build')
 
+    depends_on('hwloc@2.0.0:', when='@3.3: +hwloc')
+
     depends_on('libfabric', when='netmod=ofi')
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
@@ -130,11 +144,20 @@ spack package at this time.''',
 
     depends_on('pmix', when='pmi=pmix')
 
+    # +argobots variant requires Argobots
+    depends_on('argobots', when='+argobots')
+
     # building from git requires regenerating autotools files
     depends_on('automake@1.15:', when='@develop', type=("build"))
     depends_on('libtool@2.4.4:', when='@develop', type=("build"))
     depends_on("m4", when="@develop", type=("build")),
     depends_on("autoconf@2.67:", when='@develop', type=("build"))
+
+    # building with "+hwloc' also requires regenerating autotools files
+    depends_on('automake@1.15:', when='@3.3 +hwloc', type="build")
+    depends_on('libtool@2.4.4:', when='@3.3 +hwloc', type="build")
+    depends_on("m4", when="@3.3 +hwloc", type="build"),
+    depends_on("autoconf@2.67:", when='@3.3 +hwloc', type="build")
 
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
@@ -165,7 +188,8 @@ spack package at this time.''',
         # their run environments the code to make the compilers available.
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.external_module and 'cray' in self.spec.external_module:
+        external_modules = self.spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
             env.set('MPICC', spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
@@ -186,20 +210,25 @@ spack package at this time.''',
         env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
+        spec = self.spec
+
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.external_module and 'cray' in self.spec.external_module:
-            self.spec.mpicc = spack_cc
-            self.spec.mpicxx = spack_cxx
-            self.spec.mpifc = spack_fc
-            self.spec.mpif77 = spack_f77
+        external_modules = spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
+            spec.mpicc = spack_cc
+            spec.mpicxx = spack_cxx
+            spec.mpifc = spack_fc
+            spec.mpif77 = spack_f77
         else:
-            self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
-            self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
-            self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
-            self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+            spec.mpicc = join_path(self.prefix.bin, 'mpicc')
+            spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
 
-        self.spec.mpicxx_shared_libs = [
+            if '+fortran' in spec:
+                spec.mpifc = join_path(self.prefix.bin, 'mpif90')
+                spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+
+        spec.mpicxx_shared_libs = [
             join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
@@ -207,7 +236,8 @@ spack package at this time.''',
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path):
+        if (os.path.exists(self.configure_abs_path) and
+            not spec.satisfies('@3.3 +hwloc')):
             return
         # Else bootstrap with autotools
         bash = which('bash')
@@ -218,9 +248,18 @@ spack package at this time.''',
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
         # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+        # The user can work around this by disabling Fortran explicitly
+        # with ~fortran
+
+        f77 = self.compiler.f77
+        fc = self.compiler.fc
+
+        fortran_missing = f77 is None or fc is None
+
+        if '+fortran' in self.spec and fortran_missing:
             raise InstallError(
-                'MPICH requires both C and Fortran compilers!'
+                'mpich +fortran requires Fortran compilers. Configure '
+                'Fortran compiler or disable Fortran support with ~fortran'
             )
 
     def configure_args(self):
@@ -228,12 +267,17 @@ spack package at this time.''',
         config_args = [
             '--disable-silent-rules',
             '--enable-shared',
+            '--with-hwloc-prefix={0}'.format(
+                spec['hwloc'].prefix if '^hwloc' in spec else 'embedded'),
             '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without'),
             '--enable-wrapper-rpath={0}'.format('no' if '~wrapperrpath' in
                                                 spec else 'yes')
         ]
+
+        if '~fortran' in spec:
+            config_args.append('--disable-fortran')
 
         if '+slurm' in spec:
             config_args.append('--with-slurm=yes')
@@ -286,5 +330,10 @@ spack package at this time.''',
             # scripts of all instances of hwloc (there are three copies of it:
             # for hydra, for hydra2, and for MPICH itself).
             config_args += self.enable_or_disable('libxml2')
+
+        # If +argobots specified, add argobots option
+        if '+argobots' in spec:
+            config_args.append('--with-thread-package=argobots')
+            config_args.append('--with-argobots=' + spec['argobots'].prefix)
 
         return config_args

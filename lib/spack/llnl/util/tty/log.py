@@ -21,6 +21,7 @@ from six import string_types
 from six import StringIO
 
 import llnl.util.tty as tty
+from llnl.util.lang import fork_context
 
 try:
     import termios
@@ -323,14 +324,14 @@ class log_output(object):
     work within test frameworks like nose and pytest.
     """
 
-    def __init__(self, file_like=None, echo=False, debug=False, buffer=False):
+    def __init__(self, file_like=None, echo=False, debug=0, buffer=False):
         """Create a new output log context manager.
 
         Args:
             file_like (str or stream): open file object or name of file where
                 output should be logged
             echo (bool): whether to echo output in addition to logging it
-            debug (bool): whether to enable tty debug mode during logging
+            debug (int): positive to enable tty debug mode during logging
             buffer (bool): pass buffer=True to skip unbuffering output; note
                 this doesn't set up any *new* buffering
 
@@ -355,7 +356,7 @@ class log_output(object):
         self._active = False  # used to prevent re-entry
 
     def __call__(self, file_like=None, echo=None, debug=None, buffer=None):
-        """Thie behaves the same as init. It allows a logger to be reused.
+        """This behaves the same as init. It allows a logger to be reused.
 
         Arguments are the same as for ``__init__()``.  Args here take
         precedence over those passed to ``__init__()``.
@@ -430,7 +431,7 @@ class log_output(object):
             except BaseException:
                 input_stream = None  # just don't forward input if this fails
 
-            self.process = multiprocessing.Process(
+            self.process = fork_context.Process(
                 target=_writer_daemon,
                 args=(
                     input_stream, read_fd, write_fd, self.echo, self.log_file,

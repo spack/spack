@@ -21,6 +21,8 @@ class Glib(Package):
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    version('2.64.5', sha256='9cbd5bd2715ead1c28d53c46f7b7b6ff6166f5887b772c1a9e3bf2910cfecc11')
+    version('2.64.4', sha256='f7e0b325b272281f0462e0f7fff25a833820cac19911ff677251daf6d87bce50')
     version('2.64.3', sha256='fe9cbc97925d14c804935f067a3ad77ef55c0bbe9befe68962318f5a767ceb22')
     version('2.64.2', sha256='9a2f21ed8f13b9303399de13a0252b7cbcede593d26971378ec6cb90e87f2277')
     version('2.64.1', sha256='17967603bcb44b6dbaac47988d80c29a3d28519210b28157c2bd10997595bbc7')
@@ -141,10 +143,18 @@ class Glib(Package):
             args.append('--with-libiconv=maybe')
         else:
             args.append('--with-libiconv=gnu')
-        if 'tracing=dtrace' in self.spec or 'tracing=systemtap' in self.spec:
-            args.append('--enable-tracing')
+        if self.spec.satisfies('@2.56:'):
+            for value in ('dtrace', 'systemtap'):
+                if ('tracing=' + value) in self.spec:
+                    args.append('--enable-' + value)
+                else:
+                    args.append('--disable-' + value)
         else:
-            args.append('--disable-tracing')
+            if ('tracing=dtrace' in self.spec
+                    or 'tracing=systemtap' in self.spec):
+                args.append('--enable-tracing')
+            else:
+                args.append('--disable-tracing')
         # SELinux is not available in Spack, so glib should not use it.
         args.append('--disable-selinux')
         # glib should not use the globally installed gtk-doc. Otherwise,

@@ -6,15 +6,16 @@
 from spack import *
 
 
-class Blaspp(CMakePackage):
-    """BLAS++: C++ API for the Basic Linear Algebra Subroutines (University of
-    Texas)."""
+class Blaspp(CMakePackage, CudaPackage):
+    """C++ API for the Basic Linear Algebra Subroutines. Developed by the
+       Innovative Computing Laboratory at the University of Tennessee,
+       Knoxville."""
 
     homepage = "https://bitbucket.org/icl/blaspp"
-    hg       = "https://bitbucket.org/icl/blaspp"
-    maintainers = ['teonnik', 'Sely85']
+    git      = "https://bitbucket.org/icl/blaspp"
+    maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
-    version('develop', hg=hg, revision="5191c9d")
+    version('develop', commit='6293d96')
 
     variant('gfort',
             default=False,
@@ -60,6 +61,16 @@ class Blaspp(CMakePackage):
                          '-DBLAS_LIBRARY_THREADING="threaded"'])
         else:
             args.append('-DBLAS_LIBRARY_THREADING="sequential"')
+
+        # `blaspp` has an implicit CUDA detection mechanism. This disables it
+        # in cases where it may backfire. One such case is when `cuda` is
+        # external and marked with `buildable=false`. `blaspp`'s CMake CUDA
+        # detection mechanism finds CUDA but doesn't set certain paths properly
+        # which leads to a build issues [1].
+        #
+        # [1]: https://bitbucket.org/icl/blaspp/issues/6/compile-error-due-to-implicit-cuda
+        if '~cuda' in spec:
+            args.append('-DCMAKE_CUDA_COMPILER=')
 
         # Missing:
         #

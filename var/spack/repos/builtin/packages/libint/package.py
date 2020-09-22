@@ -13,6 +13,10 @@ TUNE_VARIANTS = (
     'cp2k-lmax-5',
     'cp2k-lmax-6',
     'cp2k-lmax-7',
+    'molgw-lmax-4',
+    'molgw-lmax-5',
+    'molgw-lmax-6',
+    'molgw-lmax-7',
 )
 
 
@@ -131,6 +135,25 @@ class Libint(AutotoolsPackage):
                     '--with-eri2-max-am={0},{1}'.format(lmax + 2, lmax + 1),
                     '--with-eri3-max-am={0},{1}'.format(lmax + 2, lmax + 1),
                     '--with-opt-am=3',
+                    # keep code-size at an acceptable limit,
+                    # cf. https://github.com/evaleev/libint/wiki#program-specific-notes:
+                    '--enable-generic-code',
+                    '--disable-unrolling',
+                ]
+            if tune_value.startswith('molgw'):
+                lmax = int(tune_value.split('-lmax-')[1])
+                config_args += [
+                    '--enable-1body=1',
+                    '--enable-eri=0',
+                    '--enable-eri2=0',
+                    '--enable-eri3=0',
+                    '--with-multipole-max-order=0',
+                    '--with-max-am={0}'.format(lmax),
+                    '--with-eri-max-am={0}'.format(lmax),
+                    '--with-eri2-max-am={0}'.format(lmax),
+                    '--with-eri3-max-am={0}'.format(lmax),
+                    '--with-opt-am=2',
+                    '--enable-contracted-ints',
                     # keep code-size at an acceptable limit,
                     # cf. https://github.com/evaleev/libint/wiki#program-specific-notes:
                     '--enable-generic-code',
