@@ -83,4 +83,5 @@ class Casacore(CMakePackage):
         else:
             args.extend(['-DBUILD_PYTHON=YES', '-DBUILD_PYTHON3=NO'])
 
+        args.append('-DBUILD_TESTING=OFF')
         return args
