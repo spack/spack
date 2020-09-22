@@ -43,6 +43,10 @@ class PyCuml(PythonPackage):
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))
 
+    phases = [ 'build_ext', 'install' ]
+
+    build_directory = 'python'
+
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
