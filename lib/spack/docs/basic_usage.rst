@@ -132,31 +132,27 @@ If ``mpileaks`` depends on other packages, Spack will install the
 dependencies first.  It then fetches the ``mpileaks`` tarball, expands
 it, verifies that it was downloaded without errors, builds it, and
 installs it in its own directory under ``$SPACK_ROOT/opt``. You'll see
-a number of messages from spack, a lot of build output, and a message
-that the packages is installed:
+a number of messages from Spack, a lot of build output, and a message
+that the package is installed.  Add one or more debug options (``-d``)
+to get increasingly detailed output.
 
 .. code-block:: console
 
    $ spack install mpileaks
-   ==> Installing mpileaks
-   ==> mpich is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4.
-   ==> callpath is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/callpath@1.0.2-5dce4318.
-   ==> adept-utils is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/adept-utils@1.0-5adef8da.
-   ==> Trying to fetch from https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
-   ######################################################################## 100.0%
-   ==> Staging archive: ~/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23/mpileaks-1.0.tar.gz
-   ==> Created stage in ~/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23.
-   ==> No patches needed for mpileaks.
-   ==> Building mpileaks.
-
-   ... build output ...
-
-   ==> Successfully installed mpileaks.
-     Fetch: 2.16s.  Build: 9.82s.  Total: 11.98s.
-   [+] ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpileaks@1.0-59f6ad23
+   ... dependency build output ...
+   ==> Installing mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2
+   ==> No binary for mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2 found: installing from source
+   ==> mpileaks: Executing phase: 'autoreconf'
+   ==> mpileaks: Executing phase: 'configure'
+   ==> mpileaks: Executing phase: 'build'
+   ==> mpileaks: Executing phase: 'install'
+   [+] ~/spack/opt/linux-rhel7-broadwell/gcc-8.1.0/mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2
 
 The last line, with the ``[+]``, indicates where the package is
 installed.
+
+Add the debug option -- ``spack  install -d mpileaks`` -- to get additional
+output.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Building a specific version
