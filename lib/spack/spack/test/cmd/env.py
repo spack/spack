@@ -1040,14 +1040,14 @@ def test_env_dir_remains_after_deactivation(): #TODO: fix later
     #assert dir is in PATH
     assert e.path in var
 
-    #add fake dir to PATH manually
+    #add dir to PATH manually
+    idx = var.index("export PATH=") + 12
+    var = var[:idx] + e.path + ":" + var[idx:]
 
-    #os.path.join(fakePath)
-
-    #assert fake dir is in PATH twice
-
-    #deactivate env
-    #assert dir is in the PATH once
+#    assert fake dir is in PATH twice
+#
+#    deactivate env
+#    assert dir is in the PATH once
 
 
 def test_env_updates_view_install(
