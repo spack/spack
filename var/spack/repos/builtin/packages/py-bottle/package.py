@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyBottle(PythonPackage):
-    """Bottle is a fast, simple and lightweight WSGI micro web-framework for Python."""
+    """Bottle is a fast, simple and lightweight WSGI 
+       micro web-framework for Python."""
 
     homepage = "https://github.com/bottlepy/bottle"
     url      = "https://github.com/bottlepy/bottle/archive/0.12.18.tar.gz"
@@ -23,4 +24,5 @@ class PyBottle(PythonPackage):
     version('0.12.10', sha256='f57fb6594feac80fd92a573ab8ca7ce98491471211d99f1c97855e34f5d13677')
     version('0.12.9',  sha256='45285ad084ca054d821ceef8bd95462efd38e13ecbef13a82c22b6472a6f4b2d')
 
+    depends_on('python@2.7:,3.4:',  type=('build', 'run'))
     depends_on('py-setuptools', type='build')
