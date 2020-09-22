@@ -1044,8 +1044,10 @@ def test_env_dir_remains_after_deactivation(): #TODO: fix later
     idx = var.index("export PATH=") + 12
     var = var[:idx] + e.path + ":" + var[idx:]
 
-#    assert fake dir is in PATH twice
-#
+    #assert dir is in PATH twice
+    string = e.path + ":" + e.path
+    assert string in var
+
 #    deactivate env
 #    assert dir is in the PATH once
 
