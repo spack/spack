@@ -79,12 +79,12 @@ modules:
       - '%intel'
       - '%clang'
       - '%pgi'
-    naming_scheme: '${PACKAGE}/${VERSION}'
+    projections:
+      all: '{name}/{version}'
+      ^coreneuron+knl: '{name}-knl/{version}'
+      +common: '{name}/{version}-commonmods'
     all:
       autoload: 'all'
-      suffixes:
-        '^coreneuron+knl': 'knl'
-        '+common': 'commonmods'  # neurodamus-core
       environment:
         set:
           '${PACKAGE}_ROOT': '${PREFIX}'
