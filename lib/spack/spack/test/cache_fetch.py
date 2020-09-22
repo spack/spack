@@ -32,5 +32,5 @@ def test_fetch(tmpdir):
     fetcher = CacheURLFetchStrategy(url=url)
     with Stage(fetcher, path=testpath) as stage:
         source_path = stage.source_path
-        mkdirp(source_path)
+        mkdirp(os.path.join(source_path, 'test'))
         fetcher.fetch()

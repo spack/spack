@@ -84,5 +84,5 @@ def test_hg_extra_fetch(tmpdir):
     fetcher = HgFetchStrategy(hg='file:///not-a-real-hg-repo')
     with Stage(fetcher, path=testpath) as stage:
         source_path = stage.source_path
-        mkdirp(source_path)
+        mkdirp(os.path.join(source_path, 'test'))
         fetcher.fetch()
