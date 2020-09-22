@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
-import glob
 
 
 class Sparse(MakefilePackage):
@@ -36,9 +34,7 @@ class Sparse(MakefilePackage):
             make()
 
     def install(self, spec, prefix):
-        headers = glob.glob('src/*.h')
+        mkdir(prefix.include)
         install_tree('lib', prefix.lib)
         install_tree('bin', prefix.bin)
-        mkdir(prefix.include)
-        for h in headers:
-            install(h, prefix.include)
+        install('src/*.h', prefix.include)

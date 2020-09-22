@@ -76,3 +76,14 @@ class Lcio(CMakePackage):
     def setup_run_environment(self, env):
         env.set('LCIO', self.prefix)
         env.prepend_path('PYTHONPATH', self.prefix.python)
+        # needed for the python bindings to find "Exceptions.h"
+        env.prepend_path('CPATH', self.prefix)
+
+    @run_after('install')
+    def install_source(self):
+        # these files are needed for the python bindings and root to
+        # find the headers
+        install_tree('src/cpp/include/pre-generated/',
+                     self.prefix.include + '/pre-generated')
+        install('src/cpp/include/IOIMPL/LCEventLazyImpl.h',
+                self.prefix.include + '/IOIMPL/')

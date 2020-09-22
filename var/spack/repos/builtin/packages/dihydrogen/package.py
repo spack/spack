@@ -51,6 +51,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
     # Override the default set of CUDA architectures with the relevant
     # subset from lib/spack/spack/build_systems/cuda.py
     cuda_arch_values = [
+        '30', '32', '35', '37',
+        '50', '52', '53',
         '60', '61', '62',
         '70', '72', '75',
         '80'
@@ -104,8 +106,6 @@ class Dihydrogen(CMakePackage, CudaPackage):
     illegal_cuda_arch_values = [
         '10', '11', '12', '13',
         '20', '21',
-        '30', '32', '35', '37',
-        '50', '52', '53',
     ]
     for value in illegal_cuda_arch_values:
         conflicts('cuda_arch=' + value)

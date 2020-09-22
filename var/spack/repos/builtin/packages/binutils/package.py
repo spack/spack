@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
 import sys
 
 
@@ -115,9 +113,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             # grab the full binutils set of headers
             install_tree('include', extradir)
             # also grab the headers from the bfd directory
-            for current_file in glob.glob(join_path(self.build_directory,
-                                                    'bfd', '*.h')):
-                install(current_file, extradir)
+            install(join_path(self.build_directory, 'bfd', '*.h'),
+                    extradir)
 
     def flag_handler(self, name, flags):
         # To ignore the errors of narrowing conversions for

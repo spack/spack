@@ -14,7 +14,7 @@ problems if you encounter them.
 Variants are not properly forwarded to dependencies
 ---------------------------------------------------
 
-**Status:** Expected to be fixed in the next release
+**Status:** Expected to be fixed by Spack's new concretizer
 
 Sometimes, a variant of a package can also affect how its dependencies are
 built. For example, in order to build MPI support for a package, it may
@@ -48,3 +48,30 @@ A workaround is to explicitly activate the variants of dependencies as well:
 
 See https://github.com/spack/spack/issues/267 and
 https://github.com/spack/spack/issues/2546 for further details.
+
+-----------------------------------------------
+depends_on cannot handle recursive dependencies
+-----------------------------------------------
+
+**Status:** Not yet a work in progress
+
+Although ``depends_on`` can handle any aspect of Spack's spec syntax,
+it currently cannot handle recursive dependencies. If the ``^`` sigil
+appears in a ``depends_on`` statement, the concretizer will hang.
+For example, something like:
+
+.. code-block:: python
+
+   depends_on('mfem+cuda ^hypre+cuda', when='+cuda')
+
+
+should be rewritten as:
+
+.. code-block:: python
+
+   depends_on('mfem+cuda', when='+cuda')
+   depends_on('hypre+cuda', when='+cuda')
+
+
+See https://github.com/spack/spack/issues/17660 and
+https://github.com/spack/spack/issues/11160 for more details.

@@ -14,14 +14,15 @@ class Hipblas(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
     url      = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-3.5.0.tar.gz"
 
-    maintainers = ['haampie']
+    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    for ver in ['3.5.0', '3.7.0']:
+        depends_on('hip@' + ver, when='@' + ver)
+        depends_on('rocsolver@' + ver, type='build', when='@' + ver)
+        depends_on('rocblas@' + ver, type='link', when='@' + ver)
+        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
+        depends_on('comgr@' + ver, type='build', when='@' + ver)
 
-    depends_on('hip')
-    depends_on('rocsolver')
-    depends_on('rocblas')
-    depends_on('rocm-device-libs', type='build')
-    depends_on('comgr', type='build')
-
+    version('3.7.0', sha256='9840a493ab4838c86696ceb33ce07c34b5f59f62db4f88cb3af62b69d84f8729')
     version('3.5.0', sha256='d451da80beb048767da71a090afceed2e111d01b3e95a7044deada5054d6e7b1')
 
     def cmake_args(self):

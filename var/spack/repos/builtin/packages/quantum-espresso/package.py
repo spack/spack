@@ -3,11 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
-import os.path
-
-from spack import *
-
 
 class QuantumEspresso(Package):
     """Quantum ESPRESSO is an integrated suite of Open-Source computer codes
@@ -325,7 +320,7 @@ class QuantumEspresso(Package):
             # Compute the include directory from there: versions
             # of espresso prior to 6.1 requires -I in front of the directory
             elpa_include = '' if '@6.1:' in spec else '-I'
-            elpa_include += os.path.join(
+            elpa_include += join_path(
                 elpa.headers.directories[0],
                 'modules'
             )
@@ -369,7 +364,6 @@ class QuantumEspresso(Package):
 
         if 'platform=darwin' in spec:
             mkdirp(prefix.bin)
-            for filename in glob.glob("bin/*.x"):
-                install(filename, prefix.bin)
+            install('bin/*.x', prefix.bin)
         else:
             make('install')

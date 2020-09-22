@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 from six import iteritems
 
 
@@ -54,6 +52,10 @@ class Rust(Package):
         'src',
         default=True,
         description='Install Rust source files'
+    )
+    variant(
+        'extra_targets', default='none', multi=True,
+        description='Triples for extra targets to enable. For supported targets, see: https://doc.rust-lang.org/nightly/rustc/platform-support.html'
     )
 
     depends_on('python@2.7:', type='build')
@@ -496,6 +498,17 @@ class Rust(Package):
 
         ar = which('ar', required=True)
 
+        extra_targets = []
+        if self.spec.variants['extra_targets'].value != 'none':
+            extra_targets = list(self.spec.variants['extra_targets'].value)
+
+        targets = [self.get_rust_target()] + extra_targets
+        target_spec = 'target=[' + \
+            ','.join('"{0}"'.format(target) for target in targets) + ']'
+        target_specs = '\n'.join(
+            '[target.{0}]\nar = "{1}"\n'.format(target, ar.path)
+            for target in targets)
+
         # build.tools was introduced in Rust 1.25
         tools_spec = \
             'tools={0}'.format(tools) if self.check_newer('1.25') else ''
@@ -529,6 +542,7 @@ docs = false
 vendor = true
 extended = true
 verbose = 2
+{target_spec}
 {tools_spec}
 {rustfmt_spec}
 
@@ -537,8 +551,7 @@ channel = "stable"
 rpath = true
 {deny_warnings_spec}
 
-[target.{target}]
-ar = "{ar}"
+{target_specs}
 
 [install]
 prefix = "{prefix}"
@@ -547,9 +560,9 @@ sysconfdir = "etc"
                 cargo=join_path(boot_bin, 'cargo'),
                 rustc=join_path(boot_bin, 'rustc'),
                 prefix=prefix,
-                target=target,
                 deny_warnings_spec=deny_warnings_spec,
-                ar=ar.path,
+                target_spec=target_spec,
+                target_specs=target_specs,
                 tools_spec=tools_spec,
                 rustfmt_spec=rustfmt_spec
             )

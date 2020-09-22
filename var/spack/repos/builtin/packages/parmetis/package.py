@@ -22,10 +22,13 @@ class Parmetis(CMakePackage):
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
     variant('gdb', default=False, description='Enables gdb support.')
+    variant('int64', default=False, description='Sets the bit width of METIS\'s index type to 64.')
 
     depends_on('cmake@2.8:', type='build')
     depends_on('mpi')
     depends_on('metis@5:')
+    depends_on('metis+int64', when='+int64')
+    depends_on('metis~int64', when='~int64')
 
     patch('enable_external_metis.patch')
     # bug fixes from PETSc developers

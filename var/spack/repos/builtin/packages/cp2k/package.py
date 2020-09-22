@@ -30,7 +30,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     version('master', branch='master', submodules="True")
 
     variant('mpi', default=True, description='Enable MPI support')
-    variant('openmp', default=False, description='Enable OpenMP support')
+    variant('openmp', default=True, description='Enable OpenMP support')
     variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'blas'),
             description='Library for small matrix multiplications')
     variant('plumed', default=False, description='Enable PLUMED support')
@@ -103,10 +103,10 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('cosma+scalapack', when='+cosma')
     depends_on('cosma+cuda+scalapack', when='+cosma+cuda')
     depends_on('elpa@2011.12:2016.13+openmp', when='+openmp+elpa@:5.999')
-    depends_on('elpa@2011.12:2017.11+openmp', when='+openmp+elpa@6.0:')
+    depends_on('elpa@2011.12:2017.11+openmp', when='+openmp+elpa@6.0:6.999')
     depends_on('elpa@2018.05:+openmp', when='+openmp+elpa@7.0:')
     depends_on('elpa@2011.12:2016.13~openmp', when='~openmp+elpa@:5.999')
-    depends_on('elpa@2011.12:2017.11~openmp', when='~openmp+elpa@6.0:')
+    depends_on('elpa@2011.12:2017.11~openmp', when='~openmp+elpa@6.0:6.999')
     depends_on('elpa@2018.05:~openmp', when='~openmp+elpa@7.0:')
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
@@ -119,8 +119,10 @@ class Cp2k(MakefilePackage, CudaPackage):
     # only OpenMP should be consistenly used, all other common things
     # like ELPA, SCALAPACK are independent and Spack will ensure that
     # a consistent/compat. combination is pulled in to the dependency graph.
-    depends_on('sirius+fortran+vdwxc+shared+openmp', when='+sirius+openmp')
-    depends_on('sirius+fortran+vdwxc+shared~openmp', when='+sirius~openmp')
+    depends_on('sirius@:6.999+fortran+vdwxc+shared+openmp', when='@:7.999+sirius+openmp')
+    depends_on('sirius@:6.999+fortran+vdwxc+shared~openmp', when='@:7.999+sirius~openmp')
+
+    depends_on('sirius@7:+fortran+vdwxc+shared+openmp', when='@8:+sirius+openmp')
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
     # which is written using Python 3
@@ -152,6 +154,12 @@ class Cp2k(MakefilePackage, CudaPackage):
     # cp2k with option smm=blas on aarch64
     conflicts('smm=libxsmm',  when='target=aarch64:', msg='libxsmm is not available on arm')
 
+    conflicts('^fftw~openmp', when='+openmp')
+    conflicts('^openblas threads=none', when='+openmp')
+    conflicts('^openblas threads=pthreads', when='+openmp')
+
+    conflicts('~openmp', when='@8:', msg='Building without OpenMP is not supported in CP2K 8+')
+
     @property
     def makefile_architecture(self):
         return '{0.architecture}-{0.compiler.name}'.format(self.spec)
@@ -174,31 +182,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     def archive_files(self):
         return [os.path.join(self.stage.source_path, self.makefile)]
 
-    def consistency_check(self, spec):
-        """
-        Consistency checks.
-        Due to issue #1712 we can not put them into depends_on/conflicts.
-        """
-
-        if '+openmp' in spec:
-            if '^openblas' in spec and '^openblas threads=openmp' not in spec:
-                raise InstallError(
-                    '^openblas threads=openmp required for cp2k+openmp'
-                    ' with openblas')
-
-            if '^fftw' in spec and '^fftw +openmp' not in spec:
-                raise InstallError(
-                    '^fftw +openmp required for cp2k+openmp'
-                    ' with fftw')
-
-            # MKL doesn't need to be checked since they are
-            # OMP thread-safe when using mkl_sequential
-            # BUT: we should check the version of MKL IF it is used for FFTW
-            #      since there we need at least v14 of MKL to be safe!
-
     def edit(self, spec, prefix):
-        self.consistency_check(spec)
-
         pkgconf = which('pkg-config')
 
         if '^fftw' in spec:
@@ -432,7 +416,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         if spec.satisfies('+sirius'):
             sirius = spec['sirius']
             cppflags.append('-D__SIRIUS')
-            fcflags += ['-I{0}'.format(os.path.join(sirius.prefix, 'fortran'))]
+            fcflags += ['-I{0}'.format(sirius.prefix.include.sirius)]
             libs += list(sirius.libs)
 
         if spec.satisfies('+cuda'):
