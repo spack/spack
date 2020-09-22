@@ -11,11 +11,10 @@ class PyPureEval(PythonPackage):
     without triggering arbitrary code that may have unwanted side effects."""
 
     homepage = "https://github.com/alexmojaki/pure_eval"
-    url      = "https://github.com/alexmojaki/pure_eval/archive/v0.1.0.tar.gz"
-
-    version('0.1.0', sha256='67bed696eb316ba3801101eb173df9c49060061009000c1e959979c3d9fef16b')
+    url      = "https://github.com/alexmojaki/pure_eval/archive/master.zip"
+    git      = "https://github.com/alexmojaki/pure_eval.git"
+    
+    version('master', branch='master')
 
     depends_on('python@3.5:3.9', type=('build', 'run'))
     depends_on('py-setuptools@44:',  type='build')
-    depends_on('py-pip',         type=('build', 'run'))
-    depends_on('py-wheel',       type=('build', 'run'))
