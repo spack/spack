@@ -83,9 +83,9 @@ class Casacore(CMakePackage):
             args.append('-DUSE_FFTW3=NO')
 
         # Python2 and Python3 binding
-        if('+python' not in spec):
+        if '+python' not in spec:
             args.extend(['-DBUILD_PYTHON=NO', '-DBUILD_PYTHON3=NO'])
-        elif(spec['python'].version >= Version('3.0.0')):
+        elif spec['python'].version >= Version('3.0.0'):
             args.extend(['-DBUILD_PYTHON=NO', '-DBUILD_PYTHON3=YES'])
         else:
             args.extend(['-DBUILD_PYTHON=YES', '-DBUILD_PYTHON3=NO'])
