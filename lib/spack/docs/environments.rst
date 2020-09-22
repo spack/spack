@@ -331,6 +331,9 @@ installed specs using the ``-c`` (``--concretized``) flag.
 
   ==> 0 installed packages
 
+
+.. _installing-environment:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Installing an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^

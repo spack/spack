@@ -1849,7 +1849,7 @@ processes coordinate the installation of the dependencies of specs
 provided on the command line and as part of an environment build with
 only **one process** being allowed to install a given package at a time.
 Refer to :ref:`Dependencies` for more information on dependencies and
-:ref:`Installing an Environment` for how to install an environment.
+:ref:`installing-environment` for how to install an environment.
 
 Concurrent processes may be any combination of interactive sessions and
 batch jobs.  Which means a ``spack install`` can be running in a terminal
