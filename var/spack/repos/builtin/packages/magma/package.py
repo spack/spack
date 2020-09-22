@@ -36,13 +36,15 @@ class Magma(CMakePackage, CudaPackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('cuda@8:', when='@2.5.1:')  # See PR #14471
-    depends_on('cuda@:10.99999')  # incompatible with CUDA 11
-    # The previous line would ideally include "when='@:2.5.3'", but this
-    # doesn't work due to a problem with the concretizer.
 
     conflicts('~cuda', msg='Magma requires cuda')
     conflicts('cuda_arch=none',
               msg='Please indicate a CUDA arch value or values')
+
+    # currently not compatible with CUDA-11
+    # https://bitbucket.org/icl/magma/issues/22/cuda-11-changes-issue
+    # https://bitbucket.org/icl/magma/issues/25/error-cusparsesolveanalysisinfo_t-does-not
+    conflicts('^cuda@11:', when='@:2.5.3')
 
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')
