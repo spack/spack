@@ -19,4 +19,3 @@ class PySentryPython(PythonPackage):
     depends_on('py-urllib3@1.10.0:', type=('build', 'run'))
     depends_on('py-certifi', type=('build', 'run'))
     depends_on('py-flask@0.11:', type=('build', 'run'))
-    

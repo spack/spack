@@ -15,4 +15,5 @@ class PyRedis(PythonPackage):
     version('3.3.8', sha256='98a22fb750c9b9bb46e75e945dc3f61d0ab30d06117cbb21ff9cd1d315fedd3b')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools',       type='build')
+    depends_on('py-hiredis',          type=('build', 'run'))

@@ -13,7 +13,7 @@ class PyPureEval(PythonPackage):
     homepage = "https://github.com/alexmojaki/pure_eval"
     url      = "https://github.com/alexmojaki/pure_eval/archive/master.zip"
     git      = "https://github.com/alexmojaki/pure_eval.git"
-    
+
     version('master', branch='master')
 
     depends_on('python@3.5:3.9', type=('build', 'run'))

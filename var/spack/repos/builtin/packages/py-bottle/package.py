@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyBottle(PythonPackage):
-    """Bottle is a fast, simple and lightweight WSGI 
+    """Bottle is a fast, simple and lightweight WSGI
        micro web-framework for Python."""
 
     homepage = "https://github.com/bottlepy/bottle"
