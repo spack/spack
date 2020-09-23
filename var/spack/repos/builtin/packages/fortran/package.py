@@ -5,6 +5,7 @@
 
 import os
 
+
 class Fortran(Package):
     """Virtual package for the Fortran language."""
     homepage = 'https://wg5-fortran.org/'

@@ -7,6 +7,7 @@
 import os
 import sys
 import glob
+import shutil
 import tempfile
 import re
 import inspect
@@ -20,6 +21,7 @@ from llnl.util.filesystem import \
 
 from spack.version import Version, ver
 from spack.package import PackageBase, run_after, InstallError
+from spack.paths import tests_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
@@ -1324,7 +1326,7 @@ class IntelPackage(PackageBase):
     def test_compiler(self):
         # Get compiler tests
         compiler_test_dir = self.test_dir.join('compiler_tests')
-        shutil.copytree(os.path.join(spack.paths.tests_path, 'compilers'),
+        shutil.copytree(os.path.join(tests_path, 'compilers'),
                         compiler_test_dir)
 
         # compile and run each test

@@ -53,7 +53,7 @@ from ordereddict_backport import OrderedDict
 from spack.filesystem_view import YamlFilesystemView
 from spack.installer import \
     install_args_docstring, PackageInstaller, InstallError
-from spack.install_test import TestFailure
+from spack.install_test import TestFailure, TestSuite
 from spack.util.executable import which, ProcessError
 from spack.util.prefix import Prefix
 from spack.stage import stage_prefix, Stage, ResourceStage, StageComposite
@@ -456,7 +456,7 @@ def test_log_pathname(test_stage, spec):
         (str): the pathname of the test log file
     """
     return os.path.join(test_stage,
-                        'test-{0}-out.txt'.format(test_pkg_id(spec)))
+                        'test-{0}-out.txt'.format(TestSuite.test_pkg_id(spec)))
 
 
 def setup_test_stage(test_name):
@@ -1684,14 +1684,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 old_debug = tty.is_debug()
                 tty.set_debug(True)
 
-                # run test methods from the package and all virtuals it provides
-                # virtuals have to be deduped by name
+                # run test methods from the package and all virtuals it
+                # provides virtuals have to be deduped by name
                 v_names = list(set([vspec.name
                                     for vspec in self.virtuals_provided]))
 
                 # hack for compilers that are not dependencies (yet)
                 # TODO: this all eventually goes away
-                if self.name in ('gcc', 'intel', 'intel-parallel-studio', 'pgi'):
+                c_names = ('gcc', 'intel', 'intel-parallel-studio', 'pgi')
+                if self.name in c_names:
                     v_names.extend(['c', 'cxx', 'fortran'])
                 if self.spec.satisfies('llvm+clang'):
                     v_names.extend(['c', 'cxx'])
@@ -1719,8 +1720,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                                 # maybe enforce this later
                                 shutil.copytree(data_source, data_dir)
 
-                            # grab the function for each method so we can call it
-                            # with this package in place of its `self` object
+                            # grab the function for each method so we can call
+                            # it with this package in place of its `self`
+                            # object
                             test_fn = spec_pkg.__class__.test
                             if not isinstance(test_fn, types.FunctionType):
                                 test_fn = test_fn.__func__
@@ -1832,7 +1834,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         status = [status] if isinstance(status, six.integer_types) else status
         expected = [expected] if isinstance(expected, six.string_types) else \
             expected
-        options = [options] if isinstance(options, six.string_types) else options
+        options = [options] if isinstance(options, six.string_types) else \
+            options
 
         if purpose:
             tty.msg(purpose)

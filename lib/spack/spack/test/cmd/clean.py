@@ -8,7 +8,6 @@ import spack.stage
 import spack.caches
 import spack.main
 import spack.package
-import llnl.util.filesystem as fs
 
 clean = spack.main.SpackCommand('clean')
 
@@ -17,6 +16,7 @@ clean = spack.main.SpackCommand('clean')
 def mock_calls_for_clean(monkeypatch):
 
     counts = {}
+
     class Counter(object):
         def __init__(self, name):
             self.name = name
@@ -25,10 +25,12 @@ def mock_calls_for_clean(monkeypatch):
         def __call__(self, *args, **kwargs):
             counts[self.name] += 1
 
-    monkeypatch.setattr(spack.package.PackageBase, 'do_clean', Counter('package'))
+    monkeypatch.setattr(spack.package.PackageBase, 'do_clean',
+                        Counter('package'))
     monkeypatch.setattr(spack.stage, 'purge', Counter('stages'))
     monkeypatch.setattr(
-        spack.caches.fetch_cache, 'destroy', Counter('downloads'), raising=False)
+        spack.caches.fetch_cache, 'destroy', Counter('downloads'),
+        raising=False)
     monkeypatch.setattr(
         spack.caches.misc_cache, 'destroy', Counter('caches'))
     monkeypatch.setattr(

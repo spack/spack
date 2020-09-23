@@ -6,7 +6,6 @@
 import argparse
 import os
 import shutil
-import collections
 
 import llnl.util.tty as tty
 

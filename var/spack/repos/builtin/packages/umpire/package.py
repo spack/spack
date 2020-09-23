@@ -291,4 +291,3 @@ class Umpire(CMakePackage, CudaPackage):
         self._run_plots_checks()
         self._run_tools_checks()
         self._run_tut_checks()
-

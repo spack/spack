@@ -5,6 +5,7 @@
 
 import os
 
+
 class Cxx(Package):
     """Virtual package for the C++ language."""
     homepage = 'https://isocpp.org/std/the-standard'

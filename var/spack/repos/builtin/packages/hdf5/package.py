@@ -404,11 +404,13 @@ HDF5 version {version} {version}
                       work_dir=test_data_dir)
 
         reason = 'test: ensuring h5copy runs'
-        options = ['-i', h5_file, '-s', 'Spack', '-o', 'test.h5', '-d', 'Spack']
+        options = ['-i', h5_file, '-s', 'Spack', '-o', 'test.h5', '-d',
+                   'Spack']
         self.run_test('h5copy', options, [], installed=True,
                       purpose=reason, skip_missing=True, work_dir='.')
 
-        reason = 'test: ensuring h5diff shows no differences between orig and copy'
+        reason = ('test: ensuring h5diff shows no differences between orig and'
+                  ' copy')
         self.run_test('h5diff', [h5_file, 'test.h5'], [], installed=True,
                       purpose=reason, skip_missing=True, work_dir='.')
 

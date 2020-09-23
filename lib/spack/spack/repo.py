@@ -688,11 +688,12 @@ class RepoPath(object):
 
         Set `use_index` False when calling from a code block that could
         be run during the computation of the provider index."""
+        have_name = pkg_name is not None
         if use_index:
-            return pkg_name is not None and pkg_name in self.provider_index
+            return have_name and pkg_name in self.provider_index
         else:
-            return pkg_name is not None and (not self.exists(pkg_name) or
-                                             self.get_pkg_class(pkg_name).virtual)
+            return have_name and (not self.exists(pkg_name) or
+                                  self.get_pkg_class(pkg_name).virtual)
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
