@@ -164,7 +164,6 @@ class Julia(Package):
             else:
                 target_str = str(spec.target).replace('_', '-')
                 options += [
-                    'MARCH={0}'.format(target_str),
                     'JULIA_CPU_TARGET={0}'.format(target_str)
                 ]
 
