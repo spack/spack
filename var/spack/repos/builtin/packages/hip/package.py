@@ -92,6 +92,7 @@ class Hip(CMakePackage):
             '-DHIP_COMPILER=clang',
             '-DHIP_PLATFORM=rocclr',
             '-DHSA_PATH={0}'.format(self.spec['hsa-rocr-dev'].prefix),
-            '-DLIBROCclr_STATIC_DIR={0}/lib'.format(self.spec['hip-rocclr'].prefix)
+            '-DLIBROCclr_STATIC_DIR={0}/lib'.format
+            (self.spec['hip-rocclr'].prefix)
         ]
         return args
