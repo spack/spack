@@ -326,5 +326,5 @@ env:
 
     # Ensure variants set properly
     for dep in (dep_spec, spec['dev-build-test-install']):
-        assert dep.satisfies('+dev_build dev_path=%s' % build_dir)
-    assert spec.satisfies('+dev_build')
+        assert dep.satisfies('dev_path=%s' % build_dir)
+    assert spec.satisfies('^dev_path=any')

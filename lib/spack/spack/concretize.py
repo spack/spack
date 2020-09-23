@@ -64,47 +64,25 @@ class Concretizer(object):
 
     def concretize_develop(self, spec):
         """
-        Add ``dev_build=True`` and ``dev_path=*`` variables as required.
-
-        Add ``dev_build=True`` variable to any spec with a direct or transitive
-        dependency (including itself) that is being built from local source.
-        Add ``dev_path=/path/to/local/source`` to any spec for a package that
-        is specified for developer builds by the active environment, and
-        constrain the spec by the develop spec if one is specified for the
-        package.
+        Add ``dev_path=*`` variant to packages built from local source.
         """
         env = spack.environment.get_env(None, None)
-        dev_info = env.dev_specs if env else {}
+        dev_info = env.dev_specs.get(spec.name, {}) if env else {}
+        if not dev_info:
+            return False
 
-        changed = False
-        for dep in spec.traverse(root=True, order='post'):
-            if 'dev_path' in dep.variants and 'dev_build' in dep.variants:
-                # there's nothing more to do
-                continue
-            elif 'dev_path' in dep.variants:
-                dep.variants.setdefault(
-                    'dev_build', vt.BoolValuedVariant('dev_build', True))
-                changed = True
-                continue
+        path = dev_info['path']
+        path = path if os.path.isabs(path) else os.path.join(
+            env.path, path)
 
-            if dep.name in dev_info:
-                path = dev_info[dep.name]['path']
-                path = path if os.path.isabs(path) else os.path.join(
-                    env.path, path)
-
-                dep.variants.setdefault(
-                    'dev_path', vt.SingleValuedVariant('dev_path', path))
-                dep.variants.setdefault(
-                    'dev_build', vt.BoolValuedVariant('dev_build', True))
-                dep.constrain(dev_info[dep.name]['spec'])
-                changed = True
-            elif 'dev_build' in dep.variants:
-                # Not direct dev build and already set transitively
-                continue
-            elif any('dev_build' in dd.variants for dd in dep.traverse()):
-                dep.variants.setdefault(
-                    'dev_build', vt.BoolValuedVariant('dev_build', True))
-                changed = True
+        if 'dev_path' in spec.variants:
+            assert spec.variants['dev_path'].value == path
+            changed = False
+        else:
+            spec.variants.setdefault(
+                'dev_path', vt.SingleValuedVariant('dev_path', path))
+            changed = True
+        changed |= spec.constrain(dev_info['spec'])
         return changed
 
     def _valid_virtuals_and_externals(self, spec):
