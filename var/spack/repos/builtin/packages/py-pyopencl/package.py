@@ -27,5 +27,4 @@ class PyPyopencl(PythonPackage):
     def prepare(self):
         cl_prefix = self.spec['ocl-icd'].prefix
         python('configure.py', '--cl-inc-dir=' + cl_prefix.include,
-	       '--cl-lib-dir=' + cl_prefix.lib)
-
+               '--cl-lib-dir=' + cl_prefix.lib)
