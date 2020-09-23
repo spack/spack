@@ -68,29 +68,30 @@ class Hdf5(CMakePackage):
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('szip', default=False, description='Enable szip support')
+    variant('zlib', default=True, description='Enable zlib support')
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
+    # Build HDF5 with API compatibility.
+    variant('api', default='none', description='Choose api compatibility', values=('v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
 
-    variant('apiversion', values=('v16', 'v18', 'v110', 'v112', 'v114'),
-            default='v110', multi=False,
-            description='Default API version')
+    conflicts('api=v114', when='@1.6:1.12.99', msg='v114 is not compatible with this release')
+    conflicts('api=v112', when='@1.6:1.10.99', msg='v112 is not compatible with this release')
+    conflicts('api=v110', when='@1.6:1.8.99', msg='v110 is not compatible with this release')
+    conflicts('api=v18', when='@1.6:1.6.99', msg='v18 is not compatible with this release')
 
     depends_on('cmake@3.12.4:', type='build')
 
     depends_on('mpi', when='+mpi')
-    depends_on('szip', when='+szip')
-    depends_on('zlib@1.2.8')
     depends_on('java', type=('build','run'), when='+java+shared')
+    # numactl does not currently build on darwin
+    if sys.platform != 'darwin':
+        depends_on('numactl', when='+mpi+fortran')
+    depends_on('szip', when='+szip')
+    depends_on('zlib@1.2.5:', when='+zlib')
 
     # The Java wrappers and associated libhdf5_java library
     # were first available in 1.10
     conflicts('languages=java', when='@1.8')
-
-    conflicts('apiversion=v114', when='@1.12')
-    conflicts('apiversion=v114', when='@1.10')
-    conflicts('apiversion=v112', when='@1.10')
-    conflicts('apiversion=v114', when='@1.8')
-    conflicts('apiversion=v112', when='@1.8')
-    conflicts('apiversion=v110', when='@1.8')
-
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
@@ -252,9 +253,14 @@ class Hdf5(CMakePackage):
         # sanity check in configure, so this doesn't merit a variant.
         args.append('-DALLOW_UNSUPPORTED=ON')
         
-        args.append('-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON')
-
         spec = self.spec
+        if '+zlib' in spec:
+            args.append('-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON')
+            args.append('-DZLIB_INCLUDE_DIR:PATH={0}'.format(spec['zlib'].prefix.include))
+            args.append('-DZLIB_DIR:PATH={0}'.format(spec['zlib'].prefix.lib))
+        else:
+            args.append('-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=OFF')
+
         if '+mpi' in spec:
             args.append('-DHDF5_ENABLE_PARALLEL=ON')
             args.append('-DCMAKE_C_COMPILER={0}'.format(spec['mpi'].mpicc))
