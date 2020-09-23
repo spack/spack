@@ -21,12 +21,12 @@ class PyUproot4(PythonPackage):
     variant('xrootd', default=True,
             description='Build with xrootd support ')
     variant('lz4', default=True,
-            description='Build with support for reading lz4-compressed rootfiles ')
+            description='Build with support for reading '
+                        'lz4-compressed rootfiles ')
 
     variant('zstd', default=True,
-            description='Build with support for reading zstd-compressed rootfiles ')
-
-
+            description='Build with support for reading '
+                        'zstd-compressed rootfiles ')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
@@ -37,4 +37,3 @@ class PyUproot4(PythonPackage):
     depends_on('xxhash', when="+lz4")
 
     depends_on('zstd', when="+zstd")
-  
