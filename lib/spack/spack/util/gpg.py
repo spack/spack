@@ -265,32 +265,8 @@ def has_gpg(*args, **kwargs):
         return False
 
 
-class wrap(list):
-    def __call__(self, *args):
-        if len(args) > 2:
-            raise ValueError('too many args')
-
-        if len(args) == 0:
-            return self
-
-        if len(args) == 1:
-            name = args[0]
-            if callable(name):
-                func = name
-                name = func.__name__
-            else:
-                return (lambda func: self(func, name))
-
-        if len(args) == 2:
-            func, name = args
-
-        self.append((func, name))
-        return func
-
-
-wrap = wrap()
-
-
+# NOTE(opadron): When adding methods to this class, consider adding convenience
+#                wrapper functions further down in this file.
 class Gpg(object):
     def __init__(self, gnupg_home=None):
         self.gnupg_home = get_gnupg_home(gnupg_home)
@@ -327,12 +303,10 @@ class Gpg(object):
         exe.add_default_env('GNUPGHOME', self.gnupg_home)
         return exe
 
-    @wrap('gpg')
     def __call__(self, *args, **kwargs):
         if self.prep:
             return self.gpg_exe(*args, **kwargs)
 
-    @wrap
     def create(self, **kwargs):
         r, w = os.pipe()
         r = os.fdopen(r, 'r')
@@ -352,29 +326,24 @@ class Gpg(object):
         self('--gen-key', '--batch', input=r)
         r.close()
 
-    @wrap
     def signing_keys(self, *args):
         output = self('--list-secret-keys', '--with-colons', '--fingerprint',
                       *args, output=str)
         return parse_secret_keys_output(output)
 
-    @wrap
     def public_keys(self, *args):
         output = self('--list-public-keys', '--with-colons', '--fingerprint',
                       *args, output=str)
         return parse_public_keys_output(output)
 
-    @wrap
     def export_keys(self, location, *keys):
         self('--batch', '--yes',
              '--armor', '--export',
              '--output', location, *keys)
 
-    @wrap
     def trust(self, keyfile):
         self('--import', keyfile)
 
-    @wrap
     def untrust(self, signing, *keys):
         if signing:
             skeys = self.signing_keys(*keys)
@@ -383,18 +352,15 @@ class Gpg(object):
         pkeys = self.public_keys(*keys)
         self('--batch', '--yes', '--delete-keys', *pkeys)
 
-    @wrap
     def sign(self, key, file, output, clearsign=False):
         self(('--clearsign' if clearsign else '--detach-sign'),
              '--armor', '--default-key', key,
              '--output', output, file)
 
-    @wrap
     def verify(self, signature, file, suppress_warnings=False):
         self('--verify', signature, file,
              **({'error': str} if suppress_warnings else {}))
 
-    @wrap
     def list(self, trusted, signing):
         if trusted:
             self('--list-public-keys')
@@ -407,47 +373,58 @@ class SpackGPGError(spack.error.SpackError):
     """Class raised when GPG errors are detected."""
 
 
-# Make wrapped versions of the Gpg instance methods for convenience
-#
-# Done so that most calling code can skip the creation of a Gpg instance.
-#
-#     Instead of this:
-#         import spack.util.gpg
-#         gpg = spack.util.gpg.Gpg(gnupg_home='...')
-#         gpg('--version')
-#         gpg.public_keys()
-#
-#     Use this:
-#         import spack.util.gpg as gpg
-#         gpg.gpg('--version')
-#         gpg.public_keys()
-#
-#     If using a non-default GNUPGHOME:
-#         with gpg.gnupg_home_override('...'):
-#             ...
-def _make_wrapped_callables(namespace):
-    global wrap
+# Convenience wrappers for methods of the Gpg class
 
-    def _make_wrapped_callable(func, name):
-        if func.__name__ == '__call__':
-            @functools.wraps(func)
-            def result(*args, **kwargs):
-                _callable = get_global_gpg_instance()
-                return _callable(*args, **kwargs)
-        else:
-            @functools.wraps(func)
-            def result(*args, **kwargs):
-                _callable = getattr(get_global_gpg_instance(), name)
-                return _callable(*args, **kwargs)
-
-        result.name = name
-        return result
-
-    for func, name in wrap:
-        namespace[name] = _make_wrapped_callable(func, name)
+# __call__ is a bit of a special case, since the Gpg instance is, itself, the
+# "thing" that is being called.
+@functools.wraps(Gpg.__call__)
+def gpg(*args, **kwargs):
+    return get_global_gpg_instance()(*args, **kwargs)
 
 
-_make_wrapped_callables(globals())
+gpg.name = 'gpg'
 
-del _make_wrapped_callables
-del wrap
+
+@functools.wraps(Gpg.create)
+def create(*args, **kwargs):
+    return get_global_gpg_instance().create(*args, **kwargs)
+
+
+@functools.wraps(Gpg.signing_keys)
+def signing_keys(*args, **kwargs):
+    return get_global_gpg_instance().signing_keys(*args, **kwargs)
+
+
+@functools.wraps(Gpg.public_keys)
+def public_keys(*args, **kwargs):
+    return get_global_gpg_instance().public_keys(*args, **kwargs)
+
+
+@functools.wraps(Gpg.export_keys)
+def export_keys(*args, **kwargs):
+    return get_global_gpg_instance().export_keys(*args, **kwargs)
+
+
+@functools.wraps(Gpg.trust)
+def trust(*args, **kwargs):
+    return get_global_gpg_instance().trust(*args, **kwargs)
+
+
+@functools.wraps(Gpg.untrust)
+def untrust(*args, **kwargs):
+    return get_global_gpg_instance().untrust(*args, **kwargs)
+
+
+@functools.wraps(Gpg.sign)
+def sign(*args, **kwargs):
+    return get_global_gpg_instance().sign(*args, **kwargs)
+
+
+@functools.wraps(Gpg.verify)
+def verify(*args, **kwargs):
+    return get_global_gpg_instance().verify(*args, **kwargs)
+
+
+@functools.wraps(Gpg.list)
+def list(*args, **kwargs):
+    return get_global_gpg_instance().list(*args, **kwargs)
