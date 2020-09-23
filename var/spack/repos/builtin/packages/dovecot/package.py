@@ -9,25 +9,7 @@ from spack import *
 class Dovecot(AutotoolsPackage):
     """Dovecot mail server."""
 
-    homepage = "https://github.com/dovecot/core"
-    url      = "https://github.com/dovecot/core/archive/2.3.11.3.tar.gz"
+    homepage = "https://www.dovecot.org/"
+    url      = "https://dovecot.org/releases/2.3/dovecot-2.3.11.3.tar.gz"
 
-    version('2.3.11.3', sha256='a76d321dc36dfcf172bede5c8b0cc201b8ff3911c5d8edf3db75e74c62a42992')
-
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-    depends_on('gettext')
-
-    def setup_build_environment(self, env):
-        aclocal_path = self.spec['gettext'].prefix.share.aclocal
-        env.prepend_path('ACLOCAL_PATH', aclocal_path)
-
-    def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('./autogen.sh')
-
-    def configure_args(self):
-        args = ['PANDOC=false']
-        return args
+    version('2.3.11.3', sha256='d3d9ea9010277f57eb5b9f4166a5d2ba539b172bd6d5a2b2529a6db524baafdc')
