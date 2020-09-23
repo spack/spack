@@ -376,6 +376,8 @@ class Trilinos(CMakePackage):
     patch('xlf_tpetra.patch', when='@12.12.1%xl_r')
     patch('xlf_tpetra.patch', when='@12.12.1%clang')
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
+    patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
+    patch('cray_secas.patch', when='@12.14.1:12.18.1%cce')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
