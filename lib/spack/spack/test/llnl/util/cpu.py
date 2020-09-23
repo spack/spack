@@ -35,6 +35,8 @@ from llnl.util.cpu import Microarchitecture  # noqa
     'linux-centos7-thunderx2',
     'linux-centos7-cascadelake',
     'linux-fedora32-icelake',
+    'linux-amazon-graviton',
+    'linux-amazon-graviton2',
     'darwin-mojave-ivybridge',
     'darwin-mojave-haswell',
     'darwin-mojave-skylake',

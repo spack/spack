@@ -188,7 +188,11 @@ def host():
 
     # Reverse sort of the depth for the inheritance tree among only targets we
     # can use. This gets the newest target we satisfy.
-    return sorted(candidates, key=lambda t: len(t.ancestors), reverse=True)[0]
+    return sorted(
+        candidates,
+        key=lambda t: (len(t.ancestors), len(t.features)),
+        reverse=True
+    )[0]
 
 
 def compatibility_check(architecture_family):
