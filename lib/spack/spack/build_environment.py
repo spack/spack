@@ -61,7 +61,7 @@ from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
     EnvironmentModifications, validate, preserve_environment)
-from spack.util.environment import system_dirs, inspect_path
+from spack.util.environment import system_dirs
 from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, path_from_modules, module
@@ -737,8 +737,8 @@ def setup_package(pkg, dirty, context='build'):
         )
 
         if (not dirty) and (not env.is_unset('CPATH')):
-            tty.debug("A dependency has updated CPATH, this may lead pkg-config"
-                      " to assume that the package is part of the system"
+            tty.debug("A dependency has updated CPATH, this may lead pkg-"
+                      "config to assume that the package is part of the system"
                       " includes and omit it when invoked with '--cflags'.")
 
         # setup package itself

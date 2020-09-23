@@ -27,4 +27,5 @@ class Mpi(Package):
             if compiled:
                 self.run_test(mpirun,
                               options=['-np', '1', exe_name],
-                              expected=[r'Hello world! From rank \s*0 of \s*1'])
+                              expected=[r'Hello world! From rank \s*0 of \s*1']
+                              )

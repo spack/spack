@@ -8,8 +8,6 @@ import os
 
 import pytest
 
-from llnl.util.filesystem import mkdirp
-
 import spack.config
 import spack.package
 import spack.cmd.install

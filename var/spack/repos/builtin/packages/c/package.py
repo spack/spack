@@ -5,6 +5,7 @@
 
 import os
 
+
 class C(Package):
     """Virtual package for C compilers."""
     homepage = 'http://open-std.org/JTC1/SC22/WG14/www/standards'
