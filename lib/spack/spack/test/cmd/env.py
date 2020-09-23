@@ -1030,31 +1030,27 @@ def test_store_different_build_deps():
         assert x_read['z'] != y_read['z']
 
 
-def test_env_dir_remains_after_deactivation(): #TODO: fix later
+def test_env_dir_remains_after_deactivation(mock_packages): #TODO: fix later
     #create env with view in fake dir
     e = ev.create('test', with_view=True)
 
     #activate env
-    shell = env('activate', '--sh', 'test')
+    with ev.read('test'):
+        add('cmake')
+        install()
+#
+#        print(os.environ['PATH'])
+#        if os.path.join(e.default_view.root, 'bin') in os.environ['PATH'].split(':'):
+#            print("in there")
+#        else:
+#            print("not in there")
 
-    #assert dir is in PATH
-    assert e.path in shell
+        if 'PATH' in os.environ.keys():
+            os.environ['PATH'] = os.path.join(e.default_view.root, 'bin') + ":" +  os.environ['PATH']
+        else:
+            os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
 
-    #add dir to PATH manually
-    idx = shell.index("export PATH=") + len("export PATH=")
-    shell = shell[:idx] + e.path + ":" + shell[idx:]
-
-    #assert dir is in PATH twice
-    string = e.path + ":" + e.path
-    assert string in shell
-
-    print(shell)
-#    deactivate env
-    env_deactivate()
-    print(shell)
-
-    assert False
-#    assert dir is in the PATH once
+#    assert False
 
 
 def test_env_updates_view_install(
