@@ -20,3 +20,7 @@ class NlohmannJsonSchemaValidator(CMakePackage):
 
     depends_on('cmake@3.2:', type='build')
     depends_on('nlohmann-json')
+
+    def cmake_args(self):
+        args = ['-DBUILD_SHARED_LIBS:BOOL=ON']
+        return args
