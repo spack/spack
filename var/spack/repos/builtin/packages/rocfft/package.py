@@ -11,7 +11,7 @@ class Rocfft(CMakePackage):
     """Radeon Open Compute FFT library"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-3.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-3.8.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
