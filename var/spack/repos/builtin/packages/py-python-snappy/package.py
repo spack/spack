@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import sys
+import os
+import platform
 
 
 class PyPythonSnappy(PythonPackage):
@@ -19,5 +22,16 @@ class PyPythonSnappy(PythonPackage):
 
     depends_on('python@2.7,3.5:', type=('build', 'run'))
     depends_on('snappy',          type=('build', 'run'))
-    depends_on('py-cffi',         type=('build', 'run'))
     depends_on('py-setuptools',   type='build')
+    if 'PyPy' in sys.version:
+        depends_on('py-cffi',     type=('build', 'run'))
+
+    phases = ['configure', 'build', 'install']
+
+    def configure(self, spec, prefix):
+        args = []
+        snappy_headers = HeaderList([])
+        snappy_headers = spec['snappy'].headers
+        snappy_header_dirs = ':'.join(snappy_headers.directories)
+        
+        self.setup_py('config', '--with-includepath={0}'.format(snappy_header_dirs))
