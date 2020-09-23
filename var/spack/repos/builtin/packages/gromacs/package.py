@@ -65,8 +65,6 @@ class Gromacs(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
-    variant('rdtscp', default=True,
-            description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version'
             ' of libgromacs and/or the mdrun program')
@@ -181,10 +179,11 @@ class Gromacs(CMakePackage):
             # Fall back to this for unknown microarchitectures
             options.append('-DGMX_SIMD:STRING=None')
 
-        if '-rdtscp' in self.spec:
-            options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
-        else:
-            options.append('-DGMX_USE_RDTSCP:BOOL=ON')
+        # Use the 'rtdscp' assembly instruction only on
+        # appropriate architectures
+        options.append(self.define(
+            'GMX_USE_RDTSCP', str(target.family) in ('x86_64', 'x86')
+        ))
 
         if '+mdrun_only' in self.spec:
             options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')
