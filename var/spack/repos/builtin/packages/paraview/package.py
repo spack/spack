@@ -77,7 +77,7 @@ class Paraview(CMakePackage, CudaPackage):
 
     # VTK < 8.2.1 can't handle Python 3.8
     # This affects Paraview 5.6.2 (VTK 8.2.0)
-    # https://gitlab.kitware.com/vtk/vtk/-/issues/17670 
+    # https://gitlab.kitware.com/vtk/vtk/-/issues/17670
     depends_on('python@3:3.7', when='@5.6.2 +python3', type=('build', 'run'))
 
     depends_on('py-numpy@:1.15.4', when='+python', type=('build', 'run'))
