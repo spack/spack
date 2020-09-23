@@ -303,6 +303,7 @@ class Gpg(object):
         # Make sure that the GNUPGHOME exists
         if not os.path.exists(self.gnupg_home):
             os.makedirs(self.gnupg_home)
+            os.chmod(self.gnupg_home, 0o700)
 
         if not os.path.isdir(self.gnupg_home):
             raise SpackGPGError(
