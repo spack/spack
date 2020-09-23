@@ -6,8 +6,11 @@
 from spack import *
 
 
-class GitTest(Package):
+class GitTestFull(Package):
     """Mock package that uses git for fetching."""
     homepage = "http://www.git-fetch-example.com"
 
-    version('git', branch='master', git='to-be-filled-in-by-test')
+    version('git', branch='master', git='to-be-filled-in-by-test', submodules=True)
+
+    def install(self, spec, prefix):
+        pass
