@@ -490,7 +490,7 @@ class Rust(Package):
         ar = which('ar', required=True)
 
         extra_targets = []
-        if self.spec.variants['extra_targets'].value != 'none':
+        if self.spec.variants['extra_targets'].value != ('none',):
             extra_targets = list(self.spec.variants['extra_targets'].value)
 
         targets = [self.get_rust_target()] + extra_targets
