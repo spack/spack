@@ -60,7 +60,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         if spec.satisfies('%fj') and not spec.satisfies('platform=darwin'):
             args.append('LDFLAGS=-rtlib=compiler-rt')
 
-        if spec.satisfies('%intel'):
+        if spec.satisfies('%intel@:18.999'):
             args.append('CFLAGS=-no-gcc')
 
         if '+sigsegv' in spec:
@@ -72,7 +72,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         # http://lists.gnu.org/archive/html/bug-m4/2016-09/msg00002.html
         arch = spec.architecture
         if (arch.platform == 'darwin' and arch.os == 'sierra' and
-            '%gcc' in spec):
+                '%gcc' in spec):
             args.append('ac_cv_type_struct_sched_param=yes')
 
         return args
