@@ -292,8 +292,7 @@ def generate_package_index(cache_prefix):
     file_list = (
         entry
         for entry in web_util.list_url(cache_prefix)
-        if entry.endswith('.yaml')
-        and os.sep not in entry)
+        if entry.endswith('.yaml'))
 
     tty.debug('Retrieving spec.yaml files from {0} to build index'.format(
         cache_prefix))
