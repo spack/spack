@@ -10,14 +10,9 @@ class Patchutils(AutotoolsPackage):
     """This is patchutils, a collection of tools that operate on patch
     files."""
 
-    homepage = "https://github.com/twaugh/patchutils"
-    url      = "https://github.com/twaugh/patchutils/archive/0.4.2.tar.gz"
+    homepage = "http://cyberelk.net/tim/software/patchutils/"
+    url      = "http://cyberelk.net/tim/data/patchutils/stable/patchutils-0.4.2.tar.xz"
 
-    version('0.4.2', sha256='2ff95f11946558ce63f4d1167abaccbffd49750152346d5304e03ad884304ad6')
-    version('0.4.0', sha256='7c693849a1a18688fbe1bddac38847fb56e467a749aabc7c671c9fe353049323')
-    version('0.3.4', sha256='49510da6a9627bfe3c340eed69040ca513cdc56d0bc82dacec07c13e766ba550')
-
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    version('0.4.2', sha256='8875b0965fe33de62b890f6cd793be7fafe41a4e552edbf641f1fed5ebbf45ed')
+    version('0.4.0', sha256='da6df1fa662b635c2969e7d017e6f32f5b39f1b802673a0af635e4936d4bc2f4')
+    version('0.3.4', sha256='cf55d4db83ead41188f5b6be16f60f6b76a87d5db1c42f5459d596e81dabe876')
