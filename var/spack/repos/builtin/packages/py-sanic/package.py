@@ -26,3 +26,7 @@ class PySanic(PythonPackage):
     depends_on('py-websockets@8.1:8.999')
     depends_on('py-uvloop')
     depends_on('py-chardet')
+    depends_on('py-hstspreload')
+    depends_on('py-h2')
+    depends_on('py-urllib3')
+    depends_on('py-brotlipy')
