@@ -13,6 +13,7 @@ class PyAwkward1(PythonPackage):
     url = "https://github.com/scikit-hep/awkward-1.0/archive/0.3.1.tar.gz"
     homepage = "https://awkward-array.org"
 
+    maintainers = ['vvolkl']
 
     version('0.3.1', sha256='7126d9feab8828b0b4f4c6dbc9e28c269a91e28eef4a6033d7ebb5db21f1dab3')
 
@@ -21,7 +22,6 @@ class PyAwkward1(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    #depends_on('py-numba@0.50.0')
     depends_on('py-numpy@1.13.1:')
     depends_on('py-pybind11')
     depends_on('rapidjson')
