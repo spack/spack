@@ -878,26 +878,13 @@ class TransmitPackage(object):
     def __init__(self, pkg):
         if TransmitPackage._serialize:
             self.serialized_pkg = TransmitPackage.serialize(pkg)
-
-            self.repo_dirs = list(r.root for r in spack.repo.path.repos)
-            self.config = spack.config.config
-            self.platform = spack.architecture.platform
-            self.test_patches = spack.test_state.store_patches()
-
-            # TODO: transfer spack.store.store? note that you should not
-            # transfer spack.store.store and spack.store.db: 'db' is a
-            # shortcut that accesses the store (so transferring both can
-            # create an inconsistency). Some tests set 'db' directly, and
-            # others set 'store'
         else:
             self.pkg = pkg
+        self.test_state = spack.test_state.TransmitTestState()
 
     def restore(self):
+        self.test_state.restore()
         if TransmitPackage._serialize:
-            spack.repo.path = spack.repo._path(self.repo_dirs)
-            spack.config.config = self.config
-            spack.architecture.platform = self.platform
-            self.test_patches.apply()
             return pickle.load(self.serialized_pkg)
         else:
             return self.pkg

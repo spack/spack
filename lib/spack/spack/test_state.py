@@ -8,6 +8,11 @@ from types import ModuleType
 import pickle
 import pydoc
 import io
+import sys
+import multiprocessing
+
+import spack.architecture
+import spack.config
 
 
 patches = None
@@ -25,6 +30,45 @@ def serialize(obj):
     pickle.dump(obj, serialized_obj)
     serialized_obj.seek(0)
     return serialized_obj
+
+
+class SpackTestProcess(object):
+    def __init__(self, fn):
+        self.fn = fn
+
+    def _restore_and_run(self, fn, test_state):
+        test_state.restore()
+        fn()
+
+    def create(self):
+        test_state = TransmitTestState()
+        return multiprocessing.Process(
+            target=self._restore_and_run,
+            args=(self.fn, test_state))
+
+
+class TransmitTestState(object):
+    _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
+
+    def __init__(self):
+        if TransmitTestState._serialize:
+            self.repo_dirs = list(r.root for r in spack.repo.path.repos)
+            self.config = spack.config.config
+            self.platform = spack.architecture.platform
+            self.test_patches = store_patches()
+
+            # TODO: transfer spack.store.store? note that you should not
+            # transfer spack.store.store and spack.store.db: 'db' is a
+            # shortcut that accesses the store (so transferring both can
+            # create an inconsistency). Some tests set 'db' directly, and
+            # others set 'store'
+
+    def restore(self):
+        if TransmitTestState._serialize:
+            spack.repo.path = spack.repo._path(self.repo_dirs)
+            spack.config.config = self.config
+            spack.architecture.platform = self.platform
+            self.test_patches.apply()
 
 
 class TransmitPatches(object):
