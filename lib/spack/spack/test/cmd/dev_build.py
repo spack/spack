@@ -112,7 +112,6 @@ def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
                            install_mockery):
     monkeypatch.setattr(os, 'execvp', print_spack_cc)
 
-
     monkeypatch.setattr(spack.build_environment, 'module', mock_module_noop)
 
     with tmpdir.as_cwd():
