@@ -59,7 +59,7 @@ def modulefile_content(filename_dict, request):
         spec = spack.spec.Spec(spec_str)
         spec.concretize()
         generator = writer_cls(spec)
-        generator.write()
+        generator.write(overwrite=True)
 
         # Get its filename
         filename = generator.layout.filename
