@@ -1037,9 +1037,9 @@ def test_env_dir_remains_after_deactivation(mock_packages): #TODO: fix later
     #activate env
     with ev.read('test'):
         add('cmake')
-        install()
-#
-#        print(os.environ['PATH'])
+        install('cmake')
+
+#        print(os.environ['PATH'].split(':'))
 #        if os.path.join(e.default_view.root, 'bin') in os.environ['PATH'].split(':'):
 #            print("in there")
 #        else:
