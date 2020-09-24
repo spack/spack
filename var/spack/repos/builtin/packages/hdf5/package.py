@@ -268,7 +268,8 @@ class Hdf5(CMakePackage):
             args.append('-DHDF5_ENABLE_PARALLEL=ON')
             args.append('-DCMAKE_C_COMPILER={0}'.format(spec['mpi'].mpicc))
             args.append('-DCMAKE_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
-            args.append('-DCMAKE_Fortran_COMPILER={0}'.format(spec['mpi'].mpifc))
+            args.append(
+                '-DCMAKE_Fortran_COMPILER={0}'.format(spec['mpi'].mpifc))
         else:
             args.append('-DHDF5_ENABLE_PARALLEL=OFF')
 
