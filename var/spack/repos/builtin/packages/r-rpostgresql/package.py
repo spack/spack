@@ -27,3 +27,4 @@ class RRpostgresql(RPackage):
     depends_on('r@2.9.0:', type=('build', 'run'))
     depends_on('r-dbi@0.3:', type=('build', 'run'))
     depends_on('postgresql')
+    patch('config.guess.patch')
