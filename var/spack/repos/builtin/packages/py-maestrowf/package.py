@@ -21,7 +21,7 @@ class PyMaestrowf(PythonPackage):
     version('master',  branch='master')
 
     # Pre-release candidates
-    version('1.1.7dev0', sha256='bcef838f13da396dd33cc7f503655de7a8f16ee5fe7b1e2a553044334a03f1f0')
+    version('1.1.7dev0', sha256='bcef838f13da396dd33cc7f503655de7a8f16ee5fe7b1e2a553044334a03f1f0', url="https://pypi.io/packages/source/m/maestrowf//maestrowf-1.1.7.dev0.tar.gz")
 
     # pypi releases
     version('1.1.8', sha256='fa8f8eb8dd3adfb9646d7b0dfd498a00423d2131adbc8dbc8016c4159b2ec1d5', preferred=True)

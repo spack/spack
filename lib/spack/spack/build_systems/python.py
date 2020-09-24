@@ -428,7 +428,7 @@ class PythonPackage(PackageBase):
                 view.link(src, dst)
             elif not os.path.islink(src):
                 shutil.copy2(src, dst)
-                if 'script' in get_filetype(src):
+                if 'script' in get_filetype(src) and not self.spec['python'].external:
                     filter_file(
                         python_prefix, os.path.abspath(
                             view.get_projection_for_spec(self.spec)), dst
