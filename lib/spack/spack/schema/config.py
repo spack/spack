@@ -111,11 +111,28 @@ def update(data):
     Returns:
         True if data was changed, False otherwise
     """
+    changed = False
     # currently only deprecated property is `install_tree`
     install_tree = data.get('install_tree', None)
     if isinstance(install_tree, six.string_types):
         # deprecated short-form install tree
-        new_data = {'root': install_tree}
-        data['install_tree'] = new_data
-        return True
-    return False
+        # add value as `root` in updated install_tree
+        data['install_tree'] = {'root': install_tree}
+        changed = True
+
+    install_scheme = data.pop('install_scheme', None)
+    if install_scheme:
+        projections_data = {
+            'projections': {
+                'all': install_scheme
+            }
+        }
+
+        # update projections with install_scheme
+        # whether install_tree was updated or not
+        # we merge the yaml to ensure we don't invalidate other projections
+        update_data = data.get('install_tree', {})
+        update_data = spack.config.merge_yaml(update_data, projections_data)
+        data['install_tree'] = update_data
+        changed = True
+    return changed

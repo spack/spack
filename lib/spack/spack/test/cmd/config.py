@@ -45,7 +45,8 @@ def config_yaml_v015(mutable_config):
     """Create a packages.yaml in the old format"""
     old_data = {
         'config': {
-            'install_tree': '/fake/path'
+            'install_tree': '/fake/path',
+            'install_scheme': '{name}-{version}',
         }
     }
     return functools.partial(_create_config, data=old_data, section='config')
@@ -641,3 +642,5 @@ def check_packages_updated(data):
 
 def check_config_updated(data):
     assert isinstance(data['install_tree'], dict)
+    assert data['install_tree']['root'] == '/fake/path'
+    assert data['install_tree']['projections'] == {'all': '{name}-{version}'}
