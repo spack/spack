@@ -14,4 +14,4 @@ class SinglevalueVariantDependent(Package):
 
     version('1.0', '0123456789abcdef0123456789abcdef')
 
-    depends_on('multivalue_variant fee=baz')
+    depends_on('multivalue-variant fee=baz')

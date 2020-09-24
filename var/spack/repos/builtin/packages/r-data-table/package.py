@@ -16,6 +16,7 @@ class RDataTable(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/data.table_1.10.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/data.table"
 
+    version('1.12.8', sha256='d3a75f3a355ff144cc20a476041617e21fcf2a9f79265fd9bbd4693f3671f9dc')
     version('1.12.2', sha256='db55c18f0d703a8bc1c806dd1f7551bb405cb867717f52ef9dd64405394d22f5')
     version('1.12.0', sha256='611b112123dbd4ebd5200770fcdfaaeaab622adeb2b290d36018d3092742e3f7')
     version('1.11.8',   sha256='dc427465599cadd848b28a78e2fce3362867847b44148252054385999fe566d9')

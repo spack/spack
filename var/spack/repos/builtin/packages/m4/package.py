@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class M4(AutotoolsPackage, GNUMirrorPackage):
@@ -32,9 +32,24 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    executables = ['^g?m4$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        # Output on macOS:
+        #   GNU M4 1.4.6
+        # Output on Linux:
+        #   m4 (GNU M4) 1.4.18
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU M4\)?\s+(\S+)', output)
+        return match.group(1) if match else None
+
     def configure_args(self):
         spec = self.spec
         args = ['--enable-c++']
+
+        if spec.satisfies('%cce@9:'):
+            args.append('LDFLAGS=-rtlib=compiler-rt')
 
         if spec.satisfies('%clang') and not spec.satisfies('platform=darwin'):
             args.append('LDFLAGS=-rtlib=compiler-rt')

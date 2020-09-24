@@ -44,8 +44,8 @@ Environments:
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
-   # Install the software, remove unecessary deps
-   RUN cd /opt/spack-environment && spack install && spack gc -y
+   # Install the software, remove unnecessary deps
+   RUN cd /opt/spack-environment && spack env activate . && spack install && spack gc -y
 
    # Strip all the binaries
    RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
@@ -71,7 +71,7 @@ Environments:
     && yum install -y libgomp \
     && rm -rf /var/cache/yum  && yum clean all
 
-   RUN echo 'export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][gromacs]\[$(tput setaf 2)\]\u\[$(tput sgr0)\]:\w $ \[$(tput sgr0)\]"' >> ~/.bashrc
+   RUN echo 'export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][gromacs]\[$(tput setaf 2)\]\u\[$(tput sgr0)\]:\w $ "' >> ~/.bashrc
 
 
    LABEL "app"="gromacs"
@@ -165,7 +165,7 @@ of environments:
        # Extra instructions
        extra_instructions:
          final: |
-   RUN echo 'export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][gromacs]\[$(tput setaf 2)\]\u\[$(tput sgr0)\]:\w $ \[$(tput sgr0)\]"' >> ~/.bashrc
+           RUN echo 'export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][gromacs]\[$(tput setaf 2)\]\u\[$(tput sgr0)\]:\w $ "' >> ~/.bashrc
 
        # Labels for the image
        labels:
@@ -266,8 +266,8 @@ following ``Dockerfile``:
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
-   # Install the software, remove unecessary deps
-   RUN cd /opt/spack-environment && spack install && spack gc -y
+   # Install the software, remove unnecessary deps
+   RUN cd /opt/spack-environment && spack env activate . && spack install && spack gc -y
 
    # Strip all the binaries
    RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
@@ -293,7 +293,7 @@ following ``Dockerfile``:
     && yum install -y libgomp \
     && rm -rf /var/cache/yum  && yum clean all
 
-   RUN echo 'export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][gromacs]\[$(tput setaf 2)\]\u\[$(tput sgr0)\]:\w $ \[$(tput sgr0)\]"' >> ~/.bashrc
+   RUN echo 'export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][gromacs]\[$(tput setaf 2)\]\u\[$(tput sgr0)\]:\w $ "' >> ~/.bashrc
 
 
    LABEL "app"="gromacs"

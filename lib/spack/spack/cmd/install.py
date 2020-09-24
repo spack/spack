@@ -32,6 +32,7 @@ def update_kwargs_from_args(args, kwargs):
     that will be passed to Package.do_install API"""
 
     kwargs.update({
+        'fail_fast': args.fail_fast,
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
@@ -78,6 +79,9 @@ the dependencies"""
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
+    subparser.add_argument(
+        '--fail-fast', action='store_true',
+        help="stop all builds if any build fails (default is best effort)")
     subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="don't remove the install prefix if installation fails")
@@ -156,8 +160,15 @@ packages. If neither are chosen, don't run tests for any packages."""
         action='store_true',
         help="Show usage instructions for CDash reporting"
     )
+    subparser.add_argument(
+        '-y', '--yes-to-all',
+        action='store_true',
+        dest='yes_to_all',
+        help="""assume "yes" is the answer to every confirmation request.
+To run completely non-interactively, also specify '--no-checksum'."""
+    )
     add_cdash_args(subparser, False)
-    arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
+    arguments.add_common_arguments(subparser, ['spec'])
 
 
 def add_cdash_args(subparser, add_help):
@@ -264,7 +275,7 @@ environment variables:
         return
 
     if not args.spec and not args.specfiles:
-        # if there are no args but an active environment or spack.yaml file
+        # if there are no args but an active environment
         # then install the packages from it.
         env = ev.get_env(args, 'install')
         if env:
@@ -285,7 +296,18 @@ environment variables:
                 env.regenerate_views()
             return
         else:
-            tty.die("install requires a package argument or a spack.yaml file")
+            msg = "install requires a package argument or active environment"
+            if 'spack.yaml' in os.listdir(os.getcwd()):
+                # There's a spack.yaml file in the working dir, the user may
+                # have intended to use that
+                msg += "\n\n"
+                msg += "Did you mean to install using the `spack.yaml`"
+                msg += " in this directory? Try: \n"
+                msg += "    spack env activate .\n"
+                msg += "    spack install\n"
+                msg += "  OR\n"
+                msg += "    spack --env . install"
+            tty.die(msg)
 
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')

@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+import re
+import os
 from spack import *
 
 
@@ -16,14 +18,30 @@ class Git(AutotoolsPackage):
     homepage = "http://git-scm.com"
     url      = "https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.12.0.tar.gz"
 
+    executables = ['^git$']
+
     # In order to add new versions here, add a new list entry with:
     # * version: {version}
     # * sha256: the sha256sum of the git-{version}.tar.gz
     # * sha256_manpages: the sha256sum of the corresponding manpage from
     #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # You can find the source here: https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
-
     releases = [
+        {
+            'version': '2.28.0',
+            'sha256': 'f914c60a874d466c1e18467c864a910dd4ea22281ba6d4d58077cb0c3f115170',
+            'sha256_manpages': '3cfca28a88d5b8112ea42322b797a500a14d0acddea391aed0462aff1ab11bf7'
+        },
+        {
+            'version': '2.27.0',
+            'sha256': '77ded85cbe42b1ffdc2578b460a1ef5d23bcbc6683eabcafbb0d394dffe2e787',
+            'sha256_manpages': '414e4b17133e54d846f6bfa2479f9757c50e16c013eb76167a492ae5409b8947'
+        },
+        {
+            'version': '2.26.0',
+            'sha256': 'aa168c2318e7187cd295a645f7370cc6d71a324aafc932f80f00c780b6a26bed',
+            'sha256_manpages': 'c1ffaf0b4cd1e80a0eb0d4039e208c9d411ef94d5da44e38363804e1a7961218'
+        },
         {
             'version': '2.25.0',
             'sha256': 'a98c9b96d91544b130f13bf846ff080dda2867e77fe08700b793ab14ba5346f6',
@@ -177,19 +195,36 @@ class Git(AutotoolsPackage):
     depends_on('curl')
     depends_on('expat')
     depends_on('gettext')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('libidn2')
     depends_on('openssl')
     depends_on('pcre', when='@:2.13')
     depends_on('pcre2', when='@2.14:')
     depends_on('perl')
     depends_on('zlib')
+    depends_on('openssh', type='run')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('tk',       type=('build', 'link'), when='+tcltk')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'git version (\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        prefix = os.path.dirname(exes[0])
+        variants = ''
+        if 'gitk' in os.listdir(prefix):
+            variants += '+tcltk'
+        else:
+            variants += '~tcltk'
+        return variants
 
     # See the comment in setup_build_environment re EXTLIBS.
     def patch(self):
@@ -221,7 +256,7 @@ class Git(AutotoolsPackage):
         configure_args = [
             '--with-curl={0}'.format(spec['curl'].prefix),
             '--with-expat={0}'.format(spec['expat'].prefix),
-            '--with-iconv={0}'.format(spec['libiconv'].prefix),
+            '--with-iconv={0}'.format(spec['iconv'].prefix),
             '--with-openssl={0}'.format(spec['openssl'].prefix),
             '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),

@@ -18,3 +18,8 @@ class RSys(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/sys"
 
     version('3.2', sha256='2819498461fe2ce83d319d1a47844e86bcea6d01d10861818dba289e7099bbcc')
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags':
+            flags.append(self.compiler.c99_flag)
+        return (flags, None, None)

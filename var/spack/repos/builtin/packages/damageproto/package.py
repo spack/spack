@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Damageproto(AutotoolsPackage):
+class Damageproto(AutotoolsPackage, XorgPackage):
     """X Damage Extension.
 
     This package contains header files and documentation for the X Damage
     extension.  Library and server implementations are separate."""
 
     homepage = "https://cgit.freedesktop.org/xorg/proto/damageproto"
-    url      = "https://www.x.org/releases/individual/proto/damageproto-1.2.1.tar.gz"
+    xorg_mirror_path = "proto/damageproto-1.2.1.tar.gz"
 
     version('1.2.1', sha256='f65ccbf1de9750a527ea6e85694085b179f2d06495cbdb742b3edb2149fef303')
 

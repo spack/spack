@@ -17,6 +17,7 @@ class Maverick(MakefilePackage):
 
     conflicts('%gcc@:6.0')
     conflicts('%cce')
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%intel')
     conflicts('%nag')

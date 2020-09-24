@@ -14,15 +14,21 @@ class G4realsurface(Package):
 
     maintainers = ['drbenmorgan']
 
-    version('1.0', sha256='3e2d2506600d2780ed903f1f2681962e208039329347c58ba1916740679020b1')
-    version('2.1', sha256='2a287adbda1c0292571edeae2082a65b7f7bd6cf2bf088432d1d6f889426dcf3')
+    # Only versions relevant to Geant4 releases built by spack are added
     version('2.1.1', sha256='90481ff97a7c3fa792b7a2a21c9ed80a40e6be386e581a39950c844b2dd06f50')
+    version('2.1', sha256='2a287adbda1c0292571edeae2082a65b7f7bd6cf2bf088432d1d6f889426dcf3')
+    version('1.0', sha256='3e2d2506600d2780ed903f1f2681962e208039329347c58ba1916740679020b1')
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
         install_path = join_path(prefix.share, 'data', 'RealSurface{0}'
                                  .format(self.version))
         install_tree(self.stage.source_path, install_path)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        install_path = join_path(self.prefix.share, 'data', 'RealSurface{0}'
+                                 .format(self.version))
+        env.set('G4REALSURFACEDATA', install_path)
 
     def url_for_version(self, version):
         """Handle version string."""

@@ -324,7 +324,7 @@ def test_find_prefix_in_env(mutable_mock_env_path, install_mockery, mock_fetch,
 
 def test_find_loaded(database, working_env):
     output = find('--loaded', '--group')
-    assert output == ''  # 0 packages installed printed separately
+    assert output == ''
 
     os.environ[uenv.spack_loaded_hashes_var] = ':'.join(
         [x.dag_hash() for x in spack.store.db.query()])

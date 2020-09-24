@@ -14,14 +14,16 @@ class Z3(MakefilePackage):
     homepage = "https://github.com/Z3Prover/z3/wiki"
     url      = "https://github.com/Z3Prover/z3/archive/z3-4.5.0.tar.gz"
 
+    version('4.8.7', sha256='8c1c49a1eccf5d8b952dadadba3552b0eac67482b8a29eaad62aa7343a0732c3')
     version('4.5.0', sha256='aeae1d239c5e06ac183be7dd853775b84698db1265cb2258e5918a28372d4a0c')
     version('4.4.1', sha256='50967cca12c5c6e1612d0ccf8b6ebf5f99840a783d6cf5216336a2b59c37c0ce')
     version('4.4.0', sha256='65b72f9eb0af50949e504b47080fb3fc95f11c435633041d9a534473f3142cba')
 
     phases = ['bootstrap', 'build', 'install']
 
-    variant('python', default=False, description='Enable python binding')
+    variant('python', default=True, description='Enable python binding')
     depends_on('python', type=('build', 'run'))
+    depends_on('py-setuptools', type=('run'), when='+python')
     extends('python', when='+python')
 
     # Referenced: https://github.com/Z3Prover/z3/issues/1016

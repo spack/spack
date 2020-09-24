@@ -402,3 +402,24 @@ def test_bundle_patch_directive(mock_directive_bundle,
                        match="Patches are not allowed"):
         patch = spack.directives.patch('mock/patch.txt')
         patch(mock_directive_bundle)
+
+
+def test_fetch_options(mock_packages, config):
+    """Test fetch options inference."""
+
+    pkg = spack.repo.get('fetch-options')
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.digest == 'abc10'
+    assert fetcher.extra_options == {'timeout': 42, 'cookie': 'foobar'}
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.1')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.digest == 'abc11'
+    assert fetcher.extra_options == {'timeout': 65}
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.2')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.digest == 'abc12'
+    assert fetcher.extra_options == {'cookie': 'baz'}

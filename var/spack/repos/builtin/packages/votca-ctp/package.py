@@ -19,7 +19,7 @@ class VotcaCtp(CMakePackage):
     url      = "https://github.com/votca/ctp/tarball/v1.5"
     git      = "https://github.com/votca/ctp.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('1.5.1', sha256='ef957c2f6b09335d0d27ecb7e1b80b55e76a100247bc0d0b3cfef7718d2a1126')
     version('1.5', sha256='31eb6bcc9339e575116f0c91fe7a4ce7d4189f31f0640329c993fea911401d65')
 

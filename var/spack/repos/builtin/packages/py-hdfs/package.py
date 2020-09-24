@@ -9,7 +9,7 @@ from spack import *
 class PyHdfs(PythonPackage):
     """API and command line interface for HDFS"""
     homepage = "https://hdfscli.readthedocs.io/en/latest/"
-    url      = "https://pypi.org/packages/source/h/hdfs/hdfs-2.1.0.tar.gz"
+    url      = "https://pypi.io/packages/source/h/hdfs/hdfs-2.1.0.tar.gz"
 
     version('2.1.0', sha256='a40fe99ccb03b5c3247b33a4110eb21b57405dd7c3f1b775e362e66c19b44bc6')
 

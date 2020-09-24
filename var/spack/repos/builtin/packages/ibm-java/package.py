@@ -10,15 +10,24 @@ import os
 
 class IbmJava(Package):
     """Binary distribution of the IBM Java Software Development Kit
-    for big and little-endian powerpc (power7, 8 and 9)."""
+    for big and little-endian powerpc (power7, 8 and 9).  Note: IBM
+    is fairly aggressive about taking down old versions, so old
+    (and even current) versions may not be available."""
 
     homepage = "https://developer.ibm.com/javasdk/"
+    maintainers = ['mwkrentel']
 
     # Note: IBM is fairly aggressive about taking down old versions,
     # so we may need to update this frequently.  Also, old revs may
     # not be available for download.
 
     version_list = [
+        ('8.0.6.11', 'ppc64',   '6fd17a6b9a34bb66e0db37f6402dc1b7612d54084c94b859f4a42f445fd174d4'),
+        ('8.0.6.11', 'ppc64le', 'd69ff7519e32e89db88a9a4d4d88d1881524073ac940f35d3860db2c6647be2e'),
+        ('8.0.6.10', 'ppc64',   'ff5151ead88f891624eefe33d80d56c325ca0aa4b93bd96c135cad326993eda2'),
+        ('8.0.6.10', 'ppc64le', 'ea99ab28dd300b08940882d178247e99aafe5a998b1621cf288dfb247394e067'),
+        ('8.0.6.7',  'ppc64',   'a1accb461a039af4587ea86511e317fea1d423e7f781459a17ed3947afed2982'),
+        ('8.0.6.7',  'ppc64le', '9ede76a597af28c7f10c6f8a68788cc2dcd39fdab178c9bac56df8b3766ac717'),
         ('8.0.6.0',  'ppc64',   'e142746a83e47ab91d71839d5776f112ed154ae180d0628e3f10886151dad710'),
         ('8.0.6.0',  'ppc64le', '18c2eccf99225e6e7643141d8da4110cacc39f2fa00149fc26341d2272cc0102'),
         ('8.0.5.30', 'ppc64',   'd39ce321bdadd2b2b829637cacf9c1c0d90235a83ff6e7dcfa7078faca2f212f'),
@@ -35,6 +44,7 @@ class IbmJava(Package):
     provides('java@8')
 
     conflicts('target=x86_64:', msg='ibm-java is only available for ppc64 and ppc64le')
+    conflicts('target=aarch64', msg='ibm-java is only available for ppc64 and ppc64le')
 
     # This assumes version numbers are 4-tuples: 8.0.5.30
     def url_for_version(self, version):

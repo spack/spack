@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-from spack.main import SpackCommand
+import pytest
+from spack.main import SpackCommand, SpackCommandError
 import spack.spec
 import spack.user_environment as uenv
 
@@ -81,6 +82,18 @@ def test_load_includes_run_env(install_mockery, mock_fetch, mock_archive,
 
     assert 'export FOOBAR=mpileaks' in sh_out
     assert 'setenv FOOBAR mpileaks' in csh_out
+
+
+def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Test with and without the --first option"""
+    install('libelf@0.8.12')
+    install('libelf@0.8.13')
+    # Now there are two versions of libelf
+    with pytest.raises(SpackCommandError):
+        # This should cause an error due to multiple versions
+        load('--sh', 'libelf')
+    # Using --first should avoid the error condition
+    load('--sh', '--first', 'libelf')
 
 
 def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive,

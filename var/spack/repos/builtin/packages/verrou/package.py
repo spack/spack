@@ -32,18 +32,24 @@ class Verrou(AutotoolsPackage):
     version('2.0.0', sha256='798df6e426ec57646a2a626d756b72f0171647ae5b07c982952dae2d71e26045')
     version('1.1.0', sha256='b5105f61c65680f31551199cd143b2e15f412c34c821537998a7165e315dde2d')
 
+    # The server is sometimes a bit slow to respond
+    timeout = {'timeout': 60}
+
     resource(name='valgrind-3.15.0',
              url='https://sourceware.org/pub/valgrind/valgrind-3.15.0.tar.bz2',
              sha256='417c7a9da8f60dd05698b3a7bc6002e4ef996f14c13f0ff96679a16873e78ab1',
-             when='@2.2.0:')
+             when='@2.2.0:',
+             fetch_options=timeout)
     resource(name='valgrind-3.14.0',
              url='https://sourceware.org/pub/valgrind/valgrind-3.14.0.tar.bz2',
              sha256='037c11bfefd477cc6e9ebe8f193bb237fe397f7ce791b4a4ce3fa1c6a520baa5',
-             when='@2.1.0:2.1.99')
+             when='@2.1.0:2.1.99',
+             fetch_options=timeout)
     resource(name='valgrind-3.13.0',
              url='https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2',
              sha256='d76680ef03f00cd5e970bbdcd4e57fb1f6df7d2e2c071635ef2be74790190c3b',
-             when='@1.1.0:2.0.99')
+             when='@1.1.0:2.0.99',
+             fetch_options=timeout)
 
     variant('fma', default=True,
             description='Activates fused multiply-add support for Verrou')

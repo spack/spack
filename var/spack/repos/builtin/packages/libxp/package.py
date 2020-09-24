@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libxp(AutotoolsPackage):
+class Libxp(AutotoolsPackage, XorgPackage):
     """libXp - X Print Client Library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXp"
-    url      = "https://www.x.org/archive/individual/lib/libXp-1.0.3.tar.gz"
+    xorg_mirror_path = "lib/libXp-1.0.3.tar.gz"
 
     version('1.0.3', sha256='f6b8cc4ef05d3eafc9ef5fc72819dd412024b4ed60197c0d5914758125817e9c')
 

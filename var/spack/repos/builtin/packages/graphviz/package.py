@@ -19,6 +19,8 @@ class Graphviz(AutotoolsPackage):
     homepage = 'http://www.graphviz.org'
     git      = 'https://gitlab.com/graphviz/graphviz.git'
 
+    # This commit hash is tag='stable_release_2.44.1'
+    version('2.44.1', commit='771bc4dbff3e6f358fa75cdc7774a413ccacad51')
     # This commit hash is tag='stable_release_2.42.2'
     version('2.42.2', commit='da4c2ec6f24ca1b6d1752c6b5bc4389e55682147')
     # This commit hash is tag='stable_release_2.40.1'
@@ -55,6 +57,8 @@ class Graphviz(AutotoolsPackage):
             description='Build with libgd support (more output formats)')
     variant('pangocairo', default=False,
             description='Build with pango+cairo support (more output formats)')
+    variant('poppler', default=False,
+            description='Build with poppler support (pdf formats)')
     variant('qt', default=False,
             description='Build with Qt support')
     variant('quartz', default=(MACOS_VERSION is not None),
@@ -72,6 +76,7 @@ class Graphviz(AutotoolsPackage):
     patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.40.1_icc_vmalloc.patch',
           sha256='813e6529e79161a18b0f24a969b7de22f8417b2e942239e658b5402884541bc2',
           when='@:2.40%intel')
+    patch('ps2pdf.patch')
 
     if not MACOS_VERSION:
         conflicts('+quartz',
@@ -93,12 +98,13 @@ class Graphviz(AutotoolsPackage):
     depends_on('ghostscript', when='+ghostscript')
     depends_on('gtkplus', when='+gtkplus')
     depends_on('gts', when='+gts')
-    depends_on('cairo', when='+pangocairo')
+    depends_on('cairo+pdf+png+svg', when='+pangocairo')
     depends_on('fontconfig', when='+pangocairo')
     depends_on('freetype', when='+pangocairo')
     depends_on('glib', when='+pangocairo')
     depends_on('libpng', when='+pangocairo')
     depends_on('pango', when='+pangocairo')
+    depends_on('poppler+glib', when='+poppler')
     depends_on('zlib')
     depends_on('qt', when='+qt')
     depends_on('libx11', when="+x")
@@ -111,6 +117,9 @@ class Graphviz(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('libtool', type='build')
+    # required to build docs
+    depends_on('groff', type='build')
+    depends_on('ghostscript', type='build')
 
     parallel = False
 
@@ -134,6 +143,13 @@ class Graphviz(AutotoolsPackage):
         filter_file(r'-lstdc\+\+', '-lc++', 'configure.ac',
                     *(d + '/Makefile.am' for d in mkdirs))
 
+    @when('%apple-clang')
+    def patch(self):
+        # When using Clang, replace GCC's libstdc++ with LLVM's libc++
+        mkdirs = ['cmd/dot', 'cmd/edgepaint', 'cmd/mingle', 'plugin/gdiplus']
+        filter_file(r'-lstdc\+\+', '-lc++', 'configure.ac',
+                    *(d + '/Makefile.am' for d in mkdirs))
+
     def configure_args(self):
         spec = self.spec
         args = ['--disable-silent-rules']
@@ -147,7 +163,7 @@ class Graphviz(AutotoolsPackage):
         args.append('--{0}-swig'.format('enable' if use_swig else 'disable'))
 
         for var in ["expat", "gts", "ghostscript", "libgd", "pangocairo",
-                    "qt", "quartz", "x"]:
+                    "poppler", "qt", "quartz", "x"]:
             args += self.with_or_without(var)
 
         args.append('--{0}-gtk'.format(

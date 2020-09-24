@@ -9,21 +9,30 @@ both in memory and in its file
 """
 import datetime
 import functools
-import multiprocessing
 import os
 import pytest
 import json
+try:
+    import uuid
+    _use_uuid = True
+except ImportError:
+    _use_uuid = False
+    pass
+
+from jsonschema import validate
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
+from llnl.util.lang import fork_context
 
 import spack.repo
 import spack.store
 import spack.database
 import spack.package
 import spack.spec
-from spack.test.conftest import MockPackage, MockPackageMultiRepo
+from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.executable import Executable
+from spack.schema.database_index import schema
 
 
 pytestmark = pytest.mark.db
@@ -67,11 +76,11 @@ def test_installed_upstream(upstream_and_downstream_db):
         downstream_db, downstream_layout = (upstream_and_downstream_db)
 
     default = ('build', 'link')
-    x = MockPackage('x', [], [])
-    z = MockPackage('z', [], [])
-    y = MockPackage('y', [z], [default])
-    w = MockPackage('w', [x, y], [default, default])
-    mock_repo = MockPackageMultiRepo([w, x, y, z])
+    mock_repo = MockPackageMultiRepo()
+    x = mock_repo.add_package('x', [], [])
+    z = mock_repo.add_package('z', [], [])
+    y = mock_repo.add_package('y', [z], [default])
+    mock_repo.add_package('w', [x, y], [default, default])
 
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('w')
@@ -110,9 +119,9 @@ def test_removed_upstream_dep(upstream_and_downstream_db):
         downstream_db, downstream_layout = (upstream_and_downstream_db)
 
     default = ('build', 'link')
-    z = MockPackage('z', [], [])
-    y = MockPackage('y', [z], [default])
-    mock_repo = MockPackageMultiRepo([y, z])
+    mock_repo = MockPackageMultiRepo()
+    z = mock_repo.add_package('z', [], [])
+    mock_repo.add_package('y', [z], [default])
 
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('y')
@@ -144,8 +153,8 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
         downstream_db, downstream_layout = (upstream_and_downstream_db)
 
-    x = MockPackage('x', [], [])
-    mock_repo = MockPackageMultiRepo([x])
+    mock_repo = MockPackageMultiRepo()
+    mock_repo.add_package('x', [], [])
 
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('x')
@@ -177,8 +186,8 @@ def test_cannot_write_upstream(tmpdir_factory, test_store, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b']]
     layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/']]
 
-    x = MockPackage('x', [], [])
-    mock_repo = MockPackageMultiRepo([x])
+    mock_repo = MockPackageMultiRepo()
+    mock_repo.add_package('x', [], [])
 
     # Instantiate the database that will be used as the upstream DB and make
     # sure it has an index file
@@ -203,11 +212,10 @@ def test_recursive_upstream_dbs(tmpdir_factory, test_store, gen_mock_layout):
     layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/', '/rc/']]
 
     default = ('build', 'link')
-    z = MockPackage('z', [], [])
-    y = MockPackage('y', [z], [default])
-    x = MockPackage('x', [y], [default])
-
-    mock_repo = MockPackageMultiRepo([x, y, z])
+    mock_repo = MockPackageMultiRepo()
+    z = mock_repo.add_package('z', [], [])
+    y = mock_repo.add_package('y', [z], [default])
+    mock_repo.add_package('x', [y], [default])
 
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('x')
@@ -419,6 +427,10 @@ def test_005_db_exists(database):
     assert os.path.exists(str(index_file))
     assert os.path.exists(str(lock_file))
 
+    with open(index_file) as fd:
+        index_object = json.load(fd)
+        validate(index_object, schema)
+
 
 def test_010_all_install_sanity(database):
     """Ensure that the install layout reflects what we think it does."""
@@ -469,6 +481,21 @@ def test_015_write_and_read(mutable_database):
         assert new_rec.installed == rec.installed
 
 
+def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
+    monkeypatch.setattr(spack.database, '_use_uuid', False)
+    # write and read DB
+    with spack.store.db.write_transaction():
+        specs = spack.store.db.query()
+        recs = [spack.store.db.get_record(s) for s in specs]
+
+    for spec, rec in zip(specs, recs):
+        new_rec = spack.store.db.get_record(spec)
+        assert new_rec.ref_count == rec.ref_count
+        assert new_rec.spec == rec.spec
+        assert new_rec.path == rec.path
+        assert new_rec.installed == rec.installed
+
+
 def test_020_db_sanity(database):
     """Make sure query() returns what's actually in the db."""
     _check_db_sanity(database)
@@ -497,7 +524,7 @@ def test_030_db_sanity_from_another_process(mutable_database):
         with mutable_database.write_transaction():
             _mock_remove('mpileaks ^zmpi')
 
-    p = multiprocessing.Process(target=read_and_modify, args=())
+    p = fork_context.Process(target=read_and_modify, args=())
     p.start()
     p.join()
 
@@ -654,7 +681,7 @@ def test_115_reindex_with_packages_not_in_repo(mutable_database):
     # Dont add any package definitions to this repository, the idea is that
     # packages should not have to be defined in the repository once they
     # are installed
-    with spack.repo.swap(MockPackageMultiRepo([])):
+    with spack.repo.swap(MockPackageMultiRepo()):
         spack.store.store.reindex()
         _check_db_sanity(mutable_database)
 
@@ -662,17 +689,17 @@ def test_115_reindex_with_packages_not_in_repo(mutable_database):
 def test_external_entries_in_db(mutable_database):
     rec = mutable_database.get_record('mpileaks ^zmpi')
     assert rec.spec.external_path is None
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
 
     rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
     rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
     assert rec.explicit is True
 
 
@@ -696,6 +723,8 @@ def test_old_external_entries_prefix(mutable_database):
     with open(spack.store.db._index_path, 'r') as f:
         db_obj = json.loads(f.read())
 
+    validate(db_obj, schema)
+
     s = spack.spec.Spec('externaltool')
     s.concretize()
 
@@ -703,6 +732,9 @@ def test_old_external_entries_prefix(mutable_database):
 
     with open(spack.store.db._index_path, 'w') as f:
         f.write(json.dumps(db_obj))
+    if _use_uuid:
+        with open(spack.store.db._verifier_path, 'w') as f:
+            f.write(str(uuid.uuid4()))
 
     record = spack.store.db.get_record(s)
 

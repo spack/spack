@@ -8,9 +8,12 @@ from spack import *
 class PyHumanfriendly(PythonPackage):
     """Human friendly output for text interfaces using Python"""
 
-    homepage = "https://pypi.org/project/humanfriendly/"
-    url      = "https://files.pythonhosted.org/packages/26/71/e7daf57e819a70228568ff5395fdbc4de81b63067b93167e07825fcf0bcf/humanfriendly-4.18.tar.gz"
+    homepage = "https://humanfriendly.readthedocs.io/"
+    url      = "https://pypi.io/packages/source/h/humanfriendly/humanfriendly-8.1.tar.gz"
 
+    version('8.1',  sha256='25c2108a45cfd1e8fbe9cdb30b825d34ef5d5675c8e11e4775c9aedbfb0bdee2')
     version('4.18', sha256='33ee8ceb63f1db61cce8b5c800c531e1a61023ac5488ccde2ba574a85be00a85')
 
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-monotonic', when='^python@:2', type=('build', 'run'))

@@ -1,0 +1,23 @@
+--- a/include/half.hpp.orig	2020-06-26 07:46:50.861595808 -0400
++++ b/include/half.hpp	2020-06-26 07:47:31.353286730 -0400
+@@ -266,9 +266,6 @@
+ #if HALF_ENABLE_CPP11_HASH
+ 	#include <functional>
+ #endif
+-#if HALF_ENABLE_F16C_INTRINSICS
+-	#include <immintrin.h>
+-#endif
+ 
+ 
+ #ifndef HALF_ENABLE_F16C_INTRINSICS
+@@ -281,6 +278,10 @@
+ 	#define HALF_ENABLE_F16C_INTRINSICS __F16C__
+ #endif
+ 
++#if HALF_ENABLE_F16C_INTRINSICS
++	#include <immintrin.h>
++#endif
++
+ #ifdef HALF_DOXYGEN_ONLY
+ /// Type for internal floating-point computations.
+ /// This can be predefined to a built-in floating-point type (`float`, `double` or `long double`) to override the internal 

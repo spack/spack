@@ -627,8 +627,8 @@ output metadata on specs and all dependencies as json:
        "target": "x86_64"
       },
       "compiler": {
-       "name": "clang",
-       "version": "10.0.0-apple"
+       "name": "apple-clang",
+       "version": "10.0.0"
       },
       "namespace": "builtin",
       "parameters": {
@@ -695,11 +695,11 @@ Here is an example of a much longer spec than we've seen thus far:
 
 .. code-block:: none
 
-   mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt arch=bgq_os ^callpath @1.1 %gcc@4.7.2
+   mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt target=x86_64 ^callpath @1.1 %gcc@4.7.2
 
 If provided to ``spack install``, this will install the ``mpileaks``
 library at some version between ``1.2`` and ``1.4`` (inclusive),
-built using ``gcc`` at version 4.7.5 for the Blue Gene/Q architecture,
+built using ``gcc`` at version 4.7.5 for a generic ``x86_64`` architecture,
 with debug options enabled, and without Qt support.  Additionally, it
 says to link it with the ``callpath`` library (which it depends on),
 and to build callpath with ``gcc`` 4.7.2.  Most specs will not be as
@@ -925,7 +925,7 @@ contains any spaces. Any of ``cppflags=-O3``, ``cppflags="-O3"``,
 ``cppflags='-O3'``, and ``cppflags="-O3 -fPIC"`` are acceptable, but
 ``cppflags=-O3 -fPIC`` is not. Additionally, if the value of the
 compiler flags is not the last thing on the line, it must be followed
-by a space. The commmand ``spack install libelf cppflags="-O3"%intel``
+by a space. The command ``spack install libelf cppflags="-O3"%intel``
 will be interpreted as an attempt to set ``cppflags="-O3%intel"``.
 
 The six compiler flags are injected in the order of implicit make commands
@@ -1234,6 +1234,8 @@ add a version specifier to the spec:
 Notice that the package versions that provide insufficient MPI
 versions are now filtered out.
 
+.. _extensions:
+
 ---------------------------
 Extensions & Python support
 ---------------------------
@@ -1241,8 +1243,7 @@ Extensions & Python support
 Spack's installation model assumes that each package will live in its
 own install prefix.  However, certain packages are typically installed
 *within* the directory hierarchy of other packages.  For example,
-modules in interpreted languages like `Python
-<https://www.python.org>`_ are typically installed in the
+`Python <https://www.python.org>`_ packages are typically installed in the
 ``$prefix/lib/python-2.7/site-packages`` directory.
 
 Spack has support for this type of installation as well.  In Spack,

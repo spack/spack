@@ -127,7 +127,7 @@ compilers:
       cxxflags: -O3
     modules: 'None'
 - compiler:
-    spec: clang@9.1.0-apple
+    spec: apple-clang@9.1.0
     operating_system: elcapitan
     paths:
       cc: /path/to/clang

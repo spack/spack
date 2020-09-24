@@ -18,7 +18,11 @@ class Hpctoolkit(AutotoolsPackage):
     git      = "https://github.com/HPCToolkit/hpctoolkit.git"
     maintainers = ['mwkrentel']
 
-    version('master', branch='master')
+    version('develop', branch='develop')
+    version('master',  branch='master')
+    version('2020.08.03', commit='d9d13c705d81e5de38e624254cf0875cce6add9a')
+    version('2020.07.21', commit='4e56c780cffc53875aca67d6472a2fb3678970eb')
+    version('2020.06.12', commit='ac6ae1156e77d35596fea743ed8ae768f7222f19')
     version('2020.03.01', commit='94ede4e6fa1e05e6f080be8dc388240ea027f769')
     version('2019.12.28', commit='b4e1877ff96069fd8ed0fdf0e36283a5b4b62240')
     version('2019.08.14', commit='6ea44ed3f93ede2d0a48937f288a2d41188a277c')
@@ -34,17 +38,13 @@ class Hpctoolkit(AutotoolsPackage):
             description='Build for Cray compute nodes, including '
             'hpcprof-mpi.')
 
-    variant('bgq', default=False,
-            description='Build for Blue Gene compute nodes, including '
-            'hpcprof-mpi (up to 2019.12.28 only).')
-
     variant('mpi', default=False,
             description='Build hpcprof-mpi, the MPI version of hpcprof.')
 
     # We can't build with both PAPI and perfmon for risk of segfault
     # from mismatched header files (unless PAPI installs the perfmon
     # headers).
-    variant('papi', default=False,
+    variant('papi', default=True,
             description='Use PAPI instead of perfmon for access to '
             'the hardware performance counters.')
 
@@ -60,19 +60,22 @@ class Hpctoolkit(AutotoolsPackage):
         ' +graph +regex +shared +multithreaded visibility=global'
     )
 
-    depends_on('binutils+libiberty~nls', type='link')
+    depends_on('binutils+libiberty~nls', type='link', when='@2020.04.00:')
+    depends_on('binutils@:2.33.1+libiberty~nls', type='link', when='@:2020.03.99')
     depends_on('boost' + boost_libs)
     depends_on('bzip2+shared', type='link')
     depends_on('dyninst@9.3.2:')
     depends_on('elfutils+bzip2+xz~nls', type='link')
+    depends_on('gotcha@1.0.3:')
     depends_on('intel-tbb+shared')
     depends_on('libdwarf')
     depends_on('libmonitor+hpctoolkit')
-    depends_on('libmonitor+bgq', when='+bgq')
-    depends_on('libunwind@1.4: +xz')
+    depends_on('libunwind@1.4: +xz+pic', when='@2020.09.00:')
+    depends_on('libunwind@1.4: +xz', when='@:2020.08.99')
     depends_on('mbedtls+pic')
     depends_on('xerces-c transcoder=iconv')
-    depends_on('xz', type='link')
+    depends_on('xz+pic', type='link', when='@2020.09.00:')
+    depends_on('xz', type='link', when='@:2020.08.99')
     depends_on('zlib+shared')
 
     depends_on('cuda', when='+cuda')
@@ -90,9 +93,6 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts('+cuda', when='@2018.0.0:2019.99.99',
               msg='cuda requires 2020.03.01 or later')
 
-    conflicts('+bgq', when='@2020.03.01:',
-              msg='blue gene requires 2019.12.28 or earlier')
-
     flag_handler = AutotoolsPackage.build_system_flags
 
     def configure_args(self):
@@ -104,6 +104,7 @@ class Hpctoolkit(AutotoolsPackage):
             '--with-bzip=%s'         % spec['bzip2'].prefix,
             '--with-dyninst=%s'      % spec['dyninst'].prefix,
             '--with-elfutils=%s'     % spec['elfutils'].prefix,
+            '--with-gotcha=%s'       % spec['gotcha'].prefix,
             '--with-tbb=%s'          % spec['intel-tbb'].prefix,
             '--with-libdwarf=%s'     % spec['libdwarf'].prefix,
             '--with-libmonitor=%s'   % spec['libmonitor'].prefix,
@@ -115,11 +116,7 @@ class Hpctoolkit(AutotoolsPackage):
         ]
 
         if '+cuda' in spec:
-            cupti_path = join_path(spec['cuda'].prefix, 'extras', 'CUPTI')
-            args.extend([
-                '--with-cuda=%s' % spec['cuda'].prefix,
-                '--with-cupti=%s' % cupti_path,
-            ])
+            args.append('--with-cuda=%s' % spec['cuda'].prefix)
 
         if spec.target.family == 'x86_64':
             args.append('--with-xed=%s' % spec['intel-xed'].prefix)
@@ -134,12 +131,6 @@ class Hpctoolkit(AutotoolsPackage):
             args.extend([
                 '--enable-mpi-search=cray',
                 '--enable-all-static',
-            ])
-        elif '+bgq' in spec:
-            args.extend([
-                '--enable-mpi-search=bgq',
-                '--enable-all-static',
-                '--enable-bgq',
             ])
         elif '+mpi' in spec:
             args.append('MPICXX=%s' % spec['mpi'].mpicxx)

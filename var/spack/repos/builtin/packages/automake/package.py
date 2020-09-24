@@ -2,8 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
+import re
 
 
 class Automake(AutotoolsPackage, GNUMirrorPackage):
@@ -12,6 +11,7 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
     homepage = 'http://www.gnu.org/software/automake/'
     gnu_mirror_path = 'automake/automake-1.15.tar.gz'
 
+    version('1.16.2', sha256='b2f361094b410b4acbf4efba7337bdb786335ca09eb2518635a09fb7319ca5c1')
     version('1.16.1', sha256='608a97523f97db32f1f5d5615c98ca69326ced2054c9f82e65bade7fc4c9dea8')
     version('1.15.1', sha256='988e32527abe052307d21c8ca000aa238b914df363a617e38f4fb89f5abf6260')
     version('1.15',   sha256='7946e945a96e28152ba5a6beb0625ca715c6e32ac55f2e353ef54def0c8ed924')
@@ -23,6 +23,14 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
     depends_on('perl', type=('build', 'run'))
 
     build_directory = 'spack-build'
+
+    executables = ['^automake$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU automake\)\s+(\S+)', output)
+        return match.group(1) if match else None
 
     def patch(self):
         # The full perl shebang might be too long

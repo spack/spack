@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Xscope(AutotoolsPackage):
+class Xscope(AutotoolsPackage, XorgPackage):
     """XSCOPE -- a program to monitor X11/Client conversations."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xscope"
-    url      = "https://www.x.org/archive/individual/app/xscope-1.4.1.tar.gz"
+    xorg_mirror_path = "app/xscope-1.4.1.tar.gz"
 
     version('1.4.1', sha256='f99558a64e828cd2c352091ed362ad2ef42b1c55ef5c01cbf782be9735bb6de3')
 

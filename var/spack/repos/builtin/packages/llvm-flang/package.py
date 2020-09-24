@@ -16,7 +16,8 @@ class LlvmFlang(CMakePackage, CudaPackage):
 
     maintainer = ['naromero77']
 
-    version('master', branch='master')
+    version('release_90', branch='release_90')
+    version('release_80', branch='release_80')
     version('release_70', branch='release_70')
     version('release_60', branch='release_60')
     version('20190329', tag='flang_20190329')
@@ -50,10 +51,17 @@ class LlvmFlang(CMakePackage, CudaPackage):
     # LLVM-Flang Componentes: Driver, OpenMP
     resource(name='flang-driver',
              git='https://github.com/flang-compiler/flang-driver.git',
-             branch='master',
+             branch='release_90',
              destination='tools',
              placement='clang',
-             when='@master')
+             when='@release_90')
+
+    resource(name='flang-driver',
+             git='https://github.com/flang-compiler/flang-driver.git',
+             branch='release_80',
+             destination='tools',
+             placement='clang',
+             when='@release_80')
 
     resource(name='flang-driver',
              git='https://github.com/flang-compiler/flang-driver.git',
@@ -105,11 +113,18 @@ class LlvmFlang(CMakePackage, CudaPackage):
              when='@20180308')
 
     resource(name='openmp',
-             git='https://github.com/flang-compiler/openmp.git',
-             branch='master',
+             git='https://github.com/llvm-mirror/openmp.git',
+             branch='release_90',
              destination='projects',
              placement='openmp',
-             when='@master')
+             when='@release_90')
+
+    resource(name='openmp',
+             git='https://github.com/flang-compiler/openmp.git',
+             branch='release_80',
+             destination='projects',
+             placement='openmp',
+             when='@release_80')
 
     resource(name='openmp',
              git='https://github.com/flang-compiler/openmp.git',
@@ -195,6 +210,11 @@ class LlvmFlang(CMakePackage, CudaPackage):
         args.append('-DLIBOMP_FORTRAN_MODULES=ON')
         args.append('-DLIBOMP_ENABLE_SHARED=TRUE')
 
+        # Make sure llvm-flang can find GCC's libstdc++
+        if self.compiler.name == "gcc":
+            gcc_prefix = ancestor(self.compiler.cc, 2)
+            args.append('-DGCC_INSTALL_PREFIX=' + gcc_prefix)
+
         # used by libomptarget for NVidia gpu
         if '+cuda' in spec:
             args.append('-DOPENMP_ENABLE_LIBOMPTARGET=ON')
@@ -238,6 +258,7 @@ class LlvmFlang(CMakePackage, CudaPackage):
                         spec['libelf'].prefix.include,
                         spec['hwloc'].prefix.include))
 
-        cmake(*args)
-        make()
-        make('install')
+            # Only build if offload target.
+            cmake(*args)
+            make()
+            make('install')

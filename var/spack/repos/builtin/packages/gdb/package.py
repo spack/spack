@@ -15,6 +15,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/gdb"
     gnu_mirror_path = "gdb/gdb-7.10.tar.gz"
 
+    version('9.2', sha256='38ef247d41ba7cc3f6f93a612a78bab9484de9accecbe3b0150a3c0391a3faf0')
     version('9.1', sha256='fcda54d4f35bc53fb24b50009a71ca98410d71ff2620942e3c829a7f5d614252')
     version('8.3.1', sha256='26ce655216cd03f4611518a7a1c31d80ec8e884c16715e9ba8b436822e51434b')
     version('8.3', sha256='b2266ec592440d0eec18ee1790f8558b3b8a2845b76cc83a872e39b501ce8a28')
@@ -33,6 +34,12 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
     variant('python', default=True, description='Compile with Python support')
     variant('xz', default=True, description='Compile with lzma support')
+    variant('source-highlight', default=False, description='Compile with source-highlight support')
+    variant('lto', default=False, description='Enable lto')
+    variant('quad', default=False, description='Enable quad')
+    variant('gold', default=False, description='Enable gold linker')
+    variant('ld', default=False, description='Enable ld')
+    variant('tui', default=False, description='Enable tui')
 
     # Required dependency
     depends_on('texinfo', type='build')
@@ -40,6 +47,8 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     # Optional dependencies
     depends_on('python', when='+python')
     depends_on('xz', when='+xz')
+    depends_on('source-highlight', when='+source-highlight')
+    depends_on('ncurses', when='+tui')
 
     build_directory = 'spack-build'
 
@@ -49,4 +58,20 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
             args.append('--with-python')
             args.append('LDFLAGS={0}'.format(
                 self.spec['python'].libs.ld_flags))
+
+        if '+lto' in self.spec:
+            args.append('--enable-lto')
+
+        if '+quad' in self.spec:
+            args.append('--with-quad')
+
+        if '+gold' in self.spec:
+            args.append('--enable-gold')
+
+        if '+ld' in self.spec:
+            args.append('--enable-ld')
+
+        if '+tui' in self.spec:
+            args.append('--enable-tui')
+
         return args

@@ -139,9 +139,12 @@ To display the graph we can use the GraphViz backend::
   @contributor: U{Reka Albert <http://www.phys.psu.edu/~ralbert/>}
 
 '''
-import pkg_resources
-__version__ = pkg_resources.require('altgraph')[0].version
-
+# import pkg_resources
+# __version__ = pkg_resources.require('altgraph')[0].version
+# pkg_resources is not finding the altgraph import despite the fact that it is in sys.path
+# there is no .dist-info or .egg-info for pkg_resources to query the version from
+# so it must be set manually
+__version__ = '0.16.1'
 
 class GraphError(ValueError):
     pass

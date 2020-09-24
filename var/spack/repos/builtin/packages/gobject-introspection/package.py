@@ -73,3 +73,7 @@ class GobjectIntrospection(Package):
 
     def setup_build_environment(self, env):
         env.set('SPACK_SBANG', "%s/bin/sbang" % spack_root)
+
+    @property
+    def parallel(self):
+        return not self.spec.satisfies('%fj')

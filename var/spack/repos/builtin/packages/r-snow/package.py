@@ -17,3 +17,8 @@ class RSnow(RPackage):
     version('0.4-2', sha256='ee070187aea3607c9ca6235399b3db3e181348692405d038e962e06aefccabd7')
 
     depends_on('r@2.13.1:', type=('build', 'run'))
+
+    @run_after('install')
+    def install_wrapper(self):
+        mkdir(self.prefix.bin)
+        install('inst/RMPISNOW', self.prefix.bin)

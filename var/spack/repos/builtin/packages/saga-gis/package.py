@@ -5,7 +5,7 @@
 from spack import *
 
 
-class SagaGis(AutotoolsPackage):
+class SagaGis(AutotoolsPackage, SourceforgePackage):
     """
     SAGA is a GIS for Automated Geoscientific Analyses and has been designed
     for an easy and effective implementation of spatial algorithms. It offers
@@ -13,7 +13,7 @@ class SagaGis(AutotoolsPackage):
     easily approachable user interface with many visualisation options
     """
     homepage    = "http://saga-gis.org/"
-    url         = "https://sourceforge.net/projects/saga-gis/files/SAGA%20-%205/SAGA%20-%205.0.0/saga-5.0.0.tar.gz"
+    sourceforge_mirror_path = "SAGA%20-%205.0.0/saga-5.0.0.tar.gz"
     git         = "git://git.code.sf.net/p/saga-gis/code"
 
     version('develop',  branch='master')

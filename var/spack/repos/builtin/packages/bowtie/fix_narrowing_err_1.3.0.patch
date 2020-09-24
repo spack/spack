@@ -1,0 +1,11 @@
+--- spack-src/alphabet.cpp.bak	2020-07-23 11:52:57.000000000 +0900
++++ spack-src/alphabet.cpp	2020-09-16 17:05:52.093190703 +0900
+@@ -274,7 +274,7 @@
+ const char *iupacs = "!ACMGRSVTWYHKDBN!acmgrsvtwyhkdbn";
+ 
+ signed char mask2iupac[16] = {
+-	-1,
++	static_cast<signed char>(-1),
+ 	'A', // 0001
+ 	'C', // 0010
+ 	'M', // 0011

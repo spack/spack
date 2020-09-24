@@ -6,7 +6,7 @@
 """
 This module contains all the elements that are required to create an
 architecture object. These include, the target processor, the operating system,
-and the architecture platform (i.e. cray, darwin, linux, bgq, etc) classes.
+and the architecture platform (i.e. cray, darwin, linux, etc) classes.
 
 On a multiple architecture machine, the architecture spec field can be set to
 build a package against any target and operating system that is present on the
@@ -209,14 +209,15 @@ class Target(object):
         compiler_version = compiler.version
         version_number, suffix = cpu.version_components(compiler.version)
         if not version_number or suffix not in ('', 'apple'):
-            # Try to deduce the correct version. Depending on where this
-            # function is called we might get either a CompilerSpec or a
-            # fully fledged compiler object
+            # Try to deduce the underlying version of the compiler, regardless
+            # of its name in compilers.yaml. Depending on where this function
+            # is called we might get either a CompilerSpec or a fully fledged
+            # compiler object.
             import spack.spec
             if isinstance(compiler, spack.spec.CompilerSpec):
                 compiler = spack.compilers.compilers_for_spec(compiler).pop()
             try:
-                compiler_version = compiler.cc_version(compiler.cc)
+                compiler_version = compiler.real_version
             except spack.util.executable.ProcessError as e:
                 # log this and just return compiler.version instead
                 tty.debug(str(e))
@@ -232,10 +233,14 @@ class Platform(object):
         Will return a instance of it once it is returned.
     """
 
-    priority        = None  # Subclass sets number. Controls detection order
+    priority        = None   # Subclass sets number. Controls detection order
+
+    #: binary formats used on this platform; used by relocation logic
+    binary_formats  = ['elf']
+
     front_end       = None
     back_end        = None
-    default         = None  # The default back end target. On cray ivybridge
+    default         = None   # The default back end target. On cray ivybridge
 
     front_os        = None
     back_os         = None
@@ -435,6 +440,12 @@ class Arch(object):
             ('target', self.target.to_dict_or_value())])
         return syaml_dict([('arch', d)])
 
+    def to_spec(self):
+        """Convert this Arch to an anonymous Spec with architecture defined."""
+        spec = spack.spec.Spec()
+        spec.architecture = spack.spec.ArchSpec(str(self))
+        return spec
+
     @staticmethod
     def from_dict(d):
         spec = spack.spec.ArchSpec.from_dict(d)
@@ -517,6 +528,14 @@ def platform():
 
 
 @memoized
+def default_arch():
+    """Default ``Arch`` object for this machine.
+
+    See ``sys_type()``.
+    """
+    return Arch(platform(), 'default_os', 'default_target')
+
+
 def sys_type():
     """Print out the "default" platform-os-target tuple for this machine.
 
@@ -529,8 +548,7 @@ def sys_type():
     architectures.
 
     """
-    arch = Arch(platform(), 'default_os', 'default_target')
-    return str(arch)
+    return str(default_arch())
 
 
 @memoized

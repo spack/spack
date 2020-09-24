@@ -25,12 +25,15 @@ class Scorep(AutotoolsPackage):
     version('1.4.2', sha256='d7f3fcca2efeb2f5d5b5f183b3b2c4775e66cbb3400ea2da841dd0428713ebac')
     version('1.3',   sha256='dcfd42bd05f387748eeefbdf421cb3cd98ed905e009303d70b5f75b217fd1254')
 
-    patch('gcc7.patch', when='@:3')
+    patch('gcc7.patch', when='@1.4:3')
+    patch('gcc10.patch', when='@3.1:')
 
     variant('mpi', default=True, description="Enable MPI support")
     variant('papi', default=True, description="Enable PAPI")
     variant('pdt', default=False, description="Enable PDT")
     variant('shmem', default=False, description='Enable shmem tracing')
+    variant('unwind', default=False,
+            description="Enable sampling via libunwind and lib wrapping")
 
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
@@ -63,6 +66,8 @@ class Scorep(AutotoolsPackage):
     depends_on('mpi', when="+mpi")
     depends_on('papi', when="+papi")
     depends_on('pdt', when="+pdt")
+    depends_on('llvm', when="+unwind")
+    depends_on('libunwind', when="+unwind")
 
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
@@ -95,6 +100,10 @@ class Scorep(AutotoolsPackage):
         if "+pdt" in spec:
             config_args.append("--with-pdt=%s" % spec['pdt'].prefix.bin)
 
+        if "+unwind" in spec:
+            config_args.append("--with-libunwind=%s" %
+                               spec['libunwind'].prefix)
+
         config_args += self.with_or_without('shmem')
         config_args += self.with_or_without('mpi')
 
@@ -106,8 +115,8 @@ class Scorep(AutotoolsPackage):
             config_args.append('--with-mpi=openmpi')
 
         config_args.extend([
-            'CFLAGS={0}'.format(self.compiler.pic_flag),
-            'CXXFLAGS={0}'.format(self.compiler.pic_flag)
+            'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
+            'CXXFLAGS={0}'.format(self.compiler.cxx_pic_flag)
         ])
 
         if "+mpi" in spec:

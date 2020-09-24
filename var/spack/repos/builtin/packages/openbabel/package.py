@@ -31,9 +31,13 @@ class Openbabel(CMakePackage):
     depends_on('swig@2.0:', type='build', when='+python')
     depends_on('boost')
     depends_on('cairo')       # required to support PNG depiction
+    depends_on('pango')       # custom cairo requires custom pango
     depends_on('eigen@3.0:')  # required if using the language bindings
     depends_on('libxml2')     # required to read/write CML files, XML formats
     depends_on('zlib')        # required to support reading gzipped files
+    depends_on('rapidjson')   # required to support JSON
+    depends_on('libsm')
+    depends_on('uuid')
 
     # Needed for Python 3.6 support
     patch('python-3.6-rtld-global.patch', when='@:2.4.1+python')
@@ -53,6 +57,8 @@ class Openbabel(CMakePackage):
             ])
         else:
             args.append('-DPYTHON_BINDINGS=OFF')
+
+        args.append('-DWITH_MAEPARSER=OFF')  # maeparser is currently broken
 
         return args
 

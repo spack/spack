@@ -142,18 +142,55 @@ class TestTcl(object):
         assert len([x for x in content if 'is-loaded' in x]) == 1
         assert len([x for x in content if 'module load ' in x]) == 1
 
-    def test_naming_scheme(self, factory, module_configuration):
+    def test_naming_scheme_compat(self, factory, module_configuration):
+        """Tests backwards compatibility for naming_scheme key"""
+        module_configuration('naming_scheme')
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory('mpileaks')
+        expected = {
+            'all': '{name}/{version}-{compiler.name}'
+        }
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections['all'])
+        assert projection in writer.layout.use_name
+
+    def test_projections_specific(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
 
         # This configuration has no error, so check the conflicts directives
         # are there
-        module_configuration('conflicts')
+        module_configuration('projections')
 
         # Test we read the expected configuration for the naming scheme
         writer, _ = factory('mpileaks')
-        expected = '{name}/{version}-{compiler.name}'
+        expected = {
+            'all': '{name}/{version}-{compiler.name}',
+            'mpileaks': '{name}-mpiprojection'
+        }
 
-        assert writer.conf.naming_scheme == expected
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections['mpileaks'])
+        assert projection in writer.layout.use_name
+
+    def test_projections_all(self, factory, module_configuration):
+        """Tests reading the correct naming scheme."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration('projections')
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory('libelf')
+        expected = {
+            'all': '{name}/{version}-{compiler.name}',
+            'mpileaks': '{name}-mpiprojection'
+        }
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections['all'])
+        assert projection in writer.layout.use_name
 
     def test_invalid_naming_scheme(self, factory, module_configuration):
         """Tests the evaluation of an invalid naming scheme."""
@@ -199,6 +236,7 @@ class TestTcl(object):
 
         w1, s1 = factory('mpileaks')
         w2, s2 = factory('callpath')
+        w3, s3 = factory('openblas')
 
         test_root = str(tmpdir_factory.mktemp('module-root'))
 
@@ -209,6 +247,22 @@ class TestTcl(object):
         assert index[s1.dag_hash()].use_name == w1.layout.use_name
         assert index[s2.dag_hash()].path == w2.layout.filename
 
+        spack.modules.common.generate_module_index(test_root, [w3])
+
+        index = spack.modules.common.read_module_index(test_root)
+
+        assert len(index) == 3
+        assert index[s1.dag_hash()].use_name == w1.layout.use_name
+        assert index[s2.dag_hash()].path == w2.layout.filename
+
+        spack.modules.common.generate_module_index(
+            test_root, [w3], overwrite=True)
+
+        index = spack.modules.common.read_module_index(test_root)
+
+        assert len(index) == 1
+        assert index[s3.dag_hash()].use_name == w3.layout.use_name
+
     def test_suffixes(self, module_configuration, factory):
         """Tests adding suffixes to module file name."""
         module_configuration('suffix')
@@ -218,7 +272,11 @@ class TestTcl(object):
         assert 'foo-foo' not in writer.layout.use_name
 
         writer, spec = factory('mpileaks~debug arch=x86-linux')
-        assert 'bar-foo' in writer.layout.use_name
+        assert 'foo-bar' in writer.layout.use_name
+        assert 'baz' not in writer.layout.use_name
+
+        writer, spec = factory('mpileaks~debug+opt arch=x86-linux')
+        assert 'baz-foo-bar' in writer.layout.use_name
 
     def test_setup_environment(self, modulefile_content, module_configuration):
         """Tests the internal set-up of run-time environment."""
@@ -239,6 +297,20 @@ class TestTcl(object):
         assert len(
             [x for x in content if 'setenv FOOBAR "callpath"' in x]
         ) == 1
+
+    def test_override_config(self, module_configuration, factory):
+        """Tests overriding some sections of the configuration file."""
+        module_configuration('override_config')
+
+        writer, spec = factory('mpileaks~opt arch=x86-linux')
+        assert 'mpich-static' in writer.layout.use_name
+        assert 'over' not in writer.layout.use_name
+        assert 'ridden' not in writer.layout.use_name
+
+        writer, spec = factory('mpileaks+opt arch=x86-linux')
+        assert 'over-ridden' in writer.layout.use_name
+        assert 'mpich' not in writer.layout.use_name
+        assert 'static' not in writer.layout.use_name
 
     def test_override_template_in_package(
             self, modulefile_content, module_configuration

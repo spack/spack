@@ -3,10 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-import os
-
 
 class Superlu(Package):
     """SuperLU is a general purpose library for the direct solution of large,
@@ -64,19 +60,19 @@ class Superlu(Package):
             'ARCH       = ar',
             'ARCHFLAGS  = cr',
             'RANLIB     = {0}'.format('ranlib' if which('ranlib') else 'echo'),
-            'CC         = {0}'.format(os.environ['CC']),
-            'FORTRAN    = {0}'.format(os.environ['FC']),
-            'LOADER     = {0}'.format(os.environ['CC']),
+            'CC         = {0}'.format(env['CC']),
+            'FORTRAN    = {0}'.format(env['FC']),
+            'LOADER     = {0}'.format(env['CC']),
             'CDEFS      = -DAdd_'
         ])
 
         if '+pic' in spec:
             config.extend([
                 # Use these lines instead when pic_flag capability arrives
-                'CFLAGS     = -O3 {0}'.format(self.compiler.pic_flag),
-                'NOOPTS     = {0}'.format(self.compiler.pic_flag),
-                'FFLAGS     = -O2 {0}'.format(self.compiler.pic_flag),
-                'LOADOPTS   = {0}'.format(self.compiler.pic_flag)
+                'CFLAGS     = -O3 {0}'.format(self.compiler.cc_pic_flag),
+                'NOOPTS     = {0}'.format(self.compiler.cc_pic_flag),
+                'FFLAGS     = -O2 {0}'.format(self.compiler.f77_pic_flag),
+                'LOADOPTS   = {0}'.format(self.compiler.cc_pic_flag)
             ])
         else:
             config.extend([
@@ -95,7 +91,5 @@ class Superlu(Package):
 
         # Install manually
         install_tree('lib', prefix.lib)
-        headers = glob.glob(join_path('SRC', '*.h'))
         mkdir(prefix.include)
-        for h in headers:
-            install(h, prefix.include)
+        install(join_path('SRC', '*.h'), prefix.include)

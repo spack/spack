@@ -16,22 +16,20 @@ import shutil
 import stat
 import sys
 import traceback
-
-from six import string_types, add_metaclass
+import types
 
 try:
     from collections.abc import Mapping  # novm
 except ImportError:
     from collections import Mapping
 
-from types import ModuleType
+import six
 
 import ruamel.yaml as yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, install
-
+import llnl.util.filesystem as fs
 import spack.config
 import spack.caches
 import spack.error
@@ -39,11 +37,9 @@ import spack.patch
 import spack.spec
 import spack.util.spack_json as sjson
 import spack.util.imp as simp
-from spack.provider_index import ProviderIndex
-from spack.util.path import canonicalize_path
-from spack.util.naming import NamespaceTrie, valid_module_name
-from spack.util.naming import mod_to_class, possible_spack_module_names
-
+import spack.provider_index
+import spack.util.path
+import spack.util.naming as nm
 
 #: Super-namespace for all packages.
 #: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
@@ -95,7 +91,7 @@ def autospec(function):
     return converter
 
 
-class SpackNamespace(ModuleType):
+class SpackNamespace(types.ModuleType):
     """ Allow lazy loading of modules."""
 
     def __init__(self, namespace):
@@ -151,7 +147,7 @@ class FastPackageChecker(Mapping):
             pkg_dir = os.path.join(self.packages_path, pkg_name)
 
             # Warn about invalid names that look like packages.
-            if not valid_module_name(pkg_name):
+            if not nm.valid_module_name(pkg_name):
                 if not pkg_name.startswith('.'):
                     tty.warn('Skipping package at {0}. "{1}" is not '
                              'a valid Spack module name.'.format(
@@ -244,10 +240,11 @@ class TagIndex(Mapping):
 
         # Add it again under the appropriate tags
         for tag in getattr(package, 'tags', []):
+            tag = tag.lower()
             self._tag_dict[tag].append(package.name)
 
 
-@add_metaclass(abc.ABCMeta)
+@six.add_metaclass(abc.ABCMeta)
 class Indexer(object):
     """Adaptor for indexes that need to be generated when repos are updated."""
 
@@ -305,10 +302,10 @@ class TagIndexer(Indexer):
 class ProviderIndexer(Indexer):
     """Lifecycle methods for virtual package providers."""
     def _create(self):
-        return ProviderIndex()
+        return spack.provider_index.ProviderIndex()
 
     def read(self, stream):
-        self.index = ProviderIndex.from_json(stream)
+        self.index = spack.provider_index.ProviderIndex.from_json(stream)
 
     def update(self, pkg_fullname):
         self.index.remove_provider(pkg_fullname)
@@ -447,7 +444,7 @@ class RepoPath(object):
 
     def __init__(self, *repos):
         self.repos = []
-        self.by_namespace = NamespaceTrie()
+        self.by_namespace = nm.NamespaceTrie()
 
         self._all_package_names = None
         self._provider_index = None
@@ -456,7 +453,7 @@ class RepoPath(object):
         # Add each repo to this path.
         for repo in repos:
             try:
-                if isinstance(repo, string_types):
+                if isinstance(repo, six.string_types):
                     repo = Repo(repo)
                 self.put_last(repo)
             except RepoError as e:
@@ -544,7 +541,7 @@ class RepoPath(object):
     def provider_index(self):
         """Merged ProviderIndex from all Repos in the RepoPath."""
         if self._provider_index is None:
-            self._provider_index = ProviderIndex()
+            self._provider_index = spack.provider_index.ProviderIndex()
             for repo in reversed(self.repos):
                 self._provider_index.merge(repo.provider_index)
 
@@ -707,7 +704,7 @@ class Repo(object):
         """
         # Root directory, containing _repo.yaml and package dirs
         # Allow roots to by spack-relative by starting with '$spack'
-        self.root = canonicalize_path(root)
+        self.root = spack.util.path.canonicalize_path(root)
 
         # check and raise BadRepoError on fail.
         def check(condition, msg):
@@ -762,8 +759,8 @@ class Repo(object):
 
         """
         parent = None
-        for l in range(1, len(self._names) + 1):
-            ns = '.'.join(self._names[:l])
+        for i in range(1, len(self._names) + 1):
+            ns = '.'.join(self._names[:i])
 
             if ns not in sys.modules:
                 module = SpackNamespace(ns)
@@ -776,7 +773,7 @@ class Repo(object):
                 # This ensures that we can do things like:
                 #    import spack.pkg.builtin.mpich as mpich
                 if parent:
-                    modname = self._names[l - 1]
+                    modname = self._names[i - 1]
                     setattr(parent, modname, module)
             else:
                 # no need to set up a module
@@ -803,7 +800,7 @@ class Repo(object):
         if import_name in self:
             return import_name
 
-        options = possible_spack_module_names(import_name)
+        options = nm.possible_spack_module_names(import_name)
         options.remove(import_name)
         for name in options:
             if name in self:
@@ -885,9 +882,7 @@ class Repo(object):
             raise UnknownPackageError(spec.name)
 
         if spec.namespace and spec.namespace != self.namespace:
-            raise UnknownPackageError(
-                "Repository %s does not contain package %s"
-                % (self.namespace, spec.fullname))
+            raise UnknownPackageError(spec.name, self.namespace)
 
         package_class = self.get_pkg_class(spec.name)
         try:
@@ -921,18 +916,18 @@ class Repo(object):
                 % (self.namespace, spec.fullname))
 
         # Install patch files needed by the package.
-        mkdirp(path)
+        fs.mkdirp(path)
         for patch in itertools.chain.from_iterable(
                 spec.package.patches.values()):
 
             if patch.path:
                 if os.path.exists(patch.path):
-                    install(patch.path, path)
+                    fs.install(patch.path, path)
                 else:
                     tty.warn("Patch file did not exist: %s" % patch.path)
 
         # Install the package.py file itself.
-        install(self.filename_for_package_name(spec.name), path)
+        fs.install(self.filename_for_package_name(spec.name), path)
 
     def purge(self):
         """Clear entire package instance cache."""
@@ -1006,6 +1001,7 @@ class Repo(object):
         index = self.tag_index
 
         for t in tags:
+            t = t.lower()
             v &= set(index[t])
 
         return sorted(v)
@@ -1082,7 +1078,7 @@ class Repo(object):
             raise InvalidNamespaceError('Invalid namespace for %s repo: %s'
                                         % (self.namespace, namespace))
 
-        class_name = mod_to_class(pkg_name)
+        class_name = nm.mod_to_class(pkg_name)
         module = self._get_pkg_module(pkg_name)
 
         cls = getattr(module, class_name)
@@ -1107,7 +1103,7 @@ def create_repo(root, namespace=None):
        If the namespace is not provided, use basename of root.
        Return the canonicalized path and namespace of the created repository.
     """
-    root = canonicalize_path(root)
+    root = spack.util.path.canonicalize_path(root)
     if not namespace:
         namespace = os.path.basename(root)
 
@@ -1141,7 +1137,7 @@ def create_repo(root, namespace=None):
         config_path = os.path.join(root, repo_config_name)
         packages_path = os.path.join(root, packages_dir_name)
 
-        mkdirp(packages_path)
+        fs.mkdirp(packages_path)
         with open(config_path, 'w') as config:
             config.write("repo:\n")
             config.write("  namespace: '%s'\n" % namespace)
@@ -1163,7 +1159,7 @@ def create_repo(root, namespace=None):
 def create_or_construct(path, namespace=None):
     """Create a repository, or just return a Repo if it already exists."""
     if not os.path.exists(path):
-        mkdirp(path)
+        fs.mkdirp(path)
         create_repo(path, namespace)
     return Repo(path)
 
@@ -1273,16 +1269,22 @@ class UnknownPackageError(UnknownEntityError):
 
     def __init__(self, name, repo=None):
         msg = None
-        if repo:
-            msg = "Package '%s' not found in repository '%s'" % (name, repo)
-        else:
-            msg = "Package '%s' not found." % name
-
-        # special handling for specs that may have been intended as filenames
-        # prompt the user to ask whether they intended to write './<name>'
         long_msg = None
-        if name.endswith(".yaml"):
-            long_msg = "Did you mean to specify a filename with './%s'?" % name
+        if name:
+            if repo:
+                msg = "Package '{0}' not found in repository '{1}'"
+                msg = msg.format(name, repo)
+            else:
+                msg = "Package '{0}' not found.".format(name)
+
+            # Special handling for specs that may have been intended as
+            # filenames: prompt the user to ask whether they intended to write
+            # './<name>'.
+            if name.endswith(".yaml"):
+                long_msg = "Did you mean to specify a filename with './{0}'?"
+                long_msg = long_msg.format(name)
+        else:
+            msg = "Attempting to retrieve anonymous package."
 
         super(UnknownPackageError, self).__init__(msg, long_msg)
         self.name = name

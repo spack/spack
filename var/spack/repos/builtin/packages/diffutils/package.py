@@ -18,7 +18,7 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
-    depends_on('libiconv')
+    depends_on('iconv')
 
     def setup_build_environment(self, env):
         if self.spec.satisfies('%fj'):

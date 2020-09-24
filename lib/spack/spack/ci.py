@@ -4,9 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import base64
+import copy
 import datetime
 import json
 import os
+import re
 import shutil
 import tempfile
 import zlib
@@ -24,18 +26,21 @@ import spack.cmd.buildcache as buildcache
 import spack.compilers as compilers
 import spack.config as cfg
 import spack.environment as ev
-from spack.dependency import all_deptypes
 from spack.error import SpackError
 import spack.hash_types as ht
-from spack.main import SpackCommand
+import spack.main
 import spack.repo
 from spack.spec import Spec
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
 
 
-spack_gpg = SpackCommand('gpg')
-spack_compiler = SpackCommand('compiler')
+JOB_RETRY_CONDITIONS = [
+    'always',
+]
+
+spack_gpg = spack.main.SpackCommand('gpg')
+spack_compiler = spack.main.SpackCommand('compiler')
 
 
 class TemporaryDirectory(object):
@@ -342,25 +347,24 @@ def compute_spec_deps(spec_list):
            ],
            "specs": [
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "readline@7.0%clang@9.1.0-apple arch=darwin-highs...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-highs...",
                  "label": "readline/ip6aiun"
                },
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "ncurses@6.1%clang@9.1.0-apple arch=darwin-highsi...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "ncurses@6.1%apple-clang@9.1.0 arch=darwin-highsi...",
                  "label": "ncurses/y43rifz"
                },
                {
-                 "root_spec": "readline@7.0%clang@9.1.0-apple arch=darwin-...",
-                 "spec": "pkgconf@1.5.4%clang@9.1.0-apple arch=darwin-high...",
+                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
+                 "spec": "pkgconf@1.5.4%apple-clang@9.1.0 arch=darwin-high...",
                  "label": "pkgconf/eg355zb"
                }
            ]
        }
 
     """
-    deptype = all_deptypes
     spec_labels = {}
 
     specs = []
@@ -380,7 +384,7 @@ def compute_spec_deps(spec_list):
 
         rkey, rlabel = spec_deps_key_label(spec)
 
-        for s in spec.traverse(deptype=deptype):
+        for s in spec.traverse(deptype=all):
             if s.external:
                 tty.msg('Will not stage external pkg: {0}'.format(s))
                 continue
@@ -392,7 +396,7 @@ def compute_spec_deps(spec_list):
             }
             append_dep(rlabel, slabel)
 
-            for d in s.dependencies(deptype=deptype):
+            for d in s.dependencies(deptype=all):
                 dkey, dlabel = spec_deps_key_label(d)
                 if d.external:
                     tty.msg('Will not stage external dep: {0}'.format(d))
@@ -400,11 +404,11 @@ def compute_spec_deps(spec_list):
 
                 append_dep(slabel, dlabel)
 
-    for l, d in spec_labels.items():
+    for spec_label, spec_holder in spec_labels.items():
         specs.append({
-            'label': l,
-            'spec': d['spec'],
-            'root_spec': d['root'],
+            'label': spec_label,
+            'spec': spec_holder['spec'],
+            'root_spec': spec_holder['root'],
         })
 
     deps_json_obj = {
@@ -419,20 +423,76 @@ def spec_matches(spec, match_string):
     return spec.satisfies(match_string)
 
 
-def find_matching_config(spec, ci_mappings):
+def copy_attributes(attrs_list, src_dict, dest_dict):
+    for runner_attr in attrs_list:
+        if runner_attr in src_dict:
+            if runner_attr in dest_dict and runner_attr == 'tags':
+                # For 'tags', we combine the lists of tags, while
+                # avoiding duplicates
+                for tag in src_dict[runner_attr]:
+                    if tag not in dest_dict[runner_attr]:
+                        dest_dict[runner_attr].append(tag)
+            elif runner_attr in dest_dict and runner_attr == 'variables':
+                # For 'variables', we merge the dictionaries.  Any conflicts
+                # (i.e. 'runner-attributes' has same variable key as the
+                # higher level) we resolve by keeping the more specific
+                # 'runner-attributes' version.
+                for src_key, src_val in src_dict[runner_attr].items():
+                    dest_dict[runner_attr][src_key] = copy.deepcopy(
+                        src_dict[runner_attr][src_key])
+            else:
+                dest_dict[runner_attr] = copy.deepcopy(src_dict[runner_attr])
+
+
+def find_matching_config(spec, gitlab_ci):
+    runner_attributes = {}
+    overridable_attrs = [
+        'image',
+        'tags',
+        'variables',
+        'before_script',
+        'script',
+        'after_script',
+    ]
+
+    copy_attributes(overridable_attrs, gitlab_ci, runner_attributes)
+
+    ci_mappings = gitlab_ci['mappings']
     for ci_mapping in ci_mappings:
         for match_string in ci_mapping['match']:
             if spec_matches(spec, match_string):
-                return ci_mapping['runner-attributes']
-    return None
+                if 'runner-attributes' in ci_mapping:
+                    copy_attributes(overridable_attrs,
+                                    ci_mapping['runner-attributes'],
+                                    runner_attributes)
+                return runner_attributes
+    else:
+        return None
+
+    return runner_attributes
 
 
 def pkg_name_from_spec_label(spec_label):
     return spec_label[:spec_label.index('/')]
 
 
+def format_job_needs(phase_name, strip_compilers, dep_jobs,
+                     osname, build_group, enable_artifacts_buildcache):
+    needs_list = []
+    for dep_job in dep_jobs:
+        needs_list.append({
+            'job': get_job_name(phase_name,
+                                strip_compilers,
+                                dep_job,
+                                osname,
+                                build_group),
+            'artifacts': enable_artifacts_buildcache,
+        })
+    return needs_list
+
+
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
-                            custom_spack_repo=None, custom_spack_ref=None):
+                            run_optimizer=False, use_dependencies=False):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
     with spack.concretize.disable_compiler_existence_check():
@@ -444,7 +504,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         tty.die('Environment yaml does not have "gitlab-ci" section')
 
     gitlab_ci = yaml_root['gitlab-ci']
-    ci_mappings = gitlab_ci['mappings']
 
     final_job_config = None
     if 'final-stage-rebuild-index' in gitlab_ci:
@@ -466,22 +525,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             tty.verbose("Using CDash auth token from environment")
             cdash_auth_token = os.environ.get('SPACK_CDASH_AUTH_TOKEN')
 
-    # Make sure we use a custom spack if necessary
-    before_script = None
-    after_script = None
-    if custom_spack_repo:
-        if not custom_spack_ref:
-            custom_spack_ref = 'master'
-        before_script = [
-            ('git clone "{0}" --branch "{1}" --depth 1 '
-             '--single-branch'.format(custom_spack_repo, custom_spack_ref)),
-            # Next line just shows spack version in pipeline output
-            'pushd ./spack && git rev-parse HEAD && popd',
-            '. "./spack/share/spack/setup-env.sh"',
-        ]
-        after_script = [
-            'rm -rf "./spack"'
-        ]
+    is_pr_pipeline = (
+        os.environ.get('SPACK_IS_PR_PIPELINE', '').lower() == 'true'
+    )
 
     ci_mirrors = yaml_root['mirrors']
     mirror_urls = [url for url in ci_mirrors.values()]
@@ -538,6 +584,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
     stage_names = []
 
+    max_length_needs = 0
+    max_needs_job = ''
+
     for phase in phases:
         phase_name = phase['name']
         strip_compilers = phase['strip-compilers']
@@ -556,7 +605,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 release_spec = root_spec[pkg_name]
 
                 runner_attribs = find_matching_config(
-                    release_spec, ci_mappings)
+                    release_spec, gitlab_ci)
 
                 if not runner_attribs:
                     tty.warn('No match found for {0}, skipping it'.format(
@@ -580,15 +629,26 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     except AttributeError:
                         image_name = build_image
 
+                job_script = [
+                    'spack env activate --without-view .',
+                    'spack ci rebuild',
+                ]
+                if 'script' in runner_attribs:
+                    job_script = [s for s in runner_attribs['script']]
+
+                before_script = None
+                if 'before_script' in runner_attribs:
+                    before_script = [
+                        s for s in runner_attribs['before_script']
+                    ]
+
+                after_script = None
+                if 'after_script' in runner_attribs:
+                    after_script = [s for s in runner_attribs['after_script']]
+
                 osname = str(release_spec.architecture)
                 job_name = get_job_name(phase_name, strip_compilers,
                                         release_spec, osname, build_group)
-
-                debug_flag = ''
-                if 'enable-debug-messages' in gitlab_ci:
-                    debug_flag = '-d '
-
-                job_scripts = ['spack {0}ci rebuild'.format(debug_flag)]
 
                 compiler_action = 'NONE'
                 if len(phases) > 1:
@@ -601,25 +661,35 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                         root_spec, main_phase, strip_compilers),
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
                     'SPACK_COMPILER_ACTION': compiler_action,
+                    'SPACK_IS_PR_PIPELINE': str(is_pr_pipeline),
                 }
 
                 job_dependencies = []
                 if spec_label in dependencies:
-                    for dep_label in dependencies[spec_label]:
-                        dep_pkg = pkg_name_from_spec_label(dep_label)
-                        dep_spec = spec_labels[dep_label]['rootSpec'][dep_pkg]
-                        dep_job_name = get_job_name(
-                            phase_name, strip_compilers, dep_spec, osname,
-                            build_group)
-                        job_dependencies.append(dep_job_name)
+                    if enable_artifacts_buildcache:
+                        dep_jobs = [
+                            d for d in release_spec.traverse(deptype=all,
+                                                             root=False)
+                        ]
+                    else:
+                        dep_jobs = []
+                        for dep_label in dependencies[spec_label]:
+                            dep_pkg = pkg_name_from_spec_label(dep_label)
+                            dep_root = spec_labels[dep_label]['rootSpec']
+                            dep_jobs.append(dep_root[dep_pkg])
+
+                    job_dependencies.extend(
+                        format_job_needs(phase_name, strip_compilers, dep_jobs,
+                                         osname, build_group,
+                                         enable_artifacts_buildcache))
 
                 # This next section helps gitlab make sure the right
                 # bootstrapped compiler exists in the artifacts buildcache by
                 # creating an artificial dependency between this spec and its
                 # compiler.  So, if we are in the main phase, and if the
                 # compiler we are supposed to use is listed in any of the
-                # bootstrap spec lists, then we will add one more dependency to
-                # "job_dependencies" (that compiler).
+                # bootstrap spec lists, then we will add more dependencies to
+                # the job (that compiler and maybe it's dependencies as well).
                 if is_main_phase(phase_name):
                     compiler_pkg_spec = compilers.pkg_spec_for_compiler(
                         release_spec.compiler)
@@ -627,12 +697,25 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                         bs_arch = bs['spec'].architecture
                         if (bs['spec'].satisfies(compiler_pkg_spec) and
                             bs_arch == release_spec.architecture):
-                            c_job_name = get_job_name(bs['phase-name'],
-                                                      bs['strip-compilers'],
-                                                      bs['spec'],
-                                                      str(bs_arch),
-                                                      build_group)
-                            job_dependencies.append(c_job_name)
+                            # We found the bootstrap compiler this release spec
+                            # should be built with, so for DAG scheduling
+                            # purposes, we will at least add the compiler spec
+                            # to the jobs "needs".  But if artifact buildcache
+                            # is enabled, we'll have to add all transtive deps
+                            # of the compiler as well.
+                            dep_jobs = [bs['spec']]
+                            if enable_artifacts_buildcache:
+                                dep_jobs = [
+                                    d for d in bs['spec'].traverse(deptype=all)
+                                ]
+
+                            job_dependencies.extend(
+                                format_job_needs(bs['phase-name'],
+                                                 bs['strip-compilers'],
+                                                 dep_jobs,
+                                                 str(bs_arch),
+                                                 build_group,
+                                                 enable_artifacts_buildcache))
 
                 if enable_cdash_reporting:
                     cdash_build_name = get_cdash_build_name(
@@ -647,7 +730,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
                     job_vars['SPACK_CDASH_BUILD_NAME'] = cdash_build_name
                     job_vars['SPACK_RELATED_BUILDS_CDASH'] = ';'.join(
-                        related_builds)
+                        sorted(related_builds))
 
                 variables.update(job_vars)
 
@@ -657,19 +740,33 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 ]
 
                 if enable_artifacts_buildcache:
-                    artifact_paths.append('local_mirror/build_cache')
+                    bc_root = 'local_mirror/build_cache'
+                    artifact_paths.extend([os.path.join(bc_root, p) for p in [
+                        bindist.tarball_name(release_spec, '.spec.yaml'),
+                        bindist.tarball_name(release_spec, '.cdashid'),
+                        bindist.tarball_directory_name(release_spec),
+                    ]])
 
                 job_object = {
                     'stage': stage_name,
                     'variables': variables,
-                    'script': job_scripts,
+                    'script': job_script,
                     'tags': tags,
                     'artifacts': {
                         'paths': artifact_paths,
                         'when': 'always',
                     },
-                    'dependencies': job_dependencies,
+                    'needs': sorted(job_dependencies, key=lambda d: d['job']),
+                    'retry': {
+                        'max': 2,
+                        'when': JOB_RETRY_CONDITIONS,
+                    }
                 }
+
+                length_needs = len(job_dependencies)
+                if length_needs > max_length_needs:
+                    max_length_needs = length_needs
+                    max_needs_job = job_name
 
                 if before_script:
                     job_object['before_script'] = before_script
@@ -691,6 +788,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     tty.debug('{0} build jobs generated in {1} stages'.format(
         job_id, stage_id))
 
+    tty.debug('The max_needs_job is {0}, with {1} needs'.format(
+        max_needs_job, max_length_needs))
+
     # Use "all_job_names" to populate the build group for this set
     if enable_cdash_reporting and cdash_auth_token:
         try:
@@ -701,7 +801,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     else:
         tty.warn('Unable to populate buildgroup without CDash credentials')
 
-    if final_job_config:
+    if final_job_config and not is_pr_pipeline:
         # Add an extra, final job to regenerate the index
         final_stage = 'stage-rebuild-index'
         final_job = {
@@ -721,8 +821,42 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
     output_object['stages'] = stage_names
 
+    # Capture the version of spack used to generate the pipeline, transform it
+    # into a value that can be passed to "git checkout", and save it in a
+    # global yaml variable
+    spack_version = spack.main.get_version()
+    version_to_clone = None
+    v_match = re.match(r"^\d+\.\d+\.\d+$", spack_version)
+    if v_match:
+        version_to_clone = 'v{0}'.format(v_match.group(0))
+    else:
+        v_match = re.match(r"^[^-]+-[^-]+-([a-f\d]+)$", spack_version)
+        if v_match:
+            version_to_clone = v_match.group(1)
+        else:
+            version_to_clone = spack_version
+
+    output_object['variables'] = {
+        'SPACK_VERSION': spack_version,
+        'SPACK_CHECKOUT_VERSION': version_to_clone,
+    }
+
+    sorted_output = {}
+    for output_key, output_value in sorted(output_object.items()):
+        sorted_output[output_key] = output_value
+
+    # TODO(opadron): remove this or refactor
+    if run_optimizer:
+        import spack.ci_optimization as ci_opt
+        sorted_output = ci_opt.optimizer(sorted_output)
+
+    # TODO(opadron): remove this or refactor
+    if use_dependencies:
+        import spack.ci_needs_workaround as cinw
+        sorted_output = cinw.needs_to_dependencies(sorted_output)
+
     with open(output_file, 'w') as outf:
-        outf.write(syaml.dump_config(output_object, default_flow_style=True))
+        outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
 
 
 def url_encode_string(input_string):
@@ -947,9 +1081,9 @@ def read_cdashid_from_mirror(spec, mirror_url):
 def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id):
     if mirror_url:
         tty.debug('Creating buildcache')
-        buildcache._createtarball(env, yaml_path, None, True, False,
-                                  mirror_url, None, True, False, False, True,
-                                  False)
+        buildcache._createtarball(env, spec_yaml=yaml_path, add_deps=False,
+                                  output_location=mirror_url, force=True,
+                                  allow_root=True)
         if build_id:
             tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
                 build_id, mirror_url))
@@ -962,17 +1096,10 @@ def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
         tty.debug('job package: {0}'.format(job_pkg))
         stage_dir = job_pkg.stage.path
         tty.debug('stage dir: {0}'.format(stage_dir))
-        build_env_src = os.path.join(stage_dir, 'spack-build-env.txt')
         build_out_src = os.path.join(stage_dir, 'spack-build-out.txt')
-        build_env_dst = os.path.join(
-            job_log_dir, 'spack-build-env.txt')
         build_out_dst = os.path.join(
             job_log_dir, 'spack-build-out.txt')
-        tty.debug('Copying logs to artifacts:')
-        tty.debug('  1: {0} -> {1}'.format(
-            build_env_src, build_env_dst))
-        shutil.copyfile(build_env_src, build_env_dst)
-        tty.debug('  2: {0} -> {1}'.format(
+        tty.debug('Copying build log ({0}) to artifacts ({1})'.format(
             build_out_src, build_out_dst))
         shutil.copyfile(build_out_src, build_out_dst)
     except Exception as inst:

@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import sys
-
 
 class Gdal(AutotoolsPackage):
     """GDAL (Geospatial Data Abstraction Library) is a translator library for
@@ -18,7 +15,7 @@ class Gdal(AutotoolsPackage):
     """
 
     homepage   = "https://www.gdal.org/"
-    url        = "https://download.osgeo.org/gdal/3.0.4/gdal-3.0.4.tar.xz"
+    url        = "https://download.osgeo.org/gdal/3.1.3/gdal-3.1.3.tar.xz"
     list_url   = "https://download.osgeo.org/gdal/"
     list_depth = 1
 
@@ -29,6 +26,10 @@ class Gdal(AutotoolsPackage):
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
+    version('3.1.3',  sha256='161cf55371a143826f1d76ce566db1f0a666496eeb4371aed78b1642f219d51d')
+    version('3.1.2',  sha256='767c8d0dfa20ba3283de05d23a1d1c03a7e805d0ce2936beaff0bb7d11450641')
+    version('3.1.1',  sha256='97154a606339a6c1d87c80fb354d7456fe49828b2ef9a3bc9ed91771a03d2a04')
+    version('3.1.0',  sha256='e754a22242ccbec731aacdb2333b567d4c95b9b02d3ba1ea12f70508d244fcda')
     version('3.0.4',  sha256='5569a4daa1abcbba47a9d535172fc335194d9214fdb96cd0f139bb57329ae277')
     version('3.0.3',  sha256='e20add5802265159366f197a8bb354899e1693eab8dbba2208de14a457566109')
     version('3.0.2',  sha256='c3765371ce391715c8f28bd6defbc70b57aa43341f6e94605f04fe3c92468983')
@@ -88,6 +89,7 @@ class Gdal(AutotoolsPackage):
 
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
+    # extends('jdk', when='+java')
     # extends('perl', when='+perl')
     extends('python', when='+python')
 
@@ -107,7 +109,7 @@ class Gdal(AutotoolsPackage):
     # Optional dependencies
     depends_on('libtool', type='build', when='+libtool')
     depends_on('zlib', when='+libz')
-    depends_on('libiconv', when='+libiconv')
+    depends_on('iconv', when='+libiconv')
     depends_on('xz', when='+liblzma')
     depends_on('zstd', when='+zstd @2.3:')
     depends_on('postgresql', when='+pg')
@@ -146,7 +148,9 @@ class Gdal(AutotoolsPackage):
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
-    depends_on('java', type=('build', 'link', 'run'), when='+java')
+    depends_on('java@4:8', type=('build', 'link', 'run'), when='+java')
+    depends_on('ant', type='build', when='+java')
+    depends_on('swig', type='build', when='+java')
     depends_on('jackcess@1.2.0:1.2.999', type='run', when='+mdb')
     depends_on('armadillo', when='+armadillo')
     depends_on('cryptopp', when='+cryptopp @2.1:')
@@ -162,6 +166,12 @@ class Gdal(AutotoolsPackage):
 
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
+    executables = ['^gdal-config$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        return Executable(exe)('--version', output=str, error=str).rstrip()
+
     def setup_build_environment(self, env):
         # Needed to install Python bindings to GDAL installation
         # prefix instead of Python installation prefix.
@@ -169,9 +179,20 @@ class Gdal(AutotoolsPackage):
         env.set('PREFIX', self.prefix)
         env.set('DESTDIR', '/')
 
+    def setup_run_environment(self, env):
+        if '+java' in self.spec:
+            class_paths = find(self.prefix, '*.jar')
+            classpath = os.pathsep.join(class_paths)
+            env.prepend_path('CLASSPATH', classpath)
+
+    def patch(self):
+        if '+java platform=darwin' in self.spec:
+            filter_file('linux', 'darwin', 'swig/java/java.opt', string=True)
+
     # https://trac.osgeo.org/gdal/wiki/BuildHints
     def configure_args(self):
         spec = self.spec
+        libs = []
 
         # Required dependencies
         args = [
@@ -250,7 +271,7 @@ class Gdal(AutotoolsPackage):
 
         if '+libiconv' in spec:
             args.append('--with-libiconv-prefix={0}'.format(
-                spec['libiconv'].prefix))
+                spec['iconv'].prefix))
         else:
             args.append('--with-libiconv-prefix=no')
 
@@ -294,6 +315,9 @@ class Gdal(AutotoolsPackage):
         # https://trac.osgeo.org/gdal/wiki/HDF
         if '+hdf4' in spec:
             args.append('--with-hdf4={0}'.format(spec['hdf'].prefix))
+            hdf4 = self.spec['hdf']
+            if '+external-xdr' in hdf4 and hdf4['rpc'].name != 'libc':
+                libs.append(hdf4['rpc'].libs.link_flags)
         else:
             args.append('--with-hdf4=no')
 
@@ -393,6 +417,7 @@ class Gdal(AutotoolsPackage):
             args.append('--with-python=no')
 
         # https://trac.osgeo.org/gdal/wiki/GdalOgrInJava
+        # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
         if '+java' in spec:
             args.extend([
                 '--with-java={0}'.format(spec['java'].home),
@@ -480,7 +505,30 @@ class Gdal(AutotoolsPackage):
                 '--with-pdfium=no',
             ])
 
+        if libs:
+            args.append('LIBS=' + ' '.join(libs))
+
         return args
+
+    # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
+    def build(self, spec, prefix):
+        make()
+        if '+java' in spec:
+            with working_dir('swig/java'):
+                make()
+
+    def check(self):
+        # no top-level test target
+        if '+java' in self.spec:
+            with working_dir('swig/java'):
+                make('test')
+
+    def install(self, spec, prefix):
+        make('install')
+        if '+java' in spec:
+            with working_dir('swig/java'):
+                make('install')
+                install('*.jar', prefix)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
@@ -493,5 +541,5 @@ class Gdal(AutotoolsPackage):
     @run_after('install')
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
-        if sys.platform == 'darwin':
+        if 'platform=darwin' in self.spec:
             fix_darwin_install_name(self.prefix.lib)

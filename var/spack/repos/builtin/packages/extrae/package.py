@@ -35,7 +35,7 @@ class Extrae(AutotoolsPackage):
        OpenMP, CUDA, OpenCL, pthread, OmpSs"""
     homepage = "https://tools.bsc.es/extrae"
     url      = "https://ftp.tools.bsc.es/extrae/extrae-3.4.1-src.tar.bz2"
-    version('3.7.1', sha256='95810b057f95e91bfc89813eb8bd320dfe40614fc8e98c63d95c5101c56dd213')
+    version('3.7.1', sha256='c83ddd18a380c9414d64ee5de263efc6f7bac5fe362d5b8374170c7f18360378')
     version('3.4.1', sha256='77bfec16d6b5eee061fbaa879949dcef4cad28395d6a546b1ae1b9246f142725')
 
     depends_on("autoconf", type='build')
@@ -51,7 +51,7 @@ class Extrae(AutotoolsPackage):
     depends_on("elf", type="link")
     depends_on("libxml2")
     depends_on("numactl")
-    depends_on("binutils+libiberty")
+    depends_on("binutils+libiberty@:2.33")
     depends_on("gettext")
     # gettext dependency added to find -lintl
     # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined

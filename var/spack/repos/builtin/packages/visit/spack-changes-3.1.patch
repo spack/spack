@@ -1,0 +1,11 @@
+--- a/src/CMakeLists.txt	2019-08-11 17:06:04.000000000 -0400
++++ b/src/CMakeLists.txt	2019-08-11 17:06:20.000000000 -0400
+@@ -459,6 +459,7 @@
+     cmake_policy(SET CMP0033 OLD)
+     cmake_policy(SET CMP0057 NEW)
+     cmake_policy(SET CMP0062 NEW)
++    cmake_policy(SET CMP0068 NEW)
+     IF(WIN32)
+         # don't automatically link with qtmain
+         cmake_policy(SET CMP0020 OLD)
+

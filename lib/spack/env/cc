@@ -15,9 +15,9 @@
 # 1. It allows Spack to swap compilers into and out of builds easily.
 # 2. It adds several options to the compile line so that spack
 #    packages can find their dependencies at build time and run time:
-#      -I           arguments for dependency /include directories.
-#      -L           arguments for dependency /lib directories.
-#      -Wl,-rpath   arguments for dependency /lib directories.
+#      -I and/or -isystem arguments for dependency /include directories.
+#      -L                 arguments for dependency /lib directories.
+#      -Wl,-rpath         arguments for dependency /lib directories.
 #
 
 # This is an array of environment variables that need to be set before
@@ -251,10 +251,11 @@ input_command="$*"
 #
 # Parse the command line arguments.
 #
-# We extract -L, -I, and -Wl,-rpath arguments from the command line and
-# recombine them with Spack arguments later.  We parse these out so that
-# we can make sure that system paths come last, that package arguments
-# come first, and that Spack arguments are injected properly.
+# We extract -L, -I, -isystem and -Wl,-rpath arguments from the
+# command line and recombine them with Spack arguments later.  We
+# parse these out so that we can make sure that system paths come
+# last, that package arguments come first, and that Spack arguments
+# are injected properly.
 #
 # All other arguments, including -l arguments, are treated as
 # 'other_args' and left in their original order.  This ensures that
@@ -273,12 +274,24 @@ system_libdirs=()
 system_rpaths=()
 libs=()
 other_args=()
+isystem_system_includes=()
+isystem_includes=()
 
 while [ -n "$1" ]; do
     # an RPATH to be added after the case statement.
     rp=""
 
     case "$1" in
+        -isystem*)
+            arg="${1#-isystem}"
+	    isystem_was_used=true
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            if system_dir "$arg"; then
+                isystem_system_includes+=("$arg")
+            else
+                isystem_includes+=("$arg")
+            fi
+            ;;
         -I*)
             arg="${1#-I}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
@@ -425,12 +438,6 @@ then
     esac
 fi
 
-# Prepend include directories
-IFS=':' read -ra include_dirs <<< "$SPACK_INCLUDE_DIRS"
-if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
-    includes=("${includes[@]}" "${include_dirs[@]}")
-fi
-
 IFS=':' read -ra rpath_dirs <<< "$SPACK_RPATH_DIRS"
 if [[ $mode == ccld || $mode == ld ]]; then
 
@@ -481,9 +488,22 @@ args=()
 # flags assembled earlier
 args+=("${flags[@]}")
 
-# include directory search paths
+# Insert include directories just prior to any system include directories
+
 for dir in "${includes[@]}";         do args+=("-I$dir"); done
+for dir in "${isystem_includes[@]}";         do args+=("-isystem$dir"); done
+
+IFS=':' read -ra spack_include_dirs <<< "$SPACK_INCLUDE_DIRS"
+if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
+    if [[ "$isystem_was_used" == "true" ]] ; then
+	for dir in "${spack_include_dirs[@]}";  do args+=("-isystem$dir"); done
+    else
+	for dir in "${spack_include_dirs[@]}";  do args+=("-I$dir"); done
+    fi
+fi
+
 for dir in "${system_includes[@]}";  do args+=("-I$dir"); done
+for dir in "${isystem_system_includes[@]}";  do args+=("-isystem$dir"); done
 
 # Library search paths
 for dir in "${libdirs[@]}";          do args+=("-L$dir"); done

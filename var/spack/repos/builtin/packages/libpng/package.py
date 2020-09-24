@@ -10,11 +10,10 @@ class Libpng(AutotoolsPackage):
     """libpng is the official PNG reference library."""
 
     homepage = "http://www.libpng.org/pub/png/libpng.html"
-    url      = "http://download.sourceforge.net/libpng/libpng-1.6.37.tar.gz"
-    list_url = "https://sourceforge.net/projects/libpng/files/"
-    list_depth = 2
+    url = "https://github.com/glennrp/libpng/archive/v1.6.37.tar.gz"
+    git = "https://github.com/glennrp/libpng.git"
 
-    version('1.6.37', sha256='daeb2620d829575513e35fecc83f0d3791a620b9b93d800b763542ece9390fb4')
+    version('1.6.37', sha256='ca74a0dace179a8422187671aee97dd3892b53e168627145271cad5b5ac81307')
     # From http://www.libpng.org/pub/png/libpng.html (2019-04-15)
     #     libpng versions 1.6.36 and earlier have a use-after-free bug in the
     #     simplified libpng API png_image_free(). It has been assigned ID
@@ -22,7 +21,7 @@ class Libpng(AutotoolsPackage):
     #     released on 15 April 2019.
 
     # Required for qt@3
-    version('1.2.57', sha256='09ec37869fc5b130f5eb06ffb9bf949796e8d2d78e0788f78ab1c78624c6e9da')
+    version('1.2.57', sha256='7f415186d38ca71c23058386d7cf5135c8beda821ee1beecdc2a7a26c0356615')
 
     depends_on('zlib@1.0.4:')  # 1.2.5 or later recommended
 

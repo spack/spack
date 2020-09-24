@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -30,7 +32,7 @@ def setup_parser(subparser):
 
 def inverted_dependencies():
     """Iterate through all packages and return a dictionary mapping package
-       names to possible dependnecies.
+       names to possible dependencies.
 
        Virtual packages are included as sources, so that you can query
        dependents of, e.g., `mpi`, but virtuals are not included as
@@ -84,7 +86,8 @@ def dependents(parser, args):
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
         format_string = '{name}{@version}{%compiler}{/hash:7}'
-        tty.msg("Dependents of %s" % spec.cformat(format_string))
+        if sys.stdout.isatty():
+            tty.msg("Dependents of %s" % spec.cformat(format_string))
         deps = spack.store.db.installed_relatives(
             spec, 'parents', args.transitive)
         if deps:

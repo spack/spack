@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Xqilla(AutotoolsPackage):
+class Xqilla(AutotoolsPackage, SourceforgePackage):
     """XQilla is an XQuery and XPath 2 library and command line utility
     written in C++, implemented on top of the Xerces-C library."""
 
     homepage = "http://xqilla.sourceforge.net/HomePage"
-    url      = "https://downloads.sourceforge.net/project/xqilla/XQilla-2.3.3.tar.gz"
+    sourceforge_mirror_path = "xqilla/XQilla-2.3.3.tar.gz"
 
     version('2.3.3', sha256='8f76b9b4f966f315acc2a8e104e426d8a76ba4ea3441b0ecfdd1e39195674fd6')
 

@@ -68,7 +68,7 @@ class Adios(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('m4', type='build')
-    depends_on('libtool@:2.4.2', type='build')
+    depends_on('libtool', type='build')
     depends_on('python', type='build')
 
     depends_on('mpi', when='+mpi')
@@ -105,6 +105,10 @@ class Adios(AutotoolsPackage):
     #   https://github.com/ornladios/ADIOS/pull/204
     patch('zfp051.patch', when='@1.11.0:1.13.1')
 
+    # Fix a bug in configure.ac that causes automake issues on RHEL 7.7
+    patch('https://github.com/ornladios/ADIOS/pull/207.patch', when='@1.12.0: +mpi',
+          sha256='01113e9efb929d71c28bf33cc8b7f215d85195ec700e99cb41164e2f8f830640')
+
     def validate(self, spec):
         """Checks if incompatible variants have been activated at the same time
 
@@ -127,13 +131,18 @@ class Adios(AutotoolsPackage):
 
         return '--without-phdf5'
 
+    def setup_build_environment(self, env):
+        # https://github.com/ornladios/ADIOS/issues/206
+        if self.spec.satisfies('%gcc@10: +fortran'):
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
+
     def configure_args(self):
         spec = self.spec
         self.validate(spec)
 
         extra_args = [
             # required, otherwise building its python bindings will fail
-            'CFLAGS={0}'.format(self.compiler.pic_flag)
+            'CFLAGS={0}'.format(self.compiler.cc_pic_flag)
         ]
 
         extra_args += self.enable_or_disable('shared')

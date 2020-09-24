@@ -6,12 +6,19 @@
 from spack import *
 
 
-class Nccl(MakefilePackage):
+class Nccl(MakefilePackage, CudaPackage):
     """Optimized primitives for collective multi-GPU communication."""
 
     homepage = "https://github.com/NVIDIA/nccl"
-    url      = "https://github.com/NVIDIA/nccl/archive/v2.4.8-1.tar.gz"
+    url      = "https://github.com/NVIDIA/nccl/archive/v2.7.3-1.tar.gz"
 
+    maintainers = ['adamjstewart']
+
+    version('2.7.8-1', sha256='fa2bec307270f30fcf6280a85f24ea8801e0ce3b3027937c7325260a890b07e0')
+    version('2.7.6-1', sha256='60dd9b1743c2db6c05f60959edf98a4477f218115ef910d7ec2662f2fb5cf626')
+    version('2.7.5-1', sha256='26a8dec6fa0a776eb71205d618d58e26d372621719788a23b33db6fdce4426bf')
+    version('2.7.3-1', sha256='dc7b8794373306e323363314c3327796e416f745e8003490fc1407a22dd7acd6')
+    version('2.6.4-1', sha256='ed8c9dfd40e013003923ae006787b1a30d3cb363b47d2e4307eaa2624ebba2ba')
     version('2.5.7-1', sha256='781a6bb2278566be4abbdf22b2fa19afc7306cff4b312c82bd782979b368014e')
     version('2.5.6-2', sha256='8a30e0b4813a825592872fcbeeede22a659e2c399074dcce02960591dc81387d')
     version('2.5.6-1', sha256='38a37d98be11f43232b988719226866b407f08b9666dcaf345796bd8f354ef54')
@@ -23,10 +30,14 @@ class Nccl(MakefilePackage):
     version('1.3.4-1', sha256='11e4eb44555bb28b9cbad973dacb4640b82710c9769e719afc2013b63ffaf884')
     version('1.3.0-1', sha256='53f36151061907bdcafad1c26c1d9370a0a8400f561a83704a5138213ba51003')
 
-    depends_on('cuda')
+    variant('cuda', default=True, description='Build with CUDA')
+
+    depends_on('rdma-core', when='@2.3.5-5:')
 
     # https://github.com/NVIDIA/nccl/issues/244
     patch('so_reuseport.patch', when='@2.3.7-1:2.4.8-1')
+
+    conflicts('~cuda', msg='NCCL requires CUDA')
 
     @property
     def build_targets(self):

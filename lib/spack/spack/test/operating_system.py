@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.operating_systems.cnl as cnl
+import spack.operating_systems.cray_backend as cray_backend
 
 
 def test_read_cle_release_file(tmpdir, monkeypatch):
@@ -20,8 +20,9 @@ PATCHSET=35-201906112304
 DUMMY=foo=bar
 """)
 
-    monkeypatch.setattr(cnl, '_cle_release_file', str(cle_release_path))
-    attrs = cnl.read_cle_release_file()
+    monkeypatch.setattr(cray_backend, '_cle_release_file',
+                        str(cle_release_path))
+    attrs = cray_backend.read_cle_release_file()
 
     assert attrs['RELEASE'] == '6.0.UP07'
     assert attrs['BUILD'] == '6.0.7424'
@@ -31,7 +32,7 @@ DUMMY=foo=bar
     assert attrs['PATCHSET'] == '35-201906112304'
     assert attrs['DUMMY'] == 'foo=bar'
 
-    assert cnl.Cnl._detect_crayos_version() == 6
+    assert cray_backend.CrayBackend._detect_crayos_version() == 6
 
 
 def test_read_clerelease_file(tmpdir, monkeypatch):
@@ -40,12 +41,12 @@ def test_read_clerelease_file(tmpdir, monkeypatch):
     with clerelease_path.open('w') as f:
         f.write('5.2.UP04\n')
 
-    monkeypatch.setattr(cnl, '_clerelease_file', str(clerelease_path))
-    v = cnl.read_clerelease_file()
+    monkeypatch.setattr(cray_backend, '_clerelease_file', str(clerelease_path))
+    v = cray_backend.read_clerelease_file()
 
     assert v == '5.2.UP04'
 
-    assert cnl.Cnl._detect_crayos_version() == 5
+    assert cray_backend.CrayBackend._detect_crayos_version() == 5
 
 
 def test_cle_release_precedence(tmpdir, monkeypatch):
@@ -67,7 +68,8 @@ DUMMY=foo=bar
     with clerelease_path.open('w') as f:
         f.write('5.2.UP04\n')
 
-    monkeypatch.setattr(cnl, '_clerelease_file', str(clerelease_path))
-    monkeypatch.setattr(cnl, '_cle_release_file', str(cle_release_path))
+    monkeypatch.setattr(cray_backend, '_clerelease_file', str(clerelease_path))
+    monkeypatch.setattr(cray_backend, '_cle_release_file',
+                        str(cle_release_path))
 
-    assert cnl.Cnl._detect_crayos_version() == 6
+    assert cray_backend.CrayBackend._detect_crayos_version() == 6

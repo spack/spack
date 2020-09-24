@@ -1,0 +1,231 @@
+--- a/m4/with_database_dir.m4
++++ b/m4/with_database_dir.m4
+@@ -56,20 +56,11 @@ AC_DEFUN([PBS_AC_WITH_DATABASE_DIR],
+       AS_IF([test -r "$database_dir/include/postgresql/libpq-fe.h"],
+         [database_inc="-I$database_dir/include/postgresql"],
+         AC_MSG_ERROR([Database headers not found.]))))
+-  AS_IF([test "$database_dir" = "/usr"],
+-    # Using system installed PostgreSQL
+-    AS_IF([test -r "/usr/lib64/libpq.so" -o -r "/usr/lib/libpq.so" -o -r "/usr/lib/x86_64-linux-gnu/libpq.so"],
+-      [database_lib="-lpq"],
+-      AC_MSG_ERROR([PBS database shared object library not found.])),
+-    # Using developer installed PostgreSQL
+-      AS_IF([test -r "$database_dir/lib64/libpq.a"],
+-        [database_lib="$database_dir/lib64/libpq.a"],
+-        AS_IF([test -r "$database_dir/lib/libpq.a"],
+-          [database_lib="$database_dir/lib/libpq.a"],
+-          AC_MSG_ERROR([PBS database library not found.])
+-        )
+-      )
+-  )
++  AS_IF([test -r "$database_dir/lib64/libpq.so"],
++    [database_lib="-L$database_dir/lib64 -lpq"],
++    [test -r "$database_dir/lib/libpq.so"],
++    [database_lib="-L$database_dir/lib -lpq"],
++    AC_MSG_ERROR([PBS database shared object library not found.]))
+   AC_MSG_RESULT([$database_dir])
+   AC_SUBST([database_dir])
+   AC_SUBST([database_inc])
+--- a/m4/with_editline.m4
++++ b/m4/with_editline.m4
+@@ -52,31 +52,12 @@ AC_DEFUN([PBS_AC_WITH_EDITLINE],
+     AS_IF([test "$editline_dir" != "/usr"],
+       [editline_inc="-I$editline_dir/include"]),
+     AC_MSG_ERROR([editline headers not found.]))
+-  AS_IF([test "$editline_dir" = "/usr"],
+-    # Using system installed editline
+-    AS_IF([test -r /usr/lib64/libedit.so],
+-      [editline_lib="-ledit"],
+-      AS_IF([test -r /usr/lib/libedit.so],
+-        [editline_lib="-ledit"],
+-        AS_IF([test -r /usr/lib/x86_64-linux-gnu/libedit.so],
+-          [editline_lib="-ledit"],
+-          AC_MSG_ERROR([editline shared object library not found.])))),
+-    # Using developer installed editline
+-    AS_IF([test -r "${editline_dir}/lib64/libedit.a"],
+-      [editline_lib="${editline_dir}/lib64/libedit.a"],
+-      AS_IF([test -r "${editline_dir}/lib/libedit.a"],
+-        [editline_lib="${editline_dir}/lib/libedit.a"],
+-        AC_MSG_ERROR([editline library not found.])
+-      )
+-    )
+-  )
++  AS_IF([test -r "$editline_dir/lib64/libedit.so"],
++    [editline_lib="-L$editline_dir/lib64 -ledit"],
++    [test -r "$editline_dir/lib/libedit.so"],
++    [editline_lib="-L$editline_dir/lib -ledit"],
++    AC_MSG_ERROR([editline shared object library not found.]))
+   AC_MSG_RESULT([$editline_dir])
+-  AC_CHECK_LIB([ncurses], [tgetent],
+-    [curses_lib="-lncurses"],
+-    AC_CHECK_LIB([curses], [tgetent],
+-      [curses_lib="-lcurses"],
+-      AC_MSG_ERROR([curses library not found.])))
+-  [editline_lib="$editline_lib $curses_lib"]
+   AC_SUBST(editline_inc)
+   AC_SUBST(editline_lib)
+   AC_DEFINE([QMGR_HAVE_HIST], [], [Defined when editline is available])
+--- a/m4/with_expat.m4
++++ b/m4/with_expat.m4
+@@ -52,20 +52,11 @@ AC_DEFUN([PBS_AC_WITH_EXPAT],
+     AS_IF([test "$expat_dir" != "/usr"],
+       [expat_inc="-I$expat_dir/include"]),
+     AC_MSG_ERROR([expat headers not found.]))
+-  AS_IF([test "$expat_dir" = "/usr"],
+-    # Using system installed expat
+-    AS_IF([test -r "/usr/lib64/libexpat.so" -o -r "/usr/lib/libexpat.so" -o -r "/usr/lib/x86_64-linux-gnu/libexpat.so"],
+-      [expat_lib="-lexpat"],
+-      AC_MSG_ERROR([expat shared object library not found.])),
+-    # Using developer installed expat
+-    AS_IF([test -r "${expat_dir}/lib64/libexpat.a"],
+-      [expat_lib="${expat_dir}/lib64/libexpat.a"],
+-      AS_IF([test -r "${expat_dir}/lib/libexpat.a"],
+-        [expat_lib="${expat_dir}/lib/libexpat.a"],
+-        AC_MSG_ERROR([expat library not found.])
+-      )
+-    )
+-  )
++  AS_IF([test -r "$expat_dir/lib64/libexpat.so"],
++    [expat_lib="-L$expat_dir/lib64 -lexpat"],
++    [test -r "$expat_dir/lib/libexpat.so"],
++    [expat_lib="-L$expat_dir/lib -lexpat"],
++    AC_MSG_ERROR([expat shared object library not found.]))
+   AC_MSG_RESULT([$expat_dir])
+   AC_SUBST(expat_inc)
+   AC_SUBST(expat_lib)
+--- a/m4/with_hwloc.m4
++++ b/m4/with_hwloc.m4
+@@ -56,28 +56,12 @@ AC_DEFUN([PBS_AC_WITH_HWLOC],
+       [hwloc_inc="-I$hwloc_dir/include"]),
+       AC_MSG_ERROR([hwloc headers not found.])
+   )
+-  AS_IF([test "$hwloc_dir" = "/usr"],
+-    # Using system installed hwloc
+-    AS_IF([test -r "/usr/lib64/libhwloc.so" -o -r "/usr/lib/libhwloc.so" -o -r "/usr/lib/x86_64-linux-gnu/libhwloc.so"],
+-      [hwloc_lib="-lhwloc"],
+-      AC_MSG_ERROR([hwloc shared object library not found.])
+-    ),
+-    # Using developer installed hwloc
+-    AS_IF([test -r "${hwloc_dir}/lib64/libhwloc_embedded.a"],
+-      [hwloc_lib="${hwloc_dir}/lib64/libhwloc_embedded.a"],
+-      AS_IF([test -r "${hwloc_dir}/lib/libhwloc_embedded.a"],
+-        [hwloc_lib="${hwloc_dir}/lib/libhwloc_embedded.a"],
+-        AC_MSG_ERROR([hwloc library not found.])
+-      )
+-    )
+-  )
++  AS_IF([test -r "$hwloc_dir/lib64/libhwloc.so"],
++    [hwloc_lib="-L$hwloc_dir/lib64 -lhwloc"],
++    [test -r "$hwloc_dir/lib/libhwloc.so"],
++    [hwloc_lib="-L$hwloc_dir/lib -lhwloc"],
++    AC_MSG_ERROR([hwloc shared object library not found.]))
+   AC_MSG_RESULT([$hwloc_dir])
+-  AS_CASE([x$target_os],
+-    [xlinux*],
+-      AC_CHECK_LIB([numa], [mbind], [hwloc_lib="$hwloc_lib -lnuma"])
+-      AC_CHECK_LIB([udev], [udev_new], [hwloc_lib="$hwloc_lib -ludev"])
+-      AC_CHECK_LIB([pciaccess], [pci_system_init], [hwloc_lib="$hwloc_lib -lpciaccess"])
+-  )
+   AC_SUBST(hwloc_flags)
+   AC_SUBST(hwloc_inc)
+   AC_SUBST(hwloc_lib)
+--- a/m4/with_libical.m4
++++ b/m4/with_libical.m4
+@@ -59,23 +59,13 @@ AC_DEFUN([PBS_AC_WITH_LIBICAL],
+   AS_IF([test $libical_version -gt 1],
+     AC_DEFINE([LIBICAL_API2], [], [Defined when libical version >= 2])
+   )
+-  AS_IF([test "$libical_dir" = "/usr"],
+-    dnl Using system installed libical
+-    libical_inc=""
+-    AS_IF([test -r "/usr/lib64/libical.so" -o -r "/usr/lib/libical.so" -o -r "/usr/lib/x86_64-linux-gnu/libical.so"],
+-      [libical_lib="-lical"],
+-      AC_MSG_ERROR([libical shared object library not found.])
+-    ),
+-    dnl Using developer installed libical
+-    libical_inc="-I$libical_include"
+-    AS_IF([test -r "${libical_dir}/lib64/libical.a"],
+-      [libical_lib="${libical_dir}/lib64/libical.a"],
+-      AS_IF([test -r "${libical_dir}/lib/libical.a"],
+-        [libical_lib="${libical_dir}/lib/libical.a"],
+-        AC_MSG_ERROR([ical library not found.])
+-      )
+-    )
+-  )
++  AS_IF([test "$libical_dir" != "/usr"],
++    [libical_inc="-I$libical_include"])
++  AS_IF([test -r "$libical_dir/lib64/libical.so"],
++    [libical_lib="-L$libical_dir/lib64 -lical"],
++    [test -r "$libical_dir/lib/libical.so"],
++    [libical_lib="-L$libical_dir/lib -lical"],
++    AC_MSG_ERROR([libical shared object library not found.]))
+   AC_MSG_RESULT([$libical_dir])
+   AC_SUBST(libical_inc)
+   AC_SUBST(libical_lib)
+--- a/m4/with_tcl.m4
++++ b/m4/with_tcl.m4
+@@ -52,9 +52,7 @@ AC_DEFUN([PBS_AC_WITH_TCL],
+     [. "$tcl_dir/lib64/tclConfig.sh"],
+     AS_IF([test -r "$tcl_dir/lib/tclConfig.sh"],
+       [. "$tcl_dir/lib/tclConfig.sh"],
+-      AS_IF([test -r "$tcl_dir/lib/x86_64-linux-gnu/tclConfig.sh"],
+-        [. "$tcl_dir/lib/x86_64-linux-gnu/tclConfig.sh"],
+-        AC_MSG_ERROR([tclConfig.sh not found]))))
++      AC_MSG_ERROR([tclConfig.sh not found])))
+   AC_MSG_RESULT([$tcl_dir])
+   AC_MSG_CHECKING([for Tcl version])
+   AS_IF([test "x$TCL_VERSION" = "x"],
+@@ -62,32 +60,34 @@ AC_DEFUN([PBS_AC_WITH_TCL],
+   AC_MSG_RESULT([$TCL_VERSION])
+   [tcl_version="$TCL_VERSION"]
+   AC_SUBST(tcl_version)
++
++  AC_ARG_WITH([tk],
++    AS_HELP_STRING([--with-tk=DIR],
++      [Specify the directory where Tk is installed.]
++    )
++  )
++  AS_IF([test "x$with_tk" != "x"],
++    tk_dir=["$with_tk"],
++    tk_dir=["/usr"]
++  )
+   AC_MSG_CHECKING([for Tk])
+-  AS_IF([test -r "$tcl_dir/lib64/tkConfig.sh"],
+-    [. "$tcl_dir/lib64/tkConfig.sh"],
+-    AS_IF([test -r "$tcl_dir/lib/tkConfig.sh"],
+-      [. "$tcl_dir/lib/tkConfig.sh"],
+-      AS_IF([test -r "$tcl_dir/lib/x86_64-linux-gnu/tkConfig.sh"],
+-        [. "$tcl_dir/lib/x86_64-linux-gnu/tkConfig.sh"],
+-        AC_MSG_ERROR([tkConfig.sh not found]))))
+-  AC_MSG_RESULT([$tcl_dir])
++  AS_IF([test -r "$tk_dir/lib64/tkConfig.sh"],
++    [. "$tk_dir/lib64/tkConfig.sh"],
++    AS_IF([test -r "$tk_dir/lib/tkConfig.sh"],
++      [. "$tk_dir/lib/tkConfig.sh"],
++        AC_MSG_ERROR([tkConfig.sh not found])))
++  AC_MSG_RESULT([$tk_dir])
+   AC_MSG_CHECKING([for Tk version])
+   AS_IF([test "x$TK_VERSION" = "x"],
+     AC_MSG_ERROR([Could not determine Tk version]))
+   AC_MSG_RESULT([$TK_VERSION])
+   [tk_version="$TK_VERSION"]
+   AC_SUBST(tk_version)
+-  AS_IF([test x$TCL_INCLUDE_SPEC = x],
+-    # Using developer installed tcl
+-    [tcl_inc="-I$tcl_dir/include"]
+-    [tcl_lib="$tcl_dir/lib/libtcl$TCL_VERSION.a $TCL_LIBS"]
+-    [tk_inc="-I$tcl_dir/include"]
+-    [tk_lib="$tcl_dir/lib/libtcl$TCL_VERSION.a $tcl_dir/lib/libtk$TK_VERSION.a $TK_LIBS"],
+-    # Using system installed tcl
+-    [tcl_inc="$TCL_INCLUDE_SPEC"]
+-    [tcl_lib="$TCL_LIB_SPEC $TCL_LIBS"]
+-    [tk_inc="$TK_INCLUDE_SPEC"]
+-    [tk_lib=`echo "$TCL_LIB_SPEC $TK_LIB_SPEC $TK_LIBS" | ${SED} -e 's/-lXss //'`])
++
++  tcl_inc="$TCL_INCLUDE_SPEC"
++  tcl_lib="$TCL_LIB_SPEC $TCL_LIBS"
++  tk_inc="$TK_INCLUDE_SPEC"
++  tk_lib=`echo "$TCL_LIB_SPEC $TK_LIB_SPEC $TK_LIBS" | ${SED} -e 's/-lXss //'`
+   AC_SUBST(tcl_inc)
+   AC_SUBST(tcl_lib)
+   AC_SUBST(tk_inc)

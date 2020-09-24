@@ -33,9 +33,17 @@ class Pgi(Compiler):
     ignore_version_errors = [2]  # `pgcc -V` on PowerPC annoyingly returns 2
     version_regex = r'pg[^ ]* ([0-9.]+)-[0-9]+ (LLVM )?[^ ]+ target on '
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
+
+    @property
+    def debug_flags(self):
+        return ['-g', '-gopt']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4']
 
     @property
     def openmp_flag(self):
@@ -46,14 +54,26 @@ class Pgi(Compiler):
         return "-std=c++11"
 
     @property
-    def pic_flag(self):
+    def cc_pic_flag(self):
+        return "-fpic"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-fpic"
+
+    @property
+    def f77_pic_flag(self):
+        return "-fpic"
+
+    @property
+    def fc_pic_flag(self):
         return "-fpic"
 
     required_libs = ['libpgc', 'libpgf90']
 
     @property
     def c99_flag(self):
-        if self.version >= ver('12.10'):
+        if self.real_version >= ver('12.10'):
             return '-c99'
         raise UnsupportedCompilerFlag(self,
                                       'the C99 standard',
@@ -62,7 +82,7 @@ class Pgi(Compiler):
 
     @property
     def c11_flag(self):
-        if self.version >= ver('15.3'):
+        if self.real_version >= ver('15.3'):
             return '-c11'
         raise UnsupportedCompilerFlag(self,
                                       'the C11 standard',

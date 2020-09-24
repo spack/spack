@@ -1,0 +1,11 @@
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -61,7 +61,7 @@ install-sendmail: install
+ 	$(LN_S) ssmtp $(bindir)/sendmail
+ 	$(INSTALL) -d -m 755 $(libexecdir)
+ 	$(RM) $(libexecdir)/sendmail
+-	$(LN_S) sendmail /lib/sendmail
++	$(LN_S) $(bindir)/sendmail $(libexecdir)/sendmail
+ 	$(RM) $(mandir)/sendmail.8
+ 	$(LN_S) ssmtp.8 $(mandir)/sendmail.8
+ 

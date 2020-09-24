@@ -437,3 +437,14 @@ def test_from_environment_diff(before, after, search_list):
 
     for item in search_list:
         assert item in mod
+
+
+@pytest.mark.regression('15775')
+def test_blacklist_lmod_variables():
+    # Construct the list of environment modifications
+    file = os.path.join(datadir, 'sourceme_lmod.sh')
+    env = EnvironmentModifications.from_sourcing_file(file)
+
+    # Check that variables related to lmod are not in there
+    modifications = env.group_by_name()
+    assert not any(x.startswith('LMOD_') for x in modifications)

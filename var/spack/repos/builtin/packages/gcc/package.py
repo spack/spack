@@ -2,15 +2,17 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-from spack.operating_systems.mac_os import macos_version, macos_sdk_path
-from llnl.util import tty
-
 import glob
 import itertools
 import os
+import re
 import sys
+
+import llnl.util.tty as tty
+import spack.architecture
+import spack.util.executable
+
+from spack.operating_systems.mac_os import macos_version, macos_sdk_path
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
@@ -19,12 +21,18 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = 'https://gcc.gnu.org'
     gnu_mirror_path = 'gcc/gcc-9.2.0/gcc-9.2.0.tar.xz'
-    svn      = 'svn://gcc.gnu.org/svn/gcc/'
+    git      = 'git://gcc.gnu.org/git/gcc.git'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
-    version('develop', svn=svn + 'trunk')
+    maintainers = ['michaelkuhn']
 
+    version('master', branch='master')
+
+    version('10.2.0', sha256='b8dd4368bb9c7f0b98188317ee0254dd8cc99d1e3a18d0ff146c855fe16c1d8c')
+    version('10.1.0', sha256='b6898a23844b656f1b68691c5c012036c2e694ac4b53a8918d4712ad876e7ea2')
+
+    version('9.3.0', sha256='71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1')
     version('9.2.0', sha256='ea6ef08f121239da5695f76c9b33637a118dcf63e24164422231917fa61fb206')
     version('9.1.0', sha256='79a66834e96a6050d8fe78db2c3b32fb285b230b855d0a66288235bc04b327a0')
 
@@ -33,6 +41,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     version('8.2.0', sha256='196c3c04ba2613f893283977e6011b2345d1cd1af9abeac58e916b1aab3e0080')
     version('8.1.0', sha256='1d1866f992626e61349a1ccd0b8d5253816222cdc13390dcfaa74b093aa2b153')
 
+    version('7.5.0', sha256='b81946e7f01f90528a1f7352ab08cc602b9ccc05d4e44da4bd501c5a189ee661')
     version('7.4.0', sha256='eddde28d04f334aec1604456e536416549e9b1aa137fc69204e65eb0c009fe51')
     version('7.3.0', sha256='832ca6ae04636adbb430e865a1451adf6979ab44ca1c8374f61fba65645ce15c')
     version('7.2.0', sha256='1cf7adf8ff4b5aa49041c8734bbcf1ad18cc4c94d0029aae0f4e48841088479a')
@@ -86,13 +95,19 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('nvptx',
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
+    variant('bootstrap',
+            default=False,
+            description='add --enable-bootstrap flag for stage3 build')
+
+    depends_on('flex', type='build', when='@master')
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
-    depends_on('mpfr@2.4.2:3.1.6')
-    depends_on('mpc@0.8.1:', when='@4.5:')
+    depends_on('mpfr@2.4.2:3.1.6', when='@:9.9')
+    depends_on('mpfr@3.1.0:', when='@10:')
+    depends_on('mpc@1.0.1:', when='@4.5:')
     # Already released GCC versions do not support any newer version of ISL
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
@@ -100,21 +115,25 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('isl@0.14', when='@5.0:5.2')
     depends_on('isl@0.15', when='@5.3:5.9')
     depends_on('isl@0.15:0.18', when='@6:8.9')
-    depends_on('isl@0.15:0.20', when='@9:')
+    depends_on('isl@0.15:0.20', when='@9:9.9')
+    depends_on('isl@0.15:', when='@10:')
     depends_on('zlib', when='@6:')
-    depends_on('libiconv', when='platform=darwin')
+    depends_on('zstd', when='@10:')
+    depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
-    depends_on('binutils~libiberty', when='+binutils')
+    depends_on('binutils~libiberty', when='+binutils', type=('build', 'link', 'run'))
     depends_on('zip', type='build', when='languages=java')
     depends_on('cuda', when='+nvptx')
 
-    resource(
-             name='newlib',
+    # The server is sometimes a bit slow to respond
+    timeout = {'timeout': 60}
+
+    resource(name='newlib',
              url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
              sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
              destination='newlibsource',
-             when='+nvptx'
-            )
+             when='+nvptx',
+             fetch_options=timeout)
 
     # nvptx-tools does not seem to work as a dependency,
     # but does fine when the source is inside the gcc build directory
@@ -218,7 +237,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # Fix system headers for Catalina SDK
             # (otherwise __OSX_AVAILABLE_STARTING ends up undefined)
             patch('https://raw.githubusercontent.com/Homebrew/formula-patches/b8b8e65e/gcc/9.2.0-catalina.patch',
-                  sha256='0b8d14a7f3c6a2f0d2498526e86e088926671b5da50a554ffa6b7f73ac4f132b', when='@9.2.0:')
+                  sha256='0b8d14a7f3c6a2f0d2498526e86e088926671b5da50a554ffa6b7f73ac4f132b', when='@9.2.0')
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
         # This is needed because `gcc` avoids the superenv shim.
@@ -230,10 +249,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
-    # Backport libsanitizer patch for glibc >= 2.31 and 8.1.0 <= gcc <= 9.2.0
+    # Backport libsanitizer patch for glibc >= 2.31 and 5.3.0 <= gcc <= 9.2.0
     # https://bugs.gentoo.org/708346
-    patch('glibc-2.31-libsanitizer-1.patch', when='@8.1.0:9.2.0')
-    patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-1.patch', when='@7.1.0:7.5.0,8.1.0:8.3.0,9.0.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-1-gcc-6.patch', when='@5.3.0:5.5.0,6.1.0:6.5.0')
+    patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:8.3.0,9.0.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-2-gcc-6.patch', when='@5.3.0:5.5.0,6.1.0:6.5.0')
+    patch('glibc-2.31-libsanitizer-2-gcc-7.patch', when='@7.1.0:7.5.0')
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch('ucontext_t.patch', when='@4.9,5.1:5.4,6.1:6.4,7.1')
@@ -247,14 +269,145 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('sys_ustat.h.patch', when='@5.0:6.4,7.0:7.3,8.1')
     patch('sys_ustat-4.9.patch', when='@4.9')
 
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95005
+    patch('zstd.patch', when='@10:')
+
     build_directory = 'spack-build'
+
+    @property
+    def executables(self):
+        names = [r'gcc', r'[^\w]?g\+\+', r'gfortran']
+        suffixes = [r'', r'-mp-\d+\.\d', r'-\d+\.\d', r'-\d+', r'\d\d']
+        return [r''.join(x) for x in itertools.product(names, suffixes)]
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        result = []
+        for exe in exes_in_prefix:
+            # On systems like Ubuntu we might get multiple executables
+            # with the string "gcc" in them. See:
+            # https://helpmanual.io/packages/apt/gcc/
+            basename = os.path.basename(exe)
+            substring_to_be_filtered = [
+                'c99-gcc',
+                'c89-gcc',
+                '-nm',
+                '-ar',
+                'ranlib',
+                'clang'  # clang++ matches g++ -> clan[g++]
+            ]
+            if any(x in basename for x in substring_to_be_filtered):
+                continue
+            # Filter out links in favor of real executables on
+            # all systems but Cray
+            host_platform = str(spack.architecture.platform())
+            if os.path.islink(exe) and host_platform != 'cray':
+                continue
+
+            result.append(exe)
+
+        return result
+
+    @classmethod
+    def determine_version(cls, exe):
+        try:
+            output = spack.compiler.get_compiler_version_output(
+                exe, '--version'
+            )
+        except Exception:
+            output = ''
+        # Apple's gcc is actually apple clang, so skip it.
+        # Users can add it manually to compilers.yaml at their own risk.
+        if 'Apple' in output:
+            return None
+
+        version_regex = re.compile(r'([\d\.]+)')
+        for vargs in ('-dumpfullversion', '-dumpversion'):
+            try:
+                output = spack.compiler.get_compiler_version_output(exe, vargs)
+                match = version_regex.search(output)
+                if match:
+                    return match.group(1)
+            except spack.util.executable.ProcessError:
+                pass
+            except Exception as e:
+                tty.debug(e)
+
+        return None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        languages, compilers = set(), {}
+        for exe in exes:
+            basename = os.path.basename(exe)
+            if 'g++' in basename:
+                languages.add('c++')
+                compilers['cxx'] = exe
+            elif 'gfortran' in basename:
+                languages.add('fortran')
+                compilers['fortran'] = exe
+            elif 'gcc' in basename:
+                languages.add('c')
+                compilers['c'] = exe
+        variant_str = 'languages={0}'.format(','.join(languages))
+        return variant_str, {'compilers': compilers}
+
+    @classmethod
+    def validate_detected_spec(cls, spec, extra_attributes):
+        # For GCC 'compilers' is a mandatory attribute
+        msg = ('the extra attribute "compilers" must be set for '
+               'the detected spec "{0}"'.format(spec))
+        assert 'compilers' in extra_attributes, msg
+
+        compilers = extra_attributes['compilers']
+        for constraint, key in {
+            'languages=c': 'c',
+            'languages=c++': 'cxx',
+            'languages=fortran': 'fortran'
+        }.items():
+            if spec.satisfies(constraint, strict=True):
+                msg = '{0} not in {1}'
+                assert key in compilers, msg.format(key, spec)
+
+    @property
+    def cc(self):
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('c', None)
+        result = None
+        if 'languages=c' in self.spec:
+            result = str(self.spec.prefix.bin.gcc)
+        return result
+
+    @property
+    def cxx(self):
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('cxx', None)
+        result = None
+        if 'languages=c++' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'g++')
+        return result
+
+    @property
+    def fortran(self):
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('fortran', None)
+        result = None
+        if 'languages=fortran' in self.spec:
+            result = str(self.spec.prefix.bin.gfortran)
+        return result
 
     def url_for_version(self, version):
         # This function will be called when trying to fetch from url, before
         # mirrors are tried. It takes care of modifying the suffix of gnu
         # mirror path so that Spack will also look for the correct file in
         # the mirrors
-        if (version < Version('6.4.0')and version != Version('5.5.0')) \
+        if (version < Version('6.4.0') and version != Version('5.5.0')) \
                 or version == Version('7.1.0'):
             self.gnu_mirror_path = self.gnu_mirror_path.replace('xz', 'bz2')
         return super(Gcc, self).url_for_version(version)
@@ -298,14 +451,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             '--enable-languages={0}'.format(
                 ','.join(spec.variants['languages'].value)),
             # Drop gettext dependency
-            '--disable-nls',
-            '--with-mpfr={0}'.format(spec['mpfr'].prefix),
-            '--with-gmp={0}'.format(spec['gmp'].prefix),
+            '--disable-nls'
         ]
 
         # Use installed libz
         if self.version >= Version('6'):
             options.append('--with-system-zlib')
+
+        if 'zstd' in spec:
+            options.append('--with-zstd={0}'.format(spec['zstd'].prefix))
 
         # Enabling language "jit" requires --enable-host-shared.
         if 'languages=jit' in spec:
@@ -313,29 +467,37 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Binutils
         if spec.satisfies('+binutils'):
-            stage1_ldflags = str(self.rpath_args)
-            boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
-            if '%gcc' in spec:
-                stage1_ldflags = boot_ldflags
             binutils = spec['binutils'].prefix.bin
             options.extend([
-                '--with-sysroot=/',
-                '--with-stage1-ldflags=' + stage1_ldflags,
-                '--with-boot-ldflags=' + boot_ldflags,
                 '--with-gnu-ld',
                 '--with-ld=' + binutils.ld,
                 '--with-gnu-as',
                 '--with-as=' + binutils.join('as'),
+            ])
+
+        # enable_bootstrap
+        if spec.satisfies('+bootstrap'):
+            options.extend([
                 '--enable-bootstrap',
             ])
 
-        # MPC
-        if 'mpc' in spec:
-            options.append('--with-mpc={0}'.format(spec['mpc'].prefix))
+        # Configure include and lib directories explicitly for these
+        # dependencies since the short GCC option assumes that libraries
+        # are installed in "/lib" which might not be true on all OS
+        # (see #10842)
+        #
+        # More info at: https://gcc.gnu.org/install/configure.html
+        for dep_str in ('mpfr', 'gmp', 'mpc', 'isl'):
+            if dep_str not in spec:
+                continue
 
-        # ISL
-        if 'isl' in spec:
-            options.append('--with-isl={0}'.format(spec['isl'].prefix))
+            dep_spec = spec[dep_str]
+            include_dir = dep_spec.headers.directories[0]
+            lib_dir = dep_spec.libs.directories[0]
+            options.extend([
+                '--with-{0}-include={1}'.format(dep_str, include_dir),
+                '--with-{0}-lib={1}'.format(dep_str, lib_dir)
+            ])
 
         # nvptx-none offloading for host compiler
         if spec.satisfies('+nvptx'):
@@ -351,8 +513,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             options.extend([
                 '--with-native-system-header-dir=/usr/include',
                 '--with-sysroot={0}'.format(macos_sdk_path()),
-                '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix)
+                '--with-libiconv-prefix={0}'.format(spec['iconv'].prefix)
             ])
+
+        # enable appropriate bootstrapping flags
+        stage1_ldflags = str(self.rpath_args)
+        boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
+        options.append('--with-stage1-ldflags=' + stage1_ldflags)
+        options.append('--with-boot-ldflags=' + boot_ldflags)
 
         return options
 

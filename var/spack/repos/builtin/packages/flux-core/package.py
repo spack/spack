@@ -15,6 +15,11 @@ class FluxCore(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-core.git"
 
     version('master', branch='master')
+    version('0.19.0', sha256='f45328a37d989c308c46639a9ed771f47b11184422cf5604249919fbd320d6f5')
+    version('0.18.0', sha256='9784bbca94177a32dbbc99728e8925bf894f3aebaa316961d6ea85df32d59545')
+    version('0.17.0', sha256='3f8c6cb72982028f86a96c0098cacd3a6e9de359fa1cf077380c835a20e7b7f7')
+    version('0.16.0', sha256='1582f7fb4d2313127418c34de7c9ce4f5fef00622d19cedca7bed929f4709f10')
+    version('0.15.0', sha256='51bc2eae69501f802459fc82f191eb5e8ae0b4f7e9e77ac18543a850cc8445f5')
     version('0.11.3', sha256='91b5d7dca8fc28a77777c4e4cb8717fc3dc2c174e70611740689a71901c6de7e')
     version('0.11.2', sha256='ab8637428cd9b74b2dff4842d10e0fc4acc8213c4e51f31d32a4cbfbdf730412')
     version('0.11.1', sha256='3c8495db0f3b701f6dfe3e2a75aed794fc561e9f28284e8c02ac67693bfe890e')
@@ -43,9 +48,13 @@ class FluxCore(AutotoolsPackage):
     depends_on("lua@5.1:5.2.99", when="@0.10.0:,master")
     depends_on("lua-luaposix")
     depends_on("munge", when="@0.1.0:0.10.0")
-    depends_on("python", type=('build', 'run'))
-    depends_on("python@2.7:2.99", when="@0.1.0:0.11.0")
-    depends_on("python@2.7:", when="@0.11.1:")
+    # `link` dependency on python due to Flux's `pymod` module
+    depends_on("python", type=('build', 'run', 'link'))
+    depends_on("python@2.7:2.99",
+               when="@0.1.0:0.11.0",
+               type=('build', 'run', 'link'))
+    depends_on("python@2.7:", when="@0.11.1:", type=('build', 'run', 'link'))
+    depends_on("python@3.6:", when="@0.17.0:,master", type=('build', 'run', 'link'))
     depends_on("py-cffi", type=('build', 'run'))
     depends_on("py-six", type=('build', 'run'), when="@0.11.0:")
     depends_on("py-pyyaml", type=('build', 'run'), when="@0.11.0:")

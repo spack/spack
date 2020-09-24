@@ -29,12 +29,15 @@
 ########################################################################
 # Store LD_LIBRARY_PATH variables from spack shell function
 # This is necessary because MacOS System Integrity Protection clears
-# (DY?)LD_LIBRARY_PATH variables on process start.
+# variables that affect dyld on process start.
 if ( ${?LD_LIBRARY_PATH} ) then
     setenv SPACK_LD_LIBRARY_PATH $LD_LIBRARY_PATH
 endif
 if ( ${?DYLD_LIBRARY_PATH} ) then
     setenv SPACK_DYLD_LIBRARY_PATH $DYLD_LIBRARY_PATH
+endif
+if ( ${?DYLD_FALLBACK_LIBRARY_PATH} ) then
+    setenv SPACK_DYLD_FALLBACK_LIBRARY_PATH $DYLD_FALLBACK_LIBRARY_PATH
 endif
 
 # accumulate initial flags for main spack command
@@ -66,7 +69,7 @@ case cd:
     [ $#_sp_args -gt 0 ] && set _sp_arg = ($_sp_args[1])
     shift _sp_args
 
-    if ( "$_sp_arg" == "-h" ) then
+    if ( "$_sp_arg" == "-h" || "$_sp_args" == "--help" ) then
         \spack cd -h
     else
         cd `\spack location $_sp_arg $_sp_args`
@@ -78,7 +81,7 @@ case env:
     set _sp_arg=""
     [ $#_sp_args -gt 0 ] && set _sp_arg = ($_sp_args[1])
 
-    if ( "$_sp_arg" == "-h" ) then
+    if ( "$_sp_arg" == "-h" || "$_sp_arg" == "--help" ) then
         \spack env -h
     else
         switch ($_sp_arg)
@@ -86,12 +89,18 @@ case env:
                 set _sp_env_arg=""
                 [ $#_sp_args -gt 1 ] && set _sp_env_arg = ($_sp_args[2])
 
-                if ( "$_sp_env_arg" == "" || "$_sp_args" =~ "*--sh*" || "$_sp_args" =~ "*--csh*" || "$_sp_args" =~ "*-h*" ) then
-                    # no args or args contain -h/--help, --sh, or --csh: just execute
+                # Space needed here to differentiate between `-h`
+                # argument and environments with "-h" in the name.
+                if ( "$_sp_env_arg" == "" || \
+                     "$_sp_args" =~ "* --sh*" || \
+                     "$_sp_args" =~ "* --csh*" || \
+                     "$_sp_args" =~ "* -h*" || \
+                     "$_sp_args" =~ "* --help*" ) then
+                    # No args or args contain --sh, --csh, or -h/--help: just execute.
                     \spack $_sp_flags env $_sp_args
                 else
                     shift _sp_args  # consume 'activate' or 'deactivate'
-                    # actual call to activate: source the output
+                    # Actual call to activate: source the output.
                     eval `\spack $_sp_flags env activate --csh $_sp_args`
                 endif
                 breaksw
@@ -99,30 +108,40 @@ case env:
                 set _sp_env_arg=""
                 [ $#_sp_args -gt 1 ] && set _sp_env_arg = ($_sp_args[2])
 
-                if ( "$_sp_env_arg" != "" ) then
-                    # with args: execute the command
+                # Space needed here to differentiate between `--sh`
+                # argument and environments with "--sh" in the name.
+                if ( "$_sp_args" =~ "* --sh*" || \
+                     "$_sp_args" =~ "* --csh*" ) then
+                    # Args contain --sh or --csh: just execute.
                     \spack $_sp_flags env $_sp_args
+                else if ( "$_sp_env_arg" != "" ) then
+                    # Any other arguments are an error or -h/--help: just run help.
+                    \spack $_sp_flags env deactivate -h
                 else
-                    # no args: source the output
+                    # No args: source the output of the command.
                     eval `\spack $_sp_flags env deactivate --csh`
                 endif
                 breaksw
             default:
-                echo default
                 \spack $_sp_flags env $_sp_args
                 breaksw
         endsw
     endif
+    breaksw
+
 case load:
 case unload:
-    # Space in `-h` portion is important for differentiating -h option
-    # from variants that begin with "h" or packages with "-h" in name
-    if ( "$_sp_spec" =~ "*--sh*" || "$_sp_spec" =~ "*--csh*" || \
-         " $_sp_spec" =~ "* -h*" || "$_sp_spec" =~ "*--help*") then
-        # IF a shell is given, print shell output
+    # Get --sh, --csh, -h, or --help arguments.
+    # Space needed here to differentiate between `-h`
+    # argument and specs with "-h" in the name.
+    if ( " $_sp_spec" =~ "* --sh*" || \
+         " $_sp_spec" =~ "* --csh*" || \
+         " $_sp_spec" =~ "* -h*" || \
+         " $_sp_spec" =~ "* --help*") then
+        # Args contain --sh, --csh, or -h/--help: just execute.
         \spack $_sp_flags $_sp_subcommand $_sp_spec
     else
-        # otherwise eval with csh
+        # Otherwise, eval with csh.
         eval `\spack $_sp_flags $_sp_subcommand --csh $_sp_spec || \
              echo "exit 1"`
     endif

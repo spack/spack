@@ -1,0 +1,14 @@
+diff --git a/vtkm/worklet/Contour.h b/vtkm/worklet/Contour.h
+index c28c5ec09..70737777f 100644
+--- a/vtkm/worklet/Contour.h
++++ b/vtkm/worklet/Contour.h
+@@ -46,7 +46,8 @@ struct DeduceCoordType
+                   vtkm::cont::CellSetSingleType<>& result,
+                   Args&&... args) const
+   {
+-    result = flying_edges::execute(cells, coords, std::forward<Args>(args)...);
++    result = marching_cells::execute(cells, coords, std::forward<Args>(args)...);
++    //result = flying_edges::execute(cells, coords, std::forward<Args>(args)...);
+   }
+ };
+ 

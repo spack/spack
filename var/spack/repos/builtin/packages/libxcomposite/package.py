@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Libxcomposite(AutotoolsPackage):
+class Libxcomposite(AutotoolsPackage, XorgPackage):
     """libXcomposite - client library for the Composite extension to the
     X11 protocol."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXcomposite"
-    url      = "https://www.x.org/archive/individual/lib/libXcomposite-0.4.4.tar.gz"
+    xorg_mirror_path = "lib/libXcomposite-0.4.4.tar.gz"
 
     version('0.4.4', sha256='83c04649819c6f52cda1b0ce8bcdcc48ad8618428ad803fb07f20b802f1bdad1')
 
