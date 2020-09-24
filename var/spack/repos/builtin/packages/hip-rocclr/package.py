@@ -7,8 +7,8 @@
 from spack import *
 
 
-class Rocclr(CMakePackage):
-    """ROCclr is a virtual device interface that compute runtimes interact
+class HipRocclr(CMakePackage):
+    """Hip-ROCclr is a virtual device interface that compute runtimes interact
        with to different backends such as ROCr or PAL This abstraction allows
        runtimes to work on Windows as well as on Linux without much effort."""
 
