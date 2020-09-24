@@ -8,6 +8,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 13-
 """
+import six
 from llnl.util.lang import union_dicts
 import spack.schema.projections
 
@@ -99,3 +100,22 @@ schema = {
     'additionalProperties': False,
     'properties': properties,
 }
+
+
+def update(data):
+    """Update the data in place to remove deprecated properties.
+
+    Args:
+        data (dict): dictionary to be updated
+
+    Returns:
+        True if data was changed, False otherwise
+    """
+    # currently only deprecated property is `install_tree`
+    install_tree = data.get('install_tree', None)
+    if isinstance(install_tree, six.string_types):
+        # deprecated short-form install tree
+        new_data = {'root': install_tree}
+        data['install_tree'] = new_data
+        return True
+    return False
