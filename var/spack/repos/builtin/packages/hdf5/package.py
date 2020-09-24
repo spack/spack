@@ -82,7 +82,7 @@ class Hdf5(CMakePackage):
     depends_on('cmake@3.12.4:', type='build')
 
     depends_on('mpi', when='+mpi')
-    depends_on('java', type=('build','run'), when='+java+shared')
+    depends_on('java', type=('build', 'run'), when='+java+shared')
     # numactl does not currently build on darwin
     if sys.platform != 'darwin':
         depends_on('numactl', when='+mpi+fortran')
@@ -240,7 +240,6 @@ class Hdf5(CMakePackage):
             msg = 'cannot build a Java variant without a Java compiler'
             raise RuntimeError(msg)
 
-
     def cmake_args(self):
         args = [
             '-DBUILD_SHARED_LIBS={0}'.format(
@@ -252,12 +251,16 @@ class Hdf5(CMakePackage):
         # combinations of other arguments. Enabling it just skips a
         # sanity check in configure, so this doesn't merit a variant.
         args.append('-DALLOW_UNSUPPORTED=ON')
-        
+
         spec = self.spec
         if '+zlib' in spec:
             args.append('-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON')
-            args.append('-DZLIB_INCLUDE_DIR:PATH={0}'.format(spec['zlib'].prefix.include))
-            args.append('-DZLIB_DIR:PATH={0}'.format(spec['zlib'].prefix.lib))
+            args.append(
+                '-DZLIB_INCLUDE_DIR:PATH={0}'.format(
+                    spec['zlib'].prefix.include))
+            args.append(
+                '-DZLIB_DIR:PATH={0}'.format(
+                    spec['zlib'].prefix.lib))
         else:
             args.append('-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=OFF')
 
@@ -315,7 +318,9 @@ class Hdf5(CMakePackage):
             args.append('-DBUILD_TESTING=OFF')
 
         if 'apiversion' in spec:
-            args.append('-DDEFAULT_API_VERSION={0}'.format(spec.variants['apiversion'].value))
+            args.append(
+                '-DDEFAULT_API_VERSION={0}'.format(
+                    spec.variants['apiversion'].value))
 
         return args
 
