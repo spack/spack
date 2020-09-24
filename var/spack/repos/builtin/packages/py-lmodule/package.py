@@ -7,9 +7,9 @@ from spack import *
 
 
 class PyLmodule(PythonPackage):
-    """Lmodule is a Python API for Lmod module system. It's primary purpose is 
-    to help automate module testing. Lmodule uses Lmod spider tool to query 
-    all modules in-order to automate module testing. Lmodule can be used with 
+    """Lmodule is a Python API for Lmod module system. It's primary purpose is
+    to help automate module testing. Lmodule uses Lmod spider tool to query
+    all modules in-order to automate module testing. Lmodule can be used with
     environment-modules to interact with module using the Module class."""
 
     homepage = "https://lmodule.readthedocs.io/en/latest/"
@@ -23,4 +23,3 @@ class PyLmodule(PythonPackage):
     depends_on('python@3.6.0:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('lmod@7.0:', type='run')
-
