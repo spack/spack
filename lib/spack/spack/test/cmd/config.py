@@ -16,8 +16,6 @@ config = spack.main.SpackCommand('config')
 env = spack.main.SpackCommand('env')
 
 
-
-
 def _create_config(scope=None, data={}, section='packages'):
     scope = scope or spack.config.default_modify_scope()
     cfg_file = spack.config.config.get_config_filename(scope, section)
@@ -51,7 +49,6 @@ def config_yaml_v015(mutable_config):
         }
     }
     return functools.partial(_create_config, data=old_data, section='config')
-
 
 
 def test_get_config_scope(mock_low_high_config):
