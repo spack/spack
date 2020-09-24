@@ -7,7 +7,7 @@ import os
 import collections
 import getpass
 import tempfile
-from six import StringIO
+from six import StringIO, string_types
 
 from llnl.util.filesystem import touch, mkdirp
 
@@ -29,16 +29,25 @@ import spack.util.path as spack_path
 # sample config data
 config_low = {
     'config': {
-        'install_tree': 'install_tree_path',
-        'build_stage': ['path1', 'path2', 'path3']}}
+        'install_trees:': {
+            'tree1': '/path1/'},
+        'shared_install_trees': {},
+        'build_stage': ['path1', 'path2', 'path3'],
+        'dirty': False}}
 
 config_override_all = {
     'config:': {
-        'install_tree:': 'override_all'}}
+        'install_trees:': {
+            'tree2': '/path2/'},
+        'shared_install_trees': {}
+    }}
 
 config_override_key = {
     'config': {
-        'install_tree:': 'override_key'}}
+        'install_trees:': {
+            'tree2': '/path2/'},
+        'shared_install_trees': {}
+    }}
 
 config_merge_list = {
     'config': {
@@ -59,6 +68,37 @@ config_override_dict = {
         'info:': {
             'a': 7,
             'c': 9}}}
+
+
+def _combined_dicts(*dicts):
+    combined_dicts = {}
+    for d in dicts:
+        combined_dicts.update(d)
+    return combined_dicts
+
+
+def _convert_to_cfg(nested_dict):
+    return syaml.load_config(syaml.dump_config(nested_dict))
+
+
+def _convert_to_nested_dict(cfg):
+    """Replaces ordered dictionaries with dictionaries"""
+    if isinstance(cfg, string_types):
+        return cfg
+
+    try:
+        items = cfg.items()
+        return dict((k, _convert_to_nested_dict(v)) for k, v in items)
+    except AttributeError:
+        pass
+
+    try:
+        iter(cfg)
+        return list(_convert_to_nested_dict(v) for v in cfg)
+    except TypeError:
+        pass
+
+    return cfg
 
 
 @pytest.fixture()
@@ -384,49 +424,55 @@ def test_substitute_padding(mock_low_high_config):
 
 def test_read_config(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
-    assert spack.config.get('config') == config_low['config']
+    assert spack.config.get('config') == _convert_to_cfg(
+        config_low['config'])
 
 
 def test_read_config_override_all(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_all, 'high')
-    assert spack.config.get('config') == {
-        'install_tree': 'override_all'
-    }
+    assert spack.config.get('config') == _convert_to_cfg(
+        config_override_all['config:'])
 
 
 def test_read_config_override_key(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_key, 'high')
-    assert spack.config.get('config') == {
-        'install_tree': 'override_key',
-        'build_stage': ['path1', 'path2', 'path3']
-    }
+    cfg = spack.config.get('config')
+
+    expected_cfg = _combined_dicts(
+        config_low['config'],
+        config_override_key['config'],
+    )
+    expected_cfg = _convert_to_nested_dict(_convert_to_cfg(expected_cfg))
+    assert _convert_to_nested_dict(cfg) == expected_cfg
 
 
 def test_read_config_merge_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_merge_list, 'high')
-    assert spack.config.get('config') == {
-        'install_tree': 'install_tree_path',
-        'build_stage': ['patha', 'pathb', 'path1', 'path2', 'path3']
-    }
+    assert spack.config.get('config') == _convert_to_cfg(
+        _combined_dicts(
+            config_low['config'],
+            {'build_stage': ['patha', 'pathb', 'path1', 'path2', 'path3']})
+    )
 
 
 def test_read_config_override_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_list, 'high')
-    assert spack.config.get('config') == {
-        'install_tree': 'install_tree_path',
-        'build_stage': config_override_list['config']['build_stage:']
-    }
+    assert spack.config.get('config') == _convert_to_cfg(
+        _combined_dicts(
+            config_low['config'],
+            {'build_stage': config_override_list['config']['build_stage:']})
+    )
 
 
 def test_internal_config_update(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
 
     before = mock_low_high_config.get('config')
-    assert before['install_tree'] == 'install_tree_path'
+    assert before['dirty'] is False
 
     # add an internal configuration scope
     scope = spack.config.InternalConfigScope('command_line')
@@ -435,12 +481,12 @@ def test_internal_config_update(mock_low_high_config, write_config_file):
     mock_low_high_config.push_scope(scope)
 
     command_config = mock_low_high_config.get('config', scope='command_line')
-    command_config['install_tree'] = 'foo/bar'
+    command_config['dirty'] = True
 
     mock_low_high_config.set('config', command_config, scope='command_line')
 
     after = mock_low_high_config.get('config')
-    assert after['install_tree'] == 'foo/bar'
+    assert after['dirty'] is True
 
 
 def test_internal_config_filename(mock_low_high_config, write_config_file):

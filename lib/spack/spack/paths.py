@@ -48,6 +48,9 @@ mock_packages_path = os.path.join(repos_path, "builtin.mock")
 #: User configuration location
 user_config_path = os.path.expanduser('~/.spack')
 
+# Default cache locations (can be changed in config)
+default_misc_cache_path = os.path.join(user_config_path, 'cache')
+default_source_cache_path = os.path.join(default_misc_cache_path, 'downloads')
 
 opt_path        = os.path.join(prefix, "opt")
 etc_path        = os.path.join(prefix, "etc")

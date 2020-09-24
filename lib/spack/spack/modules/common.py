@@ -214,7 +214,9 @@ def root_path(name):
     """
     # Root folders where the various module files should be written
     roots = spack.config.get('config:module_roots', {})
-    path = roots.get(name, os.path.join(spack.paths.share_path, name))
+    module_base = os.path.join(str(spack.store.root), 'modules')
+
+    path = roots.get(name, os.path.join(module_base, name))
     return spack.util.path.canonicalize_path(path)
 
 
@@ -279,14 +281,36 @@ def read_module_indices():
     other_spack_instances = spack.config.get(
         'upstreams') or {}
 
+    uses_old_module_index = False
+    for install_properties in other_spack_instances.values():
+        if 'modules' in install_properties:
+            uses_old_module_index = True
+            break
+
     module_indices = []
 
-    for install_properties in other_spack_instances.values():
-        module_type_to_index = {}
-        module_type_to_root = install_properties.get('modules', {})
-        for module_type, root in module_type_to_root.items():
-            module_type_to_index[module_type] = read_module_index(root)
-        module_indices.append(module_type_to_index)
+    if not uses_old_module_index:
+        # New spack upstream instances do not require specifying module root
+        # locations in the config, since modules are now stored in the install
+        # tree by default.
+        upstream_roots = spack.store.upstream_install_roots(
+            str(spack.store.root))
+        for upstream_root in upstream_roots:
+            module_type_to_index = {}
+            upstream_module_root = os.path.join(upstream_root, 'modules')
+            for module_type in os.listdir(upstream_module_root):
+                module_type_root = os.path.join(
+                    upstream_module_root, module_type)
+                module_type_to_index[module_type] = read_module_index(
+                    module_type_root)
+            module_indices.append(module_type_to_index)
+    else:
+        for install_properties in other_spack_instances.values():
+            module_type_to_index = {}
+            module_type_to_root = install_properties.get('modules', {})
+            for module_type, root in module_type_to_root.items():
+                module_type_to_index[module_type] = read_module_index(root)
+            module_indices.append(module_type_to_index)
 
     return module_indices
 

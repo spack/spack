@@ -26,6 +26,7 @@ configuration.
 import os
 
 import llnl.util.lang
+import llnl.util.filesystem as fs
 
 import spack.paths
 import spack.config
@@ -35,6 +36,15 @@ import spack.directory_layout
 
 #: default installation root, relative to the Spack install path
 default_root = os.path.join(spack.paths.opt_path, 'spack')
+
+
+user_install_root = os.path.expanduser('~/.spack/install-root')
+
+
+install_tree = None
+
+
+init_upstream = None
 
 
 class Store(object):
@@ -58,8 +68,9 @@ class Store(object):
     """
     def __init__(self, root, path_scheme=None, hash_length=None):
         self.root = root
+        upstream_dbs = upstream_dbs_from_pointers(root)
         self.db = spack.database.Database(
-            root, upstream_dbs=retrieve_upstream_dbs())
+            root, upstream_dbs=upstream_dbs)
         self.layout = spack.directory_layout.YamlDirectoryLayout(
             root, hash_len=hash_length, path_scheme=path_scheme)
 
@@ -70,7 +81,33 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    root = spack.config.get('config:install_tree', default_root)
+    install_trees = spack.config.get('config:install_trees')
+    shared_install_trees = spack.config.get('config:shared_install_trees')
+
+    if install_tree:
+        if install_tree in install_trees:
+            root = install_trees[install_tree]
+        elif install_tree in shared_install_trees:
+            root = shared_install_trees[install_tree]
+        else:
+            # TODO: provide the user an option to create a new install tree
+            raise ValueError("Specified install tree does not exist: {0}"
+                             .format(install_tree))
+    elif shared_install_trees:
+        # If no install tree is specified and there are shared install trees,
+        # then we are in user mode, and the install tree is in ~
+        root = user_install_root
+    else:
+        # If this is not a shared spack instance, then by default we will place
+        # the install prefix inside the Spack tree
+        root = default_root
+
+    if init_upstream:
+        init_upstream_path = shared_install_trees[init_upstream]
+        initialize_upstream_pointer_if_unset(root, init_upstream_path)
+    elif shared_install_trees and (not upstream_set(root)):
+        raise ValueError("Must specify an upstream shared install tree")
+
     root = spack.util.path.canonicalize_path(root)
 
     return Store(root,
@@ -87,7 +124,42 @@ db = llnl.util.lang.LazyReference(lambda: store.db)
 layout = llnl.util.lang.LazyReference(lambda: store.layout)
 
 
-def retrieve_upstream_dbs():
+def upstream_set(root):
+    upstream_root_description = os.path.join(root, 'upstream-spack')
+    return os.path.exists(upstream_root_description)
+
+
+def initialize_upstream_pointer_if_unset(root, init_upstream_root):
+    """Set the installation to point to the specified upstream."""
+    if not os.path.exists(root):
+        fs.mkdirp(root)
+    upstream_root_description = os.path.join(root, 'upstream-spack')
+    if not os.path.exists(upstream_root_description):
+        with open(upstream_root_description, 'w') as f:
+            f.write(init_upstream_root)
+
+
+def upstream_install_roots(root):
+    # Each installation root directory contains a file that points to the
+    # upstream installation used (if any). This constructs a sequence of
+    # upstream installations by recursively following these references.
+    upstream_root_description = os.path.join(root, 'upstream-spack')
+    install_roots = list()
+    while os.path.exists(upstream_root_description):
+        with open(upstream_root_description, 'r') as f:
+            upstream_root = f.read()
+            install_roots.append(upstream_root)
+            upstream_root_description = os.path.join(
+                upstream_root, 'upstream-spack')
+    return install_roots
+
+
+def upstream_dbs_from_pointers(root):
+    return _construct_upstream_dbs_from_install_roots(
+        upstream_install_roots(root))
+
+
+def upstream_dbs_from_config():
     other_spack_instances = spack.config.get('upstreams', {})
 
     install_roots = []

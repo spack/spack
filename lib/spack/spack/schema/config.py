@@ -20,7 +20,6 @@ properties = {
                 'type': 'string',
                 'enum': ['rpath', 'runpath']
             },
-            'install_tree': {'type': 'string'},
             'install_hash_length': {'type': 'integer', 'minimum': 1},
             'install_path_scheme': {'type': 'string'},
             'build_stage': {
@@ -52,6 +51,22 @@ properties = {
                                ' has been dropped]',
                     'error': False
                 },
+            },
+            'install_trees': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'patternProperties': {
+                    r'\w[\w-]*': {'type': 'string'}
+                }
+            },
+            'shared_install_trees': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'patternProperties': {
+                    r'\w[\w-]*': {'type': 'string'}
+                }
             },
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},
