@@ -10,7 +10,7 @@ def test_set_install_hash_length(mock_packages, mutable_config, monkeypatch,
                                  tmpdir):
     # spack.store.layout caches initial config values, so we monkeypatch
     mutable_config.set('config:install_hash_length', 5)
-    mutable_config.set('config:install_tree', str(tmpdir))
+    mutable_config.set('config:install_tree', {'root': str(tmpdir)})
     monkeypatch.setattr(spack.store, 'store', spack.store._store())
 
     spec = spack.spec.Spec('libelf').concretized()
