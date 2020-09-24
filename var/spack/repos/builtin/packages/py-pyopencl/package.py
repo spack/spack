@@ -11,7 +11,7 @@ class PyPyopencl(PythonPackage):
     """Python wrapper for OpenCL."""
 
     homepage = "https://documen.tician.de/pyopencl/"
-    url      = "https://files.pythonhosted.org/packages/75/ee/b8c71784fe0eb6997b5daf6065136ea7a8e64118a079917b0eeb70ed0d00/pyopencl-2020.2.2.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pyopencl/pyopencl-2020.2.2.tar.gz"
 
     maintainers = ['matthiasdiener']
 
@@ -22,6 +22,9 @@ class PyPyopencl(PythonPackage):
     depends_on('py-mako@0.3.6:', type=('build', 'run'))
     depends_on('py-pybind11@2.5.0:', type='build')
     depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-pytools', type=('build', 'run'))
+    depends_on('py-decorator', type=('build', 'run'))
 
     @run_before('build')
     def prepare(self):
