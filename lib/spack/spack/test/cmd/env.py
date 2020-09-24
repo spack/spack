@@ -1035,20 +1035,21 @@ def test_env_dir_remains_after_deactivation(mock_packages): #TODO: fix later
     e = ev.create('test', with_view=True)
 
     #activate env
-    with ev.read('test'):
-        add('cmake')
-        install('cmake')
+    shell = env('activate', '--sh', 'test')
 
-#        print(os.environ['PATH'].split(':'))
-#        if os.path.join(e.default_view.root, 'bin') in os.environ['PATH'].split(':'):
-#            print("in there")
-#        else:
-#            print("not in there")
+    #assert dir is in PATH
+    assert os.path.join(e.default_view.root, 'bin') in shell
 
-        if 'PATH' in os.environ.keys():
-            os.environ['PATH'] = os.path.join(e.default_view.root, 'bin') + ":" +  os.environ['PATH']
-        else:
-            os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
+    print("shell", shell)
+    print("Env PATH1", os.environ['PATH'])
+
+    #assert dir is in PATH twice
+    if 'PATH' in os.environ.keys():
+        os.environ['PATH'] = os.path.join(e.default_view.root, 'bin') + ":" +  os.environ['PATH']
+    else:
+        os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
+
+    print("Env PATH", os.environ['PATH'])
 
 #    assert False
 
