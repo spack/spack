@@ -18,8 +18,9 @@ import spack.spec
 from spack.error import SpackError
 
 
-a = '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
-default_projections = {'all': a}
+default_projections = {'all': ('{architecture}/'
+                               '{compiler.name}-{compiler.version}/'
+                               '{name}-{version}-{hash}')}
 
 
 def _check_concrete(spec):
