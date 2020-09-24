@@ -16,17 +16,20 @@ class Opium(AutotoolsPackage):
 
     depends_on('blas')
     depends_on('lapack')
-    build_targets = ['clean']
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+        options = []
         libs = spec['lapack'].libs + spec['blas'].libs
-        options = ['LDFLAGS=%s' % libs.ld_flags]
+        options.append('LDFLAGS=%s' % libs.ld_flags)
+        return options
 
-        configure(*options)
+    def build(self, spec, prefix):
         with working_dir("src", create=False):
             make("all-subdirs")
             make("opium")
 
+    def install(self, spec, prefix):
         # opium not have a make install :-((
         mkdirp(self.prefix.bin)
         install(join_path(self.stage.source_path, 'opium'),
