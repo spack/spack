@@ -23,8 +23,8 @@ class PyPyopencl(PythonPackage):
     depends_on('py-pybind11@2.5.0:', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytools', type=('build', 'run'))
-    depends_on('py-decorator', type=('build', 'run'))
+    depends_on('py-pytools@2017.6:', type=('build', 'run'))
+    depends_on('py-decorator@3.2.0:', type=('build', 'run'))
 
     @run_before('build')
     def prepare(self):
