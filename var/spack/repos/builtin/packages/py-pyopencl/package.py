@@ -19,9 +19,9 @@ class PyPyopencl(PythonPackage):
 
     depends_on('opencl')
     depends_on('ocl-icd')
-    depends_on('py-mako')
-    depends_on('py-pybind11')
-    depends_on('py-numpy')
+    depends_on('py-mako@0.3.6:', type=('build', 'run'))
+    depends_on('py-pybind11@2.5.0:', type='build')
+    depends_on('py-numpy', type=('build', 'run'))
 
     @run_before('build')
     def prepare(self):
