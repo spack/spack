@@ -166,7 +166,6 @@ def test_dev_build_fails_no_version(mock_packages):
 def test_dev_build_env(tmpdir, mock_packages, install_mockery,
                        mutable_mock_env_path):
     # setup dev-build-test-install package for dev build
-    # we can concretize outside environment because it has no dev-build deps
     build_dir = tmpdir.mkdir('build')
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' %
                            build_dir)
@@ -203,7 +202,6 @@ env:
 def test_dev_build_env_version_mismatch(tmpdir, mock_packages, install_mockery,
                                         mutable_mock_env_path):
     # setup dev-build-test-install package for dev build
-    # we can concretize outside environment because it has no dev-build deps
     build_dir = tmpdir.mkdir('build')
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
     spec.concretize()
@@ -288,7 +286,6 @@ env:
 def test_dev_build_env_dependency(tmpdir, mock_packages, install_mockery,
                                   mock_fetch, mutable_mock_env_path):
     # setup dev-build-test-install package for dev build
-    # we can concretize outside environment because it has no dev-build deps
     build_dir = tmpdir.mkdir('build')
     spec = spack.spec.Spec('dependent-of-dev-build@0.0.0')
     dep_spec = spack.spec.Spec('dev-build-test-install')
@@ -342,7 +339,6 @@ def test_dev_build_rebuild_on_source_changes(
     ``test_spec = dependent-of-dev-build`` tests rebuild for changes to dep
     """
     # setup dev-build-test-install package for dev build
-    # we can concretize outside environment because it has no dev-build deps
     build_dir = tmpdir.mkdir('build')
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' %
                            build_dir)
