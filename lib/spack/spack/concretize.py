@@ -377,7 +377,7 @@ class Concretizer(object):
                 msg += " '%s' set to 'any' and preference is." % name
                 msg += "'%s'. Set the variant to a non 'any'" % var.value
                 msg += " value or set a preference for variant '%s'." % name
-                raise vt.UnsatisfiableVariantSpecError(msg)
+                raise NonDeterministicVariantError(msg)
 
         return changed
 
@@ -805,3 +805,7 @@ class NoBuildError(spack.error.SpackError):
         msg = ("The spec\n    '%s'\n    is configured as not buildable, "
                "and no matching external installs were found")
         super(NoBuildError, self).__init__(msg % spec)
+
+
+class NonDeterministicVariantError(spack.error.SpecError):
+    """Raised when a spec variant is set to 'any' and concretizes to 'none'."""

@@ -128,7 +128,7 @@ class Variant(object):
             raise InvalidVariantValueError(self, not_allowed_values, pkg)
 
         # Validate the group of values if needed
-        if self.group_validator is not None:
+        if self.group_validator is not None and value != ('any',):
             self.group_validator(pkg.name, self.name, value)
 
     @property
