@@ -46,7 +46,7 @@ def config_yaml_v015(mutable_config):
     old_data = {
         'config': {
             'install_tree': '/fake/path',
-            'install_scheme': '{name}-{version}',
+            'install_path_scheme': '{name}-{version}',
         }
     }
     return functools.partial(_create_config, data=old_data, section='config')

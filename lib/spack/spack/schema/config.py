@@ -31,11 +31,11 @@ properties = {
                             spack.schema.projections.properties,
                         ),
                     },
-                    {'type': 'string'}
+                    {'type': 'string'}  # deprecated
                 ],
             },
             'install_hash_length': {'type': 'integer', 'minimum': 1},
-            'install_path_scheme': {'type': 'string'},
+            'install_path_scheme': {'type': 'string'},  # deprecated
             'build_stage': {
                 'oneOf': [
                     {'type': 'string'},
@@ -111,8 +111,14 @@ def update(data):
     Returns:
         True if data was changed, False otherwise
     """
+    # currently deprecated properties are
+    # install_tree: <string>
+    # install_path_scheme: <string>
+    # updated: install_tree: {root: <string>,
+    #                         projections: <projections_dict}
+    # root replaces install_tree, projections replace install_path_scheme
     changed = False
-    # currently only deprecated property is `install_tree`
+
     install_tree = data.get('install_tree', None)
     if isinstance(install_tree, six.string_types):
         # deprecated short-form install tree
@@ -120,11 +126,11 @@ def update(data):
         data['install_tree'] = {'root': install_tree}
         changed = True
 
-    install_scheme = data.pop('install_scheme', None)
-    if install_scheme:
+    install_path_scheme = data.pop('install_path_scheme', None)
+    if install_path_scheme:
         projections_data = {
             'projections': {
-                'all': install_scheme
+                'all': install_path_scheme
             }
         }
 
