@@ -26,17 +26,18 @@ import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.fetch_strategy as fs
-import spack.util.gpg
 import spack.relocate as relocate
+import spack.util.gpg
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.mirror
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.gpg import Gpg
 
 _build_cache_relative_path = 'build_cache'
+_build_cache_keys_relative_path = '_pgp'
 
 BUILD_CACHE_INDEX_TEMPLATE = '''
 <html>
@@ -247,15 +248,9 @@ def checksum_tarball(file):
     return hasher.hexdigest()
 
 
-def sign_tarball(key, force, specfile_path):
-    # Sign the packages if keys available
-    if spack.util.gpg.Gpg.gpg() is None:
-        raise NoGpgException(
-            "gpg2 is not available in $PATH .\n"
-            "Use spack install gnupg and spack load gnupg.")
-
+def select_signing_key(key=None):
     if key is None:
-        keys = Gpg.signing_keys()
+        keys = spack.util.gpg.signing_keys()
         if len(keys) == 1:
             key = keys[0]
 
@@ -263,26 +258,30 @@ def sign_tarball(key, force, specfile_path):
             raise PickKeyException(str(keys))
 
         if len(keys) == 0:
-            msg = "No default key available for signing.\n"
-            msg += "Use spack gpg init and spack gpg create"
-            msg += " to create a default key."
-            raise NoKeyException(msg)
+            raise NoKeyException(
+                "No default key available for signing.\n"
+                "Use spack gpg init and spack gpg create"
+                " to create a default key.")
+    return key
 
+
+def sign_tarball(key, force, specfile_path):
     if os.path.exists('%s.asc' % specfile_path):
         if force:
             os.remove('%s.asc' % specfile_path)
         else:
             raise NoOverwriteException('%s.asc' % specfile_path)
 
-    Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
+    key = select_signing_key(key)
+    spack.util.gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 
 def generate_package_index(cache_prefix):
     """Create the build cache index page.
 
     Creates (or replaces) the "index.json" page at the location given in
-    cache_prefix.  This page contains a link for each binary package (*.yaml)
-    and public key (*.key) under cache_prefix.
+    cache_prefix.  This page contains a link for each binary package (.yaml)
+    under cache_prefix.
     """
     tmpdir = tempfile.mkdtemp()
     db_root_dir = os.path.join(tmpdir, 'db_root')
@@ -323,6 +322,45 @@ def generate_package_index(cache_prefix):
             extra_args={'ContentType': 'application/json'})
     finally:
         shutil.rmtree(tmpdir)
+
+
+def generate_key_index(key_prefix, tmpdir=None):
+    """Create the key index page.
+
+    Creates (or replaces) the "index.json" page at the location given in
+    key_prefix.  This page contains an entry for each key (.pub) under
+    key_prefix.
+    """
+
+    tty.debug(' '.join(('Retrieving key.pub files from',
+                        url_util.format(key_prefix),
+                        'to build key index')))
+
+    fingerprints = (
+        entry[:-4]
+        for entry in web_util.list_url(key_prefix, recursive=False)
+        if entry.endswith('.pub'))
+
+    keys_local = url_util.local_file_path(key_prefix)
+    if keys_local:
+        target = os.path.join(keys_local, 'index.json')
+    else:
+        target = os.path.join(tmpdir, 'index.json')
+
+    index = {
+        'keys': dict(
+            (fingerprint, {}) for fingerprint
+            in sorted(set(fingerprints)))
+    }
+    with open(target, 'w') as f:
+        sjson.dump(index, f)
+
+    if not keys_local:
+        web_util.push_to_url(
+            target,
+            url_util.join(key_prefix, 'index.json'),
+            keep_original=False,
+            extra_args={'ContentType': 'application/json'})
 
 
 def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
@@ -445,7 +483,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
 
     # sign the tarball and spec file with gpg
     if not unsigned:
+        key = select_signing_key(key)
         sign_tarball(key, force, specfile_path)
+
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name=tarfile_path, arcname='%s' % tarfile_name)
@@ -468,7 +508,15 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
               .format(spec, remote_spackfile_path))
 
     try:
-        # create an index.html for the build_cache directory so specs can be
+        # push the key to the build cache's _pgp directory so it can be
+        # imported
+        if not unsigned:
+            push_keys(outdir,
+                      keys=[key],
+                      regenerate_index=regenerate_index,
+                      tmpdir=tmpdir)
+
+        # create an index.json for the build_cache directory so specs can be
         # found
         if regenerate_index:
             generate_package_index(url_util.join(
@@ -695,7 +743,8 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
         if os.path.exists('%s.asc' % specfile_path):
             try:
                 suppress = config.get('config:suppress_gpg_warnings', False)
-                Gpg.verify('%s.asc' % specfile_path, specfile_path, suppress)
+                spack.util.gpg.verify(
+                    '%s.asc' % specfile_path, specfile_path, suppress)
             except Exception as e:
                 shutil.rmtree(tmpdir)
                 raise e
@@ -898,41 +947,46 @@ def get_specs():
     return _cached_specs
 
 
-def get_keys(install=False, trust=False, force=False):
+def get_keys(install=False, trust=False, force=False, mirrors=None):
+    """Get pgp public keys available on mirror with suffix .pub
     """
-    Get pgp public keys available on mirror
-    with suffix .key or .pub
-    """
-    if not spack.mirror.MirrorCollection():
+    mirror_collection = (mirrors or spack.mirror.MirrorCollection())
+
+    if not mirror_collection:
         tty.die("Please add a spack mirror to allow " +
                 "download of build caches.")
 
-    keys = set()
+    for mirror in mirror_collection.values():
+        fetch_url = mirror.fetch_url
+        keys_url = url_util.join(fetch_url,
+                                 _build_cache_relative_path,
+                                 _build_cache_keys_relative_path)
+        keys_index = url_util.join(keys_url, 'index.json')
 
-    for mirror in spack.mirror.MirrorCollection().values():
-        fetch_url_build_cache = url_util.join(
-            mirror.fetch_url, _build_cache_relative_path)
+        tty.debug('Finding public keys in {0}'.format(
+            url_util.format(fetch_url)))
 
-        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
-        if mirror_dir:
-            tty.debug('Finding public keys in {0}'.format(mirror_dir))
-            files = os.listdir(str(mirror_dir))
-            for file in files:
-                if re.search(r'\.key', file) or re.search(r'\.pub', file):
-                    link = url_util.join(fetch_url_build_cache, file)
-                    keys.add(link)
-        else:
-            tty.debug('Finding public keys at {0}'
-                      .format(url_util.format(fetch_url_build_cache)))
-            # For s3 mirror need to request index.html directly
-            p, links = web_util.spider(
-                url_util.join(fetch_url_build_cache, 'index.html'))
+        try:
+            _, _, json_file = web_util.read_from_url(keys_index)
+            json_index = sjson.load(codecs.getreader('utf-8')(json_file))
+        except (URLError, web_util.SpackWebError) as url_err:
+            if web_util.url_exists(keys_index):
+                err_msg = [
+                    'Unable to find public keys in {0},',
+                    ' caught exception attempting to read from {1}.',
+                ]
 
-            for link in links:
-                if re.search(r'\.key', link) or re.search(r'\.pub', link):
-                    keys.add(link)
+                tty.error(''.join(err_msg).format(
+                    url_util.format(fetch_url),
+                    url_util.format(keys_index)))
 
-        for link in keys:
+                tty.debug(url_err)
+
+            continue
+
+        for fingerprint, key_attributes in json_index['keys'].items():
+            link = os.path.join(keys_url, fingerprint + '.pub')
+
             with Stage(link, name="build_cache", keep=True) as stage:
                 if os.path.exists(stage.save_filename) and force:
                     os.remove(stage.save_filename)
@@ -941,14 +995,78 @@ def get_keys(install=False, trust=False, force=False):
                         stage.fetch()
                     except fs.FetchError:
                         continue
-            tty.debug('Found key {0}'.format(link))
+
+            tty.debug('Found key {0}'.format(fingerprint))
             if install:
                 if trust:
-                    Gpg.trust(stage.save_filename)
+                    spack.util.gpg.trust(stage.save_filename)
                     tty.debug('Added this key to trusted keys.')
                 else:
                     tty.debug('Will not add this key to trusted keys.'
                               'Use -t to install all downloaded keys')
+
+
+def push_keys(*mirrors, **kwargs):
+    """
+    Upload pgp public keys to the given mirrors
+    """
+    keys = kwargs.get('keys')
+    regenerate_index = kwargs.get('regenerate_index', False)
+    tmpdir = kwargs.get('tmpdir')
+    remove_tmpdir = False
+
+    keys = spack.util.gpg.public_keys(*(keys or []))
+
+    try:
+        for mirror in mirrors:
+            push_url = getattr(mirror, 'push_url', mirror)
+            keys_url = url_util.join(push_url,
+                                     _build_cache_relative_path,
+                                     _build_cache_keys_relative_path)
+            keys_local = url_util.local_file_path(keys_url)
+
+            verb = 'Writing' if keys_local else 'Uploading'
+            tty.debug('{0} public keys to {1}'.format(
+                verb, url_util.format(push_url)))
+
+            if keys_local:  # mirror is local, don't bother with the tmpdir
+                prefix = keys_local
+                mkdirp(keys_local)
+            else:
+                # A tmp dir is created for the first mirror that is non-local.
+                # On the off-hand chance that all the mirrors are local, then
+                # we can avoid the need to create a tmp dir.
+                if tmpdir is None:
+                    tmpdir = tempfile.mkdtemp()
+                    remove_tmpdir = True
+                prefix = tmpdir
+
+            for fingerprint in keys:
+                tty.debug('    ' + fingerprint)
+                filename = fingerprint + '.pub'
+
+                export_target = os.path.join(prefix, filename)
+                spack.util.gpg.export_keys(export_target, fingerprint)
+
+                # If mirror is local, the above export writes directly to the
+                # mirror (export_target points directly to the mirror).
+                #
+                # If not, then export_target is a tmpfile that needs to be
+                # uploaded to the mirror.
+                if not keys_local:
+                    spack.util.web.push_to_url(
+                        export_target,
+                        url_util.join(keys_url, filename),
+                        keep_original=False)
+
+            if regenerate_index:
+                if keys_local:
+                    generate_key_index(keys_url)
+                else:
+                    generate_key_index(keys_url, tmpdir)
+    finally:
+        if remove_tmpdir:
+            shutil.rmtree(tmpdir)
 
 
 def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
