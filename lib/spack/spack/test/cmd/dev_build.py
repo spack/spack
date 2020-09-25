@@ -376,7 +376,7 @@ env:
 
             reset_string()  # so the package will accept rebuilds
 
-            fs.touch(os.path.join(build_dir, 'test'))
+            fs.touch(os.path.join(str(build_dir), 'test'))
             output = install()
 
     assert 'Installing %s' % test_spec in output
