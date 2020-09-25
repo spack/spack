@@ -712,7 +712,7 @@ class Environment(object):
         self.dev_specs = configuration['develop']
         for name, entry in self.dev_specs.items():
             # spec must include a concrete version
-            assert Spec(entry['spec']).version
+            assert Spec(entry['spec']).version.concrete
             # do not check paths because `spack develop` will clone all develop
             # specs when run with no args
             # default path is the spec name
