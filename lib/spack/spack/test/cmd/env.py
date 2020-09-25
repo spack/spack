@@ -1082,7 +1082,7 @@ def test_env_activate_dir_saved_correctly(working_env):  # TODO: do docs
     assert os.path.join(e.default_view.root, 'bin') not in os.environ['SPACK_ENV_ACTIVATED_PATHS']
 
 
-def test_env_dir_added_maunally(working_env)  # TODO: do docs
+def test_env_dir_added_maunally(working_env):  # TODO: do docs
     # Create env with view
     e = ev.create('test', with_view=True)
 
@@ -1095,8 +1095,6 @@ def test_env_dir_added_maunally(working_env)  # TODO: do docs
 
     # Make sure only SPACK_ENV_ACTIVATED_PATHS was removed
     assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
-    assert os.path.join(e.default_view.root, 'bin') not in os.environ['SPACK_ENV_ACTIVATED_PATHS']
-
 
 
 def test_env_updates_view_install(
