@@ -7,7 +7,6 @@
 import os
 import sys
 import glob
-import shutil
 import tempfile
 import re
 import inspect
@@ -21,7 +20,6 @@ from llnl.util.filesystem import \
 
 from spack.version import Version, ver
 from spack.package import PackageBase, run_after, InstallError
-from spack.paths import tests_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
@@ -1320,48 +1318,3 @@ class IntelPackage(PackageBase):
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
-
-    # IntelPackages have their own test methods that collate the relevant tests
-    # Tests for each component are here in IntelPackage
-    def test_compiler(self):
-        # Get compiler tests
-        compiler_test_dir = self.test_dir.join('compiler_tests')
-        shutil.copytree(os.path.join(tests_path, 'compilers'),
-                        compiler_test_dir)
-
-        # compile and run each test
-        langs = ('c', 'c++', 'fortran')
-        compilers = ('icc', 'icpc', 'ifort')
-        for lang, compiler in zip(langs, compilers):
-            lang_dir = os.path.join(compiler_test_dir, lang)
-            for test in os.listdir(lang_dir):
-                full_path = os.path.join(compiler_test_dir, test)
-                exe_name = '%s.exe' % test
-
-                # Get the right compiler for this test
-                compiler = test_compiler_for_source(test)
-
-                ###
-                # Compile the test
-                ###
-                # once we reconcile compilers and dependencies this should
-                # query package for appropriate cxx11 flag
-                # only the hello_cxx11 test requires c++11
-                options = ['-std=c++11'] if 'c++11' in test else []
-
-                # standard options
-                options.extend(['-o', exe_name])
-
-                # ifort requires '-Tf' flag immediately precede any *.f95 file
-                if '.f95' in test:
-                    options.append('-Tf')
-
-                # We can finally append the filename
-                options.append(full_path)
-                compiled = self.run_test(compiler, options=options,
-                                         installed=True)
-
-                # run the test to ensure it works
-                # only run it if the compile step worked
-                if compiled:
-                    self.run_test(exe_name, expected=["Hello world", "YES!"])
