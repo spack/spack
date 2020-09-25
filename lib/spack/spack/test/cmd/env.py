@@ -1031,7 +1031,7 @@ def test_store_different_build_deps():
 
 
 def test_env_dir_stays_after_deactivation():  # TODO: do docs
-    # Create env with view in fake dir
+    # Create env with view
     e = ev.create('test', with_view=True)
 
     # Activate env
@@ -1039,15 +1039,16 @@ def test_env_dir_stays_after_deactivation():  # TODO: do docs
 
     # Add to SPACK_ENV_ACTIVATED_PATHS
     if 'SPACK_ENV_ACTIVATED_PATHS' in os.environ.keys():
-        os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(e.default_view.root, 'bin') + ":" + os.environ['SPACK_ENV_ACTIVATED_PATHS']
+        os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(
+            e.default_view.root, 'bin') + ":" + os.environ['SPACK_ENV_ACTIVATED_PATHS']
     else:
-        os.environ['SPACK_ENV_ACTIVATED_PATHS'] =
-            os.path.join(e.default_view.root, 'bin')
+        os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(
+        e.default_view.root, 'bin')
 
     # Add to PATH
     if 'PATH' in os.environ.keys():
-        os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
-            + ":" + os.environ['PATH']
+        os.environ['PATH'] = os.path.join(
+        e.default_view.root, 'bin') + ":" + os.environ['PATH']
     else:
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
 
@@ -1056,6 +1057,28 @@ def test_env_dir_stays_after_deactivation():  # TODO: do docs
 
     # Make sure only SPACK_ENV_ACTIVATED_PATHS was removed
     assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
+    assert os.path.join(e.default_view.root, 'bin') not in os.environ['SPACK_ENV_ACTIVATED_PATHS']
+
+
+def test_env_activate_dir_saved_correctly():  # TODO: do docs
+    # Create env with view
+    e = ev.create('test', with_view=True)
+
+    # Activate env
+    env('activate', '--sh', 'test')
+
+    # Add to SPACK_ENV_ACTIVATED_PATHS
+    if 'SPACK_ENV_ACTIVATED_PATHS' in os.environ.keys():
+        os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(
+            e.default_view.root, 'bin') + ":" + os.environ['SPACK_ENV_ACTIVATED_PATHS']
+    else:
+        os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(
+        e.default_view.root, 'bin')
+
+    # Deactivate TODO: make sure this works
+    env('deactivate')
+
+    # Make sure only SPACK_ENV_ACTIVATED_PATHS was removed
     assert os.path.join(e.default_view.root, 'bin') not in os.environ['SPACK_ENV_ACTIVATED_PATHS']
 
 
