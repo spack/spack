@@ -28,7 +28,7 @@ class Flang(CMakePackage):
     msg = ('Target OpenMP offloading to NVIDIA GPUs '
            '(experimental w/ no support). '
            'Only works with GCC compilers compatible with CUDA 9.x. '
-           'Specify ^llvm-flang cuda_arch=<value> explictly.')
+           'Specify ^llvm-flang+cuda cuda_arch=<value> explictly.')
 
     variant('nvptx',
             default=False,
