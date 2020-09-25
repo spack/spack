@@ -1030,7 +1030,7 @@ def test_store_different_build_deps():
         assert x_read['z'] != y_read['z']
 
 
-def test_env_dir_remains_after_deactivation(): #TODO: fix later
+def test_env_dir_remains_after_deactivation(): #TODO: fix later & do docs
     #create env with view in fake dir
     e = ev.create('test', with_view=True)
 
@@ -1052,9 +1052,13 @@ def test_env_dir_remains_after_deactivation(): #TODO: fix later
     print(os.environ['PATH'])
 
     #deactivate
+    env('deactivate')
 
     #Make sure only SPACK_ENV_ACTIVATED_PATHS was removed
-    assert False
+    print(os.environ['SPACK_ENV_ACTIVATED_PATHS'])
+
+    assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
+    assert os.path.join(e.default_view.root, 'bin') not in os.environ['SPACK_ENV_ACTIVATED_PATHS']
 
 
 def test_env_updates_view_install(
