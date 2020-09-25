@@ -1560,10 +1560,10 @@ class PackageInstaller(object):
             # lock on the package.
             try:
                 if pkg.spec.dag_hash() in self.overwrite:
-                    # If it's actually overwriting, do a fs transaction
                     rec, _ = self._check_db(pkg.spec)
                     if rec and rec.installed:
                         if rec.installation_time < self.overwrite_time:
+                            # If it's actually overwriting, do a fs transaction
                             if os.path.exists(rec.path):
                                 with fs.replace_directory_transaction(
                                         rec.path):
