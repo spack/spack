@@ -44,7 +44,7 @@ def develop(parser, args):
                 tty.msg(msg)
                 continue
 
-            stage = package = spack.spec.Spec(entry['spec']).package.stage
+            stage = spack.spec.Spec(entry['spec']).package.stage
             # Iterate over composite strategy to update path
             # This will include resources in what we clone
             for stage_obj in stage:

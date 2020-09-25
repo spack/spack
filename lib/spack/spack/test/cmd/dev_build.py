@@ -331,8 +331,8 @@ env:
     assert spec.satisfies('^dev_path=any')
 
 
-@pytest.mark.parametrize('test_spec',['dev-build-test-install',
-                                      'dependent-of-dev-build'])
+@pytest.mark.parametrize('test_spec', ['dev-build-test-install',
+                                       'dependent-of-dev-build'])
 def test_dev_build_rebuild_on_source_changes(
         test_spec, tmpdir, mock_packages, install_mockery,
         mutable_mock_env_path, mock_fetch):
@@ -371,7 +371,7 @@ env:
 """ % (test_spec, build_dir))
 
         env('create', 'test', './spack.yaml')
-        with ev.read('test') as e:
+        with ev.read('test'):
             install()
 
             reset_string()  # so the package will accept rebuilds

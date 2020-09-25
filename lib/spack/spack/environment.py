@@ -998,7 +998,8 @@ class Environment(object):
             path (string): Path to find code for developer builds. Relative
         paths will be resolved relative to the environment.
             clone (bool, default False): Clone the package code to the path.
-        If clone is False Spack will assume the code is already present at path.
+        If clone is False Spack will assume the code is already present at
+        path.
 
         Returns (bool): True iff the environment was changed.
         """
