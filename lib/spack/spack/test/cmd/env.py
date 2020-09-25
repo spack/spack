@@ -1030,28 +1030,31 @@ def test_store_different_build_deps():
         assert x_read['z'] != y_read['z']
 
 
-def test_env_dir_remains_after_deactivation(mock_packages): #TODO: fix later
+def test_env_dir_remains_after_deactivation(): #TODO: fix later
     #create env with view in fake dir
     e = ev.create('test', with_view=True)
 
     #activate env
     shell = env('activate', '--sh', 'test')
 
-    #assert dir is in PATH
-    assert os.path.join(e.default_view.root, 'bin') in shell
+    #Add to SPACK_ENV_ACTIVATED_PATHS
+    if 'SPACK_ENV_ACTIVATED_PATHS' in os.environ.keys():
+        os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(e.default_view.root, 'bin') + ":" +  os.environ['SPACK_ENV_ACTIVATED_PATHS']
+    else:
+        os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(e.default_view.root, 'bin')
 
-    print("shell", shell)
-    print("Env PATH1", os.environ['PATH'])
-
-    #assert dir is in PATH twice
+    #Add to PATH
     if 'PATH' in os.environ.keys():
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin') + ":" +  os.environ['PATH']
     else:
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
 
-    print("Env PATH", os.environ['PATH'])
+    print(os.environ['PATH'])
 
-#    assert False
+    #deactivate
+
+    #Make sure only SPACK_ENV_ACTIVATED_PATHS was removed
+    assert False
 
 
 def test_env_updates_view_install(
