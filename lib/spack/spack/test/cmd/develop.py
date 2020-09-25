@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pytest
 import os
+import shutil
 import llnl.util.filesystem as fs
 
 import spack.spec
@@ -14,7 +15,8 @@ develop = SpackCommand('develop')
 env = SpackCommand('env')
 
 
-@pytest.mark.usefixtures('mutable_mock_env_path', 'mock_packages')
+@pytest.mark.usefixtures(
+    'mutable_mock_env_path', 'mock_packages', 'mock_fetch')
 class TestDevelop(object):
     def check_develop(self, env, spec, path=None):
         path = path or spec.name
@@ -49,3 +51,20 @@ class TestDevelop(object):
         with ev.read('test') as e:
             develop('--no-clone', '-p', str(tmpdir), 'mpich@1.0')
             self.check_develop(e, spack.spec.Spec('mpich@1.0'), str(tmpdir))
+
+    def test_develop(self):
+        env('create', 'test')
+        with ev.read('test') as e:
+            develop('mpich@1.0')
+            self.check_develop(e, spack.spec.Spec('mpich@1.0'))
+
+    def test_develop_no_args(self):
+        env('create', 'test')
+        with ev.read('test') as e:
+            # develop and remove it
+            develop('mpich@1.0')
+            shutil.rmtree(os.path.join(e.path, 'mpich'))
+
+            # test develop with no args
+            develop()
+            self.check_develop(e, spack.spec.Spec('mpich@1.0'))

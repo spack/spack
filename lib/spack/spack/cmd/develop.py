@@ -32,21 +32,32 @@ def develop(parser, args):
     if not args.spec:
         if args.no_clone:
             raise SpackError("No spec provided to spack develop command")
-        else:
-            # download all dev specs
-            for name, entry in env.dev_specs.items():
-                path = entry.get('path', name)
-                abspath = path if os.path.isabs(path) else os.path.join(
-                    env.path, path)
-                if os.path.exists(abspath):
-                    msg = "Skipping developer download of %s" % entry['spec']
-                    msg += " because its path already exists."
-                    tty.msg(msg)
-                    continue
-                spack.spec.Spec(entry['spec']).package.fetcher.clone(abspath)
 
-            if not env.dev_specs:
-                tty.warn("No develop specs to download")
+        # download all dev specs
+        for name, entry in env.dev_specs.items():
+            path = entry.get('path', name)
+            abspath = path if os.path.isabs(path) else os.path.join(
+                env.path, path)
+            if os.path.exists(abspath):
+                msg = "Skipping developer download of %s" % entry['spec']
+                msg += " because its path already exists."
+                tty.msg(msg)
+                continue
+
+            stage = package = spack.spec.Spec(entry['spec']).package.stage
+            # Iterate over composite strategy to update path
+            # This will include resources in what we clone
+            for stage_obj in stage:
+                stage_obj.path = abspath
+                stage_obj.source_path = abspath
+            stage.create()
+            stage.fetch()
+            stage.expand_archive()
+
+        if not env.dev_specs:
+            tty.warn("No develop specs to download")
+
+        return
 
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
