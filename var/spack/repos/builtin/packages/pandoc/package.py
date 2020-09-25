@@ -27,7 +27,7 @@ class Pandoc(Package):
         version('2.7.3', sha256='fb93800c90f3fab05dbd418ee6180d086b619c9179b822ddfecb608874554ff0')
 
     variant('texlive', default=True, description='Use TeX Live to enable PDF output')
-    
+
     depends_on('texlive', when='+texlive')
 
     def install(self, spec, prefix):
