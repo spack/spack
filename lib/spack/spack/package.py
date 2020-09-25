@@ -1598,9 +1598,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         dev_path_var = self.spec.variants.get('dev_path', None)
         if dev_path_var:
             kwargs['keep_stage'] = True
-        dev_build_var = self.spec.variants.get('dev_build', None)
-        if dev_build_var:
-            kwargs['use_cache'] = False
 
         builder = PackageInstaller(self)
         builder.install(**kwargs)
