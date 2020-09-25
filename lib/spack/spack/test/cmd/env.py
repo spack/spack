@@ -1030,7 +1030,7 @@ def test_store_different_build_deps():
         assert x_read['z'] != y_read['z']
 
 
-def test_env_dir_stays_after_deactivation():  # TODO: do docs
+def test_env_dir_stays_after_deactivation(working_env):  # TODO: do docs
     # Create env with view
     e = ev.create('test', with_view=True)
 
