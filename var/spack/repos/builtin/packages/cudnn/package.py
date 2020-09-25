@@ -22,6 +22,21 @@ class Cudnn(Package):
 
     maintainers = ['adamjstewart']
 
+    # cuDNN 8.0.3
+    version('8.0.3.33-11.0-linux-x64',
+            sha256='8924bcc4f833734bdd0009050d110ad0c8419d3796010cf7bc515df654f6065a',
+            preferred=True)
+    version('8.0.3.33-11.0-linux-ppc64le',
+            sha256='c2d0519831137b43d0eebe07522edb4ef5d62320e65e5d5fa840a9856f25923d')
+    version('8.0.3.33-10.2-linux-x64',
+            sha256='b3d487c621e24b5711983b89bb8ad34f0378bdbf8a1a4b86eefaa23b19956dcc')
+    version('8.0.3.33-10.2-linux-ppc64le',
+            sha256='ff22c9c37af191c9104989d784427cde744cdde879bfebf3e4e55ca6a9634a11')
+    version('8.0.3.33-10.1-linux-x64',
+            sha256='4752ac6aea4e4d2226061610d6843da6338ef75a93518aa9ce50d0f58df5fb07')
+    version('8.0.3.33-10.1-linux-ppc64le',
+            sha256='c546175f6ec86a11ee8fb9ab5526fa8d854322545769a87d35b1a505992f89c3')
+
     # cuDNN 8.0.2
     version('8.0.2.39-11.0-linux-x64',
             sha256='672f46288b8edd98f8d156a4f1ff518201ca6de0cff67915ceaa37f6d6d86345')
@@ -48,8 +63,7 @@ class Cudnn(Package):
 
     # cuDNN 7.6.5
     version('7.6.5.32-10.2-linux-x64',
-            sha256='600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20',
-            preferred=True)
+            sha256='600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20')
     version('7.6.5.32-10.2-linux-ppc64le',
             sha256='7dc08b6ab9331bfd12207d4802c61db1ad7cace7395b67a6e7b16efa0335668b')
     version('7.6.5.32-10.1-linux-x64',
