@@ -22,11 +22,7 @@ class Veloc(CMakePackage):
     version('1.0',    sha256='d594b73d6549a61fce8e67b8984a17cebc3e766fc520ed1636ae3683cdde77cb')
     version('1.0rc1', sha256='81686ca0994a22475911d38d21c7c74b64ffef4ca872fd01f76d155c5124b0bc')
 
-    depends_on('boost~atomic~chrono~clanglibcpp~date_time~debug~exception'
-               '~filesystem~graph~icu~iostreams~locale~log~math~mpi'
-               '~multithreaded~numpy~program_options~python~random~regex'
-               '~serialization~shared~signals~singlethreaded~system'
-               '~taggedlayout~test~thread~timer~versionedlayout~wave')
+    depends_on('boost')
     depends_on('libpthread-stubs')
     depends_on('mpi')
     depends_on('er')
