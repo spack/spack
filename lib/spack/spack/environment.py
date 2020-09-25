@@ -990,7 +990,15 @@ class Environment(object):
                 del self.specs_by_hash[dag_hash]
 
     def develop(self, spec, path, clone=False):
-        """Add dev-build info for spec, set to version and path.
+        """Add dev-build info for package
+
+        Args:
+            spec (Spec): Set constraints on development specs. Must include a
+        concrete version.
+            path (string): Path to find code for developer builds. Relative
+        paths will be resolved relative to the environment.
+            clone (bool, default False): Clone the package code to the path.
+        If clone is False Spack will assume the code is already present at path.
 
         Returns (bool): True iff the environment was changed.
         """
