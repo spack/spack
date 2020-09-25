@@ -16,7 +16,7 @@ class LlvmFlang(CMakePackage, CudaPackage):
 
     maintainer = ['naromero77']
 
-    version('release_90', branch='release_90')
+    version('release_90', branch='release_90', preferred=True)
     version('release_80', branch='release_80')
     version('release_70', branch='release_70')
     version('release_60', branch='release_60')
