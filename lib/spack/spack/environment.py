@@ -716,6 +716,8 @@ class Environment(object):
             # do not check paths because `spack develop` will clone all develop
             # specs when run with no args
             # default path is the spec name
+            assert re.match(r'{0}?(.*{0})*.*'.format(os.sep),
+                            entry.get('path', name))
             if 'path' not in entry:
                 self.dev_specs[name]['path'] = name
 
