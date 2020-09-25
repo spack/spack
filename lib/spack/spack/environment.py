@@ -1332,25 +1332,24 @@ class Environment(object):
         if not spec.package.installed:
             return False
 
-        # if it's not a dev build, we don't need to overwrite it
-        dev_path_var = spec.variants.get('dev_path', None)
-        dev_build_var = spec.variants.get('dev_build', None)
-        if not dev_build_var:
+        # if spec and all deps aren't dev builds, we don't need to overwrite it
+        if not any(spec.satisfies(c)
+                   for c in ('dev_path=any', '^dev_path=any')):
             return False
 
-        # if a dep is not installed, then it will be changed
-        deps = list(spec.traverse(root=False))
-        all_installed = all(dep.package.installed for dep in deps)
-        if not all_installed:
-            return True
-
-        # if any dep needs overwrite, then overwrite this package
-        any_rebuild = any(self._spec_needs_overwrite(dep) for dep in deps)
-        if any_rebuild:
+        # if any dep needs overwrite, or any dep is missing and is a dev build
+        # then overwrite this package
+        if any(
+            self._spec_needs_overwrite(dep) or
+            ((not dep.package.installed) and dep.satisfies('dev_path=any'))
+            for dep in spec.traverse(root=False)
+        ):
             return True
 
         # if it's not a direct dev build and its dependencies haven't
-        # changed, it hasn't changed
+        # changed, it hasn't changed. Don't use satisfaction here because if it
+        # exists, then we need the value later
+        dev_path_var = spec.variants.get('dev_path', None)
         if not dev_path_var:
             return False
 
@@ -1417,7 +1416,10 @@ class Environment(object):
         with spack.store.db.read_transaction():
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
-                if not spec.package.installed or spec.satisfies('+dev_build'):
+                if not spec.package.installed or (
+                        spec.satisfies('dev_path=any') or
+                        spec.satisfies('^dev_path=any')
+                ):
                     # If it's a dev build it could need to be reinstalled
                     specs_to_install.append(spec)
 

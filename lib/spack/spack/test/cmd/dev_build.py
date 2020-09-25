@@ -6,6 +6,7 @@
 import os
 import pytest
 import spack.spec
+import llnl.util.filesystem as fs
 import spack.environment as ev
 from spack.main import SpackCommand, SpackCommandError
 
@@ -328,3 +329,54 @@ env:
     for dep in (dep_spec, spec['dev-build-test-install']):
         assert dep.satisfies('dev_path=%s' % build_dir)
     assert spec.satisfies('^dev_path=any')
+
+
+@pytest.mark.parametrize('test_spec',['dev-build-test-install',
+                                      'dependent-of-dev-build'])
+def test_dev_build_rebuild_on_source_changes(
+        test_spec, tmpdir, mock_packages, install_mockery,
+        mutable_mock_env_path, mock_fetch):
+    """Test dev builds rebuild on changes to source code.
+
+    ``test_spec = dev-build-test-install`` tests rebuild for changes to package
+    ``test_spec = dependent-of-dev-build`` tests rebuild for changes to dep
+    """
+    # setup dev-build-test-install package for dev build
+    # we can concretize outside environment because it has no dev-build deps
+    build_dir = tmpdir.mkdir('build')
+    spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' %
+                           build_dir)
+    spec.concretize()
+
+    def reset_string():
+        with build_dir.as_cwd():
+            with open(spec.package.filename, 'w') as f:
+                f.write(spec.package.original_string)
+
+    reset_string()
+
+    # setup environment
+    envdir = tmpdir.mkdir('env')
+    with envdir.as_cwd():
+        with open('spack.yaml', 'w') as f:
+            f.write("""\
+env:
+  specs:
+  - %s@0.0.0
+
+  develop:
+    dev-build-test-install:
+      spec: dev-build-test-install@0.0.0
+      path: %s
+""" % (test_spec, build_dir))
+
+        env('create', 'test', './spack.yaml')
+        with ev.read('test') as e:
+            install()
+
+            reset_string()  # so the package will accept rebuilds
+
+            fs.touch(os.path.join(build_dir, 'test'))
+            output = install()
+
+    assert 'Installing %s' % test_spec in output
