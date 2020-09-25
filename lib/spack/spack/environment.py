@@ -1032,7 +1032,6 @@ class Environment(object):
                     (spec, path))
 
         if clone:
-            # Not really cloning if it's a url-fetched version
             abspath = path if os.path.isabs(path) else os.path.join(
                 self.path, path)
 
