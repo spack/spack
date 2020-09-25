@@ -180,7 +180,8 @@ class Sundials(CMakePackage):
     depends_on('suite-sparse',        when='+klu')
     depends_on('petsc +mpi',          when='+petsc')
     depends_on('hypre +mpi',          when='+hypre')
-    depends_on('superlu-dist@6.1.1:', when='+superlu-dist')
+    depends_on('superlu-dist@6.1.1:', when='@:5.3.0 +superlu-dist')
+    depends_on('superlu-dist@6.3.0:', when='@5.4.0: +superlu-dist')
     depends_on('trilinos+tpetra',     when='+trilinos')
 
     # Require that external libraries built with the same precision
@@ -204,6 +205,7 @@ class Sundials(CMakePackage):
     # remove OpenMP header file and function from hypre vector test code
     patch('test_nvector_parhyp.patch', when='@2.7.0:3.0.0')
     patch('FindPackageMultipass.cmake.patch', when='@5.0.0')
+    patch('0001-support-superlu-dist-6.3.patch', when='@5.4.0: +superlu-dist')
 
     # ==========================================================================
     # SUNDIALS Settings

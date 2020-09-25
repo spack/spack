@@ -1,0 +1,317 @@
+From 0b760d3eb598f29ddd484510d96f813ab3de8a66 Mon Sep 17 00:00:00 2001
+From: "Balos, Cody Joe" <balos1@llnl.gov>
+Date: Fri, 25 Sep 2020 11:20:58 -0700
+Subject: [PATCH] support superlu-dist 6.3
+
+---
+ config/FindSUPERLUDIST.cmake                  | 29 ++++++++++++++-----
+ config/SundialsSuperLUDIST.cmake              |  2 +-
+ .../ark_brusselator1D_FEM_sludist.cpp         | 18 ++++++------
+ .../cvode/superludist/cvAdvDiff_sludist.cpp   | 14 ++++-----
+ .../test_sunlinsol_superludist.cpp            | 14 ++++-----
+ include/sunlinsol/sunlinsol_superludist.h     | 20 +++++++------
+ .../superludist/sunlinsol_superludist.c       | 14 ++++-----
+ 7 files changed, 63 insertions(+), 48 deletions(-)
+
+diff --git a/config/FindSUPERLUDIST.cmake b/config/FindSUPERLUDIST.cmake
+index ee5cbc7ff..8325382ef 100644
+--- a/config/FindSUPERLUDIST.cmake
++++ b/config/FindSUPERLUDIST.cmake
+@@ -75,12 +75,25 @@ if(SUPERLUDIST_LIBRARY AND SUPERLUDIST_INCLUDE_DIR)
+   mark_as_advanced(FORCE SUPERLUDIST_CONFIG_PATH)
+ endif()
+ 
+-# set a more informative error message in case the library was not found
+-set(SUPERLUDIST_NOT_FOUND_MESSAGE "\
+-************************************************************************\n\
+-ERROR: Could not find SuperLU_DIST. Please check the variables:\n\
+-       SUPERLUDIST_INCLUDE_DIR and SUPERLUDIST_LIBRARY_DIR\n\
+-************************************************************************")
++# find the library version file
++if(SUPERLUDIST_LIBRARY AND SUPERLUDIST_INCLUDE_DIR)
++  find_file(SUPERLUDIST_VERSION_PATH superlu_defs.h PATHS ${SUPERLUDIST_INCLUDE_DIR})
++
++  file(STRINGS ${SUPERLUDIST_VERSION_PATH} _version_major REGEX "SUPERLU_DIST_MAJOR_VERSION")
++  list(GET _version_major 0 _version_string)
++  string(REGEX MATCHALL "[0-9]" _version_major "${_version_string}")
++
++  file(STRINGS ${SUPERLUDIST_VERSION_PATH} _version_minor REGEX "SUPERLU_DIST_MINOR_VERSION")
++  list(GET _version_minor 0 _version_string)
++  string(REGEX MATCHALL "[0-9]" _version_minor "${_version_string}")
++
++  file(STRINGS ${SUPERLUDIST_VERSION_PATH} _version_patch REGEX "SUPERLU_DIST_PATCH_VERSION")
++  list(GET _version_patch 0 _version_string)
++  string(REGEX MATCHALL "[0-9]" _version_patch "${_version_string}")
++
++  set(SUPERLUDIST_VERSION "${_version_major}.${_version_minor}.${_version_patch}")
++  mark_as_advanced(FORCE SUPERLUDIST_VERSION_PATH)
++endif()
+ 
+ # set package variables including SUPERLUDIST_FOUND
+ find_package_handle_standard_args(SUPERLUDIST
+@@ -88,8 +101,8 @@ find_package_handle_standard_args(SUPERLUDIST
+     SUPERLUDIST_LIBRARY
+     SUPERLUDIST_INCLUDE_DIR
+     SUPERLUDIST_INDEX_SIZE
+-  FAIL_MESSAGE
+-    "${SUPERLUDIST_NOT_FOUND_MESSAGE}"
++  VERSION_VAR
++    SUPERLUDIST_VERSION
+   )
+ 
+ # Create target for SuperLU_DIST
+diff --git a/config/SundialsSuperLUDIST.cmake b/config/SundialsSuperLUDIST.cmake
+index 24026fd54..719108b1c 100644
+--- a/config/SundialsSuperLUDIST.cmake
++++ b/config/SundialsSuperLUDIST.cmake
+@@ -50,7 +50,7 @@ endif()
+ # --- Find SuperLU_DIST and test it --- #
+ 
+ # Try to find SuperLU_DIST
+-find_package(SUPERLUDIST REQUIRED)
++find_package(SUPERLUDIST 6.3.0 REQUIRED)
+ 
+ # If we have the SuperLU_DIST libraries, test them
+ if(SUPERLUDIST_FOUND)
+diff --git a/examples/arkode/CXX_superludist/ark_brusselator1D_FEM_sludist.cpp b/examples/arkode/CXX_superludist/ark_brusselator1D_FEM_sludist.cpp
+index 06cc1e50e..a83ca822d 100644
+--- a/examples/arkode/CXX_superludist/ark_brusselator1D_FEM_sludist.cpp
++++ b/examples/arkode/CXX_superludist/ark_brusselator1D_FEM_sludist.cpp
+@@ -177,9 +177,9 @@ int main(int argc, char *argv[]) {
+   SuperMatrix Msuper;         /* empty SuperLU-DIST mass matrix object */
+   SuperMatrix Rsuper;         /* empty SuperLU-DIST reaction matrix object */
+   gridinfo_t grid;            /* SuperLU-DIST process grid */
+-  LUstruct_t Alu, Mlu;        /* SuperLU-DIST LUstruct_t */
+-  ScalePermstruct_t Ascaleperm, Mscaleperm; /* SuperLU-DIST ScalePermstruct_t */
+-  SOLVEstruct_t Asolve, Msolve;             /* SuperLU-DIST SOLVEstruct_t */
++  dLUstruct_t Alu, Mlu;        /* SuperLU-DIST dLUstruct_t */
++  dScalePermstruct_t Ascaleperm, Mscaleperm; /* SuperLU-DIST dScalePermstruct_t */
++  dSOLVEstruct_t Asolve, Msolve;             /* SuperLU-DIST dSOLVEstruct_t */
+   SuperLUStat_t Astat, Mstat;               /* SuperLU-DIST SuperLUState_t */
+   superlu_dist_options_t Aopts, Mopts;      /* SuperLU-DIST options struct */
+ 
+@@ -355,16 +355,16 @@ int main(int argc, char *argv[]) {
+   /* SuperLU_DIST structures */
+   dCreate_CompRowLoc_Matrix_dist(&Asuper, NEQ, NEQ, NNZ, NEQ, 0,
+                                  Adata, Acolind, Arowptr, SLU_NR_loc, SLU_D, SLU_GE);
+-  ScalePermstructInit(NEQ, NEQ, &Ascaleperm);
+-  LUstructInit(NEQ, &Alu);
++  dScalePermstructInit(NEQ, NEQ, &Ascaleperm);
++  dLUstructInit(NEQ, &Alu);
+   PStatInit(&Astat);
+   set_default_options_dist(&Aopts);
+   Aopts.PrintStat = NO;
+ 
+   dCreate_CompRowLoc_Matrix_dist(&Msuper, NEQ, NEQ, NNZ, NEQ, 0,
+                                  Mdata, Mcolind, Mrowptr, SLU_NR_loc, SLU_D, SLU_GE);
+-  ScalePermstructInit(NEQ, NEQ, &Mscaleperm);
+-  LUstructInit(NEQ, &Mlu);
++  dScalePermstructInit(NEQ, NEQ, &Mscaleperm);
++  dLUstructInit(NEQ, &Mlu);
+   PStatInit(&Mstat);
+   set_default_options_dist(&Mopts);
+   Mopts.PrintStat = NO;
+@@ -517,8 +517,8 @@ int main(int argc, char *argv[]) {
+ 
+   /* Free the SuperLU_DIST structures */
+   PStatFree(&Astat); PStatFree(&Mstat);
+-  ScalePermstructFree(&Ascaleperm); ScalePermstructFree(&Mscaleperm);
+-  LUstructFree(&Alu); LUstructFree(&Mlu);
++  dScalePermstructFree(&Ascaleperm); dScalePermstructFree(&Mscaleperm);
++  dLUstructFree(&Alu); dLUstructFree(&Mlu);
+   Destroy_CompRowLoc_Matrix_dist(&Asuper);
+   Destroy_CompRowLoc_Matrix_dist(&Msuper);
+   Destroy_CompRowLoc_Matrix_dist(&Rsuper);
+diff --git a/examples/cvode/superludist/cvAdvDiff_sludist.cpp b/examples/cvode/superludist/cvAdvDiff_sludist.cpp
+index f077170cc..62bc86ea9 100644
+--- a/examples/cvode/superludist/cvAdvDiff_sludist.cpp
++++ b/examples/cvode/superludist/cvAdvDiff_sludist.cpp
+@@ -115,9 +115,9 @@ int main(int argc, char *argv[])
+   long int nst;
+ 
+   gridinfo_t grid;
+-  LUstruct_t LUstruct;
+-  ScalePermstruct_t scaleperm;
+-  SOLVEstruct_t solve;
++  dLUstruct_t LUstruct;
++  dScalePermstruct_t scaleperm;
++  dSOLVEstruct_t solve;
+   SuperLUStat_t stat;
+   superlu_dist_options_t options;
+   SuperMatrix Asuper;
+@@ -198,8 +198,8 @@ int main(int argc, char *argv[])
+   options.PrintStat = NO;
+ 
+   /* Initialize SuperLU-DIST solver structures */
+-  ScalePermstructInit(NEQ, NEQ, &scaleperm);
+-  LUstructInit(NEQ, &LUstruct);
++  dScalePermstructInit(NEQ, NEQ, &scaleperm);
++  dLUstructInit(NEQ, &LUstruct);
+   PStatInit(&stat);
+ 
+   /* Call CVodeCreate to create the solver memory and specify the Adams-Moulton LMM */
+@@ -268,8 +268,8 @@ int main(int argc, char *argv[])
+ 
+   /* Free the SuperLU_DIST structures */
+   PStatFree(&stat);
+-  ScalePermstructFree(&scaleperm);
+-  LUstructFree(&LUstruct);
++  dScalePermstructFree(&scaleperm);
++  dLUstructFree(&LUstruct);
+   Destroy_CompRowLoc_Matrix_dist(&Asuper);
+   superlu_gridexit(&grid);
+ 
+diff --git a/examples/sunlinsol/superludist/test_sunlinsol_superludist.cpp b/examples/sunlinsol/superludist/test_sunlinsol_superludist.cpp
+index 55a64d921..e35b1a476 100644
+--- a/examples/sunlinsol/superludist/test_sunlinsol_superludist.cpp
++++ b/examples/sunlinsol/superludist/test_sunlinsol_superludist.cpp
+@@ -57,9 +57,9 @@ int main(int argc, char *argv[])
+   realtype        *xdata, *ydata, *bdata;
+   sunindextype    *rowptrs, *colind;
+   gridinfo_t      grid;                 /* SuperLU-DIST process grid  */
+-  LUstruct_t      lu;
+-  ScalePermstruct_t scaleperm;
+-  SOLVEstruct_t   solve;                /* SuperLU-DIST solve struct  */
++  dLUstruct_t      lu;
++  dScalePermstruct_t scaleperm;
++  dSOLVEstruct_t   solve;                /* SuperLU-DIST solve struct  */
+   SuperLUStat_t   stat;
+   superlu_dist_options_t options;       /* SuperLU-DIST options struct*/
+   sunindextype    i, j, k;
+@@ -314,8 +314,8 @@ int main(int argc, char *argv[])
+ 
+   /* Initialize all of the SuperLU-DIST structures */
+   set_default_options_dist(&options);
+-  ScalePermstructInit(N, N, &scaleperm);
+-  LUstructInit(N, &lu);
++  dScalePermstructInit(N, N, &scaleperm);
++  dLUstructInit(N, &lu);
+   PStatInit(&stat);
+ 
+   /* Dont print out stats in this test */
+@@ -399,8 +399,8 @@ int main(int argc, char *argv[])
+   Destroy_CompRowLoc_Matrix_dist(Asuper);
+   free(Asuper); Asuper = NULL;
+   PStatFree(&stat);
+-  ScalePermstructFree(&scaleperm);
+-  LUstructFree(&lu);
++  dScalePermstructFree(&scaleperm);
++  dLUstructFree(&lu);
+ 
+ #if LOG_PROCESS_TO_FILE
+   /* Close file pointer */
+diff --git a/include/sunlinsol/sunlinsol_superludist.h b/include/sunlinsol/sunlinsol_superludist.h
+index f98232e99..402812c25 100644
+--- a/include/sunlinsol/sunlinsol_superludist.h
++++ b/include/sunlinsol/sunlinsol_superludist.h
+@@ -32,7 +32,9 @@
+ #define _SUNLINSOL_SLUDIST_H
+ 
+ #include <mpi.h>
++
+ #include <superlu_ddefs.h>
++
+ #include <sundials/sundials_linearsolver.h>
+ #include <sundials/sundials_matrix.h>
+ #include <sundials/sundials_nvector.h>
+@@ -54,10 +56,10 @@ struct _SUNLinearSolverContent_SuperLUDIST {
+   int                     last_flag;
+   realtype                berr;
+   gridinfo_t              *grid;
+-  LUstruct_t              *lu;
++  dLUstruct_t             *lu;
+   superlu_dist_options_t  *options;
+-  ScalePermstruct_t       *scaleperm;
+-  SOLVEstruct_t           *solve;
++  dScalePermstruct_t      *scaleperm;
++  dSOLVEstruct_t          *solve;
+   SuperLUStat_t           *stat;
+   sunindextype            N;
+ };
+@@ -73,9 +75,9 @@ typedef struct _SUNLinearSolverContent_SuperLUDIST *SUNLinearSolverContent_Super
+ 
+ SUNDIALS_EXPORT SUNLinearSolver SUNLinSol_SuperLUDIST(N_Vector y, SUNMatrix A,
+                                                       gridinfo_t *grid,
+-                                                      LUstruct_t *lu,
+-                                                      ScalePermstruct_t *scaleperm,
+-                                                      SOLVEstruct_t *solve,
++                                                      dLUstruct_t *lu,
++                                                      dScalePermstruct_t *scaleperm,
++                                                      dSOLVEstruct_t *solve,
+                                                       SuperLUStat_t *stat,
+                                                       superlu_dist_options_t *options);
+ 
+@@ -87,10 +89,10 @@ SUNDIALS_EXPORT SUNLinearSolver SUNLinSol_SuperLUDIST(N_Vector y, SUNMatrix A,
+ 
+ SUNDIALS_EXPORT realtype SUNLinSol_SuperLUDIST_GetBerr(SUNLinearSolver LS);
+ SUNDIALS_EXPORT gridinfo_t* SUNLinSol_SuperLUDIST_GetGridinfo(SUNLinearSolver LS);
+-SUNDIALS_EXPORT LUstruct_t* SUNLinSol_SuperLUDIST_GetLUstruct(SUNLinearSolver LS);
++SUNDIALS_EXPORT dLUstruct_t* SUNLinSol_SuperLUDIST_GetLUstruct(SUNLinearSolver LS);
+ SUNDIALS_EXPORT superlu_dist_options_t* SUNLinSol_SuperLUDIST_GetSuperLUOptions(SUNLinearSolver LS);
+-SUNDIALS_EXPORT ScalePermstruct_t* SUNLinSol_SuperLUDIST_GetScalePermstruct(SUNLinearSolver LS);
+-SUNDIALS_EXPORT SOLVEstruct_t* SUNLinSol_SuperLUDIST_GetSOLVEstruct(SUNLinearSolver LS);
++SUNDIALS_EXPORT dScalePermstruct_t* SUNLinSol_SuperLUDIST_GetScalePermstruct(SUNLinearSolver LS);
++SUNDIALS_EXPORT dSOLVEstruct_t* SUNLinSol_SuperLUDIST_GetSOLVEstruct(SUNLinearSolver LS);
+ SUNDIALS_EXPORT SuperLUStat_t* SUNLinSol_SuperLUDIST_GetSuperLUStat(SUNLinearSolver LS);
+ 
+ /*
+diff --git a/src/sunlinsol/superludist/sunlinsol_superludist.c b/src/sunlinsol/superludist/sunlinsol_superludist.c
+index 526832e93..72ae53f29 100644
+--- a/src/sunlinsol/superludist/sunlinsol_superludist.c
++++ b/src/sunlinsol/superludist/sunlinsol_superludist.c
+@@ -52,8 +52,8 @@
+  */
+ 
+ SUNLinearSolver SUNLinSol_SuperLUDIST(N_Vector y, SUNMatrix A, gridinfo_t *grid,
+-                                      LUstruct_t *lu, ScalePermstruct_t *scaleperm,
+-                                      SOLVEstruct_t *solve, SuperLUStat_t *stat,
++                                      dLUstruct_t *lu, dScalePermstruct_t *scaleperm,
++                                      dSOLVEstruct_t *solve, SuperLUStat_t *stat,
+                                       superlu_dist_options_t *options)
+ {
+   SUNLinearSolver S;
+@@ -128,7 +128,7 @@ gridinfo_t* SUNLinSol_SuperLUDIST_GetGridinfo(SUNLinearSolver LS)
+   return(SLU_GRID(LS));
+ }
+ 
+-LUstruct_t* SUNLinSol_SuperLUDIST_GetLUstruct(SUNLinearSolver LS)
++dLUstruct_t* SUNLinSol_SuperLUDIST_GetLUstruct(SUNLinearSolver LS)
+ {
+   return(SLU_LU(LS));
+ }
+@@ -138,12 +138,12 @@ superlu_dist_options_t* SUNLinSol_SuperLUDIST_GetSuperLUOptions(SUNLinearSolver
+   return(SLU_OPTIONS(LS));
+ }
+ 
+-ScalePermstruct_t* SUNLinSol_SuperLUDIST_GetScalePermstruct(SUNLinearSolver LS)
++dScalePermstruct_t* SUNLinSol_SuperLUDIST_GetScalePermstruct(SUNLinearSolver LS)
+ {
+   return(SLU_SCALEPERM(LS));
+ }
+ 
+-SOLVEstruct_t* SUNLinSol_SuperLUDIST_GetSOLVEstruct(SUNLinearSolver LS)
++dSOLVEstruct_t* SUNLinSol_SuperLUDIST_GetSOLVEstruct(SUNLinearSolver LS)
+ {
+   return(SLU_SOLVESTRUCT(LS));
+ }
+@@ -186,7 +186,7 @@ int SUNLinSolSetup_SuperLUDIST(SUNLinearSolver S, SUNMatrix A)
+     /* if the solve struct was already initialized, we need to
+        finalize the last solve to avoid leaking memory */
+     if (SLU_OPTIONS(S)->SolveInitialized == YES) {
+-      Destroy_LU(SLU_SIZE(S), SLU_GRID(S), SLU_LU(S));
++      dDestroy_LU(SLU_SIZE(S), SLU_GRID(S), SLU_LU(S));
+       dSolveFinalize(SLU_OPTIONS(S), SLU_SOLVESTRUCT(S));
+     }
+   } else {
+@@ -257,7 +257,7 @@ int SUNLinSolFree_SuperLUDIST(SUNLinearSolver S)
+ 
+   /* Call SuperLU DIST destroy/finalize routines,
+      but don't free the sturctures themselves - that is the user's job */
+-  Destroy_LU(SLU_SIZE(S), SLU_GRID(S), SLU_LU(S));
++  dDestroy_LU(SLU_SIZE(S), SLU_GRID(S), SLU_LU(S));
+   dSolveFinalize(SLU_OPTIONS(S), SLU_SOLVESTRUCT(S));
+ 
+   /* free content structure */
+-- 
+2.25.0
+
