@@ -994,14 +994,15 @@ class Environment(object):
 
         Args:
             spec (Spec): Set constraints on development specs. Must include a
-        concrete version.
+                concrete version.
             path (string): Path to find code for developer builds. Relative
-        paths will be resolved relative to the environment.
+                paths will be resolved relative to the environment.
             clone (bool, default False): Clone the package code to the path.
-        If clone is False Spack will assume the code is already present at
-        path.
+                If clone is False Spack will assume the code is already present
+                at ``path``.
 
-        Returns (bool): True iff the environment was changed.
+        Return:
+            (bool): True iff the environment was changed.
         """
         spec = spec.copy()  # defensive copy since we access cached attributes
 
