@@ -44,15 +44,17 @@ def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
     install('printing-package')
     spack_test('run', 'printing-package')
 
-    contents = os.listdir(mock_test_stage)
-    assert len(contents) == 1
+    stage_files = os.listdir(mock_test_stage)
+    assert len(stage_files) == 1
 
-    testdir = os.path.join(mock_test_stage, contents[0])
-    contents = os.listdir(testdir)
-    assert len(contents) == 4
+    # Grab test stage directory contents
+    testdir = os.path.join(mock_test_stage, stage_files[0])
+    testdir_files = os.listdir(testdir)
 
-    contents = list(filter(lambda x: x != 'results.txt', contents))
-    outfile = os.path.join(testdir, contents[0])
+    # Grab the output from the test log
+    testlog = list(filter(lambda x: x.endswith('out.txt') and
+                          x != 'results.txt', testdir_files))
+    outfile = os.path.join(testdir, testlog[0])
     with open(outfile, 'r') as f:
         output = f.read()
     assert "BEFORE TEST" in output
