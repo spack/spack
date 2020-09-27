@@ -6,6 +6,7 @@
 
 from spack import *
 
+
 class Neovim(CMakePackage):
     """Neovim: Vim-fork focused on extensibility and usability"""
 
@@ -49,5 +50,3 @@ class Neovim(CMakePackage):
 
     def cmake_args(self):
         return ['-DPREFER_LUA=ON']
-
-
