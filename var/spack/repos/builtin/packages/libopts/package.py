@@ -15,7 +15,7 @@ class Libopts(AutotoolsPackage):
 
     version('master', branch='master')
 
-    parallel=False
+    parallel = False
 
     def install(self, spec, prefix):
         install_tree('lib', prefix.lib)
