@@ -15,5 +15,5 @@ class PyAcmeTiny(PythonPackage):
     version('master', branch='master')
     version('4.0.4', commit='5350420d35177eda733d85096433a24e55f8d00e')
 
-    depends_on('py-setuptools', type=('build', 'run')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools-scm', type='build')
