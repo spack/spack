@@ -25,4 +25,5 @@ class RocmClangOcl(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
+    for ver in ['3.7.0', '3.8.0']:
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
