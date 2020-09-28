@@ -97,7 +97,8 @@ class Mesa(AutotoolsPackage):
              'libxcb@1.8.1:',
              'libxdamage@1.1:',
              'libxfixes',
-             'libxxf86vm'), ('+egl', '+glvnd')):
+             'libxxf86vm',
+             'xf86vidmodeproto'), ('+egl', '+glvnd')):
         depends_on(dependency, when=constraint)
 
     # Prevent an unnecessary xcb-dri dependency
