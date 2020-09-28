@@ -633,7 +633,7 @@ class IntelPackage(PackageBase):
         vars_file_info_for = {
             # key (usu. spack package name) -> [rel_path, component_suite_dir]
             # Extension note: handle additions by Spack name or ad-hoc keys.
-            '@oneapi':               ['env/vars',                   'compiler/latest'],
+            '@oneapi':               ['env/vars',     'compiler/latest'],
             '@early_compiler':       ['bin/compilervars',           None],
             'intel-parallel-studio': ['bin/psxevars', 'parallel_studio_xe'],
             'intel':                 ['bin/compilervars',           None],
@@ -1147,7 +1147,7 @@ class IntelPackage(PackageBase):
 
     def _oneapi_install(self, spec):
         return spec.versions.lowest() >= Version('2021')
-        
+
     def configure(self, spec, prefix):
         '''Generates the silent.cfg file to pass to installer.sh.
 
@@ -1239,10 +1239,13 @@ class IntelPackage(PackageBase):
 
         # perform
         if self._oneapi_install(spec):
-            install_script('./l_HPCKit_b_%s_offline.sh' % spec.versions.lowest(),
+            install_script('./l_HPCKit_b_%s_offline.sh' %
+                           spec.versions.lowest(),
                            '-s', '-a', '-s', '--action', 'install',
                            '--eula', 'accept',
-                           '--components', 'intel.oneapi.lin.dpcpp-cpp-compiler-pro:intel.oneapi.lin.ifort-compiler',
+                           '--components',
+                           ('intel.oneapi.lin.dpcpp-cpp-compiler-pro'
+                            ':intel.oneapi.lin.ifort-compiler'),
                            '--install-dir', prefix)
         else:
             install_script('--silent', 'silent.cfg')
