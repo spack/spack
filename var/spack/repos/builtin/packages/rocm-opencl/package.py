@@ -71,5 +71,6 @@ class RocmOpencl(CMakePackage):
         vendor_config_path = '/etc/OpenCL/vendors'
         mkdirp(vendor_config_path)
 
-        with open(join_path(vendor_config_path, 'amdocl64_30800.icd'), 'w') as f:
+        config_file_name = 'amdocl64_30800.icd'
+        with open(join_path(vendor_config_path, config_file_name), 'w') as f:
             f.write('libamdocl64.so')
