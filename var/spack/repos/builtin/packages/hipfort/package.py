@@ -21,18 +21,6 @@ class Hipfort(CMakePackage):
     depends_on('cmake@3:', type='build')
     for ver in ['3.8.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
-
-    def cmake_args(self):
-        spec = self.spec
-
-        args = [
-            '-DCMAKE_MODULE_PATH={0}/cmake'.format(spec['hip'].prefix)
-        ]
-
-        return args
