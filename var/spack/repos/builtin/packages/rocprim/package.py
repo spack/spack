@@ -21,12 +21,13 @@ class Rocprim(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    depends_on('numactl', type='link')
     for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
+    for ver in ['3.7.0', '3.8.0']:
+        depends_on('numactl', type='link')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
