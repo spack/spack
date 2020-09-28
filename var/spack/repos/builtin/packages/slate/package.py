@@ -46,13 +46,6 @@ class Slate(Package):
             comp_cxx = 'mpicxx'
             comp_for = 'mpif90'
 
-        make('mpi=' + f_mpi, 'blas=mkl', 'cuda=' + f_cuda, 'openmp=' + f_openmp,
+        make('install', 'prefix=' + prefix, 
+             'mpi=' + f_mpi, 'blas=mkl', 'cuda=' + f_cuda, 'openmp=' + f_openmp,
              'CXX=' + comp_cxx, 'FC=' + comp_for)
-        install_tree('lib', prefix.lib)
-        install_tree('test', prefix.test)
-        mkdirp(prefix.include)
-        install('include/slate/slate.hh', prefix.include)
-        install('lapack_api/lapack_slate.hh',
-                prefix.include + "/slate_lapack_api.hh")
-        install('scalapack_api/scalapack_slate.hh',
-                prefix.include + "/slate_scalapack_api.hh")
