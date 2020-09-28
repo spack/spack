@@ -11,6 +11,7 @@ class Miopengemm(CMakePackage):
     and kernel generator"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM"
+    url      = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-3.8.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
