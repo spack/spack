@@ -87,12 +87,17 @@ class Mesa(AutotoolsPackage):
 
     # Add the necessary dri dependencies
     for dependency, constraint in itertools.product(
-            ('dri2proto@2.8:',
+            ('damageproto@1.1:',
+             'dri2proto@2.8:',
+             'fixesproto',
              'glproto@1.4.13:',
              'libdrm@2.4.75:',
+             'libx11',
+             'libxext',
              'libxcb@1.8.1:',
              'libxdamage@1.1:',
-             'libxfixes'), ('+egl', '+glvnd')):
+             'libxfixes',
+             'xxf86vm'), ('+egl', '+glvnd')):
         depends_on(dependency, when=constraint)
 
     # Prevent an unnecessary xcb-dri dependency
