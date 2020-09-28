@@ -7,7 +7,7 @@ import re
 import sys
 
 
-class Opengl(Package):
+class Opengl(BundlePackage):
     """Placeholder for external OpenGL libraries from hardware vendors"""
 
     homepage = "https://www.opengl.org/"
