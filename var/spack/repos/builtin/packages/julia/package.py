@@ -18,6 +18,10 @@ class Julia(Package):
     maintainers = ['glennpj']
 
     version('master', branch='master')
+    version('1.5.2', sha256='850aed3fe39057488ec633f29af705f5ada87e3058fd65e48ad26f91b713a19a')
+    version('1.5.1', sha256='1d0debfccfc7cd07047aa862dd2b1a96f7438932da1f5feff6c1033a63f9b1d4')
+    version('1.5.0', sha256='4a6ffadc8dd04ca0b7fdef6ae203d0af38185e57b78f7c0b972c4707354a6d1b')
+    version('1.4.1', sha256='b21585db55673ac0668c163678fcf2aad11eb7c64bb2aa03a43046115fab1553')
     version('1.4.0', sha256='880c73a08296ce8d94ad9605149f2a2b2b028e7202a700ef725da899300b8be9')
     version('1.3.1', sha256='053908ec2706eb76cfdc998c077de123ecb1c60c945b4b5057aa3be19147b723')
     version('1.2.0', sha256='2419b268fc5c3666dd9aeb554815fe7cf9e0e7265bc9b94a43957c31a68d9184')
@@ -46,7 +50,8 @@ class Julia(Package):
     # Python only needed to build LLVM?
     depends_on('python@2.7:2.8', type='build', when='@:1.1')
     depends_on('python@2.7:', type='build', when='@1.2:')
-    depends_on('cmake @2.8:', type='build', when='@1.0:')
+    depends_on('cmake@2.8:', type='build', when='@1.0:')
+    depends_on('cmake@:3.11', type='build', when='@:1.4')
     depends_on('git', type='build', when='@master')
 
     # Combined build-time and run-time dependencies:
