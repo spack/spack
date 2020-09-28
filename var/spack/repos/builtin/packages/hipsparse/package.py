@@ -30,6 +30,7 @@ class Hipsparse(CMakePackage):
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
+    for ver in ['3.8.0']:
         depends_on('rocprim@' + ver, type='link', when='@' + ver)
 
     patch('e79985dccde22d826aceb3badfc643a3227979d2.patch', when='@3.5.0')
