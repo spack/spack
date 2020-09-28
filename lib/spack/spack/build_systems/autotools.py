@@ -5,7 +5,6 @@
 import inspect
 import os
 import os.path
-import sys
 import re
 from subprocess import PIPE
 from subprocess import check_call
