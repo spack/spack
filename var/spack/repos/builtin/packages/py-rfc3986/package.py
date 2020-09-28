@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyRfc3986(PythonPackage):
-    """A Python implementation of RFC 3986 including validation and authority parsing."""
+    """A Python implementation of RFC 3986 including
+       validation and authority parsing."""
 
     homepage = "http://rfc3986.readthedocs.io/"
     url      = "https://pypi.io/packages/source/r/rfc3986/rfc3986-1.4.0.tar.gz"
