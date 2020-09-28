@@ -25,8 +25,10 @@ class RocmOpencl(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('mesa~llvm@18.3:', type='link')
+    depends_on('numactl', type='link', when='@3.7.0')
+
     for ver in ['3.5.0', '3.7.0']:
-        depends_on('rocclr@' + ver, type='build', when='@' + ver)
+        depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
 
@@ -38,7 +40,7 @@ class RocmOpencl(CMakePackage):
         # all the includes...
 
         if name in ('cflags', 'cxxflags'):
-            rocclr = self.spec['rocclr'].prefix.include
+            rocclr = self.spec['hip-rocclr'].prefix.include
             extra_includes = [
                 'include',
                 'compiler/lib',
@@ -57,7 +59,8 @@ class RocmOpencl(CMakePackage):
 
         args = [
             '-DUSE_COMGR_LIBRARY=yes',
-            '-DROCclr_DIR={0}'.format(self.spec['rocclr'].prefix),
-            '-DLIBROCclr_STATIC_DIR={0}/lib'.format(self.spec['rocclr'].prefix)
+            '-DROCclr_DIR={0}'.format(self.spec['hip-rocclr'].prefix),
+            '-DLIBROCclr_STATIC_DIR={0}/lib'.format
+            (self.spec['hip-rocclr'].prefix)
         ]
         return args

@@ -37,7 +37,7 @@ class Rocmvalidationsuite(CMakePackage):
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('rocclr@' + ver, type='build', when='@' + ver)
+        depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
         depends_on('rocminfo@' + ver, type='build', when='@' + ver)

@@ -22,7 +22,7 @@ class MiopenOpencl(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('boost@1.58.0', type='link')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('bzip2', type='link')
     depends_on('sqlite', type='link')
     depends_on('half', type='build')
