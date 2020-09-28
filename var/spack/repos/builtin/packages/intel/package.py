@@ -14,6 +14,7 @@ class Intel(IntelPackage):
 
     # Same as in ../intel-parallel-studio/package.py, Composer Edition,
     # but the version numbering in Spack differs.
+    version('2021.1.9.2205',       sha256='8926a3001e61edbb293cb607beb8eb3a3511330a4625c8f3b1b51603426f121a', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/16949/l_HPCKit_b_2021.1.9.2205_offline.sh', expand=False)
     version('20.0.2',              sha256='42af16e9a91226978bb401d9f17b628bc279aa8cb104d4a38ba0808234a79bdd', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16759/parallel_studio_xe_2020_update2_composer_edition.tgz')
     version('20.0.1',              sha256='26c7e7da87b8a83adfd408b2a354d872be97736abed837364c1bf10f4469b01e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16530/parallel_studio_xe_2020_update1_composer_edition.tgz')
     version('20.0.0',              sha256='9168045466139b8e280f50f0606b9930ffc720bbc60bc76f5576829ac15757ae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16229/parallel_studio_xe_2020_composer_edition.tgz')

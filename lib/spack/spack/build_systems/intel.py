@@ -531,8 +531,9 @@ class IntelPackage(PackageBase):
         }
         for rename_rule in [
             # cs given as arg, in years, dir actually used, [version_globs]
+            [None,              '2021:', 'compiler/latest/linux'],
             [None,              ':2015', 'composer_xe'],
-            [None,              '2016:', 'compilers_and_libraries'],
+            [None,              '2016:2020', 'compilers_and_libraries'],
             ['advisor',         ':2016', 'advisor_xe'],
             ['inspector',       ':2016', 'inspector_xe'],
             ['vtune_amplifier', ':2017', 'vtune_amplifier_xe'],
@@ -632,6 +633,7 @@ class IntelPackage(PackageBase):
         vars_file_info_for = {
             # key (usu. spack package name) -> [rel_path, component_suite_dir]
             # Extension note: handle additions by Spack name or ad-hoc keys.
+            '@oneapi':               ['env/vars',                   'compiler/latest'],
             '@early_compiler':       ['bin/compilervars',           None],
             'intel-parallel-studio': ['bin/psxevars', 'parallel_studio_xe'],
             'intel':                 ['bin/compilervars',           None],
@@ -646,6 +648,8 @@ class IntelPackage(PackageBase):
             # resolve differently. Listed as a separate entry to serve as
             # example and to avoid pitfalls upon possible refactoring.
             key = '@early_compiler'
+        if self.version_yearlike.satisfies(ver('2021:')):
+            key = '@oneapi'
 
         f, component_suite_dir = vars_file_info_for[key]
         f = _expand_fields(f) + '.sh'
@@ -1141,11 +1145,18 @@ class IntelPackage(PackageBase):
         debug_print(license_type)
         return license_type
 
+    def _oneapi_install(self, spec):
+        return spec.versions.lowest() >= Version('2021')
+        
     def configure(self, spec, prefix):
         '''Generates the silent.cfg file to pass to installer.sh.
 
         See https://software.intel.com/en-us/articles/configuration-file-format
         '''
+
+        # silent.cfg is not needed starting in 2021
+        if self._oneapi_install(spec):
+            return
 
         # Both tokens AND values of the configuration file are validated during
         # the run of the underlying binary installer. Any unknown token or
@@ -1212,21 +1223,32 @@ class IntelPackage(PackageBase):
         '''Runs Intel's install.sh installation script. Afterwards, save the
         installer config and logs to <prefix>/.spack
         '''
-        # prepare
-        tmpdir = tempfile.mkdtemp(prefix='spack-intel-')
 
-        install_script = Executable('./install.sh')
+        if self._oneapi_install(spec):
+            install_script = Executable('bash')
+        else:
+            install_script = Executable('./install.sh')
+
+        # Capture logs written in /tmp
+        tmpdir = tempfile.mkdtemp(prefix='spack-intel-')
         install_script.add_default_env('TMPDIR', tmpdir)
+        dst = os.path.join(self.prefix, '.spack')
 
         # Need to set HOME to avoid using ~/intel
         install_script.add_default_env('HOME', prefix)
 
         # perform
-        install_script('--silent', 'silent.cfg')
+        if self._oneapi_install(spec):
+            install_script('./l_HPCKit_b_%s_offline.sh' % spec.versions.lowest(),
+                           '-s', '-a', '-s', '--action', 'install',
+                           '--eula', 'accept',
+                           '--components', 'intel.oneapi.lin.dpcpp-cpp-compiler-pro:intel.oneapi.lin.ifort-compiler',
+                           '--install-dir', prefix)
+        else:
+            install_script('--silent', 'silent.cfg')
+            install('silent.cfg', dst)
 
         # preserve config and logs
-        dst = os.path.join(self.prefix, '.spack')
-        install('silent.cfg', dst)
         for f in glob.glob('%s/intel*log' % tmpdir):
             install(f, dst)
 
