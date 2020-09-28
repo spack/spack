@@ -6,7 +6,7 @@ from spack import *
 import os
 
 
-class KokkosNvccWrapper(MakefilePackage):
+class KokkosNvccWrapper(Package):
     """The NVCC wrapper provides a wrapper around NVCC to make it a
        'full' C++ compiler that accepts all flags"""
 
@@ -28,11 +28,6 @@ class KokkosNvccWrapper(MakefilePackage):
     depends_on("cuda")
     depends_on("mpi", when="+mpi")
     depends_on("cmake@3.10:", type='build')
-
-    def build(self, spec, prefix):
-        # This is not actually a Makefile, but I don't know how
-        # else to do this in Spack
-        pass
 
     def install(self, spec, prefix):
         src = os.path.join("bin", "nvcc_wrapper")
