@@ -121,49 +121,47 @@ class AutotoolsPackage(PackageBase):
         else:
             config_arch = 'local'
 
-        config_files = {'guess': None, 'sub': None}
-        config_args = {'guess': [], 'sub': [config_arch]}
+        suffixes = ['sub', 'guess']
 
-        for config_name in config_files.keys():
-            config_file = 'config.{0}'.format(config_name)
-            my_config_file_list = find('.', config_file)
+        def _runs_ok(script):
+            args = [script]
+            if re.search(r'sub$', script):
+                args.append(config_arch)
+            try:
+                check_call(args, stdout=PIPE, stderr=PIPE)
+            except Exception as e:
+                tty.debug(e)
+                return False
+            return True
 
-            my_config_files = []
-            for conf in my_config_file_list:
-                try:
-                    config_path = conf
-                    check_call([config_path] + config_args[config_name],
-                               stdout=PIPE, stderr=PIPE)
-                    # The package's config file already runs OK, so just use it
-                    continue
-                except Exception as e:
-                    my_config_files.append(conf)
-                    tty.debug(e)
-            if not my_config_files:
+        system_config_root = ['/usr/share']
+        if 'automake' in self.spec:
+            system_config_root.insert(0, self.spec['automake'].prefix)
+        for s in suffixes:
+            conf_files = fs.find(
+                self.stage.path,
+                files='config.{0}'.format(s), recursive=True
+            )
+            to_be_patched = [f for f in conf_files if not _runs_ok(f)]
+            if not to_be_patched:
                 continue
-
-            system_config_root = []
-            if 'automake' in self.spec:
-                system_config_root.append(self.spec['automake'].prefix)
-            system_config_root.append('/usr/share')
-            config_path = None
-            for system_root in system_config_root:
-                for path in find(system_root, config_file):
-                    try:
-                        check_call([path] + config_args[config_name],
-                                   stdout=PIPE, stderr=PIPE)
-                        config_path = path
+            system_conf = [f for f in conf_files if _runs_ok(f)]
+            if not system_conf:
+                for system_dir in system_config_root:
+                    system_conf = fs.find(
+                        system_dir,
+                        files='config.{0}'.format(s), recursive=True
+                    )
+                    system_conf = [
+                        f for f in system_conf if _runs_ok(f)
+                    ]
+                    if system_conf:
                         break
-                    except Exception as e:
-                        tty.debug(e)
-                        continue
-
-            if config_path is not None:
-                for myconf in my_config_files:
-                    copy(config_path, myconf)
-                break
-            else:
-                raise RuntimeError('Failed to find suitable ' + config_file)
+            if not system_conf:
+                raise RuntimeError('Failed to find suitable ' +
+                                   'config.{0}'.format(s))
+            for p in to_be_patched:
+                fs.copy(system_conf[0], p)
 
     @run_before('configure')
     def _set_autotools_environment_variables(self):
