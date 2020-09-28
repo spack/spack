@@ -130,7 +130,8 @@ class CudaPackage(PackageBase):
     conflicts('%gcc@8:', when='+cuda ^cuda@:10.0.130' + arch_platform)
     conflicts('%gcc@9:', when='+cuda ^cuda@:10.1.243' + arch_platform)
     # officially, CUDA 11.0.2 only supports the system GCC 8.3 on ppc64le
-    conflicts('%gcc@:4,10:', when='+cuda ^cuda@:11.0.2' + arch_platform)
+    conflicts('%gcc@:4', when='+cuda ^cuda@11.0.2' + arch_platform)
+    conflicts('%gcc@10:', when='+cuda ^cuda@:11.0.2' + arch_platform)
     conflicts('%pgi', when='+cuda ^cuda@:8' + arch_platform)
     conflicts('%pgi@:16', when='+cuda ^cuda@:9.1.185' + arch_platform)
     conflicts('%pgi@:17', when='+cuda ^cuda@:10' + arch_platform)
