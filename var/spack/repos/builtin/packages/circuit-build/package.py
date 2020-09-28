@@ -20,3 +20,6 @@ class CircuitBuild(PythonPackage):
     depends_on('py-click@7.0:7.99', type='run')
     depends_on('snakemake@5.6:5.99', type='run')
     depends_on('py-pyyaml@5.0:', type='run')
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.spec['snakemake'].prefix.bin)
