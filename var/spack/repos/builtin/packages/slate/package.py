@@ -46,7 +46,7 @@ class Slate(Package):
             comp_cxx = 'mpicxx'
             comp_for = 'mpif90'
 
-        make('mpi=' + f_mpi, 'mkl=1', 'cuda=' + f_cuda, 'openmp=' + f_openmp,
+        make('mpi=' + f_mpi, 'blas=mkl', 'cuda=' + f_cuda, 'openmp=' + f_openmp,
              'CXX=' + comp_cxx, 'FC=' + comp_for)
         install_tree('lib', prefix.lib)
         install_tree('test', prefix.test)
