@@ -716,6 +716,8 @@ EOF
     rm -f "${HOME}/specs.txt"
     export PATH="${SPACK_ROOT}/deploy/bin:${PATH}"
     deploy -e "${HOME}/build_environment" -j 12 "${SPACK_ROOT}/deploy/environments/${what}.yaml" "${HOME}"
+    # srun -n12 -c12 -Aproj16 -pprod slurmspack "${HOME}/build_environment"
+
     cat > "${HOME}/stack.xml" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>

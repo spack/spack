@@ -1,0 +1,20 @@
+#!/bin/sh
+
+CPUS=${SLURM_CPUS_PER_TASK}
+TASK=${SLURM_PROCID}
+
+unset $(env|awk -F= '/^(PMI|SLURM)_/ {if (match($1, "_(ACCOUNT|PARTITION)$")==0) print $1}')
+
+if [[ -z "${CPUS}" ]]; then
+    echo "need to run inside SLURM with cores assigned to tasks"
+    exit 1
+elif [[ -z "${1}" ]]; then
+    echo "${0} ENV"
+    exit 1
+fi
+
+exec spack \
+    -e ${1} \
+    install \
+    -j ${CPUS} \
+    --log-format junit --log-file stack-${TASK}.xml \
