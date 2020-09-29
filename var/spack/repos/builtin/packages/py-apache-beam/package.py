@@ -11,7 +11,7 @@ class PyApacheBeam(PythonPackage):
 
     homepage = "https://github.com/apache/beam"
     url      = "https://pypi.io/packages/source/a/apache-beam/apache-beam-2.24.0.zip"
-    
+
     version('2.24.0', sha256='55c50b1a964bacc840a5e4cc3b4a42c4ef09d12192d215ba3cad65d4d22e09dd')
 
     depends_on('python@3:', type=('build', 'run'))
