@@ -97,6 +97,7 @@ class Mesa(AutotoolsPackage):
              'libxcb@1.8.1:',
              'libxdamage@1.1:',
              'libxfixes',
+             'libxshmfence',
              'libxxf86vm',
              'xf86vidmodeproto'), ('+egl', '+glvnd')):
         depends_on(dependency, when=constraint)
