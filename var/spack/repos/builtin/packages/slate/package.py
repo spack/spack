@@ -49,8 +49,8 @@ class Slate(Package):
         elif '^essl' in spec:
             blas = 'essl'
         else:
-            raise InstallError('Supports only BLAS provider openblas, intel-mkl, or essl')
-
+            raise InstallError('Supports only BLAS provider '
+                               'openblas, intel-mkl, or essl')
 
         make('all', 'install',
              'prefix=' + prefix,
