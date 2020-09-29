@@ -25,6 +25,7 @@ class Slate(Package):
     variant('mpi',    default=True, description='Build with MPI support.')
     variant('openmp', default=True, description='Build with OpenMP support.')
 
+    depends_on('bash', type='build')
     depends_on('scalapack')
     depends_on('blas')
     depends_on('cuda@9:10', when='+cuda')
@@ -53,6 +54,7 @@ class Slate(Package):
                                'openblas, intel-mkl, or essl')
 
         make('all', 'install',
+             'SHELL=bash',
              'prefix=' + prefix,
              'mpi=' + f_mpi,
              'blas=' + blas,
