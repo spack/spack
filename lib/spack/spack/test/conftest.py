@@ -760,6 +760,47 @@ def gen_mock_layout(tmpdir):
     yield create_layout
 
 
+class MockConfig(object):
+    def __init__(self, configuration, writer_key):
+        self._configuration = configuration
+        self.writer_key = writer_key
+
+    def configuration(self):
+        return self._configuration
+
+    def writer_configuration(self):
+        return self.configuration()[self.writer_key]
+
+
+class ConfigUpdate(object):
+    def __init__(self, root_for_conf, writer_mod, writer_key, monkeypatch):
+        self.root_for_conf = root_for_conf
+        self.writer_mod = writer_mod
+        self.writer_key = writer_key
+        self.monkeypatch = monkeypatch
+
+    def __call__(self, filename):
+        file = os.path.join(self.root_for_conf, filename + '.yaml')
+        with open(file) as f:
+            mock_config = MockConfig(syaml.load_config(f), self.writer_key)
+
+        self.monkeypatch.setattr(
+            spack.modules.common,
+            'configuration',
+            mock_config.configuration
+        )
+        self.monkeypatch.setattr(
+            self.writer_mod,
+            'configuration',
+            mock_config.writer_configuration
+        )
+        self.monkeypatch.setattr(
+            self.writer_mod,
+            'configuration_registry',
+            {}
+        )
+
+
 @pytest.fixture()
 def module_configuration(monkeypatch, request):
     """Reads the module configuration file from the mock ones prepared
@@ -776,34 +817,7 @@ def module_configuration(monkeypatch, request):
         spack.paths.test_path, 'data', 'modules', writer_key
     )
 
-    def _impl(filename):
-
-        file = os.path.join(root_for_conf, filename + '.yaml')
-        with open(file) as f:
-            configuration = syaml.load_config(f)
-
-        def mock_config_function():
-            return configuration
-
-        def writer_key_function():
-            return mock_config_function()[writer_key]
-
-        monkeypatch.setattr(
-            spack.modules.common,
-            'configuration',
-            mock_config_function
-        )
-        monkeypatch.setattr(
-            writer_mod,
-            'configuration',
-            writer_key_function
-        )
-        monkeypatch.setattr(
-            writer_mod,
-            'configuration_registry',
-            {}
-        )
-    return _impl
+    return ConfigUpdate(root_for_conf, writer_mod, writer_key, monkeypatch)
 
 
 @pytest.fixture()
