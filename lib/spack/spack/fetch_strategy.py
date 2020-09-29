@@ -118,13 +118,6 @@ class FetchStrategy(object):
             shutil.move(directory, self.stage.source_path)
 
     # Subclasses need to implement these methods
-    def clone(self):
-        """Fetch source code archive or repo without a stage.
-
-        Returns:
-            bool: True on success, False on failure.
-        """
-
     def fetch(self):
         """Fetch source code archive or repo.
 
