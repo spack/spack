@@ -30,8 +30,9 @@ class Rocblas(CMakePackage):
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-smi@' + ver, type='build', when='@' + ver)    # used in Tensile
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver) # used in Tensile
+        # used in Tensile
+        depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
 
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
@@ -81,16 +82,13 @@ class Rocblas(CMakePackage):
             '-DTensile_COMPILER=hipcc',
             '-DTensile_ARCHITECTURE={0}'.format(archs),
             '-DTensile_LOGIC=asm_full',
-            '-DTensile_CODE_OBJECT_VERSION=V3'
+            '-DTensile_CODE_OBJECT_VERSION=V3',
+            '-DBUILD_WITH_TENSILE_HOST={0}'.format(
+                'ON' if '@3.7.0:' in self.spec else 'OFF'
+            )
         ]
 
         if '@3.7.0:' in self.spec:
             args.append('-DTensile_LIBRARY_FORMAT=msgpack')
-
-        # Potentially this already works in 3.7.0, but was not tested
-        if '@3.8.0:' in self.spec:
-            args.append('-DBUILD_WITH_TENSILE_HOST=ON')
-        else:
-            args.append('-DBUILD_WITH_TENSILE_HOST=OFF')
 
         return args
