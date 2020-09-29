@@ -49,6 +49,8 @@ class Libcuml(CMakePackage):
 
     root_cmakelists_dir = 'cpp'
 
+    build_targets = [ 'cuml++', 'cuml', 'ml', 'prims' ]
+
     def cmake_args(self):
         # FIXME: Add arguments other than
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
