@@ -49,21 +49,36 @@ class LibglvndFe(BundlePackage):
 
     @property
     def gl_libs(self):
-        return find_libraries('libOpenGL',
+        result = find_libraries('libOpenGL',
                               root=self.spec['libglvnd'].prefix,
                               shared=True,
                               recursive=True)
+        print('\nexporting GL LIBS:\n')
+        print('\n')
+        print(result)
+        print('\n')
+        return result
 
     @property
     def glx_libs(self):
-        return find_libraries('libGLX',
+        result = find_libraries('libGLX',
                               root=self.spec['libglvnd'].prefix,
                               shared=True,
                               recursive=True)
+        print('\nexporting GLX LIBS:\n')
+        print('\n')
+        print(result)
+        print('\n')
+        return result
 
     @property
     def egl_libs(self):
-        return find_libraries('libEGL',
+        result = find_libraries('libEGL',
                               root=self.spec['libglvnd'].prefix,
                               shared=True,
                               recursive=True)
+        print('\nexporting EGL LIBS:\n')
+        print('\n')
+        print(result)
+        print('\n')
+        return result
