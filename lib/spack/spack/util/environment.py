@@ -264,6 +264,10 @@ class PrependPath(NameValueModifier):
         directories = [os.path.normpath(self.value)] + directories
         env[self.name] = self.separator.join(directories)
 
+    def to_string(self):
+        print(type(env.get(self.name, '')))
+        return "HELLO"#env.get(self.name, '')
+
 
 class RemovePath(NameValueModifier):
 
