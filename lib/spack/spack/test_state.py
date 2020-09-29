@@ -94,7 +94,7 @@ def store_patches():
     module_patches = list()
     class_patches = list()
     for patch in patches:
-        for target, name, _ in patch._setattr:
+        for target, name, _ in patches:
             if isinstance(target, ModuleType):
                 new_val = getattr(target, name)
                 module_name = target.__name__
