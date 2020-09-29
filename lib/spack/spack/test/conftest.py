@@ -113,8 +113,8 @@ def mock_compiler_executable_verification(request, monkeypatch):
     If a test is marked in that way this is a no-op."""
     if 'enable_compiler_verification' not in request.keywords:
         monkeypatch.setattr(spack.compiler.Compiler,
-                                   'verify_executables',
-                                   _verify_executables_noop)
+                            'verify_executables',
+                            _verify_executables_noop)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -403,7 +403,7 @@ def _pkg_install_fn(pkg, spec, prefix):
 @pytest.fixture
 def mock_pkg_install(monkeypatch):
     monkeypatch.setattr(spack.package.PackageBase, 'install',
-                               _pkg_install_fn, raising=False)
+                        _pkg_install_fn, raising=False)
 
 
 @pytest.fixture(scope='function')
