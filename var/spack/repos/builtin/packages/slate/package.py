@@ -27,6 +27,7 @@ class Slate(Package):
     variant('blas',   default='openblas', description='Select BLAS implementation', 
             values=('openblas', 'essl', 'mkl'), multi=False)
 
+    depends_on('bash', type='build')
     depends_on('scalapack')
     depends_on('intel-mkl', when='blas=mkl')
     depends_on('essl',      when='blas=essl')
@@ -47,6 +48,7 @@ class Slate(Package):
             comp_for = 'mpif90'
 
         make('all', 'install',
+             'SHELL=bash',
              'prefix=' + prefix,
              'mpi=' + f_mpi,
              'blas=' + spec.variants['blas'].value,
