@@ -140,8 +140,8 @@ class PyHorovod(PythonPackage, CudaPackage):
 
         # Tensor Operations
         if 'tensor_ops=nccl' in self.spec:
-            env.set('HOROVOD_GPU_OPERATIONS', 'NCCL')
             env.set('HOROVOD_GPU_ALLREDUCE', 'NCCL')
+            env.set('HOROVOD_GPU_ALLGATHER', 'NCCL')
             env.set('HOROVOD_GPU_BROADCAST', 'NCCL')
 
             env.set('HOROVOD_NCCL_HOME', self.spec['nccl'].prefix)
