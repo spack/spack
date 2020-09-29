@@ -83,7 +83,7 @@ def develop(parser, args):
     # clone default: only if the path doesn't exist
     clone = args.clone
     if clone is None:
-        clone = os.path.exists(abspath)
+        clone = not os.path.exists(abspath)
 
     if not clone and not os.path.exists(abspath):
         raise SpackError("Provided path %s does not exist" % abspath)

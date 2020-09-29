@@ -52,7 +52,7 @@ class TestDevelop(object):
             develop('--no-clone', '-p', str(tmpdir), 'mpich@1.0')
             self.check_develop(e, spack.spec.Spec('mpich@1.0'), str(tmpdir))
 
-    def test_develop(self):
+    def test_develop(self, mock_fetch):
         env('create', 'test')
         with ev.read('test') as e:
             develop('mpich@1.0')
