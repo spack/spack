@@ -24,13 +24,9 @@ class Slate(Package):
     variant('cuda',   default=True, description='Build with CUDA support.')
     variant('mpi',    default=True, description='Build with MPI support.')
     variant('openmp', default=True, description='Build with OpenMP support.')
-    variant('blas',   default='openblas', description='Select BLAS implementation', 
-            values=('openblas', 'essl', 'mkl'), multi=False)
 
     depends_on('scalapack')
-    depends_on('intel-mkl', when='blas=mkl')
-    depends_on('essl',      when='blas=essl')
-    depends_on('openblas',  when='blas=openblas')
+    depends_on('blas')
     depends_on('cuda@9:10', when='+cuda')
     depends_on('mpi',       when='+mpi')
 
@@ -46,10 +42,20 @@ class Slate(Package):
             comp_cxx = 'mpicxx'
             comp_for = 'mpif90'
 
+        if '^openblas' in spec:
+            blas = 'openblas'
+        elif '^intel-mkl' in spec:
+            blas = 'mkl'
+        elif '^essl' in spec:
+            blas = 'essl'
+        else:
+            raise InstallError('Supports only BLAS provider openblas, intel-mkl, or essl')
+
+
         make('all', 'install',
              'prefix=' + prefix,
              'mpi=' + f_mpi,
-             'blas=' + spec.variants['blas'].value,
+             'blas=' + blas,
              'cuda=' + f_cuda,
              'openmp=' + f_omp,
              'c_api=1',
