@@ -568,6 +568,8 @@ class Singleton(object):
         return self._instance
 
     def __getattr__(self, name):
+        if name == '_instance' or name == 'instance':
+            raise AttributeError()
         return getattr(self.instance, name)
 
     def __getitem__(self, name):
