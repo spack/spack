@@ -5,7 +5,6 @@
 import inspect
 import os
 import os.path
-import re
 from subprocess import PIPE
 from subprocess import check_call
 
@@ -124,7 +123,7 @@ class AutotoolsPackage(PackageBase):
 
         def _runs_ok(script):
             args = [script]
-            if re.search(r'sub$', script):
+            if script.endswith('sub'):
                 args.append(config_arch)
             try:
                 check_call(args, stdout=PIPE, stderr=PIPE)
@@ -136,15 +135,18 @@ class AutotoolsPackage(PackageBase):
         system_config_root = ['/usr/share']
         if 'automake' in self.spec:
             system_config_root.insert(0, self.spec['automake'].prefix)
+        conf_files = fs.find(
+            self.stage.path,
+            files=['config.{0}'.format(s) for s in suffixes],
+            recursive=True
+        )
         for s in suffixes:
-            conf_files = fs.find(
-                self.stage.path,
-                files='config.{0}'.format(s), recursive=True
-            )
-            to_be_patched = [f for f in conf_files if not _runs_ok(f)]
+            to_be_patched = [f for f in conf_files
+                             if f.endswith(s) and not _runs_ok(f)]
             if not to_be_patched:
                 continue
-            system_conf = [f for f in conf_files if _runs_ok(f)]
+            system_conf = [f for f in conf_files
+                           if f.endswith(s) and _runs_ok(f)]
             if not system_conf:
                 for system_dir in system_config_root:
                     system_conf = fs.find(
