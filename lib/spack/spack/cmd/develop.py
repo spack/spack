@@ -20,9 +20,14 @@ level = "long"
 def setup_parser(subparser):
     subparser.add_argument(
         '-p', '--path', help='Source location of package')
-    subparser.add_argument(
-        '--no-clone', action='store_true',
+
+    clone_group = subparser.add_mutually_exclusive_group()
+    clone_group.add_argument(
+        '--no-clone', action='store_false', dest='clone', default=None,
         help='Do not clone. The package already exists at the source path')
+    clone_group.add_argument(
+        '--clone', action='store_true', dest='clone', default=None,
+        help='Clone the package even if the path already exists')
     arguments.add_common_arguments(subparser, ['spec'])
 
 
@@ -30,7 +35,7 @@ def develop(parser, args):
     env = ev.get_env(args, 'develop', required=True)
 
     if not args.spec:
-        if args.no_clone:
+        if args.clone is False:
             raise SpackError("No spec provided to spack develop command")
 
         # download all dev specs
@@ -75,10 +80,15 @@ def develop(parser, args):
     if not os.path.isabs(abspath):
         abspath = os.path.join(env.path, path)
 
-    if args.no_clone and not os.path.exists(abspath):
+    # clone default: only if the path doesn't exist
+    clone = args.clone
+    if clone is None:
+        clone = os.path.exists(abspath)
+
+    if not clone and not os.path.exists(abspath):
         raise SpackError("Provided path %s does not exist" % abspath)
 
     with env.write_transaction():
-        changed = env.develop(spec, path, not args.no_clone)
+        changed = env.develop(spec, path, clone)
         if changed:
             env.write()
