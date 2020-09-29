@@ -26,7 +26,7 @@ class CudaPackage(PackageBase):
         '50', '52', '53',
         '60', '61', '62',
         '70', '72', '75',
-        '80',
+        '80', '86'
     ]
 
     # FIXME: keep cuda and cuda_arch separate to make usage easier until
@@ -77,6 +77,7 @@ class CudaPackage(PackageBase):
     depends_on('cuda@10.0:',    when='cuda_arch=75')
 
     depends_on('cuda@11.0:',    when='cuda_arch=80')
+    depends_on('cuda@11.1:',    when='cuda_arch=86')
 
     # There are at least three cases to be aware of for compiler conflicts
     # 1. Linux x86_64
