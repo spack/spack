@@ -11,8 +11,9 @@ class PyCrcmod(PythonPackage):
        compute the Cyclic Redundancy Check (CRC)"""
 
     homepage = "https://github.com/gsutil-mirrors/crcmod"
-    url      = "https://files.pythonhosted.org/packages/c1/35/f63f75068e1e9c4b54522c3fefb7134b5d91917fdc33f17e2889e0f4590c/crcmod-1.6.tar.gz"
+    url      = "https://pypi.io/packages/source/c/crcmod/crcmod-1.7.tar.gz"
 
+    version('1.7', sha256='dc7051a0db5f2bd48665a990d3ec1cc305a466a77358ca4492826f41f283601e')
     version('1.6', sha256='56d27d035ea029c6ed96779ca042c0136d39d106e3c30baa6422738c7d86aaa5')
 
     depends_on('python@2.4:2.7,3.1:', type=('build', 'run'))
