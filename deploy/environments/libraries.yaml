@@ -1,4 +1,6 @@
 spack:
+  view: false
+  concretization: separately
   packages:
     all:
       compiler: [gcc@9.3.0, intel@19.1.1.217]
