@@ -696,7 +696,7 @@ class PackageInstaller(object):
             request (BuildRequest): the associated install request
         """
         err = 'Cannot proceed with {0}: {1}'
-        for dep in request.spec.traverse(order='post', root=False):
+        for dep in request.traverse_dependencies():
             dep_pkg = dep.package
             dep_id = package_id(dep_pkg)
 
@@ -974,7 +974,7 @@ class PackageInstaller(object):
 
         install_deps = request.install_args.get('install_deps')
         if install_deps:
-            for dep in request.spec.traverse(order='post', root=False):
+            for dep in request.traverse_dependencies():
                 dep_pkg = dep.package
 
                 # First push any missing compilers (if requested)
@@ -1684,6 +1684,9 @@ class BuildTask(object):
         self.pkg_id = package_id(self.pkg)
 
         # The explicit build request associated with the package
+        if not isinstance(request, BuildRequest):
+            raise ValueError("{0} must have a build request".format(str(pkg)))
+
         self.request = request
 
         # Initialize the status to an active state.  The status is used to
@@ -1706,15 +1709,14 @@ class BuildTask(object):
 
         # Set of dependents, which needs to include the requesting package
         self.dependents = set(get_dependent_ids(self.pkg.spec))
-        if request:
-            self.add_dependent(request.pkg_id)
+        self.add_dependent(self.request.pkg_id)
 
         # Set of dependencies
         #
         # Be consistent wrt use of dependents and dependencies.  That is,
         # if use traverse for transitive dependencies, then must remove
         # transitive dependents on failure.
-        deptypes = ('build', 'link')
+        deptypes = self.request.get_deptypes(self.pkg)
         self.dependencies = set(package_id(d.package) for d in
                                 self.pkg.spec.dependencies(deptype=deptypes)
                                 if package_id(d.package) != self.pkg_id)
@@ -1787,7 +1789,7 @@ class BuildTask(object):
     @property
     def explicit(self):
         """The package was explicitly requested by the user."""
-        return not self.request or self.pkg == self.request.pkg
+        return self.pkg == self.request.pkg
 
     @property
     def key(self):
@@ -1837,10 +1839,22 @@ class BuildRequest(object):
         # Save off dependency package ids for quick checks since traversals
         # are not able to return full dependents for all packages across
         # environment specs.
-        deptypes = ('build', 'link')
+        deptypes = self.get_deptypes(self.pkg)
         self.dependencies = set(package_id(d.package) for d in
                                 self.pkg.spec.dependencies(deptype=deptypes)
                                 if package_id(d.package) != self.pkg_id)
+
+    def __repr__(self):
+        """Returns a formal representation of the build request."""
+        rep = '{0}('.format(self.__class__.__name__)
+        for attr, value in self.__dict__.items():
+            rep += '{0}={1}, '.format(attr, value.__repr__())
+        return '{0})'.format(rep.strip(', '))
+
+    def __str__(self):
+        """Returns a printable version of the build request."""
+        return 'package={0}, install_args={1}' \
+            .format(self.pkg.name, self.install_args)
 
     def _add_default_args(self):
         """Ensure standard install options are set to at least the default."""
@@ -1861,27 +1875,60 @@ class BuildRequest(object):
                              ('verbose', False), ]:
             _ = self.install_args.setdefault(arg, default)
 
-    def __repr__(self):
-        """Returns a formal representation of the build request."""
-        rep = '{0}('.format(self.__class__.__name__)
-        for attr, value in self.__dict__.items():
-            rep += '{0}={1}, '.format(attr, value.__repr__())
-        return '{0})'.format(rep.strip(', '))
+    def get_deptypes(self, pkg):
+        """Determine the required dependency types for the associated package.
 
-    def __str__(self):
-        """Returns a printable version of the build request."""
-        return 'package={0}, install_args={1}' \
-            .format(self.pkg.name, self.install_args)
+        Args:
+            pkg (PackageBase): explicit or implicit package being installed
+
+        Returns:
+            (tuple) required dependency type(s) for the package
+        """
+        deptypes = ['link', 'run']
+        if not self.install_args.get('cache_only'):
+            deptypes.append('build')
+        if self.run_tests(pkg):
+            deptypes.append('test')
+        return tuple(sorted(deptypes))
+
+    def has_dependency(self, dep_id):
+        """Returns ``True`` if the package id represents a known dependency
+           of the requested package, ``False`` otherwise."""
+        return dep_id in self.dependencies
+
+    def run_tests(self, pkg):
+        """Determine if the tests should be run for the provided packages
+
+        Args:
+            pkg (PackageBase): explicit or implicit package being installed
+
+        Returns:
+            (bool) ``True`` if they should be run; ``False`` otherwise
+        """
+        tests = self.install_args.get('tests', False)
+        return tests is True or (tests and pkg.name in tests)
 
     @property
     def spec(self):
         """The specification associated with the package."""
         return self.pkg.spec
 
-    def has_dependency(self, dep_id):
-        """Returns ``True`` if the package id represents a known dependency
-           of the requested package, ``False`` otherwise."""
-        return dep_id in self.dependencies
+    def traverse_dependencies(self):
+        """
+        Yield any dependencies of the appropriate type(s)
+
+        Yields:
+            (Spec) The next child spec in the DAG
+        """
+        get_spec = lambda s: s.spec
+
+        deptypes = self.get_deptypes(self.pkg)
+        tty.debug('Processing dependencies for {0}: {1}'
+                  .format(self.pkg_id, deptypes))
+        for dspec in self.spec.traverse_edges(
+                deptype=deptypes, order='post', root=False,
+                direction='children'):
+            yield get_spec(dspec)
 
 
 class InstallError(spack.error.SpackError):

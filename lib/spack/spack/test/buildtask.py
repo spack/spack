@@ -21,8 +21,12 @@ def test_build_task_errors(install_mockery):
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
+    with pytest.raises(ValueError, match='must have a build request'):
+        inst.BuildTask(spec.package, None, False, 0, 0, 0, [])
+
+    request = inst.BuildRequest(spec.package, {})
     with pytest.raises(inst.InstallError, match='Cannot create a build task'):
-        inst.BuildTask(spec.package, None, False, 0, 0, inst.STATUS_REMOVED,
+        inst.BuildTask(spec.package, request, False, 0, 0, inst.STATUS_REMOVED,
                        [])
 
 
@@ -32,8 +36,9 @@ def test_build_task_basics(install_mockery):
     assert spec.concrete
 
     # Ensure key properties match expectations
-    task = inst.BuildTask(spec.package, None, False, 0, 0, inst.STATUS_ADDED,
-                          [])
+    request = inst.BuildRequest(spec.package, {})
+    task = inst.BuildTask(spec.package, request, False, 0, 0,
+                          inst.STATUS_ADDED, [])
     assert task.explicit  # package was "explicitly" requested
     assert task.priority == len(task.uninstalled_deps)
     assert task.key == (task.priority, task.sequence)
@@ -54,8 +59,9 @@ def test_build_task_strings(install_mockery):
     assert spec.concrete
 
     # Ensure key properties match expectations
-    task = inst.BuildTask(spec.package, None, False, 0, 0, inst.STATUS_ADDED,
-                          [])
+    request = inst.BuildRequest(spec.package, {})
+    task = inst.BuildTask(spec.package, request, False, 0, 0,
+                          inst.STATUS_ADDED, [])
 
     # Cover __repr__
     irep = task.__repr__()
