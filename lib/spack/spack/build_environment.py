@@ -57,6 +57,7 @@ import spack.main
 import spack.paths
 import spack.schema.environment
 import spack.store
+import spack.test_state
 from spack.spec import dso_suffix
 import spack.architecture as arch
 from spack.util.string import plural

@@ -93,6 +93,8 @@ def store_patches():
     global patches
     module_patches = list()
     class_patches = list()
+    if not patches:
+        return TransmitPatches(list(), list())
     for patch in patches:
         for target, name, _ in patches:
             if isinstance(target, ModuleType):
