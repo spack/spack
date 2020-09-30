@@ -1202,12 +1202,6 @@ class Environment(object):
             for err in errors:
                 tty.warn(*err)
 
-        # Record which parts of the path have been changed
-        """ Pseudo code
-            env_mod.set("SPACK_CHANGES").join (modified paths)
-        """
-        env_mod.set('SPACK_ENV_ACTIVATED_PATHS', mods.group_by_name().values())
-
         # deduplicate paths from specs mapped to the same location
         for env_var in env_mod.group_by_name():
             env_mod.prune_duplicate_paths(env_var)
@@ -1225,13 +1219,9 @@ class Environment(object):
             self.default_view).reversed())
 
         mods, _ = self._env_modifications_for_default_view(reverse=True)
-        env_mod.extend(mods)
 
-        # Filter the parts the path that have been modified by the activation
-        """ Pseudo code
-            modified = os.environ.get("SPACK_CHANGES"). split by colon
-        """
-        modified = os.environ.get("SPACK_ENV_ACTIVATED_PATHS")
+        for mod in mods.group_by_name().values():
+            env_mod.remove_path('SPACK_ENV_ACTIVATION_PATHS', mod)
 
         return env_mod.shell_modifications(shell)
 

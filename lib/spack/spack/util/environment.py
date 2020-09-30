@@ -279,6 +279,9 @@ class RemovePath(NameValueModifier):
                        if x != os.path.normpath(self.value)]
         env[self.name] = self.separator.join(directories)
 
+    def execute_once(self, env):
+        print("When removing directories once")
+
 
 class DeprioritizeSystemPaths(NameModifier):
 
@@ -546,6 +549,8 @@ class EnvironmentModifications(object):
         new_env = os.environ.copy()
 
         for name, actions in sorted(modifications.items()):
+            if name == 'SPACK_ENV_ACTIVATION_PATHS':
+                x.execute_once(new_env)
             for x in actions:
                 x.execute(new_env)
 
