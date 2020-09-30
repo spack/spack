@@ -781,10 +781,8 @@ def mock_gnupghome(monkeypatch):
     # This comes up because tmp paths on macOS are already long-ish, and
     # pytest makes them longer.
     short_name_tmpdir = tempfile.mkdtemp()
-    monkeypatch.setattr(spack.util.gpg, 'GNUPGHOME', short_name_tmpdir)
-    monkeypatch.setattr(spack.util.gpg.Gpg, '_gpg', None)
-
-    yield
+    with spack.util.gpg.gnupg_home_override(short_name_tmpdir):
+        yield short_name_tmpdir
 
     # clean up, since we are doing this manually
     shutil.rmtree(short_name_tmpdir)
