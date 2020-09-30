@@ -386,14 +386,14 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
     Weight*R@9,Provider : provider_weight(Provider, Weight), root(Package, R)
 }.
 
+% compiler preferences
+#maximize{ Weight@8,Package : compiler_match(Package, Weight) }.
+#minimize{ Weight@7,Package : compiler_weight(Package, Weight) }.
+
 % prefer more recent versions.
 #minimize{
-    Weight@8,Package : version_weight(Package, Weight)
+    Weight@6,Package : version_weight(Package, Weight)
 }.
-
-% compiler preferences
-#maximize{ Weight@7,Package : compiler_match(Package, Weight) }.
-#minimize{ Weight@6,Package : compiler_weight(Package, Weight) }.
 
 % fastest target for node
 
