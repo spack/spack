@@ -20,6 +20,7 @@
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
+import os
 from spack import *
 
 
@@ -49,6 +50,6 @@ class Libcumlprims(Package):
         return url.format(version.up_to(3), version)
 
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')
+        cp = which('cp')
+
+        cp('-r', os.path.join(self.stage.source_path, '.'), prefix)
