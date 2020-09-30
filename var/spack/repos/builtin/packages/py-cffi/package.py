@@ -15,6 +15,7 @@ class PyCffi(PythonPackage):
 
     import_modules = ['cffi']
 
+    version('1.14.3', sha256='18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59')
     version('1.13.0', sha256='8fe230f612c18af1df6f348d02d682fe2c28ca0a6c3856c99599cdacae7cf226')
     version('1.12.2', sha256='e113878a446c6228669144ae8a56e268c91b7f1fafae927adc4879d9849e0ea7')
     version('1.11.5', sha256='e90f17980e6ab0f3c2f3730e56d1fe9bcba1891eeea58966e89d352492cc74f4')
