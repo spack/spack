@@ -120,6 +120,7 @@ class Timemory(CMakePackage):
 
     conflicts('+python', when='~shared',
               msg='+python requires building shared libraries')
+    conflicts('+python_deps', when='~python')
     conflicts('+cupti', when='~cuda', msg='CUPTI requires CUDA')
     conflicts('+kokkos_tools', when='~tools',
               msg='+kokkos_tools requires +tools')
