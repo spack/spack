@@ -41,9 +41,9 @@ class Libcumlprims(Package):
 
     # FIXME: Add dependencies if required.
     # depends_on('foo')
-    depends_on('cuda@11.0', when='@0.15.0-cuda11.0_gdbd0d39_0')
-    depends_on('cuda@10.2', when='@0.15.0-cuda10.2_gdbd0d39_0')
-    depends_on('cuda@10.1', when='@0.15.0-cuda10.1_gdbd0d39_0')
+    depends_on('cuda@11.0.0:11.0.999', when='@0.15.0-cuda11.0_gdbd0d39_0')
+    depends_on('cuda@10.2.0:10.2.999', when='@0.15.0-cuda10.2_gdbd0d39_0')
+    depends_on('cuda@10.1.0:10.1.999', when='@0.15.0-cuda10.1_gdbd0d39_0')
 
     def url_for_version(self, version):
         url = "https://anaconda.org/nvidia/libcumlprims/{0}/download/linux-64/libcumlprims-{1}.tar.bz2"
