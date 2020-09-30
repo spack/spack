@@ -48,7 +48,7 @@ class PyCuml(PythonPackage):
     depends_on('libcumlprims')
     
     for v in ('@0.15.0',):
-        depends_on('libcuml' + v, when=v)
+        depends_on('libcuml{0}~singlegpu'.format(v), when=v)
 
     phases = [ 'build_ext', 'install' ]
 
