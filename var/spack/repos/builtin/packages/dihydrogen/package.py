@@ -14,12 +14,15 @@ class Dihydrogen(CMakePackage, CudaPackage):
        needs of the distributed machine learning effort, LBANN."""
 
     homepage = "https://github.com/LLNL/DiHydrogen.git"
-    url      = "https://github.com/LLNL/DiHydrogen.git"
+    url      = "https://github.com/LLNL/DiHydrogen/archive/v0.1.tar.gz"
     git      = "https://github.com/LLNL/DiHydrogen.git"
 
     maintainers = ['bvanessen']
 
+    version('develop', branch='develop')
     version('master', branch='master')
+
+    version('0.1', sha256='171d4b8adda1e501c38177ec966e6f11f8980bf71345e5f6d87d0a988fef4c4e')
 
     variant('al', default=True,
             description='Builds with Aluminum communication library')
