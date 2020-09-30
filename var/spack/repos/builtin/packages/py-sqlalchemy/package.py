@@ -12,6 +12,7 @@ class PySqlalchemy(PythonPackage):
     homepage = 'http://www.sqlalchemy.org/'
     url      = "https://pypi.io/packages/source/S/SQLAlchemy/SQLAlchemy-1.3.9.tar.gz"
 
+    version('1.3.19', sha256='3bba2e9fbedb0511769780fe1d63007081008c5c2d7d715e91858c94dbaa260e')
     version('1.3.9', sha256='272a835758908412e75e87f75dd0179a51422715c125ce42109632910526b1fd')
     version('1.2.19', sha256='5bb2c4fc2bcc3447ad45716c66581eab982c007dcf925482498d8733f86f17c7')
     version('1.2.10', sha256='72325e67fb85f6e9ad304c603d83626d1df684fdf0c7ab1f0352e71feeab69d8')
