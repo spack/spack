@@ -45,6 +45,7 @@ class PyCuml(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numba', type=('build', 'run'))
     depends_on('cuda')
+    depends_on('libcumlprims')
     
     for v in ('@0.15.0',):
         depends_on('libcuml' + v, when=v)
