@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Rocmvalidationsuite(CMakePackage):
+class RocmValidationSuite(CMakePackage):
     """The ROCm Validation Suite (RVS) is a system administrators
        and cluster manager's tool for detecting and troubleshooting
        common problems affecting AMD GPU(s) running in a high-performance
@@ -15,10 +15,11 @@ class Rocmvalidationsuite(CMakePackage):
        compatible platform."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
-    url      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-3.7.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-3.8.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.8.0', sha256='68f1c5102e5cbed205a0ecf5a01efbdccf480f7e484ab1e58cbc6bc03e428122')
     version('3.7.0', sha256='bb42d7fb7ee877b80ce53b0cd1f04b0c8301197b6777d2edddcb44732bf8c9e2')
     version('3.5.0', sha256='273e67ecce7e32939341679362b649f3361a36a22fab5f64cefe94b49e6f1e46')
 
@@ -33,7 +34,7 @@ class Rocmvalidationsuite(CMakePackage):
         spec = self.spec
         build_env.set("HIPCC_PATH", spec['hip'].prefix)
 
-    for ver in ['3.5.0', '3.7.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
