@@ -467,13 +467,19 @@ class PyclingoDriver(object):
 
     def fact(self, head):
         """ASP fact (a rule without a body)."""
-        sym = head.symbol()
-        self.out.write("%s.\n" % sym)
+        symbols = _normalize(head)
+        self.out.write("%s.\n" % ','.join(str(a) for a in symbols))
 
-        atom = self.backend.add_atom(sym)
-        self.backend.add_rule([atom], [], choice=self.cores)
+        atoms = {}
+        for s in symbols:
+            atoms[s] = self.backend.add_atom(s)
+
+        self.backend.add_rule(
+            [atoms[s] for s in symbols], [], choice=self.cores
+        )
         if self.cores:
-            self.assumptions.append(atom)
+            for s in symbols:
+                self.assumptions.append(atoms[s])
 
     def rule(self, head, body):
         """ASP rule (an implication)."""
@@ -651,6 +657,8 @@ class SpackSolverSetup(object):
         self.possible_virtuals = None
         self.possible_compilers = []
         self.version_constraints = set()
+        self.providers_by_vspec_name = collections.defaultdict(list)
+        self.virtual_constraints = set()
         self.compiler_version_constraints = set()
         self.post_facts = []
 
@@ -838,21 +846,31 @@ class SpackSolverSetup(object):
         self.package_compiler_defaults(pkg)
 
         # dependencies
+        self.package_dependencies_rules(pkg)
+
+        # virtual preferences
+        self.virtual_preferences(
+            pkg.name,
+            lambda v, p, i: self.gen.fact(
+                fn.pkg_provider_preference(pkg.name, v, p, i)
+            )
+        )
+
+    def package_dependencies_rules(self, pkg):
+        """Translate 'depends_on' directives into ASP logic."""
         for name, conditions in sorted(pkg.dependencies.items()):
             for cond, dep in sorted(conditions.items()):
                 named_cond = cond.copy()
-                if not named_cond.name:
-                    named_cond.name = pkg.name
+                named_cond.name = named_cond.name or pkg.name
 
-                if cond == spack.spec.Spec():
-                    for t in sorted(dep.type):
+                for t in sorted(dep.type):
+                    if cond == spack.spec.Spec():
                         self.gen.fact(
                             fn.declared_dependency(
                                 dep.pkg.name, dep.spec.name, t
                             )
                         )
-                else:
-                    for t in sorted(dep.type):
+                    else:
                         self.gen.rule(
                             fn.declared_dependency(
                                 dep.pkg.name, dep.spec.name, t
@@ -863,26 +881,27 @@ class SpackSolverSetup(object):
                         )
 
                 # add constraints on the dependency from dep spec.
-                clauses = self.spec_clauses(dep.spec)
                 if spack.repo.path.is_virtual(dep.spec.name):
-                    clauses = []
-                for clause in clauses:
+                    self.virtual_constraints.add(str(dep.spec))
                     self.gen.rule(
-                        clause,
-                        self.gen._and(
-                            fn.depends_on(dep.pkg.name, dep.spec.name),
+                        head=fn.single_provider_for(
+                            str(dep.spec.name), str(dep.spec.versions)
+                        ),
+                        body=self.gen._and(
                             *self.spec_clauses(named_cond, body=True)
                         )
                     )
+                else:
+                    clauses = self.spec_clauses(dep.spec)
+                    for clause in clauses:
+                        self.gen.rule(
+                            clause,
+                            self.gen._and(
+                                fn.depends_on(dep.pkg.name, dep.spec.name),
+                                *self.spec_clauses(named_cond, body=True)
+                            )
+                        )
             self.gen.newline()
-
-        # virtual preferences
-        self.virtual_preferences(
-            pkg.name,
-            lambda v, p, i: self.gen.fact(
-                fn.pkg_provider_preference(pkg.name, v, p, i)
-            )
-        )
 
     def virtual_preferences(self, pkg_name, func):
         """Call func(vspec, provider, i) for each of pkg's provider prefs."""
@@ -1191,9 +1210,19 @@ class SpackSolverSetup(object):
         # what provides what
         for vspec in sorted(self.possible_virtuals):
             self.gen.fact(fn.virtual(vspec))
-            for provider in sorted(spack.repo.path.providers_for(vspec)):
-                # TODO: handle versioned and conditional virtuals
+            all_providers = sorted(spack.repo.path.providers_for(vspec))
+            for idx, provider in enumerate(all_providers):
                 self.gen.fact(fn.provides_virtual(provider.name, vspec))
+                possible_provider_fn = fn.possible_provider(
+                    vspec, provider.name, idx
+                )
+                item = (idx, provider, possible_provider_fn)
+                self.providers_by_vspec_name[vspec].append(item)
+                clauses = self.spec_clauses(provider, body=True)
+                for clause in clauses:
+                    self.gen.rule(clause, possible_provider_fn)
+                self.gen.newline()
+            self.gen.newline()
 
     def generate_possible_compilers(self, specs):
         compilers = compilers_for_default_arch()
@@ -1239,6 +1268,27 @@ class SpackSolverSetup(object):
                 predicates,
             )
             self.gen.newline()
+
+    def define_virtual_constraints(self):
+        for vspec_str in sorted(self.virtual_constraints):
+            vspec = spack.spec.Spec(vspec_str)
+            self.gen.h2("Virtual spec: {0}".format(vspec_str))
+            providers = spack.repo.path.providers_for(vspec_str)
+            candidates = self.providers_by_vspec_name[vspec.name]
+            possible_providers = [
+                func for idx, spec, func in candidates if spec in providers
+            ]
+
+            self.gen.newline()
+            single_provider_for = fn.single_provider_for(
+                vspec.name, vspec.versions
+            )
+            one_of_the_possibles = self.gen.one_of(*possible_providers)
+            single_provider_rule = "{0} :- {1}.\n{1} :- {0}.\n".format(
+                single_provider_for, str(one_of_the_possibles)
+            )
+            self.gen.out.write(single_provider_rule)
+            self.gen.control.add("base", [], single_provider_rule)
 
     def define_compiler_version_constraints(self):
         compiler_list = spack.compilers.all_compiler_specs()
@@ -1318,16 +1368,29 @@ class SpackSolverSetup(object):
                 self.gen.h2('Spec: %s' % str(dep))
 
                 if dep.virtual:
-                    self.gen.fact(fn.virtual_node(dep.name))
+                    for clause in self.virtual_spec_clauses(dep):
+                        self.gen.fact(clause)
                 else:
                     for clause in self.spec_clauses(dep):
                         self.gen.fact(clause)
+
+        self.gen.h1("Virtual Constraints")
+        self.define_virtual_constraints()
 
         self.gen.h1("Version Constraints")
         self.define_version_constraints()
 
         self.gen.h1("Compiler Version Constraints")
         self.define_compiler_version_constraints()
+
+    def virtual_spec_clauses(self, dep):
+        assert dep.virtual
+        self.virtual_constraints.add(str(dep))
+        clauses = [
+            fn.virtual_node(dep.name),
+            fn.single_provider_for(str(dep.name), str(dep.versions))
+        ]
+        return clauses
 
 
 class SpecBuilder(object):
