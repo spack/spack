@@ -113,7 +113,11 @@ external(Package) :- external_only(Package), node(Package).
 
 % if an external version is selected, the package is external and
 % we are using the corresponding spec
-external(Package), external_spec(Package, ID) :-
+external(Package) :-
+    version(Package, Version), version_weight(Package, Weight),
+    external_version_declared(Package, Version, Weight, ID).
+
+external_spec(Package, ID) :-
     version(Package, Version), version_weight(Package, Weight),
     external_version_declared(Package, Version, Weight, ID).
 
