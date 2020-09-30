@@ -20,5 +20,7 @@ class Bdii(MakefilePackage):
     version('5.2.25', sha256='6abc3ed872538a12dc470a1d30bf4ae1ca4d6302eb6b50370413940f9e9259ca')
     version('5.2.24', sha256='5d09ed06b8b09ce372b3489fab93e25302f68ca80d8fcc600c2535648c861a3a')
 
+    depends_on('openldap', type='run')
+
     def install(self, spec, prefix):
         make('prefix={0}'.format(prefix), 'install')
