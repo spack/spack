@@ -99,9 +99,10 @@ def current_host(request, monkeypatch):
     # this function is memoized, so clear its state for testing
     spack.architecture.get_platform.cache.clear()
 
+    monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
+    monkeypatch.setattr(spack.platforms.test.Test, 'front_end', cpu)
     if not is_preference:
         monkeypatch.setattr(archspec.cpu, 'host', lambda: target)
-        monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
         yield target
     else:
         with spack.config.override('packages:all', {'target': [cpu]}):
@@ -380,13 +381,12 @@ class TestConcretize(object):
         assert spec['externalmodule'].compiler.satisfies('gcc')
 
     def test_nobuild_package(self):
-        got_error = False
+        """Test that a non-buildable package raise an error if no specs
+        in packages.yaml are compatible with the request.
+        """
         spec = Spec('externaltool%clang')
-        try:
+        with pytest.raises(spack.error.SpecError):
             spec.concretize()
-        except spack.concretize.NoBuildError:
-            got_error = True
-        assert got_error
 
     def test_external_and_virtual(self):
         spec = Spec('externaltest')
@@ -634,7 +634,7 @@ class TestConcretize(object):
             else current_host
         with spack.concretize.disable_compiler_existence_check():
             s = Spec(spec).concretized()
-            assert str(s.architecture.target) == str(expected)
+            assert str(s.architecture.target) == str(expected), str(best_achievable)
 
     @pytest.mark.regression('8735,14730')
     def test_compiler_version_matches_any_entry_in_compilers_yaml(self):
@@ -643,6 +643,7 @@ class TestConcretize(object):
         with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
             s = Spec('mpileaks %gcc@4.5')
             s.concretize()
+            pass
 
         # An abstract compiler with a version list could resolve to 4.5.0
         s = Spec('mpileaks %gcc@4.5:')
