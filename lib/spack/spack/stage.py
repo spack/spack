@@ -279,7 +279,6 @@ class Stage(object):
         self.skip_checksum_for_mirror = True
 
         self.srcdir = None
-        self._src_path = None
 
         # TODO: This uses a protected member of tempfile, but seemed the only
         # TODO: way to get a temporary name.  It won't be the same as the
@@ -394,22 +393,12 @@ class Stage(object):
     @property
     def expanded(self):
         """Returns True if source path expanded; else False."""
-        return (os.path.exists(self.source_path) and not
-                all(os.path.join(self.path, a) in self.expected_archive_files
-                    for a in os.listdir(self.source_path)))
+        return os.path.exists(self.source_path)
 
     @property
     def source_path(self):
         """Returns the well-known source directory path."""
-        return self._src_path or os.path.join(self.path, _source_path_subdir)
-
-    @source_path.setter
-    def source_path(self, value):
-        """Set source path to alternate value."""
-        if os.path.isabs(value):
-            self._src_path = value
-        else:
-            self._src_path = os.path.join(self.path, value)
+        return os.path.join(self.path, _source_path_subdir)
 
     def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
@@ -699,10 +688,6 @@ class StageComposite:
     @property
     def path(self):
         return self[0].path
-
-    @path.setter
-    def path(self, value):
-        self[0].path = value
 
     @property
     def archive_file(self):

@@ -24,7 +24,6 @@ in order to build it.  They need to define the following methods:
 """
 import copy
 import functools
-import glob
 import os
 import os.path
 import re
@@ -108,20 +107,9 @@ class FetchStrategy(object):
         # 'no_cache' option from version directive.
         self.cache_enabled = not kwargs.pop('no_cache', False)
 
-    # Utility methods for all classes
-    def move_dir_to_source_path(self, directory):
-        if self.stage.source_path == self.stage.path:
-            # The path will already exist, so we need to move contents manually
-            for entry in glob.glob(os.path.join(directory, '*')):
-                shutil.move(entry, self.stage.source_path)
-        else:
-            shutil.move(directory, self.stage.source_path)
-
     # Subclasses need to implement these methods
     def fetch(self):
         """Fetch source code archive or repo.
-
-        May be implemented in terms of self.clone when possible
 
         Returns:
             bool: True on success, False on failure.
@@ -490,23 +478,21 @@ class URLFetchStrategy(FetchStrategy):
             src = os.path.join(tarball_container, non_hidden[0])
             if os.path.isdir(src):
                 self.stage.srcdir = non_hidden[0]
-                self.move_dir_to_source_path(src)
+                shutil.move(src, self.stage.source_path)
                 if len(files) > 1:
                     files.remove(non_hidden[0])
                     for f in files:
                         src = os.path.join(tarball_container, f)
                         dest = os.path.join(self.stage.path, f)
                         shutil.move(src, dest)
-                # This can be empty or
-                # have an empty dir inside it when path == source_path
-                shutil.rmtree(tarball_container)
+                os.rmdir(tarball_container)
             else:
                 # This is a non-directory entry (e.g., a patch file) so simply
                 # rename the tarball container to be the source path.
-                self.move_dir_to_source_path(tarball_container)
+                shutil.move(tarball_container, self.stage.source_path)
 
         else:
-            self.move_dir_to_source_path(tarball_container)
+            shutil.move(tarball_container, self.stage.source_path)
 
     def archive(self, destination):
         """Just moves this archive to the destination."""
@@ -723,7 +709,7 @@ class GoFetchStrategy(VCSFetchStrategy):
 
         # Move the directory to the well-known stage source path
         repo_root = _ensure_one_stage_entry(self.stage.path)
-        self.move_dir_to_source_path(repo_root)
+        shutil.move(repo_root, self.stage.source_path)
 
     @_needs_stage
     def reset(self):
@@ -836,7 +822,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 git(*clone_args)
                 repo_name = get_single_file('.')
                 self.stage.srcdir = repo_name
-                self.move_dir_to_source_path(repo_name)
+                shutil.move(repo_name, self.stage.source_path)
 
             with working_dir(self.stage.source_path):
                 checkout_args = ['checkout', self.commit]
@@ -877,7 +863,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
                 repo_name = get_single_file('.')
                 self.stage.srcdir = repo_name
-                self.move_dir_to_source_path(repo_name)
+                shutil.move(repo_name, self.stage.source_path)
 
             with working_dir(self.stage.source_path):
                 # For tags, be conservative and check them out AFTER
@@ -1003,7 +989,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
             self.svn(*args)
             repo_name = get_single_file('.')
             self.stage.srcdir = repo_name
-            self.move_dir_to_source_path(repo_name)
+            shutil.move(repo_name, self.stage.source_path)
 
     def _remove_untracked_files(self):
         """Removes untracked files in an svn repository."""
@@ -1121,7 +1107,7 @@ class HgFetchStrategy(VCSFetchStrategy):
             self.hg(*args)
             repo_name = get_single_file('.')
             self.stage.srcdir = repo_name
-            self.move_dir_to_source_path(repo_name)
+            shutil.move(repo_name, self.stage.source_path)
 
     def archive(self, destination):
         super(HgFetchStrategy, self).archive(destination, exclude='.hg')
