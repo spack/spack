@@ -2,11 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import glob
 import os
 
 import llnl.util.tty as tty
-import llnl.util.filesystem as fs
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -45,7 +43,6 @@ def develop(parser, args):
             path = entry.get('path', name)
             abspath = path if os.path.isabs(path) else os.path.join(
                 env.path, path)
-            fs.mkdirp(abspath)
 
             if os.path.exists(abspath):
                 msg = "Skipping developer download of %s" % entry['spec']
@@ -54,29 +51,7 @@ def develop(parser, args):
                 continue
 
             stage = spack.spec.Spec(entry['spec']).package.stage
-            stage.create()
-            stage.fetch()
-            stage.expand_archive()
-
-            # glob all files and directories in the stage source_path
-            hidden_entries = glob.glob(os.path.join(stage.source_path, '.*'))
-            entries = glob.glob(os.path.join(stage.source_path, '*'))
-
-            # Move all files from stage to destination directory
-            # Include hidden files for VCS repo history
-            for entry in hidden_entries + entries:
-                if os.path.isdir(entry):
-                    dest = os.path.join(abspath, os.path.basename(entry))
-                    shutil.copytree(entry, dest)
-                else:
-                    shutil.copy2(entry, abspath)
-
-            # copy archive file if we downloaded from url -- replaces for vcs
-            if stage.archive_file and os.path.exists(stage.archive_file):
-                shutil.copy2(stage.archive_file, abspath)
-
-            # remove leftover stage
-            stage.destroy()
+            stage.steal_source(abspath)
 
         if not env.dev_specs:
             tty.warn("No develop specs to download")

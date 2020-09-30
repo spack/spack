@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-import glob
 import os
 import re
 import sys
@@ -1036,36 +1035,12 @@ class Environment(object):
                     (spec, path))
 
         if clone:
-            # Get the source code via staging API
-            stage = spec.package.stage
-            stage.create()
-            stage.fetch()
-            stage.expand_archive()
-
-            # glob all files and directories in the stage source_path
-            hidden_entries = glob.glob(os.path.join(stage.source_path, '.*'))
-            entries = glob.glob(os.path.join(stage.source_path, '*'))
-
-            # Create destination directory
+            # "steal" the source code via staging API
             abspath = path if os.path.isabs(path) else os.path.join(
                 self.path, path)
-            fs.mkdirp(abspath)
 
-            # Move all files from stage to destination directory
-            # Include hidden files for VCS repo history
-            for entry in hidden_entries + entries:
-                if os.path.isdir(entry):
-                    dest = os.path.join(abspath, os.path.basename(entry))
-                    shutil.copytree(entry, dest)
-                else:
-                    shutil.copy2(entry, abspath)
-
-            # copy archive file if we downloaded from url -- replaces for vcs
-            if stage.archive_file and os.path.exists(stage.archive_file):
-                shutil.copy2(stage.archive_file, abspath)
-
-            # remove leftover stage
-            stage.destroy()
+            stage = spec.package.stage
+            stage.steal_source(abspath)
 
         # If it wasn't already in the list, append it
         self.dev_specs[spec.name] = {'path': path, 'spec': str(spec)}
