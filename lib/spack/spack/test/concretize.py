@@ -644,3 +644,12 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpecError):
             s = Spec('+variant')
             s.concretize()
+
+    def test_concretize_anonymous_dep(self):
+        with pytest.raises(spack.error.SpecError):
+            s = Spec('mpileaks ^%gcc')
+            s.concretize()
+
+        with pytest.raises(spack.error.SpecError):
+            s = Spec('mpileaks ^cflags=-g')
+            s.concretize()

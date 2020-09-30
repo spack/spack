@@ -90,3 +90,11 @@ class TestDevelop(object):
             develop('-p', str(tmpdir), 'mpich@1.0')
             self.check_develop(e, spack.spec.Spec('mpich@1.0'), str(tmpdir))
             assert len(e.dev_specs) == 1
+
+    def test_develop_update_spec(self):
+        env('create', 'test')
+        with ev.read('test') as e:
+            develop('mpich@1.0')
+            develop('mpich@2.0')
+            self.check_develop(e, spack.spec.Spec('mpich@2.0'))
+            assert len(e.dev_specs) == 1

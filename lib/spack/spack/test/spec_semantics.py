@@ -7,6 +7,7 @@ import sys
 import pytest
 
 from spack.error import SpecError, UnsatisfiableSpecError
+from spack.spec import UnconstrainableDependencySpecError
 from spack.spec import Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.variant import InvalidVariantValueError, UnknownVariantError
 from spack.variant import MultipleValuesInExclusiveVariantError
@@ -80,7 +81,8 @@ def check_constrain_not_changed(spec, constraint):
 def check_invalid_constraint(spec, constraint):
     spec = Spec(spec)
     constraint = Spec(constraint)
-    with pytest.raises(UnsatisfiableSpecError):
+    with pytest.raises((UnsatisfiableSpecError,
+                        UnconstrainableDependencySpecError)):
         spec.constrain(constraint)
 
 
@@ -674,6 +676,7 @@ class TestSpecSematics(object):
         check_invalid_constraint(
             'libelf platform=test target=be os=be', 'libelf target=fe os=fe'
         )
+        check_invalid_constraint('libdwarf', '^%gcc')
 
     def test_constrain_changed(self):
         check_constrain_changed('libelf', '@1.0')
