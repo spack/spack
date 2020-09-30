@@ -38,6 +38,7 @@ class Libceed(Package):
     depends_on('hip@3.8.0:', when='@0.8:+hip')
 
     depends_on('occa@develop', when='@develop+occa')
+    depends_on('occa@1.1.0', when='@0.7:+occa')
     depends_on('occa@1.0.8:', when='@0.4+occa')
     depends_on('occa@1.0.0-alpha.5,develop', when='@:0.2+occa')
     depends_on('occa+cuda', when='+occa+cuda')
