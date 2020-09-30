@@ -277,14 +277,6 @@ class Umpire(CMakePackage, CudaPackage):
 
     def test(self):
         """Perform smoke tests on the installed package."""
-        tty.debug('Expected results currently based on simple {0} builds'
-                  .format(self.name))
-
-        if not self.spec.satisfies('@0.1.3:2.1.0'):
-            tty.debug('Expected results have not been confirmed for {0} {1}'
-                      .format(self.name, self.spec.version))
-
-        # Run smoke tests
         self._run_bench_checks()
         self._run_cookbook_checks()
         self._run_example_checks()

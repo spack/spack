@@ -230,7 +230,7 @@ def test_find(args):  # TODO: merge with status (noargs)
 
 
 def test_status(args):
-    """Get the current status for a particular Spack test suites."""
+    """Get the current status for the specified Spack test suite(s)."""
     if args.names:
         test_suites = []
         for name in args.names:
@@ -251,7 +251,7 @@ def test_status(args):
 
 
 def test_results(args):
-    """Get the results from Spack test suites (default all)."""
+    """Get the results from Spack test suite(s) (default all)."""
     if args.names:
         test_suites = []
         for name in args.names:
@@ -284,9 +284,9 @@ def test_results(args):
 
 
 def test_remove(args):
-    """Remove results for a test from the test stage.
+    """Remove results from Spack test suite(s) (default all).
 
-    If no test is listed, remove all tests from the test stage.
+    If no test suite is listed, remove results for all suites.
 
     Removed tests can no longer be accessed for results or status, and will not
     appear in `spack test list` results."""

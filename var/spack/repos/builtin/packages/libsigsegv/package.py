@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
-
 
 class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
     """GNU libsigsegv is a library for handling page faults in user mode."""
@@ -70,14 +68,6 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
                           skip_missing=True)
 
     def test(self):
-        """Perform smoke tests on the installed package."""
-        tty.debug('Expected results currently based on simple {0} builds'
-                  .format(self.name))
-
-        if not self.spec.satisfies('@2.10:2.12'):
-            tty.debug('Expected results have not been confirmed for {0} {1}'
-                      .format(self.name, self.spec.version))
-
         # Run the simple built-in smoke test
         self._run_smoke_tests()
 

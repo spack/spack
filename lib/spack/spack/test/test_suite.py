@@ -17,9 +17,7 @@ def test_test_log_pathname(mock_packages, config):
     logfile = test_suite.log_file_for_spec(spec)
 
     assert test_suite.stage in logfile
-    assert test_name in logfile
-    assert spec.name in logfile
-    assert 'out.txt' in logfile
+    assert test_suite.test_log_name(spec) in logfile
 
 
 def test_test_ensure_stage(mock_test_stage):
@@ -31,8 +29,7 @@ def test_test_ensure_stage(mock_test_stage):
     test_suite = spack.install_test.TestSuite([spec], test_name)
     test_suite.ensure_stage()
 
-    assert os.path.exists(test_suite.stage)
-    assert test_suite.stage.endswith(test_name)
+    assert os.path.isdir(test_suite.stage)
     assert mock_test_stage in test_suite.stage
 
 
