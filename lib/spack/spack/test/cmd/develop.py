@@ -52,7 +52,7 @@ class TestDevelop(object):
             develop('--no-clone', '-p', str(tmpdir), 'mpich@1.0')
             self.check_develop(e, spack.spec.Spec('mpich@1.0'), str(tmpdir))
 
-    def test_develop(self, mock_fetch):
+    def test_develop(self):
         env('create', 'test')
         with ev.read('test') as e:
             develop('mpich@1.0')
@@ -68,3 +68,25 @@ class TestDevelop(object):
             # test develop with no args
             develop()
             self.check_develop(e, spack.spec.Spec('mpich@1.0'))
+
+    def test_develop_twice(self):
+        env('create', 'test')
+        with ev.read('test') as e:
+            develop('mpich@1.0')
+            self.check_develop(e, spack.spec.Spec('mpich@1.0'))
+
+            develop('mpich@1.0')
+            # disk representation isn't updated unless we write
+            # second develop command doesn't change it, so we don't write
+            # but we check disk representation
+            e.write()
+            self.check_develop(e, spack.spec.Spec('mpich@1.0'))
+            assert len(e.dev_specs) == 1
+
+    def test_develop_update_path(self, tmpdir):
+        env('create', 'test')
+        with ev.read('test') as e:
+            develop('mpich@1.0')
+            develop('-p', str(tmpdir), 'mpich@1.0')
+            self.check_develop(e, spack.spec.Spec('mpich@1.0'), str(tmpdir))
+            assert len(e.dev_specs) == 1
