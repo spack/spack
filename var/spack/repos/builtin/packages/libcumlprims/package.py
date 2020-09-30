@@ -34,10 +34,16 @@ class Libcumlprims(Package):
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
-    version('64', sha256='0edc55767f06f533fbff7a0fecaf6e6d4f82eec39604b3874a07b5609f79ece8')
+    version('0.15.0-cuda11.0_gdbd0d39_0', sha256='0edc55767f06f533fbff7a0fecaf6e6d4f82eec39604b3874a07b5609f79ece8')
+    version('0.15.0-cuda10.2_gdbd0d39_0', sha256='b7a8740de0d15380829f42fcb078567e73ab7d29b14be073376153bf2d8ec945')
+    version('0.15.0-cuda10.1_gdbd0d39_0', sha256='f055f904b5ef67995869b0bc648d9fe30839b08e77cb335573bf9f1c816d4d9b')
 
     # FIXME: Add dependencies if required.
     # depends_on('foo')
+
+    def url_for_version(self, version):
+        url = "https://anaconda.org/nvidia/libcumlprims/{0}/download/linux-64/libcumlprims-{1}.tar.bz2"
+        return url.format(version.up_to(3), version)
 
     def install(self, spec, prefix):
         # FIXME: Unknown build system
