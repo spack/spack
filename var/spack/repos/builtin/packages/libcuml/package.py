@@ -62,7 +62,6 @@ class Libcuml(CMakePackage):
         #-DBLAS_LIBRARIES=${INSTALL_PREFIX}/lib/libopenblas.so.0 \
         #${GPU_ARCH} \
         #-DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-        #-DBUILD_CUML_MPI_COMMS=${BUILD_CPP_MG_TESTS}
         #-DBUILD_CUML_MG_TESTS=${BUILD_CPP_MG_TESTS}
         #-DPARALLEL_LEVEL=${PARALLEL_LEVEL}
         #-DDISABLE_DEPRECATION_WARNING=${BUILD_DISABLE_DEPRECATION_WARNING}
@@ -75,5 +74,6 @@ class Libcuml(CMakePackage):
         args.append("-DENABLE_CUMLPRIMS_MG=OFF")
         args.append("-DBUILD_STATIC_FAISS=ON")
         args.append("-DSINGLEGPU=ON")
+        args.append("-DBUILD_CUML_MPI_COMMS=ON")
 
         return args
