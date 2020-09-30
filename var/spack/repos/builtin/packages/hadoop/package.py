@@ -6,11 +6,10 @@
 from spack import *
 
 
-class Hadoop(Package):
+class Hadoop(MavenPackage):
     """The Apache Hadoop software library is a framework that
     allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+    across clusters of computers using simple programming models."""
 
     homepage = "http://hadoop.apache.org/"
     url      = "https://github.com/apache/hadoop/archive/rel/release-3.2.1.tar.gz"
@@ -20,25 +19,14 @@ class Hadoop(Package):
     version('3.1.1', sha256='00f6eb11144525d426fe4dabcc9ddb5f6080cceb96b2cb77d2a55f0713412c20')
     version('3.1.0', sha256='42c540101ee8c50e4c90ba7a430a75459afb1802211e7d4a09ee694eb0157631')
 
-    depends_on('protobuf@2.5.0')
-    depends_on('maven', type='build')
+    depends_on('maven@3.0.2:', type='build')
     depends_on('java@8', type=('build', 'run'))
-    depends_on('cmake', type='build')
-    depends_on('openssl')
-    depends_on('libtirpc')
     depends_on('doxygen', type='build', when='@3.2.1:')
+    depends_on('cmake',  type='build')
+    depends_on('protobuf@2.5.0')
+    depends_on('libtirpc')
     depends_on('cyrus-sasl', when='@3.2.1:')
 
     def setup_build_environment(self, env):
         env.append_path('LDFLAGS', '-ldl -ltirpc')
         env.prepend_path('CPATH', self.spec['libtirpc'].prefix.include.tirpc)
-
-    def install(self, spec, prefix):
-        mvn = which('mvn')
-        mvn('package', '-DskipTests', '-Pdist,native',
-            '-Dtar', '-Dmaven.javadoc.skip=true')
-        hadoop_path = join_path(self.stage.source_path,
-                                'hadoop-dist', 'target',
-                                'hadoop-{0}'.format(self.version))
-        with working_dir(hadoop_path):
-            install_tree('.', prefix)
