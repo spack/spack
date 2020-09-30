@@ -14,8 +14,6 @@ class ParquetFormat(MavenPackage):
 
     version('2.8.0', sha256='345c044cea73997162e0c38ae830509ee424faf49c90974e4f244079a3df01b0')
     version('2.7.0', sha256='e821ffc67f61b49afce017ce2d1d402b4df352ca49dbeae167b06c4d3264b6ba')
-    version('2.6.0', sha256='c795ca5f8b43f83d5577681d97df28db63b113dc2c35956cc40ff66e156b7660')
-    version('2.5.0', sha256='b9f6db03be3bc3768b564544bf17ced6523775abcb78220cef5c8e4f6db468fa')
 
-    depends_on('thrift@0.12.0')
+    depends_on('thrift@0.12.0', when='@2.7.0:' )
     depends_on('java@8', type=('build', 'run'))
