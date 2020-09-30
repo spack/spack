@@ -5,17 +5,15 @@
 
 
 import inspect
-import fileinput
 import os
 import os.path
 import shutil
 import stat
-import sys
-import re
 from subprocess import PIPE
 from subprocess import check_call
 
 import llnl.util.tty as tty
+import llnl.util.filesystem as fs
 from llnl.util.filesystem import working_dir, force_remove
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
@@ -196,20 +194,25 @@ class AutotoolsPackage(PackageBase):
         detect the compiler (and patch_libtool is set), patch in the correct
         flags for the Arm, Clang/Flang, and Fujitsu compilers."""
 
-        libtool = os.path.join(self.build_directory, "libtool")
-        if self.patch_libtool and os.path.exists(libtool):
-            if self.spec.satisfies('%arm') or self.spec.satisfies('%clang') \
-                    or self.spec.satisfies('%fj'):
-                for line in fileinput.input(libtool, inplace=True):
-                    # Replace missing flags with those for Arm/Clang
-                    if line == 'wl=""\n':
-                        line = 'wl="-Wl,"\n'
-                    if line == 'pic_flag=""\n':
-                        line = 'pic_flag="{0}"\n'\
-                               .format(self.compiler.cc_pic_flag)
-                    if self.spec.satisfies('%fj') and 'fjhpctag.o' in line:
-                        line = re.sub(r'/\S*/fjhpctag.o', '', line)
-                    sys.stdout.write(line)
+        # Exit early if we are required not to patch libtool
+        if not self.patch_libtool:
+            return
+
+        for libtool_path in fs.find(
+                self.build_directory, 'libtool', recursive=True):
+            self._patch_libtool(libtool_path)
+
+    def _patch_libtool(self, libtool_path):
+        if self.spec.satisfies('%arm')\
+                or self.spec.satisfies('%clang')\
+                or self.spec.satisfies('%fj'):
+            fs.filter_file('wl=""\n', 'wl="-Wl,"\n', libtool_path)
+            fs.filter_file('pic_flag=""\n',
+                           'pic_flag="{0}"\n'
+                           .format(self.compiler.cc_pic_flag),
+                           libtool_path)
+        if self.spec.satisfies('%fj'):
+            fs.filter_file(r'/\S*/fjhpctag.o', '', libtool_path)
 
     @property
     def configure_directory(self):
