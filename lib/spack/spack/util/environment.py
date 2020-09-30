@@ -280,7 +280,20 @@ class RemovePath(NameValueModifier):
         env[self.name] = self.separator.join(directories)
 
     def execute_once(self, env):
-        print("When removing directories once")
+        environment_value = env.get(self.name, '')
+        already_found = False
+        dir_copy = []
+
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+
+        for x in directories:
+            if x != os.path.normpath(self.value):
+                dir_copy.append(os.path.normpath(x))
+            elif not already_found:
+                already_found = True
+
+        env[self.name] = self.separator.join(dir_copy)
 
 
 class DeprioritizeSystemPaths(NameModifier):
