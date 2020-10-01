@@ -19,7 +19,6 @@ class Sirius(CMakePackage, CudaPackage):
     maintainers = ['simonpintarelli', 'haampie', 'dev-zero', 'AdhocMan']
 
     version('develop', branch='develop')
-    version('master', branch='master')
 
     version('7.0.0', sha256='da783df11e7b65668e29ba8d55c8a6827e2216ad6d88040f84f42ac20fd1bb99')
     version('6.5.6', sha256='c8120100bde4477545eae489ea7f9140d264a3f88696ec92728616d78f214cae',
@@ -82,13 +81,10 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('magma', when='+magma')
 
     depends_on('spfft', when='@6.4.0:')
-    depends_on('spfft', when='@master')
     depends_on('spfft', when='@develop')
     depends_on('spfft+cuda', when='@6.4.0:+cuda')
-    depends_on('spfft+cuda', when='@master+cuda')
     depends_on('spfft+cuda', when='@develop+cuda')
     depends_on('spfft+rocm', when='@6.4.0:+rocm')
-    depends_on('spfft+rocm', when='@master+rocm')
     depends_on('spfft+rocm', when='@develop+rocm')
 
     depends_on('spla@1.1.0:', when='@develop')
@@ -205,12 +201,14 @@ class Sirius(CMakePackage, CudaPackage):
             )
             args += ["-DELPA_INCLUDE_DIR={0}".format(elpa_incdir)]
 
-        if '+cuda' in spec:
-            cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch[0] != 'none':
-                args += [
-                    '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0])
-                ]
+        cuda_arch = spec.variants['cuda_arch'].value
+        cuda_arch_selected = cuda_arch[0] != 'none'
+        if '+cuda' in spec and cuda_arch_selected:
+            cuda_args = '-DCUDA_ARCH={0}'.format(cuda_arch[0])
+            if spec.satisfies('@:6.999'):
+                cuda_args = '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(
+                    cuda_arch[0])
+            args.append(cuda_args)
 
         if '+rocm' in spec:
             archs = ",".join(self.spec.variants['amdgpu_target'].value)

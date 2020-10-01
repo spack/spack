@@ -24,14 +24,16 @@ configuration.
 
 """
 import os
+import six
 
 import llnl.util.lang
+import llnl.util.tty as tty
 
 import spack.paths
 import spack.config
 import spack.util.path
 import spack.database
-import spack.directory_layout
+import spack.directory_layout as dir_layout
 
 #: default installation root, relative to the Spack install path
 default_root = os.path.join(spack.paths.opt_path, 'spack')
@@ -56,12 +58,12 @@ class Store(object):
         hash_length (int): length of the hashes used in the directory
             layout; spec hash suffixes will be truncated to this length
     """
-    def __init__(self, root, path_scheme=None, hash_length=None):
+    def __init__(self, root, projections=None, hash_length=None):
         self.root = root
         self.db = spack.database.Database(
             root, upstream_dbs=retrieve_upstream_dbs())
-        self.layout = spack.directory_layout.YamlDirectoryLayout(
-            root, hash_len=hash_length, path_scheme=path_scheme)
+        self.layout = dir_layout.YamlDirectoryLayout(
+            root, projections=projections, hash_length=hash_length)
 
     def reindex(self):
         """Convenience function to reindex the store DB with its own layout."""
@@ -70,11 +72,31 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    root = spack.config.get('config:install_tree', default_root)
-    root = spack.util.path.canonicalize_path(root)
+    install_tree = spack.config.get('config:install_tree', {})
 
-    return Store(root,
-                 spack.config.get('config:install_path_scheme'),
+    if isinstance(install_tree, six.string_types):
+        tty.warn("Using deprecated format for configuring install_tree")
+        root = install_tree
+
+        # construct projection from previous values for backwards compatibility
+        all_projection = spack.config.get(
+            'config:install_path_scheme',
+            dir_layout.default_projections['all'])
+
+        projections = {'all': all_projection}
+    else:
+        root = install_tree.get('root', default_root)
+        root = spack.util.path.canonicalize_path(root)
+
+        projections = install_tree.get(
+            'projections', dir_layout.default_projections)
+
+        path_scheme = spack.config.get('config:install_path_scheme', None)
+        if path_scheme:
+            tty.warn("Deprecated config value 'install_path_scheme' ignored"
+                     " when using new install_tree syntax")
+
+    return Store(root, projections,
                  spack.config.get('config:install_hash_length'))
 
 
