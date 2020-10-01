@@ -52,7 +52,7 @@ class PyCuml(PythonPackage):
             when='^cuda@{0}'.format(v))
 
     for v in ('@0.15.0',):
-        depends_on('libcuml{0}~singlegpu'.format(v), when=v)
+        depends_on('libcuml{0}'.format(v), when=v)
 
     phases = [ 'build_ext', 'install' ]
 
