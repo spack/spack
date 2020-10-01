@@ -324,12 +324,12 @@ class MultiProcessFd(object):
     def close(self):
         # The object returned by multiprocess_fd is intended to transmit the FD
         # to a child process, this FD is then opened to a Python File object
-        # (using fdopen). In >= 3.8, the multiprocessing.connection.Connection
-        # object is used instead of MultiProcessFd; Connection closes the FD
+        # (using fdopen). In >= 3.8, multiprocess_fd returns a
+        # multiprocessing.connection.Connection; Connection closes the FD
         # when it is deleted, and prints a warning about duplicate closure if
-        # it is not explicitly closed. In < 3.8, MultiProcessFd is used, and
-        # if the associated FD were to be closed here, it conflicts with the
-        # closure of the File object.
+        # it is not explicitly closed. In < 3.8, multiprocess_fd returns a
+        # MultiProcessFd object; closing the FD here appears to conflict with
+        # closure of the File object (in < 3.8 that is), so this is a noop.
         pass
 
 
