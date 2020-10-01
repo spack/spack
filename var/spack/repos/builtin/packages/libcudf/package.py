@@ -34,7 +34,6 @@ class Libcudf(CMakePackage):
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
-    version('0.16.0a', sha256='0f02805985900564bfb47a924a257f83fe7dfd87eaada03cf745a74384132f04')
     version('0.15.0',  sha256='57b8036134368daa8a967eae971ee121cdc58c8678a03eba1358ed2b927dc16e')
 
     # FIXME: Add dependencies if required.
