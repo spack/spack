@@ -66,9 +66,12 @@ class RocmOpencl(CMakePackage):
         ]
         return args
 
+    def setup_run_environment(self, env):
+        env.set('OCL_ICD_VENDORS', self.prefix.vendors + '/')
+
     @run_after('install')
     def post_install(self):
-        vendor_config_path = '/etc/OpenCL/vendors'
+        vendor_config_path = join_path(self.prefix + '/vendors')
         mkdirp(vendor_config_path)
 
         config_file_name = 'amdocl64_30800.icd'
