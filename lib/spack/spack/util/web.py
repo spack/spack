@@ -224,7 +224,7 @@ def url_exists(url):
     try:
         read_from_url(url)
         return True
-    except URLError:
+    except (SpackWebError, URLError):
         return False
 
 
@@ -295,15 +295,27 @@ def _iter_s3_prefix(client, url, num_entries=1024):
             break
 
 
-def list_url(url):
+def _iter_local_prefix(path):
+    for root, _, files in os.walk(path):
+        for f in files:
+            yield os.path.relpath(os.path.join(root, f), path)
+
+
+def list_url(url, recursive=False):
     url = url_util.parse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
-        return os.listdir(local_path)
+        if recursive:
+            return list(_iter_local_prefix(local_path))
+        return [subpath for subpath in os.listdir(local_path)
+                if os.path.isfile(os.path.join(local_path, subpath))]
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
+        if recursive:
+            return list(_iter_s3_prefix(s3, url))
+
         return list(set(
             key.split('/', 1)[0]
             for key in _iter_s3_prefix(s3, url)))

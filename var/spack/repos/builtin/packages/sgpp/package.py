@@ -122,6 +122,8 @@ class Sgpp(SConsPackage):
     conflicts('+combigrid', when='@:3.2.0~solver')
     conflicts('+combigrid', when='@:3.2.0~quadrature')
 
+    patch('for_aarch64.patch', when='target=aarch64:')
+
     def build_args(self, spec, prefix):
         # Testing parameters
         if self.run_tests:

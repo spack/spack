@@ -11,10 +11,11 @@ class Rocfft(CMakePackage):
     """Radeon Open Compute FFT library"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-3.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-3.8.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.8.0', sha256='ed23009796e2ee7c43dcc24527f2d6b1d7a73dceac06c30384460098d2fe1556')
     version('3.7.0', sha256='94462e4bd19c2c749fcf6903adbee66d4d3bd345c0246861ff8f40b9d08a6ead')
     version('3.5.0', sha256='629f02cfecb7de5ad2517b6a8aac6ed4de60d3a9c620413c4d9db46081ac2c88')
 
@@ -29,7 +30,7 @@ class Rocfft(CMakePackage):
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['3.5.0', '3.7.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
