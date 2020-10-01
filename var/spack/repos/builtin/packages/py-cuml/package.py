@@ -44,6 +44,7 @@ class PyCuml(PythonPackage):
     depends_on('py-cython', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numba', type=('build', 'run'))
+    depends_on('py-cudf', type=('build', 'run'))
     depends_on('cuda')
 
     for v in ('11.0', '10.2', '10.1'):
