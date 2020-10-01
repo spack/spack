@@ -36,8 +36,6 @@ class Libcuml(CMakePackage):
 
     version('0.15.0',  sha256='b6b37c0f370cd4e881fc24083166ee86a934f1b823159ad36fac6457412c79cd')
 
-    variant('singlegpu', default=True)
-
     # FIXME: Add dependencies if required.
     # depends_on('foo')
     depends_on('cmake@3.14:', type='build')
@@ -48,8 +46,8 @@ class Libcuml(CMakePackage):
     depends_on('nccl@2.4:')
     depends_on('treelite')
     depends_on('googletest')
-    depends_on('libcumlprims', when='~singlegpu')
-    depends_on('mpi', when='~singlegpu')
+    depends_on('libcumlprims')
+    depends_on('mpi')
 
     root_cmakelists_dir = 'cpp'
 
@@ -72,15 +70,9 @@ class Libcuml(CMakePackage):
         args.append("-DBUILD_CUML_C_LIBRARY=ON")
         args.append("-DWITH_UCX=ON")
         args.append("-DNVTX=OFF")
-        # FIXME
         args.append("-DBUILD_STATIC_FAISS=ON")
-        if '+singlegpu' in self.spec:
-            args.append("-DSINGLEGPU=ON")
-            args.append("-DENABLE_CUMLPRIMS_MG=OFF")
-            args.append("-DBUILD_CUML_MPI_COMMS=OFF")
-        else:
-            args.append("-DSINGLEGPU=OFF")
-            args.append("-DENABLE_CUMLPRIMS_MG=ON")
-            args.append("-DBUILD_CUML_MPI_COMMS=ON")
+        args.append("-DSINGLEGPU=OFF")
+        args.append("-DENABLE_CUMLPRIMS_MG=ON")
+        args.append("-DBUILD_CUML_MPI_COMMS=ON")
 
         return args
