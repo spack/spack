@@ -21,7 +21,8 @@ class PyRmm(PythonPackage):
     depends_on('py-cython', type='build')
     depends_on('py-numba', type=('build', 'run'))
 
-    depends_on('librmm@0.15.0', when='@0.15.0')
+    for v in ('@0.15.0',):
+        depends_on('librmm' + v, when=v)
     
     depends_on('cuda@9:')
     depends_on('spdlog')
