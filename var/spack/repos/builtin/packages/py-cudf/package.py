@@ -55,11 +55,11 @@ class PyCudf(PythonPackage):
     depends_on('py-pandas@0.23.4:', type=('build', 'run'))
     depends_on('py-rmm', type=('build', 'run'))
     depends_on('cuda@10:')
-    
+
     for v in ('@0.15.0',):
         depends_on('libcudf' + v, when=v)
 
-    phases = [ 'cmake', 'build_ext', 'install' ]
+    phases = ['cmake', 'build_ext', 'install']
 
     def cmake(self, spec, prefix):
         cmake = which('cmake')
