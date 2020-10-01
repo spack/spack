@@ -28,7 +28,7 @@ class Libcudf(CMakePackage):
     def cmake_args(self):
         args = []
 
-        #args.append('-DGPU_ARCHES')
+        # args.append('-DGPU_ARCHES')
         args.append('-DUSE_NVTX=ON')
         args.append('-DBUILD_BENCHMARKS=OFF')
         args.append('-DDISABLE_DEPRICATION_WARNING=ON')
