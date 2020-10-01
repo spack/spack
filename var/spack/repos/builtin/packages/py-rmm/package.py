@@ -23,7 +23,7 @@ class PyRmm(PythonPackage):
 
     for v in ('@0.15.0',):
         depends_on('librmm' + v, when=v)
-    
+
     depends_on('cuda@9:')
     depends_on('spdlog')
 
