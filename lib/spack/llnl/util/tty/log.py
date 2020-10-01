@@ -322,15 +322,7 @@ class MultiProcessFd(object):
         self._handle = fd
 
     def close(self):
-        # The object returned by multiprocess_fd is intended to transmit the FD
-        # to a child process, this FD is then opened to a Python File object
-        # (using fdopen). In >= 3.8, multiprocess_fd returns a
-        # multiprocessing.connection.Connection; Connection closes the FD
-        # when it is deleted, and prints a warning about duplicate closure if
-        # it is not explicitly closed. In < 3.8, multiprocess_fd returns a
-        # MultiProcessFd object; closing the FD here appears to conflict with
-        # closure of the File object (in < 3.8 that is), so this is a noop.
-        pass
+        os.close(self._handle)
 
 
 def multiprocess_fd(fd):
@@ -342,6 +334,22 @@ def multiprocess_fd(fd):
         return multiprocessing.connection.Connection(fd)
     else:
         return MultiProcessFd(fd)
+
+
+def close_connection_and_file(connection, file):
+    # The object returned by multiprocess_fd is intended to transmit the FD
+    # to a child process, this FD is then opened to a Python File object
+    # (using fdopen). In >= 3.8, multiprocess_fd returns a
+    # multiprocessing.connection.Connection; Connection closes the FD
+    # when it is deleted, and prints a warning about duplicate closure if
+    # it is not explicitly closed. In < 3.8, multiprocess_fd returns a
+    # MultiProcessFd object; closing the FD here appears to conflict with
+    # closure of the File object (in < 3.8 that is). Therefore this needs
+    # to choose whether to close the File or the Connection.
+    if sys.version_info >= (3, 8):
+        connection.close()
+    else:
+        file.close()
 
 
 class log_output(object):
@@ -742,9 +750,9 @@ def _writer_daemon(stdin_wrapper, read_wrapper, write_fd, echo,
         if isinstance(log_file, StringIO):
             control_pipe.send(log_file.getvalue())
         log_file_wrapper.close()
-        read_wrapper.close()
+        close_connection_and_file(read_wrapper, in_pipe)
         if stdin_wrapper:
-            stdin_wrapper.close()
+            close_connection_and_file(stdin_wrapper, stdin)
 
         # send echo value back to the parent so it can be preserved.
         control_pipe.send(echo)
