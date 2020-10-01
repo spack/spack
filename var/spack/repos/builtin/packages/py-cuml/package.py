@@ -45,8 +45,12 @@ class PyCuml(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numba', type=('build', 'run'))
     depends_on('cuda')
-    depends_on('libcumlprims')
-    
+
+    for v in ('11.0', '10.2', '10.1'):
+        depends_on(
+            'libcumlprims@0.15.0-cuda{0}_gdbd0d39_0'.format(v),
+            when='^cuda@{0}'.format(v))
+
     for v in ('@0.15.0',):
         depends_on('libcuml{0}~singlegpu'.format(v), when=v)
 
