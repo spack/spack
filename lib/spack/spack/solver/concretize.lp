@@ -260,6 +260,17 @@ node_target_match(Package, 1)
 1 { compiler_weight(Package, Weight) : compiler_weight(Package, Weight) } 1
  :- node(Package).
 
+% If the compiler version was set from the command line,
+% respect it verbatim
+node_compiler_version(Package, Compiler, Version) :- node_compiler_version_hard(Package, Compiler, Version).
+
+% Cannot select a compiler if it is not supported on the OS
+% Compilers that are explicitly marked as allowed
+% are excluded from this check
+:- node_compiler_version(Package, Compiler, Version), node_os(Package, OS),
+   not compiler_supports_os(Compiler, Version, OS),
+   not allow_compiler(Compiler, Version).
+
 % dependencies imply we should try to match hard compiler constraints
 % todo: look at what to do about intersecting constraints here. we'd
 % ideally go with the "lowest" pref in the DAG
@@ -285,6 +296,9 @@ compiler_version_match(Package, 1)
     node_compiler_version_match_pref(Package, Compiler, V).
 
 #defined node_compiler_hard/2.
+#defined node_compiler_version_hard/3.
+#defined compiler_supports_os/3.
+#defined allow_compiler/2.
 
 % compilers weighted by preference acccording to packages.yaml
 compiler_weight(Package, Weight)

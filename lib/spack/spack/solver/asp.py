@@ -165,12 +165,8 @@ class AspFunctionBuilder(object):
 fn = AspFunctionBuilder()
 
 
-def default_arch():
-    return spack.spec.ArchSpec(spack.architecture.sys_type())
-
-
-def compilers_for_default_arch():
-    return spack.compilers.compilers_for_arch(default_arch())
+def all_compilers_in_config():
+    return spack.compilers.all_compilers()
 
 
 def extend_flag_list(flag_list, new_flags):
@@ -781,6 +777,15 @@ class SpackSolverSetup(object):
             f = fn.default_compiler_preference(cspec.name, cspec.version, i)
             self.gen.fact(f)
 
+    def compiler_supports_os(self):
+        compilers_yaml = spack.compilers.all_compilers_config()
+        for entry in compilers_yaml:
+            c = spack.spec.CompilerSpec(entry['compiler']['spec'])
+            operating_system = entry['compiler']['operating_system']
+            self.gen.fact(fn.compiler_supports_os(
+                c.name, c.version, operating_system
+            ))
+
     def package_compiler_defaults(self, pkg):
         """Facts about packages' compiler prefs."""
 
@@ -997,7 +1002,7 @@ class SpackSolverSetup(object):
         self.gen.newline()
 
         # flags from compilers.yaml
-        compilers = compilers_for_default_arch()
+        compilers = all_compilers_in_config()
         for compiler in compilers:
             for name, flags in compiler.flags.items():
                 for flag in flags:
@@ -1116,6 +1121,8 @@ class SpackSolverSetup(object):
                 supported.append(target)
             except llnl.util.cpu.UnsupportedMicroarchitecture:
                 continue
+            except ValueError:
+                continue
 
         return sorted(supported, reverse=True)
 
@@ -1225,24 +1232,26 @@ class SpackSolverSetup(object):
             self.gen.newline()
 
     def generate_possible_compilers(self, specs):
-        compilers = compilers_for_default_arch()
+        compilers = all_compilers_in_config()
         cspecs = set([c.spec for c in compilers])
 
         # add compiler specs from the input line to possibilities if we
         # don't require compilers to exist.
-        strict = spack.concretize.Concretizer.check_for_compiler_existence
+        strict = spack.concretize.Concretizer().check_for_compiler_existence
         for spec in specs:
             for s in spec.traverse():
-                if (not s.compiler
-                    or s.compiler in cspecs
-                    or not s.compiler.concrete):
+                if not s.compiler or not s.compiler.concrete:
                     continue
 
-                if strict:
+                if strict and s.compiler not in cspecs:
                     raise spack.concretize.UnavailableCompilerVersionError(
-                        s.compiler)
+                        s.compiler
+                    )
                 else:
                     cspecs.add(s.compiler)
+                    self.gen.fact(fn.allow_compiler(
+                        s.compiler.name, s.compiler.version
+                    ))
 
         return cspecs
 
@@ -1345,6 +1354,7 @@ class SpackSolverSetup(object):
         self.gen.h1('General Constraints')
         self.available_compilers()
         self.compiler_defaults()
+        self.compiler_supports_os()
 
         # architecture defaults
         self.platform_defaults()
@@ -1486,7 +1496,7 @@ class SpecBuilder(object):
         imposes order afterwards.
         """
         # nodes with no flags get flag order from compiler
-        compilers = dict((c.spec, c) for c in compilers_for_default_arch())
+        compilers = dict((c.spec, c) for c in all_compilers_in_config())
         for pkg in self._flag_compiler_defaults:
             spec = self._specs[pkg]
             compiler_flags = compilers[spec.compiler].flags
