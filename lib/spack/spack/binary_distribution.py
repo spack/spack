@@ -271,8 +271,7 @@ class BinaryDistributionCacheManager(object):
         # Fetch the hash first so we can check if we actually need to fetch
         # the index itself.
         try:
-            _, _, fs = web_util.read_from_url(
-                hash_fetch_url, 'text/plain')
+            _, _, fs = web_util.read_from_url(hash_fetch_url)
             fetched_hash = codecs.getreader('utf-8')(fs).read()
         except (URLError, web_util.SpackWebError) as url_err:
             tty.debug('Unable to read index hash {0}'.format(
@@ -288,8 +287,7 @@ class BinaryDistributionCacheManager(object):
 
         # Fetch index itself
         try:
-            _, _, fs = web_util.read_from_url(
-                index_fetch_url, 'application/json')
+            _, _, fs = web_util.read_from_url(index_fetch_url)
             index_object_str = codecs.getreader('utf-8')(fs).read()
         except (URLError, web_util.SpackWebError) as url_err:
             tty.debug('Unable to read index {0}'.format(index_fetch_url),
@@ -1162,8 +1160,7 @@ def try_direct_fetch(spec, force=False, full_hash_match=False):
             mirror.fetch_url, _build_cache_relative_path, specfile_name)
 
         try:
-            _, _, fs = web_util.read_from_url(
-                buildcache_fetch_url, 'text/plain')
+            _, _, fs = web_util.read_from_url(buildcache_fetch_url)
             fetched_spec_yaml = codecs.getreader('utf-8')(fs).read()
         except (URLError, web_util.SpackWebError, HTTPError) as url_err:
             tty.debug('Did not find {0} on {1}'.format(
