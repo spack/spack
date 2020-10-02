@@ -86,6 +86,13 @@ class TestConcretizePreferences(object):
         )
 
     def test_preferred_variants_from_any(self):
+        """
+        Test that 'foo=any' concretizes to any non-none value
+
+        Test that concretization of variants raises an error attempting
+        non-deterministic concretization from 'any' when preferred value is
+        'none'.
+        """
         update_packages('multivalue-variant', 'variants', 'foo=bar')
         assert_variant_values(
             'multivalue-variant foo=any', foo=('bar',)

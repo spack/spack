@@ -165,6 +165,7 @@ def test_dev_build_fails_no_version(mock_packages):
 
 def test_dev_build_env(tmpdir, mock_packages, install_mockery,
                        mutable_mock_env_path):
+    """Test Spack does dev builds for packages in develop section of env."""
     # setup dev-build-test-install package for dev build
     build_dir = tmpdir.mkdir('build')
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' %
@@ -201,6 +202,7 @@ env:
 
 def test_dev_build_env_version_mismatch(tmpdir, mock_packages, install_mockery,
                                         mutable_mock_env_path):
+    """Test Spack constraints concretization by develop specs."""
     # setup dev-build-test-install package for dev build
     build_dir = tmpdir.mkdir('build')
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
@@ -233,6 +235,7 @@ env:
 
 def test_dev_build_multiple(tmpdir, mock_packages, install_mockery,
                             mutable_mock_env_path, mock_fetch):
+    """Test spack install with multiple developer builds"""
     # setup dev-build-test-install package for dev build
     # don't concretize outside environment -- dev info will be wrong
     leaf_dir = tmpdir.mkdir('leaf')
@@ -285,6 +288,9 @@ env:
 
 def test_dev_build_env_dependency(tmpdir, mock_packages, install_mockery,
                                   mock_fetch, mutable_mock_env_path):
+    """
+    Test non-root specs in an environment are properly marked for dev builds.
+    """
     # setup dev-build-test-install package for dev build
     build_dir = tmpdir.mkdir('build')
     spec = spack.spec.Spec('dependent-of-dev-build@0.0.0')
