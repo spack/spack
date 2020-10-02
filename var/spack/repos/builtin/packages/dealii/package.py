@@ -101,7 +101,7 @@ class Dealii(CMakePackage, CudaPackage):
     variant('trilinos', default=True,
             description='Compile with Trilinos (only with MPI)')
 
-    # required dependencies, light version
+    # Required dependencies: Light version
     depends_on('blas')
     # Boost 1.58 is blacklisted, require at least 1.59, see
     # https://github.com/dealii/dealii/issues/1591
@@ -144,7 +144,7 @@ class Dealii(CMakePackage, CudaPackage):
     # Optional dependencies: Configuration
     depends_on('cuda@8:',          when='+cuda')
     depends_on('cmake@3.9:',       when='+cuda', type='build')
-    # older version of deal.II do not build with Cmake 3.10, see
+    # Older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
     depends_on('cmake@:3.9.99',    when='@:8.99', type='build')
     depends_on('mpi',              when='+mpi')
@@ -222,14 +222,14 @@ class Dealii(CMakePackage, CudaPackage):
     conflicts('cxxstd=98', when='@9.0:')
     conflicts('cxxstd=11', when='@9.3:')
 
-    # interfaces added in 8.5.0:
+    # Interfaces added in 8.5.0:
     for p in ['gsl', 'python']:
         conflicts('+{0}'.format(p), when='@:8.4.2',
                   msg='The interface to {0} is supported from version 8.5.0 '
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
 
-    # interfaces added in 9.0.0:
+    # Interfaces added in 9.0.0:
     for p in ['assimp', 'gmsh', 'nanoflann', 'scalapack', 'sundials',
               'adol-c']:
         conflicts('+{0}'.format(p), when='@:8.5.1',
@@ -244,12 +244,12 @@ class Dealii(CMakePackage, CudaPackage):
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
 
-    # interfaces removed in 9.3.0:
+    # Interfaces removed in 9.3.0:
     conflicts('+nanoflann', when='@9.3.0:',
-              msg='The interface to nanoflann was removed from version 9.3.0. '
+              msg='The interface to Nanoflann was removed from version 9.3.0. '
                   'Please explicitly disable this variant via ~nanoflann')
 
-    # check that the combination of variants makes sense
+    # Check that the combination of variants makes sense
     # 64-bit BLAS:
     for p in ['openblas', 'intel-mkl', 'intel-parallel-studio+mkl']:
         conflicts('^{0}+ilp64'.format(p), when='@:8.5.1',
@@ -274,14 +274,14 @@ class Dealii(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
         options = []
-        # release flags
+        # Release flags
         cxx_flags_release = []
-        # debug and release flags
+        # Debug and release flags
         cxx_flags = []
 
         # Set directory structure:
         if spec.satisfies('@:8.2.1'):
-            options.extend(['-DDEAL_II_COMPONENT_COMPAT_FILES=OFF'])
+            options.append('-DDEAL_II_COMPONENT_COMPAT_FILES=OFF')
         else:
             options.extend([
                 '-DDEAL_II_EXAMPLES_RELDIR=share/deal.II/examples',
@@ -316,13 +316,13 @@ class Dealii(CMakePackage, CudaPackage):
 
         # Doxygen documentation
         options.append(self.define_from_variant(
-            'DEAL_II_COMPONENT_DOCUMENTATION', 'doc')
-        )
+            'DEAL_II_COMPONENT_DOCUMENTATION', 'doc'
+        ))
 
         # Examples / tutorial programs
         options.append(self.define_from_variant(
-            'DEAL_II_COMPONENT_EXAMPLES', 'examples')
-        )
+            'DEAL_II_COMPONENT_EXAMPLES', 'examples'
+        ))
 
         # Enforce the specified C++ standard
         if spec.variants['cxxstd'].value != 'default':
@@ -343,8 +343,8 @@ class Dealii(CMakePackage, CudaPackage):
 
         # 64 bit indices
         options.append(self.define_from_variant(
-            'DEAL_II_WITH_64BIT_INDICES', 'int64')
-        )
+            'DEAL_II_WITH_64BIT_INDICES', 'int64'
+        ))
 
         if (spec.satisfies('^openblas+ilp64') or
             spec.satisfies('^intel-mkl+ilp64') or
@@ -352,10 +352,10 @@ class Dealii(CMakePackage, CudaPackage):
             options.append('-DLAPACK_WITH_64BIT_BLAS_INDICES=ON')
 
         # CUDA
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_CUDA', 'cuda'
+        ))
         if '+cuda' in spec:
-            options.append(
-                '-DDEAL_II_WITH_CUDA=ON'
-            )
             if not spec.satisfies('^cuda@9:'):
                 options.append('-DDEAL_II_WITH_CXX14=OFF')
             cuda_arch = spec.variants['cuda_arch'].value
@@ -371,15 +371,13 @@ class Dealii(CMakePackage, CudaPackage):
                 options.append(
                     '-DDEAL_II_CUDA_FLAGS={0}'.format(flags)
                 )
-        else:
-            options.extend([
-                '-DDEAL_II_WITH_CUDA=OFF',
-            ])
 
         # MPI
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_MPI', 'mpi'
+        ))
         if '+mpi' in spec:
             options.extend([
-                '-DDEAL_II_WITH_MPI:BOOL=ON',
                 '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
                 '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
                 '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
@@ -387,16 +385,12 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DMPI_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
                 '-DMPI_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             ])
-        else:
-            options.extend([
-                '-DDEAL_II_WITH_MPI:BOOL=OFF',
-            ])
 
         # Python bindings
         if spec.satisfies('@8.5.0:'):
             options.append(self.define_from_variant(
-                'DEAL_II_COMPONENT_PYTHON_BINDINGS', 'python')
-            )
+                'DEAL_II_COMPONENT_PYTHON_BINDINGS', 'python'
+            ))
             if '+python' in spec:
                 python_exe = spec['python'].command.path
                 python_library = spec['python'].libs[0]
@@ -409,9 +403,8 @@ class Dealii(CMakePackage, CudaPackage):
 
         # Threading
         options.append(self.define_from_variant(
-            'DEAL_II_WITH_THREADS', 'threads')
-        )
-
+            'DEAL_II_WITH_THREADS', 'threads'
+        ))
         if '+threads' in spec:
             if (spec.satisfies('^intel-parallel-studio+tbb')):
                 # deal.II/cmake will have hard time picking up TBB from Intel.
@@ -432,38 +425,32 @@ class Dealii(CMakePackage, CudaPackage):
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
                 'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser',
                 'symengine', 'ginkgo'):
+            options.append(self.define_from_variant(
+                'DEAL_II_WITH_%s' % library.upper(), library
+            ))
             if ('+' + library) in spec:
-                options.extend([
-                    '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),
-                    '-DDEAL_II_WITH_%s:BOOL=ON' % library.upper()
-                ])
-            else:
-                options.extend([
-                    '-DDEAL_II_WITH_%s:BOOL=OFF' % library.upper()
-                ])
+                options.append(
+                    '-D%s_DIR=%s' % (library.upper(), spec[library].prefix)
+                )
 
         # Optional dependencies that do not fit the above pattern:
         # ADOL-C
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_ADOLC', 'adol-c'
+        ))
         if '+adol-c' in spec:
-            options.extend([
+            options.append(
                 '-DADOLC_DIR=%s' % spec['adol-c'].prefix,
-                '-DDEAL_II_WITH_ADOLC=ON'
-            ])
-        else:
-            options.extend([
-                '-DDEAL_II_WITH_ADOLC=OFF'
-            ])
+            )
 
         # ARPACK
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_ARPACK', 'arpack'
+        ))
         if '+arpack' in spec and '+mpi' in spec:
             options.extend([
                 '-DARPACK_DIR=%s' % spec['arpack-ng'].prefix,
-                '-DDEAL_II_WITH_ARPACK=ON',
                 '-DDEAL_II_ARPACK_WITH_PARPACK=ON'
-            ])
-        else:
-            options.extend([
-                '-DDEAL_II_WITH_ARPACK=OFF'
             ])
 
         # NetCDF
@@ -483,30 +470,26 @@ class Dealii(CMakePackage, CudaPackage):
             ])
 
         # ScaLAPACK
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_SCALAPACK', 'scalapack'
+        ))
         if '+scalapack' in spec:
             scalapack = spec['scalapack'].libs
             options.extend([
                 '-DSCALAPACK_FOUND=true',
                 '-DSCALAPACK_INCLUDE_DIRS=%s' % (
                     spec['scalapack'].prefix.include),
-                '-DSCALAPACK_LIBRARIES=%s' % scalapack.joined(';'),
-                '-DDEAL_II_WITH_SCALAPACK=ON'
-            ])
-        else:
-            options.extend([
-                '-DDEAL_II_WITH_SCALAPACK=OFF'
+                '-DSCALAPACK_LIBRARIES=%s' % scalapack.joined(';')
             ])
 
         # Open Cascade
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_OPENCASCADE', 'oce'
+        ))
         if '+oce' in spec:
-            options.extend([
+            options.append(
                 '-DOPENCASCADE_DIR=%s' % spec['oce'].prefix,
-                '-DDEAL_II_WITH_OPENCASCADE=ON'
-            ])
-        else:
-            options.extend([
-                '-DDEAL_II_WITH_OPENCASCADE=OFF'
-            ])
+            )
 
         # As a final step, collect CXX flags that may have been
         # added anywhere above:
@@ -521,9 +504,9 @@ class Dealii(CMakePackage, CudaPackage):
         # Add flags for machine vectorization, used when tutorials
         # and user code is built.
         # See https://github.com/dealii/dealii/issues/9164
-        options.extend([
+        options.append(
             '-DDEAL_II_CXX_FLAGS=%s' % os.environ['SPACK_TARGET_ARGS']
-        ])
+        )
 
         return options
 
