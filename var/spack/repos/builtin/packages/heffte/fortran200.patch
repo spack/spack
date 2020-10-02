@@ -1,0 +1,13 @@
+diff --git a/fortran/test_mixed.f90 b/fortran/test_mixed.f90
+index 69424a8..b65d758 100644
+--- a/fortran/test_mixed.f90
++++ b/fortran/test_mixed.f90
+@@ -37,7 +37,7 @@ allocate(output(fft_cpu%size_outbox()))
+ 
+ do i = 1, fft_cpu%size_inbox()
+     input(i) = i
+-endif
++enddo
+ 
+ call fft_cpu%forward(input, output, scale_fftw_symmetric)
+ 
