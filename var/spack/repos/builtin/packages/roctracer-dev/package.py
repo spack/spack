@@ -44,7 +44,7 @@ class RoctracerDev(CMakePackage):
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         with working_dir('script'):
             match = '^#!/usr/bin/python'
-            python = self.spec['python'].command
+            python = self.spec['python'].command.path
             substitute = "#!{python}".format(python=python)
             files = [
                 'check_trace.py', 'gen_ostream_ops.py', 'hsaap.py', 'kfdap.py'
