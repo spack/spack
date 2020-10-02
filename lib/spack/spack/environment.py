@@ -1352,8 +1352,9 @@ class Environment(object):
             return True
 
         # if it's not a direct dev build and its dependencies haven't
-        # changed, it hasn't changed. Don't use satisfaction here because if it
-        # exists, then we need the value later
+        # changed, it hasn't changed.
+        # We don't merely check satisfaction (spec.satisfies('dev_path=any')
+        # because we need the value of the variant in the next block of code
         dev_path_var = spec.variants.get('dev_path', None)
         if not dev_path_var:
             return False
