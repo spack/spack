@@ -12,8 +12,8 @@ class ProcessInProcess(Package):
     homepage = "https://github.com/RIKEN-SysSoft/PiP"
     git      = "https://github.com/RIKEN-SysSoft/PiP.git"
 
-    version('1', branch='pip-1', preferred=True)
-    version('2', branch='pip-2')
+    version('1', branch='pip-1')
+    version('2', branch='pip-2', preferred=True)
     version('3', branch='pip-3')
 
     conflicts('%gcc@:3', when='os=centos7')
@@ -77,8 +77,7 @@ class ProcessInProcess(Package):
                   '--with-glibc-libdir=%s' % prefix.glibc.lib)
         make()
         make('install')
-        make('doxygen-install')  # installing already-doxygen-ed man pages
-        bash(prefix.bin.piplnlibs)
+        make('doc')  # installing already-doxygen-ed documents (man pages, html, ...)
 
         with working_dir(join_path('PiP-gdb', 'PiP-gdb')):
             bash('build.sh',
