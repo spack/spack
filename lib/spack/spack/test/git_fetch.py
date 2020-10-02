@@ -160,7 +160,7 @@ def test_git_extra_fetch(tmpdir):
 
     fetcher = GitFetchStrategy(git='file:///not-a-real-git-repo')
     with Stage(fetcher, path=testpath) as stage:
-        mkdirp(os.path.join(stage.source_path, 'test'))
+        mkdirp(source_path)
         fetcher.fetch()   # Use fetcher to fetch for code coverage
         shutil.rmtree(stage.source_path)
 

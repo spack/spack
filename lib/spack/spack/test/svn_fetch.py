@@ -89,6 +89,6 @@ def test_svn_extra_fetch(tmpdir):
         assert stage is not None
 
         source_path = stage.source_path
-        mkdirp(os.path.join(source_path, 'test'))
+        mkdirp(source_path)
 
         fetcher.fetch()
