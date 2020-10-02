@@ -713,11 +713,10 @@ class Environment(object):
         for name, entry in self.dev_specs.items():
             # spec must include a concrete version
             assert Spec(entry['spec']).version.concrete
-            # do not check paths because `spack develop` will clone all develop
-            # specs when run with no args
-            # default path is the spec name
+            # very basic regex match for a valid path, do not test existence
             assert re.match(r'{0}?(.*{0})*.*'.format(os.sep),
                             entry.get('path', name))
+            # default path is the spec name
             if 'path' not in entry:
                 self.dev_specs[name]['path'] = name
 
