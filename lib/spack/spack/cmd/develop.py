@@ -12,7 +12,7 @@ import spack.environment as ev
 
 from spack.error import SpackError
 
-description = 'add a spec to an environments dev-build information'
+description = "add a spec to an environment's dev-build information"
 section = "environments"
 level = "long"
 
