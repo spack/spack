@@ -1407,23 +1407,38 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
 
     spec_yaml = syaml.load(yaml_contents)
 
+    yaml_spec = spec_yaml['spec']
+    name = spec.name
+
+    # The "spec" key in the yaml is a list of objects, each with a single
+    # key that is the package name.  While the list usually just contains
+    # a single object, we iterate over the list looking for the object
+    # with the name of this concrete spec as a key, out of an abundance
+    # of caution.
+    cached_pkg_specs = [item[name] for item in yaml_spec if name in item]
+    cached_target = cached_pkg_specs[0] if cached_pkg_specs else None
+
     # If either the full_hash didn't exist in the .spec.yaml file, or it
     # did, but didn't match the one we computed locally, then we should
     # just rebuild.  This can be simplified once the dag_hash and the
     # full_hash become the same thing.
-    if ('full_hash' not in spec_yaml or
-            spec_yaml['full_hash'] != pkg_full_hash):
-        if 'full_hash' in spec_yaml:
+    rebuild = False
+    if not cached_target or 'full_hash' not in cached_target:
+        reason = 'full_hash was missing from remote spec.yaml'
+        rebuild = True
+    else:
+        full_hash = cached_target['full_hash']
+        if full_hash != pkg_full_hash:
             reason = 'hash mismatch, remote = {0}, local = {1}'.format(
-                spec_yaml['full_hash'], pkg_full_hash)
-        else:
-            reason = 'full_hash was missing from remote spec.yaml'
+                full_hash, pkg_full_hash)
+            rebuild = True
+
+    if rebuild:
         tty.msg('Rebuilding {0}, reason: {1}'.format(
             spec.short_spec, reason))
         tty.msg(spec.tree())
-        return True
 
-    return False
+    return rebuild
 
 
 def check_specs_against_mirrors(mirrors, specs, output_file=None,
