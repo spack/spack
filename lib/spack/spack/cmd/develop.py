@@ -28,6 +28,11 @@ def setup_parser(subparser):
     clone_group.add_argument(
         '--clone', action='store_true', dest='clone', default=None,
         help='Clone the package even if the path already exists')
+
+    subparser.add_argument(
+        '-f', '--force',
+        help='Remove any files or directories that block cloning source code')
+
     arguments.add_common_arguments(subparser, ['spec'])
 
 
@@ -81,6 +86,15 @@ def develop(parser, args):
 
     if not clone and not os.path.exists(abspath):
         raise SpackError("Provided path %s does not exist" % abspath)
+
+    if clone and os.path.exists(abspath):
+        if args.force:
+            shutil.rmtree(abspath)
+        else:
+            raise SpackError(
+                "Path %s already exists and cannot be cloned to." % abspath
+                " Use `spack develop -f` to overwrite."
+            )
 
     with env.write_transaction():
         changed = env.develop(spec, path, clone)
