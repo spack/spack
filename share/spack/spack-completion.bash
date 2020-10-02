@@ -434,7 +434,7 @@ _spack_buildcache_copy() {
 }
 
 _spack_buildcache_update_index() {
-    SPACK_COMPREPLY="-h --help -d --mirror-url"
+    SPACK_COMPREPLY="-h --help -d --mirror-url -k --keys"
 }
 
 _spack_cd() {

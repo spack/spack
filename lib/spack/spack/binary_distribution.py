@@ -400,6 +400,10 @@ def build_cache_relative_path():
     return _build_cache_relative_path
 
 
+def build_cache_keys_relative_path():
+    return _build_cache_keys_relative_path
+
+
 def build_cache_prefix(prefix):
     return os.path.join(prefix, build_cache_relative_path())
 
