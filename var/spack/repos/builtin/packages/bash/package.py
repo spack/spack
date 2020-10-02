@@ -61,20 +61,16 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = [
+        return [
+            # https://github.com/Homebrew/legacy-homebrew/pull/23234
+            # https://trac.macports.org/ticket/40603
+            'CFLAGS=-DSSH_SOURCE_BASHRC',
+            'LIBS=' + spec['ncurses'].libs.link_flags,
             '--with-curses',
             '--enable-readline',
             '--with-installed-readline',
             '--with-libiconv-prefix={0}'.format(spec['iconv'].prefix),
-            'LIBS=' + spec['ncurses'].libs.link_flags,
         ]
-
-        # https://github.com/Homebrew/legacy-homebrew/pull/23234
-        # https://trac.macports.org/ticket/40603
-        if 'platform=darwin' in spec:
-            args.append('CFLAGS=-DSSH_SOURCE_BASHRC')
-
-        return args
 
     def check(self):
         make('tests')
