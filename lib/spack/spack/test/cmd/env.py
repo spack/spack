@@ -13,6 +13,7 @@ import llnl.util.filesystem as fs
 import spack.hash_types as ht
 import spack.modules
 import spack.environment as ev
+import spack.user_environment as uenv
 
 from spack.cmd.env import _env_create
 from spack.spec import Spec
@@ -1035,7 +1036,7 @@ def test_env_dir_stays_after_deactivation(working_env):  # TODO: do docs
     e = ev.create('test', with_view=True)
 
     # Activate env
-    env('activate', '--sh', 'test')
+    assert(print(e.add_default_view().group_by_name()))
 
     # Add to SPACK_ENV_ACTIVATED_PATHS
     if 'SPACK_ENV_ACTIVATED_PATHS' in os.environ.keys():
@@ -1060,26 +1061,19 @@ def test_env_dir_stays_after_deactivation(working_env):  # TODO: do docs
     assert os.path.join(e.default_view.root, 'bin') not in os.environ['SPACK_ENV_ACTIVATED_PATHS']
 
 
-def test_env_activate_dir_saved_correctly(working_env):  # TODO: do docs
+def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
     # Create env with view
     e = ev.create('test', with_view=True)
 
-    # Activate env
-    env('activate', '--sh', 'test')
-
-    # Add to SPACK_ENV_ACTIVATED_PATHS
-    if 'SPACK_ENV_ACTIVATED_PATHS' in os.environ.keys():
-        os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(
-            e.default_view.root, 'bin') + ":" + os.environ['SPACK_ENV_ACTIVATED_PATHS']
-    else:
-        os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(
-        e.default_view.root, 'bin')
-
-    # Deactivate TODO: make sure this works
-    env('deactivate')
-
-    # Make sure only SPACK_ENV_ACTIVATED_PATHS was removed
-    assert os.path.join(e.default_view.root, 'bin') not in os.environ['SPACK_ENV_ACTIVATED_PATHS']
+    mods = e.add_default_view()
+    
+    mods.apply_modifications()
+    
+    added_paths = set(os.environ['SPACK_ENV_ADDED_PATH'].split(':'))
+    
+    assert 'SPACK_ENV_ADDED_PATH' in mods.group_by_name()
+    assert added_paths == set([os.path.join(e.default_view.root, 'bin')])
+    assert False
 
 
 def test_env_dir_added_maunally(working_env):  # TODO: do docs
@@ -1092,9 +1086,23 @@ def test_env_dir_added_maunally(working_env):  # TODO: do docs
         e.default_view.root, 'bin') + ":" + os.environ['PATH']
     else:
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
-
-    # Make sure only SPACK_ENV_ACTIVATED_PATHS was removed
-    assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
+    
+    mods = e.add_default_view()
+    
+    keys = set()
+    
+    for values in uenv.prefix_inspections(sys.platform).values():
+        keys |= set(values)
+    
+    mod_keys = set(mods.group_by_name().keys())
+    
+    mods.apply_modifications()
+    mod_vars = set(os.environ['SPACK_ENV_MODIFIED_VARS'].split(':'))
+    
+    assert 'SPACK_ENV_MODIFIED_VARS' in mods.group_by_name()
+    assert mod_keys == keys | set(['SPACK_ENV_MODIFIED_VARS'])
+    assert mod_vars == keys
+    assert False
 
 
 def test_env_updates_view_install(
