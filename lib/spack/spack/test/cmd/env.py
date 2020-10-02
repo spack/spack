@@ -1076,7 +1076,7 @@ def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
     assert False
 
 
-def test_env_dir_added_maunally(working_env):  # TODO: do docs
+def test_env_dir_added_before_activation(working_env):  # TODO: do docs
     # Create env with view
     e = ev.create('test', with_view=True)
 
@@ -1089,19 +1089,33 @@ def test_env_dir_added_maunally(working_env):  # TODO: do docs
     
     mods = e.add_default_view()
     
-    keys = set()
-    
-    for values in uenv.prefix_inspections(sys.platform).values():
-        keys |= set(values)
-    
-    mod_keys = set(mods.group_by_name().keys())
+    mods.apply_modifications()
+   
+    added_paths = set(os.environ['SPACK_ENV_ADDED_PATH'].split(':'))
+
+    assert 'SPACK_ENV_ADDED_PATH' in mods.group_by_name()
+    assert len(added_paths) == 0
+    assert False
+
+def test_env_dir_added_after_activation(working_env):  # TODO: do docs
+    # Create env with view
+    e = ev.create('test', with_view=True)
+
+    mods = e.add_default_view()
     
     mods.apply_modifications()
-    mod_vars = set(os.environ['SPACK_ENV_MODIFIED_VARS'].split(':'))
-    
-    assert 'SPACK_ENV_MODIFIED_VARS' in mods.group_by_name()
-    assert mod_keys == keys | set(['SPACK_ENV_MODIFIED_VARS'])
-    assert mod_vars == keys
+  
+    # Add to PATH
+    if 'PATH' in os.environ.keys():
+        os.environ['PATH'] = os.path.join(
+        e.default_view.root, 'bin') + ":" + os.environ['PATH']
+    else:
+        os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
+
+    added_paths = set(os.environ['SPACK_ENV_ADDED_PATH'].split(':'))
+
+    assert 'SPACK_ENV_ADDED_PATH' in mods.group_by_name()
+    assert added_paths == set([os.path.join(e.default_view.root, 'bin')])
     assert False
 
 
