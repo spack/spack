@@ -95,7 +95,7 @@ class Sbml(CMakePackage):
                 "-DWITH_PYTHON_INCLUDE:PATH=%s" % spec['python'].prefix,
             ])
         else:
-            args.append('-DWITH_PYTHON:BOOL=ON')
+            args.append('-DWITH_PYTHON:BOOL=OFF')
 
         args.append(self.define_from_variant('WITH_CSHARP', 'mono'))
 
