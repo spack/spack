@@ -6,7 +6,6 @@
 
 import inspect
 import json
-import spack
 
 from llnl.util.filesystem import join_path, copy, mkdirp
 from spack.directives import cargo_manifest, conflicts, depends_on, variant
@@ -160,8 +159,8 @@ lto = "{lto}"
         for p in metadata["packages"]:
             for w in metadata["workspace_members"]:
                 if p["id"] == w:
-                    for t in p["targets"]:
-                        yield t
+                    for target in p["targets"]:
+                        yield target
 
     def cargo_features(self):
         """Features to build cargo project with. Overridable by package."""
@@ -185,7 +184,7 @@ lto = "{lto}"
         jobs = inspect.getmodule(self).make_jobs
 
         # Explicitly build each target in the workspace
-        for t in self.workspace_targets():
+        for target in self.workspace_targets():
             args = [
                 "rustc", "--jobs", str(jobs), "-vv", "--manifest-path",
                 self.manifest_path
@@ -196,16 +195,16 @@ lto = "{lto}"
 
             args += self._feature_args()
 
-            if "bin" in t["kind"]:
+            if "bin" in target["kind"]:
                 args += ["--bin"]
-            elif "staticlib" in t["kind"]:
+            elif "staticlib" in target["kind"]:
                 args += ["--lib"]
-            elif "cdylib" in t["kind"]:
+            elif "cdylib" in target["kind"]:
                 args += ["--lib"]
             else:
                 continue
 
-            args += [t["name"], "--"]
+            args += [target["name"], "--"]
 
             args += ["--cap-lints", "warn"]
             if '+prefer_dynamic' in self.spec:
@@ -221,27 +220,28 @@ lto = "{lto}"
         so_ext = 'dylib' if 'platform=darwin' in self.spec else 'so'
 
         # This loop attempts to install all
-        for t in self.workspace_targets():
-            if "bin" in t["kind"]:
+        for target in self.workspace_targets():
+            if "bin" in target["kind"]:
                 mkdirp(prefix.bin)
                 copy(
-                    join_path(self.target_path, t["name"]),
+                    join_path(self.target_path, target["name"]),
                     prefix.bin
                 )
 
-            if "staticlib" in t["kind"]:
+            if "staticlib" in target["kind"]:
                 mkdirp(prefix.lib)
                 copy(
-                    join_path(self.target_path, "lib{0}.a".format(t["name"])),
+                    join_path(
+                        self.target_path, "lib{0}.a".format(target["name"])),
                     prefix.lib
                 )
 
-            if "cdylib" in t["kind"]:
+            if "cdylib" in target["kind"]:
                 mkdirp(prefix.lib)
                 copy(
                     join_path(
                         self.target_path,
-                        "lib{0}.{1}".format(t["name"], so_ext)
+                        "lib{0}.{1}".format(target["name"], so_ext)
                     ),
                     prefix.lib
                 )
