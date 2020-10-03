@@ -264,10 +264,6 @@ class PrependPath(NameValueModifier):
         directories = [os.path.normpath(self.value)] + directories
         env[self.name] = self.separator.join(directories)
 
-    def to_string(self):
-        print(type(env.get(self.name, '')))
-        return "HELLO"#env.get(self.name, '')
-
 
 class RemovePath(NameValueModifier):
 
@@ -278,22 +274,6 @@ class RemovePath(NameValueModifier):
         directories = [os.path.normpath(x) for x in directories
                        if x != os.path.normpath(self.value)]
         env[self.name] = self.separator.join(directories)
-
-    def execute_once(self, env):
-        environment_value = env.get(self.name, '')
-        already_found = False
-        dir_copy = []
-
-        directories = environment_value.split(
-            self.separator) if environment_value else []
-
-        for x in directories:
-            if x != os.path.normpath(self.value):
-                dir_copy.append(os.path.normpath(x))
-            elif not already_found:
-                already_found = True
-
-        env[self.name] = self.separator.join(dir_copy)
 
 
 class DeprioritizeSystemPaths(NameModifier):
@@ -565,8 +545,6 @@ class EnvironmentModifications(object):
         new_env = os.environ.copy()
 
         for name, actions in sorted(modifications.items()):
-            if name == 'SPACK_ENV_ACTIVATION_PATHS':
-                x.execute_once(new_env)
             for x in actions:
                 x.execute(new_env)
 
