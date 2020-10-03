@@ -16,6 +16,7 @@ _versions = {
     }
 }
 
+
 class NvidiaHpcSdk(Package):
     """The NVIDIA HPC SDK is a comprehensive suite of compilers and libraries 
     enabling HPC developers to program the entire HPC platform from the GPU 
@@ -68,12 +69,12 @@ class NvidiaHpcSdk(Package):
         os.environ['NVHPC_DEFAULT_CUDA'] = cuda_version
 
         os.system('./install')
-    
+
     def setup_run_environment(self, env):
         prefix = Prefix(join_path(self.prefix, '{}_{}'.format(platform.system(), platform.machine()), self.version))
 
         env.set('target', '{}_{}'.format(platform.system(), platform.machine()))
-        env.set('version', str(self.version))
+        env.set('version', repr(self.version))
         env.set('NVHPC', prefix)
 
         env.prepend_path('PATH', prefix.compilers.bin)
