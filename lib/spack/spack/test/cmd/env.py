@@ -1060,24 +1060,20 @@ def test_env_dir_stays_after_deactivation(working_env):  # TODO: do docs
     assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
     assert os.path.join(e.default_view.root, 'bin') not in os.environ['SPACK_ENV_ACTIVATED_PATHS']
 
-
 def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
-    # Create env with view
     e = ev.create('test', with_view=True)
 
     mods = e.add_default_view()
-    
+
     mods.apply_modifications()
-    
-    added_paths = set(os.environ['SPACK_ENV_ADDED_PATH'].split(':'))
-    
+
     assert 'SPACK_ENV_ADDED_PATH' in mods.group_by_name()
+
+    added_paths = set(os.environ['SPACK_ENV_ADDED_PATH'].split(':'))
+
     assert added_paths == set([os.path.join(e.default_view.root, 'bin')])
-    assert False
 
-
-def test_env_dir_added_before_activation(working_env):  # TODO: do docs
-    # Create env with view
+def test_env_dir_added_before_activation():  # TODO: do docs
     e = ev.create('test', with_view=True)
 
     # Add to PATH
@@ -1086,16 +1082,10 @@ def test_env_dir_added_before_activation(working_env):  # TODO: do docs
         e.default_view.root, 'bin') + ":" + os.environ['PATH']
     else:
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
-    
-    mods = e.add_default_view()
-    
-    mods.apply_modifications()
-   
-    added_paths = set(os.environ['SPACK_ENV_ADDED_PATH'].split(':'))
 
-    assert 'SPACK_ENV_ADDED_PATH' in mods.group_by_name()
-    assert len(added_paths) == 0
-    assert False
+    mods = e.add_default_view()
+
+    assert 'SPACK_ENV_ADDED_PATH' not in mods.group_by_name()
 
 def test_env_dir_added_after_activation(working_env):  # TODO: do docs
     # Create env with view
@@ -1116,8 +1106,6 @@ def test_env_dir_added_after_activation(working_env):  # TODO: do docs
 
     assert 'SPACK_ENV_ADDED_PATH' in mods.group_by_name()
     assert added_paths == set([os.path.join(e.default_view.root, 'bin')])
-    assert False
-
 
 def test_env_updates_view_install(
         tmpdir, mock_stage, mock_fetch, install_mockery):

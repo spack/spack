@@ -1196,6 +1196,8 @@ class Environment(object):
         env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view))
 
+        keys_to_check = env_mod.group_by_name().keys()
+
         mods, errors = self._env_modifications_for_default_view()
         env_mod.extend(mods)
         if errors:
@@ -1206,8 +1208,25 @@ class Environment(object):
         for env_var in env_mod.group_by_name():
             env_mod.prune_duplicate_paths(env_var)
 
+        check_env = os.environ.copy()
+
+        env_mod.apply_modifications(check_env)
+
+        for key in keys_to_check:
+            orig = os.environ.get(key, '').split(':')
+            new = check_env.get(key, '').split(':')
+
+            if orig == new:
+                continue
+
+            num_new = len(new) - len(orig)
+
+            added = new[:num_new]
+
+            env_mod.set('SPACK_ENV_ADDED_%s' % key.upper(), ':'.join(added))
+
         return env_mod
-    
+
     def add_default_view_to_shell(shell):
         env_mod = self.add_default_view()
         return env_mod.shell_modifications(shell)
