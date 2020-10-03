@@ -18,17 +18,18 @@ _versions = {
 
 
 class NvidiaHpcSdk(Package):
-    """The NVIDIA HPC SDK is a comprehensive suite of compilers and libraries 
-    enabling HPC developers to program the entire HPC platform from the GPU 
-    foundation to the CPU and through the interconnect. It is the only 
-    comprehensive, integrated SDK for programming accelerated computing systems."""
+    """The NVIDIA HPC SDK is a comprehensive suite of compilers and libraries
+    enabling HPC developers to program the entire HPC platform from the GPU
+    foundation to the CPU and through the interconnect. It is the only
+    comprehensive, integrated SDK for programming accelerated computing 
+    systems."""
 
     homepage = "https://developer.nvidia.com/hpc-sdk"
 
     maintainers = ['Nischay-Pro']
 
     for ver, packages in _versions.items():
-        key = "{}_{}".format(platform.system(), platform.machine())
+        key = "{0}_{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
             version(ver, md5=pkg[0], url=pkg[1], expand=True)
@@ -57,7 +58,8 @@ class NvidiaHpcSdk(Package):
 
         if '+network' in spec and '~single' in spec:
             os.environ['NVHPC_INSTALL_TYPE'] = "network"
-            os.environ['NVHPC_INSTALL_LOCAL_DIR'] = "{}/{}/shared_objects".format(prefix, self.version)
+            os.environ['NVHPC_INSTALL_LOCAL_DIR'] = "{}/{}/shared_objects"\
+                .format(prefix, self.version)
         elif '+single' in spec and '~network' in spec:
             os.environ['NVHPC_INSTALL_TYPE'] = "single"
         else:
@@ -71,9 +73,13 @@ class NvidiaHpcSdk(Package):
         os.system('./install')
 
     def setup_run_environment(self, env):
-        prefix = Prefix(join_path(self.prefix, '{}_{}'.format(platform.system(), platform.machine()), self.version))
+        prefix = Prefix(join_path(self.prefix, '{0}_{1}'.format(
+            platform.system(), platform.machine()), self.version)
+        )
 
-        env.set('target', '{}_{}'.format(platform.system(), platform.machine()))
+        env.set('target', '{0}_{1}'.format(platform.system(),
+            platform.machine())
+        )
         env.set('version', repr(self.version))
         env.set('NVHPC', prefix)
 
