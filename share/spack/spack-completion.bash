@@ -434,7 +434,7 @@ _spack_buildcache_copy() {
 }
 
 _spack_buildcache_update_index() {
-    SPACK_COMPREPLY="-h --help -d --mirror-url"
+    SPACK_COMPREPLY="-h --help -d --mirror-url -k --keys"
 }
 
 _spack_cd() {
@@ -906,7 +906,7 @@ _spack_gpg() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="verify trust untrust sign create list init export"
+        SPACK_COMPREPLY="verify trust untrust sign create list init export publish"
     fi
 }
 
@@ -972,6 +972,15 @@ _spack_gpg_export() {
     fi
 }
 
+_spack_gpg_publish() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url --rebuild-index"
+    else
+        _keys
+    fi
+}
+
 _spack_graph() {
     if $list_options
     then
@@ -1002,7 +1011,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash -y --yes-to-all --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --require-full-hash-match --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash -y --yes-to-all --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp"
     else
         _all_packages
     fi

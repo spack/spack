@@ -49,6 +49,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         depends_on('autoconf', type='build', when=_version)
         depends_on('automake', type='build', when=_version)
         depends_on('libtool', type='build', when=_version)
+        depends_on('yacc', type='build', when=_version)
     # Need newer 'automake' to support newer platforms
     for _target in ['ppc64le', 'aarch64']:
         depends_on('automake@1.15:', type='build', when='target={0}:'.format(_target))
