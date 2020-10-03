@@ -35,7 +35,7 @@ class Draco(CMakePackage):
 
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
-    variant('caliper',  default=True,  description='Enable caliper timers support')
+    variant('caliper',  default=False, description='Enable caliper timers support')
     variant('cuda',     default=False, description='Enable Cuda/GPU support')
     variant('eospac',   default=True,  description='Enable EOSPAC support')
     variant('lapack',   default=True,  description='Enable LAPACK wrapper')
