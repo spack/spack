@@ -6,6 +6,7 @@
 import codecs
 import os
 import re
+import sys
 import tarfile
 import shutil
 import tempfile
@@ -270,8 +271,7 @@ class BinaryDistributionCacheManager(object):
         # Fetch the hash first so we can check if we actually need to fetch
         # the index itself.
         try:
-            _, _, fs = web_util.read_from_url(
-                hash_fetch_url, 'text/plain')
+            _, _, fs = web_util.read_from_url(hash_fetch_url)
             fetched_hash = codecs.getreader('utf-8')(fs).read()
         except (URLError, web_util.SpackWebError) as url_err:
             tty.debug('Unable to read index hash {0}'.format(
@@ -287,8 +287,7 @@ class BinaryDistributionCacheManager(object):
 
         # Fetch index itself
         try:
-            _, _, fs = web_util.read_from_url(
-                index_fetch_url, 'application/json')
+            _, _, fs = web_util.read_from_url(index_fetch_url)
             index_object_str = codecs.getreader('utf-8')(fs).read()
         except (URLError, web_util.SpackWebError) as url_err:
             tty.debug('Unable to read index {0}'.format(index_fetch_url),
@@ -401,6 +400,10 @@ def build_cache_relative_path():
     return _build_cache_relative_path
 
 
+def build_cache_keys_relative_path():
+    return _build_cache_keys_relative_path
+
+
 def build_cache_prefix(prefix):
     return os.path.join(prefix, build_cache_relative_path())
 
@@ -460,7 +463,11 @@ def write_buildinfo_file(spec, workdir, rel=False):
                         tty.warn(msg)
 
             if relocate.needs_binary_relocation(m_type, m_subtype):
-                if not filename.endswith('.o'):
+                if ((m_subtype in ('x-executable', 'x-sharedlib')
+                    and sys.platform != 'darwin') or
+                   (m_subtype in ('x-mach-binary')
+                    and sys.platform == 'darwin') or
+                   (not filename.endswith('.o'))):
                     rel_path_name = os.path.relpath(path_name, prefix)
                     binary_to_relocate.append(rel_path_name)
             if relocate.needs_text_relocation(m_type, m_subtype):
@@ -1157,8 +1164,7 @@ def try_direct_fetch(spec, force=False, full_hash_match=False):
             mirror.fetch_url, _build_cache_relative_path, specfile_name)
 
         try:
-            _, _, fs = web_util.read_from_url(
-                buildcache_fetch_url, 'text/plain')
+            _, _, fs = web_util.read_from_url(buildcache_fetch_url)
             fetched_spec_yaml = codecs.getreader('utf-8')(fs).read()
         except (URLError, web_util.SpackWebError, HTTPError) as url_err:
             tty.debug('Did not find {0} on {1}'.format(
@@ -1401,23 +1407,38 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
 
     spec_yaml = syaml.load(yaml_contents)
 
+    yaml_spec = spec_yaml['spec']
+    name = spec.name
+
+    # The "spec" key in the yaml is a list of objects, each with a single
+    # key that is the package name.  While the list usually just contains
+    # a single object, we iterate over the list looking for the object
+    # with the name of this concrete spec as a key, out of an abundance
+    # of caution.
+    cached_pkg_specs = [item[name] for item in yaml_spec if name in item]
+    cached_target = cached_pkg_specs[0] if cached_pkg_specs else None
+
     # If either the full_hash didn't exist in the .spec.yaml file, or it
     # did, but didn't match the one we computed locally, then we should
     # just rebuild.  This can be simplified once the dag_hash and the
     # full_hash become the same thing.
-    if ('full_hash' not in spec_yaml or
-            spec_yaml['full_hash'] != pkg_full_hash):
-        if 'full_hash' in spec_yaml:
+    rebuild = False
+    if not cached_target or 'full_hash' not in cached_target:
+        reason = 'full_hash was missing from remote spec.yaml'
+        rebuild = True
+    else:
+        full_hash = cached_target['full_hash']
+        if full_hash != pkg_full_hash:
             reason = 'hash mismatch, remote = {0}, local = {1}'.format(
-                spec_yaml['full_hash'], pkg_full_hash)
-        else:
-            reason = 'full_hash was missing from remote spec.yaml'
+                full_hash, pkg_full_hash)
+            rebuild = True
+
+    if rebuild:
         tty.msg('Rebuilding {0}, reason: {1}'.format(
             spec.short_spec, reason))
         tty.msg(spec.tree())
-        return True
 
-    return False
+    return rebuild
 
 
 def check_specs_against_mirrors(mirrors, specs, output_file=None,
