@@ -182,7 +182,7 @@ lto = "{lto}"
 
     def build(self, spec, prefix):
         """cargo build"""
-        jobs = spack.config.get('config:build_jobs') if self.parallel else 1
+        jobs = inspect.getmodule(self).make_jobs
 
         # Explicitly build each target in the workspace
         for t in self.workspace_targets():

@@ -6,6 +6,7 @@
 from spack import *
 from spack.util.rust import rust_archs, RustQuery
 
+import inspect
 from six import iteritems
 
 
@@ -560,7 +561,7 @@ sysconfdir = "etc"
             )
 
     def install(self, spec, prefix):
-        jobs = spack.config.get('config:build_jobs') if self.parallel else 1
+        jobs = inspect.getmodule(self).make_jobs
 
         rustflags = []
 
