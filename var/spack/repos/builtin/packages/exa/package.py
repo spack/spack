@@ -15,6 +15,9 @@ class Exa(CargoPackage):
 
     maintainers = ['AndrewGaspar']
 
+    version('master', branch='master')
+    version('0.9.0', sha256='0463ccb5038bd6a0ee042e0a8ff5cd9792906e19a29f0ce631217c7a5f1720e9')
+
     # exa doesn't build with prefer_dynamic at present, so switch default to
     # False
     variant(
@@ -41,6 +44,3 @@ class Exa(CargoPackage):
     def setup_build_environment(self, env):
         if '+git' in self.spec:
             env.append_flags('LIBGIT2_SYS_USE_PKG_CONFIG', '1')
-
-    version('master', branch='master')
-    version('0.9.0', sha256='0463ccb5038bd6a0ee042e0a8ff5cd9792906e19a29f0ce631217c7a5f1720e9')

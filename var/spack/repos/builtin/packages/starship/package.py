@@ -17,6 +17,9 @@ class Starship(CargoPackage):
 
     maintainers = ["AndrewGaspar"]
 
+    version('master', branch='master')
+    version('0.44.0', sha256='73b7c7f2d82721457c01890f2593fe3c5c6b867da7e4dca94179204f55ee7de3')
+
     # Change the defaults for prefer_dynamic and lto to reflect that starship
     # cannot build with prefer_dynamic at this time, and prefers to be built
     # with lto.
@@ -38,6 +41,3 @@ class Starship(CargoPackage):
 
     def setup_build_environment(self, env):
         env.append_flags('LIBGIT2_SYS_USE_PKG_CONFIG', '1')
-
-    version('master', branch='master')
-    version('0.44.0', sha256='73b7c7f2d82721457c01890f2593fe3c5c6b867da7e4dca94179204f55ee7de3')

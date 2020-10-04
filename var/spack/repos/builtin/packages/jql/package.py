@@ -15,6 +15,9 @@ class Jql(CargoPackage):
 
     maintainers = ['AndrewGaspar']
 
+    version('master', branch='master')
+    version('2.7.2', sha256='dd14894364600cc6667801b01ad93eb665610e9de81fc64734de074ab1f1b2e5')
+
     # jql doesn't build with prefer_dynamic at present, so switch default to
     # False
     variant(
@@ -22,6 +25,3 @@ class Jql(CargoPackage):
         default=False,
         description='Link Rust standard library dynamically'
     )
-
-    version('master', branch='master')
-    version('2.7.2', sha256='dd14894364600cc6667801b01ad93eb665610e9de81fc64734de074ab1f1b2e5')

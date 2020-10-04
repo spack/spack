@@ -18,6 +18,9 @@ class Ripgrep(CargoPackage):
 
     maintainers = ["AndrewGaspar"]
 
+    version('master', branch='master')
+    version('12.1.1', sha256='b955557adc78324dbc2bc663ca85df54b48a579b340876e38dffb39f24882ebf')
+
     variant(
         "pcre2",
         default=True,
@@ -52,6 +55,3 @@ class Ripgrep(CargoPackage):
     def setup_build_environment(self, env):
         if '+pcre2' in self.spec:
             env.append_flags('PCRE2_SYS_STATIC', '0')
-
-    version('master', branch='master')
-    version('12.1.1', sha256='b955557adc78324dbc2bc663ca85df54b48a579b340876e38dffb39f24882ebf')

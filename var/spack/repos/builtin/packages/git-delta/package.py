@@ -15,11 +15,11 @@ class GitDelta(CargoPackage):
 
     maintainers = ['AndrewGaspar']
 
-    depends_on('llvm@6.0:', type='build', when='@0.0.18:')
-    depends_on('oniguruma')
-
     version('master', branch='master')
     version('0.4.3', sha256='6fe5636682428510a29198a056cb032cdcec2b18ed0ceba8f1854ee097d65d8e')
+
+    depends_on('llvm@6.0:', type='build', when='@0.0.18:')
+    depends_on('oniguruma')
 
     # delta has a dependency on libclang - specify path to llvm-config
     def setup_build_environment(self, env):

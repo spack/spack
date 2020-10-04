@@ -16,6 +16,9 @@ class RustBindgen(CargoPackage):
 
     maintainers = ['AndrewGaspar']
 
+    version('master', branch='master')
+    version('0.55.1', sha256='75b13ce559e6433d360c26305643803cb52cfbabbc2b9c47ce04a58493dfb443')
+
     depends_on('llvm@6.0:', type=('build', 'run'))
 
     # rust-bindgen has a dependency on libclang - add path
@@ -23,6 +26,3 @@ class RustBindgen(CargoPackage):
         env.append_flags(
             'LLVM_CONFIG_PATH',
             join_path(self.spec['llvm'].prefix.bin, 'llvm-config'))
-
-    version('master', branch='master')
-    version('0.55.1', sha256='75b13ce559e6433d360c26305643803cb52cfbabbc2b9c47ce04a58493dfb443')

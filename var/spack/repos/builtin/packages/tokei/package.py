@@ -18,6 +18,9 @@ class Tokei(CargoPackage):
 
     maintainers = ["AndrewGaspar"]
 
+    version('master', branch='master')
+    version('12.0.4', sha256='61fef2813bec8a83ec1c0f7e25a650cd57047b220e1ce8828b6cc752b9cf5ba8')
+
     # tokei doesn't build with prefer_dynamic at present, so switch default to
     # False
     variant(
@@ -46,6 +49,3 @@ class Tokei(CargoPackage):
                 features += [feature]
 
         return features
-
-    version('master', branch='master')
-    version('12.0.4', sha256='61fef2813bec8a83ec1c0f7e25a650cd57047b220e1ce8828b6cc752b9cf5ba8')

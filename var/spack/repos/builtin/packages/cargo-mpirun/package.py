@@ -17,7 +17,7 @@ class CargoMpirun(CargoPackage):
 
     maintainers = ['AndrewGaspar']
 
-    depends_on('mpi', type='run')
-
     version('master', branch='master')
     version('0.1.8', sha256='18ef8a141344a81cc80e1f889257c78d620a9c958a1c0b0581299c3e194c0eef')
+
+    depends_on('mpi', type='run')
