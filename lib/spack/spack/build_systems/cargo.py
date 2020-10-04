@@ -75,14 +75,14 @@ class CargoPackage(PackageBase):
 
     @property
     def cargo(self):
-        cargo = Executable(join_path(self.spec['rust'].prefix.bin, 'cargo'))
+        cargo = Executable(self.spec['rust'].prefix.bin.cargo)
         cargo.add_default_arg('--locked')
         cargo.add_default_arg('--offline')
         return cargo
 
     @property
     def rustc(self):
-        return Executable(join_path(self.spec['rust'].prefix.bin, 'rustc'))
+        return Executable(self.spec['rust'].prefix.bin.rustc)
 
     @property
     def target_cpu(self):
