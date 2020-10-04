@@ -89,7 +89,7 @@ class Lammps(CMakePackage, CudaPackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
-    depends_on('fftw', when='+kspace')
+    depends_on('fftw-api@3', when='+kspace')
     depends_on('voropp+pic', when='+voronoi')
     depends_on('netcdf-c+mpi', when='+user-netcdf')
     depends_on('blas', when='+user-atc')
@@ -182,7 +182,10 @@ class Lammps(CMakePackage, CudaPackage):
             else:
                 args.append('{0}=OFF'.format(opt))
         if '+kspace' in spec:
-            args.append('-DFFT=FFTW3')
+            if '^fftw' in spec:
+                args.append('-DFFT=FFTW3')
+            if '^mkl' in spec:
+                args.append('-DFFT=MKL')
         if '+kokkos' in spec:
             args.append('-DEXTERNAL_KOKKOS=ON')
 
