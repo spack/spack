@@ -66,6 +66,8 @@ class CargoPackage(PackageBase):
             "LTO."
     )
 
+    # The differing dependency type is OK because the two `when` conditions
+    # are mutually exclusive.
     depends_on('rust', type='build', when='~prefer_dynamic')
     depends_on('rust', type=('build', 'link'), when='+prefer_dynamic')
 
