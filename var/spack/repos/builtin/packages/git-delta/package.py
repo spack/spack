@@ -25,7 +25,6 @@ class GitDelta(CargoPackage):
     def setup_build_environment(self, env):
         # onig-sys environment
         env.append_flags('RUSTONIG_DYNAMIC_LIBONIG', '1')
-        if '^llvm' in self.spec:
-            env.append_flags(
-                'LLVM_CONFIG_PATH',
-                join_path(self.spec['llvm'].prefix.bin, 'llvm-config'))
+        env.append_flags(
+            'LLVM_CONFIG_PATH',
+            join_path(self.spec['llvm'].prefix.bin, 'llvm-config'))
