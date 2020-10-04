@@ -20,11 +20,12 @@ class Rocalution(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.8.0', sha256='39e64a29e75c4276163a93596436064c6338770ca72ce7f43711ed8285ed2de5')
     version('3.7.0', sha256='4d6b20aaaac3bafb7ec084d684417bf578349203b0f9f54168f669e3ec5699f8')
     version('3.5.0', sha256='be2f78c10c100d7fd9df5dd2403a44700219c2cbabaacf2ea50a6e2241df7bfe')
 
     depends_on('cmake@3.5:', type='build')
-    for ver in ['3.5.0', '3.7.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('hip@' + ver,  when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
         depends_on('rocprim@' + ver, type='link', when='@' + ver)
