@@ -1252,7 +1252,7 @@ class Environment(object):
             return env_mod.shell_modifications(shell)
 
         env_mod = self.rm_default_view()
-        return env_mod.shell_modification(shell)
+        return env_mod.shell_modifications(shell)
 
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.
