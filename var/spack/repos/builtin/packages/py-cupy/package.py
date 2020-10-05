@@ -34,14 +34,15 @@ class PyCupy(PythonPackage):
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
-    version('8.0.0',       sha256='92c3a576e28a903bb8fd1c1751daa38b542b2e9b5a32adf31b641327e54e25fb')
+    version('8.0.0', sha256='92c3a576e28a903bb8fd1c1751daa38b542b2e9b5a32adf31b641327e54e25fb')
 
     # FIXME: Add dependencies if required. Only add the python dependency
     # if you need specific versions. A generic python dependency is
     # added implicity by the PythonPackage class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-fastrlock@0.3:', type=('build', 'run'))
+    depends_on('py-numpy@1.15:', type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
