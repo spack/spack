@@ -15,9 +15,9 @@ class Visit(CMakePackage):
        LINUX-------------------------------------------------------------------
        spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0
        LINUX-W/O-OPENGL--------------------------------------------------------
-       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \ ^mesa+opengl
+       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \\ ^mesa+opengl
        MACOS-------------------------------------------------------------------
-       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \ ^qt~framework
+       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \\ ^qt~framework
 
     """
     ############################
