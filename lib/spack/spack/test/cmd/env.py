@@ -13,7 +13,6 @@ import llnl.util.filesystem as fs
 import spack.hash_types as ht
 import spack.modules
 import spack.environment as ev
-import spack.user_environment as uenv
 
 from spack.cmd.env import _env_create
 from spack.spec import Spec
@@ -1041,15 +1040,16 @@ def test_env_dir_stays_after_deactivation(working_env):  # TODO: do docs
     # Add to SPACK_ENV_ACTIVATED_PATHS
     if 'SPACK_ENV_ACTIVATED_PATHS' in os.environ.keys():
         os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(
-            e.default_view.root, 'bin') + ":" + os.environ['SPACK_ENV_ACTIVATED_PATHS']
+            e.default_view.root, 'bin') + ":" + os.environ[
+            'SPACK_ENV_ACTIVATED_PATHS']
     else:
         os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(
-        e.default_view.root, 'bin')
+            e.default_view.root, 'bin')
 
     # Add to PATH
     if 'PATH' in os.environ.keys():
         os.environ['PATH'] = os.path.join(
-        e.default_view.root, 'bin') + ":" + os.environ['PATH']
+            e.default_view.root, 'bin') + ":" + os.environ['PATH']
     else:
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
 
@@ -1058,7 +1058,8 @@ def test_env_dir_stays_after_deactivation(working_env):  # TODO: do docs
 
     # Make sure only SPACK_ENV_ACTIVATED_PATHS was removed
     assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
-    assert os.path.join(e.default_view.root, 'bin') not in os.environ['SPACK_ENV_ACTIVATED_PATHS']
+    assert os.path.join(e.default_view.root,
+                        'bin') not in os.environ['SPACK_ENV_ACTIVATED_PATHS']
 
 
 def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
@@ -1081,7 +1082,7 @@ def test_env_dir_added_before_activation():  # TODO: do docs
     # Add to PATH
     if 'PATH' in os.environ.keys():
         os.environ['PATH'] = os.path.join(
-        e.default_view.root, 'bin') + ":" + os.environ['PATH']
+            e.default_view.root, 'bin') + ":" + os.environ['PATH']
     else:
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
 
@@ -1095,13 +1096,13 @@ def test_env_dir_added_after_activation(working_env):  # TODO: do docs
     e = ev.create('test', with_view=True)
 
     mods = e.add_default_view()
-    
+
     mods.apply_modifications()
-  
+
     # Add to PATH
     if 'PATH' in os.environ.keys():
         os.environ['PATH'] = os.path.join(
-        e.default_view.root, 'bin') + ":" + os.environ['PATH']
+            e.default_view.root, 'bin') + ":" + os.environ['PATH']
     else:
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
 

@@ -1189,10 +1189,6 @@ class Environment(object):
     def add_default_view(self):
         env_mod = spack.util.environment.EnvironmentModifications()
 
-        if default_view_name not in self.views:
-            # No default view to add to shell
-            return env_mod.shell_modifications(shell)
-
         env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view))
 
@@ -1227,7 +1223,13 @@ class Environment(object):
 
         return env_mod
 
-    def add_default_view_to_shell(shell):
+    def add_default_view_to_shell(self, shell):
+        env_mod = spack.util.environment.EnvironmentModifications()
+
+        if default_view_name not in self.views:
+            # No default view to add to shell
+            return env_mod.shell_modifications(shell)
+
         env_mod = self.add_default_view()
         return env_mod.shell_modifications(shell)
 
