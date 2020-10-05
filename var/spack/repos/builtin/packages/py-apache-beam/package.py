@@ -16,7 +16,7 @@ class PyApacheBeam(PythonPackage):
 
     depends_on('python@3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pip@7.0.0', type=('build', 'run'))
+    depends_on('py-pip@7.0.0:', type=('build', 'run'))
     depends_on('py-cython@0.28.1:', type=('build', 'run'))
     depends_on('py-avro@1.8.1:1.10.8', type=('build', 'run'), when='^python@:2.9')
     depends_on('py-avro-python3@1.8.1:1.10.0', type=('build', 'run'), when='^python@3.0:')
@@ -37,7 +37,7 @@ class PyApacheBeam(PythonPackage):
     depends_on('py-pyarrow@0.15.1:0.18.0', type=('build', 'run'), when='^python@3.0:')
     depends_on('py-pydot@1.2.0:2', type=('build', 'run'))
     depends_on('py-python-dateutil@2.8.0:3', type=('build', 'run'))
-    depends_on('py-pytz@2018.3', type=('build', 'run'))
+    depends_on('py-pytz@2018.3:', type=('build', 'run'))
     depends_on('py-pyvcf@0.6.8:0.7.0', type=('build', 'run'), when='^python@:2.9')
     depends_on('py-requests@2.24.0:3.0.0', type=('build', 'run'))
     depends_on('py-typing@3.7.0:3.8.0', type=('build', 'run'), when='^python@:3.5')
