@@ -16,3 +16,4 @@ class PyCppheaderparser(PythonPackage):
     version('2.7.4', sha256='382b30416d95b0a5e8502b214810dcac2a56432917e2651447d3abe253e3cc42')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-ply', type=('build', 'run'))
