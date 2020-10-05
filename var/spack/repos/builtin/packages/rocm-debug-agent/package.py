@@ -11,6 +11,7 @@ class RocmDebugAgent(CMakePackage):
     """Radeon Open Compute (ROCm) debug agent"""
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent"
+    url      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-3.8.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
