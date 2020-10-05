@@ -1552,8 +1552,6 @@ class Spec(object):
 
         if not self._concrete:
             d['concrete'] = False
-        else:
-            d['full_hash'] = self._full_hash
 
         if 'patches' in self.variants:
             variant = self.variants['patches']
@@ -1736,7 +1734,6 @@ class Spec(object):
 
         # specs read in are concrete unless marked abstract
         spec._concrete = node.get('concrete', True)
-        spec._full_hash = node.get('full_hash', None)
 
         if 'patches' in node:
             patches = node['patches']
