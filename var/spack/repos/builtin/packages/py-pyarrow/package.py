@@ -22,6 +22,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
     version('0.9.0', sha256='7db8ce2f0eff5a00d6da918ce9f9cfec265e13f8a119b4adb1595e5b19fd6242')
 
     variant('parquet', default=False, description="Build with Parquet support")
+    variant('orc', default=False)
 
     depends_on('cmake@3.0.0:', type='build')
     depends_on('pkgconfig', type='build')
@@ -53,4 +54,6 @@ class PyPyarrow(PythonPackage, CudaPackage):
             args.append('--with-parquet')
         if spec.satisfies('+cuda'):
             args.append('--with-cuda')
+        if spec.satisfies('+orc'):
+            args.append('--with-orc')
         return args
