@@ -25,7 +25,6 @@ class RoctracerDev(CMakePackage):
     depends_on('py-setuptools@44.1.0', type='build')
     depends_on('python@2.7.18', type='build')
     depends_on('py-cppheaderparser', type='build')
-    depends_on('py-ply', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
