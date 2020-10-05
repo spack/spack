@@ -23,7 +23,8 @@ class PyMerlin(PythonPackage):
     depends_on('py-pytest', type='test')
 
     depends_on('py-cached-property', type=('build', 'run'))
-    depends_on('py-celery@4.3.0:+redis', type=('build', 'run'))
+    depends_on('py-celery@5.0.0+redis+sqlalchemy', when="@1.7.5:", type=('build', 'run'))
+    depends_on('py-celery@4.3.0:4.999+redis+sqlalchemy', when="@:1.7.4", type=('build', 'run'))
     depends_on('py-coloredlogs@10.0:', type=('build', 'run'))
     depends_on('py-cryptography', type=('build', 'run'))
     depends_on('py-importlib-resources', when="^python@3.0:3.6.99", type=('build', 'run'))
