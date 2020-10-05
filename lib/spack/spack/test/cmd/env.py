@@ -1030,37 +1030,24 @@ def test_store_different_build_deps():
         assert x_read['z'] != y_read['z']
 
 
-def test_env_dir_stays_after_deactivation(working_env):  # TODO: do docs
-    # Create env with view
+def test_env_dir_remains_after_deactivation(working_env):  # TODO: do docs
     e = ev.create('test', with_view=True)
 
-    # Activate env
     mods = e.add_default_view()
     mods.apply_modifications()
 
-    print("Activating", mods.group_by_name())
-
-    # Add to PATH
     if 'PATH' in os.environ.keys():
         os.environ['PATH'] = os.path.join(
             e.default_view.root, 'bin') + ":" + os.environ['PATH']
     else:
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
 
-    # Deactivate TODO: make sure this works
-    print("Deactivating")
-    print(os.environ['PATH'])
-
     rm_mods = e.rm_default_view()
     rm_mods.apply_modifications()
 
-    print(os.environ['PATH'])
-
-    # Make sure only SPACK_ENV_ACTIVATED_PATHS was removed
     assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
-    assert os.path.join(e.default_view.root,
-                        'bin') not in os.environ['SPACK_ENV_ACTIVATED_PATHS']
-
+    assert os.environ['PATH'].count(os.path.join(e.default_view.root, 'bin')) == 1
+    assert 'SPACK_ENV_ADDED_PATH' not in os.environ
 
 def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
     e = ev.create('test', with_view=True)
@@ -1079,7 +1066,6 @@ def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
 def test_env_dir_added_before_activation():  # TODO: do docs
     e = ev.create('test', with_view=True)
 
-    # Add to PATH
     if 'PATH' in os.environ.keys():
         os.environ['PATH'] = os.path.join(
             e.default_view.root, 'bin') + ":" + os.environ['PATH']
@@ -1092,14 +1078,11 @@ def test_env_dir_added_before_activation():  # TODO: do docs
 
 
 def test_env_dir_added_after_activation(working_env):  # TODO: do docs
-    # Create env with view
     e = ev.create('test', with_view=True)
 
     mods = e.add_default_view()
-
     mods.apply_modifications()
 
-    # Add to PATH
     if 'PATH' in os.environ.keys():
         os.environ['PATH'] = os.path.join(
             e.default_view.root, 'bin') + ":" + os.environ['PATH']
