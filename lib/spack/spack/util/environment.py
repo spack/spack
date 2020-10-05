@@ -568,10 +568,10 @@ class EnvironmentModifications(object):
             for x in actions:
                 spack_env = 'SPACK_ENV_ADDED_%s' % name
                 if spack_env in os.environ:
-                    x.execute_once(env)
+                    x.execute_once(new_env)
                     del os.environ[spack_env]
                 else:
-                    x.execute(env)
+                    x.execute(new_env)
 
         cmds = ''
 
