@@ -100,11 +100,7 @@ class Cuda(Package):
                             "presence of /tmp/cuda-installer.log "
                             "please remove the file and try again ")
         runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
-        chmod = which('chmod')
-        if not os.access(runfile, os.X_OK):
-            chmod('+x', runfile)
-        runfile = which(runfile)
-
+  
         # Note: NVIDIA does not officially support many newer versions of
         # compilers.  For example, on CentOS 6, you must use GCC 4.4.7 or
         # older. See:
@@ -114,6 +110,7 @@ class Cuda(Package):
 
         # CUDA 10.1+ has different cmdline options for the installer
         arguments = [
+            runfile,            # the install script
             '--silent',         # disable interactive prompts
             '--override',       # override compiler version checks
             '--toolkit',        # install CUDA Toolkit
@@ -123,8 +120,8 @@ class Cuda(Package):
         else:
             arguments.append('--verbose')                   # Verbose log file
             arguments.append('--toolkitpath=%s' % prefix)   # Where to install
-
-        runfile(*arguments)
+        install_shell = which('sh')
+        install_shell(*arguments)
         try:
             os.remove('/tmp/cuda-installer.log')
         except OSError:
