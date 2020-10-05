@@ -40,11 +40,13 @@ class PyFastrlock(PythonPackage):
     # if you need specific versions. A generic python dependency is
     # added implicity by the PythonPackage class.
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cython', type='build')
     # depends_on('py-foo',        type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
         args = []
+        args.append('--with-cython')
         return args
