@@ -43,6 +43,9 @@ class PyCupy(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-fastrlock@0.3:', type=('build', 'run'))
     depends_on('py-numpy@1.15:', type=('build', 'run'))
+    depends_on('cuda')
+    depends_on('nccl')
+    depends_on('cudnn')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
