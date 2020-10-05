@@ -29,6 +29,7 @@ class PyCudf(PythonPackage):
     depends_on('py-pandas@0.23.4:', type=('build', 'run'))
     depends_on('py-rmm', type=('build', 'run'))
     depends_on('cuda@10:')
+    depends_on('py-cupy', type=('build', 'run'))
 
     for v in ('@0.15.0',):
         depends_on('libcudf' + v, when=v)
