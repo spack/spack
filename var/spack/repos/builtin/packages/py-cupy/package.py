@@ -28,13 +28,13 @@ class PyCupy(PythonPackage):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
-    url      = "https://github.com/cupy/cupy/archive/v8.0.0.tar.gz"
+    git      = "https://github.com/cupy/cupy"
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
-    version('8.0.0', sha256='92c3a576e28a903bb8fd1c1751daa38b542b2e9b5a32adf31b641327e54e25fb')
+    version('8.0.0', tag='v8.0.0', submodules=True)
 
     # FIXME: Add dependencies if required. Only add the python dependency
     # if you need specific versions. A generic python dependency is
