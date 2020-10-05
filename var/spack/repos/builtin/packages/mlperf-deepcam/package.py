@@ -12,9 +12,9 @@ class MlperfDeepcam(Package):
        based on the Exascale Deep Learning for Climate Analytics"""
 
     homepage = "https://github.com/azrael417/mlperf-deepcam"
-    url      = "https://github.com/azrael417/mlperf-deepcam.git"
+    git      = "https://github.com/azrael417/mlperf-deepcam.git"
 
-    version('417', sha256='a2ebf7233001cd92a244c295a53da503ed24ad81af1d244403cfa944a91dbae6')
+    version('master', branch='master')
 
     tags = ['proxy-app']
 
