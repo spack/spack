@@ -91,10 +91,9 @@ def develop(parser, args):
         if args.force:
             shutil.rmtree(abspath)
         else:
-            raise SpackError(
-                "Path %s already exists and cannot be cloned to." % abspath
-                " Use `spack develop -f` to overwrite."
-            )
+            msg = "Path %s already exists and cannot be cloned to." % abspath
+            msg += " Use `spack develop -f` to overwrite."
+            raise SpackError(msg)
 
     with env.write_transaction():
         changed = env.develop(spec, path, clone)
