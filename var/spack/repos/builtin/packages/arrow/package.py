@@ -40,6 +40,7 @@ class Arrow(CMakePackage, CudaPackage):
             values=('Debug', 'FastDebug', 'Release'))
     variant('python', default=False, description='Build Python interface')
     variant('parquet', default=False, description='Build Parquet interface')
+    variant('orc', default=False, description='Build ORC support')
 
     root_cmakelists_dir = 'cpp'
 
@@ -65,6 +66,8 @@ class Arrow(CMakePackage, CudaPackage):
             args.append("-DARROW_PYTHON:BOOL=ON")
         if self.spec.satisfies('+parquet'):
             args.append("-DARROW_PARQUET:BOOL=ON")
+        if self.spec.satisfies('+orc'):
+            args.append('-DARROW_ORC:BOOL=ON')
         for dep in ('flatbuffers', 'rapidjson', 'snappy', 'zlib', 'zstd'):
             args.append("-D{0}_HOME={1}".format(dep.upper(),
                                                 self.spec[dep].prefix))
