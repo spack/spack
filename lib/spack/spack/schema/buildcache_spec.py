@@ -26,6 +26,7 @@ schema = {
                 'relative_rpaths': {'type': 'boolean'},
             },
         },
+        'full_hash': {'type': 'string'},
         'spec': {
             'type': 'array',
             'items': spack.schema.spec.properties,
