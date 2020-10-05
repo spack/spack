@@ -1233,12 +1233,8 @@ class Environment(object):
         env_mod = self.add_default_view()
         return env_mod.shell_modifications(shell)
 
-    def rm_default_view_from_shell(self, shell):
+    def rm_default_view(self):
         env_mod = spack.util.environment.EnvironmentModifications()
-
-        if default_view_name not in self.views:
-            # No default view to add to shell
-            return env_mod.shell_modifications(shell)
 
         env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view).reversed())
@@ -1246,7 +1242,17 @@ class Environment(object):
         mods, _ = self._env_modifications_for_default_view(reverse=True)
         env_mod.extend(mods)
 
-        return env_mod.shell_modifications(shell)
+        return env_mod
+
+    def rm_default_view_from_shell(self, shell):
+        env_mod = spack.util.environment.EnvironmentModifications()
+
+        if default_view_name not in self.views:
+            # No default view to add to shell
+            return env_mod.shell_modifications(shell)
+
+        env_mod = self.rm_default_view()
+        return env_mod.shell_modification(shell)
 
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.

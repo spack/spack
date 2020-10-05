@@ -275,6 +275,21 @@ class RemovePath(NameValueModifier):
                        if x != os.path.normpath(self.value)]
         env[self.name] = self.separator.join(directories)
 
+    def execute_once(self, env):
+        environment_value = env.get(self.name, '')
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        copy_dir = []
+        already_found = False
+
+        for x in directories:
+            if x == os.path.normpath(self.value) and not already_found:
+                already_found = True
+            else:
+                copy_dir.append(os.path.normpath(x))
+
+        env[self.name] = self.separator.join(copy_dir)
+
 
 class DeprioritizeSystemPaths(NameModifier):
 
@@ -537,7 +552,12 @@ class EnvironmentModifications(object):
         # Apply modifications one variable at a time
         for name, actions in sorted(modifications.items()):
             for x in actions:
-                x.execute(env)
+                spack_env = 'SPACK_ENV_ADDED_%s' % name
+                if spack_env in os.environ:
+                    x.execute_once(env)
+                    del os.environ[spack_env]
+                else:
+                    x.execute(env)
 
     def shell_modifications(self, shell='sh'):
         """Return shell code to apply the modifications and clears the list."""
@@ -546,7 +566,12 @@ class EnvironmentModifications(object):
 
         for name, actions in sorted(modifications.items()):
             for x in actions:
-                x.execute(new_env)
+                spack_env = 'SPACK_ENV_ADDED_%s' % name
+                if spack_env in os.environ:
+                    x.execute_once(env)
+                    del os.environ[spack_env]
+                else:
+                    x.execute(env)
 
         cmds = ''
 

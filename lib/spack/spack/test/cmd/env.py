@@ -1035,16 +1035,10 @@ def test_env_dir_stays_after_deactivation(working_env):  # TODO: do docs
     e = ev.create('test', with_view=True)
 
     # Activate env
-    assert(print(e.add_default_view().group_by_name()))
+    mods = e.add_default_view()
+    mods.apply_modifications()
 
-    # Add to SPACK_ENV_ACTIVATED_PATHS
-    if 'SPACK_ENV_ACTIVATED_PATHS' in os.environ.keys():
-        os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(
-            e.default_view.root, 'bin') + ":" + os.environ[
-            'SPACK_ENV_ACTIVATED_PATHS']
-    else:
-        os.environ['SPACK_ENV_ACTIVATED_PATHS'] = os.path.join(
-            e.default_view.root, 'bin')
+    print("Activating", mods.group_by_name())
 
     # Add to PATH
     if 'PATH' in os.environ.keys():
@@ -1054,7 +1048,13 @@ def test_env_dir_stays_after_deactivation(working_env):  # TODO: do docs
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
 
     # Deactivate TODO: make sure this works
-    env('deactivate')
+    print("Deactivating")
+    print(os.environ['PATH'])
+
+    rm_mods = e.rm_default_view()
+    rm_mods.apply_modifications()
+
+    print(os.environ['PATH'])
 
     # Make sure only SPACK_ENV_ACTIVATED_PATHS was removed
     assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
