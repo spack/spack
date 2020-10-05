@@ -237,7 +237,9 @@ def test_dev_build_multiple(tmpdir, mock_packages, install_mockery,
                             mutable_mock_env_path, mock_fetch):
     """Test spack install with multiple developer builds"""
     # setup dev-build-test-install package for dev build
-    # don't concretize outside environment -- dev info will be wrong
+    # Wait to concretize inside the environment to set dev_path on the specs;
+    # without the environment, the user would need to set dev_path for both the
+    # root and dependency if they wanted a dev build for both.
     leaf_dir = tmpdir.mkdir('leaf')
     leaf_spec = spack.spec.Spec('dev-build-test-install@0.0.0')
     with leaf_dir.as_cwd():
