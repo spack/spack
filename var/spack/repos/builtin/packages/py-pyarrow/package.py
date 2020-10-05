@@ -51,4 +51,6 @@ class PyPyarrow(PythonPackage, CudaPackage):
         args = []
         if spec.satisfies('+parquet'):
             args.append('--with-parquet')
+        if spec.satisfies('+cuda'):
+            args.append('--with-cuda')
         return args
