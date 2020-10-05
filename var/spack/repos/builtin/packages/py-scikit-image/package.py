@@ -11,8 +11,9 @@ class PyScikitImage(PythonPackage):
     filtering, warping, color manipulation, object detection, etc."""
 
     homepage = "http://scikit-image.org/"
-    url      = "https://pypi.io/packages/source/s/scikit-image/scikit-image-0.12.3.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scikit-image/scikit-image-0.17.2.tar.gz"
 
+    version('0.17.2', sha256='bd954c0588f0f7e81d9763dc95e06950e68247d540476e06cb77bcbcd8c2d8b3')
     version('0.14.2', sha256='1afd0b84eefd77afd1071c5c1c402553d67be2d7db8950b32d6f773f25850c1f')
     version('0.12.3', sha256='82da192f0e524701e89c5379c79200bc6dc21373f48bf7778a864c583897d7c7')
 
@@ -29,3 +30,7 @@ class PyScikitImage(PythonPackage):
     depends_on('py-cloudpickle', type=('build', 'run'), when='@0.14:')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.23.4:', type='build')
+
+    conflicts('python@:3.5', when='@0.16.1:')
+    conflicts('py-numpy@:1.15.1', when='@0.16.1:')
+    conflicts('py-scipy@:1.0.1',  when='@0.16.1:')
