@@ -29,10 +29,8 @@ class Fl(Package):
 
     def install(self, spec, prefix):
         if (self.spec.satisfies('platform=linux') and
-           (self.spec.target.family == 'x86_64' or
-            self.spec.target.family == 'aarch64')):
+            self.spec.target.family in ['x86_64', 'aarch64']):
             with working_dir('fl_{0}'.format(spec.version)):
                 install_tree('.', prefix)
         else:
-            raise InstallError('fl is built for Linux x86_64 or \
-                                aarch64 platform.')
+            raise InstallError('fl requires Linux x86_64 or aarch64 platform.')
