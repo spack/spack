@@ -21,6 +21,7 @@ class Likwid(Package):
     git      = "https://github.com/RRZE-HPC/likwid.git"
     maintainers = ['TomTheBear']
 
+    version('5.0.2', sha256='0a1c8984e4b43ea8b99d09456ef05035eb934594af1669432117585c638a2da4')
     version('5.0.1', sha256='3757b0cb66e8af0116f9288c7f90543acbd8e2af8f72f77aef447ca2b3e76453')
     version('5.0.0', sha256='26623f5a1a5fec19d798f0114774a5293d1c93a148538b9591a13e50930fa41e')
     version('4.3.4', sha256='5c0d1c66b25dac8292a02232f06454067f031a238f010c62f40ef913c6609a83')
@@ -39,7 +40,8 @@ class Likwid(Package):
     # functionality and functions are prefixed with "likwid_".
 
     depends_on('lua', when='@:4')
-    depends_on('lua@5.2:', when='@5:')
+    depends_on('lua@5.2:', when='@5:5.0.1')
+    depends_on('lua:', when='@5.0.2')
 
     # TODO: check
     # depends_on('gnuplot', type='run')
