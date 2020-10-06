@@ -317,10 +317,14 @@ class Dealii(CMakePackage, CudaPackage):
             ])
 
         # Doxygen documentation
-        options.append(self.define_from_variant('DEAL_II_COMPONENT_DOCUMENTATION', 'doc'))
+        options.append(self.define_from_variant(
+            'DEAL_II_COMPONENT_DOCUMENTATION', 'doc')
+        )
 
         # Examples / tutorial programs
-        options.append(self.define_from_variant('DEAL_II_COMPONENT_EXAMPLES', 'examples'))
+        options.append(self.define_from_variant(
+            'DEAL_II_COMPONENT_EXAMPLES', 'examples')
+        )
 
         # Deal with C++ standard
         if spec.variants['cxxstd'].value != 'default':
@@ -355,7 +359,9 @@ class Dealii(CMakePackage, CudaPackage):
             cxx_flags_release.extend(['-O3', '-ffp-contract=fast'])
 
         # 64 bit indices
-        options.append(self.define_from_variant('DEAL_II_WITH_64BIT_INDICES', 'int64'))
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_64BIT_INDICES', 'int64')
+        )
 
         if (spec.satisfies('^openblas+ilp64') or
             spec.satisfies('^intel-mkl+ilp64') or
@@ -420,7 +426,9 @@ class Dealii(CMakePackage, CudaPackage):
                 ])
 
         # Threading
-        options.append(self.define_from_variant('DEAL_II_WITH_THREADS', 'threads'))
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_THREADS', 'threads')
+        )
 
         if (spec.satisfies('^intel-parallel-studio+tbb')
             and '+threads' in spec):
