@@ -1074,9 +1074,9 @@ def test_env_dir_added_before_activation():  # TODO: do docs
     else:
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
 
-    mods = e.add_default_view()
+    _ = e.add_default_view()
 
-    assert 'SPACK_ENV_ADDED_PATH' not in os.environ 
+    assert 'SPACK_ENV_ADDED_PATH' not in os.environ
 
 
 def test_env_dir_added_after_activation(working_env):  # TODO: do docs
