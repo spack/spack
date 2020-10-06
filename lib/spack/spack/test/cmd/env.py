@@ -1065,7 +1065,7 @@ def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
     print("Added", added_paths)
     print("Comparison", set([os.path.join(e.default_view.root, 'bin')]))
 
-    assert added_paths == set([os.path.join(e.default_view.root, 'bin')])
+    assert set([os.path.join(e.default_view.root, 'bin')]) in added_paths
 
 
 def test_env_dir_added_before_activation():  # TODO: do docs
