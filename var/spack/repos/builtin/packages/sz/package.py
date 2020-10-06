@@ -41,6 +41,7 @@ class Sz(CMakePackage):
     variant('random_access', default=False, description="build the random access compression mode")
     variant('fortran', default=False, description='Enable fortran compilation')
     variant('shared', default=True, description="build shared versions of the libraries")
+    variant('stats', default=False, description="build profiling statistics for compression")
 
     # Part of latest sources don't support -O3 optimization
     # with Fujitsu compiler.
@@ -123,4 +124,9 @@ class Sz(CMakePackage):
             args.append("-DBUILD_SHARED_LIBS=ON")
         else:
             args.append("-DBUILD_SHARED_LIBS=OFF")
+
+        if "+stats" in self.spec:
+            args.append("-DBUILD_STATS=ON")
+        else:
+            args.append("-DBUILD_STATS=OFF")
         return args
