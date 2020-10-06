@@ -19,6 +19,7 @@ class PyScikitImage(PythonPackage):
 
     extends('python', ignore=r'bin/.*\.py$')
 
+    depends_on('python@:3.6', when='@0.16.1:')
     depends_on('py-dask', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))
     depends_on('py-networkx', type=('build', 'run'))
@@ -32,5 +33,3 @@ class PyScikitImage(PythonPackage):
     depends_on('py-cloudpickle', type=('build', 'run'), when='@0.14:')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.23.4:', type='build')
-
-    conflicts('python@:3.6', when='@0.16.1:')
