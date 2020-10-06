@@ -1062,9 +1062,6 @@ def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
 
     added_paths = set(os.environ['SPACK_ENV_ADDED_PATH'].split(':'))
 
-    print("Added", added_paths)
-    print("Comparison", set([os.path.join(e.default_view.root, 'bin')]))
-
     assert os.path.join(e.default_view.root, 'bin') in added_paths
 
 
@@ -1078,7 +1075,7 @@ def test_env_dir_added_before_activation():  # TODO: do docs
         os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
 
     mods = e.add_default_view()
-
+    print("modifications", mods.group_by_name())
     assert 'SPACK_ENV_ADDED_PATH' not in mods.group_by_name()
 
 
