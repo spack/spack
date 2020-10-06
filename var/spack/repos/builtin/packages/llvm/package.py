@@ -364,7 +364,8 @@ class Llvm(CMakePackage, CudaPackage):
                 [
                     "-DCUDA_TOOLKIT_ROOT_DIR:PATH=" + spec["cuda"].prefix,
                     "-DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES={0}".format(
-                        ",".join(spec.variants["cuda_arch"].value)
+                        ",".join(spec.variants["cuda_arch"].value),
+                    "-DLIBOMPTARGET_ENABLE_DEBUG=ON"
                     ),
                     "-DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_{0}".format(
                         spec.variants["cuda_arch"].value[-1]
