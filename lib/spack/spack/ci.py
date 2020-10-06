@@ -33,11 +33,15 @@ import spack.repo
 from spack.spec import Spec
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
+import spack.util.gpg as gpg_util
+import spack.util.url as url_util
 
 
 JOB_RETRY_CONDITIONS = [
     'always',
 ]
+
+SPACK_PR_MIRRORS_ROOT_URL = 's3://spack-pr-mirrors'
 
 spack_gpg = spack.main.SpackCommand('gpg')
 spack_compiler = spack.main.SpackCommand('compiler')
@@ -529,6 +533,12 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         os.environ.get('SPACK_IS_PR_PIPELINE', '').lower() == 'true'
     )
 
+    spack_pr_branch = os.environ.get('SPACK_PR_BRANCH', None)
+    pr_mirror_url = None
+    if spack_pr_branch:
+        pr_mirror_url = url_util.join(SPACK_PR_MIRRORS_ROOT_URL,
+                                      spack_pr_branch)
+
     ci_mirrors = yaml_root['mirrors']
     mirror_urls = [url for url in ci_mirrors.values()]
 
@@ -858,6 +868,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         'SPACK_CHECKOUT_VERSION': version_to_clone,
     }
 
+    if pr_mirror_url:
+        output_object['variables']['SPACK_PR_MIRROR_URL'] = pr_mirror_url
+
     sorted_output = {}
     for output_key, output_value in sorted(output_object.items()):
         sorted_output[output_key] = output_value
@@ -918,6 +931,14 @@ def import_signing_key(base64_signing_key):
     tty.debug(trusted_keys_output)
     tty.debug('spack gpg list --signing')
     tty.debug(signing_keys_output)
+
+
+def can_sign_binaries():
+    return len(gpg_util.signing_keys()) == 1
+
+
+def can_verify_binaries():
+    return len(gpg_util.public_keys()) >= 1
 
 
 def configure_compilers(compiler_action, scope=None):
@@ -1095,12 +1116,15 @@ def read_cdashid_from_mirror(spec, mirror_url):
     return int(contents)
 
 
-def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id):
+def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id,
+                         sign_binaries):
     if mirror_url:
-        tty.debug('Creating buildcache')
+        unsigned = not sign_binaries
+        tty.debug('Creating buildcache ({0})'.format(
+            'unsigned' if unsigned else 'signed'))
         buildcache._createtarball(env, spec_yaml=yaml_path, add_deps=False,
                                   output_location=mirror_url, force=True,
-                                  allow_root=True)
+                                  allow_root=True, unsigned=unsigned)
         if build_id:
             tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
                 build_id, mirror_url))
