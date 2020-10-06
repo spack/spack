@@ -34,6 +34,7 @@ class Arrow(CMakePackage, CudaPackage):
     depends_on('zlib+pic')
     depends_on('zstd+pic')
     depends_on('thrift+pic', when='+parquet')
+    depends_on('orc', when='+orc')
 
     variant('build_type', default='Release',
             description='CMake build type',
