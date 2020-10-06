@@ -39,6 +39,7 @@ class Orc(CMakePackage):
     # FIXME: Add dependencies if required.
     # depends_on('foo')
     depends_on('maven')
+    depends_on('openssl')
 
     def cmake_args(self):
         # FIXME: Add arguments other than
