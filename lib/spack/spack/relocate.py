@@ -615,12 +615,13 @@ def _transform_rpaths(orig_rpaths, orig_root, new_prefixes):
 
         # Otherwise inspect the mapping and transform + append any prefix
         # that starts with a registered key
+        # avoiding duplicates
         for old_prefix, new_prefix in new_prefixes.items():
             if orig_rpath.startswith(old_prefix):
-                new_rpaths.append(
-                    re.sub(re.escape(old_prefix), new_prefix, orig_rpath)
-                )
-
+                new_rpath = re.sub(re.escape(old_prefix), new_prefix,
+                                   orig_rpath)
+                if new_rpath not in new_rpaths:
+                    new_rpaths.append(new_rpath)
     return new_rpaths
 
 
@@ -668,7 +669,9 @@ def relocate_elf_binaries(binaries, orig_root, new_root,
             new_rpaths = _make_relative(
                 new_binary, new_root, new_norm_rpaths
             )
-            _set_elf_rpaths(new_binary, new_rpaths)
+            # check to see if relative rpaths are changed before rewriting
+            if sorted(new_rpaths) != sorted(orig_rpaths):
+                _set_elf_rpaths(new_binary, new_rpaths)
         else:
             new_rpaths = _transform_rpaths(
                 orig_rpaths, orig_root, new_prefixes
