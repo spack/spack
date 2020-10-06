@@ -1094,7 +1094,7 @@ def test_env_dir_added_after_activation(working_env):  # TODO: do docs
     added_paths = set(os.environ['SPACK_ENV_ADDED_PATH'].split(':'))
 
     assert 'SPACK_ENV_ADDED_PATH' in mods.group_by_name()
-    assert added_paths == set([os.path.join(e.default_view.root, 'bin')])
+    assert os.path.join(e.default_view.root, 'bin') in added_paths
 
 
 def test_env_updates_view_install(
