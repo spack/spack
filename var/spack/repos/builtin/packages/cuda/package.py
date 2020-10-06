@@ -82,7 +82,7 @@ class Cuda(Package):
     def setup_build_environment(self, env):
         env.set('CUDAHOSTCXX', self.compiler.cxx)
         if self.spec.satisfies('@10.1.243:'):
-            libxml2_home  = self.spec['libxml2'].prefix
+            libxml2_home = self.spec['libxml2'].prefix
             env.set('LIBXML2HOME', libxml2_home)
             env.append_path('LD_LIBRARY_PATH', libxml2_home.lib)
 
@@ -100,7 +100,7 @@ class Cuda(Package):
                             "presence of /tmp/cuda-installer.log "
                             "please remove the file and try again ")
         runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
- 
+
         # Note: NVIDIA does not officially support many newer versions of
         # compilers.  For example, on CentOS 6, you must use GCC 4.4.7 or
         # older. See:
