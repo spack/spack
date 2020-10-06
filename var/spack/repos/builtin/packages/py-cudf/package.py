@@ -25,7 +25,7 @@ class PyCudf(PythonPackage):
     depends_on('py-cython', type='build')
     depends_on('py-numba@0.40.0:', type=('build', 'run'))
     depends_on('py-numpy@1.14.4:', type=('build', 'run'))
-    depends_on('py-pyarrow+cuda', type=('build', 'run'))
+    depends_on('py-pyarrow+cuda+orc', type=('build', 'run'))
     depends_on('py-pandas@0.23.4:', type=('build', 'run'))
     depends_on('py-rmm', type=('build', 'run'))
     depends_on('cuda@10:')
