@@ -266,7 +266,7 @@ class BinaryDistributionCacheManager(object):
         hash_fetch_url = url_util.join(
             mirror_url, _build_cache_relative_path, 'index.json.hash')
 
-        fetched_hash = ''
+        fetched_hash = None
 
         # Fetch the hash first so we can check if we actually need to fetch
         # the index itself.
