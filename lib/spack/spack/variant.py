@@ -401,8 +401,8 @@ class MultiValuedVariant(AbstractVariant):
         Returns:
             bool: True or False
         """
-        # If the superclass doesn't satisfy the superclass, it doesn't satisfy
-        # this handles conflicts between none and any
+        # If it doesn't satisfy as an AbstractVariant, it doesn't satisfy as a
+        # MultiValuedVariant this handles conflicts between none and any
         super_sat = super(MultiValuedVariant, self).satisfies(other)
 
         # Otherwise we want all the values in `other` to be also in `self`
@@ -410,7 +410,7 @@ class MultiValuedVariant(AbstractVariant):
                               'any' in other or 'any' in self)
 
 
-class SingleValuedVariant(MultiValuedVariant):
+class SingleValuedVariant(AbstractVariant):
     """A variant that can hold multiple values, but one at a time."""
 
     def _value_setter(self, value):
@@ -427,10 +427,9 @@ class SingleValuedVariant(MultiValuedVariant):
 
     @implicit_variant_conversion
     def satisfies(self, other):
-        # If it doesn't satisfy as an abstract variant, it doesn't satisfy
-        # This handles conflicts between none and any
-        # Notice we're skipping a level in the MRO
-        abstract_sat = super(MultiValuedVariant, self).satisfies(other)
+        # If it doesn't satisfy as an AbstractVariant, it doesn't satisfy as a
+        # SingleValuedVariant this handles conflicts between none and any
+        abstract_sat = super(SingleValuedVariant, self).satisfies(other)
 
         return abstract_sat and (self.value == other.value or
                                  other.value == 'any' or self.value == 'any')
