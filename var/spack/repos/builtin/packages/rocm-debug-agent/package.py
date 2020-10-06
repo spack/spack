@@ -11,27 +11,37 @@ class RocmDebugAgent(CMakePackage):
     """Radeon Open Compute (ROCm) debug agent"""
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent"
-    url      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/roc-3.5.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-3.8.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.8.0', sha256='55243331ac4b0d90e88882eb29fd06fad354e278f8a34ac7f0680b2c895ca2ac')
     version('3.7.0', sha256='d0f442a2b224a734b0080c906f0fc3066a698e5cde9ff97ffeb485b36d2caba1')
     version('3.5.0', sha256='203ccb18d2ac508aae40bf364923f67375a08798b20057e574a0c5be8039f133')
+
+    def url_for_version(self, version):
+        url = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/"
+        if version <= Version('3.7.0'):
+            url += "roc-{0}.tar.gz".format(version)
+        else:
+            url += "rocm-{0}.tar.gz".format(version)
+
+        return url
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
     depends_on("elfutils", type='link')
 
-    for ver in ['3.5.0', '3.7.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
         depends_on('hsakmt-roct@' + ver, type='link', when='@' + ver)
-
-    depends_on('rocm-dbgapi@3.7.0', type='link', when='@3.7.0')
-    depends_on('hip@3.7.0', when='@3.7.0')
+        if ver in ['3.7.0', '3.8.0']:
+            depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
+            depends_on('hip@' + ver, when='@' + ver)
 
     # https://github.com/ROCm-Developer-Tools/rocr_debug_agent/pull/4
-    patch('0001-Drop-overly-strict-Werror-flag.patch', when='@3.7.0')
+    patch('0001-Drop-overly-strict-Werror-flag.patch', when='@3.7.0:')
 
     @property
     def root_cmakelists_dir(self):
@@ -50,7 +60,7 @@ class RocmDebugAgent(CMakePackage):
                 format(spec['hsa-rocr-dev'].prefix, spec['hsakmt-roct'].prefix)
             )
 
-        if '@3.7.0' in spec:
+        if '@3.7.0:' in spec:
             args.append(
                 '-DCMAKE_MODULE_PATH={0}'.
                 format(spec['hip'].prefix.cmake)
