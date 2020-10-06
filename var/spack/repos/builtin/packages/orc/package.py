@@ -45,4 +45,6 @@ class Orc(CMakePackage):
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
         # FIXME: If not needed delete this function
         args = []
+        args.append('-DCMAKE_CXX_FLAGS=-fPIC')
+        args.append('-DCMAKE_CC_FLAGS=-fPIC')
         return args
