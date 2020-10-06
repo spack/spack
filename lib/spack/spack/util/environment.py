@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyrigh 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -268,14 +268,6 @@ class PrependPath(NameValueModifier):
 class RemovePath(NameValueModifier):
 
     def execute(self, env):
-        environment_value = env.get(self.name, '')
-        directories = environment_value.split(
-            self.separator) if environment_value else []
-        directories = [os.path.normpath(x) for x in directories
-                       if x != os.path.normpath(self.value)]
-        env[self.name] = self.separator.join(directories)
-
-    def execute_once(self, env):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
@@ -552,12 +544,7 @@ class EnvironmentModifications(object):
         # Apply modifications one variable at a time
         for name, actions in sorted(modifications.items()):
             for x in actions:
-                spack_env = 'SPACK_ENV_ADDED_%s' % name
-                if spack_env in os.environ:
-                    x.execute_once(env)
-                    del os.environ[spack_env]
-                else:
-                    x.execute(env)
+                x.execute(env)
 
     def shell_modifications(self, shell='sh'):
         """Return shell code to apply the modifications and clears the list."""
@@ -566,12 +553,7 @@ class EnvironmentModifications(object):
 
         for name, actions in sorted(modifications.items()):
             for x in actions:
-                spack_env = 'SPACK_ENV_ADDED_%s' % name
-                if spack_env in os.environ:
-                    x.execute_once(new_env)
-                    del os.environ[spack_env]
-                else:
-                    x.execute(new_env)
+                x.execute(new_env)
 
         cmds = ''
 
