@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class PyNvidiaMlPy3(PythonPackage):
-    """Python Bindings for the NVIDIA Management Library."""
+    """Python 3 Bindings for the NVIDIA Management Library."""
 
     homepage = "http://www.nvidia.com/"
     url      = "https://pypi.io/packages/source/n/nvidia-ml-py3/nvidia-ml-py3-7.352.0.tar.gz"
