@@ -100,7 +100,7 @@ class Cuda(Package):
                             "presence of /tmp/cuda-installer.log "
                             "please remove the file and try again ")
         runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
-  
+ 
         # Note: NVIDIA does not officially support many newer versions of
         # compilers.  For example, on CentOS 6, you must use GCC 4.4.7 or
         # older. See:
