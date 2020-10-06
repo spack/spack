@@ -9,12 +9,13 @@ from spack import *
 class Sz(CMakePackage):
     """Error-bounded Lossy Compressor for HPC Data"""
 
-    homepage = "https://collab.cels.anl.gov/display/ESR/SZ"
-    url      = "https://github.com/disheng222/SZ/archive/v2.1.8.0.tar.gz"
-    git      = "https://github.com/disheng222/sz"
+    homepage = "https://szcompressor.org"
+    url      = "https://github.com/szcompressor/SZ/releases/download/v2.1.10/sz-2.1.10.tar.gz"
+    git      = "https://github.com/szcompressor/sz"
     maintainers = ['disheng222', 'robertu94']
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('2.1.10', sha256='3aba7619bdb5412218f162696f946c9d3a3df5acf128ddc685b21e45c11f6ae3')    
     version('2.1.9', sha256='491724ff1c0eaaab5e1a7a28e36aba6da9dcbeddb29d8d21a6d1388383d4891e')
     version('2.1.8.3', sha256='be94f3c8ab03d6849c59a98e0ebf80816a6b8d07a1d762a4b285498acb2f3871')
     version('2.1.8.1', sha256='a27c9c9da16c9c4232c54813ba79178945f47609043f11501d49a171e47d3f46')
