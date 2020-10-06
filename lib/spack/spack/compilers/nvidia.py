@@ -3,12 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.compiler
-from spack.compiler import Compiler, UnsupportedCompilerFlag
-from spack.version import ver
-
-import re
-
 
 class Nvidia(Compiler):
     # Subclasses use possible names of C compiler
