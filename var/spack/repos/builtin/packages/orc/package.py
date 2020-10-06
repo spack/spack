@@ -40,6 +40,8 @@ class Orc(CMakePackage):
     # depends_on('foo')
     depends_on('maven')
     depends_on('openssl')
+    depends_on('zlib')
+    depends_on('pcre')
 
     def cmake_args(self):
         # FIXME: Add arguments other than
@@ -48,4 +50,6 @@ class Orc(CMakePackage):
         args = []
         args.append('-DCMAKE_CXX_FLAGS=-fPIC')
         args.append('-DCMAKE_C_FLAGS=-fPIC')
+        args.append('-DINSTALL_VENDORED_LIBS:BOOL=OFF')
+
         return args
