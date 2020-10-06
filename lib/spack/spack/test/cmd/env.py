@@ -1062,10 +1062,10 @@ def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
 
     added_paths = set(os.environ['SPACK_ENV_ADDED_PATH'].split(':'))
 
-    assert added_paths == set([os.path.join(e.default_view.root, 'bin')])
     print("Added", added_paths)
     print("Comparison", set([os.path.join(e.default_view.root, 'bin')]))
- 
+
+    assert added_paths == set([os.path.join(e.default_view.root, 'bin')])
 
 
 def test_env_dir_added_before_activation():  # TODO: do docs
