@@ -48,9 +48,8 @@ class Julia(Package):
     # depends_on('awk')
     depends_on('m4', type='build')
     # depends_on('pkgconfig')
-    # Python only needed to build LLVM?
+    # Python only needed to build LLVM, which is only done on 1.1 and earlier
     depends_on('python@2.7:2.8', type='build', when='@:1.1')
-    depends_on('python@2.7:', type='build', when='@1.2:')
     depends_on('cmake@2.8:', type='build', when='@1.0:')
     depends_on('cmake@:3.11', type='build', when='@:1.4')
     depends_on('git', type='build', when='@master')
