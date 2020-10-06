@@ -139,6 +139,19 @@ def test_concretize():
     assert any(x.name == 'mpileaks' for x in env_specs)
 
 
+def test_env_uninstalled_specs(install_mockery, mock_fetch):
+    e = ev.create('test')
+    e.add('cmake-client')
+    e.concretize()
+    assert any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+    e.install_all()
+    assert not any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+    e.add('mpileaks')
+    e.concretize()
+    assert not any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+    assert any(s.name == 'mpileaks' for s in e.uninstalled_specs())
+
+
 def test_env_install_all(install_mockery, mock_fetch):
     e = ev.create('test')
     e.add('cmake-client')

@@ -8,6 +8,7 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
+import spack.environment as ev
 import spack.repo
 
 description = "fetch archives for packages"
@@ -27,8 +28,20 @@ def setup_parser(subparser):
 
 
 def fetch(parser, args):
-    if not args.specs:
-        tty.die("fetch requires at least one package argument")
+    if args.specs:
+        specs = spack.cmd.parse_specs(args.specs, concretize=True)
+    else:
+        # No specs were given explicitly, check if we are in an
+        # environment. If yes fetch all uninstalled specs from
+        # it.
+        env = ev.get_env(args, 'fetch')
+        if env:
+            specs = env.uninstalled_specs()
+            if specs == []:
+                tty.die("No uninstalled specs in environment. Did you "
+                        "run `spack concretize` yet?")
+        else:
+            tty.die("fetch requires at least one spec argument")
 
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
@@ -36,7 +49,6 @@ def fetch(parser, args):
     if args.deprecated:
         spack.config.set('config:deprecated', True, scope='command_line')
 
-    specs = spack.cmd.parse_specs(args.specs, concretize=True)
     for spec in specs:
         if args.missing or args.dependencies:
             for s in spec.traverse():
