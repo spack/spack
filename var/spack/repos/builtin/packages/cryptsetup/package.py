@@ -35,6 +35,7 @@ class Cryptsetup(AutotoolsPackage):
     depends_on('m4',       type='build')
 
     depends_on('automake@:1.16.1', when='@2.2.1', type='build')
+    depends_on('openssl')
 
     # Upstream includes support for discovering the location of the libintl
     # library but is missing the bit in the Makefile.ac that includes it in
@@ -49,7 +50,8 @@ class Cryptsetup(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            'systemd_tmpfilesdir={0}/tmpfiles.d'.format(self.prefix)
+            'systemd_tmpfilesdir={0}/tmpfiles.d'.format(self.prefix),
+            '--with-crypto_backend=openssl',
         ]
         return args
 

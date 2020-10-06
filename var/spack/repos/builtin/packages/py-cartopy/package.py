@@ -42,10 +42,10 @@ class PyCartopy(PythonPackage):
     # Optional dependecies
     depends_on('py-pyepsg@0.4.0:',     type=('build', 'run'), when='+epsg')
     depends_on('py-owslib@0.8.11:',    type=('build', 'run'), when='+ows')
-    depends_on('py-pillow@1.7.8:',     type=('build', 'run'), when='+ows')
+    depends_on('pil@1.7.8:',           type=('build', 'run'), when='+ows')
     depends_on('py-matplotlib@1.5.1:', type=('build', 'run'), when='+plotting')
     depends_on('gdal@1.10.0:+python',  type=('build', 'run'), when='+plotting')
-    depends_on('py-pillow@1.7.8:',     type=('build', 'run'), when='+plotting')
+    depends_on('pil@1.7.8:',           type=('build', 'run'), when='+plotting')
     depends_on('py-scipy@0.10:',       type=('build', 'run'), when='+plotting')
 
     # Testing dependencies

@@ -75,6 +75,11 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
     depends_on('python@3:', when='+python3', type=('build', 'run'))
 
+    # VTK < 8.2.1 can't handle Python 3.8
+    # This affects Paraview 5.6.2 (VTK 8.2.0)
+    # https://gitlab.kitware.com/vtk/vtk/-/issues/17670
+    depends_on('python@3:3.7', when='@5.6.2 +python3', type=('build', 'run'))
+
     depends_on('py-numpy@:1.15.4', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python3', type=('build', 'run'))
     depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
@@ -115,7 +120,7 @@ class Paraview(CMakePackage, CudaPackage):
     # Can't contretize with python2 and py-setuptools@45.0.0:
     depends_on('py-setuptools@:44.99.99', when='+python')
     # Can't contretize with python2 and py-pillow@7.0.0:
-    depends_on('py-pillow@:6', when='+python')
+    depends_on('pil@:6', when='+python')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 

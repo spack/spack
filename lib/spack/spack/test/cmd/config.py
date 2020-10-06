@@ -2,8 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import functools
 import os
-
 import pytest
 
 import llnl.util.filesystem as fs
@@ -16,26 +16,40 @@ config = spack.main.SpackCommand('config')
 env = spack.main.SpackCommand('env')
 
 
+def _create_config(scope=None, data={}, section='packages'):
+    scope = scope or spack.config.default_modify_scope()
+    cfg_file = spack.config.config.get_config_filename(scope, section)
+    with open(cfg_file, 'w') as f:
+        syaml.dump(data, stream=f)
+    return cfg_file
+
+
 @pytest.fixture()
 def packages_yaml_v015(mutable_config):
     """Create a packages.yaml in the old format"""
-    def _create(scope=None):
-        old_data = {
-            'packages': {
-                'cmake': {
-                    'paths': {'cmake@3.14.0': '/usr'}
-                },
-                'gcc': {
-                    'modules': {'gcc@8.3.0': 'gcc-8'}
-                }
+    old_data = {
+        'packages': {
+            'cmake': {
+                'paths': {'cmake@3.14.0': '/usr'}
+            },
+            'gcc': {
+                'modules': {'gcc@8.3.0': 'gcc-8'}
             }
         }
-        scope = scope or spack.config.default_modify_scope()
-        cfg_file = spack.config.config.get_config_filename(scope, 'packages')
-        with open(cfg_file, 'w') as f:
-            syaml.dump(old_data, stream=f)
-        return cfg_file
-    return _create
+    }
+    return functools.partial(_create_config, data=old_data, section='packages')
+
+
+@pytest.fixture()
+def config_yaml_v015(mutable_config):
+    """Create a packages.yaml in the old format"""
+    old_data = {
+        'config': {
+            'install_tree': '/fake/path',
+            'install_path_scheme': '{name}-{version}',
+        }
+    }
+    return functools.partial(_create_config, data=old_data, section='config')
 
 
 def test_get_config_scope(mock_low_high_config):
@@ -398,12 +412,43 @@ def test_remove_list(mutable_empty_config):
 
 
 def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
-    env = ev.create('test')
+    ev.create('test')
+    with ev.read('test'):
+        config('add', 'config:dirty:true')
+        output = config('get')
+
+    expected = """  config:
+    dirty: true
+
+"""
+    assert expected in output
+
+
+def test_config_add_to_env_preserve_comments(mutable_empty_config,
+                                             mutable_mock_env_path,
+                                             tmpdir):
+    filepath = str(tmpdir.join('spack.yaml'))
+    manifest = """# comment
+spack:  # comment
+  # comment
+  specs:  # comment
+    - foo  # comment
+  # comment
+  view: true  # comment
+  packages:  # comment
+    # comment
+    all: # comment
+      # comment
+      compiler: [gcc] # comment
+"""
+    with open(filepath, 'w') as f:
+        f.write(manifest)
+    env = ev.Environment(str(tmpdir))
     with env:
         config('add', 'config:dirty:true')
         output = config('get')
 
-    expected = ev.default_manifest_yaml
+    expected = manifest
     expected += """  config:
     dirty: true
 
@@ -438,7 +483,16 @@ def test_config_update_packages(packages_yaml_v015):
 
     # Check the entries have been transformed
     data = spack.config.get('packages')
-    check_update(data)
+    check_packages_updated(data)
+
+
+def test_config_update_config(config_yaml_v015):
+    config_yaml_v015()
+    config('update', '-y', 'config')
+
+    # Check the entires have been transformed
+    data = spack.config.get('config')
+    check_config_updated(data)
 
 
 def test_config_update_not_needed(mutable_config):
@@ -512,7 +566,7 @@ def test_updating_multiple_scopes_at_once(packages_yaml_v015):
 
     for scope in ('user', 'site'):
         data = spack.config.get('packages', scope=scope)
-        check_update(data)
+        check_packages_updated(data)
 
 
 @pytest.mark.regression('18031')
@@ -572,7 +626,7 @@ packages:
     assert '[backup=' in output
 
 
-def check_update(data):
+def check_packages_updated(data):
     """Check that the data from the packages_yaml_v015
     has been updated.
     """
@@ -584,3 +638,9 @@ def check_update(data):
     externals = data['gcc']['externals']
     assert {'spec': 'gcc@8.3.0', 'modules': ['gcc-8']} in externals
     assert 'modules' not in data['gcc']
+
+
+def check_config_updated(data):
+    assert isinstance(data['install_tree'], dict)
+    assert data['install_tree']['root'] == '/fake/path'
+    assert data['install_tree']['projections'] == {'all': '{name}-{version}'}

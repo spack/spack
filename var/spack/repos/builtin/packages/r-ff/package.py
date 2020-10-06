@@ -19,3 +19,5 @@ class RFf(RPackage):
 
     depends_on('r@2.10.1:', type=('build', 'run'))
     depends_on('r-bit@1.1-13:', type=('build', 'run'))
+
+    patch('utk_platform_macros.hpp.patch', when='target=aarch64:')

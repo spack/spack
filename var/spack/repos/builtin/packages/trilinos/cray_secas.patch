@@ -1,0 +1,26 @@
+From f29f61e8ebcb8c887c271bc4a764192976910ca3 Mon Sep 17 00:00:00 2001
+From: Howard Pritchard <hppritcha@gmail.com>
+Date: Mon, 17 Aug 2020 16:05:47 -0600
+Subject: [PATCH] secas: patch FortranSettings for Cray fortran
+
+compiler.  This problem showed up in spack based builds of LANL LAP project dependencies
+on one of our cray systems using CCE.
+
+Signed-off-by: Howard Pritchard <hppritcha@gmail.com>
+
+diff --git a/packages/seacas/cmake/FortranSettings.cmake b/packages/seacas/cmake/FortranSettings.cmake
+index c3447d57..7a73ce5f 100644
+--- a/packages/seacas/cmake/FortranSettings.cmake
++++ b/packages/seacas/cmake/FortranSettings.cmake
+@@ -8,6 +8,8 @@ IF ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
+   SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fcray-pointer -fdefault-real-8 -fdefault-integer-8 -fno-range-check")
+ ELSEIF ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "XL")
+   SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -WF,-D__XLF__ -qintsize=8 -qrealsize=8 -qfixed")
++ELSEIF ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "Cray")
++  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -sdefault64")
+ ELSE()
+   SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -r8 -i8")
+ ENDIF()
+-- 
+2.18.4
+

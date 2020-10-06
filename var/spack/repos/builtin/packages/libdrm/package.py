@@ -7,7 +7,7 @@ from spack import *
 import sys
 
 
-class Libdrm(Package):
+class Libdrm(AutotoolsPackage):
     """A userspace library for accessing the DRM, direct rendering manager,
     on Linux, BSD and other systems supporting the ioctl interface."""
 
@@ -25,11 +25,10 @@ class Libdrm(Package):
     depends_on('libpciaccess@0.10:', when=(sys.platform != 'darwin'))
     depends_on('libpthread-stubs')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix),
-                  '--enable-static',
-                  'LIBS=-lrt')  # This fixes a bug with `make check`
-
-        make()
-        make('check')
-        make('install')
+    def configure_args(self):
+        args = []
+        args.append('--enable-static')
+        args.append('LIBS=-lrt')  # This fixes a bug with `make check`
+        if self.spec.satisfies('%gcc@10.0.0:'):
+            args.append('CFLAGS=-fcommon')
+        return args

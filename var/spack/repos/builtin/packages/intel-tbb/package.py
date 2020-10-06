@@ -205,13 +205,11 @@ class IntelTbb(Package):
 
         for lib_name in tbb_lib_names:
             # install release libs
-            fs = glob.glob(join_path("build", "*release", lib_name + ".*"))
-            for f in fs:
-                install(f, prefix.lib)
+            install(join_path("build", "*release", lib_name + ".*"),
+                    prefix.lib)
             # install debug libs if they exist
-            fs = glob.glob(join_path("build", "*debug", lib_name + "_debug.*"))
-            for f in fs:
-                install(f, prefix.lib)
+            install(join_path("build", "*debug", lib_name + "_debug.*"),
+                    prefix.lib)
 
         if spec.satisfies('@2017.8,2018.1:', strict=True):
             # Generate and install the CMake Config file.

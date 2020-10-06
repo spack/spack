@@ -1967,22 +1967,29 @@ exactly what kind of a dependency you need. For example:
    depends_on('cmake', type='build')
    depends_on('py-numpy', type=('build', 'run'))
    depends_on('libelf', type=('build', 'link'))
+   depends_on('py-pytest', type='test')
 
 The following dependency types are available:
 
-* **"build"**: made available during the project's build. The package will
-  be added to ``PATH``, the compiler include paths, and ``PYTHONPATH``.
-  Other projects which depend on this one will not have these modified
-  (building project X doesn't need project Y's build dependencies).
-* **"link"**: the project is linked to by the project. The package will be
-  added to the current package's ``rpath``.
-* **"run"**: the project is used by the project at runtime. The package will
-  be added to ``PATH`` and ``PYTHONPATH``.
+* **"build"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at build-time.
+* **"link"**: the dependency will be added to Spack's compiler
+  wrappers, automatically injecting the appropriate linker flags,
+  including ``-I``, ``-L``, and RPATH/RUNPATH handling.
+* **"run"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at run-time. This is true for both ``spack load``
+  and the module files Spack writes.
+* **"test"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at build-time. The only difference between
+  "build" and "test" is that test dependencies are only built
+  if the user requests unit tests with ``spack install --test``.
 
 One of the advantages of the ``build`` dependency type is that although the
 dependency needs to be installed in order for the package to be built, it
 can be uninstalled without concern afterwards. ``link`` and ``run`` disallow
-this because uninstalling the dependency would break the package.
+this because uninstalling the dependency would break the package. Another
+consequence of this is that ``build``-only dependencies do not affect the
+hash of the package. The same is true for ``test`` dependencies.
 
 If the dependency type is not specified, Spack uses a default of
 ``('build', 'link')``. This is the common case for compiler languages.
@@ -2003,7 +2010,8 @@ package. In that case, you could say something like:
 
 .. code-block:: python
 
-   variant('mpi', default=False)
+   variant('mpi', default=False, description='Enable MPI support')
+
    depends_on('mpi', when='+mpi')
 
 ``when`` can include constraints on the variant, version, compiler, etc. and
@@ -4677,119 +4685,3 @@ might write:
    DWARF_PREFIX = $(spack location --install-dir libdwarf)
    CXXFLAGS += -I$DWARF_PREFIX/include
    CXXFLAGS += -L$DWARF_PREFIX/lib
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Build System Configuration Support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Imagine a developer creating a CMake or Autotools-based project in a
-local directory, which depends on libraries A-Z.  Once Spack has
-installed those dependencies, one would like to run ``cmake`` with
-appropriate command line and environment so CMake can find them.  The
-``spack setup`` command does this conveniently, producing a CMake
-configuration that is essentially the same as how Spack *would have*
-configured the project.  This can be demonstrated with a usage
-example:
-
-.. code-block:: console
-
-   $ cd myproject
-   $ spack setup myproject@local
-   $ mkdir build; cd build
-   $ ../spconfig.py ..
-   $ make
-   $ make install
-
-Notes:
-
-* Spack must have ``myproject/package.py`` in its repository for
-  this to work.
-* ``spack setup`` produces the executable script ``spconfig.py`` in
-  the local directory, and also creates the module file for the
-  package.  ``spconfig.py`` is normally run from the user's
-  out-of-source build directory.
-* The version number given to ``spack setup`` is arbitrary, just
-  like ``spack diy``.  ``myproject/package.py`` does not need to
-  have any valid downloadable versions listed (typical when a
-  project is new).
-* spconfig.py produces a CMake configuration that *does not* use the
-  Spack wrappers.  Any resulting binaries *will not* use RPATH,
-  unless the user has enabled it.  This is recommended for
-  development purposes, not production.
-* ``spconfig.py`` is human readable, and can serve as a developer
-  reference of what dependencies are being used.
-* ``make install`` installs the package into the Spack repository,
-  where it may be used by other Spack packages.
-* CMake-generated makefiles re-run CMake in some circumstances.  Use
-  of ``spconfig.py`` breaks this behavior, requiring the developer
-  to manually re-run ``spconfig.py`` when a ``CMakeLists.txt`` file
-  has changed.
-
-^^^^^^^^^^^^
-CMakePackage
-^^^^^^^^^^^^
-
-In order to enable ``spack setup`` functionality, the author of
-``myproject/package.py`` must subclass from ``CMakePackage`` instead
-of the standard ``Package`` superclass.  Because CMake is
-standardized, the packager does not need to tell Spack how to run
-``cmake; make; make install``.  Instead the packager only needs to
-create (optional) methods ``configure_args()`` and ``configure_env()``, which
-provide the arguments (as a list) and extra environment variables (as
-a dict) to provide to the ``cmake`` command.  Usually, these will
-translate variant flags into CMake definitions.  For example:
-
-.. code-block:: python
-
-   def cmake_args(self):
-       spec = self.spec
-       return [
-           '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
-           '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
-           '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
-           '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
-           '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')
-       ]
-
-If needed, a packager may also override methods defined in
-``StagedPackage`` (see below).
-
-^^^^^^^^^^^^^
-StagedPackage
-^^^^^^^^^^^^^
-
-``CMakePackage`` is implemented by subclassing the ``StagedPackage``
-superclass, which breaks down the standard ``Package.install()``
-method into several sub-stages: ``setup``, ``configure``, ``build``
-and ``install``.  Details:
-
-* Instead of implementing the standard ``install()`` method, package
-  authors implement the methods for the sub-stages
-  ``install_setup()``, ``install_configure()``,
-  ``install_build()``, and ``install_install()``.
-
-* The ``spack install`` command runs the sub-stages ``configure``,
-  ``build`` and ``install`` in order.  (The ``setup`` stage is
-  not run by default; see below).
-* The ``spack setup`` command runs the sub-stages ``setup``
-  and a dummy install (to create the module file).
-* The sub-stage install methods take no arguments (other than
-  ``self``).  The arguments ``spec`` and ``prefix`` to the standard
-  ``install()`` method may be accessed via ``self.spec`` and
-  ``self.prefix``.
-
-^^^^^^^^^^^^^
-GNU Autotools
-^^^^^^^^^^^^^
-
-The ``setup`` functionality is currently only available for
-CMake-based packages.  Extending this functionality to GNU
-Autotools-based packages would be easy (and should be done by a
-developer who actively uses Autotools).  Packages that use
-non-standard build systems can gain ``setup`` functionality by
-subclassing ``StagedPackage`` directly.
-
-.. Emacs local variables
-   Local Variables:
-   fill-column: 79
-   End:

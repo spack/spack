@@ -4,11 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import glob
-
-from spack import *
-
-
 class Cloverleaf(MakefilePackage):
     """Proxy Application. CloverLeaf is a miniapp that solves the
        compressible Euler equations on a Cartesian grid,
@@ -95,7 +90,5 @@ class Cloverleaf(MakefilePackage):
                 prefix.bin)
         install('CloverLeaf_{0}/clover.in'.format(self.type_of_build),
                 prefix.bin)
-
-        for f in glob.glob(
-                'CloverLeaf_{0}/*.in'.format(self.type_of_build)):
-            install(f, prefix.doc.tests)
+        install('CloverLeaf_{0}/*.in'.format(self.type_of_build),
+                prefix.doc.tests)
