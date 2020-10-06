@@ -22,6 +22,8 @@ class Dealii(CMakePackage, CudaPackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
+    generator = 'Ninja'
+
     version('master', branch='master')
     version('9.2.0', sha256='d05a82fb40f1f1e24407451814b5a6004e39366a44c81208b1ae9d65f3efa43a')
     version('9.1.1', sha256='fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276')
@@ -53,8 +55,6 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with 64 bit indices support')
     variant('mpi',      default=True,
             description='Compile with MPI')
-    variant('ninja',    default=False,
-            description='Compile using the Ninja build system')
     variant('optflags', default=False,
             description='Compile using additional optimization flags')
     variant('python',   default=False,
@@ -139,6 +139,7 @@ class Dealii(CMakePackage, CudaPackage):
     # bzip2 is not needed since 9.0
     depends_on('bzip2', when='@:8.99')
     depends_on('lapack')
+    depends_on('ninja',           type='build')
     depends_on('suite-sparse')
     depends_on('zlib')
 
@@ -149,7 +150,6 @@ class Dealii(CMakePackage, CudaPackage):
     # https://github.com/dealii/dealii/issues/5510
     depends_on('cmake@:3.9.99',    when='@:8.99', type='build')
     depends_on('mpi',              when='+mpi')
-    depends_on('ninja',            when='+ninja', type='build')
     depends_on('python',           when='@8.5.0:+python')
 
     # Optional dependencies: Packages
@@ -272,13 +272,6 @@ class Dealii(CMakePackage, CudaPackage):
     conflicts('+slepc', when='~petsc',
               msg='It is not possible to enable slepc interfaces '
                   'without petsc.')
-
-    @property
-    def generator(self):
-        if '+ninja' in self.spec:
-            return 'Ninja'
-        else:
-            return 'Unix Makefiles'
 
     def cmake_args(self):
         spec = self.spec
