@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class Blaspp(CMakePackage, CudaPackage):
@@ -11,56 +12,41 @@ class Blaspp(CMakePackage, CudaPackage):
        Innovative Computing Laboratory at the University of Tennessee,
        Knoxville."""
 
-    homepage = "https://bitbucket.org/icl/blaspp"
-    git      = "https://bitbucket.org/icl/blaspp"
+    homepage = 'https://bitbucket.org/icl/blaspp'
+    url = 'https://bitbucket.org/icl/blaspp/downloads/blaspp-2020.09.00.tar.gz'
     maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
-    version('develop', commit='6293d96')
+    version('develop', git=homepage)
+    version('2020.09.00', sha256='ee5d29171bbed515734007dd121ce2e733e2f83920c4d5ede046e657f4a513ef')
 
-    variant('gfort',
-            default=False,
-            description=('Use GNU Fortran interface. '
-                         'Default is Intel interface. (MKL)'))
-    variant('ilp64',
-            default=False,
-            description=('Use 64bit integer interface. '
-                         'Default is 32bit. (MKL & ESSL)'))
     variant('openmp',
-            default=False,
-            description=('Use OpenMP threaded backend. '
-                         'Default is sequential. (MKL & ESSL)'))
+            default=True,
+            description='Use OpenMP internally.')
 
+    variant('cuda', default=True,
+            description='Build with CUDA')
+
+    variant('shared',
+            default=True,
+            description='Build shared libraries')
+
+    depends_on('cmake@3.15.0:', type='build')
     depends_on('blas')
 
-    # 1) The CMake options exposed by `blaspp` allow for a value called `auto`.
-    #    The value is not needed here as the choice of dependency in the spec
-    #    determines the appropriate flags.
-    #
-    # 2) BLASFinder.cmake handles most options. For `auto`, it searches all
-    #    blas libraries listed in `def_lib_list`.
-    #
-    # 3) ?? Custom blas library can be supplied via `BLAS_LIBRARIES`.
-    #
     def cmake_args(self):
         spec = self.spec
-        args = ['-DBLASPP_BUILD_TESTS:BOOL={0}'.format(
-            'ON' if self.run_tests else 'OFF')]
+        args = []
+        args.append('-Dbuild_tests={0}'.format(
+            'ON' if self.run_tests else 'OFF'))
 
-        if '+gfort' in spec:
-            args.append('-DBLAS_LIBRARY_MKL="GNU gfortran conventions"')
-        else:
-            args.append('-DBLAS_LIBRARY_MKL="Intel ifort conventions"')
+        args.append('-Duse_openmp={0}'.format(
+            'ON' if '+openmp' in spec else 'OFF'))
 
-        if '+ilp64' in spec:
-            args.append('-DBLAS_LIBRARY_INTEGER="int64_t (ILP64)"')
-        else:
-            args.append('-DBLAS_LIBRARY_INTEGER="int (LP64)"')
+        args.append('-DBUILD_SHARED_LIBS={0}'.format(
+            'ON' if '+shared' in spec else 'OFF'))
 
-        if '+openmp' in spec:
-            args.append(['-DUSE_OPENMP=ON',
-                         '-DBLAS_LIBRARY_THREADING="threaded"'])
-        else:
-            args.append('-DBLAS_LIBRARY_THREADING="sequential"')
+        args.append('-DUSE_CUDA={0}'.format(
+            'ON' if '+cuda' in spec else 'OFF'))
 
         # `blaspp` has an implicit CUDA detection mechanism. This disables it
         # in cases where it may backfire. One such case is when `cuda` is
@@ -72,22 +58,10 @@ class Blaspp(CMakePackage, CudaPackage):
         if '~cuda' in spec:
             args.append('-DCMAKE_CUDA_COMPILER=')
 
-        # Missing:
-        #
-        # - acml  : BLAS_LIBRARY="AMD ACML"
-        #           BLAS_LIBRARY_THREADING= threaded/sequential
-        #
-        # - apple : BLAS_LIBRARY="Apple Accelerate" (veclibfort ???)
-        #
-        if '^mkl' in spec:
-            args.append('-DBLAS_LIBRARY="Intel MKL"')
-        elif '^essl' in spec:
-            args.append('-DBLAS_LIBRARY="IBM ESSL"')
-        elif '^openblas' in spec:
-            args.append('-DBLAS_LIBRARY="OpenBLAS"')
-        elif '^cray-libsci' in spec:
-            args.append('-DBLAS_LIBRARY="Cray LibSci"')
-        else:  # e.g. netlib-lapack
-            args.append('-DBLAS_LIBRARY="generic"')
-
+        args.append('-DBLAS_LIBRARIES=%s' % spec['blas'].libs.joined(';'))
         return args
+
+    def check(self):
+        with working_dir(join_path(self.build_directory, 'test')):
+            if os.system('./run_tests.py --quick'):
+                raise Exception('Tests were not all successful!')
