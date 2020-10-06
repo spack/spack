@@ -46,5 +46,5 @@ class Orc(CMakePackage):
         # FIXME: If not needed delete this function
         args = []
         args.append('-DCMAKE_CXX_FLAGS=-fPIC')
-        args.append('-DCMAKE_CC_FLAGS=-fPIC')
+        args.append('-DCMAKE_C_FLAGS=-fPIC')
         return args
