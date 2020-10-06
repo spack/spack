@@ -40,7 +40,6 @@ class PyScikitImage(PythonPackage):
     depends_on('py-tifffile@2019.7.26:', type=('run'), when='@0.17.1:')
     depends_on('py-pywavelets', type=('run'), when='@0.14:')
     depends_on('py-pywavelets@1.1.1:', type=('run'), when='@0.16.1:')
-    depends_on('py-cloudpickle', type=('run'), when='@:0.16.1')
 
     conflicts('pil@7.1.0', when='@0.16.1:')
     conflicts('pil@7.1.1', when='@0.16.1:')
