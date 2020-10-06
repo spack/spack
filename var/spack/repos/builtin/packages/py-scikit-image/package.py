@@ -19,7 +19,7 @@ class PyScikitImage(PythonPackage):
 
     extends('python', ignore=r'bin/.*\.py$')
 
-    depends_on('python@:3.6', when='@0.16.1:')
+    depends_on('python@3.6:', when='@0.16.1:')
     depends_on('py-dask', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))
     depends_on('py-networkx', type=('build', 'run'))
