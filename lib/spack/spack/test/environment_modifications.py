@@ -215,7 +215,8 @@ def test_path_manipulation(env):
     expected = '/path/first:/path/middle:/path/last'
     assert os.environ['NEWLY_CREATED_PATH_LIST'] == expected
 
-    assert os.environ['REMOVE_PATH_LIST'] == '/a/b:/a/c:/a/d:/f/g'
+    #Directory will only be removed once
+    assert os.environ['REMOVE_PATH_LIST'] == '/a/b:/a/c:/a/d:/duplicate:/f/g'
 
     assert not os.environ['PATH_LIST_WITH_SYSTEM_PATHS'].\
         startswith('/usr/include:')

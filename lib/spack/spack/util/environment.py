@@ -444,7 +444,7 @@ class EnvironmentModifications(object):
 
         Args:
             name: name of the path list in the environment
-            path: path to be removed
+            path: path to be removed once
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = RemovePath(name, path, **kwargs)
