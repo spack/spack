@@ -41,7 +41,7 @@ class Likwid(Package):
 
     depends_on('lua', when='@:4')
     depends_on('lua@5.2:', when='@5:5.0.1')
-    depends_on('lua:', when='@5.0.2')
+    depends_on('lua', when='@5.0.2:')
 
     # TODO: check
     # depends_on('gnuplot', type='run')
