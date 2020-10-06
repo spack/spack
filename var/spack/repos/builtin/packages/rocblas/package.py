@@ -15,6 +15,7 @@ class Rocblas(CMakePackage):
 
     maintainers = ['haampie']
 
+    version('3.8.0', sha256='568a9da0360349b1b134d74cc67cbb69b43c06eeca7c33b50072cd26cd3d8900')
     version('3.7.0', sha256='9425db5f8e8b6f7fb172d09e2a360025b63a4e54414607709efc5acb28819642')
     version('3.5.0', sha256='8560fabef7f13e8d67da997de2295399f6ec595edfd77e452978c140d5f936f0')
 
@@ -24,11 +25,14 @@ class Rocblas(CMakePackage):
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['3.5.0', '3.7.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
+        # used in Tensile
+        depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
 
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
@@ -38,9 +42,7 @@ class Rocblas(CMakePackage):
     depends_on('perl-file-which', type='build')
     depends_on('py-pyyaml', type='build')
     depends_on('py-wheel', type='build')
-
-    # Tensile uses LLVM
-    depends_on('llvm-amdgpu')
+    depends_on('py-msgpack', type='build')
 
     resource(name='Tensile',
              git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
@@ -52,8 +54,13 @@ class Rocblas(CMakePackage):
              commit='af71ea890a893e647bf2cf4571a90297d65689ca',
              when='@3.7.0')
 
+    resource(name='Tensile',
+             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
+             commit='9123205f9b5f95c96ff955695e942d2c3b321cbf',
+             when='@3.8.0')
+
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
-    # Not yet landed in 3.7.0.
+    # Not yet landed in 3.7.0, nor 3.8.0.
     patch('0001-Fix-compilation-error-with-StringRef-to-basic-string.patch')
 
     def setup_build_environment(self, env):
@@ -76,10 +83,12 @@ class Rocblas(CMakePackage):
             '-DTensile_ARCHITECTURE={0}'.format(archs),
             '-DTensile_LOGIC=asm_full',
             '-DTensile_CODE_OBJECT_VERSION=V3',
-            '-DBUILD_WITH_TENSILE_HOST=OFF'
+            '-DBUILD_WITH_TENSILE_HOST={0}'.format(
+                'ON' if '@3.7.0:' in self.spec else 'OFF'
+            )
         ]
 
-        if '@3.7.0' in self.spec:
+        if '@3.7.0:' in self.spec:
             args.append('-DTensile_LIBRARY_FORMAT=msgpack')
 
         return args

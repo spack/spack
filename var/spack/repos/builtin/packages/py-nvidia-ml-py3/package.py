@@ -7,15 +7,9 @@ from spack import *
 
 
 class PyNvidiaMlPy3(PythonPackage):
-    """Python 3 Bindings for the NVIDIA Management Library"""
+    """Python 3 Bindings for the NVIDIA Management Library."""
 
-    homepage = "https://github.com/nicolargo/nvidia-ml-py3"
-    url      = "https://github.com/nicolargo/nvidia-ml-py3/archive/master.zip"
-    git      = "https://github.com/nicolargo/nvidia-ml-py3.git"
-    version('master', branch='master')
+    homepage = "http://www.nvidia.com/"
+    url      = "https://pypi.io/packages/source/n/nvidia-ml-py3/nvidia-ml-py3-7.352.0.tar.gz"
 
-    depends_on('python', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--root=/', '--prefix={0}'.format(prefix))
+    version('7.352.0', sha256='390f02919ee9d73fe63a98c73101061a6b37fa694a793abf56673320f1f51277')
