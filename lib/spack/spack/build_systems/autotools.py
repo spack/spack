@@ -217,7 +217,7 @@ class AutotoolsPackage(PackageBase):
             objfile = ['fjcrt0.o', 'fjlang08.o', 'fjomp.o',
                        'crti.o', 'crtbeginS.o', 'crtendS.o']
             for o in objfile:
-               fs.filter_file(rehead + o, '', libtool_path)
+                fs.filter_file(rehead + o, '', libtool_path)
 
     @property
     def configure_directory(self):
