@@ -28,6 +28,8 @@ class RocmGdb(AutotoolsPackage):
     depends_on('expat', type='build')
     depends_on('python', type='build')
     depends_on('zlib', type='link')
+    depends_on('babeltrace@1.2.4', type='link')
+
     for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
         depends_on('comgr@' + ver, type='link', when='@' + ver)
