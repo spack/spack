@@ -35,7 +35,7 @@ class MlperfDeepcam(Package):
     depends_on('py-apex', type=('build', 'run'))
     depends_on('py-wandb', type=('build', 'run'))
     depends_on('py-apex', type=('build', 'run'))
-    depends_on('py-mlperf_logging', type=('build', 'run'))
+    depends_on('py-mlperf-logging', type=('build', 'run'))
     depends_on('py-pytorch-gradual-warmup-lr', type=('build', 'run'))
 
     def install(self, spec, prefix):
