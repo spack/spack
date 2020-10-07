@@ -23,7 +23,7 @@ class PyChalice(PythonPackage):
     version('1.14.1', sha256='d8034247c1e7698d0b4747b534fd06ce518dcbee91b4e7054efa75efe27fba2e')
     version('1.14.0', sha256='59a63a098c05309efc0285dd2e38f8415e8618d05c08821fb7660377e30bda22')
 
-    depends_on('python@2:,3:3.7', type=('build', 'run'))
+    depends_on('python@2.0:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-click@7.0:8.0',           type=('build', 'run'))
     depends_on('py-botocore@1.12.86:2.0.0',  type=('build', 'run'))
