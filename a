@@ -1,0 +1,16 @@
+lib/spack/docs/packaging_guide.rst
+lib/spack/spack/ci.py
+lib/spack/spack/cmd/create.py
+lib/spack/spack/package.py
+lib/spack/spack/test/cmd/create.py
+lib/spack/spack/test/compilers/basics.py
+lib/spack/spack/test/modules/tcl.py
+lib/spack/spack/test/package_sanity.py
+var/spack/repos/builtin.mock/packages/callpath/package.py
+var/spack/repos/builtin.mock/packages/cmake-client/package.py
+var/spack/repos/builtin.mock/packages/cmake/package.py
+var/spack/repos/builtin.mock/packages/conflict-parent/package.py
+var/spack/repos/builtin.mock/packages/conflict/package.py
+var/spack/repos/builtin.mock/packages/module-path-separator/package.py
+var/spack/repos/builtin.mock/packages/mpileaks/package.py
+var/spack/repos/tutorial/packages/elpa/package.py

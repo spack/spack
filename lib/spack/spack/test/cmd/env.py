@@ -1036,7 +1036,6 @@ def test_env_dir_remains_after_deactivation(working_env):
     directory to their PATH. When the user deactivates the environment
     the directory should be in the path once.
     """
-
     e = ev.create('test', with_view=True)
 
     mods = e.add_default_view()
@@ -1058,13 +1057,11 @@ def test_env_dir_remains_after_deactivation(working_env):
 
 def test_env_activate_record_modified_paths(working_env):
     """
-    Changes done when an environment is activated are recorded separatly
+    Changes done when an environment is activated are recorded separately
     """
-
     e = ev.create('test', with_view=True)
 
     mods = e.add_default_view()
-
     mods.apply_modifications()
 
     assert 'SPACK_ENV_ADDED_PATH' in mods.group_by_name()
@@ -1098,7 +1095,6 @@ def test_env_dir_added_after_activation(working_env):
     User added environment's directory to their PATH after
     activating the environment
     """
-
     e = ev.create('test', with_view=True)
 
     mods = e.add_default_view()
