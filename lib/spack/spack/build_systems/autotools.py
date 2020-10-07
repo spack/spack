@@ -79,8 +79,8 @@ class AutotoolsPackage(PackageBase):
     autoreconf_extra_args = []
 
     #: If False deletes all the .la files in the prefix folder
-    #: after the installation.
-    install_libtool_archives = True
+    #: after the installation. If True instead it installs them.
+    install_libtool_archives = False
 
     @property
     def _removed_la_files_log(self):
