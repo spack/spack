@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class Lapackpp(CMakePackage):
     """LAPACK++: C++ API for the Basic Linear Algebra Subroutines. Developed
        by the Innovative Computing Laboratory at the University of Tennessee,
@@ -37,9 +38,6 @@ class Lapackpp(CMakePackage):
         ]
 
     def check(self):
-        os.system('echo Geri')
         with working_dir(join_path(self.build_directory, 'test')):
-            os.system('pwd;ls')
             if os.system('./run_tests.py --quick'):
                 raise Exception('Tests were not all successful!')
-
