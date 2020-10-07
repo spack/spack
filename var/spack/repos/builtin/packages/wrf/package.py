@@ -17,6 +17,7 @@ class Wrf(Package):
 
     homepage = "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
     url      = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
+    maintainers = ['MichaelLaufer']
 
     version('4.2', sha256='c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706')
     version('4.0', sha256='a5b072492746f96a926badda7e6b44cb0af26695afdd6c029a94de5e1e5eec73')
@@ -61,7 +62,7 @@ class Wrf(Package):
     # http://www2.mmm.ucar.edu/wrf/users/docs/user_guide_v4/v4.0/users_guide_chap2.html#_Required_Compilers_and_1
     # Section: "Required/Optional Libraries to Download"
     depends_on('parallel-netcdf', when='+pnetcdf')
-    depends_on('netcdf-c+parallel-netcdf')
+    depends_on('netcdf-c')
     depends_on('netcdf-fortran')
     depends_on('jasper')
     depends_on('libpng')
@@ -74,27 +75,24 @@ class Wrf(Package):
     # time is not installed on all systems b/c bash provides it
     # this fixes that for csh install scripts
     depends_on('time', type=('build'))
-
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
     depends_on('m4', type='build')
     depends_on('libtool', type='build')
     phases = ['configure', 'build', 'install']
 
-    def setup_build_environment(self, spack_env):
-        spack_env.set('NETCDF', self.spec['netcdf-c'].prefix)
+    def setup_build_environment(self, env):
+        env.set('NETCDF', self.spec['netcdf-c'].prefix)
         if '+pnetcdf' in self.spec:
-            spack_env.set('PNETCDF', self.spec['parallel-netcdf'].prefix)
+            env.set('PNETCDF', self.spec['parallel-netcdf'].prefix)
         # This gets used via the applied patch files
-        spack_env.set('NETCDFF', self.spec['netcdf-fortran'].prefix)
-        spack_env.set('PHDF5', self.spec['hdf5'].prefix)
-        spack_env.set('JASPERINC', self.spec['jasper'].prefix.include)
-        spack_env.set('JASPERLIB', self.spec['jasper'].prefix.lib)
+        env.set('NETCDFF', self.spec['netcdf-fortran'].prefix)
+        env.set('PHDF5', self.spec['hdf5'].prefix)
+        env.set('JASPERINC', self.spec['jasper'].prefix.include)
+        env.set('JASPERLIB', self.spec['jasper'].prefix.lib)
 
         if self.spec.satisfies('%gcc@10:'):
             args = '-w -O2 -fallow-argument-mismatch -fallow-invalid-boz'
-            spack_env.set('FCFLAGS', args)
-            spack_env.set('FFLAGS', args)
+            env.set('FCFLAGS', args)
+            env.set('FFLAGS', args)
 
     def patch(self):
         # Let's not assume csh is intalled in bin
@@ -144,7 +142,5 @@ class Wrf(Package):
             spec.variants['compile_type'].value)
 
     def install(self, spec, prefix):
-        mkdir(prefix.bin)
-        install('./main/wrf.exe', prefix.bin)
-        install('./main/ndown.exe', prefix.bin)
-        install('./main/real.exe', prefix.bin)
+        # Save all install files as many are needed for WPS and WRF runs
+        install_tree('.', prefix)

@@ -213,8 +213,7 @@ def _hms(seconds):
     return ' '.join(parts)
 
 
-def _install_from_cache(pkg, cache_only, explicit, unsigned=False,
-                        full_hash_match=False):
+def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
     """
     Extract the package from binary cache
 
@@ -230,8 +229,8 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False,
         (bool) ``True`` if the package was extract from binary cache,
             ``False`` otherwise
     """
-    installed_from_cache = _try_install_from_binary_cache(
-        pkg, explicit, unsigned=unsigned, full_hash_match=full_hash_match)
+    installed_from_cache = _try_install_from_binary_cache(pkg, explicit,
+                                                          unsigned)
     pkg_id = package_id(pkg)
     if not installed_from_cache:
         pre = 'No binary for {0} found'.format(pkg_id)
@@ -303,8 +302,7 @@ def _process_external_package(pkg, explicit):
         spack.store.db.add(spec, None, explicit=explicit)
 
 
-def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
-                                  preferred_mirror_url=None):
+def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned):
     """
     Process the binary cache tarball.
 
@@ -319,8 +317,7 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
         (bool) ``True`` if the package was extracted from binary cache,
             else ``False``
     """
-    tarball = binary_distribution.download_tarball(binary_spec,
-                                                   url=preferred_mirror_url)
+    tarball = binary_distribution.download_tarball(binary_spec)
     # see #10063 : install from source if tarball doesn't exist
     if tarball is None:
         tty.msg('{0} exists in binary cache but with different hash'
@@ -336,8 +333,7 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
     return True
 
 
-def _try_install_from_binary_cache(pkg, explicit, unsigned=False,
-                                   full_hash_match=False):
+def _try_install_from_binary_cache(pkg, explicit, unsigned=False):
     """
     Try to extract the package from binary cache.
 
@@ -349,18 +345,13 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False,
     """
     pkg_id = package_id(pkg)
     tty.debug('Searching for binary cache of {0}'.format(pkg_id))
-    matches = binary_distribution.get_spec(
-        pkg.spec, force=False, full_hash_match=full_hash_match)
-
-    if not matches:
+    specs = binary_distribution.get_spec(pkg.spec, force=False)
+    binary_spec = spack.spec.Spec.from_dict(pkg.spec.to_dict())
+    binary_spec._mark_concrete()
+    if binary_spec not in specs:
         return False
 
-    # In the absence of guidance from user or some other reason to prefer one
-    # mirror over another, any match will suffice, so just pick the first one.
-    preferred_mirror = matches[0]['mirror_url']
-    binary_spec = matches[0]['spec']
-    return _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
-                                         preferred_mirror_url=preferred_mirror)
+    return _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned)
 
 
 def _update_explicit_entry_in_db(pkg, rec, explicit):
@@ -1053,7 +1044,6 @@ class PackageInstaller(object):
         unsigned = kwargs.get('unsigned', False)
         use_cache = kwargs.get('use_cache', True)
         verbose = kwargs.get('verbose', False)
-        full_hash_match = kwargs.get('full_hash_match', False)
 
         pkg = task.pkg
         pkg_id = package_id(pkg)
@@ -1065,8 +1055,7 @@ class PackageInstaller(object):
 
         # Use the binary cache if requested
         if use_cache and \
-                _install_from_cache(pkg, cache_only, explicit, unsigned,
-                                    full_hash_match):
+                _install_from_cache(pkg, cache_only, explicit, unsigned):
             self._update_installed(task)
             if task.compiler:
                 spack.compilers.add_compilers_to_config(

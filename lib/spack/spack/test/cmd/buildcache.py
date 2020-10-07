@@ -19,6 +19,9 @@ buildcache = spack.main.SpackCommand('buildcache')
 install = spack.main.SpackCommand('install')
 env = spack.main.SpackCommand('env')
 add = spack.main.SpackCommand('add')
+gpg = spack.main.SpackCommand('gpg')
+mirror = spack.main.SpackCommand('mirror')
+uninstall = spack.main.SpackCommand('uninstall')
 
 
 @pytest.fixture()
@@ -133,3 +136,41 @@ def test_buildcache_create_fail_on_perm_denied(
                    '--unsigned', 'trivial-install-test-package')
     assert error.value.errno == errno.EACCES
     tmpdir.chmod(0o700)
+
+
+@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
+                    reason='This test requires gpg')
+def test_update_key_index(tmpdir, mutable_mock_env_path,
+                          install_mockery, mock_packages, mock_fetch,
+                          mock_stage, mock_gnupghome):
+    """Test the update-index command with the --keys option"""
+    working_dir = tmpdir.join('working_dir')
+
+    mirror_dir = working_dir.join('mirror')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+
+    mirror('add', 'test-mirror', mirror_url)
+
+    gpg('create', 'Test Signing Key', 'nobody@nowhere.com')
+
+    s = Spec('libdwarf').concretized()
+
+    # Install a package
+    install(s.name)
+
+    # Put installed package in the buildcache, which, because we're signing
+    # it, should result in the public key getting pushed to the buildcache
+    # as well.
+    buildcache('create', '-a', '-d', mirror_dir.strpath, s.name)
+
+    # Now make sure that when we pass the "--keys" argument to update-index
+    # it causes the index to get update.
+    buildcache('update-index', '--keys', '-d', mirror_dir.strpath)
+
+    key_dir_list = os.listdir(os.path.join(
+        mirror_dir.strpath, 'build_cache', '_pgp'))
+
+    uninstall('-y', s.name)
+    mirror('rm', 'test-mirror')
+
+    assert 'index.json' in key_dir_list

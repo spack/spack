@@ -1112,7 +1112,6 @@ class Database(object):
             # the original hash of concrete specs.
             new_spec._mark_concrete()
             new_spec._hash = key
-            new_spec._full_hash = spec._full_hash
 
         else:
             # If it is already there, mark it as installed.

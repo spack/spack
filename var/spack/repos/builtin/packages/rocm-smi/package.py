@@ -30,5 +30,6 @@ class RocmSmi(MakefilePackage):
                 os.path.basename(self.spec['python'].command.path)),
             'rocm_smi.py'
         )
-        copy('rocm_smi.py', prefix)
-        symlink('rocm_smi.py', prefix.rocm_smi)
+        mkdir(prefix.bin)
+        copy('rocm_smi.py', prefix.bin)
+        symlink('rocm_smi.py', prefix.bin.rocm_smi)
