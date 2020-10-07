@@ -30,10 +30,10 @@ class Meme(AutotoolsPackage):
     depends_on('imagemagick', type=('build', 'run'), when='+image-magick')
     depends_on('perl-xml-parser', type=('build', 'run'))
 
-    def url_for_version(self, version):                                                         
+    def url_for_version(self, version):
         url = 'http://meme-suite.org/meme-software/{0}/meme{1}{2}.tar.gz'
-        sep = '-' if version >= Version('5.0.2') else '_'                    
-        return url.format(version.up_to(3), sep, version) 
+        sep = '-' if version >= Version('5.0.2') else '_'
+        return url.format(version.up_to(3), sep, version)
 
     def configure_args(self):
         spec = self.spec
