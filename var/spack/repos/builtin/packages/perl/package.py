@@ -75,7 +75,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     # Fix 'Unexpected product version' error on macOS 11.0 Big Sur
     # https://github.com/Perl/perl5/pull/17946
-    patch('macos-11-version-check.patch', when='@5.24.1:5.32.0')
+    patch('macos-11-version-check.patch', when="@5.24.1:5.32.0 platform='darwin'")
 
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
