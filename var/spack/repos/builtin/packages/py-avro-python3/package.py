@@ -7,7 +7,10 @@ from spack import *
 
 
 class PyAvroPython3(PythonPackage):
-    """Apache Avro™ is a data serialization system."""
+    """Apache Avro™ is a data serialization system.
+       Note: lang/py3 version (this package) will be deprecated
+       and lang/py functions will be made available for both
+       python2 and python3"""
 
     homepage = "https://github.com/apache/avro/tree/master/lang/py3"
     url      = "https://pypi.io/packages/source/a/avro-python3/avro-python3-1.10.0.tar.gz"
