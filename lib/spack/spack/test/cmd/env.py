@@ -1030,7 +1030,13 @@ def test_store_different_build_deps():
         assert x_read['z'] != y_read['z']
 
 
-def test_env_dir_remains_after_deactivation(working_env):  # TODO: do docs
+def test_env_dir_remains_after_deactivation(working_env):
+    """
+    User activates an environment with a view and adds environment's
+    directory to their PATH. When the user deactivates the environment
+    the directory should be in the path once.
+    """
+
     e = ev.create('test', with_view=True)
 
     mods = e.add_default_view()
@@ -1050,7 +1056,11 @@ def test_env_dir_remains_after_deactivation(working_env):  # TODO: do docs
         e.default_view.root, 'bin')) == 1
 
 
-def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
+def test_env_activate_record_modified_paths(working_env):
+    """
+    Changes done when an environment is activated are recorded separatly
+    """
+
     e = ev.create('test', with_view=True)
 
     mods = e.add_default_view()
@@ -1064,7 +1074,11 @@ def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
     assert os.path.join(e.default_view.root, 'bin') in added_paths
 
 
-def test_env_dir_added_before_activation():  # TODO: do docs
+def test_env_dir_added_before_activation():
+    """
+    User added environment's directory to their PATH before
+    activating the environment
+    """
     e = ev.create('test', with_view=True)
 
     if 'PATH' in os.environ.keys():
@@ -1076,9 +1090,15 @@ def test_env_dir_added_before_activation():  # TODO: do docs
     _ = e.add_default_view()
 
     assert 'SPACK_ENV_ADDED_PATH' not in os.environ
+    assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
 
 
-def test_env_dir_added_after_activation(working_env):  # TODO: do docs
+def test_env_dir_added_after_activation(working_env):
+    """
+    User added environment's directory to their PATH after
+    activating the environment
+    """
+
     e = ev.create('test', with_view=True)
 
     mods = e.add_default_view()
