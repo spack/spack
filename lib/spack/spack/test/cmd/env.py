@@ -1048,7 +1048,6 @@ def test_env_dir_remains_after_deactivation(working_env):  # TODO: do docs
     assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
     assert os.environ['PATH'].count(os.path.join(
         e.default_view.root, 'bin')) == 1
-    assert 'SPACK_ENV_ADDED_PATH' not in os.environ
 
 
 def test_env_activate_record_modified_paths(working_env):  # TODO: do docs
