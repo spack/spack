@@ -73,6 +73,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # https://bugzilla.redhat.com/show_bug.cgi?id=1536752
     patch('https://src.fedoraproject.org/rpms/perl/raw/004cea3a67df42e92ffdf4e9ac36d47a3c6a05a4/f/perl-5.26.1-guard_old_libcrypt_fix.patch', level=1, sha256='0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac', when='@:5.26.2')
 
+    # Fix 'Unexpected product version' error on macOS 11.0 Big Sur
+    # https://github.com/Perl/perl5/pull/17946
+    patch('macos-11-version-check.patch', when='@5.24.1:5.32.0 platform=darwin')
+
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
     # having it in core increases the "energy of activation" for doing
