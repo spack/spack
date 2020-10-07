@@ -51,5 +51,6 @@ class Orc(CMakePackage):
         args.append('-DCMAKE_CXX_FLAGS=-fPIC')
         args.append('-DCMAKE_C_FLAGS=-fPIC')
         args.append('-DINSTALL_VENDORED_LIBS:BOOL=OFF')
+        args.append('-DBUILD_LIBHDFSPP:BOOL=OFF')
 
         return args
