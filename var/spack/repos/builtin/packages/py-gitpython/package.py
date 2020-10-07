@@ -13,7 +13,6 @@ class PyGitpython(PythonPackage):
     url      = "https://pypi.io/packages/source/g/gitpython/GitPython-3.1.7.tar.gz"
 
     version('3.1.8', sha256='49d4f859bda7bd6ef9ce72d9a2cddb6a59dd70f34a18ce409670bc655431c517')
-    version('3.1.7', sha256='974ded8ca74441cadc8d5c32123595347a7e43d6fefde439735601e6d3a8716b')
     version('3.1.6', sha256='00d459b1fd2d4a2106252867701f7303485654bdb115275fa6f788756d18879e')
     version('3.1.5', sha256='2f7f9716afecc099bebf4d1a5e4a7df96f32c8255254e83642d8acf70f1b82c3')
     version('3.1.4', sha256='946e9c1daa755b8d4aaaad7f96c3fb4ac99ba36379b4355d6a3a4966ba68ca12')
