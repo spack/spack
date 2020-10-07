@@ -20,6 +20,6 @@ class PyDockerpyCreds(PythonPackage):
     version('0.2.0', sha256='f2838348e1175079e3062bf0769b9fa5070c29f4d94435674b9f8a76144f4e5b')
     version('0.1.0', sha256='f7ab290cb536e7ef1c774d4eb5df86237e579a9c7a87805da39ff07bd14e0aff')
 
-    depends_on('python@2,2.7,3,3.4:', type=('build', 'run'))
+    depends_on('python@2.0:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-six',        type=('build', 'run'))
