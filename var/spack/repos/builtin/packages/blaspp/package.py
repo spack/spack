@@ -33,6 +33,8 @@ class Blaspp(CMakePackage, CudaPackage):
     depends_on('cmake@3.15.0:', type='build')
     depends_on('blas')
 
+    conflicts('^openblas@0.3.6:', msg='Testing errors in OpenBLAS >0.3.6')
+
     def cmake_args(self):
         spec = self.spec
         args = []
