@@ -12,7 +12,7 @@ class OpenclHeaders(BundlePackage):
 
     homepage = "https://www.khronos.org/registry/OpenCL/"
 
-    version('2.2')
+    version('3.0')
 
-    depends_on('opencl-c-headers')
-    depends_on('opencl-clhpp')
+    depends_on('opencl-c-headers@2020.06.16:')
+    depends_on('opencl-clhpp@2.0.12:')
