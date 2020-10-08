@@ -16,7 +16,7 @@ class Camp(CMakePackage, CudaPackage):
     git      = "https://github.com/LLNL/camp.git"
 
     version('master', branch='master', submodules='True')
-    version('0.1.0', tag='v0.1.0', submodules='True')
+    version('0.1.0', url='https://github.com/LLNL/camp/archive/v0.1.0.tar.gz')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', type='build', when="+cuda")
