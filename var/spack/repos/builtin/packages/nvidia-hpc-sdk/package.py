@@ -61,13 +61,13 @@ class NvidiaHpcSdk(Package, CudaPackage):
 	prefix_new = Prefix(join_path(self.prefix,
 		platform.system()+'_'+platform.machine(), target_version))
 
-	env.set('target', platform.system()+'_'+platform.machine())
-	env.set('version', target_version)
-	env.set('NVHPC', prefix_new)
+        env.set('target', platform.system()+'_'+platform.machine())
+        env.set('version', target_version)
+        env.set('NVHPC', prefix_new)
 
-	env.set('PATH', prefix_new.compilers.bin)
-	env.set('LD_LIBRARY_PATH', prefix_new.compilers.lib)
-	env.set('MANPATH', prefix_new.compilers.man)
+        env.set('PATH', prefix_new.compilers.bin)
+        env.set('LD_LIBRARY_PATH', prefix_new.compilers.lib)
+        env.set('MANPATH', prefix_new.compilers.man)
 
         env.set('F77', join_path(prefix_new.compilers.bin, 'nvfortran'))
         env.set('F90', join_path(prefix_new.compilers.bin, 'nvfortran'))
