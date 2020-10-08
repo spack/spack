@@ -18,7 +18,7 @@ class PyTransformers(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-tokenizers@0.5.2', type=('build', 'run'))
+    depends_on('py-tokenizers', type=('build', 'run'))
     depends_on('py-dataclasses', when='^python@:3.6', type=('build', 'run'))
     depends_on('py-boto3', type=('build', 'run'))
     depends_on('py-filelock', type=('build', 'run'))
@@ -27,3 +27,9 @@ class PyTransformers(PythonPackage):
     depends_on('py-regex@:2019.12.16,2019.12.18:', type=('build', 'run'))
     depends_on('py-sentencepiece', type=('build', 'run'))
     depends_on('py-sacremoses', type=('build', 'run'))
+
+    def patch(self):
+        filter_file('tokenizers == 0.8.1.rc2',
+                    'tokenizers >= 0.8.1.rc2',
+                    'setup.py',
+                    string=True)
