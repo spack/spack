@@ -6,6 +6,7 @@
 from spack import *
 from spack.util.prefix import Prefix
 import platform
+import os
 
 
 class NvidiaHpcSdk(Package, CudaPackage):
