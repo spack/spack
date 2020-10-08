@@ -14,24 +14,16 @@ from spack.version import ver
 
 #: compiler symlink mappings for mixed f77 compilers
 f77_mapping = [
-    ('gfortran', 'clang/gfortran'),
-    ('xlf_r', 'xl_r/xlf_r'),
-    ('xlf', 'xl/xlf'),
-    ('pgfortran', 'pgi/pgfortran'),
-    ('ifort', 'intel/ifort')
+    ('flang')
 ]
 
 #: compiler symlink mappings for mixed f90/fc compilers
 fc_mapping = [
-    ('gfortran', 'clang/gfortran'),
-    ('xlf90_r', 'xl_r/xlf90_r'),
-    ('xlf90', 'xl/xlf90'),
-    ('pgfortran', 'pgi/pgfortran'),
-    ('ifort', 'intel/ifort')
+    ('flang'),
 ]
 
 
-class Clang(Compiler):
+class Aocc(Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['clang']
 
@@ -39,10 +31,10 @@ class Clang(Compiler):
     cxx_names = ['clang++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['flang', 'gfortran', 'xlf_r']
+    f77_names = ['flang']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['flang', 'gfortran', 'xlf90_r']
+    fc_names = ['flang']
 
     version_argument = '--version'
 
@@ -61,24 +53,11 @@ class Clang(Compiler):
     @property
     def link_paths(self):
         # clang links are always the same
-        link_paths = {'cc': 'clang/clang',
-                      'cxx': 'clang/clang++'}
-
-        # fortran links need to look at the actual compiler names from
-        # compilers.yaml to figure out which named symlink to use
-        for compiler_name, link_path in f77_mapping:
-            if self.f77 and compiler_name in self.f77:
-                link_paths['f77'] = link_path
-                break
-        else:
-            link_paths['f77'] = 'clang/flang'
-
-        for compiler_name, link_path in fc_mapping:
-            if self.fc and compiler_name in self.fc:
-                link_paths['fc'] = link_path
-                break
-        else:
-            link_paths['fc'] = 'clang/flang'
+        link_paths = {'cc': 'aocc/clang',
+                      'cxx': 'aocc/clang++',
+                      'f77': 'aocc/flang',
+                      'fc': 'aocc/flang',
+                      'f95': 'aocc/flang'}
 
         return link_paths
 
@@ -89,8 +68,12 @@ class Clang(Compiler):
     openmp_flag = "-fopenmp"
 
     @property
+    def openmp_flag(self):
+        return "-fopenmp"
+
+    @property
     def cxx11_flag(self):
-        if self.real_version < ver('3.3'):
+        if self.version < ver('3.3'):
             raise UnsupportedCompilerFlag(
                 self, "the C++11 standard", "cxx11_flag", "< 3.3"
             )
@@ -98,22 +81,22 @@ class Clang(Compiler):
 
     @property
     def cxx14_flag(self):
-        if self.real_version < ver('3.4'):
+        if self.version < ver('3.4'):
             raise UnsupportedCompilerFlag(
                 self, "the C++14 standard", "cxx14_flag", "< 3.5"
             )
-        elif self.real_version < ver('3.5'):
+        elif self.version < ver('3.5'):
             return "-std=c++1y"
 
         return "-std=c++14"
 
     @property
     def cxx17_flag(self):
-        if self.real_version < ver('3.5'):
+        if self.version < ver('3.5'):
             raise UnsupportedCompilerFlag(
                 self, "the C++17 standard", "cxx17_flag", "< 3.5"
             )
-        elif self.real_version < ver('5.0'):
+        elif self.version < ver('5.0'):
             return "-std=c++1z"
 
         return "-std=c++17"
@@ -124,7 +107,7 @@ class Clang(Compiler):
 
     @property
     def c11_flag(self):
-        if self.real_version < ver('6.1.0'):
+        if self.version < ver('6.1.0'):
             raise UnsupportedCompilerFlag(self,
                                           "the C11 standard",
                                           "c11_flag",
@@ -154,20 +137,20 @@ class Clang(Compiler):
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
         ver = 'unknown'
-        if ('Apple' in output) or ('AMD' in output):
+        if 'Apple' in output:
             return ver
 
         match = re.search(
             # Normal clang compiler versions are left as-is
-            r'clang version ([^ )]+)-svn[~.\w\d-]*|'
+            r'AMD clang version ([^ )]+)-svn[~.\w\d-]*|'
             # Don't include hyphenated patch numbers in the version
             # (see https://github.com/spack/spack/pull/14365 for details)
-            r'clang version ([^ )]+?)-[~.\w\d-]*|'
-            r'clang version ([^ )]+)',
+            r'AMD clang version ([^ )]+?)-[~.\w\d-]*|'
+            r'AMD clang version ([^ )]+)',
             output
         )
         if match:
-            ver = match.group(match.lastindex)
+            ver=output.split('AOCC_')[1].split('-')[0]
         return ver
 
     @classmethod
