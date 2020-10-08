@@ -32,6 +32,8 @@ OpenCL ICD loaders."""
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('ruby',     type='build')
+    depends_on('asciidoc-py3', type='build')
+    depends_on('xmlto',    type='build')
     depends_on('opencl-headers', when='+headers')
 
     provides('opencl@:2.2', when='+headers')
