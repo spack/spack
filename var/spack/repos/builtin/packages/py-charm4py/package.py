@@ -5,7 +5,6 @@
 
 
 from spack import *
-import os.path
 
 
 class PyCharm4py(PythonPackage):
