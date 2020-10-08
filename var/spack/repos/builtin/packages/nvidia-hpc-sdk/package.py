@@ -59,7 +59,7 @@ class NvidiaHpcSdk(Package, CudaPackage):
         #TO-DO: Cleaner way to handle path building
         ver_build = self.version.split("_", 1)[1]
         target_version = ver_build[:2]+'.'+ver_build[:-1]
-        prefix_new = Prefix(join_path(self.prefix, 
+        prefix_new = Prefix(join_path(self.prefix,
           platform.system()+'_'+platform.machine(), target_version))
 
         env.set('target', platform.system()+'_'+platform.machine())
