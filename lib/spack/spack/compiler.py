@@ -342,12 +342,36 @@ class Compiler(object):
 
         E.g. C++11 flag checks.
         """
+#FTW
+#        import inspect
+#        print("FTW: file for re:", inspect.getfile(re))
+#        print("FTW@compilers.py:349: self._real_version: " , self._real_version)
+#        print("FTW: self.get_real_version(): " , self.get_real_version())
+#FTW above never returns, so need to drill into that
+#
+#        output = get_compiler_version_output(
+#            cc, cls.version_argument, tuple(cls.ignore_version_errors))
+#        print("FTW: output@354:", output);
+##        using_oneapi = "CPC" in output
+#        print("FTW: using_oneapi=", using_oneapi)
+#        if (using_oneapi and isinstance(self, Intel)):
+#            Intel.version_regex =  r'\((?:IFORT|ICC)\)|DPC\+\+ [^ ]+ [^ ]+ [^ ]+ \(([^ ]+)\)'
+#            print("FTW: using oneapi regex:", Intel.version_regex)
+#        else:
+#            print("FTW: using Intel regex:", Intel.version_regex)
+
         if not self._real_version:
+            print("FTW: not self._real_version is True: " , self._real_version)
             try:
+#                print("FTW: trying...")
+#                print("FTW: self.get_real_version(): " , self.get_real_version)
                 self._real_version = spack.version.Version(
                     self.get_real_version())
             except spack.util.executable.ProcessError:
+#                print("FTW: caught exception...")
                 self._real_version = self.version
+#FTW
+        print("FTW: Got self._real_version = " , self._real_version)
         return self._real_version
 
     def implicit_rpaths(self):
@@ -512,6 +536,7 @@ class Compiler(object):
     # compilers on PATH based systems, and do not set up the run environment of
     # the compiler. This method can be called on `module` based systems as well
     def get_real_version(self):
+        print("FTW@compiler.py:540: Entering get_real_version(", self, ")") 
         """Query the compiler for its version.
 
         This is the "real" compiler version, regardless of what is in the
@@ -525,6 +550,7 @@ class Compiler(object):
             output = cc(self.version_argument,
                         output=str, error=str,
                         ignore_errors=tuple(self.ignore_version_errors))
+            print("FTW@compiler.py:554: Exiting get_real_version() by returning self.extract_version_from_output(output)") 
             return self.extract_version_from_output(output)
 
     #
@@ -544,8 +570,33 @@ class Compiler(object):
     @classmethod
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
+        print("FTW@complier.py:574: entering extract_version_from_output(", cls, ", ", output, ")")
         """Extracts the version from compiler's output."""
+        print("FTW: extract_version_from_output: using cls.version_regex:", cls.version_regex)
+        print("FTW: extract_version_from_output: output:", output)
+        print("FTW: extract_version_from_output: cls:", cls)
+
+        print("FTW: output@579:", output);
+        using_oneapi = "DPC" in output
+        print("FTW: got using_oneapi=", using_oneapi)
+        print("FTW: cls = ", cls)
+#FTW: Not an instance, it's the class itself... so need to figure out how to test that
+        print("FTW@compilers.py:582: cls ?= spack.compilers.Intel:", cls == spack.compilers.Intel)
+        if (using_oneapi and (cls == spack.compilers.Intel)):
+            print("FTW@compilers.py:583: got using_oneapi and isinstance")
+            spack.compilers.Intel.version_regex =  r'\((?:IFORT|ICC)\)|DPC\+\+ [^ ]+ [^ ]+ [^ ]+ \(([^ ]+)\)'
+            print("FTW: using oneapi regex:", spack.compilers.Intel.version_regex)
+        else:
+            print("FTW: using Intel regex:", spack.compilers.Intel.version_regex)
+        print("FTW if I get this far, it's probably ok")
+
+        import inspect
+#        print("FTW: classmethod:", inspect.getfile(classmethod))
+        print("FTW: file for cls:", inspect.getfile(cls))
         match = re.search(cls.version_regex, output)
+#FTW
+        print("FTW: match =", match)
+#this is returning None
         return match.group(1) if match else 'unknown'
 
     @classmethod
