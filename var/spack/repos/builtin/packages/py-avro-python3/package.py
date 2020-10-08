@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyAvroPython3(PythonPackage):
-    """Apache Avro™ is a data serialization system.
+    """Apache Avro is a data serialization system.
     Note: lang/py3 version (this package) will be deprecated and lang/py
     functions will be made available for both python2 and python3."""
 
