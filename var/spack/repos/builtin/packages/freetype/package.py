@@ -32,6 +32,12 @@ class Freetype(AutotoolsPackage):
 
     patch('windows.patch', when='@2.9.1')
 
+    @property
+    def headers(self):
+        headers = find_headers('*', self.prefix.include, recursive=True)
+        headers.directories = [self.prefix.include.freetype2]
+        return headers
+
     def configure_args(self):
         args = ['--with-harfbuzz=no']
         if self.spec.satisfies('@2.9.1:'):

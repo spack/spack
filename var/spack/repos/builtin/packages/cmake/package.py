@@ -2,42 +2,52 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
 import re
-import os
 
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
-       tools designed to build, test and package software."""
+    tools designed to build, test and package software.
+    """
     homepage = 'https://www.cmake.org'
-    url      = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
+    url = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
     maintainers = ['chuckatkins']
 
-    executables = ['cmake']
+    executables = ['^cmake$']
 
+    version('3.18.2',   sha256='5d4e40fc775d3d828c72e5c45906b4d9b59003c9433ff1b36a1cb552bbd51d7e')
+    version('3.18.1',   sha256='c0e3338bd37e67155b9d1e9526fec326b5c541f74857771b7ffed0c46ad62508')
     version('3.18.0',   sha256='83b4ffcb9482a73961521d2bafe4a16df0168f03f56e6624c419c461e5317e29')
+    version('3.17.4',   sha256='86985d73d0a63ec99c236aab5287316e252164f33d7c4cb160954a980c71f36f')
     version('3.17.3',   sha256='0bd60d512275dc9f6ef2a2865426a184642ceb3761794e6b65bff233b91d8c40')
     version('3.17.1',   sha256='3aa9114485da39cbd9665a0bfe986894a282d5f0882b1dea960a739496620727')
     version('3.17.0',   sha256='b74c05b55115eacc4fa2b77a814981dbda05cdc95a53e279fe16b7b272f00847')
+    version('3.16.8',   sha256='177434021132686cb901fea7db9fa2345efe48d566b998961594d5cc346ac588')
+    version('3.16.7',   sha256='5f49c95a2933b1800f14840f3a389f4cef0b19093985a35053b43f38ec21358f')
+    version('3.16.6',   sha256='6f6ff1a197851b0fa8412ff5de602e6717a4eb9509b2c385b08589c4e7a16b62')
     version('3.16.5',   sha256='5f760b50b8ecc9c0c37135fae5fbf00a2fef617059aa9d61c1bb91653e5a8bfc')
+    version('3.16.4',   sha256='9bcc8c114d9da603af9512083ed7d4a39911d16105466beba165ba8fe939ac2c')
+    version('3.16.3',   sha256='e54f16df9b53dac30fd626415833a6e75b0e47915393843da1825b096ee60668')
     version('3.16.2',   sha256='8c09786ec60ca2be354c29829072c38113de9184f29928eb9da8446a5f2ce6a9')
     version('3.16.1',   sha256='a275b3168fa8626eca4465da7bb159ff07c8c6cb0fb7179be59e12cbdfa725fd')
     version('3.16.0',   sha256='6da56556c63cab6e9a3e1656e8763ed4a841ac9859fefb63cbe79472e67e8c5f')
+    version('3.15.7',   sha256='71999d8a14c9b51708847371250a61533439a7331eb7702ac105cfb3cb1be54b')
+    version('3.15.6',   sha256='3fa17992ac97d3fc856ffba5d3b10578744ea5b4736818f01e6067f0253b2db5')
     version('3.15.5',   sha256='fbdd7cef15c0ced06bb13024bfda0ecc0dedbcaaaa6b8a5d368c75255243beb4')
     version('3.15.4',   sha256='8a211589ea21374e49b25fc1fc170e2d5c7462b795f1b29c84dd0e984301ed7a')
     version('3.15.3',   sha256='13958243a01365b05652fa01b21d40fa834f70a9e30efa69c02604e64f58b8f5')
     version('3.15.2',   sha256='539088cb29a68e6d6a8fba5c00951e5e5b1a92c68fa38a83e1ed2f355933f768')
     version('3.15.1',   sha256='18dec548d8f8b04d53c60f9cedcebaa6762f8425339d1e2c889c383d3ccdd7f7')
     version('3.15.0',   sha256='0678d74a45832cacaea053d85a5685f3ed8352475e6ddf9fcb742ffca00199b5')
+    version('3.14.7',   sha256='9221993e0af3e6d10124d840ff24f5b2f3b884416fca04d3312cb0388dec1385')
+    version('3.14.6',   sha256='4e8ea11cabe459308671b476469eace1622e770317a15951d7b55a82ccaaccb9')
     version('3.14.5',   sha256='505ae49ebe3c63c595fa5f814975d8b72848447ee13b6613b0f8b96ebda18c06')
     version('3.14.4',   sha256='00b4dc9b0066079d10f16eed32ec592963a44e7967371d2f5077fd1670ff36d9')
     version('3.14.3',   sha256='215d0b64e81307182b29b63e562edf30b3875b834efdad09b3fcb5a7d2f4b632')
     version('3.14.2',   sha256='a3cbf562b99270c0ff192f692139e98c605f292bfdbc04d70da0309a5358e71e')
     version('3.14.1',   sha256='7321be640406338fc12590609c42b0fae7ea12980855c1be363d25dcd76bb25f')
     version('3.14.0',   sha256='aa76ba67b3c2af1946701f847073f4652af5cbd9f141f221c97af99127e75502')
+    version('3.13.5',   sha256='526db6a4b47772d1943b2f86de693e712f9dacf3d7c13b19197c9bef133766a5')
     version('3.13.4',   sha256='fdd928fee35f472920071d1c7f1a6a2b72c9b25e04f7a37b409349aef3f20e9b')
     version('3.13.3',   sha256='665f905036b1f731a2a16f83fb298b1fb9d0f98c382625d023097151ad016b25')
     version('3.13.2',   sha256='c925e7d2c5ba511a69f43543ed7b4182a7d446c274c7480d0e42cd933076ae25')
@@ -100,12 +110,11 @@ class Cmake(Package):
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
-    # Tries to build an Objective-C file from libuv with GCC's C frontend
-    # https://gitlab.kitware.com/cmake/cmake/-/issues/20620
-    # https://github.com/libuv/libuv/issues/2805
+    # Does not compile and is not covered in upstream CI (yet).
     conflicts('%gcc platform=darwin',
-              msg='CMake does not compile with GCC on macOS yet, use clang. '
-                  'See: https://gitlab.kitware.com/cmake/cmake/-/issues/20620')
+              msg='CMake does not compile with GCC on macOS yet, '
+                  'please use %apple-clang. '
+                  'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
 
     # Really this should conflict since it's enabling or disabling openssl for
     # CMake's internal copy of curl.  Ideally we'd want a way to have the
@@ -162,20 +171,10 @@ class Cmake(Package):
     phases = ['bootstrap', 'build', 'install']
 
     @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        exe_to_path = dict(
-            (os.path.basename(p), p) for p in exes_in_prefix
-        )
-        if 'cmake' not in exe_to_path:
-            return None
-
-        cmake = spack.util.executable.Executable(exe_to_path['cmake'])
-        output = cmake('--version', output=str)
-        if output:
-            match = re.search(r'cmake.*version\s+(\S+)', output)
-            if match:
-                version_str = match.group(1)
-                return Spec('cmake@{0}'.format(version_str))
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'cmake.*version\s+(\S+)', output)
+        return match.group(1) if match else None
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':

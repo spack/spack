@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 from six import iteritems
 
 
@@ -55,6 +53,10 @@ class Rust(Package):
         default=True,
         description='Install Rust source files'
     )
+    variant(
+        'extra_targets', default='none', multi=True,
+        description='Triples for extra targets to enable. For supported targets, see: https://doc.rust-lang.org/nightly/rustc/platform-support.html'
+    )
 
     depends_on('python@2.7:', type='build')
     depends_on('python@2.7:2.8', when='@:1.43', type='build')
@@ -85,6 +87,7 @@ class Rust(Package):
     # The `x.py` bootstrapping script did not exist prior to Rust 1.17. It
     # would be possible to support both, but for simplicitly, we only support
     # Rust 1.17 and newer
+    version('1.46.0', sha256='2d6a3b7196db474ba3f37b8f5d50a1ecedff00738d7846840605b42bfc922728')
     version('1.45.1', sha256='ea53e6424e3d1fe56c6d77a00e72c5d594b509ec920c5a779a7b8e1dbd74219b')
     version('1.44.1', sha256='7e2e64cb298dd5d5aea52eafe943ba0458fa82f2987fdcda1ff6f537b6f88473')
     version('1.44.0', sha256='bf2df62317e533e84167c5bc7d4351a99fdab1f9cd6e6ba09f51996ad8561100')
@@ -129,6 +132,12 @@ class Rust(Package):
     # This dictionary contains a version: hash dictionary for each supported
     # Rust target.
     rust_releases = {
+        '1.46.0': {
+            'x86_64-unknown-linux-gnu':      'e3b98bc3440fe92817881933f9564389eccb396f5f431f33d48b979fa2fbdcf5',
+            'powerpc64le-unknown-linux-gnu': '89e2f4761d257f017a4b6aa427f36ac0603195546fa2cfded8c899789832941c',
+            'aarch64-unknown-linux-gnu':     'f0c6d630f3dedb3db69d69ed9f833aa6b472363096f5164f1068c7001ca42aeb',
+            'x86_64-apple-darwin':           '82d61582a3772932432a99789c3b3bd4abe6baca339e355048ca9efb9ea5b4db'
+        },
         '1.45.1': {
             'x86_64-unknown-linux-gnu':      '76dc9f05b3bfd0465d6e6d22bc9fd5db0b473e3548e8b3d266ecfe4d9e5dca16',
             'powerpc64le-unknown-linux-gnu': '271846e4f5adc9a33754794c2ffab851f9e0313c8c1315264e7db5c8f63ab7ab',
@@ -496,6 +505,17 @@ class Rust(Package):
 
         ar = which('ar', required=True)
 
+        extra_targets = []
+        if self.spec.variants['extra_targets'].value != 'none':
+            extra_targets = list(self.spec.variants['extra_targets'].value)
+
+        targets = [self.get_rust_target()] + extra_targets
+        target_spec = 'target=[' + \
+            ','.join('"{0}"'.format(target) for target in targets) + ']'
+        target_specs = '\n'.join(
+            '[target.{0}]\nar = "{1}"\n'.format(target, ar.path)
+            for target in targets)
+
         # build.tools was introduced in Rust 1.25
         tools_spec = \
             'tools={0}'.format(tools) if self.check_newer('1.25') else ''
@@ -529,6 +549,7 @@ docs = false
 vendor = true
 extended = true
 verbose = 2
+{target_spec}
 {tools_spec}
 {rustfmt_spec}
 
@@ -537,8 +558,7 @@ channel = "stable"
 rpath = true
 {deny_warnings_spec}
 
-[target.{target}]
-ar = "{ar}"
+{target_specs}
 
 [install]
 prefix = "{prefix}"
@@ -547,9 +567,9 @@ sysconfdir = "etc"
                 cargo=join_path(boot_bin, 'cargo'),
                 rustc=join_path(boot_bin, 'rustc'),
                 prefix=prefix,
-                target=target,
                 deny_warnings_spec=deny_warnings_spec,
-                ar=ar.path,
+                target_spec=target_spec,
+                target_specs=target_specs,
                 tools_spec=tools_spec,
                 rustfmt_spec=rustfmt_spec
             )

@@ -5,6 +5,7 @@
 
 from spack import *
 import os
+import re
 
 
 class Flex(AutotoolsPackage):
@@ -12,6 +13,8 @@ class Flex(AutotoolsPackage):
 
     homepage = "https://github.com/westes/flex"
     url = "https://github.com/westes/flex/releases/download/v2.6.1/flex-2.6.1.tar.gz"
+
+    executables = ['^flex$']
 
     version('2.6.4', sha256='e87aae032bf07c26f85ac0ed3250998c37621d95f8bd748b31f15b33c45ee995')
     version('2.6.3', sha256='68b2742233e747c462f781462a2a1e299dc6207401dac8f0bbb316f48565c2aa')
@@ -42,6 +45,25 @@ class Flex(AutotoolsPackage):
     # - https://github.com/spack/spack/issues/6942
     # - https://github.com/westes/flex/issues/241
     patch('https://github.com/westes/flex/commit/24fd0551333e7eded87b64dd36062da3df2f6380.patch', sha256='09c22e5c6fef327d3e48eb23f0d610dcd3a35ab9207f12e0f875701c677978d3', when='@2.6.4')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'flex\s+(\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        results = []
+        for exe in exes:
+            variants = ''
+            path = os.path.dirname(exe)
+            if 'lex' in os.listdir(path):
+                variants += "+lex"
+            else:
+                variants += "~lex"
+            results.append(variants)
+        return results
 
     @when('@:2.6.0,2.6.4')
     def autoreconf(self, spec, prefix):

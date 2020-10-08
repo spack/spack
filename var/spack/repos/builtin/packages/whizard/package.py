@@ -19,7 +19,8 @@ class Whizard(AutotoolsPackage):
 
     version('master', branch="master")
     version('3.0.0_alpha', sha256='4636e5a10350bb67ccc98cd105bc891ea04f3393c2420f81be3d21240be20009')
-    version('2.8.4', sha256='49893f077484470934a9d6e1545bbda7d398076568bceda00880d58132f26432', preferred=True)
+    version('2.8.5', sha256='0f633e5620aa7dd50336b492e8a76bfae15b15943ea842010346ad7610818ecd', preferred=True)
+    version('2.8.4', sha256='49893f077484470934a9d6e1545bbda7d398076568bceda00880d58132f26432')
     version('2.8.3', sha256='96a9046682d4b992b477eb96d561c3db789207e1049b60c9bd140db40eb1e5d7')
     version('2.8.2', sha256='32c9be342d01b3fc6f947fddce74bf2d81ece37fb39bca1f37778fb0c07e2568')
     version('2.8.1', sha256='0c759ce0598e25f38e04659f745c5963d238c4b5c12209f16449b6c0bc6dc64e')
@@ -55,7 +56,7 @@ class Whizard(AutotoolsPackage):
             description="data visualization with latex")
 
     depends_on('ocaml', type='build', when="@3:")
-    depends_on('ocaml@:4.8.2', type='build', when="@:2.99.99")
+    depends_on('ocaml~force-safe-string', type='build', when="@:2.99.99")
     depends_on('hepmc', when="hepmc=2")
     depends_on('hepmc3', when="hepmc=3")
     depends_on('lcio', when="+lcio")
@@ -88,7 +89,6 @@ class Whizard(AutotoolsPackage):
             '--enable-lhapdf=%s' % ("yes" if "+lhapdf" in spec else "no"),
             '--enable-openloops=%s' % ("yes" if "+openloops" in spec
                                        else "no"),
-            '--with-openloops=%s' % spec['openloops'].prefix,
             # todo: hoppet
             # todo: recola
             # todo: looptools
@@ -96,14 +96,14 @@ class Whizard(AutotoolsPackage):
             # todo: pythia6
         ]
 
+        if "+openloops" in spec:
+            args.append('--with-openloops=%s' % spec['openloops'].prefix)
         if "+lcio" in spec:
             args.append('--with-lcio=%s' % spec['lcio'].prefix)
-
         if "hepmc=3" in spec:
             args.append('--with-hepmc=%s' % spec['hepmc3'].prefix)
         if "hepmc=2" in spec:
             args.append('--with-hepmc=%s' % spec['hepmc'].prefix)
-
         if "+openmp" not in spec:
             args.append('--disable-openmp')
         return args

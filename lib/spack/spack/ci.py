@@ -4,9 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import base64
+import copy
 import datetime
 import json
 import os
+import re
 import shutil
 import tempfile
 import zlib
@@ -26,7 +28,7 @@ import spack.config as cfg
 import spack.environment as ev
 from spack.error import SpackError
 import spack.hash_types as ht
-from spack.main import SpackCommand
+import spack.main
 import spack.repo
 from spack.spec import Spec
 import spack.util.spack_yaml as syaml
@@ -37,8 +39,8 @@ JOB_RETRY_CONDITIONS = [
     'always',
 ]
 
-spack_gpg = SpackCommand('gpg')
-spack_compiler = SpackCommand('compiler')
+spack_gpg = spack.main.SpackCommand('gpg')
+spack_compiler = spack.main.SpackCommand('compiler')
 
 
 class TemporaryDirectory(object):
@@ -421,12 +423,53 @@ def spec_matches(spec, match_string):
     return spec.satisfies(match_string)
 
 
-def find_matching_config(spec, ci_mappings):
+def copy_attributes(attrs_list, src_dict, dest_dict):
+    for runner_attr in attrs_list:
+        if runner_attr in src_dict:
+            if runner_attr in dest_dict and runner_attr == 'tags':
+                # For 'tags', we combine the lists of tags, while
+                # avoiding duplicates
+                for tag in src_dict[runner_attr]:
+                    if tag not in dest_dict[runner_attr]:
+                        dest_dict[runner_attr].append(tag)
+            elif runner_attr in dest_dict and runner_attr == 'variables':
+                # For 'variables', we merge the dictionaries.  Any conflicts
+                # (i.e. 'runner-attributes' has same variable key as the
+                # higher level) we resolve by keeping the more specific
+                # 'runner-attributes' version.
+                for src_key, src_val in src_dict[runner_attr].items():
+                    dest_dict[runner_attr][src_key] = copy.deepcopy(
+                        src_dict[runner_attr][src_key])
+            else:
+                dest_dict[runner_attr] = copy.deepcopy(src_dict[runner_attr])
+
+
+def find_matching_config(spec, gitlab_ci):
+    runner_attributes = {}
+    overridable_attrs = [
+        'image',
+        'tags',
+        'variables',
+        'before_script',
+        'script',
+        'after_script',
+    ]
+
+    copy_attributes(overridable_attrs, gitlab_ci, runner_attributes)
+
+    ci_mappings = gitlab_ci['mappings']
     for ci_mapping in ci_mappings:
         for match_string in ci_mapping['match']:
             if spec_matches(spec, match_string):
-                return ci_mapping['runner-attributes']
-    return None
+                if 'runner-attributes' in ci_mapping:
+                    copy_attributes(overridable_attrs,
+                                    ci_mapping['runner-attributes'],
+                                    runner_attributes)
+                return runner_attributes
+    else:
+        return None
+
+    return runner_attributes
 
 
 def pkg_name_from_spec_label(spec_label):
@@ -449,7 +492,6 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
 
 
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
-                            custom_spack_repo=None, custom_spack_ref=None,
                             run_optimizer=False, use_dependencies=False):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
@@ -462,7 +504,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         tty.die('Environment yaml does not have "gitlab-ci" section')
 
     gitlab_ci = yaml_root['gitlab-ci']
-    ci_mappings = gitlab_ci['mappings']
 
     final_job_config = None
     if 'final-stage-rebuild-index' in gitlab_ci:
@@ -487,22 +528,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     is_pr_pipeline = (
         os.environ.get('SPACK_IS_PR_PIPELINE', '').lower() == 'true'
     )
-
-    # Make sure we use a custom spack if necessary
-    before_script = None
-    after_script = None
-    if custom_spack_repo:
-        if not custom_spack_ref:
-            custom_spack_ref = 'develop'
-        before_script = [
-            ('git clone "{0}"'.format(custom_spack_repo)),
-            'pushd ./spack && git checkout "{0}" && popd'.format(
-                custom_spack_ref),
-            '. "./spack/share/spack/setup-env.sh"',
-        ]
-        after_script = [
-            'rm -rf "./spack"'
-        ]
 
     ci_mirrors = yaml_root['mirrors']
     mirror_urls = [url for url in ci_mirrors.values()]
@@ -580,7 +605,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 release_spec = root_spec[pkg_name]
 
                 runner_attribs = find_matching_config(
-                    release_spec, ci_mappings)
+                    release_spec, gitlab_ci)
 
                 if not runner_attribs:
                     tty.warn('No match found for {0}, skipping it'.format(
@@ -604,18 +629,26 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     except AttributeError:
                         image_name = build_image
 
+                job_script = [
+                    'spack env activate --without-view .',
+                    'spack ci rebuild',
+                ]
+                if 'script' in runner_attribs:
+                    job_script = [s for s in runner_attribs['script']]
+
+                before_script = None
+                if 'before_script' in runner_attribs:
+                    before_script = [
+                        s for s in runner_attribs['before_script']
+                    ]
+
+                after_script = None
+                if 'after_script' in runner_attribs:
+                    after_script = [s for s in runner_attribs['after_script']]
+
                 osname = str(release_spec.architecture)
                 job_name = get_job_name(phase_name, strip_compilers,
                                         release_spec, osname, build_group)
-
-                debug_flag = ''
-                if 'enable-debug-messages' in gitlab_ci:
-                    debug_flag = '-d '
-
-                job_scripts = [
-                    'spack env activate --without-view .',
-                    'spack {0}ci rebuild'.format(debug_flag),
-                ]
 
                 compiler_action = 'NONE'
                 if len(phases) > 1:
@@ -717,7 +750,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 job_object = {
                     'stage': stage_name,
                     'variables': variables,
-                    'script': job_scripts,
+                    'script': job_script,
                     'tags': tags,
                     'artifacts': {
                         'paths': artifact_paths,
@@ -773,9 +806,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         final_stage = 'stage-rebuild-index'
         final_job = {
             'stage': final_stage,
-            'script': 'spack buildcache update-index -d {0}'.format(
+            'script': 'spack buildcache update-index --keys -d {0}'.format(
                 mirror_urls[0]),
-            'tags': final_job_config['tags']
+            'tags': final_job_config['tags'],
+            'when': 'always'
         }
         if 'image' in final_job_config:
             final_job['image'] = final_job_config['image']
@@ -787,6 +821,26 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         stage_names.append(final_stage)
 
     output_object['stages'] = stage_names
+
+    # Capture the version of spack used to generate the pipeline, transform it
+    # into a value that can be passed to "git checkout", and save it in a
+    # global yaml variable
+    spack_version = spack.main.get_version()
+    version_to_clone = None
+    v_match = re.match(r"^\d+\.\d+\.\d+$", spack_version)
+    if v_match:
+        version_to_clone = 'v{0}'.format(v_match.group(0))
+    else:
+        v_match = re.match(r"^[^-]+-[^-]+-([a-f\d]+)$", spack_version)
+        if v_match:
+            version_to_clone = v_match.group(1)
+        else:
+            version_to_clone = spack_version
+
+    output_object['variables'] = {
+        'SPACK_VERSION': spack_version,
+        'SPACK_CHECKOUT_VERSION': version_to_clone,
+    }
 
     sorted_output = {}
     for output_key, output_value in sorted(output_object.items()):

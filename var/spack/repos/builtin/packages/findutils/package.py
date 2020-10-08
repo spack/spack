@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import re
 
 
 class Findutils(AutotoolsPackage, GNUMirrorPackage):
@@ -12,6 +13,8 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/findutils/"
     gnu_mirror_path = "findutils/findutils-4.6.0.tar.gz"
+
+    executables = ['^find$']
 
     version('4.6.0',  sha256='ded4c9f73731cd48fec3b6bdaccce896473b6d8e337e9612e16cf1431bb1169d')
     version('4.4.2',  sha256='434f32d171cbc0a5e72cfc5372c6fc4cb0e681f8dce566a0de5b6fccd702b62a')
@@ -44,6 +47,12 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
     patch('https://src.fedoraproject.org/rpms/findutils/raw/97ba2d7a18d1f9ae761b6ff0b4f1c4d33d7a8efc/f/findutils-4.6.0-gnulib-makedev.patch', sha256='bd9e4e5cc280f9753ae14956c4e4aa17fe7a210f55dd6c84aa60b12d106d47a2', when='@4.6.0')
 
     build_directory = 'spack-build'
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'find \(GNU findutils\)\s+(\S+)', output)
+        return match.group(1) if match else None
 
     @property
     def force_autoreconf(self):

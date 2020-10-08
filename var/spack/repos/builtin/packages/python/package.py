@@ -37,7 +37,7 @@ class Python(AutotoolsPackage):
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
-    version('3.7.8',  sha256='0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0', preferred=True)
+    version('3.7.8',  sha256='0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0')
     version('3.7.7',  sha256='8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a')
     version('3.7.6',  sha256='aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114')
     version('3.7.5',  sha256='8ecc681ea0600bbfb366f2b173f727b205bb825d93d2f0b286bc4e58d37693da')
@@ -129,7 +129,7 @@ class Python(AutotoolsPackage):
     variant('pyexpat',  default=True,  description='Build pyexpat module')
     variant('ctypes',   default=True,  description='Build ctypes module')
     variant('tkinter',  default=False, description='Build tkinter module')
-    variant('uuid',     default=False, description='Build uuid module')
+    variant('uuid',     default=True,  description='Build uuid module')
     variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
@@ -186,6 +186,10 @@ class Python(AutotoolsPackage):
     patch('cray-rpath-2.3.patch', when='@2.3:3.0.1 platform=cray')
     patch('cray-rpath-3.1.patch', when='@3.1:3.99  platform=cray')
 
+    # Ensure that distutils chooses correct compiler option for RPATH on fj:
+    patch('fj-rpath-2.3.patch', when='@2.3:3.0.1 %fj')
+    patch('fj-rpath-3.1.patch', when='@3.1:3.99  %fj')
+
     # Fixes an alignment problem with more aggressive optimization in gcc8
     # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
     patch('gcc-8-2.7.14.patch', when='@2.7.14 %gcc@8:')
@@ -219,6 +223,75 @@ class Python(AutotoolsPackage):
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
+
+    executables = [r'^python[\d.]*[mw]?$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        # Newer versions of Python support `--version`,
+        # but older versions only support `-V`
+        # Python 2 sends to STDERR, while Python 3 sends to STDOUT
+        # Output looks like:
+        #   Python 3.7.7
+        output = Executable(exe)('-V', output=str, error=str)
+        match = re.search(r'Python\s+(\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        python = Executable(exes[0])
+
+        variants = ''
+        for module in ['readline', 'sqlite3', 'dbm', 'nis',
+                       'zlib', 'bz2', 'lzma', 'ctypes', 'uuid']:
+            try:
+                python('-c', 'import ' + module, error=os.devnull)
+                variants += '+' + module
+            except ProcessError:
+                variants += '~' + module
+
+        # Some variants enable multiple modules
+        try:
+            python('-c', 'import ssl', error=os.devnull)
+            python('-c', 'import hashlib', error=os.devnull)
+            variants += '+ssl'
+        except ProcessError:
+            variants += '~ssl'
+
+        try:
+            python('-c', 'import xml.parsers.expat', error=os.devnull)
+            python('-c', 'import xml.etree.ElementTree', error=os.devnull)
+            variants += '+pyexpat'
+        except ProcessError:
+            variants += '~pyexpat'
+
+        # Some modules changed names in Python 3
+        if Version(version_str) >= Version('3'):
+            try:
+                python('-c', 'import tkinter', error=os.devnull)
+                variants += '+tkinter'
+            except ProcessError:
+                variants += '~tkinter'
+
+            try:
+                python('-c', 'import tkinter.tix', error=os.devnull)
+                variants += '+tix'
+            except ProcessError:
+                variants += '~tix'
+        else:
+            try:
+                python('-c', 'import Tkinter', error=os.devnull)
+                variants += '+tkinter'
+            except ProcessError:
+                variants += '~tkinter'
+
+            try:
+                python('-c', 'import Tix', error=os.devnull)
+                variants += '+tix'
+            except ProcessError:
+                variants += '~tix'
+
+        return variants
 
     def url_for_version(self, version):
         url = "https://www.python.org/ftp/python/{0}/Python-{1}.tgz"
@@ -601,6 +674,13 @@ class Python(AutotoolsPackage):
             # Ensure that uuid module works
             if '+uuid' in spec:
                 self.command('-c', 'import uuid')
+
+            # Ensure that tix module works
+            if '+tix' in spec:
+                if spec.satisfies('@3:'):
+                    self.command('-c', 'import tkinter.tix')
+                else:
+                    self.command('-c', 'import Tix')
 
     # ========================================================================
     # Set up environment to make install easy for python extensions.

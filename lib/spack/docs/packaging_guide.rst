@@ -645,7 +645,7 @@ multiple fields based on delimiters such as ``.``, ``-`` etc. Then
 matching fields are compared using the rules below:
 
 #. The following develop-like strings are greater (newer) than all
-   numbers and are ordered as ``develop > master > head > trunk``.
+   numbers and are ordered as ``develop > main > master > head > trunk``.
 
 #. Numbers are all less than the chosen develop-like strings above,
    and are sorted numerically.
@@ -1967,22 +1967,29 @@ exactly what kind of a dependency you need. For example:
    depends_on('cmake', type='build')
    depends_on('py-numpy', type=('build', 'run'))
    depends_on('libelf', type=('build', 'link'))
+   depends_on('py-pytest', type='test')
 
 The following dependency types are available:
 
-* **"build"**: made available during the project's build. The package will
-  be added to ``PATH``, the compiler include paths, and ``PYTHONPATH``.
-  Other projects which depend on this one will not have these modified
-  (building project X doesn't need project Y's build dependencies).
-* **"link"**: the project is linked to by the project. The package will be
-  added to the current package's ``rpath``.
-* **"run"**: the project is used by the project at runtime. The package will
-  be added to ``PATH`` and ``PYTHONPATH``.
+* **"build"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at build-time.
+* **"link"**: the dependency will be added to Spack's compiler
+  wrappers, automatically injecting the appropriate linker flags,
+  including ``-I``, ``-L``, and RPATH/RUNPATH handling.
+* **"run"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at run-time. This is true for both ``spack load``
+  and the module files Spack writes.
+* **"test"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at build-time. The only difference between
+  "build" and "test" is that test dependencies are only built
+  if the user requests unit tests with ``spack install --test``.
 
 One of the advantages of the ``build`` dependency type is that although the
 dependency needs to be installed in order for the package to be built, it
 can be uninstalled without concern afterwards. ``link`` and ``run`` disallow
-this because uninstalling the dependency would break the package.
+this because uninstalling the dependency would break the package. Another
+consequence of this is that ``build``-only dependencies do not affect the
+hash of the package. The same is true for ``test`` dependencies.
 
 If the dependency type is not specified, Spack uses a default of
 ``('build', 'link')``. This is the common case for compiler languages.
@@ -2003,7 +2010,8 @@ package. In that case, you could say something like:
 
 .. code-block:: python
 
-   variant('mpi', default=False)
+   variant('mpi', default=False, description='Enable MPI support')
+
    depends_on('mpi', when='+mpi')
 
 ``when`` can include constraints on the variant, version, compiler, etc. and
@@ -4054,21 +4062,223 @@ File functions
 Making a package discoverable with ``spack external find``
 ----------------------------------------------------------
 
-To make a package discoverable with
-:ref:`spack external find <cmd-spack-external-find>` you must
-define one or more executables associated with the package and must
-implement a method to generate a Spec when given an executable.
+The simplest way to make a package discoverable with
+:ref:`spack external find <cmd-spack-external-find>` is to:
 
-The executables are specified as a package level ``executables``
-attribute which is a list of strings (see example below); each string
-is treated as a regular expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3',
-'my-weird-gcc', etc.).
+1. Define the executables associated with the package
+2. Implement a method to determine the versions of these executables
 
-The method ``determine_spec_details`` has the following signature:
+^^^^^^^^^^^^^^^^^
+Minimal detection
+^^^^^^^^^^^^^^^^^
+
+The first step is fairly simple, as it requires only to
+specify a package level ``executables`` attribute:
 
 .. code-block:: python
 
-   def determine_spec_details(prefix, exes_in_prefix):
+   class Foo(Package):
+       # Each string provided here is treated as a regular expression, and
+       # would match for example 'foo', 'foobar', and 'bazfoo'.
+       executables = ['foo']
+
+This attribute must be a list of strings. Each string is a regular
+expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3', 'my-weird-gcc', etc.) to
+determine a set of system executables that might be part or this package. Note
+that to match only executables named 'gcc' the regular expression ``'^gcc$'``
+must be used.
+
+Finally to determine the version of each executable the ``determine_version``
+method must be implemented:
+
+.. code-block:: python
+
+   @classmethod
+   def determine_version(cls, exe):
+       """Return either the version of the executable passed as argument
+       or ``None`` if the version cannot be determined.
+
+       Args:
+           exe (str): absolute path to the executable being examined
+       """
+
+This method receives as input the path to a single executable and must return
+as output its version as a string; if the user cannot determine the version
+or determines that the executable is not an instance of the package, they can
+return None and the exe will be discarded as a candidate.
+Implementing the two steps above is mandatory, and gives the package the
+basic ability to detect if a spec is present on the system at a given version.
+
+.. note::
+   Any executable for which the ``determine_version`` method returns ``None``
+   will be discarded and won't appear in later stages of the workflow described below.
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Additional functionality
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Besides the two mandatory steps described above, there are also optional
+methods that can be implemented to either increase the amount of details
+being detected or improve the robustness of the detection logic in a package.
+
+""""""""""""""""""""""""""""""
+Variants and custom attributes
+""""""""""""""""""""""""""""""
+
+The ``determine_variants`` method can be optionally implemented in a package
+to detect additional details of the spec:
+
+.. code-block:: python
+
+   @classmethod
+   def determine_variants(cls, exes, version_str):
+       """Return either a variant string, a tuple of a variant string
+       and a dictionary of extra attributes that will be recorded in
+       packages.yaml or a list of those items.
+
+       Args:
+           exes (list of str): list of executables (absolute paths) that
+               live in the same prefix and share the same version
+           version_str (str): version associated with the list of
+               executables, as detected by ``determine_version``
+       """
+
+This method takes as input a list of executables that live in the same prefix and
+share the same version string, and returns either:
+
+1. A variant string
+2. A tuple of a variant string and a dictionary of extra attributes
+3. A list of items matching either 1 or 2 (if multiple specs are detected
+   from the set of executables)
+
+If extra attributes are returned, they will be recorded in ``packages.yaml``
+and be available for later reuse. As an example, the ``gcc`` package will record
+by default the different compilers found and an entry in ``packages.yaml``
+would look like:
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: 'gcc@9.0.1 languages=c,c++,fortran'
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/x86_64-linux-gnu-gcc-9
+             c++: /usr/bin/x86_64-linux-gnu-g++-9
+             fortran: /usr/bin/x86_64-linux-gnu-gfortran-9
+
+This allows us, for instance, to keep track of executables that would be named
+differently if built by Spack (e.g. ``x86_64-linux-gnu-gcc-9``
+instead of just ``gcc``).
+
+.. TODO: we need to gather some more experience on overriding 'prefix'
+   and other special keywords in extra attributes, but as soon as we are
+   confident that this is the way to go we should document the process.
+   See https://github.com/spack/spack/pull/16526#issuecomment-653783204
+
+"""""""""""""""""""""""""""
+Filter matching executables
+"""""""""""""""""""""""""""
+
+Sometimes defining the appropriate regex for the ``executables``
+attribute might prove to be difficult, especially if one has to
+deal with corner cases or exclude "red herrings". To help keeping
+the regular expressions as simple as possible, each package can
+optionally implement a ``filter_executables`` method:
+
+.. code-block:: python
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        """Return a filtered list of the executables in prefix"""
+
+which takes as input a prefix and a list of matching executables and
+returns a filtered list of said executables.
+
+Using this method has the advantage of allowing custom logic for
+filtering, and does not restrict the user to regular expressions
+only.  Consider the case of detecting the GNU C++ compiler. If we
+try to search for executables that match ``g++``, that would have
+the unwanted side effect of selecting also ``clang++`` - which is
+a C++ compiler provided by another package - if present on the system.
+Trying to select executables that contain ``g++`` but not ``clang``
+would be quite complicated to do using regex only. Employing the
+``filter_detected_exes`` method it becomes:
+
+.. code-block:: python
+
+   class Gcc(Package):
+      executables = ['g++']
+
+      def filter_detected_exes(cls, prefix, exes_in_prefix):
+         return [x for x in exes_in_prefix if 'clang' not in x]
+
+Another possibility that this method opens is to apply certain
+filtering logic when specific conditions are met (e.g. take some
+decisions on an OS and not on another).
+
+^^^^^^^^^^^^^^^^^^
+Validate detection
+^^^^^^^^^^^^^^^^^^
+
+To increase detection robustness, packagers may also implement a method
+to validate the detected Spec objects:
+
+.. code-block:: python
+
+   @classmethod
+   def validate_detected_spec(cls, spec, extra_attributes):
+       """Validate a detected spec. Raise an exception if validation fails."""
+
+This method receives a detected spec along with its extra attributes and can be
+used to check that certain conditions are met by the spec. Packagers can either
+use assertions or raise an ``InvalidSpecDetected`` exception when the check fails.
+In case the conditions are not honored the spec will be discarded and any message
+associated with the assertion or the exception will be logged as the reason for
+discarding it.
+
+As an example, a package that wants to check that the ``compilers`` attribute is
+in the extra attributes can implement this method like this:
+
+.. code-block:: python
+
+   @classmethod
+   def validate_detected_spec(cls, spec, extra_attributes):
+       """Check that 'compilers' is in the extra attributes."""
+       msg = ('the extra attribute "compilers" must be set for '
+              'the detected spec "{0}"'.format(spec))
+       assert 'compilers' in extra_attributes, msg
+
+or like this:
+
+.. code-block:: python
+
+   @classmethod
+   def validate_detected_spec(cls, spec, extra_attributes):
+       """Check that 'compilers' is in the extra attributes."""
+       if 'compilers' not in extra_attributes:
+           msg = ('the extra attribute "compilers" must be set for '
+                  'the detected spec "{0}"'.format(spec))
+           raise InvalidSpecDetected(msg)
+
+.. _determine_spec_details:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Custom detection workflow
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In the rare case when the mechanisms described so far don't fit the
+detection of a package, the implementation of all the methods above
+can be disregarded and instead a custom ``determine_spec_details``
+method can be implemented directly in the package class (note that
+the definition of the ``executables`` attribute is still required):
+
+.. code-block:: python
+
+   @classmethod
+   def determine_spec_details(cls, prefix, exes_in_prefix):
        # exes_in_prefix = a set of paths, each path is an executable
        # prefix = a prefix that is common to each path in exes_in_prefix
 
@@ -4076,14 +4286,13 @@ The method ``determine_spec_details`` has the following signature:
        # the package. Return one or more Specs for each instance of the
        # package which is thought to be installed in the provided prefix
 
-``determine_spec_details`` takes as parameters a set of discovered
-executables (which match those specified by the user) as well as a
-common prefix shared by all of those executables. The function must
-return one or more Specs associated with the executables (it can also
-return ``None`` to indicate that no provided executables are associated
-with the package).
+This method takes as input a set of discovered executables (which match
+those specified by the user) as well as a common prefix shared by all
+of those executables. The function must return one or more :py:class:`spack.spec.Spec` associated
+with the executables (it can also return ``None`` to indicate that no
+provided executables are associated with the package).
 
-Say for example we have a package called ``foo-package`` which
+As an example, consider a made-up package called ``foo-package`` which
 builds an executable called ``foo``. ``FooPackage`` would appear as
 follows:
 
@@ -4107,10 +4316,12 @@ follows:
                return
            # This implementation is lazy and only checks the first candidate
            exe_path = candidates[0]
-           exe = spack.util.executable.Executable(exe_path)
-           output = exe('--version')
+           exe = Executable(exe_path)
+           output = exe('--version', output=str, error=str)
            version_str = ...  # parse output for version string
-           return Spec('foo-package@{0}'.format(version_str))
+           return Spec.from_detection(
+               'foo-package@{0}'.format(version_str)
+           )
 
 .. _package-lifecycle:
 
@@ -4474,119 +4685,3 @@ might write:
    DWARF_PREFIX = $(spack location --install-dir libdwarf)
    CXXFLAGS += -I$DWARF_PREFIX/include
    CXXFLAGS += -L$DWARF_PREFIX/lib
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Build System Configuration Support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Imagine a developer creating a CMake or Autotools-based project in a
-local directory, which depends on libraries A-Z.  Once Spack has
-installed those dependencies, one would like to run ``cmake`` with
-appropriate command line and environment so CMake can find them.  The
-``spack setup`` command does this conveniently, producing a CMake
-configuration that is essentially the same as how Spack *would have*
-configured the project.  This can be demonstrated with a usage
-example:
-
-.. code-block:: console
-
-   $ cd myproject
-   $ spack setup myproject@local
-   $ mkdir build; cd build
-   $ ../spconfig.py ..
-   $ make
-   $ make install
-
-Notes:
-
-* Spack must have ``myproject/package.py`` in its repository for
-  this to work.
-* ``spack setup`` produces the executable script ``spconfig.py`` in
-  the local directory, and also creates the module file for the
-  package.  ``spconfig.py`` is normally run from the user's
-  out-of-source build directory.
-* The version number given to ``spack setup`` is arbitrary, just
-  like ``spack diy``.  ``myproject/package.py`` does not need to
-  have any valid downloadable versions listed (typical when a
-  project is new).
-* spconfig.py produces a CMake configuration that *does not* use the
-  Spack wrappers.  Any resulting binaries *will not* use RPATH,
-  unless the user has enabled it.  This is recommended for
-  development purposes, not production.
-* ``spconfig.py`` is human readable, and can serve as a developer
-  reference of what dependencies are being used.
-* ``make install`` installs the package into the Spack repository,
-  where it may be used by other Spack packages.
-* CMake-generated makefiles re-run CMake in some circumstances.  Use
-  of ``spconfig.py`` breaks this behavior, requiring the developer
-  to manually re-run ``spconfig.py`` when a ``CMakeLists.txt`` file
-  has changed.
-
-^^^^^^^^^^^^
-CMakePackage
-^^^^^^^^^^^^
-
-In order to enable ``spack setup`` functionality, the author of
-``myproject/package.py`` must subclass from ``CMakePackage`` instead
-of the standard ``Package`` superclass.  Because CMake is
-standardized, the packager does not need to tell Spack how to run
-``cmake; make; make install``.  Instead the packager only needs to
-create (optional) methods ``configure_args()`` and ``configure_env()``, which
-provide the arguments (as a list) and extra environment variables (as
-a dict) to provide to the ``cmake`` command.  Usually, these will
-translate variant flags into CMake definitions.  For example:
-
-.. code-block:: python
-
-   def cmake_args(self):
-       spec = self.spec
-       return [
-           '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
-           '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
-           '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
-           '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
-           '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')
-       ]
-
-If needed, a packager may also override methods defined in
-``StagedPackage`` (see below).
-
-^^^^^^^^^^^^^
-StagedPackage
-^^^^^^^^^^^^^
-
-``CMakePackage`` is implemented by subclassing the ``StagedPackage``
-superclass, which breaks down the standard ``Package.install()``
-method into several sub-stages: ``setup``, ``configure``, ``build``
-and ``install``.  Details:
-
-* Instead of implementing the standard ``install()`` method, package
-  authors implement the methods for the sub-stages
-  ``install_setup()``, ``install_configure()``,
-  ``install_build()``, and ``install_install()``.
-
-* The ``spack install`` command runs the sub-stages ``configure``,
-  ``build`` and ``install`` in order.  (The ``setup`` stage is
-  not run by default; see below).
-* The ``spack setup`` command runs the sub-stages ``setup``
-  and a dummy install (to create the module file).
-* The sub-stage install methods take no arguments (other than
-  ``self``).  The arguments ``spec`` and ``prefix`` to the standard
-  ``install()`` method may be accessed via ``self.spec`` and
-  ``self.prefix``.
-
-^^^^^^^^^^^^^
-GNU Autotools
-^^^^^^^^^^^^^
-
-The ``setup`` functionality is currently only available for
-CMake-based packages.  Extending this functionality to GNU
-Autotools-based packages would be easy (and should be done by a
-developer who actively uses Autotools).  Packages that use
-non-standard build systems can gain ``setup`` functionality by
-subclassing ``StagedPackage`` directly.
-
-.. Emacs local variables
-   Local Variables:
-   fill-column: 79
-   End:

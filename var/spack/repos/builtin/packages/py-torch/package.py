@@ -51,6 +51,7 @@ class PyTorch(PythonPackage, CudaPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.6.0', tag='v1.6.0', submodules=True)
     version('1.5.1', tag='v1.5.1', submodules=True)
     version('1.5.0', tag='v1.5.0', submodules=True)
     version('1.4.1', tag='v1.4.1', submodules=True)
@@ -121,9 +122,10 @@ class PyTorch(PythonPackage, CudaPackage):
     # Use Ninja generator to speed up build times
     # Automatically used if found
     depends_on('ninja@1.5:', type='build')
+    depends_on('python@3.6.1:', when='@1.6:', type=('build', 'run'))
     depends_on('python@3.5:', when='@1.5:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-future', when='@1.1: ^python@:2', type='build')
     depends_on('py-pyyaml', type=('build', 'run'))
@@ -192,6 +194,22 @@ class PyTorch(PythonPackage, CudaPackage):
     # Both build and install run cmake/make/make install
     # Only run once to speed up build times
     phases = ['install']
+
+    @property
+    def libs(self):
+        root = join_path(
+            self.prefix, self.spec['python'].package.site_packages_dir,
+            'torch', 'lib')
+        return find_libraries('libtorch', root)
+
+    @property
+    def headers(self):
+        root = join_path(
+            self.prefix, self.spec['python'].package.site_packages_dir,
+            'torch', 'include')
+        headers = find_all_headers(root)
+        headers.directories = [root]
+        return headers
 
     def setup_build_environment(self, env):
         def enable_or_disable(variant, keyword='USE', var=None, newer=False):

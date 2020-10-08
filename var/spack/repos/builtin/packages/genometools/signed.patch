@@ -1,0 +1,231 @@
+diff -u -r -N a/src/core/io.c b/src/core/io.c
+--- a/src/core/io.c	2020-08-17 15:23:43.000000000 +0900
++++ b/src/core/io.c	2020-08-24 11:45:55.000000000 +0900
+@@ -87,21 +87,29 @@
+   return rval ? false : true;
+ }
+ 
+-signed char gt_io_peek(GtIO *io)
++int gt_io_peek(GtIO *io)
+ {
+   char c;
+   gt_assert(io);
+-  gt_io_get_char(io, &c);
++  int e = gt_io_get_char(io, &c);
+   gt_io_unget_char(io, c);
+-  return c;
++  if (e == -1) {
++    return EOF;
++  } else{
++    return c;
++  }
+ }
+ 
+-signed char gt_io_next(GtIO *io)
++int gt_io_next(GtIO *io)
+ {
+   char c;
+   gt_assert(io);
+-  gt_io_get_char(io, &c);
+-  return c;
++  int e = gt_io_get_char(io, &c);
++  if (e == -1) {
++    return EOF;
++  } else{
++    return c;
++  }
+ }
+ 
+ GtUword gt_io_get_line_number(const GtIO *io)
+@@ -122,9 +130,9 @@
+   return io->path;
+ }
+ 
+-int gt_io_expect(GtIO *io, char expected_char, GtError *err)
++int gt_io_expect(GtIO *io, int expected_char, GtError *err)
+ {
+-  char cc;
++  int cc;
+   gt_error_check(err);
+   cc = gt_io_next(io);
+   if (cc != expected_char) {
+diff -u -r -N a/src/core/io.h b/src/core/io.h
+--- a/src/core/io.h	2020-08-17 15:23:43.000000000 +0900
++++ b/src/core/io.h	2020-08-24 11:46:21.000000000 +0900
+@@ -37,12 +37,12 @@
+ void          gt_io_unget_char(GtIO*, char);
+ bool          gt_io_line_start(const GtIO*);
+ bool          gt_io_has_char(GtIO*);
+-signed char   gt_io_peek(GtIO*);
+-signed char   gt_io_next(GtIO*);
++int           gt_io_peek(GtIO*);
++int           gt_io_next(GtIO*);
+ GtUword       gt_io_get_line_number(const GtIO*);
+ const char*   gt_io_get_filename(const GtIO*);
+ GtStr*        gt_io_get_filename_str(const GtIO*);
+ 
+-int           gt_io_expect(GtIO*, char expected_char, GtError*);
++int           gt_io_expect(GtIO*, int expected_char, GtError*);
+ 
+ #endif
+diff -u -r -N a/src/core/seq_iterator_fastq.c b/src/core/seq_iterator_fastq.c
+--- a/src/core/seq_iterator_fastq.c	2020-08-17 15:57:33.000000000 +0900
++++ b/src/core/seq_iterator_fastq.c	2020-08-20 17:28:23.000000000 +0900
+@@ -92,10 +92,10 @@
+ 
+ static inline int parse_fastq_seqname(GtSeqIteratorFastQ *seqit,
+                                       GtStr *buffer,
+-                                      char startchar,
++                                      int startchar,
+                                       GtError *err)
+ {
+-  char currentchar;
++  int currentchar;
+   bool firstsymbol = true;
+   gt_error_check(err);
+   gt_assert(seqit && buffer);
+@@ -127,7 +127,7 @@
+                                 GtError *err)
+ {
+   int had_err = 0;
+-  char currentchar;
++  int currentchar;
+   GtStr *tmp_str = gt_str_new();
+ 
+   gt_error_check(err);
+@@ -207,7 +207,7 @@
+ static inline int parse_fastq_qualities(GtSeqIteratorFastQ *seqit,
+                                         GT_UNUSED GtError *err)
+ {
+-  char currentchar;
++  int currentchar;
+   GtUword i = 0;
+   gt_assert(gt_str_length(seqit->sequencebuffer) > 0);
+   if ((currentchar = fastq_buf_getchar(seqit)) == EOF)
+diff -u -r -N a/src/extended/bed_parser.c b/src/extended/bed_parser.c
+--- a/src/extended/bed_parser.c	2020-08-17 16:16:25.000000000 +0900
++++ b/src/extended/bed_parser.c	2020-08-24 11:47:38.000000000 +0900
+@@ -84,7 +84,7 @@
+   gt_error_check(err);
+   had_err = gt_io_expect(bed_file, BLANK_CHAR, err);
+   while (!had_err) {
+-    char cc = gt_io_peek(bed_file);
++    int cc = gt_io_peek(bed_file);
+     if (cc == GT_CARRIAGE_RETURN) {
+       gt_io_next(bed_file);
+       if (gt_io_peek(bed_file) == GT_END_OF_LINE)
+@@ -189,7 +189,7 @@
+ 
+ static bool bed_separator(GtIO *bed_file)
+ {
+-  char cc = gt_io_peek(bed_file);
++  int cc = gt_io_peek(bed_file);
+   if (cc == BLANK_CHAR || cc == TABULATOR_CHAR)
+     return true;
+   return false;
+@@ -212,7 +212,7 @@
+ 
+ static int track_rest(GtBEDParser *bed_parser, GtIO *bed_file, GtError *err)
+ {
+-  char cc;
++  int cc;
+   int had_err = 0;
+   gt_error_check(err);
+   bed_parser->offset = 0; /* reset offset for new track line */
+diff -u -r -N a/src/extended/match_iterator_blast.c b/src/extended/match_iterator_blast.c
+--- a/src/extended/match_iterator_blast.c	2020-08-17 16:28:49.000000000 +0900
++++ b/src/extended/match_iterator_blast.c	2020-08-20 17:46:58.000000000 +0900
+@@ -104,12 +104,15 @@
+       had_err = -1;
+     }
+   } else {
++    int intbuf;
+     while (true) {
+-      while ((buffer[i] = gt_file_xfgetc(mib->pvt->gtmatchfilep)) != '\n') {
+-        if (buffer[i] == EOF)
++      while ((intbuf = gt_file_xfgetc(mib->pvt->gtmatchfilep)) != '\n') {
++        if (intbuf == EOF)
+           return GT_MATCHER_STATUS_END;
++        buffer[i] = intbuf;
+         i++;
+       }
++      buffer[i] = '\n';
+       buffer[i+1] = '\0';
+       if (buffer[0] == '#') {
+         mib->pvt->curpos++;
+diff -u -r -N a/src/extended/match_iterator_open.c b/src/extended/match_iterator_open.c
+--- a/src/extended/match_iterator_open.c	2020-08-17 16:28:49.000000000 +0900
++++ b/src/extended/match_iterator_open.c	2020-08-20 17:46:40.000000000 +0900
+@@ -95,12 +95,15 @@
+       had_err = -1;
+     }
+   } else {
++    int intbuf;
+     while (true) {
+-      while ((buffer[i] = gt_file_xfgetc(mpi->pvt->gtmatchfilep)) != '\n') {
+-        if (buffer[i] == EOF)
++      while ((intbuf = gt_file_xfgetc(mpi->pvt->gtmatchfilep)) != '\n') {
++        if (intbuf == EOF)
+           return GT_MATCHER_STATUS_END;
++        buffer[i] = intbuf;
+         i++;
+       }
++      buffer[i] = '\n';
+       buffer[i+1] = '\0';
+       if (buffer[0] == '#') {
+         mpi->pvt->curpos++;
+diff -u -r -N a/src/extended/obo_parse_tree.c b/src/extended/obo_parse_tree.c
+--- a/src/extended/obo_parse_tree.c	2020-08-17 17:06:46.000000000 +0900
++++ b/src/extended/obo_parse_tree.c	2020-08-24 11:48:09.000000000 +0900
+@@ -181,7 +181,7 @@
+ 
+ static bool ignored_char(GtIO *obo_file)
+ {
+-  char cc = gt_io_peek(obo_file);
++  int cc = gt_io_peek(obo_file);
+   if ((cc == OBO_BLANK_CHAR) || (cc == OBO_COMMENT_CHAR) ||
+       (cc == GT_CARRIAGE_RETURN) || (cc == GT_END_OF_LINE))
+     return true;
+@@ -218,7 +218,7 @@
+   gt_error_check(err);
+   had_err = gt_io_expect(obo_file, OBO_BLANK_CHAR, err);
+   while (!had_err) {
+-    char cc = gt_io_peek(obo_file);
++    int cc = gt_io_peek(obo_file);
+     if (cc == OBO_COMMENT_CHAR)
+       return comment_line(obo_file, err);
+     else if (cc == GT_CARRIAGE_RETURN) {
+diff -u -r -N a/src/extended/xrf_abbr_parse_tree.c b/src/extended/xrf_abbr_parse_tree.c
+--- a/src/extended/xrf_abbr_parse_tree.c	2020-08-17 17:17:38.000000000 +0900
++++ b/src/extended/xrf_abbr_parse_tree.c	2020-08-24 11:48:48.000000000 +0900
+@@ -163,7 +163,7 @@
+ 
+ static bool gt_xrf_abbr_parse_tree_ignored_char(GtIO *xrf_abbr_file)
+ {
+-  char cc = gt_io_peek(xrf_abbr_file);
++  int cc = gt_io_peek(xrf_abbr_file);
+   if ((cc == XRF_BLANK_CHAR) || (cc == XRF_COMMENT_CHAR) ||
+       (cc == GT_CARRIAGE_RETURN) || (cc == GT_END_OF_LINE))
+     return true;
+@@ -203,7 +203,7 @@
+   gt_log_log("blank");
+   had_err = gt_io_expect(xrf_abbr_file, XRF_BLANK_CHAR, err);
+   while (!had_err) {
+-    char cc = gt_io_peek(xrf_abbr_file);
++    int cc = gt_io_peek(xrf_abbr_file);
+     if (cc == XRF_COMMENT_CHAR)
+       return gt_xrf_abbr_parse_tree_comment_line(xrf_abbr_file, err);
+     else if (cc == GT_CARRIAGE_RETURN) {
+diff -u -r -N a/src/ltr/pdom_model_set.c b/src/ltr/pdom_model_set.c
+--- a/src/ltr/pdom_model_set.c	2020-08-17 17:31:47.000000000 +0900
++++ b/src/ltr/pdom_model_set.c	2020-08-20 17:28:23.000000000 +0900
+@@ -65,7 +65,8 @@
+ {
+   GtStr *concat_dbnames, *cmdline, *indexfilename = NULL;
+   GtUword i;
+-  char *md5_hash, ch;
++  char *md5_hash;
++  int ch;
+   const char *tmpdir;
+   int had_err = 0, rval;
+   FILE *dest;

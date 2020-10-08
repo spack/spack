@@ -16,6 +16,7 @@ class Gaudi(CMakePackage):
     version('master', branch='master')
     # major cmake config overhaul already in use by some
     version('develop', git='https://gitlab.cern.ch/clemenci/Gaudi.git', branch='cmake-modernisation')
+    version('34.0', sha256='28fc4abb5a6b08da5a6b1300451c7e8487f918b055939877219d454abf7668ae')
     version('33.2', sha256='26aaf9c4ff237a60ec79af9bd18ad249fc91c16e297ba77e28e4a256123db6e5')
     version('33.1', sha256='7eb6b2af64aeb965228d4b6ea66c7f9f57f832f93d5b8ad55c9105235af5b042')
     version('33.0', sha256='76a967c41f579acc432593d498875dd4dc1f8afd5061e692741a355a9cf233c8')
@@ -33,11 +34,11 @@ class Gaudi(CMakePackage):
             description='Build with Intel VTune profiler support')
 
     # only build subdirectory GaudiExamples when +optional
-    patch("build_testing.patch", when="@:33.2")
+    patch("build_testing.patch", when="@:34.99")
     # fix for the new cmake config, should be merged in branch
     patch('python2.patch', when="@develop")
     # fixes for the cmake config which could not find newer boost versions
-    patch("link_target_fixes.patch", when="@33.0:33.2")
+    patch("link_target_fixes.patch", when="@33.0:34.99")
     patch("link_target_fixes32.patch", when="@:32.2")
 
     # These dependencies are needed for a minimal Gaudi build

@@ -15,7 +15,7 @@ class PyTox(PythonPackage):
     version('3.14.2', sha256='7efd010a98339209f3a8292f02909b51c58417bfc6838ab7eca14cf90f96117a')
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-importlib-metadata@1.1.0:', when='^python@:3.7', type=('build', 'run'))
     depends_on('py-packaging@14:', type=('build', 'run'))
     depends_on('py-pluggy@0.12.0:0.999', type=('build', 'run'))

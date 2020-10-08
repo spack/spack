@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from glob import glob
-
 
 class Bowtie2(Package):
     """Bowtie 2 is an ultrafast and memory-efficient tool for aligning
@@ -71,14 +68,4 @@ class Bowtie2(Package):
             make_arg.append('POPCNT_CAPABILITY=0')
         make(*make_arg)
         mkdirp(prefix.bin)
-        for bow in glob("bowtie2*"):
-            install(bow, prefix.bin)
-        # install('bowtie2',prefix.bin)
-        # install('bowtie2-align-l',prefix.bin)
-        # install('bowtie2-align-s',prefix.bin)
-        # install('bowtie2-build',prefix.bin)
-        # install('bowtie2-build-l',prefix.bin)
-        # install('bowtie2-build-s',prefix.bin)
-        # install('bowtie2-inspect',prefix.bin)
-        # install('bowtie2-inspect-l',prefix.bin)
-        # install('bowtie2-inspect-s',prefix.bin)
+        install('bowtie2*', prefix.bin)

@@ -46,8 +46,12 @@ class PyNetcdf4(PythonPackage):
         """Ensure installed netcdf and hdf5 libraries are used"""
         # Explicitly set these variables so setup.py won't erroneously pick up
         # system versions
+        # See: http://unidata.github.io/netcdf4-python
         env.set('USE_SETUPCFG', '0')
+        env.set('USE_NCCONFIG', '1')
+        env.set('HDF5_DIR', self.spec['hdf5'].prefix)
         env.set('HDF5_INCDIR', self.spec['hdf5'].prefix.include)
         env.set('HDF5_LIBDIR', self.spec['hdf5'].prefix.lib)
+        env.set('NETCDF4_DIR', self.spec['netcdf-c'].prefix)
         env.set('NETCDF4_INCDIR', self.spec['netcdf-c'].prefix.include)
         env.set('NETCDF4_LIBDIR', self.spec['netcdf-c'].prefix.lib)

@@ -11,7 +11,7 @@ class Pcre2(AutotoolsPackage):
        libraries. These are useful for implementing regular expression
        pattern matching using the same syntax and semantics as Perl 5."""
 
-    homepage = "http://www.pcre.org"""
+    homepage = "http://www.pcre.org"
     url      = "https://ftp.pcre.org/pub/pcre/pcre2-10.31.tar.bz2"
 
     version('10.35', sha256='9ccba8e02b0ce78046cdfb52e5c177f0f445e421059e43becca4359c669d4613')
@@ -37,7 +37,9 @@ class Pcre2(AutotoolsPackage):
 
     @property
     def libs(self):
-        libs = find_libraries('libpcre2*',
-                              root=self.prefix.lib,
-                              recursive=False)
-        return libs
+        if '+multibyte' in self.spec:
+            name = 'libpcre2-32'
+        else:
+            name = 'libpcre2-8'
+
+        return find_libraries(name, root=self.prefix, recursive=True)

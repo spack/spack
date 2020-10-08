@@ -17,6 +17,7 @@ class Podio(CMakePackage):
     maintainers = ['vvolkl', 'drbenmorgan']
 
     version('master', branch='master')
+    version('0.12.0', sha256='1729a2ce21e8b307fc37dfb9a9f5ae031e9f4be4992385cf99dba3e5fdf5323a')
     version('0.11.0', sha256='4b2765566a14f0ddece2c894634e0a8e4f42f3e44392addb9110d856f6267fb6')
     version('0.10.0', sha256='b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2')
     version('0.9.2', sha256='8234d1b9636029124235ef81199a1220968dcc7fdaeab81cdc96a47af332d240')
@@ -31,18 +32,15 @@ class Podio(CMakePackage):
     patch('cpack.patch', when="@:0.10.0")
     patch('dictloading.patch', when="@0.10.0")
 
-    depends_on('root@6.08.06:')
+    depends_on('root@6.08.06: cxxstd=17')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('python', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-jinja2@2.10.1:', type=('build', 'run'), when='@0.12.0:')
 
     def cmake_args(self):
-        args = []
-        # C++ Standard
-        args.append('-DCMAKE_CXX_STANDARD=%s'
-                    % self.spec['root'].variants['cxxstd'].value)
-        args.append('-DBUILD_TESTING=%s' % self.run_tests)
+        args = ['-DBUILD_TESTING=%s' % self.run_tests, ]
         return args
 
     def url_for_version(self, version):

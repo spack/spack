@@ -18,7 +18,8 @@ class Delphes(CMakePackage):
     maintainers = ['drbenmorgan', 'vvolkl', 'selvaggi']
 
     version('master', branch='master')
-    version('3.4.2', sha256='d46a7c5474de650befdb89377115feee31f1743107ceb3d8da699be9d48c097b')
+    version('3.4.3pre04', tag='3.4.3pre04')
+    version('3.4.2', sha256='d46a7c5474de650befdb89377115feee31f1743107ceb3d8da699be9d48c097b', preferred=True)
     version('3.4.1', sha256='4b5a2aeac326643f45b6d45c39ba2302e323eeb86d8cb58843c6e73949b1208a')
     version('3.4.0', sha256='c0f9500663a0c3a5c1eddcee598a67b5bcfc9318303195c6cacc0590b4023fa1')
     version('3.3.3', sha256='404de818a6b7852b01187ccf598d8ac19d308b9361f128751ef003cde248ff00')
@@ -38,19 +39,19 @@ class Delphes(CMakePackage):
     version('3.0.6', sha256='9e225731d57d2a76d35886841f8eff121bb3a45560b16077bd8c351151581d88')
     version('3.0.5', sha256='ab64ec6d2476fbfa40562e7edb510a8ab4c4fe5be77a4353ebf315c2af181a80')
 
-    depends_on('cmake', type='build')
-    depends_on('root cxxstd=14', when='cxxstd=14')
-    depends_on('root cxxstd=17', when='cxxstd=17')
-
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'Release'))
+    variant('pythia8', default=True,
+            description="build with pythia8")
 
     variant('cxxstd',
             default='17',
             values=('14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
+
+    depends_on('cmake', type='build')
+    depends_on('root cxxstd=14', when='cxxstd=14')
+    depends_on('root cxxstd=17', when='cxxstd=17')
+    depends_on('pythia8', when="+pythia8")
 
     def cmake_args(self):
         args = []
@@ -61,4 +62,4 @@ class Delphes(CMakePackage):
 
     def setup_run_environment(self, env):
         # make the cards distributed with delphes more easily accessible
-        env.set('DELPHESCARDS', self.prefix.cards)
+        env.set('DELPHES_DIR', self.prefix)
