@@ -7,8 +7,8 @@ from spack import *
 
 
 class PySanic(PythonPackage):
-    """Sanic is a Flask-like Python 3.5+ web server that’s written to go fast.
-    It’s based on the work done by the amazing folks at magicstack"""
+    """Sanic is a Flask-like Python 3.5+ web server that is written to go fast.
+    It is based on the work done by the amazing folks at magicstack"""
 
     homepage = "https://github.com/huge-success/sanic"
     url      = "https://pypi.io/packages/source/s/sanic/sanic-20.6.3.tar.gz"
