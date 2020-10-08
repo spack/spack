@@ -545,11 +545,18 @@ class Compiler(object):
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
         """Extracts the version from compiler's output."""
+        # Intel OneAPI compilers generate a differently formatted
+        # version string than older versions, so must parse using
+        # this modified regular expression. This may change, and 
+        # the "DPC" string used below to identify a OneAPI version
+        # in particular may need to change.
         if (cls == spack.compilers.Intel):
             using_oneapi = "DPC" in output
             if (using_oneapi):
-                # The default value of version_regex will still work for older Intel versions
-                spack.compilers.Intel.version_regex =  r'\((?:IFORT|ICC)\)|DPC\+\+ [^ ]+ [^ ]+ [^ ]+ \(([^ ]+)\)'
+                # The default value of version_regex will still work 
+                # for older Intel versions
+                spack.compilers.Intel.version_regex =
+                    r'\((?:IFORT|ICC)\)|DPC\+\+ [^ ]+ [^ ]+ [^ ]+ \(([^ ]+)\)'
         match = re.search(cls.version_regex, output)
         return match.group(1) if match else 'unknown'
 
