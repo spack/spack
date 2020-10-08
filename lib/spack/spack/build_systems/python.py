@@ -418,6 +418,7 @@ class PythonPackage(PackageBase):
     def add_files_to_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
+        python_is_external = self.spec['python'].external
         global_view = same_path(python_prefix, view.get_projection_for_spec(
             self.spec
         ))
@@ -428,7 +429,8 @@ class PythonPackage(PackageBase):
                 view.link(src, dst)
             elif not os.path.islink(src):
                 shutil.copy2(src, dst)
-                if 'script' in get_filetype(src) and not self.spec['python'].external:
+                is_script = 'script' in get_filetype(scr)
+                if is_script and python_is_external:
                     filter_file(
                         python_prefix, os.path.abspath(
                             view.get_projection_for_spec(self.spec)), dst
