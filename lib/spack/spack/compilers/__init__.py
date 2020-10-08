@@ -739,7 +739,7 @@ def is_mixed_toolchain(compiler):
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
-        if toolchains == set(['Clang', 'AppleClang']):
+        if toolchains == set(['Clang', 'AppleClang', 'Aocc']):
             return False
         tty.debug("[TOOLCHAINS] {0}".format(toolchains))
         return True
