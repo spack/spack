@@ -555,8 +555,8 @@ class Compiler(object):
             if (using_oneapi):
                 # The default value of version_regex will still work 
                 # for older Intel versions
-                spack.compilers.Intel.version_regex =
-                    r'\((?:IFORT|ICC)\)|DPC\+\+ [^ ]+ [^ ]+ [^ ]+ \(([^ ]+)\)'
+                spack.compilers.Intel.version_regex = \
+                  r'\((?:IFORT|ICC)\)|DPC\+\+ [^ ]+ [^ ]+ [^ ]+ \(([^ ]+)\)'
         match = re.search(cls.version_regex, output)
         return match.group(1) if match else 'unknown'
 
