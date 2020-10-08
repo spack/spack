@@ -15,7 +15,6 @@ class Camp(CMakePackage, CudaPackage):
     homepage = "https://github.com/LLNL/camp"
     git      = "https://github.com/LLNL/camp.git"
 
-    version('develop', branch='master', submodules='True')
     version('master', branch='master', submodules='True')
     version('0.1.0', tag='v0.1.0', submodules='True')
 
