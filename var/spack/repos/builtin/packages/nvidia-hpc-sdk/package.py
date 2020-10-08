@@ -38,11 +38,11 @@ class NvidiaHpcSdk(Package, CudaPackage):
     depends_on('cuda@10.1.243:', when='cuda=10.1')
 
     def url_for_version(self, version):
-	if platform.machine() == "aarch64":
+        if platform.machine() == "aarch64":
            url = "https://developer.download.nvidia.com/hpc-sdk/nvhpc_{0}_Linux_{1}_cuda_11.0.tar.gz"
-	else:
+        else:
            url = "https://developer.download.nvidia.com/hpc-sdk/nvhpc_{0}_Linux_{1}_cuda_multi.tar.gz"
-	return url.format(version, platform.machine())
+        return url.format(version, platform.machine())
 
     def install(self, spec, prefix):
 
@@ -55,7 +55,7 @@ class NvidiaHpcSdk(Package, CudaPackage):
         os.system("./install")
 
     def setup_run_environment(self, env):
-	#TO-DO: Cleaner way to handle path building
+        #TO-DO: Cleaner way to handle path building
         ver_build = self.version.split("_", 1)[1]
         target_version = ver_build[:2]+'.'+ver_build[:-1]
         prefix_new = Prefix(join_path(self.prefix, 
