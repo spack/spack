@@ -8,7 +8,8 @@ from spack import *
 
 class Camp(CMakePackage, CudaPackage):
     """
-    Compiler agnostic metaprogramming library providing concepts, type operations and tuples for C++ and cuda 
+    Compiler agnostic metaprogramming library providing concepts,
+    type operations and tuples for C++ and cuda
     """
 
     homepage = "https://github.com/LLNL/camp"
