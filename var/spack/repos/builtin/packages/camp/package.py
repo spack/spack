@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,6 @@ class Camp(CMakePackage, CudaPackage):
     version('develop', branch='master', submodules='True')
     version('master', branch='master', submodules='True')
     version('0.1.0', tag='v0.1.0', submodules='True')
-
-    variant('enable_implicit_conversions', default=True, description='Enable implicit conversions to-from raw pointers')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', type='build', when="+cuda")
