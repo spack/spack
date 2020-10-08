@@ -42,6 +42,7 @@ class ParallelNetcdf(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
+    variant('burstbuffer', default=False, description='Enable burst buffer feature')
 
     depends_on('mpi')
 
@@ -54,6 +55,7 @@ class ParallelNetcdf(AutotoolsPackage):
 
     conflicts('+shared', when='@:1.9%nag+fortran')
     conflicts('+shared', when='@:1.8')
+    conflicts('+burstbuffer', when='@:1.10')
 
     patch('nag_libtool.patch', when='@1.9:1.12.1%nag')
 
@@ -130,5 +132,8 @@ class ParallelNetcdf(AutotoolsPackage):
         if self.spec.satisfies('%nag+fortran+shared'):
             args.extend(['ac_cv_prog_fc_v=-Wl,-v',
                          'ac_cv_prog_f77_v=-Wl,-v'])
+
+        if '+burstbuffer' in self.spec:
+            args.append('--enable-burst-buffering')
 
         return args
