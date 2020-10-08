@@ -36,3 +36,7 @@ class Cusz(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
+
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+        install('bin/cusz', prefix.bin)
