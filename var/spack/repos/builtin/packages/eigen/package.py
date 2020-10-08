@@ -30,7 +30,7 @@ class Eigen(CMakePackage):
 
     # there is a bug in 3.3.8 that provokes a compile error in dependent packages, see https://gitlab.com/libeigen/eigen/-/issues/2011
     patch('https://gitlab.com/libeigen/eigen/-/commit/6d822a1052fc665f06dc51b4729f6a38e0da0546.diff', when='@3.3.8',
-            sha256='62590e9b33a8f72b608a72b87147a306e7cb20766ea53c6b8e0a183fa6cb7635')
+          sha256='62590e9b33a8f72b608a72b87147a306e7cb20766ea53c6b8e0a183fa6cb7635')
 
     # From http://eigen.tuxfamily.org/index.php?title=Main_Page#Requirements
     # "Eigen doesn't have any dependencies other than the C++ standard
