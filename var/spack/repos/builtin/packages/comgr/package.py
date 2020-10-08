@@ -12,24 +12,23 @@ class Comgr(CMakePackage):
        contains one library, the Code Object Manager (Comgr)"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport"
-    url      = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-3.5.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-3.8.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.8.0', sha256='62a35480dfabaa98883d91ed0f7c490daa9bbd424af37e07e5d85a6e8030b146')
     version('3.7.0', sha256='73e56ec3c63dade24ad351e9340e2f8e127694028c1fb7cec5035376bf098432')
     version('3.5.0', sha256='25c963b46a82d76d55b2302e0e18aac8175362656a465549999ad13d07b689b9')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    depends_on('cmake@3:', type='build')
-
-    for ver in ['3.5.0', '3.7.0']:
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-
     depends_on('zlib', type='link')
     depends_on('z3', type='link')
     depends_on('ncurses', type='link')
+    depends_on('cmake@3:', type='build')
+    for ver in ['3.5.0', '3.7.0', '3.8.0']:
+        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     root_cmakelists_dir = 'lib/comgr'
