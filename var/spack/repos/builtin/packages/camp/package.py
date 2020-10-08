@@ -39,7 +39,6 @@ class Camp(CMakePackage, CudaPackage):
         else:
             options.append('-DENABLE_CUDA=OFF')
 
-        options.append('-DENABLE_TESTS={0}'.format(
-            'ON' if self.run_tests else 'OFF'))
+        options.append('-DENABLE_TESTS=ON')
 
         return options
