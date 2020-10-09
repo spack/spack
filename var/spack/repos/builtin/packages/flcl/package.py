@@ -9,23 +9,21 @@ class Flcl(CMakePackage):
     """API for Fortran to C++ and C++ to Fortran multi-dimensional array
     interoperability using Kokkos."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/kokkos/kokkos-fortran-interop"
     git      = "https://github.com/kokkos/kokkos-fortran-interop.git"
-    url      = "https://github.com/kokkos/kokkos-fortran-interop/releases/download/0.2/0.2.tar.gz"
+    url      = "https://github.com/kokkos/kokkos-fortran-interop/releases/download/0.3/0.3.tar.gz"
 
-    maintainers = ['womeld']
+    maintainers = ['womeld', 'agaspar']
 
     version('develop', branch='develop')
-    version('spackaging', branch='spackaging')
-    version('0.2', sha256='514d97fe91a168245897b2c914ad66454199647cc806bd9fec940206a0f434f7')
+    version('0.3', sha256='0586b981b976588d8059e5bf1bf71fb5a7153ea950c7e2b562a3d812fefee56e')
 
     depends_on('kokkos')
     depends_on('cmake@3.17:', type='build')
 
     def cmake_args(self):
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
         args = []
+        args.append('-DBUILD_TESTING:BOOL={0}'.format(
+                    'ON' if self.run_tests else 'OFF'))
+
         return args
