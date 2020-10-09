@@ -26,18 +26,13 @@ from spack import *
 class Libjwt(AutotoolsPackage):
     """libjwt JSON Web Token C Library"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     git      = "https://github.com/benmcollins/libjwt"
     url      = "https://github.com/benmcollins/libjwt/archive/v1.12.0.tar.gz"
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
+    maintainers = ['bollig']
 
-    # FIXME: Add proper versions and checksums here.
     version('1.12.0', sha256='eaf5d8b31d867c02dde767efa2cf494840885a415a3c9a62680bf870a4511bee')
 
-    # FIXME: Add dependencies if required.
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
