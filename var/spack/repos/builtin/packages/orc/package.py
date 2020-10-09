@@ -59,6 +59,8 @@ class Orc(CMakePackage):
         args.append('-DCMAKE_C_FLAGS=-fPIC')
         args.append('-DINSTALL_VENDORED_LIBS:BOOL=OFF')
         args.append('-DBUILD_LIBHDFSPP:BOOL=OFF')
+        args.append('-DBUILD_TOOLS:BOOL=OFF')
+        args.append('-DBUILD_CPP_TESTS:BOOL=OFF')
 
         for x in ('snappy', 'zlib', 'zstd', 'lz4', 'protobuf'):
             args.append('-D{0}_HOME={1}'.format(x.upper(), self.spec[x].prefix))
