@@ -48,6 +48,7 @@ class Orc(CMakePackage):
     depends_on('snappy@1.1.7')
     depends_on('lz4@1.7.5')
 
+    patch('thirdparty.patch')
 
     def cmake_args(self):
         # FIXME: Add arguments other than
