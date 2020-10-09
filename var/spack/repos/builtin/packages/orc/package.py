@@ -40,8 +40,14 @@ class Orc(CMakePackage):
     # depends_on('foo')
     depends_on('maven')
     depends_on('openssl')
-    depends_on('zlib')
+    depends_on('zlib@1.2.11')
     depends_on('pcre')
+    depends_on('protobuf@3.5.1')
+    depends_on('zstd@1.4.5')
+    depends_on('googletest@1.8.0')
+    depends_on('snappy@1.1.7')
+    depends_on('lz4@1.7.5')
+
 
     def cmake_args(self):
         # FIXME: Add arguments other than
