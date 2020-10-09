@@ -1,0 +1,83 @@
+diff -u -r -N a/devices/vector/gdevpsf2.c b/devices/vector/gdevpsf2.c
+--- a/devices/vector/gdevpsf2.c	2019-10-15 18:05:37.000000000 +0900
++++ b/devices/vector/gdevpsf2.c	2020-08-21 20:32:33.000000000 +0900
+@@ -1402,7 +1402,9 @@
+      * Therefore, we start by assuming the largest reasonable value for all
+      * the sizes and iterate until everything converges.
+      */
+- iter:
++    int iter = true;
++ while(true){
++  if(iter){
+     swrite_position_only(&poss);
+     writer.strm = &poss;
+ 
+@@ -1418,7 +1420,7 @@
+         cff_Index_size(charstrings_count, charstrings_size);
+     Subrs_offset = Private_size;  /* relative to Private Dict */
+ 
+- write:
++  }
+     if(check_ioerror(writer.strm))
+         return_error(gs_error_ioerror);
+     start_pos = stell(writer.strm);
+@@ -1499,14 +1501,16 @@
+         /* The iteration has converged.  Write the result. */
+         if (writer.strm == &poss) {
+             writer.strm = s;
+-            goto write;
++            iter = false;
++        } else {
++        	break;
+         }
+     } else {
+         /* No convergence yet. */
+         End_offset = offset;
+-        goto iter;
++        iter = true;
+     }
+-
++ }
+     /* All done. */
+     gs_free_object(pfont->memory, std_string_items, "psf_write_type2_font");
+     gs_free_object(pfont->memory, subset.glyphs.subset_data, "psf_write_type2_font");
+@@ -1716,7 +1720,9 @@
+      * Therefore, we start by assuming the largest reasonable value for all
+      * the sizes and iterate until everything converges.
+      */
+- iter:
++    int iter = true;
++ while(true){
++  if(iter){
+     swrite_position_only(&poss);
+     writer.strm = &poss;
+ 
+@@ -1732,7 +1738,7 @@
+                "[l]GSubrs at %u, charset at %u, FDSelect at %u, CharStrings at %u\n",
+                GSubrs_offset, charset_offset, FDSelect_offset, CharStrings_offset);
+ 
+- write:
++  }
+     start_pos = stell(writer.strm);
+     if_debug1m('l', s->memory, "[l]start_pos = %ld\n", start_pos);
+     /* Write the header, setting offset_size. */
+@@ -1867,14 +1873,16 @@
+         /* The iteration has converged.  Write the result. */
+         if (writer.strm == &poss) {
+             writer.strm = s;
+-            goto write;
++            iter = false;
++        } else {
++        	break;
+         }
+     } else {
+         /* No convergence yet. */
+         End_offset = offset;
+-        goto iter;
++        iter = true;
+     }
+-
++ }
+     /* All done. */
+     return 0;
+ }

@@ -3,17 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import sys
 
 
 class Hdf(AutotoolsPackage):
     """HDF4 (also known as HDF) is a library and multi-object
     file format for storing and managing data between machines."""
 
-    homepage = "https://portal.hdfgroup.org/display/support"
+    homepage = "https://portal.hdfgroup.org"
     url      = "https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.14/src/hdf-4.2.14.tar.gz"
     list_url = "https://support.hdfgroup.org/ftp/HDF/releases/"
     list_depth = 2
+    maintainers = ['lrknox']
 
     version('4.2.15', sha256='dbeeef525af7c2d01539906c28953f0fdab7dba603d1bc1ec4a5af60d002c459')
     version('4.2.14', sha256='2d383e87c8a0ca6a5352adbd1d5546e6cc43dc21ff7d90f93efa644d85c0b14a')
@@ -22,7 +23,7 @@ class Hdf(AutotoolsPackage):
     version('4.2.11', sha256='c3f7753b2fb9b27d09eced4d2164605f111f270c9a60b37a578f7de02de86d24')
 
     variant('szip', default=False, description="Enable szip support")
-    variant('external-xdr', default=True,
+    variant('external-xdr', default=sys.platform != 'darwin',
             description="Use an external XDR backend")
     variant('netcdf', default=False,
             description='Build NetCDF API (version 2.3.2)')

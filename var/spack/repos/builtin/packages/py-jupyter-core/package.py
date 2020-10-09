@@ -29,6 +29,5 @@ class PyJupyterCore(PythonPackage):
 
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@4.6.2:')
-
-    depends_on('py-setuptools', when='@4.5.0:', type='build')
+    depends_on('py-setuptools', when='@4.5.0:', type=('build', 'run'))
     depends_on('py-traitlets', type=('build', 'run'))

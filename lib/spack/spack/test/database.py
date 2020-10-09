@@ -9,7 +9,6 @@ both in memory and in its file
 """
 import datetime
 import functools
-import multiprocessing
 import os
 import pytest
 import json
@@ -24,6 +23,7 @@ from jsonschema import validate
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
+from llnl.util.lang import fork_context
 
 import spack.repo
 import spack.store
@@ -524,7 +524,7 @@ def test_030_db_sanity_from_another_process(mutable_database):
         with mutable_database.write_transaction():
             _mock_remove('mpileaks ^zmpi')
 
-    p = multiprocessing.Process(target=read_and_modify, args=())
+    p = fork_context.Process(target=read_and_modify, args=())
     p.start()
     p.join()
 
@@ -689,17 +689,17 @@ def test_115_reindex_with_packages_not_in_repo(mutable_database):
 def test_external_entries_in_db(mutable_database):
     rec = mutable_database.get_record('mpileaks ^zmpi')
     assert rec.spec.external_path is None
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
 
     rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
     rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
     assert rec.explicit is True
 
 

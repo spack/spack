@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
 import os
 
 
@@ -87,23 +85,17 @@ class IntelXed(Package):
         mkdirp(prefix.lib)
         mkdirp(prefix.bin)
 
-        libs = glob.glob(join_path('obj', 'lib*.a'))
-        for lib in libs:
-            install(lib, prefix.lib)
+        install(join_path('obj', 'lib*.a'), prefix.lib)
 
         # Build and install shared libxed.so and examples (to get the CLI).
         mfile('--clean')
         mfile('examples', '--shared', *args)
 
-        libs = glob.glob(join_path('obj', 'lib*.so'))
-        for lib in libs:
-            install(lib, prefix.lib)
+        install(join_path('obj', 'lib*.so'), prefix.lib)
 
         # Install the xed program
         install(join_path('obj', 'examples', 'xed'), prefix.bin)
 
         # Install header files.
-        hdrs = glob.glob(join_path('include', 'public', 'xed', '*.h'))  \
-            + glob.glob(join_path('obj', '*.h'))
-        for hdr in hdrs:
-            install(hdr, prefix.include)
+        install(join_path('include', 'public', 'xed', '*.h'), prefix.include)
+        install(join_path('obj', '*.h'), prefix.include)

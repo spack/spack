@@ -3,9 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 import sys
-
-from spack import *
 
 
 class Opengl(Package):
@@ -34,6 +33,14 @@ class Opengl(Package):
 
     if sys.platform != 'darwin':
         provides('glx@1.4')
+
+    executables = ['^glxinfo$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)(output=str, error=str)
+        match = re.search(r'OpenGL version string: (\S+)', output)
+        return match.group(1) if match else None
 
     # Override the fetcher method to throw a useful error message;
     # fixes GitHub issue (#7061) in which this package threw a

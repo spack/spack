@@ -246,9 +246,46 @@ end
 
 
 
+function match_flag -d "checks all combinations of flags ocurring inside of a string"
+
+    # Remove leading and trailing spaces -- but we need to insert a "guard" (x)
+    # so that eg. `string trim -h` doesn't trigger the help string for `string trim`
+    set -l _a (string sub -s 2 (string trim "x$argv[1]"))
+    set -l _b (string sub -s 2 (string trim "x$argv[2]"))
+
+    if test -z "$_a" || test -z "$_b"
+        return 0
+    end
+
+    # surrounded by spaced
+    if echo "$_a" | string match -r -q " +$_b +"
+        return 0
+    end
+
+    # beginning of string + trailing space
+    if echo "$_a" | string match -r -q "^$_b +"
+        return 0
+    end
+
+    # end of string + leadingg space
+    if echo "$_a" | string match -r -q " +$_b\$"
+        return 0
+    end
+
+    # entire string
+    if echo "$_a" | string match -r -q "^$_b\$"
+        return 0
+    end
+
+    return 1
+
+end
+
+
+
 function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, or --fish"
     #
-    # Check if inputs contain -h, --sh, --csh, or --fish
+    # Check if inputs contain -h/--help, --sh, --csh, or --fish
     #
 
     # combine argument array into single string (space seperated), to be passed
@@ -257,23 +294,29 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
 
     # skip if called with blank input. Notes: [1] (cf. EOF)
     if test -n "$_a"
-        # looks for a single `-h` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *-h *"
+
+        # looks for a single `-h`
+        if match_flag $_a "-h"
             return 0
         end
 
-        # looks for a single `--sh` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--sh *"
+        # looks for a single `--help`
+        if match_flag $_a "--help"
             return 0
         end
 
-        # looks for a single `--csh` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--csh *"
+        # looks for a single `--sh`
+        if match_flag $_a "--sh"
             return 0
         end
 
-        # looks for a single `--fish` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--fish *"
+        # looks for a single `--csh`
+        if match_flag $_a "--csh"
+            return 0
+        end
+
+        # looks for a single `--fish`
+        if match_flag $_a "--fish"
             return 0
         end
 
@@ -285,7 +328,7 @@ end
 
 function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, --csh, or --fish"
     #
-    # Check if inputs contain -h, --sh, --csh, or --fish
+    # Check if inputs contain --sh, --csh, or --fish
     #
 
     # combine argument array into single string (space seperated), to be passed
@@ -295,20 +338,18 @@ function check_env_deactivate_flags -d "check spack env subcommand flags for --s
     # skip if called with blank input. Notes: [1] (cf. EOF)
     if test -n "$_a"
 
-        # TODO: should this crash (we're clearly using fish, not bash, here)?
-        # looks for a single `--sh` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--sh *"
+        # looks for a single `--sh`
+        if match_flag $_a "--sh"
             return 0
         end
 
-        # TODO: should this crash (we're clearly using fish, not csh, here)?
-        # looks for a single `--csh` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--csh *"
+        # looks for a single `--csh`
+        if match_flag $_a "--csh"
             return 0
         end
 
-        # looks for a single `--fish` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--fish *"
+        # looks for a single `--fish`
+        if match_flag $_a "--fish"
             return 0
         end
 

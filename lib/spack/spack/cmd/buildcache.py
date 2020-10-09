@@ -231,6 +231,9 @@ def setup_parser(subparser):
         'update-index', help=buildcache_update_index.__doc__)
     update_index.add_argument(
         '-d', '--mirror-url', default=None, help='Destination mirror url')
+    update_index.add_argument(
+        '-k', '--keys', default=False, action='store_true',
+        help='If provided, key index will be updated as well as package index')
     update_index.set_defaults(func=buildcache_update_index)
 
 
@@ -239,8 +242,9 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
        concretized specs given from cli
 
     Args:
-        specs: list of specs to be matched against installed packages
-        allow_multiple_matches : if True multiple matches are admitted
+        pkgs (string): spec to be matched against installed packages
+        allow_multiple_matches (bool): if True multiple matches are admitted
+        env (Environment): active environment, or ``None`` if there is not one
 
     Return:
         list of specs
@@ -332,26 +336,25 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
                    signing_key=None, force=False, make_relative=False,
                    unsigned=False, allow_root=False, rebuild_index=False):
     if spec_yaml:
-        packages = set()
         with open(spec_yaml, 'r') as fd:
             yaml_text = fd.read()
             tty.debug('createtarball read spec yaml:')
             tty.debug(yaml_text)
             s = Spec.from_yaml(yaml_text)
-            packages.add('/{0}'.format(s.dag_hash()))
+            package = '/{0}'.format(s.dag_hash())
+            matches = find_matching_specs(package, env=env)
 
     elif packages:
-        packages = packages
+        matches = find_matching_specs(packages, env=env)
 
     elif env:
-        packages = env.concretized_user_specs
+        matches = [env.specs_by_hash[h] for h in env.concretized_order]
 
     else:
         tty.die("build cache file creation requires at least one" +
-                " installed package spec, an activate environment," +
+                " installed package spec, an active environment," +
                 " or else a path to a yaml file containing a spec" +
                 " to install")
-    pkgs = set(packages)
     specs = set()
 
     mirror = spack.mirror.MirrorCollection().lookup(output_location)
@@ -359,8 +362,6 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
 
     msg = 'Buildcache files will be output to %s/build_cache' % outdir
     tty.msg(msg)
-
-    matches = find_matching_specs(pkgs, env=env)
 
     if matches:
         tty.debug('Found at least one matching spec')
@@ -371,11 +372,16 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
             tty.debug('skipping external or virtual spec %s' %
                       match.format())
         else:
-            if add_spec:
+            lookup = spack.store.db.query_one(match)
+
+            if not add_spec:
+                tty.debug('skipping matching root spec %s' % match.format())
+            elif lookup is None:
+                tty.debug('skipping uninstalled matching spec %s' %
+                          match.format())
+            else:
                 tty.debug('adding matching spec %s' % match.format())
                 specs.add(match)
-            else:
-                tty.debug('skipping matching spec %s' % match.format())
 
             if not add_deps:
                 continue
@@ -388,8 +394,13 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
                 if d == 0:
                     continue
 
+                lookup = spack.store.db.query_one(node)
+
                 if node.external or node.virtual:
                     tty.debug('skipping external or virtual dependency %s' %
+                              node.format())
+                elif lookup is None:
+                    tty.debug('skipping uninstalled depenendency %s' %
                               node.format())
                 else:
                     tty.debug('adding dependency %s' % node.format())
@@ -768,6 +779,13 @@ def buildcache_update_index(args):
 
     bindist.generate_package_index(
         url_util.join(outdir, bindist.build_cache_relative_path()))
+
+    if args.keys:
+        keys_url = url_util.join(outdir,
+                                 bindist.build_cache_relative_path(),
+                                 bindist.build_cache_keys_relative_path())
+
+        bindist.generate_key_index(keys_url)
 
 
 def buildcache(parser, args):

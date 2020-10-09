@@ -20,6 +20,7 @@ class Paraview(CMakePackage, CudaPackage):
     maintainers = ['chuckatkins', 'danlipsa']
 
     version('develop', branch='master', submodules=True)
+    version('5.8.1', sha256='7653950392a0d7c0287c26f1d3a25cdbaa11baa7524b0af0e6a1a0d7d487d034')
     version('5.8.0', sha256='219e4107abf40317ce054408e9c3b22fb935d464238c1c00c0161f1c8697a3f9')
     version('5.7.0', sha256='e41e597e1be462974a03031380d9e5ba9a7efcdb22e4ca2f3fec50361f310874')
     version('5.6.2', sha256='1f3710b77c58a46891808dbe23dc59a1259d9c6b7bb123aaaeaa6ddf2be882ea')
@@ -74,6 +75,11 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
     depends_on('python@3:', when='+python3', type=('build', 'run'))
 
+    # VTK < 8.2.1 can't handle Python 3.8
+    # This affects Paraview 5.6.2 (VTK 8.2.0)
+    # https://gitlab.kitware.com/vtk/vtk/-/issues/17670
+    depends_on('python@3:3.7', when='@5.6.2 +python3', type=('build', 'run'))
+
     depends_on('py-numpy@:1.15.4', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python3', type=('build', 'run'))
     depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
@@ -114,7 +120,7 @@ class Paraview(CMakePackage, CudaPackage):
     # Can't contretize with python2 and py-setuptools@45.0.0:
     depends_on('py-setuptools@:44.99.99', when='+python')
     # Can't contretize with python2 and py-pillow@7.0.0:
-    depends_on('py-pillow@:6', when='+python')
+    depends_on('pil@:6', when='+python')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 

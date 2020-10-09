@@ -1,3 +1,20 @@
+# v0.15.4 (2020-08-12)
+
+This release contains one feature addition:
+
+* Users can set `SPACK_GNUPGHOME` to override Spack's GPG path (#17139)
+
+Several bugfixes for CUDA, binary packaging, and `spack -V`:
+
+* CUDA package's `.libs` method searches for `libcudart` instead of `libcuda` (#18000)
+* Don't set `CUDAHOSTCXX` in environments that contain CUDA (#17826)
+* `buildcache create`: `NoOverwriteException` is a warning, not an error (#17832)
+* Fix `spack buildcache list --allarch` (#17884)
+* `spack -V` works with `releases/latest` tag and shallow clones (#17884)
+
+And fixes for GitHub Actions and tests to ensure that CI passes on the
+release branch (#15687, #17279, #17328, #17377, #17732).
+
 # v0.15.3 (2020-07-28)
 
 This release contains the following bugfixes:
@@ -589,4 +606,4 @@ version of all the changes since `v0.9.1`.
 - Switched from `nose` to `pytest` for unit tests.
   - Unit tests take 1 minute now instead of 8
 - Massively expanded documentation
-- Docs are now hosted on [spack.readthedocs.io](http://spack.readthedocs.io)
+- Docs are now hosted on [spack.readthedocs.io](https://spack.readthedocs.io)

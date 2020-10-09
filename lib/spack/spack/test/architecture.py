@@ -15,7 +15,6 @@ import spack.architecture
 from spack.spec import Spec
 from spack.platforms.cray import Cray
 from spack.platforms.linux import Linux
-from spack.platforms.bgq import Bgq
 from spack.platforms.darwin import Darwin
 
 
@@ -42,8 +41,6 @@ def test_platform():
     output_platform_class = spack.architecture.real_platform()
     if os.path.exists('/opt/cray/pe'):
         my_platform_class = Cray()
-    elif os.path.exists('/bgsys'):
-        my_platform_class = Bgq()
     elif 'Linux' in py_platform.system():
         my_platform_class = Linux()
     elif 'Darwin' in py_platform.system():

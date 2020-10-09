@@ -40,7 +40,7 @@ __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 VALID_VERSION = r'[A-Za-z0-9_.-]'
 
 # Infinity-like versions. The order in the list implies the comparison rules
-infinity_versions = ['develop', 'master', 'head', 'trunk']
+infinity_versions = ['develop', 'main', 'master', 'head', 'trunk']
 
 
 def int_if_int(string):

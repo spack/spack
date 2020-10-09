@@ -4,11 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # adapted from official quantum espresso package
 
-import glob
-import os.path
-
-from spack import *
-
 
 class QESirius(Package):
     """SIRIUS enabled fork of QuantumESPRESSO. """
@@ -57,7 +52,7 @@ class QESirius(Package):
     depends_on('blas')
     depends_on('lapack')
     depends_on('fftw-api@3')
-    depends_on('sirius+fortran')
+    depends_on('sirius+fortran+shared')
     depends_on('mpi', when='+mpi')
     depends_on('scalapack', when='+scalapack+mpi')
     depends_on('elpa+openmp', when='+elpa+openmp')
@@ -172,7 +167,6 @@ class QESirius(Package):
         options = ['-prefix={0}'.format(prefix_path)]
 
         sirius = spec['sirius']
-
         options.append('LIBS={0}'.format(sirius.libs[0]))
         options.append('LD_LIBS={0}'.format(sirius.libs[0]))
 
@@ -203,7 +197,7 @@ class QESirius(Package):
         f90flags = 'F90FLAGS=-cpp -I {0}/sirius'.format(header_dir)
 
         if self.spec.satisfies('%gcc@10:'):
-            f90flags += '-fallow-argument-mismatch'
+            f90flags += ' -fallow-argument-mismatch'
 
         options.append(f90flags)
 
@@ -267,7 +261,7 @@ class QESirius(Package):
             # Compute the include directory from there: versions
             # of espresso prior to 6.1 requires -I in front of the directory
             elpa_include = '' if '@6.1:' in spec else '-I'
-            elpa_include += os.path.join(
+            elpa_include += join_path(
                 elpa.headers.directories[0],
                 'modules'
             )
@@ -311,7 +305,6 @@ class QESirius(Package):
 
         if 'platform=darwin' in spec:
             mkdirp(prefix.bin)
-            for filename in glob.glob("bin/*.x"):
-                install(filename, prefix.bin)
+            install('bin/*.x', prefix.bin)
         else:
             make('install')

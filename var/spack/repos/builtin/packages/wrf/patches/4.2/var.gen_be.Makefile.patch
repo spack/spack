@@ -1,0 +1,40 @@
+diff --git a/var/gen_be/Makefile b/var/gen_be/Makefile
+index 208c34d..20ae8d7 100644
+--- a/var/gen_be/Makefile
++++ b/var/gen_be/Makefile
+@@ -14,7 +14,7 @@ gen_be : 	gen_be_ensrf.exe	\
+ 		gen_be_ep1.exe	\
+ 		gen_be_ep2.exe	\
+ 		gen_be_vertloc.exe	\
+-		gen_be_addmean.exe	
++		gen_be_addmean.exe	\
+ 		gen_be_stage1.exe	\
+ 		gen_be_stage1_1dvar.exe	\
+ 		gen_be_stage2.exe	\
+@@ -70,7 +70,7 @@ gen_be_vertloc.exe     : gen_be_vertloc.f90 $(GEN_BE_OBJS) $(GEN_BE_LIBS)
+         $(SFC) -o gen_be_vertloc.exe $(LDFLAGS) $(GEN_BE_OBJS)  gen_be_vertloc.o $(GEN_BE_LIB)
+ 
+ gen_be_addmean.exe : gen_be_addmean.f90 $(GEN_BE_OBJS) $(GEN_BE_LIBS)
+-	$(CPP) $(CPPFLAGS) -I$(WRF_SRC_ROOT_DIR)/inc -I$(NETCDFPATH)/include gen_be_addmean.f90 > gen_be_addmean.f
++	$(CPP) $(CPPFLAGS) -I$(WRF_SRC_ROOT_DIR)/inc -I$(NETCDFFPATH)/include gen_be_addmean.f90 > gen_be_addmean.f
+ 	$(SFC) -c $(FCFLAGS) -I../da $(MODULE_DIRS) $(WRFVAR_INC) $(PROMOTION) gen_be_addmean.f
+ 	$(SFC) -o gen_be_addmean.exe $(LDFLAGS) $(GEN_BE_OBJS) gen_be_addmean.o $(GEN_BE_LIB)
+ 
+@@ -140,7 +140,7 @@ gen_be_diags_read.exe : gen_be_diags_read.f90 $(GEN_BE_OBJS) $(GEN_BE_LIBS)
+ 	$(SFC) -o gen_be_diags_read.exe $(LDFLAGS) $(GEN_BE_OBJS) gen_be_diags_read.o $(GEN_BE_LIB)
+ 
+ gen_be_etkf.exe : gen_be_etkf.f90 $(GEN_BE_OBJS) $(GEN_BE_LIBS)
+-	$(CPP) $(CPPFLAGS) -I$(WRF_SRC_ROOT_DIR)/inc -I$(NETCDFPATH)/include gen_be_etkf.f90 > gen_be_etkf.f
++	$(CPP) $(CPPFLAGS) -I$(WRF_SRC_ROOT_DIR)/inc -I$(NETCDFFPATH)/include gen_be_etkf.f90 > gen_be_etkf.f
+ 	$(SFC) -c $(FCFLAGS) -I../da $(MODULE_DIRS) $(WRFVAR_INC) $(PROMOTION) gen_be_etkf.f
+ 	$(SFC) -o gen_be_etkf.exe $(LDFLAGS) $(GEN_BE_OBJS) gen_be_etkf.o $(GEN_BE_LIB)
+ 
+@@ -150,7 +150,7 @@ gen_be_ensrf.exe : gen_be_ensrf.f90 $(GEN_BE_OBJS) $(GEN_BE_LIBS)
+ 	$(SFC) -o gen_be_ensrf.exe $(LDFLAGS) $(GEN_BE_OBJS) gen_be_ensrf.o $(GEN_BE_LIB)
+ 
+ gen_be_ensmean.exe : gen_be_ensmean.f90 $(GEN_BE_OBJS) $(GEN_BE_LIBS)
+-	$(CPP) $(CPPFLAGS) -I$(WRF_SRC_ROOT_DIR)/inc -I$(NETCDFPATH)/include gen_be_ensmean.f90 > gen_be_ensmean.f
++	$(CPP) $(CPPFLAGS) -I$(WRF_SRC_ROOT_DIR)/inc -I$(NETCDFFPATH)/include gen_be_ensmean.f90 > gen_be_ensmean.f
+ 	$(SFC) -c $(FCFLAGS) -I../da $(MODULE_DIRS) $(WRFVAR_INC) $(PROMOTION) gen_be_ensmean.f
+ 	$(SFC) -o gen_be_ensmean.exe $(LDFLAGS) $(GEN_BE_OBJS) gen_be_ensmean.o $(GEN_BE_LIB)
+ 

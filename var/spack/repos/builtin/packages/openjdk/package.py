@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import platform
+import re
 
 
 # If you need to add a new version, please be aware that:
@@ -59,6 +59,19 @@ class Openjdk(Package):
     #    override how it is symlinked into a view prefix. Then, spack activate
     #    can symlink all *.jar files to `prefix.lib.ext`
     extendable = True
+
+    executables = ['^java$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('-version', output=str, error=str)
+
+        # Make sure this is actually OpenJDK, not Oracle JDK
+        if 'openjdk' not in output:
+            return None
+
+        match = re.search(r'\(build (\S+)\)', output)
+        return match.group(1).replace('+', '_') if match else None
 
     @property
     def home(self):

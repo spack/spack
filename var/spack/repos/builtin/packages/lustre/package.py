@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import re
 
 
 class Lustre(Package):
@@ -13,7 +14,15 @@ class Lustre(Package):
     homepage = 'http://lustre.org/'
     has_code = False
 
+    executables = [r'^lfs$']
+
     version('2.12')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'lfs (\d\S*)', output)
+        return match.group(1) if match else None
 
     # Lustre is filesystem and needs to be installed on system.
     # To have it as external package in SPACK, follow below:

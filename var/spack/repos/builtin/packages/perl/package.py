@@ -11,6 +11,7 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
+import re
 import os
 from contextlib import contextmanager
 
@@ -26,6 +27,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     homepage = "http://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
+
+    executables = [r'^perl(-?\d+.*)?$']
 
     # see http://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
@@ -70,6 +73,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # https://bugzilla.redhat.com/show_bug.cgi?id=1536752
     patch('https://src.fedoraproject.org/rpms/perl/raw/004cea3a67df42e92ffdf4e9ac36d47a3c6a05a4/f/perl-5.26.1-guard_old_libcrypt_fix.patch', level=1, sha256='0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac', when='@:5.26.2')
 
+    # Fix 'Unexpected product version' error on macOS 11.0 Big Sur
+    # https://github.com/Perl/perl5/pull/17946
+    patch('macos-11-version-check.patch', when='@5.24.1:5.32.0 platform=darwin')
+
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
     # having it in core increases the "energy of activation" for doing
@@ -92,6 +99,40 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     )
 
     phases = ['configure', 'build', 'install']
+
+    @classmethod
+    def determine_version(cls, exe):
+        perl = spack.util.executable.Executable(exe)
+        output = perl('--version', output=str, error=str)
+        if output:
+            match = re.search(r'perl.*\(v([0-9.]+)\)', output)
+            if match:
+                return match.group(1)
+        return None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        for exe in exes:
+            perl = spack.util.executable.Executable(exe)
+            output = perl('-V', output=str, error=str)
+            variants = ''
+            if output:
+                match = re.search(r'-Duseshrplib', output)
+                if match:
+                    variants += '+shared'
+                else:
+                    variants += '~shared'
+                match = re.search(r'-Duse.?threads', output)
+                if match:
+                    variants += '+threads'
+                else:
+                    variants += '~threads'
+            path = os.path.dirname(exe)
+            if 'cpanm' in os.listdir(path):
+                variants += '+cpanm'
+            else:
+                variants += '~cpanm'
+            return variants
 
     # On a lustre filesystem, patch may fail when files
     # aren't writeable so make pp.c user writeable

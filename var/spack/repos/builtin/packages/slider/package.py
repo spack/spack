@@ -3,10 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 
-
-class Slider(Package):
+class Slider(MavenPackage):
     """Slider is a framework for deployment and management of these
     long-running data access applications in Hadoop."""
 
@@ -19,7 +17,6 @@ class Slider(Package):
     version('0.91.0', sha256='212a5cde6de60060c9a081f553d66940b70af4bccb469072febb554c4005bcef')
     version('0.90.2', sha256='410941f772d29f564c4bb90ca0631f29dc895f509048cb6052f8695302e3f944')
 
-    depends_on('maven', type='build')
     depends_on('java@8', type=('build', 'run'))
     depends_on('python@2.7.0:2.7.99', type='run')
 
@@ -27,8 +24,6 @@ class Slider(Package):
         return "http://archive.apache.org/dist/incubator/slider/{0}-incubating/apache-slider-{0}-incubating-source-release.tar.gz".format(version)
 
     def install(self, spec, prefix):
-        mvn = which('mvn')
-        mvn('clean', 'package', '-DskipTests')
         slider_path = join_path(self.stage.source_path,
                                 'slider-assembly', 'target',
                                 'slider-{0}-incubating-all'

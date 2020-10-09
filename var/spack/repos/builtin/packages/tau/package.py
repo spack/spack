@@ -76,7 +76,6 @@ class Tau(Package):
     # This is a _reasonable_ subset of the full set of TAU
     # architectures supported:
     variant('craycnl', default=False, description='Build for Cray compute nodes')
-    variant('bgq', default=False, description='Build for IBM BlueGene/Q compute nodes')
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
     variant('x86_64', default=False, description='Force build for x86 Linux instead of auto-detect')
 
@@ -161,9 +160,6 @@ class Tau(Package):
 
         if '+craycnl' in spec:
             options.append('-arch=craycnl')
-
-        if '+bgq' in spec:
-            options.append('-arch=bgq')
 
         if '+ppc64le' in spec:
             options.append('-arch=ibm64linux')
