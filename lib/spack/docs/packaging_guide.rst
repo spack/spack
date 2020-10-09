@@ -3116,7 +3116,7 @@ differ from package to package. In order to make the ``install()`` method
 independent of the choice of ``Blas`` implementation, each package which
 provides it implements ``@property def blas_libs(self):`` to return an object
 of
-`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+`LibraryList <https://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
 type which simplifies usage of a set of libraries.
 The same applies to packages which provide ``Lapack`` and ``ScaLapack``.
 Package developers are requested to use this interface. Common usage cases are:
@@ -3151,7 +3151,7 @@ Package developers are requested to use this interface. Common usage cases are:
 
 
 For more information, see documentation of
-`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+`LibraryList <https://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
 class.
 
 
