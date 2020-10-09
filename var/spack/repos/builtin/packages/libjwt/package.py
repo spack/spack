@@ -9,6 +9,7 @@ from spack import *
 class Libjwt(AutotoolsPackage):
     """libjwt JSON Web Token C Library"""
 
+    homepage = "https://github.com/benmcollins/libjwt"
     git      = "https://github.com/benmcollins/libjwt"
     url      = "https://github.com/benmcollins/libjwt/archive/v1.12.0.tar.gz"
 
