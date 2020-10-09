@@ -69,8 +69,6 @@ class Slurm(AutotoolsPackage):
     depends_on('libyaml', when='+restd')
     depends_on('libjwt', when='+restd')
 
-    #depends_on('hdf5~mpi', when='+hdf5')
-
     def flag_handler(self, name, flags):
         wrapper_flags = None
 
@@ -108,11 +106,11 @@ class Slurm(AutotoolsPackage):
 
         if '+restd' in spec:
             args.append('--enable-slurmrestd')
-            args.append('--with-http-parser={0}'.format(spec['http-parser'].prefix))
+            args.append('--with-http-parser={0}'.format(
+                spec['http-parser'].prefix))
             args.append('--with-jwt={0}'.format(spec['libjwt'].prefix))
         else:
             args.append('--disable-slurmrestd')
-
 
         if '+hwloc' in spec:
             args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
