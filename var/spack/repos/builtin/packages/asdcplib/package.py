@@ -21,3 +21,12 @@ class Asdcplib(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
+    depends_on('openssl',  type=('build', 'link'))
+
+    def configure_args(self):
+
+        spec = self.spec
+
+        args = ['--with-openssl={0}'.format(spec['openssl'].prefix)]
+
+        return args
