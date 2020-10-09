@@ -1,0 +1,321 @@
+--- spack-src/src/mtcp/restore_libc.c.bak	2019-08-15 03:32:13.000000000 +0900
++++ spack-src/src/mtcp/restore_libc.c	2020-10-09 12:45:40.911253793 +0900
+@@ -356,7 +356,17 @@
+   struct user_desc gdtentrytls[2];
+ 
+   gdtentrytls[0].entry_number = get_tls_segreg() / 8;
+-  if (tls_get_thread_area(&gdtentrytls[0], &gdtentrytls[1]) == -1) {
++
++#if defined(__i386__) || defined(__x86_64__)
++  if (tls_get_thread_area(&gdtentrytls[0], &gdtentrytls[1]) == -1)
++#elif defined(__arm__) || defined(__aarch64__)
++  // FIXME: ARM uses tls_get_thread_area with incompatible syntax,
++  //        setting global variable myinfo_gs.  Fix this to work
++  //        for per-thread storage (multiple threads).
++  //        See commit 591a1631 (2.6.0), 7d02a2e0 (3.0):  PR #609
++  if (tls_get_thread_area(&gdtentrytls[0], myinfo_gs) == -1)
++#endif
++  {
+     PRINTF("Error getting GDT TLS entry: %d\n", errno);
+     _exit(0);
+   }
+@@ -573,7 +583,18 @@
+  */
+   i = tlsInfo->TLSSEGREG / 8;
+   tlsInfo->gdtentrytls[0].entry_number = i;
+-  if (tls_get_thread_area (&(tlsInfo->gdtentrytls[0]), &(tlsInfo->gdtentrytls[1])) == -1) {
++
++#if defined(__i386__) || defined(__x86_64__)
++  if (tls_get_thread_area(&(tlsInfo->gdtentrytls[0]),
++                          &(tlsInfo->gdtentrytls[1])) == -1)
++#elif defined(__arm__) || defined(__aarch64__)
++  // FIXME: ARM uses tls_get_thread_area with incompatible syntax,
++  //        setting global variable myinfo_gs.  Fix this to work
++  //        for per-thread storage (multiple threads).
++  //        See commit 591a1631 (2.6.0), 7d02a2e0 (3.0):  PR #609
++  if (tls_get_thread_area (&(tlsInfo->gdtentrytls[0]), myinfo_gs) == -1)
++#endif
++  {
+     PRINTF("Error saving GDT TLS entry: %d\n", errno);
+     _exit(0);
+   }
+@@ -611,9 +632,14 @@
+   }
+ 
+   /* Now pass this to the kernel, so it can adjust the segment descriptors:
+-   *   tls_set_thread_areaa() uses arg1 for fs and arg2 for gs.
+-   * This will make different kernel calls according to the CPU architecture. */
+-  if (tls_set_thread_area (&(tlsInfo->gdtentrytls[0]), &(tlsInfo->gdtentrytls[1])) != 0) {
++   *   i386, x86_64: tls_set_thread_areaa() uses arg1 for fs and arg2 for gs.
++   * This will make different kernel calls according to the CPU architecture. */#if defined(__i386__) || defined(__x86_64__)
++  if (tls_set_thread_area(&(tlsInfo->gdtentrytls[0]),
++                          &(tlsInfo->gdtentrytls[1])) != 0)
++#elif defined(__arm__) || defined(__aarch64__)
++  if (tls_set_thread_area (&(tlsInfo->gdtentrytls[0]), myinfo_gs) != 0)
++#endif
++  {
+     PRINTF("Error restoring GDT TLS entry: %d\n", errno);
+     mtcp_abort();
+   }
+--- spack-src/src/mtcp/mtcp_restart.c.bak	2019-08-15 03:32:13.000000000 +0900
++++ spack-src/src/mtcp/mtcp_restart.c	2020-10-09 13:07:13.231130185 +0900
+@@ -462,8 +462,14 @@
+                 CLEAN_FOR_64_BIT(sub %0, %%ebp; )
+                 : : "r" (rinfo.stack_offset) : "memory");
+ 
+-#elif defined(__arm__) || defined(__aarch64__)
+-  asm volatile ("sub sp, sp, %0; mov fp, fp, %0 \n\t"
++#elif defined(__arm__)
++  asm volatile ("sub sp, sp, %0"
++                : : "r" (rinfo.stack_offset) : "memory");
++
++#elif defined(__aarch64__)
++  // Use x29 instead of fp because GCC's inline assembler does not recognize fp.
++  asm volatile ("sub sp, sp, %0\n\t"
++                "sub x29, x29, %0"
+                 : : "r" (rinfo.stack_offset) : "memory");
+ 
+ #else /* if defined(__i386__) || defined(__x86_64__) */
+@@ -1118,9 +1124,19 @@
+   }
+ 
+   /* Now pass this to the kernel, so it can adjust the segment descriptor.
+-   *   tls_set_thread_areaa() uses arg1 for fs and arg2 for gs.
++   *   i386, x86_65: tls_set_thread_areaa() uses arg1 for fs and arg2 for gs.
+    * This will make different kernel calls according to the CPU architecture. */
+-  if (tls_set_thread_area (&(tlsInfo->gdtentrytls[0]), &(tlsInfo->gdtentrytls[1])) != 0) {
++#if defined(__i386__) || defined(__x86_64__)
++  if (tls_set_thread_area(&(tlsInfo->gdtentrytls[0]),
++                          &(tlsInfo->gdtentrytls[1])) != 0)
++#elif defined(__arm__) || defined(__aarch64__)
++  // FIXME: ARM uses tls_get_thread_area with incompatible syntax,
++  //        setting global variable myinfo_gs.  Fix this to work
++  //        for per-thread storage (multiple threads).
++  //        See commit 591a1631 (2.6.0), 7d02a2e0 (3.0):  PR #609
++  if (tls_set_thread_area (&(tlsInfo->gdtentrytls[0]), myinfo_gs) != 0)
++#endif
++  {
+     MTCP_PRINTF("Error restoring GDT TLS entry; errno: %d\n", mtcp_sys_errno);
+     mtcp_abort();
+   }
+--- spack-src/src/plugin/pid/pid_miscwrappers.cpp.bak	2019-08-15 03:32:13.000000000 +0900
++++ spack-src/src/plugin/pid/pid_miscwrappers.cpp	2020-10-09 13:21:00.221078403 +0900
+@@ -21,14 +21,6 @@
+ 
+ #include <semaphore.h>
+ #include <sys/syscall.h>
+-#ifdef __aarch64__
+-# define __ARCH_WANT_SYSCALL_DEPRECATED
+-// SYS_getpgrp is a deprecated kernel call in aarch64, but in favor of what?
+-# include <asm-generic/unistd.h>
+-// SYS_getpgrp undefined in aarch64, but add extra insurance
+-# undef SYS_getpgrp
+-# define SYS_getpgrp __NR_getpgrp
+-#endif
+ #include <linux/version.h>
+ 
+ #include "config.h"  // for HAS_CMA
+@@ -355,11 +347,16 @@
+       break;
+     }
+ 
+-    case SYS_getpgrp:
+-    {
+-      ret = getpgrp();
+-      break;
+-    }
++// SYS_getpgrp undefined in aarch64.
++// Presumably, it's handled by libc, and is not a kernel call
++//   in AARCH64 (e.g., v5.01).
++#ifndef __aarch64__
++  case SYS_getpgrp:
++  {
++    ret = getpgrp();
++    break;
++  }
++#endif
+ 
+     case SYS_getpgid:
+     {
+--- spack-src/src/miscwrappers.cpp.bak	2019-08-15 03:32:13.000000000 +0900
++++ spack-src/src/miscwrappers.cpp	2020-10-09 13:51:30.611006815 +0900
+@@ -41,26 +41,28 @@
+ #endif
+ 
+ #ifdef __aarch64__
++
+ // We must support all deprecated syscalls in case the end user code uses it.
+ # define __ARCH_WANT_SYSCALL_DEPRECATED
+ # define __ARCH_WANT_SYSCALL_NO_AT
+ # define __ARCH_WANT_SYSCALL_NO_FLAGS
++
+ // SYS_fork is a deprecated kernel call in aarch64; in favor of SYS_clone?
+ # include <asm-generic/unistd.h>
+-// SYS_fork undefined in aarch64, but add extra insurance
+-# undef SYS_fork
+-# undef SYS_open
+-# undef SYS_pipe
+-# undef SYS_poll
+-# define SYS_fork __NR_fork
+-# define SYS_open __NR_open
+-# define SYS_pipe __NR_pipe
+-# define SYS_poll __NR_poll
+-// These kernel calls are not deprecated.  But SYS_XXX is not defined for them.
+-# define SYS_epoll_create __NR_epoll_create
+-# define SYS_inotify_init __NR_inotify_init
+-# define SYS_signalfd __NR_signalfd
+-# define SYS_eventfd __NR_eventfd
++
++// SYS_fork, etc., are undefined in aarch64
++// Presumably, libc translates the POSIX syscalls into later kernel calls.
++// # define SYS_fork         __NR_fork
++// # define SYS_open         __NR_open
++// # define SYS_pipe         __NR_pipe
++// # define SYS_poll         __NR_poll
++
++// These kernel calls are now often gone on aarch64.  SYS_XXX should not be
++//   defined for them.
++// # define SYS_epoll_create __NR_epoll_create
++// # define SYS_inotify_init __NR_inotify_init
++// # define SYS_signalfd     __NR_signalfd
++// # define SYS_eventfd      __NR_eventfd
+ #endif
+ 
+ using namespace dmtcp;
+@@ -321,23 +323,27 @@
+       break;
+     }
+ 
++# ifndef __aarch64__
+     case SYS_fork:
+     {
+       ret = fork();
+       break;
+     }
++# endif // ifndef __aarch64__
+     case SYS_exit:
+     {
+       SYSCALL_GET_ARG(int,status);
+       exit(status);
+       break;
+     }
++# ifndef __aarch64__
+     case SYS_open:
+     {
+       SYSCALL_GET_ARGS_3(const char*,pathname,int,flags,mode_t,mode);
+       ret = open(pathname, flags, mode);
+       break;
+     }
++# endif // ifndef __aarch64__
+     case SYS_close:
+     {
+       SYSCALL_GET_ARG(int,fd);
+@@ -443,12 +449,14 @@
+     }
+ #endif
+ 
++# ifndef __aarch64__
+     case SYS_pipe:
+     {
+       SYSCALL_GET_ARG(int*,fds);
+       ret = pipe(fds);
+       break;
+     }
++# endif // ifdef __aarch64__
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)) && __GLIBC_PREREQ(2,9)
+     case SYS_pipe2:
+     {
+@@ -498,33 +506,44 @@
+     }
+ # endif
+ #endif
++# ifndef __aarch64__
+     case SYS_poll:
+     {
+       SYSCALL_GET_ARGS_3(struct pollfd *,fds,nfds_t,nfds,int,timeout);
+       ret = poll(fds, nfds, timeout);
+       break;
+     }
++# endif // ifdef __aarch64__
++# ifndef __aarch64__
+     case SYS_epoll_create:
+     {
+       SYSCALL_GET_ARG(int,size);
+       ret = epoll_create(size);
+       break;
+     }
++# endif // ifdef __aarch64__
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13) && __GLIBC_PREREQ(2,4)
++# ifndef __aarch64__
+     case SYS_inotify_init:
+     {
+       ret = inotify_init();
+       break;
+     }
+-#endif
++#endif // ifdef __aarch64__
++#endif // if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 13) && __GLIBC_PREREQ(2,
++       // 4)
++
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22) && __GLIBC_PREREQ(2,8)
++# ifndef __aarch64__
+     case SYS_signalfd:
+     {
+       SYSCALL_GET_ARGS_3(int,fd,sigset_t *,mask,int,flags);
+       ret = signalfd(fd, mask, flags);
+       break;
+     }
+-#endif
++#endif // ifndef __aarch64__
++#endif // if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 22) && __GLIBC_PREREQ(2,
++       // 8)
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27) && __GLIBC_PREREQ(2,8)
+     case SYS_signalfd4:
+     {
+@@ -534,13 +553,16 @@
+     }
+ #endif
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22) && __GLIBC_PREREQ(2,8)
++# ifndef __aarch64__
+     case SYS_eventfd:
+     {
+       SYSCALL_GET_ARGS_2(unsigned int,initval,int,flags);
+       ret = eventfd(initval, flags);
+       break;
+     }
+-#endif
++#endif // ifndef __aarch64__
++#endif // if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 22) && __GLIBC_PREREQ(2,
++       // 8)
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27) && __GLIBC_PREREQ(2,8)
+     case SYS_eventfd2:
+     {
+--- spack-src/src/execwrappers.cpp.bak	2019-08-15 03:32:13.000000000 +0900
++++ spack-src/src/execwrappers.cpp	2020-10-09 14:01:25.910998477 +0900
+@@ -20,14 +20,6 @@
+  ****************************************************************************/
+ 
+ #include <sys/syscall.h>
+-#ifdef __aarch64__
+-# define __ARCH_WANT_SYSCALL_DEPRECATED
+-// SYS_fork is a deprecated kernel call in aarch64; in favor of SYS_clone?
+-# include <asm-generic/unistd.h>
+-// SYS_fork undefined in aarch64, but add extra insurance
+-# undef SYS_fork
+-# define SYS_fork __NR_fork
+-#endif
+ #include "constants.h"
+ #include "uniquepid.h"
+ #include "dmtcpworker.h"
+@@ -168,7 +160,11 @@
+        * resuming to run under dmtcp
+        */
+       (dmtcp_delay_resume_blocked != NULL && dmtcp_delay_resume_blocked())) {
++#ifndef __aarch64__
+     return _real_syscall(SYS_fork);
++#else
++    return _real_fork();
++#endif
+   }
+ 
+   /* Acquire the wrapperExeution lock to prevent checkpoint to happen while
