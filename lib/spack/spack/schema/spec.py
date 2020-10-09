@@ -81,7 +81,6 @@ properties = {
         ],
         'properties': {
             'hash': {'type': 'string'},
-            'full_hash': {'type': 'string'},
             'version': {
                 'oneOf': [
                     {'type': 'string'},
