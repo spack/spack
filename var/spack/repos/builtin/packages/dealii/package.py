@@ -43,10 +43,9 @@ class Dealii(CMakePackage, CudaPackage):
     variant('build_type', default='DebugRelease',
             description='The build type to build',
             values=('Debug', 'Release', 'DebugRelease'))
-    variant('cxxstd',
-            default='default',
-            multi=False,
-            values=('default', '11', '14', '17', '2a'))
+    variant('cxxstd',   default='default', multi=False,
+            description='Compile using the specified C++ standard',
+            values=('default', '11', '14', '17'))
     variant('doc',      default=False,
             description='Compile with documentation')
     variant('examples', default=True,
@@ -136,8 +135,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('boost cxxstd=11', when='cxxstd=11')
     depends_on('boost cxxstd=14', when='cxxstd=14')
     depends_on('boost cxxstd=17', when='cxxstd=17')
-    # bzip2 is not needed since 9.0
-    depends_on('bzip2', when='@:8.99')
+    depends_on('bzip2',           when='@:8.99')
     depends_on('lapack')
     depends_on('ninja',           type='build')
     depends_on('suite-sparse')
@@ -326,27 +324,12 @@ class Dealii(CMakePackage, CudaPackage):
             'DEAL_II_COMPONENT_EXAMPLES', 'examples')
         )
 
-        # Deal with C++ standard
+        # Enforce the specified C++ standard
         if spec.variants['cxxstd'].value != 'default':
             cxxstd = spec.variants['cxxstd'].value
-
-            if spec.satisfies('^cmake@3.1:'):
-                options.extend([
-                    '-DCMAKE_CXX_STANDARD={0}'.format(cxxstd)
-                ])
-            else:
-                flag = getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
-                if flag:
-                    cxx_flags.append(flag)
-
-            # Ensure that deal.II doesn't override these settings internally
-            cxxstd_value = int(cxxstd)
-            if cxxstd_value < 11:
-                options.extend(['-DDEAL_II_WITH_CXX11:BOOL=OFF'])
-            if cxxstd_value < 14:
-                options.extend(['-DDEAL_II_WITH_CXX14:BOOL=OFF'])
-            if cxxstd_value < 17:
-                options.extend(['-DDEAL_II_WITH_CXX17:BOOL=OFF'])
+            options.append(
+                '-DDEAL_II_WITH_CXX{0}:BOOL=ON'.format(cxxstd)
+            )
 
         # Performance
         # Set recommended flags for maximum (matrix-free) performance, see
@@ -411,10 +394,9 @@ class Dealii(CMakePackage, CudaPackage):
 
         # Python bindings
         if spec.satisfies('@8.5.0:'):
-            options.extend([
-                '-DDEAL_II_COMPONENT_PYTHON_BINDINGS=%s' %
-                ('ON' if '+python' in spec else 'OFF')
-            ])
+            options.append(self.define_from_variant(
+                'DEAL_II_COMPONENT_PYTHON_BINDINGS', 'python')
+            )
             if '+python' in spec:
                 python_exe = spec['python'].command.path
                 python_library = spec['python'].libs[0]
@@ -430,19 +412,19 @@ class Dealii(CMakePackage, CudaPackage):
             'DEAL_II_WITH_THREADS', 'threads')
         )
 
-        if (spec.satisfies('^intel-parallel-studio+tbb')
-            and '+threads' in spec):
-            # deal.II/cmake will have hard time picking up TBB from Intel.
-            tbb_ver = '.'.join(('%s' % spec['tbb'].version).split('.')[1:])
-            options.extend([
-                '-DTBB_FOUND=true',
-                '-DTBB_VERSION=%s' % tbb_ver,
-                '-DTBB_INCLUDE_DIRS=%s' % ';'.join(
-                    spec['tbb'].headers.directories),
-                '-DTBB_LIBRARIES=%s' % spec['tbb'].libs.joined(';')
-            ])
-        else:
-            options.append('-DTBB_DIR=%s' % spec['tbb'].prefix)
+        if '+threads' in spec:
+            if (spec.satisfies('^intel-parallel-studio+tbb')):
+                # deal.II/cmake will have hard time picking up TBB from Intel.
+                tbb_ver = '.'.join(('%s' % spec['tbb'].version).split('.')[1:])
+                options.extend([
+                    '-DTBB_FOUND=true',
+                    '-DTBB_VERSION=%s' % tbb_ver,
+                    '-DTBB_INCLUDE_DIRS=%s' % ';'.join(
+                        spec['tbb'].headers.directories),
+                    '-DTBB_LIBRARIES=%s' % spec['tbb'].libs.joined(';')
+                ])
+            else:
+                options.append('-DTBB_DIR=%s' % spec['tbb'].prefix)
 
         # Optional dependencies for which library names are the same as CMake
         # variables:
@@ -472,7 +454,7 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DDEAL_II_WITH_ADOLC=OFF'
             ])
 
-        # arpack
+        # ARPACK
         if '+arpack' in spec and '+mpi' in spec:
             options.extend([
                 '-DARPACK_DIR=%s' % spec['arpack-ng'].prefix,
@@ -500,7 +482,7 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DDEAL_II_WITH_NETCDF=OFF'
             ])
 
-        # Scalapack
+        # ScaLAPACK
         if '+scalapack' in spec:
             scalapack = spec['scalapack'].libs
             options.extend([
