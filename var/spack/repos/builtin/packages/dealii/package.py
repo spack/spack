@@ -22,6 +22,8 @@ class Dealii(CMakePackage, CudaPackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
+    generator = 'Ninja'
+
     version('master', branch='master')
     version('9.2.0', sha256='d05a82fb40f1f1e24407451814b5a6004e39366a44c81208b1ae9d65f3efa43a')
     version('9.1.1', sha256='fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276')
@@ -37,26 +39,51 @@ class Dealii(CMakePackage, CudaPackage):
     version('8.2.1', sha256='d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0')
     version('8.1.0', sha256='d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99')
 
-    variant('mpi',      default=True,  description='Compile with MPI')
+    # Configuration variants
+    variant('build_type', default='DebugRelease',
+            description='The build type to build',
+            values=('Debug', 'Release', 'DebugRelease'))
+    variant('cxxstd',   default='default', multi=False,
+            description='Compile using the specified C++ standard',
+            values=('default', '11', '14', '17'))
+    variant('doc',      default=False,
+            description='Compile with documentation')
+    variant('examples', default=True,
+            description='Compile tutorial programs')
+    variant('int64',    default=False,
+            description='Compile with 64 bit indices support')
+    variant('mpi',      default=True,
+            description='Compile with MPI')
+    variant('optflags', default=False,
+            description='Compile using additional optimization flags')
+    variant('python',   default=False,
+            description='Compile with Python bindings')
+
+    # Package variants
     variant('assimp',   default=True,
             description='Compile with Assimp')
     variant('arpack',   default=True,
             description='Compile with Arpack and PArpack (only with MPI)')
     variant('adol-c',   default=True,
-            description='Compile with Adol-c')
-    variant('doc',      default=False,
-            description='Compile with documentation')
-    variant('ginkgo',   default=True, description='Compile with Ginkgo')
-    variant('gmsh',     default=True,  description='Compile with GMSH')
-    variant('gsl',      default=True,  description='Compile with GSL')
+            description='Compile with ADOL-C')
+    variant('ginkgo',   default=True,
+            description='Compile with Ginkgo')
+    variant('gmsh',     default=True,
+            description='Compile with GMSH')
+    variant('gsl',      default=True,
+            description='Compile with GSL')
     variant('hdf5',     default=True,
             description='Compile with HDF5 (only with MPI)')
-    variant('metis',    default=True,  description='Compile with Metis')
-    variant('muparser', default=True,  description='Compile with muParser')
-    variant('nanoflann', default=True, description='Compile with Nanoflann')
-    variant('netcdf',   default=True,
+    variant('metis',    default=True,
+            description='Compile with Metis')
+    variant('muparser', default=True,
+            description='Compile with muParser')
+    variant('nanoflann', default=True,
+            description='Compile with Nanoflann')
+    variant('netcdf',   default=False,
             description='Compile with Netcdf (only with MPI)')
-    variant('oce',      default=True,  description='Compile with OCE')
+    variant('oce',      default=True,
+            description='Compile with OCE')
     variant('p4est',    default=True,
             description='Compile with P4est (only with MPI)')
     variant('petsc',    default=True,
@@ -73,15 +100,6 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with multi-threading via TBB')
     variant('trilinos', default=True,
             description='Compile with Trilinos (only with MPI)')
-    variant('python',   default=False,
-            description='Compile with Python bindings')
-    variant('int64',    default=False,
-            description='Compile with 64 bit indices support')
-    variant('optflags', default=False,
-            description='Compile using additional optimization flags')
-    variant('build_type', default='DebugRelease',
-            description='The build type to build',
-            values=('Debug', 'Release', 'DebugRelease'))
 
     # required dependencies, light version
     depends_on('blas')
@@ -111,14 +129,28 @@ class Dealii(CMakePackage, CudaPackage):
                               when='@1.68.0'),
                         ],
                when='+python')
-    # bzip2 is not needed since 9.0
-    depends_on('bzip2', when='@:8.99')
+    # The std::auto_ptr is removed in the C++ 17 standard.
+    # See https://github.com/dealii/dealii/issues/4662
+    # and related topics discussed for other software libraries.
+    depends_on('boost cxxstd=11', when='cxxstd=11')
+    depends_on('boost cxxstd=14', when='cxxstd=14')
+    depends_on('boost cxxstd=17', when='cxxstd=17')
+    depends_on('bzip2',           when='@:8.99')
     depends_on('lapack')
+    depends_on('ninja',           type='build')
     depends_on('suite-sparse')
     depends_on('zlib')
 
-    # optional dependencies
+    # Optional dependencies: Configuration
+    depends_on('cuda@8:',          when='+cuda')
+    depends_on('cmake@3.9:',       when='+cuda', type='build')
+    # older version of deal.II do not build with Cmake 3.10, see
+    # https://github.com/dealii/dealii/issues/5510
+    depends_on('cmake@:3.9.99',    when='@:8.99', type='build')
     depends_on('mpi',              when='+mpi')
+    depends_on('python',           when='@8.5.0:+python')
+
+    # Optional dependencies: Packages
     depends_on('adol-c@2.6.4:',    when='@9.0:+adol-c')
     depends_on('arpack-ng+mpi',    when='+arpack+mpi')
     depends_on('assimp',           when='@9.0:+assimp')
@@ -129,17 +161,12 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('gsl',              when='@8.5.0:+gsl')
     # FIXME: next line fixes concretization with petsc
     depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi+petsc')
-    depends_on('hdf5+mpi+hl', when='+hdf5+mpi~petsc')
-    depends_on('cuda@8:',          when='+cuda')
-    depends_on('cmake@3.9:',       when='+cuda', type='build')
-    # older version of deal.II do not build with Cmake 3.10, see
-    # https://github.com/dealii/dealii/issues/5510
-    depends_on('cmake@:3.9.99',    when='@:8.99', type='build')
+    depends_on('hdf5+mpi+hl',      when='+hdf5+mpi~petsc')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
     depends_on('metis@5:+int64',   when='+metis+int64')
     depends_on('metis@5:~int64',   when='+metis~int64')
-    depends_on('muparser', when='+muparser')
+    depends_on('muparser',         when='+muparser')
     # Nanoflann support has been removed after 9.2.0
     depends_on('nanoflann',        when='@9.0:9.2+nanoflann')
     depends_on('netcdf-c+mpi',     when='+netcdf+mpi')
@@ -149,7 +176,6 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('petsc+mpi~int64',  when='+petsc+mpi~int64')
     depends_on('petsc+mpi+int64',  when='+petsc+mpi+int64')
     depends_on('petsc@:3.6.4',     when='@:8.4.1+petsc+mpi')
-    depends_on('python',           when='@8.5.0:+python')
     depends_on('scalapack',        when='@9.0:+scalapack')
     depends_on('slepc',            when='+slepc+petsc+mpi')
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
@@ -165,7 +191,8 @@ class Dealii(CMakePackage, CudaPackage):
     # depends_on("symengine@0.4: build_type=Release", when="@9.1:+symengine+trilinos^trilinos~debug")  # NOQA: ignore=E501
     # depends_on("symengine@0.4: build_type=Debug", when="@9.1:+symengine+trilinos^trilinos+debug")  # NOQA: ignore=E501
     depends_on('symengine@0.4:', when='@9.1:+symengine')
-    depends_on('tbb', when='+threads')
+    depends_on('symengine@0.6:', when='@9.2:+symengine')
+    depends_on('tbb',            when='+threads')
     # do not require +rol to make concretization of xsdk possible
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
@@ -191,11 +218,16 @@ class Dealii(CMakePackage, CudaPackage):
           sha256='6f876dc8eadafe2c4ec2a6673864fb451c6627ca80511b6e16f3c401946fdf33',
           when='@9.0.0:9.1.1')
 
-    # check that the combination of variants makes sense
-    # 64-bit BLAS:
-    for p in ['openblas', 'intel-mkl', 'intel-parallel-studio+mkl']:
-        conflicts('^{0}+ilp64'.format(p), when='@:8.5.1',
-                  msg='64bit BLAS is only supported from 9.0.0')
+    # Check for sufficiently modern versions
+    conflicts('cxxstd=98', when='@9.0:')
+    conflicts('cxxstd=11', when='@9.3:')
+
+    # interfaces added in 8.5.0:
+    for p in ['gsl', 'python']:
+        conflicts('+{0}'.format(p), when='@:8.4.2',
+                  msg='The interface to {0} is supported from version 8.5.0 '
+                      'onwards. Please explicitly disable this variant '
+                      'via ~{0}'.format(p))
 
     # interfaces added in 9.0.0:
     for p in ['assimp', 'gmsh', 'nanoflann', 'scalapack', 'sundials',
@@ -212,24 +244,16 @@ class Dealii(CMakePackage, CudaPackage):
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
 
+    # interfaces removed in 9.3.0:
     conflicts('+nanoflann', when='@9.3.0:',
               msg='The interface to nanoflann was removed from version 9.3.0. '
                   'Please explicitly disable this variant via ~nanoflann')
 
-    conflicts('+slepc', when='~petsc',
-              msg='It is not possible to enable slepc interfaces '
-                  'without petsc.')
-
-    conflicts('+adol-c', when='^trilinos+chaco',
-              msg='symbol clash between the ADOL-C library and '
-                  'Trilinos SEACAS Chaco.')
-
-    # interfaces added in 8.5.0:
-    for p in ['gsl', 'python']:
-        conflicts('+{0}'.format(p), when='@:8.4.2',
-                  msg='The interface to {0} is supported from version 8.5.0 '
-                      'onwards. Please explicitly disable this variant '
-                      'via ~{0}'.format(p))
+    # check that the combination of variants makes sense
+    # 64-bit BLAS:
+    for p in ['openblas', 'intel-mkl', 'intel-parallel-studio+mkl']:
+        conflicts('^{0}+ilp64'.format(p), when='@:8.5.1',
+                  msg='64bit BLAS is only supported from 9.0.0')
 
     # MPI requirements:
     for p in ['arpack', 'hdf5', 'netcdf', 'p4est', 'petsc', 'scalapack',
@@ -237,6 +261,15 @@ class Dealii(CMakePackage, CudaPackage):
         conflicts('+{0}'.format(p), when='~mpi',
                   msg='To enable {0} it is necessary to build deal.II with '
                       'MPI support enabled.'.format(p))
+
+    # Optional dependencies:
+    conflicts('+adol-c', when='^trilinos+chaco',
+              msg='symbol clash between the ADOL-C library and '
+                  'Trilinos SEACAS Chaco.')
+
+    conflicts('+slepc', when='~petsc',
+              msg='It is not possible to enable slepc interfaces '
+                  'without petsc.')
 
     def cmake_args(self):
         spec = self.spec
@@ -246,10 +279,20 @@ class Dealii(CMakePackage, CudaPackage):
         # debug and release flags
         cxx_flags = []
 
+        # Set directory structure:
+        if spec.satisfies('@:8.2.1'):
+            options.extend(['-DDEAL_II_COMPONENT_COMPAT_FILES=OFF'])
+        else:
+            options.extend([
+                '-DDEAL_II_EXAMPLES_RELDIR=share/deal.II/examples',
+                '-DDEAL_II_DOCREADME_RELDIR=share/deal.II/',
+                '-DDEAL_II_DOCHTML_RELDIR=share/deal.II/doc'
+            ])
+
+        # Required dependencies
         lapack_blas_libs = spec['lapack'].libs + spec['blas'].libs
         lapack_blas_headers = spec['lapack'].headers + spec['blas'].headers
         options.extend([
-            '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
             # CMake's FindBlas/Lapack may pickup system's blas/lapack instead
             # of Spack's. Be more specific to avoid this.
@@ -263,30 +306,6 @@ class Dealii(CMakePackage, CudaPackage):
             '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
 
-        if '+threads' in spec:
-            options.append('-DDEAL_II_WITH_THREADS:BOOL=ON')
-        else:
-            options.extend(['-DDEAL_II_WITH_THREADS:BOOL=OFF'])
-
-        if (spec.satisfies('^intel-parallel-studio+tbb')
-            and '+threads' in spec):
-            # deal.II/cmake will have hard time picking up TBB from Intel.
-            tbb_ver = '.'.join(('%s' % spec['tbb'].version).split('.')[1:])
-            options.extend([
-                '-DTBB_FOUND=true',
-                '-DTBB_VERSION=%s' % tbb_ver,
-                '-DTBB_INCLUDE_DIRS=%s' % ';'.join(
-                    spec['tbb'].headers.directories),
-                '-DTBB_LIBRARIES=%s' % spec['tbb'].libs.joined(';')
-            ])
-        else:
-            options.append('-DTBB_DIR=%s' % spec['tbb'].prefix)
-
-        if (spec.satisfies('^openblas+ilp64') or
-            spec.satisfies('^intel-mkl+ilp64') or
-            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
-            options.append('-DLAPACK_WITH_64BIT_BLAS_INDICES=ON')
-
         if spec.satisfies('@:8.99'):
             options.extend([
                 # Cmake may still pick up system's bzip2, fix this:
@@ -295,6 +314,24 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DBZIP2_LIBRARIES=%s' % spec['bzip2'].libs.joined(';')
             ])
 
+        # Doxygen documentation
+        options.append(self.define_from_variant(
+            'DEAL_II_COMPONENT_DOCUMENTATION', 'doc')
+        )
+
+        # Examples / tutorial programs
+        options.append(self.define_from_variant(
+            'DEAL_II_COMPONENT_EXAMPLES', 'examples')
+        )
+
+        # Enforce the specified C++ standard
+        if spec.variants['cxxstd'].value != 'default':
+            cxxstd = spec.variants['cxxstd'].value
+            options.append(
+                '-DDEAL_II_WITH_CXX{0}:BOOL=ON'.format(cxxstd)
+            )
+
+        # Performance
         # Set recommended flags for maximum (matrix-free) performance, see
         # https://groups.google.com/forum/?fromgroups#!topic/dealii/3Yjy8CBIrgU
         if spec.satisfies('%gcc'):
@@ -304,31 +341,15 @@ class Dealii(CMakePackage, CudaPackage):
         elif spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
             cxx_flags_release.extend(['-O3', '-ffp-contract=fast'])
 
-        # Python bindings
-        if spec.satisfies('@8.5.0:'):
-            options.extend([
-                '-DDEAL_II_COMPONENT_PYTHON_BINDINGS=%s' %
-                ('ON' if '+python' in spec else 'OFF')
-            ])
-            if '+python' in spec:
-                python_exe = spec['python'].command.path
-                python_library = spec['python'].libs[0]
-                python_include = spec['python'].headers.directories[0]
-                options.extend([
-                    '-DPYTHON_EXECUTABLE=%s' % python_exe,
-                    '-DPYTHON_INCLUDE_DIR=%s' % python_include,
-                    '-DPYTHON_LIBRARY=%s' % python_library
-                ])
+        # 64 bit indices
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_64BIT_INDICES', 'int64')
+        )
 
-        # Set directory structure:
-        if spec.satisfies('@:8.2.1'):
-            options.extend(['-DDEAL_II_COMPONENT_COMPAT_FILES=OFF'])
-        else:
-            options.extend([
-                '-DDEAL_II_EXAMPLES_RELDIR=share/deal.II/examples',
-                '-DDEAL_II_DOCREADME_RELDIR=share/deal.II/',
-                '-DDEAL_II_DOCHTML_RELDIR=share/deal.II/doc'
-            ])
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            options.append('-DLAPACK_WITH_64BIT_BLAS_INDICES=ON')
 
         # CUDA
         if '+cuda' in spec:
@@ -362,11 +383,48 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
                 '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
                 '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
+                '-DMPI_C_COMPILER=%s' % spec['mpi'].mpicc,
+                '-DMPI_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+                '-DMPI_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             ])
         else:
             options.extend([
                 '-DDEAL_II_WITH_MPI:BOOL=OFF',
             ])
+
+        # Python bindings
+        if spec.satisfies('@8.5.0:'):
+            options.append(self.define_from_variant(
+                'DEAL_II_COMPONENT_PYTHON_BINDINGS', 'python')
+            )
+            if '+python' in spec:
+                python_exe = spec['python'].command.path
+                python_library = spec['python'].libs[0]
+                python_include = spec['python'].headers.directories[0]
+                options.extend([
+                    '-DPYTHON_EXECUTABLE=%s' % python_exe,
+                    '-DPYTHON_INCLUDE_DIR=%s' % python_include,
+                    '-DPYTHON_LIBRARY=%s' % python_library
+                ])
+
+        # Threading
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_THREADS', 'threads')
+        )
+
+        if '+threads' in spec:
+            if (spec.satisfies('^intel-parallel-studio+tbb')):
+                # deal.II/cmake will have hard time picking up TBB from Intel.
+                tbb_ver = '.'.join(('%s' % spec['tbb'].version).split('.')[1:])
+                options.extend([
+                    '-DTBB_FOUND=true',
+                    '-DTBB_VERSION=%s' % tbb_ver,
+                    '-DTBB_INCLUDE_DIRS=%s' % ';'.join(
+                        spec['tbb'].headers.directories),
+                    '-DTBB_LIBRARIES=%s' % spec['tbb'].libs.joined(';')
+                ])
+            else:
+                options.append('-DTBB_DIR=%s' % spec['tbb'].prefix)
 
         # Optional dependencies for which library names are the same as CMake
         # variables:
@@ -384,7 +442,8 @@ class Dealii(CMakePackage, CudaPackage):
                     '-DDEAL_II_WITH_%s:BOOL=OFF' % library.upper()
                 ])
 
-        # adol-c
+        # Optional dependencies that do not fit the above pattern:
+        # ADOL-C
         if '+adol-c' in spec:
             options.extend([
                 '-DADOLC_DIR=%s' % spec['adol-c'].prefix,
@@ -395,13 +454,7 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DDEAL_II_WITH_ADOLC=OFF'
             ])
 
-        # doxygen
-        options.extend([
-            '-DDEAL_II_COMPONENT_DOCUMENTATION=%s' %
-            ('ON' if '+doc' in spec else 'OFF'),
-        ])
-
-        # arpack
+        # ARPACK
         if '+arpack' in spec and '+mpi' in spec:
             options.extend([
                 '-DARPACK_DIR=%s' % spec['arpack-ng'].prefix,
@@ -413,6 +466,7 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DDEAL_II_WITH_ARPACK=OFF'
             ])
 
+        # NetCDF
         # since Netcdf is spread among two, need to do it by hand:
         if '+netcdf' in spec and '+mpi' in spec:
             netcdf = spec['netcdf-cxx'].libs + spec['netcdf-c'].libs
@@ -428,6 +482,7 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DDEAL_II_WITH_NETCDF=OFF'
             ])
 
+        # ScaLAPACK
         if '+scalapack' in spec:
             scalapack = spec['scalapack'].libs
             options.extend([
@@ -453,12 +508,8 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DDEAL_II_WITH_OPENCASCADE=OFF'
             ])
 
-        # 64 bit indices
-        options.extend([
-            '-DDEAL_II_WITH_64BIT_INDICES=%s' % ('+int64' in spec)
-        ])
-
-        # collect CXX flags:
+        # As a final step, collect CXX flags that may have been
+        # added anywhere above:
         if len(cxx_flags_release) > 0 and '+optflags' in spec:
             options.extend([
                 '-DCMAKE_CXX_FLAGS_RELEASE:STRING=%s' % (

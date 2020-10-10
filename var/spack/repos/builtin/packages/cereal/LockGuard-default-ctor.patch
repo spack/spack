@@ -1,0 +1,13 @@
+diff -pur cereal/include/cereal/details/static_object.hpp cereal_new/include/cereal/details/static_object.hpp
+--- cereal/include/cereal/details/static_object.hpp	2020-05-06 11:10:09.251770253 +0200
++++ cereal_new/include/cereal/details/static_object.hpp	2020-05-06 11:11:00.904447455 +0200
+@@ -94,7 +94,8 @@ namespace cereal
+             std::unique_lock<std::mutex> lock;
+           #else
+           public:
+-	          LockGuard(LockGuard const &) = default; // prevents implicit copy ctor warning
++            LockGuard() = default;
++            LockGuard(LockGuard const &) = default; // prevents implicit copy ctor warning
+             ~LockGuard() CEREAL_NOEXCEPT {} // prevents variable not used
+           #endif
+         };
