@@ -526,3 +526,7 @@ class Dealii(CMakePackage, CudaPackage):
 
     def setup_run_environment(self, env):
         env.set('DEAL_II_DIR', self.prefix)
+
+    def setup_environment(self, spack_env, run_env):
+        spec = self.spec
+        spack_env.set('CUDAHOSTCXX', spec['mpi'].mpicxx)
