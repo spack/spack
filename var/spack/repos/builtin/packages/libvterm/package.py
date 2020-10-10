@@ -3,7 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 from spack import *
+
 
 class Libvterm(Package):
     """An abstract library implementation of a terminal emulator"""
@@ -19,5 +21,3 @@ class Libvterm(Package):
     def install(self, spec, prefix):
         make()
         make("install", "PREFIX=" + prefix)
-
-
