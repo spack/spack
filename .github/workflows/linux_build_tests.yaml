@@ -49,7 +49,13 @@ jobs:
     - name: Install System Packages
       run: |
         sudo apt-get update
-        sudo apt-get -yqq install ccache gfortran perl perl-base r-base r-base-core r-base-dev ruby findutils openssl libssl-dev libpciaccess-dev
+        sudo apt-get -y install ccache gfortran perl perl-base r-base r-base-core r-base-dev ruby findutils openssl libssl-dev libpciaccess-dev
+        which gcc
+        which g++
+        which gfortran
+        gcc --version
+        g++ --version
+        gfortran --version
         R --version
         perl --version
         ruby --version
