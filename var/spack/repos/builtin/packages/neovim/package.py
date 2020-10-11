@@ -25,7 +25,6 @@ class Neovim(CMakePackage):
     version('0.2.0', sha256='72e263f9d23fe60403d53a52d4c95026b0be428c1b9c02b80ab55166ea3f62b5')
 
     depends_on('cmake@3.0:', type='build')
-    depends_on('git@1.8.4:', type='build', when='@stable,master')
     depends_on('pkgconfig', type='build')
     depends_on('gettext', type=('build', 'link'))
     depends_on('lua@5.1.0:5.1.9', type=('build', 'link'))
