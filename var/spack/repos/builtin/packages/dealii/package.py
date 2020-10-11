@@ -529,4 +529,5 @@ class Dealii(CMakePackage, CudaPackage):
 
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
-        spack_env.set('CUDAHOSTCXX', spec['mpi'].mpicxx)
+        if '+mpi' in spec:
+            spack_env.set('CUDAHOSTCXX', spec['mpi'].mpicxx)
