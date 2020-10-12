@@ -19,7 +19,7 @@ class Libcudf(CMakePackage):
     depends_on('cmake@3.14:', type='build')
     depends_on('cuda@10.0:')
     depends_on('boost')
-    depends_on('arrow+cuda+orc')
+    depends_on('arrow+cuda+orc+parquet')
     depends_on('librmm')
     depends_on('dlpack')
 
