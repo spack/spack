@@ -77,6 +77,10 @@ class Whizard(AutotoolsPackage):
     conflicts('%intel@:17',
               msg='The fortran compiler needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html')
 
+    # Trying to build in parallel leads to a race condition at the build step.
+    # See: https://github.com/key4hep/k4-spack/issues/71
+    parallel = False
+
     def setup_build_environment(self, env):
         # whizard uses the compiler during runtime,
         # and seems incompatible with
