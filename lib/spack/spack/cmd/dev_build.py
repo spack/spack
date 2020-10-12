@@ -107,7 +107,7 @@ def dev_build(self, args):
     if args.test == 'all':
         tests = True
     elif args.test == 'root':
-        tests = [spec.name for spec in abstract_specs]
+        tests = [package.name]
 
     package.do_install(
         make_jobs=args.jobs,
