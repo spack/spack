@@ -396,7 +396,8 @@ class Dealii(CMakePackage, CudaPackage):
             ])
             if '+cuda' in spec:
                 options.extend([
-                    self.define('DEAL_II_MPI_WITH_CUDA_SUPPORT', True),
+                    self.define('DEAL_II_MPI_WITH_CUDA_SUPPORT',
+                                spec['mpi'].satisfies('+cuda')),
                     self.define('CUDA_HOST_COMPILER', spec['mpi'].mpicxx)
                 ])
 
