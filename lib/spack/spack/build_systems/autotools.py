@@ -212,7 +212,12 @@ class AutotoolsPackage(PackageBase):
                            .format(self.compiler.cc_pic_flag),
                            libtool_path)
         if self.spec.satisfies('%fj'):
-            fs.filter_file(r'/\S*/fjhpctag.o', '', libtool_path)
+            fs.filter_file('-nostdlib', '', libtool_path)
+            rehead = r'/\S*/'
+            objfile = ['fjcrt0.o', 'fjlang08.o', 'fjomp.o',
+                       'crti.o', 'crtbeginS.o', 'crtendS.o']
+            for o in objfile:
+                fs.filter_file(rehead + o, '', libtool_path)
 
     @property
     def configure_directory(self):
