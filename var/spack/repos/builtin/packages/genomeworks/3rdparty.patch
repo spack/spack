@@ -1,0 +1,11 @@
+--- a/cmake/3rdparty.cmake	2020-10-08 19:23:46.717478760 +0200
++++ b/cmake/3rdparty.cmake	2020-10-08 19:26:29.251160827 +0200
+@@ -46,7 +46,7 @@
+ add_library(cub INTERFACE IMPORTED)
+ #target_include_directories(cub INTERFACE ${CUB_DIR}>) does not work with
+ #cmake before 3.11, use the following for now:
+-set_property(TARGET cub APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CUB_DIR}")
+-#set_property(TARGET cub APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CUB_DIR}")
+ 
+ set(KSEQPP_DIR ${PROJECT_SOURCE_DIR}/3rdparty/kseqpp/src CACHE STRING
+     "Path to kseqpp repo")
