@@ -33,7 +33,7 @@ class Blaspp(CMakePackage, CudaPackage):
     depends_on('cmake@3.15.0:', type='build')
     depends_on('blas')
 
-    conflicts('^openblas@0.3.6:', msg='Testing errors in OpenBLAS >0.3.6')
+    conflicts('^openblas@0.3.6:', msg='Testing errors in OpenBLAS >=0.3.6')
 
     def cmake_args(self):
         spec = self.spec
@@ -47,18 +47,8 @@ class Blaspp(CMakePackage, CudaPackage):
         args.append('-DBUILD_SHARED_LIBS={0}'.format(
             'ON' if '+shared' in spec else 'OFF'))
 
-        args.append('-DUSE_CUDA={0}'.format(
+        args.append('-Duse_cuda={0}'.format(
             'ON' if '+cuda' in spec else 'OFF'))
-
-        # `blaspp` has an implicit CUDA detection mechanism. This disables it
-        # in cases where it may backfire. One such case is when `cuda` is
-        # external and marked with `buildable=false`. `blaspp`'s CMake CUDA
-        # detection mechanism finds CUDA but doesn't set certain paths properly
-        # which leads to a build issues [1].
-        #
-        # [1]: https://bitbucket.org/icl/blaspp/issues/6/compile-error-due-to-implicit-cuda
-        if '~cuda' in spec:
-            args.append('-DCMAKE_CUDA_COMPILER=')
 
         args.append('-DBLAS_LIBRARIES=%s' % spec['blas'].libs.joined(';'))
         return args
