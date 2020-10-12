@@ -14,9 +14,9 @@ class Faiss(AutotoolsPackage, PythonPackage, CudaPackage):
 
       Faiss contains algorithms that search in sets of vectors of any size, up
       to ones that possibly do not fit in RAM. It also contains supporting code
-      for evaluation and parameter tuning. Faiss is written in C++ with complete
-      wrappers for Python/numpy. Some of the most useful algorithms are
-      implemented on the GPU. It is developed by Facebook AI Research.
+      for evaluation and parameter tuning. Faiss is written in C++ with
+      complete wrappers for Python/numpy. Some of the most useful algorithms
+      are implemented on the GPU. It is developed by Facebook AI Research.
     """
 
     homepage = "https://github.com/facebookresearch/faiss"
@@ -34,14 +34,12 @@ class Faiss(AutotoolsPackage, PythonPackage, CudaPackage):
 
     conflicts('+tests', when='~python', msg='+tests must be accompanied by +python')
 
-
-    depends_on('blas')
-
     # we don't want "extend" because we don't want to symlink to python prefix
     depends_on('python',        when='+python', type=('build', 'run'))
     depends_on('py-numpy',      when='+python', type=('build', 'run'))
     depends_on('py-scipy',      when='+tests',  type=('build', 'run'))
 
+    depends_on('blas')
     depends_on('py-setuptools', when='+python', type='build')
     depends_on('swig',          when='+python', type='build')
 
@@ -140,8 +138,6 @@ class Faiss(AutotoolsPackage, PythonPackage, CudaPackage):
                 _prefix_and_install('TestGpuSelect')
                 _prefix_and_install('demo_ivfpq_indexing_gpu')
 
-        #os.chdir(self.stage.source_path)
-
     # --------------------------------------------------------------------------
     @run_after('configure')
     def _fix_makefile(self):
@@ -154,9 +150,10 @@ class Faiss(AutotoolsPackage, PythonPackage, CudaPackage):
         # TODO: should this be removed for other architectures as well?
         #       i.e., change the condition to target != 'x86' ?
 
-        if self.version <= Version('1.5.3') and self.spec.architecture.target == 'power9le':
+        if self.version <= Version('1.5.3') and \
+           self.spec.architecture.target == 'power9le':
             makefile = FileFilter('makefile.inc')
-            makefile.filter( 'CPUFLAGS     = -mavx2 -mf16c',
+            makefile.filter('CPUFLAGS     = -mavx2 -mf16c',
                             '#CPUFLAGS     = -mavx2 -mf16c')
 
     # --------------------------------------------------------------------------
