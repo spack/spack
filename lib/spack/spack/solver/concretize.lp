@@ -310,7 +310,7 @@ compiler_version_match(Package, 1)
 #defined compiler_supports_os/3.
 #defined allow_compiler/2.
 
-% compilers weighted by preference acccording to packages.yaml
+% compilers weighted by preference according to packages.yaml
 compiler_weight(Package, Weight)
  :- node_compiler(Package, Compiler),
     node_compiler_version(Package, Compiler, V),
