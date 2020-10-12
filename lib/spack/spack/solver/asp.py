@@ -790,7 +790,7 @@ class SpackSolverSetup(object):
         """Facts about packages' compiler prefs."""
 
         packages = spack.config.get("packages")
-        pkg_prefs = packages.get(pkg)
+        pkg_prefs = packages.get(pkg.name)
         if not pkg_prefs or "compiler" not in pkg_prefs:
             return
 

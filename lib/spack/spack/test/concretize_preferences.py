@@ -112,7 +112,7 @@ class TestConcretizePreferences(object):
         # Try the last available compiler
         compiler = str(compiler_list[-1])
         update_packages('mpileaks', 'compiler', [compiler])
-        spec = concretize('mpileaks os=redhat6 target=x86')
+        spec = concretize('mpileaks os=redhat6')
         assert spec.compiler == spack.spec.CompilerSpec(compiler)
 
     def test_preferred_target(self, mutable_mock_repo):
