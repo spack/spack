@@ -368,23 +368,11 @@ class Neuron(CMakePackage):
         neuron"s configure we dynamically find the architecture-
         specific directory by looking for a specific binary.
         """
-        if self.spec.satisfies("+cmake"):
-            # TODO : fix this when neuron provides an easy way to
-            # detect arch directory
-            neuron_arch = subprocess.Popen(["uname", "-p"],
-                                           stdout=subprocess.PIPE) \
-                .communicate()[0].decode('UTF-8').rstrip()
-        else:
-            file_list = find(self.prefix, "*/bin/nrniv_makefile")
-            # check needed as when initially evaluated the prefix is empty
-            if file_list:
-                neuron_arch = \
-                    os.path.basename(
-                        os.path.dirname(os.path.dirname(file_list[0]))
-                    )
-            else:
-                neuron_arch = ""
-        return neuron_arch
+        return subprocess.Popen(
+            ['awk', '-F=', '$1 == "MODSUBDIR" { print $2; exit; }',
+             str(self.prefix.bin.nrnivmodl)],
+            stdout=subprocess.PIPE
+        ).communicate()[0].decode().strip()
 
     @property
     def basedir(self):

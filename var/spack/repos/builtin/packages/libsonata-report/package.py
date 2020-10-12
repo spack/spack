@@ -34,6 +34,7 @@ class LibsonataReport(CMakePackage):
         result = [
             '-DEXTLIB_FROM_SUBMODULES=ON',
             '-DREPORTS_ONLY=ON',
+            '-DCMAKE_CXX_FLAGS=-DFMT_HEADER_ONLY=1'
         ]
         if self.spec.satisfies('+mpi'):
             result.extend([
