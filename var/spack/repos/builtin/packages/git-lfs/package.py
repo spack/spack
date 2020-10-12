@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 from spack import *
 
 
@@ -15,6 +16,8 @@ class GitLfs(MakefilePackage):
 
     homepage = "https://git-lfs.github.com"
     url      = "https://github.com/git-lfs/git-lfs/archive/v2.6.1.tar.gz"
+
+    executables = ['^git-lfs$']
 
     version('2.11.0', sha256='8183c4cbef8cf9c2e86b0c0a9822451e2df272f89ceb357c498bfdf0ff1b36c7')
     version('2.10.0', sha256='07fd5c57a1039d5717dc192affbe3268ec2fd03accdca462cb504c0b4194cd23')
@@ -31,6 +34,12 @@ class GitLfs(MakefilePackage):
     patch('patches/issue-10702.patch', when='@2.7.0:2.7.1')
 
     parallel = False
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'git-lfs/(\S+)', output)
+        return match.group(1) if match else None
 
     # Git-lfs does not provide an 'install' target in the Makefile
     def install(self, spec, prefix):

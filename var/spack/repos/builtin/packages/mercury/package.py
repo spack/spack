@@ -68,6 +68,7 @@ class Mercury(CMakePackage):
             '-DBUILD_SHARED_LIBS:BOOL=%s' % variant_bool('+shared'),
             '-DBUILD_TESTING:BOOL=%s' % str(self.run_tests),
             '-DMERCURY_ENABLE_PARALLEL_TESTING:BOOL=%s' % str(parallel_tests),
+            '-DMERCURY_ENABLE_POST_LIMIT:BOOL=OFF',
             '-DMERCURY_USE_BOOST_PP:BOOL=ON',
             '-DMERCURY_USE_CHECKSUMS:BOOL=ON',
             '-DMERCURY_USE_EAGER_BULK:BOOL=ON',

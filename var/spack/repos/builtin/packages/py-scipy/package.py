@@ -12,7 +12,7 @@ class PyScipy(PythonPackage):
     as routines for numerical integration and optimization."""
 
     homepage = "https://www.scipy.org/"
-    url      = "https://pypi.io/packages/source/s/scipy/scipy-1.5.0.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scipy/scipy-1.5.2.tar.gz"
 
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -30,6 +30,8 @@ class PyScipy(PythonPackage):
         'scipy.sparse.linalg.eigen.lobpcg', 'scipy.special._precompute'
     ]
 
+    version('1.5.2',  sha256='066c513d90eb3fd7567a9e150828d39111ebd88d3e924cdfc9f8ce19ab6f90c9')
+    version('1.5.1',  sha256='039572f0ca9578a466683558c5bf1e65d442860ec6e13307d528749cfe6d07b8')
     version('1.5.0',  sha256='4ff72877d19b295ee7f7727615ea8238f2d59159df0bdd98f91754be4a2767f0')
     version('1.4.1',  sha256='dee1bbf3a6c8f73b6b218cb28eed8dd13347ea2f87d572ce19b289d6fd3fbc59')
     version('1.4.0',  sha256='31f7cfa93b01507c935c12b535e24812594002a02a56803d7cd063e9920d25e8')
@@ -68,6 +70,10 @@ class PyScipy(PythonPackage):
     # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
     depends_on('blas')
     depends_on('lapack')
+
+    # https://github.com/scipy/scipy/issues/12860
+    patch('https://git.sagemath.org/sage.git/plain/build/pkgs/scipy/patches/extern_decls.patch?id=711fe05025795e44b84233e065d240859ccae5bd',
+          sha256='5433f60831cb554101520a8f8871ac5a32c95f7a971ccd68b69049535b106780', when='@1.2:1.5')
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/11611

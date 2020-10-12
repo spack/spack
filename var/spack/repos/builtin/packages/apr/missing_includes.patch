@@ -1,0 +1,153 @@
+https://bz.apache.org/bugzilla/show_bug.cgi?id=64753
+*** a/configure	2020-09-25 09:58:14.000000000 +0200
+--- b/configure	2020-09-25 10:01:12.000000000 +0200
+***************
+*** 22913,22918 ****
+--- 22913,22919 ----
+  #include <errno.h>
+  #include <string.h>
+  #include <stdio.h>
++ #include <stdlib.h>
+  main()
+  {
+    char buf[1024];
+***************
+*** 24475,24480 ****
+--- 24476,24482 ----
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+  /* end confdefs.h.  */
+  #include <stdio.h>
++ #include <stdlib.h>
+  #include <sys/types.h>
+  #ifdef WIN32
+  #define binmode "b"
+***************
+*** 24800,24805 ****
+--- 24802,24808 ----
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+  /* end confdefs.h.  */
+  #include <stdio.h>
++ #include <stdlib.h>
+  #include <sys/types.h>
+  #ifdef WIN32
+  #define binmode "b"
+***************
+*** 24864,24869 ****
+--- 24867,24873 ----
+  /* end confdefs.h.  */
+  #include <stdio.h>
+  #include <stddef.h>
++ #include <stdlib.h>
+  #ifdef WIN32
+  #define binmode "b"
+  #else
+***************
+*** 24928,24933 ****
+--- 24932,24938 ----
+  /* end confdefs.h.  */
+  #include <stdio.h>
+  #include <sys/types.h>
++ #include <stdlib.h>
+  #ifdef WIN32
+  #define binmode "b"
+  #else
+***************
+*** 25298,25303 ****
+--- 25303,25309 ----
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+  /* end confdefs.h.  */
+  #include <stdio.h>
++ #include <stdlib.h>
+  $ac_includes_default
+  #ifdef WIN32
+  #define binmode "b"
+***************
+*** 25584,25589 ****
+--- 25590,25596 ----
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+  /* end confdefs.h.  */
+  #include <stdio.h>
++ #include <stdlib.h>
+  #include <sys/types.h>
+  #include <sys/uio.h>
+  #ifdef WIN32
+***************
+*** 26211,26216 ****
+--- 26218,26224 ----
+  #include <sys/types.h>
+  #include <sys/time.h>
+  #include <sys/resource.h>
++ #include <stdlib.h>
+  main()
+  {
+      struct rlimit limit;
+***************
+*** 26809,26814 ****
+--- 26817,26823 ----
+  /* end confdefs.h.  */
+  
+  #include <sys/types.h>
++ #include <stdlib.h>
+  #include <pthread.h>
+          int main()
+          {
+***************
+*** 27454,27459 ****
+--- 27463,27469 ----
+  #endif
+  #include <fcntl.h>
+  #include <errno.h>
++ #include <stdlib.h>
+  
+  int fd;
+  struct flock proc_mutex_lock_it = {0};
+***************
+*** 28763,28768 ****
+--- 28773,28779 ----
+  #ifndef HAVE_SOCKLEN_T
+  typedef int socklen_t;
+  #endif
++ #include <stdlib.h>
+  int main(void) {
+      int listen_s, connected_s, client_s;
+      int listen_port, rc;
+***************
+*** 28913,28918 ****
+--- 28924,28930 ----
+  #ifdef HAVE_FCNTL_H
+  #include <fcntl.h>
+  #endif
++ #include <stdlib.h>
+  int main(void) {
+      int listen_s, connected_s, client_s;
+      int listen_port, rc;
+***************
+*** 29598,29603 ****
+--- 29610,29616 ----
+  #ifdef HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
++ #include <stdlib.h>
+  
+  int main(void) {
+      struct addrinfo hints, *ai;
+***************
+*** 29661,29666 ****
+--- 29674,29680 ----
+  #ifdef HAVE_NETDB_H
+  #include <netdb.h>
+  #endif
++ #include <stdlib.h>
+  
+  int main(void) {
+      if (EAI_ADDRFAMILY < 0) {
+***************
+*** 29722,29727 ****
+--- 29736,29742 ----
+  #ifdef HAVE_NETINET_IN_H
+  #include <netinet/in.h>
+  #endif
++ #include <stdlib.h>
+  
+  int main(void) {
+      struct sockaddr_in sa;

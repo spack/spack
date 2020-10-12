@@ -28,13 +28,14 @@ class Trilinos(CMakePackage):
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
     git      = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers = ['aprokop', 'keitat']
+    maintainers = ['keitat']
 
     # ###################### Versions ##########################
 
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
     version('master', branch='master')
+    version('13.0.0', commit='9fec35276d846a667bc668ff4cbdfd8be0dfea08')  # tag trilinos-release-13-0-0
     version('12.18.1', commit='55a75997332636a28afc9db1aee4ae46fe8d93e7')  # tag trilinos-release-12-8-1
     version('12.14.1', sha256='52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
     version('12.12.1', sha256='5474c5329c6309224a7e1726cf6f0d855025b2042959e4e2be2748bd6bb49e18')
@@ -197,8 +198,6 @@ class Trilinos(CMakePackage):
     # External package options
     variant('dtk',          default=False,
             description='Enable DataTransferKit')
-    variant('fortrilinos',  default=False,
-            description='Enable ForTrilinos')
     variant('mesquite',     default=False,
             description='Enable Mesquite')
 
@@ -219,11 +218,6 @@ class Trilinos(CMakePackage):
              placement='DataTransferKit',
              submodules=True,
              when='+dtk @develop')
-    resource(name='fortrilinos',
-             git='https://github.com/trilinos/ForTrilinos.git',
-             tag='develop',
-             placement='packages/ForTrilinos',
-             when='+fortrilinos')
     resource(name='mesquite',
              url='https://github.com/trilinos/mesquite/archive/trilinos-release-12-12-1.tar.gz',
              sha256='e0d09b0939dbd461822477449dca611417316e8e8d8268fd795debb068edcbb5',
@@ -245,9 +239,11 @@ class Trilinos(CMakePackage):
     conflicts('+amesos', when='~epetra')
     conflicts('+amesos', when='~teuchos')
     conflicts('+anasazi', when='~teuchos')
+    conflicts('+aztec', when='~epetra')
     conflicts('+belos', when='~teuchos')
     conflicts('+epetraext', when='~epetra')
     conflicts('+epetraext', when='~teuchos')
+    conflicts('+exodus', when='~netcdf')
     conflicts('+ifpack2', when='~belos')
     conflicts('+ifpack2', when='~teuchos')
     conflicts('+ifpack2', when='~tpetra')
@@ -295,9 +291,6 @@ class Trilinos(CMakePackage):
     conflicts('+dtk', when='~tpetra')
     # Only allow DTK with Trilinos 12.14 and develop
     conflicts('+dtk', when='@0:12.12.99,master')
-    conflicts('+fortrilinos', when='~fortran')
-    conflicts('+fortrilinos', when='@:99')
-    conflicts('+fortrilinos', when='@master')
     # Only allow Mesquite with Trilinos 12.12 and up, and develop
     conflicts('+mesquite', when='@0:12.10.99,master')
     # Can only use one type of SuperLU
@@ -340,6 +333,7 @@ class Trilinos(CMakePackage):
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
+    depends_on('hdf5+mpi', when="+hdf5+mpi")
     depends_on('netcdf-c+mpi', when="+netcdf~pnetcdf+mpi")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
     depends_on('parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
@@ -358,6 +352,7 @@ class Trilinos(CMakePackage):
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
     depends_on('superlu-dist@4.4:5.3', when='@12.6.2:12.12.1+superlu-dist')
+    depends_on('superlu-dist@5.4:6.2.0', when='@12.12.2:13.0+superlu-dist')
     depends_on('superlu-dist@develop', when='@develop+superlu-dist')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
     depends_on('superlu+pic@4.3', when='+superlu')
@@ -382,6 +377,8 @@ class Trilinos(CMakePackage):
     patch('xlf_tpetra.patch', when='@12.12.1%xl_r')
     patch('xlf_tpetra.patch', when='@12.12.1%clang')
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
+    patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
+    patch('cray_secas.patch', when='@12.14.1:12.18.1%cce')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
@@ -430,7 +427,6 @@ class Trilinos(CMakePackage):
             # Force Trilinos to use the MPI wrappers instead of raw compilers
             # this is needed on Apple systems that require full resolution of
             # all symbols when linking shared libraries
-            mpi_bin = spec['mpi'].prefix.bin
             options.extend([
                 define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
                 define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
@@ -516,6 +512,13 @@ class Trilinos(CMakePackage):
             ])
 
         if '+stratimikos' in spec:
+            # Explicitly enable Thyra (ThyraCore is required). If you don't do
+            # this, then you get "NOT setting ${pkg}_ENABLE_Thyra=ON since
+            # Thyra is NOT enabled at this point!" leading to eventual build
+            # errors if using MueLu because `Xpetra_ENABLE_Thyra` is set to
+            # off.
+            options.append(define('Trilinos_ENABLE_Thyra', True))
+
             # Add thyra adapters based on package enables
             options.extend(
                 define_trilinos_enable('Thyra' + pkg + 'Adapters', pkg.lower())
@@ -690,7 +693,7 @@ class Trilinos(CMakePackage):
             if '+mpi' in spec:
                 libgfortran = os.path.dirname(os.popen(
                     '%s --print-file-name libgfortran.a' %
-                    join_path(mpi_bin, 'mpif90')).read())
+                    spec['mpi'].mpifc).read())
                 options.append(define(
                     'Trilinos_EXTRA_LINK_FLAGS',
                     '-L%s/ -lgfortran' % (libgfortran),
@@ -712,17 +715,36 @@ class Trilinos(CMakePackage):
             'explicit_template_instantiation'))
 
         if '+explicit_template_instantiation' in spec and '+tpetra' in spec:
-            gotype = spec.variants['gotype'].value
             options.extend([
                 define('Tpetra_INST_DOUBLE', True),
-                define('Tpetra_INST_INT_INT', gotype == 'int'),
-                define('Tpetra_INST_INT_LONG', gotype == 'long'),
-                define('Tpetra_INST_INT_LONG_LONG', gotype == 'long_long'),
                 define('Tpetra_INST_COMPLEX_DOUBLE', complex_s),
                 define('Tpetra_INST_COMPLEX_FLOAT', float_s and complex_s),
                 define('Tpetra_INST_FLOAT', float_s),
                 define('Tpetra_INST_SERIAL', True),
             ])
+
+            gotype = spec.variants['gotype'].value
+            # default in older Trilinos versions to enable multiple GOs
+            if ((gotype == 'none') and spec.satisfies('@:12.14.1')):
+                options.extend([
+                    '-DTpetra_INST_INT_INT:BOOL=ON',
+                    '-DTpetra_INST_INT_LONG:BOOL=ON',
+                    '-DTpetra_INST_INT_LONG_LONG:BOOL=ON'
+                ])
+            # set default GO in newer versions to long
+            elif (gotype == 'none'):
+                options.extend([
+                    '-DTpetra_INST_INT_INT:BOOL=OFF',
+                    '-DTpetra_INST_INT_LONG:BOOL=ON',
+                    '-DTpetra_INST_INT_LONG_LONG:BOOL=OFF'
+                ])
+            # if another GO is specified, use this
+            else:
+                options.extend([
+                    define('Tpetra_INST_INT_INT', gotype == 'int'),
+                    define('Tpetra_INST_INT_LONG', gotype == 'long'),
+                    define('Tpetra_INST_INT_LONG_LONG', gotype == 'long_long'),
+                ])
 
         # disable due to compiler / config errors:
         if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
@@ -769,3 +791,8 @@ class Trilinos(CMakePackage):
                         (r'\1\3'),
                         '%s/cmake/Trilinos/TrilinosConfig.cmake' %
                         self.prefix.lib)
+
+    def setup_run_environment(self, env):
+        if '+exodus' in self.spec:
+            env.prepend_path('PYTHONPATH',
+                             self.prefix.lib)

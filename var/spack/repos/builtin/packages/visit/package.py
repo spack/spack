@@ -9,7 +9,18 @@ from spack import *
 class Visit(CMakePackage):
     """VisIt is an Open Source, interactive, scalable, visualization,
        animation and analysis tool. See comments in VisIt's package.py
-       for tips about building VisIt with spack.
+       for tips about building VisIt with spack. Building VisIt with
+       Spack is still experimental and many standard features are likely
+       disabled
+       LINUX-------------------------------------------------------------------
+       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0
+       LINUX-W/O-OPENGL--------------------------------------------------------
+       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \\
+       ^mesa+opengl
+       MACOS-------------------------------------------------------------------
+       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \\
+       ^qt~framework
+
     """
     ############################
     # Suggestions for building:
@@ -24,6 +35,11 @@ class Visit(CMakePackage):
     #
     # linux:
     #  spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0
+    #
+    # linux w/o opengl: (add mesa as opengl if system lacks system opengl )
+    #
+    #  spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \
+    #                      ^mesa+opengl
     #
     # macOS:
     #  spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \
@@ -159,6 +175,7 @@ class Visit(CMakePackage):
     # https://github.com/visit-dav/visit/issues/3498
     depends_on('vtk@8.1.0:8.1.999+opengl2~python', when='~python @3.0:3.999,develop')
     depends_on('vtk@8.1.0:8.1.999+opengl2+python', when='+python @3.0:3.999,develop')
+    depends_on('glu', when='platform=linux')
     depends_on('vtk@6.1.0~opengl2', when='@:2.999')
     depends_on('vtk+python', when='+python @3.0:,develop')
     depends_on('vtk~mpi', when='~mpi')

@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
-import glob
-from spack import *
 
 
 class Gatk(Package):
@@ -61,8 +59,7 @@ class Gatk(Package):
         # For ver 3.x will install "GenomeAnalysisTK.jar"
         # For ver 4.x will install both "gatk-package-<ver>-local.jar"
         # and "gatk-package-<ver>-spark.jar"
-        for file in glob.glob("*.jar"):
-            install(file, prefix.bin)
+        install("*.jar", prefix.bin)
 
         # Skip helper script for versions >4.0
         if spec.satisfies("@4.0:"):

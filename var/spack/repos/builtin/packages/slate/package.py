@@ -25,7 +25,7 @@ class Slate(Package):
     variant('mpi',    default=True, description='Build with MPI support.')
     variant('openmp', default=True, description='Build with OpenMP support.')
 
-    depends_on('cuda@9:', when='+cuda')
+    depends_on('cuda@9:10', when='+cuda')
     depends_on('intel-mkl')
     depends_on('mpi', when='+mpi')
 
@@ -41,10 +41,13 @@ class Slate(Package):
         f_mpi = "1" if spec.variants['mpi'].value else "0"
         f_openmp = "1" if spec.variants['openmp'].value else "0"
 
-        compiler = 'mpicxx' if spec.variants['mpi'].value else ''
+        comp_cxx = comp_for = ''
+        if '+mpi' in spec:
+            comp_cxx = 'mpicxx'
+            comp_for = 'mpif90'
 
         make('mpi=' + f_mpi, 'mkl=1', 'cuda=' + f_cuda, 'openmp=' + f_openmp,
-             'CXX=' + compiler)
+             'CXX=' + comp_cxx, 'FC=' + comp_for)
         install_tree('lib', prefix.lib)
         install_tree('test', prefix.test)
         mkdirp(prefix.include)

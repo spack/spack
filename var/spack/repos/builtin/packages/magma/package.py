@@ -17,6 +17,7 @@ class Magma(CMakePackage, CudaPackage):
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
     maintainers = ['stomov', 'luszczek']
 
+    version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')
     version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
     version('2.5.2', sha256='065feb85558f9dd6f4cc4db36ac633a3f787827fc832d0b578a049a43a195620')
     version('2.5.1', sha256='ce32c199131515336b30c92a907effe0c441ebc5c5bdb255e4b06b2508de109f')
@@ -40,6 +41,11 @@ class Magma(CMakePackage, CudaPackage):
     conflicts('~cuda', msg='Magma requires cuda')
     conflicts('cuda_arch=none',
               msg='Please indicate a CUDA arch value or values')
+
+    # currently not compatible with CUDA-11
+    # https://bitbucket.org/icl/magma/issues/22/cuda-11-changes-issue
+    # https://bitbucket.org/icl/magma/issues/25/error-cusparsesolveanalysisinfo_t-does-not
+    conflicts('^cuda@11:', when='@:2.5.3')
 
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')

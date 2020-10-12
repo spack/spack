@@ -1,0 +1,25 @@
+commit 66c5273035396c34998c32e9d7918bce9aeca58f
+Author: Toyohisa Kameyama <kameyama@riken.jp>
+Date:   Fri Sep 25 10:04:58 2020 +0900
+
+    mfu: support aarch64
+    
+    aarch64 kernel is not found SYS_getdents.
+    If SYS_getdents is not defined, use sys_getdents64.
+    
+    Signed-off-by: Toyohisa Kameyama <kameyama@riken.jp>
+
+diff --git a/src/common/mfu_flist_walk.c b/src/common/mfu_flist_walk.c
+index ed81c8d..08836c4 100644
+--- a/src/common/mfu_flist_walk.c
++++ b/src/common/mfu_flist_walk.c
+@@ -161,6 +161,9 @@ static void walk_getdents_process_dir(const char* dir, CIRCLE_handle* handle)
+         return;
+     }
+ 
++#if !defined(SYS_getdents) && defined(SYS_getdents64)
++#define SYS_getdents SYS_getdents64
++#endif
+     /* Read all directory entries */
+     while (1) {
+         /* execute system call to get block of directory entries */

@@ -4,9 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
+import re
 import llnl.util.tty as tty
 from spack import *
-import platform
 
 # - vanilla CentOS 7, and possibly other systems, fail a test:
 #   TestCloneNEWUSERAndRemapRootDisableSetgroups
@@ -35,12 +36,22 @@ class Go(Package):
     url = 'https://dl.google.com/go/go1.12.6.src.tar.gz'
 
     extendable = True
+    executables = ['^go$']
 
+    version('1.15.2', sha256='28bf9d0bcde251011caae230a4a05d917b172ea203f2a62f2c2f9533589d4b4d')
+    version('1.15.1', sha256='d3743752a421881b5cc007c76b4b68becc3ad053e61275567edab1c99e154d30')
+    version('1.15', sha256='69438f7ed4f532154ffaf878f3dfd83747e7a00b70b3556eddabf7aaee28ac3a')
+    version('1.14.9', sha256='c687c848cc09bcabf2b5e534c3fc4259abebbfc9014dd05a1a2dc6106f404554')
+    version('1.14.8', sha256='d9a613fb55f508cf84e753456a7c6a113c8265839d5b7fe060da335c93d6e36a')
+    version('1.14.6', sha256='73fc9d781815d411928eccb92bf20d5b4264797be69410eac854babe44c94c09')
+    version('1.14.5', sha256='ca4c080c90735e56152ac52cd77ae57fe573d1debb1a58e03da9cc362440315c')
     version('1.14.4', sha256='7011af3bbc2ac108d1b82ea8abb87b2e63f78844f0259be20cde4d42c5c40584')
     version('1.14.3', sha256='93023778d4d1797b7bc6a53e86c3a9b150c923953225f8a48a2d5fabc971af56')
     version('1.14.2', sha256='98de84e69726a66da7b4e58eac41b99cbe274d7e8906eeb8a5b7eb0aadee7f7c')
     version('1.14.1', sha256='2ad2572115b0d1b4cb4c138e6b3a31cee6294cb48af75ee86bec3dca04507676')
     version('1.14',   sha256='6d643e46ad565058c7a39dac01144172ef9bd476521f42148be59249e4b74389')
+    version('1.13.14', sha256='197333e97290e9ea8796f738d61019dcba1c377c2f3961fd6a114918ecc7ab06')
+    version('1.13.13', sha256='ab7e44461e734ce1fd5f4f82c74c6d236e947194d868514d48a2b1ea73d25137')
     version('1.13.12', sha256='17ba2c4de4d78793a21cc659d9907f4356cd9c8de8b7d0899cdedcef712eba34')
     version('1.13.11', sha256='89ed1abce25ad003521c125d6583c93c1280de200ad221f961085200a6c00679')
     version('1.13.10', sha256='eb9ccc8bf59ed068e7eff73e154e4f5ee7eec0a47a610fb864e3332a2fdc8b8c')
@@ -103,6 +114,12 @@ class Go(Package):
     # https://github.com/golang/go/issues/17986
     # The fix for this issue has been merged into the 1.8 tree.
     patch('misc-cgo-testcshared.patch', level=0, when='@1.6.4:1.7.5')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('version', output=str, error=str)
+        match = re.search(r'go version go(\S+)', output)
+        return match.group(1) if match else None
 
     # NOTE: Older versions of Go attempt to download external files that have
     # since been moved while running the test suite.  This patch modifies the

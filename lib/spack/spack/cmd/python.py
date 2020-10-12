@@ -70,6 +70,6 @@ def python(parser, args, unknown_args):
         # Provides readline support, allowing user to use arrow keys
         console.push('import readline')
 
-        console.interact("Spack version %s\nPython %s, %s %s"""
+        console.interact("Spack version %s\nPython %s, %s %s"
                          % (spack.spack_version, platform.python_version(),
                             platform.system(), platform.machine()))

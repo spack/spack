@@ -79,6 +79,9 @@ class Mesa(AutotoolsPackage):
     # Prevent an unnecessary xcb-dri dependency
     patch('autotools-x11-nodri.patch')
 
+    # Backport Mesa MR#6053 to prevent multiply-defined symbols
+    patch('multiple-symbols_hash.patch', when='@:20.1.4%gcc@10:')
+
     def autoreconf(self, spec, prefix):
         which('autoreconf')('--force',  '--verbose', '--install')
 

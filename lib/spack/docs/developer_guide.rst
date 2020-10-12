@@ -557,8 +557,10 @@ packages. They should generally only contain fixes to the Spack core.
 
 Both major and minor releases are tagged. After each release, we merge
 the release branch back into ``develop`` so that the version bump and any
-other release-specific changes are visible in the mainline (see
-:ref:`merging-releases-to-develop`).
+other release-specific changes are visible in the mainline. As a
+convenience, we also tag the latest release as ``releases/latest``,
+so that users can easily check it out to get the latest
+stable version. See :ref:`merging-releases` for more details.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -618,12 +620,12 @@ for a major release, the steps to make the release are as follows:
 #. Bump the version in ``lib/spack/spack/__init__.py``. See `this example from 0.13.0
    <https://github.com/spack/spack/commit/8eeb64096c98b8a43d1c587f13ece743c864fba9>`_
 
-#. Updaate the release version lists in these files to include the new version:
+#. Update the release version lists in these files to include the new version:
 
    * ``lib/spack/spack/schema/container.py``
    * ``lib/spack/spack/container/images.json``
 
-   **TODO**: We should get rid of this step in some future release.
+.. TODO: We should get rid of this step in some future release.
 
 #. Update ``CHANGELOG.md`` with major highlights in bullet form. Use
    proper markdown formatting, like `this example from 0.15.0
@@ -632,6 +634,7 @@ for a major release, the steps to make the release are as follows:
 #. Push the release branch to GitHub.
 
 #. Make sure CI passes on the release branch, including:
+
    * Regular unit tests
    * Build tests
    * The E4S pipeline at `gitlab.spack.io <https://gitlab.spack.io>`_
@@ -641,7 +644,7 @@ for a major release, the steps to make the release are as follows:
 
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases-to-develop`.
+#. Follow the steps in :ref:`merging-releases`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
@@ -744,7 +747,7 @@ release:
 
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases-to-develop`.
+#. Follow the steps in :ref:`merging-releases`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
@@ -793,20 +796,46 @@ Publishing a release on GitHub
       page <https://api.github.com/repos/spack/spack/releases>`_ and search
       for ``download_count`` to see this.
 
+#. Go to `readthedocs.org <https://readthedocs.org/projects/spack>`_ and activate
+   the release tag. This builds the documentation and makes the released version
+   selectable in the versions menu.
 
-.. _merging-releases-to-develop:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Merging back into ``develop``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _merging-releases:
 
-Once each release is complete, make sure that it is merged back into
-``develop`` with a merge commit:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updating `releases/latest` and `develop`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If the new release is the **highest** Spack release yet, you should
+also tag it as ``releases/latest``. For example, suppose the highest
+release is currently ``0.15.3``:
+
+     * If you are releasing ``0.15.4`` or ``0.16.0``, then you should tag
+       it with ``releases/latest``, as these are higher than ``0.15.3``.
+
+     * If you are making a new release of an **older** major version of
+       Spack, e.g. ``0.14.4``, then you should not tag it as
+       ``releases/latest`` (as there are newer major versions).
+
+   To tag ``releases/latest``, do this:
+
+   .. code-block:: console
+
+      $ git checkout releases/vX.Y     # vX.Y is the new release's branch
+      $ git tag --force releases/latest
+      $ git push --tags
+
+   The ``--force`` argument makes ``git`` overwrite the existing
+   ``releases/latest`` tag with the new one.
+
+We also merge each release that we tag as ``releases/latest`` into ``develop``.
+Make sure to do this with a merge commit:
 
 .. code-block:: console
 
    $ git checkout develop
-   $ git merge --no-ff releases/v0.15
+   $ git merge --no-ff vX.Y.Z  # vX.Y.Z is the new release's tag
    $ git push
 
 We merge back to ``develop`` because it:
@@ -833,7 +862,6 @@ We put this step last in the process because it's best to do it only once
 the release is complete and tagged. If you do it before you've tagged the
 release and later decide you want to tag some later commit, you'll need
 to merge again.
-
 
 .. _announcing-releases:
 

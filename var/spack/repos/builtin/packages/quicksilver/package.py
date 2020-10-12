@@ -14,12 +14,13 @@ class Quicksilver(MakefilePackage):
     tags = ['proxy-app']
 
     homepage = "https://codesign.llnl.gov/quicksilver.php"
-    url      = "https://github.com/LLNL/Quicksilver"
+    url      = "https://github.com/LLNL/Quicksilver/tarball/V1.0"
     git      = "https://github.com/LLNL/Quicksilver.git"
 
     maintainers = ['richards12']
 
     version('master', branch='master')
+    version('1.0', sha256='83371603b169ec75e41fb358881b7bd498e83597cd251ff9e5c35769ef22c59a')
 
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('mpi', default=True, description='Build with MPI support')

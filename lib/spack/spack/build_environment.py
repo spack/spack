@@ -45,7 +45,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, fork_context
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
@@ -62,7 +62,7 @@ from spack.util.environment import (
 from spack.util.environment import system_dirs
 from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
-from spack.util.module_cmd import load_module, get_path_from_module, module
+from spack.util.module_cmd import load_module, path_from_modules, module
 from spack.util.log_parse import parse_log_events, make_log_context
 
 
@@ -642,7 +642,7 @@ def get_rpaths(pkg):
     # Second module is our compiler mod name. We use that to get rpaths from
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
-        rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
+        rpaths.append(path_from_modules([pkg.compiler.modules[1]]))
     return list(dedupe(filter_system_paths(rpaths)))
 
 
@@ -706,8 +706,9 @@ def load_external_modules(pkg):
         pkg (PackageBase): package to load deps for
     """
     for dep in list(pkg.spec.traverse()):
-        if dep.external_module:
-            load_module(dep.external_module)
+        external_modules = dep.external_modules or []
+        for external_module in external_modules:
+            load_module(external_module)
 
 
 def setup_package(pkg, dirty):
@@ -885,7 +886,7 @@ def fork(pkg, function, dirty, fake):
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
 
-        p = multiprocessing.Process(
+        p = fork_context.Process(
             target=child_process, args=(child_pipe, input_stream))
         p.start()
 

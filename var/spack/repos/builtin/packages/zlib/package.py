@@ -3,14 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 # Although zlib comes with a configure script, it does not use Autotools
 # The AutotoolsPackage causes zlib to fail to build with PGI
 class Zlib(Package):
     """A free, general-purpose, legally unencumbered lossless
-       data-compression library."""
+    data-compression library.
+    """
 
     homepage = "http://zlib.net"
     # URL must remain http:// so Spack can bootstrap curl
