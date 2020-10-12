@@ -16,16 +16,16 @@ class Zip(MakefilePackage):
 
     # Upstream is unmaintained, get patches from:
     # https://deb.debian.org/debian/pool/main/z/zip/zip_3.0-11.debian.tar.xz
-    patch('01-typo-it-is-transferring-not-transfering')
-    patch('02-typo-it-is-privileges-not-priviliges')
-    patch('03-manpages-in-section-1-not-in-section-1l')
-    patch('04-do-not-set-unwanted-cflags')
-    patch('05-typo-it-is-preceding-not-preceeding')
-    patch('06-stack-markings-to-avoid-executable-stack')
-    patch('07-fclose-in-file-not-fclose-x')
-    patch('08-hardening-build-fix-1')
-    patch('09-hardening-build-fix-2')
-    patch('10-remove-build-date')
+    patch('01-typo-it-is-transferring-not-transfering.patch')
+    patch('02-typo-it-is-privileges-not-priviliges.patch')
+    patch('03-manpages-in-section-1-not-in-section-1l.patch')
+    patch('04-do-not-set-unwanted-cflags.patch')
+    patch('05-typo-it-is-preceding-not-preceeding.patch')
+    patch('06-stack-markings-to-avoid-executable-stack.patch')
+    patch('07-fclose-in-file-not-fclose-x.patch')
+    patch('08-hardening-build-fix-1.patch')
+    patch('09-hardening-build-fix-2.patch')
+    patch('10-remove-build-date.patch')
 
     def url_for_version(self, version):
         return 'http://downloads.sourceforge.net/infozip/zip{0}.tar.gz'.format(version.joined)
