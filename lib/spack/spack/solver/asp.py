@@ -819,12 +819,16 @@ class SpackSolverSetup(object):
             if single_value:
                 self.gen.fact(fn.variant_single_value(pkg.name, name))
                 self.gen.fact(
-                    fn.variant_default_value(pkg.name, name, variant.default))
+                    fn.variant_default_value_from_package_py(
+                        pkg.name, name, variant.default)
+                )
             else:
                 defaults = variant.default.split(',')
                 for val in sorted(defaults):
                     self.gen.fact(
-                        fn.variant_default_value(pkg.name, name, val))
+                        fn.variant_default_value_from_package_py(
+                            pkg.name, name, val)
+                    )
 
             values = variant.values
             if values is None:
@@ -947,16 +951,16 @@ class SpackSolverSetup(object):
                 self.gen.fact(fn.external_only(pkg_name))
 
             # Read a list of all the specs for this package
-            externals = data['externals']
+            externals = data.get('externals', [])
             external_specs = [spack.spec.Spec(x['spec']) for x in externals]
 
             # Compute versions with appropriate weights
             external_versions = [
-                (x.version, id) for id, x in enumerate(external_specs)
+                (x.version, idx) for idx, x in enumerate(external_specs)
             ]
             external_versions = [
-                (v, -(w + 1), id)
-                for w, (v, id) in enumerate(sorted(external_versions))
+                (v, -(w + 1), idx)
+                for w, (v, idx) in enumerate(sorted(external_versions))
             ]
             for version, weight, id in external_versions:
                 self.gen.fact(fn.external_version_declared(
@@ -992,6 +996,26 @@ class SpackSolverSetup(object):
             )
             self.gen.out.write(external_rule)
             self.gen.control.add("base", [], external_rule)
+
+    def concretization_preferences(self, pkg_name):
+        """Facts on concretization preferences, as read from packages.yaml"""
+        preferences = spack.package_prefs.PackagePrefs
+        preferred_variants = preferences.preferred_variants(pkg_name)
+        if not preferred_variants:
+            return
+
+        self.gen.h2('Concretization preferences {0}'.format(pkg_name))
+        for variant_name in sorted(preferred_variants):
+            variant = preferred_variants[variant_name]
+            values = variant.value
+
+            if not isinstance(values, tuple):
+                values = (values,)
+
+            for value in values:
+                self.gen.fact(fn.variant_default_value_from_packages_yaml(
+                    pkg_name, variant.name, value
+                ))
 
     def flag_defaults(self):
         self.gen.h2("Compiler flag defaults")
@@ -1370,6 +1394,7 @@ class SpackSolverSetup(object):
         for pkg in sorted(pkgs):
             self.gen.h2('Package: %s' % pkg)
             self.pkg_rules(pkg)
+            self.concretization_preferences(pkg)
 
         self.gen.h1('Spec Constraints')
         for spec in sorted(specs):
