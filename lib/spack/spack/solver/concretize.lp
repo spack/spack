@@ -163,7 +163,16 @@ variant_not_default(Package, Variant, Value, 0)
     variant_default_value(Package, Variant, Value),
     node(Package).
 
-% suppress wranings about this atom being unset.  It's only set if some
+% The default value for a variant in a package is what is written
+% in the package.py file, unless some preference is set in packages.yaml
+variant_default_value(Package, Variant, Value)
+ :- variant_default_value_from_package_py(Package, Variant, Value),
+    not variant_default_value_from_packages_yaml(Package, Variant, _).
+
+variant_default_value(Package, Variant, Value)
+ :- variant_default_value_from_packages_yaml(Package, Variant, Value).
+
+% suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.
 #defined variant/2.
@@ -171,6 +180,7 @@ variant_not_default(Package, Variant, Value, 0)
 #defined variant_single_value/2.
 #defined variant_default_value/3.
 #defined variant_possible_value/3.
+#defined variant_default_value_from_packages_yaml/3.
 
 %-----------------------------------------------------------------------------
 % Platform semantics

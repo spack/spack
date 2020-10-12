@@ -70,19 +70,22 @@ def assert_variant_values(spec, **variants):
 
 @pytest.mark.usefixtures('concretize_scope', 'mock_packages')
 class TestConcretizePreferences(object):
-    def test_preferred_variants(self):
-        """Test preferred variants are applied correctly
-        """
-        update_packages('mpileaks', 'variants', '~debug~opt+shared+static')
-        assert_variant_values(
-            'mpileaks', debug=False, opt=False, shared=True, static=True
-        )
-        update_packages(
-            'mpileaks', 'variants', ['+debug', '+opt', '~shared', '-static']
-        )
-        assert_variant_values(
-            'mpileaks', debug=True, opt=True, shared=False, static=False
-        )
+    @pytest.mark.parametrize('package_name,variant_value,expected_results', [
+        ('mpileaks', '~debug~opt+shared+static',
+         {'debug': False, 'opt': False, 'shared': True, 'static': True}),
+        # Check that using a list of variants instead of a single string works
+        ('mpileaks', ['~debug', '~opt', '+shared', '+static'],
+         {'debug': False, 'opt': False, 'shared': True, 'static': True}),
+        # Use different values for the variants and check them again
+        ('mpileaks', ['+debug', '+opt', '~shared', '-static'],
+         {'debug': True, 'opt': True, 'shared': False, 'static': False}),
+    ])
+    def test_preferred_variants(
+            self, package_name, variant_value, expected_results
+    ):
+        """Test preferred variants are applied correctly"""
+        update_packages(package_name, 'variants', variant_value)
+        assert_variant_values(package_name, **expected_results)
 
     def test_preferred_variants_from_wildcard(self):
         """
