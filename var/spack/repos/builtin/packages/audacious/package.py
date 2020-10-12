@@ -2,9 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os.path
-
-
 class Audacious(AutotoolsPackage):
     """A lightweight and versatile audio player."""
 
@@ -28,11 +25,8 @@ class Audacious(AutotoolsPackage):
 
     def patch(self):
         search_path_args = ' '.join(self.autoreconf_search_path_args)
-        filter_file(
-            '-I m4',
-            '-I m4 {0}'.format(search_path_args),
-            os.path.join(self.stage.source_path, 'autogen.sh')
-        )
+        search_path_str = '-I m4 {0}'.format(search_path_args)
+        filter_file('-I m4', search_path_str, 'autogen.sh')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
