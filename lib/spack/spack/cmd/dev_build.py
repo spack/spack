@@ -102,7 +102,6 @@ def dev_build(self, args):
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
 
-    abstract_specs = spack.cmd.parse_specs(args.spec)
     tests = False
     if args.test == 'all':
         tests = True
