@@ -26,19 +26,22 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
     depends_on('pkgconfig', type='build')
     depends_on('java', type='build')
 
+    cuda_arch_values = CudaPackage.cuda_arch_values
+    variant(
+        'cuda_arch',
+        description='CUDA architecture',
+        default='none',
+        values=cuda_arch_values,
+        multi=False
+    )
+    conflicts('cuda_arch=none', when='+cuda',
+              msg='must select a CUDA architecture')
+
     def patch(self):
         # update cuda architecture if necessary
         if '+cuda' in self.spec:
             cuda_arch = self.spec.variants['cuda_arch'].value
-            archflag = ''
-
-            if cuda_arch != 'none':
-                if len(cuda_arch) > 1:
-                    raise InstallError(
-                        'libbeagle only supports compilation for a single GPU'
-                        'type.'
-                    )
-                archflag = '-arch compute_{0}'.format(cuda_arch[0])
+            archflag = '-arch=compute_{0}'.format(cuda_arch)
 
             filter_file('-arch compute_13', '',
                         'libhmsbeagle/GPU/kernels/Makefile.am',
