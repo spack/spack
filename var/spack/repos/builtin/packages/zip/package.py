@@ -30,9 +30,8 @@ class Zip(MakefilePackage):
     def url_for_version(self, version):
         return 'http://downloads.sourceforge.net/infozip/zip{0}.tar.gz'.format(version.joined)
 
-    make_args = ['-f', 'unix/Makefile']
-    build_targets = make_args + ['generic']
+    def build(self, spec, prefix):
+        make('-f', 'unix/Makefile', 'CC=' + spack_cc, 'generic')
 
-    @property
-    def install_targets(self):
-        return self.make_args + ['prefix={0}'.format(self.prefix), 'install']
+    def install(self, spec, prefix):
+        make('-f', 'unix/Makefile', 'prefix=' + prefix, 'install')
