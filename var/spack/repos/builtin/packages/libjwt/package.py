@@ -22,6 +22,3 @@ class Libjwt(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
     depends_on('jansson')
-
-    def install(self, spec, prefix):
-        make('install')
