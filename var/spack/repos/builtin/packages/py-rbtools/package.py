@@ -17,7 +17,7 @@ class PyRbtools(PythonPackage):
     version('1.0.1', sha256='bc5e3c511a2273ec61c43a82f56b4cef0b23beae81e277cecbb37ce6761edf29')
     version('1.0',   sha256='dbab2cc89d798462c7e74952d43ba1ff1c97eb9c8f92876e600c6520f72454c9')
 
-    depends_on('python@2.7:2.8', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools@:44.99.99', type=('build', 'run'))
     depends_on('py-colorama',    type=('build', 'run'))
     depends_on('py-texttable',   type=('build', 'run'))
