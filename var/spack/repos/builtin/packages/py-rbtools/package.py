@@ -22,5 +22,5 @@ class PyRbtools(PythonPackage):
     depends_on('py-colorama',    type=('build', 'run'))
     depends_on('py-texttable',   type=('build', 'run'))
     depends_on('py-tqdm',        type=('build', 'run'))
-    depends_on('py-six',         type=('build', 'run'))
+    depends_on('py-six@1.8.0:',  type=('build', 'run'))
     depends_on('py-backports-shutil-get-terminal-size', when='^python@:2', type=('build', 'run'))
