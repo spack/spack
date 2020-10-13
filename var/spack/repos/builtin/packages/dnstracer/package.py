@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Dnstracer(AutotoolsPackage):
+class Dnstracer(Package):
     """Dnstracer determines where a given Domain Name Server gets
     its information from, and follows the chain of DNS servers back to
     the servers which know the data."""
@@ -16,12 +16,14 @@ class Dnstracer(AutotoolsPackage):
 
     version('master', branch='master')
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-
     phases = ['configure', 'build', 'install']
+
     def configure(self, spec, prefix):
         configure = Executable('./configure.sh')
         configure('--prefix={0}'.format(prefix))
+
+    def build(self, spec, prefix):
+        make()
+
+    def install(self, spec, prefix):
+        make('install')
