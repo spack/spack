@@ -104,7 +104,7 @@ class Acts(CMakePackage, CudaPackage):
 
     # Build dependencies
     depends_on('boost @1.62:1.69.99 +program_options +test', when='@:0.10.3')
-    depends_on('boost @1.69: +filesystem +program_options +test', when='@0.10.4')
+    depends_on('boost @1.69: +filesystem +program_options +test', when='@0.10.4:')
     depends_on('cmake @3.11:', type='build')
     depends_on('dd4hep @1.10:', when='+dd4hep')
     depends_on('dd4hep @1.10: +geant4', when='+dd4hep +geant4')
