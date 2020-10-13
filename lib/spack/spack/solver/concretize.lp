@@ -15,9 +15,14 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
  :- node(Package).
 
 version_weight(Package, Weight)
- :- version(Package, Version), version_declared(Package, Version, Weight).
+ :- version(Package, Version), version_declared(Package, Version, Weight),
+    not preferred_version_declared(Package, Version, _).
+
+version_weight(Package, Weight)
+  :- version(Package, Version), preferred_version_declared(Package, Version, Weight).
 
 #defined version_conflict/2.
+#defined preferred_version_declared/3.
 
 %-----------------------------------------------------------------------------
 % Dependency semantics
@@ -243,6 +248,8 @@ target_weight(Target, Package, Weight)
      not derive_target_from_parent(_, Package),
      not package_target_weight(Target, Package, _).
 
+% TODO: Need to account for the case of more than one parent
+% TODO: each of which sets different targets
 target_weight(Target, Dependency, Weight)
   :- depends_on(Package, Dependency),
      derive_target_from_parent(Package, Dependency),
