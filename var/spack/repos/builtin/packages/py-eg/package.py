@@ -18,3 +18,5 @@ class PyEg(PythonPackage):
     version('1.0.2', sha256='f9fa9ed4a9bcfaf594d9b4acc758def5ca5b464e3263a6f0eb2270d818aef3cc')
     version('1.0.1', sha256='b52aa86a2b2d018c17bb99637c07e9f42f53fdf8890ef2beaaa774a425350ac4')
     version('1.0.0', sha256='e811b1006002fa80bcac66f5c86cd412f9816969d087296cfd360752d31a85fd')
+
+    depends_on('py-setuptools', type='build')
