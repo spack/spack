@@ -27,6 +27,7 @@ This module supports the coordination of local and distributed concurrent
 installations of packages in a Spack instance.
 """
 
+import copy
 import glob
 import heapq
 import itertools
@@ -664,8 +665,22 @@ class PackageInstaller(object):
         packages = _packages_needed_to_bootstrap_compiler(pkg)
         for (comp_pkg, is_compiler) in packages:
             if package_id(comp_pkg) not in self.build_tasks:
-                self._push_task(comp_pkg, request, is_compiler, 0, 0,
-                                STATUS_ADDED)
+                self._add_init_task(comp_pkg, request, is_compiler)
+
+    def _add_init_task(self, pkg, request, is_compiler):
+        """
+        Creates and queus the initial build task for the package.
+
+        Args:
+            pkg (Package): the package to be built and installed
+            request (BuildRequest or None): the associated install request
+                 where ``None`` can be used to indicate the package was
+                 explicitly requested by the user
+            is_compiler (bool): whether task is for a bootstrap compiler
+        """
+        task = BuildTask(pkg, request, is_compiler, 0, 0, STATUS_ADDED,
+                         self.installed)
+        self._push_task(task)
 
     def _check_db(self, spec):
         """Determine if the spec is flagged as installed in the database
@@ -983,8 +998,7 @@ class PackageInstaller(object):
 
                 dep_id = package_id(dep_pkg)
                 if dep_id not in self.build_tasks:
-                    self._push_task(dep_pkg, request, False, 0, 0,
-                                    STATUS_ADDED)
+                    self._add_init_task(dep_pkg, request, False)
                 else:
                     # A task has already been created for the dependency.
                     #
@@ -1015,7 +1029,7 @@ class PackageInstaller(object):
                 self._check_deps_status(request)
 
             # Now add the package itself, if appropriate
-            self._push_task(request.pkg, request, False, 0, 0, STATUS_ADDED)
+            self._add_init_task(request.pkg, request, False)
 
         # Ensure if one request is to fail fast then all requests will.
         fail_fast = request.install_args.get('fail_fast')
@@ -1219,49 +1233,39 @@ class PackageInstaller(object):
                 return task
         return None
 
-    def _push_task(self, pkg, request, compiler, start, attempts, status):
+    def _push_task(self, task):
         """
-        Create and push (or queue) a build task for the package.
+        Push (or queue) the specified build task for the package.
 
         Source: Customization of "add_task" function at
                 docs.python.org/2/library/heapq.html
 
         Args:
-            pkg (Package): package to be installed
-            request (BuildRequest): the associated install request
-            compiler (bool): whether task is for a bootstrap compiler
-            start (int): the initial start time for the package, in seconds
-            attempts (int): the number of attempts to install the package
-            status (str): the installation status
-            installed (list of str): the identifiers of packages that have
-                been installed so far
+            task (BuildTask): the installation build task for a package
         """
         msg = "{0} a build task for {1} with status '{2}'"
         skip = 'Skipping requeue of task for {0}: {1}'
-        pkg_id = package_id(pkg)
 
         # Ensure do not (re-)queue installed or failed packages whose status
         # may have been determined by a separate process.
-        if pkg_id in self.installed:
-            tty.debug(skip.format(pkg_id, 'installed'))
+        if task.pkg_id in self.installed:
+            tty.debug(skip.format(task.pkg_id, 'installed'))
             return
 
-        if pkg_id in self.failed:
-            tty.debug(skip.format(pkg_id, 'failed'))
+        if task.pkg_id in self.failed:
+            tty.debug(skip.format(task.pkg_id, 'failed'))
             return
 
         # Remove any associated build task since its sequence will change
-        self._remove_task(pkg_id)
-        desc = 'Queueing' if attempts == 0 else 'Requeueing'
-        tty.verbose(msg.format(desc, pkg_id, status))
+        self._remove_task(task.pkg_id)
+        desc = 'Queueing' if task.attempts == 0 else 'Requeueing'
+        tty.verbose(msg.format(desc, task.pkg_id, task.status))
 
         # Now add the new task to the queue with a new sequence number to
         # ensure it is the last entry popped with the same priority.  This
         # is necessary in case we are re-queueing a task whose priority
         # was decremented due to the installation of one of its dependencies.
-        task = BuildTask(pkg, request, compiler, start, attempts, status,
-                         self.installed)
-        self.build_tasks[pkg_id] = task
+        self.build_tasks[task.pkg_id] = task
         heapq.heappush(self.build_pq, (task.key, task))
 
     def _release_lock(self, pkg_id):
@@ -1316,9 +1320,11 @@ class PackageInstaller(object):
             tty.msg('{0} {1}'.format(install_msg(task.pkg_id, self.pid),
                                      'in progress by another process'))
 
-        start = task.start or time.time()
-        self._push_task(task.pkg, task.request, task.compiler, start,
-                        task.attempts, STATUS_INSTALLING)
+        new_task = copy.copy(task)
+        new_task.start = task.start or time.time()
+        new_task.status = STATUS_INSTALLING
+        new_task.flag_installed(self.installed)
+        self._push_task(new_task)
 
     def _setup_install_dir(self, pkg):
         """
@@ -1419,10 +1425,9 @@ class PackageInstaller(object):
                 # Ensure the dependent's uninstalled dependencies are
                 # up-to-date.  This will require requeueing the task.
                 dep_task = self.build_tasks[dep_id]
-                dep_task.flag_installed(self.installed)
-                self._push_task(dep_task.pkg, dep_task.request,
-                                dep_task.compiler, dep_task.start,
-                                dep_task.attempts, dep_task.status)
+                new_task = copy.copy(dep_task)
+                new_task.flag_installed(self.installed)
+                self._push_task(new_task)
             else:
                 tty.debug('{0} has no build task to update for {1}\'s success'
                           .format(dep_id, pkg_id))
@@ -1441,11 +1446,11 @@ class PackageInstaller(object):
         for request in self.build_requests:
             self._add_tasks(request)
 
+        # Proceed with the installation request(s)
         single_explicit_spec = len(self.build_requests) == 1
         failed_explicits = []
         exists_errors = []
 
-        # Proceed with the installation request(s)
         while self.build_pq:
             task = self._pop_task()
             if task is None:
@@ -1745,6 +1750,24 @@ class BuildTask(object):
         # Ensure the task gets a unique sequence number to preserve the
         # order in which it was added.
         self.sequence = next(_counter)
+
+    def __eq__(self, other):
+        return self.key == other.key
+
+    def __ge__(self, other):
+        return self.key >= other.key
+
+    def __gt__(self, other):
+        return self.key > other.key
+
+    def __le__(self, other):
+        return self.key <= other.key
+
+    def __lt__(self, other):
+        return self.key < other.key
+
+    def __ne__(self, other):
+        return self.key != other.key
 
     def __repr__(self):
         """Returns a formal representation of the build task."""
