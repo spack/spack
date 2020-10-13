@@ -18,7 +18,7 @@ class Flang(CMakePackage, CudaPackage):
 
     maintainers = ['naromero77']
 
-    version('master', branch='master')
+    version('master', branch='master', preferred=True)
     version('20190329', sha256='b8c621da53829f8c53bad73125556fb1839c9056d713433b05741f7e445199f2')
     version('20181226', sha256='00e716bea258c3bb60d6a5bb0c82bc79f67000062dc89939693e75f501883c36')
     version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
@@ -33,7 +33,7 @@ class Flang(CMakePackage, CudaPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('python@2.7:', type='build')
 
-    depends_on('llvm-flang@release_70', when='@master')
+    depends_on('llvm-flang@release_90', when='@master')
     depends_on('llvm-flang@20190329', when='@20190329')
     depends_on('llvm-flang@20181226_70', when='@20181226')
     depends_on('llvm-flang@20180921', when='@20180921')

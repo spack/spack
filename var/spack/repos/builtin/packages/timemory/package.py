@@ -25,6 +25,9 @@ class Timemory(CMakePackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('static', default=False, description='Build static libraries')
     variant('python', default=False, description='Enable Python support')
+    variant('python_deps', default=False,
+            description='Install non-critical python dependencies '
+                        '(may significantly increase spack install time)')
     variant('mpi', default=False,
             description='Enable support for MPI aggregation')
     variant('nccl', default=False,
@@ -92,12 +95,12 @@ class Timemory(CMakePackage):
 
     extends('python', when='+python')
     depends_on('python@3:', when='+python', type=('build', 'run'))
-    depends_on('py-numpy', when='+python', type=('run'))
-    depends_on('pil', when='+python', type=('run'))
-    depends_on('py-matplotlib', when='+python', type=('run'))
-    depends_on('py-mpi4py', when='+python+mpi', type=('run'))
     depends_on('py-cython', when='+python', type=('build'))
-    depends_on('py-ipython', when='+python', type=('run'))
+    depends_on('pil', when='+python+python_deps', type=('run'))
+    depends_on('py-numpy', when='+python+python_deps', type=('run'))
+    depends_on('py-matplotlib', when='+python+python_deps', type=('run'))
+    depends_on('py-ipython', when='+python+python_deps', type=('run'))
+    depends_on('py-mpi4py', when='+python+mpi+python_deps', type=('run'))
     depends_on('mpi', when='+mpi')
     depends_on('nccl', when='+nccl')
     depends_on('tau', when='+tau')
@@ -117,6 +120,7 @@ class Timemory(CMakePackage):
 
     conflicts('+python', when='~shared',
               msg='+python requires building shared libraries')
+    conflicts('+python_deps', when='~python')
     conflicts('+cupti', when='~cuda', msg='CUPTI requires CUDA')
     conflicts('+kokkos_tools', when='~tools',
               msg='+kokkos_tools requires +tools')

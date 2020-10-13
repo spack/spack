@@ -434,7 +434,7 @@ _spack_buildcache_copy() {
 }
 
 _spack_buildcache_update_index() {
-    SPACK_COMPREPLY="-h --help -d --mirror-url"
+    SPACK_COMPREPLY="-h --help -d --mirror-url -k --keys"
 }
 
 _spack_cd() {
@@ -465,7 +465,7 @@ _spack_ci() {
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref --optimize --dependencies"
+    SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies"
 }
 
 _spack_ci_rebuild() {
@@ -906,7 +906,7 @@ _spack_gpg() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="verify trust untrust sign create list init export"
+        SPACK_COMPREPLY="verify trust untrust sign create list init export publish"
     fi
 }
 
@@ -967,6 +967,15 @@ _spack_gpg_export() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help"
+    else
+        _keys
+    fi
+}
+
+_spack_gpg_publish() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url --rebuild-index"
     else
         _keys
     fi

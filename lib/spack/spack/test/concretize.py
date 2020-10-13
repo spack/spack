@@ -70,7 +70,7 @@ def check_concretize(abstract_spec):
         # with virtual
         'mpileaks ^mpi', 'mpileaks ^mpi@:1.1', 'mpileaks ^mpi@2:',
         'mpileaks ^mpi@2.1', 'mpileaks ^mpi@2.2', 'mpileaks ^mpi@2.2',
-        'mpileaks ^mpi@:1', 'mpileaks ^mpi@1.2:2'
+        'mpileaks ^mpi@:1', 'mpileaks ^mpi@1.2:2',
         # conflict not triggered
         'conflict',
         'conflict%clang~foo',

@@ -7,6 +7,7 @@ import platform
 import sys
 import os
 from spack import *
+import llnl.util.tty as tty
 
 
 class Namd(MakefilePackage):
@@ -19,10 +20,9 @@ class Namd(MakefilePackage):
     manual_download = True
 
     version("master", branch="master")
+    version('2.15a1', branch="master", tag='release-2-15-alpha-1')
     version('2.14', sha256='34044d85d9b4ae61650ccdba5cda4794088c3a9075932392dd0752ef8c049235',
             preferred=True)
-    version('2.14b2', sha256='cb4bd918d2d545bb618e4b4a20023a53916f0aa362d9e57f3de1562c36240b00')
-    version('2.14b1', sha256='9407e54f5271b3d3039a5a9d2eae63c7e108ce31b7481e2197c19e1125b43919')
     version('2.13', '9e3323ed856e36e34d5c17a7b0341e38')
     version('2.12', '2a1191909b1ab03bf0205971ad4d8ee9')
 
@@ -76,7 +76,8 @@ class Namd(MakefilePackage):
     def build_directory(self):
         return '{0}-spack'.format(self.arch)
 
-    def edit(self, spec, prefix):
+    def _edit_arch_generic(self, spec, prefix):
+        """Generic arch makefile generation"""
         m64 = '-m64 ' if not spec.satisfies('arch=aarch64:') else ''
         with working_dir('arch'):
             with open('{0}.arch'.format(self.build_directory), 'w') as fh:
@@ -89,12 +90,12 @@ class Namd(MakefilePackage):
                 if self.spec.satisfies('^charmpp@:6.10.1'):
                     optims_opts = {
                         'gcc': m64 + '-O3 -fexpensive-optimizations \
-                                -ffast-math -lpthread ' + archopt,
-                        'intel': '-O2 -ip ' + archopt}
+                                        -ffast-math -lpthread ' + archopt,
+                        'intel': '-O2 -ip -qopenmp-simd' + archopt}
                 else:
                     optims_opts = {
                         'gcc': m64 + '-O3 -fexpensive-optimizations \
-                                -ffast-math ' + archopt,
+                                        -ffast-math ' + archopt,
                         'intel': '-O2 -ip ' + archopt}
 
                 optim_opts = optims_opts[self.compiler.name] \
@@ -110,6 +111,67 @@ class Namd(MakefilePackage):
                     'COPTS = {0}'.format(optim_opts),
                     ''
                 ]))
+
+    def _edit_arch_target_based(self, spec, prefix):
+        """Try to use target base arch file return True if succeed"""
+        if spec.version < Version("2.14"):
+            return False
+
+        found_special_opt = False
+        with working_dir('arch'):
+            arch_filename = '{0}.arch'.format(self.build_directory)
+
+            replace = [
+                [
+                    r"^CHARMARCH = .*$",
+                    'CHARMARCH = {0}'.format(self.spec['charmpp'].charmarch)
+                ],
+                [
+                    r"^NAMD_ARCH = .*$",
+                    'NAMD_ARCH = {0}'.format(self.arch)
+                ]
+            ]
+
+            # Optimizations for skylake_avx512
+            if spec.platform == "linux" and \
+                    self.compiler.name == "intel" and \
+                    'avx512' in spec.target and \
+                    spec.target >= 'skylake_avx512':
+                if spec.version >= Version("2.15") and \
+                        os.path.exists("Linux-AVX512-icc.arch"):
+                    tty.info("Building binaries with AVX512-tile optimization")
+                    copy("Linux-AVX512-icc.arch", arch_filename)
+                elif spec.version >= Version("2.14") and \
+                        os.path.exists("Linux-SKX-icc.arch"):
+                    tty.info("Building binaries with Skylake-X"
+                             "AVX512 optimization")
+                    copy("Linux-SKX-icc.arch", arch_filename)
+                else:
+                    return False
+
+                replace.append([
+                    r"^CXX = icpc",
+                    'CXX = {0}'.format(self.compiler.cxx)
+                ])
+                replace.append([
+                    r"^CC = icc",
+                    'CC = {0}'.format(self.compiler.cc)
+                ])
+                found_special_opt = True
+
+            if found_special_opt:
+                for pattern, replacement in replace:
+                    filter_file(pattern, replacement, arch_filename)
+
+        return found_special_opt
+
+    def _edit_arch(self, spec, prefix):
+        """Try to use target base arch file, if not make generic"""
+        if not self._edit_arch_target_based(spec, prefix):
+            self._edit_arch_generic(spec, prefix)
+
+    def edit(self, spec, prefix):
+        self._edit_arch(spec, prefix)
 
         self._copy_arch_file('base')
 

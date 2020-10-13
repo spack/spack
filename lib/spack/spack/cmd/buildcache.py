@@ -231,6 +231,9 @@ def setup_parser(subparser):
         'update-index', help=buildcache_update_index.__doc__)
     update_index.add_argument(
         '-d', '--mirror-url', default=None, help='Destination mirror url')
+    update_index.add_argument(
+        '-k', '--keys', default=False, action='store_true',
+        help='If provided, key index will be updated as well as package index')
     update_index.set_defaults(func=buildcache_update_index)
 
 
@@ -776,6 +779,13 @@ def buildcache_update_index(args):
 
     bindist.generate_package_index(
         url_util.join(outdir, bindist.build_cache_relative_path()))
+
+    if args.keys:
+        keys_url = url_util.join(outdir,
+                                 bindist.build_cache_relative_path(),
+                                 bindist.build_cache_keys_relative_path())
+
+        bindist.generate_key_index(keys_url)
 
 
 def buildcache(parser, args):

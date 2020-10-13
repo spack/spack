@@ -18,6 +18,8 @@ class Byacc(AutotoolsPackage):
 
     version('master', branch='master')
 
+    provides('yacc')
+
     depends_on('m4',       type='build')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

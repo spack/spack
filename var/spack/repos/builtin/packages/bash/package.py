@@ -48,6 +48,8 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
         patch('https://ftpmirror.gnu.org/bash/bash-{0}-patches/bash{1}-{2}'.format(ver, ver.joined, num),
               level=0, when='@{0}'.format(ver), sha256=checksum)
 
+    patch('xcode12-strsignal-conf.patch', when='@:5.0 %apple-clang@12:')
+
     executables = ['^bash$']
 
     @classmethod
@@ -60,7 +62,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
         spec = self.spec
 
         return [
-            'LIBS=-lncursesw',
+            'LIBS=' + spec['ncurses'].libs.link_flags,
             '--with-curses',
             '--enable-readline',
             '--with-installed-readline',

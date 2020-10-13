@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Arrow(CMakePackage):
+class Arrow(CMakePackage, CudaPackage):
     """A cross-language development platform for in-memory data.
 
     This package contains the C++ bindings.
@@ -59,6 +59,8 @@ class Arrow(CMakePackage):
             "-DARROW_WITH_BROTLI=OFF",
             "-DARROW_WITH_LZ4=OFF",
         ]
+        if self.spec.satisfies('+cuda'):
+            args.append('-DARROW_CUDA:BOOL=ON')
         if self.spec.satisfies('+python'):
             args.append("-DARROW_PYTHON:BOOL=ON")
         if self.spec.satisfies('+parquet'):

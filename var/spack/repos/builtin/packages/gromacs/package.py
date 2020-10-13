@@ -24,6 +24,7 @@ class Gromacs(CMakePackage):
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('master', branch='master')
+    version('2020.4', sha256='5519690321b5500c7951aaf53ff624042c3edd1a5f5d6dd1f2d802a3ecdbf4e6')
     version('2020.3', sha256='903183691132db14e55b011305db4b6f4901cc4912d2c56c131edfef18cc92a9')
     version('2020.2', sha256='7465e4cd616359d84489d919ec9e4b1aaf51f0a4296e693c249e83411b7bd2f3')
     version('2020.1', sha256='e1666558831a3951c02b81000842223698016922806a8ce152e8f616e29899cf')
@@ -65,8 +66,6 @@ class Gromacs(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
-    variant('rdtscp', default=True,
-            description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version'
             ' of libgromacs and/or the mdrun program')
@@ -181,10 +180,11 @@ class Gromacs(CMakePackage):
             # Fall back to this for unknown microarchitectures
             options.append('-DGMX_SIMD:STRING=None')
 
-        if '-rdtscp' in self.spec:
-            options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
-        else:
-            options.append('-DGMX_USE_RDTSCP:BOOL=ON')
+        # Use the 'rtdscp' assembly instruction only on
+        # appropriate architectures
+        options.append(self.define(
+            'GMX_USE_RDTSCP', str(target.family) in ('x86_64', 'x86')
+        ))
 
         if '+mdrun_only' in self.spec:
             options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')

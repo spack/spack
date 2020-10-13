@@ -136,7 +136,7 @@ def test_all_packages_use_sha256_checksums():
                 if bad_digest:
                     errors.append(
                         "All packages must use sha256 checksums."
-                        "Resource in %s uses %s." % (name, v, bad_digest)
+                        "Resource in %s uses %s." % (name, bad_digest)
                     )
 
     assert [] == errors
@@ -203,3 +203,19 @@ def test_all_dependencies_exist():
     assert not missing, "These packages have missing dependencies:\n" + (
         "\n".join(lines)
     )
+
+
+def test_variant_defaults_are_parsable_from_cli():
+    """Ensures that variant defaults are parsable from cli."""
+    failing = []
+    for pkg in spack.repo.path.all_packages():
+        for variant_name, variant in pkg.variants.items():
+            default_is_parsable = (
+                # Permitting a default that is an instance on 'int' permits
+                # to have foo=false or foo=0. Other falsish values are
+                # not allowed, since they can't be parsed from cli ('foo=')
+                isinstance(variant.default, int) or variant.default
+            )
+            if not default_is_parsable:
+                failing.append((pkg.name, variant_name))
+    assert not failing

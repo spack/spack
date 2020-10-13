@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class PyPandas(PythonPackage):
     """pandas is a fast, powerful, flexible and easy to use open source
@@ -12,7 +10,7 @@ class PyPandas(PythonPackage):
     programming language."""
 
     homepage = "https://pandas.pydata.org/"
-    url = "https://pypi.io/packages/source/p/pandas/pandas-1.1.2.tar.gz"
+    url = "https://pypi.io/packages/source/p/pandas/pandas-1.1.3.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = [
@@ -29,6 +27,7 @@ class PyPandas(PythonPackage):
         'pandas.api.extensions'
     ]
 
+    version('1.1.3',  sha256='babbeda2f83b0686c9ad38d93b10516e68cdcd5771007eb80a763e98aaf44613')
     version('1.1.2',  sha256='b64ffd87a2cfd31b40acd4b92cb72ea9a52a48165aec4c140e78fd69c45d1444')
     version('1.1.1',  sha256='53328284a7bb046e2e885fd1b8c078bd896d7fc4575b915d4936f54984a2ba67')
     version('1.1.0',  sha256='b39508562ad0bb3f384b0db24da7d68a2608b9ddc85b1d931ccaaa92d5e45273')
@@ -58,8 +57,9 @@ class PyPandas(PythonPackage):
     depends_on('python@3.6.1:', type=('build', 'run'), when='@1:')
     depends_on('python@3.5.3:', type=('build', 'run'), when='@0.25:')
     # https://pandas.pydata.org/docs/whatsnew/v1.0.0.html#build-changes
-    depends_on('py-cython@0.29.13:', type='build', when='@1:')
-    depends_on('py-cython@0.29.16:', type='build', when='@1.1:')
+    depends_on('py-cython@0.29.13:2', type='build', when='@1:')
+    depends_on('py-cython@0.29.16:2', type='build', when='@1.1:')
+    depends_on('py-cython@0.29.21:2', type='build', when='@1.1.3:')
     depends_on('py-setuptools@24.2.0:', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numpy@1.13.3:', type=('build', 'run'), when='@0.25:')
