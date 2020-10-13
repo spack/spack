@@ -31,7 +31,7 @@ class Genomeworks(CMakePackage, CudaPackage):
     patch('3rdparty.patch')
 
     def cmake_args(self):
-        args = ["-DCMAKE_BUILD_TYPE=Release"]
+        args = []
         spec = self.spec
         if '+cuda' in spec:
             args.append('-DWITH_CUDA=ON')
