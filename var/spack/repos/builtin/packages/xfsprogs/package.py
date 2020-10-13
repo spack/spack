@@ -35,4 +35,3 @@ class Xfsprogs(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.prefix.sbin)
-        env.append_path('LD_LIBRARY_PATH', self.prefix.lib64)
