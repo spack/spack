@@ -533,6 +533,23 @@ def test_nag_flags():
                         'nag@1.0')
 
 
+def test_nvhpc_flags():
+    supported_flag_test("openmp_flag", "-mp", "nvhpc@20.9")
+    supported_flag_test("cxx11_flag", "--c++11", "nvhpc@20.9")
+    supported_flag_test("cxx14_flag", "--c++14", "nvhpc@20.9")
+    supported_flag_test("cxx17_flag", "--c++17", "nvhpc@20.9")
+    supported_flag_test("c99_flag", "-c99", "nvhpc@20.9")
+    supported_flag_test("c11_flag", "-c11", "nvhpc@20.9")
+    supported_flag_test("cc_pic_flag",  "-fpic", "nvhpc@20.9")
+    supported_flag_test("cxx_pic_flag", "-fpic", "nvhpc@20.9")
+    supported_flag_test("f77_pic_flag", "-fpic", "nvhpc@20.9")
+    supported_flag_test("fc_pic_flag",  "-fpic", "nvhpc@20.9")
+    supported_flag_test("debug_flags", ['-g', '-gopt'], 'nvhpc@20.9')
+    supported_flag_test("opt_flags", ['-O', '-O0', '-O1', '-O2', '-O3', '-O4'],
+                        'nvhpc@20.9')
+    supported_flag_test("stdcxx_libs", ('-c++libs',), 'nvhpc@20.9')
+
+
 def test_pgi_flags():
     supported_flag_test("openmp_flag", "-mp", "pgi@1.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "pgi@1.0")
