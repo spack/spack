@@ -1031,6 +1031,17 @@ class SpackSolverSetup(object):
             str(preferred.architecture.target), pkg_name, -10
         ))
 
+    def preferred_versions(self, pkg_name):
+        packages_yaml = spack.config.get('packages')
+        versions = packages_yaml.get(pkg_name, {}).get('version', [])
+        if not versions:
+            return
+
+        for idx, version in enumerate(reversed(versions)):
+            self.gen.fact(
+                fn.preferred_version_declared(pkg_name, version, -(idx + 1))
+            )
+
     def flag_defaults(self):
         self.gen.h2("Compiler flag defaults")
 
@@ -1404,10 +1415,12 @@ class SpackSolverSetup(object):
 
         self.gen.h1('Package Constraints')
         for pkg in sorted(pkgs):
-            self.gen.h2('Package: %s' % pkg)
+            self.gen.h2('Package rules: %s' % pkg)
             self.pkg_rules(pkg)
+            self.gen.h2('Package preferences: %s' % pkg)
             self.preferred_variants(pkg)
             self.preferred_targets(pkg)
+            self.preferred_versions(pkg)
 
         self.gen.h1('Spec Constraints')
         for spec in sorted(specs):
