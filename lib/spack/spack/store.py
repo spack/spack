@@ -72,7 +72,10 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    install_tree = spack.config.get('config:install_tree', {})
+    if spack.config.get('config:active_upstream') is not None:
+        install_tree = spack.config.get('config:active_tree')
+    else:
+        install_tree = spack.config.get('config:install_tree', {})
 
     if isinstance(install_tree, six.string_types):
         tty.warn("Using deprecated format for configuring install_tree")
