@@ -28,7 +28,6 @@ class Genomeworks(CMakePackage, CudaPackage):
     depends_on('cuda@11:', type=('build', 'run'))
     depends_on('python@3.6.7:', type=('build', 'run'))
 
-    phases = ['cmake', 'install']
     patch('3rdparty.patch')
 
     def cmake_args(self):
