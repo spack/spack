@@ -38,7 +38,7 @@ class Mivisionx(CMakePackage):
 
     depends_on('ffmpeg@4.1.1', type='build')
     depends_on('protobuf@3.5.0', type='build')
-    depends_on('opencv@3.4.6~opencl~opencl_svm~openclamdfft~openclamdblas~python', type='build')
+    depends_on('opencv@3.4.6', type='build')
     depends_on('rocm-opencl@3.5.0', type='build', when='@1.7')
     depends_on('rocm-cmake@3.5.0', type='build', when='@1.7')
     depends_on('miopen-opencl@3.5.0', type=('build', 'run', 'link'), when='@1.7')
