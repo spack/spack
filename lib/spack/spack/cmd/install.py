@@ -41,8 +41,6 @@ def update_kwargs_from_args(args, kwargs):
         'fake': args.fake,
         'dirty': args.dirty,
         'use_cache': args.use_cache,
-        'install_global': args.install_global,
-        'upstream': args.upstream,
         'cache_only': args.cache_only,
         'explicit': True,  # Always true for install command
         'stop_at': args.until,
@@ -129,14 +127,6 @@ the dependencies"""
         '-f', '--file', action='append', default=[],
         dest='specfiles', metavar='SPEC_YAML_FILE',
         help="install from file. Read specs to install from .yaml files")
-    subparser.add_argument(
-        '--upstream', action='store', default=None,
-        dest='upstream', metavar='UPSTREAM_NAME',
-        help='specify which upstream spack to install too')
-    subparser.add_argument(
-        '-g', '--global', action='store_true', default=False,
-        dest='install_global',
-        help='install package to globally accesible location')
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -262,6 +252,7 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
                 env.regenerate_views()
         else:
             spec.package.do_install(**kwargs)
+        # Resets active upstream and active tree after install
         spack.config.set('config:active_tree', '~/.spack/opt/spack',
                          scope='user')
         spack.config.set('config:active_upstream', None,
@@ -280,30 +271,6 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
 
 
 def install(parser, args, **kwargs):
-    # Install Package to Global Upstream for multi-user use
-    if args.install_global:
-        spack.config.set('config:active_upstream', 'global',
-                         scope='user')
-        global_root = spack.config.get('upstreams')
-        global_root = global_root['global']['install_tree']
-        global_root = spack.util.path.canonicalize_path(global_root)
-        spack.config.set('config:active_tree', global_root,
-                         scope='user')
-    elif args.upstream:
-        if args.upstream not in spack.config.get('upstreams'):
-            tty.die("specified upstream does not exist")
-        spack.config.set('config:active_upstream', args.upstream,
-                         scope='user')
-        root = spack.config.get('upstreams')
-        root = root[args.upstream]['install_tree']
-        root = spack.util.path.canonicalize_path(root)
-        spack.config.set('config:active_tree', root, scope='user')
-    else:
-        spack.config.set('config:active_upstream', None,
-                         scope='user')
-        spack.config.set('config:active_tree',
-                         spack.config.get('config:install_tree'),
-                         scope='user')
     if args.help_cdash:
         parser = argparse.ArgumentParser(
             formatter_class=argparse.RawDescriptionHelpFormatter,

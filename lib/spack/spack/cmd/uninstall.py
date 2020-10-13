@@ -71,19 +71,9 @@ def setup_parser(subparser):
         nargs=argparse.REMAINDER,
         help="specs of packages to uninstall")
 
-    subparser.add_argument(
-        '-u', '--upstream', action='store', default=None,
-        dest='upstream', metavar='UPSTREAM_NAME',
-        help='specify which upstream spack to uninstall from')
-
-    subparser.add_argument(
-        '-g', '--global', action='store_true',
-        dest='global_uninstall',
-        help='uninstall packages installed to global upstream')
-
 
 def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
-                        upstream=None, global_uninstall=False):
+                        upstream=None):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
@@ -95,15 +85,7 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
     Return:
         list of specs
     """
-    if global_uninstall:
-        spack.config.set('config:active_upstream', 'global',
-                         scope='user')
-        global_root = spack.config.get('upstreams')
-        global_root = global_root['global']['install_tree']
-        global_root = spack.util.path.canonicalize_path(global_root)
-        spack.config.set('config:active_tree', global_root,
-                         scope='user')
-    elif upstream:
+    if upstream:
         if upstream not in spack.config.get('upstreams'):
             tty.die("specified upstream does not exist")
         spack.config.set('config:active_upstream', upstream,
@@ -122,7 +104,7 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
                 spec_copy.concretize()
                 if spec_copy.package.installed_upstream:
                     tty.warn("{0} is installed upstream".format(spec_name))
-                    tty.die("Use 'spack uninstall [--upstream upstream_name]'")
+                    tty.die("Use 'spack [--upstream upstream_name] uninstall'")
 
     # constrain uninstall resolution to current environment if one is active
     hashes = env.all_hashes() if env else None
@@ -296,10 +278,9 @@ def do_uninstall(env, specs, force):
 def get_uninstall_list(args, specs, env):
     # Gets the list of installed specs that match the ones give via cli
     # args.all takes care of the case where '-a' is given in the cli
+    active_upstream = spack.config.get('config:active_upstream')
     uninstall_list = find_matching_specs(env, specs, args.all, args.force,
-                                         upstream=args.upstream,
-                                         global_uninstall=args.global_uninstall
-                                         )
+                                         upstream=active_upstream)
 
     # Takes care of '-R'
     active_dpts, inactive_dpts = installed_dependents(uninstall_list, env)

@@ -420,6 +420,21 @@ def make_argument_parser(**kwargs):
     parser.add_argument(
         '--print-shell-vars', action='store',
         help="print info needed by setup-env.[c]sh")
+    parser.add_argument(
+        '--install-root', dest='install_root',
+        action='store', default=None,
+        help='specify non-default install root'
+    )
+    parser.add_argument(
+        '-u', '--upstream', dest='upstream',
+        action='store', default=None,
+        help='target specified upstream'
+    )
+    parser.add_argument(
+        '-g', '--global', action='store_true',
+        default=False, dest='global_upstream',
+        help='target global upstream'
+    )
 
     return parser
 
@@ -465,6 +480,35 @@ def setup_main_options(args):
 
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)
+
+    # If install-root, upstream, or global command specified
+    # Target different install root here.
+    if args.install_root is not None:
+        tty.warn('Non-default install root specified')
+    elif args.upstream is not None:
+        # Install Package to Global Upstream for multi-user use
+        if args.upstream not in spack.config.get('upstreams'):
+            tty.die("specified upstream does not exist")
+        spack.config.set('config:active_upstream', args.upstream,
+                         scope='user')
+        root = spack.config.get('upstreams')
+        root = root[args.upstream]['install_tree']
+        root = spack.util.path.canonicalize_path(root)
+        spack.config.set('config:active_tree', root, scope='user')
+    if args.global_upstream:
+        spack.config.set('config:active_upstream', 'global',
+                         scope='user')
+        global_root = spack.config.get('upstreams')
+        global_root = global_root['global']['install_tree']
+        global_root = spack.util.path.canonicalize_path(global_root)
+        spack.config.set('config:active_tree', global_root,
+                         scope='user')
+    else:
+        spack.config.set('config:active_upstream', None,
+                         scope='user')
+        spack.config.set('config:active_tree',
+                         spack.config.get('config:install_tree'),
+                         scope='user')
 
 
 def allows_unknown_args(command):
