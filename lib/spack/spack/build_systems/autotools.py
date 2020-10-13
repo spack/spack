@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
 import os
 import os.path
@@ -80,10 +78,25 @@ class AutotoolsPackage(PackageBase):
     #: Options to be passed to autoreconf when using the default implementation
     autoreconf_extra_args = []
 
+    #: If False deletes all the .la files in the prefix folder
+    #: after the installation. If True instead it installs them.
+    install_libtool_archives = False
+
+    @property
+    def _removed_la_files_log(self):
+        """File containing the list of remove libtool archives"""
+        build_dir = self.build_directory
+        if not os.path.isabs(self.build_directory):
+            build_dir = os.path.join(self.stage.path, build_dir)
+        return os.path.join(build_dir, 'removed_la_files.txt')
+
     @property
     def archive_files(self):
         """Files to archive for packages based on autotools"""
-        return [os.path.join(self.build_directory, 'config.log')]
+        files = [os.path.join(self.build_directory, 'config.log')]
+        if not self.install_libtool_archives:
+            files.append(self._removed_la_files_log)
+        return files
 
     @run_after('autoreconf')
     def _do_patch_config_files(self):
@@ -534,3 +547,19 @@ class AutotoolsPackage(PackageBase):
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
+
+    @run_after('install')
+    def remove_libtool_archives(self):
+        """Remove all .la files in prefix sub-folders if the package sets
+        ``install_libtool_archives`` to be False.
+        """
+        # If .la files are to be installed there's nothing to do
+        if self.install_libtool_archives:
+            return
+
+        # Remove the files and create a log of what was removed
+        libtool_files = fs.find(str(self.prefix), '*.la', recursive=True)
+        with fs.safe_remove(*libtool_files):
+            fs.mkdirp(os.path.dirname(self._removed_la_files_log))
+            with open(self._removed_la_files_log, mode='w') as f:
+                f.write('\n'.join(libtool_files))
