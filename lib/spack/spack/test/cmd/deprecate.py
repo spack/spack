@@ -107,22 +107,6 @@ def test_deprecate_fails_active_extensions(mock_packages, mock_archive,
     assert 'is an active extension of' in output
 
 
-def test_uninstall_deprecated(mock_packages, mock_archive, mock_fetch,
-                              install_mockery):
-    """Tests that we can still uninstall deprecated packages."""
-    install('libelf@0.8.13')
-    install('libelf@0.8.10')
-
-    deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.13')
-
-    non_deprecated = spack.store.db.query()
-
-    uninstall('-y', '-g', 'libelf@0.8.10')
-
-    assert spack.store.db.query() == spack.store.db.query(installed=any)
-    assert spack.store.db.query() == non_deprecated
-
-
 def test_deprecate_already_deprecated(mock_packages, mock_archive, mock_fetch,
                                       install_mockery):
     """Tests that we can re-deprecate a spec to change its deprecator."""
