@@ -39,7 +39,7 @@ class NvidiaHpcSdk(Package, CudaPackage):
         os.environ['NVHPC_SILENT'] = "true"
         os.environ['NVHPC_INSTALL_DIR'] = self.prefix
         os.environ['NVHPC_DEFAULT_CUDA'] = str(
-             self.spec['cuda'].version.up_to(2))
+            self.spec['cuda'].version.up_to(2))
         os.environ['NVHPC_INSTALL_TYPE'] = self.spec.variants['network'].value
         os.environ['NVHPC_INSTALL_LOCAL_DIR'] = self.prefix
 
@@ -49,7 +49,7 @@ class NvidiaHpcSdk(Package, CudaPackage):
         ver_build = self.version.split("_", 1)[1]
         target_version = ver_build[:2] + '.' + ver_build[:-1]
         prefix_new = Prefix(join_path(self.prefix,
-              platform.system() + '_' + platform.machine(), target_version))
+                platform.system() + '_' + platform.machine(), target_version))
 
         env.set('target', platform.system() + '_' + platform.machine())
         env.set('version', target_version)
