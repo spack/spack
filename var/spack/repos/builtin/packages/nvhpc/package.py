@@ -66,8 +66,9 @@ class Nvhpc(Package):
 
         if '+network' in spec and '~single' in spec:
             os.environ['NVHPC_INSTALL_TYPE'] = "network"
-            os.environ['NVHPC_INSTALL_LOCAL_DIR'] = "%s/%s/%s/share_objects" \
-                % (prefix, 'Linux_%s' % spec.target.family, self.version)
+            os.environ['NVHPC_INSTALL_LOCAL_DIR'] = \
+                "%s/%s/%s/share_objects" % \
+                (prefix, 'Linux_%s' % spec.target.family, self.version)
         elif '+single' in spec and '~network' in spec:
             os.environ['NVHPC_INSTALL_TYPE'] = "single"
         else:

@@ -205,8 +205,8 @@ def test_nag_version_detection(version_str, expected_version):
      'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
      '20.9')
 ])
-def test_nvidia_version_detection(version_str, expected_version):
-    version = spack.compilers.nvidia.Nvidia.extract_version_from_output(
+def test_nvhpc_version_detection(version_str, expected_version):
+    version = spack.compilers.nvhpc.Nvhpc.extract_version_from_output(
         version_str
     )
     assert version == expected_version
