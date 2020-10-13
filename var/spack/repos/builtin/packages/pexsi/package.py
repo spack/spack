@@ -68,7 +68,7 @@ class Pexsi(MakefilePackage):
 
         if ('^superlu +openmp' in self.spec
                 or '^openblas threads=openmp' in self.spec):
-            fldflags += ' -fopenmp'
+            fldflags += ' ' + self.compiler.openmp_flag
 
         substitutions.append(('@FLDFLAGS', fldflags.lstrip()))
 
