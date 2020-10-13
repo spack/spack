@@ -48,7 +48,7 @@ class PyCuml(PythonPackage):
     depends_on('cuda')
     depends_on('py-cupy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-treelite', type=('build', 'run'))
+    depends_on('treelite+python', type=('build', 'run'))
 
     for v in ('11.0', '10.2', '10.1'):
         depends_on(
