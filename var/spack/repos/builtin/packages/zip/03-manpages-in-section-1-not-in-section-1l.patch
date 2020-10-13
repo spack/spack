@@ -1,0 +1,47 @@
+From: Lior Kaplan <webmaster@guides.co.il>
+Subject: put manpages in section 1, not in section 1L
+Bug-Debian: http://bugs.debian.org/308045
+X-Debian-version: 2.31-3
+
+--- a/man/zip.1
++++ b/man/zip.1
+@@ -13,7 +13,7 @@
+ .\" 30 August 2007, 27 April 2008, 25 May 2008, 27 May 2008 by EG,
+ .\" 7 June 2008 by SMS and EG; 12 June 2008 by EG)
+ .\"
+-.TH ZIP 1L "16 June 2008 (v3.0)" Info-ZIP
++.TH ZIP 1 "16 June 2008 (v3.0)" Info-ZIP
+ .SH NAME
+ zip \- package and compress (archive) files
+ .SH SYNOPSIS
+@@ -53,14 +53,14 @@
+ and is compatible with PKZIP (Phil Katz's ZIP for MSDOS systems).
+ .LP
+ A companion program
+-.RI ( unzip (1L))
++.RI ( unzip (1))
+ unpacks
+ .I zip
+ archives.
+ The
+ .I zip
+ and
+-.IR unzip (1L)
++.IR unzip (1)
+ programs can work with archives produced by PKZIP (supporting
+ most PKZIP features up to PKZIP version 4.6),
+ and PKZIP and PKUNZIP can work with archives produced by
+@@ -2661,10 +2661,10 @@
+ [VMS] see ZIPOPT
+ .SH "SEE ALSO"
+ compress(1),
+-shar(1L),
++shar(1),
+ tar(1),
+-unzip(1L),
+-gzip(1L)
++unzip(1),
++gzip(1)
+ .SH DIAGNOSTICS
+ The exit status (or error level) approximates the exit codes defined by PKWARE
+ and takes on the following values, except under VMS:

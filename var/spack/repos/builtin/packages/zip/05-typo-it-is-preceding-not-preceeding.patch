@@ -1,0 +1,26 @@
+From: Santiago Vila <sanvila@debian.org>
+Subject: manpage typo: preceeding -> preceding
+X-Debian-version: 3.0-2
+
+--- a/man/zip.1
++++ b/man/zip.1
+@@ -502,7 +502,7 @@
+ where the option starts with --, has a multicharacter name, can
+ include a trailing dash to negate the option (if the option
+ supports it), and can have a value (option argument) specified by
+-preceeding it with = (no spaces).  Values can also follow the
++preceding it with = (no spaces).  Values can also follow the
+ argument.  So
+ .IP
+ \fC--before-date=mmddyyyy\fP
+--- a/zip.txt
++++ b/zip.txt
+@@ -376,7 +376,7 @@
+ 
+        where the option starts with --, has a multicharacter name, can include
+        a  trailing  dash to negate the option (if the option supports it), and
+-       can have a value (option argument) specified by preceeding  it  with  =
++       can have a value (option argument) specified by preceding  it  with  =
+        (no spaces).  Values can also follow the argument.  So
+ 
+               --before-date=mmddyyyy
