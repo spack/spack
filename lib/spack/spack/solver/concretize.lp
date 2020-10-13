@@ -235,6 +235,22 @@ node_os(Package, OS)
 % one target per node -- optimization will pick the "best" one
 1 { node_target(Package, Target) : target(Target) } 1 :- node(Package).
 
+% The target weight is either the default target weight
+% or a more specific per-package weight if set
+target_weight(Target, Package, Weight)
+  :- default_target_weight(Target, Weight),
+     node(Package),
+     not derive_target_from_parent(_, Package),
+     not package_target_weight(Target, Package, _).
+
+target_weight(Target, Dependency, Weight)
+  :- depends_on(Package, Dependency),
+     derive_target_from_parent(Package, Dependency),
+     target_weight(Target, Package, Weight).
+
+target_weight(Target, Package, Weight)
+  :- package_target_weight(Target, Package, Weight).
+
 % can't use targets on node if the compiler for the node doesn't support them
 :- node_target(Package, Target),
    not compiler_supports_target(Compiler, Version, Target),
@@ -247,7 +263,9 @@ node_target(Package, Target)
 
 % each node has the weight of its assigned target
 node_target_weight(Package, Weight)
- :- node(Package), node_target(Package, Target), target_weight(Target, Weight).
+ :- node(Package),
+    node_target(Package, Target),
+    target_weight(Target, Package, Weight).
 
 % compatibility rules for targets among nodes
 node_target_match_pref(Package, Target) :- node_target_set(Package, Target).
@@ -257,7 +275,12 @@ node_target_match_pref(Dependency, Target)
 node_target_match(Package, 1)
   :- node_target(Package, Target), node_target_match_pref(Package, Target).
 
+derive_target_from_parent(Parent, Package)
+  :- depends_on(Parent, Package), not package_target_weight(_, Package, _).
+
+
 #defined node_target_set/2.
+#defined package_target_weight/3.
 
 %-----------------------------------------------------------------------------
 % Compiler semantics
@@ -422,7 +445,7 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 % fastest target for node
 
 % TODO: if these are slightly different by compiler (e.g., skylake is
-% best, gcc supports skylake and broadweell, clang's best is haswell)
+% best, gcc supports skylake and broadwell, clang's best is haswell)
 % things seem to get really slow.
 #maximize{ Weight@5,Package : node_target_match(Package, Weight) }.
 #minimize{ Weight@4,Package : node_target_weight(Package, Weight) }.
