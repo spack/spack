@@ -15,7 +15,7 @@ class Symlinks(MakefilePackage):
     version('1.4', sha256='4818a3be253b53f2547fe51349652c87301794fc2ff4e3104850301ffe9843a0')
 
     def edit(self, spec, prefix):
-        filter_file(r'(/usr/local)', prefix, 'Makefile')
+        filter_file('/usr/local', prefix, 'Makefile', string=True)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
