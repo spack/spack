@@ -24,6 +24,8 @@ class NvidiaHpcSdk(Package, CudaPackage):
     variant('network', default='network', description='Network installation',
             values=('network', 'single'), multi=False)
 
+    variant('mpi', default=False, description="OpenMPI installation")
+
     depends_on('cuda@10:')
     conflicts('^cuda@:10', when='platform=aarch64')
 
@@ -73,3 +75,17 @@ class NvidiaHpcSdk(Package, CudaPackage):
 
         env.prepend_path('LD_LIBRARY_PATH', prefix_new.cuda.lib64)
         env.prepend_path('LD_LIBRARY_PATH', prefix_new.math_libs.lib64)
+
+        if '+mpi' in self.spec:
+            env.prepend_path('LD_LIBRARY_PATH', prefix_new.comm_libs.mpi.lib)
+            env.prepend_path('LD_LIBRARY_PATH',
+                             prefix_new.comm_libs.nvshmem.lib)
+            env.prepend_path('LD_LIBRARY_PATH', prefix_new.comm_libs.nccl.lib)
+
+            env.prepend_path('PATH', prefix_new.comm_libs.mpi.bin)
+            env.prepend_path('PATH', prefix_new.comm_libs.nvshmem.bin)
+            env.prepend_path('PATH', prefix_new.comm_libs.nccl.bin)
+
+            env.prepend_path('CPATH', prefix_new.comm_libs.nvshmem.include)
+            env.prepend_path('CPATH', prefix_new.comm_libs.nccl.include)
+            env.prepend_path('CPATH', prefix_new.comm_libs.mpi.include)
