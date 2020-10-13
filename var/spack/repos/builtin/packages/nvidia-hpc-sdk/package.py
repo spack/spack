@@ -10,9 +10,10 @@ import os
 
 
 class NvidiaHpcSdk(Package, CudaPackage):
-    """The NVIDIA HPC Software Development Kit (SDK) includes the proven compilers,
-       libraries and software tools essential to maximizing developer productivity
-       and the performance and portability of HPC applications."""
+    """The NVIDIA HPC Software Development Kit (SDK) includes the proven
+       compilers libraries and software tools essential to
+       maximizing developer productivity and the performance
+       and portability of HPC applications."""
 
     homepage = "https://developer.nvidia.com/hpc-sdk"
 
@@ -27,27 +28,27 @@ class NvidiaHpcSdk(Package, CudaPackage):
     conflicts('^cuda@:10', when='platform=aarch64')
 
     def url_for_version(self, version):
-        if platform.machine() == "aarch64":
+       if platform.machine() == "aarch64":
            url = "https://developer.download.nvidia.com/hpc-sdk/nvhpc_{0}_Linux_{1}_cuda_11.0.tar.gz"
-        else:
+       else:
            url = "https://developer.download.nvidia.com/hpc-sdk/nvhpc_{0}_Linux_{1}_cuda_multi.tar.gz"
-        return url.format(version, platform.machine())
+       return url.format(version, platform.machine())
 
     def install(self, spec, prefix):
 
         os.environ['NVHPC_SILENT'] = "true"
         os.environ['NVHPC_INSTALL_DIR'] = self.prefix
-        os.environ['NVHPC_DEFAULT_CUDA'] = str(self.spec['cuda'].version.up_to(2))
+        os.environ['NVHPC_DEFAULT_CUDA'] =
+           str(self.spec['cuda'].version.up_to(2))
         os.environ['NVHPC_INSTALL_TYPE'] = self.spec.variants['network'].value
         os.environ['NVHPC_INSTALL_LOCAL_DIR'] = self.prefix
 
         os.system("./install")
 
     def setup_run_environment(self, env):
-        # TO-DO: Cleaner way to handle path building
-        ver_build = self.version.split("_", 1)[1]
+        ver_build=self.version.split("_", 1)[1]
         target_version = ver_build[:2]+'.'+ver_build[:-1]
-        prefix_new = Prefix(join_path(self.prefix,
+        prefix_new=Prefix(join_path(self.prefix,
           platform.system()+'_'+platform.machine(), target_version))
 
         env.set('target', platform.system()+'_'+platform.machine())
