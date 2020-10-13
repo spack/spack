@@ -37,6 +37,8 @@ import six
 import sys
 import time
 
+from collections import defaultdict
+
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
@@ -654,20 +656,22 @@ class PackageInstaller(object):
         return '{0}: {1}; {2}; {3}; {4}'.format(
             self.pid, requests, tasks, installed, failed)
 
-    def _add_bootstrap_compilers(self, pkg, request):
+    def _add_bootstrap_compilers(self, pkg, request, all_deps):
         """
         Add bootstrap compilers and dependencies to the build queue.
 
         Args:
             pkg (PackageBase): the package with possible compiler dependencies
             request (BuildRequest): the associated install request
+            all_deps (defaultdict(set)): dictionary of all dependencies and
+                associated dependents
         """
         packages = _packages_needed_to_bootstrap_compiler(pkg)
         for (comp_pkg, is_compiler) in packages:
             if package_id(comp_pkg) not in self.build_tasks:
-                self._add_init_task(comp_pkg, request, is_compiler)
+                self._add_init_task(comp_pkg, request, is_compiler, all_deps)
 
-    def _add_init_task(self, pkg, request, is_compiler):
+    def _add_init_task(self, pkg, request, is_compiler, all_deps):
         """
         Creates and queus the initial build task for the package.
 
@@ -677,9 +681,14 @@ class PackageInstaller(object):
                  where ``None`` can be used to indicate the package was
                  explicitly requested by the user
             is_compiler (bool): whether task is for a bootstrap compiler
+            all_deps (defaultdict(set)): dictionary of all dependencies and
+                associated dependents
         """
         task = BuildTask(pkg, request, is_compiler, 0, 0, STATUS_ADDED,
                          self.installed)
+        for dep_id in task.dependencies:
+            all_deps[dep_id].add(package_id(pkg))
+
         self._push_task(task)
 
     def _check_db(self, spec):
@@ -956,11 +965,16 @@ class PackageInstaller(object):
         self.locks[pkg_id] = (lock_type, lock)
         return self.locks[pkg_id]
 
-    def _add_tasks(self, request):
+    def _add_tasks(self, request, all_deps):
         """Add tasks to the priority queue for the given build request.
+
+        It also tracks all dependents associated with each dependency in
+        order to ensure proper tracking of uninstalled dependencies.
 
         Args:
             request (BuildRequest): the associated install request
+            all_deps (defaultdict(set)): dictionary of all dependencies and
+                associated dependents
         """
         tty.debug('Initializing the build queue for {0}'
                   .format(request.pkg.name))
@@ -994,19 +1008,11 @@ class PackageInstaller(object):
 
                 # First push any missing compilers (if requested)
                 if install_compilers:
-                    self._add_bootstrap_compilers(dep_pkg, request)
+                    self._add_bootstrap_compilers(dep_pkg, request, all_deps)
 
                 dep_id = package_id(dep_pkg)
                 if dep_id not in self.build_tasks:
-                    self._add_init_task(dep_pkg, request, False)
-                else:
-                    # A task has already been created for the dependency.
-                    #
-                    # Make sure the requested package is included in the
-                    # dependency's dependents to ensure it gets updated when
-                    # this dependency is installed.
-                    task = self.build_tasks[dep_id]
-                    task.add_dependent(request.pkg_id)
+                    self._add_init_task(dep_pkg, request, False, all_deps)
 
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
@@ -1016,7 +1022,7 @@ class PackageInstaller(object):
             # Push any missing compilers (if requested) as part of the
             # package dependencies.
             if install_compilers:
-                self._add_bootstrap_compilers(request.pkg, request)
+                self._add_bootstrap_compilers(request.pkg, request, all_deps)
 
         install_package = request.install_args.get('install_package')
         if install_package and request.pkg_id not in self.build_tasks:
@@ -1029,7 +1035,7 @@ class PackageInstaller(object):
                 self._check_deps_status(request)
 
             # Now add the package itself, if appropriate
-            self._add_init_task(request.pkg, request, False)
+            self._add_init_task(request.pkg, request, False, all_deps)
 
         # Ensure if one request is to fail fast then all requests will.
         fail_fast = request.install_args.get('fail_fast')
@@ -1432,6 +1438,24 @@ class PackageInstaller(object):
                 tty.debug('{0} has no build task to update for {1}\'s success'
                           .format(dep_id, pkg_id))
 
+    def _init_queue(self):
+        """Initialize the build queue from the list of build requests."""
+        all_dependencies = defaultdict(set)
+
+        tty.debug('Initializing the build queue from the build requests')
+        for request in self.build_requests:
+            self._add_tasks(request, all_dependencies)
+
+        # Add any missing dependents to ensure proper uninstalled dependency
+        # tracking when installing multiple specs
+        tty.debug('Ensure all dependencies know all dependents across specs')
+        for dep_id in all_dependencies:
+            if dep_id in self.build_tasks:
+                dependents = all_dependencies[dep_id]
+                task = self.build_tasks[dep_id]
+                for dependent_id in dependents.difference(task.dependents):
+                    task.add_dependent(dependent_id)
+
     def install(self):
         """
         Install the requested package(s) and or associated dependencies.
@@ -1439,14 +1463,9 @@ class PackageInstaller(object):
         Args:
             pkg (Package): the package to be built and installed"""
 
+        self._init_queue()
+
         fail_fast_err = 'Terminating after first install failure'
-
-        # Initialize the build queue from the list of build requests
-        tty.debug('Initializing the build queue')
-        for request in self.build_requests:
-            self._add_tasks(request)
-
-        # Proceed with the installation request(s)
         single_explicit_spec = len(self.build_requests) == 1
         failed_explicits = []
         exists_errors = []
@@ -1713,8 +1732,8 @@ class BuildTask(object):
         self.attempts = attempts + 1
 
         # Set of dependents, which needs to include the requesting package
+        # to support tracking of parallel, multi-spec, environment installs.
         self.dependents = set(get_dependent_ids(self.pkg.spec))
-        self.add_dependent(self.request.pkg_id)
 
         # Set of dependencies
         #
@@ -1791,7 +1810,7 @@ class BuildTask(object):
             pkg_id (str):  package identifier of the dependent package
         """
         if pkg_id != self.pkg_id and pkg_id not in self.dependents:
-            tty.debug('{0} is not in the dependents of {1} so adding'
+            tty.debug('Adding {0} as a dependent of {1}'
                       .format(pkg_id, self.pkg_id))
             self.dependents.add(pkg_id)
 

@@ -620,6 +620,8 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
+    from collections import defaultdict
+
     def _pkgs(pkg):
         spec = spack.spec.Spec('mpi').concretized()
         return [(spec.package, True)]
@@ -627,9 +629,10 @@ def test_add_bootstrap_compilers(install_mockery, monkeypatch):
     const_arg = installer_args(['trivial-install-test-package'], {})
     installer = create_installer(const_arg)
     request = installer.build_requests[0]
+    all_deps = defaultdict(set)
 
     monkeypatch.setattr(inst, '_packages_needed_to_bootstrap_compiler', _pkgs)
-    installer._add_bootstrap_compilers(request.pkg, request)
+    installer._add_bootstrap_compilers(request.pkg, request, all_deps)
 
     ids = list(installer.build_tasks)
     assert len(ids) == 1
