@@ -14,17 +14,18 @@ class Atmi(CMakePackage):
        (integrated and discrete)."""
 
     homepage = "https://github.com/RadeonOpenCompute/atmi"
-    url      = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-3.7.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-3.8.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.8.0', sha256='039f0c2b369d0dbc01000754893d9210828f4cb9b36c3e70da8c3819b131c933')
     version('3.7.0', sha256='8df08489a10ee04cea911811393e0e7d91bd437fc1fd81a23a4e7ab924a974f3')
     version('3.5.0', sha256='3fb57d2e583fab82bd0582d0c2bccff059ca91122c18ac49a7770a8bb041a37b')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
-    depends_on('cmake@3:', type='build')
 
-    for ver in ['3.5.0', '3.7.0']:
+    depends_on('cmake@3:', type='build')
+    for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('comgr@' + ver, type='link', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
         depends_on('libelf@0.8:', type='link', when='@' + ver)

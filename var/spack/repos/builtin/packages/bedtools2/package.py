@@ -22,6 +22,7 @@ class Bedtools2(Package):
     version('2.23.0', sha256='9dacaa561d11ce9835d1d51e5aeb092bcbe117b7119663ec9a671abac6a36056')
 
     depends_on('zlib')
+    depends_on('python', type='build')
 
     def install(self, spec, prefix):
         make("prefix=%s" % prefix, "install")

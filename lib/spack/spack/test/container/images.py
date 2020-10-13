@@ -40,7 +40,7 @@ def test_package_info(image):
     ({'modules': {'enable': ['tcl']}}, 'the subsection "modules" in'),
     ({'concretization': 'separately'}, 'the "concretization" attribute'),
     ({'config': {'install_tree': '/some/dir'}},
-     'the "config:install_tree" attribute has been set'),
+     'the "config:root:install_tree" attribute has been set'),
     ({'view': '/some/dir'}, 'the "view" attribute has been set')
 ])
 def test_validate(

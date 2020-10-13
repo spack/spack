@@ -507,7 +507,7 @@ def setup_main_options(args):
         spack.config.set('config:active_upstream', None,
                          scope='user')
         spack.config.set('config:active_tree',
-                         spack.config.get('config:install_tree'),
+                         spack.config.get('config:install_tree:root'),
                          scope='user')
 
 

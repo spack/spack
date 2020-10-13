@@ -2,10 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
-
 class Nsimd(CMakePackage):
     """NSIMD is a vectorization library that abstracts SIMD programming.
     It was designed to exploit the maximum power of processors
@@ -28,11 +24,8 @@ class Nsimd(CMakePackage):
                 'NEON128', 'AARCH64', 'SVE',
             ),
             multi=False)
-    variant('optionals',
-            default=(),
-            description='Optional SIMD features',
-            values=('FMA', 'FP16'),
-            multi=True)
+    variant('optionals', values=any_combination_of('FMA', 'FP16'),
+            description='Optional SIMD features',)
 
     conflicts('simd=none', msg="SIMD instruction set not defined")
 
@@ -56,10 +49,14 @@ class Nsimd(CMakePackage):
         python(*options)
 
     def cmake_args(self):
+        # Required SIMD argument
         simd = self.spec.variants['simd'].value
-        optionals = ';'.join(self.spec.variants['optionals'].value)
-        cmake_args = [
-            "-DSIMD={0}".format(simd),
-            "-DSIMD_OPTIONALS={0}".format(optionals),
-        ]
+        cmake_args = ["-DSIMD={0}".format(simd)]
+
+        # Optional SIMD instructions to be turned on explicitly
+        optionals_value = self.spec.variants['optionals'].value
+        if optionals_value != 'none':
+            optionals_arg = ';'.join(optionals_value)
+            cmake_args.append("-DSIMD_OPTIONALS={0}".format(optionals_arg))
+
         return cmake_args

@@ -606,4 +606,4 @@ version of all the changes since `v0.9.1`.
 - Switched from `nose` to `pytest` for unit tests.
   - Unit tests take 1 minute now instead of 8
 - Massively expanded documentation
-- Docs are now hosted on [spack.readthedocs.io](http://spack.readthedocs.io)
+- Docs are now hosted on [spack.readthedocs.io](https://spack.readthedocs.io)
