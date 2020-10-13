@@ -185,10 +185,10 @@ def test_nag_version_detection(version_str, expected_version):
      'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
      '20.9'),
     # Fortran compiler on Power
-     ('nvfortran 20.9-0 linuxpower target on Linuxpower\n'
-      'NVIDIA Compilers and Tools\n'
-      'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
-      '20.9'),
+    ('nvfortran 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
     # C compiler on Arm
     ('nvc 20.9-0 linuxarm64 target on aarch64 Linux\n'
      'NVIDIA Compilers and Tools\n'
