@@ -31,6 +31,7 @@ _versions = {
         'Linux-x86_64': ('a5c5c8726d2210f2310a852c6d6e03c9ef8c75e3643e9c94e24909f5e9c2ea7a', 'https://developer.download.nvidia.com/hpc-sdk/20.7/nvhpc_2020_207_Linux_x86_64_cuda_multi.tar.gz')}
 }
 
+
 class Nvhpc(Package):
     """Nvidia optimizing multi-core x64 compilers for Linux
     with support for debugging and profiling of local MPI processes."""
@@ -65,8 +66,8 @@ class Nvhpc(Package):
 
         if '+network' in spec and '~single' in spec:
             os.environ['NVHPC_INSTALL_TYPE'] = "network"
-            os.environ['NVHPC_INSTALL_LOCAL_DIR'] = "%s/%s/%s/share_objects" % \
-                (prefix, 'Linux_%s' % spec.target.family, self.version)
+            os.environ['NVHPC_INSTALL_LOCAL_DIR'] = "%s/%s/%s/share_objects" \
+                % (prefix, 'Linux_%s' % spec.target.family, self.version)
         elif '+single' in spec and '~network' in spec:
             os.environ['NVHPC_INSTALL_TYPE'] = "single"
         else:
@@ -78,7 +79,9 @@ class Nvhpc(Package):
         os.system("./install")
 
     def setup_run_environment(self, env):
-        prefix = Prefix(join_path(self.prefix, 'Linux_%s' % self.spec.target.family, self.version, 'compilers'))
+        prefix = Prefix(join_path(self.prefix,
+                                  'Linux_%s' % self.spec.target.family,
+                                  self.version, 'compilers'))
 
         env.set('CC',  join_path(prefix.bin, 'nvc'))
         env.set('CXX', join_path(prefix.bin, 'nvc++'))
@@ -93,7 +96,9 @@ class Nvhpc(Package):
 
     @property
     def libs(self):
-        prefix = Prefix(join_path(self.prefix, 'Linux_%s' % self.spec.target.family, self.version, 'compilers'))
+        prefix = Prefix(join_path(self.prefix,
+                                  'Linux_%s' % self.spec.target.family,
+                                  self.version, 'compilers'))
         libs = []
 
         if '+blas' in self.spec:
