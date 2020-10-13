@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 import os
+import sys
 from spack import *
 
 
-class Faiss(AutotoolsPackage, PythonPackage, CudaPackage):
+class Faiss(AutotoolsPackage, CudaPackage):
     """Faiss is a library for efficient similarity search and clustering of
        dense vectors.
 
@@ -35,7 +35,7 @@ class Faiss(AutotoolsPackage, PythonPackage, CudaPackage):
     conflicts('+tests', when='~python', msg='+tests must be accompanied by +python')
 
     # we don't want "extend" because we don't want to symlink to python prefix
-    depends_on('python',        when='+python', type=('build', 'run'))
+    depends_on('python@3.7:',   when='+python', type=('build', 'run'))
     depends_on('py-numpy',      when='+python', type=('build', 'run'))
     depends_on('py-scipy',      when='+tests',  type=('build', 'run'))
 
@@ -43,31 +43,24 @@ class Faiss(AutotoolsPackage, PythonPackage, CudaPackage):
     depends_on('py-setuptools', when='+python', type='build')
     depends_on('swig',          when='+python', type='build')
 
-    # --- patch for v1.5.3 -----------------------------------------------
+    # patch for v1.5.3
     # faiss assumes that the "source directory" will always
     # be called "faiss" (not spack-src or faiss-1.5.3)
     # so, we will have to create a symlink to self (faiss did that in 1.6.3)
     # and add an include path
     patch('fixes-in-v1.5.3.patch', when='@1.5.3')
 
-    # --- patch for v1.6.3 -----------------------------------------------
+    # patch for v1.6.3
     # for v1.6.3, GPU build has a bug (two files need to be deleted)
     # https://github.com/facebookresearch/faiss/issues/1159
     # also, some include paths in gpu/tests/Makefile are missing
     patch('fixes-in-v1.6.3.patch', when='@1.6.3')
 
-    # --------------------------------------------------------------------------
-    phases = ['configure', 'build', 'install']
-
     def configure_args(self):
         args = []
-        if '+cuda' in self.spec:
-            args.append('--with-cuda={}'.format(self.spec['cuda'].prefix))
-        else:
-            args.append('--without-cuda')
+        args.extend(self.with_or_without('cuda', activation_value='prefix'))
         return args
 
-    # --------------------------------------------------------------------------
     def build(self, spec, prefix):
 
         make()
@@ -88,30 +81,14 @@ class Faiss(AutotoolsPackage, PythonPackage, CudaPackage):
                 make('build')                       # target added by the patch
                 make('demo_ivfpq_indexing_gpu')
 
-    # --------------------------------------------------------------------------
     def install(self, spec, prefix):
 
         make('install')
 
         if '+python' in self.spec:
-
             with working_dir('python'):
                 setup_py('install', '--prefix=' + prefix,
                          '--single-version-externally-managed', '--root=/')
-
-            '''
-            # faiss's suggested installation (using makefile) puts the
-            # python bindings in python prefix
-            # but, instead, we want to keep these files in the faiss prefix
-
-            # TODO: replace with make install once the PR is accepted
-            # https://github.com/facebookresearch/faiss/pull/1271
-
-            cmd = '{} setup.py install --prefix={}'
-            os.chdir(os.path.join(self.stage.source_path, 'python'))
-            os.system(cmd.format(self.spec['python'].command, self.prefix))
-            os.chdir(self.stage.source_path)
-            '''
 
         if not os.path.isdir(self.prefix.bin):
             os.makedirs(self.prefix.bin)
@@ -138,47 +115,17 @@ class Faiss(AutotoolsPackage, PythonPackage, CudaPackage):
                 _prefix_and_install('TestGpuSelect')
                 _prefix_and_install('demo_ivfpq_indexing_gpu')
 
-    # --------------------------------------------------------------------------
     @run_after('configure')
     def _fix_makefile(self):
 
-        # for v1.5.3, the makefile contains x86-specific flags
-        # so, we need to remove them for powerpc
-        # for v1.6.0 and forward, this seems to have been fixed
+        # spack injects its own optimization flags
+        makefile = FileFilter('makefile.inc')
+        makefile.filter('CPUFLAGS     = -mavx2 -mf16c',
+                        '#CPUFLAGS     = -mavx2 -mf16c')
 
-        # TODO: didn't check < 1.5.3 (but, do we care about the older versions)
-        # TODO: should this be removed for other architectures as well?
-        #       i.e., change the condition to target != 'x86' ?
-
-        if self.version <= Version('1.5.3') and \
-           self.spec.architecture.target == 'power9le':
-            makefile = FileFilter('makefile.inc')
-            makefile.filter('CPUFLAGS     = -mavx2 -mf16c',
-                            '#CPUFLAGS     = -mavx2 -mf16c')
-
-    # --------------------------------------------------------------------------
-    '''
-    @run_after('install')
-    def _fix_install(self):
-
-        # for some reason, the egg gets installed as the archive
-        # so, let's inflate it manually
-        if '+python' in self.spec:
-
-            fversion = self.version.string
-            pversion = self.spec['python'].version.up_to(2).string
-
-            fname = 'faiss-{}-py{}.egg'.format(fversion, pversion)
-            lpath = 'lib/python{}/site-packages'.format(pversion)
-
-            os.chdir(os.path.join(self.prefix, lpath))
-
-            # if this is a file, not a directory
-            if os.path.isfile(fname):
-                bname = '{}.zip'.format(fname)
-                os.system('mv {} {}'.format(fname, bname))
-                os.system('unzip {} -d {}'.format(bname, fname))
-
-            os.chdir(self.stage.source_path)
-    '''
-    # --------------------------------------------------------------------------
+    def setup_run_environment(self, env):
+        pv = sys.version_info
+        env.prepend_path('PYTHONPATH',
+                         join_path(self.prefix.lib,
+                                   'python{}.{}'.format(pv[0], pv[1]),
+                                   'site-packages'))
