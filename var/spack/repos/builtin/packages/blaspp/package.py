@@ -35,14 +35,13 @@ class Blaspp(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = [
+        return [
             '-Dbuild_tests=%s'       % self.run_tests,
             '-Duse_openmp=%s'        % ('+openmp' in spec),
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             '-Duse_cuda=%s'          % ('+cuda' in spec),
             '-DBLAS_LIBRARIES=%s'    % spec['blas'].libs.joined(';')
         ]
-        return args
 
     def check(self):
         if os.path.isfile(join_path(self.build_directory, 'test', 'tester')):
