@@ -23,7 +23,7 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
         spec = self.spec
 
         if name == 'cflags':
-            if '%intel' in spec:
+            if '%intel@:18.999' in spec:
                 flags.append('-no-gcc')
 
             elif '%clang' in spec or '%fj' in spec:
