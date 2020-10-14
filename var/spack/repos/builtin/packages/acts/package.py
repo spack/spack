@@ -89,6 +89,7 @@ class Acts(CMakePackage, CudaPackage):
     variant('unit_tests', default=False, description='Build the unit tests')
 
     # Variants that enable / disable Acts plugins
+    variant('autodiff', default=False, description='Build the auto-differentiation plugin')
     variant('dd4hep', default=False, description='Build the DD4hep plugin')
     variant('digitization', default=False, description='Build the geometric digitization plugin')
     variant('fatras', default=False, description='Build the FAst TRAcking Simulation package')
@@ -104,6 +105,7 @@ class Acts(CMakePackage, CudaPackage):
     variant('pythia8', default=False, description='Build the Pythia8-based examples')
 
     # Build dependencies
+    # FIXME: Use spack's autodiff package once there is one
     depends_on('boost @1.62:1.69.99 +program_options +test', when='@:0.10.3')
     depends_on('boost @1.69: +filesystem +program_options +test', when='@0.10.4:')
     depends_on('cmake @3.11:', type='build')
@@ -120,6 +122,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on('root @6.10: cxxstd=17', when='+tgeo @0.8.1:')
 
     # Some variant combinations do not make sense
+    conflicts('+autodiff', when='@:1.01')
     conflicts('+benchmarks', when='@:0.15')
     conflicts('+dd4hep', when='-tgeo')
     conflicts('+examples', when='@:0.22')
@@ -167,6 +170,7 @@ class Acts(CMakePackage, CudaPackage):
             legacy_plugin_label = "LEGACY"
 
         args = [
+            plugin_cmake_variant("AUTODIFF", "autodiff"),
             cmake_variant("BENCHMARKS", "benchmarks"),
             plugin_cmake_variant("CUDA", "cuda"),
             plugin_cmake_variant("DD4HEP", "dd4hep"),
@@ -193,6 +197,8 @@ class Acts(CMakePackage, CudaPackage):
             cxxstd = spec['root'].variants['cxxstd'].value
             args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
 
+        # FIXME: Once we can use spack's autodiff package, set
+        #        ACTS_USE_SYSTEM_AUTODIFF too.
         if spec.satisfies('@0.33: +json'):
             args.append("-DACTS_USE_SYSTEM_NLOHMANN_JSON=ON")
         elif spec.satisfies('@0.14.0: +json'):
