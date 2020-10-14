@@ -30,6 +30,7 @@ class Uqtk(CMakePackage):
     # Do not link the gfortran library when using the Fujitsu compiler.
     patch('not_link_gfortran.patch', when='@3.1.0:%fj')
 
+    @when('@3.1.0:')
     def cmake_args(self):
         spec = self.spec
 
