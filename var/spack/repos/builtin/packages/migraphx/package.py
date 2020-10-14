@@ -14,13 +14,11 @@ class Migraphx(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     def url_for_version(self, version):
-        # Fix up a typo in the 3.5.0 release.
-        if version == Version('3.5.0'):
-            return "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-3.5.0.tar.gz"
-        if version == Version('3.7.0'):
-            return "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/0.7.tar.gz"
-        if version == Version('3.8.0'):
-            return "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/0.8.tar.gz"
+        url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/{0}.tar.gz"
+        if version > Version('3.5'):
+            return url.format(version)
+        else:
+            return url.format('rocm-' + version)
 
     version('3.8.0', sha256='08fa991349a2b95364b0a69be7960580c3e3fde2fda0f0c67bc41429ea2d67a0')
     version('3.7.0', sha256='697c3c7babaa025eaabec630dbd8a87d10dc4fe35fafa3b0d3463aaf1fc46399')
