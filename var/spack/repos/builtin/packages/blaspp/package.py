@@ -36,6 +36,7 @@ class Blaspp(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
         args = [
+            '-Dbuild_tests=%s'       % self.run_tests,
             '-Duse_openmp=%s'        % ('+openmp' in spec),
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             '-Duse_cuda=%s'          % ('+cuda' in spec),
