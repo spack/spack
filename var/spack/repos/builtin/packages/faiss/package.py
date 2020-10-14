@@ -90,7 +90,7 @@ class Faiss(AutotoolsPackage, CudaPackage):
                 setup_py('install', '--prefix=' + prefix,
                          '--single-version-externally-managed', '--root=/')
 
-        if not os.path.isdir(self.prefix.bin):
+        if '+tests' in self.spec and not os.path.isdir(self.prefix.bin):
             os.makedirs(self.prefix.bin)
 
         def _prefix_and_install(file):
@@ -124,8 +124,5 @@ class Faiss(AutotoolsPackage, CudaPackage):
                         '#CPUFLAGS     = -mavx2 -mf16c')
 
     def setup_run_environment(self, env):
-        pv = sys.version_info
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.prefix.lib,
-                                   'python{}.{}'.format(pv[0], pv[1]),
-                                   'site-packages'))
+        if '+python' in self.spec:
+            env.prepend_path('PYTHONPATH', site_packages_dir)
