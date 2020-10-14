@@ -10,6 +10,7 @@ class Migraphx(CMakePackage):
     """ AMD's graph optimization engine."""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX"
+    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-3.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
