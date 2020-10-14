@@ -29,9 +29,9 @@ class Charliecloud(AutotoolsPackage):
 
     # Man pages and html docs variant.
     variant('docs', default=False, description='Build man pages and html docs')
-    depends_on('rsync',               type='build', when='+docs')
-    depends_on('py-sphinx',           type='build', when='+docs')
-    depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
+    depends_on('rsync',                     type='build', when='+docs')
+    depends_on('py-sphinx',                 type='build', when='+docs')
+    depends_on('py-sphinx-rtd-theme@0.4.3', type='build', when='+docs')
 
     # See https://github.com/spack/spack/pull/16049.
     conflicts('platform=darwin', msg='This package does not build on macOS')
