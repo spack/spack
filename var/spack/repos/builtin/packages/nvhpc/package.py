@@ -46,9 +46,9 @@ class Nvhpc(Package):
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
 
-    variant('network',   default=True,
+    variant('network',   default=False,
             description="Perform a network install")
-    variant('single',    default=False,
+    variant('single',    default=True,
             description="Perform a single system install")
     variant('blas',      default=True,
             description="Enable BLAS")
