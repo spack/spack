@@ -99,11 +99,6 @@ class Aocc(Compiler):
             return loc_ver
 
         match = re.search(
-            # Normal clang compiler versions are left as-is
-            r'AMD clang version ([^ )]+)-svn[~.\w\d-]*|'
-            # Don't include hyphenated patch numbers in the version
-            # (see https://github.com/spack/spack/pull/14365 for details)
-            r'AMD clang version ([^ )]+?)-[~.\w\d-]*|'
             r'AMD clang version ([^ )]+)',
             output
         )
