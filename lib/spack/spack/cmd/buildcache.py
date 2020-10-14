@@ -507,10 +507,11 @@ def listspecs(args):
     """list binary packages available from mirrors"""
     specs = bindist.get_specs()
 
-    for spec in specs:
-        in_db = spack.store.db.query(spec, installed=any)
-        if not in_db:
-            spack.store.db.add(spec, spack.store.layout)
+    with spack.store.db.write_transaction():
+        for spec in specs:
+            in_db = spack.store.db.query(spec, installed=any)
+            if not in_db:
+                spack.store.db.add(spec, spack.store.layout)
 
     if not args.allarch:
         arch = spack.architecture.default_arch().to_spec()
