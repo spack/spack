@@ -54,9 +54,12 @@ class Nvhpc(Package):
             description="Enable BLAS")
     variant('lapack',    default=True,
             description="Enable LAPACK")
+    variant('mpi',       default=False,
+            description="Enable MPI")
 
     provides('blas',        when='+blas')
     provides('lapack',      when='+lapack')
+    provides('mpi',         when='+mpi')
 
     conflicts('+network', when='+single',
               msg="You cannot choose both a network and a single install")
@@ -93,6 +96,25 @@ class Nvhpc(Package):
         env.prepend_path('LIBRARY_PATH',    prefix.lib)
         env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
         env.prepend_path('MANPATH',         prefix.man)
+
+        if '+mpi' in self.spec:
+            mpi_prefix = Prefix(join_path(self.prefix,
+                                'Linux_%s' % self.spec.target.family,
+                                self.version, 'comm_libs', 'mpi'))
+            env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
+            env.prepend_path('PATH', mpi_prefix.bin)
+            env.prepend_path('CPATH', mpi_prefix.include)
+
+    def setup_dependent_package(self, module, dependent_spec):
+        if '+mpi' in self.spec or self.provides('mpi'):
+            mpi_prefix = Prefix(join_path(self.prefix,
+                                'Linux_%s' % self.spec.target.family,
+                                self.version, 'comm_libs', 'mpi'))
+
+            self.spec.mpicc  = join_path(mpi_prefix.bin, 'mpicc')
+            self.spec.mpicxx = join_path(mpi_prefix.bin, 'mpicxx')
+            self.spec.mpif77 = join_path(mpi_prefix.bin, 'mpif77')
+            self.spec.mpifc  = join_path(mpi_prefix.bin, 'mpif90')
 
     @property
     def libs(self):
