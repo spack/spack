@@ -399,6 +399,8 @@ environment variables:
 
             if any([concrete in installed for concrete in specs]):
                 # Preserve ordering if force replacement of any installed specs
+                tty.debug('Performing serial installs due to forced '
+                          'replacement of installed concrete specs.')
                 for abstract, concrete in zip(abstract_specs, specs):
                     if concrete in installed:
                         with fs.replace_directory_transaction(concrete.prefix):

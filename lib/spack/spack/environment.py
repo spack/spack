@@ -1273,9 +1273,28 @@ class Environment(object):
             install_args (dict): keyword install arguments
         """
 
+        # If "spack install" is invoked repeatedly for a large environment
+        # where all specs are already installed, the operation can take
+        # a large amount of time due to repeatedly acquiring and releasing
+        # locks, this does an initial check across all specs within a single
+        # DB read transaction to reduce time spent in this case.
+        tty.debug('Assessing installation status of environment packages')
+        uninstalled_specs = []
+        with spack.store.db.read_transaction():
+            for concretized_hash in self.concretized_order:
+                spec = self.specs_by_hash[concretized_hash]
+                if not spec.package.installed:
+                    uninstalled_specs.append(spec)
+
+        if not uninstalled_specs:
+            tty.debug('All of the packages are already installed')
+            return
+
+        tty.debug('Processing {0} uninstalled specs'
+                  .format(len(uninstalled_specs)))
+
         installs = []
-        ordered_specs = [self.specs_by_hash[c] for c in self.concretized_order]
-        for spec in ordered_specs:
+        for spec in uninstalled_specs:
             # Parse cli arguments and construct a dictionary
             # that will be passed to the package installer
             kwargs = dict()
@@ -1291,7 +1310,7 @@ class Environment(object):
             builder.install()
         finally:
             # Ensure links are set appropriately
-            for spec in ordered_specs:
+            for spec in uninstalled_specs:
                 if spec.package.installed:
                     self._install_log_links(spec)
 
