@@ -77,9 +77,11 @@ def test_buildcache_list_allarch(database, mock_get_specs_multiarch, capsys):
 
     assert output.count('mpileaks') == 2
 
+
 @pytest.mark.db
 @pytest.mark.regression('reference listed binaries by hash')
-def test_buildcache_reference_by_hash(mutable_database, mock_get_specs, capsys):
+def test_buildcache_reference_by_hash(
+        mutable_database, mock_get_specs, capsys):
     expected = mutable_database.query(installed=True)
     uninstall('-a', '-y')
 
