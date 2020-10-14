@@ -20,3 +20,5 @@ class Jellyfish(AutotoolsPackage):
 
     depends_on('perl', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
+
+    patch('dna_codes.patch', when='@1.1.11')
