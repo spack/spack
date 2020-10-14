@@ -6,6 +6,8 @@
 from __future__ import print_function
 
 import collections
+import copy
+import itertools
 import os
 import pkgutil
 import pprint
@@ -410,6 +412,30 @@ def _normalize(body):
     else:
         raise TypeError("Invalid typee: ", type(body))
     return args
+
+
+def _normalize_packages_yaml(packages_yaml):
+    normalized_yaml = copy.copy(packages_yaml)
+    for pkg_name in packages_yaml:
+        is_virtual = spack.repo.path.is_virtual(pkg_name)
+        if pkg_name == 'all' or not is_virtual:
+            continue
+
+        # Remove the virtual entry from the normalized configuration
+        data = normalized_yaml.pop(pkg_name)
+        is_buildable = data.get('buildable', True)
+        if not is_buildable:
+            for provider in spack.repo.path.providers_for(pkg_name):
+                entry = normalized_yaml.setdefault(provider.name, {})
+                entry['buildable'] = False
+
+        externals = data.get('externals', [])
+        keyfn = lambda x: spack.spec.Spec(x['spec']).name
+        for provider, specs in itertools.groupby(externals, key=keyfn):
+            entry = normalized_yaml.setdefault(provider, {})
+            entry.setdefault('externals', []).extend(specs)
+
+    return normalized_yaml
 
 
 class PyclingoDriver(object):
@@ -934,7 +960,12 @@ class SpackSolverSetup(object):
 
     def external_packages(self):
         """Facts on external packages, as read from packages.yaml"""
+        # Read packages.yaml and normalize it, so that it
+        # will not contain entries referring to virtual
+        # packages.
         packages_yaml = spack.config.get("packages")
+        packages_yaml = _normalize_packages_yaml(packages_yaml)
+
         self.gen.h1('External packages')
         for pkg_name, data in packages_yaml.items():
             if pkg_name == 'all':
@@ -1526,6 +1557,7 @@ class SpecBuilder(object):
         has been selected for this package.
         """
         packages_yaml = spack.config.get('packages')
+        packages_yaml = _normalize_packages_yaml(packages_yaml)
         spec_info = packages_yaml[pkg]['externals'][int(idx)]
         self._specs[pkg].external_path = spec_info.get('prefix', None)
         self._specs[pkg].external_modules = spec_info.get('modules', [])
@@ -1622,6 +1654,10 @@ class SpecBuilder(object):
 
         # fix flags after all specs are constructed
         self.reorder_flags()
+
+        # Add external paths to specs with just external modules
+        for s in self._specs.values():
+            spack.spec.Spec.ensure_external_path_if_external(s)
 
         return self._specs
 
