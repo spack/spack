@@ -2362,17 +2362,9 @@ class Spec(object):
                 t[-1] for t in ordered_hashes)
 
         for s in self.traverse():
-            if s.external_modules and not s.external_path:
-                compiler = spack.compilers.compiler_for_spec(
-                    s.compiler, s.architecture)
-                for mod in compiler.modules:
-                    md.load_module(mod)
-
-                # get the path from the module
-                # the package can override the default
-                s.external_path = getattr(s.package, 'external_prefix',
-                                          md.path_from_modules(
-                                              s.external_modules))
+            # TODO: Refactor this into a common method to build external specs
+            # TODO: or turn external_path into a lazy property
+            self.ensure_external_path_if_external(s)
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
@@ -2418,6 +2410,21 @@ class Spec(object):
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
         self.architecture.target.optimization_flags(self.compiler)
+
+    @staticmethod
+    def ensure_external_path_if_external(external_spec):
+        if external_spec.external_modules and not external_spec.external_path:
+            compiler = spack.compilers.compiler_for_spec(
+                external_spec.compiler, external_spec.architecture)
+            for mod in compiler.modules:
+                md.load_module(mod)
+
+            # get the path from the module
+            # the package can override the default
+            external_spec.external_path = getattr(
+                external_spec.package, 'external_prefix',
+                md.path_from_modules(external_spec.external_modules)
+            )
 
     def _new_concretize(self, tests=False):
         import spack.solver.asp
