@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 from spack import *
 
 
@@ -90,7 +89,10 @@ class Faiss(AutotoolsPackage, CudaPackage):
                 setup_py('install', '--prefix=' + prefix,
                          '--single-version-externally-managed', '--root=/')
 
-        if '+tests' in self.spec and not os.path.isdir(self.prefix.bin):
+        if '+tests' not in self.spec:
+            return
+
+        if not os.path.isdir(self.prefix.bin):
             os.makedirs(self.prefix.bin)
 
         def _prefix_and_install(file):
@@ -98,14 +100,13 @@ class Faiss(AutotoolsPackage, CudaPackage):
             install('faiss_{}'.format(file), self.prefix.bin)
 
         # CPU tests
-        if '+tests' in self.spec:
-            with working_dir('tests'):
-                # rename the exec to keep consistent with gpu tests
-                os.system('mv tests TestCpu')
-                _prefix_and_install('TestCpu')
+        with working_dir('tests'):
+            # rename the exec to keep consistent with gpu tests
+            os.system('mv tests TestCpu')
+            _prefix_and_install('TestCpu')
 
         # GPU tests
-        if '+tests' in self.spec and '+cuda' in self.spec:
+        if '+cuda' in self.spec:
             with working_dir(os.path.join('gpu', 'test')):
                 _prefix_and_install('TestGpuIndexFlat')
                 _prefix_and_install('TestGpuIndexBinaryFlat')
