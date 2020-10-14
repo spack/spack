@@ -17,43 +17,34 @@ class Blaspp(CMakePackage, CudaPackage):
     maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
     version('develop', git=homepage)
+    version('2020.10.00', sha256='ce148cfe397428d507c72d7d9eba5e9d3f55ad4cd842e6e873c670183dcb7795')
     version('2020.09.00', sha256='ee5d29171bbed515734007dd121ce2e733e2f83920c4d5ede046e657f4a513ef')
 
-    variant('openmp',
-            default=True,
-            description='Use OpenMP internally.')
-
-    variant('cuda', default=True,
-            description='Build with CUDA')
-
-    variant('shared',
-            default=True,
-            description='Build shared libraries')
+    variant('openmp', default=True, description='Use OpenMP internally.')
+    variant('cuda',   default=True, description='Build with CUDA')
+    variant('shared', default=True, description='Build shared libraries')
 
     depends_on('cmake@3.15.0:', type='build')
     depends_on('blas')
 
+    # This will attempt to use a supported version of OpenBLAS
+    depends_on('openblas@:0.3.5', when='^openblas')
+    # In some cases, the spack concretizer will fail to use a supported
+    # version of OpenBLAS.  In this case, present an error message.
     conflicts('^openblas@0.3.6:', msg='Testing errors in OpenBLAS >=0.3.6')
 
     def cmake_args(self):
         spec = self.spec
-        args = []
-        args.append('-Dbuild_tests={0}'.format(
-            'ON' if self.run_tests else 'OFF'))
-
-        args.append('-Duse_openmp={0}'.format(
-            'ON' if '+openmp' in spec else 'OFF'))
-
-        args.append('-DBUILD_SHARED_LIBS={0}'.format(
-            'ON' if '+shared' in spec else 'OFF'))
-
-        args.append('-Duse_cuda={0}'.format(
-            'ON' if '+cuda' in spec else 'OFF'))
-
-        args.append('-DBLAS_LIBRARIES=%s' % spec['blas'].libs.joined(';'))
+        args = [
+            '-Duse_openmp=%s'        % ('+openmp' in spec),
+            '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
+            '-Duse_cuda=%s'          % ('+cuda' in spec),
+            '-DBLAS_LIBRARIES=%s'    % spec['blas'].libs.joined(';')
+        ]
         return args
 
     def check(self):
-        with working_dir(join_path(self.build_directory, 'test')):
-            if os.system('./run_tests.py --quick'):
-                raise Exception('Tests were not all successful!')
+        if os.path.isfile(join_path(self.build_directory, 'test', 'tester')):
+            make('check')
+        else:
+            raise Exception('The tester was not built!')
