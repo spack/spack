@@ -41,9 +41,9 @@ default_root = os.path.join(spack.paths.opt_path, 'spack')
 
 user_install_root = os.path.expanduser('~/.spack/install-root')
 
-init_upstream = None
-
 install_root = None
+active_upstream = None
+init_upstream = None
 
 
 class Store(object):
@@ -65,12 +65,14 @@ class Store(object):
         hash_length (int): length of the hashes used in the directory
             layout; spec hash suffixes will be truncated to this length
     """
-    def __init__(self, root, projections=None, hash_length=None):
+    def __init__(self, root, projections=None,
+                 hash_length=None, active_upstream=None):
         self.root = root
         self.db = spack.database.Database(
             root, upstream_dbs=retrieve_upstream_dbs())
         self.layout = dir_layout.YamlDirectoryLayout(
             root, projections=projections, hash_length=hash_length)
+        self.active_upstream = active_upstream
 
     def reindex(self):
         """Convenience function to reindex the store DB with its own layout."""
@@ -80,7 +82,7 @@ class Store(object):
 def _store():
     """Get the singleton store instance."""
     if install_root:
-        install_tree = spack.util.path.canonicalize_path(install_root);
+        install_tree = spack.util.path.canonicalize_path(install_root)
     else:
         install_tree = spack.config.get('config:install_tree')
 
@@ -107,7 +109,8 @@ def _store():
                      " when using new install_tree syntax")
 
     return Store(root, projections,
-                 spack.config.get('config:install_hash_length'))
+                 spack.config.get('config:install_hash_length'),
+                 active_upstream)
 
 
 #: Singleton store instance

@@ -85,26 +85,14 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
     Return:
         list of specs
     """
-    if upstream:
-        if upstream not in spack.config.get('upstreams'):
-            tty.die("specified upstream does not exist")
-        spack.config.set('config:active_upstream', upstream,
-                         scope='user')
-        root = spack.config.get('upstreams')
-        root = root[upstream]['install_tree']
-        root = spack.util.path.canonicalize_path(root)
-        spack.config.set('config:active_tree', root, scope='user')
-    else:
-        spack.config.set('config:active_upstream', None,
-                         scope='user')
-        for spec in specs:
-            if isinstance(spec, spack.spec.Spec):
-                spec_name = str(spec)
-                spec_copy = (copy.deepcopy(spec))
-                spec_copy.concretize()
-                if spec_copy.package.installed_upstream:
-                    tty.warn("{0} is 1".format(spec_name))
-                    tty.die("Use 'spack [--upstream upstream_name] uninstall'")
+    for spec in specs:
+        if isinstance(spec, spack.spec.Spec):
+            spec_name = str(spec)
+            spec_copy = (copy.deepcopy(spec))
+            spec_copy.concretize()
+            if spec_copy.package.installed_upstream:
+                tty.warn("{0} is 1".format(spec_name))
+                tty.die("Use 'spack [--upstream upstream_name] uninstall'")
 
     # constrain uninstall resolution to current environment if one is active
     hashes = env.all_hashes() if env else None
@@ -267,18 +255,11 @@ def do_uninstall(env, specs, force):
     if env:
         env.write()
 
-    spack.config.set('config:active_tree',
-                     '~/.spack/opt/spack',
-                     scope='user')
-
-    spack.config.set('config:active_upstream', None,
-                     scope='user')
-
 
 def get_uninstall_list(args, specs, env):
     # Gets the list of installed specs that match the ones give via cli
     # args.all takes care of the case where '-a' is given in the cli
-    active_upstream = spack.config.get('config:active_upstream')
+    active_upstream = spack.store.active_upstream
     uninstall_list = find_matching_specs(env, specs, args.all, args.force,
                                          upstream=active_upstream)
 

@@ -214,8 +214,8 @@ def root_path(name):
     """
 
     # Root folders where the various module files should be written
-    active_upstream = spack.config.get('config:active_upstream')
-    if active_upstream is not None:
+    active_upstream = spack.store.active_upstream
+    if active_upstream:
         # Installs module files to upstream share directory.
         # Extra logic is needed for determining this location.
         roots = spack.config.get('upstreams')[active_upstream]['modules']

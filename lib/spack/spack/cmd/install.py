@@ -252,11 +252,6 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
                 env.regenerate_views()
         else:
             spec.package.do_install(**kwargs)
-        # Resets active upstream and active tree after install
-        spack.config.set('config:active_tree', '~/.spack/opt/spack',
-                         scope='user')
-        spack.config.set('config:active_upstream', None,
-                         scope='user')
 
     except spack.build_environment.InstallError as e:
         if cli_args.show_log_on_error:

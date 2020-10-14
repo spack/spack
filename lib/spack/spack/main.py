@@ -489,22 +489,17 @@ def setup_main_options(args):
         # Install Package to Global Upstream for multi-user use
         if args.upstream not in spack.config.get('upstreams'):
             tty.die("specified upstream does not exist")
-        spack.config.set('config:active_upstream', args.upstream,
-                         scope='user')
+        spack.store.active_upstream = args.upstream
         root = spack.config.get('upstreams')
         root = root[args.upstream]['install_tree']
         root = spack.util.path.canonicalize_path(root)
         spack.store.install_root = root
     elif args.global_upstream:
-        spack.config.set('config:active_upstream', 'global',
-                         scope='user')
+        spack.store.active_upstream = 'global'
         global_root = spack.config.get('upstreams')
         global_root = global_root['global']['install_tree']
         global_root = spack.util.path.canonicalize_path(global_root)
         spack.store.install_root = global_root
-    else:
-        spack.config.set('config:active_upstream', None,
-                         scope='user')
 
 
 def allows_unknown_args(command):
