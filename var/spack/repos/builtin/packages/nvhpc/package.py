@@ -99,17 +99,17 @@ class Nvhpc(Package):
 
         if '+mpi' in self.spec:
             mpi_prefix = Prefix(join_path(self.prefix,
-                                'Linux_%s' % self.spec.target.family,
-                                self.version, 'comm_libs', 'mpi'))
-            env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
+                                          'Linux_%s' % self.spec.target.family,
+                                          self.version, 'comm_libs', 'mpi'))
             env.prepend_path('PATH', mpi_prefix.bin)
             env.prepend_path('CPATH', mpi_prefix.include)
+            env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
 
     def setup_dependent_package(self, module, dependent_spec):
         if '+mpi' in self.spec or self.provides('mpi'):
             mpi_prefix = Prefix(join_path(self.prefix,
-                                'Linux_%s' % self.spec.target.family,
-                                self.version, 'comm_libs', 'mpi'))
+                                          'Linux_%s' % self.spec.target.family,
+                                          self.version, 'comm_libs', 'mpi'))
 
             self.spec.mpicc  = join_path(mpi_prefix.bin, 'mpicc')
             self.spec.mpicxx = join_path(mpi_prefix.bin, 'mpicxx')
