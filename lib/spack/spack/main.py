@@ -423,7 +423,7 @@ def make_argument_parser(**kwargs):
     parser.add_argument(
         '--install-root', dest='install_root',
         action='store', default=None,
-        help='specify non-default install root'
+        help='specify non-default install tree'
     )
     parser.add_argument(
         '-u', '--upstream', dest='upstream',
@@ -483,9 +483,9 @@ def setup_main_options(args):
 
     # If install-root, upstream, or global command specified
     # Target different install root here.
-    if args.install_root is not None:
-        tty.warn('Non-default install root specified')
-    elif args.upstream is not None:
+    if args.install_root:
+        spack.store.install_root = args.install_root
+    elif args.upstream:
         # Install Package to Global Upstream for multi-user use
         if args.upstream not in spack.config.get('upstreams'):
             tty.die("specified upstream does not exist")
@@ -494,20 +494,16 @@ def setup_main_options(args):
         root = spack.config.get('upstreams')
         root = root[args.upstream]['install_tree']
         root = spack.util.path.canonicalize_path(root)
-        spack.config.set('config:active_tree', root, scope='user')
-    if args.global_upstream:
+        spack.store.install_root = root
+    elif args.global_upstream:
         spack.config.set('config:active_upstream', 'global',
                          scope='user')
         global_root = spack.config.get('upstreams')
         global_root = global_root['global']['install_tree']
         global_root = spack.util.path.canonicalize_path(global_root)
-        spack.config.set('config:active_tree', global_root,
-                         scope='user')
+        spack.store.install_root = global_root
     else:
         spack.config.set('config:active_upstream', None,
-                         scope='user')
-        spack.config.set('config:active_tree',
-                         spack.config.get('config:install_tree:root'),
                          scope='user')
 
 

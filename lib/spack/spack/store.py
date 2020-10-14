@@ -36,7 +36,14 @@ import spack.database
 import spack.directory_layout as dir_layout
 
 #: default installation root, relative to the Spack install path
-default_root = os.path.join(spack.paths.user_config_path, 'opt/spack')
+default_root = os.path.join(spack.paths.opt_path, 'spack')
+
+
+user_install_root = os.path.expanduser('~/.spack/install-root')
+
+init_upstream = None
+
+install_root = None
 
 
 class Store(object):
@@ -72,14 +79,14 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    if spack.config.get('config:active_upstream') is not None:
-        install_tree = spack.config.get('config:active_tree')
+    if install_root:
+        install_tree = spack.util.path.canonicalize_path(install_root);
     else:
-        install_tree = spack.config.get('config:install_tree', {})
+        install_tree = spack.config.get('config:install_tree')
 
     if isinstance(install_tree, six.string_types):
         tty.warn("Using deprecated format for configuring install_tree")
-        root = spack.config.get('config:active_tree')
+        root = install_tree
 
         # construct projection from previous values for backwards compatibility
         all_projection = spack.config.get(
