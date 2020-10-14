@@ -119,7 +119,13 @@ def solve(parser, args):
 
         # iterate over roots from command line
         for input_spec in specs:
-            spec = answer[input_spec.name]
+            key = input_spec.name
+            if input_spec.virtual:
+                providers = [spec.name for spec in answer.values()
+                             if spec.package.provides(key)]
+                key = providers[0]
+
+            spec = answer[key]
 
             # With -y, just print YAML to output.
             if args.format == 'yaml':

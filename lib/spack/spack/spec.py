@@ -2434,9 +2434,16 @@ class Spec(object):
 
         # take the best answer
         opt, i, answer = min(result.answers)
-        assert self.name in answer
+        name = self.name
+        # TODO: Consolidate this code with similar code in solve.py
+        if self.virtual:
+            providers = [spec.name for spec in answer.values()
+                         if spec.package.provides(name)]
+            name = providers[0]
 
-        concretized = answer[self.name]
+        assert name in answer
+
+        concretized = answer[name]
         self._dup(concretized)
         self._mark_concrete()
 

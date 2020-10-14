@@ -65,6 +65,7 @@ provider_weight(Dependency, Weight)
  :- virtual(Virtual), depends_on(Package, Dependency),
     provider(Dependency, Virtual),
     pkg_provider_preference(Package, Virtual, Dependency, Weight).
+
 provider_weight(Dependency, Weight)
  :- virtual(Virtual), depends_on(Package, Dependency),
     provider(Dependency, Virtual),
@@ -80,8 +81,23 @@ provider_weight(Dependency, 100)
     not pkg_provider_preference(Package, Virtual, Dependency, _),
     not default_provider_preference(Virtual, Dependency, _).
 
+% Do the same for virtual roots
+provider_weight(Package, Weight)
+ :- virtual_root(Virtual),
+    provider(Package, Virtual),
+    default_provider_preference(Virtual, Package, Weight).
+
+provider_weight(Package, 100)
+ :- virtual_root(Virtual),
+    provider(Package, Virtual),
+    not default_provider_preference(Virtual, Package, _).
+
 % all nodes must be reachable from some root
 node(Package) :- root(Package).
+
+1 { root(Package) : provides_virtual(Package, Virtual) } 1
+  :- virtual_root(Virtual).
+
 needed(Package) :- root(Package).
 needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
 :- node(Package), not needed(Package).
@@ -94,6 +110,7 @@ node(Dependency) :- node(Package), depends_on(Package, Dependency).
 #defined declared_dependency/3.
 #defined virtual/1.
 #defined virtual_node/1.
+#defined virtual_root/1.
 #defined provides_virtual/2.
 #defined external/1.
 #defined external_spec/2.
