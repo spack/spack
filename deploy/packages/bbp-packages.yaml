@@ -170,16 +170,11 @@ packages:
       - mpi
       - python
     specs:
-      - neurodamus-core~common@2.11.1
-      - neurodamus-neocortex+coreneuron@0.3
-      - neurodamus-hippocampus+coreneuron@0.4
-      - neurodamus-thalamus+coreneuron@0.3
-      - neurodamus-mousify+coreneuron@0.3
-      - neurodamus-neocortex+coreneuron@0.3^coreneuron+knl
-      - neurodamus-hippocampus+coreneuron@0.4^coreneuron+knl
-      - neurodamus-thalamus+coreneuron@0.3^coreneuron+knl
       - neurodamus-core~common@3.0.0
       - neurodamus-neocortex+coreneuron@1.0
       - neurodamus-hippocampus+coreneuron@1.0
       - neurodamus-thalamus+coreneuron@1.0
       - neurodamus-mousify+coreneuron@1.0
+      - neurodamus-neocortex+coreneuron@1.0^coreneuron+knl
+      - neurodamus-hippocampus+coreneuron@1.0^coreneuron+knl
+      - neurodamus-thalamus+coreneuron@1.0^coreneuron+knl
