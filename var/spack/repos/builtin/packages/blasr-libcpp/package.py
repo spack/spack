@@ -15,6 +15,8 @@ class BlasrLibcpp(Package):
     homepage = "https://github.com/PacificBiosciences/blasr_libcpp"
     url      = "https://github.com/PacificBiosciences/blasr_libcpp/archive/5.3.1.tar.gz"
 
+    maintainers = ['robqiao']
+
     version('5.3.1', sha256='45a673255bfe7e29ed1f5bdb6410aa45cb6b907400d038c3da9daf1058b09156')
 
     depends_on('pbbam')
