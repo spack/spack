@@ -34,10 +34,8 @@ class Xbraid(MakefilePackage):
     def install(self, spec, prefix):
         # Install headers
         mkdirp(prefix.include)
-        headers = glob.glob('braid/*.h')
-        headers.extend(glob.glob('braid/*.hpp'))
-        for f in headers:
-            install(f, join_path(prefix.include, os.path.basename(f)))
+        install('braid/*.h', prefix.include)
+        install('braid/*.hpp', prefix.include)
 
         # Install library
         mkdirp(prefix.lib)
@@ -60,9 +58,7 @@ class Xbraid(MakefilePackage):
     def install(self, spec, prefix):
         # Install headers
         mkdirp(prefix.include)
-        headers = glob.glob('*.h')
-        for f in headers:
-            install(f, join_path(prefix.include, os.path.basename(f)))
+        install('*.h', prefix.include)
 
         # Install library
         mkdirp(prefix.lib)
