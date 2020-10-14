@@ -227,7 +227,7 @@ class AutotoolsPackage(PackageBase):
         if self.spec.satisfies('%fj'):
             fs.filter_file('-nostdlib', '', libtool_path)
             rehead = r'/\S*/'
-            objfile = ['fjcrt0.o', 'fjlang08.o', 'fjomp.o',
+            objfile = ['fjhpctag.o', 'fjcrt0.o', 'fjlang08.o', 'fjomp.o',
                        'crti.o', 'crtbeginS.o', 'crtendS.o']
             for o in objfile:
                 fs.filter_file(rehead + o, '', libtool_path)
