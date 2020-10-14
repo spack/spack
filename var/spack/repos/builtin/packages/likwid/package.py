@@ -32,7 +32,7 @@ class Likwid(Package):
 
     patch('https://github.com/RRZE-HPC/likwid/commit/e0332ace8fe8ca7dcd4b4477a25e37944f173a5c.patch', sha256='c3b8f939a46b425665577ce764d4fba080a23cab5999c53db71655fd54d7e0b1', when='@5.0.1')
     patch('https://github.com/RRZE-HPC/likwid/commit/d2d0ef333b5e0997d7c80fc6ac1a473b5e47d084.patch', sha256='636cbf40669261fdb36379d67253be2b731cfa7b6d610d232767d72fbdf08bc0', when='@4.3.4')
-
+    patch('https://github.com/RRZE-HPC/likwid/files/5341379/likwid-lua5.1.patch.txt', sha256='bc56253c1e3436b5ba7bf4c5533d0391206900c8663c008f771a16376975e416', when='@5.0.2^lua@5.1')
     variant('fortran', default=True, description='with fortran interface')
 
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
