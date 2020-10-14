@@ -12,7 +12,7 @@ class Migraphx(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    
+
     def url_for_version(self, version):
         # Fix up a typo in the 3.5.0 release.
         if version == Version('3.5.0'):
@@ -36,7 +36,7 @@ class Migraphx(CMakePackage):
     depends_on('msgpack-c', type='link')
     depends_on('msgpack-c', type='build', when='@3.8.0')
     depends_on('half@1.12.0', type='link')
-    for ver in ['3.5.0','3.7.0', '3.8.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
