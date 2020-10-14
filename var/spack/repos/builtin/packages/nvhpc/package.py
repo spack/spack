@@ -58,23 +58,22 @@ class Nvhpc(Package):
     provides('blas',        when='+blas')
     provides('lapack',      when='+lapack')
 
+    conflicts('+network', when='+single',
+              msg="You cannot choose both a network and a single install")
+
     def install(self, spec, prefix):
         # Enable the silent installation feature
         os.environ['NVHPC_SILENT'] = "true"
         os.environ['NVHPC_ACCEPT_EULA'] = "accept"
         os.environ['NVHPC_INSTALL_DIR'] = prefix
 
-        if '+network' in spec and '~single' in spec:
+        if '+network' in spec:
             os.environ['NVHPC_INSTALL_TYPE'] = "network"
             os.environ['NVHPC_INSTALL_LOCAL_DIR'] = \
                 "%s/%s/%s/share_objects" % \
                 (prefix, 'Linux_%s' % spec.target.family, self.version)
-        elif '+single' in spec and '~network' in spec:
+        elif '+single' in spec:
             os.environ['NVHPC_INSTALL_TYPE'] = "single"
-        else:
-            msg  = 'You must choose either a network install or a single '
-            msg += 'system install.\nYou cannot choose both.'
-            raise RuntimeError(msg)
 
         # Run install script
         os.system("./install")
