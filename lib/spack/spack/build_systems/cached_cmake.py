@@ -71,9 +71,9 @@ class CachedCMakePackage(CMakePackage):
             '  ' + cmake_cache_entry(
                 "CMAKE_Fortran_COMPILER", os.environ['FC']),
             'else()',
-            '  ' + cmake_cache_entry("CMAKE_C_COMPILER", spack_cc),
-            '  ' + cmake_cache_entry("CMAKE_CXX_COMPILER", spack_cxx),
-            '  ' + cmake_cache_entry("CMAKE_Fortran_COMPILER", spack_fc),
+            '  ' + cmake_cache_entry("CMAKE_C_COMPILER", spack_cc),  # noqa: F821
+            '  ' + cmake_cache_entry("CMAKE_CXX_COMPILER", spack_cxx),  # noqa: F821
+            '  ' + cmake_cache_entry("CMAKE_Fortran_COMPILER", spack_fc),  # noqa: F821
             'endif()'
         ]
 
@@ -160,15 +160,15 @@ class CachedCMakePackage(CMakePackage):
         entries = []
         # Override XL compiler family
         familymsg = ("Override to proper compiler family for XL")
-        if "xlf" in (spack_fc or ''):
+        if "xlf" in (spack_fc or ''):  # noqa: F821
             entries.append(cmake_cache_entry(
                 "CMAKE_Fortran_COMPILER_ID", "XL",
                 familymsg))
-        if "xlc" in spack_cc:
+        if "xlc" in spack_cc:  # noqa: F821
             entries.append(cmake_cache_entry(
                 "CMAKE_C_COMPILER_ID", "XL",
                 familymsg))
-        if "xlC" in spack_cxx:
+        if "xlC" in spack_cxx:  # noqa: F821
             entries.append(cmake_cache_entry(
                 "CMAKE_CXX_COMPILER_ID", "XL",
                 familymsg))
