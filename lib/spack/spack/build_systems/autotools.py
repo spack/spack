@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
+import itertools
 import os
 import os.path
 from subprocess import PIPE
@@ -101,8 +102,8 @@ class AutotoolsPackage(PackageBase):
         """Some packages ship with older config.guess/config.sub files and
         need to have these updated when installed on a newer architecture.
         In particular, config.guess fails for PPC64LE for version prior
-        to a 2013-06-10 build date (automake 1.13.4) and for ARM (aarch64)."""
-
+        to a 2013-06-10 build date (automake 1.13.4) and for ARM (aarch64).
+        """
         if not self.patch_config_files or (
                 not self.spec.satisfies('target=ppc64le:') and
                 not self.spec.satisfies('target=aarch64:')
@@ -119,50 +120,60 @@ class AutotoolsPackage(PackageBase):
         else:
             config_arch = 'local'
 
-        suffixes = ['sub', 'guess']
+        def runs_ok(script_abs_path):
+            # Construct the list of arguments for the call
+            additional_args = {
+                'config.sub': [config_arch]
+            }
+            script_name = os.path.basename(script_abs_path)
+            args = [script_abs_path] + additional_args.get(script_name, [])
 
-        def _runs_ok(script):
-            args = [script]
-            if script.endswith('sub'):
-                args.append(config_arch)
             try:
                 check_call(args, stdout=PIPE, stderr=PIPE)
             except Exception as e:
                 tty.debug(e)
                 return False
+
             return True
 
-        system_config_root = ['/usr/share']
-        if 'automake' in self.spec:
-            system_config_root.insert(0, self.spec['automake'].prefix)
-        conf_files = fs.find(
-            self.stage.path,
-            files=['config.{0}'.format(s) for s in suffixes],
-            recursive=True
+        # Compute the list of files that needs to be patched
+        search_dir = self.stage.path
+        to_be_patched = fs.find(
+            search_dir, files=['config.sub', 'config.guess'], recursive=True
         )
-        for s in suffixes:
-            to_be_patched = [f for f in conf_files
-                             if f.endswith(s) and not _runs_ok(f)]
-            if not to_be_patched:
-                continue
-            system_conf = [f for f in conf_files
-                           if f.endswith(s) and _runs_ok(f)]
-            if not system_conf:
-                for system_dir in system_config_root:
-                    system_conf = fs.find(
-                        system_dir,
-                        files='config.{0}'.format(s), recursive=True
-                    )
-                    system_conf = [
-                        f for f in system_conf if _runs_ok(f)
-                    ]
-                    if system_conf:
-                        break
-            if not system_conf:
-                raise RuntimeError('Failed to find suitable ' +
-                                   'config.{0}'.format(s))
-            for p in to_be_patched:
-                fs.copy(system_conf[0], p)
+        to_be_patched = [f for f in to_be_patched if not runs_ok(f)]
+
+        # If there are no files to be patched, return early
+        if not to_be_patched:
+            return
+
+        # Directories where to search for files to be copied
+        # over the failing ones
+        good_file_dirs = ['/usr/share']
+        if 'automake' in self.spec:
+            good_file_dirs.insert(0, self.spec['automake'].prefix)
+
+        # List of files to be found in the directories above
+        to_be_found = list(set(os.path.basename(f) for f in to_be_patched))
+        substitutes = {}
+        for directory in good_file_dirs:
+            candidates = fs.find(directory, files=to_be_found, recursive=True)
+            candidates = [f for f in candidates if runs_ok(f)]
+            for name, good_files in itertools.groupby(
+                    candidates, key=os.path.basename
+            ):
+                substitutes[name] = next(good_files)
+                to_be_found.remove(name)
+
+        # Check that we found everything we needed
+        if to_be_found:
+            msg = 'Failed to find suitable substitutes for {0}'
+            raise RuntimeError(msg.format(', '.join(to_be_found)))
+
+        # Copy the good files over the bad ones
+        for abs_path in to_be_patched:
+            name = os.path.basename(abs_path)
+            fs.copy(substitutes[name], abs_path)
 
     @run_before('configure')
     def _set_autotools_environment_variables(self):
