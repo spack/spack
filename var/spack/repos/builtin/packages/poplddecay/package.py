@@ -29,6 +29,4 @@ class Poplddecay(MakefilePackage):
             make('clean')
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin.bin)
-        install('bin/PopLDdecay', prefix.bin.bin)
         install_tree('bin', prefix.bin)
