@@ -146,7 +146,7 @@ class Axom(CachedCMakePackage, CudaPackage):
             self.spec.compiler.version
         )
 
-    def initconfig_compiler_strings(self):
+    def initconfig_compiler_entries(self):
         strings = super(Axom, self).initconfig_compiler_strings()
 
         if "+fortran" in self.spec or spack_fc is not None:
@@ -185,7 +185,7 @@ class Axom(CachedCMakePackage, CudaPackage):
 
         return strings
 
-    def initconfig_hardware_strings(self):
+    def initconfig_hardware_entries(self):
         spec = self.spec
         strings = super(Axom, self).initconfig_hardware_strings()
 
@@ -234,19 +234,27 @@ class Axom(CachedCMakePackage, CudaPackage):
                 else:
                     strings.append(cmake_cache_option("AXOM_ENABLE_CUB", False))
 
+                # CUDA_FLAGS
+                cuda_flags = '-restrict '
+
                 if not spec.satisfies('cuda_arch=none'):
                     cuda_arch = spec.variants['cuda_arch'].value
                     axom_arch = 'sm_{0}'.format(cuda_arch[0])
                     strings.append(cmake_cache_entry("AXOM_CUDA_ARCH", axom_arch))
+                    cudaflags += "-arch ${AXOM_CUDA_ARCH} "
                 else:
                     strings.append("# cuda_arch could not be determined\n\n")
+
+                cudaflags += " %s"% self.compiler.cxx11_flags
+                cudaflags += "--expt-extended-lambda -G "
+                strings.append(cmake_cache_entry("CMAKE_CUDA_FLAGS", cudaflags))
 
                 strings.append("# nvcc does not like gtest's 'pthreads' flag\n")
                 strings.append(cmake_cache_option("gtest_disable_pthreads", True))
 
         return strings
 
-    def initconfig_mpi_strings(self):
+    def initconfig_mpi_entries(self):
         strings = super(Axom, self).initconfig_mpi_strings()
         spec = self.spec
 
@@ -260,7 +268,7 @@ class Axom(CachedCMakePackage, CudaPackage):
 
         return strings
 
-    def initconfig_strings(self):
+    def initconfig_package_entries(self):
         strings = []
 
         # TPL locations
