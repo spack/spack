@@ -247,8 +247,9 @@ def supported_compilers():
     """
     # Hack to be able to call the compiler `apple-clang` while still
     # using a valid python name for the module
-    return sorted(name if name != 'apple_clang' else 'apple-clang' for name in
+    retval= sorted(name if name != 'apple_clang' else 'apple-clang' for name in
                   llnl.util.lang.list_modules(spack.paths.compilers_path))
+    return retval
 
 
 @_auto_compiler_spec

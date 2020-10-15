@@ -844,13 +844,8 @@ def fork(pkg, function, dirty, fake):
         try:
             if not fake:
                 setup_package(pkg, dirty=dirty)
-#FTW
-            print("FTW@build_environment.py:child_process:848:") 
             import inspect
-            print("FTW@build_environment.py:function():849:", function) 
-            print("FTW@build_environment.py:getfilefunction():849:", inspect.getfile(function)) 
             return_value = function()
-            print("FTW@build_environment.py:child_process:850:") 
             child_pipe.send(return_value)
 
         except StopPhase as e:
@@ -883,7 +878,6 @@ def fork(pkg, function, dirty, fake):
             child_pipe.send(ce)
 
         finally:
-            print("FTW@build_environment.py:child_process:883 finally:") 
             child_pipe.close()
 
     parent_pipe, child_pipe = multiprocessing.Pipe()
