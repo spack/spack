@@ -21,8 +21,6 @@ class Faiss(AutotoolsPackage, CudaPackage):
     homepage = "https://github.com/facebookresearch/faiss"
     url      = "https://github.com/facebookresearch/faiss/archive/v1.6.3.tar.gz"
 
-    # putting the creator's name for now
-    #  hopefully, FAISS developers will take over
     maintainers = ['bhatiaharsh']
 
     version('1.6.3', sha256='e1a41c159f0b896975fbb133e0240a233af5c9286c09a28fde6aefff5336e542')
@@ -74,7 +72,7 @@ class Faiss(AutotoolsPackage, CudaPackage):
                 make('tests')
 
         # GPU tests
-        if '+tests' in self.spec and '+cuda' in self.spec:
+        if '+tests+cuda' in self.spec:
             with working_dir(os.path.join('gpu', 'test')):
                 make('gtest')
                 make('build')                       # target added by the patch
