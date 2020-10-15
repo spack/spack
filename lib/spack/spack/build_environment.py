@@ -844,7 +844,6 @@ def fork(pkg, function, dirty, fake):
         try:
             if not fake:
                 setup_package(pkg, dirty=dirty)
-            import inspect
             return_value = function()
             child_pipe.send(return_value)
 

@@ -396,7 +396,6 @@ class Concretizer(object):
             return True
 
         if other_compiler:  # Another node has abstract compiler information
-            import inspect
             compiler_list = spack.compilers.find_specs_by_arch(
                 other_compiler, spec.architecture
             )
