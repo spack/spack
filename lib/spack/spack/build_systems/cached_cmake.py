@@ -71,9 +71,12 @@ class CachedCMakePackage(CMakePackage):
             '  ' + cmake_cache_entry(
                 "CMAKE_Fortran_COMPILER", os.environ['FC']),
             'else()',
-            '  ' + cmake_cache_entry("CMAKE_C_COMPILER", spack_cc),  # noqa: F821
-            '  ' + cmake_cache_entry("CMAKE_CXX_COMPILER", spack_cxx),  # noqa: F821
-            '  ' + cmake_cache_entry("CMAKE_Fortran_COMPILER", spack_fc),  # noqa: F821
+            '  ' + cmake_cache_entry(
+                "CMAKE_C_COMPILER", spack_cc),  # noqa: F821
+            '  ' + cmake_cache_entry(
+                "CMAKE_CXX_COMPILER", spack_cxx),  # noqa: F821
+            '  ' + cmake_cache_entry(
+                "CMAKE_Fortran_COMPILER", spack_fc),  # noqa: F821
             'endif()'
         ]
 
