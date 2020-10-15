@@ -6,8 +6,10 @@ import os
 import re
 
 
-class SpectrumMpi(BundlePackage):
+class SpectrumMpi(Package):
     """IBM MPI implementation from Spectrum MPI."""
+
+    has_code = False
 
     homepage = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
 
