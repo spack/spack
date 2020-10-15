@@ -16,7 +16,7 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-#. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.8) to run Spack
+#. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.9) to run Spack
 #. A C/C++ compiler for building
 #. The ``make`` executable for building
 #. The ``tar``, ``gzip``, ``bzip2``, ``xz`` and optionally ``zstd``
@@ -26,8 +26,8 @@ before Spack is run:
 #. If using the ``gpg`` subcommand, ``gnupg2`` is required
 
 These requirements can be easily installed on most modern Linux systems;
-on Macintosh, XCode is required.  Spack is designed to run on HPC
-platforms like Cray and BlueGene/Q.  Not all packages should be expected
+on macOS, XCode is required.  Spack is designed to run on HPC
+platforms like Cray.  Not all packages should be expected
 to work on all platforms.  A build matrix showing which packages are
 working on which systems is planned but not yet available.
 
@@ -53,12 +53,12 @@ in the ``SPACK_ROOT`` environment variable.  Add ``$SPACK_ROOT/bin``
 to your path and you're ready to go:
 
 .. code-block:: console
-   
+
    # For bash/zsh users
    $ export SPACK_ROOT=/path/to/spack
    $ export PATH=$SPACK_ROOT/bin:$PATH
 
-   # For tsch/csh users 
+   # For tsch/csh users
    $ setenv SPACK_ROOT /path/to/spack
    $ setenv PATH $SPACK_ROOT/bin:$PATH
 
