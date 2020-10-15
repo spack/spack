@@ -3,12 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
-import os
 import llnl.util.lang as lang
 import llnl.util.tty as tty
-
-from spack import *
 
 
 class Umpire(CMakePackage, CudaPackage):
@@ -108,18 +104,28 @@ class Umpire(CMakePackage, CudaPackage):
 
         return options
 
-    extra_install_tests = '../spack-build/bin'
+    @property
+    def build_relpath(self):
+        """Relative path to the cmake build subdirectory."""
+        return join_path('..', self.build_dirname)
 
     @run_after('install')
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(self.extra_install_tests)
+        # Now copy the relative files
+        self.cache_extra_test_sources(self.build_relpath)
+
+        # Ensure the path exists since relying on a relative path at the
+        # same level as the normal stage source path.
+        mkdirp(self.install_test_root)
 
     @property
     @lang.memoized
     def _extra_tests_path(self):
-        return os.path.join(self.install_test_root, self.extra_install_tests)
+        # TODO: The tests should be converted to re-build and run examples
+        # TODO: using the installed libraries.
+        return join_path(self.install_test_root, self.build_relpath)
 
     @property
     @lang.memoized
@@ -155,7 +161,7 @@ class Umpire(CMakePackage, CudaPackage):
 
         dirs = []
         if self.spec.satisfies('@0.3.3:1.0.1'):
-            dirs.append(os.path.join(self._extra_tests_path, 'benchmarks'))
+            dirs.append(join_path(self._extra_tests_path, 'benchmarks'))
         elif self.spec.satisfies('@1.1.0:'):
             dirs.append(self.prefix.bin)
 
@@ -177,11 +183,11 @@ class Umpire(CMakePackage, CudaPackage):
         tty.info('Running cookbook checks')
 
         dirs = []
-        cb_subdir = os.path.join('examples', 'cookbook')
+        cb_subdir = join_path('examples', 'cookbook')
         if self.spec.satisfies('@0.3.3:1.0.1'):
-            dirs.append(os.path.join(self._extra_tests_path, cb_subdir))
+            dirs.append(join_path(self._extra_tests_path, cb_subdir))
         elif self.spec.satisfies('@1.1.0'):
-            dirs.append(os.path.join(self.prefix.bin, cb_subdir))
+            dirs.append(join_path(self.prefix.bin, cb_subdir))
         elif self.spec.satisfies('@2.0.0:'):
             dirs.append(self.prefix.bin)
 
@@ -203,9 +209,9 @@ class Umpire(CMakePackage, CudaPackage):
         if self.spec.satisfies('@0.1.3:0.3.1'):
             dirs.append(self._extra_tests_path)
         elif self.spec.satisfies('@0.3.3:1.0.1'):
-            dirs.append(os.path.join(self._extra_tests_path, 'examples'))
+            dirs.append(join_path(self._extra_tests_path, 'examples'))
         elif self.spec.satisfies('@1.1.0'):
-            dirs.append(os.path.join(self.prefix.bin, 'examples'))
+            dirs.append(join_path(self.prefix.bin, 'examples'))
         elif self.spec.satisfies('@2.0.0:'):
             dirs.append(self.prefix.bin)
 
@@ -250,13 +256,13 @@ class Umpire(CMakePackage, CudaPackage):
         tty.info('Running tutorials checks')
 
         dirs = []
-        tut_subdir = os.path.join('examples', 'tutorial')
+        tut_subdir = join_path('examples', 'tutorial')
         if self.spec.satisfies('@0.2.4:0.3.1'):
             dirs.append(self._extra_tests_path)
         elif self.spec.satisfies('@0.3.3:1.0.1'):
-            dirs.append(os.path.join(self._extra_tests_path, tut_subdir))
+            dirs.append(join_path(self._extra_tests_path, tut_subdir))
         elif self.spec.satisfies('@1.1.0'):
-            dirs.append(os.path.join(self.prefix.bin, tut_subdir))
+            dirs.append(join_path(self.prefix.bin, tut_subdir))
         elif self.spec.satisfies('@2.0.0:'):
             dirs.append(self.prefix.bin)
 
