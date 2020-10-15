@@ -13,6 +13,7 @@ class Syscalc(MakefilePackage):
     url      = "http://madgraph.phys.ucl.ac.be/Downloads/SysCalc_V1.1.7.tar.gz"
 
     version('1.1.7', sha256='65db22fad45f12f963adf2575c7439970e6361b59bc9bb6ea0964c3eddaa499f')
+
     depends_on('lhapdf@6:')
 
     def url_for_version(self, version):
