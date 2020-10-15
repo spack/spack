@@ -57,7 +57,7 @@ def test_buildcache_preview_just_runs(database):
 
 @pytest.mark.db
 @pytest.mark.regression('13757')
-def test_buildcache_list_duplicates(mock_get_specs, capsys):
+def test_buildcache_list_duplicates(mock_get_specs, mutable_database, capsys):
     with capsys.disabled():
         output = buildcache('list', 'mpileaks', '@2.3')
 
@@ -66,7 +66,8 @@ def test_buildcache_list_duplicates(mock_get_specs, capsys):
 
 @pytest.mark.db
 @pytest.mark.regression('17827')
-def test_buildcache_list_allarch(database, mock_get_specs_multiarch, capsys):
+def test_buildcache_list_allarch(
+        mutable_database, mock_get_specs_multiarch, capsys):
     with capsys.disabled():
         output = buildcache('list', '--allarch')
 
