@@ -48,6 +48,7 @@ class Papi(AutotoolsPackage):
     depends_on('lm-sensors', when='+lmsensors')
 
     conflicts('%gcc@8:', when='@5.3.0', msg='Requires GCC version less than 8.0')
+    conflicts('+sde', when='@:5.9.99999', msg='Software defined events (SDE) added in 6.0.0')
 
     # This is the only way to match exactly version 6.0.0 without also
     # including version 6.0.0.1 due to spack version matching logic
