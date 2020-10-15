@@ -338,6 +338,8 @@ class Concretizer(object):
         return changed
 
     def concretize_compiler(self, spec):
+#FTW
+        print("FTW: concretize_compiler() with spec =", spec)
         """If the spec already has a compiler, we're done.  If not, then take
            the compiler used for the nearest ancestor with a compiler
            spec and use that.  If the ancestor's compiler is not
@@ -395,10 +397,15 @@ class Concretizer(object):
             spec.compiler = other_compiler
             return True
 
+#FTW
+        print("FTW@concretize.py:401: other_compiler", other_compiler)
         if other_compiler:  # Another node has abstract compiler information
+            import inspect
+            print("FTW@concretize.py:404", inspect.getfile(spack.compilers.find_specs_by_arch))
             compiler_list = spack.compilers.find_specs_by_arch(
                 other_compiler, spec.architecture
             )
+            print("FTW@concretize.py:408: got compiler_list = ", compiler_list)
             if not compiler_list:
                 # We don't have a matching compiler installed
                 if not self.check_for_compiler_existence:
