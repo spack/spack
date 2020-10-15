@@ -9,8 +9,6 @@ import os
 import socket
 from os.path import join as pjoin
 
-import llnl.util.tty as tty
-
 
 def get_spec_path(spec, package_name, path_replacements={}, use_bin=False):
     """Extracts the prefix path for the given spack package
@@ -208,8 +206,8 @@ class Axom(CachedCMakePackage, CudaPackage):
                     "-WF,-C!  -qxlf2003=polymorphic",
                     description))
                 # Grab lib directory for the current fortran compiler
-                libdir = os.path.join(os.path.dirname(
-                                      os.path.dirname(spack_fc)), "lib")
+                libdir = pjoin(os.path.dirname(os.path.dirname(spack_fc)),
+                               "lib")
                 description = ("Adds a missing rpath for libraries "
                                "associated with the fortran compiler")
                 linker_flags = "${BLT_EXE_LINKER_FLAGS} -Wl,-rpath," + libdir
@@ -225,32 +223,39 @@ class Axom(CachedCMakePackage, CudaPackage):
             if "+cuda" in spec:
                 entries.append(cmake_cache_option("ENABLE_CUDA", True))
                 entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION",
-                                             True))
+                                                  True))
 
-                entries.append(cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
+                entries.append(
+                    cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
 
                 if "+cub" in spec:
-                    entries.append(cmake_cache_option("AXOM_ENABLE_CUB", True))
+                    entries.append(
+                        cmake_cache_option("AXOM_ENABLE_CUB", True))
                 else:
-                    entries.append(cmake_cache_option("AXOM_ENABLE_CUB", False))
+                    entries.append(
+                        cmake_cache_option("AXOM_ENABLE_CUB", False))
 
                 # CUDA_FLAGS
-                cuda_flags = '-restrict '
+                cudaflags = '-restrict '
 
                 if not spec.satisfies('cuda_arch=none'):
                     cuda_arch = spec.variants['cuda_arch'].value
                     axom_arch = 'sm_{0}'.format(cuda_arch[0])
-                    entries.append(cmake_cache_entry("AXOM_CUDA_ARCH", axom_arch))
+                    entries.append(
+                        cmake_cache_entry("AXOM_CUDA_ARCH", axom_arch))
                     cudaflags += "-arch ${AXOM_CUDA_ARCH} "
                 else:
                     entries.append("# cuda_arch could not be determined\n\n")
 
-                cudaflags += " %s"% self.compiler.cxx11_flags
+                cudaflags += " %s" % self.compiler.cxx11_flags
                 cudaflags += "--expt-extended-lambda -G "
-                entries.append(cmake_cache_entry("CMAKE_CUDA_FLAGS", cudaflags))
+                entries.append(
+                    cmake_cache_entry("CMAKE_CUDA_FLAGS", cudaflags))
 
-                entries.append("# nvcc does not like gtest's 'pthreads' flag\n")
-                entries.append(cmake_cache_option("gtest_disable_pthreads", True))
+                entries.append(
+                    "# nvcc does not like gtest's 'pthreads' flag\n")
+                entries.append(
+                    cmake_cache_option("gtest_disable_pthreads", True))
 
         return entries
 
@@ -262,7 +267,7 @@ class Axom(CachedCMakePackage, CudaPackage):
             entries.append(cmake_cache_option("ENABLE_MPI", True))
             if spec['mpi'].name == 'spectrum-mpi':
                 entries.append(cmake_cache_entry("BLT_MPI_COMMAND_APPEND",
-                                            "mpibind"))
+                                                 "mpibind"))
         else:
             entries.append(cmake_cache_option("ENABLE_MPI", False))
 
@@ -355,7 +360,6 @@ class Axom(CachedCMakePackage, CudaPackage):
         return entries
 
     def cmake_args(self):
-        spec = self.spec
         options = []
 
         if self.run_tests is False:

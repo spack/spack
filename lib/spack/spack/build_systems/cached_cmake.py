@@ -4,9 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from llnl.util.filesystem import install, mkdirp
+import llnl.util.tty as tty
+
 from spack.build_systems.cmake import CMakePackage
 from spack.package import run_after
-
 
 def cmake_cache_entry(name, value, comment=""):
     """Generate a string for a cmake cache variable"""
@@ -61,9 +63,12 @@ class CachedCMakePackage(CMakePackage):
             "# Compiler Spec: {0}".format(spec.compiler),
             "#------------------{0}".format("-" * 60),
             'if(DEFINED ENV{SPACK_CC})',
-            '  ' + cmake_cache_entry("CMAKE_C_COMPILER", env['CC']),
-            '  ' + cmake_cache_entry("CMAKE_CXX_COMPILER", env['CXX']),
-            '  ' + cmake_cache_entry("CMAKE_Fortran_COMPILER", env['FC']),
+            '  ' + cmake_cache_entry(
+                "CMAKE_C_COMPILER", os.environ['CC']),
+            '  ' + cmake_cache_entry(
+                "CMAKE_CXX_COMPILER", os.environ['CXX']),
+            '  ' + cmake_cache_entry(
+                "CMAKE_Fortran_COMPILER", os.environ['FC']),
             'else()',
             '  ' + cmake_cache_entry("CMAKE_C_COMPILER", spack_cc),
             '  ' + cmake_cache_entry("CMAKE_CXX_COMPILER", spack_cxx),
