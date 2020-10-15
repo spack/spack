@@ -475,9 +475,7 @@ class Mfem(Package):
 
         if '+petsc' in spec:
             options += [
-                'PETSC_OPT=%s' % spec['petsc'].headers.cpp_flags,
-                'PETSC_LIB=%s' %
-                ld_flags_from_library_list(spec['petsc'].libs)]
+                'PETSC_DIR=%s' % spec['petsc'].prefix]
 
         if '+pumi' in spec:
             pumi_libs = ['pumi', 'crv', 'ma', 'mds', 'apf', 'pcu', 'gmi',
@@ -676,9 +674,9 @@ class Mfem(Package):
     @property
     def sundials_components(self):
         """Return the SUNDIALS components needed by MFEM."""
-        sun_comps = 'arkode,cvode,nvecserial,kinsol'
+        sun_comps = 'arkode,cvodes,nvecserial,kinsol'
         if '+mpi' in self.spec:
-            sun_comps += ',nvecparhyp,nvecparallel'
+            sun_comps += ',nvecparhyp,nvecparallel,nvecmpiplusx'
         return sun_comps
 
     @property
