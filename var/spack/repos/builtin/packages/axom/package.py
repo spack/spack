@@ -147,12 +147,12 @@ class Axom(CachedCMakePackage, CudaPackage):
         )
 
     def initconfig_compiler_entries(self):
-        strings = super(Axom, self).initconfig_compiler_strings()
+        entries = super(Axom, self).initconfig_compiler_entries()
 
         if "+fortran" in self.spec or spack_fc is not None:
-            strings.append(cmake_cache_option("ENABLE_FORTRAN", True))
+            entries.append(cmake_cache_option("ENABLE_FORTRAN", True))
         else:
-            strings.append(cmake_cache_option("ENABLE_FORTRAN", False))
+            entries.append(cmake_cache_option("ENABLE_FORTRAN", False))
 
         if ((spack_fc is not None)
            and ("gfortran" in spack_fc)
@@ -165,36 +165,36 @@ class Axom(CachedCMakePackage, CudaPackage):
                     flags += " -Wl,-rpath,{0}".format(_libpath)
             description = ("Adds a missing libstdc++ rpath")
             if flags:
-                strings.append(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
+                entries.append(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
                                                  description))
 
         if "+cpp14" in spec:
-            strings.append(cmake_cache_entry("BLT_CXX_STD", "c++14", ""))
+            entries.append(cmake_cache_entry("BLT_CXX_STD", "c++14", ""))
 
         # Override XL compiler family
         familymsg = ("Override to proper compiler family for XL")
         if (spack_fc is not None) and ("xlf" in spack_fc):
-            strings.append(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID", "XL",
+            entries.append(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID", "XL",
                                              familymsg))
         if "xlc" in spack_cc:
-            strings.append(cmake_cache_entry("CMAKE_C_COMPILER_ID", "XL",
+            entries.append(cmake_cache_entry("CMAKE_C_COMPILER_ID", "XL",
                                              familymsg))
         if "xlC" in spack_cxx:
-            strings.append(cmake_cache_entry("CMAKE_CXX_COMPILER_ID", "XL",
+            entries.append(cmake_cache_entry("CMAKE_CXX_COMPILER_ID", "XL",
                                              familymsg))
 
-        return strings
+        return entries
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        strings = super(Axom, self).initconfig_hardware_strings()
+        entries = super(Axom, self).initconfig_hardware_entries()
 
         # OpenMP
-        strings.append(cmake_cache_option("ENABLE_OPENMP",
+        entries.append(cmake_cache_option("ENABLE_OPENMP",
                                           spec.satisfies('+openmp')))
 
         # Enable death tests
-        strings.append(cmake_cache_option(
+        entries.append(cmake_cache_option(
             "ENABLE_GTEST_DEATH_TESTS",
             not spec.satisfies('+cuda target=ppc64le:')
         ))
@@ -203,7 +203,7 @@ class Axom(CachedCMakePackage, CudaPackage):
             if (spack_fc is not None) and ("xlf" in spack_fc):
                 description = ("Converts C-style comments to Fortran style "
                                "in preprocessed files")
-                strings.append(cmake_cache_entry(
+                entries.append(cmake_cache_entry(
                     "BLT_FORTRAN_FLAGS",
                     "-WF,-C!  -qxlf2003=polymorphic",
                     description))
@@ -213,26 +213,26 @@ class Axom(CachedCMakePackage, CudaPackage):
                 description = ("Adds a missing rpath for libraries "
                                "associated with the fortran compiler")
                 linker_flags = "${BLT_EXE_LINKER_FLAGS} -Wl,-rpath," + libdir
-                strings.append(cmake_cache_entry("BLT_EXE_LINKER_FLAGS",
+                entries.append(cmake_cache_entry("BLT_EXE_LINKER_FLAGS",
                                                  linker_flags, description))
                 if "+shared" in spec:
                     linker_flags = "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-rpath," \
                                    + libdir
-                    strings.append(cmake_cache_entry(
+                    entries.append(cmake_cache_entry(
                         "CMAKE_SHARED_LINKER_FLAGS",
                         linker_flags, description))
 
             if "+cuda" in spec:
-                strings.append(cmake_cache_option("ENABLE_CUDA", True))
-                strings.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION",
+                entries.append(cmake_cache_option("ENABLE_CUDA", True))
+                entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION",
                                              True))
 
-                strings.append(cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
+                entries.append(cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
 
                 if "+cub" in spec:
-                    strings.append(cmake_cache_option("AXOM_ENABLE_CUB", True))
+                    entries.append(cmake_cache_option("AXOM_ENABLE_CUB", True))
                 else:
-                    strings.append(cmake_cache_option("AXOM_ENABLE_CUB", False))
+                    entries.append(cmake_cache_option("AXOM_ENABLE_CUB", False))
 
                 # CUDA_FLAGS
                 cuda_flags = '-restrict '
@@ -240,41 +240,41 @@ class Axom(CachedCMakePackage, CudaPackage):
                 if not spec.satisfies('cuda_arch=none'):
                     cuda_arch = spec.variants['cuda_arch'].value
                     axom_arch = 'sm_{0}'.format(cuda_arch[0])
-                    strings.append(cmake_cache_entry("AXOM_CUDA_ARCH", axom_arch))
+                    entries.append(cmake_cache_entry("AXOM_CUDA_ARCH", axom_arch))
                     cudaflags += "-arch ${AXOM_CUDA_ARCH} "
                 else:
-                    strings.append("# cuda_arch could not be determined\n\n")
+                    entries.append("# cuda_arch could not be determined\n\n")
 
                 cudaflags += " %s"% self.compiler.cxx11_flags
                 cudaflags += "--expt-extended-lambda -G "
-                strings.append(cmake_cache_entry("CMAKE_CUDA_FLAGS", cudaflags))
+                entries.append(cmake_cache_entry("CMAKE_CUDA_FLAGS", cudaflags))
 
-                strings.append("# nvcc does not like gtest's 'pthreads' flag\n")
-                strings.append(cmake_cache_option("gtest_disable_pthreads", True))
+                entries.append("# nvcc does not like gtest's 'pthreads' flag\n")
+                entries.append(cmake_cache_option("gtest_disable_pthreads", True))
 
-        return strings
+        return entries
 
     def initconfig_mpi_entries(self):
-        strings = super(Axom, self).initconfig_mpi_strings()
+        entries = super(Axom, self).initconfig_mpi_entries()
         spec = self.spec
 
         if "+mpi" in self.spec:
-            strings.append(cmake_cache_option("ENABLE_MPI", True))
+            entries.append(cmake_cache_option("ENABLE_MPI", True))
             if spec['mpi'].name == 'spectrum-mpi':
-                strings.append(cmake_cache_entry("BLT_MPI_COMMAND_APPEND",
+                entries.append(cmake_cache_entry("BLT_MPI_COMMAND_APPEND",
                                             "mpibind"))
         else:
-            strings.append(cmake_cache_option("ENABLE_MPI", False))
+            entries.append(cmake_cache_option("ENABLE_MPI", False))
 
-        return strings
+        return entries
 
     def initconfig_package_entries(self):
-        strings = []
+        entries = []
 
         # TPL locations
-        strings.append("#------------------{0}\n".format("-" * 60))
-        strings.append("# TPLs\n")
-        strings.append("#------------------{0}\n\n".format("-" * 60))
+        entries.append("#------------------{0}\n".format("-" * 60))
+        entries.append("# TPLs\n")
+        entries.append("#------------------{0}\n\n".format("-" * 60))
 
         spec = self.spec
         # Try to find the common prefix of the TPL directory, including the
@@ -286,28 +286,28 @@ class Axom(CachedCMakePackage, CudaPackage):
         if len(prefix_paths) == 2:
             tpl_root = os.path.realpath(pjoin(prefix_paths[0], compiler_str))
             path_replacements[tpl_root] = "${TPL_ROOT}"
-            strings.append("# Root directory for generated TPLs\n")
-            strings.append(cmake_cache_entry("TPL_ROOT", tpl_root))
+            entries.append("# Root directory for generated TPLs\n")
+            entries.append(cmake_cache_entry("TPL_ROOT", tpl_root))
 
         conduit_dir = get_spec_path(spec, "conduit", path_replacements)
-        strings.append(cmake_cache_entry("CONDUIT_DIR", conduit_dir))
+        entries.append(cmake_cache_entry("CONDUIT_DIR", conduit_dir))
 
         # optional tpls
         for dep in ('mfem', 'hdf5', 'lua', 'scr', 'raja', 'umpire'):
             if '+%s' % dep in spec:
                 dep_dir = get_spec_path(self.spec, dep, path_replacements)
-                strings.append(cmake_cache_entry('%s_DIR' % dep.upper(),
+                entries.append(cmake_cache_entry('%s_DIR' % dep.upper(),
                                                  dep_dir))
             else:
-                strings.append('# %s not build\n' % dep.upper())
+                entries.append('# %s not build\n' % dep.upper())
 
         ##################################
         # Devtools
         ##################################
 
-        strings.append("#------------------{0}\n".format("-" * 60))
-        strings.append("# Devtools\n")
-        strings.append("#------------------{0}\n\n".format("-" * 60))
+        entries.append("#------------------{0}\n".format("-" * 60))
+        entries.append("# Devtools\n")
+        entries.append("#------------------{0}\n\n".format("-" * 60))
 
         # Add common prefix to path replacement list
         if "+devtools" in spec:
@@ -316,8 +316,8 @@ class Axom(CachedCMakePackage, CudaPackage):
             path2 = os.path.realpath(spec["doxygen"].prefix)
             devtools_root = os.path.commonprefix([path1, path2])[:-1]
             path_replacements[devtools_root] = "${DEVTOOLS_ROOT}"
-            strings.append("# Root directory for generated developer tools\n")
-            strings.append(cmake_cache_entry("DEVTOOLS_ROOT", devtools_root))
+            entries.append("# Root directory for generated developer tools\n")
+            entries.append(cmake_cache_entry("DEVTOOLS_ROOT", devtools_root))
 
             # Only turn on clangformat support if devtools is on
             clang_fmt_path = spec['llvm'].prefix.bin.join('clang-format')
@@ -332,16 +332,16 @@ class Axom(CachedCMakePackage, CudaPackage):
             python_path = os.path.realpath(spec['python'].command.path)
             for key in path_replacements:
                 python_path = python_path.replace(key, path_replacements[key])
-            strings.append(cmake_cache_entry("PYTHON_EXECUTABLE", python_path))
+            entries.append(cmake_cache_entry("PYTHON_EXECUTABLE", python_path))
 
         enable_docs = "doxygen" in spec or "py-sphinx" in spec
-        strings.append(cmake_cache_option("ENABLE_DOCS", enable_docs))
+        entries.append(cmake_cache_option("ENABLE_DOCS", enable_docs))
 
         if "py-sphinx" in spec:
             python_bin_dir = get_spec_path(spec, "python",
                                            path_replacements,
                                            use_bin=True)
-            strings.append(cmake_cache_entry("SPHINX_EXECUTABLE",
+            entries.append(cmake_cache_entry("SPHINX_EXECUTABLE",
                                              pjoin(python_bin_dir,
                                                    "sphinx-build")))
 
@@ -349,10 +349,10 @@ class Axom(CachedCMakePackage, CudaPackage):
             if dep in spec:
                 dep_bin_dir = get_spec_path(spec, dep, path_replacements,
                                             use_bin=True)
-                strings.append(cmake_cache_entry('%s_EXECUTABLE' % dep.upper(),
+                entries.append(cmake_cache_entry('%s_EXECUTABLE' % dep.upper(),
                                                  pjoin(dep_bin_dir, dep)))
 
-        return strings
+        return entries
 
     def cmake_args(self):
         spec = self.spec

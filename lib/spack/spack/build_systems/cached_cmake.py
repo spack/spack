@@ -2,8 +2,23 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 
-from spack.package.build_system.cmake import CMakePackage
+from spack.build_systems.cmake import CMakePackage
+from spack.package import run_after
+
+
+def cmake_cache_entry(name, value, comment=""):
+    """Generate a string for a cmake cache variable"""
+    return 'set({0} "{1}" CACHE PATH "{2}")\n'.format(name, value, comment)
+
+
+def cmake_cache_option(name, boolean_value, comment=""):
+    """Generate a string for a cmake configuration option"""
+
+    value = "ON" if boolean_value else "OFF"
+    return 'set({0} {1} CACHE BOOL "{2}")\n'.format(name, value, comment)
+
 
 class CachedCMakePackage(CMakePackage):
     """Specialized class for packages build using CMake initial cache.
@@ -14,17 +29,6 @@ class CachedCMakePackage(CMakePackage):
     avoid system limits on the length of the command line."""
 
     phases = ['initconfig', 'cmake', 'build', 'install']
-
-    def cmake_cache_entry(self, name, value, comment=""):
-        """Generate a string for a cmake cache variable"""
-        return 'set({0} "{1}" CACHE PATH "{2}")\n\n'.format(name, value, comment)
-
-
-    def cmake_cache_option(self, name, boolean_value, comment=""):
-        """Generate a string for a cmake configuration option"""
-
-        value = "ON" if boolean_value else "OFF"
-        return 'set({0} {1} CACHE BOOL "{2}")\n\n'.format(name, value, comment)
 
     @property
     def cache_name(self):
@@ -39,23 +43,32 @@ class CachedCMakePackage(CMakePackage):
     def cache_path(self):
         return os.path.join(self.stage.source_path, self.cache_name)
 
-    def flag_handler(self, name, values):
+    def flag_handler(self, name, flags):
         if name in ('cflags', 'cxxflags', 'cppflags', 'fflags'):
             return (None, None, None)  # handled in the cmake cache
         return (flags, None, None)
 
     def initconfig_compiler_entries(self):
+        # This will tell cmake to use the Spack compiler wrappers when run
+        # through Spack, but use the underlying compiler when run outside of
+        # Spack
+        spec = self.spec
         entries = [
-            "#------------------{0}\n".format("-" * 60),
-            "# Compilers\n",
-            "#------------------{0}\n\n".format("-" * 60),
-
-            "# Compiler Spec: {0}\n".format(spec.compiler),
+            "#------------------{0}".format("-" * 60),
+            "# Compilers",
             "#------------------{0}\n".format("-" * 60),
 
-            cmake_cache_entry("CMAKE_C_COMPILER", spack_cc),
-            cmake_cache_entry("CMAKE_CXX_COMPILER", spack_cxx),
-            cmake_cache_entry("CMAKE_Fortran_COMPILER", f_compiler),
+            "# Compiler Spec: {0}".format(spec.compiler),
+            "#------------------{0}".format("-" * 60),
+            'if(DEFINED ENV{SPACK_CC})',
+            '  ' + cmake_cache_entry("CMAKE_C_COMPILER", env['CC']),
+            '  ' + cmake_cache_entry("CMAKE_CXX_COMPILER", env['CXX']),
+            '  ' + cmake_cache_entry("CMAKE_Fortran_COMPILER", env['FC']),
+            'else()',
+            '  ' + cmake_cache_entry("CMAKE_C_COMPILER", spack_cc),
+            '  ' + cmake_cache_entry("CMAKE_CXX_COMPILER", spack_cxx),
+            '  ' + cmake_cache_entry("CMAKE_Fortran_COMPILER", spack_fc),
+            'endif()'
         ]
 
         # use global spack compiler flags
@@ -76,13 +89,15 @@ class CachedCMakePackage(CMakePackage):
         return entries
 
     def initconfig_mpi_entries(self):
-        if "mpi" in not in spec:
+        spec = self.spec
+
+        if "mpi" not in spec:
             return []
 
         entries = [
-            "#------------------{0}\n".format("-" * 60),
+            "#------------------{0}".format("-" * 60),
             "# MPI\n",
-            "#------------------{0}\n\n".format("-" * 60),
+            "#------------------{0}\n".format("-" * 60),
         ]
 
         entries.append(cmake_cache_entry("MPI_C_COMPILER",
@@ -114,7 +129,7 @@ class CachedCMakePackage(CMakePackage):
 
         if not os.path.exists(mpiexec):
             msg = "Unable to determine MPIEXEC, %s tests may fail" % self.name
-            entries.append("# {0}\n\n".format(msg))
+            entries.append("# {0}\n".format(msg))
             tty.warn(msg)
         else:
             # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
@@ -131,11 +146,15 @@ class CachedCMakePackage(CMakePackage):
         else:
             entries.append(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", "-np"))
 
+        return entries
+
     def initconfig_hardware_entries(self):
+        spec = self.spec
+
         entries = []
         # Override XL compiler family
         familymsg = ("Override to proper compiler family for XL")
-        if (spack_fc is not None) and ("xlf" in spack_fc):
+        if "xlf" in (spack_fc or ''):
             entries.append(cmake_cache_entry(
                 "CMAKE_Fortran_COMPILER_ID", "XL",
                 familymsg))
@@ -149,9 +168,9 @@ class CachedCMakePackage(CMakePackage):
                 familymsg))
 
         if 'cuda' in spec:
+            entries.append("#------------------{0}".format("-" * 60))
+            entries.append("# Cuda")
             entries.append("#------------------{0}\n".format("-" * 60))
-            entries.append("# Cuda\n")
-            entries.append("#------------------{0}\n\n".format("-" * 60))
 
             cudatoolkitdir = spec['cuda'].prefix
             entries.append(cmake_cache_entry("CUDA_TOOLKIT_ROOT_DIR",
@@ -167,13 +186,16 @@ class CachedCMakePackage(CMakePackage):
                 entries.append(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER",
                                                  "${CMAKE_CXX_COMPILER}"))
 
+        return entries
+
     def std_initconfig_entries(self):
         return [
+            "#------------------{0}".format("-" * 60),
+            "# !!!! This is a generated file, edit at own risk !!!!",
+            "#------------------{0}".format("-" * 60),
+            "# CMake executable path: {0}".format(
+                self.spec['cmake'].command.path),
             "#------------------{0}\n".format("-" * 60),
-            "# !!!! This is a generated file, edit at own risk !!!!\n",
-            "#------------------{0}\n".format("-" * 60),
-            "# CMake executable path: {0}\n".format(cmake_exe),
-            "#------------------{0}\n\n".format("-" * 60),
         ]
 
     def initconfig(self, spec, prefix):
@@ -186,6 +208,12 @@ class CachedCMakePackage(CMakePackage):
             for entry in cache_entries:
                 f.write('%s\n' % entry)
             f.write('\n')
+
+    @property
+    def std_cmake_args(self):
+        args = super(CachedCMakePackage, self).std_cmake_args
+        args.extend(['-C', self.cache_path])
+        return args
 
     @run_after('install')
     def install_cmake_cache(self):
