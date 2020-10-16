@@ -28,9 +28,9 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
         if self.spec.satisfies('%fj'):
             env.append_flags('CFLAGS',
                              '-Qunused-arguments')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'diff \(GNU diffutils\) (\S+)', output)
         return match.group(1) if match else None
-
