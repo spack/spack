@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class Lapackpp(CMakePackage):
@@ -28,7 +29,6 @@ class Lapackpp(CMakePackage):
     depends_on('blaspp@2020.09.00', when='lapackpp@2020.09.00')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('cblas')
 
     def cmake_args(self):
         spec = self.spec
@@ -38,3 +38,10 @@ class Lapackpp(CMakePackage):
             '-DLAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(';'),
             '-DCMAKE_MESSAGE_LOG_LEVEL=TRACE'
         ]
+
+    def check(self):
+        # If the tester fails to build, ensure that the check() fails.
+        if os.path.isfile(join_path(self.build_directory, 'test', 'tester')):
+            make('check')
+        else:
+            raise Exception('The tester was not built!')
