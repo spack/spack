@@ -26,6 +26,7 @@ import spack.repo
 import spack.schema.env
 import spack.spec
 import spack.store
+import spack.stage
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.config
@@ -707,6 +708,15 @@ class Environment(object):
         configuration = config_dict(self.yaml)
         self.concretization = configuration.get('concretization')
 
+        # Retrieve dev-build packages:
+        self.dev_specs = configuration['develop']
+        for name, entry in self.dev_specs.items():
+            # spec must include a concrete version
+            assert Spec(entry['spec']).version.concrete
+            # default path is the spec name
+            if 'path' not in entry:
+                self.dev_specs[name]['path'] = name
+
     @property
     def user_specs(self):
         return self.spec_lists[user_speclist_name]
@@ -722,6 +732,7 @@ class Environment(object):
 
     def clear(self):
         self.spec_lists = {user_speclist_name: SpecList()}  # specs from yaml
+        self.dev_specs = {}               # dev-build specs from yaml
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []       # roots of last concretize, in order
         self.specs_by_hash = {}           # concretized specs by hash
@@ -975,6 +986,71 @@ class Environment(object):
                 dag_hash = self.concretized_order[i]
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
+
+    def develop(self, spec, path, clone=False):
+        """Add dev-build info for package
+
+        Args:
+            spec (Spec): Set constraints on development specs. Must include a
+                concrete version.
+            path (string): Path to find code for developer builds. Relative
+                paths will be resolved relative to the environment.
+            clone (bool, default False): Clone the package code to the path.
+                If clone is False Spack will assume the code is already present
+                at ``path``.
+
+        Return:
+            (bool): True iff the environment was changed.
+        """
+        spec = spec.copy()  # defensive copy since we access cached attributes
+
+        if not spec.versions.concrete:
+            raise SpackEnvironmentError(
+                'Cannot develop spec %s without a concrete version' % spec)
+
+        for name, entry in self.dev_specs.items():
+            if name == spec.name:
+                e_spec = Spec(entry['spec'])
+                e_path = entry['path']
+
+                if e_spec == spec:
+                    if path == e_path:
+                        tty.msg("Spec %s already configured for development" %
+                                spec)
+                        return False
+                    else:
+                        tty.msg("Updating development path for spec %s" % spec)
+                        break
+                else:
+                    msg = "Updating development spec for package "
+                    msg += "%s with path %s" % (spec.name, path)
+                    tty.msg(msg)
+                    break
+        else:
+            tty.msg("Configuring spec %s for development at path %s" %
+                    (spec, path))
+
+        if clone:
+            # "steal" the source code via staging API
+            abspath = path if os.path.isabs(path) else os.path.join(
+                self.path, path)
+
+            stage = spec.package.stage
+            stage.steal_source(abspath)
+
+        # If it wasn't already in the list, append it
+        self.dev_specs[spec.name] = {'path': path, 'spec': str(spec)}
+        return True
+
+    def undevelop(self, spec):
+        """Remove develop info for abstract spec ``spec``.
+
+        returns True on success, False if no entry existed."""
+        spec = Spec(spec)  # In case it's a spec object
+        if spec.name in self.dev_specs:
+            del self.dev_specs[spec.name]
+            return True
+        return False
 
     def concretize(self, force=False):
         """Concretize user_specs in this environment.
@@ -1248,6 +1324,53 @@ class Environment(object):
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
+    def _spec_needs_overwrite(self, spec):
+        # Overwrite the install if it's a dev build (non-transitive)
+        # and the code has been changed since the last install
+        # or one of the dependencies has been reinstalled since
+        # the last install
+
+        # if it's not installed, we don't need to overwrite it
+        if not spec.package.installed:
+            return False
+
+        # if spec and all deps aren't dev builds, we don't need to overwrite it
+        if not any(spec.satisfies(c)
+                   for c in ('dev_path=any', '^dev_path=any')):
+            return False
+
+        # if any dep needs overwrite, or any dep is missing and is a dev build
+        # then overwrite this package
+        if any(
+            self._spec_needs_overwrite(dep) or
+            ((not dep.package.installed) and dep.satisfies('dev_path=any'))
+            for dep in spec.traverse(root=False)
+        ):
+            return True
+
+        # if it's not a direct dev build and its dependencies haven't
+        # changed, it hasn't changed.
+        # We don't merely check satisfaction (spec.satisfies('dev_path=any')
+        # because we need the value of the variant in the next block of code
+        dev_path_var = spec.variants.get('dev_path', None)
+        if not dev_path_var:
+            return False
+
+        # if it is a direct dev build, check whether the code changed
+        # we already know it is installed
+        _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+        mtime = fs.last_modification_time_recursive(dev_path_var.value)
+        return mtime > record.installation_time
+
+    def _get_overwrite_specs(self):
+        ret = []
+        for dag_hash in self.concretized_order:
+            spec = self.specs_by_hash[dag_hash]
+            ret.extend([d.dag_hash() for d in spec.traverse(root=True)
+                        if self._spec_needs_overwrite(d)])
+
+        return ret
+
     def install(self, user_spec, concrete_spec=None, **install_args):
         """Install a single spec into an environment.
 
@@ -1260,7 +1383,11 @@ class Environment(object):
 
     def _install(self, spec, **install_args):
         # "spec" must be concrete
-        spec.package.do_install(**install_args)
+        package = spec.package
+
+        install_args['overwrite'] = install_args.get(
+            'overwrite', []) + self._get_overwrite_specs()
+        package.do_install(**install_args)
 
         if not spec.external:
             # Make sure log directory exists
@@ -1288,14 +1415,18 @@ class Environment(object):
         # a large amount of time due to repeatedly acquiring and releasing
         # locks, this does an initial check across all specs within a single
         # DB read transaction to reduce time spent in this case.
-        uninstalled_specs = []
+        specs_to_install = []
         with spack.store.db.read_transaction():
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
-                if not spec.package.installed:
-                    uninstalled_specs.append(spec)
+                if not spec.package.installed or (
+                        spec.satisfies('dev_path=any') or
+                        spec.satisfies('^dev_path=any')
+                ):
+                    # If it's a dev build it could need to be reinstalled
+                    specs_to_install.append(spec)
 
-        for spec in uninstalled_specs:
+        for spec in specs_to_install:
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
             kwargs = dict()
@@ -1583,6 +1714,17 @@ class Environment(object):
         else:
             view = False
         yaml_dict['view'] = view
+
+        if self.dev_specs:
+            # Remove entries that are mirroring defaults
+            write_dev_specs = copy.deepcopy(self.dev_specs)
+            for name, entry in write_dev_specs.items():
+                if entry['path'] == name:
+                    del entry['path']
+            yaml_dict['develop'] = write_dev_specs
+        else:
+            yaml_dict.pop('develop', None)
+
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident
         with fs.temp_cwd() as env_dir:

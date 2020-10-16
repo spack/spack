@@ -2063,7 +2063,8 @@ class Spec(object):
             # still need to select a concrete package later.
             if not self.virtual:
                 changed |= any(
-                    (concretizer.concretize_architecture(self),
+                    (concretizer.concretize_develop(self),  # special variant
+                     concretizer.concretize_architecture(self),
                      concretizer.concretize_compiler(self),
                      concretizer.adjust_target(self),
                      # flags must be concretized after compiler
@@ -2698,6 +2699,10 @@ class Spec(object):
 
         if user_spec_deps:
             for name, spec in user_spec_deps.items():
+                if not name:
+                    msg = "Attempted to normalize anonymous dependency spec"
+                    msg += " %s" % spec
+                    raise InvalidSpecDetected(msg)
                 if name not in all_spec_deps:
                     all_spec_deps[name] = spec
                 else:
@@ -2849,6 +2854,9 @@ class Spec(object):
         # check and be more specific about what's wrong.
         if not other.satisfies_dependencies(self):
             raise UnsatisfiableDependencySpecError(other, self)
+
+        if any(not d.name for d in other.traverse(root=False)):
+            raise UnconstrainableDependencySpecError(other)
 
         # Handle common first-order constraints directly
         changed = False
@@ -4123,8 +4131,23 @@ class SpecParser(spack.parse.Parser):
 
                         if not dep:
                             # We're adding a dependency to the last spec
-                            self.expect(ID)
-                            dep = self.spec(self.token.value)
+                            if self.accept(ID):
+                                self.previous = self.token
+                                if self.accept(EQ):
+                                    # This is an anonymous dep with a key=value
+                                    # push tokens to be parsed as part of the
+                                    # dep spec
+                                    self.push_tokens(
+                                        [self.previous, self.token])
+                                    dep_name = None
+                                else:
+                                    # named dep (standard)
+                                    dep_name = self.token.value
+                                self.previous = None
+                            else:
+                                # anonymous dep
+                                dep_name = None
+                            dep = self.spec(dep_name)
 
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
@@ -4507,6 +4530,14 @@ class UnsatisfiableDependencySpecError(spack.error.UnsatisfiableSpecError):
     def __init__(self, provided, required):
         super(UnsatisfiableDependencySpecError, self).__init__(
             provided, required, "dependency")
+
+
+class UnconstrainableDependencySpecError(spack.error.SpecError):
+    """Raised when attempting to constrain by an anonymous dependency spec"""
+    def __init__(self, spec):
+        msg = "Cannot constrain by spec '%s'. Cannot constrain by a" % spec
+        msg += " spec containing anonymous dependencies"
+        super(UnconstrainableDependencySpecError, self).__init__(msg)
 
 
 class AmbiguousHashError(spack.error.SpecError):
