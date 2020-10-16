@@ -33,8 +33,17 @@ _versions = {
 
 
 class Nvhpc(Package):
-    """Nvidia optimizing multi-core x64 compilers for Linux
-    with support for debugging and profiling of local MPI processes."""
+    """The NVIDIA HPC SDK is a comprehensive suite of compilers, libraries
+    and tools essential to maximizing developer productivity and the
+    performance and portability of HPC applications. The NVIDIA HPC
+    SDK C, C++, and Fortran compilers support GPU acceleration of HPC
+    modeling and simulation applications with standard C++ and
+    Fortran, OpenACC directives, and CUDA. GPU-accelerated math
+    libraries maximize performance on common HPC algorithms, and
+    optimized communications libraries enable standards-based
+    multi-GPU and scalable systems programming. Performance profiling
+    and debugging tools simplify porting and optimization of HPC
+    applications."""
 
     homepage = "http://developer.nvidia.com/hpc-sdk"
 
