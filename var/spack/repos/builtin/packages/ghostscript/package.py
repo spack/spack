@@ -5,6 +5,7 @@
 
 from spack import *
 import shutil
+import re
 
 
 class Ghostscript(AutotoolsPackage):
@@ -12,6 +13,8 @@ class Ghostscript(AutotoolsPackage):
 
     homepage = "http://ghostscript.com/"
     url = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs926/ghostscript-9.26.tar.gz"
+
+    executables = [r'^gs$']
 
     version('9.50', sha256='0f53e89fd647815828fc5171613e860e8535b68f7afbc91bf89aee886769ce89')
     version('9.27', sha256='9760e8bdd07a08dbd445188a6557cb70e60ccb6a5601f7dbfba0d225e28ce285')
@@ -71,3 +74,9 @@ class Ghostscript(AutotoolsPackage):
     def install(self, spec, prefix):
         make('install')
         make('soinstall')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--help', output=str, error=str)
+        match = re.search(r'GPL Ghostscript (\S+)', output)
+        return match.group(1) if match else None
