@@ -125,7 +125,7 @@ case "$command" in
         comp="FC"
         lang_flags=F
         ;;
-    f77|xlf|xlf_r|pgf77|frt)
+    f77|xlf|xlf_r|pgf77|frt|flang)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
