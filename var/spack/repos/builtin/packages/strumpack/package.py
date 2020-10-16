@@ -94,7 +94,11 @@ class Strumpack(CMakePackage, CudaPackage):
             '-DSTRUMPACK_COUNT_FLOPS=%s' % on_off('+count_flops'),
             '-DSTRUMPACK_TASK_TIMERS=%s' % on_off('+task_timers'),
             '-DSTRUMPACK_DEV_TESTING=%s' % on_off('+build_dev_tests'),
-            '-DSTRUMPACK_BUILD_TESTS=%s' % on_off('+build_tests')
+            '-DSTRUMPACK_BUILD_TESTS=%s' % on_off('+build_tests'),
+            '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
+            '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
+            '-DTPL_SCALAPACK_LIBRARIES=%s' % spec['scalapack'].
+            libs.joined(";"),
         ]
 
         if spec.satisfies('@:3.9.999'):
