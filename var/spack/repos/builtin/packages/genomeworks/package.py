@@ -28,6 +28,9 @@ class Genomeworks(CMakePackage, CudaPackage):
     depends_on('cuda@11:', type=('build', 'run'))
     depends_on('python@3.6.7:', type=('build', 'run'))
 
+    # Disable CUB compilation, as it is already included in CUDA 11.
+    # See https://github.com/clara-parabricks/GenomeWorks/issues/570
+    # This patch breaks GenomeWorks with Cuda <11, cuda@11: is therefore used as dependency.
     patch('3rdparty.patch')
 
     def cmake_args(self):
