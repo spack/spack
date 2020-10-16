@@ -5,7 +5,6 @@
 
 from spack import *
 import shutil
-import re
 
 
 class Ghostscript(AutotoolsPackage):
