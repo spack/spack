@@ -5,6 +5,7 @@
 
 from spack import *
 import shutil
+import re
 
 
 class Ghostscript(AutotoolsPackage):
@@ -77,4 +78,5 @@ class Ghostscript(AutotoolsPackage):
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
-        return output
+        match = re.search(r'GPL Ghostscript (\S+)', output)
+        return match.group(1) if match else None
