@@ -46,23 +46,20 @@ class Nvhpc(Package):
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
 
-    variant('network',   default=False,
-            description="Perform a network install")
-    variant('single',    default=True,
-            description="Perform a single system install")
-    variant('blas',      default=True,
+    variant('blas',         default=True,
             description="Enable BLAS")
-    variant('lapack',    default=True,
+    variant('install_type', default='single',
+            values=('single', 'network'), multi=False,
+            description='Network installs are for installations shared '
+                        'by different operating systems')
+    variant('lapack',       default=True,
             description="Enable LAPACK")
-    variant('mpi',       default=False,
+    variant('mpi',          default=False,
             description="Enable MPI")
 
     provides('blas',        when='+blas')
     provides('lapack',      when='+lapack')
     provides('mpi',         when='+mpi')
-
-    conflicts('+network', when='+single',
-              msg="You cannot choose both a network and a single install")
 
     def install(self, spec, prefix):
         # Enable the silent installation feature
@@ -70,12 +67,12 @@ class Nvhpc(Package):
         os.environ['NVHPC_ACCEPT_EULA'] = "accept"
         os.environ['NVHPC_INSTALL_DIR'] = prefix
 
-        if '+network' in spec:
+        if spec.variants['install_type'].value == 'network':
             os.environ['NVHPC_INSTALL_TYPE'] = "network"
             os.environ['NVHPC_INSTALL_LOCAL_DIR'] = \
                 "%s/%s/%s/share_objects" % \
                 (prefix, 'Linux_%s' % spec.target.family, self.version)
-        elif '+single' in spec:
+        else:
             os.environ['NVHPC_INSTALL_TYPE'] = "single"
 
         # Run install script
