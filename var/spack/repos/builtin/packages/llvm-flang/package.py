@@ -16,7 +16,7 @@ class LlvmFlang(CMakePackage, CudaPackage):
 
     maintainer = ['naromero77']
 
-    version('release_90', branch='release_90')
+    version('release_90', branch='release_90', preferred=True)
     version('release_80', branch='release_80')
     version('release_70', branch='release_70')
     version('release_60', branch='release_60')
@@ -46,7 +46,11 @@ class LlvmFlang(CMakePackage, CudaPackage):
     # libomptarget dependencies
     depends_on('libelf', when='+cuda')
     depends_on('libffi', when='+cuda')
-    depends_on('cuda@:9', when='+cuda')  # llvm 7 not compatible with newer version of cuda
+    # note that there may be other llvm-flang + cuda conflicts, but these
+    # are the only versions that are relevant for the flang+nvptx package
+    # llvm 7 not compatible with newer version of cuda
+    depends_on('cuda@:9', when='+cuda@release_70')
+    depends_on('cuda@:9', when='+cuda@20190329')
 
     # LLVM-Flang Componentes: Driver, OpenMP
     resource(name='flang-driver',

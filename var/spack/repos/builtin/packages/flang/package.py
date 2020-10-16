@@ -8,7 +8,7 @@ from spack import *
 import os
 
 
-class Flang(CMakePackage, CudaPackage):
+class Flang(CMakePackage):
     """Flang is a Fortran compiler targeting LLVM."""
 
     homepage = "https://github.com/flang-compiler/flang"
@@ -24,17 +24,27 @@ class Flang(CMakePackage, CudaPackage):
     version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
     version('20180612', sha256='6af858bea013548e091371a97726ac784edbd4ff876222575eaae48a3c2920ed')
 
+    # variants
+    msg = ('Target OpenMP offloading to NVIDIA GPUs '
+           '(experimental w/ no support). '
+           'Only works with GCC compilers compatible with CUDA 9.x. '
+           'Specify ^llvm-flang+cuda cuda_arch=<value> explictly.')
+
+    variant('nvptx',
+            default=False,
+            description=msg)
+
     # Patched only relevant for March 2019 release with OpenMP Offload support
     patch('https://github.com/flang-compiler/flang/commit/b342225a64692d2b9c3aff7658a8e4f94a8923eb.diff',
           sha256='3bd2c7453131eaaf11328785a3031fa2298bdd0c02cfd5e2b478e6e847d5da43',
-          when='@20190329 +cuda')
+          when='@20190329 +nvptx')
 
     # Build dependency
     depends_on('cmake@3.8:', type='build')
     depends_on('python@2.7:', type='build')
 
-    depends_on('llvm-flang@release_90', when='@master')
-    depends_on('llvm-flang@20190329', when='@20190329')
+    depends_on('llvm-flang@release_90', when='@master ~nvptx')
+    depends_on('llvm-flang@20190329', when='@20190329 ~nvptx')
     depends_on('llvm-flang@20181226_70', when='@20181226')
     depends_on('llvm-flang@20180921', when='@20180921')
     depends_on('llvm-flang@20180612', when='@20180612')
@@ -45,10 +55,11 @@ class Flang(CMakePackage, CudaPackage):
     depends_on('pgmath@20180921', when='@20180921')
     depends_on('pgmath@20180612', when='@20180612')
 
-    depends_on('llvm-flang +cuda', when='+cuda')
+    depends_on('llvm-flang+cuda@release_70', when='@master +nvptx')
+    depends_on('llvm-flang+cuda@20190329', when='@20190329 +nvptx')
 
     # conflicts
-    conflicts('+cuda', when='@:20181226',
+    conflicts('+nvptx', when='@:20181226',
               msg='OpenMP offload to NVidia GPUs available 20190329 or later')
 
     # Spurious problems running in parallel the Makefile

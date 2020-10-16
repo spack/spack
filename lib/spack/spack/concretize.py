@@ -36,6 +36,7 @@ import spack.compilers
 import spack.architecture
 import spack.error
 import spack.tengine
+import spack.variant as vt
 from spack.config import config
 from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
@@ -60,6 +61,29 @@ class Concretizer(object):
             )
         self.abstract_spec = abstract_spec
         self._adjust_target_answer_generator = None
+
+    def concretize_develop(self, spec):
+        """
+        Add ``dev_path=*`` variant to packages built from local source.
+        """
+        env = spack.environment.get_env(None, None)
+        dev_info = env.dev_specs.get(spec.name, {}) if env else {}
+        if not dev_info:
+            return False
+
+        path = dev_info['path']
+        path = path if os.path.isabs(path) else os.path.join(
+            env.path, path)
+
+        if 'dev_path' in spec.variants:
+            assert spec.variants['dev_path'].value == path
+            changed = False
+        else:
+            spec.variants.setdefault(
+                'dev_path', vt.SingleValuedVariant('dev_path', path))
+            changed = True
+        changed |= spec.constrain(dev_info['spec'])
+        return changed
 
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
@@ -328,12 +352,32 @@ class Concretizer(object):
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
         pkg_cls = spec.package_class
         for name, variant in pkg_cls.variants.items():
+            any_set = False
+            var = spec.variants.get(name, None)
+            if var and 'any' in var:
+                # remove 'any' variant before concretizing
+                # 'any' cannot be combined with other variables in a
+                # multivalue variant, a concrete variant cannot have the value
+                # 'any', and 'any' does not constrain a variant except to
+                # preclude the values 'none' and None. We track `any_set` to
+                # avoid replacing 'any' with None, and remove it to continue
+                # concretization.
+                spec.variants.pop(name)
+                any_set = True
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:
                     spec.variants[name] = preferred_variants.get(name)
                 else:
                     spec.variants[name] = variant.make_default()
+
+            var = spec.variants[name]
+            if any_set and 'none' in var or None in var:
+                msg = "Attempted non-deterministic setting of variant"
+                msg += " '%s' set to 'any' and preference is." % name
+                msg += "'%s'. Set the variant to a non 'any'" % var.value
+                msg += " value or set a preference for variant '%s'." % name
+                raise NonDeterministicVariantError(msg)
 
         return changed
 
@@ -761,3 +805,7 @@ class NoBuildError(spack.error.SpackError):
         msg = ("The spec\n    '%s'\n    is configured as not buildable, "
                "and no matching external installs were found")
         super(NoBuildError, self).__init__(msg % spec)
+
+
+class NonDeterministicVariantError(spack.error.SpecError):
+    """Raised when a spec variant is set to 'any' and concretizes to 'none'."""

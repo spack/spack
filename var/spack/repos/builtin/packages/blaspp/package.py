@@ -13,55 +13,40 @@ class Blaspp(CMakePackage, CudaPackage):
        Knoxville."""
 
     homepage = 'https://bitbucket.org/icl/blaspp'
+    git = homepage
     url = 'https://bitbucket.org/icl/blaspp/downloads/blaspp-2020.09.00.tar.gz'
     maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
-    version('develop', git=homepage)
+    version('master', branch='master')
+    version('2020.10.00', sha256='ce148cfe397428d507c72d7d9eba5e9d3f55ad4cd842e6e873c670183dcb7795')
     version('2020.09.00', sha256='ee5d29171bbed515734007dd121ce2e733e2f83920c4d5ede046e657f4a513ef')
 
-    variant('openmp',
-            default=True,
-            description='Use OpenMP internally.')
-
-    variant('cuda', default=True,
-            description='Build with CUDA')
-
-    variant('shared',
-            default=True,
-            description='Build shared libraries')
+    variant('openmp', default=True, description='Use OpenMP internally.')
+    variant('cuda',   default=True, description='Build with CUDA')
+    variant('shared', default=True, description='Build shared libraries')
 
     depends_on('cmake@3.15.0:', type='build')
     depends_on('blas')
 
+    # This will attempt to use a supported version of OpenBLAS
+    depends_on('openblas@:0.3.5', when='^openblas')
+    # In some cases, the spack concretizer will fail to use a supported
+    # version of OpenBLAS.  In this case, present an error message.
+    conflicts('^openblas@0.3.6:', msg='Testing errors in OpenBLAS >=0.3.6')
+
     def cmake_args(self):
         spec = self.spec
-        args = []
-        args.append('-Dbuild_tests={0}'.format(
-            'ON' if self.run_tests else 'OFF'))
-
-        args.append('-Duse_openmp={0}'.format(
-            'ON' if '+openmp' in spec else 'OFF'))
-
-        args.append('-DBUILD_SHARED_LIBS={0}'.format(
-            'ON' if '+shared' in spec else 'OFF'))
-
-        args.append('-DUSE_CUDA={0}'.format(
-            'ON' if '+cuda' in spec else 'OFF'))
-
-        # `blaspp` has an implicit CUDA detection mechanism. This disables it
-        # in cases where it may backfire. One such case is when `cuda` is
-        # external and marked with `buildable=false`. `blaspp`'s CMake CUDA
-        # detection mechanism finds CUDA but doesn't set certain paths properly
-        # which leads to a build issues [1].
-        #
-        # [1]: https://bitbucket.org/icl/blaspp/issues/6/compile-error-due-to-implicit-cuda
-        if '~cuda' in spec:
-            args.append('-DCMAKE_CUDA_COMPILER=')
-
-        args.append('-DBLAS_LIBRARIES=%s' % spec['blas'].libs.joined(';'))
-        return args
+        return [
+            '-Dbuild_tests=%s'       % self.run_tests,
+            '-Duse_openmp=%s'        % ('+openmp' in spec),
+            '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
+            '-Duse_cuda=%s'          % ('+cuda' in spec),
+            '-DBLAS_LIBRARIES=%s'    % spec['blas'].libs.joined(';')
+        ]
 
     def check(self):
-        with working_dir(join_path(self.build_directory, 'test')):
-            if os.system('./run_tests.py --quick'):
-                raise Exception('Tests were not all successful!')
+        # If the tester fails to build, ensure that the check() fails.
+        if os.path.isfile(join_path(self.build_directory, 'test', 'tester')):
+            make('check')
+        else:
+            raise Exception('The tester was not built!')

@@ -7,6 +7,7 @@ import sys
 import pytest
 
 from spack.error import SpecError, UnsatisfiableSpecError
+from spack.spec import UnconstrainableDependencySpecError
 from spack.spec import Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.variant import InvalidVariantValueError, UnknownVariantError
 from spack.variant import MultipleValuesInExclusiveVariantError
@@ -80,7 +81,8 @@ def check_constrain_not_changed(spec, constraint):
 def check_invalid_constraint(spec, constraint):
     spec = Spec(spec)
     constraint = Spec(constraint)
-    with pytest.raises(UnsatisfiableSpecError):
+    with pytest.raises((UnsatisfiableSpecError,
+                        UnconstrainableDependencySpecError)):
         spec.constrain(constraint)
 
 
@@ -272,6 +274,8 @@ class TestSpecSematics(object):
         check_satisfies('mpich foo=true', 'mpich+foo')
         check_satisfies('mpich~foo', 'mpich foo=FALSE')
         check_satisfies('mpich foo=False', 'mpich~foo')
+        check_satisfies('mpich foo=any', 'mpich~foo')
+        check_satisfies('mpich +foo', 'mpich foo=any')
 
     def test_satisfies_multi_value_variant(self):
         # Check quoting
@@ -283,6 +287,12 @@ class TestSpecSematics(object):
                         'multivalue-variant foo=bar,baz')
 
         # A more constrained spec satisfies a less constrained one
+        check_satisfies('multivalue-variant foo="bar,baz"',
+                        'multivalue-variant foo=any')
+
+        check_satisfies('multivalue-variant foo=any',
+                        'multivalue-variant foo="bar,baz"')
+
         check_satisfies('multivalue-variant foo="bar,baz"',
                         'multivalue-variant foo="bar"')
 
@@ -307,6 +317,7 @@ class TestSpecSematics(object):
         a.concretize()
 
         assert a.satisfies('foobar=bar')
+        assert a.satisfies('foobar=any')
 
         # Assert that an autospec generated from a literal
         # gives the right result for a single valued variant
@@ -440,6 +451,10 @@ class TestSpecSematics(object):
         check_unsatisfiable('mpich', 'mpich+foo', True)
         check_unsatisfiable('mpich', 'mpich~foo', True)
         check_unsatisfiable('mpich', 'mpich foo=1', True)
+
+        # None and any do not satisfy each other
+        check_unsatisfiable('foo=none', 'foo=any')
+        check_unsatisfiable('foo=any', 'foo=none')
 
     def test_unsatisfiable_variant_mismatch(self):
         # No matchi in specs
@@ -608,6 +623,11 @@ class TestSpecSematics(object):
             'multivalue-variant foo="baz"'
         )
 
+        check_constrain(
+            'libelf foo=bar,baz', 'libelf foo=bar,baz', 'libelf foo=any')
+        check_constrain(
+            'libelf foo=bar,baz', 'libelf foo=any', 'libelf foo=bar,baz')
+
     def test_constrain_compiler_flags(self):
         check_constrain(
             'libelf cflags="-O3" cppflags="-Wall"',
@@ -648,12 +668,15 @@ class TestSpecSematics(object):
         check_invalid_constraint('libelf+debug', 'libelf~debug')
         check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
         check_invalid_constraint('libelf debug=True', 'libelf debug=False')
+        check_invalid_constraint('libelf foo=none', 'libelf foo=any')
+        check_invalid_constraint('libelf foo=any', 'libelf foo=none')
 
         check_invalid_constraint(
             'libelf cppflags="-O3"', 'libelf cppflags="-O2"')
         check_invalid_constraint(
             'libelf platform=test target=be os=be', 'libelf target=fe os=fe'
         )
+        check_invalid_constraint('libdwarf', '^%gcc')
 
     def test_constrain_changed(self):
         check_constrain_changed('libelf', '@1.0')
@@ -661,6 +684,7 @@ class TestSpecSematics(object):
         check_constrain_changed('libelf', '%gcc')
         check_constrain_changed('libelf%gcc', '%gcc@4.5')
         check_constrain_changed('libelf', '+debug')
+        check_constrain_changed('libelf', 'debug=any')
         check_constrain_changed('libelf', '~debug')
         check_constrain_changed('libelf', 'debug=2')
         check_constrain_changed('libelf', 'cppflags="-O3"')
@@ -680,6 +704,7 @@ class TestSpecSematics(object):
         check_constrain_not_changed('libelf+debug', '+debug')
         check_constrain_not_changed('libelf~debug', '~debug')
         check_constrain_not_changed('libelf debug=2', 'debug=2')
+        check_constrain_not_changed('libelf debug=2', 'debug=any')
         check_constrain_not_changed(
             'libelf cppflags="-O3"', 'cppflags="-O3"')
 
@@ -893,13 +918,14 @@ class TestSpecSematics(object):
                 for x in ('cflags', 'cxxflags', 'fflags')
             )
 
-    def test_any_combination_of(self):
-        # Test that using 'none' and another value raise during concretization
-        spec = Spec('multivalue-variant foo=none,bar')
-        with pytest.raises(spack.error.SpecError) as exc_info:
-            spec.concretize()
+    def test_combination_of_any_or_none(self):
+        # Test that using 'none' and another value raises
+        with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
+            Spec('multivalue-variant foo=none,bar')
 
-        assert "is mutually exclusive with any of the" in str(exc_info.value)
+        # Test that using 'any' and another value raises
+        with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
+            Spec('multivalue-variant foo=any,bar')
 
     @pytest.mark.skipif(
         sys.version_info[0] == 2, reason='__wrapped__ requires python 3'

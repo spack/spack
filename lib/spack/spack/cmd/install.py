@@ -392,13 +392,8 @@ environment variables:
                 if not answer:
                     tty.die('Reinstallation aborted.')
 
-            for abstract, concrete in zip(abstract_specs, specs):
-                if concrete in installed:
-                    with fs.replace_directory_transaction(concrete.prefix):
-                        install_spec(args, kwargs, abstract, concrete)
-                else:
-                    install_spec(args, kwargs, abstract, concrete)
+            # overwrite all concrete explicit specs from this build
+            kwargs['overwrite'] = [spec.dag_hash() for spec in specs]
 
-        else:
-            for abstract, concrete in zip(abstract_specs, specs):
-                install_spec(args, kwargs, abstract, concrete)
+        for abstract, concrete in zip(abstract_specs, specs):
+            install_spec(args, kwargs, abstract, concrete)
