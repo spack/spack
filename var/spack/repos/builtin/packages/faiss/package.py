@@ -31,7 +31,6 @@ class Faiss(AutotoolsPackage, CudaPackage):
 
     conflicts('+tests', when='~python', msg='+tests must be accompanied by +python')
 
-    # we don't want "extend" because we don't want to symlink to python prefix
     depends_on('python@3.7:',   when='+python', type=('build', 'run'))
     depends_on('py-numpy',      when='+python', type=('build', 'run'))
     depends_on('py-scipy',      when='+tests',  type=('build', 'run'))
@@ -94,13 +93,13 @@ class Faiss(AutotoolsPackage, CudaPackage):
             os.makedirs(self.prefix.bin)
 
         def _prefix_and_install(file):
-            os.system('mv {} faiss_{}'.format(file, file))
-            install('faiss_{}'.format(file), self.prefix.bin)
+            os.rename(file, 'faiss_' + file)
+            install('faiss_' + file, self.prefix.bin)
 
         # CPU tests
         with working_dir('tests'):
             # rename the exec to keep consistent with gpu tests
-            os.system('mv tests TestCpu')
+            os.rename('tests', 'TestCpu')
             _prefix_and_install('TestCpu')
 
         # GPU tests
