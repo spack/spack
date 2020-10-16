@@ -28,6 +28,7 @@ class Lapackpp(CMakePackage):
     depends_on('blaspp@2020.09.00', when='lapackpp@2020.09.00')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('cblas')
 
     def cmake_args(self):
         spec = self.spec
