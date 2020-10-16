@@ -106,8 +106,8 @@ class Bzip2(Package, SourcewarePackage):
 
             install(lib3, join_path(prefix.lib, lib3))
             with working_dir(prefix.lib):
-                for l in (lib, lib1, lib2):
-                    symlink(lib3, l)
+                for libname in (lib, lib1, lib2):
+                    symlink(lib3, libname)
 
         with working_dir(prefix.bin):
             force_remove('bunzip2', 'bzcat')
