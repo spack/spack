@@ -14,7 +14,7 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/cpio/"
     gnu_mirror_path = "cpio/cpio-2.13.tar.gz"
 
-    executables = ['cpio']
+    executables = ['^cpio$']
 
     version('2.13', sha256='e87470d9c984317f658567c03bfefb6b0c829ff17dbf6b0de48d71a4c8f3db88')
 
