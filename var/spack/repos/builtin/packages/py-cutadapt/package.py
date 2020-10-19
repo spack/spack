@@ -21,8 +21,11 @@ class PyCutadapt(PythonPackage):
     version('1.13', sha256='aa9f2c1f33dc081fe94f42b1250e4382b8fb42cabbf6e70a76ff079f211d5fc0')
 
     depends_on('python@2.7:', type=('build', 'run'), when='@1.13')
-    depends_on('python@3.4:', type=('build', 'run'), when='@2.5:')
+    depends_on('python@3.4:', type=('build', 'run'), when='@2.5:2.9')
+    depends_on('python@3.5:', type=('build', 'run'), when='@2.10:')
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-xopen@0.1.1:', type=('build', 'run'), when='@1.13')
-    depends_on('py-xopen@0.8.1:', type=('build', 'run'), when='@2.5:')
+    depends_on('py-xopen@0.8.1:', type=('build', 'run'), when='@2.5:2.9')
+    depends_on('py-xopen@0.8.4:', type=('build', 'run'), when='@2.10:')
     depends_on('py-dnaio', type=('build', 'run'), when='@2.5:')
+    depends_on('py-dnaio@0.4.2:', type=('build', 'run'), when='@2.10:')
