@@ -6,6 +6,7 @@
 from spack import *
 import os
 import sys
+import re
 
 
 class Mpich(AutotoolsPackage):
@@ -17,6 +18,8 @@ class Mpich(AutotoolsPackage):
     git      = "https://github.com/pmodels/mpich.git"
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 1
+
+    executables = ['^mpichversion$']
 
     version('develop', submodules=True)
     version('3.3.2', sha256='4bfaf8837a54771d3e4922c84071ef80ffebddbb6971a006038d91ee7ef959b9')
@@ -174,6 +177,109 @@ spack package at this time.''',
     # case to avoid generating an identical MPICH installation.
     conflicts('+pci', when='@:3.2~hydra')
     conflicts('+libxml2', when='@:3.2~hydra')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)(output=str, error=str)
+        match = re.search(r'MPICH Version:\s+(\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        def get_spack_compiler_spec(path):
+            spack_compilers = spack.compilers.find_compilers([path])
+            actual_compiler = None
+            # check if the compiler actually matches the one we want
+            for spack_compiler in spack_compilers:
+                if os.path.dirname(spack_compiler.cc) == path:
+                    actual_compiler = spack_compiler
+                    break
+            return actual_compiler.spec if actual_compiler else None
+
+        def is_enabled(text):
+            if text in set(['t', 'true', 'enabled', 'enable', 'with',
+                            'yes', '1']):
+                return True
+            return False
+
+        def is_disabled(text):
+            if text in set(['f', 'false', 'disabled', 'disable',
+                            'without', 'no', '0']):
+                return True
+            return False
+
+        results = []
+        for exe in exes:
+            variants = ''
+            output = Executable(exe)(output=str, error=str)
+            if re.search(r'--with-hwloc-prefix=embedded', output):
+                variants += '~hwloc'
+
+            if re.search(r'--with-pm=hydra', output):
+                variants += '+hydra'
+            else:
+                variants += '~hydra'
+
+            match = re.search(r'--(\S+)-romio', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+romio'
+            elif match and is_disabled(match.group(1)):
+                variants += '~romio'
+
+            if re.search(r'--with-ibverbs', output):
+                variants += '+verbs'
+            elif re.search(r'--without-ibverbs', output):
+                variants += '~verbs'
+
+            match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+wrapperrpath'
+            match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
+            if match and is_disabled(match.group(1)):
+                variants += '~wrapperrpath'
+
+            if re.search(r'--disable-fortran', output):
+                variants += '~fortran'
+
+            match = re.search(r'--with-slurm=(\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+slurm'
+
+            if re.search(r'--enable-libxml2', output):
+                variants += '+libxml2'
+            elif re.search(r'--disable-libxml2', output):
+                variants += '~libxml2'
+
+            if re.search(r'--with-thread-package=argobots', output):
+                variants += '+argobots'
+
+            if re.search(r'--with-pmi=no', output):
+                variants += ' pmi=off'
+            elif re.search(r'--with-pmi=simple', output):
+                variants += ' pmi=pmi'
+            elif re.search(r'--with-pmi=pmi2/simple', output):
+                variants += ' pmi=pmi2'
+            elif re.search(r'--with-pmix', output):
+                variants += ' pmi=pmix'
+
+            match = re.search(r'MPICH Device:\s+(\S+)', output)
+            if match:
+                if match.group(1) == 'ch3:nemesis':
+                    variants += ' device=ch3'
+                else:
+                    variants += ' device=' + match.group(1)
+
+            match = re.search(r'--with-device=ch.\S+(ucx|ofi|mxm|tcp)', output)
+            if match:
+                variants += ' netmod=' + match.group(1)
+
+            match = re.search(r'MPICH CC:\s+(\S+)', output)
+            compiler_spec = get_spack_compiler_spec(
+                os.path.dirname(match.group(1)))
+            if compiler_spec:
+                variants += '%' + str(compiler_spec)
+            results.append(variants)
+        return results
 
     def setup_build_environment(self, env):
         env.unset('F90')
