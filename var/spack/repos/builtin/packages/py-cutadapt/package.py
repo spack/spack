@@ -24,6 +24,7 @@ class PyCutadapt(PythonPackage):
     depends_on('python@3.4:', type=('build', 'run'), when='@2.5:2.9')
     depends_on('python@3.5:', type=('build', 'run'), when='@2.10:')
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools-scm', type='build')
     depends_on('py-xopen@0.1.1:', type=('build', 'run'), when='@1.13')
     depends_on('py-xopen@0.8.1:', type=('build', 'run'), when='@2.5:2.9')
     depends_on('py-xopen@0.8.4:', type=('build', 'run'), when='@2.10:')
