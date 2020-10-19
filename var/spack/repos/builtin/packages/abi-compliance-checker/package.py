@@ -19,7 +19,7 @@ class AbiComplianceChecker(MakefilePackage):
     depends_on('abi-dumper@1.1:')
     depends_on('perl@5:')
     depends_on('binutils')
-    depends_on('exuberant-ctags')
+    depends_on('universal-ctags')
 
     def install(self, spec, prefix):
         make('prefix={0}'.format(prefix), 'install')
