@@ -52,8 +52,8 @@ class Slate(MakefilePackage):
             'blas=%s'   % blas
         ]
         if '+mpi' in spec:
-            config.extend('CXX=' + spec['mpi'].mpicxx)
-            config.extend('FC=' + spec['mpi'].mpifc)
+            config.append('CXX=' + spec['mpi'].mpicxx)
+            config.append('FC=' + spec['mpi'].mpifc)
 
         with open('make.inc', 'w') as inc:
             for line in config:
