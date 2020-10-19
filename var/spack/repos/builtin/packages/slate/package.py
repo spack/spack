@@ -57,4 +57,3 @@ class Slate(MakefilePackage):
         with open('make.inc', 'w') as inc:
             for line in config:
                 inc.write('{0}\n'.format(line))
-
