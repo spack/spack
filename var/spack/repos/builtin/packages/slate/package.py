@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Slate(Package):
+class Slate(MakefilePackage):
     """The Software for Linear Algebra Targeting Exascale (SLATE) project is
     to provide fundamental dense linear algebra capabilities to the US
     Department of Energy and to the high-performance computing (HPC) community
@@ -33,15 +33,9 @@ class Slate(Package):
 
     conflicts('%gcc@:5')
 
-    def install(self, spec, prefix):
-        f_cuda = "1" if spec.variants['cuda'].value   else "0"
-        f_mpi  = "1" if spec.variants['mpi'].value    else "0"
-        f_omp  = "1" if spec.variants['openmp'].value else "0"
-
-        comp_cxx = comp_for = ''
-        if '+mpi' in spec:
-            comp_cxx = 'mpicxx'
-            comp_for = 'mpif90'
+    @property
+    def make_args(self):
+        spec = self.spec
 
         if '^openblas' in spec:
             blas = 'openblas'
@@ -52,15 +46,20 @@ class Slate(Package):
         else:
             raise InstallError('Supports only BLAS provider '
                                'openblas, intel-mkl, or essl')
+        args = [
+            'SHELL=bash',
+            'prefix=' + self.prefix,
+            'mpi=' + ("1" if '+mpi' in spec else "0"),
+            'cuda=' + ("1" if '+cuda' in spec else "0"),
+            'openmp=' + ("1" if '+openmp' in spec else "0"),
+            'blas=' + blas
+        ]
+        if '+mpi' in spec:
+            args.extend(['CXX=mpicxx', 'FC=mpif90'])
+        return args
 
-        make('all', 'install',
-             'SHELL=bash',
-             'prefix=' + prefix,
-             'mpi=' + f_mpi,
-             'blas=' + blas,
-             'cuda=' + f_cuda,
-             'openmp=' + f_omp,
-             'c_api=1',
-             'fortran_api=1',
-             'CXX=' + comp_cxx,
-             'FC=' + comp_for)
+    def build(self, spec, prefix):
+        make(*self.make_args)
+
+    def install(self, spec, prefix):
+        make('install', *self.make_args)
