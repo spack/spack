@@ -18,6 +18,7 @@ class Amrex(CMakePackage):
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
+    version('20.10', sha256='92def480d1f0bcb5bcb9dfae2ddc8997060414386a1d71ccbfdad785fa2e46fa')
     version('20.09', sha256='3ae203f18656117d8201da16e899a6144ec217817a2a5d9b7649e2eef9cacdf9')
     version('20.08', sha256='a202430cd8dbef2de29b20fe9b5881cc58ee762326556ec3c0ad9c3f85ddfc2f')
     version('20.07', sha256='c386f566f4c57ee56b5630f79ce2c6117d5a612a4aab69b7b26e48d577251165')
@@ -66,10 +67,13 @@ class Amrex(CMakePackage):
             description='Enable Hypre interfaces')
     variant('petsc', default=False,
             description='Enable PETSc interfaces')
+    variant('cuda', default=False,
+            description='Enable CUDA interfaces')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
     depends_on('sundials@4.0.0:4.1.0 +ARKODE +CVODE', when='@19.08: +sundials')
+    depends_on('cuda@9.0.0:', when='+cuda')
     depends_on('python@2.7:', type='build', when='@:20.04')
     depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
     depends_on('cmake@3.13:', type='build', when='@18.11:')
@@ -126,6 +130,7 @@ class Amrex(CMakePackage):
             '-DENABLE_HDF5:BOOL=%s' % self.cmake_is_on('+hdf5'),
             '-DENABLE_HYPRE:BOOL=%s' % self.cmake_is_on('+hypre'),
             '-DENABLE_PETSC:BOOL=%s' % self.cmake_is_on('+petsc'),
+            '-DENABLE_CUDA:BOOL=%s' % self.cmake_is_on('+cuda'),
         ]
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')

@@ -19,8 +19,10 @@ import spack.cmd.buildcache as buildcache
 import spack.cmd.install as install
 import spack.cmd.uninstall as uninstall
 import spack.cmd.mirror as mirror
-from spack.spec import Spec
+import spack.mirror
+import spack.util.gpg
 from spack.directory_layout import YamlDirectoryLayout
+from spack.spec import Spec
 
 
 def_install_path_scheme = '${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}'  # noqa: E501
@@ -469,3 +471,40 @@ def test_relative_rpaths_install_nondefault(tmpdir,
     margs = mparser.parse_args(
         ['rm', '--scope', 'site', 'test-mirror-rel'])
     mirror.mirror(mparser, margs)
+
+
+def test_push_and_fetch_keys(mock_gnupghome):
+    testpath = str(mock_gnupghome)
+
+    mirror = os.path.join(testpath, 'mirror')
+    mirrors = {'test-mirror': mirror}
+    mirrors = spack.mirror.MirrorCollection(mirrors)
+    mirror = spack.mirror.Mirror('file://' + mirror)
+
+    gpg_dir1 = os.path.join(testpath, 'gpg1')
+    gpg_dir2 = os.path.join(testpath, 'gpg2')
+
+    # dir 1: create a new key, record its fingerprint, and push it to a new
+    #        mirror
+    with spack.util.gpg.gnupg_home_override(gpg_dir1):
+        spack.util.gpg.create(name='test-key',
+                              email='fake@test.key',
+                              expires='0',
+                              comment=None)
+
+        keys = spack.util.gpg.public_keys()
+        assert len(keys) == 1
+        fpr = keys[0]
+
+        bindist.push_keys(mirror, keys=[fpr], regenerate_index=True)
+
+    # dir 2: import the key from the mirror, and confirm that its fingerprint
+    #        matches the one created above
+    with spack.util.gpg.gnupg_home_override(gpg_dir2):
+        assert len(spack.util.gpg.public_keys()) == 0
+
+        bindist.get_keys(mirrors=mirrors, install=True, trust=True, force=True)
+
+        new_keys = spack.util.gpg.public_keys()
+        assert len(new_keys) == 1
+        assert new_keys[0] == fpr

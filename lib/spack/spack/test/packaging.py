@@ -20,6 +20,7 @@ import spack.repo
 import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
+import spack.util.gpg
 from spack.spec import Spec
 from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
@@ -31,14 +32,6 @@ from spack.relocate import _placeholder, macho_find_paths
 from spack.relocate import file_is_relocatable
 
 
-def has_gpg():
-    try:
-        gpg = spack.util.gpg.Gpg.gpg()
-    except spack.util.gpg.SpackGPGError:
-        gpg = None
-    return bool(gpg)
-
-
 def fake_fetchify(url, pkg):
     """Fake the URL for a package so it downloads from a file."""
     fetcher = FetchStrategyComposite()
@@ -46,7 +39,8 @@ def fake_fetchify(url, pkg):
     pkg.fetcher = fetcher
 
 
-@pytest.mark.skipif(not has_gpg(), reason='This test requires gpg')
+@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
+                    reason='This test requires gpg')
 @pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
@@ -101,12 +95,9 @@ echo $PATH"""
 
     create_args = ['create', '-a', '-f', '-d', mirror_path, pkghash]
     # Create a private key to sign package with if gpg2 available
-    if spack.util.gpg.Gpg.gpg():
-        spack.util.gpg.Gpg.create(name='test key 1', expires='0',
-                                  email='spack@googlegroups.com',
-                                  comment='Spack test key')
-    else:
-        create_args.insert(create_args.index('-a'), '-u')
+    spack.util.gpg.create(name='test key 1', expires='0',
+                          email='spack@googlegroups.com',
+                          comment='Spack test key')
 
     create_args.insert(create_args.index('-a'), '--rebuild-index')
 
@@ -119,8 +110,6 @@ echo $PATH"""
     pkg.do_uninstall(force=True)
 
     install_args = ['install', '-a', '-f', pkghash]
-    if not spack.util.gpg.Gpg.gpg():
-        install_args.insert(install_args.index('-a'), '-u')
     args = parser.parse_args(install_args)
     # Test install
     buildcache.buildcache(parser, args)
@@ -144,8 +133,6 @@ echo $PATH"""
     # Uninstall the package
     pkg.do_uninstall(force=True)
 
-    if not spack.util.gpg.Gpg.gpg():
-        install_args.insert(install_args.index('-a'), '-u')
     args = parser.parse_args(install_args)
     buildcache.buildcache(parser, args)
 

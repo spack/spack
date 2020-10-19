@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class UtilLinux(AutotoolsPackage):
@@ -28,6 +29,9 @@ class UtilLinux(AutotoolsPackage):
     # Make it possible to disable util-linux's libuuid so that you may
     # reliably depend_on(`libuuid`).
     variant('libuuid', default=True, description='Build libuuid')
+    variant('bash', default=False, description='Install bash completion scripts')
+
+    depends_on('bash', when="+bash", type='run')
 
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/util-linux/v{0}/util-linux-{1}.tar.gz"
@@ -37,9 +41,18 @@ class UtilLinux(AutotoolsPackage):
         config_args = [
             '--disable-use-tty-group',
             '--disable-makeinstall-chown',
-            '--without-systemd'
+            '--without-systemd',
         ]
+        if "+bash" in self.spec:
+            config_args.extend(
+                ['--enable-bash-completion',
+                 '--with-bashcompletiondir=' + os.path.join(
+                     self.spec['bash'].prefix,
+                     "share", "bash-completion", "completions")])
+        else:
+            config_args.append('--disable-bash-completion')
         config_args.extend(self.enable_or_disable('libuuid'))
+
         return config_args
 
     def install(self, spec, prefix):

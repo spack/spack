@@ -352,6 +352,7 @@ class Trilinos(CMakePackage):
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
     depends_on('superlu-dist@4.4:5.3', when='@12.6.2:12.12.1+superlu-dist')
+    depends_on('superlu-dist@5.4:6.2.0', when='@12.12.2:13.0+superlu-dist')
     depends_on('superlu-dist@develop', when='@develop+superlu-dist')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
     depends_on('superlu+pic@4.3', when='+superlu')
@@ -376,6 +377,8 @@ class Trilinos(CMakePackage):
     patch('xlf_tpetra.patch', when='@12.12.1%xl_r')
     patch('xlf_tpetra.patch', when='@12.12.1%clang')
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
+    patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
+    patch('cray_secas.patch', when='@12.14.1:12.18.1%cce')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
@@ -712,17 +715,36 @@ class Trilinos(CMakePackage):
             'explicit_template_instantiation'))
 
         if '+explicit_template_instantiation' in spec and '+tpetra' in spec:
-            gotype = spec.variants['gotype'].value
             options.extend([
                 define('Tpetra_INST_DOUBLE', True),
-                define('Tpetra_INST_INT_INT', gotype == 'int'),
-                define('Tpetra_INST_INT_LONG', gotype == 'long'),
-                define('Tpetra_INST_INT_LONG_LONG', gotype == 'long_long'),
                 define('Tpetra_INST_COMPLEX_DOUBLE', complex_s),
                 define('Tpetra_INST_COMPLEX_FLOAT', float_s and complex_s),
                 define('Tpetra_INST_FLOAT', float_s),
                 define('Tpetra_INST_SERIAL', True),
             ])
+
+            gotype = spec.variants['gotype'].value
+            # default in older Trilinos versions to enable multiple GOs
+            if ((gotype == 'none') and spec.satisfies('@:12.14.1')):
+                options.extend([
+                    '-DTpetra_INST_INT_INT:BOOL=ON',
+                    '-DTpetra_INST_INT_LONG:BOOL=ON',
+                    '-DTpetra_INST_INT_LONG_LONG:BOOL=ON'
+                ])
+            # set default GO in newer versions to long
+            elif (gotype == 'none'):
+                options.extend([
+                    '-DTpetra_INST_INT_INT:BOOL=OFF',
+                    '-DTpetra_INST_INT_LONG:BOOL=ON',
+                    '-DTpetra_INST_INT_LONG_LONG:BOOL=OFF'
+                ])
+            # if another GO is specified, use this
+            else:
+                options.extend([
+                    define('Tpetra_INST_INT_INT', gotype == 'int'),
+                    define('Tpetra_INST_INT_LONG', gotype == 'long'),
+                    define('Tpetra_INST_INT_LONG_LONG', gotype == 'long_long'),
+                ])
 
         # disable due to compiler / config errors:
         if spec.satisfies('%xl') or spec.satisfies('%xl_r'):

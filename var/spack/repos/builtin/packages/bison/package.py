@@ -38,6 +38,8 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
     # https://lists.gnu.org/archive/html/bug-bison/2019-08/msg00008.html
     patch('parallel.patch', when='@3.4.2')
 
+    provides('yacc')
+
     depends_on('diffutils', type='build')
     depends_on('m4', type=('build', 'run'))
     depends_on('perl', type='build')

@@ -172,6 +172,8 @@ class Kokkos(CMakePackage, CudaPackage):
     variant("wrapper", default=False,
             description="Use nvcc-wrapper for CUDA build")
     depends_on("kokkos-nvcc-wrapper", when="+wrapper")
+    depends_on("kokkos-nvcc-wrapper@develop", when="@develop+wrapper")
+    depends_on("kokkos-nvcc-wrapper@master", when="@master+wrapper")
     conflicts("+wrapper", when="~cuda")
 
     variant("std", default="11", values=["11", "14", "17", "20"], multi=False)

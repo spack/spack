@@ -11,15 +11,16 @@ class RocprofilerDev(CMakePackage):
     """ROCPROFILER library for AMD HSA runtime API extension support"""
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocprofiler"
-    url      = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/rocm-3.7.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/rocm-3.8.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.8.0', sha256='38ad3ac20f60f3290ce750c34f0aad442354b1d0a56b81167a018e44ecdf7fff')
     version('3.7.0', sha256='d3f03bf850cbd86ca9dfe6e6cc6f559d8083b0f3ea4711d8260b232cb6fdd1cc')
     version('3.5.0', sha256='c42548dd467b7138be94ad68c715254eb56a9d3b670ccf993c43cd4d43659937')
 
     depends_on('cmake@3:', type='build')
-    for ver in ['3.5.0', '3.7.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0']:
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
         depends_on('rocminfo@' + ver, type='build', when='@' + ver)
@@ -31,6 +32,7 @@ class RocprofilerDev(CMakePackage):
              destination='',
              placement='roctracer',
              when='@3.5.0')
+
     resource(name='roctracer-dev',
              url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-3.7.0.tar.gz',
              sha256='6fa5b771e990f09c242237ab334b9f01039ec7d54ccde993e719c5d6577d1518',
@@ -38,6 +40,14 @@ class RocprofilerDev(CMakePackage):
              destination='',
              placement='roctracer',
              when='@3.7.0')
+
+    resource(name='roctracer-dev',
+             url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-3.8.0.tar.gz',
+             sha256='5154a84ce7568cd5dba756e9508c34ae9fc62f4b0b5731f93c2ad68b21537ed1',
+             expand=True,
+             destination='',
+             placement='roctracer',
+             when='@3.8.0')
 
     def patch(self):
         filter_file('${HSA_RUNTIME_LIB_PATH}/../include',
