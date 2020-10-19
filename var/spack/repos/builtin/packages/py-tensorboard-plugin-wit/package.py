@@ -17,6 +17,8 @@ class PyTensorboardPluginWit(Package):
     url      = "https://github.com/PAIR-code/what-if-tool/archive/v1.7.0.tar.gz"
     git      = "https://github.com/pair-code/what-if-tool.git"
 
+    maintainers = ['aweits']
+
     version('master', branch='master')
     version('1.7.0', sha256='30dcab9065b02c3f1476f4fb92b27f6feb6c00cdb281699c44d8e69c86745247')
 

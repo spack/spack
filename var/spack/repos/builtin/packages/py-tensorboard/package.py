@@ -12,6 +12,8 @@ class PyTensorboard(Package):
     homepage = "https://pypi.python.org/project/tensorboard"
     url      = "https://github.com/tensorflow/tensorboard/archive/2.2.0.tar.gz"
 
+    maintainers = ['aweits']
+
     version('2.3.0', sha256='947a58702c2841eb4559637dbf8639633f79de9a0f422be9737f3563a1725440')
     version('2.2.0', sha256='d0dfbf0e4b3b5ebbc3fafa6d281d4b9aa5478eac6bac3330652ab6674278ab77')
 
