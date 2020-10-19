@@ -16,5 +16,10 @@ class AbiComplianceChecker(MakefilePackage):
     version('2.2', sha256='9fb7b17e33d49e301d02a6374fbd2596feb53ecc77194879a4e1c2d1e24b4ddb')
     version('2.1', sha256='0e19ea16b6c6aa6c7b222063127427bef3b835adbbd9e6606a972a912599d014')
 
+    depends_on('abi-dumper@1.1:')
+    depends_on('perl@5:')
+    depends_on('binutils')
+    depends_on('exuberant-ctags')
+
     def install(self, spec, prefix):
         make('prefix={0}'.format(prefix), 'install')
