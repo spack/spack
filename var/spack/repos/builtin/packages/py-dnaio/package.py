@@ -18,6 +18,6 @@ class PyDnaio(PythonPackage):
 
     depends_on('python@3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-setuptools-scm', type='build')
+    depends_on('py-setuptools-scm', when='@0.4:', type='build')
     depends_on('py-xopen', type=('build', 'run'))
     depends_on('py-xopen@0.8.2:', when='@0.4:', type=('build', 'run'))
