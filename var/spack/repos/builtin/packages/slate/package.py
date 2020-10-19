@@ -33,10 +33,7 @@ class Slate(MakefilePackage):
 
     conflicts('%gcc@:5')
 
-    @property
-    def make_args(self):
-        spec = self.spec
-
+    def edit(self, spec, prefix):
         if '^openblas' in spec:
             blas = 'openblas'
         elif '^intel-mkl' in spec:
@@ -46,20 +43,18 @@ class Slate(MakefilePackage):
         else:
             raise InstallError('Supports only BLAS provider '
                                'openblas, intel-mkl, or essl')
-        args = [
+        config = [
             'SHELL=bash',
-            'prefix=' + self.prefix,
+            'prefix=' + prefix,
             'mpi=' + ("1" if '+mpi' in spec else "0"),
             'cuda=' + ("1" if '+cuda' in spec else "0"),
             'openmp=' + ("1" if '+openmp' in spec else "0"),
             'blas=' + blas
         ]
         if '+mpi' in spec:
-            args.extend(['CXX=mpicxx', 'FC=mpif90'])
-        return args
+            config.extend(['CXX=mpicxx', 'FC=mpif90'])
 
-    def build(self, spec, prefix):
-        make(*self.make_args)
+        with open('make.inc', 'w') as inc:
+            for line in config:
+                inc.write('{0}\n'.format(line))
 
-    def install(self, spec, prefix):
-        make('install', *self.make_args)
