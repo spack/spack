@@ -45,14 +45,15 @@ class Slate(MakefilePackage):
                                'openblas, intel-mkl, or essl')
         config = [
             'SHELL=bash',
-            'prefix=' + prefix,
-            'mpi=' + ("1" if '+mpi' in spec else "0"),
-            'cuda=' + ("1" if '+cuda' in spec else "0"),
-            'openmp=' + ("1" if '+openmp' in spec else "0"),
-            'blas=' + blas
+            'prefix=%s' % prefix,
+            'mpi=%i'    % ('+mpi' in spec),
+            'cuda=%i'   % ('+cuda' in spec),
+            'openmp=%i' % ('+openmp' in spec),
+            'blas=%s'   % blas
         ]
         if '+mpi' in spec:
-            config.extend(['CXX=mpicxx', 'FC=mpif90'])
+            config.extend('CXX=' + spec['mpi'].mpicxx)
+            config.extend('FC=' + spec['mpi'].mpifc)
 
         with open('make.inc', 'w') as inc:
             for line in config:
