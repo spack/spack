@@ -14,7 +14,6 @@ class PyCoapthon3(PythonPackage):
     homepage = "https://github.com/Tanganelli/CoAPthon3/"
     url      = "https://github.com/Tanganelli/CoAPthon3/archive/1.0.1.tar.gz"
 
-    version('1.01',  sha256='b90a410cf35f18c0fb2620baf44a3283a640d40a299c31c7d184a69c1dbec105')
     version('1.0.1', sha256='331150a581708d47b208cee3b067ced80a00f0cc1278e913ec546e6c6b28bffd')
     version('1.0',   sha256='63eb083269c2a286aedd206d3df17ab67fa978dc43caf34eaab9498da15c497a')
 
