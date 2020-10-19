@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PremakeCore(Package):
+class PremakeCore(MakefilePackage):
     """Premake is a command line utility which reads a scripted
     definition of a software project, then uses it to perform
     build configuration tasks or generate project files for
@@ -20,6 +20,8 @@ class PremakeCore(Package):
     version('5.0.0-alpha14', sha256='bb0b7b13b1aa175159cbce252389f6e28025a1a935e678632b0dede8e5c21cb9')
     version('5.0.0-alpha13', sha256='bfe983e24686c50cada935f74adad2aefe6581649734b2ab8c1aaa2de4d473c6')
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         make('-f', 'Bootstrap.mak', self.architecture.platform.name)
+
+    def install(self, spec, prefix):
         install_tree('bin/release', prefix.bin)
