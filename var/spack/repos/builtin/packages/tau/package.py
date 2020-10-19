@@ -23,7 +23,8 @@ class Tau(Package):
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.1.tar.gz"
     git      = "https://github.com/UO-OACISS/tau2"
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('2.29.1', sha256='4195a0a236bba510ab50a93e13c7f00d9472e8bc46c91de3f0696112a34e34e2')
     version('2.29', sha256='146be769a23c869a7935e8fa5ba79f40ba36b9057a96dda3be6730fc9ca86086')
     version('2.28.2', sha256='64e129a482056755012b91dae2fb4f728dbf3adbab53d49187eca952891c5457')
     version('2.28.1', sha256='b262e5c9977471e9f5a8d729b3db743012df9b0ab8244da2842039f8a3b98b34')
