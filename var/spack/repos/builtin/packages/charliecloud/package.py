@@ -38,9 +38,9 @@ class Charliecloud(AutotoolsPackage):
 
     # See https://github.com/spack/spack/issues/19310
     conflicts('^py-sphinx-rtd-theme@0.5.0', when='%gcc@:4.8',
-              msg="newer py-sphinx-rtd-theme versions cannot build with gcc "
-                  + "4.8 (https://github.com/spack/spack/issues/19310); "
-                  + "specify an older version, e.g., py-sphinx-rtd-theme@0.4.3")
+              msg="py-sphinx-rtd-theme@0.5.0 fails to build with gcc 4.8 "
+                  "(see https://github.com/spack/spack/issues/19310); specify "
+                  + "an older version, e.g., py-sphinx-rtd-theme@0.4.3")
 
     # Bash automated testing harness (bats).
     depends_on('bats@0.4.0', type='test')
