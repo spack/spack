@@ -17,5 +17,11 @@ class AbiDumper(MakefilePackage):
     version('1.0',     sha256='bfa0189a172fa788afc603b1ae675808a57556a77a008e4af8f643d396c34bbb')
     version('0.99.19', sha256='6bbc35795839a04523d9e7bdb07806b9a661e17d8be0e755c99e4235805d4528')
 
+    depends_on('perl@5:')
+    depends_on('elfutils')
+    depends_on('binutils')
+    depends_on('universal-ctags')
+    depends_on('vtable-dumper@1.1:')
+
     def install(self, spec, prefix):
         make('prefix={0}'.format(prefix), 'install')
