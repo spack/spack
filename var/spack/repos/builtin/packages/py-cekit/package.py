@@ -22,3 +22,9 @@ class PyCekit(PythonPackage):
     version('3.3.1', sha256='d31b7800417ec265131fc54df8a1cf275739fe29f3a3f96123dc996667d85368')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-pyyaml@3.10:',     type=('build', 'run'))
+    depends_on('py-jinja2@2.7:',      type=('build', 'run'))
+    depends_on('py-pykwalify@1.6.0:', type=('build', 'run'))
+    depends_on('py-colorlog@2.10.0:', type=('build', 'run'))
+    depends_on('py-click@6.7:',       type=('build', 'run'))
+    depends_on('py-packaging@19.0:',  type=('build', 'run'))
