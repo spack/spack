@@ -19,5 +19,4 @@ class E2fsprogs(AutotoolsPackage):
     depends_on('texinfo', type='build')
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.prefix.bin)
         env.prepend_path('PATH', self.prefix.sbin)
