@@ -194,6 +194,11 @@ variant_default_value(Package, Variant, Value)
 variant_default_value(Package, Variant, Value)
  :- variant_default_value_from_packages_yaml(Package, Variant, Value).
 
+% Treat 'none' in a special way - it cannot be combined with other
+% values even if the variant is multi-valued
+:- 2 {variant_value(Package, Variant, Value): variant_possible_value(Package, Variant, Value)},
+   variant_value(Package, Variant, "none").
+
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.

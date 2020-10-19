@@ -1150,8 +1150,10 @@ class SpackSolverSetup(object):
             value = variant.value
             if isinstance(value, tuple):
                 for v in value:
+                    if v == '*':
+                        continue
                     clauses.append(f.variant(spec.name, vname, v))
-            else:
+            elif value != '*':
                 clauses.append(f.variant(spec.name, vname, variant.value))
 
         # compiler and compiler version
@@ -1424,7 +1426,7 @@ class SpackSolverSetup(object):
         possible = spack.package.possible_dependencies(
             *specs,
             virtuals=self.possible_virtuals,
-            deptype=("build", "link", "run")
+            deptype=("build", "link", "run", "test")
         )
         pkgs = set(possible)
 
