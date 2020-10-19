@@ -33,4 +33,3 @@ class Wayland(AutotoolsPackage):
     depends_on('chrpath')
     depends_on('expat')
     depends_on('libffi')
-    depends_on('expat')
