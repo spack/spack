@@ -64,13 +64,18 @@ class Itk(CMakePackage):
 
         if '+review' in self.spec:
             args.append('-DModule_ITKReview=ON')
+        else:
+            args.append('-DModule_ITKReview=OFF')
         if '+rtk' in self.spec:
             args.append('-DModule_RTK=ON')
+        else:
+            args.append('-DModule_RTK=OFF')
 
         if '^mkl' in self.spec:
             args.append('-DITK_USE_MKL=ON')
         else:
             args.extend([
+                '-DITK_USE_MKL=OFF',
                 '-DUSE_FFTWD=ON',
                 '-DUSE_FFTWF=ON',
                 '-DUSE_SYSTEM_FFTW=ON',
