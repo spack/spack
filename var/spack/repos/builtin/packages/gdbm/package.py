@@ -27,6 +27,7 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("readline")
     patch('gdbm_gcc_10.patch', when='%gcc@10:')
+    patch('gdbm_gcc_10.patch', when='%llvm@11:')
 
     def configure_args(self):
 
