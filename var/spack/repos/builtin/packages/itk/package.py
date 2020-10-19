@@ -35,13 +35,13 @@ class Itk(CMakePackage):
     # a git repository. The copy pulled from the mirror is not a git
     # repository.
     # NOTE: This problem is reflected in issues #8746 and #14344 and PR #9436.
-    #resource(
-    #    name='RTK',
-    #    git='https://github.com/SimonRit/RTK.git',
-    #    get_full_repo=True,
-    #    destination='Modules/Remote',
-    #    when='+rtk',
-    #)
+    # resource(
+    #     name='RTK',
+    #     git='https://github.com/SimonRit/RTK.git',
+    #     get_full_repo=True,
+    #     destination='Modules/Remote',
+    #     when='+rtk',
+    # )
 
     depends_on('git', type='build')
     depends_on('perl', type='build')

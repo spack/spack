@@ -34,7 +34,7 @@ class Gate(CMakePackage):
             description='build support for the Reconstruction Toolkit')
     variant('default_platform', default='condor',
             description='select default platform for the cluster tools',
-            values=('SGE', 'condor', 'openPBS', 'openmosix', 'slurm',' xgrid'),
+            values=('SGE', 'condor', 'openPBS', 'openmosix', 'slurm', 'xgrid'),
             multi=False)
 
     depends_on('geant4~threads')  # Gate needs a non-threaded geant4
@@ -59,14 +59,14 @@ class Gate(CMakePackage):
 
     def setup_run_environment(self, env):
         env.set('GC_GATE_EXE_DIR', self.prefix.bin)
-        env.set('GC_CONDOR_SCRIPT', join_path(self.prefix, 'share', 'jobsplitter',
-                                           'condor.script'))
-        env.set('GC_PBS_SCRIPT', join_path(self.prefix, 'share', 'jobsplitter',
-                                           'openPBS.script'))
-        env.set('GC_SGE_SCRIPT', join_path(self.prefix, 'share', 'jobsplitter',
-                                           'SGE.script'))
-        env.set('GC_SLURM_SCRIPT', join_path(self.prefix, 'share', 'jobsplitter',
-                                           'slurm.script'))
+        env.set('GC_CONDOR_SCRIPT', join_path(self.prefix, 'share',
+                                              'jobsplitter', 'condor.script'))
+        env.set('GC_PBS_SCRIPT', join_path(self.prefix, 'share',
+                                           'jobsplitter', 'openPBS.script'))
+        env.set('GC_SGE_SCRIPT', join_path(self.prefix, 'share',
+                                           'jobsplitter', 'SGE.script'))
+        env.set('GC_SLURM_SCRIPT', join_path(self.prefix, 'share',
+                                             'jobsplitter', 'slurm.script'))
 
     @run_after('install')
     def cluster_tools(self):
