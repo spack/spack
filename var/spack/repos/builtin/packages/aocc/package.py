@@ -28,7 +28,6 @@ class Aocc(Package):
     Example for installation: \'spack install aocc +license-agreed\'
     '''
     family = 'compiler'
-    AOCC_HOME = None
     homepage = "https://developer.amd.com/amd-aocc/"
     key_part_1 = '500940ce36c19297dfba3aa56dcef33b'
     key_part_2 = '6145867a1f34890945172ac2be83b286'

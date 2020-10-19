@@ -18,6 +18,7 @@ import spack.compilers.nag
 import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
+import spack.compilers.aocc
 
 from spack.operating_systems.cray_frontend import CrayFrontend
 import spack.util.module_cmd
@@ -233,3 +234,30 @@ def test_cray_frontend_compiler_detection(
 
     paths = cray_fe_os.compiler_search_paths
     assert paths == [str(compiler_dir)]
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    # C compiler
+    ('AMD clang version 10.0.0 (CLANG: AOCC_2.2.0-Build#93 2020_06_25)'
+     '(based on LLVM Mirror.Version.10.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '2.2.0'
+     ),
+    # C++ compiler
+    ('AMD clang version 10.0.0 (CLANG: AOCC_2.2.0-Build#93 2020_06_25)'
+     '(based on LLVM Mirror.Version.10.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '2.2.0'
+     ),
+    # Fortran compiler
+    ('AMD clang version 10.0.0 (CLANG: AOCC_2.2.0-Build#93 2020_06_25)'
+     '(based on LLVM Mirror.Version.10.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '2.2.0'
+     )
+])
+def test_aocc_version_detection(version_str, expected_version):
+    version = spack.compilers.aocc.Aocc.extract_version_from_output(
+        version_str
+    )
+    assert version == expected_version
