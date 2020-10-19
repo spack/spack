@@ -29,12 +29,18 @@ class Charliecloud(AutotoolsPackage):
 
     # Man pages and html docs variant.
     variant('docs', default=False, description='Build man pages and html docs')
-    depends_on('rsync',                     type='build', when='+docs')
-    depends_on('py-sphinx',                 type='build', when='+docs')
-    depends_on('py-sphinx-rtd-theme@0.4.3', type='build', when='+docs')
+    depends_on('rsync',               type='build', when='+docs')
+    depends_on('py-sphinx',           type='build', when='+docs')
+    depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
 
     # See https://github.com/spack/spack/pull/16049.
     conflicts('platform=darwin', msg='This package does not build on macOS')
+
+    # See https://github.com/spack/spack/issues/19310
+    conflicts('^py-sphinx-rtd-theme@0.5.0', when='%gcc@:4.8',
+              msg="newer py-sphinx-rtd-theme versions cannot build with gcc "
+                  + "4.8 (https://github.com/spack/spack/issues/19310); "
+                  + "specify an older version, e.g., py-sphinx-rtd-theme@0.4.3")
 
     # Bash automated testing harness (bats).
     depends_on('bats@0.4.0', type='test')
