@@ -38,11 +38,6 @@ class Tpm2Tss(AutotoolsPackage):
         env.prepend_path('ACLOCAL_PATH',
                          self.spec['autoconf-archive'].prefix.share.aclocal)
 
-    def patch(self):
-        sed = which('sed')
-        sed('-ie', r'/include \$(top_srcdir)\/aminclude_static\.am/d',
-            'Makefile.am')
-
     def autoreconf(self, spec, prefix):
         sh = which('sh')
         sh('./bootstrap')
