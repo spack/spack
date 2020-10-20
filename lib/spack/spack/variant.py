@@ -60,7 +60,7 @@ class Variant(object):
         self.description = str(description)
 
         self.values = None
-        if values is '*':
+        if values == '*':
             # wildcard is a special case to make it easy to say any value is ok
             self.single_value_validator = lambda x: True
 
