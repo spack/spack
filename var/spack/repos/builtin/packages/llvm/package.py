@@ -28,6 +28,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('master', branch='master')
+    version('11.0.0', sha256='8ad4ddbafac4f2c8f2ea523c2c4196f940e8e16f9e635210537582a48622a5d5')
     version('10.0.1', sha256='c7ccb735c37b4ec470f66a6c35fbae4f029c0f88038f6977180b1a8ddc255637')
     version('10.0.0', sha256='b81c96d2f8f40dc61b14a167513d87c0d813aae0251e06e11ae8a4384ca15451')
     version('9.0.1', sha256='be7b034641a5fda51ffca7f5d840b1a768737779f75f7c4fd18fe2d37820289a')
@@ -197,7 +198,7 @@ class Llvm(CMakePackage, CudaPackage):
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
     # for a bug report about this problem in llvm master.
     patch("constexpr_longdouble.patch", when="@6:8+libcxx")
-    patch("constexpr_longdouble_9.0.patch", when="@9:+libcxx")
+    patch("constexpr_longdouble_9.0.patch", when="@9:10.0.0+libcxx")
 
     # Backport from llvm master; see
     # https://bugs.llvm.org/show_bug.cgi?id=38233

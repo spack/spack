@@ -154,7 +154,7 @@ class Clang(Compiler):
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
         ver = 'unknown'
-        if 'Apple' in output:
+        if ('Apple' in output) or ('AMD' in output):
             return ver
 
         match = re.search(
