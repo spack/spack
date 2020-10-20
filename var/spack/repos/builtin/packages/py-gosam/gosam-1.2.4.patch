@@ -1,0 +1,176 @@
+--- gosam/setup.py.orig	2017-06-06 17:06:58.000000000 +0200
++++ gosam/setup.py	2020-10-19 09:44:45.459485490 +0200
+@@ -1,6 +1,7 @@
+ #!/usr/bin/env python
+ # vim: ts=3:sw=3
+ 
++from __future__ import print_function
+ from distutils.core import setup
+ from distutils.sysconfig import get_config_vars
+ from distutils.command.build_py import build_py as _build_py
+@@ -16,7 +17,7 @@
+ import fileinput
+ 
+ def get_git_revision():
+-                return "6d9f1cba"
++		return "6d9f1cba"
+ 		# Replace this function such that it just returns the
+ 		# hard-coded git commit id when creating a release.
+ 		from subprocess import check_output
+@@ -183,7 +184,7 @@
+ 			if line.startswith("### [line replaced by setup.py"):
+ 				logs.append("Patching " + fileinput.filename())
+ 				line=replace_text
+-			print line, # redirected to fileinput
++			print (line,  end='') # redirected to fileinput
+ 		for message in logs:
+ 			log.info(message)
+ 	def change_roots (self, *names):
+--- gosam/src/python/golem/model/expressions.py.orig	2020-10-19 09:55:56.542624598 +0200
++++ gosam/src/python/golem/model/expressions.py	2020-10-19 09:56:28.334765940 +0200
+@@ -1,5 +1,6 @@
+ # vim: ts=3:sw=3
+ 
++from __future__ import print_function
+ import golem.model.scanner
+ import golem.util.tools
+ from golem.util.tools import error
+@@ -325,7 +326,7 @@
+ 				self.__class__.__name__)
+ 
+ 	def __int__(self):
+-		print type(self.__class__.__name__),self.__class__.__name__ 
++		print(type(self.__class__.__name__),self.__class__.__name__)
+ 		raise NotImplementedError(
+ 				"Expression.__int__() needs to be overwritten in %s." % \
+ 				self.__class__.__name__)
+--- gosam/src/python/golem/model/feynrules.py.orig	2020-10-19 09:54:49.974320251 +0200
++++ gosam/src/python/golem/model/feynrules.py	2020-10-19 09:55:27.758494449 +0200
+@@ -4,6 +4,7 @@
+ Python interface.
+ """
+ 
++from __future__ import print_function
+ import os
+ import os.path
+ import imp
+@@ -426,9 +427,9 @@
+ 
+ 		# new for modified UFO files
+ 		for p in particlect:
+-			print p.counterterm
++			print(p.counterterm)
+ 		for p in parameterct:
+-			print p.counterterm
++			print(p.counterterm)
+ 
+ 	def write_qgraf_file(self, f):
+ 		trunc_model = [self.model_orig]
+--- gosam/src/python/golem/util/olp.py.orig	2020-10-19 10:02:07.168149705 +0200
++++ gosam/src/python/golem/util/olp.py	2020-10-19 10:01:24.455985227 +0200
+@@ -700,8 +700,8 @@
+ 
+    # This fills in the defaults where no option is given:
+    for p in golem.properties.properties:
+-		if conf.getProperty(p):
+-			conf.setProperty(str(p), conf.getProperty(p))
++       if conf.getProperty(p):
++            conf.setProperty(str(p), conf.getProperty(p))
+ 
+    golem.properties.setInternals(conf)
+ 
+--- gosam/src/python/golem/util/main_misc.py.orig	2020-10-19 09:59:28.123524412 +0200
++++ gosam/src/python/golem/util/main_misc.py	2020-10-19 10:00:04.615671152 +0200
+@@ -1,4 +1,5 @@
+ # vim: ts=3:sw=3
++from __future__ import print_function
+ import sys
+ import os
+ import os.path
+@@ -507,7 +508,7 @@
+ 			if not os.path.sep in rp:
+ 				os.mkdir(rp)
+ 				warning("Process path %r created." % path)
+-		except OSError,err:
++		except OSError as err:
+ 			raise GolemConfigError("Could not create process path: %r\r%s" % (path,err))
+ 
+ 	if not os.path.exists(path):
+--- gosam/src/python/golem/util/tools.py.orig	2020-10-19 09:58:09.235199432 +0200
++++ gosam/src/python/golem/util/tools.py	2020-10-19 09:59:11.795458050 +0200
+@@ -1,5 +1,6 @@
+ # vim: ts=3:sw=3:expandtab
+ 
++from __future__ import print_function
+ import sys
+ import os.path
+ import imp
+@@ -313,7 +314,7 @@
+          copy_file(os.path.join(src_path, model + ext),
+                os.path.join(path, MODEL_LOCAL + ext))
+       if genUV == 'true':
+-         print 'Generating UV terms'
++         print('Generating UV terms')
+          for ext in [".py", ".hh"]:
+             copy_file(os.path.join(src_path, model + 'ct' + ext),
+                   os.path.join(path, MODEL_LOCAL + 'ct' + ext))
+@@ -453,27 +454,27 @@
+ #  possible values are: alphaGF, alpha0, alphaMZ, alphaRUN, alphaMSbar, OLPDefined
+    if ewscheme == "alphaGF":
+       golem.model.MODEL_OPTIONS["ewchoose"]='1'
+-      print "OLP EWScheme --> alphaGF (Gmu scheme)"
++      print("OLP EWScheme --> alphaGF (Gmu scheme)")
+ 
+    if ewscheme == "alpha0":
+       golem.model.MODEL_OPTIONS["ewchoose"]='2'
+       golem.model.MODEL_OPTIONS["alpha"]='0.007297352536480967'
+-      print "OLP EWScheme --> alpha0"
++      print("OLP EWScheme --> alpha0")
+ 
+    if ewscheme == "alphaMZ":
+       golem.model.MODEL_OPTIONS["ewchoose"]='2'
+       # Value of alpha(Mz)^-1=128.944 from Nucl.Phys.Proc.Suppl. 225-227 (2012) 282-287
+       golem.model.MODEL_OPTIONS["alpha"]='0.007755305'
+-      print "OLP EWScheme --> alphaMZ"
++      print("OLP EWScheme --> alphaMZ")
+ 
+    if ewscheme == "alphaRUN":
+-      print "OLP EWScheme --> alphaRUN"
+-      print "EW not supported yet!"
++      print("OLP EWScheme --> alphaRUN")
++      print("EW not supported yet!")
+    if ewscheme == "alphaMSbar":
+-      print "OLP EWScheme --> alphaMSbar"
+-      print "EW not supported yet!"
++      print("OLP EWScheme --> alphaMSbar")
++      print("EW not supported yet!")
+    if ewscheme == "OLPDefined":
+-      print "OLP EWScheme --> OLPDefined: GoSam default taken"
++      print("OLP EWScheme --> OLPDefined: GoSam default taken")
+       golem.model.MODEL_OPTIONS["ewchoose"]=2
+       
+    if raisewarn == True:
+--- gosam/src/python/golem/util/config.py.orig	2020-10-19 09:56:53.082874309 +0200
++++ gosam/src/python/golem/util/config.py	2020-10-19 09:57:50.451120346 +0200
+@@ -1,4 +1,5 @@
+ # vim: ts=3:sw=3:expandtab
++from __future__ import print_function
+ import sys
+ import datetime
+ 
+@@ -994,12 +995,12 @@
+    def getInstance(self,conf=None):
+       if conf:
+          for p in self.locations:
+-            print "# ~~~ " + p + " usable with installed Golem95/Samurai? ... ",
++            print("# ~~~ " + p + " usable with installed Golem95/Samurai? ... ", end='')
+             if self.checkCompatibility(p,conf):
+-               print "Yes"
++               print("Yes")
+                return p
+             else:
+-              print "No"
++              print("No")
+          print("==> Configuration failed:")
+          print("    Libraries not with examined compiler created.")
+          sys.exit(1)
