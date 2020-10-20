@@ -50,6 +50,7 @@ class PyCuml(PythonPackage):
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('treelite+python', type=('build', 'run'))
     depends_on('py-joblib', type=('build', 'run'))
+    depends_on('py-scikit-learn', type=('build', 'run'))
 
     for v in ('11.0', '10.2', '10.1'):
         depends_on(
