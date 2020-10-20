@@ -7,8 +7,8 @@ from spack import *
 
 
 class PyGosam(PythonPackage):
-    """The package GoSam allows for the automated calculation of 
-       one-loop amplitudes for multi-particle processes in renormalizable 
+    """The package GoSam allows for the automated calculation of
+       one-loop amplitudes for multi-particle processes in renormalizable
        quantum field theories."""
 
     homepage = "https://gosam.hepforge.org"
