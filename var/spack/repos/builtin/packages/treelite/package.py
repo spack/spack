@@ -16,7 +16,7 @@ class Treelite(CMakePackage, PythonPackage):
 
     version('0.93',    sha256='7d347372f7fdc069904afe93e69ed0bf696ba42d271fe2f8bf6835d2ab2f45d5')
 
-    variant('protobuf', default=True, description='Build with protobuf')
+    variant('protobuf', default=False, description='Build with protobuf')
     variant('python', default=True, description='Build with python support')
 
     depends_on('protobuf', when='+protobuf')
