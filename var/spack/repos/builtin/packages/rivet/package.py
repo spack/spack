@@ -14,7 +14,8 @@ class Rivet(AutotoolsPackage):
     url      = "https://rivet.hepforge.org/downloads/?f=Rivet-3.1.2.tar.bz2"
 
     version('3.1.2',  sha256='c041d09644f4eae7c212d82237033267fbc1583dfbb4e3e67377f86cece9577a')
-    version('3.1.1',  sha256='7c98b26af5f859bc65200499d15765e4b056b4cf233b34176f27a7e6bc4cf9b1')
+    version('3.1.1',  sha256='7c98b26af5f859bc65200499d15765e4b056b4cf233b34176f27a7e6bc4cf9b1',
+            preferred=True)
     version('3.1.0',  sha256='4e156daee5eb10bd1573ef32d4a6a6df74788cd9180fc977db93ef4cb281000c')
     version('3.0.2',  sha256='9624d6cdcad77eafde40312cf6a1c97f4263f22faf9244b198c140b2c256d2f3')
     version('3.0.1',  sha256='e7551168b86a05c9c029c319c313a0aa142a476195e7ff986c896c1b868f89dd')
@@ -92,7 +93,7 @@ class Rivet(AutotoolsPackage):
 
     # The following versions were not a part of LCG stack
     # and thus the exact version of YODA is unknown
-    depends_on('yoda@1.7.0:1.7.999', when='@2.6.0,2.7.0,2.7.1,3.0.0,3.0.2,3.1.0')
+    depends_on('yoda@1.7.0:1.7.999', when='@2.6.0,2.7.0,2.7.1,3.0.0,3.0.2')
     depends_on('yoda@1.5.0:1.5.999', when='@2.4.1')
 
     depends_on('hepmc', type=('build', 'run'))
@@ -101,6 +102,7 @@ class Rivet(AutotoolsPackage):
     depends_on('fjcontrib', type=('build', 'run'), when='@3.0.0:')
     depends_on('gsl', type=('build', 'run'), when='@:2.6.0,2.6.2:')
     depends_on('python', type=('build', 'run'))
+    depends_on('py-cython', type='build')
     depends_on('swig', type=('build', 'run'))
     depends_on('yaml-cpp', when='@2.0.0:2.1.2', type=('build', 'run'))
 
@@ -128,6 +130,7 @@ class Rivet(AutotoolsPackage):
     patch('rivet-3.0.1.patch', when='@3.0.1', level=0)
     patch('rivet-3.1.0.patch', when='@3.1.0', level=0)
     patch('rivet-3.1.1.patch', when='@3.1.1', level=0)
+    patch('rivet-3.1.2.patch', when='@3.1.2', level=0)
 
     @run_before('configure')
     def copy_gsl_m4(self):
@@ -141,6 +144,8 @@ class Rivet(AutotoolsPackage):
     def setup_build_environment(self, env):
         # this avoids an "import site" error in the build
         env.unset('PYTHONHOME')
+        fjcontrib_home = self.spec['fjcontrib'].prefix
+        env.prepend_path('LD_LIBRARY_PATH', fjcontrib_home.lib)
 
     def configure_args(self):
         args = []
