@@ -20,7 +20,7 @@ class PyCudf(PythonPackage):
     build_directory = 'python/cudf'
 
     depends_on('cmake@3.14:', type='build')
-    depends_on('python@3.6:3.7', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
     depends_on('py-numba@0.40.0:', type=('build', 'run'))
