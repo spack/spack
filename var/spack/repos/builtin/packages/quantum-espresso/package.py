@@ -175,6 +175,12 @@ class QuantumEspresso(Package):
     conflicts('@:6.2,6.5:', when='+qmcpack',
               msg='QMCPACK converter NOT available for this version of QE')
 
+    # Internal compiler error gcc8 and a64fx, I check only 6.5 and 6.6
+    conflicts('@5.3:', when='%gcc@8 target=a64fx',
+              msg='Internal compiler error with gcc8 and a64fx')
+
+    # 6.6
+    patch('fft.patch', when='@6.6')
     # 6.4.1
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
     patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
@@ -350,7 +356,7 @@ class QuantumEspresso(Package):
         # can't be applied to the '+qmcpack' variant
         if spec.variants['hdf5'].value != 'none':
             if (spec.satisfies('@6.1.0:6.4.0') or
-                (spec.satisfies('@6.4.1') and '+qmcpack' in spec)):
+                    (spec.satisfies('@6.4.1') and '+qmcpack' in spec)):
                 make_inc = join_path(self.stage.source_path, 'make.inc')
                 zlib_libs = spec['zlib'].prefix.lib + ' -lz'
                 filter_file(
