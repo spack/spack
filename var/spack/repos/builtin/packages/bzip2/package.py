@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import *
 
 
@@ -16,6 +18,8 @@ class Bzip2(Package, SourcewarePackage):
     homepage = "https://sourceware.org/bzip2/"
     sourceware_mirror_path = "bzip2/bzip2-1.0.8.tar.gz"
 
+    executables = [r'^bzip2$']
+
     version('1.0.8', sha256='ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269')
     version('1.0.7', sha256='e768a87c5b1a79511499beb41500bcc4caf203726fff46a6f5f9ad27fe08ab2b')
     version('1.0.6', sha256='a2848f34fcd5d6cf47def00461fcb528a0484d8edef8208d6d2e2909dc61d9cd')
@@ -23,6 +27,13 @@ class Bzip2(Package, SourcewarePackage):
     variant('shared', default=True, description='Enables the build of shared libraries.')
 
     depends_on('diffutils', type='build')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--help', output=str, error=str)
+        match = re.search(r'bzip2, a block-sorting file compressor.'
+                          '  Version ([^,]+)', output)
+        return match.group(1) if match else None
 
     # override default implementation
     @property
@@ -95,8 +106,8 @@ class Bzip2(Package, SourcewarePackage):
 
             install(lib3, join_path(prefix.lib, lib3))
             with working_dir(prefix.lib):
-                for l in (lib, lib1, lib2):
-                    symlink(lib3, l)
+                for libname in (lib, lib1, lib2):
+                    symlink(lib3, libname)
 
         with working_dir(prefix.bin):
             force_remove('bunzip2', 'bzcat')

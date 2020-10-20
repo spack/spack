@@ -62,6 +62,9 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
         spec = self.spec
 
         return [
+            # https://github.com/Homebrew/legacy-homebrew/pull/23234
+            # https://trac.macports.org/ticket/40603
+            'CFLAGS=-DSSH_SOURCE_BASHRC',
             'LIBS=' + spec['ncurses'].libs.link_flags,
             '--with-curses',
             '--enable-readline',
