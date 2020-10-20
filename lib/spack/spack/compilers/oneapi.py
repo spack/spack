@@ -48,56 +48,39 @@ class Oneapi(Compiler):
 
     @property
     def openmp_flag(self):
-        if self.real_version < ver('16.0'):
-            return "-openmp"
-        else:
-            return "-qopenmp"
+        return "-qopenmp"
+    # There may be some additional options here for offload, e.g. :
+    #  -fopenmp-simd           Emit OpenMP code only for SIMD-based constructs.
+    #  -fopenmp-targets=<value>
+    #  -fopenmp-version=<value>
+    #  -fopenmp                Parse OpenMP pragmas and generate parallel code.
+    #  -qno-openmp             Disable OpenMP support
+    #  -qopenmp-link=<value>   Choose whether to link with the static or dynamic OpenMP libraries. Default is dynamic.
+    #  -qopenmp-simd           Emit OpenMP code only for SIMD-based constructs.
+    #  -qopenmp-stubs          enables the user to compile OpenMP programs in sequential mode. The OpenMP directives are ignored and a stub OpenMP library is linked.
+    #  -qopenmp-threadprivate=<value>
+    #  -qopenmp                Parse OpenMP pragmas and generate parallel code.
+    #  -static-openmp          Use the static host OpenMP runtime while linking.
+    #  -Xopenmp-target=<triple> <arg>
+    #  -Xopenmp-target <arg>   Pass <arg> to the target offloading toolchain.
+    # Source: icx --help output
+
 
     @property
     def cxx11_flag(self):
-        if self.real_version < ver('11.1'):
-            raise UnsupportedCompilerFlag(self,
-                                          "the C++11 standard",
-                                          "cxx11_flag",
-                                          "< 11.1")
-
-        elif self.real_version < ver('13'):
-            return "-std=c++0x"
-        else:
-            return "-std=c++11"
+        return "-std=c++11"
 
     @property
     def cxx14_flag(self):
-        # Adapted from CMake's Intel-CXX rules.
-        if self.real_version < ver('15'):
-            raise UnsupportedCompilerFlag(self,
-                                          "the C++14 standard",
-                                          "cxx14_flag",
-                                          "< 15")
-        elif self.real_version < ver('15.0.2'):
-            return "-std=c++1y"
-        else:
-            return "-std=c++14"
+        return "-std=c++14"
 
     @property
     def c99_flag(self):
-        if self.real_version < ver('12'):
-            raise UnsupportedCompilerFlag(self,
-                                          "the C99 standard",
-                                          "c99_flag",
-                                          "< 12")
-        else:
-            return "-std=c99"
+        return "-std=c99"
 
     @property
     def c11_flag(self):
-        if self.real_version < ver('16'):
-            raise UnsupportedCompilerFlag(self,
-                                          "the C11 standard",
-                                          "c11_flag",
-                                          "< 16")
-        else:
-            return "-std=c1x"
+        return "-std=c1x"
 
     @property
     def cc_pic_flag(self):
