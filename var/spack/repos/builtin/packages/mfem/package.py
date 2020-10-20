@@ -682,7 +682,10 @@ class Mfem(Package):
         """Return the SUNDIALS components needed by MFEM."""
         sun_comps = 'arkode,cvodes,nvecserial,kinsol'
         if '+mpi' in self.spec:
-            sun_comps += ',nvecparhyp,nvecparallel,nvecmpiplusx'
+            if self.spec.satisfies('@4.2:'):
+                sun_comps += ',nvecparallel,nvecmpiplusx'
+            else:
+                sun_comps += ',nvecparhyp,nvecparallel'
         return sun_comps
 
     @property
