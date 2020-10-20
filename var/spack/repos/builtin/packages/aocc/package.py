@@ -29,21 +29,14 @@ class Aocc(Package):
     '''
     family = 'compiler'
     homepage = "https://developer.amd.com/amd-aocc/"
-    key_part_1 = '500940ce36c19297dfba3aa56dcef33b'
-    key_part_2 = '6145867a1f34890945172ac2be83b286'
-
-    site_nm = 'developer.amd.com'
-    tar_nm = 'aocc-compiler-2.2.0.tar'
-    version(ver="2.2.0",
-            sha256='{0}{1}'.format(key_part_1, key_part_2),
-            url='http://{0}/wordpress/media/files/{1}'.format(site_nm, tar_nm))
+    version(ver="2.2.0", sha256='500940ce36c19297dfba3aa56dcef33b6145867a1f34890945172ac2be83b286',
+            url='http://developer.amd.com/wordpress/media/files/aocc-compiler-2.2.0.tar')
 
     # Licensing
-    lic_nm = 'AOCC_EULA.pdf'
     license_required = True
     license_comment = '#'
-    license_files = [lic_nm]
-    license_url = 'http://{0}/wordpress/media/files/{1}'.format(site_nm, lic_nm)
+    license_files = ['AOCC_EULA.pdf']
+    license_url = 'http://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf'
     install_example = "spack install aocc +license-agreed"
 
     depends_on('libxml2')
@@ -58,9 +51,7 @@ class Aocc(Package):
 
     @run_before('install')
     def abort_without_license_agreed(self):
-        site_nm = 'developer.amd.com/wordpress/media'
-        lic_nm = 'AOCC_EULA.pdf'
-        license_url = 'http://{0}/files/{1}'.format(site_nm, lic_nm)
+        license_url = 'http://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf' 
         install_example = "spack install aocc +license-agreed"
         if not self.spec.variants['license-agreed'].value:
             raise InstallError("\n\n\nNOTE:\nUse +license-agreed " +
