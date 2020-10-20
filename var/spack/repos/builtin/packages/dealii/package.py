@@ -263,9 +263,18 @@ class Dealii(CMakePackage, CudaPackage):
                       'MPI support enabled.'.format(p))
 
     # Optional dependencies:
+    conflicts('+adol-c', when='^netcdf',
+              msg='Symbol clash between the ADOL-C library and '
+                  'Netcdf.')
     conflicts('+adol-c', when='^trilinos+chaco',
-              msg='symbol clash between the ADOL-C library and '
+              msg='Symbol clash between the ADOL-C library and '
                   'Trilinos SEACAS Chaco.')
+    conflicts('+adol-c', when='^trilinos+netcdf',
+              msg='Symbol clash between the ADOL-C library and '
+                  'Trilinos Netcdf.')
+    conflicts('+adol-c', when='^trilinos+pnetcdf',
+              msg='Symbol clash between the ADOL-C library and '
+                  'Trilinos parallel Netcdf.')
 
     conflicts('+slepc', when='~petsc',
               msg='It is not possible to enable slepc interfaces '
