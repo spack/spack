@@ -1444,6 +1444,9 @@ class Environment(object):
                 if spec.package.installed:
                     self._install_log_links(spec)
 
+            with self.write_transaction():
+                self.regenerate_views()
+
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""
         all_specs = set()

@@ -267,11 +267,6 @@ def install_specs(cli_args, kwargs, specs):
                     shutil.copyfileobj(log, sys.stderr)
         raise
 
-    finally:
-        if env:
-            with env.write_transaction():
-                env.regenerate_views()
-
 
 def install(parser, args, **kwargs):
     if args.help_cdash:
