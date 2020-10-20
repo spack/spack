@@ -7,7 +7,7 @@ from spack import *
 
 
 class Njet(AutotoolsPackage):
-    """NJet is a library for multi-parton one-loop matrix elements 
+    """NJet is a library for multi-parton one-loop matrix elements
        in massless QCD."""
 
     homepage = "https://bitbucket.org/njet/njet/wiki/Home"
@@ -18,6 +18,6 @@ class Njet(AutotoolsPackage):
     depends_on('qd')
 
     def configure_args(self):
-        args = ['--with-qd=' + self.spec['qd'].prefix, 
+        args = ['--with-qd=' + self.spec['qd'].prefix,
                 "FFLAGS=-ffixed-line-length-none -std=legacy"]
         return args
