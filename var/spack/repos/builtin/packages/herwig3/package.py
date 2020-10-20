@@ -45,8 +45,8 @@ class Herwig3(AutotoolsPackage):
         lhapdf = which('lhapdf')
         if self.spec.satisfies('@7.2.0:'):
             lhapdf("--pdfdir=" + self.prefix.tmppdfsets, 
-                   "--source=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current",
-                   "--listdir=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current", 
+#                   "--source=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current",
+#                   "--listdir=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current", 
                    "install", "MHT2014lo68cl", "MMHT2014nlo68cl", "CT14lo", "CT14nlo")
 
     def configure_args(self):
