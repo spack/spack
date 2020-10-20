@@ -162,7 +162,7 @@ spack package at this time.''',
     depends_on("m4", when="@3.3 +hwloc", type="build"),
     depends_on("autoconf@2.67:", when='@3.3 +hwloc', type="build")
 
-    # MPICH's Yaksa submodule reuqires python to configure
+    # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@3.3.99:", type="build")
 
     conflicts('device=ch4', when='@:3.2')
