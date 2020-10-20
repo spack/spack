@@ -1336,21 +1336,21 @@ class Environment(object):
 
         # if spec and all deps aren't dev builds, we don't need to overwrite it
         if not any(spec.satisfies(c)
-                   for c in ('dev_path=any', '^dev_path=any')):
+                   for c in ('dev_path=*', '^dev_path=*')):
             return False
 
         # if any dep needs overwrite, or any dep is missing and is a dev build
         # then overwrite this package
         if any(
             self._spec_needs_overwrite(dep) or
-            ((not dep.package.installed) and dep.satisfies('dev_path=any'))
+            ((not dep.package.installed) and dep.satisfies('dev_path=*'))
             for dep in spec.traverse(root=False)
         ):
             return True
 
         # if it's not a direct dev build and its dependencies haven't
         # changed, it hasn't changed.
-        # We don't merely check satisfaction (spec.satisfies('dev_path=any')
+        # We don't merely check satisfaction (spec.satisfies('dev_path=*')
         # because we need the value of the variant in the next block of code
         dev_path_var = spec.variants.get('dev_path', None)
         if not dev_path_var:
@@ -1420,8 +1420,8 @@ class Environment(object):
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
                 if not spec.package.installed or (
-                        spec.satisfies('dev_path=any') or
-                        spec.satisfies('^dev_path=any')
+                        spec.satisfies('dev_path=*') or
+                        spec.satisfies('^dev_path=*')
                 ):
                     # If it's a dev build it could need to be reinstalled
                     specs_to_install.append(spec)
