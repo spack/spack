@@ -26,6 +26,7 @@ class NetcdfC(AutotoolsPackage):
     maintainers = ['skosukhin', 'WardF']
 
     version('master', branch='master')
+    version('4.7.4',   sha256='0e476f00aeed95af8771ff2727b7a15b2de353fb7bb3074a0d340b55c2bd4ea8')
     version('4.7.3',   sha256='8e8c9f4ee15531debcf83788594744bd6553b8489c06a43485a15c93b4e0448b')
     version('4.7.2',   sha256='b751cc1f314ac8357df2e0a1bacf35a624df26fe90981d3ad3fa85a5bbd8989a')
     version('4.7.1',   sha256='5c537c585773e575a16b28c3973b9608a98fdc4cf7c42893aa5223024e0001fc')
@@ -96,26 +97,15 @@ class NetcdfC(AutotoolsPackage):
 
     # High-level API of HDF5 1.8.9 or later is required for netCDF-4 support:
     # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
-    depends_on('hdf5@1.8.9:+hl~mpi', when='~mpi')
-    depends_on('hdf5@1.8.9:+hl+mpi', when='+mpi')
+    depends_on('hdf5@1.8.9:+hl')
 
     # Starting version 4.4.0, it became possible to disable parallel I/O even
     # if HDF5 supports it. For previous versions of the library we need
-    # HDF5 without mpi support to disable parallel I/O.
-    # The following doesn't work if hdf5+mpi by default and netcdf-c~mpi is
-    # specified in packages.yaml
-    # depends_on('hdf5~mpi', when='@:4.3~mpi')
-    # Thus, we have to introduce a conflict
-    conflicts('~mpi', when='@:4.3^hdf5+mpi',
-              msg='netcdf-c@:4.3~mpi requires hdf5~mpi')
+    # HDF5 without mpi support to disable parallel I/O:
+    depends_on('hdf5~mpi', when='@:4.3~mpi')
 
     # We need HDF5 with mpi support to enable parallel I/O.
-    # The following doesn't work if hdf5~mpi by default and netcdf-c+mpi is
-    # specified in packages.yaml
-    # depends_on('hdf5+mpi', when='+mpi')
-    # Thus, we have to introduce a conflict
-    conflicts('+mpi', when='^hdf5~mpi',
-              msg='netcdf-c+mpi requires hdf5+mpi')
+    depends_on('hdf5+mpi', when='+mpi')
 
     # NetCDF 4.4.0 and prior have compatibility issues with HDF5 1.10 and later
     # https://github.com/Unidata/netcdf-c/issues/250
@@ -191,6 +181,8 @@ class NetcdfC(AutotoolsPackage):
         hdf5_hl = self.spec['hdf5:hl']
         cppflags.append(hdf5_hl.headers.cpp_flags)
         ldflags.append(hdf5_hl.libs.search_flags)
+        if hdf5_hl.satisfies('~shared'):
+            libs.append(hdf5_hl.libs.link_flags)
 
         if '+parallel-netcdf' in self.spec:
             config_args.append('--enable-pnetcdf')

@@ -576,7 +576,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     archive_files = []
 
     #: Boolean. Set to ``True`` for packages that require a manual download.
-    #: This is currently only used by package sanity tests.
+    #: This is currently used by package sanity tests and generation of a
+    #: more meaningful fetch failure error.
     manual_download = False
 
     #: Set of additional options used when fetching package versions.
@@ -914,6 +915,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return stage
 
     def _make_stage(self):
+        # If it's a dev package (not transitively), use a DIY stage object
+        dev_path_var = self.spec.variants.get('dev_path', None)
+        if dev_path_var:
+            return spack.stage.DIYStage(dev_path_var.value)
+
         # Construct a composite stage on top of the composite FetchStrategy
         composite_fetcher = self.fetcher
         composite_stage = StageComposite()
@@ -1209,21 +1215,33 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         spack.store.layout.remove_install_directory(self.spec)
 
+    @property
+    def download_instr(self):
+        """
+        Defines the default manual download instructions.  Packages can
+        override the property to provide more information.
+
+        Returns:
+            (str):  default manual download instructions
+        """
+        required = ('Manual download is required for {0}. '
+                    .format(self.spec.name) if self.manual_download else '')
+        return ('{0}Refer to {1} for download instructions.'
+                .format(required, self.spec.package.homepage))
+
     def do_fetch(self, mirror_only=False):
         """
         Creates a stage directory and downloads the tarball for this package.
         Working directory will be set to the stage directory.
         """
-        if not self.spec.concrete:
-            raise ValueError("Can only fetch concrete packages.")
-
         if not self.has_code:
             tty.debug('No fetch required for {0}: package has no code.'
                       .format(self.name))
 
         start_time = time.time()
         checksum = spack.config.get('config:checksum')
-        if checksum and self.version not in self.versions:
+        fetch = self.stage.managed_by_spack
+        if checksum and fetch and self.version not in self.versions:
             tty.warn("There is no checksum on file to fetch %s safely." %
                      self.spec.cformat('{name}{@version}'))
 
@@ -1243,7 +1261,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                  self.spec.format('{name}{@version}'), ck_msg)
 
         self.stage.create()
-        self.stage.fetch(mirror_only)
+        err_msg = None if not self.manual_download else self.download_instr
+        self.stage.fetch(mirror_only, err_msg=err_msg)
         self._fetch_time = time.time() - start_time
 
         if checksum and self.version in self.versions:
@@ -1258,9 +1277,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball."""
-        if not self.spec.concrete:
-            raise ValueError("Can only stage concrete packages.")
-
         # Always create the stage directory at this point.  Why?  A no-code
         # package may want to use the installation process to install metadata.
         self.stage.create()
@@ -1600,6 +1616,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             verbose (bool): Display verbose build output (by default,
                 suppresses it)
         """
+        # Non-transitive dev specs need to keep the dev stage and be built from
+        # source every time. Transitive ones just need to be built from source.
+        dev_path_var = self.spec.variants.get('dev_path', None)
+        if dev_path_var:
+            kwargs['keep_stage'] = True
 
         builder = PackageInstaller([(self, kwargs)])
         builder.install()

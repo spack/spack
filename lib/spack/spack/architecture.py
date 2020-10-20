@@ -217,7 +217,7 @@ class Target(object):
             if isinstance(compiler, spack.spec.CompilerSpec):
                 compiler = spack.compilers.compilers_for_spec(compiler).pop()
             try:
-                compiler_version = compiler.get_real_version()
+                compiler_version = compiler.real_version
             except spack.util.executable.ProcessError as e:
                 # log this and just return compiler.version instead
                 tty.debug(str(e))
@@ -233,10 +233,14 @@ class Platform(object):
         Will return a instance of it once it is returned.
     """
 
-    priority        = None  # Subclass sets number. Controls detection order
+    priority        = None   # Subclass sets number. Controls detection order
+
+    #: binary formats used on this platform; used by relocation logic
+    binary_formats  = ['elf']
+
     front_end       = None
     back_end        = None
-    default         = None  # The default back end target. On cray ivybridge
+    default         = None   # The default back end target. On cray ivybridge
 
     front_os        = None
     back_os         = None

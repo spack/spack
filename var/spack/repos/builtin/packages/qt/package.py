@@ -376,9 +376,11 @@ class Qt(Package):
 
         if self.spec.variants['freetype'].value == 'spack':
             config_args.extend([
-                '-system-freetype',
-                '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include)
+                '-system-freetype'
             ])
+            config_args.extend(
+                self.spec['freetype'].headers.include_flags.split()
+            )
             if not MACOS_VERSION:
                 config_args.append('-fontconfig')
 

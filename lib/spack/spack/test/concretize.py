@@ -70,7 +70,7 @@ def check_concretize(abstract_spec):
         # with virtual
         'mpileaks ^mpi', 'mpileaks ^mpi@:1.1', 'mpileaks ^mpi@2:',
         'mpileaks ^mpi@2.1', 'mpileaks ^mpi@2.2', 'mpileaks ^mpi@2.2',
-        'mpileaks ^mpi@:1', 'mpileaks ^mpi@1.2:2'
+        'mpileaks ^mpi@:1', 'mpileaks ^mpi@1.2:2',
         # conflict not triggered
         'conflict',
         'conflict%clang~foo',
@@ -195,7 +195,7 @@ class TestConcretize(object):
             s.satisfies('mpich2') for s in repo.providers_for('mpi@3')
         )
 
-    def test_provides_handles_multiple_providers_of_same_vesrion(self):
+    def test_provides_handles_multiple_providers_of_same_version(self):
         """
         """
         providers = spack.repo.path.providers_for('mpi@3.0')
@@ -500,6 +500,12 @@ class TestConcretize(object):
             with pytest.raises(exc_type):
                 s.concretize()
 
+    def test_no_conflixt_in_external_specs(self, conflict_spec):
+        # clear deps because external specs cannot depend on anything
+        ext = Spec(conflict_spec).copy(deps=False)
+        ext.external_path = '/fake/path'
+        ext.concretize()  # failure raises exception
+
     def test_regression_issue_4492(self):
         # Constructing a spec which has no dependencies, but is otherwise
         # concrete is kind of difficult. What we will do is to concretize
@@ -637,4 +643,13 @@ class TestConcretize(object):
     def test_concretize_anonymous(self):
         with pytest.raises(spack.error.SpecError):
             s = Spec('+variant')
+            s.concretize()
+
+    def test_concretize_anonymous_dep(self):
+        with pytest.raises(spack.error.SpecError):
+            s = Spec('mpileaks ^%gcc')
+            s.concretize()
+
+        with pytest.raises(spack.error.SpecError):
+            s = Spec('mpileaks ^cflags=-g')
             s.concretize()

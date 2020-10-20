@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import re
 
 
@@ -35,13 +34,19 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('--version', output=str, error=os.devnull)
+        output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'\(GNU libtool\)\s+(\S+)', output)
         return match.group(1) if match else None
 
     @when('@2.4.2,develop')
     def autoreconf(self, spec, prefix):
         Executable('./bootstrap')()
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libltdl'], root=self.prefix, recursive=True, shared=True
+        )
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))

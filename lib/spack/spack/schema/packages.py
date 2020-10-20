@@ -128,6 +128,14 @@ def update(data):
     changed = False
     for cfg_object in data.values():
         externals = []
+
+        # If we don't have these deprecated attributes, continue
+        if not any(x in cfg_object for x in ('paths', 'modules')):
+            continue
+
+        # If we arrive here we need to make some changes i.e.
+        # we need to remove and eventually convert some attributes
+        changed = True
         paths = cfg_object.pop('paths', {})
         for spec, prefix in paths.items():
             externals.append({
@@ -141,6 +149,6 @@ def update(data):
                 'modules': [str(module)]
             })
         if externals:
-            changed = True
             cfg_object['externals'] = externals
+
     return changed

@@ -96,6 +96,14 @@ class Openblas(MakefilePackage):
     # Fix ICE in LLVM 9.0.0 https://github.com/xianyi/OpenBLAS/pull/2329
     # Patch as in https://github.com/xianyi/OpenBLAS/pull/2597
     patch('openblas_appleclang11.patch', when='@0.3.8:0.3.9 %apple-clang@11.0.3')
+    # There was an error in Reference-LAPACK that is triggeret by Xcode12
+    # fixed upstream by https://github.com/xianyi/OpenBLAS/pull/2808 and
+    # should be included in post 0.3.10 versions. Application to earlier
+    # versions was not tested.
+    # See also https://github.com/xianyi/OpenBLAS/issues/2870
+    patch('https://github.com/xianyi/OpenBLAS/commit/f42e84d46c52f4ee1e05af8f365cd85de8a77b95.patch',
+          sha256='7b1eec78d1b1f55d3a3f1249696be7da0e2e1cd3b7fadae852e97dc860f8a7fd',
+          when='@0.3.8:0.3.10 %apple-clang@12.0.0:')
 
     # Add conditions to f_check to determine the Fujitsu compiler
     patch('openblas_fujitsu.patch', when='%fj')

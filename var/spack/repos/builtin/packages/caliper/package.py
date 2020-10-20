@@ -56,7 +56,6 @@ class Caliper(CMakePackage):
 
     depends_on('adiak@0.1:0.99', when='@2.2: +adiak')
 
-    depends_on('dyninst@9.3.0:9.99', when='@:1.99 +dyninst')
     depends_on('dyninst@10.0:10.99', when='@2: +dyninst')
 
     depends_on('papi@5.3:5.99', when='@:2.2 +papi')
@@ -75,6 +74,10 @@ class Caliper(CMakePackage):
     # sosflow support not yet in 2.0
     conflicts('+sosflow', '@2.0.0:2.4.99')
     conflicts('+adiak', '@:2.1.99')
+
+    # The Dyninst 9.X used by v1.9.X is deprecated
+    conflicts('+dyninst', when='@:1.99',
+              msg='Dyninst unsupported by version <=2.0.1')
 
     def cmake_args(self):
         spec = self.spec

@@ -15,6 +15,7 @@ import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 import six
 import spack
+import spack.cmd
 import spack.error
 import spack.util.environment
 import spack.util.spack_yaml as syaml
@@ -28,12 +29,19 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='external_command')
 
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
+
     find_parser = sp.add_parser(
         'find', help='add external packages to packages.yaml'
     )
     find_parser.add_argument(
         '--not-buildable', action='store_true', default=False,
         help="packages with detected externals won't be built with Spack")
+    find_parser.add_argument(
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_modify_scope('packages'),
+        help="configuration scope to modify")
     find_parser.add_argument('packages', nargs=argparse.REMAINDER)
 
     sp.add_parser(
@@ -146,7 +154,17 @@ def external_find(args):
         packages_to_check = spack.repo.path.all_packages()
 
     pkg_to_entries = _get_external_packages(packages_to_check)
-    _update_pkg_config(pkg_to_entries, args.not_buildable)
+    new_entries = _update_pkg_config(
+        args.scope, pkg_to_entries, args.not_buildable
+    )
+    if new_entries:
+        path = spack.config.config.get_config_filename(args.scope, 'packages')
+        msg = ('The following specs have been detected on this system '
+               'and added to {0}')
+        tty.msg(msg.format(path))
+        spack.cmd.display_specs(new_entries)
+    else:
+        tty.msg('No new external packages detected')
 
 
 def _group_by_prefix(paths):
@@ -188,32 +206,34 @@ def _get_predefined_externals():
     pkg_config = spack.config.get('packages')
     already_defined_specs = set()
     for pkg_name, per_pkg_cfg in pkg_config.items():
-        paths = per_pkg_cfg.get('paths', {})
-        already_defined_specs.update(spack.spec.Spec(k) for k in paths)
-        modules = per_pkg_cfg.get('modules', {})
-        already_defined_specs.update(spack.spec.Spec(k) for k in modules)
+        for item in per_pkg_cfg.get('externals', []):
+            already_defined_specs.add(spack.spec.Spec(item['spec']))
     return already_defined_specs
 
 
-def _update_pkg_config(pkg_to_entries, not_buildable):
+def _update_pkg_config(scope, pkg_to_entries, not_buildable):
     predefined_external_specs = _get_predefined_externals()
 
-    pkg_to_cfg = {}
+    pkg_to_cfg, all_new_specs = {}, []
     for pkg_name, ext_pkg_entries in pkg_to_entries.items():
         new_entries = list(
             e for e in ext_pkg_entries
             if (e.spec not in predefined_external_specs))
 
         pkg_config = _generate_pkg_config(new_entries)
+        all_new_specs.extend([
+            spack.spec.Spec(x['spec']) for x in pkg_config.get('externals', [])
+        ])
         if not_buildable:
             pkg_config['buildable'] = False
         pkg_to_cfg[pkg_name] = pkg_config
 
-    cfg_scope = spack.config.default_modify_scope()
-    pkgs_cfg = spack.config.get('packages', scope=cfg_scope)
+    pkgs_cfg = spack.config.get('packages', scope=scope)
 
     spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
-    spack.config.set('packages', pkgs_cfg, scope=cfg_scope)
+    spack.config.set('packages', pkgs_cfg, scope=scope)
+
+    return all_new_specs
 
 
 def _get_external_packages(packages_to_check, system_path_to_exe=None):
@@ -262,7 +282,8 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                 tty.debug(
                     'The following executables in {0} were decidedly not '
                     'part of the package {1}: {2}'
-                    .format(prefix, pkg.name, ', '.join(exes_in_prefix))
+                    .format(prefix, pkg.name, ', '.join(
+                        _convert_to_iterable(exes_in_prefix)))
                 )
 
             for spec in specs:
@@ -275,7 +296,8 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                     continue
 
                 if spec in resolved_specs:
-                    prior_prefix = ', '.join(resolved_specs[spec])
+                    prior_prefix = ', '.join(
+                        _convert_to_iterable(resolved_specs[spec]))
 
                     tty.debug(
                         "Executables in {0} and {1} are both associated"

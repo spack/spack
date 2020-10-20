@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class M4(AutotoolsPackage, GNUMirrorPackage):
@@ -32,6 +32,18 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    executables = ['^g?m4$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        # Output on macOS:
+        #   GNU M4 1.4.6
+        # Output on Linux:
+        #   m4 (GNU M4) 1.4.18
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU M4\)?\s+(\S+)', output)
+        return match.group(1) if match else None
+
     def configure_args(self):
         spec = self.spec
         args = ['--enable-c++']
@@ -48,7 +60,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         if spec.satisfies('%fj') and not spec.satisfies('platform=darwin'):
             args.append('LDFLAGS=-rtlib=compiler-rt')
 
-        if spec.satisfies('%intel'):
+        if spec.satisfies('%intel@:18.999'):
             args.append('CFLAGS=-no-gcc')
 
         if '+sigsegv' in spec:
@@ -60,7 +72,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         # http://lists.gnu.org/archive/html/bug-m4/2016-09/msg00002.html
         arch = spec.architecture
         if (arch.platform == 'darwin' and arch.os == 'sierra' and
-            '%gcc' in spec):
+                '%gcc' in spec):
             args.append('ac_cv_type_struct_sched_param=yes')
 
         return args

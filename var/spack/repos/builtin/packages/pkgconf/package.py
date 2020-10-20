@@ -31,6 +31,23 @@ class Pkgconf(AutotoolsPackage):
     # TODO: Add a package for the kyua testing framework
     # depends_on('kyua', type='test')
 
+    # https://github.com/spack/spack/issues/3525
+    conflicts('%pgi')
+
+    executables = ['^pkgconf$', '^pkg-config$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        exe = Executable(exe)
+
+        # Make sure this is actually pkgconf, not pkg-config
+        if 'usage: pkgconf' not in exe('--help', output=str, error=str):
+            return None
+
+        version = exe('--version', output=str, error=str).rstrip()
+
+        return version
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Adds the ACLOCAL path for autotools."""
         env.append_path('ACLOCAL_PATH', self.prefix.share.aclocal)

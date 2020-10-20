@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Bcftools(AutotoolsPackage):
     """BCFtools is a set of utilities that manipulate variant calls in the
@@ -99,8 +96,7 @@ class Bcftools(AutotoolsPackage):
 
         if spec.satisfies('@1.2'):
             mkdirp(self.prefix.libexec.bcftools)
-            for files in glob.glob('plugins/*.so'):
-                install(files, self.prefix.libexec.bcftools)
+            install('plugins/*.so', self.prefix.libexec.bcftools)
 
     @when('@1.2')
     def setup_run_environment(self, env):

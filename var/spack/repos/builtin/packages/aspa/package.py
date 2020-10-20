@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Aspa(MakefilePackage):
     """A fundamental premise in ExMatEx is that scale-bridging performed in
@@ -52,5 +49,4 @@ class Aspa(MakefilePackage):
         install('exec/kriging_model_centers.txt', prefix.input)
         install('exec/point_data.txt', prefix.input)
         install('exec/value_data.txt', prefix.input)
-        for files in glob.glob('doc/*.*'):
-            install(files, prefix.doc)
+        install('doc/*.*', prefix.doc)

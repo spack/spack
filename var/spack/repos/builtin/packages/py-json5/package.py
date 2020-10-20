@@ -16,4 +16,4 @@ class PyJson5(PythonPackage):
 
     version('0.9.4', sha256='2ebfad1cd502dca6aecab5b5c36a21c732c3461ddbc412fb0e9a52b07ddfe586')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))

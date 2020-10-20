@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Amrvis(MakefilePackage):
     """Amrvis is a visualization package specifically designed to
@@ -198,6 +195,4 @@ class Amrvis(MakefilePackage):
     def install(self, spec, prefix):
         # Install exe manually
         mkdirp(prefix.bin)
-        exes = glob.iglob('*.ex')
-        for exe in exes:
-            install(exe, prefix.bin)
+        install('*.ex', prefix.bin)

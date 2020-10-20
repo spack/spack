@@ -74,6 +74,16 @@ class Nseg(MakefilePackage):
                 res_path = join_path(res.fetcher.stage.source_path, res.name)
                 copy(res_path, join_path(self.build_directory, res_name))
 
+        if self.spec.satisfies('%fj'):
+            sfiles = ['genwin.c', 'nseg.c']
+            for s_name in sfiles:
+                filter_file(
+                    'return;',
+                    'return 0;',
+                    join_path(self.build_directory, s_name),
+                    string=True
+                )
+
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             mkdirp(prefix.bin)

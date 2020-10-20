@@ -272,7 +272,11 @@ class TestTcl(object):
         assert 'foo-foo' not in writer.layout.use_name
 
         writer, spec = factory('mpileaks~debug arch=x86-linux')
-        assert 'bar-foo' in writer.layout.use_name
+        assert 'foo-bar' in writer.layout.use_name
+        assert 'baz' not in writer.layout.use_name
+
+        writer, spec = factory('mpileaks~debug+opt arch=x86-linux')
+        assert 'baz-foo-bar' in writer.layout.use_name
 
     def test_setup_environment(self, modulefile_content, module_configuration):
         """Tests the internal set-up of run-time environment."""
@@ -293,6 +297,20 @@ class TestTcl(object):
         assert len(
             [x for x in content if 'setenv FOOBAR "callpath"' in x]
         ) == 1
+
+    def test_override_config(self, module_configuration, factory):
+        """Tests overriding some sections of the configuration file."""
+        module_configuration('override_config')
+
+        writer, spec = factory('mpileaks~opt arch=x86-linux')
+        assert 'mpich-static' in writer.layout.use_name
+        assert 'over' not in writer.layout.use_name
+        assert 'ridden' not in writer.layout.use_name
+
+        writer, spec = factory('mpileaks+opt arch=x86-linux')
+        assert 'over-ridden' in writer.layout.use_name
+        assert 'mpich' not in writer.layout.use_name
+        assert 'static' not in writer.layout.use_name
 
     def test_override_template_in_package(
             self, modulefile_content, module_configuration

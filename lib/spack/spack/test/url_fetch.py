@@ -6,8 +6,10 @@
 import collections
 import os
 import pytest
+import sys
 
 from llnl.util.filesystem import working_dir, is_exe
+import llnl.util.tty as tty
 
 import spack.repo
 import spack.config
@@ -171,6 +173,25 @@ def test_hash_detection(checksum_type):
 def test_unknown_hash(checksum_type):
     with pytest.raises(ValueError):
         crypto.Checker('a')
+
+
+def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
+    """Ensure fetch with status bar option succeeds."""
+    def is_true():
+        return True
+
+    testpath = str(tmpdir)
+
+    monkeypatch.setattr(sys.stdout, 'isatty', is_true)
+    monkeypatch.setattr(tty, 'msg_enabled', is_true)
+
+    fetcher = fs.URLFetchStrategy(mock_archive.url)
+    with Stage(fetcher, path=testpath) as stage:
+        assert fetcher.archive_file is None
+        stage.fetch()
+
+    status = capfd.readouterr()[1]
+    assert '##### 100.0%' in status
 
 
 def test_url_extra_fetch(tmpdir, mock_archive):

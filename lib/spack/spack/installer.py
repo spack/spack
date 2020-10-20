@@ -509,7 +509,6 @@ def log(pkg):
     packages_dir = spack.store.layout.build_packages_path(pkg.spec)
 
     # Remove first if we're overwriting another build
-    # (can happen with spack setup)
     try:
         # log and env install paths are inside this
         shutil.rmtree(packages_dir)
@@ -748,7 +747,11 @@ class PackageInstaller(object):
             # Check the database to see if the dependency has been installed
             # and flag as such if appropriate
             rec, installed_in_db = self._check_db(dep)
-            if installed_in_db:
+            if installed_in_db and (
+                    dep.dag_hash() not in request.overwrite or
+                    rec.installation_time > request.overwrite_time):
+                tty.debug('Flagging {0} as installed per the database'
+                          .format(dep_id))
                 self._flag_installed(dep_pkg,
                                      get_dependent_ids(dep_pkg.spec))
 
@@ -796,7 +799,10 @@ class PackageInstaller(object):
         if restage and task.pkg.stage.managed_by_spack:
             task.pkg.stage.destroy()
 
-        if not partial and self.layout.check_installed(task.pkg.spec):
+        if not partial and self.layout.check_installed(task.pkg.spec) and (
+                rec.spec.dag_hash() not in task.request.overwrite or
+                rec.installation_time > task.request.overwrite_time
+        ):
             self._update_installed(task)
 
             # Only update the explicit entry once for the explicit package
@@ -1462,7 +1468,6 @@ class PackageInstaller(object):
 
         Args:
             pkg (Package): the package to be built and installed"""
-
         self._init_queue()
 
         fail_fast_err = 'Terminating after first install failure'
@@ -1540,6 +1545,11 @@ class PackageInstaller(object):
                 self._requeue_task(task)
                 continue
 
+            # Take a timestamp with the overwrite argument to allow checking
+            # whether another process has already overridden the package.
+            if task.request.overwrite and task.explicit:
+                task.request.overwrite_time = time.time()
+
             # Determine state of installation artifacts and adjust accordingly.
             self._prepare_for_install(task)
 
@@ -1586,7 +1596,24 @@ class PackageInstaller(object):
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
             try:
-                self._install_task(task)
+                if pkg.spec.dag_hash() in self.overwrite:
+                    rec, _ = self._check_db(pkg.spec)
+                    if rec and rec.installed:
+                        if rec.installation_time < self.overwrite_time:
+                            # If it's actually overwriting, do a fs transaction
+                            if os.path.exists(rec.path):
+                                with fs.replace_directory_transaction(
+                                        rec.path):
+                                    self._install_task(task)
+                            else:
+                                tty.debug("Missing installation to overwrite")
+                                self._install_task(task)
+                    else:
+                        # overwriting nothing
+                        self._install_task(task)
+                else:
+                    self._install_task(task)
+
                 self._update_installed(task)
 
                 # If we installed then we should keep the prefix
@@ -1877,6 +1904,10 @@ class BuildRequest(object):
         # since they apply to the requested package *and* dependencies.
         self.install_args = install_args if install_args else {}
         self._add_default_args()
+
+        # Cache overwrite information
+        self.overwrite = set(self.install_args.get('overwrite', []))
+        self.overwrite_time = time.time()
 
         # Save off dependency package ids for quick checks since traversals
         # are not able to return full dependents for all packages across

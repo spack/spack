@@ -43,13 +43,25 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     variant('nls', default=True,
             description='Enable Native Language Support.')
 
+    # libdebuginfod support
+    variant('debuginfod', default=False,
+            description='Enable libdebuginfod support.')
+
     depends_on('bzip2', type='link', when='+bzip2')
     depends_on('xz',    type='link', when='+xz')
     depends_on('zlib',  type='link')
     depends_on('gettext', when='+nls')
     depends_on('m4',    type='build')
 
+    # debuginfod has extra dependencies
+    # NB: Waiting on an elfutils patch before we can use libmicrohttpd@0.9.71
+    depends_on('libmicrohttpd@0.9.33:0.9.70', type='link', when='+debuginfod')
+    depends_on('libarchive@3.1.2:', type='link', when='+debuginfod')
+    depends_on('sqlite@3.7.17:', type='link', when='+debuginfod')
+    depends_on('curl@7.29.0:', type='link', when='+debuginfod')
+
     conflicts('%gcc@7.2.0:', when='@0.163')
+    conflicts('+debuginfod', when='@:0.178')
 
     provides('elf@1')
 
@@ -92,9 +104,9 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         else:
             args.append('--disable-nls')
 
-        # The experimental debuginfod server requires libmicrohttpd
-        # which doesn't have a spack package
-        if spec.satisfies('@0.178:'):
+        if '+debuginfod' in spec:
+            args.append('--enable-debuginfod')
+        elif spec.satisfies('@0.178:'):
             args.append('--disable-debuginfod')
 
         return args

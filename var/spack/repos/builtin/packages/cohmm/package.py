@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Cohmm(MakefilePackage):
     """An anticipated important use-case for next-generation supercomputing
@@ -37,5 +34,4 @@ class Cohmm(MakefilePackage):
         install('cohmm', prefix.bin)
         install('README.md', prefix.doc)
         install('LICENSE.md', prefix.doc)
-        for files in glob.glob('input/*.*'):
-            install(files, prefix.input)
+        install('input/*.*', prefix.input)

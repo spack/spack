@@ -34,7 +34,7 @@ class Cce(Compiler):
 
     @property
     def is_clang_based(self):
-        version = self.version
+        version = self._real_version or self.version
         return version >= ver('9.0') and 'classic' not in str(version)
 
     @property
@@ -69,9 +69,9 @@ class Cce(Compiler):
     def c99_flag(self):
         if self.is_clang_based:
             return '-std=c99'
-        elif self.version >= ver('8.4'):
+        elif self.real_version >= ver('8.4'):
             return '-h std=c99,noconform,gnu'
-        elif self.version >= ver('8.1'):
+        elif self.real_version >= ver('8.1'):
             return '-h c99,noconform,gnu'
         raise UnsupportedCompilerFlag(self,
                                       'the C99 standard',
@@ -82,7 +82,7 @@ class Cce(Compiler):
     def c11_flag(self):
         if self.is_clang_based:
             return '-std=c11'
-        elif self.version >= ver('8.5'):
+        elif self.real_version >= ver('8.5'):
             return '-h std=c11,noconform,gnu'
         raise UnsupportedCompilerFlag(self,
                                       'the C11 standard',

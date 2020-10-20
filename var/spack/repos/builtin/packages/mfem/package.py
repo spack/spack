@@ -494,10 +494,16 @@ class Mfem(Package):
                 ld_flags_from_dirs([spec['gslib'].prefix.lib], ['gs'])]
 
         if '+netcdf' in spec:
+            lib_flags = ld_flags_from_dirs([spec['netcdf-c'].prefix.lib],
+                                           ['netcdf'])
+            hdf5 = spec['hdf5:hl']
+            if hdf5.satisfies('~shared'):
+                hdf5_libs = hdf5.libs
+                hdf5_libs += LibraryList(find_system_libraries('libdl'))
+                lib_flags += " " + ld_flags_from_library_list(hdf5_libs)
             options += [
                 'NETCDF_OPT=-I%s' % spec['netcdf-c'].prefix.include,
-                'NETCDF_LIB=%s' %
-                ld_flags_from_dirs([spec['netcdf-c'].prefix.lib], ['netcdf'])]
+                'NETCDF_LIB=%s' % lib_flags]
 
         if '+zlib' in spec:
             if "@:3.3.2" in spec:

@@ -161,8 +161,15 @@ packages. If neither are chosen, don't run tests for any packages."""
         action='store_true',
         help="Show usage instructions for CDash reporting"
     )
+    subparser.add_argument(
+        '-y', '--yes-to-all',
+        action='store_true',
+        dest='yes_to_all',
+        help="""assume "yes" is the answer to every confirmation request.
+To run completely non-interactively, also specify '--no-checksum'."""
+    )
     add_cdash_args(subparser, False)
-    arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
+    arguments.add_common_arguments(subparser, ['spec'])
 
 
 def add_cdash_args(subparser, add_help):
@@ -397,17 +404,7 @@ environment variables:
                 if not answer:
                     tty.die('Reinstallation aborted.')
 
-            if any([concrete in installed for concrete in specs]):
-                # Preserve ordering if force replacement of any installed specs
-                tty.debug('Performing serial installs due to forced '
-                          'replacement of installed concrete specs.')
-                for abstract, concrete in zip(abstract_specs, specs):
-                    if concrete in installed:
-                        with fs.replace_directory_transaction(concrete.prefix):
-                            install_specs(args, kwargs, [(abstract, concrete)])
-                    else:
-                        install_specs(args, kwargs, [(abstract, concrete)])
-            else:
-                install_specs(args, kwargs, zip(abstract_specs, specs))
-        else:
-            install_specs(args, kwargs, zip(abstract_specs, specs))
+            # overwrite all concrete explicit specs from this build
+            kwargs['overwrite'] = [spec.dag_hash() for spec in specs]
+
+        install_specs(args, kwargs, zip(abstract_specs, specs))

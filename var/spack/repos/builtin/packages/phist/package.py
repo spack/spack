@@ -26,6 +26,7 @@ class Phist(CMakePackage):
 
     version('develop', branch='devel')
     version('master', branch='master')
+    version('1.9.1', sha256='6e6411115ec48afe605b4f2179e9bc45d60f15459428f474f3f32b80d2830f1f')
     version('1.9.0', sha256='990d3308fc0083ed0f9f565d00c649ee70c3df74d44cbe5f19dfe05263d06559')
     version('1.8.0', sha256='ee42946bce187e126452053b5f5c200b57b6e40ee3f5bcf0751f3ced585adeb0')
     version('1.7.5', sha256='f11fe27f2aa13d69eb285cc0f32c33c1603fa1286b84e54c81856c6f2bdef500')
@@ -118,8 +119,8 @@ class Phist(CMakePackage):
     depends_on('ghost', when='kernel_lib=ghost')
 
     depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
-    depends_on('parmetis ^metis+int64', when='+parmetis +int64')
-    depends_on('parmetis ^metis~int64', when='+parmetis ~int64')
+    depends_on('parmetis+int64', when='+parmetis+int64')
+    depends_on('parmetis~int64', when='+parmetis~int64')
 
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package

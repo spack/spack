@@ -13,13 +13,12 @@ class Pfunit(CMakePackage):
     serial and MPI-parallel software written in Fortran."""
 
     homepage = "http://pfunit.sourceforge.net/"
-    url      = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit/archive/3.2.9.tar.gz"
+    url = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit/releases/download/v4.1.10/pFUnit-4.1.10.tar"
 
     maintainers = ['citibeth']
 
-    # Currently investigating build fails for v 4.0.0.
-    # See discussion in PR #11642.
-    # version('4.0.0',  sha256='b8b6470f2b1e2b19c164c244c10e803bd69c8da9a6a5a65ba7c479fb8b92a1e1') # noqa: E501
+    version('4.1.11', sha256='16160bac223aaa3ed2b27e30287d25fdaec3cf6f2c570ebd8d61196e6aa6180f')
+    version('4.1.10', sha256='051c35ad9678002943f4a4f2ab532a6b44de86ca414751616f93e69f393f5373')
     version('3.3.3',  sha256='9f673b58d20ad23148040a100227b4f876458a9d9aee0f0d84a5f0eef209ced5')
     version('3.3.2',  sha256='b1cc2e109ba602ea71bccefaa3c4a06e7ab1330db9ce6c08db89cfde497b8ab8')
     version('3.3.1',  sha256='f8f4bea7de991a518a0371b4c70b19e492aa9a0d3e6715eff9437f420b0cdb45')
@@ -40,15 +39,31 @@ class Pfunit(CMakePackage):
 
     depends_on('python@2.7:', type=('build', 'run'))  # python3 too!
     depends_on('mpi', when='+mpi')
+    depends_on('m4', when='@4.1.5:', type='build')
 
+    conflicts("%gcc@:8.3.9", when="@4.0.0:", msg='Older versions of GCC do '
+              'not support the Fortran 2008 features required by new pFUnit.')
+    # See https://github.com/Goddard-Fortran-Ecosystem/pFUnit/pull/179
+    conflicts("+shared", when="@4.0.0:")
     conflicts("use_comm_world", when="~mpi")
-    patch("mpi-test.patch", when="+use_comm_world")
+    conflicts('+mpi', when='@:3.99.99 %gcc@10.0.0:')
+    patch("mpi-test.patch", when="@:3.99.99 +use_comm_world")
 
     def patch(self):
         # The package tries to put .mod files in directory ./mod;
         # spack needs to put them in a standard location:
         for file in glob.glob('*/CMakeLists.txt'):
             filter_file(r'.*/mod($|[^\w].*)', '', file)
+
+    def url_for_version(self, version):
+        # Version 4 uses a different URL syntax than previous versions
+        url_base = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit"
+        if version >= Version('4'):
+            url = url_base + "/releases/download/v{0}/pFUnit-{0}.tar"
+        else:
+            url = url_base + "/archive/{0}.tar.gz"
+
+        return url.format(version.dotted)
 
     def cmake_args(self):
         spec = self.spec
@@ -60,11 +75,15 @@ class Pfunit(CMakePackage):
             '-DOPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
             '-DMAX_RANK=%s' % spec.variants['max_array_rank'].value]
 
-        if spec.satisfies('+mpi'):
-            args.extend(['-DMPI=YES', '-DMPI_USE_MPIEXEC=YES',
-                         '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc])
+        if spec.satisfies('@4.0.0:'):
+            args.append('-DSKIP_MPI=%s' % ('YES' if '~mpi' in spec else 'NO'))
         else:
-            args.append('-DMPI=NO')
+            args.append('-DMPI=%s' % ('YES' if '+mpi' in spec else 'NO'))
+
+        if spec.satisfies('+mpi'):
+            args.extend(['-DMPI_USE_MPIEXEC=YES',
+                         '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc])
+
         return args
 
     def check(self):

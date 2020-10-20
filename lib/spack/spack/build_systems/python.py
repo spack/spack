@@ -192,6 +192,10 @@ class PythonPackage(PackageBase):
 
         self.setup_py('build_scripts', *args)
 
+    def build_scripts_args(self, spec, prefix):
+        """Arguments to pass to build_scripts."""
+        return []
+
     def clean(self, spec, prefix):
         """Clean up temporary files from 'build' command."""
         args = self.clean_args(spec, prefix)

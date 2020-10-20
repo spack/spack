@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyPyarrow(PythonPackage):
+class PyPyarrow(PythonPackage, CudaPackage):
     """A cross-language development platform for in-memory data.
 
     This package contains the Python bindings.
@@ -43,6 +43,7 @@ class PyPyarrow(PythonPackage):
     for v in ('@0.9.0', '@0.11.0', '@0.12.1', '@0.15.1', '@0.17.1'):
         depends_on('arrow+python' + v, when=v)
         depends_on('arrow+parquet+python' + v, when='+parquet' + v)
+        depends_on('arrow+cuda' + v, when='+cuda' + v)
 
     phases = ['build_ext', 'install']
 

@@ -103,3 +103,4 @@ class Qemu(AutotoolsPackage):
 
     depends_on('glib@2.40:')
     depends_on('pixman@0.21.8:')
+    depends_on('pkgconfig', type='build')

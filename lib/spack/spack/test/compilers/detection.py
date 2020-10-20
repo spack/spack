@@ -15,6 +15,7 @@ import spack.compilers.fj
 import spack.compilers.gcc
 import spack.compilers.intel
 import spack.compilers.nag
+import spack.compilers.nvhpc
 import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
@@ -154,6 +155,60 @@ def test_intel_version_detection(version_str, expected_version):
 ])
 def test_nag_version_detection(version_str, expected_version):
     version = spack.compilers.nag.Nag.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    # C compiler on x86-64
+    ('nvc 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on x86-64
+    ('nvc++ 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on x86-64
+    ('nvfortran 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C compiler on Power
+    ('nvc 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on Power
+    ('nvc++ 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on Power
+    ('nvfortran 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C compiler on Arm
+    ('nvc 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on Arm
+    ('nvc++ 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on Arm
+    ('nvfortran 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9')
+])
+def test_nvhpc_version_detection(version_str, expected_version):
+    version = spack.compilers.nvhpc.Nvhpc.extract_version_from_output(
+        version_str
+    )
     assert version == expected_version
 
 

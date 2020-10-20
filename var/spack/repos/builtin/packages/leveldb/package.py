@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
-from spack import *
-
 
 class Leveldb(CMakePackage):
     """LevelDB is a fast key-value storage library written at Google
@@ -52,13 +49,10 @@ class Leveldb(CMakePackage):
         mkdirp(prefix.lib)
 
         # Needed for version 1.20
-        libraries  = glob.glob('out-shared/libleveldb.*')
-        libraries += glob.glob('out-static/libleveldb.*')
+        install('out-shared/libleveldb.*', prefix.lib)
+        install('out-static/libleveldb.*', prefix.lib)
         # Needed for version 1.18
-        libraries += glob.glob('libleveldb.*')
-
-        for library in libraries:
-            install(library, prefix.lib)
+        install('libleveldb.*', prefix.lib)
 
         install_tree('include', prefix.include)
 

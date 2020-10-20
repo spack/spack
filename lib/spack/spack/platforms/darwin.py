@@ -12,6 +12,8 @@ from spack.operating_systems.mac_os import MacOs
 class Darwin(Platform):
     priority    = 89
 
+    binary_formats = ['macho']
+
     def __init__(self):
         super(Darwin, self).__init__('darwin')
 
