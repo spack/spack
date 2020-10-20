@@ -250,6 +250,7 @@ def supported_compilers():
     return sorted(name if name != 'apple_clang' else 'apple-clang' for name in
                   llnl.util.lang.list_modules(spack.paths.compilers_path))
 
+
 @_auto_compiler_spec
 def supported(compiler_spec):
     """Test if a particular compiler is supported."""
