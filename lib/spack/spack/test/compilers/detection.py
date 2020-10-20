@@ -150,26 +150,29 @@ def test_intel_version_detection(version_str, expected_version):
 
 
 @pytest.mark.parametrize('version_str,expected_version', [
-    ( # ICX
+    (  # ICX
       'Intel(R) oneAPI DPC++ Compiler Pro 2021.1 (2020.8.0.0827)',
       'Target: x86_64-unknown-linux-gnu',
       'Thread model: posix',
-      'InstalledDir: /soft/restricted/CNDA/sdk/2020.9.15.1/oneapi/compiler/2021.1-beta09/linux/bin',
+      'InstalledDir: /soft/restricted/CNDA/sdk/' + 
+        '2020.9.15.1/oneapi/compiler/2021.1-beta09/linux/bin',
       '2020.8.0.0827'
     ),
-    ( # ICPX
+    (  # ICPX
       'Intel(R) oneAPI DPC++ Compiler Pro 2021.1 (2020.8.0.0827)',
       'Target: x86_64-unknown-linux-gnu',
       'Thread model: posix',
-      'InstalledDir: /soft/restricted/CNDA/sdk/2020.9.15.1/oneapi/compiler/2021.1-beta09/linux/bin'
+      'InstalledDir: /soft/restricted/CNDA/sdk/' +
+        '2020.9.15.1/oneapi/compiler/2021.1-beta09/linux/bin',
       '2020.8.0.0827'
     ),
-    ( # IFX
+    (  # IFX
       'ifx (IFORT) 2021.1 Beta 20200827',
       'Copyright (C) 1985-2020 Intel Corporation. All rights reserved.'
       '2020.8.0.0827'
     )
-    ] )
+    ] 
+    )
 def test_oneapi_version_detection(version_str, expected_version):
     version = spack.compilers.oneapi.Oneapi.extract_version_from_output(
         version_str

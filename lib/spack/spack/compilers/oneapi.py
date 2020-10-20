@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import Compiler, UnsupportedCompilerFlag
-from spack.version import ver
+from spack.compiler import Compiler
 
 
 class Oneapi(Compiler):
@@ -55,16 +54,19 @@ class Oneapi(Compiler):
     #  -fopenmp-version=<value>
     #  -fopenmp                Parse OpenMP pragmas and generate parallel code.
     #  -qno-openmp             Disable OpenMP support
-    #  -qopenmp-link=<value>   Choose whether to link with the static or dynamic OpenMP libraries. Default is dynamic.
+    #  -qopenmp-link=<value>   Choose whether to link with the static or 
+    #                          dynamic OpenMP libraries. Default is dynamic.
     #  -qopenmp-simd           Emit OpenMP code only for SIMD-based constructs.
-    #  -qopenmp-stubs          enables the user to compile OpenMP programs in sequential mode. The OpenMP directives are ignored and a stub OpenMP library is linked.
+    #  -qopenmp-stubs          enables the user to compile OpenMP programs in 
+    #                          sequential mode. The OpenMP directives are 
+    #                          ignored and a stub OpenMP library is linked.
     #  -qopenmp-threadprivate=<value>
     #  -qopenmp                Parse OpenMP pragmas and generate parallel code.
-    #  -static-openmp          Use the static host OpenMP runtime while linking.
+    #  -static-openmp          Use the static host OpenMP runtime while 
+    #                          linking.
     #  -Xopenmp-target=<triple> <arg>
     #  -Xopenmp-target <arg>   Pass <arg> to the target offloading toolchain.
     # Source: icx --help output
-
 
     @property
     def cxx11_flag(self):
