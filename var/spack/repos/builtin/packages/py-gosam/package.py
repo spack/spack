@@ -19,3 +19,4 @@ class PyGosam(PythonPackage):
     depends_on('form', type=('build', 'run'))
     depends_on('qgraf', type=('build', 'run'))
     depends_on('gosam-contrib', type=('build', 'run'))
+    depends_on('python@2.7:2.7.99', type=('build', 'run'))
