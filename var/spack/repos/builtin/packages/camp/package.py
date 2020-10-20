@@ -21,6 +21,9 @@ class Camp(CMakePackage, CudaPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', type='build', when="+cuda")
 
+    variant('tests', default='none', values=('none', 'all'),
+            multi=False, description='Tests to run')
+
     def cmake_args(self):
         spec = self.spec
 
@@ -39,6 +42,7 @@ class Camp(CMakePackage, CudaPackage):
         else:
             options.append('-DENABLE_CUDA=OFF')
 
-        options.append('-DENABLE_TESTS=ON')
+        options.append('-DENABLE_TESTS={0}'.format(
+            "On" if "tests=none" in spec else "Off"))
 
         return options
