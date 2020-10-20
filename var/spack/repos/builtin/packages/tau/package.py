@@ -107,7 +107,7 @@ class Tau(Package):
     conflicts('+adios2', when='@:2.29.1')
     conflicts('+sqlite', when='@:2.29.1')
 
-    patch('unwind.patch', when="@2.29")
+    patch('unwind.patch', when="@2.29.0")
 
     def set_compiler_options(self, spec):
 
