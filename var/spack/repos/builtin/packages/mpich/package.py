@@ -19,6 +19,8 @@ class Mpich(AutotoolsPackage):
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 1
 
+    maintainers = ['raffenet', 'yfguo']
+
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)
@@ -161,6 +163,9 @@ spack package at this time.''',
     depends_on('libtool@2.4.4:', when='@3.3 +hwloc', type="build")
     depends_on("m4", when="@3.3 +hwloc", type="build"),
     depends_on("autoconf@2.67:", when='@3.3 +hwloc', type="build")
+
+    # MPICH's Yaksa submodule requires python to configure
+    depends_on("python@3.0:", when="@develop", type="build")
 
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
