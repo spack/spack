@@ -2456,10 +2456,10 @@ class Spec(object):
 
     #: choose your concretizer here.
     def concretize(self, tests=False):
-        if spack.config.get('config:concretizer') == "original":
-            self._old_concretize(tests)
-        else:
+        if spack.config.get('config:concretizer') == "clingo":
             self._new_concretize(tests)
+        else:
+            self._old_concretize(tests)
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.

@@ -498,7 +498,6 @@ class TestConcretize(object):
         s = Spec(conflict_spec)
         with pytest.raises(spack.error.SpackError):
             s.concretize()
-        assert not s.concrete
 
     @pytest.mark.parametrize('spec_str', [
         'conflict@10.0%clang+foo'
