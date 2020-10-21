@@ -1332,10 +1332,8 @@ class PackageInstaller(object):
             tty.msg('{0} {1}'.format(install_msg(task.pkg_id, self.pid),
                                      'in progress by another process'))
 
-        new_task = copy.copy(task)
-        new_task.start = task.start or time.time()
+        new_task = task.next_attempt(self.installed)
         new_task.status = STATUS_INSTALLING
-        new_task.flag_installed(self.installed)
         self._push_task(new_task)
 
     def _setup_install_dir(self, pkg):
@@ -1437,9 +1435,7 @@ class PackageInstaller(object):
                 # Ensure the dependent's uninstalled dependencies are
                 # up-to-date.  This will require requeueing the task.
                 dep_task = self.build_tasks[dep_id]
-                new_task = copy.copy(dep_task)
-                new_task.flag_installed(self.installed)
-                self._push_task(new_task)
+                self._push_task(dep_task.next_attempt(self.installed))
             else:
                 tty.debug('{0} has no build task to update for {1}\'s success'
                           .format(dep_id, pkg_id))
@@ -1755,9 +1751,6 @@ class BuildTask(object):
         # The initial start time for processing the spec
         self.start = start
 
-        # Number of times the task has been queued
-        self.attempts = attempts + 1
-
         # Set of dependents, which needs to include the requesting package
         # to support tracking of parallel, multi-spec, environment installs.
         self.dependents = set(get_dependent_ids(self.pkg.spec))
@@ -1793,9 +1786,9 @@ class BuildTask(object):
         self.uninstalled_deps = set(pkg_id for pkg_id in self.dependencies if
                                     pkg_id not in installed)
 
-        # Ensure the task gets a unique sequence number to preserve the
-        # order in which it was added.
-        self.sequence = next(_counter)
+        # Ensure key sequence-related properties are updated accordingly.
+        self.attempts = 0
+        self._update()
 
     def __eq__(self, other):
         return self.key == other.key
@@ -1827,6 +1820,15 @@ class BuildTask(object):
         dependencies = '#dependencies={0}'.format(len(self.dependencies))
         return ('priority={0}, status={1}, start={2}, {3}'
                 .format(self.priority, self.status, self.start, dependencies))
+
+    def _update(self):
+        """Update properties associated with a new instance of a task."""
+        # Number of times the task has/will be queued
+        self.attempts = self.attempts + 1
+
+        # Ensure the task gets a unique sequence number to preserve the
+        # order in which it is added.
+        self.sequence = next(_counter)
 
     def add_dependent(self, pkg_id):
         """
@@ -1864,6 +1866,14 @@ class BuildTask(object):
     def key(self):
         """The key is the tuple (# uninstalled dependencies, sequence)."""
         return (self.priority, self.sequence)
+
+    def next_attempt(self, installed):
+        """Create a new, updated task for the next installation attempt."""
+        task = copy.copy(self)
+        task._update()
+        task.start = self.start or time.time()
+        task.flag_installed(installed)
+        return task
 
     @property
     def priority(self):

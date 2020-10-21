@@ -731,6 +731,8 @@ def test_requeue_task(install_mockery, capfd):
     assert len(ids) == 1
     qtask = installer.build_tasks[ids[0]]
     assert qtask.status == inst.STATUS_INSTALLING
+    assert qtask.sequence > task.sequence
+    assert qtask.attempts == task.attempts + 1
 
     out = capfd.readouterr()[0]
     assert 'Installing a' in out
