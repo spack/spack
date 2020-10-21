@@ -51,3 +51,15 @@ class Fltk(Package):
         configure(*options)
         make()
         make('install')
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('OPTIM="-Wall -Wunused -Wno-format-y2k \$OPTIM"',
+                        'OPTIM="-Wall $OPTIM"', 'configure')
+            filter_file('OPTIM="-Os \$OPTIM"', 'OPTIM="-O2 $OPTIM"',
+                        'configure')
+            filter_file('CXXFLAGS="\$CXXFLAGS -fvisibility=hidden"',
+                        'CXXFLAGS="$CXXFLAGS"', 'configure')
+            filter_file('OPTIM="\$OPTIM -fvisibility=hidden"',
+                        'OPTIM="$OPTIM"', 'configure')
