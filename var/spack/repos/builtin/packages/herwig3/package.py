@@ -13,24 +13,22 @@ class Herwig3(AutotoolsPackage):
     homepage = "https://herwig.hepforge.org"
     url      = "https://herwig.hepforge.org/downloads/Herwig-7.2.1.tar.bz2"
 
-    version('7.2.1', sha256='d4fff32f21c5c08a4b2e563c476b079859c2c8e3b78d853a8a60da96d5eea686',
-            url='http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/MCGeneratorsTarFiles/Herwig-7.2.1.tar.bz2')
+    version('7.2.1', sha256='d4fff32f21c5c08a4b2e563c476b079859c2c8e3b78d853a8a60da96d5eea686')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
-    # DEPENDS lhapdf Boost Python GSL thepeg fastjet vbfnlo openloops madgraph5amc njet gosam automake
     depends_on('lhapdf',   type=('build', 'run'))
     depends_on('thepeg@2.2.1', when='@7.2.1', type=('build', 'link', 'run'))
     depends_on('boost', type='build')
     depends_on('python', type=('build', 'run'))
-    depends_on('gsl', type=('build', 'run'))
+    depends_on('gsl', type='link')
     depends_on('fastjet', type=('build', 'run'))
     depends_on('vbfnlo@3:', type=('build', 'run'))
     depends_on('madgraph5amc', type=('build', 'run'))
     depends_on('njet', type=('build', 'run'))
-    # depends_on('gosam', type=('build', 'run'))
+    depends_on('gosam', type=('build', 'run'), when='^python@2.7:2.7.99')
     depends_on('gosam-contrib', type=('build', 'run'))
     depends_on('openloops', type=('build', 'run'))
 
@@ -57,11 +55,14 @@ class Herwig3(AutotoolsPackage):
                 '--with-boost=' + self.spec['boost'].prefix,
                 '--with-madgraph=' + self.spec['madgraph5amc'].prefix,
                 '--with-openloops=' + self.spec['openloops'].prefix,
-                # '--with-gosam=' + self.spec['gosam'].prefix,
                 '--with-gosam-contrib=' + self.spec['gosam-contrib'].prefix,
                 '--with-njet=' + self.spec['njet'].prefix,
                 '--with-vbfnlo=' + self.spec['vbfnlo'].prefix
                ]
+        
+        if self.spec.satisfies('^python@2.7:2.7.99'):
+            args.append('--with-gosam=' + self.spec['gosam'].prefix)
+        
         return args
 
 
@@ -85,21 +86,13 @@ class Herwig3(AutotoolsPackage):
 
     def build(self, spec, prefix):
         make()
-        if spec.satisfies('@7.0.3:7.1.9'):
-            with working_dir('Contrib/FxFx'):
-                make()
-        elif spec.satisfies('@7.1.9:'):
-            with working_dir('MatrixElement/FxFx'):
-                make()
+        with working_dir('MatrixElement/FxFx'):
+            make()
 
     def install(self, spec, prefix):
         make('install')    
-        if spec.satisfies('@7.0.3:7.1.9'):
-            with working_dir('Contrib/FxFx'):
-                make('install')
-        elif spec.satisfies('@7.1.9:'):
-            with working_dir('MatrixElement/FxFx'):
-                make('install')
+        with working_dir('MatrixElement/FxFx'):
+            make('install')
 
     @run_after('install')
     def remove_lhapdfsets(self):
