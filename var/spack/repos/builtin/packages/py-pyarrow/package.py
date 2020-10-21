@@ -22,7 +22,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
     version('0.9.0', sha256='7db8ce2f0eff5a00d6da918ce9f9cfec265e13f8a119b4adb1595e5b19fd6242')
 
     variant('parquet', default=False, description="Build with Parquet support")
-    variant('orc', default=False)
+    variant('orc', default=False, description='Build with orc support')
 
     depends_on('cmake@3.0.0:', type='build')
     depends_on('pkgconfig', type='build')
