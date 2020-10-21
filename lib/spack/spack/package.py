@@ -202,14 +202,19 @@ class DetectablePackageMeta(object):
                         external_modules = extra_attributes.pop(
                             'modules', None
                         )
-                        spec = spack.spec.Spec(
-                            spec_str,
-                            external_path=external_path,
-                            external_modules=external_modules
-                        )
-                        specs.append(spack.spec.Spec.from_detection(
-                            spec, extra_attributes=extra_attributes
-                        ))
+                        try:
+                            spec = spack.spec.Spec(
+                                spec_str,
+                                external_path=external_path,
+                                external_modules=external_modules
+                            )
+                        except Exception as e:
+                            msg = 'Parsing failed [spec_str="{0}", error={1}]'
+                            tty.debug(msg.format(spec_str, str(e)))
+                        else:
+                            specs.append(spack.spec.Spec.from_detection(
+                                spec, extra_attributes=extra_attributes
+                            ))
 
                 return sorted(specs)
 
