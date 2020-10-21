@@ -288,6 +288,9 @@ spack package at this time.''',
         # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
         if self.spec.satisfies('%gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+        # Same fix but for macOS - avoids issue #17934
+        if self.spec.satisfies('%apple-clang@11:'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
 
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
