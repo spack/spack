@@ -36,7 +36,7 @@ class Fzf(MakefilePackage):
     @classmethod
     def determine_version(cls, exe):
         candidate = Executable(exe)('--version', output=str, error=str)
-        match = re.match(r'(^[\d.]*)', candidate)
+        match = re.match(r'(^[\d.]+)', candidate)
         return match.group(1) if match else None
 
     @when('@:0.17.5')
