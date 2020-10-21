@@ -1668,6 +1668,9 @@ class SpecBuilder(object):
         for s in self._specs.values():
             spack.spec.Spec.ensure_external_path_if_external(s)
 
+        for s in self._specs.values():
+            spack.spec.Spec.ensure_no_deprecated(s)
+
         return self._specs
 
 
