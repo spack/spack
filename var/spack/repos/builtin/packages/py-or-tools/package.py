@@ -14,12 +14,12 @@ class PyOrTools(CMakePackage):
 
     version('7.8', sha256='d93a9502b18af51902abd130ff5f23768fcf47e266e6d1f34b3586387aa2de68')
 
+    depends_on('cmake@3.14:', type='build')
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.0:', type=('build', 'run'))
-    depends_on('py-packaging@16.0:', type=('build', 'run'))
-    depends_on('py-protobuf@3.12.2')
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-protobuf@3.12.2', type=('build', 'run'))
     depends_on('protobuf@3.12.2')
-    depends_on('py-six')
+    depends_on('py-six@1.10:', type=('build', 'run'))
     depends_on('gflags@2.2.2')
     depends_on('glog@0.4.0')
     depends_on('protobuf@3.12.2')
@@ -34,6 +34,8 @@ class PyOrTools(CMakePackage):
     depends_on('py-wheel', type='build')
     depends_on('py-virtualenv', type='build')
     depends_on('scipoptsuite')
+
+    extends('python')
 
     def cmake_args(self):
         cmake_args = []
