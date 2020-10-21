@@ -16,6 +16,6 @@ class Qgraf(Package):
     version('3.4.2', sha256='cfc029fb871c78943865ef8b51ebcd3cd4428448b8816714b049669dfdeab8aa')
 
     def install(self, spec, prefix):
-        fortran = Executable(self.compiler.fc)
+        fortran = Executable(spack_fc)
         fortran('qgraf-{0}.f'.format(self.spec.version), '-o', 'qgraf')
         install_tree('.', prefix)
