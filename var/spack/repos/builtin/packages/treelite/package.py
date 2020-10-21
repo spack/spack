@@ -33,7 +33,8 @@ class Treelite(CMakePackage, PythonPackage):
 
         if '+protobuf' in self.spec:
             args.append('-DENABLE_PROTOBUF:BOOL=ON')
-            args.append('-DProtobuf_LIBRARY={0}'.format(self.spec['protobuf'].prefix))
+            args.append('-DProtobuf_LIBRARY={0}'.format(
+                self.spec['protobuf'].prefix))
         else:
             args.append('-DENABLE_PROTOBUF:BOOL=OFF')
 
