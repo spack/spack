@@ -605,7 +605,7 @@ SYCL/DPC++
 ^^^^^^^^^^
 
 The SYCL/DPC++ compiler is Intel and Codeplay's `staging area compiler <https://github.com/intel/llvm>`_ for upcoming Clang/LLVM SYCL support.
-This compiler is typically distributed with `oneAPI <https://software.intel.com/content/www/us/en/develop/articles/oneapi-repo-instructions.html>`_ and gets activated with ``source /opt/intel/inteloneapi/setvars.sh`` on Linux.
+This compiler is available in binary form via apt & yum packages, docker containers, or an intel installer with `oneAPI <https://software.intel.com/content/www/us/en/develop/tools/oneapi/download.html#basekit>`_ and can be activated with ``source /opt/intel/inteloneapi/setvars.sh`` on Linux.
 
 One can record these activation steps by comparing set environment variables:
 
