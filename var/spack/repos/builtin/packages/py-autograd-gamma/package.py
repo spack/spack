@@ -14,3 +14,5 @@ class PyAutogradGamma(PythonPackage):
     version('0.4.3', sha256='2cb570cbb8da61ede937ccc004d87d3924108f754b351a86cdd2ad31ace6cdf6')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-autograd@1.2.0:', type=('build', 'run'))
+    depends_on('py-scipy@1.2.0:', type=('build', 'run'))
