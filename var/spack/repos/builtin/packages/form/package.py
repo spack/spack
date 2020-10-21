@@ -18,11 +18,8 @@ class Form(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
-    depends_on('gmp', type=('build', 'run'))
-    depends_on('zlib', type=('build', 'run'))
-
-    def autoreconf(self, spec, prefix):
-        autoreconf('--install', '--verbose', '--force')
+    depends_on('gmp', type='link')
+    depends_on('zlib', type='link')
 
     def configure_args(self):
         args = ['--with-gmp=' + self.spec['gmp'].prefix,
