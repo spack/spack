@@ -2364,27 +2364,13 @@ class Spec(object):
         for s in self.traverse():
             # TODO: Refactor this into a common method to build external specs
             # TODO: or turn external_path into a lazy property
-            self.ensure_external_path_if_external(s)
+            Spec.ensure_external_path_if_external(s)
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
 
         # If any spec in the DAG is deprecated, throw an error
-        deprecated = []
-        with spack.store.db.read_transaction():
-            for x in self.traverse():
-                _, rec = spack.store.db.query_by_spec_hash(x.dag_hash())
-                if rec and rec.deprecated_for:
-                    deprecated.append(rec)
-
-        if deprecated:
-            msg = "\n    The following specs have been deprecated"
-            msg += " in favor of specs with the hashes shown:\n"
-            for rec in deprecated:
-                msg += '        %s  --> %s\n' % (rec.spec, rec.deprecated_for)
-            msg += '\n'
-            msg += "    For each package listed, choose another spec\n"
-            raise SpecDeprecatedError(msg)
+        Spec.ensure_no_deprecated(self)
 
         # Now that the spec is concrete we should check if
         # there are declared conflicts
@@ -2425,6 +2411,31 @@ class Spec(object):
                 external_spec.package, 'external_prefix',
                 md.path_from_modules(external_spec.external_modules)
             )
+
+    @staticmethod
+    def ensure_no_deprecated(root):
+        """Raise is a deprecated spec is in the dag.
+
+        Args:
+            root (Spec): root spec to be analyzed
+
+        Raises:
+            SpecDeprecatedError: is any deprecated spec is found
+        """
+        deprecated = []
+        with spack.store.db.read_transaction():
+            for x in root.traverse():
+                _, rec = spack.store.db.query_by_spec_hash(x.dag_hash())
+                if rec and rec.deprecated_for:
+                    deprecated.append(rec)
+        if deprecated:
+            msg = "\n    The following specs have been deprecated"
+            msg += " in favor of specs with the hashes shown:\n"
+            for rec in deprecated:
+                msg += '        %s  --> %s\n' % (rec.spec, rec.deprecated_for)
+            msg += '\n'
+            msg += "    For each package listed, choose another spec\n"
+            raise SpecDeprecatedError(msg)
 
     def _new_concretize(self, tests=False):
         import spack.solver.asp
