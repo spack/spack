@@ -29,6 +29,4 @@ class Libcumlprims(Package):
         return url.format(version.up_to(3), version)
 
     def install(self, spec, prefix):
-        cp = which('cp')
-
-        cp('-r', os.path.join(self.stage.source_path, '.'), prefix)
+        install_tree('.', self.prefix)
