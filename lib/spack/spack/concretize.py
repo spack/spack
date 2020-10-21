@@ -352,32 +352,19 @@ class Concretizer(object):
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
         pkg_cls = spec.package_class
         for name, variant in pkg_cls.variants.items():
-            any_set = False
             var = spec.variants.get(name, None)
-            if var and 'any' in var:
-                # remove 'any' variant before concretizing
-                # 'any' cannot be combined with other variables in a
+            if var and '*' in var:
+                # remove variant wildcard before concretizing
+                # wildcard cannot be combined with other variables in a
                 # multivalue variant, a concrete variant cannot have the value
-                # 'any', and 'any' does not constrain a variant except to
-                # preclude the values 'none' and None. We track `any_set` to
-                # avoid replacing 'any' with None, and remove it to continue
-                # concretization.
+                # wildcard, and a wildcard does not constrain a variant
                 spec.variants.pop(name)
-                any_set = True
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:
                     spec.variants[name] = preferred_variants.get(name)
                 else:
                     spec.variants[name] = variant.make_default()
-
-            var = spec.variants[name]
-            if any_set and 'none' in var or None in var:
-                msg = "Attempted non-deterministic setting of variant"
-                msg += " '%s' set to 'any' and preference is." % name
-                msg += "'%s'. Set the variant to a non 'any'" % var.value
-                msg += " value or set a preference for variant '%s'." % name
-                raise NonDeterministicVariantError(msg)
 
         return changed
 
@@ -805,7 +792,3 @@ class NoBuildError(spack.error.SpackError):
         msg = ("The spec\n    '%s'\n    is configured as not buildable, "
                "and no matching external installs were found")
         super(NoBuildError, self).__init__(msg % spec)
-
-
-class NonDeterministicVariantError(spack.error.SpecError):
-    """Raised when a spec variant is set to 'any' and concretizes to 'none'."""
