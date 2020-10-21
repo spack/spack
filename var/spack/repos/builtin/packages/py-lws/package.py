@@ -14,7 +14,7 @@ class PyLws(PythonPackage):
     url      = "https://files.pythonhosted.org/packages/51/a8/3f1727af04052008a748acba02b561b42e63ae275da03a63266ebc3ef64e/lws-1.2.6.tar.gz"
 
     version('1.2.6', sha256='ac94834832aadfcd53fcf4a77e1d95155063b39adbce14c733f8345bdac76e87')
-    
+
     depends_on('python@3:',         type=('build', 'run'))
     depends_on('py-cython',         type='build')
     depends_on('py-setuptools',     type='build')
@@ -22,4 +22,4 @@ class PyLws(PythonPackage):
     depends_on('py-scipy',          type=('build', 'run'))
 
     def setup_build_environment(self, env):
-        env.set('LWS_USE_CYTHON',1)
+        env.set('LWS_USE_CYTHON', 1)
