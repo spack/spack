@@ -14,7 +14,7 @@ class Libcudf(CMakePackage):
     homepage = "https://rapids.ai"
     url      = "https://github.com/rapidsai/cudf/archive/v0.15.0.tar.gz"
 
-    version('0.15.0',  sha256='57b8036134368daa8a967eae971ee121cdc58c8678a03eba1358ed2b927dc16e')
+    version('0.15.0',  sha256='2570636b72cce4c52f71e36307f51f630e2f9ea94a1abc018d40ce919ba990e4')
 
     depends_on('cmake@3.14:', type='build')
     depends_on('cuda@10.0:')
