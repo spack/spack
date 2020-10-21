@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Herwig3(AutotoolsPackage):
@@ -19,18 +18,18 @@ class Herwig3(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
-    depends_on('lhapdf',   type=('build', 'run'))
-    depends_on('thepeg@2.2.1', when='@7.2.1', type='build')
-    depends_on('boost', type='build')
+    depends_on('lhapdf',   type='link')
+    depends_on('thepeg@2.2.1', when='@7.2.1', type='link')
+    depends_on('boost', type='link')
     depends_on('python', type=('build', 'run'))
     depends_on('gsl', type='link')
-    depends_on('fastjet', type='build')
-    depends_on('vbfnlo@3:', type='build')
-    depends_on('madgraph5amc', type='build')
-    depends_on('njet', type='build')
-    depends_on('gosam', type='build', 'run', when='^python@2.7:2.7.99')
-    depends_on('gosam-contrib', type='build')
-    depends_on('openloops', type='build')
+    depends_on('fastjet', type='link')
+    depends_on('vbfnlo@3:', type='link')
+    depends_on('madgraph5amc', type='link')
+    depends_on('njet', type='link')
+    depends_on('gosam', type='link', when='^python@2.7:2.7.99')
+    depends_on('gosam-contrib', type='link')
+    depends_on('openloops', type='link')
 
     force_autoreconf = True
 
@@ -42,13 +41,14 @@ class Herwig3(AutotoolsPackage):
         mkdirp(self.prefix.tmppdfsets)
         lhapdf = which('lhapdf')
         if self.spec.satisfies('@7.2.0:'):
-            lhapdf("--pdfdir=" + self.prefix.tmppdfsets, 
-#                   "--source=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current",
-#                   "--listdir=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current", 
-                   "install", "MHT2014lo68cl", "MMHT2014nlo68cl", "CT14lo", "CT14nlo")
+            lhapdf("--pdfdir=" + self.prefix.tmppdfsets,
+                   # "--source=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current",
+                   # "--listdir=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current",
+                   "install", "MHT2014lo68cl", "MMHT2014nlo68cl",
+                   "CT14lo", "CT14nlo")
 
     def configure_args(self):
-        args = ['--with-gsl=' + self.spec['gsl'].prefix, 
+        args = ['--with-gsl=' + self.spec['gsl'].prefix,
                 '--with-thepeg=' + self.spec['thepeg'].prefix,
                 '--with-thepeg-headers=' + self.spec['thepeg'].prefix.include,
                 '--with-fastjet=' + self.spec['fastjet'].prefix,
@@ -57,14 +57,12 @@ class Herwig3(AutotoolsPackage):
                 '--with-openloops=' + self.spec['openloops'].prefix,
                 '--with-gosam-contrib=' + self.spec['gosam-contrib'].prefix,
                 '--with-njet=' + self.spec['njet'].prefix,
-                '--with-vbfnlo=' + self.spec['vbfnlo'].prefix
-               ]
-        
+                '--with-vbfnlo=' + self.spec['vbfnlo'].prefix]
+
         if self.spec.satisfies('^python@2.7:2.7.99'):
             args.append('--with-gosam=' + self.spec['gosam'].prefix)
-        
-        return args
 
+        return args
 
     def flag_handler(self, name, flags):
         if name == 'fcflags':
@@ -83,14 +81,13 @@ class Herwig3(AutotoolsPackage):
         env.set('BOOSTINCLUDE', '-I' + self.spec['boost'].prefix.include)
         env.set('HERWIGINSTALL', self.prefix)
 
-
     def build(self, spec, prefix):
         make()
         with working_dir('MatrixElement/FxFx'):
             make()
 
     def install(self, spec, prefix):
-        make('install')    
+        make('install')
         with working_dir('MatrixElement/FxFx'):
             make('install')
 
