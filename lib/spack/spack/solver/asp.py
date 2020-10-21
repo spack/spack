@@ -1351,6 +1351,12 @@ class SpackSolverSetup(object):
                 if v.satisfies(versions)
             ]
 
+            # This is needed to account for a variable number of
+            # numbers e.g. if both 1.0 and 1.0.2 are possible versions
+            exact_match = [v for v in allowed_versions if v == versions]
+            if exact_match:
+                allowed_versions = exact_match
+
             # don't bother restricting anything if all versions are allowed
             if len(allowed_versions) == len(self.possible_versions[pkg_name]):
                 continue
@@ -1658,15 +1664,18 @@ class SpecBuilder(object):
             repo = spack.repo.path.repo_for_pkg(spec)
             spec.namespace = repo.namespace
 
-            # once this is done, everything is concrete
-            spec._mark_concrete()
-
         # fix flags after all specs are constructed
         self.reorder_flags()
+
+        for s in self._specs.values():
+            spack.spec.Spec.inject_patches_variant(s)
 
         # Add external paths to specs with just external modules
         for s in self._specs.values():
             spack.spec.Spec.ensure_external_path_if_external(s)
+
+        for s in self._specs.values():
+            s._mark_concrete()
 
         for s in self._specs.values():
             spack.spec.Spec.ensure_no_deprecated(s)

@@ -2293,73 +2293,7 @@ class Spec(object):
         if extra:
             raise InvalidDependencyError(self.name, extra)
 
-        # This dictionary will store object IDs rather than Specs as keys
-        # since the Spec __hash__ will change as patches are added to them
-        spec_to_patches = {}
-        for s in self.traverse():
-            # After concretizing, assign namespaces to anything left.
-            # Note that this doesn't count as a "change".  The repository
-            # configuration is constant throughout a spack run, and
-            # normalize and concretize evaluate Packages using Repo.get(),
-            # which respects precedence.  So, a namespace assignment isn't
-            # changing how a package name would have been interpreted and
-            # we can do it as late as possible to allow as much
-            # compatibility across repositories as possible.
-            if s.namespace is None:
-                s.namespace = spack.repo.path.repo_for_pkg(s.name).namespace
-
-            if s.concrete:
-                continue
-
-            # Add any patches from the package to the spec.
-            patches = []
-            for cond, patch_list in s.package_class.patches.items():
-                if s.satisfies(cond, strict=True):
-                    for patch in patch_list:
-                        patches.append(patch)
-            if patches:
-                spec_to_patches[id(s)] = patches
-
-        # Also record all patches required on dependencies by
-        # depends_on(..., patch=...)
-        for dspec in self.traverse_edges(deptype=all,
-                                         cover='edges', root=False):
-            pkg_deps = dspec.parent.package_class.dependencies
-            if dspec.spec.name not in pkg_deps:
-                continue
-
-            if dspec.spec.concrete:
-                continue
-
-            patches = []
-            for cond, dependency in pkg_deps[dspec.spec.name].items():
-                if dspec.parent.satisfies(cond, strict=True):
-                    for pcond, patch_list in dependency.patches.items():
-                        if dspec.spec.satisfies(pcond):
-                            for patch in patch_list:
-                                patches.append(patch)
-            if patches:
-                all_patches = spec_to_patches.setdefault(id(dspec.spec), [])
-                all_patches.extend(patches)
-
-        for spec in self.traverse():
-            if id(spec) not in spec_to_patches:
-                continue
-
-            patches = list(lang.dedupe(spec_to_patches[id(spec)]))
-            mvar = spec.variants.setdefault(
-                'patches', vt.MultiValuedVariant('patches', ())
-            )
-            mvar.value = tuple(p.sha256 for p in patches)
-            # FIXME: Monkey patches mvar to store patches order
-            full_order_keys = list(tuple(p.ordering_key) + (p.sha256,) for p
-                                   in patches)
-            ordered_hashes = sorted(full_order_keys)
-            tty.debug("Ordered hashes [{0}]: ".format(spec.name) +
-                      ', '.join('/'.join(str(e) for e in t)
-                                for t in ordered_hashes))
-            mvar._patches_in_order_of_appearance = list(
-                t[-1] for t in ordered_hashes)
+        Spec.inject_patches_variant(self)
 
         for s in self.traverse():
             # TODO: Refactor this into a common method to build external specs
@@ -2396,6 +2330,74 @@ class Spec(object):
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
         self.architecture.target.optimization_flags(self.compiler)
+
+    @staticmethod
+    def inject_patches_variant(root):
+        # This dictionary will store object IDs rather than Specs as keys
+        # since the Spec __hash__ will change as patches are added to them
+        spec_to_patches = {}
+        for s in root.traverse():
+            # After concretizing, assign namespaces to anything left.
+            # Note that this doesn't count as a "change".  The repository
+            # configuration is constant throughout a spack run, and
+            # normalize and concretize evaluate Packages using Repo.get(),
+            # which respects precedence.  So, a namespace assignment isn't
+            # changing how a package name would have been interpreted and
+            # we can do it as late as possible to allow as much
+            # compatibility across repositories as possible.
+            if s.namespace is None:
+                s.namespace = spack.repo.path.repo_for_pkg(s.name).namespace
+
+            if s.concrete:
+                continue
+
+            # Add any patches from the package to the spec.
+            patches = []
+            for cond, patch_list in s.package_class.patches.items():
+                if s.satisfies(cond, strict=True):
+                    for patch in patch_list:
+                        patches.append(patch)
+            if patches:
+                spec_to_patches[id(s)] = patches
+        # Also record all patches required on dependencies by
+        # depends_on(..., patch=...)
+        for dspec in root.traverse_edges(deptype=all,
+                                         cover='edges', root=False):
+            pkg_deps = dspec.parent.package_class.dependencies
+            if dspec.spec.name not in pkg_deps:
+                continue
+
+            if dspec.spec.concrete:
+                continue
+
+            patches = []
+            for cond, dependency in pkg_deps[dspec.spec.name].items():
+                if dspec.parent.satisfies(cond, strict=True):
+                    for pcond, patch_list in dependency.patches.items():
+                        if dspec.spec.satisfies(pcond):
+                            for patch in patch_list:
+                                patches.append(patch)
+            if patches:
+                all_patches = spec_to_patches.setdefault(id(dspec.spec), [])
+                all_patches.extend(patches)
+        for spec in root.traverse():
+            if id(spec) not in spec_to_patches:
+                continue
+
+            patches = list(lang.dedupe(spec_to_patches[id(spec)]))
+            mvar = spec.variants.setdefault(
+                'patches', vt.MultiValuedVariant('patches', ())
+            )
+            mvar.value = tuple(p.sha256 for p in patches)
+            # FIXME: Monkey patches mvar to store patches order
+            full_order_keys = list(tuple(p.ordering_key) + (p.sha256,) for p
+                                   in patches)
+            ordered_hashes = sorted(full_order_keys)
+            tty.debug("Ordered hashes [{0}]: ".format(spec.name) +
+                      ', '.join('/'.join(str(e) for e in t)
+                                for t in ordered_hashes))
+            mvar._patches_in_order_of_appearance = list(
+                t[-1] for t in ordered_hashes)
 
     @staticmethod
     def ensure_external_path_if_external(external_spec):
