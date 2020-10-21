@@ -26,4 +26,4 @@ class Blt(Package):
     depends_on('cmake')
 
     def install(self, spec, prefix):
-        llnl.util.filesystem.copy_tree('.', prefix)
+        install_tree('.', prefix)
