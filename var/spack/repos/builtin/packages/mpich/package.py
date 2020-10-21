@@ -19,6 +19,8 @@ class Mpich(AutotoolsPackage):
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 1
 
+    maintainers = ['raffenet', 'yfguo']
+
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)
