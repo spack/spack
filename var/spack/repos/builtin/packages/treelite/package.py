@@ -26,7 +26,7 @@ class Treelite(CMakePackage, PythonPackage):
     depends_on('py-scipy', when='+python', type=('build', 'run'))
 
     build_directory = 'build'
-    phases = ['cmake', 'build', 'install', 'python_build', 'python_install']
+    phases = ['cmake', 'build', 'python_build', 'install', 'python_install']
 
     def cmake_args(self):
         args = []
