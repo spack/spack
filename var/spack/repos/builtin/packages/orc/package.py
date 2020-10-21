@@ -29,8 +29,8 @@ class Orc(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append('-DCMAKE_CXX_FLAGS=-fPIC')
-        args.append('-DCMAKE_C_FLAGS=-fPIC')
+        args.append('-DCMAKE_CXX_FLAGS=' + self.compiler.cxx_pic_flag)
+        args.append('-DCMAKE_C_FLAGS=' + self.compiler.cc_pic_flag)
         args.append('-DINSTALL_VENDORED_LIBS:BOOL=OFF')
         args.append('-DBUILD_LIBHDFSPP:BOOL=OFF')
         args.append('-DBUILD_TOOLS:BOOL=OFF')
