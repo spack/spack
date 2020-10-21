@@ -786,10 +786,10 @@ class InsufficientArchitectureInfoError(spack.error.SpackError):
             % (spec.name, str(archs)))
 
 
-class NoBuildError(spack.error.SpackError):
+class NoBuildError(spack.error.SpecError):
     """Raised when a package is configured with the buildable option False, but
-       no satisfactory external versions can be found"""
-
+    no satisfactory external versions can be found
+    """
     def __init__(self, spec):
         msg = ("The spec\n    '%s'\n    is configured as not buildable, "
                "and no matching external installs were found")

@@ -208,6 +208,7 @@ variant_default_value(Package, Variant, Value)
 #defined variant_default_value/3.
 #defined variant_possible_value/3.
 #defined variant_default_value_from_packages_yaml/3.
+#defined variant_default_value_from_package_py/3.
 
 %-----------------------------------------------------------------------------
 % Platform semantics
