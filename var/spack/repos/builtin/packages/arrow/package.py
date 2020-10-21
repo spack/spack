@@ -61,14 +61,27 @@ class Arrow(CMakePackage, CudaPackage):
             "-DARROW_WITH_BROTLI=OFF",
             "-DARROW_WITH_LZ4=OFF",
         ]
+
         if self.spec.satisfies('+cuda'):
             args.append('-DARROW_CUDA:BOOL=ON')
+        else:
+            args.append('-DARROW_CUDA:BOOL=OFF')
+
         if self.spec.satisfies('+python'):
             args.append("-DARROW_PYTHON:BOOL=ON")
+        else:
+            args.append('-DARROW_PYTHON:BOOL=OFF')
+
         if self.spec.satisfies('+parquet'):
             args.append("-DARROW_PARQUET:BOOL=ON")
+        else:
+            args.append("-DARROW_PARQUET:BOOL=OFF")
+
         if self.spec.satisfies('+orc'):
             args.append('-DARROW_ORC:BOOL=ON')
+        else:
+            args.append('-DARROW_ORC:BOOL=OFF')
+
         for dep in ('flatbuffers', 'rapidjson', 'snappy', 'zlib', 'zstd'):
             args.append("-D{0}_HOME={1}".format(dep.upper(),
                                                 self.spec[dep].prefix))
