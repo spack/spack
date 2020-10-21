@@ -31,7 +31,7 @@ from six import StringIO
 from six.moves.urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
+from llnl.util.tty.color import cescape, colorize
 
 import spack.error
 import spack.util.compression as comp
@@ -898,6 +898,9 @@ def color_url(path, **kwargs):
         errors (bool): Append parse errors at end of string.
         subs (bool): Color substitutions as well as parsed name/version.
     """
+    # Allow URLs containing @ and }
+    path = cescape(path)
+
     errors = kwargs.get('errors', False)
     subs   = kwargs.get('subs', False)
 
