@@ -30,7 +30,7 @@ class PyOrTools(CMakePackage):
     depends_on('osi@0.108.6')
     depends_on('coinutils@2.11.4')
     depends_on('swig')
-    depends_on('python')
+    depends_on('python', type=('build', 'run'))
     depends_on('py-wheel', type='build')
     depends_on('py-virtualenv', type='build')
     depends_on('scipoptsuite')
