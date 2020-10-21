@@ -15,7 +15,6 @@ class PyGosam(PythonPackage):
     url      = "https://gosam.hepforge.org/downloads/?f=gosam-2.0.4-6d9f1cba.tar.gz"
 
     version('2.0.4', sha256='faf621c70f66d9dffc16ac5cce66258067f39f686d722a4867eeb759fcde4f44')
-    patch('gosam-1.2.4.patch')
 
     depends_on('form', type=('build', 'run'))
     depends_on('qgraf', type=('build', 'run'))
