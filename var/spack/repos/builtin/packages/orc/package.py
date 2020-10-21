@@ -37,6 +37,7 @@ class Orc(CMakePackage):
         args.append('-DBUILD_CPP_TESTS:BOOL=OFF')
 
         for x in ('snappy', 'zlib', 'zstd', 'lz4', 'protobuf'):
-            args.append('-D{0}_HOME={1}'.format(x.upper(), self.spec[x].prefix))
+            args.append('-D{0}_HOME={1}'.format(x.upper(),
+                                                self.spec[x].prefix))
 
         return args
