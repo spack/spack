@@ -26,10 +26,8 @@ class Lapackpp(CMakePackage):
 
     # Needs to compile against a matching blaspp version
     depends_on('blaspp')
-    depends_on('blaspp@master', when='lapackpp@master')
-    depends_on('blaspp@2020.10.01', when='lapackpp@2020.10.01')
-    depends_on('blaspp@2020.10.00', when='lapackpp@2020.10.00')
-    depends_on('blaspp@2020.09.00', when='lapackpp@2020.09.00')
+    for ver in ['master', '2020.10.01', '2020.10.00', '2020.09.00']:
+        depends_on('blaspp@' + ver, when='@' + ver)
     depends_on('blas')
     depends_on('lapack')
 
