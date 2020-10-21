@@ -248,6 +248,10 @@ class Boost(Package):
           sha256='246508e052c44b6f4e8c2542a71c06cacaa72cd1447ab8d2a542b987bc35ace9',
           when='@1.73.0')
 
+    # Support bzip2 and gzip in other directory
+    # See https://github.com/boostorg/build/pull/154
+    patch('boost_154.patch', when='@:1.63.99')
+
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
             url = "https://dl.bintray.com/boostorg/release/{0}/source/boost_{1}.tar.bz2"

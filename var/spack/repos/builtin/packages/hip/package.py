@@ -29,9 +29,9 @@ class Hip(CMakePackage):
         depends_on('hip-rocclr@' + ver,  type='build', when='@' + ver)
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('comgr@' + ver, when='@' + ver)
+        depends_on('comgr@' + ver, type=('build', 'link', 'run'), when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-device-libs@' + ver, type=('build', 'link', 'run'), when='@' + ver)
         depends_on('rocminfo@' + ver, type='build', when='@' + ver)
 
     # Notice: most likely this will only be a hard dependency on 3.7.0
@@ -86,6 +86,17 @@ class Hip(CMakePackage):
                 'hipconfig', 'hipify-cmakefile'
             ]
             filter_file(match, substitute, *files, **kwargs)
+
+    @run_before('install')
+    def filter_numactl(self):
+        if '@3.7.0:' in self.spec:
+            numactl = self.spec['numactl'].prefix.lib
+            kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+
+            with working_dir('bin'):
+                match = ' -lnuma'
+                substitute = " -L{numactl} -lnuma".format(numactl=numactl)
+                filter_file(match, substitute, 'hipcc', **kwargs)
 
     def cmake_args(self):
         args = [

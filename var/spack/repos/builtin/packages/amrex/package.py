@@ -67,10 +67,13 @@ class Amrex(CMakePackage):
             description='Enable Hypre interfaces')
     variant('petsc', default=False,
             description='Enable PETSc interfaces')
+    variant('cuda', default=False,
+            description='Enable CUDA interfaces')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
     depends_on('sundials@4.0.0:4.1.0 +ARKODE +CVODE', when='@19.08: +sundials')
+    depends_on('cuda@9.0.0:', when='+cuda')
     depends_on('python@2.7:', type='build', when='@:20.04')
     depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
     depends_on('cmake@3.13:', type='build', when='@18.11:')
@@ -127,6 +130,7 @@ class Amrex(CMakePackage):
             '-DENABLE_HDF5:BOOL=%s' % self.cmake_is_on('+hdf5'),
             '-DENABLE_HYPRE:BOOL=%s' % self.cmake_is_on('+hypre'),
             '-DENABLE_PETSC:BOOL=%s' % self.cmake_is_on('+petsc'),
+            '-DENABLE_CUDA:BOOL=%s' % self.cmake_is_on('+cuda'),
         ]
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')

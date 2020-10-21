@@ -42,6 +42,12 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
     def autoreconf(self, spec, prefix):
         Executable('./bootstrap')()
 
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libltdl'], root=self.prefix, recursive=True, shared=True
+        )
+
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
 

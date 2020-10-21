@@ -96,6 +96,12 @@ properties = {
                     'version': {'type': 'string'},
                 },
             },
+            'develop': {
+                'anyOf': [
+                    {'type': 'boolean'},
+                    {'type': 'string'},
+                ],
+            },
             'namespace': {'type': 'string'},
             'parameters': {
                 'type': 'object',

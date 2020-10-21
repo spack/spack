@@ -153,7 +153,7 @@ class Gromacs(CMakePackage):
         elif target >= llnl.util.cpu.targets['bulldozer']:
             # AMD Family 15h
             options.append('-DGMX_SIMD=AVX_128_FMA')
-        elif target >= llnl.util.cpu.targets['power7']:
+        elif 'vsx' in target:
             # IBM Power 7 and beyond
             options.append('-DGMX_SIMD=IBM_VSX')
         elif target.family == llnl.util.cpu.targets['aarch64']:

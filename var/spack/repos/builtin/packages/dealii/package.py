@@ -263,9 +263,18 @@ class Dealii(CMakePackage, CudaPackage):
                       'MPI support enabled.'.format(p))
 
     # Optional dependencies:
+    conflicts('+adol-c', when='^netcdf',
+              msg='Symbol clash between the ADOL-C library and '
+                  'Netcdf.')
     conflicts('+adol-c', when='^trilinos+chaco',
-              msg='symbol clash between the ADOL-C library and '
+              msg='Symbol clash between the ADOL-C library and '
                   'Trilinos SEACAS Chaco.')
+    conflicts('+adol-c', when='^trilinos+netcdf',
+              msg='Symbol clash between the ADOL-C library and '
+                  'Trilinos Netcdf.')
+    conflicts('+adol-c', when='^trilinos+pnetcdf',
+              msg='Symbol clash between the ADOL-C library and '
+                  'Trilinos parallel Netcdf.')
 
     conflicts('+slepc', when='~petsc',
               msg='It is not possible to enable slepc interfaces '
@@ -303,9 +312,10 @@ class Dealii(CMakePackage, CudaPackage):
             # Note that both lapack and blas are provided in -DLAPACK_XYZ.
             self.define('LAPACK_FOUND', True),
             self.define(
-                'LAPACK_INCLUDE_DIRS', lapack_blas_headers.directories
+                'LAPACK_INCLUDE_DIRS',
+                ';'.join(lapack_blas_headers.directories)
             ),
-            self.define('LAPACK_LIBRARIES', lapack_blas_libs),
+            self.define('LAPACK_LIBRARIES', lapack_blas_libs.joined(';')),
             self.define('UMFPACK_DIR', spec['suite-sparse'].prefix),
             self.define('ZLIB_DIR', spec['zlib'].prefix),
             self.define('DEAL_II_ALLOW_BUNDLED', False)
@@ -318,7 +328,7 @@ class Dealii(CMakePackage, CudaPackage):
                 self.define(
                     'BZIP2_INCLUDE_DIRS', spec['bzip2'].prefix.include
                 ),
-                self.define('BZIP2_LIBRARIES', spec['bzip2'].libs)
+                self.define('BZIP2_LIBRARIES', spec['bzip2'].libs.joined(';'))
             ])
 
         # Doxygen documentation
@@ -428,9 +438,10 @@ class Dealii(CMakePackage, CudaPackage):
                     self.define('TBB_FOUND', True),
                     self.define('TBB_VERSION', tbb_ver),
                     self.define(
-                        'TBB_INCLUDE_DIRS', spec['tbb'].headers.directories
+                        'TBB_INCLUDE_DIRS',
+                        ';'.join(spec['tbb'].headers.directories)
                     ),
-                    self.define('TBB_LIBRARIES', spec['tbb'].libs)
+                    self.define('TBB_LIBRARIES', spec['tbb'].libs.joined(';'))
                 ])
             else:
                 options.append(
@@ -481,7 +492,7 @@ class Dealii(CMakePackage, CudaPackage):
                     spec['netcdf-cxx'].prefix.include,
                     spec['netcdf-c'].prefix.include
                 )),
-                self.define('NETCDF_LIBRARIES', netcdf_libs)
+                self.define('NETCDF_LIBRARIES', netcdf_libs.joined(';'))
             ])
         else:
             options.append(
@@ -499,7 +510,7 @@ class Dealii(CMakePackage, CudaPackage):
                 self.define(
                     'SCALAPACK_INCLUDE_DIRS', spec['scalapack'].prefix.include
                 ),
-                self.define('SCALAPACK_LIBRARIES', scalapack_libs)
+                self.define('SCALAPACK_LIBRARIES', scalapack_libs.joined(';'))
             ])
 
         # Open Cascade

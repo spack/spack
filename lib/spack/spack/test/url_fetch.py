@@ -191,7 +191,7 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
         stage.fetch()
 
     status = capfd.readouterr()[1]
-    assert '##### 100.0%' in status
+    assert '##### 100' in status
 
 
 def test_url_extra_fetch(tmpdir, mock_archive):
