@@ -27,6 +27,7 @@ class Veloc(CMakePackage):
     depends_on('mpi')
     depends_on('er')
     depends_on('axl')
+    depends_on('openssl')  # Relies on the OpenSSL crypto library for checksums
     depends_on('pdsh', when='@master')
     depends_on('cmake@3.9:', type='build')
 
