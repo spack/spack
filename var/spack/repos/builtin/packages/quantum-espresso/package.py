@@ -200,7 +200,7 @@ class QuantumEspresso(Package):
     # QE 6.6 fix conpile error when FFT_LIBS is specified.
     patch('https://gitlab.com/QEF/q-e/-/commit/cf1fedefc20d39f5cd7551ded700ea4c77ad6e8f.diff',
           sha256='8f179663a8d031aff9b1820a32449942281195b6e7b1ceaab1f729651b43fa58',
-          when='@6.6')
+          when='+patch@6.6')
     # QE 6.3 requires multiple patches to fix MKL detection
     # There may still be problems on Mac with MKL detection
     patch('https://gitlab.com/QEF/q-e/commit/0796e1b7c55c9361ecb6515a0979280e78865e36.diff',
