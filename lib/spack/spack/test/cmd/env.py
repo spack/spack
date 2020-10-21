@@ -185,17 +185,18 @@ def test_env_modifications_error_on_activate(
     assert "Warning: couldn't get environment settings" in err
 
 
-def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
+def test_env_install_same_spec_twice(install_mockery, mock_fetch):
     env('create', 'test')
 
     e = ev.read('test')
-    with capfd.disabled():
-        with e:
-            # The first installation outputs the package prefix
-            install('cmake-client')
-            # The second installation attempt will also update the view
-            out = install('cmake-client')
-            assert 'Updating view at' in out
+    with e:
+        # The first installation outputs the package prefix, updates the view
+        out = install('cmake-client')
+        assert 'Updating view at' in out
+
+        # The second installation reports all packages already installed
+        out = install('cmake-client')
+        assert 'already installed' in out
 
 
 def test_env_install_two_specs_same_dep(install_mockery, mock_fetch, tmpdir):

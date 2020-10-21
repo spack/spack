@@ -1414,7 +1414,7 @@ class Environment(object):
                     specs_to_install.append(spec)
 
         if not specs_to_install:
-            tty.debug('All of the packages are already installed')
+            tty.msg('All of the packages are already installed')
             return
 
         tty.debug('Processing {0} uninstalled specs'
