@@ -605,7 +605,7 @@ SYCL/DPC++
 ^^^^^^^^^^
 
 The SYCL/DPC++ compiler is Intel and Codeplay's `staging area compiler <https://github.com/intel/llvm>`_ for upcoming Clang/LLVM SYCL support.
-This compiler is available in binary form via apt & yum packages, docker containers, or an intel installer with `oneAPI <https://software.intel.com/content/www/us/en/develop/tools/oneapi/download.html#basekit>`_ and can be activated with ``source /opt/intel/inteloneapi/setvars.sh`` on Linux.
+This compiler is available in binary form via apt & yum packages, docker containers, or an intel installer with `oneAPI <https://software.intel.com/content/www/us/en/develop/tools/oneapi/download.html#basekit>`_ and can be activated with ``source /opt/intel/oneapi/setvars.sh`` on Linux.
 
 One can record these activation steps by comparing set environment variables:
 
@@ -613,7 +613,7 @@ One can record these activation steps by comparing set environment variables:
 
    env > env.txt
    set +e
-   source /opt/intel/inteloneapi/setvars.sh
+   source /opt/intel/oneapi/setvars.sh
    env > env_extras.txt
    diff env.txt env_extras.txt
 
@@ -622,12 +622,12 @@ A typical entry in ``compilers.yaml`` looks like this:
 
 .. code-block:: yaml
 
-   # DPC++ 2021.1-beta07 (2020.5.0.0604)
+   # DPC++ 2021.1-beta09 (2020.8.0.0827)
    - compiler:
        spec: clang@11.0.0
        paths:
-         cc: /opt/intel/inteloneapi/compiler/latest/linux/bin/clang
-         cxx: /opt/intel/inteloneapi/compiler/latest/linux/bin/dpcpp
+         cc: /opt/intel/oneapi/compiler/2021.1-beta09/linux/bin/clang
+         cxx: /opt/intel/oneapi/compiler/2021.1-beta09/linux/bin/dpcpp
          f77:
          fc:
        flags: {}
@@ -636,16 +636,15 @@ A typical entry in ``compilers.yaml`` looks like this:
        modules: []
        environment:
          set:
-           OCL_ICD_FILENAMES: "libintelocl_emu.so:libalteracl.so:/opt/intel/inteloneapi/compiler/latest/linux/lib/x64/libintelocl.so"
+           OCL_ICD_FILENAMES: "libintelocl_emu.so:libalteracl.so:/opt/intel/oneapi/compiler/2021.1-beta09/linux/lib/x64/libintelocl.so"
            ACL_BOARD_VENDOR_PATH: "/opt/Intel/OpenCLFPGA/oneAPI/Boards"
-           INTELFPGAOCLSDKROOT: "/opt/intel/inteloneapi/compiler/2021.1-beta07/linux/lib/oclfpga"
-           DPCPP_ROOT: "/opt/intel/inteloneapi"
-           ONEAPI_ROOT: "/opt/intel/inteloneapi"
+           INTELFPGAOCLSDKROOT: "/opt/intel/oneapi/compiler/2021.1-beta09/linux/lib/oclfpga"
+           ONEAPI_ROOT: "/opt/intel/oneapi"
          prepend_path:
-           LD_LIBRARY_PATH: "/opt/intel/inteloneapi/compiler/latest/linux/lib:/opt/intel/inteloneapi/compiler/latest/linux/lib/x64:/opt/intel/inteloneapi/compiler/2021.1-beta07/linux/lib/oclfpga/host/linux64/lib:/opt/intel/inteloneapi/compiler/2021.1-beta07/linux/lib/oclfpga/linux64/lib:/opt/intel/inteloneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/inteloneapi/compiler/latest/linux/compiler/lib"
-           CPATH: "/opt/intel/inteloneapi/dev-utilities/2021.1-beta07/include:/opt/intel/inteloneapi/compiler/latest/linux/include"
-           LIBRARY_PATH: "/opt/intel/inteloneapi/compiler/latest/linux/lib"
-           PATH: "/opt/intel/inteloneapi/dev-utilities/2021.1-beta07/bin:/opt/intel/inteloneapi/compiler/2021.1-beta07/linux/lib/oclfpga/bin:/opt/intel/inteloneapi/compiler/latest/linux/bin/intel64:/opt/intel/inteloneapi/compiler/latest/linux/bin:/opt/intel/inteloneapi/compiler/latest/linux/ioc/bin"
+           LD_LIBRARY_PATH: "/opt/intel/oneapi/compiler/2021.1-beta09/linux/lib:/opt/intel/oneapi/compiler/2021.1-beta09/linux/lib/x64:/opt/intel/oneapi/compiler/2021.1-beta09/linux/lib/emu:/opt/intel/oneapi/compiler/2021.1-beta09/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2021.1-beta09/linux/lib/oclfpga/linux64/lib:/opt/intel/oneapi/compiler/2021.1-beta09/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/2021.1-beta09/linux/compiler/lib:/opt/intel/oneapi/tbb/2021.1-beta09/lib/intel64/gcc4.8"
+           CPATH: "/opt/intel/oneapi/compiler/2021.1-beta09/linux/include:/opt/intel/oneapi/dev-utilities/2021.1-beta09/include:/opt/intel/oneapi/tbb/2021.1-beta09/include"
+           LIBRARY_PATH: "/opt/intel/oneapi/compiler/2021.1-beta09/linux/lib:/opt/intel/oneapi/tbb/2021.1-beta09/lib/intel64/gcc4.8"
+           PATH: "/opt/intel/oneapi/compiler/2021.1-beta09/linux/lib/oclfpga/llvm/aocl-bin:/opt/intel/oneapi/compiler/2021.1-beta09/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2021.1-beta09/linux/bin/intel64:/opt/intel/oneapi/compiler/2021.1-beta09/linux/bin:/opt/intel/oneapi/compiler/2021.1-beta09/linux/ioc/bin:/opt/intel/oneapi/dev-utilities/2021.1-beta09/bin"
 
 
 ^^^
