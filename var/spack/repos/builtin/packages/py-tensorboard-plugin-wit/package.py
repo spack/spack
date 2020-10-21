@@ -14,15 +14,22 @@ class PyTensorboardPluginWit(Package):
        that requires minimal code."""
 
     homepage = "https://pypi.python.org/project/tensorboard-plugin-wit"
+    url      = "https://github.com/PAIR-code/what-if-tool/archive/v1.7.0.tar.gz"
     git      = "https://github.com/pair-code/what-if-tool.git"
 
+    maintainers = ['aweits']
+
     version('master', branch='master')
+    version('1.7.0', sha256='30dcab9065b02c3f1476f4fb92b27f6feb6c00cdb281699c44d8e69c86745247')
+
     depends_on('bazel@0.26.1:', type='build')
     depends_on('py-setuptools@36.2.0:', type='build')
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
     depends_on('py-wheel', type='build')
 
     extends('python')
+
+    patch('tboard_shellenv.patch')
 
     phases = ['setup', 'build', 'install']
 
@@ -38,13 +45,13 @@ class PyTensorboardPluginWit(Package):
                     'dest="{0}"'.format(builddir),
                     'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
         filter_file(r'pip install .*',
-                    ''.format(builddir),
+                    '',
                     'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
         filter_file(r'command \-v .*',
-                    ''.format(builddir),
+                    '',
                     'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
         filter_file(r'virtualenv venv',
-                    ''.format(builddir),
+                    '',
                     'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
 
     def build(self, spec, prefix):

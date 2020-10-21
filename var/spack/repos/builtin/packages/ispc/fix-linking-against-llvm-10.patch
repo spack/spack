@@ -1,0 +1,26 @@
+From 0b68b43ec71130e1167d9ff59d5f874be47a9414 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20Aumu=CC=88ller?= <aumuell@reserv.at>
+Date: Sun, 18 Oct 2020 21:02:32 +0200
+Subject: [PATCH] fix linking against llvm 10
+
+---
+ CMakeLists.txt | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 68759c14..f4499c8f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -401,6 +401,9 @@ target_link_libraries(${PROJECT_NAME} ${LLVM_LIBRARY_LIST})
+ if (WIN32)
+     target_link_libraries(${PROJECT_NAME} version.lib shlwapi.lib odbc32.lib odbccp32.lib)
+ else()
++    if (CMAKE_DL_LIBS)
++        target_link_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS})
++    endif()
+     if (APPLE)
+         target_link_libraries(${PROJECT_NAME} pthread z curses)
+     else()
+-- 
+2.28.0
+

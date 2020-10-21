@@ -35,8 +35,8 @@ env:
             after = spack.spec.Spec('mpich').concretized()
 
     # Removing dev spec from environment changes concretization
-    assert before.satisfies('dev_path=any')
-    assert not after.satisfies('dev_path=any')
+    assert before.satisfies('dev_path=*')
+    assert not after.satisfies('dev_path=*')
 
 
 def test_undevelop_nonexistent(tmpdir, mock_packages, mutable_mock_env_path):

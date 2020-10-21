@@ -44,6 +44,12 @@ class Krims(CMakePackage):
     conflicts("%clang@:3.5")
 
     #
+    # patch
+    #
+    # float80 is enable only x86_64
+    patch('float80.patch')
+
+    #
     # Dependencies
     #
     depends_on("cmake@3:", type="build")

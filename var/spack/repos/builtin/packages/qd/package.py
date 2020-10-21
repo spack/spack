@@ -7,14 +7,24 @@ from spack import *
 
 
 class Qd(AutotoolsPackage):
-    """This package provides numeric types of twice the precision of IEEE double (106 mantissa bits, or approximately 32 decimal digits) and four times the precision of IEEE double (212 mantissa bits, or approximately 64 decimal digits).  Due to features such as operator and function overloading, these facilities can be utilized with only minor modifications to conventional C++ and Fortran-90 programs."""
+    """C++/Fortran-90 double-double and quad-double package.
+       With modifications for easier integration with NJet.
+       see http://crd-legacy.lbl.gov/~dhbailey/mpdist/ for authors page"""
 
-    homepage = "https://github.com/scibuilder/QD"
-    git      = "https://github.com/scibuilder/QD.git"
+    homepage = "https://bitbucket.org/njet/qd-library/src/master/"
+    git      = "https://bitbucket.org/njet/qd-library.git"
 
-    version('develop', branch='master')
+    version('2.3.13', commit='a57dde9')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%nvhpc'):
+            env.append_flags('FCFLAGS', "-fPIC")
+
+    def configure_args(self):
+        args = ['--enable-shared']
+        return args

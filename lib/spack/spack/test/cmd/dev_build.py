@@ -333,7 +333,7 @@ env:
     # Ensure variants set properly
     for dep in (dep_spec, spec['dev-build-test-install']):
         assert dep.satisfies('dev_path=%s' % build_dir)
-    assert spec.satisfies('^dev_path=any')
+    assert spec.satisfies('^dev_path=*')
 
 
 @pytest.mark.parametrize('test_spec', ['dev-build-test-install',

@@ -87,6 +87,17 @@ class Hip(CMakePackage):
             ]
             filter_file(match, substitute, *files, **kwargs)
 
+    @run_before('install')
+    def filter_numactl(self):
+        if '@3.7.0:' in self.spec:
+            numactl = self.spec['numactl'].prefix.lib
+            kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+
+            with working_dir('bin'):
+                match = ' -lnuma'
+                substitute = " -L{numactl} -lnuma".format(numactl=numactl)
+                filter_file(match, substitute, 'hipcc', **kwargs)
+
     def cmake_args(self):
         args = [
             '-DHIP_COMPILER=clang',

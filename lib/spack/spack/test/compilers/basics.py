@@ -442,6 +442,30 @@ def test_clang_flags():
                         'clang@3.3')
 
 
+def test_aocc_flags():
+    supported_flag_test("debug_flags",
+                        ['-gcodeview', '-gdwarf-2', '-gdwarf-3',
+                         '-gdwarf-4', '-gdwarf-5', '-gline-tables-only',
+                         '-gmodules', '-gz', '-g'],
+                        'aocc@2.2.0')
+    supported_flag_test("opt_flags",
+                        ['-O0', '-O1', '-O2', '-O3', '-Ofast',
+                         '-Os', '-Oz', '-Og',
+                         '-O', '-O4'],
+                        'aocc@2.2.0')
+    supported_flag_test("openmp_flag", "-fopenmp", "aocc@2.2.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "aocc@2.2.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "aocc@2.2.0")
+    supported_flag_test("cxx17_flag", "-std=c++17", "aocc@2.2.0")
+    supported_flag_test("c99_flag", "-std=c99", "aocc@2.2.0")
+    supported_flag_test("c11_flag", "-std=c11", "aocc@2.2.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("version_argument", "--version", "aocc@2.2.0")
+
+
 def test_fj_flags():
     supported_flag_test("openmp_flag", "-Kopenmp", "fj@4.0.0")
     supported_flag_test("cxx98_flag", "-std=c++98", "fj@4.0.0")
