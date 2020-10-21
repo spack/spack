@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import shutil
 
 
 class Herwig3(AutotoolsPackage):
@@ -93,5 +94,4 @@ class Herwig3(AutotoolsPackage):
 
     @run_after('install')
     def remove_lhapdfsets(self):
-        import shutil
         shutil.rmtree(self.prefix.tmppdfsets)
