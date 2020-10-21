@@ -22,6 +22,7 @@ class PyLifelines(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'), when='@0.9.4')
     depends_on('py-scipy', type=('build', 'run'), when='@0.9.4')
     depends_on('py-pandas@0.18.0:', type=('build', 'run'), when='@0.9.4')
+    depends_on('python@3.6:', type=('build', 'run'), when='@0.25.5:')
     depends_on('py-pandas@0.23.0:', type=('build', 'run'), when='@0.25.5:')
     depends_on('py-scipy@1.2.0:', type=('build', 'run'), when='@0.25.5:')
     depends_on('py-numpy@1.14:', type=('build', 'run'), when='@0.25.5:')
