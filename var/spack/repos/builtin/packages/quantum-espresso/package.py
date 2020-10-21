@@ -175,6 +175,10 @@ class QuantumEspresso(Package):
     conflicts('@:6.2,6.5:', when='+qmcpack',
               msg='QMCPACK converter NOT available for this version of QE')
 
+    # Internal compiler error gcc8 and a64fx, I check only 6.5 and 6.6
+    conflicts('@5.3:', when='%gcc@8 target=a64fx',
+              msg='Internal compiler error with gcc8 and a64fx')
+
     # 6.4.1
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
     patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
@@ -193,6 +197,10 @@ class QuantumEspresso(Package):
     patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.003')
 
     # QE UPSTREAM PATCHES
+    # QE 6.6 fix conpile error when FFT_LIBS is specified.
+    patch('https://gitlab.com/QEF/q-e/-/commit/cf1fedefc20d39f5cd7551ded700ea4c77ad6e8f.diff',
+          sha256='8f179663a8d031aff9b1820a32449942281195b6e7b1ceaab1f729651b43fa58',
+          when='+patch@6.6')
     # QE 6.3 requires multiple patches to fix MKL detection
     # There may still be problems on Mac with MKL detection
     patch('https://gitlab.com/QEF/q-e/commit/0796e1b7c55c9361ecb6515a0979280e78865e36.diff',
@@ -350,7 +358,7 @@ class QuantumEspresso(Package):
         # can't be applied to the '+qmcpack' variant
         if spec.variants['hdf5'].value != 'none':
             if (spec.satisfies('@6.1.0:6.4.0') or
-                (spec.satisfies('@6.4.1') and '+qmcpack' in spec)):
+                    (spec.satisfies('@6.4.1') and '+qmcpack' in spec)):
                 make_inc = join_path(self.stage.source_path, 'make.inc')
                 zlib_libs = spec['zlib'].prefix.lib + ' -lz'
                 filter_file(
