@@ -13,7 +13,7 @@ class Lapackpp(CMakePackage):
        Knoxville."""
 
     homepage = "https://bitbucket.org/icl/lapackpp"
-    git = "https://bitbucket.org/gragghia/lapackpp"
+    git = homepage
     url = 'https://bitbucket.org/icl/lapackpp/downloads/lapackpp-2020.09.00.tar.gz'
     maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 

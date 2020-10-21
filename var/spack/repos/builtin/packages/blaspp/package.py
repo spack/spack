@@ -13,7 +13,7 @@ class Blaspp(CMakePackage, CudaPackage):
        Knoxville."""
 
     homepage = 'https://bitbucket.org/icl/blaspp'
-    git = 'https://bitbucket.org/gragghia/blaspp'
+    git = homepage
     url = 'https://bitbucket.org/icl/blaspp/downloads/blaspp-2020.09.00.tar.gz'
     maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
