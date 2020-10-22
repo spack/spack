@@ -27,7 +27,7 @@ class PpopenApplDemUtil(MakefilePackage):
     def edit(self, spec, prefix):
         mkdirp('bin')
         mkdirp('lib')
-        mkdirp('include')        
+        mkdirp('include')
         makefile_in = FileFilter('Makefile.in')
         makefile_in.filter('PREFIX += .*', 'PREFIX = {0}'.format(prefix))
         makefile_in.filter('F90 += .*', 'F90 = {0}'.format(spack_fc))
