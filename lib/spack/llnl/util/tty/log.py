@@ -315,39 +315,43 @@ class FileWrapper(object):
 
 
 class MultiProcessFd(object):
-    """Provide the same API as ``multiprocessing.connection.Connection`` for
-       Python versions before 3.8. This is intended to be used for file
-       descriptors that must be transmitted between processes."""
+    """Return an object which stores a file descriptor and can be passed as an
+       argument to a function run with ``multiprocessing.Process``, such that the
+       file descriptor is available in the subprocess."""
     def __init__(self, fd):
-        self._handle = fd
+        self._connection = None
+        self._fd = None
+        if sys.version_info >= (3, 8):
+            self._connection = multiprocessing.connection.Connection(fd)
+        else
+            self._fd = fd
+
+    @property
+    def fd(self):
+        if self._connection:
+            return self._connection._handle
+        else:
+            return self._fd
 
     def close(self):
-        os.close(self._handle)
+        if self._connection:
+            self._connection.close()
+        else:
+            os.close(self._fd)
 
 
-def multiprocess_fd(fd):
-    """Return an object which stores a file descriptor and can be passed as an
-    argument to a function run with ``multiprocessing.Process``, such that the
-    file descriptor is available in the subprocess.
-    """
-    if sys.version_info >= (3, 8):
-        return multiprocessing.connection.Connection(fd)
-    else:
-        return MultiProcessFd(fd)
-
-
-def close_connection_and_file(connection, file):
-    # The object returned by multiprocess_fd is intended to transmit the FD
+def close_connection_and_file(multiprocess_fd, file):
+    # MultiprocessFd is intended to transmit a FD
     # to a child process, this FD is then opened to a Python File object
-    # (using fdopen). In >= 3.8, multiprocess_fd returns a
+    # (using fdopen). In >= 3.8, MultiprocessFd encapsulates a
     # multiprocessing.connection.Connection; Connection closes the FD
     # when it is deleted, and prints a warning about duplicate closure if
-    # it is not explicitly closed. In < 3.8, multiprocess_fd returns a
-    # MultiProcessFd object; closing the FD here appears to conflict with
+    # it is not explicitly closed. In < 3.8, MultiprocessFd encapsulates a
+    # simple FD; closing the FD here appears to conflict with
     # closure of the File object (in < 3.8 that is). Therefore this needs
     # to choose whether to close the File or the Connection.
     if sys.version_info >= (3, 8):
-        connection.close()
+        multiprocess_fd.close()
     else:
         file.close()
 
@@ -479,7 +483,7 @@ class log_output(object):
         # OS-level pipe for redirecting output to logger
         read_fd, write_fd = os.pipe()
 
-        read_wrapper = multiprocess_fd(read_fd)
+        read_multiprocess_fd = MultiprocessFd(read_fd)
 
         # Multiprocessing pipe for communication back from the daemon
         # Currently only used to save echo value between uses
@@ -489,26 +493,27 @@ class log_output(object):
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
             try:
-                input_wrapper = multiprocess_fd(
+                input_multiprocess_fd = MultiprocessFd(
                     os.dup(sys.stdin.fileno())
                 )
             except BaseException:
-                input_wrapper = None  # just don't forward input if this fails
+                # just don't forward input if this fails
+                input_multiprocess_fd = None
 
             self.process = multiprocessing.Process(
                 target=_writer_daemon,
                 args=(
-                    input_wrapper, read_wrapper, write_fd, self.echo,
-                    self.log_file, child_pipe
+                    input_multiprocess_fd, read_multiprocess_fd, write_fd,
+                    self.echo, self.log_file, child_pipe
                 )
             )
             self.process.daemon = True  # must set before start()
             self.process.start()
 
         finally:
-            if input_wrapper:
-                input_wrapper.close()
-            read_wrapper.close()
+            if input_multiprocess_fd:
+                input_multiprocess_fd.close()
+            read_multiprocess_fd.close()
 
         # Flush immediately before redirecting so that anything buffered
         # goes to the original stream
@@ -622,7 +627,7 @@ class log_output(object):
             sys.stdout.flush()
 
 
-def _writer_daemon(stdin_wrapper, read_wrapper, write_fd, echo,
+def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
                    log_file_wrapper, control_pipe):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
@@ -660,11 +665,12 @@ def _writer_daemon(stdin_wrapper, read_wrapper, write_fd, echo,
     ``StringIO`` in the parent. This is mainly for testing.
 
     Arguments:
-        stdin (stream): input from the terminal
-        read (int): pipe for reading from parent's redirected stdout
+        stdin_multiprocess_fd (int): input from the terminal
+        read_multiprocess_fd (int): pipe for reading from parent's redirected
+            stdout
         echo (bool): initial echo setting -- controlled by user and
             preserved across multiple writer daemons
-        log_file (file-like): file to log all output
+        log_file_wrapper (file-like): file to log all output
         control_pipe (Pipe): multiprocessing pipe on which to send control
             information to the parent
 
@@ -679,10 +685,10 @@ def _writer_daemon(stdin_wrapper, read_wrapper, write_fd, echo,
 
     # Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
-    in_pipe = os.fdopen(read_wrapper._handle, 'r', 1)
+    in_pipe = os.fdopen(read_multiprocess_fd.fd, 'r', 1)
 
-    if stdin_wrapper:
-        stdin = os.fdopen(stdin_wrapper._handle)
+    if stdin_multiprocess_fd:
+        stdin = os.fdopen(stdin_multiprocess_fd.fd)
     else:
         stdin = None
 
@@ -753,9 +759,9 @@ def _writer_daemon(stdin_wrapper, read_wrapper, write_fd, echo,
         if isinstance(log_file, StringIO):
             control_pipe.send(log_file.getvalue())
         log_file_wrapper.close()
-        close_connection_and_file(read_wrapper, in_pipe)
-        if stdin_wrapper:
-            close_connection_and_file(stdin_wrapper, stdin)
+        close_connection_and_file(read_multiprocess_fd, in_pipe)
+        if stdin_multiprocess_fd:
+            close_connection_and_file(stdin_multiprocess_fd, stdin)
 
         # send echo value back to the parent so it can be preserved.
         control_pipe.send(echo)
