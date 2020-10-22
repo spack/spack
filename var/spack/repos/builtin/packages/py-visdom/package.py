@@ -40,8 +40,17 @@ class PyVisdom(PythonPackage):
     # if you need specific versions. A generic python dependency is
     # added implicity by the PythonPackage class.
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy@1.8:', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-requests', type=('build', 'run'))
+    depends_on('py-tornado', type=('build', 'run'))
+    depends_on('py-pyzmq', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-jsonpatch', type=('build', 'run'))
+    depends_on('py-websocket-client', type=('build', 'run'))
+    depends_on('py-torch@0.3.1:', type=('build', 'run'))
+    depends_on('py-pillow', type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
