@@ -2858,16 +2858,28 @@ class Spec(object):
 
             # Ensure correctness of variants (if the spec is not virtual)
             if not spec.virtual:
-                pkg_cls = spec.package_class
-                pkg_variants = pkg_cls.variants
-                # reserved names are variants that may be set on any package
-                # but are not necessarily recorded by the package's class
-                not_existing = set(spec.variants) - (
-                    set(pkg_variants) | set(spack.directives.reserved_names))
-                if not_existing:
-                    raise vt.UnknownVariantError(spec, not_existing)
-
+                Spec.ensure_valid_variants(spec)
                 vt.substitute_abstract_variants(spec)
+
+    @staticmethod
+    def ensure_valid_variants(spec):
+        """Ensures that the variant attached to a spec are valid.
+
+        Args:
+            spec (Spec): spec to be analyzed
+
+        Raises:
+            UnknownVariantError: on the first unknown variant found
+        """
+        pkg_cls = spec.package_class
+        pkg_variants = pkg_cls.variants
+        # reserved names are variants that may be set on any package
+        # but are not necessarily recorded by the package's class
+        not_existing = set(spec.variants) - (
+            set(pkg_variants) | set(spack.directives.reserved_names)
+        )
+        if not_existing:
+            raise vt.UnknownVariantError(spec, not_existing)
 
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.

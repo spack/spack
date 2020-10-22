@@ -207,7 +207,7 @@ def check_packages_exist(specs):
                 tty.debug(msg)
 
             if not check_passed:
-                raise spack.error.SpecError(str(s.name))
+                raise spack.repo.UnknownPackageError(str(s.fullname))
 
 
 class Result(object):
@@ -1752,6 +1752,13 @@ def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False):
     driver = PyclingoDriver()
     if "asp" in dump:
         driver.out = sys.stdout
+
+    # Check upfront that the variants are admissible
+    for root in specs:
+        for s in root.traverse():
+            if s.virtual:
+                continue
+            spack.spec.Spec.ensure_valid_variants(s)
 
     setup = SpackSolverSetup()
     return driver.solve(setup, specs, dump, models, timers, stats, tests)

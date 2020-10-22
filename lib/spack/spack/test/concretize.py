@@ -649,7 +649,7 @@ class TestConcretize(object):
         assert str(s.compiler.version) == '4.5.0'
 
     def test_concretize_anonymous(self):
-        with pytest.raises(spack.error.SpecError):
+        with pytest.raises(spack.error.SpackError):
             s = Spec('+variant')
             s.concretize()
 
@@ -657,6 +657,6 @@ class TestConcretize(object):
         'mpileaks ^%gcc', 'mpileaks ^cflags=-g'
     ])
     def test_concretize_anonymous_dep(self, spec_str):
-        with pytest.raises(spack.error.SpecError):
+        with pytest.raises(spack.error.SpackError):
             s = Spec(spec_str)
             s.concretize()
