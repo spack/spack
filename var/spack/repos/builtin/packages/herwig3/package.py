@@ -28,7 +28,7 @@ class Herwig3(AutotoolsPackage):
     depends_on('vbfnlo@3:', type='link')
     depends_on('madgraph5amc', type='link')
     depends_on('njet', type='link')
-    depends_on('gosam', type='link', when='^python@2.7:2.7.99')
+    depends_on('py-gosam', type='link', when='^python@2.7:2.7.99')
     depends_on('gosam-contrib', type='link')
     depends_on('openloops', type='link')
 
