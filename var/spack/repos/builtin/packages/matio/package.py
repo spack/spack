@@ -52,5 +52,6 @@ class Matio(AutotoolsPackage):
         if self.spec.satisfies('%nvhpc'):
             # workaround anonymous version tag linker error for the NVIDIA
             # compilers
-            filter_file('\${wl}-version-script '
-                        '\${wl}\$output_objdir/\$libname.ver', '', 'configure')
+            filter_file('${wl}-version-script '
+                        '${wl}$output_objdir/$libname.ver', '',
+                        'configure', string=True)

@@ -41,7 +41,7 @@ class Zstd(MakefilePackage):
         # Remove flags not understood by the NVIDIA compilers
         if self.spec.satisfies('%nvhpc'):
             filter_file('-fvisibility=hidden', '', 'lib/Makefile')
-            filter_file('-Wc\+\+-compat', '', 'lib/Makefile')
+            filter_file('-Wc++-compat', '', 'lib/Makefile', string=True)
             filter_file('-Wcast-align', '', 'lib/Makefile')
             filter_file('-Wcast-qual', '', 'lib/Makefile')
             filter_file('-Wdeclaration-after-statement', '', 'lib/Makefile')

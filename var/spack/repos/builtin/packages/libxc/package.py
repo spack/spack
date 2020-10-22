@@ -30,7 +30,7 @@ class Libxc(AutotoolsPackage, CudaPackage):
     patch('0002-Mark-xc_erfcx-a-GPU_FUNCTION.patch', when='@5.0.0')
 
     patch('nvhpc-configure.patch', when='%nvhpc')
-    patch('nvhpc-libtool.patch', when='%nvhpc@develop')
+    patch('nvhpc-libtool.patch', when='@develop %nvhpc')
 
     @property
     def libs(self):

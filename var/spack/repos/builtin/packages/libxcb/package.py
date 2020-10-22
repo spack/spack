@@ -48,7 +48,6 @@ class Libxcb(AutotoolsPackage):
 
         return config_args
 
-
     def patch(self):
         filter_file(
             'typedef struct xcb_auth_info_t {',

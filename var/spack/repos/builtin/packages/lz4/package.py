@@ -34,7 +34,7 @@ class Lz4(MakefilePackage):
             return "{0}/r{1}.tar.gz".format(url, version.joined)
 
     def build(self, spec, prefix):
-        par=True
+        par = True
         if spec.compiler.name == 'nvhpc':
             # relocation error when building shared and dynamic libs in
             # parallel

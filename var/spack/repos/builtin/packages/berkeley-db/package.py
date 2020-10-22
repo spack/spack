@@ -43,7 +43,7 @@ class BerkeleyDb(AutotoolsPackage):
 
         # The default glibc provided by CentOS 7 does not provide proper
         # atomic support when using the NVIDIA compilers
-        if self.spec.satisfies('%nvhpc') and self.spec.satisfies('os=centos7'):
-          config_args.append('--disable-atomicsupport')
+        if self.spec.satisfies('%nvhpc os=centos7'):
+            config_args.append('--disable-atomicsupport')
 
         return config_args

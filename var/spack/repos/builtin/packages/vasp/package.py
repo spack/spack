@@ -57,7 +57,7 @@ class Vasp(MakefilePackage):
         elif '%nvhpc' in spec:
             make_include = join_path('arch', 'makefile.include.linux_pgi')
             filter_file('pgcc', spack_cc, make_include)
-            filter_file('pgc\+\+', spack_cxx, make_include)
+            filter_file('pgc++', spack_cxx, make_include, string=True)
             filter_file('pgfortran', spack_fc, make_include)
             filter_file('/opt/pgi/qd-2.3.17/install/include',
                         spec['qd'].prefix.include, make_include)

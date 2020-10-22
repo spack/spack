@@ -152,7 +152,8 @@ class Gromacs(CMakePackage):
         if '+lapack' in self.spec:
             options.append('-DGMX_EXTERNAL_LAPACK:BOOL=ON')
             if self.spec['lapack'].libs:
-                options.append('-DLAPACK_LIBRARIES={0}'.format(self.spec['lapack'].libs.joined(';')))
+                options.append('-DLAPACK_LIBRARIES={0}'.format(
+                    self.spec['lapack'].libs.joined(';')))
         else:
             options.append('-DGMX_EXTERNAL_LAPACK:BOOL=OFF')
 
@@ -191,7 +192,8 @@ class Gromacs(CMakePackage):
             ]
 
             # Workaround NVIDIA compiler bug when avx512 is enabled
-            if self.spec.satisfies('%nvhpc') and ('avx512', 'AVX_512') in simd_features:
+            if (self.spec.satisfies('%nvhpc') and
+                ('avx512', 'AVX_512') in simd_features):
                 simd_features.remove(('avx512', 'AVX_512'))
 
             for feature, flag in reversed(simd_features):
