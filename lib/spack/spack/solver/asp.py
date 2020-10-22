@@ -1486,6 +1486,21 @@ class SpackSolverSetup(object):
                 else:
                     for clause in self.spec_clauses(dep):
                         self.gen.fact(clause)
+                        # TODO: This might need to be moved somewhere else.
+                        # TODO: It's needed to account for open-ended variants
+                        # TODO: validated through a function. The rationale is
+                        # TODO: that if a value is set from cli and validated
+                        # TODO: then it's also a possible value.
+                        if clause.name == 'variant_set':
+                            variant_name = clause.args[1]
+                            variant_def = dep.package.variants[variant_name]
+                            variant_def.validate_or_raise(
+                                dep.variants[variant_name],
+                                dep.package
+                            )
+                            self.gen.fact(
+                                fn.variant_possible_value(*clause.args)
+                            )
 
         self.gen.h1("Virtual Constraints")
         self.define_virtual_constraints()
