@@ -18,4 +18,4 @@ class TestFail(Package):
         mkdirp(prefix.bin)
 
     def test(self):
-        self.run_test('true', expected=['not in the output'])
+        assert False

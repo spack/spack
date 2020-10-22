@@ -1133,7 +1133,7 @@ class PackageInstaller(object):
 
                         # Spawn a daemon that reads from a pipe and redirects
                         # everything to log_path
-                        with log_output(pkg.log_path, echo, True) as logger:
+                        with log_output(pkg.log_path, echo=echo, debug=True) as logger:
                             for phase_name, phase_attr in zip(
                                     pkg.phases, pkg._InstallPhase_phases):
 

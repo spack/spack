@@ -175,7 +175,7 @@ In the ``perl`` package, we can see:
 
    @run_after('build')
    @on_package_attributes(run_tests=True)
-   def test(self):
+   def build_test(self):
        make('test')
 
 As you can guess, this runs ``make test`` *after* building the package,

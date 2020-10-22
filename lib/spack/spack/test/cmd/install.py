@@ -118,7 +118,7 @@ def test_install_dirty_flag(arguments, expected):
     assert args.dirty == expected
 
 
-def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
+def test_package_output(tmpdir, install_mockery, mock_fetch):
     """Ensure output printed from pkgs is captured by output redirection."""
     # we can't use output capture here because it interferes with Spack's
     # logging. TODO: see whether we can get multiple log_outputs to work
@@ -697,18 +697,16 @@ def test_install_only_dependencies_of_all_in_env(
                 assert os.path.exists(dep.prefix)
 
 
-def test_install_help_does_not_show_cdash_options(capsys):
+def test_install_help_does_not_show_cdash_options():
     """Make sure `spack install --help` does not describe CDash arguments"""
     with pytest.raises(SystemExit):
-        install('--help')
-        captured = capsys.readouterr()
-        assert 'CDash URL' not in captured.out
+        output = install('--help')
+        assert 'CDash URL' not in output
 
 
-def test_install_help_cdash(capsys):
+def test_install_help_cdash():
     """Make sure `spack install --help-cdash` describes CDash arguments"""
-    install_cmd = SpackCommand('install')
-    out = install_cmd('--help-cdash')
+    out = install('--help-cdash')
     assert 'CDash URL' in out
 
 

@@ -29,13 +29,13 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(self.extra_install_tests)
 
-    def _run_smoke_tests(self):
-        """Build and run the added smoke (install) test."""
+    def test_link_and_run(self):
+        """Check ability to link and run with libsigsegv."""
         data_dir = self.test_suite.current_test_data_dir
         prog = 'smoke_test'
         src = data_dir.join('{0}.c'.format(prog))
 
-        options = [
+        compiler_options = [
             '-I{0}'.format(self.prefix.include),
             src,
             '-o',
@@ -43,16 +43,16 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
             '-L{0}'.format(self.prefix.lib),
             '-lsigsegv',
             '{0}{1}'.format(self.compiler.cc_rpath_arg, self.prefix.lib)]
-        reason = 'test: checking ability to link to the library'
-        self.run_test('cc', options, [], installed=False, purpose=reason)
+        which('cc', required=True)(*compiler_options)
 
         # Now run the program and confirm the output matches expectations
-        expected = get_escaped_text_output(data_dir.join('smoke_test.out'))
-        reason = 'test: checking ability to use the library'
-        self.run_test(prog, [], expected, purpose=reason)
+        with open(data_dir.join('smoke_test.out'), 'r') as f:
+            expected = f.read()
+        output = which(prog)(output=str, error=str)
+        assert expected in output
 
-    def _run_build_tests(self):
-        """Run selected build tests."""
+    def test_libsigsegv_unit_tests(self):
+        """Run selected sigsegv tests from package unit tests"""
         passed = 'Test passed'
         checks = {
             'sigsegv1': [passed],
@@ -62,14 +62,12 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
             'stackoverflow2': ['recursion', 'overflow', 'violation', passed],
         }
 
-        for exe, expected in checks.items():
-            reason = 'test: checking {0} output'.format(exe)
-            self.run_test(exe, [], expected, installed=True, purpose=reason,
-                          skip_missing=True)
-
-    def test(self):
-        # Run the simple built-in smoke test
-        self._run_smoke_tests()
-
-        # Run test programs pulled from the build
-        self._run_build_tests()
+        for cmd, expected in checks.items():
+            exe = which(cmd)
+            if not exe:
+                # It could have been installed before we knew to capture this
+                # file from the build system
+                continue
+            output = exe(output=str, error=str)
+            for e in expected:
+                assert e in output

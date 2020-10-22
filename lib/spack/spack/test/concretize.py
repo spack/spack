@@ -263,12 +263,12 @@ class TestConcretize(object):
         ('dealii', 'develop'),
         ('xsdk', '0.4.0'),
     ])
-    def concretize_difficult_packages(self, a, b):
+    def concretize_difficult_packages(self, spec, version):
         """Test a couple of large packages that are often broken due
         to current limitations in the concretizer"""
-        s = Spec(a + '@' + b)
+        s = Spec(spec + '@' + version)
         s.concretize()
-        assert s[a].version == ver(b)
+        assert s[spec].version == ver(version)
 
     def test_concretize_two_virtuals(self):
 

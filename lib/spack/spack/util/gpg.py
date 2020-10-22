@@ -130,7 +130,7 @@ class Gpg(object):
     @classmethod
     def verify(cls, signature, file, suppress_warnings=False):
         if suppress_warnings:
-            cls.gpg()('--verify', signature, file, error=str)
+            cls.gpg()('--verify', signature, file, error=os.devnull)
         else:
             cls.gpg()('--verify', signature, file)
 

@@ -72,12 +72,12 @@ class CDash(Reporter):
             tty.verbose("Using CDash auth token from environment")
             self.authtoken = os.environ.get('SPACK_CDASH_AUTH_TOKEN')
 
+        packages = []
         if getattr(args, 'spec', ''):
             packages = args.spec
         elif getattr(args, 'specs', ''):
             packages = args.specs
-        else:
-            packages = []
+        elif getattr(args, 'specfiles', ''):
             for file in args.specfiles:
                 with open(file, 'r') as f:
                     s = spack.spec.Spec.from_yaml(f)

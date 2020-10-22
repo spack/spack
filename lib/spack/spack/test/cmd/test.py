@@ -58,7 +58,7 @@ def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
     with open(outfile, 'r') as f:
         output = f.read()
     assert "BEFORE TEST" in output
-    assert "true: expect command status in [" in output
+    assert "RUNNING TEST" in output
     assert "AFTER TEST" in output
     assert "FAILED" not in output
 
@@ -84,7 +84,7 @@ def test_test_output_on_failure(
     with capfd.disabled():
         out = spack_test('run', 'test-fail', fail_on_error=False)
 
-    assert "Expected 'not in the output' to match output of `true`" in out
+    assert "assert False" in out
     assert "TestFailure" in out
 
 
@@ -106,8 +106,8 @@ def test_show_log_on_error(
     'install_mockery_mutable_config'
 )
 @pytest.mark.parametrize('pkg_name,msgs', [
-    ('test-error', ['FAILED: Command exited', 'TestFailure']),
-    ('test-fail', ['FAILED: Expected', 'TestFailure'])
+    ('test-error', ['FAILED:', 'Command exited', 'TestFailure']),
+    ('test-fail', ['FAILED:', 'assert False', 'TestFailure'])
 ])
 def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
     install(pkg_name)
@@ -143,7 +143,6 @@ def test_cdash_output_test_error(
                    '--log-file=cdash_reports',
                    'test-error')
         report_dir = tmpdir.join('cdash_reports')
-        print(tmpdir.listdir())
         assert report_dir in tmpdir.listdir()
         report_file = report_dir.join('test-error_Test.xml')
         assert report_file in report_dir.listdir()

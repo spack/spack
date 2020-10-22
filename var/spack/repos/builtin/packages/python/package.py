@@ -1110,21 +1110,25 @@ class Python(AutotoolsPackage):
             else:
                 os.remove(dst)
 
-    def test(self):
-        # do not use self.command because we are also testing the run env
-        exe = self.command.name
+    def test_fail(self):
+        which('false')()
 
-        self.run_test('/bin/false')
+    def test_expected_fail(self):
+        """Ensure the test suite is properly catching failed exes"""
+        false = which('false')
+        false(fail_on_error=False)
+        assert false.returncode == 1
 
-        self.run_test('/usr/bin/false')
+    def test_hello_world(self):
+        """Test that a python hello world program works"""
+        exe = which(self.command.name)
 
-        self.run_test('/usr/bin/true', status=1)
+        assert self.prefix in exe.path
+        output = exe('-c', 'print("hello world!")', output=str, error=str)
+        assert 'hello world!' in output
 
-        # test hello world
-        self.run_test(exe, options=['-c', 'print("hello world!")'],
-                      expected=['hello world!'])
-
-        # check that the executable comes from the spec prefix
-        # also checks imports work
-        self.run_test(exe, options=['-c', 'import sys; print(sys.executable)'],
-                      expected=[self.spec.prefix])
+    def test_import(self):
+        """Test that python can import builtin modules"""
+        exe = which(self.command.name)
+        output = exe('-c', 'import sys; print(sys.executable)', output=str, error=str)
+        assert self.spec.prefix in output

@@ -41,14 +41,18 @@ class BerkeleyDb(AutotoolsPackage):
             '--with-repmgr-ssl=no',
         ]
 
-    def test(self):
-        """Perform smoke tests on the installed package binaries."""
-        exes = [
+    def test_version_arg(self):
+        """Test executables run and respond to -V argument"""
+        cmd = [
             'db_checkpoint', 'db_deadlock', 'db_dump', 'db_load',
             'db_printlog', 'db_stat', 'db_upgrade', 'db_verify'
         ]
-        for exe in exes:
-            reason = 'test version of {0} is {1}'.format(exe,
-                                                         self.spec.version)
-            self.run_test(exe, ['-V'], [self.spec.version.string],
-                          installed=True, purpose=reason, skip_missing=True)
+        for cmd in cmds:
+            exe = which(cmd)
+            if not exe:
+                # not guaranteeing all executables for all versions
+                continue
+            assert self.prefix in exe.path
+
+            output = exe('-V')
+            assert self.spec.version.string in output

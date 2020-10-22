@@ -324,7 +324,8 @@ class log_output(object):
     work within test frameworks like nose and pytest.
     """
 
-    def __init__(self, file_like=None, echo=False, debug=0, buffer=False):
+    def __init__(self, file_like=None, output=None, error=None,
+                 echo=False, debug=0, buffer=False):
         """Create a new output log context manager.
 
         Args:
@@ -349,13 +350,15 @@ class log_output(object):
 
         """
         self.file_like = file_like
+        self.output = output or sys.stdout
+        self.error = error or sys.stderr
         self.echo = echo
         self.debug = debug
         self.buffer = buffer
-
         self._active = False  # used to prevent re-entry
 
-    def __call__(self, file_like=None, echo=None, debug=None, buffer=None):
+    def __call__(self, file_like=None, output=None, error=None,
+                 echo=None, debug=None, buffer=None):
         """This behaves the same as init. It allows a logger to be reused.
 
         Arguments are the same as for ``__init__()``.  Args here take
@@ -376,6 +379,10 @@ class log_output(object):
         """
         if file_like is not None:
             self.file_like = file_like
+        if output is not None:
+            self.output = output
+        if error is not None:
+            self.error = error
         if echo is not None:
             self.echo = echo
         if debug is not None:
@@ -434,8 +441,8 @@ class log_output(object):
             self.process = fork_context.Process(
                 target=_writer_daemon,
                 args=(
-                    input_stream, read_fd, write_fd, self.echo, self.log_file,
-                    child_pipe
+                    input_stream, read_fd, write_fd, self.echo, self.output,
+                    self.log_file, child_pipe
                 )
             )
             self.process.daemon = True  # must set before start()
@@ -448,43 +455,54 @@ class log_output(object):
 
         # Flush immediately before redirecting so that anything buffered
         # goes to the original stream
-        sys.stdout.flush()
-        sys.stderr.flush()
+        self.output.flush()
+        self.error.flush()
+#        sys.stdout.flush()
+#        sys.stderr.flush()
 
         # Now do the actual output rediction.
-        self.use_fds = _file_descriptors_work(sys.stdout, sys.stderr)
+        self.use_fds = _file_descriptors_work(self.output, self.error)#sys.stdout, sys.stderr)
+
         if self.use_fds:
             # We try first to use OS-level file descriptors, as this
             # redirects output for subprocesses and system calls.
 
             # Save old stdout and stderr file descriptors
-            self._saved_stdout = os.dup(sys.stdout.fileno())
-            self._saved_stderr = os.dup(sys.stderr.fileno())
+            self._saved_output = os.dup(self.output.fileno())
+            self._saved_error = os.dup(self.error.fileno())
+#            self._saved_stdout = os.dup(sys.stdout.fileno())
+#            self._saved_stderr = os.dup(sys.stderr.fileno())
 
             # redirect to the pipe we created above
-            os.dup2(write_fd, sys.stdout.fileno())
-            os.dup2(write_fd, sys.stderr.fileno())
+            os.dup2(write_fd, self.output.fileno())
+            os.dup2(write_fd, self.error.fileno())
+#            os.dup2(write_fd, sys.stdout.fileno())
+#            os.dup2(write_fd, sys.stderr.fileno())
             os.close(write_fd)
-
         else:
             # Handle I/O the Python way. This won't redirect lower-level
             # output, but it's the best we can do, and the caller
             # shouldn't expect any better, since *they* have apparently
             # redirected I/O the Python way.
-
             # Save old stdout and stderr file objects
-            self._saved_stdout = sys.stdout
-            self._saved_stderr = sys.stderr
+            self._saved_output = self.output
+            self._saved_error = self.error
+#            self._saved_stdout = sys.stdout
+#            self._saved_stderr = sys.stderr
 
             # create a file object for the pipe; redirect to it.
             pipe_fd_out = os.fdopen(write_fd, 'w')
-            sys.stdout = pipe_fd_out
-            sys.stderr = pipe_fd_out
+            self.output = pipe_fd_out
+            self.error = pipe_fd_out
+#            sys.stdout = pipe_fd_out
+#            sys.stderr = pipe_fd_out
 
         # Unbuffer stdout and stderr at the Python level
         if not self.buffer:
-            sys.stdout = Unbuffered(sys.stdout)
-            sys.stderr = Unbuffered(sys.stderr)
+            self.output = Unbuffered(self.output)
+            self.error = Unbuffered(self.error)
+#            sys.stdout = Unbuffered(sys.stdout)
+#            sys.stderr = Unbuffered(sys.stderr)
 
         # Force color and debug settings now that we have redirected.
         tty.color.set_color_when(forced_color)
@@ -499,20 +517,29 @@ class log_output(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Flush any buffered output to the logger daemon.
-        sys.stdout.flush()
-        sys.stderr.flush()
+        self.output.flush()
+        self.error.flush()
+#        sys.stdout.flush()
+#        sys.stderr.flush()
 
         # restore previous output settings, either the low-level way or
         # the python way
         if self.use_fds:
-            os.dup2(self._saved_stdout, sys.stdout.fileno())
-            os.close(self._saved_stdout)
+            os.dup2(self._saved_output, self.output.fileno())
+            os.close(self._saved_output)
 
-            os.dup2(self._saved_stderr, sys.stderr.fileno())
-            os.close(self._saved_stderr)
+            os.dup2(self._saved_error, self.error.fileno())
+            os.close(self._saved_error)
+#            os.dup2(self._saved_stdout, sys.stdout.fileno())
+#            os.close(self._saved_stdout)
+
+#            os.dup2(self._saved_stderr, sys.stderr.fileno())
+#            os.close(self._saved_stderr)
         else:
-            sys.stdout = self._saved_stdout
-            sys.stderr = self._saved_stderr
+            self.output = self._saved_output
+            self.error = self._saved_error
+#            sys.stdout = self._saved_stdout
+#            sys.stderr = self._saved_stderr
 
         # print log contents in parent if needed.
         if self.write_log_in_parent:
@@ -546,16 +573,17 @@ class log_output(object):
         # output. We us these control characters rather than, say, a
         # separate pipe, because they're in-band and assured to appear
         # exactly before and after the text we want to echo.
-        sys.stdout.write(xon)
-        sys.stdout.flush()
+        self.output.write(xon)
+        self.output.flush()
         try:
             yield
         finally:
-            sys.stdout.write(xoff)
-            sys.stdout.flush()
+            self.output.write(xoff)
+            self.output.flush()
 
 
-def _writer_daemon(stdin, read_fd, write_fd, echo, log_file, control_pipe):
+def _writer_daemon(stdin, read_fd, write_fd, echo, echo_stream, log_file,
+                   control_pipe):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
     The daemon receives output from the parent process and writes it both
@@ -598,6 +626,7 @@ def _writer_daemon(stdin, read_fd, write_fd, echo, log_file, control_pipe):
             immediately closed by the writer daemon)
         echo (bool): initial echo setting -- controlled by user and
             preserved across multiple writer daemons
+        echo_stream (stream): output to echo to when echoing
         log_file (file-like): file to log all output
         control_pipe (Pipe): multiprocessing pipe on which to send control
             information to the parent
@@ -652,8 +681,8 @@ def _writer_daemon(stdin, read_fd, write_fd, echo, log_file, control_pipe):
 
                     # Echo to stdout if requested or forced.
                     if echo or force_echo:
-                        sys.stdout.write(line)
-                        sys.stdout.flush()
+                        echo_stream.write(line)
+                        echo_stream.flush()
 
                     # Stripped output to log file.
                     log_file.write(_strip(line))

@@ -365,6 +365,7 @@ class Concretizer(object):
             compilers = spack.compilers.compilers_for_spec(
                 cspec, arch_spec=aspec
             )
+
             # If the spec passed as argument is concrete we want to check
             # the versions match exactly
             if (cspec.concrete and compilers and
@@ -454,7 +455,7 @@ class Concretizer(object):
             # continue. `return True` here to force concretization to keep
             # running.
             return True
-
+        raise Exception
         compiler_match = lambda other: (
             spec.compiler == other.compiler and
             spec.architecture == other.architecture)

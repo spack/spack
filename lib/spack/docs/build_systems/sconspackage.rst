@@ -56,7 +56,7 @@ overridden like so:
 
 .. code-block:: python
 
-   def test(self):
+   def build_test(self):
        scons('check')
 
 

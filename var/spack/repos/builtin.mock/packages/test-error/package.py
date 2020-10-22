@@ -18,4 +18,4 @@ class TestError(Package):
         mkdirp(prefix.bin)
 
     def test(self):
-        self.run_test('false')
+        which('false')()

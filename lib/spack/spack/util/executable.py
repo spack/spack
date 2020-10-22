@@ -7,7 +7,7 @@ import os
 import re
 import shlex
 import subprocess
-from six import string_types, text_type
+from six import string_types, text_type, StringIO
 
 import llnl.util.tty as tty
 
@@ -93,17 +93,11 @@ class Executable(object):
 
         * python streams, e.g. open Python file objects, or ``os.devnull``
         * filenames, which will be automatically opened for writing
-        * ``str``, as in the Python string type. If you set these to ``str``,
-          output and error will be written to pipes and returned as a string.
-          If both ``output`` and ``error`` are set to ``str``, then one string
-          is returned containing output concatenated with error. Not valid
-          for ``input``
-        * ``str.split``, as in the ``split`` method of the Python string type.
-          Behaves the same as ``str``, except that value is also written to
-          ``stdout`` or ``stderr``.
 
         By default, the subprocess inherits the parent's file descriptors.
 
+        Returns:
+            (str) The interleaved output and error
         """
         # Environment
         env_arg = kwargs.get('env', None)
@@ -126,17 +120,20 @@ class Executable(object):
             ignore_errors = (ignore_errors, )
 
         input  = kwargs.pop('input',  None)
-        output = kwargs.pop('output', None)
-        error  = kwargs.pop('error',  None)
+        output = kwargs.pop('output', sys.stdout)
+        error  = kwargs.pop('error',  sys.stderr)
 
         if input is str:
             raise ValueError('Cannot use `str` as input stream.')
 
+        if output is str:
+            output = os.devnull
+        if error is str:
+            error = os.devnull
+
         def streamify(arg, mode):
             if isinstance(arg, string_types):
                 return open(arg, mode), True
-            elif arg in (str, str.split):
-                return subprocess.PIPE, False
             else:
                 return arg, False
 
@@ -161,37 +158,45 @@ class Executable(object):
 
         tty.debug(cmd_line)
 
-        try:
-            proc = subprocess.Popen(
-                cmd,
-                stdin=istream,
-                stderr=estream,
-                stdout=ostream,
-                env=env)
-            out, err = proc.communicate()
+        output_string = StringIO()
+        # Determine whether any of our streams are StringIO
+        # We cannot call `Popen` directly with a StringIO object
+        output_use_stringIO = False
+        if not hasattr(ostream, 'fileno'):
+            output_use_stringIO = True
+            ostream_stringIO = ostream
+            ostream = subprocess.PIPE
+        error_use_stringIO = False
+        if not hasattr(estream, 'fileno'):
+            error_use_stringIO = True
+            estream_stringIO = estream
+            estream = subprocess.PIPE
 
-            result = None
-            if output in (str, str.split) or error in (str, str.split):
-                result = ''
-                if output in (str, str.split):
-                    outstr = text_type(out.decode('utf-8'))
-                    result += outstr
-                    if output is str.split:
-                        sys.stdout.write(outstr)
-                if error in (str, str.split):
-                    errstr = text_type(err.decode('utf-8'))
-                    result += errstr
-                    if error is str.split:
-                        sys.stderr.write(errstr)
+        try:
+            with tty.log.log_output(
+                    output_string, output=ostream, error=estream, echo=True):
+                proc = subprocess.Popen(
+                    cmd,
+                    stdin=istream,
+                    stderr=estream,
+                    stdout=ostream,
+                    env=env)
+                out, err = proc.communicate()
+
+                if output_use_stringIO:
+                    ostream_stringIO.write(out)
+                if error_use_stringIO:
+                    estream_stringIO.write(err)
+
+            result = output_string.getvalue()
 
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
                 long_msg = cmd_line
-                if result:
-                    # If the output is not captured in the result, it will have
-                    # been stored either in the specified files (e.g. if
-                    # 'output' specifies a file) or written to the parent's
-                    # stdout/stderr (e.g. if 'output' is not specified)
+                if output == os.devnull or error == os.devnull:
+                    # If the output is not being printed anywhere, include it
+                    # in the error message. Otherwise, don't pollute the error
+                    # message.
                     long_msg += '\n' + result
 
                 raise ProcessError('Command exited with status %d:' %

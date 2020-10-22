@@ -1720,15 +1720,72 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                                 # maybe enforce this later
                                 shutil.copytree(data_source, data_dir)
 
+                            # Get all methods named test_* from package
+                            d = spec_pkg.__class__.__dict__
+                            test_fns = [
+                                fn for name, fn in d.items()
+                                if (name == 'test' or name.startswith('test_'))
+                                and hasattr(fn, '__call__')
+                            ]
                             # grab the function for each method so we can call
                             # it with this package in place of its `self`
                             # object
-                            test_fn = spec_pkg.__class__.test
-                            if not isinstance(test_fn, types.FunctionType):
-                                test_fn = test_fn.__func__
+                            test_fns = list(map(
+                                lambda x: x.__func__ if not isinstance(
+                                    x, types.FunctionType) else x,
+                                test_fns))
 
-                            # Run the tests
-                            test_fn(self)
+                            for fn in test_fns:
+                                # Run the tests
+                                print('TEST: %s' %
+                                      (fn.__doc__ or fn.__name__))
+                                try:
+                                    fn(self)
+                                    print('PASSED')
+                                except BaseException as e:
+                                    # print a summary of the error to the log file
+                                    # so that cdash and junit reporters know about it
+                                    exc_type, _, tb = sys.exc_info()
+                                    print('FAILED: {0}'.format(e))
+
+                                    # construct combined stacktrace of processes
+                                    import traceback
+                                    stack = traceback.extract_stack()[:-1]
+                                    stack += traceback.extract_tb(tb)
+
+                                    # Package files have a line added at import time,
+                                    # so they are effectively one-indexed. Other files
+                                    # we subtract 1 from the lineno for zero-indexing.
+                                    for i, entry in enumerate(stack):
+                                        filename, lineno, function, text = entry
+                                        if not spack.paths.is_package_file(filename):
+                                            lineno = lineno - 1
+                                        stack[i] = (filename, lineno, function, text)
+
+                                    # Format the stack to print and print it
+                                    out = traceback.format_list(stack)
+                                    for line in out:
+                                        print(line.rstrip('\n'))
+
+                                    if exc_type is spack.util.executable.ProcessError:
+                                        out = six.StringIO()
+                                        spack.build_environment.write_log_summary(
+                                            out, 'test', self.test_log_file, last=1)
+                                        m = out.getvalue()
+                                    else:
+                                        # Get context from combined stack
+                                        m = '\n'.join(
+                                            spack.build_environment.get_package_context(
+                                                stack)
+                                        )
+
+                                    exc = e  # e is deleted after this block
+
+                                    # If we fail fast, raise another error
+                                    if spack.config.get('config:fail_fast', False):
+                                        raise TestFailure([(exc, m)])
+                                    else:
+                                        self.test_failures.append((exc, m))
 
                     # If fail-fast was on, we error out above
                     # If we collect errors, raise them in batch here
@@ -1741,9 +1798,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         spack.build_environment.fork(
             self, test_process, dirty=dirty, fake=False, context='test')
-
-    def test(self):
-        pass
 
     def run_test(self, exe, options=[], expected=[], status=0,
                  installed=False, purpose='', skip_missing=False,

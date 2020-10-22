@@ -25,7 +25,7 @@ class PrintingPackage(Package):
 
         print("AFTER INSTALL")
 
-    def test(self):
+    def test_true(self):
         print("BEFORE TEST")
-        self.run_test('true')  # run /bin/true
+        which('echo')('RUNNING TEST')  # run an executable
         print("AFTER TEST")
