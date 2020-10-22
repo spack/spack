@@ -19,3 +19,8 @@ class PyCantoolz(PythonPackage):
     version('3.6.1', sha256='e40c712b726f1caaca16b0d0e0b3aeadd01426944663ba0dce5c47a340304e29')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-bitstring',  type=('build', 'run'))
+    depends_on('py-flask',    type=('build', 'run'))
+    depends_on('py-pyserial', type=('build', 'run'))
+    depends_on('py-mido',     type=('build', 'run'))
+    depends_on('py-numpy',    type=('build', 'run'))
