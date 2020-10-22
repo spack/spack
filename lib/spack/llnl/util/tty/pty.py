@@ -24,6 +24,7 @@ import time
 import traceback
 
 import llnl.util.tty.log as log
+from llnl.util.lang import fork_context
 
 from spack.util.executable import which
 
@@ -233,7 +234,7 @@ class PseudoShell(object):
         ``minion_function``.
 
         """
-        self.proc = multiprocessing.Process(
+        self.proc = fork_context.Process(
             target=PseudoShell._set_up_and_run_controller_function,
             args=(self.controller_function, self.minion_function,
                   self.controller_timeout, self.sleep_time),

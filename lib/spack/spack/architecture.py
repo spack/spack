@@ -217,7 +217,7 @@ class Target(object):
             if isinstance(compiler, spack.spec.CompilerSpec):
                 compiler = spack.compilers.compilers_for_spec(compiler).pop()
             try:
-                compiler_version = compiler.get_real_version()
+                compiler_version = compiler.real_version
             except spack.util.executable.ProcessError as e:
                 # log this and just return compiler.version instead
                 tty.debug(str(e))

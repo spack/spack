@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from glob import glob
 import os
 
 
@@ -39,5 +37,4 @@ class Highwayhash(MakefilePackage):
         install('nanobenchmark_example', prefix.bin)
         install('vector_test', prefix.bin)
         install('sip_hash_test', prefix.bin)
-        for i in glob('highwayhash/*.h'):
-            install(i, prefix.include)
+        install('highwayhash/*.h', prefix.include)

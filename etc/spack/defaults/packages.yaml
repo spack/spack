@@ -15,7 +15,7 @@
 # -------------------------------------------------------------------------
 packages:
   all:
-    compiler: [gcc, intel, pgi, clang, xl, nag, fj]
+    compiler: [gcc, intel, pgi, clang, xl, nag, fj, aocc]
     providers:
       D: [ldc]
       awk: [gawk]
@@ -48,6 +48,7 @@ packages:
       unwind: [libunwind]
       sycl: [hipsycl]
       flame: [libflame]
+      yacc: [bison, byacc]
     permissions:
       read: world
       write: user

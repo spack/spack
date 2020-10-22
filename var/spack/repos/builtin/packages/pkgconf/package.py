@@ -31,6 +31,9 @@ class Pkgconf(AutotoolsPackage):
     # TODO: Add a package for the kyua testing framework
     # depends_on('kyua', type='test')
 
+    # https://github.com/spack/spack/issues/3525
+    conflicts('%pgi')
+
     executables = ['^pkgconf$', '^pkg-config$']
 
     @classmethod

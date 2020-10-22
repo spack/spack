@@ -111,7 +111,7 @@ class Ffmpeg(AutotoolsPackage):
     @property
     def headers(self):
         headers = find_all_headers(self.prefix.include)
-        headers.directories = self.prefix.include
+        headers.directories = [self.prefix.include]
         return headers
 
     def enable_or_disable_meta(self, variant, options):

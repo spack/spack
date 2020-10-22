@@ -474,10 +474,14 @@ class Mfem(Package):
                 ld_flags_from_library_list(spec[sun_spec].libs)]
 
         if '+petsc' in spec:
-            options += [
-                'PETSC_OPT=%s' % spec['petsc'].headers.cpp_flags,
-                'PETSC_LIB=%s' %
-                ld_flags_from_library_list(spec['petsc'].libs)]
+            if '+shared' in spec:
+                options += [
+                    'PETSC_OPT=%s' % spec['petsc'].headers.cpp_flags,
+                    'PETSC_LIB=%s' %
+                    ld_flags_from_library_list(spec['petsc'].libs)]
+            else:
+                options += [
+                    'PETSC_DIR=%s' % spec['petsc'].prefix]
 
         if '+pumi' in spec:
             pumi_libs = ['pumi', 'crv', 'ma', 'mds', 'apf', 'pcu', 'gmi',
@@ -494,10 +498,16 @@ class Mfem(Package):
                 ld_flags_from_dirs([spec['gslib'].prefix.lib], ['gs'])]
 
         if '+netcdf' in spec:
+            lib_flags = ld_flags_from_dirs([spec['netcdf-c'].prefix.lib],
+                                           ['netcdf'])
+            hdf5 = spec['hdf5:hl']
+            if hdf5.satisfies('~shared'):
+                hdf5_libs = hdf5.libs
+                hdf5_libs += LibraryList(find_system_libraries('libdl'))
+                lib_flags += " " + ld_flags_from_library_list(hdf5_libs)
             options += [
                 'NETCDF_OPT=-I%s' % spec['netcdf-c'].prefix.include,
-                'NETCDF_LIB=%s' %
-                ld_flags_from_dirs([spec['netcdf-c'].prefix.lib], ['netcdf'])]
+                'NETCDF_LIB=%s' % lib_flags]
 
         if '+zlib' in spec:
             if "@:3.3.2" in spec:
@@ -670,9 +680,12 @@ class Mfem(Package):
     @property
     def sundials_components(self):
         """Return the SUNDIALS components needed by MFEM."""
-        sun_comps = 'arkode,cvode,nvecserial,kinsol'
+        sun_comps = 'arkode,cvodes,nvecserial,kinsol'
         if '+mpi' in self.spec:
-            sun_comps += ',nvecparhyp,nvecparallel'
+            if self.spec.satisfies('@4.2:'):
+                sun_comps += ',nvecparallel,nvecmpiplusx'
+            else:
+                sun_comps += ',nvecparhyp,nvecparallel'
         return sun_comps
 
     @property

@@ -8,7 +8,9 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 13-
 """
-
+import six
+from llnl.util.lang import union_dicts
+import spack.schema.projections
 
 #: Properties for inclusion in other schemas
 properties = {
@@ -20,9 +22,20 @@ properties = {
                 'type': 'string',
                 'enum': ['rpath', 'runpath']
             },
-            'install_tree': {'type': 'string'},
+            'install_tree': {
+                'anyOf': [
+                    {
+                        'type': 'object',
+                        'properties': union_dicts(
+                            {'root': {'type': 'string'}},
+                            spack.schema.projections.properties,
+                        ),
+                    },
+                    {'type': 'string'}  # deprecated
+                ],
+            },
             'install_hash_length': {'type': 'integer', 'minimum': 1},
-            'install_path_scheme': {'type': 'string'},
+            'install_path_scheme': {'type': 'string'},  # deprecated
             'build_stage': {
                 'oneOf': [
                     {'type': 'string'},
@@ -87,3 +100,45 @@ schema = {
     'additionalProperties': False,
     'properties': properties,
 }
+
+
+def update(data):
+    """Update the data in place to remove deprecated properties.
+
+    Args:
+        data (dict): dictionary to be updated
+
+    Returns:
+        True if data was changed, False otherwise
+    """
+    # currently deprecated properties are
+    # install_tree: <string>
+    # install_path_scheme: <string>
+    # updated: install_tree: {root: <string>,
+    #                         projections: <projections_dict}
+    # root replaces install_tree, projections replace install_path_scheme
+    changed = False
+
+    install_tree = data.get('install_tree', None)
+    if isinstance(install_tree, six.string_types):
+        # deprecated short-form install tree
+        # add value as `root` in updated install_tree
+        data['install_tree'] = {'root': install_tree}
+        changed = True
+
+    install_path_scheme = data.pop('install_path_scheme', None)
+    if install_path_scheme:
+        projections_data = {
+            'projections': {
+                'all': install_path_scheme
+            }
+        }
+
+        # update projections with install_scheme
+        # whether install_tree was updated or not
+        # we merge the yaml to ensure we don't invalidate other projections
+        update_data = data.get('install_tree', {})
+        update_data = spack.config.merge_yaml(update_data, projections_data)
+        data['install_tree'] = update_data
+        changed = True
+    return changed

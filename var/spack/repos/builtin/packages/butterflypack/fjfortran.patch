@@ -1,0 +1,269 @@
+diff -u -r a/EXAMPLE/EMCURV_Driver.f90 b/EXAMPLE/EMCURV_Driver.f90
+--- a/EXAMPLE/EMCURV_Driver.f90	2020-07-13 09:36:52.000000000 +0900
++++ b/EXAMPLE/EMCURV_Driver.f90	2020-07-13 10:55:08.000000000 +0900
+@@ -71,6 +71,8 @@
+ 	integer nargs,flag
+ 	integer v_major,v_minor,v_bugfix
+ 
++	integer, external :: iargc
++
+ 	! nmpi and groupmembers should be provided by the user
+ 	call MPI_Init(ierr)
+ 	call MPI_Comm_size(MPI_Comm_World,nmpi,ierr)
+diff -u -r a/EXAMPLE/EMCURV_Eigen_Driver.f90 b/EXAMPLE/EMCURV_Eigen_Driver.f90
+--- a/EXAMPLE/EMCURV_Eigen_Driver.f90	2020-07-13 09:36:52.000000000 +0900
++++ b/EXAMPLE/EMCURV_Eigen_Driver.f90	2020-07-13 10:55:29.000000000 +0900
+@@ -84,6 +84,8 @@
+ 	integer nargs,flag
+ 	integer v_major,v_minor,v_bugfix
+ 
++	integer, external :: iargc
++
+ 	! nmpi and groupmembers should be provided by the user
+ 	call MPI_Init(ierr)
+ 	call MPI_Comm_size(MPI_Comm_World,nmpi,ierr)
+diff -u -r a/EXAMPLE/EMCURV_Module.f90 b/EXAMPLE/EMCURV_Module.f90
+--- a/EXAMPLE/EMCURV_Module.f90	2020-07-13 09:36:52.000000000 +0900
++++ b/EXAMPLE/EMCURV_Module.f90	2020-07-13 16:32:29.000000000 +0900
+@@ -23,6 +23,7 @@
+ module EMCURV_MODULE
+ use BPACK_DEFS
+ use MISC_Utilities
++use service_routines,only:secnds
+ implicit none
+ 
+ 	!**** define your application-related variables here
+diff -u -r a/EXAMPLE/EMSURF_Driver.f90 b/EXAMPLE/EMSURF_Driver.f90
+--- a/EXAMPLE/EMSURF_Driver.f90	2020-07-13 09:36:52.000000000 +0900
++++ b/EXAMPLE/EMSURF_Driver.f90	2020-07-13 10:55:49.000000000 +0900
+@@ -64,6 +64,8 @@
+ 	integer nargs,flag
+ 	integer v_major,v_minor,v_bugfix
+ 
++	integer, external :: iargc
++
+ 	! nmpi and groupmembers should be provided by the user
+ 	call MPI_Init(ierr)
+ 	call MPI_Comm_size(MPI_Comm_World,nmpi,ierr)
+diff -u -r a/EXAMPLE/EMSURF_Eigen_Driver.f90 b/EXAMPLE/EMSURF_Eigen_Driver.f90
+--- a/EXAMPLE/EMSURF_Eigen_Driver.f90	2020-07-13 09:36:52.000000000 +0900
++++ b/EXAMPLE/EMSURF_Eigen_Driver.f90	2020-07-13 10:56:08.000000000 +0900
+@@ -82,6 +82,8 @@
+ 
+ 	integer nargs,flag
+ 
++	integer, external :: iargc
++
+ 	! nmpi and groupmembers should be provided by the user
+ 	call MPI_Init(ierr)
+ 	call MPI_Comm_size(MPI_Comm_World,nmpi,ierr)
+diff -u -r a/EXAMPLE/EMSURF_Module.f90 b/EXAMPLE/EMSURF_Module.f90
+--- a/EXAMPLE/EMSURF_Module.f90	2020-07-16 17:39:15.000000000 +0900
++++ b/EXAMPLE/EMSURF_Module.f90	2020-07-13 16:34:10.000000000 +0900
+@@ -23,6 +23,7 @@
+ module EMSURF_MODULE
+ use BPACK_DEFS
+ use MISC_Utilities
++use service_routines,only:secnds
+ implicit none
+ 
+ 	!**** define your application-related variables here
+diff -u -r a/EXAMPLE/FrontalDist_Driver.f90 b/EXAMPLE/FrontalDist_Driver.f90
+--- a/EXAMPLE/FrontalDist_Driver.f90	2020-07-13 09:36:52.000000000 +0900
++++ b/EXAMPLE/FrontalDist_Driver.f90	2020-07-13 10:56:28.000000000 +0900
+@@ -279,6 +279,8 @@
+ 	integer nargs,flag
+ 	integer v_major,v_minor,v_bugfix
+ 
++	integer, external :: iargc
++
+ 	! nmpi and groupmembers should be provided by the user
+ 	call MPI_Init(ierr)
+ 	call MPI_Comm_size(MPI_Comm_World,nmpi,ierr)
+diff -u -r a/EXAMPLE/Frontal_Driver.f90 b/EXAMPLE/Frontal_Driver.f90
+--- a/EXAMPLE/Frontal_Driver.f90	2020-07-13 09:36:52.000000000 +0900
++++ b/EXAMPLE/Frontal_Driver.f90	2020-07-13 10:56:40.000000000 +0900
+@@ -272,6 +272,8 @@
+ 	integer nargs,flag
+ 	integer v_major,v_minor,v_bugfix
+ 
++	integer, external :: iargc
++
+ 	! nmpi and groupmembers should be provided by the user
+ 	call MPI_Init(ierr)
+ 	call MPI_Comm_size(MPI_Comm_World,nmpi,ierr)
+diff -u -r a/EXAMPLE/FULLMAT_Driver.f90 b/EXAMPLE/FULLMAT_Driver.f90
+--- a/EXAMPLE/FULLMAT_Driver.f90	2020-07-13 09:36:52.000000000 +0900
++++ b/EXAMPLE/FULLMAT_Driver.f90	2020-07-13 10:56:53.000000000 +0900
+@@ -176,6 +176,8 @@
+ 	integer nargs,flag
+ 	integer v_major,v_minor,v_bugfix
+ 
++	integer, external :: iargc
++
+ 	!**** nmpi and groupmembers should be provided by the user
+ 	call MPI_Init(ierr)
+ 	call MPI_Comm_size(MPI_Comm_World,nmpi,ierr)
+diff -u -r a/EXAMPLE/FULLMATKERREG_Driver.f90 b/EXAMPLE/FULLMATKERREG_Driver.f90
+--- a/EXAMPLE/FULLMATKERREG_Driver.f90	2020-07-13 09:36:52.000000000 +0900
++++ b/EXAMPLE/FULLMATKERREG_Driver.f90	2020-07-13 16:35:24.000000000 +0900
+@@ -22,6 +22,7 @@
+ 
+ module APPLICATION_MODULE
+ use BPACK_DEFS
++use service_routines,only:secnds
+ implicit none
+ 
+ 	!**** define your application-related variables here
+diff -u -r a/EXAMPLE/KERREG_Driver.f90 b/EXAMPLE/KERREG_Driver.f90
+--- a/EXAMPLE/KERREG_Driver.f90	2020-07-13 09:36:52.000000000 +0900
++++ b/EXAMPLE/KERREG_Driver.f90	2020-07-13 16:39:05.000000000 +0900
+@@ -22,6 +22,7 @@
+ 
+ module APPLICATION_MODULE
+ use BPACK_DEFS
++use service_routines,only:secnds
+ implicit none
+ 
+ 	!**** define your application-related variables here
+@@ -125,6 +126,8 @@
+ 	integer nargs,flag
+ 	integer v_major,v_minor,v_bugfix
+ 
++	integer, external :: iargc
++
+ 	call MPI_Init(ierr)
+ 	call MPI_Comm_size(MPI_Comm_World,nmpi,ierr)
+ 	allocate(groupmembers(nmpi))
+diff -u -r a/EXAMPLE/SMAT_Driver.f90 b/EXAMPLE/SMAT_Driver.f90
+--- a/EXAMPLE/SMAT_Driver.f90	2020-07-13 09:36:53.000000000 +0900
++++ b/EXAMPLE/SMAT_Driver.f90	2020-07-13 10:24:12.000000000 +0900
+@@ -268,6 +268,8 @@
+ 	integer nargs,flag
+ 	integer v_major,v_minor,v_bugfix
+ 
++	integer, external :: iargc
++
+ 	! nmpi and groupmembers should be provided by the user
+ 	call MPI_Init(ierr)
+ 	call MPI_Comm_size(MPI_Comm_World,nmpi,ierr)
+diff -u -r a/SRC/BPACK_constr.f90 b/SRC/BPACK_constr.f90
+--- a/SRC/BPACK_constr.f90	2020-07-17 14:25:38.000000000 +0900
++++ b/SRC/BPACK_constr.f90	2020-07-13 09:25:41.000000000 +0900
+@@ -1043,9 +1043,11 @@
+ 	curr=>lstr%head
+ 	curc=>lstc%head
+ 	do nn=1,Ninter
+-	select type(ptrr=>curr%item)
++	ptrr=>curr%item
++	select type(ptrr)
+ 	type is(iarray)
+-	select type(ptrc=>curc%item)
++	ptrc=>curc%item
++	select type(ptrc)
+ 	type is(iarray)
+ 		call Hmat_MapIntersec2Block_Loc(blocks_o,option,stats,msh,ptree,inters,nn,ptrr,ptrc,lstblk)
+ 	end select
+@@ -1097,9 +1099,11 @@
+ 	curc=>blocks%lstc%head
+ 	allocate(blocks%inters(blocks%lstr%num_nods))
+ 	do nn=1,blocks%lstr%num_nods ! loop all lists of list of rows and columns
+-	select type(ptrr=>curr%item)
++	ptrr=>curr%item
++	select type(ptrr)
+ 	type is (iarray)
+-	select type(ptrc=>curc%item)
++	ptrc=>curc%item
++	select type(ptrc)
+ 	type is (iarray)
+ 		blocks%inters(nn)%nr=ptrr%num_nods
+ 		allocate(blocks%inters(nn)%rows(ptrr%num_nods))
+@@ -1323,9 +1327,11 @@
+ 	curr=>lstr%head
+ 	curc=>lstc%head
+ 	do nn=1,Ninter
+-	select type(ptrr=>curr%item)
++	ptrr=>curr%item
++	select type(ptrr)
+ 	type is(iarray)
+-	select type(ptrc=>curc%item)
++	ptrc=>curc%item
++	select type(ptrc)
+ 	type is(iarray)
+ 		select case(option%format)
+ 		case(HODLR)
+@@ -1383,9 +1389,11 @@
+ 	curc=>blocks%lstc%head
+ 	allocate(blocks%inters(blocks%lstr%num_nods))
+ 	do nn=1,blocks%lstr%num_nods ! loop all lists of list of rows and columns
+-	select type(ptrr=>curr%item)
++	ptrr=>curr%item
++	select type(ptrr)
+ 	type is (iarray)
+-	select type(ptrc=>curc%item)
++	ptrc=>curc%item
++	select type(ptrc)
+ 	type is (iarray)
+ 		blocks%inters(nn)%nr=ptrr%num_nods
+ 		allocate(blocks%inters(nn)%rows(ptrr%num_nods))
+diff -u -r a/SRC/BPACK_defs.f90 b/SRC/BPACK_defs.f90
+--- a/SRC/BPACK_defs.f90	2020-07-17 14:24:58.000000000 +0900
++++ b/SRC/BPACK_defs.f90	2020-07-10 17:25:39.000000000 +0900
+@@ -245,7 +245,7 @@
+          ! integer data_type  ! the block data_type, need better documentation later
+ 		 ! integer nested_num ! depreciated
+ 		 integer,allocatable :: ipiv(:)	! permutation of the LU of the dense diagonal blocks
+-		 integer blockinfo_MPI(MPI_Header)
++		 integer blockinfo_MPI(MPI_Header) 
+          integer length_Butterfly_index_MPI ! length of the index message, the first INDEX_Header integers are 1. decpreciated 2. rankmax 3. level_butterfly. 4. num_blocks
+          integer length_Butterfly_data_MPI ! length of the value message
+          DT,allocatable :: fullmat_MPI(:) ! massage for the dense blocks
+@@ -379,7 +379,7 @@
+ 		integer forwardN15flag ! 1 use N^1.5 algorithm. 0: use NlogN pseudo skeleton algorithm
+ 		real(kind=8) tol_comp      ! matrix construction tolerance
+ 		integer::Nmin_leaf ! leaf sizes of HODLR tree
+-		integer nogeo
++		integer nogeo 
+ 		integer xyzsort ! clustering methods given geometrical points: CKD: cartesian kd tree SKD: spherical kd tree (only for 3D points) TM: (2 mins no recursive)
+ 		integer::RecLR_leaf ! bottom level operations in a recursive merge-based LR compression: SVD, RRQR, ACA, BACA
+ 		real(kind=8):: near_para ! parameters used to determine whether two groups are nearfield or farfield pair
+diff -u -r a/SRC/BPACK_utilities.f90 b/SRC/BPACK_utilities.f90
+--- a/SRC/BPACK_utilities.f90	2020-07-10 16:23:52.000000000 +0900
++++ b/SRC/BPACK_utilities.f90	2020-07-13 09:06:56.000000000 +0900
+@@ -478,6 +478,8 @@
+ 	integer nargs,flag
+ 	character(len=1024)  :: strings,strings1
+ 
++        integer, external :: iargc
++
+ 	nargs = iargc()
+ 	flag=1
+ 	do while(flag==1)
+diff -u -r a/SRC/MISC_linkedlist.f90 b/SRC/MISC_linkedlist.f90
+--- a/SRC/MISC_linkedlist.f90	2020-07-10 12:47:03.000000000 +0900
++++ b/SRC/MISC_linkedlist.f90	2020-07-10 15:43:40.000000000 +0900
+@@ -283,8 +283,8 @@
+ !    equal to the given complex value.
+ !
+ subroutine nod_assign_nod_to_nod( LHS, RHS )
+-type(nod), intent(inout) :: LHS
+-type(nod), intent(in) :: RHS
++type(nod), intent(inout), target :: LHS
++type(nod), intent(in), target :: RHS
+ type(nod),pointer:: cur
+ class(*),pointer :: ptrl,ptrr,ptr
+ integer ii
+@@ -300,9 +300,11 @@
+ 
+ if(allocated(RHS%item))then
+ 	allocate(LHS%item, source=RHS%item)
+-	select TYPE(ptrr=>RHS%item)
++	ptrr=>RHS%item
++	select TYPE(ptrr)
+ 		type is (list)
+-			select TYPE(ptrl=>LHS%item)
++			ptrl=>LHS%item
++			select TYPE(ptrl)
+ 			type is (list)
+ 				ptrl%num_nods=0
+ 				ptrl%head=>null()

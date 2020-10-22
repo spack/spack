@@ -3,10 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import sys
-import glob
 
 
 class Mumps(Package):
@@ -277,8 +275,7 @@ class Mumps(Package):
             lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
             lib_suffix = lib_dsuffix if '+shared' in spec else '.a'
             install('libseq/libmpiseq%s' % lib_suffix, prefix.lib)
-            for f in glob.glob(join_path('libseq', '*.h')):
-                install(f, prefix.include)
+            install(join_path('libseq', '*.h'), prefix.include)
 
         # FIXME: extend the tests to mpirun -np 2 when build with MPI
         # FIXME: use something like numdiff to compare output files

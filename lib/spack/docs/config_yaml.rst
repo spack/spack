@@ -99,7 +99,7 @@ username is not already in the path, Spack will append the value of ``$user`` to
 the selected ``build_stage`` path.
 
 .. warning:: We highly recommend specifying ``build_stage`` paths that
-   distinguish between staging and other activities to ensure 
+   distinguish between staging and other activities to ensure
    ``spack clean`` does not inadvertently remove unrelated files.
    Spack prepends ``spack-stage-`` to temporary staging directory names to
    reduce this risk.  Using a combination of ``spack`` and or ``stage`` in
@@ -223,7 +223,7 @@ To build all software in serial, set ``build_jobs`` to 1.
 --------------------
 
 When set to ``true`` Spack will use ccache to cache compiles. This is
-useful specifically in two cases: (1) when using ``spack setup``, and (2)
+useful specifically in two cases: (1) when using ``spack dev-build``, and (2)
 when building the same package with many different variants. The default is
 ``false``.
 

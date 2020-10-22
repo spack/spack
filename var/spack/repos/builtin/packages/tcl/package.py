@@ -20,6 +20,7 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
     homepage = "http://www.tcl.tk"
     sourceforge_mirror_path = "tcl/tcl8.6.5-src.tar.gz"
 
+    version('8.6.10', sha256='5196dbf6638e3df8d5c87b5815c8c2b758496eb6f0e41446596c9a4e638d87ed')
     version('8.6.8', sha256='c43cb0c1518ce42b00e7c8f6eaddd5195c53a98f94adc717234a65cbcfd3f96a')
     version('8.6.6', sha256='a265409781e4b3edcc4ef822533071b34c3dc6790b893963809b9fe221befe07')
     version('8.6.5', sha256='ce26d5b9c7504fc25d2f10ef0b82b14cf117315445b5afa9e673ed331830fb53')

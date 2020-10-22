@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class SnapKorf(MakefilePackage):
     """SNAP is a general purpose gene finding program suitable for both
@@ -30,9 +27,7 @@ class SnapKorf(MakefilePackage):
         for p in progs:
             install(p, prefix.bin)
 
-        files = glob.iglob('*.pl')
-        for file in files:
-            install(file, prefix.bin)
+        install('*.pl', prefix.bin)
 
         install_tree('Zoe', prefix.Zoe)
         install_tree('HMM', prefix.HMM)

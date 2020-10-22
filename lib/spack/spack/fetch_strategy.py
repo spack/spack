@@ -295,6 +295,9 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
+            if not self._existing_url(url):
+                continue
+
             try:
                 partial_file, save_file = self._fetch_from_url(url)
                 if save_file:
@@ -309,13 +312,22 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise FailedDownloadError(url)
 
+    def _existing_url(self, url):
+        tty.debug('Checking existence of {0}'.format(url))
+        curl = self.curl
+        # Telling curl to fetch the first byte (-r 0-0) is supposed to be
+        # portable.
+        curl_args = ['--stderr', '-', '-s', '-f', '-r', '0-0', url]
+        _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
+        return curl.returncode == 0
+
     def _fetch_from_url(self, url):
         save_file = None
         partial_file = None
         if self.stage.save_filename:
             save_file = self.stage.save_filename
             partial_file = self.stage.save_filename + '.part'
-        tty.debug('Fetching {0}'.format(url))
+        tty.msg('Fetching {0}'.format(url))
         if partial_file:
             save_args = ['-C',
                          '-',  # continue partial downloads
@@ -330,8 +342,6 @@ class URLFetchStrategy(FetchStrategy):
             '-',  # print out HTML headers
             '-L',  # resolve 3xx redirects
             url,
-            '--stderr',  # redirect stderr output
-            '-',         # redirect to stdout
         ]
 
         if not spack.config.get('config:verify_ssl'):
@@ -340,7 +350,7 @@ class URLFetchStrategy(FetchStrategy):
         if sys.stdout.isatty() and tty.msg_enabled():
             curl_args.append('-#')  # status bar when using a tty
         else:
-            curl_args.append('-sS')  # just errors when not.
+            curl_args.append('-sS')  # show errors if fail
 
         connect_timeout = spack.config.get('config:connect_timeout', 10)
 
@@ -569,7 +579,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
                 raise
 
         # Notify the user how we fetched.
-        tty.debug('Using cached archive: {0}'.format(path))
+        tty.msg('Using cached archive: {0}'.format(path))
 
 
 class VCSFetchStrategy(FetchStrategy):

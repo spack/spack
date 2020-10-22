@@ -15,6 +15,7 @@ class PyCvxopt(PythonPackage):
 
     import_modules = ['cvxopt']
 
+    version('1.2.5', sha256='94ec8c36bd6628a11de9014346692daeeef99b3b7bae28cef30c7490bbcb2d72')
     version('1.1.9', sha256='8f157e7397158812cabd340b68546f1baa55a486ed0aad8bc26877593dc2983d')
 
     variant('gsl',   default=False, description='Use GSL random number generators for constructing random matrices')
@@ -24,7 +25,8 @@ class PyCvxopt(PythonPackage):
     variant('dsdp',  default=False, description='Enable support for the semidefinite programming solver DSDP')
 
     # Required dependencies
-    depends_on('python@2.7:')
+    depends_on('python@2.7:', type=('build', 'link', 'run'))
+    depends_on('python@2.7:3.7.999', type=('build', 'link', 'run'), when='@:1.1.9')
     depends_on('py-setuptools', type='build')
     depends_on('blas')
     depends_on('lapack')

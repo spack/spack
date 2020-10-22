@@ -34,6 +34,7 @@ class Spfft(CMakePackage, CudaPackage):
             values=('Debug', 'Release', 'RelWithDebInfo'))
     depends_on('fftw-api@3')
     depends_on('mpi', when='+mpi')
+    depends_on('cmake@3.11:', type='build')
 
     # ROCM variants + dependencies
     variant('rocm', default=False, description="Use ROCm backend")

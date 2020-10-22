@@ -21,6 +21,7 @@ from six import string_types
 from six import StringIO
 
 import llnl.util.tty as tty
+from llnl.util.lang import fork_context
 
 try:
     import termios
@@ -430,7 +431,7 @@ class log_output(object):
             except BaseException:
                 input_stream = None  # just don't forward input if this fails
 
-            self.process = multiprocessing.Process(
+            self.process = fork_context.Process(
                 target=_writer_daemon,
                 args=(
                     input_stream, read_fd, write_fd, self.echo, self.log_file,

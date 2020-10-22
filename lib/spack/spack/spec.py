@@ -1008,7 +1008,7 @@ class Spec(object):
         self._normal = normal
         self._concrete = concrete
         self.external_path = external_path
-        self.external_modules = external_modules
+        self.external_modules = Spec._format_module_list(external_modules)
         self._full_hash = full_hash
 
         # This attribute is used to store custom information for
@@ -1024,6 +1024,24 @@ class Spec(object):
 
         elif spec_like is not None:
             raise TypeError("Can't make spec out of %s" % type(spec_like))
+
+    @staticmethod
+    def _format_module_list(modules):
+        """Return a module list that is suitable for YAML serialization
+        and hash computation.
+
+        Given a module list, possibly read from a configuration file,
+        return an object that serializes to a consistent YAML string
+        before/after round-trip serialization to/from a Spec dictionary
+        (stored in JSON format): when read in, the module list may
+        contain YAML formatting that is discarded (non-essential)
+        when stored as a Spec dictionary; we take care in this function
+        to discard such formatting such that the Spec hash does not
+        change before/after storage in JSON.
+        """
+        if modules:
+            modules = list(modules)
+        return modules
 
     @property
     def external(self):
@@ -1383,8 +1401,8 @@ class Spec(object):
         """
         # TODO: curently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
-        yaml_text = syaml.dump(
-            self.to_node_dict(hash=hash), default_flow_style=True)
+        node_dict = self.to_node_dict(hash=hash)
+        yaml_text = syaml.dump(node_dict, default_flow_style=True)
         sha = hashlib.sha1(yaml_text.encode('utf-8'))
         b32_hash = base64.b32encode(sha.digest()).lower()
 
@@ -2045,7 +2063,8 @@ class Spec(object):
             # still need to select a concrete package later.
             if not self.virtual:
                 changed |= any(
-                    (concretizer.concretize_architecture(self),
+                    (concretizer.concretize_develop(self),  # special variant
+                     concretizer.concretize_architecture(self),
                      concretizer.concretize_compiler(self),
                      concretizer.adjust_target(self),
                      # flags must be concretized after compiler
@@ -2330,6 +2349,10 @@ class Spec(object):
         # TODO: internal configuration conflicts within one package.
         matches = []
         for x in self.traverse():
+            if x.external:
+                # external specs are already built, don't worry about whether
+                # it's possible to build that configuration with Spack
+                continue
             for conflict_spec, when_list in x.package_class.conflicts.items():
                 if x.satisfies(conflict_spec, strict=True):
                     for when_spec, msg in when_list:
@@ -2562,6 +2585,8 @@ class Spec(object):
         else:
             # merge package/vdep information into spec
             try:
+                tty.debug(
+                    "{0} applying constraint {1}".format(self.name, str(dep)))
                 changed |= spec_deps[dep.name].constrain(dep)
             except spack.error.UnsatisfiableSpecError as e:
                 fmt = 'An unsatisfiable {0}'.format(e.constraint_type)
@@ -2674,6 +2699,10 @@ class Spec(object):
 
         if user_spec_deps:
             for name, spec in user_spec_deps.items():
+                if not name:
+                    msg = "Attempted to normalize anonymous dependency spec"
+                    msg += " %s" % spec
+                    raise InvalidSpecDetected(msg)
                 if name not in all_spec_deps:
                     all_spec_deps[name] = spec
                 else:
@@ -2826,6 +2855,9 @@ class Spec(object):
         if not other.satisfies_dependencies(self):
             raise UnsatisfiableDependencySpecError(other, self)
 
+        if any(not d.name for d in other.traverse(root=False)):
+            raise UnconstrainableDependencySpecError(other)
+
         # Handle common first-order constraints directly
         changed = False
         for name in self.common_dependencies(other):
@@ -2977,8 +3009,9 @@ class Spec(object):
             if not self._dependencies:
                 return False
 
-            selfdeps = self.traverse(root=False)
-            otherdeps = other.traverse(root=False)
+            # use list to prevent double-iteration
+            selfdeps = list(self.traverse(root=False))
+            otherdeps = list(other.traverse(root=False))
             if not all(any(d.satisfies(dep, strict=True) for d in selfdeps)
                        for dep in otherdeps):
                 return False
@@ -4099,8 +4132,23 @@ class SpecParser(spack.parse.Parser):
 
                         if not dep:
                             # We're adding a dependency to the last spec
-                            self.expect(ID)
-                            dep = self.spec(self.token.value)
+                            if self.accept(ID):
+                                self.previous = self.token
+                                if self.accept(EQ):
+                                    # This is an anonymous dep with a key=value
+                                    # push tokens to be parsed as part of the
+                                    # dep spec
+                                    self.push_tokens(
+                                        [self.previous, self.token])
+                                    dep_name = None
+                                else:
+                                    # named dep (standard)
+                                    dep_name = self.token.value
+                                self.previous = None
+                            else:
+                                # anonymous dep
+                                dep_name = None
+                            dep = self.spec(dep_name)
 
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
@@ -4483,6 +4531,14 @@ class UnsatisfiableDependencySpecError(spack.error.UnsatisfiableSpecError):
     def __init__(self, provided, required):
         super(UnsatisfiableDependencySpecError, self).__init__(
             provided, required, "dependency")
+
+
+class UnconstrainableDependencySpecError(spack.error.SpecError):
+    """Raised when attempting to constrain by an anonymous dependency spec"""
+    def __init__(self, spec):
+        msg = "Cannot constrain by spec '%s'. Cannot constrain by a" % spec
+        msg += " spec containing anonymous dependencies"
+        super(UnconstrainableDependencySpecError, self).__init__(msg)
 
 
 class AmbiguousHashError(spack.error.SpecError):

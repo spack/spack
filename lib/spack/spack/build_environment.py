@@ -45,7 +45,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, fork_context
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
@@ -886,7 +886,7 @@ def fork(pkg, function, dirty, fake):
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
 
-        p = multiprocessing.Process(
+        p = fork_context.Process(
             target=child_process, args=(child_pipe, input_stream))
         p.start()
 

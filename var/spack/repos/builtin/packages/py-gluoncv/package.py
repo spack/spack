@@ -24,7 +24,7 @@ class PyGluoncv(PythonPackage):
     depends_on('py-requests',    type=('build', 'run'))
     depends_on('py-matplotlib',  type=('build', 'run'))
     depends_on('py-portalocker', type=('build', 'run'))
-    depends_on('py-pillow',      type=('build', 'run'))
+    depends_on('pil',            type=('build', 'run'))
     depends_on('py-scipy',       type=('build', 'run'))
     depends_on('py-cython',      type='build')
 

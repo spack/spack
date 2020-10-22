@@ -111,7 +111,7 @@ And this would run the ``test_platform`` test from that file:
 
 .. code-block:: console
 
-   $ spack test architecture.py::test_platform
+   $ spack test lib/spack/spack/test/architecture.py::test_platform
 
 This allows you to develop iteratively: make a change, test that change,
 make another change, test that change, etc.  We use `pytest
@@ -146,7 +146,9 @@ you want to know about.  For example, to see just the tests in
 .. command-output:: spack test --list-long lib/spack/spack/test/architecture.py
 
 You can also combine any of these options with a ``pytest`` keyword
-search.  For example, to see the names of all tests that have "spec"
+search.  See the `pytest usage docs
+<https://docs.pytest.org/en/stable/usage.html#specifying-tests-selecting-tests>`_:
+for more details on test selection syntax. For example, to see the names of all tests that have "spec"
 or "concretize" somewhere in their names:
 
 .. command-output:: spack test --list-names -k "spec and concretize"
@@ -159,7 +161,7 @@ argument to ``pytest``:
 
 .. code-block:: console
 
-   $ spack test -s spack test --list-long lib/spack/spack/test/architecture.py::test_platform
+   $ spack test -s --list-long lib/spack/spack/test/architecture.py::test_platform
 
 Unit tests are crucial to making sure bugs aren't introduced into
 Spack. If you are modifying core Spack libraries or adding new
@@ -325,7 +327,7 @@ Once all of the dependencies are installed, you can try building the documentati
 
 .. code-block:: console
 
-   $ cd "$SPACK_ROOT/lib/spack/docs"
+   $ cd path/to/spack/lib/spack/docs/
    $ make clean
    $ make
 

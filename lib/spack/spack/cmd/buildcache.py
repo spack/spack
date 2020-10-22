@@ -231,6 +231,9 @@ def setup_parser(subparser):
         'update-index', help=buildcache_update_index.__doc__)
     update_index.add_argument(
         '-d', '--mirror-url', default=None, help='Destination mirror url')
+    update_index.add_argument(
+        '-k', '--keys', default=False, action='store_true',
+        help='If provided, key index will be updated as well as package index')
     update_index.set_defaults(func=buildcache_update_index)
 
 
@@ -473,7 +476,8 @@ def installtarball(args):
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.specs)
-    matches = match_downloaded_specs(pkgs, args.multiple, args.otherarch)
+    matches = match_downloaded_specs(pkgs, args.multiple, args.force,
+                                     args.otherarch)
 
     for match in matches:
         install_tarball(match, args)
@@ -776,6 +780,13 @@ def buildcache_update_index(args):
 
     bindist.generate_package_index(
         url_util.join(outdir, bindist.build_cache_relative_path()))
+
+    if args.keys:
+        keys_url = url_util.join(outdir,
+                                 bindist.build_cache_relative_path(),
+                                 bindist.build_cache_keys_relative_path())
+
+        bindist.generate_key_index(keys_url)
 
 
 def buildcache(parser, args):
