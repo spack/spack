@@ -26,5 +26,5 @@ class PyVisdom(PythonPackage):
     depends_on('py-jsonpatch', type=('build', 'run'))
     depends_on('py-websocket-client', type=('build', 'run'))
     depends_on('py-torch@0.3.1:', type=('build', 'run'))
-    depends_on('py-pillow', type=('build', 'run'))
+    depends_on('pil', type=('build', 'run'))
     depends_on('py-torchfile', type=('build', 'run'))
