@@ -16,3 +16,7 @@ class PyTomlkit(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+
+    depends_on('py-enum34@1.1:1.999', when='^python@:2', type=('build', 'run'))
+    depends_on('py-functools32@3.2.3:3.999', when='^python@:2', type=('build', 'run'))
+    depends_on('py-typing@3.6:3.999', when='^python@:3.4', type=('build', 'run'))
