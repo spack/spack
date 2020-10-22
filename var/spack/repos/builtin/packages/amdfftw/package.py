@@ -24,6 +24,8 @@ class Amdfftw(FftwBase):
     url = "https://github.com/amd/amd-fftw/archive/2.2.tar.gz"
     git = "https://github.com/amd/amd-fftw.git"
 
+    maintainers = ['amd-toolchain-support']
+
     version('2.2', sha256='de9d777236fb290c335860b458131678f75aa0799c641490c644c843f0e246f8')
 
     variant(

@@ -20,6 +20,9 @@ class Amdscalapack(ScalapackBase):
     _name = 'amdscalapack'
     homepage = "https://developer.amd.com/amd-aocl/scalapack/"
     url = "https://github.com/amd/scalapack/archive/2.2.tar.gz"
+    git = "https://github.com/amd/scalapack.git"
+
+    maintainers = ['amd-toolchain-support']
 
     version('2.2', sha256='2d64926864fc6d12157b86e3f88eb1a5205e7fc157bf67e7577d0f18b9a7484c')
 

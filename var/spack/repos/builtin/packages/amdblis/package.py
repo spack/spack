@@ -20,4 +20,6 @@ class Amdblis(BlisBase):
     url = "https://github.com/amd/blis/archive/2.2.tar.gz"
     git = "https://github.com/amd/blis.git"
 
+    maintainers = ['amd-toolchain-support']
+
     version('2.2', sha256='e1feb60ac919cf6d233c43c424f6a8a11eab2c62c2c6e3f2652c15ee9063c0c9')

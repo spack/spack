@@ -34,6 +34,8 @@ class Amdlibflame(LibflameBase):
     url = "https://github.com/amd/libflame/archive/2.2.tar.gz"
     git = "https://github.com/amd/libflame.git"
 
+    maintainers = ['amd-toolchain-support']
+
     version('2.2', sha256='12b9c1f92d2c2fa637305aaa15cf706652406f210eaa5cbc17aaea9fcfa576dc')
 
     patch('aocc-2.2.0.patch', when="@:2.999", level=1)
