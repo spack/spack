@@ -1667,7 +1667,8 @@ class SpecBuilder(object):
 
             # print out unknown actions so we can display them for debugging
             if not action:
-                print("%s(%s)" % (name, ", ".join(str(a) for a in args)))
+                msg = "%s(%s)" % (name, ", ".join(str(a) for a in args))
+                tty.debug(msg)
                 continue
 
             assert action and callable(action)
