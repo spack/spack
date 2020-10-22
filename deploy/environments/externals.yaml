@@ -54,7 +54,6 @@ spack:
     - libjpeg-turbo
     - libxml2
     - libxslt
-    - metis+int64@5.1.0
     - ncurses
     - ninja@1.8.2
     - openblas@0.3.10

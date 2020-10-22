@@ -29,8 +29,8 @@ modules:
     whitelist:
       - boost
       - gmsh
-      - hdf5+mpi
-      - highfive+mpi
+      - hdf5+mpi%gcc
+      - highfive+mpi%gcc
       - neuron+mpi~debug%intel
       - omega-h
       - petsc

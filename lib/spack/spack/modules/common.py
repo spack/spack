@@ -524,7 +524,8 @@ class BaseConfiguration(object):
             conf = type(self)(item)
             if not conf.blacklisted:
                 whitelist.append(item)
-            elif external and item.external and item.external_module:
+            # Attempt to allow auto-loading for external modules
+            elif external and item.external and item.external_modules:
                 whitelist.append(item)
         return whitelist
 

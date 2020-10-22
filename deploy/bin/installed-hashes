@@ -1,0 +1,42 @@
+#!/usr/bin/env spack-python
+# vim: ft=python
+
+from argparse import ArgumentParser
+import sys
+
+import llnl.util.tty as tty
+
+import spack.environment as ev
+import spack.error
+import spack.report
+import spack.spec
+
+
+def run():
+    """Dump the hashes of installed, explicitly requested specs in an
+    environment
+    """
+    parser = ArgumentParser()
+    parser.add_argument('-e', '--env', required=True,
+                        help='environment to use')
+    args = parser.parse_args()
+
+    native = []
+    staged = []
+
+    env = ev.get_env(args, 'deploy', required=True)
+    for requested, spec in env.concretized_specs():
+        if spec.package.installed:
+            stringified = "/{0} {1}".format(spec.dag_hash(8), requested)
+            if "%" in str(requested):
+                staged.append(stringified)
+            else:
+                native.append(stringified)
+
+    for l in native:
+        print(l)
+    for l in staged:
+        print(l)
+
+if __name__ == "__main__":
+    run()

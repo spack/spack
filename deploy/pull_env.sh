@@ -25,7 +25,7 @@ fi
 
 mkdir -p ${tmpdir}/install
 
-cp -Rp ${deployment}/data/{.spack,spack*,*.yaml,*.txt} ${tmpdir}
+cp -Rp ${deployment}/data/{build_environment,.spack,spack*,*.yaml,*.txt} ${tmpdir}
 cp -Rp ${deployment}/.spack-db ${tmpdir}/install
 
 for arch in ${deployment}/*; do

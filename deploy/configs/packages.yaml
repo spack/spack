@@ -1,105 +1,119 @@
 packages:
-    autoconf:
-        paths:
-            autoconf@2.69: /usr
-        version: [2.69]
-    automake:
-        paths:
-            automake@1.13.4: /usr
-        version: [1.13.4]
-    bison:
-        paths:
-            bison@3.0.4: /usr
-        version: [3.0.4]
-    boost:
-        variants: +pic
-    cuda:
-        version: [9.2.88]
-    curl:
-        paths:
-            curl@7.29.0: /usr
-        version: [7.29.0]
-    darshan-runtime:
-        variants: +slurm
-    eigen:
-        variants: ~fftw~gmp~metis~mpfr~scotch
-    flex:
-        paths:
-            flex@2.5.37: /usr
-        version: [2.5.37]
-    hadoop:
-        version: [2.9.2]
-    hdf5:
-        variants: +hl
-    icu4c:
-        version: [64.1]
-    intel-mkl:
-        version: [2018.3.222]
+  autoconf:
+    version: [2.69]
+    externals:
+    - spec: autoconf@2.69
+      prefix: /usr
+  automake:
+    version: [1.13.4]
+    externals:
+    - spec: automake@1.13.4
+      prefix: /usr
+  bison:
+    version: [3.0.4]
+    externals:
+    - spec: bison@3.0.4
+      prefix: /usr
+  boost:
+    variants: +pic
+  cuda:
+    version: [9.2.88]
+  curl:
+    version: [7.29.0]
+    externals:
+    - spec: curl@7.29.0
+      prefix: /usr
+  darshan-runtime:
+    variants: +slurm
+  eigen:
+    variants: ~fftw~gmp~metis~mpfr~scotch
+  flex:
+    version: [2.5.37]
+    externals:
+    - spec: flex@2.5.37
+      prefix: /usr
+  hadoop:
+    version: [2.9.2]
+  hdf5:
+    variants: +hl
+  icu4c:
+    version: [64.1]
+  intel-mkl:
+    version: [2018.3.222]
     # Drags in heavy PEARL dependencies
-    intltool:
-        paths:
-            intltool@0.50.2: /usr
-        version: [0.50.2]
-    julia:
-        variants: +external_llvm
-    libtool:
-        paths:
-            libtool@2.4.2: /usr
-        version: [2.4.2]
-    llvm:
-        variants: +link_dylib
-    m4:
-        paths:
-            m4@1.4.16: /usr
-        version: [1.4.16]
+  intltool:
+    version: [0.50.2]
+    externals:
+    - spec: intltool@0.50.2
+      prefix: /usr
+  julia:
+    variants: +external_llvm
+  libtool:
+    version: [2.4.2]
+    externals:
+    - spec: libtool@2.4.2
+      prefix: /usr
+  llvm:
+    variants: +link_dylib
+  m4:
+    version: [1.4.16]
+    externals:
+    - spec: m4@1.4.16
+      prefix: /usr
     # can not be installed with python 3
-    node-js:
-        paths:
-            node-js@6.12.2: /usr
-        version: [6.12.2]
-    openssl:
-        paths:
-            openssl@1.0.2k: /usr
-        version: [1.0.2k]
-    opengl:
-        paths:
-            opengl@4.5: /usr
-        buildable: False
-        version: [4.5]
-    perl:
-        paths:
-            perl@5.16.3: /usr
-        version: [5.16.3]
-    petsc:
-        variants: ~fortran
-    python:
-        variants: +tk
-        version: [3.8.3]
-    qt:
-        variants: ~ssl~sql~tools
-    slurm:
-        paths:
-            slurm@17.02: /usr
-        buildable: False
-        version: [17.02]
-    steps:
-        variants: +lapack+petsc+mpi
-    superlu-dist:
-        variants: +int64
-    tar:
-        paths:
-            tar@1.28: /usr
-        version: [1.28]
-    timemory:
-        variants: +mpi~cuda+cupti+caliper~gperftools~python@3.0.0a
-    trilinos:
-        variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
-        version: [xsdk-0.4.0-rc1]
-    all:
-        compiler: [gcc@9.3.0, intel@19.1.1.217, gcc@4.8.5]
-        target: [x86_64]
-        providers:
-            mpi: [hpe-mpi]
-            scalapack: [intel-mkl, netlib-scalapack]
-            lapack: [intel-mkl, openblas]
-            blas: [intel-mkl, openblas]
+  node-js:
+    version: [6.12.2]
+    externals:
+    - spec: node-js@6.12.2
+      prefix: /usr
+  openssl:
+    version: [1.0.2k]
+    externals:
+    - spec: openssl@1.0.2k
+      prefix: /usr
+  opengl:
+    buildable: false
+    version: [4.5]
+    externals:
+    - spec: opengl@4.5
+      prefix: /usr
+  perl:
+    version: [5.16.3]
+    externals:
+    - spec: perl@5.16.3
+      prefix: /usr
+  petsc:
+    variants: ~fortran
+  python:
+    variants: +tk
+    version: [3.8.3]
+  qt:
+    variants: ~ssl~sql~tools
+  slurm:
+    buildable: false
+    version: [17.02]
+    externals:
+    - spec: slurm@17.02
+      prefix: /usr
+  steps:
+    variants: +lapack+petsc+mpi
+  superlu-dist:
+    variants: +int64
+  tar:
+    version: [1.28]
+    externals:
+    - spec: tar@1.28
+      prefix: /usr
+  timemory:
+    variants: +mpi~cuda+cupti+caliper~gperftools~python@3.0.0a
+  trilinos:
+    variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
+    version: [xsdk-0.4.0-rc1]
+  all:
+    compiler: [gcc@9.3.0, intel@19.1.1.217, gcc@4.8.5]
+    target: [x86_64]
+    providers:
+      mpi: [hpe-mpi]
+      scalapack: [intel-mkl, netlib-scalapack]
+      lapack: [intel-mkl, openblas]
+      blas: [intel-mkl, openblas]

@@ -68,6 +68,32 @@ def setup_parser(sp):
                     default=None,
                     action='store_true')
 
+
+def _to_key(spec, fmt, variants):
+    """Convert the provided `spec` to a simple, identifiable string, using
+    the spec format given by `fmt`, and using all variants if `variants` is
+    set to ``"all"``, otherwise only the ones changed from the default
+    value.
+    """
+    key = spec.format(fmt)
+    sflags = []
+    bflags = []
+    for k, v in spec.variants.items():
+        default = None
+        if k in spec.package.variants:
+            default = spec.package.variants[k].default
+        if v.value != default or variants == 'all':
+            if v.value in (True, False):
+                bflags.append(v)
+            elif v.name != 'patches':
+                sflags.append(v)
+
+    sflags = ' '.join(str(f) for f in sorted(sflags))
+    bflags = ''.join(str(f) for f in sorted(bflags))
+    key = ' '.join([e for e in (key, sflags, bflags) if len(e) > 0])
+    return str(key)
+
+
 def export(parser, args):
     q_args = {"explicit": True if args.explicit else any}
     specs = args.specs(**q_args)
@@ -93,102 +119,35 @@ def export(parser, args):
     if args.module:
         cls = spack.modules.module_types[args.module]
 
-    # Collect packages per package name
-    pkgs = {}
+    # Add all selected specs to the external packages
+    new_packages = {}
     for spec in specs:
-        pkgs.setdefault(spec.name, []).append(spec)
+        pkg_toplevel = new_packages.setdefault(spec.name, {})
+        pkg_externals = pkg_toplevel.setdefault("externals", [])
+        pkg_versions = pkg_toplevel.setdefault("version", syaml_list())
 
-    pymods = {}
+        key = _to_key(spec, args.format, args.variants)
+        externality = dict(spec=key, prefix=str(spec.prefix))
 
-    # Dump per package, make sure that none are forgotten
-    for pkg, pkg_specs in pkgs.items():
-        paths = syaml_dict()
-        modules = syaml_dict()
-        package = packages.setdefault(pkg, syaml_dict())
-        versions = None
-        if 'version' in package:
-            versions = [str(v) for v in package['version']]
+        if key in [ext["spec"] for ext in pkg_externals]:
+            tty.warn("spec already present, skipping: {0}".format(key))
+            continue
 
-        for spec in pkg_specs:
-            key = spec.format(args.format)
-            sflags = []
-            bflags = []
-            for k, v in spec.variants.items():
-                default = None
-                if k in spec.package.variants:
-                    default = spec.package.variants[k].default
-                if v.value != default or args.variants == 'all':
-                    if v.value in (True, False):
-                        bflags.append(v)
-                    elif v.name != 'patches':
-                        sflags.append(v)
-
-            sflags = ' '.join(str(f) for f in sorted(sflags))
-            bflags = ''.join(str(f) for f in sorted(bflags))
-            key = ' '.join([e for e in (key, sflags, bflags) if len(e) > 0])
-            key = str(key)
-
-            if isinstance(spec.package, PythonPackage):
-                py = spec['python']
-                if args.dependencies:
-                    key += " ^{0}".format(py.format("$_$@"))
-
-                if not spec.package.is_activated(py.package.view()):
-                    # For external packages, setup_environment is not
-                    # called, and thus they are not included in
-                    # PYTHON_PATH.
-                    msg = "python package not activated, skipping: {0}"
-                    msg = msg.format(spec.format("$_$@"))
-                    tty.warn(msg)
-                    # paths[key] = str(spec.prefix)
-                else:
-                    mod = pymods.setdefault(py, cls(py) if cls else None)
-                    if mod and not mod.conf.blacklisted:
-                        if os.path.exists(mod.layout.filename):
-                            paths[key] = '/activated'
-                            # modules[key] = mod.layout.use_name
-                            # paths[key] = str(spec.prefix)
-                    else:
-                        msg = "python package activated in inactive module, skipping: {0}"
-                        msg = msg.format(spec.format("$_$@"))
-                        tty.warn(msg)
-                        continue
+        mod = cls(spec) if cls else None
+        if mod and not mod.conf.blacklisted:
+            if os.path.exists(mod.layout.filename):
+                externality["modules"] = [str(mod.layout.use_name)]
             else:
-                mod = cls(spec) if cls else None
-                if mod and not mod.conf.blacklisted:
-                    if os.path.exists(mod.layout.filename):
-                        modules[key] = str(mod.layout.use_name)
-                    else:
-                        msg = "module not present for {0}"
-                        msg = msg.format(spec.format("$_$@"))
-                        tty.warn(msg)
-                # Even with modules, the path needs to be present to, e.g.,
-                # have `spack setup` work!
-                paths.setdefault(key, []).append(spec)
+                msg = "module not present for {0}"
+                msg = msg.format(spec.format("$_$@"))
+                tty.warn(msg)
 
-            if versions and str(spec.version) not in versions:
-                versions.append(str(spec.version))
+        version = str(spec.version)
+        if version not in pkg_versions:
+            pkg_versions.append(version)
+        pkg_externals.append(externality)
 
-        if versions:
-            package['version'] = syaml_list(sorted(versions, reverse=True))
-        if len(paths) > 0:
-            def install_date(s):
-                _, record = spack.store.db.query_by_spec_hash(s.dag_hash())
-                return record.installation_time
-            for k in paths.keys():
-                values = paths[k]
-                if values == '/activated':
-                    continue
-                paths[k] = str(sorted(values, key=install_date, reverse=True)[0].prefix)
-            package.setdefault('paths', syaml_dict()).update(paths)
-        if len(modules) > 0:
-            package.setdefault('modules', syaml_dict()).update(modules)
-
-    # Trim empty items from the yaml
-    for cfg in packages.values():
-        for k, v in list(cfg.items()):
-            if (k == 'buildable' and v) or (hasattr(v, '__iter__') and len(v) == 0):
-                del cfg[k]
+    spack.config.merge_yaml(packages, new_packages)
 
     # Restore ordering
     packages = syaml_dict(sorted((k, v) for (k, v) in packages.items() if len(v) > 0))

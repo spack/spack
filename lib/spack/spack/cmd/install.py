@@ -300,12 +300,9 @@ environment variables:
                 reporter.filename = default_log_file(specs[0])
             reporter.specs = specs
 
-            tty.msg("Installing environment {0}".format(env.name))
+            tty.msg("Installing environment %s" % env.name)
             with reporter:
                 env.install_all(args, **kwargs)
-
-            tty.debug("Regenerating environment views for {0}"
-                      .format(env.name))
             with env.write_transaction():
                 # It is not strictly required to synchronize view regeneration
                 # but doing so can prevent redundant work in the filesystem.

@@ -13,8 +13,9 @@ elif [[ -z "${1}" ]]; then
     exit 1
 fi
 
-exec spack \
-    -e ${1} \
-    install \
-    -j ${CPUS} \
-    --log-format junit --log-file stack-${TASK}.xml \
+base="$(dirname "${1}")"
+
+# In case of locking issues: fan out deployment of builder tasks a little
+sleep $(( ${TASK} * 2 ))
+
+spack -D "${1}" install -j ${CPUS} --log-format junit --log-file "${base}/stack-${TASK}.xml" || true

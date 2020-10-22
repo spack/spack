@@ -269,6 +269,8 @@ configure_compilers() {
     # Add modules for compilers themselves
     update_module_path "compilers" "yes"
     while read -r line; do
+        sha="${line%% *}"  # Remove everything after and including the first space
+        spec="${line#* }"  # Remove everything up to and including the first space
         set +o nounset
         # When a compiler is compiled with *anything but the base
         # compiler*, it's module will not be generated in the initial
@@ -277,21 +279,21 @@ configure_compilers() {
         # As the input should be sorted by compilers, the module generation
         # will now find the compilers that were used when bootstrapping.
         log "...regenerating module for ${line}"
-        spack module tcl refresh -y --latest --upstream ${line}
+        spack module tcl refresh -y --upstream ${sha}
         log "...processing ${line}"
-        cmd=$(spack module tcl loads --latest ${line}|tail -n 1)
+        cmd=$(spack module tcl loads ${sha}|tail -n 1)
         echo "${cmd}"
         ${cmd}
         set -o nounset
-        if [[ ${line} != *"intel-parallel-studio"* ]]; then
+        if [[ ${spec} != *"intel-parallel-studio"* ]]; then
             spack compiler find --scope=user
         fi
 
-        GCC_DIR=$(spack location --latest --install-dir gcc@${BASE_GCC_VERSION})
+        GCC_DIR=$(spack location --install-dir gcc@${BASE_GCC_VERSION})
         log "...using gcc ${BASE_GCC_VERSION} from ${GCC_DIR}"
-        if [[ ${line} = *"intel"* ]]; then
+        if [[ ${spec} = *"intel"* ]]; then
             # update intel modules to use newer gcc in .cfg files
-            install_dir=$(spack location --latest --install-dir ${line})
+            install_dir=$(spack location --install-dir ${sha})
             for f in $(find ${install_dir} -name "icc.cfg" -o -name "icpc.cfg" -o -name "ifort.cfg"); do
                 if ! grep -q "${GCC_DIR}" $f; then
                     echo "-gcc-name=${GCC_DIR}/bin/gcc" >> ${f}
@@ -300,7 +302,7 @@ configure_compilers() {
                     log "updated ${f} with newer GCC"
                 fi
             done
-        elif [[ ${line} = *"pgi"* ]]; then
+        elif [[ ${spec} = *"pgi"* ]]; then
             #update pgi modules for network installation
             PGI_DIR=$(dirname $(which makelocalrc))
             makelocalrc ${PGI_DIR} -gcc ${GCC_DIR}/bin/gcc -gpp ${GCC_DIR}/bin/g++ -g77 ${GCC_DIR}/bin/gfortran -x -net
@@ -715,14 +717,21 @@ EOF
     rm -f "${HOME}/"stack*.xml
     rm -f "${HOME}/specs.txt"
     export PATH="${SPACK_ROOT}/deploy/bin:${PATH}"
-    deploy -e "${HOME}/build_environment" -j 12 "${SPACK_ROOT}/deploy/environments/${what}.yaml" "${HOME}"
-    # srun -n12 -c12 -Aproj16 -pprod slurmspack "${HOME}/build_environment"
+    # deploy -e "${HOME}/build_environment" -j 12 "${SPACK_ROOT}/deploy/environments/${what}.yaml" "${HOME}"
+    mkdir -p "${HOME}/build_environment"
+    cp "${SPACK_ROOT}/deploy/environments/${what}.yaml" "${HOME}/build_environment/spack.yaml"
+    log "concretizing environment"
+    spack -D "${HOME}/build_environment" concretize -f
+    log "installing environment"
+    srun -n18 -c12 -t24:0:0 -Aproj16 -Ccpu -ppre_prod -J"spack!" slurmspack "${HOME}/build_environment"
 
     cat > "${HOME}/stack.xml" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
 </testsuites>
 EOF
+
+    installed-hashes -e "${HOME}/build_environment" > "${HOME}/specs.txt"
 
     populate_build_cache "${install_start}"
 
@@ -731,7 +740,8 @@ EOF
     cp "${HOME}"/stack*.xml "${WORKSPACE:-.}/stacks/${what}"
 
     log "refreshing modules"
-    spack module tcl refresh -y --delete-tree --latest --upstream-modules $(<${HOME}/installed.txt)
+    shas="$(cut -d" " -f1 ${HOME}/specs.txt)"
+    spack module tcl refresh -y --delete-tree --upstream-modules ${shas}
 
     . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
 
@@ -741,7 +751,7 @@ EOF
 
     if [[ "${export_packages[${what}]}" = "yes" ]]; then
         log "augmenting packages.yaml"
-        spack export --scope=user --module tcl --explicit --exclude 'allinea|py-.*|neuron|hdf5|intel-parallel-studio|pgi' $(<${HOME}/specs.txt) > "${HOME}/packages.yaml"
+        spack export --scope=user --module tcl --explicit --exclude 'allinea|py-.*|neuron|hdf5|intel-parallel-studio|pgi' ${shas} > "${HOME}/packages.yaml"
     else
         log "copying packages.yaml"
         cp "${HOME}/.spack/packages.yaml" "${HOME}"
@@ -759,7 +769,7 @@ EOF
         #
         # Sort by the compiler spec part to achieve this.
         log "adding compilers"
-        configure_compilers < <(sort -t% -k2 "${HOME}/specs.txt")
+        configure_compilers < "${HOME}/specs.txt"
     fi
 
     cp "${HOME}/.spack/compilers.yaml" "${HOME}" || true
