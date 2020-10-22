@@ -836,12 +836,12 @@ def get_checksums_for_versions(
     max_len = max(len(str(v)) for v in sorted_versions)
     num_ver = len(sorted_versions)
 
-    tty.debug('Found {0} version{1} of {2}:'.format(
-              num_ver, '' if num_ver == 1 else 's', name),
-              '',
-              *spack.cmd.elide_list(
-                  ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
-                   for v in sorted_versions]))
+    tty.msg('Found {0} version{1} of {2}:'.format(
+            num_ver, '' if num_ver == 1 else 's', name),
+            '',
+            *spack.cmd.elide_list(
+                ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
+                 for v in sorted_versions]))
     print()
 
     if batch:
