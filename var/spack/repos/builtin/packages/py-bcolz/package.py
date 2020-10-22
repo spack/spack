@@ -21,5 +21,7 @@ class PyBcolz(PythonPackage):
     version('1.2.1', sha256='c017d09bb0cb5bbb07f2ae223a3f3638285be3b574cb328e91525b2880300bd1')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-numpy@1.8:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy@1.7:', type=('build', 'run'))
+    depends_on('py-setuptools@18.1:', type='build')
+    depends_on('py-setuptools-scm@1.5.5:', type='build')
+    depends_on('py-cython@0.22:', type='build')
