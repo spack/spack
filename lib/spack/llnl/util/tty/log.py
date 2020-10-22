@@ -294,9 +294,23 @@ class FileWrapper(object):
     yet), or neither. When unwrapped, it returns an open file (or file-like)
     object.
     """
-    def __init__(self, file_like, open):
+    def __init__(self, file_like):
+        # This records whether the file-like object returned by "unwrap" is
+        # purely in-memory. In that case a subprocess will need to explicitly
+        # transmit the contents to the parent.
+        self.write_in_parent = False
+
         self.file_like = file_like
-        self.open = open
+
+        if isinstance(file_like, string_types):
+            self.open = True
+        elif _file_descriptors_work(file_like):
+            self.open = False
+        else:
+            self.file_like = None
+            self.open = True
+            self.write_in_parent = True
+
         self.file = None
 
     def unwrap(self):
@@ -307,6 +321,8 @@ class FileWrapper(object):
                 self.file = StringIO()
             return self.file
         else:
+            # We were handed an already-open file object. In this case we also
+            # will not actually close the object when requested to.
             return self.file_like
 
     def close(self):
@@ -461,14 +477,7 @@ class log_output(object):
                 "file argument must be set by either __init__ or __call__")
 
         # set up a stream for the daemon to write to
-        self.write_log_in_parent = False
-        if isinstance(self.file_like, string_types):
-            self.log_file = FileWrapper(self.file_like, open=True)
-        elif _file_descriptors_work(self.file_like):
-            self.log_file = FileWrapper(self.file_like, open=False)
-        else:
-            self.log_file = FileWrapper(None, open=True)
-            self.write_log_in_parent = True
+        self.log_file = FileWrapper(self.file_like)
 
         # record parent color settings before redirecting.  We do this
         # because color output depends on whether the *original* stdout
@@ -584,7 +593,7 @@ class log_output(object):
             sys.stderr = self._saved_stderr
 
         # print log contents in parent if needed.
-        if self.write_log_in_parent:
+        if self.log_file.write_in_parent:
             string = self.parent_pipe.recv()
             self.file_like.write(string)
 
