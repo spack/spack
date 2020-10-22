@@ -29,6 +29,9 @@ class Libxc(AutotoolsPackage, CudaPackage):
     patch('0001-Bugfix-avoid-implicit-pointer-cast-to-make-libxc-com.patch', when='@5.0.0')
     patch('0002-Mark-xc_erfcx-a-GPU_FUNCTION.patch', when='@5.0.0')
 
+    patch('nvhpc-configure.patch', when='%nvhpc')
+    patch('nvhpc-libtool.patch', when='@develop %nvhpc')
+
     @property
     def libs(self):
         """Libxc can be queried for the following parameters:

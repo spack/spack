@@ -118,6 +118,8 @@ class Cmake(Package):
                   'please use %apple-clang. '
                   'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
 
+    conflicts('%nvhpc')
+
     # Really this should conflict since it's enabling or disabling openssl for
     # CMake's internal copy of curl.  Ideally we'd want a way to have the
     # openssl variant disabled when ~ownlibs but there's not really a way to
@@ -162,6 +164,11 @@ class Cmake(Package):
     # The Fujitsu compiler requires the '--linkfortran' option
     # to combine C++ and Fortran programs.
     patch('fujitsu_add_linker_option.patch', when='%fj')
+
+    # Remove -A from the C++ flags we use when CXX_EXTENSIONS is OFF
+    # Should be fixed in 3.19.
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5025
+    patch('pgi-cxx-ansi.patch', when='@3.1:3.18.99')
 
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 

@@ -21,6 +21,10 @@ class Qd(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%nvhpc'):
+            env.append_flags('FCFLAGS', "-fPIC")
+
     def configure_args(self):
         args = ['--enable-shared']
         return args

@@ -22,6 +22,8 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    patch('nvhpc.patch', when='@3.7 %nvhpc')
+
     depends_on('iconv')
 
     def setup_build_environment(self, env):

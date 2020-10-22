@@ -1,0 +1,50 @@
+From 52eee1938919deb59cc2b51d44f365f0d9a418e5 Mon Sep 17 00:00:00 2001
+From: Tin Huynh <ahuynh@nvidia.com>
+Date: Thu, 16 Jul 2020 16:06:33 -0700
+Subject: [PATCH] PGI: Remove -A from the C++ flags we use when CXX_EXTENSIONS
+ is OFF
+
+Since commit 9b97cb5562 (PGI: Add language standards for PGI,
+2017-05-01, v3.9.0-rc1~174^2), we have passed the `-A` flag to
+the PGI C++ compiler when specifying a C++ standard flag with
+compiler extensions turned off.  The flag is not meant for that.
+The PGI C++ standard flags do not turn extensions on by default
+and have a separate `--gnu_extensions` flag for that which we
+already use when CXX_EXTENSIONS is ON.  Simply drop the `-A` flag.
+
+Fixes: #20997
+---
+ Modules/Compiler/PGI-CXX.cmake | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Modules/Compiler/PGI-CXX.cmake b/Modules/Compiler/PGI-CXX.cmake
+index c77de3605b..2d7a303c9b 100644
+--- a/Modules/Compiler/PGI-CXX.cmake
++++ b/Modules/Compiler/PGI-CXX.cmake
+@@ -4,19 +4,19 @@ string(APPEND CMAKE_CXX_FLAGS_MINSIZEREL_INIT " -DNDEBUG")
+ string(APPEND CMAKE_CXX_FLAGS_RELEASE_INIT " -DNDEBUG")
+ 
+ if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.10)
+-  set(CMAKE_CXX98_STANDARD_COMPILE_OPTION  -A)
++  set(CMAKE_CXX98_STANDARD_COMPILE_OPTION "")
+   set(CMAKE_CXX98_EXTENSION_COMPILE_OPTION --gnu_extensions)
+   set(CMAKE_CXX98_STANDARD__HAS_FULL_SUPPORT ON)
+   if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.10)
+-    set(CMAKE_CXX11_STANDARD_COMPILE_OPTION  --c++11 -A)
++    set(CMAKE_CXX11_STANDARD_COMPILE_OPTION  --c++11)
+     set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION --c++11 --gnu_extensions)
+     set(CMAKE_CXX11_STANDARD__HAS_FULL_SUPPORT ON)
+     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15.7)
+-      set(CMAKE_CXX14_STANDARD_COMPILE_OPTION  --c++14 -A)
++      set(CMAKE_CXX14_STANDARD_COMPILE_OPTION  --c++14)
+       set(CMAKE_CXX14_EXTENSION_COMPILE_OPTION --c++14 --gnu_extensions)
+       set(CMAKE_CXX14_STANDARD__HAS_FULL_SUPPORT ON)
+       if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 17.1)
+-        set(CMAKE_CXX17_STANDARD_COMPILE_OPTION  --c++17 -A)
++        set(CMAKE_CXX17_STANDARD_COMPILE_OPTION  --c++17)
+         set(CMAKE_CXX17_EXTENSION_COMPILE_OPTION --c++17 --gnu_extensions)
+         set(CMAKE_CXX17_STANDARD__HAS_FULL_SUPPORT ON)
+       endif()
+-- 
+GitLab
+
