@@ -467,8 +467,14 @@ def test_cdash_report_concretization_error(tmpdir, mock_fetch, install_mockery,
             report_file = report_dir.join('Update.xml')
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
-            assert '<UpdateReturnStatus>Conflicts in concretized spec' \
-                in content
+            assert '<UpdateReturnStatus>' in content
+            # The message is different based on using the
+            # new or the old concretizer
+            expected_messages = (
+                'Conflicts in concretized spec',
+                'does not satisfy'
+            )
+            assert any(x in content for x in expected_messages)
 
 
 @pytest.mark.disable_clean_stage_check
