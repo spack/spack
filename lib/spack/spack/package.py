@@ -306,6 +306,10 @@ class PackageMeta(
         _flush_callbacks('run_before')
         _flush_callbacks('run_after')
 
+        # Reset names for packages that inherit from another
+        # package with a different name
+        attr_dict['_name'] = None
+
         return super(PackageMeta, cls).__new__(cls, name, bases, attr_dict)
 
     @staticmethod
@@ -355,7 +359,7 @@ class PackageMeta(
         The name of a package is the name of its Python module, without
         the containing module names.
         """
-        if not hasattr(self, '_name'):
+        if self._name is None:
             self._name = self.module.__name__
             if '.' in self._name:
                 self._name = self._name[self._name.rindex('.') + 1:]
