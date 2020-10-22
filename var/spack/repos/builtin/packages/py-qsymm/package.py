@@ -23,3 +23,9 @@ class PyQsymm(PythonPackage):
 
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-numpy@1.13:', type=('build', 'run'))
+    depends_on('py-scipy@0.19:', type=('build', 'run'))
+    depends_on('py-sympy@1.1:', type=('build', 'run'))
+    depends_on('py-tinyarray', type=('build', 'run'))
+    depends_on('py-pytest', type='test')
+    depends_on('py-pytest-runner', type='test')
