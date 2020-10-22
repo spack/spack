@@ -32,15 +32,6 @@ class Libcuml(CMakePackage):
     def cmake_args(self):
         args = []
 
-        # -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
-        # -DCMAKE_CXX11_ABI=${BUILD_ABI} \
-        # -DBLAS_LIBRARIES=${INSTALL_PREFIX}/lib/libopenblas.so.0 \
-        # ${GPU_ARCH} \
-        # -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-        # -DBUILD_CUML_MG_TESTS=${BUILD_CPP_MG_TESTS}
-        # -DPARALLEL_LEVEL=${PARALLEL_LEVEL}
-        # -DDISABLE_DEPRECATION_WARNING=${BUILD_DISABLE_DEPRECATION_WARNING}
-        # -DCMAKE_PREFIX_PATH=${INSTALL_PREFIX}
         args.append("-DNCCL_PATH={0}".format(self.spec['nccl'].prefix))
         args.append("-DBUILD_CUML_C_LIBRARY=ON")
         args.append("-DWITH_UCX=ON")
