@@ -28,7 +28,7 @@ class PyTorchfile(PythonPackage):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
-    url      = "https://files.pythonhosted.org/packages/91/af/5b305f86f2d218091af657ddb53f984ecbd9518ca9fe8ef4103a007252c9/torchfile-0.1.0.tar.gz"
+    url      = "https://files.pythonhosted.org/packages/source/t/torchfile/torchfile-0.1.0.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
