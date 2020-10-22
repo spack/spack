@@ -13,8 +13,9 @@ class Amdscalapack(ScalapackBase):
     for parallel distributed memory machines. It depends on external
     libraries including BLAS and LAPACK for Linear Algebra computations.
 
-    AMD's optimized version of ScaLAPACK enables using BLIS and libFLAME library
-    that have optimized dense matrix functions and solvers for AMD EPYC processor family CPUs.
+    AMD's optimized version of ScaLAPACK enables using BLIS and
+    LibFLAME library that have optimized dense matrix functions and
+    solvers for AMD EPYC processor family CPUs.
     """
 
     _name = 'amdscalapack'
@@ -37,7 +38,11 @@ class Amdscalapack(ScalapackBase):
         args = super(Amdscalapack, self).cmake_args()
         spec = self.spec
 
-        args.extend(["-DUSE_DOTC_WRAPPER:BOOL=%s" % ('ON' if '%aocc ^amdblis' in spec else 'OFF')])
+        args.extend([
+            "-DUSE_DOTC_WRAPPER:BOOL=%s" % (
+                'ON' if '%aocc ^amdblis' in spec else 'OFF'
+            )
+        ])
 
         args.extend([
             '-DUSE_F2C=ON',

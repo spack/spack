@@ -42,23 +42,19 @@ class Amdlibflame(LibflameBase):
 
     provides('flame@5.2', when='@2:')
 
-    depends_on('blas')
-
     @property
     def lapack_libs(self):
         """find lapack_libs function"""
         shared = True if '+shared' in self.spec else False
-        return find_libraries('libflame', root=self.prefix, shared=shared, recursive=True)
+        return find_libraries(
+            'libflame', root=self.prefix, shared=shared, recursive=True
+        )
 
     def configure_args(self):
         """configure_args function"""
         args = super(Amdlibflame, self).configure_args()
         args.append("--enable-external-lapack-interfaces")
         return args
-
-    def build(self, spec, prefix):
-        """make function"""
-        make()
 
     def install(self, spec, prefix):
         """make install function"""

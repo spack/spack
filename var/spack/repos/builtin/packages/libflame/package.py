@@ -107,6 +107,7 @@ class LibflameBase(AutotoolsPackage):
         if self.spec.satisfies('platform=darwin'):
             fix_darwin_install_name(self.prefix.lib)
 
+
 class Libflame(LibflameBase):
     """libflame is a portable library for dense matrix computations,
     providing much of the functionality present in LAPACK, developed

@@ -30,7 +30,7 @@ class Amdfftw(FftwBase):
 
     variant(
         'precision', values=any_combination_of(
-            'float', 'single', 'double', 'long_double',\
+            'float', 'single', 'double', 'long_double',
             'quad').prohibit_empty_set().with_default('float,double'),
         description='Build the selected floating-point precision libraries'
     )
@@ -42,12 +42,13 @@ class Amdfftw(FftwBase):
 
     depends_on('mpi', when='+mpi')
     depends_on('texinfo')
+    depends_on('llvm-openmp', when='%apple-clang +openmp')
+
     provides('fftw-api@3', when='@2:')
 
-    conflicts('precision=quad', when='%aocc', msg='AOCC clang doesn\'t support quad precision')
-    conflicts('+debug', when='%aocc', msg='AOCC clang doesn\'t support debug')
-    conflicts('+openmp', when='%apple-clang', msg="Apple's clang does not support OpenMP")
-    conflicts('%gcc@:7.2', when="@2.1:", msg="Recommended GCC version above 7.2 for AMDFFTW")
+    conflicts('precision=quad', when='%aocc', msg="AOCC clang doesn\'t support quad precision")
+    conflicts('+debug', when='%aocc', msg="AOCC clang doesn\'t support debug")
+    conflicts('%gcc@:7.2', when="@2.2:", msg="Recommended GCC version above 7.2 for AMDFFTW")
 
     def configure(self, spec, prefix):
         """Configure function"""
@@ -56,9 +57,9 @@ class Amdfftw(FftwBase):
             '--prefix={0}'.format(prefix),
             '--enable-amd-opt',
             '--enable-threads'
-            ]
+        ]
 
-        # Check if coimpiler is AOCC
+        # Check if compiler is AOCC
         if spec.satisfies('%aocc'):
             options.append('CC=clang')
             options.append('CXX=clang++')
@@ -73,24 +74,31 @@ class Amdfftw(FftwBase):
         if '+mpi' in spec:
             options.append('--enable-mpi')
             options.append('--enable-amd-mpifft')
+        else:
+            options.append('--disable-mpi')
+            options.append('--disable-amd-mpifft')
 
         if not self.compiler.f77 or not self.compiler.fc:
             options.append("--disable-fortran")
 
         # Specific SIMD support.
         # float and double precisions are supported
-        simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma', 'kcvi', 'vsx', 'neon']
+        simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma',
+                         'kcvi', 'vsx', 'neon']
         simd_options = []
         for feature in simd_features:
             msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
             simd_options.append(msg.format(feature))
 
-        simd_options += ['--enable-fma' if 'fma' in spec.target else '--disable-fma']
+        simd_options += [
+            '--enable-fma' if 'fma' in spec.target else '--disable-fma'
+        ]
 
         float_simd_features = ['altivec', 'sse']
 
-        #When enabling configure option "--enable-amd-opt", do not use the \
-        #configure option "--enable-generic-simd128" or "--enable-generic-simd256".
+        # When enabling configure option "--enable-amd-opt", do not use the
+        # configure option "--enable-generic-simd128" or
+        # "--enable-generic-simd256"
 
         # Double is the default precision, for all the others we need
         # to enable the corresponding option.
