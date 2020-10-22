@@ -13,13 +13,12 @@ class Transrate(Package):
 
     homepage = "http://hibberdlab.com/transrate/"
 
-    version('1.0.3', sha256='68d034ecd7012f1d3d505a2edd820c1155cd8b64d2acbf2ac833f30d3800141b')
-
-    def url_for_version(self, ver):
-        osstr = 'osx' if sys.platform == 'darwin' else 'linux-x86_64'
-        base = "https://bintray.com/artifact/download/blahah/generic/transrate-{0}-{1}.tar.gz"
-
-        return base.format(ver.dotted, osstr)
+    if sys.platform == 'darwin':
+        version('1.0.3', sha256='039eba81747dd53f65a99a61923369aae4ba341891215d31a2babe574ac99ca8',
+                url='https://bintray.com/artifact/download/blahah/generic/transrate-1.0.3-osx.tar.gz')
+    else:
+        version('1.0.3', sha256='68d034ecd7012f1d3d505a2edd820c1155cd8b64d2acbf2ac833f30d3800141b',
+                url='https://bintray.com/artifact/download/blahah/generic/transrate-1.0.3-linux-x86_64.tar.gz')
 
     def install(self, spec, prefix):
         install_tree('.', prefix.bin)
