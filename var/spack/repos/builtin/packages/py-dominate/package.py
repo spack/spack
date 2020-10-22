@@ -15,8 +15,8 @@ class PyDominate(PythonPackage):
     powerful features of Python."""
 
     homepage = "https://github.com/Knio/dominate"
-    url      = "https://files.pythonhosted.org/packages/29/23/edf8e470f1053245c1aa99d92c8a3da9e83f6c7d3eb39205486965425be5/dominate-2.6.0.tar.gz"
-    # license = "spdx:LGPL-3.0"
+    url      = "https://pypi.io/packages/source/d/dominate/dominate-2.6.0.tar.gz"
+    # license = "LGPL-3.0"
 
     version('2.6.0', sha256='76ec2cde23700a6fc4fee098168b9dee43b99c2f1dd0ca6a711f683e8eb7e1e4')
 
