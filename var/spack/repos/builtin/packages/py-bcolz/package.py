@@ -16,7 +16,7 @@ class PyBcolz(PythonPackage):
     """
 
     homepage = "https://github.com/Blosc/bcolz"
-    url      = "https://files.pythonhosted.org/packages/5c/4e/23942de9d5c0fb16f10335fa83e52b431bcb8c0d4a8419c9ac206268c279/bcolz-1.2.1.tar.gz"
+    url      = "https://pypi.io/packages/source/b/bcolz/bcolz-1.2.1.tar.gz"
 
     version('1.2.1', sha256='c017d09bb0cb5bbb07f2ae223a3f3638285be3b574cb328e91525b2880300bd1')
 
