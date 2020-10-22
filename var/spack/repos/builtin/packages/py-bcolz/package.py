@@ -22,4 +22,6 @@ class PyBcolz(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-numpy@1.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@18.1:', type='build')
+    depends_on('py-setuptools-scm@1.5.5:', type='build')
+    depends_on('py-cython@0.22:', type='build')
