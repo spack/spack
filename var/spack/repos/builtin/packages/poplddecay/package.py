@@ -20,11 +20,7 @@ class Poplddecay(MakefilePackage):
     version('3.41', sha256='09a1ad01581520b84ef73eaa0b199879c84e77b259ba6ff06dbca5fcfc090457')
     version('3.40', sha256='5070930166fb90f7eaaa4b87c4430caa8a827d79c54683e2f56434a4daf69778')
 
-    def build(self, spec, prefix):
-        ###################
-        # Build Directory #
-        ###################
-        build_directory = 'src'
+    build_directory = 'src'
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin.mis)
