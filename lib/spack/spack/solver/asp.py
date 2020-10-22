@@ -593,8 +593,10 @@ class PyclingoDriver(object):
         self.backend.add_rule([], [head_atom, more_than_1])
         self.backend.add_rule([], [head_atom, -at_least_1])
 
-    def solve(self, solver_setup, specs, dump=None, nmodels=0,
-              timers=False, stats=False):
+    def solve(
+            self, solver_setup, specs, dump=None, nmodels=0,
+            timers=False, stats=False, tests=False
+    ):
         timer = Timer()
 
         # Initialize the control object for the solver
@@ -607,7 +609,7 @@ class PyclingoDriver(object):
         self.assumptions = []
         with self.control.backend() as backend:
             self.backend = backend
-            solver_setup.setup(self, specs)
+            solver_setup.setup(self, specs, tests=tests)
         timer.phase("setup")
 
         # read in the main ASP program and display logic -- these are
@@ -837,7 +839,7 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.node_compiler_preference(
                 pkg.name, cspec.name, cspec.version, i))
 
-    def pkg_rules(self, pkg):
+    def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
 
         # versions
@@ -888,7 +890,7 @@ class SpackSolverSetup(object):
         self.package_compiler_defaults(pkg)
 
         # dependencies
-        self.package_dependencies_rules(pkg)
+        self.package_dependencies_rules(pkg, tests)
 
         # virtual preferences
         self.virtual_preferences(
@@ -898,7 +900,7 @@ class SpackSolverSetup(object):
             )
         )
 
-    def package_dependencies_rules(self, pkg):
+    def package_dependencies_rules(self, pkg, tests):
         """Translate 'depends_on' directives into ASP logic."""
         for name, conditions in sorted(pkg.dependencies.items()):
             for cond, dep in sorted(conditions.items()):
@@ -906,6 +908,10 @@ class SpackSolverSetup(object):
                 named_cond.name = named_cond.name or pkg.name
 
                 for t in sorted(dep.type):
+                    # Skip test dependencies if they're not requested
+                    if t == 'test' and (not tests or pkg.name not in tests):
+                        continue
+
                     if cond == spack.spec.Spec():
                         self.gen.fact(
                             fn.declared_dependency(
@@ -1411,7 +1417,7 @@ class SpackSolverSetup(object):
             )
             self.gen.newline()
 
-    def setup(self, driver, specs):
+    def setup(self, driver, specs, tests=False):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -1464,7 +1470,7 @@ class SpackSolverSetup(object):
         self.gen.h1('Package Constraints')
         for pkg in sorted(pkgs):
             self.gen.h2('Package rules: %s' % pkg)
-            self.pkg_rules(pkg)
+            self.pkg_rules(pkg, tests=tests)
             self.gen.h2('Package preferences: %s' % pkg)
             self.preferred_variants(pkg)
             self.preferred_targets(pkg)
@@ -1735,7 +1741,7 @@ def highlight(string):
 #
 # These are handwritten parts for the Spack ASP model.
 #
-def solve(specs, dump=(), models=0, timers=False, stats=False):
+def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False):
     """Solve for a stable model of specs.
 
     Arguments:
@@ -1748,4 +1754,4 @@ def solve(specs, dump=(), models=0, timers=False, stats=False):
         driver.out = sys.stdout
 
     setup = SpackSolverSetup()
-    return driver.solve(setup, specs, dump, models, timers, stats)
+    return driver.solve(setup, specs, dump, models, timers, stats, tests)
