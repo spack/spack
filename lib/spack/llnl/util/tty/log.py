@@ -591,6 +591,9 @@ class log_output(object):
             # _writer_daemon. An exception will have already been generated.
             pass
 
+        # now that the write pipe is closed (in this __exit__, when we restore
+        # stdout with dup2), the logger daemon process loop will terminate. We
+        # wait for that here.
         self.process.join()
 
         # restore old color and debug settings

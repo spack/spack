@@ -568,7 +568,7 @@ class Singleton(object):
         return self._instance
 
     def __getattr__(self, name):
-        if name == '_instance' or name == 'instance':
+        if name in ['_instance', 'instance']:
             raise AttributeError()
         return getattr(self.instance, name)
 
