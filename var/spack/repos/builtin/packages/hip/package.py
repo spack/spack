@@ -49,6 +49,10 @@ class Hip(CMakePackage):
     patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@3.5.0:')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
+        # Please note that there is currently a bug in how spack detects hip.
+        # There is a workaound involving some manual changes to the following
+        # lines to hard-code paths. Manual edits will also be needed to the
+        # packages.yaml file. Please contact a developer for details.
         env.set('ROCM_PATH', '')
         env.set('HIP_COMPILER', 'clang')
         env.set('HIP_PLATFORM', 'hcc')

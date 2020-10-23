@@ -21,6 +21,10 @@ class Camp(CMakePackage, CudaPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', type='build', when="+cuda")
 
+    variant('hip', default=False, description='Enable HIP support')
+    depends_on('llvm-amdgpu', when='+hip')
+    depends_on('hip', when='+hip')
+
     def cmake_args(self):
         spec = self.spec
 
@@ -38,6 +42,20 @@ class Camp(CMakePackage, CudaPackage):
                 options.append('-DCMAKE_CUDA_FLAGS:STRING={0}'.format(flag))
         else:
             options.append('-DENABLE_CUDA=OFF')
+
+        # Please note that there is currently a bug in how spack detects hip.
+        # There is a workaound involving some manual changes to the hip
+        # package file and to the packages.yaml file.
+        # Please contact a developer for details.
+        if '+hip' in spec:
+            # Possibly add '-DHIP_CLANG_PATH={0}'
+            #  .format(self.spec['llvm-amdgpu'].prefix.bin
+            # in the future if there are issues.
+            options.extend([
+                '-DENABLE_HIP=ON',
+                '-DHIP_ROOT_DIR={0}'. format(spec['hip'].prefix)])
+        else:
+            options.append('-DENABLE_HIP=OFF')
 
         options.append('-DENABLE_TESTS=ON')
 
