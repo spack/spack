@@ -15,11 +15,14 @@ class PyXopen(PythonPackage):
     homepage = "https://github.com/marcelm/xopen"
     url      = "https://pypi.io/packages/source/x/xopen/xopen-0.1.1.tar.gz"
 
+    version('0.9.0', sha256='1e3918c8a5cd2bd128ba05b3b883ee322349219c99c305e10114638478e3162a')
     version('0.8.2', sha256='003749e09af74103a29e9c64c468c03e084aa6dfe6feff4fe22366679a6534f7')
     version('0.5.0', sha256='b097cd25e8afec42b6e1780c1f6315016171b5b6936100cdf307d121e2cbab9f')
     version('0.1.1', sha256='d1320ca46ed464a59db4c27c7a44caf5e268301e68319f0295d06bf6a9afa6f3')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-bz2file', type=('build', 'run'), when='@0.5: ^python@:2.8')
-    depends_on('python@2.7,3.4:', type=('build', 'run'), when='@0.5:')
+    depends_on('python@3.5:', type=('build', 'run'), when='@0.9.0:')
+    depends_on('python@2.7,3.4:', type=('build', 'run'), when='@0.5:0.8')
     depends_on('python@2.6:2.99,3.3:', type=('build', 'run'), when='@0.1.1')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm', type='build')
+    depends_on('py-bz2file', type=('build', 'run'), when='@0.5: ^python@:2.8')

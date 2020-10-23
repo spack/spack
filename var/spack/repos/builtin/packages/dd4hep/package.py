@@ -22,6 +22,8 @@ class Dd4hep(CMakePackage):
     maintainers = ['vvolkl', 'drbenmorgan']
 
     version('master', branch='master')
+    version('1.14.1', sha256='5b5742f1e23c2b36d3174cca95f810ce909c0eb66f3d6d7acb0ba657819e6717')
+    version('1.14.0', sha256='b603aa3c0db8dda392253aa71fa4a0f0c3c9715d47df0b895d45c1e8849f4895')
     version('1.13.1', sha256='83fa70cd74ce93b2f52f098388dff58d179f05ace5b50aea3f408bb8abf7cb73')
     version('1.13.0', sha256='0b1f9d902ebe21a9178c1e41204c066b29f68c8836fd1d03a9ce979811ddb295')
     version('1.12.1', sha256='85e8c775ec03c499ce10911e228342e757c81ce9ef2a9195cb253b85175a2e93')
@@ -41,6 +43,7 @@ class Dd4hep(CMakePackage):
     variant('assimp', default=False, description="Enable CAD interface based on Assimp")
     variant('hepmc3', default=False, description="Enable build with hepmc3")
     variant('lcio', default=False, description="Enable build with lcio")
+    variant('debug', default=False, description="Enable debug build")
 
     depends_on('cmake @3.12:', type='build')
     depends_on('boost @1.49:')
@@ -65,6 +68,7 @@ class Dd4hep(CMakePackage):
             "-DDD4HEP_USE_LCIO={0}".format(spec.satisfies('+lcio')),
             "-DDD4HEP_LOAD_ASSIMP={0}".format(spec.satisfies('+assimp')),
             "-DDD4HEP_USE_HEPMC3={0}".format(spec.satisfies('+hepmc3')),
+            "-DDD4HEP_BUILD_DEBUG={0}".format(spec.satisfies('+debug')),
             "-DBUILD_TESTING={0}".format(self.run_tests),
             "-DBOOST_ROOT={0}".format(spec['boost'].prefix),
             "-DBoost_NO_BOOST_CMAKE=ON",

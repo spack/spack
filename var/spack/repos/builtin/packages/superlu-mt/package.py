@@ -57,7 +57,8 @@ class SuperluMt(Package):
                 'TMGLIB     = libtmglib.a',
                 'MPLIB      = {0}'.format(self.compiler.openmp_flag),
                 'CFLAGS     = {0}'.format(self.compiler.openmp_flag),
-                'FFLAGS     = {0}'.format(self.compiler.openmp_flag)
+                'FFLAGS     = {0}'.format(self.compiler.openmp_flag),
+                'LOADOPTS   += {0}'.format(self.compiler.openmp_flag)
             ])
         elif '+pthread' in spec:
             # POSIX threads

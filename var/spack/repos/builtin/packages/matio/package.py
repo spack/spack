@@ -47,3 +47,11 @@ class Matio(AutotoolsPackage):
         if '+shared' not in self.spec:
             args.append("--disable-shared")
         return args
+
+    def patch(self):
+        if self.spec.satisfies('%nvhpc'):
+            # workaround anonymous version tag linker error for the NVIDIA
+            # compilers
+            filter_file('${wl}-version-script '
+                        '${wl}$output_objdir/$libname.ver', '',
+                        'configure', string=True)

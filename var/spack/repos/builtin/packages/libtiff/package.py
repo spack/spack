@@ -23,3 +23,9 @@ class Libtiff(AutotoolsPackage):
     depends_on('jpeg')
     depends_on('zlib')
     depends_on('xz')
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('vl_cv_prog_cc_warnings="-Wall -W"',
+                        'vl_cv_prog_cc_warnings="-Wall"', 'configure')

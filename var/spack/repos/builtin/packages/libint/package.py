@@ -195,3 +195,10 @@ class Libint(AutotoolsPackage):
             configure(*options)
             make()
             make('install')
+
+    def patch(self):
+        # Use Fortran compiler to link the Fortran example, not the C++
+        # compiler
+        if '+fortran' in self.spec and self.spec.satisfies('%nvhpc'):
+            filter_file('$(CXX) $(CXXFLAGS)', '$(FC) $(FCFLAGS)',
+                        'export/fortran/Makefile', string=True)

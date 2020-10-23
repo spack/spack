@@ -114,6 +114,7 @@ class PyPillow(PyPillowBase):
     homepage = "https://python-pillow.org/"
     url      = "https://pypi.io/packages/source/P/Pillow/Pillow-7.2.0.tar.gz"
 
+    version('8.0.0', sha256='59304c67d12394815331eda95ec892bf54ad95e0aa7bc1ccd8e0a4a5a25d4bf3')
     version('7.2.0', sha256='97f9e7953a77d5a70f49b9a48da7776dc51e9b738151b22dacf101641594a626')
     version('7.0.0', sha256='4d9ed9a64095e031435af120d3c910148067087541131e82b3e8db302f4c8946')
     version('6.2.2', sha256='db9ff0c251ed066d367f53b64827cc9e18ccea001b986d08c265e53625dab950')

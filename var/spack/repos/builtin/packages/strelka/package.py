@@ -15,7 +15,7 @@ class Strelka(CMakePackage):
 
     version('2.8.2', sha256='27415f7c14f92e0a6b80416283a0707daed121b8a3854196872981d132f1496b')
 
-    depends_on('python@2.4:')
+    depends_on('python@2.4:2.7')
     depends_on('zlib')
     depends_on('bzip2')
     depends_on('cmake@2.8.5:')

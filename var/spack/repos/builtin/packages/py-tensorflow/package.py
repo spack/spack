@@ -13,7 +13,7 @@ class PyTensorflow(Package, CudaPackage):
     homepage = "https://www.tensorflow.org"
     url      = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'aweits']
     import_modules = ['tensorflow']
 
     version('2.3.1',  sha256='ee534dd31a811f7a759453567257d1e643f216d8d55a25c32d2fbfff8153a1ac')
@@ -533,7 +533,7 @@ class PyTensorflow(Package, CudaPackage):
         env.set('INCLUDEDIR', spec['protobuf'].prefix.include)
 
     def patch(self):
-        if self.spec.satisfies('@2.3.0'):
+        if self.spec.satisfies('@2.3.0:2.3.1'):
             filter_file('deps = protodeps + well_known_proto_libs(),',
                         'deps = protodeps,',
                         'tensorflow/core/platform/default/build_config.bzl',
