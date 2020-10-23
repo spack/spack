@@ -1634,7 +1634,9 @@ class SpecBuilder(object):
         packages_yaml = _normalize_packages_yaml(packages_yaml)
         spec_info = packages_yaml[pkg]['externals'][int(idx)]
         self._specs[pkg].external_path = spec_info.get('prefix', None)
-        self._specs[pkg].external_modules = spec_info.get('modules', [])
+        self._specs[pkg].external_modules = (
+            spack.spec.Spec._format_module_list(spec_info.get('modules', []))
+        )
         self._specs[pkg].extra_attributes = spec_info.get(
             'extra_attributes', {}
         )
@@ -1755,7 +1757,8 @@ def highlight(string):
     string = re.sub(r':-', r'@*G{:-}', string)
 
     # final periods
-    string = re.sub(r'^([^%].*)\.$', r'\1@*G{.}', string, flags=re.MULTILINE)
+    pattern = re.compile(r'^([^%].*)\.$', flags=re.MULTILINE)
+    string = re.sub(pattern, r'\1@*G{.}', string)
 
     # directives
     string = re.sub(
@@ -1765,7 +1768,8 @@ def highlight(string):
     string = re.sub(r'(\w[\w-]+)\(([^)]*)\)', r'@C{\1}@w{(}\2@w{)}', string)
 
     # comments
-    string = re.sub(r'(%.*)$', r'@w\1@.', string, flags=re.MULTILINE)
+    pattern = re.compile(r'(%.*)$', flags=re.MULTILINE)
+    string = re.sub(pattern, r'@w\1@.', string)
 
     # strings
     string = re.sub(r'("[^"]*")', r'@m{\1}', string)

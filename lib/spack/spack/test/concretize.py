@@ -489,7 +489,7 @@ class TestConcretize(object):
         assert find_spec(s['b'], lambda s: '+foo' in s) is None
 
     def test_compiler_child(self):
-        s = Spec('mpileaks%clang ^dyninst%gcc')
+        s = Spec('mpileaks%clang target=x86_64 ^dyninst%gcc')
         s.concretize()
         assert s['mpileaks'].satisfies('%clang')
         assert s['dyninst'].satisfies('%gcc')
