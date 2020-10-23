@@ -468,8 +468,9 @@ env:
 
 
 @pytest.mark.usefixtures('config')
-def test_env_view_external_prefix(tmpdir_factory, mutable_database,
-                                  mock_packages):
+def test_env_view_external_prefix(
+        tmpdir_factory, mutable_database, mock_packages
+):
     fake_prefix = tmpdir_factory.mktemp('a-prefix')
     fake_bin = fake_prefix.join('bin')
     fake_bin.ensure(dir=True)
@@ -485,7 +486,7 @@ env:
 packages:
   a:
     externals:
-    - spec: a
+    - spec: a@2.0
       prefix: {a_prefix}
     buildable: false
 """.format(a_prefix=str(fake_prefix)))
@@ -1441,6 +1442,11 @@ env:
 
 
 def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):
+    # FIXME: The new concretizer doesn't handle yet soft
+    # FIXME: constraints for stacks
+    if spack.config.get('config:concretizer') == 'clingo':
+        pytest.skip('Clingo concretizer does not support soft constraints')
+
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\

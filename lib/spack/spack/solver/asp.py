@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from __future__ import print_function
 
 import collections
@@ -38,6 +37,7 @@ import spack.spec
 import spack.package
 import spack.package_prefs
 import spack.repo
+import spack.variant
 from spack.util.executable import which
 from spack.version import ver
 
@@ -1485,7 +1485,8 @@ class SpackSolverSetup(object):
 
             for dep in spec.traverse():
                 self.gen.h2('Spec: %s' % str(dep))
-
+                # Inject dev_path from environment
+                _develop_specs_from_env(dep)
                 if dep.virtual:
                     for clause in self.virtual_spec_clauses(dep):
                         self.gen.fact(clause)
@@ -1499,11 +1500,33 @@ class SpackSolverSetup(object):
                         # TODO: then it's also a possible value.
                         if clause.name == 'variant_set':
                             variant_name = clause.args[1]
-                            variant_def = dep.package.variants[variant_name]
-                            variant_def.validate_or_raise(
-                                dep.variants[variant_name],
-                                dep.package
-                            )
+                            # 'dev_path' and 'patches are treated in a
+                            # special way, as they are injected from cli
+                            # or files
+                            if variant_name == 'dev_path':
+                                pkg_name = clause.args[0]
+                                self.gen.fact(fn.variant(
+                                    pkg_name, variant_name
+                                ))
+                                self.gen.fact(fn.variant_single_value(
+                                    pkg_name, variant_name
+                                ))
+                            elif variant_name == 'patches':
+                                pkg_name = clause.args[0]
+                                self.gen.fact(fn.variant(
+                                    pkg_name, variant_name
+                                ))
+                            else:
+                                variant_def = dep.package.variants[
+                                    variant_name
+                                ]
+                                variant_def.validate_or_raise(
+                                    dep.variants[variant_name],
+                                    dep.package
+                                )
+                            # State that this variant is a possible value
+                            # to account for variant values that are not
+                            # enumerated explicitly
                             self.gen.fact(
                                 fn.variant_possible_value(*clause.args)
                             )
@@ -1556,6 +1579,21 @@ class SpecBuilder(object):
         self._arch(pkg).target = target
 
     def variant_value(self, pkg, name, value):
+        # FIXME: is there a way not to special case 'dev_path' everywhere?
+        if name == 'dev_path':
+            self._specs[pkg].variants.setdefault(
+                name,
+                spack.variant.SingleValuedVariant(name, value)
+            )
+            return
+
+        if name == 'patches':
+            self._specs[pkg].variants.setdefault(
+                name,
+                spack.variant.MultiValuedVariant(name, value)
+            )
+            return
+
         pkg_class = spack.repo.path.get_pkg_class(pkg)
 
         variant = self._specs[pkg].variants.get(name)
@@ -1697,6 +1735,9 @@ class SpecBuilder(object):
             spack.spec.Spec.ensure_external_path_if_external(s)
 
         for s in self._specs.values():
+            _develop_specs_from_env(s)
+
+        for s in self._specs.values():
             s._mark_concrete()
 
         for s in self._specs.values():
@@ -1736,6 +1777,24 @@ def highlight(string):
     string = re.sub(r'\bOPTIMUM FOUND', "@G{OPTIMUM FOUND}", string)
 
     return string
+
+
+def _develop_specs_from_env(spec):
+    env = spack.environment.get_env(None, None)
+    dev_info = env.dev_specs.get(spec.name, {}) if env else {}
+    if not dev_info:
+        return
+
+    path = dev_info['path']
+    path = path if os.path.isabs(path) else os.path.join(env.path, path)
+
+    if 'dev_path' in spec.variants:
+        assert spec.variants['dev_path'].value == path
+    else:
+        spec.variants.setdefault(
+            'dev_path', spack.variant.SingleValuedVariant('dev_path', path)
+        )
+    spec.constrain(dev_info['spec'])
 
 
 #
