@@ -82,11 +82,6 @@ class BinaryDistributionCache(object):
                         cache_key) as cache_file:
                     self._local_index_cache = json.load(cache_file)
 
-    @property
-    def spec_cache(self):
-        """The cache of specs and mirrors they live on"""
-        return self._built_spec_cache
-
     def clear_spec_cache(self):
         self._built_spec_cache = {}
 
