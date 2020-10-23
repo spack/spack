@@ -96,11 +96,6 @@ class FftwBase(AutotoolsPackage):
 
         # Variants that affect every precision
         if '+openmp' in spec:
-            # Note: Apple's Clang does not support OpenMP.
-            if spec.satisfies('%clang'):
-                ver = str(self.compiler.version)
-                if ver.endswith('-apple'):
-                    raise InstallError("Apple's clang does not support OpenMP")
             options.append('--enable-openmp')
             if spec.satisfies('@:2'):
                 # TODO: libtool strips CFLAGS, so 2.x libxfftw_threads

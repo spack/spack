@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 from spack.pkg.builtin.fftw import FftwBase
 
@@ -61,15 +62,25 @@ class Amdfftw(FftwBase):
 
         # Check if compiler is AOCC
         if spec.satisfies('%aocc'):
-            options.append('CC=clang')
-            options.append('CXX=clang++')
-            options.append('FC=flang')
+            options.append(
+                "CC={}".format(os.path.basename(self.compiler.cc))
+            )
+            options.append(
+                "CXX={}".format(os.path.basename(self.compiler.cxx))
+            )
+            options.append(
+                "FC={}".format(os.path.basename(self.compiler.fc))
+            )
 
         if '+shared' in spec:
             options.append('--enable-shared')
+        else:
+            options.append('--disable-shared')
 
         if '+openmp' in spec:
             options.append('--enable-openmp')
+        else:
+            options.append('--disable-openmp')
 
         if '+mpi' in spec:
             options.append('--enable-mpi')
