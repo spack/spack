@@ -526,7 +526,10 @@ def test_push_and_fetch_keys(mock_gnupghome):
                          'install_dir_non_default_layout')
 def test_built_spec_cache(tmpdir,
                           install_mockery):
-    """ Test what's the situation now """
+    """ Because the buildcache list command fetches the buildcache index
+    and uses it to populate the binary_distribution built spec cache, when
+    this test calls get_mirrors_for_spec, it is testing the popluation of
+    that cache from a buildcache index. """
     global mirror_path_rel
 
     mparser = argparse.ArgumentParser()
@@ -554,7 +557,7 @@ def test_built_spec_cache(tmpdir,
         'corge': cspec.full_hash(),
     }
 
-    gspec_results = bindist.get_spec(gspec)
+    gspec_results = bindist.get_mirrors_for_spec(gspec)
 
     gspec_mirrors = {}
     for result in gspec_results:
@@ -563,7 +566,7 @@ def test_built_spec_cache(tmpdir,
         assert(result['mirror_url'] not in gspec_mirrors)
         gspec_mirrors[result['mirror_url']] = True
 
-    cspec_results = bindist.get_spec(cspec, full_hash_match=True)
+    cspec_results = bindist.get_mirrors_for_spec(cspec, full_hash_match=True)
 
     cspec_mirrors = {}
     for result in cspec_results:
@@ -581,7 +584,7 @@ def test_built_spec_cache(tmpdir,
 
 def test_spec_needs_rebuild(install_mockery_mutable_config, mock_packages,
                             mock_fetch, monkeypatch, tmpdir):
-    """Make sure needs_rebuild properly comares remote full_hash
+    """Make sure needs_rebuild properly compares remote full_hash
     against locally computed one, avoiding unnecessary rebuilds"""
 
     # Create a temp mirror directory for buildcache usage

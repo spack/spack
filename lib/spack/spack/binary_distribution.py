@@ -41,25 +41,25 @@ from spack.stage import Stage
 
 
 #: default root, relative to the Spack install path
-default_manager_root = os.path.join(spack.paths.opt_path, 'spack')
+default_cache_root = os.path.join(spack.paths.opt_path, 'spack')
 
 _build_cache_relative_path = 'build_cache'
 _build_cache_keys_relative_path = '_pgp'
 
 
-class BinaryDistributionCacheManager(object):
+class BinaryDistributionCache(object):
     """
-    The BinaryDistributionCacheManager stores and manages both:
+    The BinaryDistributionCache stores and manages both:
 
     1. cached buildcache index files (the index.json describing the built
     specs available on a mirror)
 
-    2. a cache of all the conrcrete built specs available on all the
+    2. a cache of all the concrete built specs available on all the
     configured mirrors.
     """
 
     def __init__(self, cache_root=None):
-        self._cache_root = cache_root or default_manager_root
+        self._cache_root = cache_root or default_cache_root
         self._index_cache_root = os.path.join(self._cache_root, 'indices')
         self._index_contents_key = 'contents.json'
         self._index_file_cache = None
@@ -319,10 +319,10 @@ class BinaryDistributionCacheManager(object):
 def _cache_manager():
     """Get the singleton store instance."""
     cache_root = spack.config.get(
-        'config:binary_distribution_cache_root', default_manager_root)
+        'config:binary_distribution_cache_root', default_cache_root)
     cache_root = spack.util.path.canonicalize_path(cache_root)
 
-    return BinaryDistributionCacheManager(cache_root)
+    return BinaryDistributionCache(cache_root)
 
 
 #: Singleton cache_manager instance
@@ -833,14 +833,14 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     return None
 
 
-def download_tarball(spec, url=None):
+def download_tarball(spec, preferred_url=None):
     """
-    Download binary tarball for given package into stage area
-    Return True if successful
+    Download binary tarball for given package into stage area, returning
+    path to downloaded tarball if successful, None otherwise.
 
     Args:
         spec (Spec): Concrete spec
-        url (str): If provided, this is the preferred url, other configured
+        preferred_url (str): If provided, this is the preferred url, other configured
             mirrors will only be used if the tarball can't be retrieved from
             this preferred url.
 
@@ -856,12 +856,12 @@ def download_tarball(spec, url=None):
 
     urls_to_try = []
 
-    if url:
+    if preferred_url:
         urls_to_try.append(url_util.join(
-            url, _build_cache_relative_path, tarball))
+            preferred_url, _build_cache_relative_path, tarball))
 
     for mirror in spack.mirror.MirrorCollection().values():
-        if not url or url != mirror.fetch_url:
+        if not preferred_url or preferred_url != mirror.fetch_url:
             urls_to_try.append(url_util.join(
                 mirror.fetch_url, _build_cache_relative_path, tarball))
 
@@ -875,8 +875,8 @@ def download_tarball(spec, url=None):
         except fs.FetchError:
             continue
 
-    # If we arrive here, something went wrong, maybe this should be an
-    # exception?
+    tty.warn("download_tarball() was unable to download " +
+             "{0} from any configured mirrors".format(spec))
     return None
 
 
@@ -1197,9 +1197,9 @@ def try_direct_fetch(spec, force=False, full_hash_match=False):
     return found_specs
 
 
-def get_spec(spec=None, force=False, full_hash_match=False):
+def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False):
     """
-    Check if concrete spec exists on mirrors and return an object
+    Check if concrete spec exists on mirrors and return a list
     indicating the mirrors on which it can be found
     """
     if spec is None:
@@ -1211,11 +1211,11 @@ def get_spec(spec=None, force=False, full_hash_match=False):
 
     results = []
     lenient = not full_hash_match
+    spec_full_hash = spec.full_hash()
 
-    def filter_candidates(possibles):
+    def filter_candidates(candidate_list):
         filtered_candidates = []
-        for candidate in possibles:
-            spec_full_hash = spec.full_hash()
+        for candidate in candidate_list:
             candidate_full_hash = candidate['spec']._full_hash
             if lenient or spec_full_hash == candidate_full_hash:
                 filtered_candidates.append(candidate)
