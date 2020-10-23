@@ -63,13 +63,13 @@ class Amdfftw(FftwBase):
         # Check if compiler is AOCC
         if spec.satisfies('%aocc'):
             options.append(
-                "CC={}".format(os.path.basename(self.compiler.cc))
+                "CC={0}".format(os.path.basename(self.compiler.cc))
             )
             options.append(
-                "CXX={}".format(os.path.basename(self.compiler.cxx))
+                "CXX={0}".format(os.path.basename(self.compiler.cxx))
             )
             options.append(
-                "FC={}".format(os.path.basename(self.compiler.fc))
+                "FC={0}".format(os.path.basename(self.compiler.fc))
             )
 
         if '+shared' in spec:
