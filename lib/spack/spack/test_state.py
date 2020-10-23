@@ -15,6 +15,9 @@ import spack.architecture
 import spack.config
 
 
+_serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
+
+
 patches = None
 
 
@@ -41,39 +44,39 @@ class SpackTestProcess(object):
         fn()
 
     def create(self):
-        test_state = TransmitTestState()
+        test_state = TestState()
         return multiprocessing.Process(
             target=self._restore_and_run,
             args=(self.fn, test_state))
 
 
 class PackageInstallContext(object):
-    """Captures the in-memory process state of an installation that needs to be
-    transmitted to a child process.
+    """Captures the in-memory process state of a package installation that
+    needs to be transmitted to a child process.
     """
-
-    _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
-
     def __init__(self, pkg):
-        if self._serialize:
+        if _serialize:
             self.serialized_pkg = serialize(pkg)
         else:
             self.pkg = pkg
-        self.test_state = TransmitTestState()
+        self.test_state = TestState()
 
     def restore(self):
         self.test_state.restore()
-        if self._serialize:
+        if _serialize:
             return pickle.load(self.serialized_pkg)
         else:
             return self.pkg
 
 
-class TransmitTestState(object):
-    _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
-
+class TestState(object):
+    """Spack tests may modify state that is normally read from disk in memory;
+    this object is responsible for properly serializing that state to be
+    applied to a subprocess. This isn't needed outside of a testing environment
+    but this logic is designed to behave the same inside or outside of tests.
+    """
     def __init__(self):
-        if self._serialize:
+        if _serialize:
             self.repo_dirs = list(r.root for r in spack.repo.path.repos)
             self.config = spack.config.config
             self.platform = spack.architecture.platform
@@ -86,21 +89,21 @@ class TransmitTestState(object):
             # others set 'store'
 
     def restore(self):
-        if self._serialize:
+        if _serialize:
             spack.repo.path = spack.repo._path(self.repo_dirs)
             spack.config.config = self.config
             spack.architecture.platform = self.platform
-            self.test_patches.apply()
+            self.test_patches.restore()
 
 
-class TransmitPatches(object):
+class TestPatches(object):
     def __init__(self, module_patches, class_patches):
         self.module_patches = list(
             (x, y, serialize(z)) for (x, y, z) in module_patches)
         self.class_patches = list(
             (x, y, serialize(z)) for (x, y, z) in class_patches)
 
-    def apply(self):
+    def restore(self):
         for module_name, attr_name, value in self.module_patches:
             value = pickle.load(value)
             module = __import__(module_name)
@@ -116,7 +119,7 @@ def store_patches():
     module_patches = list()
     class_patches = list()
     if not patches:
-        return TransmitPatches(list(), list())
+        return TestPatches(list(), list())
     for patch in patches:
         for target, name, _ in patches:
             if isinstance(target, ModuleType):
@@ -128,7 +131,7 @@ def store_patches():
                 class_fqn = '.'.join([target.__module__, target.__name__])
                 class_patches.append((class_fqn, name, new_val))
 
-    return TransmitPatches(module_patches, class_patches)
+    return TestPatches(module_patches, class_patches)
 
 
 def clear_patches():
