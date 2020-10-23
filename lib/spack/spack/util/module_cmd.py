@@ -91,12 +91,12 @@ def module(*args):
                                     stderr=subprocess.STDOUT,
                                     shell=True,
                                     executable="/bin/bash")
-        
+
         # Make sure the command succeeded
         module_output = module_p.communicate()
         if module_p.returncode != 0:
             raise EnvironmentParseError(module_p.returncode, module_output[1])
-    
+
         # Decode and str to return a string object in both python 2 and 3
         return str(module_output[0].decode())
 
@@ -252,8 +252,10 @@ def get_path_from_module_contents(text, module_name):
     # Unable to find path in module
     return None
 
+
 class EnvironmentParseError(spack.error.SpackError):
     def __init__(self, returncode, module_cmd_stderr):
-        msg = "Failed to dump environment variables, process returned %d" % returncode
+        msg = "Failed to dump environment variables, "
+        msg += "process returned %d " % returncode
         msg += "with message: %s" % module_cmd_stderr
         super(EnvironmentParseError, self).__init__(msg)
