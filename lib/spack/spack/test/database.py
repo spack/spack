@@ -520,7 +520,7 @@ class ReadModify(object):
     """Provide a function which can execute in a separate process that removes
     a spec from the database.
     """
-    def read_and_modify(self):
+    def __call__(self):
         # check that other process can read DB
         _check_db_sanity(spack.store.db)
         with spack.store.db.write_transaction():
@@ -528,8 +528,7 @@ class ReadModify(object):
 
 
 def test_030_db_sanity_from_another_process(mutable_database):
-    action = ReadModify()
-    spack_process = spack.test_state.SpackTestProcess(action.read_and_modify)
+    spack_process = spack.test_state.SpackTestProcess(ReadModify())
     p = spack_process.create()
     p.start()
     p.join()
