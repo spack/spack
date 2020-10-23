@@ -64,7 +64,18 @@ class BinaryDistributionCache(object):
         self._index_contents_key = 'contents.json'
         self._index_file_cache = None
         self._local_index_cache = None
-        self._built_spec_cache = {}
+
+        # _mirrors_for_spec is a dictionary mapping DAG hashes to lists of
+        # entries indicating mirrors where that concrete spec can be found:
+        #
+        # _mirrors_for_spec = {
+        #   daghash1: [
+        #     { 'mirror_url': <string>, 'spec': <concrete-spec> },
+        #     ...
+        #   ],
+        #   daghash2: [ ... ],
+        # }
+        self._mirrors_for_spec = {}
 
     def _init_local_index_cache(self):
         if not self._index_file_cache:
@@ -83,7 +94,7 @@ class BinaryDistributionCache(object):
                     self._local_index_cache = json.load(cache_file)
 
     def clear_spec_cache(self):
-        self._built_spec_cache = {}
+        self._mirrors_for_spec = {}
 
     def _write_local_index_cache(self):
         self._init_local_index_cache()
@@ -119,10 +130,10 @@ class BinaryDistributionCache(object):
                 dag_hash = indexed_spec.dag_hash()
                 full_hash = indexed_spec._full_hash
 
-                if dag_hash not in self._built_spec_cache:
-                    self._built_spec_cache[dag_hash] = []
+                if dag_hash not in self._mirrors_for_spec:
+                    self._mirrors_for_spec[dag_hash] = []
 
-                for entry in self._built_spec_cache[dag_hash]:
+                for entry in self._mirrors_for_spec[dag_hash]:
                     # A binary mirror can only have one spec per DAG hash, so
                     # if we already have an entry under this DAG hash for this
                     # mirror url, we may need to replace the spec associated
@@ -132,7 +143,7 @@ class BinaryDistributionCache(object):
                             entry['spec'] = indexed_spec
                         break
                 else:
-                    self._built_spec_cache[dag_hash].append({
+                    self._mirrors_for_spec[dag_hash].append({
                         "mirror_url": mirror_url,
                         "spec": indexed_spec,
                     })
@@ -141,12 +152,12 @@ class BinaryDistributionCache(object):
 
     def get_all_built_specs(self):
         spec_list = []
-        for dag_hash in self._built_spec_cache:
+        for dag_hash in self._mirrors_for_spec:
             # in the absence of further information, all concrete specs
             # with the same DAG hash are equivalent, so we can just
             # return the first one in the list.
-            if len(self._built_spec_cache[dag_hash]) > 0:
-                spec_list.append(self._built_spec_cache[dag_hash][0]['spec'])
+            if len(self._mirrors_for_spec[dag_hash]) > 0:
+                spec_list.append(self._mirrors_for_spec[dag_hash][0]['spec'])
 
         return spec_list
 
@@ -174,10 +185,10 @@ class BinaryDistributionCache(object):
                     ]
         """
         find_hash = spec.dag_hash()
-        if find_hash not in self._built_spec_cache:
+        if find_hash not in self._mirrors_for_spec:
             return None
 
-        return self._built_spec_cache[find_hash]
+        return self._mirrors_for_spec[find_hash]
 
     def update_spec(self, spec, found_list):
         """
@@ -186,10 +197,10 @@ class BinaryDistributionCache(object):
         """
         spec_dag_hash = spec.dag_hash()
 
-        if spec_dag_hash not in self._built_spec_cache:
-            self._built_spec_cache[spec_dag_hash] = found_list
+        if spec_dag_hash not in self._mirrors_for_spec:
+            self._mirrors_for_spec[spec_dag_hash] = found_list
         else:
-            current_list = self._built_spec_cache[spec_dag_hash]
+            current_list = self._mirrors_for_spec[spec_dag_hash]
             for new_entry in found_list:
                 for cur_entry in current_list:
                     if new_entry['mirror_url'] == cur_entry['mirror_url']:
