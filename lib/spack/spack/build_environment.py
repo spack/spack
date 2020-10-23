@@ -58,7 +58,6 @@ import spack.paths
 import spack.schema.environment
 import spack.store
 import spack.test_state
-from spack.spec import dso_suffix
 import spack.architecture as arch
 from spack.util.string import plural
 from spack.util.environment import (
@@ -95,6 +94,10 @@ SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 SPACK_CCACHE_BINARY = 'SPACK_CCACHE_BINARY'
 SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
+
+
+# Platform-specific library suffix.
+dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
 class MakeExecutable(Executable):
