@@ -41,8 +41,6 @@ import sys
 import traceback
 import types
 from six import StringIO
-import pickle
-import io
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize

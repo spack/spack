@@ -332,8 +332,8 @@ class FileWrapper(object):
 
 class MultiProcessFd(object):
     """Return an object which stores a file descriptor and can be passed as an
-       argument to a function run with ``multiprocessing.Process``, such that the
-       file descriptor is available in the subprocess."""
+       argument to a function run with ``multiprocessing.Process``, such that
+       the file descriptor is available in the subprocess."""
     def __init__(self, fd):
         self._connection = None
         self._fd = None
