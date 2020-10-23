@@ -125,6 +125,10 @@ def test_buildcache_create_fails_on_noargs(tmpdir):
         buildcache('create', '-d', str(tmpdir), '--unsigned')
 
 
+@pytest.mark.skipif(
+    os.environ.get('SPACK_TEST_SOLVER') == 'clingo',
+    reason='Test for Clingo are run in a container with root permissions'
+)
 def test_buildcache_create_fail_on_perm_denied(
         install_mockery, mock_fetch, monkeypatch, tmpdir):
     """Ensure that buildcache create fails on permission denied error."""
