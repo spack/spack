@@ -1039,10 +1039,6 @@ class PackageInstaller(object):
         unsigned = kwargs.get('unsigned', False)
         use_cache = kwargs.get('use_cache', True)
 
-        build_kwargs = kwargs.copy()
-        build_kwargs['dirty'] = kwargs.get('dirty', False)
-        build_kwargs['fake'] = kwargs.get('fake', False)
-
         pkg = task.pkg
         pkg_id = package_id(pkg)
         explicit = pkg_id == self.pkg_id
@@ -1073,7 +1069,7 @@ class PackageInstaller(object):
             # Fork a child to do the actual installation.
             # Preserve verbosity settings across installs.
             spack.package.PackageBase._verbose = spack.build_environment.fork(
-                pkg, build_process, build_kwargs)
+                pkg, build_process, kwargs)
 
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
@@ -1515,7 +1511,7 @@ class PackageInstaller(object):
         return self.pkg.spec
 
 
-def build_process(pkg, build_kwargs):
+def build_process(pkg, kwargs):
     """This implements the process forked for each build.
 
     Has its own process and python module space set up by
@@ -1523,8 +1519,6 @@ def build_process(pkg, build_kwargs):
 
     This function's return value is returned to the parent process.
     """
-    kwargs = build_kwargs
-
     keep_stage = kwargs.get('keep_stage', False)
     install_source = kwargs.get('install_source', False)
     skip_patch = kwargs.get('skip_patch', False)
