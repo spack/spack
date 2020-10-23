@@ -106,8 +106,6 @@ class BinaryDistributionCache(object):
                                                     mirror_url)
 
     def _associate_built_specs_with_mirror(self, cache_key, mirror_url):
-        self._init_local_index_cache()
-
         tmpdir = tempfile.mkdtemp()
 
         try:
@@ -123,14 +121,23 @@ class BinaryDistributionCache(object):
             spec_list = db.query_local(installed=False)
 
             for indexed_spec in spec_list:
-                indexed_spec_dag_hash = indexed_spec.dag_hash()
-                if indexed_spec_dag_hash not in self._built_spec_cache:
-                    self._built_spec_cache[indexed_spec_dag_hash] = []
-                for entry in self._built_spec_cache[indexed_spec_dag_hash]:
+                dag_hash = indexed_spec.dag_hash()
+                full_hash = indexed_spec._full_hash
+
+                if dag_hash not in self._built_spec_cache:
+                    self._built_spec_cache[dag_hash] = []
+
+                for entry in self._built_spec_cache[dag_hash]:
+                    # A binary mirror can only have one spec per DAG hash, so
+                    # if we already have an entry under this DAG hash for this
+                    # mirror url, we may need to replace the spec associated
+                    # with it (but only if it has a different full_hash).
                     if entry['mirror_url'] == mirror_url:
+                        if full_hash and full_hash != entry['spec']._full_hash:
+                            entry['spec'] = indexed_spec
                         break
                 else:
-                    self._built_spec_cache[indexed_spec_dag_hash].append({
+                    self._built_spec_cache[dag_hash].append({
                         "mirror_url": mirror_url,
                         "spec": indexed_spec,
                     })
