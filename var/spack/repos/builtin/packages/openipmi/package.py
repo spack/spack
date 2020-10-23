@@ -23,7 +23,7 @@ class Openipmi(AutotoolsPackage):
     depends_on('ncurses')
 
     def configure_args(self):
-        args = ['LIBS=-ltinfo']
+        args = ['LIBS=' + self.spec['ncurses'].libs.link_flags]
         return args
 
     def install(self, spec, prefix):
