@@ -339,7 +339,7 @@ class MultiProcessFd(object):
         self._fd = None
         if sys.version_info >= (3, 8):
             self._connection = multiprocessing.connection.Connection(fd)
-        else
+        else:
             self._fd = fd
 
     @property
@@ -492,7 +492,7 @@ class log_output(object):
         # OS-level pipe for redirecting output to logger
         read_fd, write_fd = os.pipe()
 
-        read_multiprocess_fd = MultiprocessFd(read_fd)
+        read_multiprocess_fd = MultiProcessFd(read_fd)
 
         # Multiprocessing pipe for communication back from the daemon
         # Currently only used to save echo value between uses
@@ -502,7 +502,7 @@ class log_output(object):
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
             try:
-                input_multiprocess_fd = MultiprocessFd(
+                input_multiprocess_fd = MultiProcessFd(
                     os.dup(sys.stdin.fileno())
                 )
             except BaseException:

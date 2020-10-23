@@ -47,11 +47,33 @@ class SpackTestProcess(object):
             args=(self.fn, test_state))
 
 
+class PackageInstallContext(object):
+    """Captures the in-memory process state of an installation that needs to be
+    transmitted to a child process.
+    """
+
+    _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
+
+    def __init__(self, pkg):
+        if self._serialize:
+            self.serialized_pkg = serialize(pkg)
+        else:
+            self.pkg = pkg
+        self.test_state = TransmitTestState()
+
+    def restore(self):
+        self.test_state.restore()
+        if self._serialize:
+            return pickle.load(self.serialized_pkg)
+        else:
+            return self.pkg
+
+
 class TransmitTestState(object):
     _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
 
     def __init__(self):
-        if TransmitTestState._serialize:
+        if self._serialize:
             self.repo_dirs = list(r.root for r in spack.repo.path.repos)
             self.config = spack.config.config
             self.platform = spack.architecture.platform
@@ -64,7 +86,7 @@ class TransmitTestState(object):
             # others set 'store'
 
     def restore(self):
-        if TransmitTestState._serialize:
+        if self._serialize:
             spack.repo.path = spack.repo._path(self.repo_dirs)
             spack.config.config = self.config
             spack.architecture.platform = self.platform

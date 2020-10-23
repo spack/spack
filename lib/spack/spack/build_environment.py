@@ -48,7 +48,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 from llnl.util.lang import dedupe
-from llnl.util.tty.log import MultiprocessFd
+from llnl.util.tty.log import MultiProcessFd
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
@@ -818,8 +818,8 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
 
         pkg = serialized_pkg.restore()
 
-        if not kwargs['fake']:
-            setup_package(pkg, dirty=kwargs['dirty'])
+        if not kwargs.get('fake', False):
+            setup_package(pkg, dirty=kwargs.get('dirty', False))
         return_value = function(pkg, kwargs)
         child_pipe.send(return_value)
 
@@ -862,35 +862,6 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
             input_multiprocess_fd.close()
 
 
-class TransmitPackage(object):
-    """The repo must be transmitted and reconstructed along with the package
-    if the new process environment was not forked.
-    """
-
-    _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
-
-    @staticmethod
-    def serialize(obj):
-        serialized_obj = io.BytesIO()
-        pickle.dump(obj, serialized_obj)
-        serialized_obj.seek(0)
-        return serialized_obj
-
-    def __init__(self, pkg):
-        if TransmitPackage._serialize:
-            self.serialized_pkg = TransmitPackage.serialize(pkg)
-        else:
-            self.pkg = pkg
-        self.test_state = spack.test_state.TransmitTestState()
-
-    def restore(self):
-        self.test_state.restore()
-        if TransmitPackage._serialize:
-            return pickle.load(self.serialized_pkg)
-        else:
-            return self.pkg
-
-
 def fork(pkg, function, kwargs):
     """Fork a child process to do part of a spack build.
 
@@ -922,13 +893,13 @@ def fork(pkg, function, kwargs):
     parent_pipe, child_pipe = multiprocessing.Pipe()
     input_multiprocess_fd = None
 
-    serialized_pkg = TransmitPackage(pkg)
+    serialized_pkg = spack.test_state.PackageInstallContext(pkg)
 
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
-            input_multiprocess_fd = MultiprocessFd(input_fd)
+            input_multiprocess_fd = MultiProcessFd(input_fd)
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
