@@ -6,6 +6,7 @@
 import pytest
 import stat
 
+import spack.config
 import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
@@ -116,8 +117,12 @@ class TestConcretizePreferences(object):
         assert spec.compiler == spack.spec.CompilerSpec(compiler)
 
     def test_preferred_target(self, mutable_mock_repo):
-        """Test preferred compilers are applied correctly
-        """
+        """Test preferred targets are applied correctly"""
+        # FIXME: This test was a false negative, since the default and
+        # FIXME: the preferred target were the same
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known bug in the original concretizer')
+
         spec = concretize('mpich')
         default = str(spec.target)
         preferred = str(spec.target.family)
@@ -127,13 +132,13 @@ class TestConcretizePreferences(object):
         assert str(spec.target) == preferred
 
         spec = concretize('mpileaks')
-        assert str(spec['mpileaks'].target) == default
+        assert str(spec['mpileaks'].target) == preferred
         assert str(spec['mpich'].target) == preferred
 
-        update_packages('mpileaks', 'target', [preferred])
+        update_packages('mpileaks', 'target', [default])
         spec = concretize('mpileaks')
-        assert str(spec['mpich'].target) == preferred
-        assert str(spec['mpich'].target) == preferred
+        assert str(spec['mpich'].target) == default
+        assert str(spec['mpich'].target) == default
 
     def test_preferred_versions(self):
         """Test preferred package versions are applied correctly
