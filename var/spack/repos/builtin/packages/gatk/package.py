@@ -50,8 +50,8 @@ class Gatk(Package):
     )
 
     depends_on("java@8", type="run")
-    depends_on("python@2.6:2.8,3.6:", type="run", when="@4.0:")
-    depends_on("r@3.2:", type="run", when="@4.0:")
+    depends_on("python@2.6:2.8,3.6:", type="run", when="@4:")
+    depends_on("r@3.2:", type="run", when="@4:")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
