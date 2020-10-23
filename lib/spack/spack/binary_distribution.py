@@ -833,16 +833,16 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     return None
 
 
-def download_tarball(spec, preferred_url=None):
+def download_tarball(spec, preferred_mirrors=[]):
     """
     Download binary tarball for given package into stage area, returning
     path to downloaded tarball if successful, None otherwise.
 
     Args:
         spec (Spec): Concrete spec
-        preferred_url (str): If provided, this is the preferred url, other configured
-            mirrors will only be used if the tarball can't be retrieved from
-            this preferred url.
+        preferred_mirrors (list): If provided, this is a list of preferred
+        mirror urls.  Other configured mirrors will only be used if the
+        tarball can't be retrieved from one of these.
 
     Returns:
         Path to the downloaded tarball, or ``None`` if the tarball could not
@@ -856,12 +856,12 @@ def download_tarball(spec, preferred_url=None):
 
     urls_to_try = []
 
-    if preferred_url:
+    for preferred_url in preferred_mirrors:
         urls_to_try.append(url_util.join(
             preferred_url, _build_cache_relative_path, tarball))
 
     for mirror in spack.mirror.MirrorCollection().values():
-        if not preferred_url or preferred_url != mirror.fetch_url:
+        if mirror.fetch_url not in preferred_mirrors:
             urls_to_try.append(url_util.join(
                 mirror.fetch_url, _build_cache_relative_path, tarball))
 
