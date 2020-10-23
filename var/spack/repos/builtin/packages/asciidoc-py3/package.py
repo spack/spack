@@ -21,3 +21,5 @@ class AsciidocPy3(AutotoolsPackage):
     version('9.0.2', sha256='185fd68e47034c4dd892e1d4ae64c81152bc049e9bdc7d1ad63f927d35810a3b')
 
     depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('libxml2',     type=('build', 'run'))
+    depends_on('libxslt',     type=('build', 'run'))
