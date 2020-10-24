@@ -473,6 +473,8 @@ def test_relative_rpaths_install_nondefault(tmpdir,
     mirror.mirror(mparser, margs)
 
 
+@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
+                    reason='This test requires gpg')
 def test_push_and_fetch_keys(mock_gnupghome):
     testpath = str(mock_gnupghome)
 
