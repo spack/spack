@@ -3,6 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import tempfile
+import os
+import glob
+
+
 class IntelOneapi(Package):
     """
     Includes the icx/ifx compiler executables.
@@ -14,7 +19,7 @@ class IntelOneapi(Package):
 
     phases = ['install']
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         bash = Executable('bash')
 
         # Capture logs written in /tmp
