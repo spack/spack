@@ -559,7 +559,7 @@ Scripts to load modules recursively may be made with the command:
 
 An equivalent alternative using `process substitution <http://tldp.org/LDP/abs/html/process-sub.html>`_ is:
 
-.. code-block :: console
+.. code-block:: console
 
     $ source <( spack module tcl loads --dependencies <spec> )
 
