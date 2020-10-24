@@ -37,3 +37,9 @@ class IntelOneapi(Package):
         dst = os.path.join(self.prefix, '.spack')
         for f in glob.glob('%s/intel*log' % tmpdir):
             install(f, dst)
+
+    # TODO: this package includes icc as well as icx. Question: is icc a link
+    # to icx?
+    # @property
+    # def cc(self):
+    #    pass
