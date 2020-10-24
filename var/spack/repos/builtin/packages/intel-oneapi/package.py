@@ -30,13 +30,13 @@ class IntelOneapi(Package):
         bash.add_default_env('HOME', prefix)
 
         bash('./l_HPCKit_b_%s_offline.sh' %
-                       spec.versions.lowest(),
-                       '-s', '-a', '-s', '--action', 'install',
-                       '--eula', 'accept',
-                       '--components',
-                       ('intel.oneapi.lin.dpcpp-cpp-compiler-pro'
-                        ':intel.oneapi.lin.ifort-compiler'),
-                        '--install-dir', prefix)
+             spec.versions.lowest(),
+             '-s', '-a', '-s', '--action', 'install',
+             '--eula', 'accept',
+             '--components',
+             ('intel.oneapi.lin.dpcpp-cpp-compiler-pro'
+              ':intel.oneapi.lin.ifort-compiler'),
+             '--install-dir', prefix)
 
         # preserve config and logs
         dst = os.path.join(self.prefix, '.spack')
