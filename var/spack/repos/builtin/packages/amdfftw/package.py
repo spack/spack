@@ -18,6 +18,9 @@ class Amdfftw(FftwBase):
     arrays of arbitrary size and dimension.
     AMD Optimized FFTW is the optimized FFTW implementation targeted
     for AMD CPUs.
+
+    For \'single\' precision build, please use precision value as float.
+    Example : \'spack install amdfftw precision=float\'
     """
 
     _name = 'amdfftw'
@@ -30,7 +33,7 @@ class Amdfftw(FftwBase):
     version('2.2', sha256='de9d777236fb290c335860b458131678f75aa0799c641490c644c843f0e246f8')
 
     variant('shared', default=True, description='Builds a shared version of the library')
-    variant('openmp', default=True, description="Enable OpenMP support.")
+    variant('openmp', default=True, description="Enable OpenMP support")
     variant('debug', default=False, description='Builds a debug version of the library')
 
     depends_on('texinfo')
