@@ -29,21 +29,11 @@ class Amdfftw(FftwBase):
 
     version('2.2', sha256='de9d777236fb290c335860b458131678f75aa0799c641490c644c843f0e246f8')
 
-    variant(
-        'precision', values=any_combination_of(
-            'float', 'single', 'double', 'long_double',
-            'quad').prohibit_empty_set().with_default('float,double'),
-        description='Build the selected floating-point precision libraries'
-    )
-
     variant('shared', default=True, description='Builds a shared version of the library')
     variant('openmp', default=True, description="Enable OpenMP support.")
-    variant('mpi', default=True, description='Activate MPI support')
     variant('debug', default=False, description='Builds a debug version of the library')
 
-    depends_on('mpi', when='+mpi')
     depends_on('texinfo')
-    depends_on('llvm-openmp', when='%apple-clang +openmp')
 
     provides('fftw-api@3', when='@2:')
 
@@ -109,7 +99,6 @@ class Amdfftw(FftwBase):
         # to enable the corresponding option.
         enable_precision = {
             'float': ['--enable-float'],
-            'single': ['--enable-float'],
             'double': None,
             'long_double': ['--enable-long-double'],
             'quad': ['--enable-quad-precision']
@@ -122,11 +111,11 @@ class Amdfftw(FftwBase):
             opts = (enable_precision[precision] or []) + options[:]
 
             # SIMD optimizations are available only for float and double
-            if precision in ('float', 'single', 'double'):
+            if precision in ('float', 'double'):
                 opts += simd_options
 
             # float-only acceleration
-            if precision in ('float', 'single'):
+            if precision == 'float':
                 for feature in float_simd_features:
                     if feature in spec.target:
                         msg = '--enable-{0}'
