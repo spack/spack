@@ -22,13 +22,11 @@ class Date(CMakePackage):
             default=False,
             description='Build shared instead of static libraries')
     variant('tz', default=False, description='Build/install of TZ library')
-    variant(
-        'tzdb',
-        default='download',
-        values=('download', 'system', 'manual'),
-        description=
-        "Timezone database source (automatic download, use operating system's database, or manually specify)"
-    )
+    variant('tzdb',
+            default='download',
+            values=('download', 'system', 'manual'),
+            description="Timezone database source (automatic download, use "
+                        "operating system's database, or manually specify)")
 
     depends_on('cmake@3.7.0:', type='build')
     depends_on('curl', when='+tz tzdb=download')
