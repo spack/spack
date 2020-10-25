@@ -314,7 +314,7 @@ class Axom(CMakePackage, CudaPackage):
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
-            # which can trip up mpi detection 
+            # which can trip up mpi detection
             if spec['mpi'].mpicc == spack_cc:
                 mpicc_path = c_compiler
                 mpicxx_path = cpp_compiler
