@@ -16,7 +16,7 @@ class Pmdk(Package):
     url      = "https://github.com/pmem/pmdk/archive/1.5.tar.gz"
     git      = "https://github.com/pmem/pmdk.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('1.9',     sha256='2c8a148070f4bbf9f82e2ca63d2f84cb5101fc6e72c1ba93cc673ca3b7b95467')
     version('1.8',     sha256='a241ea76ef76d233cb92826b6823ed48091a2fb6963282a4fea848dbce68aa21')
     version('1.7',     sha256='865ce1b422bc83109cb4a63dcff8fd1077eea3617e668faf6a043208d8be03ca')
