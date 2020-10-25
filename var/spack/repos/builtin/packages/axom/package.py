@@ -308,13 +308,24 @@ class Axom(CMakePackage, CudaPackage):
         cfg.write("#------------------{0}\n\n".format("-" * 60))
 
         if "+mpi" in spec:
+            mpicc_path = spec['mpi'].mpicc
+            mpicxx_path = spec['mpi'].mpicxx
+            mpifc_path = spec['mpi'].mpifc
+            # if we are using compiler wrappers on cray systems
+            # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
+            # etc make return the spack compiler wrappers
+            # which can trip up mpi detection 
+            if spec['mpi'].mpicc == spack_cc:
+                mpicc_path = c_compiler
+                mpicxx_path = cpp_compiler
+                mpifc_path = f_compiler
             cfg.write(cmake_cache_option("ENABLE_MPI", True))
-            cfg.write(cmake_cache_entry("MPI_C_COMPILER", spec['mpi'].mpicc))
+            cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER",
-                                        spec['mpi'].mpicxx))
+                                        mpicxx_path))
             if "+fortran" in spec or f_compiler is not None:
                 cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
-                                            spec['mpi'].mpifc))
+                                            mpifc_path))
 
             # Check for slurm
             using_slurm = False
