@@ -52,5 +52,7 @@ class Date(CMakePackage):
             args.append('-DUSE_SYSTEM_TZ_DB=ON')
         elif tzdb == 'manual':
             args.append('-DMANUAL_TZ_DB=ON')
+        else:
+            args.extend(['-DUSE_SYSTEM_TZ_DB=OFF', '-DMANUAL_TZ_DB=OFF'])
 
         return args
