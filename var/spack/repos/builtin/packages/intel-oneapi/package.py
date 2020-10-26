@@ -10,7 +10,8 @@ import glob
 
 class IntelOneapi(Package):
     """
-    Includes the icx/ifx compiler executables.
+    Includes the newer (icx/icpx/ifx/dpcpp) and older (icc/icpc/ifort)
+    compiler executables.
     """
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
@@ -43,8 +44,7 @@ class IntelOneapi(Package):
         for f in glob.glob('%s/intel*log' % tmpdir):
             install(f, dst)
 
-    # TODO: this package includes icc as well as icx. Question: is icc a link
-    # to icx?
-    # @property
-    # def cc(self):
-    #    pass
+    @property
+    def cc(self):
+        # TODO: this needs to select the proper path based on the host OS
+        return str(self.spec.prefix.compiler.latest.linux.bin.icx)
