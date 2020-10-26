@@ -193,7 +193,12 @@ class Cp2k(MakefilePackage, CudaPackage):
             fftw_header_dir = fftw.headers.directories[0] + '/fftw'
         elif '^intel-parallel-studio+mkl' in spec:
             fftw = spec['intel-parallel-studio']
-            fftw_header_dir = fftw.headers.directories[0] + '/fftw'
+            fftw_header_dir = '<NOTFOUND>'
+            for incdir in [join_path(f, 'fftw')
+                           for f in fftw.headers.directories]:
+                if os.path.exists(incdir):
+                    fftw_header_dir = incdir
+                    break
 
         optimization_flags = {
             'gcc': [
