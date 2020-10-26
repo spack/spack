@@ -31,8 +31,8 @@ class PyPymumps(PythonPackage):
     phases = ['build_ext', 'install']
 
     def build_ext_args(self, spec, prefix):
-       #Requires --library-dirs,
-       #'--libraries', spec['mumps'].prefix.libs, does not cut it
+        # Requires --library-dirs,
+        # '--libraries', spec['mumps'].prefix.libs, does not cut it
         args = ['--include-dirs',
                 spec['mumps'].prefix.include,
                 '--library-dirs',
