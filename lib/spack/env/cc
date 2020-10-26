@@ -107,7 +107,11 @@ case "$command" in
     cpp)
         mode=cpp
         ;;
+<<<<<<< HEAD
     cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc|cl.exe)
+=======
+    cc|c89|c99|gcc|clang|armclang|icc|pgcc|xlc|xlc_r|fcc|cl.exe)
+>>>>>>> 9afa76eac (Snapshot of some MSVC infrastructure added during experiments a while ago.)
         command="$SPACK_CC"
         language="C"
         comp="CC"
