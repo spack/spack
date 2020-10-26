@@ -26,7 +26,7 @@ level = "long"
 class AllClean(argparse.Action):
     """Activates flags -s -d -f -m and -p simultaneously"""
     def __call__(self, parser, namespace, values, option_string=None):
-        parser.parse_args(['-sdfmpt'], namespace=namespace)
+        parser.parse_args(['-sdfmp'], namespace=namespace)
 
 
 def setup_parser(subparser):

@@ -76,7 +76,7 @@ def emulate_env_utility(cmd_name, context, args):
         os.execvp(cmd[0], cmd)
 
     elif not bool(args.pickle or args.dump):
-        # If no command or dump/pickle option act like the "env" command
+        # If no command or dump/pickle option then act like the "env" command
         # and print out env vars.
         for key, val in os.environ.items():
             print("%s=%s" % (key, val))

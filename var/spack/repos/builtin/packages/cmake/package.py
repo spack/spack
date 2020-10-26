@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
 import re
 
 
@@ -267,11 +266,4 @@ class Cmake(Package):
 
     def test(self):
         """Perform smoke tests on the installed package."""
-        tty.debug('Expected results currently based on simple cmake builds')
-
-        if not self.spec.satisfies('@3.8.2:3.17.3'):
-            tty.debug('Expected results have not been confirmed for {0} {1}'
-                      .format(self.name, self.spec.version))
-
-        # Simple version check tests on known binaries
         self._test_check_versions()

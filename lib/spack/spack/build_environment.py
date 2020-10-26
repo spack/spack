@@ -52,6 +52,7 @@ import spack.config
 import spack.main
 import spack.paths
 import spack.package
+import spack.repo
 import spack.schema.environment
 import spack.store
 import spack.install_test
@@ -716,7 +717,6 @@ def setup_package(pkg, dirty, context='build'):
     """Execute all environment setup routines."""
     env = EnvironmentModifications()
 
-    # clean environment
     if not dirty:
         clean_environment()
 
@@ -977,7 +977,7 @@ def get_package_context(traceback, context=3):
 
     # Package files have a line added at import time, so we adjust the lineno
     # when we are getting context from a package file instead of a base class
-    adjust = 1 if spack.paths.is_package_file(filename) else 0
+    adjust = 1 if spack.repo.is_package_file(filename) else 0
     lineno = lineno - adjust
 
     # We found obj, the Package implementation we care about.

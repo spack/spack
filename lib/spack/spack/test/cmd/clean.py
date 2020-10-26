@@ -39,7 +39,7 @@ def mock_calls_for_clean(monkeypatch):
     yield counts
 
 
-all_effects = ['stages', 'downloads', 'caches', 'failures', 'tests']
+all_effects = ['stages', 'downloads', 'caches', 'failures']
 
 
 @pytest.mark.usefixtures(

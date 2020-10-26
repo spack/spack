@@ -459,21 +459,6 @@ def test_log_pathname(test_stage, spec):
                         'test-{0}-out.txt'.format(TestSuite.test_pkg_id(spec)))
 
 
-def setup_test_stage(test_name):
-    """Set up the test stage directory.
-
-    Args:
-        test_name (str):  the name of the test
-
-    Returns:
-        (str): the path to the test stage directory
-    """
-    test_stage = Prefix(spack.cmd.test.get_stage(test_name))
-    if not os.path.exists(test_stage):
-        fsys.mkdirp(test_stage)
-    return test_stage
-
-
 class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     """This is the superclass for all spack packages.
 
@@ -658,6 +643,18 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: List of attributes to be excluded from a package's hash.
     metadata_attrs = ['homepage', 'url', 'urls', 'list_url', 'extendable',
                       'parallel', 'make_jobs']
+
+    #: Boolean. If set to ``True``, the smoke/install test requires a compiler.
+    #: This is currently used by smoke tests to ensure a compiler is available
+    #: to build a custom test code.
+    test_requires_compiler = False
+
+    #: List of test failures encountered during a smoke/install test run.
+    test_failures = None
+
+    #: TestSuite instance used to manage smoke/install tests for one or more
+    #: specs.
+    test_suite = None
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -1655,10 +1652,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fsys.mkdirp(os.path.dirname(dest_path))
                 fsys.copy(src_path, dest_path)
 
-    test_requires_compiler = False
-    test_failures = None
-    test_suite = None
-
     def do_test(self, dirty=False):
         if self.test_requires_compiler:
             compilers = spack.compilers.compilers_for_spec(
@@ -1759,7 +1752,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 Each string is a regex expected to match part of the output.
             status (int or list of int): possible passing status values
                 with 0 meaning the test is expected to succeed
-            installed (bool): the executable must be in the install prefix
+            installed (bool): if ``True``, the executable must be in the
+                install prefix
             purpose (str): message to display before running test
             skip_missing (bool): skip the test if the executable is not
                 in the install prefix bin directory or the provided work_dir
@@ -1781,10 +1775,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             except BaseException as e:
                 # print a summary of the error to the log file
                 # so that cdash and junit reporters know about it
-                exc_type, _, tb = sys.exc_info()
+                exc_type, _, _ = sys.exc_info()
                 print('FAILED: {0}'.format(e))
                 import traceback
-                # remove the current call frame to get back to
+                # remove the current call frame to exclude the extract_stack
+                # call from the error
                 stack = traceback.extract_stack()[:-1]
 
                 # Package files have a line added at import time, so we re-read
@@ -1794,11 +1789,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # displaced one by the import statement.
                 for i, entry in enumerate(stack):
                     filename, lineno, function, text = entry
-                    if spack.paths.is_package_file(filename):
+                    if spack.repo.is_package_file(filename):
                         with open(filename, 'r') as f:
                             lines = f.readlines()
-                        text = lines[lineno - 2]
-                        stack[i] = (filename, lineno, function, text)
+                        new_lineno = lineno - 2
+                        text = lines[new_lineno]
+                        stack[i] = (filename, new_lineno, function, text)
 
                 # Format the stack to print and print it
                 out = traceback.format_list(stack)
@@ -1846,13 +1842,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if installed:
             msg = "Executable '{0}' expected in prefix".format(runner.name)
             msg += ", found in {0} instead".format(runner.path)
-            assert self.spec.prefix in runner.path, msg
+            assert runner.path.startswith(self.spec.prefix), msg
 
         try:
             output = runner(*options, output=str.split, error=str.split)
 
-            can_pass = not status or 0 in status
-            assert can_pass, \
+            assert 0 in status, \
                 'Expected {0} execution to fail'.format(runner.name)
         except ProcessError as err:
             output = str(err)

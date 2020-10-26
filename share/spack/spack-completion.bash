@@ -475,7 +475,7 @@ _spack_ci_rebuild() {
 _spack_clean() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --stage -d --downloads -f --failures -m --misc-cache -p --python-cache -t --test-stage -a --all"
+        SPACK_COMPREPLY="-h --help -s --stage -d --downloads -f --failures -m --misc-cache -p --python-cache -a --all"
     else
         _all_packages
     fi
@@ -1002,7 +1002,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash -y --yes-to-all --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
     else
         _all_packages
     fi
@@ -1469,20 +1469,29 @@ _spack_test() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="run list status results remove"
+        SPACK_COMPREPLY="run list find status results remove"
     fi
 }
 
 _spack_test_run() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --name --fail-fast --fail-first --keep-stage --log-format --log-file --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp --help-cdash --smoke --capability --clean --dirty"
+        SPACK_COMPREPLY="-h --help --alias --fail-fast --fail-first --keep-stage --log-format --log-file --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp --help-cdash --smoke --capability --clean --dirty"
     else
         _installed_packages
     fi
 }
 
 _spack_test_list() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        _all_packages
+    fi
+}
+
+_spack_test_find() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help"
@@ -1512,7 +1521,7 @@ _spack_test_results() {
 _spack_test_remove() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
     else
         SPACK_COMPREPLY=""
     fi

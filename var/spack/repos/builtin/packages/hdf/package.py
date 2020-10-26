@@ -214,5 +214,5 @@ class Hdf(AutotoolsPackage):
         # Run gif converter sequence test
         self._test_gif_converters()
 
-        # Run gif converter sequence test
+        # Run hdfls output
         self._test_list()

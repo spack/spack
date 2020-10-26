@@ -160,8 +160,8 @@ class CDash(Reporter):
                 '\n'.join(report_data[phase]['loglines'])
             errors, warnings = parse_log_events(report_data[phase]['loglines'])
             # Cap the number of errors and warnings at 50 each.
-            errors = errors[0:49]
-            warnings = warnings[0:49]
+            errors = errors[:50]
+            warnings = warnings[:50]
             nerrors = len(errors)
 
             if phase == 'configure' and nerrors > 0:
