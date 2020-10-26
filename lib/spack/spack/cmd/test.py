@@ -110,8 +110,20 @@ def setup_parser(subparser):
     results_parser = sp.add_parser('results', description=test_results.__doc__,
                                    help=first_line(test_results.__doc__))
     results_parser.add_argument(
+        '-l', '--logs', action='store_true',
+        help="print the test log for each matching package")
+    results_parser.add_argument(
+        '-f', '--failed', action='store_true',
+        help="only show results for failed tests of matching packages")
+    results_parser.add_argument(
         'names', nargs=argparse.REMAINDER,
-        help="Test suites for which to print results")
+        metavar='[name(s)] [-- installed_specs]...',
+        help="suite names and installed package constraints")
+    results_parser.epilog = 'Test results will be filtered by space-' \
+        'separated suite name(s) and installed\nspecs when provided.  '\
+        'If names are provided, then only results for those test\nsuites '\
+        'will be shown.  If installed specs are provided, then ony results'\
+        '\nmatching those specs will be shown.'
 
     # Remove
     remove_parser = sp.add_parser('remove', description=test_remove.__doc__,
@@ -250,37 +262,88 @@ def test_status(args):
         tty.msg("Test suite %s completed" % test_suite.name)
 
 
+def _report_suite_results(test_suite, args, constraints):
+    """Report the relevant test suite results."""
+
+    # TODO: Make this handle capability tests too
+    # The results file may turn out to be a placeholder for future work
+
+    if constraints:
+        # TBD: Should I be refactoring or re-using ConstraintAction?
+        qspecs = spack.cmd.parse_specs(constraints)
+        specs = {}
+        for spec in qspecs:
+            for s in spack.store.db.query(spec, installed=True):
+                specs[s.dag_hash()] = s
+        specs = sorted(specs.values())
+        test_specs = {test_suite.test_pkg_id(s): s for s in test_suite.specs
+                      if s in specs}
+    else:
+        test_specs = {test_suite.test_pkg_id(s): s for s in test_suite.specs}
+
+    if not test_specs:
+        return
+
+    if os.path.exists(test_suite.results_file):
+        results_desc = 'Failing results' if args.failed else 'Results'
+        matching = ", spec matching '{0}'".format(' '.join(constraints)) \
+            if constraints else ''
+        tty.msg("{0} for test suite '{1}'{2}:"
+                .format(results_desc, test_suite.name, matching))
+
+        results = {}
+        with open(test_suite.results_file, 'r') as f:
+            for line in f:
+                pkg_id, status = line.split()
+                results[pkg_id] = status
+
+        for pkg_id in test_specs:
+            if pkg_id in results:
+                status = results[pkg_id]
+                if args.failed and status != 'FAILED':
+                    continue
+
+                msg = "  {0} {1}".format(pkg_id, status)
+                if args.logs:
+                    spec = test_specs[pkg_id]
+                    log_file = test_suite.log_file_for_spec(spec)
+                    if os.path.isfile(log_file):
+                        with open(log_file, 'r') as f:
+                            msg += '\n{0}'.format(''.join(f.readlines()))
+                tty.msg(msg)
+    else:
+        msg = "Test %s has no results.\n" % test_suite.name
+        msg += "        Check if it is running with "
+        msg += "`spack test status %s`" % test_suite.name
+        tty.msg(msg)
+
+
 def test_results(args):
     """Get the results from Spack test suite(s) (default all)."""
     if args.names:
-        test_suites = []
-        for name in args.names:
-            test_suite = spack.install_test.get_test_suite(name)
-            if test_suite:
-                test_suites.append(test_suite)
-            else:
-                tty.msg("No test suite %s found in test stage" % name)
+        try:
+            sep_index = args.names.index('--')
+            names = args.names[:sep_index]
+            constraints = args.names[sep_index + 1:]
+        except ValueError:
+            names = args.names
+            constraints = None
+    else:
+        names, constraints = None, None
+
+    if names:
+        test_suites = [spack.install_test.get_test_suite(name) for name
+                       in names]
+        if not test_suites:
+            tty.msg('No test suite(s) found in test stage: {0}'
+                    .format(', '.join(names)))
     else:
         test_suites = spack.install_test.get_all_test_suites()
         if not test_suites:
             tty.msg("No test suites with results to report")
 
-    # TODO: Make this handle capability tests too
-    # The results file may turn out to be a placeholder for future work
     for test_suite in test_suites:
-        results_file = test_suite.results_file
-        if os.path.exists(results_file):
-            msg = "Results for test suite %s: \n" % test_suite.name
-            with open(results_file, 'r') as f:
-                lines = f.readlines()
-            for line in lines:
-                msg += "        %s" % line
-            tty.msg(msg)
-        else:
-            msg = "Test %s has no results.\n" % test_suite.name
-            msg += "        Check if it is running with "
-            msg += "`spack test status %s`" % test_suite.name
-            tty.msg(msg)
+        _report_suite_results(test_suite, args, constraints)
 
 
 def test_remove(args):

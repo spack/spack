@@ -7,6 +7,7 @@
 import os
 import sys
 import glob
+import shutil
 import tempfile
 import re
 import inspect
@@ -20,6 +21,7 @@ from llnl.util.filesystem import \
 
 from spack.version import Version, ver
 from spack.package import PackageBase, run_after, InstallError
+from spack.paths import tests_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
