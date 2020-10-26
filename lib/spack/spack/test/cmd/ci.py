@@ -119,7 +119,7 @@ spack:
     - old-gcc-pkgs:
       - archive-files
       - callpath
-      - hypre@0.2.15
+      - hypre@0.2.15 ^openblas-with-lapack
   specs:
     - matrix:
       - [$old-gcc-pkgs]
