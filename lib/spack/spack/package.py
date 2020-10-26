@@ -1789,7 +1789,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # displaced one by the import statement.
                 for i, entry in enumerate(stack):
                     filename, lineno, function, text = entry
-                    if spack.paths.is_package_file(filename):
+                    if spack.repo.is_package_file(filename):
                         with open(filename, 'r') as f:
                             lines = f.readlines()
                         new_lineno = lineno - 2
