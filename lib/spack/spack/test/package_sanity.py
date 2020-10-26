@@ -174,7 +174,7 @@ def test_all_packages_use_sha256_checksums():
                 if bad_digest:
                     errors.append(
                         "All packages must use sha256 checksums."
-                        "Resource in %s uses %s." % (name, bad_digest)
+                        "Resource in %s uses %s." % (name,  bad_digest)
                     )
 
     assert [] == errors
