@@ -5,6 +5,8 @@
 
 from spack import *
 
+import spack.hooks.sbang as sbang
+
 
 class Php(AutotoolsPackage):
     """
@@ -49,7 +51,7 @@ class Php(AutotoolsPackage):
         if len(self.prefix.bin.php) + 2 <= shebang_limit:
             return
 
-        new_sbang_line = '#!/bin/bash %s/bin/sbang' % spack.paths.prefix
+        new_sbang_line = '#!/bin/bash %s' % sbang.sbang_install_path()
         original_bang = '-b "$(PHP_PHARCMD_BANG)"'
         makefile = join_path('ext', 'phar', 'Makefile.frag')
         filter_file(

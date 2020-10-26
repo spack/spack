@@ -66,7 +66,7 @@ def filter_shebang(path):
 
     # Use <?php #! instead of #! on second line for php.
     if re.search(r'^#!(/[^/\n]*)*php\b', original):
-        original = re.sub(r'^#', '<?php #', original) + '\n?>'
+        original = re.sub(r'^#', '<?php #', original) + ' ?>'
 
     # Use //! instead of #! on second line for node.js.
     if re.search(r'^#!(/[^/\n]*)*node\b', original):

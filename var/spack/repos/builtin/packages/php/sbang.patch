@@ -19,12 +19,12 @@
  	{
 -		$args = self::phar_args('abcFhilpsxy', 'pharnew');
 +		$args = self::phar_args('azbcFhilpsxy', 'pharnew');
- 
+
  		$args[''] = array(
  			'typ'     => 'any',
 @@ -560,6 +566,7 @@
  		}
- 
+
  		$alias    = $this->args['a']['val'];
 +		$spack_hb = $this->args['z']['val'];
  		$hashbang = $this->args['b']['val'];
@@ -33,10 +33,10 @@
 @@ -571,6 +578,9 @@
  		$invregex = $this->args['x']['val'];
  		$input    = $this->args['']['val'];
- 
+
 +		if (isset($spack_hb)) {
-+			$hashbang = "$spack_hb\n<?php #!$hashbang\n?>";
++			$hashbang = "$spack_hb\n<?php #!$hashbang ?>";
 +		}
  		$hash = self::phar_check_hash($hash, $privkey);
- 
+
  		$phar  = new Phar($archive, 0, $alias);
