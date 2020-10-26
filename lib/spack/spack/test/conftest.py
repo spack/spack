@@ -1185,9 +1185,7 @@ def installation_dir_with_headers(tmpdir_factory):
 
 @pytest.fixture(
     params=[
-        'conflict%clang',
         'conflict%clang+foo',
-        'conflict-parent%clang',
         'conflict-parent@0.9^conflict~foo'
     ]
 )
