@@ -1642,7 +1642,8 @@ class Spec(object):
         for s in self.traverse(order='pre', deptype=hash.deptype):
             node = s.to_node_dict(hash)
             node[s.name]['hash'] = s.dag_hash()
-            node[s.name]['full_hash'] = s._full_hash
+            if s.concrete:
+                node[s.name]['full_hash'] = s.full_hash()
             if 'build' in hash.deptype:
                 node[s.name]['build_hash'] = s.build_hash()
             node_list.append(node)
