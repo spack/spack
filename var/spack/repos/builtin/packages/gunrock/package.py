@@ -13,7 +13,7 @@ class Gunrock(CMakePackage, CudaPackage):
     git      = "https://github.com/gunrock/gunrock.git"
 
     version('master',   submodules=True)
-    version('1.2',      submodules=True, tag='v1.2', preferred=True)
+    version('1.2',      submodules=True, tag='v1.2')
     # v1.1 build is broken. See:
     # https://github.com/gunrock/gunrock/issues/777
     version('1.1',      submodules=True, tag='v1.1')
