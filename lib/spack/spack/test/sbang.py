@@ -23,18 +23,21 @@ from spack.util.executable import which
 
 short_line        = "#!/this/is/short/bin/bash\n"
 long_line         = "#!/this/" + ('x' * 200) + "/is/long\n"
+
 lua_line          = "#!/this/" + ('x' * 200) + "/is/lua\n"
 lua_in_text       = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
 lua_line_patched  = "--!/this/" + ('x' * 200) + "/is/lua\n"
+
 node_line         = "#!/this/" + ('x' * 200) + "/is/node\n"
 node_in_text      = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
 node_line_patched = "//!/this/" + ('x' * 200) + "/is/node\n"
-sbang_line        = '#!/bin/bash %s/bin/sbang\n' % spack.store.layout.root
+
 php_line         = "#!/this/" + ('x' * 200) + "/is/php\n"
 php_in_text      = ("line\n") * 100 + "php\n" + ("line\n" * 100)
 php_line_patched = "<?php #!/this/" + ('x' * 200) + "/is/php\n"
 php_line_patched2 = "?>\n"
-sbang_line        = '#!/bin/bash %s/bin/sbang\n' % spack.store.layout.root
+
+sbang_line        = '#!/bin/sh %s/bin/sbang\n' % spack.store.layout.root
 last_line         = "last!\n"
 
 
@@ -178,7 +181,7 @@ def test_shebang_handles_non_writable_files(script_dir):
     assert oct(not_writable_mode) == oct(st.st_mode)
 
 
-def check_sbang():
+def check_sbang_installation():
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
     assert sbang_path.startswith(spack.store.layout.root)
@@ -201,7 +204,7 @@ def test_install_sbang(install_mockery):
     assert not os.path.exists(sbang_bin_dir)
 
     sbang.install_sbang()
-    check_sbang()
+    check_sbang_installation()
 
     # put an invalid file in for sbang
     fs.mkdirp(sbang_bin_dir)
@@ -209,8 +212,73 @@ def test_install_sbang(install_mockery):
         f.write("foo")
 
     sbang.install_sbang()
-    check_sbang()
+    check_sbang_installation()
 
     # install again and make sure sbang is still fine
     sbang.install_sbang()
-    check_sbang()
+    check_sbang_installation()
+
+
+def test_sbang_fails_without_argument():
+    sbang = which(spack.paths.sbang_script)
+    sbang(fail_on_error=False)
+    assert sbang.returncode == 1
+
+
+@pytest.mark.parametrize("shebang,returncode,expected", [
+    # perl, with and without /usr/bin/env
+    ("#!/path/to/perl",         0, "/path/to/perl -x"),
+    ("#!/usr/bin/env perl",     0, "/usr/bin/env perl -x"),
+
+    # perl -w, with and without /usr/bin/env
+    ("#!/path/to/perl -w",      0, "/path/to/perl -w -x"),
+    ("#!/usr/bin/env perl -w",  0, "/usr/bin/env perl -w -x"),
+
+    # ruby, with and without /usr/bin/env
+    ("#!/path/to/ruby",         0, "/path/to/ruby -x"),
+    ("#!/usr/bin/env ruby",     0, "/usr/bin/env ruby -x"),
+
+    # python, with and without /usr/bin/env
+    ("#!/path/to/python",       0, "/path/to/python"),
+    ("#!/usr/bin/env python",   0, "/usr/bin/env python"),
+
+    # php with one-line php comment
+    ("<?php #!/usr/bin/php ?>", 0, "/usr/bin/php"),
+
+    # simple shell scripts
+    ("#!/bin/sh",               0, "/bin/sh"),
+    ("#!/bin/bash",             0, "/bin/bash"),
+
+    # error case: sbang as infinite loop
+    ("#!/path/to/sbang",        1, None),
+    ("#!/usr/bin/env sbang",    1, None),
+
+    # lua
+    ("--!/path/to/lua",         0, "/path/to/lua"),
+
+    # node
+    ("//!/path/to/node",        0, "/path/to/node"),
+])
+def test_sbang_with_specific_shebang(
+        tmpdir, shebang, returncode, expected):
+
+    script = str(tmpdir.join("script"))
+
+    # write a script out with <shebang> on second line
+    with open(script, "w") as f:
+        f.write("#!/bin/sh {sbang}\n{shebang}\n".format(
+            sbang=spack.paths.sbang_script,
+            shebang=shebang
+        ))
+    fs.set_executable(script)
+
+    # test running the script in debug, which prints what would be executed
+    exe = which(script)
+    out = exe(output=str, fail_on_error=False, env={"SBANG_DEBUG": "1"})
+
+    # check error status and output vs. expected
+    assert exe.returncode == returncode
+
+    if expected is not None:
+        expected += " " + script
+        assert expected == out.strip()
