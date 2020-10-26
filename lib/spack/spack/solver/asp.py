@@ -1095,6 +1095,7 @@ class SpackSolverSetup(object):
 
     def define_compiler_version_constraints(self):
         compiler_list = spack.compilers.all_compiler_specs()
+        compiler_list = list(sorted(set(compiler_list)))
 
         for pkg_name, cspec in self.compiler_version_constraints:
             possible_compiler_versions = [
