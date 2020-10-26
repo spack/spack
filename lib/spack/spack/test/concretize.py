@@ -301,7 +301,7 @@ class TestConcretize(object):
         provides one.
         """
         s = Spec('hypre ^openblas-with-lapack ^netlib-lapack')
-        with pytest.raises(spack.spec.MultipleProviderError):
+        with pytest.raises(spack.error.SpackError):
             s.concretize()
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
@@ -500,10 +500,20 @@ class TestConcretize(object):
             s.concretize()
         assert not s.concrete
 
-    def test_no_conflixt_in_external_specs(self, conflict_spec):
-        # clear deps because external specs cannot depend on anything
-        ext = Spec(conflict_spec).copy(deps=False)
-        ext.external_path = '/fake/path'
+    @pytest.mark.parametrize('spec_str', [
+        'conflict@10.0%clang+foo'
+    ])
+    def test_no_conflict_in_external_specs(self, spec_str):
+        # Modify the configuration to have the spec with conflict
+        # registered as an external
+        ext = Spec(spec_str)
+        data = {
+            'externals': [
+                {'spec': spec_str,
+                 'prefix': '/fake/path'}
+            ]
+        }
+        spack.config.set("packages::{0}".format(ext.name), data)
         ext.concretize()  # failure raises exception
 
     def test_regression_issue_4492(self):
