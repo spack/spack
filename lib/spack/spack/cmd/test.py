@@ -191,7 +191,7 @@ environment variables:
 
 def test_list(args):
     """List all installed packages with available tests."""
-    raise NotImplementedError
+    raise NotImplementedError('This feature is not yet implemented')
 
 
 def test_find(args):  # TODO: merge with status (noargs)
