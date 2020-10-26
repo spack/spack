@@ -20,7 +20,7 @@ class Phist(CMakePackage):
 
     homepage = "https://bitbucket.org/essex/phist/"
     url      = "https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz"
-    git      = "https://bitbucket.org/essex/phist/phist.git"
+    git      = "https://bitbucket.org/essex/phist.git"
 
     maintainers = ['jthies']
 
