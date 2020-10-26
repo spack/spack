@@ -21,3 +21,9 @@ class PyJupyterLatexEnvs(PythonPackage):
     depends_on('py-nbconvert', type=('build', 'run'))
     depends_on('py-notebook@4.0:', type=('build', 'run'))
     depends_on('py-traitlets@4.1:', type=('build', 'run'))
+
+    def install(self, spec, prefix):
+        super(PythonPackage, self).install(spec, prefix)
+        jupyter = which('jupyter')
+        jupyter('nbextension', 'install' '--py', 'latex_envs', '--sys-prefix')
+        jupyter('nbextension', 'enable', '--py', 'latex_envs', '--sys-prefix')
