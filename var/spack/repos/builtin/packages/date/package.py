@@ -41,11 +41,11 @@ class Date(CMakePackage):
         # compiler supports the selected standard.
         args.append('-DCMAKE_CXX_STANDARD_REQUIRED=ON')
 
-        if spec.variants['shared'].value:
-            args.append('-DBUILD_SHARED_LIBS=ON')
+        args.append('-DBUILD_SHARED_LIBS={0}'.format(
+            'ON' if spec.variants['shared'].value else 'OFF'))
 
-        if spec.variants['tz'].value:
-            args.append('-DBUILD_TZ_LIB=ON')
+        args.append('-DBUILD_TZ_LIB={0}'.format(
+            'ON' if spec.variants['tz'].value else 'OFF'))
 
         tzdb = spec.variants['tzdb'].value
         if tzdb == 'system':
