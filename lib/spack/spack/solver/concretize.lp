@@ -25,18 +25,23 @@ version_weight(Package, Weight)
 % Dependencies of any type imply that one package "depends on" another
 depends_on(Package, Dependency) :- depends_on(Package, Dependency, _).
 
-% declared dependencies are real if they're not virtual
+% declared dependencies are real if they're not virtual AND
+% the package is not an external
 depends_on(Package, Dependency, Type)
- :- declared_dependency(Package, Dependency, Type), not virtual(Dependency),
-    node(Package).
+ :- declared_dependency(Package, Dependency, Type),
+    node(Package),
+    not virtual(Dependency),
+    not external(Package).
 
-% if you declare a dependency on a virtual, you depend on one of its providers
+% if you declare a dependency on a virtual AND the package is not an external,
+% you depend on one of its providers
 1 {
   depends_on(Package, Provider, Type)
   : provides_virtual(Provider, Virtual)
 } 1
  :- declared_dependency(Package, Virtual, Type),
     virtual(Virtual),
+    not external(Package),
     node(Package).
 
 % if a virtual was required by some root spec, one provider is in the DAG
@@ -85,9 +90,32 @@ node(Dependency) :- node(Package), depends_on(Package, Dependency).
 #defined virtual/1.
 #defined virtual_node/1.
 #defined provides_virtual/2.
+#defined external/1.
+#defined external_spec/2.
+#defined external_version_declared/4.
+#defined external_only/1.
 #defined pkg_provider_preference/4.
 #defined default_provider_preference/3.
 #defined root/1.
+
+%-----------------------------------------------------------------------------
+% External semantics
+%-----------------------------------------------------------------------------
+
+% if an external version is declared, it is also declared globally
+version_declared(Package, Version, Weight) :- external_version_declared(Package, Version, Weight, _).
+
+% if a package is external its version must be one of the external versions
+1 { version(Package, Version): external_version_declared(Package, Version, _, _) } 1 :- external(Package).
+
+% if a package is not buildable (external_only), only externals are allowed
+external(Package) :- external_only(Package), node(Package).
+
+% if an external version is selected, the package is external and
+% we are using the corresponding spec
+external(Package), external_spec(Package, ID) :-
+    version(Package, Version), version_weight(Package, Weight),
+    external_version_declared(Package, Version, Weight, ID).
 
 %-----------------------------------------------------------------------------
 % Variant semantics

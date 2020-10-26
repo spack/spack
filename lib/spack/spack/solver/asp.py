@@ -401,16 +401,18 @@ class ClingoDriver(object):
         return result
 
 
-def _normalize_body(body):
+def _normalize(body):
     """Accept an AspAnd object or a single Symbol and return a list of
     symbols.
     """
     if isinstance(body, AspAnd):
-        args = [f.symbol() for f in body.args]
+        args = [getattr(f, 'symbol', lambda: f)() for f in body.args]
     elif isinstance(body, clingo.Symbol):
         args = [body]
+    elif hasattr(body, 'symbol'):
+        args = [body.symbol()]
     else:
-        raise TypeError("Invalid typee for rule body: ", type(body))
+        raise TypeError("Invalid typee: ", type(body))
     return args
 
 
@@ -475,37 +477,64 @@ class PyclingoDriver(object):
 
     def rule(self, head, body):
         """ASP rule (an implication)."""
-        args = _normalize_body(body)
+        head_symbols = _normalize(head)
+        body_symbols = _normalize(body)
 
-        symbols = [head.symbol()] + args
+        symbols = head_symbols + body_symbols
         atoms = {}
         for s in symbols:
             atoms[s] = self.backend.add_atom(s)
 
         # Special assumption atom to allow rules to be in unsat cores
-        rule_str = "%s :- %s." % (
-            head.symbol(), ",".join(str(a) for a in args))
+        head_str = ",".join(str(a) for a in head_symbols)
+        body_str = ",".join(str(a) for a in body_symbols)
+        rule_str = "%s :- %s." % (head_str, body_str)
 
         rule_atoms = self._register_rule_for_cores(rule_str)
 
         # print rule before adding
         self.out.write("%s\n" % rule_str)
         self.backend.add_rule(
-            [atoms[head.symbol()]],
-            [atoms[s] for s in args] + rule_atoms
+            [atoms[s] for s in head_symbols],
+            [atoms[s] for s in body_symbols] + rule_atoms
         )
 
-    def integrity_constraint(self, body):
-        symbols, atoms = _normalize_body(body), {}
-        for s in symbols:
+    def integrity_constraint(self, clauses, default_negated=None):
+        """Add an integrity constraint to the solver.
+
+        Args:
+            clauses: clauses to be added to the integrity constraint
+            default_negated: clauses to be added to the integrity
+                constraint after with a default negation
+        """
+        symbols, negated_symbols, atoms = _normalize(clauses), [], {}
+        if default_negated:
+            negated_symbols = _normalize(default_negated)
+
+        for s in symbols + negated_symbols:
             atoms[s] = self.backend.add_atom(s)
 
-        rule_str = ":- {0}.".format(",".join(str(a) for a in symbols))
+        symbols_str = ",".join(str(a) for a in symbols)
+        if negated_symbols:
+            negated_symbols_str = ",".join(
+                "not " + str(a) for a in negated_symbols
+            )
+            symbols_str += ",{0}".format(negated_symbols_str)
+        rule_str = ":- {0}.".format(symbols_str)
         rule_atoms = self._register_rule_for_cores(rule_str)
 
         # print rule before adding
         self.out.write("{0}\n".format(rule_str))
-        self.backend.add_rule([], [atoms[s] for s in symbols] + rule_atoms)
+        self.backend.add_rule(
+            [],
+            [atoms[s] for s in symbols] +
+            [-atoms[s] for s in negated_symbols]
+            + rule_atoms
+        )
+
+    def iff(self, expr1, expr2):
+        self.rule(head=expr1, body=expr2)
+        self.rule(head=expr2, body=expr1)
 
     def one_of_iff(self, head, versions):
         self.out.write("%s :- %s.\n" % (head, AspOneOf(*versions)))
@@ -575,11 +604,15 @@ class PyclingoDriver(object):
 
         # once done, construct the solve result
         result.satisfiable = solve_result.satisfiable
+
+        def stringify(x):
+            return x.string or str(x)
+
         if result.satisfiable:
             builder = SpecBuilder(specs)
             min_cost, best_model = min(models)
             tuples = [
-                (sym.name, [a.string for a in sym.arguments])
+                (sym.name, [stringify(a) for a in sym.arguments])
                 for sym in best_model
             ]
             answers = builder.build_specs(tuples)
@@ -703,8 +736,11 @@ class SpackSolverSetup(object):
                     'node_compiler_hard', 'node_compiler_version_satisfies'
                 ]
                 clauses = [x for x in clauses if x.name not in to_be_filtered]
+                external = fn.external(pkg.name)
 
-                self.gen.integrity_constraint(AspAnd(*clauses))
+                self.gen.integrity_constraint(
+                    AspAnd(*clauses), AspAnd(external)
+                )
 
     def available_compilers(self):
         """Facts about available compilers."""
@@ -868,6 +904,71 @@ class SpackSolverSetup(object):
                 fn.default_provider_preference(v, p, i))
         )
 
+    def external_packages(self):
+        """Facts on external packages, as read from packages.yaml"""
+        packages_yaml = spack.config.get("packages")
+        self.gen.h1('External packages')
+        for pkg_name, data in packages_yaml.items():
+            if pkg_name == 'all':
+                continue
+
+            if 'externals' not in data:
+                self.gen.fact(fn.external(pkg_name).symbol(positive=False))
+
+            self.gen.h2('External package: {0}'.format(pkg_name))
+            # Check if the external package is buildable. If it is
+            # not then "external(<pkg>)" is a fact.
+            external_buildable = data.get('buildable', True)
+            if not external_buildable:
+                self.gen.fact(fn.external_only(pkg_name))
+
+            # Read a list of all the specs for this package
+            externals = data['externals']
+            external_specs = [spack.spec.Spec(x['spec']) for x in externals]
+
+            # Compute versions with appropriate weights
+            external_versions = [
+                (x.version, id) for id, x in enumerate(external_specs)
+            ]
+            external_versions = [
+                (v, -(w + 1), id)
+                for w, (v, id) in enumerate(sorted(external_versions))
+            ]
+            for version, weight, id in external_versions:
+                self.gen.fact(fn.external_version_declared(
+                    pkg_name, str(version), weight, id
+                ))
+
+            # Establish an equivalence between "external_spec(pkg, id)"
+            # and the clauses of that spec, so that we have a uniform
+            # way to identify it
+            spec_id_list = []
+            for id, spec in enumerate(external_specs):
+                self.gen.newline()
+                spec_id = fn.external_spec(pkg_name, id)
+                clauses = self.spec_clauses(spec, body=True)
+                # This is an iff below, wish it could be written in a
+                # more compact form
+                self.gen.rule(head=spec_id.symbol(), body=AspAnd(*clauses))
+                for clause in clauses:
+                    self.gen.rule(clause, spec_id.symbol())
+                spec_id_list.append(spec_id)
+
+            # If one of the external specs is selected then the package
+            # is external and viceversa
+            # TODO: make it possible to declare the rule like below
+            # self.gen.iff(expr1=fn.external(pkg_name),
+            #              expr2=one_of_the_externals)
+            self.gen.newline()
+            # FIXME: self.gen.one_of_iff(fn.external(pkg_name), spec_id_list)
+            one_of_the_externals = self.gen.one_of(*spec_id_list)
+            external_str = fn.external(pkg_name)
+            external_rule = "{0} :- {1}.\n{1} :- {0}.\n".format(
+                external_str, str(one_of_the_externals)
+            )
+            self.gen.out.write(external_rule)
+            self.gen.control.add("base", [], external_rule)
+
     def flag_defaults(self):
         self.gen.h2("Compiler flag defaults")
 
@@ -965,8 +1066,6 @@ class SpackSolverSetup(object):
                 self.gen.fact(f.node_flag(spec.name, flag_type, flag))
 
         # TODO
-        # external_path
-        # external_module
         # namespace
 
         return clauses
@@ -1204,6 +1303,7 @@ class SpackSolverSetup(object):
 
         self.virtual_providers()
         self.provider_defaults()
+        self.external_packages()
         self.flag_defaults()
 
         self.gen.h1('Package Constraints')
@@ -1291,6 +1391,18 @@ class SpecBuilder(object):
     def no_flags(self, pkg, flag_type):
         self._specs[pkg].compiler_flags[flag_type] = []
 
+    def external_spec(self, pkg, idx):
+        """This means that the external spec and index idx
+        has been selected for this package.
+        """
+        packages_yaml = spack.config.get('packages')
+        spec_info = packages_yaml[pkg]['externals'][int(idx)]
+        self._specs[pkg].external_path = spec_info.get('prefix', None)
+        self._specs[pkg].external_modules = spec_info.get('modules', [])
+        self._specs[pkg].extra_attributes = spec_info.get(
+            'extra_attributes', {}
+        )
+
     def depends_on(self, pkg, dep, type):
         dependency = self._specs[pkg]._dependencies.get(dep)
         if not dependency:
@@ -1364,7 +1476,6 @@ class SpecBuilder(object):
             # print out unknown actions so we can display them for debugging
             if not action:
                 print("%s(%s)" % (name, ", ".join(str(a) for a in args)))
-                print("    ", args)
                 continue
 
             assert action and callable(action)
