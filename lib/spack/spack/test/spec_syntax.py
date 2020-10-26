@@ -349,13 +349,16 @@ class TestSpecSyntax(object):
         assert len(specs) == 2
 
     @pytest.mark.db
-    def test_ambiguous_hash(self, mutable_database):
+    def test_ambiguous_hash(self, mutable_database, monkeypatch):
         x1 = Spec('a')
         x1._hash = 'xy'
         x1._concrete = True
         x2 = Spec('a')
         x2._hash = 'xx'
         x2._concrete = True
+
+        monkeypatch.setattr(spack.package.PackageBase, 'version', '1.0')
+
         mutable_database.add(x1, spack.store.layout)
         mutable_database.add(x2, spack.store.layout)
 
