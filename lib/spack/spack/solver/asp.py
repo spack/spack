@@ -401,6 +401,19 @@ class ClingoDriver(object):
         return result
 
 
+def _normalize_body(body):
+    """Accept an AspAnd object or a single Symbol and return a list of
+    symbols.
+    """
+    if isinstance(body, AspAnd):
+        args = [f.symbol() for f in body.args]
+    elif isinstance(body, clingo.Symbol):
+        args = [body]
+    else:
+        raise TypeError("Invalid typee for rule body: ", type(body))
+    return args
+
+
 class PyclingoDriver(object):
     def __init__(self, cores=True, asp=None):
         """Driver for the Python clingo interface.
@@ -438,6 +451,18 @@ class PyclingoDriver(object):
     def _and(self, *args):
         return AspAnd(*args)
 
+    def _register_rule_for_cores(self, rule_str):
+        # rule atoms need to be choices before we can assume them
+        if self.cores:
+            rule_sym = clingo.Function("rule", [rule_str])
+            rule_atom = self.backend.add_atom(rule_sym)
+            self.backend.add_rule([rule_atom], [], choice=True)
+            self.assumptions.append(rule_atom)
+            rule_atoms = [rule_atom]
+        else:
+            rule_atoms = []
+        return rule_atoms
+
     def fact(self, head):
         """ASP fact (a rule without a body)."""
         sym = head.symbol()
@@ -450,12 +475,7 @@ class PyclingoDriver(object):
 
     def rule(self, head, body):
         """ASP rule (an implication)."""
-        if isinstance(body, AspAnd):
-            args = [f.symbol() for f in body.args]
-        elif isinstance(body, clingo.Symbol):
-            args = [body]
-        else:
-            raise TypeError("Invalid typee for rule body: ", type(body))
+        args = _normalize_body(body)
 
         symbols = [head.symbol()] + args
         atoms = {}
@@ -466,15 +486,7 @@ class PyclingoDriver(object):
         rule_str = "%s :- %s." % (
             head.symbol(), ",".join(str(a) for a in args))
 
-        # rule atoms need to be choices before we can assume them
-        if self.cores:
-            rule_sym = clingo.Function("rule", [rule_str])
-            rule_atom = self.backend.add_atom(rule_sym)
-            self.backend.add_rule([rule_atom], [], choice=True)
-            self.assumptions.append(rule_atom)
-            rule_atoms = [rule_atom]
-        else:
-            rule_atoms = []
+        rule_atoms = self._register_rule_for_cores(rule_str)
 
         # print rule before adding
         self.out.write("%s\n" % rule_str)
@@ -482,6 +494,18 @@ class PyclingoDriver(object):
             [atoms[head.symbol()]],
             [atoms[s] for s in args] + rule_atoms
         )
+
+    def integrity_constraint(self, body):
+        symbols, atoms = _normalize_body(body), {}
+        for s in symbols:
+            atoms[s] = self.backend.add_atom(s)
+
+        rule_str = ":- {0}.".format(",".join(str(a) for a in symbols))
+        rule_atoms = self._register_rule_for_cores(rule_str)
+
+        # print rule before adding
+        self.out.write("{0}\n".format(rule_str))
+        self.backend.add_rule([], [atoms[s] for s in symbols] + rule_atoms)
 
     def one_of_iff(self, head, versions):
         self.out.write("%s :- %s.\n" % (head, AspOneOf(*versions)))
@@ -661,6 +685,27 @@ class SpackSolverSetup(object):
         self.version_constraints.add((spec.name, spec.versions))
         return [fn.version_satisfies(spec.name, spec.versions)]
 
+    def conflict_rules(self, pkg):
+        for trigger, constraints in pkg.conflicts.items():
+            for constraint, _ in constraints:
+                constraint_body = spack.spec.Spec(pkg.name)
+                constraint_body.constrain(constraint)
+                constraint_body.constrain(trigger)
+
+                clauses = []
+                for s in constraint_body.traverse():
+                    clauses += self.spec_clauses(s, body=True)
+
+                # TODO: find a better way to generate clauses for integrity
+                # TODO: constraints, instead of generating them for the body
+                # TODO: of a rule and filter unwanted functions.
+                to_be_filtered = [
+                    'node_compiler_hard', 'node_compiler_version_satisfies'
+                ]
+                clauses = [x for x in clauses if x.name not in to_be_filtered]
+
+                self.gen.integrity_constraint(AspAnd(*clauses))
+
     def available_compilers(self):
         """Facts about available compilers."""
 
@@ -749,6 +794,9 @@ class SpackSolverSetup(object):
                 self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
 
             self.gen.newline()
+
+        # conflicts
+        self.conflict_rules(pkg)
 
         # default compilers for this package
         self.package_compiler_defaults(pkg)
@@ -948,7 +996,7 @@ class SpackSolverSetup(object):
             try:
                 target.optimization_flags(compiler.name, compiler.version)
                 supported.append(target)
-            except llnl.util.cpu.UnsupportedMicroarchitecture as e:
+            except llnl.util.cpu.UnsupportedMicroarchitecture:
                 continue
 
         return sorted(supported, reverse=True)
