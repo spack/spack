@@ -25,6 +25,9 @@ bin_path = os.path.join(prefix, "bin")
 #: The spack script itself
 spack_script = os.path.join(bin_path, "spack")
 
+#: The sbang script in the spack installation
+sbang_script = os.path.join(bin_path, "sbang")
+
 # spack directory hierarchy
 lib_path              = os.path.join(prefix, "lib", "spack")
 external_path         = os.path.join(lib_path, "external")

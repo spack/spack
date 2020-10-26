@@ -13,10 +13,11 @@ import tempfile
 import shutil
 import filecmp
 
-from llnl.util.filesystem import mkdirp
+import llnl.util.filesystem as fs
 
 import spack.paths
-from spack.hooks.sbang import shebang_too_long, filter_shebangs_in_directory
+import spack.store
+import spack.hooks.sbang as sbang
 from spack.util.executable import which
 
 
@@ -28,7 +29,7 @@ lua_line_patched  = "--!/this/" + ('x' * 200) + "/is/lua\n"
 node_line         = "#!/this/" + ('x' * 200) + "/is/node\n"
 node_in_text      = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
 node_line_patched = "//!/this/" + ('x' * 200) + "/is/node\n"
-sbang_line        = '#!/bin/bash %s/bin/sbang\n' % spack.paths.prefix
+sbang_line        = '#!/bin/bash %s/bin/sbang\n' % spack.store.layout.root
 last_line         = "last!\n"
 
 
@@ -38,7 +39,7 @@ class ScriptDirectory(object):
         self.tempdir = tempfile.mkdtemp()
 
         self.directory = os.path.join(self.tempdir, 'dir')
-        mkdirp(self.directory)
+        fs.mkdirp(self.directory)
 
         # Script with short shebang
         self.short_shebang = os.path.join(self.tempdir, 'short')
@@ -102,15 +103,15 @@ def script_dir():
 
 
 def test_shebang_handling(script_dir):
-    assert shebang_too_long(script_dir.lua_shebang)
-    assert shebang_too_long(script_dir.long_shebang)
+    assert sbang.shebang_too_long(script_dir.lua_shebang)
+    assert sbang.shebang_too_long(script_dir.long_shebang)
 
-    assert not shebang_too_long(script_dir.short_shebang)
-    assert not shebang_too_long(script_dir.has_sbang)
-    assert not shebang_too_long(script_dir.binary)
-    assert not shebang_too_long(script_dir.directory)
+    assert not sbang.shebang_too_long(script_dir.short_shebang)
+    assert not sbang.shebang_too_long(script_dir.has_sbang)
+    assert not sbang.shebang_too_long(script_dir.binary)
+    assert not sbang.shebang_too_long(script_dir.directory)
 
-    filter_shebangs_in_directory(script_dir.tempdir)
+    sbang.filter_shebangs_in_directory(script_dir.tempdir)
 
     # Make sure this is untouched
     with open(script_dir.short_shebang, 'r') as f:
@@ -157,3 +158,41 @@ def test_shebang_handles_non_writable_files(script_dir):
 
     st = os.stat(script_dir.long_shebang)
     assert oct(not_writable_mode) == oct(st.st_mode)
+
+
+def check_sbang():
+    sbang_path = sbang.sbang_install_path()
+    sbang_bin_dir = os.path.dirname(sbang_path)
+    assert sbang_path.startswith(spack.store.layout.root)
+
+    assert os.path.exists(sbang_path)
+    assert fs.is_exe(sbang_path)
+
+    status = os.stat(sbang_path)
+    assert (status.st_mode & 0o777) == 0o755
+
+    status = os.stat(sbang_bin_dir)
+    assert (status.st_mode & 0o777) == 0o755
+
+
+def test_install_sbang(install_mockery):
+    sbang_path = sbang.sbang_install_path()
+    sbang_bin_dir = os.path.dirname(sbang_path)
+
+    assert sbang_path.startswith(spack.store.layout.root)
+    assert not os.path.exists(sbang_bin_dir)
+
+    sbang.install_sbang()
+    check_sbang()
+
+    # put an invalid file in for sbang
+    fs.mkdirp(sbang_bin_dir)
+    with open(sbang_path, "w") as f:
+        f.write("foo")
+
+    sbang.install_sbang()
+    check_sbang()
+
+    # install again and make sure sbang is still fine
+    sbang.install_sbang()
+    check_sbang()
