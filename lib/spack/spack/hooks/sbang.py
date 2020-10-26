@@ -51,7 +51,7 @@ def filter_shebang(path):
             original = original.decode('UTF-8')
 
     # This line will be prepended to file
-    new_sbang_line = '#!/bin/bash %s\n' % sbang_install_path()
+    new_sbang_line = '#!/bin/sh %s\n' % sbang_install_path()
 
     # Skip files that are already using sbang.
     if original.startswith(new_sbang_line):

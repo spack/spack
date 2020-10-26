@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
@@ -8,32 +8,34 @@
 #
 # `sbang`: Run scripts with long shebang lines.
 #
-# Many operating systems limit the length of shebang lines, making it
-# hard to use interpreters that are deep in the directory hierarchy.
+# Many operating systems limit the length and number of possible
+# arguments in shebang lines, making it hard to use interpreters that are
+# deep in the directory hierarchy or require special arguments.
+#
 # `sbang` can run such scripts, either as a shebang interpreter, or
 # directly on the command line.
 #
 # Usage
-# -----------------------------
+# -----
 # Suppose you have a script, long-shebang.sh, like this:
 #
-#     1    #!/very/long/path/to/some/interpreter
+#     1    #!/very/long/path/to/some/interp
 #     2
 #     3    echo "success!"
 #
 # Invoking this script will result in an error on some OS's.  On
 # Linux, you get this:
 #
-#     $ ./long-shebang.sh
-#     -bash: ./long: /very/long/path/to/some/interp: bad interpreter:
+#     $ ./longshebang.sh
+#     -bash: ./longshebang.sh: /very/long/path/to/some/interp: bad interpreter:
 #            No such file or directory
 #
-# On Mac OS X, the system simply assumes the interpreter is the shell
-# and tries to run with it, which is likely not what you want.
+# On macOS, the system simply assumes the interpreter is the shell and
+# tries to run with it, which is not likely what you want.
 #
 #
 # `sbang` on the command line
-# -----------------------------
+# ---------------------------
 # You can use `sbang` in two ways.  The first is to use it directly,
 # from the command line, like this:
 #
@@ -42,12 +44,12 @@
 #
 #
 # `sbang` as the interpreter
-# -----------------------------
+# --------------------------
 # You can also use `sbang` *as* the interpreter for your script. Put
-# `#!/bin/bash /path/to/sbang` on line 1, and move the original
+# `#!/bin/sh /path/to/sbang` on line 1, and move the original
 # shebang to line 2 of the script:
 #
-#     1    #!/bin/bash /path/to/sbang
+#     1    #!/bin/sh /path/to/sbang
 #     2    #!/long/path/to/real/interpreter with arguments
 #     3
 #     4    echo "success!"
@@ -56,10 +58,10 @@
 #     success!
 #
 # On Linux, you could shorten line 1 to `#!/path/to/sbang`, but other
-# operating systems like Mac OS X require the interpreter to be a
-# binary, so it's best to use `sbang` as a `bash` argument.
-# Obviously, for this to work, `sbang` needs to have a short enough
-# path that *it* will run without hitting OS limits.
+# operating systems like Mac OS X require the interpreter to be a binary,
+# so it's best to use `sbang` as an argument to `/bin/sh`. Obviously, for
+# this to work, `sbang` needs to have a short enough path that *it* will
+# run without hitting OS limits.
 #
 # For Lua, node, and php scripts, the second line can't start with #!, as
 # # is not the comment character in these languages (though they all
@@ -67,59 +69,115 @@
 # like this, using --, //, or <?php ... ?> instead of # on the second
 # line, e.g.:
 #
-#     1    #!/bin/bash /path/to/sbang
+#     1    #!/bin/sh /path/to/sbang
 #     2    --!/long/path/to/lua with arguments
 #     3    print "success!"
 #
-#     1    #!/bin/bash /path/to/sbang
+#     1    #!/bin/sh /path/to/sbang
 #     2    //!/long/path/to/node with arguments
 #     3    print "success!"
 #
-#     1    #!/bin/bash /path/to/sbang
+#     1    #!/bin/sh /path/to/sbang
 #     2    <?php #/long/path/to/php with arguments ?>
 #     3    <?php echo "success!\n"; ?>
 #
 # How it works
-# -----------------------------
-# `sbang` is a very simple bash script. It looks at the first two
-# lines of a script argument and runs the last line starting with
-# `#!`, with the script as an argument. It also forwards arguments.
+# ------------
+# `sbang` is a very simple posix shell script. It looks at the first two
+# lines of a script argument and runs the last line starting with `#!`,
+# with the script as an argument. It also forwards arguments.
 #
+
+# We disable two shellcheck errors below:
+# SC2124: when saving arguments, we intentionally assign as an array
+# SC2086: when splitting $shebang_line and exec args, we want to expand args
+
+# Generic error handling
+die() {
+    echo "$@" 1>&2;
+    exit 1
+}
+
+# set SBANG_DEBUG to make the script print what would normally be executed.
+exec="exec"
+if [ -n "${SBANG_DEBUG}" ]; then
+    exec="echo "
+fi
 
 # First argument is the script we want to actually run.
 script="$1"
 
+# ensure that the script actually exists
+if [ -z "$script" ]; then
+    die "error: sbang requires exactly one argument"
+elif [ ! -f "$script" ]; then
+    die "$script: no such file or directory"
+fi
+
 # Search the first two lines of script for interpreters.
 lines=0
-while read line && ((lines < 2)) ; do
-    if [[ "$line" = '#!'* ]]; then
-        interpreter="${line#\#!}"
-    elif [[ "$line" = '//!'*node* ]]; then
-        interpreter="${line#//!}"
-    elif [[ "$line" = '--!'*lua* ]]; then
-        interpreter="${line#--!}"
-    elif [[ "$line" = '<?php #!'*php* ]]; then
-        interpreter="${line#<?php\ \#!}"
-        interpreter="${interpreter%\ ?>}"
+while read -r line && [ $lines -ne 2 ]; do
+    if [ "${line#\#!}" != "$line" ]; then
+        shebang_line="${line#\#!}"
+    elif [ "${line#//!}" != "$line" ]; then      # // comments
+        shebang_line="${line#//!}"
+    elif [ "${line#--!}" != "$line" ]; then      # -- lua comments
+        shebang_line="${line#--!}"
+    elif [ "${line#<?php\ }" != "$line" ]; then  # php comments
+        shebang_line="${line#<?php\ \#!}"
+        shebang_line="${shebang_line%\ ?>}"
     fi
     lines=$((lines+1))
 done < "$script"
-# this is ineeded for scripts with sbang parameter
-# like ones in intltool
-# #!/<spack-long-path>/perl -w
-# this is the interpreter line with all the parameters as a vector
-interpreter_v=(${interpreter})
-# this is the single interpreter path
-interpreter_f="${interpreter_v[0]}"
 
-# Invoke any interpreter found, or raise an error if none was found.
-if [[ -n "$interpreter_f" ]]; then
-    if [[ "${interpreter_f##*/}" = "perl"* ]]; then
-        exec $interpreter -x "$@"
+# shellcheck disable=SC2124
+# this saves arguments for later and intentionally assigns as an array
+args="$@"
+
+# handle scripts with sbang parameters, e.g.:
+#
+#   #!/<spack-long-path>/perl -w
+#
+# put the shebang line with all the parameters in the $@ array and get
+# the first element.
+# shellcheck disable=SC2086
+set $shebang_line
+set -- "$@"
+interpreter="$1"
+arg1="$2"
+
+# error if we did not find any interpreter
+if [ -z "$interpreter" ]; then
+    die "error: sbang found no interpreter in $script"
+fi
+
+# Determine if the interpreter is a particular program, accounting for the
+# '#!/usr/bin/env PROGRAM' convention. So:
+#
+#     interpreter_is perl
+#
+# will be true for '#!/usr/bin/perl' and '#!/usr/bin/env perl'
+interpreter_is() {
+    if [ "${interpreter##*/}" = "$1" ]; then
+        return 0
+    elif [ "$interpreter" = "/usr/bin/env" ] && [ "$arg1" = "$1" ]; then
+        return 0
     else
-        exec $interpreter "$@"
+        return 1
     fi
+}
+
+if interpreter_is "sbang"; then
+    die "error: refusing to re-execute sbang to avoid infinite loop."
+fi
+
+# Finally invoke the real shebang line
+# ruby and perl need -x to ignore the first line of input (the sbang line)
+#
+if interpreter_is perl || interpreter_is ruby; then
+    # shellcheck disable=SC2086
+    $exec $shebang_line -x "$args"
 else
-    echo "error: sbang found no interpreter in $script"
-    exit 1
+    # shellcheck disable=SC2086
+    $exec $shebang_line "$args"
 fi
