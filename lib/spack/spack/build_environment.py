@@ -716,7 +716,6 @@ def setup_package(pkg, dirty, context='build'):
     """Execute all environment setup routines."""
     env = EnvironmentModifications()
 
-    # clean environment
     if not dirty:
         clean_environment()
 
