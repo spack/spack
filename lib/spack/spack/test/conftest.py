@@ -425,7 +425,17 @@ def configuration_dir(tmpdir_factory, linux_os):
     # Create temporary 'defaults', 'site' and 'user' folders
     tmpdir.ensure('user', dir=True)
 
-    # Slightly modify compilers.yaml to look like Linux
+    # Slightly modify config.yaml and compilers.yaml
+    config_yaml = test_config.join('config.yaml')
+    modules_root = tmpdir_factory.mktemp('share')
+    tcl_root = modules_root.ensure('modules', dir=True)
+    lmod_root = modules_root.ensure('lmod', dir=True)
+    content = ''.join(config_yaml.read()).format(
+        str(tcl_root), str(lmod_root)
+    )
+    t = tmpdir.join('site', 'config.yaml')
+    t.write(content)
+
     compilers_yaml = test_config.join('compilers.yaml')
     content = ''.join(compilers_yaml.read()).format(linux_os)
     t = tmpdir.join('site', 'compilers.yaml')
@@ -781,10 +791,8 @@ def mock_gnupghome(monkeypatch):
     # This comes up because tmp paths on macOS are already long-ish, and
     # pytest makes them longer.
     short_name_tmpdir = tempfile.mkdtemp()
-    monkeypatch.setattr(spack.util.gpg, 'GNUPGHOME', short_name_tmpdir)
-    monkeypatch.setattr(spack.util.gpg.Gpg, '_gpg', None)
-
-    yield
+    with spack.util.gpg.gnupg_home_override(short_name_tmpdir):
+        yield short_name_tmpdir
 
     # clean up, since we are doing this manually
     shutil.rmtree(short_name_tmpdir)

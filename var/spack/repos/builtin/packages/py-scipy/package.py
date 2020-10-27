@@ -12,7 +12,7 @@ class PyScipy(PythonPackage):
     as routines for numerical integration and optimization."""
 
     homepage = "https://www.scipy.org/"
-    url      = "https://pypi.io/packages/source/s/scipy/scipy-1.5.2.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scipy/scipy-1.5.3.tar.gz"
 
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -30,6 +30,7 @@ class PyScipy(PythonPackage):
         'scipy.sparse.linalg.eigen.lobpcg', 'scipy.special._precompute'
     ]
 
+    version('1.5.3',  sha256='ddae76784574cc4c172f3d5edd7308be16078dd3b977e8746860c76c195fa707')
     version('1.5.2',  sha256='066c513d90eb3fd7567a9e150828d39111ebd88d3e924cdfc9f8ce19ab6f90c9')
     version('1.5.1',  sha256='039572f0ca9578a466683558c5bf1e65d442860ec6e13307d528749cfe6d07b8')
     version('1.5.0',  sha256='4ff72877d19b295ee7f7727615ea8238f2d59159df0bdd98f91754be4a2767f0')
@@ -50,20 +51,20 @@ class PyScipy(PythonPackage):
     version('0.15.1', sha256='a212cbc3b79e9a563aa45fc5c517b3499198bd7eb7e7be1e047568a5f48c259a')
     version('0.15.0', sha256='0c74e31e08acc8bf9b6ceb9bced73df2ae0cc76003e0366350bc7b26292bf8b1')
 
-    depends_on('python@2.6:2.8,3.2:', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.4:', when='@0.18:', type=('build', 'run'))
-    depends_on('python@3.5:', when='@1.3:', type=('build', 'run'))
-    depends_on('python@3.6:', when='@1.5:', type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.2:', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8,3.4:', when='@0.18:', type=('build', 'link', 'run'))
+    depends_on('python@3.5:', when='@1.3:', type=('build', 'link', 'run'))
+    depends_on('python@3.6:', when='@1.5:', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pybind11@2.2.4:', when='@1.4.0:', type='build')
-    depends_on('py-pybind11@2.4.0:', when='@1.4.1:', type='build')
-    depends_on('py-pybind11@2.4.3:', when='@1.5.0:', type='build')
-    depends_on('py-numpy@1.5.1:+blas+lapack', type=('build', 'run'))
-    depends_on('py-numpy@1.6.2:+blas+lapack', when='@0.16:', type=('build', 'run'))
-    depends_on('py-numpy@1.7.1:+blas+lapack', when='@0.18:', type=('build', 'run'))
-    depends_on('py-numpy@1.8.2:+blas+lapack', when='@0.19:', type=('build', 'run'))
-    depends_on('py-numpy@1.13.3:+blas+lapack', when='@1.3:', type=('build', 'run'))
-    depends_on('py-numpy@1.14.5:+blas+lapack', when='@1.5:', type=('build', 'run'))
+    depends_on('py-pybind11@2.2.4:', when='@1.4.0:', type=('build', 'link'))
+    depends_on('py-pybind11@2.4.0:', when='@1.4.1:', type=('build', 'link'))
+    depends_on('py-pybind11@2.4.3:', when='@1.5.0:', type=('build', 'link'))
+    depends_on('py-numpy@1.5.1:+blas+lapack', type=('build', 'link', 'run'))
+    depends_on('py-numpy@1.6.2:+blas+lapack', when='@0.16:', type=('build', 'link', 'run'))
+    depends_on('py-numpy@1.7.1:+blas+lapack', when='@0.18:', type=('build', 'link', 'run'))
+    depends_on('py-numpy@1.8.2:+blas+lapack', when='@0.19:', type=('build', 'link', 'run'))
+    depends_on('py-numpy@1.13.3:+blas+lapack', when='@1.3:', type=('build', 'link', 'run'))
+    depends_on('py-numpy@1.14.5:+blas+lapack', when='@1.5:', type=('build', 'link', 'run'))
     depends_on('py-pytest', type='test')
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see

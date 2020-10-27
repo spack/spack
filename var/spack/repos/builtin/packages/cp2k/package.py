@@ -193,7 +193,12 @@ class Cp2k(MakefilePackage, CudaPackage):
             fftw_header_dir = fftw.headers.directories[0] + '/fftw'
         elif '^intel-parallel-studio+mkl' in spec:
             fftw = spec['intel-parallel-studio']
-            fftw_header_dir = fftw.headers.directories[0] + '/fftw'
+            fftw_header_dir = '<NOTFOUND>'
+            for incdir in [join_path(f, 'fftw')
+                           for f in fftw.headers.directories]:
+                if os.path.exists(incdir):
+                    fftw_header_dir = incdir
+                    break
 
         optimization_flags = {
             'gcc': [
@@ -203,6 +208,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             ],
             'intel': ['-O2', '-pc64', '-unroll', ],
             'pgi': ['-fast'],
+            'nvhpc': ['-fast'],
             'cray': ['-O2'],
             'xl': ['-O3'],
         }
@@ -241,7 +247,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 '-ffree-line-length-none',
                 '-ggdb',  # make sure we get proper Fortran backtraces
             ]
-        elif '%pgi' in spec:
+        elif '%pgi' in spec or '%nvhpc' in spec:
             fcflags += ['-Mfreeform', '-Mextend']
         elif '%cray' in spec:
             fcflags += ['-emf', '-ffree', '-hflex_mp=strict']

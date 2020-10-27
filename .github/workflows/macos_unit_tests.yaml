@@ -18,7 +18,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
     - name: Install Python packages
       run: |
           pip install --upgrade pip six setuptools
@@ -26,7 +26,7 @@ jobs:
           pip install --upgrade flake8 pep8-naming
     - name: Setup Homebrew packages
       run: |
-        brew install gcc gnupg2 dash kcov
+        brew install dash fish gcc gnupg2 kcov
     - name: Run unit tests
       run: |
         git --version

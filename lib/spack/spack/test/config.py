@@ -29,16 +29,16 @@ import spack.util.path as spack_path
 # sample config data
 config_low = {
     'config': {
-        'install_tree': 'install_tree_path',
+        'install_tree': {'root': 'install_tree_path'},
         'build_stage': ['path1', 'path2', 'path3']}}
 
 config_override_all = {
     'config:': {
-        'install_tree:': 'override_all'}}
+        'install_tree:': {'root': 'override_all'}}}
 
 config_override_key = {
     'config': {
-        'install_tree:': 'override_key'}}
+        'install_tree:': {'root': 'override_key'}}}
 
 config_merge_list = {
     'config': {
@@ -391,7 +391,9 @@ def test_read_config_override_all(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_all, 'high')
     assert spack.config.get('config') == {
-        'install_tree': 'override_all'
+        'install_tree': {
+            'root': 'override_all'
+        }
     }
 
 
@@ -399,7 +401,9 @@ def test_read_config_override_key(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_key, 'high')
     assert spack.config.get('config') == {
-        'install_tree': 'override_key',
+        'install_tree': {
+            'root': 'override_key'
+        },
         'build_stage': ['path1', 'path2', 'path3']
     }
 
@@ -408,7 +412,9 @@ def test_read_config_merge_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_merge_list, 'high')
     assert spack.config.get('config') == {
-        'install_tree': 'install_tree_path',
+        'install_tree': {
+            'root': 'install_tree_path'
+        },
         'build_stage': ['patha', 'pathb', 'path1', 'path2', 'path3']
     }
 
@@ -417,16 +423,53 @@ def test_read_config_override_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_list, 'high')
     assert spack.config.get('config') == {
-        'install_tree': 'install_tree_path',
+        'install_tree': {
+            'root': 'install_tree_path'
+        },
         'build_stage': config_override_list['config']['build_stage:']
     }
+
+
+def test_ordereddict_merge_order():
+    """"Test that source keys come before dest keys in merge_yaml results."""
+    source = syaml.syaml_dict([
+        ("k1", "v1"),
+        ("k2", "v2"),
+        ("k3", "v3"),
+    ])
+
+    dest = syaml.syaml_dict([
+        ("k4", "v4"),
+        ("k3", "WRONG"),
+        ("k5", "v5"),
+    ])
+
+    result = spack.config.merge_yaml(dest, source)
+    assert "WRONG" not in result.values()
+
+    expected_keys = ["k1", "k2", "k3", "k4", "k5"]
+    expected_items = [
+        ("k1", "v1"), ("k2", "v2"), ("k3", "v3"), ("k4", "v4"), ("k5", "v5")
+    ]
+    assert expected_keys == list(result.keys())
+    assert expected_items == list(result.items())
+
+
+def test_list_merge_order():
+    """"Test that source lists are prepended to dest."""
+    source = ["a", "b", "c"]
+    dest = ["d", "e", "f"]
+
+    result = spack.config.merge_yaml(dest, source)
+
+    assert ["a", "b", "c", "d", "e", "f"] == result
 
 
 def test_internal_config_update(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
 
     before = mock_low_high_config.get('config')
-    assert before['install_tree'] == 'install_tree_path'
+    assert before['install_tree']['root'] == 'install_tree_path'
 
     # add an internal configuration scope
     scope = spack.config.InternalConfigScope('command_line')
@@ -435,12 +478,12 @@ def test_internal_config_update(mock_low_high_config, write_config_file):
     mock_low_high_config.push_scope(scope)
 
     command_config = mock_low_high_config.get('config', scope='command_line')
-    command_config['install_tree'] = 'foo/bar'
+    command_config['install_tree'] = {'root': 'foo/bar'}
 
     mock_low_high_config.set('config', command_config, scope='command_line')
 
     after = mock_low_high_config.get('config')
-    assert after['install_tree'] == 'foo/bar'
+    assert after['install_tree']['root'] == 'foo/bar'
 
 
 def test_internal_config_filename(mock_low_high_config, write_config_file):
@@ -714,12 +757,13 @@ def test_immutable_scope(tmpdir):
     with open(config_yaml, 'w') as f:
         f.write("""\
 config:
-    install_tree: dummy_tree_value
+    install_tree:
+      root: dummy_tree_value
 """)
     scope = spack.config.ImmutableConfigScope('test', str(tmpdir))
 
     data = scope.get_section('config')
-    assert data['config']['install_tree'] == 'dummy_tree_value'
+    assert data['config']['install_tree'] == {'root': 'dummy_tree_value'}
 
     with pytest.raises(spack.config.ConfigError):
         scope.write_section('config')

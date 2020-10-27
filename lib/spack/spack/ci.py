@@ -806,9 +806,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         final_stage = 'stage-rebuild-index'
         final_job = {
             'stage': final_stage,
-            'script': 'spack buildcache update-index -d {0}'.format(
+            'script': 'spack buildcache update-index --keys -d {0}'.format(
                 mirror_urls[0]),
-            'tags': final_job_config['tags']
+            'tags': final_job_config['tags'],
+            'when': 'always'
         }
         if 'image' in final_job_config:
             final_job['image'] = final_job_config['image']

@@ -14,6 +14,7 @@ class PyPsutil(PythonPackage):
     homepage = "https://pypi.python.org/pypi/psutil"
     url      = "https://pypi.io/packages/source/p/psutil/psutil-5.6.3.tar.gz"
 
+    version('5.7.2', sha256='90990af1c3c67195c44c9a889184f84f5b2320dce3ee3acbd054e3ba0b4a7beb')
     version('5.6.3', sha256='863a85c1c0a5103a12c05a35e59d336e1d665747e531256e061213e2e90f63f3')
     version('5.6.2', sha256='828e1c3ca6756c54ac00f1427fdac8b12e21b8a068c3bb9b631a1734cada25ed')
     version('5.5.1', sha256='72cebfaa422b7978a1d3632b65ff734a34c6b34f4578b68a5c204d633756b810')

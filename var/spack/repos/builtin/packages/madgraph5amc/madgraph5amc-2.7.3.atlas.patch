@@ -960,28 +960,7 @@
          to_install = self.ask('install', '0',  ask_class=AskLoopInstaller, timeout=300, 
                                path_msg=' ')
 
---- vendor/CutTools/makefile.orig	2018-06-18 13:24:17.164637074 +0200
-+++ vendor/CutTools/makefile	2018-06-18 13:24:27.756740547 +0200
-@@ -9,7 +9,7 @@
- ifeq ($(wildcard ../make_opts), ../make_opts)
-   include ../make_opts
- else
--  FFLAGS = 
-+  FFLAGS = -std=legacy
-   FC=gfortran
- endif
- 
---- vendor/IREGI/src/makefile_ML5_lib.orig	2018-07-09 13:33:48.546490615 +0200
-+++ vendor/IREGI/src/makefile_ML5_lib	2018-07-09 13:33:57.238573607 +0200
-@@ -5,7 +5,7 @@
- FFDIR=$(qcdlooppath)/ff
- onelooppath=$(PWD)/oneloop
- #FFLAGS=-O -g -ggdb -fno-automatic -fbounds-check -I$(onelooppath) # -fbounds-check is very useful in checking mermory error,-g is for debuging,-ggdb is for debuging special in gdb
--FFLAGS=-O -g -fPIC -I$(onelooppath)
-+FFLAGS=-O -g -fPIC -I$(onelooppath) -std=legacy
- obj= global.o funlib.o linear_algebra.o kinematics.o matrices.o matrix_base.o cmatrix_base.o mis_warp.o special_fun.o pave_reduce.o cpave_reduce.o si_reduce.o csi_reduce.o ti_reduce.o cti_reduce.o gti_reduce.o binary_tree.o IREGI4ML5_interface.o avh_olo_foriregi.o
- olomod= avh_olo_foriregi.mod avh_olo_foriregi_dp_box.mod    avh_olo_foriregi_dp_olog.mod   avh_olo_foriregi_units.mod \
-         avh_olo_foriregi_dp.mod        avh_olo_foriregi_dp_boxc.mod   avh_olo_foriregi_dp_prec.mod   avh_olo_foriregi_version.mod \
+
 --- madgraph/various/misc.py.orig      2018-04-29 15:59:44.000000000 +0200
 +++ madgraph/various/misc.py   2018-07-18 10:11:06.000000000 +0200
 @@ -469,6 +469,8 @@

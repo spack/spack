@@ -195,7 +195,7 @@ class TestConcretize(object):
             s.satisfies('mpich2') for s in repo.providers_for('mpi@3')
         )
 
-    def test_provides_handles_multiple_providers_of_same_vesrion(self):
+    def test_provides_handles_multiple_providers_of_same_version(self):
         """
         """
         providers = spack.repo.path.providers_for('mpi@3.0')
@@ -643,4 +643,13 @@ class TestConcretize(object):
     def test_concretize_anonymous(self):
         with pytest.raises(spack.error.SpecError):
             s = Spec('+variant')
+            s.concretize()
+
+    def test_concretize_anonymous_dep(self):
+        with pytest.raises(spack.error.SpecError):
+            s = Spec('mpileaks ^%gcc')
+            s.concretize()
+
+        with pytest.raises(spack.error.SpecError):
+            s = Spec('mpileaks ^cflags=-g')
             s.concretize()

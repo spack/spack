@@ -70,7 +70,7 @@ class Mesa(AutotoolsPackage):
     # provides('egl@1.5', when='+egl')
 
     # Variant dependencies
-    depends_on('llvm@6:', when='+llvm')
+    depends_on('llvm@6:10', when='+llvm')
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')

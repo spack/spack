@@ -16,6 +16,9 @@ class Umpire(CMakePackage, CudaPackage):
 
     version('develop', branch='develop', submodules='True')
     version('main', branch='main', submodules='True')
+    version('4.1.2', tag='v4.1.2', submodules='True')
+    version('4.1.1', tag='v4.1.1', submodules='True')
+    version('4.1.0', tag='v4.1.0', submodules='True')
     version('4.0.1', tag='v4.0.1', submodules='True')
     version('4.0.0', tag='v4.0.0', submodules='True')
     version('3.0.0', tag='v3.0.0', submodules='True')
@@ -54,6 +57,9 @@ class Umpire(CMakePackage, CudaPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
 
+    depends_on('blt', type='build')
+    depends_on('camp')
+
     conflicts('+numa', when='@:0.3.2')
     conflicts('~c', when='+fortran', msg='Fortran API requires C API')
 
@@ -61,6 +67,9 @@ class Umpire(CMakePackage, CudaPackage):
         spec = self.spec
 
         options = []
+
+        options.append("-DBLT_SOURCE_DIR={0}".format(spec['blt'].prefix))
+        options.append("-Dcamp_DIR={0}".format(spec['camp'].prefix))
 
         if '+cuda' in spec:
             options.extend([

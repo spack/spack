@@ -40,6 +40,10 @@ class Minimd(MakefilePackage):
                                  self.version.up_to(2)))
         inner_tar.extractall()
 
+        if spec.target.family == 'aarch64':
+            makefile = FileFilter('miniMD_ref/Makefile.openmpi')
+            makefile.filter('-mavx', '')
+
     def install(self, spec, prefix):
         # Manual Installation
         mkdirp(prefix.bin)

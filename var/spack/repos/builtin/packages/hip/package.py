@@ -26,16 +26,16 @@ class Hip(CMakePackage):
     depends_on('mesa~llvm@18.3:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0']:
-        depends_on('rocclr@' + ver,  type='build', when='@' + ver)
+        depends_on('hip-rocclr@' + ver,  type='build', when='@' + ver)
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
+        depends_on('comgr@' + ver, type=('build', 'link', 'run'), when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-device-libs@' + ver, type=('build', 'link', 'run'), when='@' + ver)
         depends_on('rocminfo@' + ver, type='build', when='@' + ver)
 
     # Notice: most likely this will only be a hard dependency on 3.7.0
-    depends_on('numactl', when='@3.7.0')
+    depends_on('numactl', when='@3.7.0:')
 
     # Note: the ROCm ecosystem expects `lib/` and `bin/` folders with symlinks
     # in the parent directory of the package, which is incompatible with spack.
@@ -68,7 +68,7 @@ class Hip(CMakePackage):
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and '@3.7.0:' in self.spec:
-            incl = self.spec['rocclr'].prefix.include
+            incl = self.spec['hip-rocclr'].prefix.include
             flags.append('-I {0}/compiler/lib/include'.format(incl))
 
         return (flags, None, None)
@@ -87,11 +87,23 @@ class Hip(CMakePackage):
             ]
             filter_file(match, substitute, *files, **kwargs)
 
+    @run_before('install')
+    def filter_numactl(self):
+        if '@3.7.0:' in self.spec:
+            numactl = self.spec['numactl'].prefix.lib
+            kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+
+            with working_dir('bin'):
+                match = ' -lnuma'
+                substitute = " -L{numactl} -lnuma".format(numactl=numactl)
+                filter_file(match, substitute, 'hipcc', **kwargs)
+
     def cmake_args(self):
         args = [
             '-DHIP_COMPILER=clang',
             '-DHIP_PLATFORM=rocclr',
             '-DHSA_PATH={0}'.format(self.spec['hsa-rocr-dev'].prefix),
-            '-DLIBROCclr_STATIC_DIR={0}/lib'.format(self.spec['rocclr'].prefix)
+            '-DLIBROCclr_STATIC_DIR={0}/lib'.format
+            (self.spec['hip-rocclr'].prefix)
         ]
         return args

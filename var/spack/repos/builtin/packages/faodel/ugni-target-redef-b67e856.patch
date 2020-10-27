@@ -1,0 +1,36 @@
+From b67e856309c15f6e2bf5c4187b458f9e08fb1168 Mon Sep 17 00:00:00 2001
+From: Todd Kordenbrock <thkorde@sandia.gov>
+Date: Wed, 30 Sep 2020 12:22:23 -0500
+Subject: [PATCH] BUILD: When creating Cray DRC targets, check if the target
+ already exists.
+
+---
+ cmake/FaodelTPLs.cmake | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/cmake/FaodelTPLs.cmake b/cmake/FaodelTPLs.cmake
+index 5f621ec..e3eb10b 100644
+--- a/cmake/FaodelTPLs.cmake
++++ b/cmake/FaodelTPLs.cmake
+@@ -306,11 +306,13 @@ elseif( Faodel_NETWORK_LIBRARY STREQUAL "nnti" )
+     foreach(drclib ${DRC_PC_LIBRARIES})
+       find_library(${drclib}_LIBRARY NAMES ${drclib} HINTS ${DRC_PC_LIBRARY_DIRS})
+       if (${drclib}_LIBRARY)
+-	add_library( ${drclib} IMPORTED UNKNOWN )
+-	set_property( TARGET ${drclib} PROPERTY IMPORTED_LOCATION ${${drclib}_LIBRARY} )
+-	set_property( TARGET ${drclib} PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${DRC_PC_INCLUDE_DIRS}" )
+-	LIST( APPEND DRC_TARGETS ${drclib} )
+-	LIST( APPEND DRC_LIBRARIES ${${drclib}_LIBRARY})
++        if( NOT TARGET ${drclib} )
++          add_library( ${drclib} IMPORTED UNKNOWN )
++          set_property( TARGET ${drclib} PROPERTY IMPORTED_LOCATION ${${drclib}_LIBRARY} )
++          set_property( TARGET ${drclib} PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${DRC_PC_INCLUDE_DIRS}" )
++          LIST( APPEND DRC_TARGETS ${drclib} )
++          LIST( APPEND DRC_LIBRARIES ${${drclib}_LIBRARY})
++        endif ( NOT TARGET ${drclib} )
+       endif (${drclib}_LIBRARY)
+     endforeach(drclib)
+     LIST(APPEND DRC_INCLUDE_DIRS ${DRC_PC_INCLUDE_DIRS})
+-- 
+2.20.1
+

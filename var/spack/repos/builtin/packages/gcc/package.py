@@ -123,7 +123,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils', type=('build', 'link', 'run'))
     depends_on('zip', type='build', when='languages=java')
-    depends_on('cuda', when='+nvptx')
+    depends_on('cuda@:10', when='+nvptx')
 
     # The server is sometimes a bit slow to respond
     timeout = {'timeout': 60}
@@ -270,7 +270,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('sys_ustat-4.9.patch', when='@4.9')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95005
-    patch('zstd.patch', when='@10:')
+    patch('zstd.patch', when='@10')
 
     build_directory = 'spack-build'
 

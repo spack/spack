@@ -35,14 +35,6 @@ buildcache_cmd = spack.main.SpackCommand('buildcache')
 git = exe.which('git', required=True)
 
 
-def has_gpg():
-    try:
-        gpg = spack.util.gpg.Gpg.gpg()
-    except spack.util.gpg.SpackGPGError:
-        gpg = None
-    return bool(gpg)
-
-
 @pytest.fixture()
 def env_deactivate():
     yield
@@ -690,7 +682,8 @@ spack:
 
 
 @pytest.mark.disable_clean_stage_check
-@pytest.mark.skipif(not has_gpg(), reason='This test requires gpg')
+@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
+                    reason='This test requires gpg')
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
                               install_mockery, mock_packages, mock_fetch,
                               mock_stage, mock_gnupghome):

@@ -55,6 +55,11 @@ class Metis(Package):
     patch('install_gklib_defs_rename.patch', when='@5:')
     patch('gklib_nomisleadingindentation_warning.patch', when='@5: %gcc@6:')
 
+    def setup_build_environment(self, env):
+        # Ignore warnings/errors re unrecognized omp pragmas on %intel
+        if '%intel@14:' in self.spec:
+            env.append_flags('CFLAGS', '-diag-disable 3180')
+
     @when('@5:')
     def patch(self):
         source_path = self.stage.source_path

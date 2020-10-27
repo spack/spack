@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Slate(Package):
+class Slate(MakefilePackage):
     """The Software for Linear Algebra Targeting Exascale (SLATE) project is
     to provide fundamental dense linear algebra capabilities to the US
     Department of Energy and to the high-performance computing (HPC) community
@@ -25,34 +25,36 @@ class Slate(Package):
     variant('mpi',    default=True, description='Build with MPI support.')
     variant('openmp', default=True, description='Build with OpenMP support.')
 
+    depends_on('bash', type='build')
+    depends_on('scalapack')
+    depends_on('blas')
     depends_on('cuda@9:10', when='+cuda')
-    depends_on('intel-mkl')
-    depends_on('mpi', when='+mpi')
+    depends_on('mpi',       when='+mpi')
 
     conflicts('%gcc@:5')
 
-    def setup_build_environment(self, env):
-        if('+cuda' in self.spec):
-            env.prepend_path('CPATH', self.spec['cuda'].prefix.include)
-        env.prepend_path('CPATH', self.spec['intel-mkl'].prefix.mkl.include)
-
-    def install(self, spec, prefix):
-        f_cuda = "1" if spec.variants['cuda'].value else "0"
-        f_mpi = "1" if spec.variants['mpi'].value else "0"
-        f_openmp = "1" if spec.variants['openmp'].value else "0"
-
-        comp_cxx = comp_for = ''
+    def edit(self, spec, prefix):
+        if '^openblas' in spec:
+            blas = 'openblas'
+        elif '^intel-mkl' in spec:
+            blas = 'mkl'
+        elif '^essl' in spec:
+            blas = 'essl'
+        else:
+            raise InstallError('Supports only BLAS provider '
+                               'openblas, intel-mkl, or essl')
+        config = [
+            'SHELL=bash',
+            'prefix=%s' % prefix,
+            'mpi=%i'    % ('+mpi' in spec),
+            'cuda=%i'   % ('+cuda' in spec),
+            'openmp=%i' % ('+openmp' in spec),
+            'blas=%s'   % blas
+        ]
         if '+mpi' in spec:
-            comp_cxx = 'mpicxx'
-            comp_for = 'mpif90'
+            config.append('CXX=' + spec['mpi'].mpicxx)
+            config.append('FC=' + spec['mpi'].mpifc)
 
-        make('mpi=' + f_mpi, 'mkl=1', 'cuda=' + f_cuda, 'openmp=' + f_openmp,
-             'CXX=' + comp_cxx, 'FC=' + comp_for)
-        install_tree('lib', prefix.lib)
-        install_tree('test', prefix.test)
-        mkdirp(prefix.include)
-        install('include/slate/slate.hh', prefix.include)
-        install('lapack_api/lapack_slate.hh',
-                prefix.include + "/slate_lapack_api.hh")
-        install('scalapack_api/scalapack_slate.hh',
-                prefix.include + "/slate_scalapack_api.hh")
+        with open('make.inc', 'w') as inc:
+            for line in config:
+                inc.write('{0}\n'.format(line))

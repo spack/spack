@@ -565,7 +565,6 @@ install_args_docstring = """
                 otherwise, the default is to install as many dependencies as
                 possible (i.e., best effort installation).
             fake (bool): Don't really build; install fake stub files instead.
-            force (bool): Install again, even if already installed.
             install_deps (bool): Install dependencies before installing this
                 package
             install_source (bool): By default, source is not installed, but
@@ -575,6 +574,8 @@ install_args_docstring = """
             keep_stage (bool): By default, stage is destroyed only if there
                 are no exceptions during build. Set to True to keep the stage
                 even with exceptions.
+            overwrite (list): list of hashes for packages to do overwrite
+                installs. Default empty list.
             restage (bool): Force spack to restage the package source.
             skip_patch (bool): Skip patch stage of build if True.
             stop_before (InstallPhase): stop execution before this
@@ -637,6 +638,10 @@ class PackageInstaller(object):
 
         # Cache of installed packages' unique ids
         self.installed = set()
+
+        # Cache of overwrite information
+        self.overwrite = set()
+        self.overwrite_time = time.time()
 
         # Data store layout
         self.layout = spack.store.layout
@@ -727,7 +732,9 @@ class PackageInstaller(object):
             # Check the database to see if the dependency has been installed
             # and flag as such if appropriate
             rec, installed_in_db = self._check_db(dep)
-            if installed_in_db:
+            if installed_in_db and (
+                    dep.dag_hash() not in self.overwrite or
+                    rec.installation_time > self.overwrite_time):
                 tty.debug('Flagging {0} as installed per the database'
                           .format(dep_id))
                 self.installed.add(dep_id)
@@ -778,7 +785,10 @@ class PackageInstaller(object):
         if restage and task.pkg.stage.managed_by_spack:
             task.pkg.stage.destroy()
 
-        if not partial and self.layout.check_installed(task.pkg.spec):
+        if not partial and self.layout.check_installed(task.pkg.spec) and (
+                rec.spec.dag_hash() not in self.overwrite or
+                rec.installation_time > self.overwrite_time
+        ):
             self._update_installed(task)
 
             # Only update the explicit entry once for the explicit package
@@ -1417,6 +1427,12 @@ class PackageInstaller(object):
         # always installed regardless of whether the root was installed
         install_package = kwargs.pop('install_package', True)
 
+        # take a timestamp with the overwrite argument to check whether another
+        # process has already overridden the package.
+        self.overwrite = set(kwargs.get('overwrite', []))
+        if self.overwrite:
+            self.overwrite_time = time.time()
+
         # Ensure not attempting to perform an installation when user didn't
         # want to go that far.
         self._check_last_phase(**kwargs)
@@ -1543,7 +1559,23 @@ class PackageInstaller(object):
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
             try:
-                self._install_task(task, **kwargs)
+                if pkg.spec.dag_hash() in self.overwrite:
+                    rec, _ = self._check_db(pkg.spec)
+                    if rec and rec.installed:
+                        if rec.installation_time < self.overwrite_time:
+                            # If it's actually overwriting, do a fs transaction
+                            if os.path.exists(rec.path):
+                                with fs.replace_directory_transaction(
+                                        rec.path):
+                                    self._install_task(task, **kwargs)
+                            else:
+                                tty.debug("Missing installation to overwrite")
+                                self._install_task(task, **kwargs)
+                    else:
+                        # overwriting nothing
+                        self._install_task(task, **kwargs)
+                else:
+                    self._install_task(task, **kwargs)
                 self._update_installed(task)
 
                 # If we installed then we should keep the prefix
