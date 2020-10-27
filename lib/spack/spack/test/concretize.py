@@ -14,7 +14,7 @@ import spack.error
 import spack.repo
 
 from spack.concretize import find_spec
-from spack.spec import Spec, CompilerSpec
+from spack.spec import Spec
 from spack.version import ver
 from spack.util.mock_package import MockPackageMultiRepo
 import spack.compilers
@@ -351,14 +351,14 @@ class TestConcretize(object):
         spec.normalize()
         spec.concretize()
 
-    def test_compiler_inheritance(self):
-        spec = Spec('mpileaks')
-        spec.normalize()
-        spec['dyninst'].compiler = CompilerSpec('clang')
-        spec.concretize()
-        # TODO: not exactly the syntax I would like.
-        assert spec['libdwarf'].compiler.satisfies('clang')
-        assert spec['libelf'].compiler.satisfies('clang')
+    @pytest.mark.parametrize('compiler_str', [
+        'clang', 'gcc', 'gcc@4.5.0', 'clang@:3.3.0'
+    ])
+    def test_compiler_inheritance(self, compiler_str):
+        spec_str = 'mpileaks %{0}'.format(compiler_str)
+        spec = Spec(spec_str).concretized()
+        assert spec['libdwarf'].compiler.satisfies(compiler_str)
+        assert spec['libelf'].compiler.satisfies(compiler_str)
 
     def test_external_package(self):
         spec = Spec('externaltool%gcc')
@@ -660,3 +660,18 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             s = Spec(spec_str)
             s.concretize()
+
+    @pytest.mark.parametrize('spec_str,expected_str', [
+        # Unconstrained versions select default compiler (gcc@4.5.0)
+        ('bowtie@1.3.0', '%gcc@4.5.0'),
+        # Version with conflicts and no valid gcc select another compiler
+        ('bowtie@1.2.2', '%clang@3.3'),
+        # If a higher gcc is available still prefer that
+        ('bowtie@1.2.2 os=redhat6', '%gcc@4.7.2'),
+    ])
+    def test_compiler_conflicts_in_package_py(self, spec_str, expected_str):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot work around conflicts')
+
+        s = Spec(spec_str).concretized()
+        assert s.satisfies(expected_str)
