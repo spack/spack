@@ -29,9 +29,9 @@ def test_stage_cmd(mock_packages, mock_fetch, config,
 
 @pytest.mark.disable_clean_stage_check
 def test_stage_path(tmpdir, mock_packages, mock_fetch, config,
-                   install_mockery):
+                    install_mockery):
 
-    test = os.path.join(tmpdir,'test')
+    test = os.path.join(tmpdir, 'test')
     spec = Spec('patchcmd')
     spec.concretize()
 
