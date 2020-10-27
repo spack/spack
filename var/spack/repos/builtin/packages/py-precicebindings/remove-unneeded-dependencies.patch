@@ -1,0 +1,47 @@
+diff --git a/setup.py b/setup.py
+index 9282639..d69c285 100644
+--- a/setup.py
++++ b/setup.py
+@@ -1,15 +1,20 @@
+ import os
+ import subprocess
+ import warnings
+-from packaging import version
+-import pip
++from setuptools._vendor.packaging import version
++   
++# If installed with pip we need to check its version
++try:
++    import pip
++    if version.parse(pip.__version__) < version.parse("19.0"):
++        # version 19.0 is required, since we are using pyproject.toml for definition of build-time depdendencies. See https://pip.pypa.io/en/stable/news/#id209
++        warnings.warn("You are using pip version {}. However, pip version > 19.0 is recommended. You can continue with the installation, but installation problems can occour. Please refer to https://github.com/precice/python-bindings#build-time-dependencies-cython-numpy-defined-in-pyprojecttoml-are-not-installed-automatically for help.".format(pip.__version__))
+ 
+-if version.parse(pip.__version__) < version.parse("19.0"):
+-    # version 19.0 is required, since we are using pyproject.toml for definition of build-time depdendencies. See https://pip.pypa.io/en/stable/news/#id209
+-    warnings.warn("You are using pip version {}. However, pip version > 19.0 is recommended. You can continue with the installation, but installation problems can occour. Please refer to https://github.com/precice/python-bindings#build-time-dependencies-cython-numpy-defined-in-pyprojecttoml-are-not-installed-automatically for help.".format(pip.__version__))
++    if version.parse(pip.__version__) < version.parse("10.0.1"):        
++        warnings.warn("You are using pip version {}. However, pip version > 10.0.1 is required. If you continue with installation it is likely that you will face an error. See https://github.com/precice/python-bindings#version-of-pip3-is-too-old".format(pip.__version__))
++except:
++    warnings.warn("Assuming that you are not using pip!")
+ 
+-if version.parse(pip.__version__) < version.parse("10.0.1"):        
+-    warnings.warn("You are using pip version {}. However, pip version > 10.0.1 is required. If you continue with installation it is likely that you will face an error. See https://github.com/precice/python-bindings#version-of-pip3-is-too-old".format(pip.__version__))
+ 
+ from enum import Enum
+ from setuptools import setup
+@@ -37,10 +42,14 @@ def get_extensions(is_test):
+     link_args = []    
+     compile_args.append("-std=c++11")
+     compile_args.append("-I{}".format(numpy.get_include()))
++    for incdir in os.environ['SPACK_INCLUDE_DIRS'].split(":"):
++        compile_args.append("-I{}".format( incdir ))
+ 
+     bindings_sources = [os.path.join(PYTHON_BINDINGS_PATH, "precice") + ".pyx"]
+     test_sources = [os.path.join(PYTHON_BINDINGS_PATH, "test", "test_bindings_module" + ".pyx")]
+     if not is_test:
++        for libdir in os.environ['SPACK_LINK_DIRS'].split(":"):
++            link_args.append( "-L{}".format(libdir) )
+         link_args.append("-lprecice")
+     if is_test:
+         bindings_sources.append(os.path.join(PYTHON_BINDINGS_PATH, "test", "SolverInterface.cpp"))
