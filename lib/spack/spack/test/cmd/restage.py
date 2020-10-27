@@ -20,8 +20,7 @@ patch = SpackCommand('patch')
 
 
 @pytest.mark.disable_clean_stage_check
-def test_restage_cmd(mock_packages, mock_fetch, config,
-                     install_mockery):
+def test_restage_cmd(mock_packages, mock_fetch, config, install_mockery):
 
     spec = Spec('patchcmd')
     spec.concretize()
