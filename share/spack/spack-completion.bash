@@ -1512,7 +1512,7 @@ _spack_test_status() {
 _spack_test_results() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -l --logs -f --failed"
     else
         SPACK_COMPREPLY=""
     fi
