@@ -291,8 +291,8 @@ def test_xl_version_detection(version_str, expected_version):
     ('pgi', '19.1a'),
     ('intel', '9.0.0'),
     ('intel', '0.0.0-foobar')
-#    ('oneapi', '2021.1'),
-#    ('oneapi', '2021.1-foobar')
+    # ('oneapi', '2021.1'),
+    # ('oneapi', '2021.1-foobar')
 ])
 def test_cray_frontend_compiler_detection(
         compiler, version, tmpdir, monkeypatch, working_env
