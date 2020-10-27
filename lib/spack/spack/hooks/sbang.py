@@ -64,6 +64,10 @@ def filter_shebang(path):
     if re.search(r'^#!(/[^/\n]*)*lua\b', original):
         original = re.sub(r'^#', '--', original)
 
+    # Use <?php #! instead of #! on second line for php.
+    if re.search(r'^#!(/[^/\n]*)*php\b', original):
+        original = re.sub(r'^#', '<?php #', original) + ' ?>'
+
     # Use //! instead of #! on second line for node.js.
     if re.search(r'^#!(/[^/\n]*)*node\b', original):
         original = re.sub(r'^#', '//', original)

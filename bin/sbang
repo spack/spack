@@ -61,15 +61,23 @@
 # Obviously, for this to work, `sbang` needs to have a short enough
 # path that *it* will run without hitting OS limits.
 #
-# For Lua, scripts the second line can't start with #!, as # is not
-# the comment character in lua (even though lua ignores #! on the
-# *first* line of a script).  So, instrument a lua script like this,
-# using -- instead of # on the second line:
+# For Lua, node, and php scripts, the second line can't start with #!, as
+# # is not the comment character in these languages (though they all
+# ignore #! on the *first* line of a script). So, instrument such scripts
+# like this, using --, //, or <?php ... ?> instead of # on the second
+# line, e.g.:
 #
 #     1    #!/bin/bash /path/to/sbang
 #     2    --!/long/path/to/lua with arguments
-#     3
-#     4    print "success!"
+#     3    print "success!"
+#
+#     1    #!/bin/bash /path/to/sbang
+#     2    //!/long/path/to/node with arguments
+#     3    print "success!"
+#
+#     1    #!/bin/bash /path/to/sbang
+#     2    <?php #/long/path/to/php with arguments ?>
+#     3    <?php echo "success!\n"; ?>
 #
 # How it works
 # -----------------------------
@@ -90,6 +98,9 @@ while read line && ((lines < 2)) ; do
         interpreter="${line#//!}"
     elif [[ "$line" = '--!'*lua* ]]; then
         interpreter="${line#--!}"
+    elif [[ "$line" = '<?php #!'*php* ]]; then
+        interpreter="${line#<?php\ \#!}"
+        interpreter="${interpreter%\ ?>}"
     fi
     lines=$((lines+1))
 done < "$script"
@@ -98,7 +109,7 @@ done < "$script"
 # #!/<spack-long-path>/perl -w
 # this is the interpreter line with all the parameters as a vector
 interpreter_v=(${interpreter})
-# this is the single interpreter path 
+# this is the single interpreter path
 interpreter_f="${interpreter_v[0]}"
 
 # Invoke any interpreter found, or raise an error if none was found.
