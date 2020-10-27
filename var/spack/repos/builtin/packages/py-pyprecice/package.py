@@ -30,7 +30,6 @@ class PyPyprecice(PythonPackage):
     version('2.0.0.2rc1',sha256='fa8791e9a1d684fe596a9b853cc60ce5b60a7e4b7c79837a210525f9586293d0')
     version('2.0.0.1',sha256='96eafdf421ec61ad6fcf0ab1d3cf210831a815272984c470b2aea57d4d0c9e0e')
     
-
     # Import module as a test
     import_modules = ['precice']
 
@@ -47,30 +46,17 @@ class PyPyprecice(PythonPackage):
     depends_on("precice@2.0.1", when="@2.0.1.1:2.0.1.99")
     depends_on("precice@2.0.0", when="@2.0.0.1:2.0.0.99")
 
-    # FIXME: Add version numbers to python packages
     depends_on("python@3:", type=('build', 'run'))
     depends_on("py-setuptools", type="build")
     depends_on("py-wheel", type=('build'))
     depends_on("py-numpy", type=('build', 'run'))
     depends_on("py-mpi4py", type=('build', 'run'), when="+mpi")
-    depends_on("py-cython", type=('build'))
-
-    def build_args(self):
-        args = []
-        return args 
-
+    depends_on("py-cython@0.29:", type=('build'))
 
     def build(self, spec, prefix):
-
-        # FIXME: This might was added to enforce usage of correct MPI wrappers. That might not be needed though.
-        env['CC'] = spec['mpi'].mpicc
-        env['CXX'] = spec['mpi'].mpicxx
-        env['F77'] = spec['mpi'].mpif77
-        env['FC'] = spec['mpi'].mpifc
-
         self.setup_py('build_ext', \
             "--include-dirs={}".format("{}/include".format(self.spec['precice'].prefix) ), \
-            "--library-dirs={}".format("{}/lib".format(self.spec['precice'].prefix) ), *( self.build_args() ) )
+            "--library-dirs={}".format("{}/lib".format(self.spec['precice'].prefix) ) )
 
     def install(self, spec, prefix):
         self.setup_py('install', '--prefix={0}'.format(prefix))
