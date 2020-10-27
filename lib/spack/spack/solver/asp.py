@@ -771,9 +771,7 @@ class SpackSolverSetup(object):
                 # TODO: find a better way to generate clauses for integrity
                 # TODO: constraints, instead of generating them for the body
                 # TODO: of a rule and filter unwanted functions.
-                to_be_filtered = [
-                    'node_compiler_hard', 'node_compiler_version_satisfies'
-                ]
+                to_be_filtered = ['node_compiler_hard']
                 clauses = [x for x in clauses if x.name not in to_be_filtered]
                 external = fn.external(pkg.name)
 
@@ -835,9 +833,10 @@ class SpackSolverSetup(object):
         ppk = spack.package_prefs.PackagePrefs(pkg.name, 'compiler', all=False)
         matches = sorted(compiler_list, key=ppk)
 
-        for i, cspec in enumerate(matches):
+        for i, cspec in enumerate(reversed(matches)):
             self.gen.fact(fn.node_compiler_preference(
-                pkg.name, cspec.name, cspec.version, i))
+                pkg.name, cspec.name, cspec.version, -i * 100
+            ))
 
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
@@ -1438,7 +1437,7 @@ class SpackSolverSetup(object):
         possible = spack.package.possible_dependencies(
             *specs,
             virtuals=self.possible_virtuals,
-            deptype=("build", "link", "run", "test")
+            deptype=spack.dependency.all_deptypes
         )
         pkgs = set(possible)
 

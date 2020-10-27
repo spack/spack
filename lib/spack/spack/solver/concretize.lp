@@ -61,15 +61,22 @@ provider(Package, Virtual)
 0 { provider(Package, Virtual) : node(Package) } 1 :- virtual(Virtual).
 
 % give dependents the virtuals they want
+provider_weight(Dependency, -10)
+ :- virtual(Virtual), depends_on(Package, Dependency),
+    provider(Dependency, Virtual),
+    external(Dependency).
+
 provider_weight(Dependency, Weight)
  :- virtual(Virtual), depends_on(Package, Dependency),
     provider(Dependency, Virtual),
-    pkg_provider_preference(Package, Virtual, Dependency, Weight).
+    pkg_provider_preference(Package, Virtual, Dependency, Weight),
+    not external(Dependency).
 
 provider_weight(Dependency, Weight)
  :- virtual(Virtual), depends_on(Package, Dependency),
     provider(Dependency, Virtual),
     not pkg_provider_preference(Package, Virtual, Dependency, _),
+    not external(Dependency),
     default_provider_preference(Virtual, Dependency, Weight).
 
 % if there's no preference for something, it costs 100 to discourage its
@@ -347,13 +354,26 @@ compiler_match(Package, 1)
  :- node_compiler(Package, Compiler),
     node_compiler_match_pref(Package, Compiler).
 
+% If the compiler is what was prescribed from command line etc.
+% or is the same as a root node, there is a version match
+
+% Compiler prescribed from command line
 node_compiler_version_match_pref(Package, Compiler, V)
  :- node_compiler_hard(Package, Compiler),
     node_compiler_version(Package, Compiler, V).
+
+% Compiler inherited from a root node
 node_compiler_version_match_pref(Dependency, Compiler, V)
  :- depends_on(Package, Dependency),
     node_compiler_version_match_pref(Package, Compiler, V),
     not node_compiler_hard(Dependency, Compiler).
+
+% Compiler inherited from the root package
+node_compiler_version_match_pref(Dependency, Compiler, V)
+ :- depends_on(Package, Dependency),
+    node_compiler_version(Package, Compiler, V), root(Package),
+    not node_compiler_hard(Dependency, Compiler).
+
 compiler_version_match(Package, 1)
  :- node_compiler_version(Package, Compiler, V),
     node_compiler_version_match_pref(Package, Compiler, V).
@@ -371,13 +391,13 @@ compiler_weight(Package, Weight)
 compiler_weight(Package, Weight)
  :- node_compiler(Package, Compiler),
     node_compiler_version(Package, Compiler, V),
-    not node_compiler_preference(Package, Compiler, _, _),
+    not node_compiler_preference(Package, Compiler, V, _),
     default_compiler_preference(Compiler, V, Weight).
 compiler_weight(Package, 100)
  :- node_compiler(Package, Compiler),
     node_compiler_version(Package, Compiler, Version),
-    not node_compiler_preference(Package, Compiler, _, _),
-    not default_compiler_preference(Compiler, _, _).
+    not node_compiler_preference(Package, Compiler, Version, _),
+    not default_compiler_preference(Compiler, Version, _).
 
 #defined node_compiler_preference/4.
 #defined default_compiler_preference/3.
@@ -464,7 +484,7 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 }.
 
 % compiler preferences
-#maximize{ Weight@8,Package : compiler_match(Package, Weight) }.
+#maximize{ Weight@8,Package : compiler_version_match(Package, Weight) }.
 #minimize{ Weight@7,Package : compiler_weight(Package, Weight) }.
 
 % prefer more recent versions.
