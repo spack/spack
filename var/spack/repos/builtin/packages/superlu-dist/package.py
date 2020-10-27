@@ -41,7 +41,8 @@ class SuperluDist(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('parmetis')
+    depends_on('parmetis~int64', when='~int64')
+    depends_on('parmetis+int64', when='+int64')
     depends_on('metis@5:~int64', when='~int64')
     depends_on('metis@5:+int64', when='+int64')
 
