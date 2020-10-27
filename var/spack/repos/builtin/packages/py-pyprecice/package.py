@@ -98,9 +98,10 @@ class PyPyprecice(PythonPackage):
             "--include-dirs={}".format(
                 "{}/include".format(self.spec["precice"].prefix)
             ),
-            "--library-dirs={}".format("{}/lib".format(self.spec["precice"].prefix)),
+            "--library-dirs={}".format(
+                "{}/lib".format(self.spec["precice"].prefix)
+            ),
         )
 
     def install(self, spec, prefix):
         self.setup_py("install", "--prefix={0}".format(prefix))
-        
