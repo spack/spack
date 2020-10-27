@@ -53,6 +53,8 @@ class Thepeg(AutotoolsPackage):
     patch('thepeg-1.9.2.patch', when='@1.9.2', level=0)
     patch('thepeg-2.1.1.patch', when='@2.1.1:2.2.1', level=0)
 
+    force_autoreconf = True
+
     depends_on('gsl')
     depends_on('lhapdf')
     depends_on('lhapdf@:6.2.999', when='@:1.9.999')

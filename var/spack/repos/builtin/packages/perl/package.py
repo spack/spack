@@ -77,6 +77,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # https://github.com/Perl/perl5/pull/17946
     patch('macos-11-version-check.patch', when='@5.24.1:5.32.0 platform=darwin')
 
+    # Enable builds with the NVIDIA compiler
+    patch('nvhpc.patch', when='%nvhpc')
+
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
     # having it in core increases the "energy of activation" for doing

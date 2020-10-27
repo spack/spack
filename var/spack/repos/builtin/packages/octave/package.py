@@ -275,6 +275,10 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
             spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
             config_args.append('F77_INTEGER_8_FLAG=-fdefault-integer-8')
 
+        # Use gfortran calling-convention %fj
+        if spec.satisfies('%fj'):
+            config_args.append('--enable-fortran-calling-convention=gfortran')
+
         return config_args
 
     # ========================================================================

@@ -15,9 +15,11 @@ import spack.compilers.fj
 import spack.compilers.gcc
 import spack.compilers.intel
 import spack.compilers.nag
+import spack.compilers.nvhpc
 import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
+import spack.compilers.aocc
 
 from spack.operating_systems.cray_frontend import CrayFrontend
 import spack.util.module_cmd
@@ -158,6 +160,60 @@ def test_nag_version_detection(version_str, expected_version):
 
 
 @pytest.mark.parametrize('version_str,expected_version', [
+    # C compiler on x86-64
+    ('nvc 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on x86-64
+    ('nvc++ 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on x86-64
+    ('nvfortran 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C compiler on Power
+    ('nvc 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on Power
+    ('nvc++ 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on Power
+    ('nvfortran 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C compiler on Arm
+    ('nvc 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on Arm
+    ('nvc++ 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on Arm
+    ('nvfortran 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9')
+])
+def test_nvhpc_version_detection(version_str, expected_version):
+    version = spack.compilers.nvhpc.Nvhpc.extract_version_from_output(
+        version_str
+    )
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
     # Output on x86-64
     ('pgcc 15.10-0 64-bit target on x86-64 Linux -tp sandybridge\n'
      'The Portland Group - PGI Compilers and Tools\n'
@@ -233,3 +289,18 @@ def test_cray_frontend_compiler_detection(
 
     paths = cray_fe_os.compiler_search_paths
     assert paths == [str(compiler_dir)]
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    # This applies to C,C++ and FORTRAN compiler
+    ('AMD clang version 10.0.0 (CLANG: AOCC_2.2.0-Build#93 2020_06_25)'
+     '(based on LLVM Mirror.Version.10.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '2.2.0'
+     )
+])
+def test_aocc_version_detection(version_str, expected_version):
+    version = spack.compilers.aocc.Aocc.extract_version_from_output(
+        version_str
+    )
+    assert version == expected_version

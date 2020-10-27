@@ -31,7 +31,7 @@ jobs:
       matrix:
         package:
         - lz4  # MakefilePackage
-        - mpich  # AutotoolsPackage
+        - mpich~fortran  # AutotoolsPackage
         - tut  # WafPackage
         - py-setuptools  # PythonPackage
         - openjpeg  # CMakePackage
@@ -48,7 +48,7 @@ jobs:
           ccache-build-${{ matrix.package }}
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
     - name: Install System Packages
       run: |
         sudo apt-get update

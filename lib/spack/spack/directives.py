@@ -50,7 +50,7 @@ from spack.version import Version, VersionChecksumError
 __all__ = []
 
 #: These are variant names used by Spack internally; packages can't use them
-reserved_names = ['patches']
+reserved_names = ['patches', 'dev_path']
 
 _patch_order_index = 0
 

@@ -32,6 +32,12 @@ class Namd(MakefilePackage):
     variant('interface', default='none', values=('none', 'tcl', 'python'),
             description='Enables TCL and/or python interface')
 
+    # init_tcl_pointers() declaration and implementation are inconsistent
+    # "src/colvarproxy_namd.C", line 482: error: inherited member is not
+    # allowed
+    patch('inherited-member.patch', when='@:2.13')
+    patch('inherited-member-2.14.patch', when='@2.14:')
+
     depends_on('charmpp@6.10.1:', when="@2.14:")
     depends_on('charmpp@6.8.2', when="@2.13")
     depends_on('charmpp@6.7.1', when="@2.12")

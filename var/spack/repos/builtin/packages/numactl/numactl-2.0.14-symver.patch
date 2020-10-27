@@ -1,0 +1,9 @@
+--- a/util.h	2020-10-08 10:08:40.517167202 -0700
++++ b/util.h	2020-10-08 10:08:55.523301155 -0700
+@@ -22,5 +22,5 @@
+ #if HAVE_ATTRIBUTE_SYMVER
+ #define SYMVER(a,b) __attribute__ ((symver (b)))
+ #else
+-#define SYMVER(a,b) __asm__ (".symver " #a "," #b);
++#define SYMVER(a,b) __asm__ (".symver " a "," b " ");
+ #endif

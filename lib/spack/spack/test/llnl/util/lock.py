@@ -43,6 +43,8 @@ actually on a shared filesystem.
 
 """
 import collections
+import errno
+import fcntl
 import os
 import socket
 import shutil
@@ -1275,6 +1277,30 @@ def test_downgrade_write_fails(tmpdir):
         msg = 'Cannot downgrade lock from write to read on file: lockfile'
         with pytest.raises(lk.LockDowngradeError, match=msg):
             lock.downgrade_write_to_read()
+
+
+@pytest.mark.parametrize("err_num,err_msg",
+                         [(errno.EACCES, "Fake EACCES error"),
+                          (errno.EAGAIN, "Fake EAGAIN error"),
+                          (errno.ENOENT, "Fake ENOENT error")])
+def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
+    """Test poll lock exception handling."""
+    def _lockf(fd, cmd, len, start, whence):
+        raise IOError(err_num, err_msg)
+
+    with tmpdir.as_cwd():
+        lockfile = 'lockfile'
+        lock = lk.Lock(lockfile)
+
+        touch(lockfile)
+
+        monkeypatch.setattr(fcntl, 'lockf', _lockf)
+
+        if err_num in [errno.EAGAIN, errno.EACCES]:
+            assert not lock._poll_lock(fcntl.LOCK_EX)
+        else:
+            with pytest.raises(IOError, match=err_msg):
+                lock._poll_lock(fcntl.LOCK_EX)
 
 
 def test_upgrade_read_okay(tmpdir):
