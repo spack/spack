@@ -290,8 +290,11 @@ class BinaryDistributionCache(object):
             tty.debug('Unable to read index hash {0}'.format(
                 hash_fetch_url), url_err, 1)
 
-        # If we were expecting some hash and found that we got it, we're done
-        if expect_hash and fetched_hash == expect_hash:
+        # The only case where we'll skip attempting to fetch the buildcache
+        # index from the mirror is when we already have a hash for this
+        # mirror, we were able to retrieve one from the mirror, and
+        # the two hashes are the same.
+        if expect_hash and fetched_hash and fetched_hash == expect_hash:
             tty.debug('Cached index for {0} already up to date'.format(
                 mirror_url))
             return
@@ -846,7 +849,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     return None
 
 
-def download_tarball(spec, preferred_mirrors=[]):
+def download_tarball(spec, preferred_mirrors=None):
     """
     Download binary tarball for given package into stage area, returning
     path to downloaded tarball if successful, None otherwise.
@@ -869,12 +872,13 @@ def download_tarball(spec, preferred_mirrors=[]):
 
     urls_to_try = []
 
-    for preferred_url in preferred_mirrors:
-        urls_to_try.append(url_util.join(
-            preferred_url, _build_cache_relative_path, tarball))
+    if preferred_mirrors:
+        for preferred_url in preferred_mirrors:
+            urls_to_try.append(url_util.join(
+                preferred_url, _build_cache_relative_path, tarball))
 
     for mirror in spack.mirror.MirrorCollection().values():
-        if mirror.fetch_url not in preferred_mirrors:
+        if not preferred_mirrors or mirror.fetch_url not in preferred_mirrors:
             urls_to_try.append(url_util.join(
                 mirror.fetch_url, _build_cache_relative_path, tarball))
 

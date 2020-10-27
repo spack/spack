@@ -177,7 +177,7 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
 
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
-    def _spec(spec, preferred_mirrors=[]):
+    def _spec(spec, preferred_mirrors=None):
         return spec
 
     # Skip binary distribution functionality since assume tested elsewhere

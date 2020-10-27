@@ -304,7 +304,7 @@ def _process_external_package(pkg, explicit):
 
 
 def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
-                                  preferred_mirrors=[]):
+                                  preferred_mirrors=None):
     """
     Process the binary cache tarball.
 

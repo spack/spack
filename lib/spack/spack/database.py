@@ -209,12 +209,7 @@ class InstallRecord(object):
 
         for field_name in include_fields:
             if field_name == 'spec':
-                spec_dict_list = self.spec.to_dict()['spec']
-                spec_dict = {}
-                for d in spec_dict_list:
-                    if self.spec.name in d:
-                        spec_dict = d[self.spec.name]
-                rec_dict.update({'spec': {self.spec.name: spec_dict}})
+                rec_dict.update({'spec': self.spec.node_dict_with_hashes()})
             elif field_name == 'deprecated_for' and self.deprecated_for:
                 rec_dict.update({'deprecated_for': self.deprecated_for})
             else:
