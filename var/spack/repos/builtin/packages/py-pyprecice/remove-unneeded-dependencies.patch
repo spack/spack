@@ -30,18 +30,3 @@ index 9282639..d69c285 100644
  
  from enum import Enum
  from setuptools import setup
-@@ -37,10 +42,14 @@ def get_extensions(is_test):
-     link_args = []    
-     compile_args.append("-std=c++11")
-     compile_args.append("-I{}".format(numpy.get_include()))
-+    for incdir in os.environ['SPACK_INCLUDE_DIRS'].split(":"):
-+        compile_args.append("-I{}".format( incdir ))
- 
-     bindings_sources = [os.path.join(PYTHON_BINDINGS_PATH, "precice") + ".pyx"]
-     test_sources = [os.path.join(PYTHON_BINDINGS_PATH, "test", "test_bindings_module" + ".pyx")]
-     if not is_test:
-+        for libdir in os.environ['SPACK_LINK_DIRS'].split(":"):
-+            link_args.append( "-L{}".format(libdir) )
-         link_args.append("-lprecice")
-     if is_test:
-         bindings_sources.append(os.path.join(PYTHON_BINDINGS_PATH, "test", "SolverInterface.cpp"))
