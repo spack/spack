@@ -30,10 +30,10 @@ class Stream(MakefilePackage):
             omp_flag = self.compiler.openmp_flag
             array_size = self.spec.variants['STREAM_ARRAY_SIZE'].value
             loc_flags = "-O3 -mcmodel=large -DSTREAM_TYPE=double \
-                         -mavx2 -DSTREAM_ARRAY_SIZE={} \
+                         -mavx2 -DSTREAM_ARRAY_SIZE={0} \
                          -DNTIMES=10 -ffp-contract=fast \
                          -march=znver2 \
-                         -fnt-store {}".format(array_size, omp_flag)
+                         -fnt-store {1}".format(array_size, omp_flag)
             cflags = loc_flags
             fflags = loc_flags
         else:
