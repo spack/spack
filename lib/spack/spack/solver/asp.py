@@ -199,8 +199,15 @@ def check_packages_exist(specs):
     repo = spack.repo.path
     for spec in specs:
         for s in spec.traverse():
-            if not (repo.exists(s.name) or repo.is_virtual(s.name)):
-                raise spack.repo.UnknownPackageError(s.name)
+            try:
+                check_passed = repo.exists(s.name) or repo.is_virtual(s.name)
+            except Exception as e:
+                msg = 'Cannot find package: {0}'.format(str(e))
+                check_passed = False
+                tty.debug(msg)
+
+            if not check_passed:
+                raise spack.error.SpecError(str(s.name))
 
 
 class Result(object):

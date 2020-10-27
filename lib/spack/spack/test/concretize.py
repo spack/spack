@@ -643,7 +643,6 @@ class TestConcretize(object):
         with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
             s = Spec('mpileaks %gcc@4.5')
             s.concretize()
-            pass
 
         # An abstract compiler with a version list could resolve to 4.5.0
         s = Spec('mpileaks %gcc@4.5:')
@@ -655,11 +654,10 @@ class TestConcretize(object):
             s = Spec('+variant')
             s.concretize()
 
-    def test_concretize_anonymous_dep(self):
+    @pytest.mark.parametrize('spec_str', [
+        'mpileaks ^%gcc', 'mpileaks ^cflags=-g'
+    ])
+    def test_concretize_anonymous_dep(self, spec_str):
         with pytest.raises(spack.error.SpecError):
-            s = Spec('mpileaks ^%gcc')
-            s.concretize()
-
-        with pytest.raises(spack.error.SpecError):
-            s = Spec('mpileaks ^cflags=-g')
+            s = Spec(spec_str)
             s.concretize()
