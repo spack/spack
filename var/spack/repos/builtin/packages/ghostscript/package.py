@@ -23,6 +23,7 @@ class Ghostscript(AutotoolsPackage):
     version('9.18', sha256='5fc93079749a250be5404c465943850e3ed5ffbc0d5c07e10c7c5ee8afbbdb1b')
 
     depends_on('pkgconfig', type='build')
+    depends_on('krb5', type='link')
 
     depends_on('freetype@2.4.2:')
     depends_on('jpeg')
