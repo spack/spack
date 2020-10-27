@@ -135,7 +135,7 @@ spack:
         compiler-agnostic: true
     mappings:
       - match:
-          - arch=test-debian6-x86_64
+          - arch=test-debian6-core2
         runner-attributes:
           tags:
             - donotcare

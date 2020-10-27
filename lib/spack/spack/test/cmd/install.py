@@ -754,18 +754,20 @@ def test_compiler_bootstrap_from_binary_mirror(
     mirror_url = 'file://{0}'.format(mirror_dir.strpath)
 
     # Install a compiler, because we want to put it in a buildcache
-    install('gcc@2.0')
+    install('gcc@10.2.0')
 
     # Put installed compiler in the buildcache
-    buildcache('create', '-u', '-a', '-f', '-d', mirror_dir.strpath, 'gcc@2.0')
+    buildcache(
+        'create', '-u', '-a', '-f', '-d', mirror_dir.strpath, 'gcc@10.2.0'
+    )
 
     # Now uninstall the compiler
-    uninstall('-y', 'gcc@2.0')
+    uninstall('-y', 'gcc@10.2.0')
 
     monkeypatch.setattr(spack.concretize.Concretizer,
                         'check_for_compiler_existence', False)
     spack.config.set('config:install_missing_compilers', True)
-    assert CompilerSpec('gcc@2.0') not in compilers.all_compiler_specs()
+    assert CompilerSpec('gcc@10.2.0') not in compilers.all_compiler_specs()
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror('add', 'test-mirror', mirror_url)
@@ -774,8 +776,8 @@ def test_compiler_bootstrap_from_binary_mirror(
     # it also gets configured as a compiler.  Test succeeds if it does not
     # raise an error
     install('--no-check-signature', '--cache-only', '--only',
-            'dependencies', 'b%gcc@2.0')
-    install('--no-cache', '--only', 'package', 'b%gcc@2.0')
+            'dependencies', 'b%gcc@10.2.0')
+    install('--no-cache', '--only', 'package', 'b%gcc@10.2.0')
 
 
 @pytest.mark.regression('16221')
