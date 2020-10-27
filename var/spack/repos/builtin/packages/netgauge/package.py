@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 
@@ -21,7 +22,6 @@ class Netgauge(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        if self.spec.target.family == 'aarch64':
-            args.append('MPICC=mpicc')
-            args.append('MPICXX=mpicxx')
+        args.append('MPICC=%s' % os.path.basename(self.spec['mpi'].mpicc))
+        args.append('MPICXX=%s' % os.path.basename(self.spec['mpi'].mpicxx))
         return args
