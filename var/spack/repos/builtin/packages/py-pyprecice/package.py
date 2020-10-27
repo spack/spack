@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 class PyPyprecice(PythonPackage):
     """This package provides python language bindings for the C++ library preCICE. """
@@ -12,7 +11,6 @@ class PyPyprecice(PythonPackage):
     homepage = 'https://www.precice.org'
     git      = 'https://github.com/precice/python-bindings.git'
     url      = 'https://github.com/precice/python-bindings/archive/v2.0.0.1.tar.gz'
-    # FIXME: Check whether list of maintainers is complete
     maintainers = ['ajaust', 'BenjaminRueth']
     
     # Always prefer final version of release candidate
@@ -33,9 +31,7 @@ class PyPyprecice(PythonPackage):
     # Import module as a test
     import_modules = ['precice']
 
-    # FIXME: Check if patch is needed
-    # FIXME: Check whether patch applies to all binding versions
-    patch('remove-unneeded-dependencies.patch')
+    patch('deactivate-version-check-via-pip.patch')
 
     variant('mpi', default=True, description='Enables MPI support')
 
