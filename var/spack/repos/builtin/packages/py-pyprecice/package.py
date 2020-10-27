@@ -6,7 +6,7 @@
 from spack import *
 import os
 
-class PyPrecicebindings(PythonPackage):
+class PyPyprecice(PythonPackage):
     """This package provides python language bindings for the C++ library preCICE. """
 
     homepage = 'https://www.precice.org'
