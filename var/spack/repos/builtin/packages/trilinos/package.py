@@ -662,9 +662,9 @@ class Trilinos(CMakePackage):
                 define('TPL_ENABLE_STRUMPACK', True),
                 define('Amesos2_ENABLE_STRUMPACK', True),
                 define('STRUMPACK_LIBRARY_DIRS',
-                       spec['strumpack'].prefix.lib),
+                       spec['strumpack'].libs.directories[0]),
                 define('STRUMPACK_INCLUDE_DIRS',
-                       spec['strumpack'].prefix.include),
+                       spec['strumpack'].headers.directories[0]),
             ])
 
         options.append(define_tpl_enable('Pnetcdf'))
