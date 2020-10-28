@@ -24,8 +24,6 @@ def test_checksum():
 @pytest.mark.disable_clean_stage_check
 def test_checksum_keep_stage(config):
 
-    output = checksum('--keep-stage', 'zlib@1.2.11')
-
     path = spack.stage.get_stage_root()
     file_list = os.listdir(path)
 
