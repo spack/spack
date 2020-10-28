@@ -63,6 +63,9 @@ from spack.error import SpackError
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
 
+# Ignore user/local Scoping if variable is true
+upstream = None
+
 #: Dict from section names -> schema for that section
 section_schemas = {
     'compilers': spack.schema.compilers.schema,
@@ -763,6 +766,9 @@ def _config():
     defaults = InternalConfigScope('_builtin', config_defaults)
     cfg.push_scope(defaults)
 
+    if upstream:
+        configuration_paths.pop['user']
+
     # add each scope and its platform-specific directory
     for name, path in configuration_paths:
         cfg.push_scope(ConfigScope(name, path))
@@ -775,7 +781,8 @@ def _config():
 
     # we make a special scope for spack commands so that they can
     # override configuration options.
-    cfg.push_scope(InternalConfigScope('command_line'))
+    if not upstream:
+        cfg.push_scope(InternalConfigScope('command_line'))
 
     return cfg
 
