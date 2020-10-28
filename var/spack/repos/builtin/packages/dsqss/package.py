@@ -5,7 +5,8 @@
 
 
 from spack import *
-import glob, os
+import os
+import glob
 
 
 class Dsqss(CMakePackage):
@@ -41,8 +42,6 @@ class Dsqss(CMakePackage):
         args = []
         args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.spec.prefix)
         return args
-
-    # TODO: fix ctest. PYTHONPATH and json files
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
