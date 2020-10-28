@@ -132,7 +132,9 @@ done < "$script"
 
 # shellcheck disable=SC2124
 # this saves arguments for later and intentionally assigns as an array
-args="$@"
+
+# This is easily done with arrays but unfortunately arrays are not POSIX
+args="$(for a in "$@"; do echo "$a"; done)"
 
 # handle scripts with sbang parameters, e.g.:
 #
@@ -174,10 +176,13 @@ fi
 # Finally invoke the real shebang line
 # ruby and perl need -x to ignore the first line of input (the sbang line)
 #
+# Note the IFS + awk awkwardness is to keep spaces in arguments while working
+# around not having arrays in POSIX
+IFS=';'
 if interpreter_is perl || interpreter_is ruby; then
     # shellcheck disable=SC2086
-    $exec $shebang_line -x "$args"
+    $exec $shebang_line -x $(echo "$args" | awk '{printf "%s;", $0}')
 else
     # shellcheck disable=SC2086
-    $exec $shebang_line "$args"
+    $exec $shebang_line $(echo "$args" | awk '{printf "%s;", $0}')
 fi
