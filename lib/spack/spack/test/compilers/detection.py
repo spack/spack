@@ -153,7 +153,7 @@ def test_intel_version_detection(version_str, expected_version):
 
 @pytest.mark.parametrize('version_str,expected_version', [
     (  # ICX
-        'Intel(R) oneAPI DPC++ Compiler Pro 2021.1 (2020.8.0.0827)\]n'
+        'Intel(R) oneAPI DPC++ Compiler Pro 2021.1 (2020.8.0.0827)\n'
         'Target: x86_64-unknown-linux-gnu\n'
         'Thread model: posix\n'
         'InstalledDir: /soft/restricted/CNDA/sdk/\n'
