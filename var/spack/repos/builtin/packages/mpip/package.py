@@ -20,29 +20,19 @@ class Mpip(AutotoolsPackage):
     version("3.4.1",
             sha256="66a86dafde61546be80a130c46e4295f47fb764cf312ae62c70a6dc456a59dac")
 
-    conflicts('platform=darwin')
-
-    depends_on('python')
-    depends_on('python@:2', when='@:3.4.1')
-    depends_on('mpi')
-
-    #  Ideally would use libunwind, but provide backtrace and
-    #    setjmp functionality, if needed
-    #  depends_on('unwind')
-
     variant('demangling', default=True,
             description="Build with demangling support")
 
     variant('setjmp', default=False,
             description="Use setjmp to generate stack trace")
 
-    variant('mpi-io', default=True,
+    variant('mpi_io', default=True,
             description="Enable MPI-I/O reporting")
 
-    variant('mpi-rma', default=True,
+    variant('mpi_rma', default=True,
             description="Enable MPI RMA reporting")
 
-    variant('mpi-nbc', default=True,
+    variant('mpi_nbc', default=True,
             description="Enable MPI non-blocking collective reporting")
 
     variant('bfd', default=True,
@@ -57,10 +47,21 @@ class Mpip(AutotoolsPackage):
     variant('stackdepth', values=int, default=8,
             description='Specify maximum report stacktrace depth')
 
-    variant('internal-stackdepth', values=int, default=3,
+    variant('internal_stackdepth', values=int, default=3,
             description='Specify number of internal stack frames')
 
-    variant('shared', default=False, description="Build the shared library")
+    variant('add_shared_target', default=False, description="Add shared make target")
+
+    conflicts('platform=darwin')
+
+    # make-wrappers.py wrapper generator script requres python
+    depends_on('python@2:', when='@3.5:')
+    depends_on('python@:2', when='@3.4.1')
+    depends_on('mpi')
+
+    #  Ideally would use libunwind, but provide backtrace and
+    #    setjmp functionality, if needed
+    #  depends_on('unwind')
 
     @when('@3.5:')
     def configure_args(self):
@@ -82,13 +83,13 @@ class Mpip(AutotoolsPackage):
         if '-demangling' in spec:
             config_args.append('--disable-demangling')
 
-        if '-mpi-io' in spec:
+        if '-mpi_io' in spec:
             config_args.append('--disable-mpi-io')
 
-        if '-mpi-rma' in spec:
+        if '-mpi_rma' in spec:
             config_args.append('--disable-mpi-rma')
 
-        if '-mpi-nbc' in spec:
+        if '-mpi_nbc' in spec:
             config_args.append('--disable-mpi-nbc')
 
         if '-bfd' in spec:
@@ -104,30 +105,26 @@ class Mpip(AutotoolsPackage):
             config_args.append('--enable-setjmp')
 
         maxargs = int(spec.variants['maxargs'].value)
-        if maxargs != 32:
-            config_args.extend(['--enable-maxargs={0}'.format(maxargs)])
+        config_args.extend(['--enable-maxargs={0}'.format(maxargs)])
 
         stackdepth = int(spec.variants['stackdepth'].value)
-        if stackdepth != 8:
-            config_args.extend(['--enable-stackdepth={0}'.format(stackdepth)])
+        config_args.extend(['--enable-stackdepth={0}'.format(stackdepth)])
 
-        internal_stackdepth = int(spec.variants['internal-stackdepth'].value)
-        if internal_stackdepth != 3:
-            config_args.extend(['--enable-internal-stackdepth={0}'
-                               .format(internal_stackdepth)])
-
+        internal_stackdepth = int(spec.variants['internal_stackdepth'].value)
+        config_args.extend(['--enable-internal-stackdepth={0}'
+                           .format(internal_stackdepth)])
         return config_args
 
-    #  Support 3.4.1 target for building shared library
+    #  Support 3.4.1 'shared' target for building shared library
     @property
     def build_targets(self):
         targets = []
-        if '+shared' in self.spec:
+        if '+add_shared_target' in self.spec:
             targets.append('shared')
 
         return targets
 
-    @when('@:3.4.1')
+    @when('@3.4.1')
     def configure_args(self):
         config_args = ['--without-f77']
         config_args.append("--with-cc=%s" % self.spec['mpi'].mpicc)
