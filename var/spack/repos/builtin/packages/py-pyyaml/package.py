@@ -11,6 +11,7 @@ class PyPyyaml(PythonPackage):
     homepage = "http://pyyaml.org/wiki/PyYAML"
     url      = "http://pyyaml.org/download/pyyaml/PyYAML-5.1.2.tar.gz"
 
+    version('5.3.1', sha256='b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d')
     version('5.1.2', sha256='01adf0b6c6f61bd11af6e10ca52b7d4057dd0be0343eb9283c878cf3af56aee4')
     version('3.13',  sha256='3ef3092145e9b70e3ddd2c7ad59bdd0252a94dfe3949721633e41344de00a6bf')
     version('3.12',  sha256='592766c6303207a20efc445587778322d7f73b161bd994f227adaa341ba212ab')

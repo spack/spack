@@ -14,6 +14,7 @@ class PyMorphTool(PythonPackage):
     url      = "https://pypi.io/packages/source/m/morph-tool/morph-tool-0.2.5.tar.gz"
 
     version('develop', branch='master')
+    version('0.2.10', sha256='e46835b9c25532cbee070141ad9f7d3d47109d5473074b47aad08f51bdc40157')
     version('0.2.5', sha256='7157039a7a421cfbdb75fd305975a6e6ce7667177dc68bd299645b62389622be')
     version('0.2.3', sha256='767effaa4d2e8c7dfee878c6d48c6647f29b19fee6f790213783c04d8951fee3')
     version('0.2.1', tag='morph-tool-v0.2.1', git='ssh://bbpcode.epfl.ch/nse/morph-tool')
@@ -30,3 +31,6 @@ class PyMorphTool(PythonPackage):
     depends_on('py-pyyaml', when='@:0.1.14', type='run')
     depends_on('py-numpy@1.14:', type='run')
     depends_on('py-pandas@1.0.3:', when='@0.2.5:', type='run')
+    depends_on('py-dask@2.19:', when='@0.2.10:', type='run')
+    depends_on('py-plotly@4.1:', when='@0.2.10:', type='run')
+    depends_on('py-xmltodict@0.12:', when='@0.2.10:', type='run')
