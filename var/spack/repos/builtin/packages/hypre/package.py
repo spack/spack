@@ -69,7 +69,7 @@ class Hypre(Package):
     patch('superlu-dist-link-2.14.0.patch', when='+superlu-dist @:2.14.0')
     patch('hypre21800-compat.patch', when='@2.18.0')
     # Patch to get config flags right
-    patch('detect-compiler.patch')
+    patch('detect-compiler.patch', when='@2.15.0:2.20.0')
 
     depends_on("mpi", when='+mpi')
     depends_on("blas")
