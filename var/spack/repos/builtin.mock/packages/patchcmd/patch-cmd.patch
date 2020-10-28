@@ -9,5 +9,5 @@
 +      echo Patchcmd!
 
  install:
- 
+
        mkdir -p $prefix
