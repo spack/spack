@@ -38,7 +38,7 @@ class Slate(CMakePackage):
     depends_on('lapackpp@master', when='@master')
     depends_on('scalapack')
 
-    cpp_17_msg='Requires C++17 compiler support'
+    cpp_17_msg = 'Requires C++17 compiler support'
     conflicts('%gcc@:5', msg=cpp_17_msg)
     conflicts('%xl', msg=cpp_17_msg)
     conflicts('%xl_r', msg=cpp_17_msg)
