@@ -291,4 +291,3 @@ class Dray(Package, CudaPackage):
         host_cfg_fname = os.path.abspath(host_cfg_fname)
         tty.info("spack generated conduit host-config file: " + host_cfg_fname)
         return host_cfg_fname
-
