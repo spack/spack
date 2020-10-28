@@ -6,8 +6,6 @@
 import os
 import pytest
 
-from llnl.util.filesystem import working_dir
-from spack.util.executable import Executable
 from spack.main import SpackCommand
 from spack.spec import Spec
 
