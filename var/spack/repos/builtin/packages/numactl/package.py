@@ -10,11 +10,11 @@ class Numactl(AutotoolsPackage):
     """NUMA support for Linux"""
 
     homepage = "http://oss.sgi.com/projects/libnuma/"
-    url      = "https://github.com/numactl/numactl/archive/v2.0.11.tar.gz"
+    url      = "https://github.com/numactl/numactl/releases/download/v2.0.14/numactl-2.0.14.tar.gz"
 
-    version('2.0.14', sha256='1ee27abd07ff6ba140aaf9bc6379b37825e54496e01d6f7343330cf1a4487035')
-    version('2.0.12', sha256='7c3e819c2bdeb883de68bafe88776a01356f7ef565e75ba866c4b49a087c6bdf')
-    version('2.0.11', sha256='3e099a59b2c527bcdbddd34e1952ca87462d2cef4c93da9b0bc03f02903f7089')
+    version('2.0.14', sha256='826bd148c1b6231e1284e42a4db510207747484b112aee25ed6b1078756bcff6')
+    version('2.0.12', sha256='55bbda363f5b32abd057b6fbb4551dd71323f5dbb66335ba758ba93de2ada729')
+    version('2.0.11', sha256='450c091235f891ee874a8651b179c30f57a1391ca5c4673354740ba65e527861')
 
     patch('numactl-2.0.11-sysmacros.patch', when="@2.0.11")
     # https://github.com/numactl/numactl/issues/94
