@@ -693,3 +693,20 @@ class TestConcretize(object):
         for dep in unexpected:
             msg = '"{0}" is in "{1}" but was unexpected'
             assert dep not in s, msg.format(dep, spec_str)
+
+    @pytest.mark.parametrize('spec_str,patched_deps', [
+        ('patch-several-dependencies', [('libelf', 1), ('fake', 2)]),
+        ('patch-several-dependencies@1.0',
+         [('libelf', 1), ('fake', 2), ('libdwarf', 1)]),
+        ('patch-several-dependencies@1.0 ^libdwarf@20111030',
+         [('libelf', 1), ('fake', 2), ('libdwarf', 2)]),
+        ('patch-several-dependencies ^libelf@0.8.10',
+         [('libelf', 2), ('fake', 2)]),
+        ('patch-several-dependencies +foo', [('libelf', 2), ('fake', 2)])
+    ])
+    def test_patching_dependencies(self, spec_str, patched_deps):
+        s = Spec(spec_str).concretized()
+
+        for dep, num_patches in patched_deps:
+            assert s[dep].satisfies('patches=*')
+            assert len(s[dep].variants['patches'].value) == num_patches
