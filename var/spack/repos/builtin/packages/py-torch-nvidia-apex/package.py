@@ -20,7 +20,7 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-torch@0.4:', type=('build', 'run'))
     depends_on('cuda@9:', when='+cuda')
-    depends_on('py-pybind11', when='@2020-10-19:,master', type=('build', 'link', 'run'))
+    depends_on('py-pybind11', when='@2020-10-19:', type=('build', 'link', 'run'))
 
     variant('cuda', default=True, description='Build with CUDA')
 
