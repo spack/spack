@@ -18,13 +18,10 @@ class Pestpp(CMakePackage):
 
     version('5.0.5', sha256='b9695724758f69c1199371608b01419973bd1475b1788039a2fab6313f6ed67c')
 
+    variant('mpi', default=True, description='Enable MPI support')
+
     depends_on('cmake@3.9:', type='build')
-    depends_on('mpi', type=('build', 'run'))
-
-    def cmake_args(self):
-        args = ['-DCMAKE_BUILD_TYPE=Release']
-
-        return args
+    depends_on('mpi', type=('build', 'run'), when='+mpi')
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
