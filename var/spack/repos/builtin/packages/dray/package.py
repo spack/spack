@@ -257,7 +257,7 @@ class Dray(Package, CudaPackage):
             cfg.write(cmake_cache_entry("ENABLE_LOGGING", "OFF"))
 
         #######################
-        # Logging
+        # Status
         #######################
         if "+stats" in spec:
             cfg.write(cmake_cache_entry("ENABLE_STATS", "ON"))
