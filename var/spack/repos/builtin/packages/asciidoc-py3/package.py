@@ -23,3 +23,5 @@ class AsciidocPy3(AutotoolsPackage):
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('libxml2',     type=('build', 'run'))
     depends_on('libxslt',     type=('build', 'run'))
+    depends_on('docbook-xml', type=('build', 'run'))
+    depends_on('docbook-xsl', type=('build', 'run'))
