@@ -5,12 +5,9 @@
 
 import os
 import pytest
-import pdb
 
 import spack.main
 import spack.stage
-from spack.stage import Stage
-from spack.spec import Spec
 
 zlib_sha256 = 'c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1'
 
