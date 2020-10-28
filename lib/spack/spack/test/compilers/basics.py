@@ -541,7 +541,7 @@ def test_intel_flags():
 
 
 def test_oneapi_flags():
-    supported_flag_test("openmp_flag", "-openmp", "oneapi@2020.8.0.0827")
+#    supported_flag_test("openmp_flag", "-openmp", "oneapi@2020.8.0.0827")
     supported_flag_test("openmp_flag", "-qopenmp", "oneapi@2020.8.0.0827")
     supported_flag_test("cxx11_flag", "-std=c++0x", "oneapi@2020.8.0.0827")
     supported_flag_test("cxx11_flag", "-std=c++11", "oneapi@2020.8.0.0827")
