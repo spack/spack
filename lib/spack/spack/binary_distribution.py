@@ -56,6 +56,20 @@ class BinaryDistributionCache(object):
 
     2. a cache of all the concrete built specs available on all the
     configured mirrors.
+
+    The concrete spec cache (``2.`` above, stored as ``_mirrors_for_spec``)
+    is a "best effort" cache, in the sense that whenever we don't find what
+    we're looking for here, we will attempt to fetch it directly from
+    configured mirrors anyway.  Thus, it has the potential to speed things
+    up, but cache misses shouldn't break any spack functionality.
+
+    At the moment, everything in this class is initialized as lazily as
+    possible, so that it avoids slowing anything in spack down until
+    absolutely necessary.
+
+    TODO: What's the cost if, e.g., we realize in the middle of a spack
+    install that the cache is out of date, and we fetch directly?  Does it
+    mean we should have paid the price to update the cache earlier?
     """
 
     def __init__(self, cache_root=None):
@@ -64,6 +78,7 @@ class BinaryDistributionCache(object):
         self._index_contents_key = 'contents.json'
         self._index_file_cache = None
         self._local_index_cache = None
+        self._specs_already_associated = {}
 
         # _mirrors_for_spec is a dictionary mapping DAG hashes to lists of
         # entries indicating mirrors where that concrete spec can be found:
@@ -95,6 +110,8 @@ class BinaryDistributionCache(object):
 
     def clear_spec_cache(self):
         self._mirrors_for_spec = {}
+        self._specs_already_associated = {}
+        self._index_file_cache = None
 
     def _write_local_index_cache(self):
         self._init_local_index_cache()
@@ -103,13 +120,20 @@ class BinaryDistributionCache(object):
             json.dump(self._local_index_cache, new)
 
     def regenerate_spec_cache(self):
+        """ Populate the local cache of concrete specs (``_mirrors_for_spec``)
+        from the locally cached buildcache index files.  This is essentially a
+        no-op if it has already been done, as we keep track of the index
+        hashes for which we have already associated the built specs. """
         self._init_local_index_cache()
 
         for mirror_url in self._local_index_cache:
             cache_entry = self._local_index_cache[mirror_url]
             cached_index_path = cache_entry['index_path']
-            self._associate_built_specs_with_mirror(cached_index_path,
-                                                    mirror_url)
+            cached_index_hash = cache_entry['index_hash']
+            if cached_index_hash not in self._specs_already_associated:
+                self._associate_built_specs_with_mirror(cached_index_path,
+                                                        mirror_url)
+                self._specs_already_associated[cached_index_hash] = True
 
     def _associate_built_specs_with_mirror(self, cache_key, mirror_url):
         tmpdir = tempfile.mkdtemp()
@@ -162,11 +186,17 @@ class BinaryDistributionCache(object):
         return spec_list
 
     def find_built_spec(self, spec):
-        """Find the built spec corresponding to ``spec``.
+        """Look in our cache for the built spec corresponding to ``spec``.
 
-        If the spec can be found among the configured binary mirrors, an
-        object is returned that contains the concrete spec and the mirror url
-        where it can be found.  Otherwise, ``None`` is returned.
+        If the spec can be found among the configured binary mirrors, a
+        list is returned that contains the concrete spec and the mirror url
+        of each mirror where it can be found.  Otherwise, ``None`` is
+        returned.
+
+        This method does not trigger reading anything from remote mirrors, but
+        rather just checks if the concrete spec is found within the cache.
+
+        The cache can be updated by calling ``update_local_index_cache()``.
 
         Args:
             spec (Spec): Concrete spec to find
@@ -184,6 +214,8 @@ class BinaryDistributionCache(object):
                         }
                     ]
         """
+        self.regenerate_spec_cache()
+
         find_hash = spec.dag_hash()
         if find_hash not in self._mirrors_for_spec:
             return None
@@ -213,7 +245,14 @@ class BinaryDistributionCache(object):
                     }
 
     def update_local_index_cache(self):
-        """ Make sure local cache of buildcache index files is up to date."""
+        """ Make sure local cache of buildcache index files is up to date.
+        If the same mirrors are configured as the last time this was called
+        and none of the remote buildcache indices have changed, calling this
+        method will only result in fetching the index hash from each mirror
+        to confirm it is the same as what is stored locally.  Otherwise, the
+        buildcache ``index.json`` and ``index.json.hash`` files are retrieved
+        from each configured mirror and stored locally (both in memory and
+        on disk under ``_index_cache_root``). """
         self._init_local_index_cache()
 
         mirrors = spack.mirror.MirrorCollection()
@@ -1254,9 +1293,13 @@ def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False):
     return results
 
 
-def get_specs():
+def update_cache_and_get_specs():
     """
-    Get concrete specs for build caches available on mirrors
+    Get all concrete specs for build caches available on configured mirrors.
+    Initialization of internal cache data structures is done as lazily as
+    possible, so this method will also attempt to initialize and update the
+    local index cache (essentially a no-op if it has been done already and
+    nothing has changed on the configured mirrors.)
     """
     cache_manager.update_local_index_cache()
     cache_manager.regenerate_spec_cache()
