@@ -14,16 +14,13 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     phases = ['install']
 
     version('master', branch='master')
-    # Since the devs don't release their own version numbers,
-    # defining our own. Using the date of the commit referenced
-    # in format YYMMDD, so the number is always increasing.
-    version('201019', commit='8a1ed9e8d35dfad26fb973996319965e4224dcdd')
+    version('2020-10-19', commit='8a1ed9e8d35dfad26fb973996319965e4224dcdd')
 
     depends_on('python@3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-torch@0.4:', type=('build', 'run'))
     depends_on('cuda@9:', when='+cuda')
-    depends_on('py-pybind11', when='@201019:,master', type=('build', 'link', 'run'))
+    depends_on('py-pybind11', when='@2020-10-19:,master', type=('build', 'link', 'run'))
 
     variant('cuda', default=True, description='Build with CUDA')
 
