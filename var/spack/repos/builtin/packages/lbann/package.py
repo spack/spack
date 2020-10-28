@@ -360,7 +360,8 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('aluminum@0.5:', when='@:0.90,0.102: +al ~cuda')
     depends_on('aluminum@0.5: +cuda +nccl +ht +cuda_rma', when='@:0.90,0.102: +al +cuda')
 
-    depends_on('cudnn', when='+cuda')
+    depends_on('cudnn', when='@0.90:0.101 +cuda')
+    depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
     depends_on('cub', when='@0.94:0.98.2 +cuda')
 
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
