@@ -55,6 +55,9 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         if spec.satisfies('%clang') and not spec.satisfies('platform=darwin'):
             args.append('LDFLAGS=-rtlib=compiler-rt')
 
+        if spec.satisfies('%aocc') and not spec.satisfies('platform=darwin'):
+            args.append('LDFLAGS=-rtlib=compiler-rt')
+
         if spec.satisfies('%arm') and not spec.satisfies('platform=darwin'):
             args.append('LDFLAGS=-rtlib=compiler-rt')
 
