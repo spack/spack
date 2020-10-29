@@ -54,7 +54,7 @@ class Camp(CMakePackage, CudaPackage):
             # in the future if there are issues.
             options.extend([
                 '-DENABLE_HIP=ON',
-                '-DHIP_ROOT_DIR={0}'. format(spec['hip'].prefix)])
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)])
         else:
             options.append('-DENABLE_HIP=OFF')
 
