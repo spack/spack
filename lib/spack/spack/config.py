@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """This module implements Spack's configuration file handling.
 
 This implements Spack's configuration system, which handles merging
@@ -29,9 +28,9 @@ When read in, Spack validates configurations with jsonschemas.  The
 schemas are in submodules of :py:mod:`spack.schema`.
 
 """
-
 import collections
 import copy
+import functools
 import os
 import re
 import sys
@@ -371,6 +370,18 @@ class InternalConfigScope(ConfigScope):
         return result
 
 
+def _config_mutator(method):
+    """Decorator to mark all the methods in the Configuration class
+    that mutate the underlying configuration. Used to clear the
+    memoization cache.
+    """
+    @functools.wraps(method)
+    def _method(self, *args, **kwargs):
+        self._get_config_memoized.cache.clear()
+        return method(self, *args, **kwargs)
+    return _method
+
+
 class Configuration(object):
     """A full Spack configuration, from a hierarchy of config files.
 
@@ -390,9 +401,9 @@ class Configuration(object):
             self.push_scope(scope)
         self.format_updates = collections.defaultdict(list)
 
+    @_config_mutator
     def push_scope(self, scope):
         """Add a higher precedence scope to the Configuration."""
-        self._get_config_memoized.cache.clear()
         cmd_line_scope = None
         if self.scopes:
             highest_precedence_scope = list(self.scopes.values())[-1]
@@ -405,11 +416,13 @@ class Configuration(object):
         if cmd_line_scope:
             self.scopes['command_line'] = cmd_line_scope
 
+    @_config_mutator
     def pop_scope(self):
         """Remove the highest precedence scope and return it."""
         name, scope = self.scopes.popitem(last=True)
         return scope
 
+    @_config_mutator
     def remove_scope(self, scope_name):
         return self.scopes.pop(scope_name)
 
@@ -473,6 +486,7 @@ class Configuration(object):
         scope = self._validate_scope(scope)
         return scope.get_section_filename(section)
 
+    @_config_mutator
     def clear_caches(self):
         """Clears the caches for configuration files,
 
@@ -480,6 +494,7 @@ class Configuration(object):
         for scope in self.scopes.values():
             scope.clear()
 
+    @_config_mutator
     def update_config(self, section, update_data, scope=None, force=False):
         """Update the configuration file for a particular scope.
 
@@ -499,9 +514,6 @@ class Configuration(object):
             scope (str): scope to be updated
             force (str): force the update
         """
-        # Invalidate the cache
-        self._get_config_memoized.cache.clear()
-
         if self.format_updates.get(section) and not force:
             msg = ('The "{0}" section of the configuration needs to be written'
                    ' to disk, but is currently using a deprecated format. '
@@ -627,6 +639,7 @@ class Configuration(object):
 
         return value
 
+    @_config_mutator
     def set(self, path, value, scope=None):
         """Convenience function for setting single values in config files.
 
@@ -719,7 +732,6 @@ def override(path_or_scope, value=None):
     yield config
 
     scope = config.remove_scope(overrides.name)
-    config._get_config_memoized.cache.clear()
     assert scope is overrides
 
 
