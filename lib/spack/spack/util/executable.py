@@ -239,7 +239,8 @@ def which_string(*args, **kwargs):
                 return exe
 
     if required:
-        tty.die("spack requires '%s'. Make sure it is in your path." % args[0])
+        raise CommandNotFoundError(
+            "spack requires '%s'. Make sure it is in your path." % args[0])
 
     return None
 
@@ -266,3 +267,7 @@ def which(*args, **kwargs):
 
 class ProcessError(spack.error.SpackError):
     """ProcessErrors are raised when Executables exit with an error code."""
+
+
+class CommandNotFoundError(spack.error.SpackError):
+    """Raised when ``which()`` can't find a required executable."""

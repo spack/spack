@@ -751,7 +751,6 @@ spack:
 
             logs_dir_list = os.listdir(logs_dir.strpath)
 
-            assert('spack-build-env.txt' in logs_dir_list)
             assert('spack-build-out.txt' in logs_dir_list)
 
             # Also just make sure that if something goes wrong with the

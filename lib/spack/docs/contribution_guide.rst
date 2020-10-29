@@ -27,17 +27,28 @@ correspond to one feature/bugfix/extension/etc. One can create PRs with
 changes relevant to different ideas, however reviewing such PRs becomes tedious
 and error prone. If possible, try to follow the **one-PR-one-package/feature** rule.
 
-Spack uses a rough approximation of the `Git Flow <http://nvie.com/posts/a-successful-git-branching-model/>`_
-branching model. The develop branch contains the latest contributions, and
-master is always tagged and points to the latest stable release. Therefore, when
-you send your request, make ``develop`` the destination branch on the
-`Spack repository <https://github.com/spack/spack>`_.
+--------
+Branches
+--------
+
+Spack's ``develop`` branch has the latest contributions. Nearly all pull
+requests should start from ``develop`` and target ``develop``.
+
+There is a branch for each major release series. Release branches
+originate from ``develop`` and have tags for each point release in the
+series. For example, ``releases/v0.14`` has tags for ``0.14.0``,
+``0.14.1``, ``0.14.2``, etc. versions of Spack. We backport important bug
+fixes to these branches, but we do not advance the package versions or
+make other changes that would change the way Spack concretizes
+dependencies. Currently, the maintainers manage these branches by
+cherry-picking from ``develop``. See :ref:`releases` for more
+information.
 
 ----------------------
 Continuous Integration
 ----------------------
 
-Spack uses `Travis CI <https://travis-ci.org/spack/spack>`_ for Continuous Integration
+Spack uses `Github Actions <https://docs.github.com/en/actions>`_ for Continuous Integration
 testing. This means that every time you submit a pull request, a series of tests will
 be run to make sure you didn't accidentally introduce any bugs into Spack. **Your PR
 will not be accepted until it passes all of these tests.** While you can certainly wait
@@ -46,22 +57,21 @@ locally to speed up the review process.
 
 .. note::
 
-   Oftentimes, Travis will fail for reasons other than a problem with your PR.
+   Oftentimes, CI will fail for reasons other than a problem with your PR.
    For example, apt-get, pip, or homebrew will fail to download one of the
    dependencies for the test suite, or a transient bug will cause the unit tests
-   to timeout. If Travis fails, click the "Details" link and click on the test(s)
+   to timeout. If any job fails, click the "Details" link and click on the test(s)
    that is failing. If it doesn't look like it is failing for reasons related to
    your PR, you have two options. If you have write permissions for the Spack
-   repository, you should see a "Restart job" button on the right-hand side. If
+   repository, you should see a "Restart workflow" button on the right-hand side. If
    not, you can close and reopen your PR to rerun all of the tests. If the same
    test keeps failing, there may be a problem with your PR. If you notice that
-   every recent PR is failing with the same error message, it may be that Travis
-   is down or one of Spack's dependencies put out a new release that is causing
-   problems. If this is the case, please file an issue.
+   every recent PR is failing with the same error message, it may be that an issue
+   occurred with the CI infrastructure or one of Spack's dependencies put out a
+   new release that is causing problems. If this is the case, please file an issue.
 
 
-If you take a look in ``$SPACK_ROOT/.travis.yml``, you'll notice that we test
-against Python 2.6, 2.7, and 3.4-3.7 on both macOS and Linux. We currently
+We currently test against Python 2.6, 2.7, and 3.5-3.7 on both macOS and Linux and
 perform 3 types of tests:
 
 .. _cmd-spack-test:
@@ -95,7 +105,7 @@ time.  For example, this would run all the tests in
 
 .. code-block:: console
 
-   $ spack test architecture.py
+   $ spack test lib/spack/spack/test/architecture.py
 
 And this would run the ``test_platform`` test from that file:
 
@@ -105,7 +115,7 @@ And this would run the ``test_platform`` test from that file:
 
 This allows you to develop iteratively: make a change, test that change,
 make another change, test that change, etc.  We use `pytest
-<http://pytest.org/>`_ as our tests fromework, and these types of
+<http://pytest.org/>`_ as our tests framework, and these types of
 arguments are just passed to the ``pytest`` command underneath. See `the
 pytest docs
 <http://doc.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_
@@ -133,7 +143,7 @@ You can combine these with ``pytest`` arguments to restrict which tests
 you want to know about.  For example, to see just the tests in
 ``architecture.py``:
 
-.. command-output:: spack test --list-long architecture.py
+.. command-output:: spack test --list-long lib/spack/spack/test/architecture.py
 
 You can also combine any of these options with a ``pytest`` keyword
 search.  For example, to see the names of all tests that have "spec"
@@ -149,7 +159,7 @@ argument to ``pytest``:
 
 .. code-block:: console
 
-   $ spack test -s architecture.py::test_platform
+   $ spack test -s spack test --list-long lib/spack/spack/test/architecture.py::test_platform
 
 Unit tests are crucial to making sure bugs aren't introduced into
 Spack. If you are modifying core Spack libraries or adding new
@@ -162,7 +172,7 @@ how to write tests!
 .. note::
 
    You may notice the ``share/spack/qa/run-unit-tests`` script in the
-   repository.  This script is designed for Travis CI.  It runs the unit
+   repository.  This script is designed for CI.  It runs the unit
    tests and reports coverage statistics back to Codecov. If you want to
    run the unit tests yourself, we suggest you use ``spack test``.
 
@@ -235,7 +245,7 @@ to update them.
 
    Try fixing flake8 errors in reverse order. This eliminates the need for
    multiple runs of ``spack flake8`` just to re-compute line numbers and
-   makes it much easier to fix errors directly off of the Travis output.
+   makes it much easier to fix errors directly off of the CI output.
 
 .. warning::
 
@@ -327,7 +337,7 @@ your PR is accepted.
    There is also a ``run-doc-tests`` script in ``share/spack/qa``. The only
    difference between running this script and running ``make`` by hand is that
    the script will exit immediately if it encounters an error or warning. This
-   is necessary for Travis CI. If you made a lot of documentation changes, it is
+   is necessary for CI. If you made a lot of documentation changes, it is
    much quicker to run ``make`` by hand so that you can see all of the warnings
    at once.
 
@@ -391,7 +401,7 @@ and allow you to see coverage line-by-line when viewing the Spack repository.
 If you are new to Spack, a great way to get started is to write unit tests to
 increase coverage!
 
-Unlike with Travis, Codecov tests are not required to pass in order for your
+Unlike with CI on Github Actions Codecov tests are not required to pass in order for your
 PR to be merged. If you modify core Spack libraries, we would greatly
 appreciate unit tests that cover these changed lines. Otherwise, we have no
 way of knowing whether or not your changes introduce a bug. If you make

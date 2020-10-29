@@ -1,3 +1,51 @@
+# v0.15.4 (2020-08-12)
+
+This release contains one feature addition:
+
+* Users can set `SPACK_GNUPGHOME` to override Spack's GPG path (#17139)
+
+Several bugfixes for CUDA, binary packaging, and `spack -V`:
+
+* CUDA package's `.libs` method searches for `libcudart` instead of `libcuda` (#18000)
+* Don't set `CUDAHOSTCXX` in environments that contain CUDA (#17826)
+* `buildcache create`: `NoOverwriteException` is a warning, not an error (#17832)
+* Fix `spack buildcache list --allarch` (#17884)
+* `spack -V` works with `releases/latest` tag and shallow clones (#17884)
+
+And fixes for GitHub Actions and tests to ensure that CI passes on the
+release branch (#15687, #17279, #17328, #17377, #17732).
+
+# v0.15.3 (2020-07-28)
+
+This release contains the following bugfixes:
+
+* Fix handling of relative view paths (#17721)
+* Fixes for binary relocation (#17418, #17455)
+* Fix redundant printing of error messages in build environment (#17709)
+
+It also adds a support script for Spack tutorials:
+
+* Add a tutorial setup script to share/spack (#17705, #17722)
+
+# v0.15.2 (2020-07-23)
+
+This minor release includes two new features:
+
+* Spack install verbosity is decreased, and more debug levels are added (#17546)
+* The $spack/share/spack/keys directory contains public keys that may be optionally trusted for public binary mirrors (#17684)
+
+This release also includes several important fixes:
+
+* MPICC and related variables are now cleand in the build environment (#17450)
+* LLVM flang only builds CUDA offload components when +cuda (#17466)
+* CI pipelines no longer upload user environments that can contain secrets to the internet (#17545)
+* CI pipelines add bootstrapped compilers to the compiler config (#17536)
+* `spack buildcache list` does not exit on first failure and lists later mirrors (#17565)
+* Apple's "gcc" executable that is an apple-clang compiler does not generate a gcc compiler config (#17589)
+* Mixed compiler toolchains are merged more naturally across different compiler suffixes (#17590)
+* Cray Shasta platforms detect the OS properly (#17467)
+* Additional more minor fixes.
+
 # v0.15.1 (2020-07-10)
 
 This minor release includes several important fixes:

@@ -23,7 +23,12 @@ class AppleClang(spack.compilers.clang.Clang):
         ver = 'unknown'
         match = re.search(
             # Apple's LLVM compiler has its own versions, so suffix them.
-            r'^Apple (?:LLVM|clang) version ([^ )]+)', output
+            r'^Apple (?:LLVM|clang) version ([^ )]+)',
+            output,
+            # Multi-line, since 'Apple clang' may not be on the first line
+            # in particular, when run as gcc, it seems to output
+            # "Configured with: --prefix=..." as the first line
+            re.M,
         )
         if match:
             ver = match.group(match.lastindex)

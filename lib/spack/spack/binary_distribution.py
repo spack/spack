@@ -36,7 +36,6 @@ import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
-import spack.architecture as architecture
 
 _build_cache_relative_path = 'build_cache'
 
@@ -466,8 +465,8 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     web_util.push_to_url(
         specfile_path, remote_specfile_path, keep_original=False)
 
-    tty.msg('Buildache for "%s" written to \n %s' %
-            (spec, remote_spackfile_path))
+    tty.debug('Buildcache for "{0}" written to \n {1}'
+              .format(spec, remote_spackfile_path))
 
     try:
         # create an index.html for the build_cache directory so specs can be
@@ -498,6 +497,7 @@ def download_tarball(spec):
 
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
+        stage.create()
         try:
             stage.fetch()
             return stage.save_filename
@@ -602,15 +602,11 @@ def relocate_package(spec, allow_root):
         if not is_backup_file(text_name):
             text_names.append(text_name)
 
-# If we are installing back to the same location don't replace anything
+# If we are not installing back to the same install tree do the relocation
     if old_layout_root != new_layout_root:
-        paths_to_relocate = [old_spack_prefix, old_layout_root]
-        paths_to_relocate.extend(prefix_to_hash.keys())
-        files_to_relocate = list(filter(
-            lambda pathname: not relocate.file_is_relocatable(
-                pathname, paths_to_relocate=paths_to_relocate),
-            map(lambda filename: os.path.join(workdir, filename),
-                buildinfo['relocate_binaries'])))
+        files_to_relocate = [os.path.join(workdir, filename)
+                             for filename in buildinfo.get('relocate_binaries')
+                             ]
         # If the buildcache was not created with relativized rpaths
         # do the relocation of path in binaries
         if (spec.architecture.platform == 'darwin' or
@@ -646,8 +642,26 @@ def relocate_package(spec, allow_root):
                                new_spack_prefix,
                                prefix_to_prefix)
 
+        paths_to_relocate = [old_prefix, old_layout_root]
+        paths_to_relocate.extend(prefix_to_hash.keys())
+        files_to_relocate = list(filter(
+            lambda pathname: not relocate.file_is_relocatable(
+                pathname, paths_to_relocate=paths_to_relocate),
+            map(lambda filename: os.path.join(workdir, filename),
+                buildinfo['relocate_binaries'])))
         # relocate the install prefixes in binary files including dependencies
         relocate.relocate_text_bin(files_to_relocate,
+                                   old_prefix, new_prefix,
+                                   old_spack_prefix,
+                                   new_spack_prefix,
+                                   prefix_to_prefix)
+
+# If we are installing back to the same location
+# relocate the sbang location if the spack directory changed
+    else:
+        if old_spack_prefix != new_spack_prefix:
+            relocate.relocate_text(text_names,
+                                   old_layout_root, new_layout_root,
                                    old_prefix, new_prefix,
                                    old_spack_prefix,
                                    new_spack_prefix,
@@ -828,26 +842,24 @@ def get_spec(spec=None, force=False):
 
         mirror_dir = url_util.local_file_path(fetch_url_build_cache)
         if mirror_dir:
-            tty.msg("Finding buildcaches in %s" % mirror_dir)
+            tty.debug('Finding buildcaches in {0}'.format(mirror_dir))
             link = url_util.join(fetch_url_build_cache, specfile_name)
             urls.add(link)
 
         else:
-            tty.msg("Finding buildcaches at %s" %
-                    url_util.format(fetch_url_build_cache))
+            tty.debug('Finding buildcaches at {0}'
+                      .format(url_util.format(fetch_url_build_cache)))
             link = url_util.join(fetch_url_build_cache, specfile_name)
             urls.add(link)
 
     return try_download_specs(urls=urls, force=force)
 
 
-def get_specs(allarch=False):
+def get_specs():
     """
     Get spec.yaml's for build caches available on mirror
     """
     global _cached_specs
-    arch = architecture.Arch(architecture.platform(),
-                             'default_os', 'default_target')
 
     if not spack.mirror.MirrorCollection():
         tty.debug("No Spack mirrors are currently configured")
@@ -857,8 +869,8 @@ def get_specs(allarch=False):
         fetch_url_build_cache = url_util.join(
             mirror.fetch_url, _build_cache_relative_path)
 
-        tty.msg("Finding buildcaches at %s" %
-                url_util.format(fetch_url_build_cache))
+        tty.debug('Finding buildcaches at {0}'
+                  .format(url_util.format(fetch_url_build_cache)))
 
         index_url = url_util.join(fetch_url_build_cache, 'index.json')
 
@@ -867,10 +879,9 @@ def get_specs(allarch=False):
                 index_url, 'application/json')
             index_object = codecs.getreader('utf-8')(file_stream).read()
         except (URLError, web_util.SpackWebError) as url_err:
-            tty.error('Failed to read index {0}'.format(index_url))
-            tty.debug(url_err)
-            # Just return whatever specs we may already have cached
-            return _cached_specs
+            tty.debug('Failed to read index {0}'.format(index_url), url_err, 1)
+            # Continue on to the next mirror
+            continue
 
         tmpdir = tempfile.mkdtemp()
         index_file_path = os.path.join(tmpdir, 'index.json')
@@ -885,9 +896,7 @@ def get_specs(allarch=False):
         spec_list = db.query_local(installed=False)
 
         for indexed_spec in spec_list:
-            spec_arch = architecture.arch_for_spec(indexed_spec.architecture)
-            if (allarch is True or spec_arch == arch):
-                _cached_specs.add(indexed_spec)
+            _cached_specs.add(indexed_spec)
 
     return _cached_specs
 
@@ -909,15 +918,15 @@ def get_keys(install=False, trust=False, force=False):
 
         mirror_dir = url_util.local_file_path(fetch_url_build_cache)
         if mirror_dir:
-            tty.msg("Finding public keys in %s" % mirror_dir)
+            tty.debug('Finding public keys in {0}'.format(mirror_dir))
             files = os.listdir(str(mirror_dir))
             for file in files:
                 if re.search(r'\.key', file) or re.search(r'\.pub', file):
                     link = url_util.join(fetch_url_build_cache, file)
                     keys.add(link)
         else:
-            tty.msg("Finding public keys at %s" %
-                    url_util.format(fetch_url_build_cache))
+            tty.debug('Finding public keys at {0}'
+                      .format(url_util.format(fetch_url_build_cache)))
             # For s3 mirror need to request index.html directly
             p, links = web_util.spider(
                 url_util.join(fetch_url_build_cache, 'index.html'))
@@ -935,14 +944,14 @@ def get_keys(install=False, trust=False, force=False):
                         stage.fetch()
                     except fs.FetchError:
                         continue
-            tty.msg('Found key %s' % link)
+            tty.debug('Found key {0}'.format(link))
             if install:
                 if trust:
                     Gpg.trust(stage.save_filename)
-                    tty.msg('Added this key to trusted keys.')
+                    tty.debug('Added this key to trusted keys.')
                 else:
-                    tty.msg('Will not add this key to trusted keys.'
-                            'Use -t to install all downloaded keys')
+                    tty.debug('Will not add this key to trusted keys.'
+                              'Use -t to install all downloaded keys')
 
 
 def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
@@ -1029,7 +1038,7 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
     """
     rebuilds = {}
     for mirror in spack.mirror.MirrorCollection(mirrors).values():
-        tty.msg('Checking for built specs at %s' % mirror.fetch_url)
+        tty.debug('Checking for built specs at {0}'.format(mirror.fetch_url))
 
         rebuild_list = []
 
