@@ -44,7 +44,7 @@ class Plplot(CMakePackage):
     depends_on('libx11')
     depends_on('qhull')
     depends_on('swig')
-    depends_on('libsm', type=('build', 'link'))
+    depends_on('libsm', type='link')
 
     def cmake_args(self):
         args = []
