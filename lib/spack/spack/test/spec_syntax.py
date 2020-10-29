@@ -349,7 +349,7 @@ class TestSpecSyntax(object):
         assert len(specs) == 2
 
     @pytest.mark.db
-    def test_ambiguous_hash(self, mutable_database, monkeypatch):
+    def test_ambiguous_hash(self, mutable_database):
         x1 = Spec('a')
         x1.concretize()
         x1._hash = 'xy'

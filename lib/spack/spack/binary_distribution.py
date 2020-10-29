@@ -41,25 +41,19 @@ from spack.stage import Stage
 
 
 #: default root, relative to the Spack install path
-default_cache_root = os.path.join(spack.paths.opt_path, 'spack')
+default_binary_index_root = os.path.join(spack.paths.opt_path, 'spack')
 
 _build_cache_relative_path = 'build_cache'
 _build_cache_keys_relative_path = '_pgp'
 
 
-class BinaryDistributionCache(object):
+class BinaryCacheIndex(object):
     """
-    The BinaryDistributionCache stores and manages both:
+    The BinaryCacheIndex tracks what specs are available on (usually remote)
+    binary caches.
 
-    1. cached buildcache index files (the index.json describing the built
-    specs available on a mirror)
-
-    2. a cache of all the concrete built specs available on all the
-    configured mirrors.
-
-    The concrete spec cache (``2.`` above, stored as ``_mirrors_for_spec``)
-    is a "best effort" cache, in the sense that whenever we don't find what
-    we're looking for here, we will attempt to fetch it directly from
+    This index is "best effort", in the sense that whenever we don't find
+    what we're looking for here, we will attempt to fetch it directly from
     configured mirrors anyway.  Thus, it has the potential to speed things
     up, but cache misses shouldn't break any spack functionality.
 
@@ -73,23 +67,30 @@ class BinaryDistributionCache(object):
     """
 
     def __init__(self, cache_root=None):
-        self._cache_root = cache_root or default_cache_root
+        self._cache_root = cache_root or default_binary_index_root
         self._index_cache_root = os.path.join(self._cache_root, 'indices')
+
+        # the key associated with the serialized _local_index_cache
         self._index_contents_key = 'contents.json'
+
+        # a FileCache instance storing copies of remote binary cache indices
         self._index_file_cache = None
+
+        # stores a map of mirror URL to index hash and cache key (index path)
         self._local_index_cache = None
-        self._specs_already_associated = {}
+
+        # hashes of remote indices already ingested into the concrete spec
+        # cache (_mirrors_for_spec)
+        self._specs_already_associated = set()
 
         # _mirrors_for_spec is a dictionary mapping DAG hashes to lists of
-        # entries indicating mirrors where that concrete spec can be found:
+        # entries indicating mirrors where that concrete spec can be found.
+        # Each entry is a dictionary consisting of:
         #
-        # _mirrors_for_spec = {
-        #   daghash1: [
-        #     { 'mirror_url': <string>, 'spec': <concrete-spec> },
-        #     ...
-        #   ],
-        #   daghash2: [ ... ],
-        # }
+        #     - the mirror where the spec is, keyed by ``mirror_url``
+        #     - the concrete spec itself, keyed by ``spec`` (including the
+        #           full hash, since the dag hash may match but we want to
+        #           use the updated source if available)
         self._mirrors_for_spec = {}
 
     def _init_local_index_cache(self):
@@ -108,10 +109,15 @@ class BinaryDistributionCache(object):
                         cache_key) as cache_file:
                     self._local_index_cache = json.load(cache_file)
 
-    def clear_spec_cache(self):
+    def clear(self):
+        """ For testing purposes we need to be able to empty the cache and
+        clear associated data structures. """
+        if self._index_file_cache:
+            self._index_file_cache.destroy()
+            self._index_file_cache = None
+        self._local_index_cache = None
+        self._specs_already_associated = set()
         self._mirrors_for_spec = {}
-        self._specs_already_associated = {}
-        self._index_file_cache = None
 
     def _write_local_index_cache(self):
         self._init_local_index_cache()
@@ -119,12 +125,16 @@ class BinaryDistributionCache(object):
         with self._index_file_cache.write_transaction(cache_key) as (old, new):
             json.dump(self._local_index_cache, new)
 
-    def regenerate_spec_cache(self):
+    def regenerate_spec_cache(self, clear_existing=False):
         """ Populate the local cache of concrete specs (``_mirrors_for_spec``)
         from the locally cached buildcache index files.  This is essentially a
         no-op if it has already been done, as we keep track of the index
         hashes for which we have already associated the built specs. """
         self._init_local_index_cache()
+
+        if clear_existing:
+            self._specs_already_associated = set()
+            self._mirrors_for_spec = {}
 
         for mirror_url in self._local_index_cache:
             cache_entry = self._local_index_cache[mirror_url]
@@ -133,7 +143,7 @@ class BinaryDistributionCache(object):
             if cached_index_hash not in self._specs_already_associated:
                 self._associate_built_specs_with_mirror(cached_index_path,
                                                         mirror_url)
-                self._specs_already_associated[cached_index_hash] = True
+                self._specs_already_associated.add(cached_index_hash)
 
     def _associate_built_specs_with_mirror(self, cache_key, mirror_url):
         tmpdir = tempfile.mkdtemp()
@@ -196,7 +206,7 @@ class BinaryDistributionCache(object):
         This method does not trigger reading anything from remote mirrors, but
         rather just checks if the concrete spec is found within the cache.
 
-        The cache can be updated by calling ``update_local_index_cache()``.
+        The cache can be updated by calling ``update()`` on the cache.
 
         Args:
             spec (Spec): Concrete spec to find
@@ -244,7 +254,7 @@ class BinaryDistributionCache(object):
                         'spec': new_entry['spec'],
                     }
 
-    def update_local_index_cache(self):
+    def update(self):
         """ Make sure local cache of buildcache index files is up to date.
         If the same mirrors are configured as the last time this was called
         and none of the remote buildcache indices have changed, calling this
@@ -258,6 +268,8 @@ class BinaryDistributionCache(object):
         mirrors = spack.mirror.MirrorCollection()
         configured_mirror_urls = [m.fetch_url for m in mirrors.values()]
         items_to_remove = []
+        spec_cache_clear_needed = False
+        spec_cache_regenerate_needed = not self._mirrors_for_spec
 
         # First compare the mirror urls currently present in the cache to the
         # configured mirrors.  If we have a cached index for a mirror which is
@@ -268,14 +280,34 @@ class BinaryDistributionCache(object):
         # cache entry, we need to fetch and cache the indices from those
         # mirrors.
 
+        # If, during this process, we find that any mirrors for which we
+        # already have entries have either been removed, or their index
+        # hash has changed, then our concrete spec cache (_mirrors_for_spec)
+        # likely has entries that need to be removed, so we will clear it
+        # and regenerate that data structure.
+
+        # If, during this process, we find that there are new mirrors for
+        # which do not yet have an entry in our index cache, then we simply
+        # need to regenerate the concrete spec cache, but do not need to
+        # clear it first.
+
+        # Otherwise the concrete spec cache should not need to be updated at
+        # all.
+
         for cached_mirror_url in self._local_index_cache:
             cache_entry = self._local_index_cache[cached_mirror_url]
             cached_index_hash = cache_entry['index_hash']
             cached_index_path = cache_entry['index_path']
             if cached_mirror_url in configured_mirror_urls:
                 # May need to fetch the index and update the local caches
-                self.fetch_and_cache_index(
+                needs_regen = self.fetch_and_cache_index(
                     cached_mirror_url, expect_hash=cached_index_hash)
+                # In this block, the need to regenerate implies a need to
+                # clear as well.  This is the first place we set these to
+                # non-default values, so setting them False is fine.  After
+                # this, we should never set False again, only True.
+                spec_cache_clear_needed = needs_regen
+                spec_cache_regenerate_needed = needs_regen
             else:
                 # No longer have this mirror, cached index should be removed
                 items_to_remove.append({
@@ -283,6 +315,8 @@ class BinaryDistributionCache(object):
                     'cache_key': os.path.join(self._index_cache_root,
                                               cached_index_path)
                 })
+                spec_cache_clear_needed = True
+                spec_cache_regenerate_needed = True
 
         # Clean up items to be removed, identified above
         for item in items_to_remove:
@@ -297,9 +331,18 @@ class BinaryDistributionCache(object):
         for mirror_url in configured_mirror_urls:
             if mirror_url not in self._local_index_cache:
                 # Need to fetch the index and update the local caches
-                self.fetch_and_cache_index(mirror_url)
+                needs_regen = self.fetch_and_cache_index(mirror_url)
+                # Generally speaking, a new mirror wouldn't imply the need to
+                # clear the spec cache, but don't touch it, which lets the
+                # previous decisions stand.  Also, only change the need to
+                # regenerate possibly from False to True.
+                if needs_regen:
+                    spec_cache_regenerate_needed = True
 
         self._write_local_index_cache()
+
+        if spec_cache_regenerate_needed:
+            self.regenerate_spec_cache(clear_existing=spec_cache_clear_needed)
 
     def fetch_and_cache_index(self, mirror_url, expect_hash=None):
         """ Fetch a buildcache index file from a remote mirror and cache it.
@@ -312,12 +355,18 @@ class BinaryDistributionCache(object):
             expect_hash (str): If provided, this hash will be compared against
                 the index hash we retrieve from the mirror, to determine if we
                 need to fetch the index or not.
+
+        Returns:
+            True if this function thinks the concrete spec cache,
+                ``_mirrors_for_spec``, should be regenerated.  Returns False
+                otherwise.
         """
         index_fetch_url = url_util.join(
             mirror_url, _build_cache_relative_path, 'index.json')
         hash_fetch_url = url_util.join(
             mirror_url, _build_cache_relative_path, 'index.json.hash')
 
+        old_cache_key = None
         fetched_hash = None
 
         # Fetch the hash first so we can check if we actually need to fetch
@@ -333,10 +382,19 @@ class BinaryDistributionCache(object):
         # index from the mirror is when we already have a hash for this
         # mirror, we were able to retrieve one from the mirror, and
         # the two hashes are the same.
-        if expect_hash and fetched_hash and fetched_hash == expect_hash:
-            tty.debug('Cached index for {0} already up to date'.format(
-                mirror_url))
-            return
+        if expect_hash and fetched_hash:
+            if fetched_hash == expect_hash:
+                tty.debug('Cached index for {0} already up to date'.format(
+                    mirror_url))
+                return False
+            else:
+                # We expected a hash, we fetched a hash, and they were not the
+                # same.  If we end up fetching an index successfully and
+                # replacing our entry for this mirror, we should clean up the
+                # existing cache file
+                if mirror_url in self._local_index_cache:
+                    existing_entry = self._local_index_cache[mirror_url]
+                    old_cache_key = existing_entry['index_path']
 
         tty.debug('Fetching index from {0}'.format(index_fetch_url))
 
@@ -347,7 +405,10 @@ class BinaryDistributionCache(object):
         except (URLError, web_util.SpackWebError) as url_err:
             tty.debug('Unable to read index {0}'.format(index_fetch_url),
                       url_err, 1)
-            return
+            # We failed to fetch the index, even though we decided it was
+            # necessary.  However, regenerating the spec cache won't produce
+            # anything different than what it has already, so return False.
+            return False
 
         locally_computed_hash = compute_hash(index_object_str)
 
@@ -355,7 +416,11 @@ class BinaryDistributionCache(object):
             msg_tmpl = ('Computed hash ({0}) did not match remote ({1}), '
                         'indicating error in index transmission')
             tty.error(msg_tmpl.format(locally_computed_hash, expect_hash))
-            return
+            # We somehow got an index that doesn't match the remote one, maybe
+            # the next time we try we'll be successful.  Regardless, we're not
+            # updating our index cache with this, so don't regenerate the spec
+            # cache either.
+            return False
 
         url_hash = compute_hash(mirror_url)
 
@@ -370,18 +435,26 @@ class BinaryDistributionCache(object):
             'index_path': cache_key,
         }
 
+        # clean up the old cache_key if necessary
+        if old_cache_key:
+            self._index_file_cache.remove(old_cache_key)
 
-def _cache_manager():
+        # We fetched an index and updated the local index cache, we should
+        # regenerate the spec cache as a result.
+        return True
+
+
+def _binary_index():
     """Get the singleton store instance."""
     cache_root = spack.config.get(
-        'config:binary_distribution_cache_root', default_cache_root)
+        'config:binary_index_root', default_binary_index_root)
     cache_root = spack.util.path.canonicalize_path(cache_root)
 
-    return BinaryDistributionCache(cache_root)
+    return BinaryCacheIndex(cache_root)
 
 
-#: Singleton cache_manager instance
-cache_manager = llnl.util.lang.Singleton(_cache_manager)
+#: Singleton binary_index instance
+binary_index = llnl.util.lang.Singleton(_binary_index)
 
 
 class NoOverwriteException(spack.error.SpackError):
@@ -1277,7 +1350,7 @@ def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False):
                 filtered_candidates.append(candidate)
         return filtered_candidates
 
-    candidates = cache_manager.find_built_spec(spec)
+    candidates = binary_index.find_built_spec(spec)
     if candidates:
         results = filter_candidates(candidates)
 
@@ -1288,7 +1361,7 @@ def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False):
                                    force=force,
                                    full_hash_match=full_hash_match)
         if results:
-            cache_manager.update_spec(spec, results)
+            binary_index.update_spec(spec, results)
 
     return results
 
@@ -1301,13 +1374,12 @@ def update_cache_and_get_specs():
     local index cache (essentially a no-op if it has been done already and
     nothing has changed on the configured mirrors.)
     """
-    cache_manager.update_local_index_cache()
-    cache_manager.regenerate_spec_cache()
-    return cache_manager.get_all_built_specs()
+    binary_index.update()
+    return binary_index.get_all_built_specs()
 
 
 def clear_spec_cache():
-    cache_manager.clear_spec_cache()
+    binary_index.clear()
 
 
 def get_keys(install=False, trust=False, force=False, mirrors=None):
