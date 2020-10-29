@@ -84,7 +84,10 @@ def make_log_context(log_events, width=None):
         _, width = tty.terminal_size()
     if width <= 0:
         width = sys.maxsize
-    wrap_width = width - num_width - 6
+    if width < num_width + 6 + 1:
+        tty.die("width at least %d\n" % (num_width + 6 + 1))
+    else:
+        wrap_width = width - num_width - 6
 
     out = StringIO()
     next_line = 1
