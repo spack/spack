@@ -392,6 +392,7 @@ class Configuration(object):
 
     def push_scope(self, scope):
         """Add a higher precedence scope to the Configuration."""
+        self._get_config_memoized.cache.clear()
         cmd_line_scope = None
         if self.scopes:
             highest_precedence_scope = list(self.scopes.values())[-1]
@@ -498,6 +499,9 @@ class Configuration(object):
             scope (str): scope to be updated
             force (str): force the update
         """
+        # Invalidate the cache
+        self._get_config_memoized.cache.clear()
+
         if self.format_updates.get(section) and not force:
             msg = ('The "{0}" section of the configuration needs to be written'
                    ' to disk, but is currently using a deprecated format. '
@@ -552,6 +556,10 @@ class Configuration(object):
            }
 
         """
+        return self._get_config_memoized(section, scope)
+
+    @llnl.util.lang.memoized
+    def _get_config_memoized(self, section, scope):
         _validate_section_name(section)
 
         if scope is None:
@@ -711,6 +719,7 @@ def override(path_or_scope, value=None):
     yield config
 
     scope = config.remove_scope(overrides.name)
+    config._get_config_memoized.cache.clear()
     assert scope is overrides
 
 

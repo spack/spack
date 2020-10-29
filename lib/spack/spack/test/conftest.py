@@ -318,6 +318,7 @@ spack.config.config = spack.config._config()
 @contextlib.contextmanager
 def use_configuration(config):
     """Context manager to swap out the global Spack configuration."""
+    config._get_config_memoized.cache.clear()
     saved = spack.config.config
     spack.config.config = config
 
