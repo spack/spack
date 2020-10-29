@@ -94,6 +94,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('dihydrogen +half', when='+dihydrogen +half')
     depends_on('dihydrogen@0.1', when='@0.101:0.101.99 +dihydrogen')
     depends_on('dihydrogen@:0.0,0.2:', when='@:0.90,0.102: +dihydrogen')
+    conflicts('~dihydrogen', when='+distconv')
 
     depends_on('cudnn', when='@0.90:0.101 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
