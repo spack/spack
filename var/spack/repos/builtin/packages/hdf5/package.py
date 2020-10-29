@@ -6,7 +6,6 @@
 import shutil
 import sys
 
-
 class Hdf5(AutotoolsPackage):
     """HDF5 is a data model, library, and file format for storing and managing
     data. It supports an unlimited variety of datatypes, and is designed for
@@ -325,6 +324,9 @@ class Hdf5(AutotoolsPackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
+        self._check_install()
+
+    def _check_install(self):
         # Build and run a small program to test the installed HDF5 library
         spec = self.spec
         print("Checking HDF5 installation...")
@@ -423,4 +425,4 @@ HDF5 version {version} {version}
         self._test_example()
 
         # Run existing install check
-        self.check_install()
+        self._check_install()
