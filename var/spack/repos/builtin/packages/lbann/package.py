@@ -19,7 +19,7 @@ class Lbann(CMakePackage, CudaPackage):
 
     maintainers = ['bvanessen']
 
-    version('develop', branch='develop')
+    version('develop', preferred=True, branch='develop')
     version('0.101', sha256='69d3fe000a88a448dc4f7e263bcb342c34a177bd9744153654528cd86335a1f7')
     version('0.100', sha256='d1bab4fb6f1b80ae83a7286cc536a32830890f6e5b0c3107a17c2600d0796912')
     version('0.99',   sha256='3358d44f1bc894321ce07d733afdf6cb7de39c33e3852d73c9f31f530175b7cd')
@@ -46,319 +46,49 @@ class Lbann(CMakePackage, CudaPackage):
     variant('conduit', default=True,
             description='Builds with support for Conduit Library '
             '(note that for v0.99 conduit is required)')
+
+    variant('dihydrogen', default=False,
+            description='Builds with support for DiHydrogen Tensor Library')
+    variant('distconv', default=False,
+            description='Builds with support for spatial, filter, or channel '
+            'distributed convolutions')
+
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('docs', default=False, description='Builds with support for building documentation')
     variant('extras', default=False, description='Add python modules for LBANN related tools')
 
-    variant('mpi', default='openmpi', values=('openmpi', 'mvapich2', 'spectrum-mpi', 'mpich'),
-            description='Enable selection of MPI library to avoid a package manager bug '
-            'in concretization of virtual packages with minimum requirements')
-    depends_on('openmpi@4:', when='mpi=openmpi')
-    depends_on('mvapich2', when='mpi=mvapich2')
-    depends_on('spectrum-mpi@rolling-release', when='mpi=spectrum-mpi')
-    depends_on('mpich', when='mpi=mpich')
-
     conflicts('@:0.90,0.99:', when='~conduit')
 
     depends_on('cmake@3.16.0:', type='build')
-    depends_on('hwloc@2.2.0:')
+    depends_on('mpi')
+    depends_on('hwloc@2.0:')
 
-    ############################################################################
-    # Start of @0.95:0.100
-    ############################################################################
-    ############################################################################
-    # Hydrogen for mpi=mvapich2
-    ############################################################################
-    depends_on('hydrogen@:1.3.4 mpi=mvapich2 +openmp_blas +shared +int64', 
-               when='mpi=mvapich2 @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=mvapich2 +openmp_blas +shared +int64 +al', 
-               when='mpi=mvapich2 @0.95:0.100 +al')
+    #depends_on['dihydrogen@:0.1:', when='+dihydrogen')
+    #depends_on['dihydrogen@:0.1: +legacy', when='+dihydrogen +distconv')
 
-    depends_on('hydrogen@:1.3.4 mpi=mvapich2 +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=mvapich2 @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=mvapich2 +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=mvapich2 @0.95:0.100 +al')
+    # Specify the correct versions of Hydrogen
+    depends_on('hydrogen@:1.3.4', when='@0.95:0.100')
+    depends_on('hydrogen@1.4.0:1.4.99', when='@0.101:0.101.99')
+    depends_on('hydrogen@1.5.0:', when='@:0.90,0.102:')
 
-    depends_on('hydrogen@:1.3.4 mpi=mvapich2 +openmp_blas +shared +int64 +cuda',
-               when='mpi=mvapich2 +cuda @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=mvapich2 +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=mvapich2 +cuda @0.95:0.100 +al')
-
-    depends_on('hydrogen@:1.3.4 mpi=mvapich2 +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=mvapich2 @0.95:0.100 +cuda')
-    depends_on('hydrogen@:1.3.4 mpi=mvapich2 +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=mvapich2 @0.95:0.100 +cuda +al')
-    ############################################################################
-    # Hydrogen for mpi=openmpi
-    ############################################################################
-    depends_on('hydrogen@:1.3.4 mpi=openmpi +openmp_blas +shared +int64', 
-               when='mpi=openmpi @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=openmpi +openmp_blas +shared +int64 +al', 
-               when='mpi=openmpi @0.95:0.100 +al')
-
-    depends_on('hydrogen@:1.3.4 mpi=openmpi +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=openmpi @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=openmpi +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=openmpi @0.95:0.100 +al')
-
-    depends_on('hydrogen@:1.3.4 mpi=openmpi +openmp_blas +shared +int64 +cuda',
-               when='mpi=openmpi +cuda @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=openmpi +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=openmpi +cuda @0.95:0.100 +al')
-
-    depends_on('hydrogen@:1.3.4 mpi=openmpi +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=openmpi @0.95:0.100 +cuda')
-    depends_on('hydrogen@:1.3.4 mpi=openmpi +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=openmpi @0.95:0.100 +cuda +al')
-    ############################################################################
-    # Hydrogen for mpi=spectrum-mpi
-    ############################################################################
-    depends_on('hydrogen@:1.3.4 mpi=spectrum-mpi +openmp_blas +shared +int64', 
-               when='mpi=spectrum-mpi @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=spectrum-mpi +openmp_blas +shared +int64 +al', 
-               when='mpi=spectrum-mpi @0.95:0.100 +al')
-
-    depends_on('hydrogen@:1.3.4 mpi=spectrum-mpi +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=spectrum-mpi @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=spectrum-mpi +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=spectrum-mpi @0.95:0.100 +al')
-
-    depends_on('hydrogen@:1.3.4 mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda',
-               when='mpi=spectrum-mpi +cuda @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=spectrum-mpi +cuda @0.95:0.100 +al')
-
-    depends_on('hydrogen@:1.3.4 mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=spectrum-mpi @0.95:0.100 +cuda')
-    depends_on('hydrogen@:1.3.4 mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=spectrum-mpi @0.95:0.100 +cuda +al')
-    ############################################################################
-    # Hydrogen for mpi=mpich
-    ############################################################################
-    depends_on('hydrogen@:1.3.4 mpi=mpich +openmp_blas +shared +int64', 
-               when='mpi=mpich @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=mpich +openmp_blas +shared +int64 +al', 
-               when='mpi=mpich @0.95:0.100 +al')
-
-    depends_on('hydrogen@:1.3.4 mpi=mpich +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=mpich @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=mpich +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=mpich @0.95:0.100 +al')
-
-    depends_on('hydrogen@:1.3.4 mpi=mpich +openmp_blas +shared +int64 +cuda',
-               when='mpi=mpich +cuda @0.95:0.100 ~al')
-    depends_on('hydrogen@:1.3.4 mpi=mpich +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=mpich +cuda @0.95:0.100 +al')
-
-    depends_on('hydrogen@:1.3.4 mpi=mpich +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=mpich @0.95:0.100 +cuda')
-    depends_on('hydrogen@:1.3.4 mpi=mpich +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=mpich @0.95:0.100 +cuda +al')
-    ############################################################################
-    # End of @0.95:0.100
-    ############################################################################
-
-    ############################################################################
-    # Start of @0.101
-    ############################################################################
-    ############################################################################
-    # Hydrogen for mpi=mvapich2
-    ############################################################################
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mvapich2 +openmp_blas +shared +int64', 
-               when='mpi=mvapich2 @0.101:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mvapich2 +openmp_blas +shared +int64 +al', 
-               when='mpi=mvapich2 @0.101:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mvapich2 +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=mvapich2 @0.101:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mvapich2 +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=mvapich2 @0.101:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mvapich2 +openmp_blas +shared +int64 +cuda',
-               when='mpi=mvapich2 +cuda @0.101:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mvapich2 +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=mvapich2 +cuda @0.101:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mvapich2 +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=mvapich2 @0.101:0.101.99 +cuda')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mvapich2 +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=mvapich2 @0.101:0.101.99 +cuda +al')
-    ############################################################################
-    # Hydrogen for mpi=openmpi
-    ############################################################################
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=openmpi +openmp_blas +shared +int64', 
-               when='mpi=openmpi @0.101:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=openmpi +openmp_blas +shared +int64 +al', 
-               when='mpi=openmpi @0.101:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=openmpi +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=openmpi @0.101:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=openmpi +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=openmpi @0.101:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=openmpi +openmp_blas +shared +int64 +cuda',
-               when='mpi=openmpi +cuda @0.101:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=openmpi +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=openmpi +cuda @0.101:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=openmpi +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=openmpi @0.101:0.101.99 +cuda')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=openmpi +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=openmpi @0.101:0.101.99 +cuda +al')
-    ############################################################################
-    # Hydrogen for mpi=spectrum-mpi
-    ############################################################################
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=spectrum-mpi +openmp_blas +shared +int64', 
-               when='mpi=spectrum-mpi @0.101:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=spectrum-mpi +openmp_blas +shared +int64 +al', 
-               when='mpi=spectrum-mpi @0.101:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=spectrum-mpi +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=spectrum-mpi @0.101:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=spectrum-mpi +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=spectrum-mpi @0.101:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda',
-               when='mpi=spectrum-mpi +cuda @0.101:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=spectrum-mpi +cuda @0.101:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=spectrum-mpi @0.101:0.101.99 +cuda')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=spectrum-mpi @0.101:0.101.99 +cuda +al')
-    ############################################################################
-    # Hydrogen for mpi=mpich
-    ############################################################################
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mpich +openmp_blas +shared +int64', 
-               when='mpi=mpich @0.101.0:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mpich +openmp_blas +shared +int64 +al', 
-               when='mpi=mpich @0.101.0:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mpich +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=mpich @0.101.0:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mpich +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=mpich @0.101.0:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mpich +openmp_blas +shared +int64 +cuda',
-               when='mpi=mpich +cuda @0.101.0:0.101.99 ~al')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mpich +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=mpich +cuda @0.101.0:0.101.99 +al')
-
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mpich +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=mpich @0.101.0:0.101.99 +cuda')
-    depends_on('hydrogen@1.4.0:1.4.99 mpi=mpich +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=mpich @0.101.0:0.101.99 +cuda +al')
-    ############################################################################
-    # End of @0.101
-    ############################################################################
-
-    ############################################################################
-    # Start of @0.102
-    ############################################################################
-    ############################################################################
-    # Hydrogen for mpi=mvapich2
-    ############################################################################
-    depends_on('hydrogen@1.5.0: mpi=mvapich2 +openmp_blas +shared +int64', 
-               when='mpi=mvapich2 @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=mvapich2 +openmp_blas +shared +int64 +al', 
-               when='mpi=mvapich2 @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=mvapich2 +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=mvapich2 @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=mvapich2 +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=mvapich2 @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=mvapich2 +openmp_blas +shared +int64 +cuda',
-               when='mpi=mvapich2 +cuda @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=mvapich2 +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=mvapich2 +cuda @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=mvapich2 +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=mvapich2 @:0.90,0.102: +cuda')
-    depends_on('hydrogen@1.5.0: mpi=mvapich2 +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=mvapich2 @:0.90,0.102: +cuda +al')
-    ############################################################################
-    # Hydrogen for mpi=openmpi
-    ############################################################################
-    depends_on('hydrogen@1.5.0: mpi=openmpi +openmp_blas +shared +int64', 
-               when='mpi=openmpi @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=openmpi +openmp_blas +shared +int64 +al', 
-               when='mpi=openmpi @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=openmpi +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=openmpi @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=openmpi +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=openmpi @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=openmpi +openmp_blas +shared +int64 +cuda',
-               when='mpi=openmpi +cuda @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=openmpi +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=openmpi +cuda @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=openmpi +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=openmpi @:0.90,0.102: +cuda')
-    depends_on('hydrogen@1.5.0: mpi=openmpi +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=openmpi @:0.90,0.102: +cuda +al')
-    ############################################################################
-    # Hydrogen for mpi=spectrum-mpi
-    ############################################################################
-    depends_on('hydrogen@1.5.0: mpi=spectrum-mpi +openmp_blas +shared +int64', 
-               when='mpi=spectrum-mpi @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=spectrum-mpi +openmp_blas +shared +int64 +al', 
-               when='mpi=spectrum-mpi @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=spectrum-mpi +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=spectrum-mpi @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=spectrum-mpi +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=spectrum-mpi @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda',
-               when='mpi=spectrum-mpi +cuda @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=spectrum-mpi +cuda @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=spectrum-mpi @:0.90,0.102: +cuda')
-    depends_on('hydrogen@1.5.0: mpi=spectrum-mpi +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=spectrum-mpi @:0.90,0.102: +cuda +al')
-    ############################################################################
-    # Hydrogen for mpi=mpich
-    ############################################################################
-    depends_on('hydrogen@1.5.0: mpi=mpich +openmp_blas +shared +int64', 
-               when='mpi=mpich @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=mpich +openmp_blas +shared +int64 +al', 
-               when='mpi=mpich @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=mpich +openmp_blas +shared +int64 build_type=Debug',
-               when='build_type=Debug mpi=mpich @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=mpich +openmp_blas +shared +int64 build_type=Debug +al',
-               when='build_type=Debug mpi=mpich @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=mpich +openmp_blas +shared +int64 +cuda',
-               when='mpi=mpich +cuda @:0.90,0.102: ~al')
-    depends_on('hydrogen@1.5.0: mpi=mpich +openmp_blas +shared +int64 +cuda +al',
-               when='mpi=mpich +cuda @:0.90,0.102: +al')
-
-    depends_on('hydrogen@1.5.0: mpi=mpich +openmp_blas +shared +int64 +cuda build_type=Debug',
-               when='build_type=Debug mpi=mpich @:0.90,0.102: +cuda')
-    depends_on('hydrogen@1.5.0: mpi=mpich +openmp_blas +shared +int64 +cuda build_type=Debug +al',
-               when='build_type=Debug mpi=mpich @:0.90,0.102: +cuda +al')
-    ############################################################################
-    # End of @0.102
-    ############################################################################
+    # Add Hydrogen variants
+    depends_on('hydrogen +openmp_blas +shared +int64')
+    depends_on('hydrogen +al', when='+al')
+    depends_on('hydrogen +cuda', when='+cuda')
+    depends_on('hydrogen build_type=Debug', when='build_type=Debug')
 
     # Older versions depended on Elemental not Hydrogen
     depends_on('elemental +openmp_blas +shared +int64', when='@0.91:0.94')
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
                when='build_type=Debug @0.91:0.94')
 
-    depends_on('aluminum@:0.3.3', when='@0.95:0.100 +al ~cuda')
-    depends_on('aluminum@:0.3.3 +cuda +nccl +ht +cuda_rma', when='@0.95:0.100 +al +cuda')
-    depends_on('aluminum@0.4:0.4.99', when='@0.101:0.101.99 +al ~cuda')
-    depends_on('aluminum@0.4:0.4.99 +cuda +nccl +ht +cuda_rma', when='@0.101:0.101.99 +al +cuda')
-    depends_on('aluminum@0.5:', when='@:0.90,0.102: +al ~cuda')
-    depends_on('aluminum@0.5: +cuda +nccl +ht +cuda_rma', when='@:0.90,0.102: +al +cuda')
+    # Specify the correct version of Aluminum
+    depends_on('aluminum@:0.3.99', when='@0.95:0.100 +al')
+    depends_on('aluminum@0.4:0.4.99', when='@0.101:0.101.99 +al')
+    depends_on('aluminum@0.5:', when='@:0.90,0.102: +al')
+
+    # Add Aluminum variants
+    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
 
     depends_on('cudnn', when='@0.90:0.101 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
@@ -367,13 +97,15 @@ class Lbann(CMakePackage, CudaPackage):
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
-    # Note that for Power systems we want the environment to add  +powerpc +vsx
-    depends_on('opencv@3.2.0: +core +highgui +imgproc +jpeg +png +tiff +zlib '
-               '+fast-math ~calib3d ~cuda ~dnn ~eigen'
+    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui +imgproc +jpeg '
+               '+png +tiff +zlib +fast-math ~calib3d ~cuda ~dnn ~eigen'
                '~features2d ~flann ~gtk ~ipp ~ipp_iw ~jasper ~java ~lapack ~ml'
                '~openmp ~opencl ~opencl_svm ~openclamdblas ~openclamdfft'
-               '~pthreads_pf ~python ~qt ~stitching ~superres ~ts ~video'
+               '~pthreads_pf ~python ~qt +shared ~stitching ~superres ~ts ~video'
                '~videostab ~videoio ~vtk', when='+opencv')
+
+    # Note that for Power systems we want the environment to add  +powerpc +vsx
+    depends_on('opencv@4.1.0: +powerpc +vsx', when='+opencv arch=ppc64le:')
 
     depends_on('cnpy')
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
@@ -381,7 +113,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0.99 +conduit')
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
 
-    depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99:')
+    depends_on('python@3:3.7.9 +shared', type=('build', 'run'), when='@:0.90,0.99:')
     extends("python")
     depends_on('py-setuptools', type='build')
     depends_on('py-argparse', type='run', when='@:0.90,0.99: ^python@:2.6')
@@ -393,7 +125,8 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99: +extras')
     depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99: +extras')
     depends_on('py-pytest', type='test', when='@:0.90,0.99:')
-    depends_on('py-protobuf+cpp@3.6.1:', type=('build', 'run'), when='@:0.90,0.99:')
+    depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99:')
+    depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
     depends_on('py-breathe', type='build', when='+docs')
     depends_on('doxygen', type='build', when='+docs')
@@ -496,6 +229,14 @@ class Lbann(CMakePackage, CudaPackage):
                     args.extend([
                         '-DNCCL_DIR={0}'.format(
                             spec['nccl'].prefix)])
+
+        if spec.satisfies('@:0.90') or spec.satisfies('@0.100:'):
+            args.extend([
+                '-DLBANN_WITH_DIHYDROGEN:BOOL=%s' % ('+dihydrogen' in spec)])
+
+        if spec.satisfies('@:0.90') or spec.satisfies('@0.101:'):
+            args.extend([
+                '-DLBANN_WITH_DISTCONV:BOOL=%s' % ('+dihydrogen' in spec)])
 
         return args
 

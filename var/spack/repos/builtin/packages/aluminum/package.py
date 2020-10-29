@@ -35,17 +35,10 @@ class Aluminum(CMakePackage, CudaPackage):
     variant('cuda_rma', default=False, description='Builds with support for CUDA intra-node '
             ' Put/Get and IPC RMA functionality')
 
-    variant('mpi', default='openmpi', values=('openmpi', 'mvapich2', 'spectrum-mpi', 'mpich'),
-            description='Enable selection of MPI library to avoid spack bug in concretization '
-            'of virtual packages with minimum requirements')
-    depends_on('openmpi@4:', when='mpi=openmpi')
-    depends_on('mvapich2', when='mpi=mvapich2')
-    depends_on('spectrum-mpi@rolling-release', when='mpi=spectrum-mpi')
-    depends_on('mpich', when='mpi=mpich')
-
     depends_on('cmake@3.16.0:', type='build')
+    depends_on('mpi')
     depends_on('nccl', when='+nccl')
-    depends_on('hwloc@2.2.0:')
+    depends_on('hwloc@2.0:')
 
     generator = 'Ninja'
     depends_on('ninja', type='build')

@@ -51,14 +51,6 @@ class Dihydrogen(CMakePackage, CudaPackage):
     variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl'),
             description='Enable the use of OpenBlas/MKL/Accelerate/ESSL')
 
-    variant('mpi', default='openmpi', values=('openmpi', 'mvapich2', 'spectrum-mpi', 'mpich'),
-            description='Enable selection of MPI library to avoid spack bug in concretization '
-            'of virtual packages with minimum requirements')
-    depends_on('openmpi@4:', when='mpi=openmpi')
-    depends_on('mvapich2', when='mpi=mvapich2')
-    depends_on('spectrum-mpi@rolling-release', when='mpi=spectrum-mpi')
-    depends_on('mpich', when='mpi=mpich')
-
     # Override the default set of CUDA architectures with the relevant
     # subset from lib/spack/spack/build_systems/cuda.py
     cuda_arch_values = [
@@ -72,44 +64,15 @@ class Dihydrogen(CMakePackage, CudaPackage):
             description='CUDA architecture',
             values=spack.variant.auto_or_any_combination_of(*cuda_arch_values))
 
+    depends_on('mpi')
     depends_on('catch2', type='test')
 
-    ############################################################################
-    # Aluminum for mpi=mvapich2
-    ############################################################################
-    depends_on('aluminum@0.4:0.4.99 mpi=mvapich2', when='@0.1:0.1.99 mpi=mvapich2 +al ~cuda')
-    depends_on('aluminum@0.4:0.4.99 mpi=mvapich2 +cuda +nccl +ht +cuda_rma',
-               when='@0.1:0.1.99 mpi=mvapich2 +al +cuda')
-    depends_on('aluminum@0.5: mpi=mvapich2', when='@:0.0,0.2: mpi=mvapich2 +al ~cuda')
-    depends_on('aluminum@0.5: mpi=mvapich2 +cuda +nccl +ht +cuda_rma',
-               when='@:0.0,0.2: mpi=mvapich2 +al +cuda')
-    ############################################################################
-    # Aluminum for mpi=openmpi
-    ############################################################################
-    depends_on('aluminum@0.4:0.4.99 mpi=openmpi', when='@0.1:0.1.99 mpi=openmpi +al ~cuda')
-    depends_on('aluminum@0.4:0.4.99 mpi=openmpi +cuda +nccl +ht +cuda_rma',
-               when='@0.1:0.1.99 mpi=openmpi +al +cuda')
-    depends_on('aluminum@0.5: mpi=openmpi', when='@:0.0,0.2: mpi=openmpi +al ~cuda')
-    depends_on('aluminum@0.5: mpi=openmpi +cuda +nccl +ht +cuda_rma',
-               when='@:0.0,0.2: mpi=openmpi +al +cuda')
-    ############################################################################
-    # Aluminum for mpi=spectrum-mpi
-    ############################################################################
-    depends_on('aluminum@0.4:0.4.99 mpi=spectrum-mpi', when='@0.1:0.1.99 mpi=spectrum-mpi +al ~cuda')
-    depends_on('aluminum@0.4:0.4.99 mpi=spectrum-mpi +cuda +nccl +ht +cuda_rma',
-               when='@0.1:0.1.99 mpi=spectrum-mpi +al +cuda')
-    depends_on('aluminum@0.5: mpi=spectrum-mpi', when='@:0.0,0.2: mpi=spectrum-mpi +al ~cuda')
-    depends_on('aluminum@0.5: mpi=spectrum-mpi +cuda +nccl +ht +cuda_rma',
-               when='@:0.0,0.2: mpi=spectrum-mpi +al +cuda')
-    ############################################################################
-    # Aluminum for mpi=mpich
-    ############################################################################
-    depends_on('aluminum@0.4:0.4.99 mpi=mpich', when='@0.1:0.1.99 mpi=mpich +al ~cuda')
-    depends_on('aluminum@0.4:0.4.99 mpi=mpich +cuda +nccl +ht +cuda_rma',
-               when='@0.1:0.1.99 mpi=mpich +al +cuda')
-    depends_on('aluminum@0.5: mpi=mpich', when='@:0.0,0.2: mpi=mpich +al ~cuda')
-    depends_on('aluminum@0.5: mpi=mpich +cuda +nccl +ht +cuda_rma',
-               when='@:0.0,0.2: mpi=mpich +al +cuda')
+    # Specify the correct version of Aluminum
+    depends_on('aluminum@0.4:0.4.99', when='@0.1:0.1.99 +al')
+    depends_on('aluminum@0.5:', when='@:0.0,0.2: +al')
+
+    # Add Aluminum variants
+    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
 
     depends_on('cuda', when=('+cuda' or '+legacy'))
     depends_on('cudnn', when=('+cuda' or '+legacy'))
