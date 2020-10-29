@@ -18,6 +18,7 @@ class Lapackpp(CMakePackage):
     maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
     version('master', branch='master')
+    version('2020.10.02', sha256='8dde9b95d75b494c4f8b893d68034e95b7a7541981359acb97b6c1c4a9c45cd9')
     version('2020.10.01', sha256='ecd659730b4c3cfb8d2595f9bbb6af65d96b79397db654f17fe045bdfea841c0')
     version('2020.10.00', sha256='5f6ab3bd3794711818a3a50198efd29571520bf455e13ffa8ba50fa8376d7d1a')
     version('2020.09.00', sha256='b5d4defa8eb314f21b3788563da9d264e2b084f2eb6535f6c6798ba798a29ee5')
