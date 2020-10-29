@@ -54,9 +54,9 @@ class Mpip(AutotoolsPackage):
 
     conflicts('platform=darwin')
 
-    # make-wrappers.py wrapper generator script requres python
-    depends_on('python@2:', when='@3.5:')
-    depends_on('python@:2', when='@3.4.1')
+    # make-wrappers.py wrapper generator script requires python
+    depends_on('python@2:', when='@3.5:', type='build')
+    depends_on('python@:2', when='@3.4.1', type='build')
     depends_on('mpi')
 
     #  Ideally would use libunwind, but provide backtrace and
