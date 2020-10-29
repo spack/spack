@@ -22,9 +22,7 @@ class Poplddecay(MakefilePackage):
 
     build_directory = 'src'
 
+    build_targets = ['all', 'clean']
+
     def install(self, spec, prefix):
-        mkdirp(prefix.bin.mis)
-        install('bin/PopLDdecay', prefix.bin)
-        install('bin/Plot_MultiPop.pl', prefix.bin)
-        install('bin/Plot_OnePop.pl', prefix.bin)
-        install_tree('bin/mis', prefix.bin.mis)
+        install_tree('bin', prefix.bin)
