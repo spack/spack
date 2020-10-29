@@ -46,7 +46,8 @@ class Lbann(CMakePackage, CudaPackage):
     variant('conduit', default=True,
             description='Builds with support for Conduit Library '
             '(note that for v0.99 conduit is required)')
-
+    variant('half', default=False,
+            description='Builds with support for FP16 precision data types')
     variant('dihydrogen', default=False,
             description='Builds with support for DiHydrogen Tensor Library')
     variant('distconv', default=False,
@@ -63,9 +64,6 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('hwloc@2.0:')
 
-    #depends_on['dihydrogen@:0.1:', when='+dihydrogen')
-    #depends_on['dihydrogen@:0.1: +legacy', when='+dihydrogen +distconv')
-
     # Specify the correct versions of Hydrogen
     depends_on('hydrogen@:1.3.4', when='@0.95:0.100')
     depends_on('hydrogen@1.4.0:1.4.99', when='@0.101:0.101.99')
@@ -75,6 +73,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('hydrogen +openmp_blas +shared +int64')
     depends_on('hydrogen +al', when='+al')
     depends_on('hydrogen +cuda', when='+cuda')
+    depends_on('hydrogen +half', when='+half')
     depends_on('hydrogen build_type=Debug', when='build_type=Debug')
 
     # Older versions depended on Elemental not Hydrogen
@@ -90,9 +89,19 @@ class Lbann(CMakePackage, CudaPackage):
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
 
+    depends_on('dihydrogen +openmp', when='+dihydrogen')
+    depends_on('dihydrogen +cuda', when='+dihydrogen +cuda')
+    depends_on('dihydrogen +al', when='+dihydrogen +al')
+    depends_on('dihydrogen +legacy +cuda', when='+distconv')
+    depends_on('dihydrogen +half', when='+dihydrogen +half')
+    depends_on('dihydrogen@0.1', when='@0.101:0.101.99 +dihydrogen')
+    depends_on('dihydrogen@:0.0,0.2:', when='@:0.90,0.102: +dihydrogen')
+
     depends_on('cudnn', when='@0.90:0.101 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
     depends_on('cub', when='@0.94:0.98.2 +cuda')
+
+    depends_on('half', when='+half')
 
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
@@ -236,7 +245,7 @@ class Lbann(CMakePackage, CudaPackage):
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.101:'):
             args.extend([
-                '-DLBANN_WITH_DISTCONV:BOOL=%s' % ('+dihydrogen' in spec)])
+                '-DLBANN_WITH_DISTCONV:BOOL=%s' % ('+distconv' in spec)])
 
         return args
 
