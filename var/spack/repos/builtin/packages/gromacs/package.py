@@ -91,7 +91,6 @@ class Gromacs(CMakePackage):
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
     depends_on('fftw-api@3')
-    depends_on('mkl', when='fft=mkl')
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cmake@3.13.0:3.99.99', type='build', when='@master')
