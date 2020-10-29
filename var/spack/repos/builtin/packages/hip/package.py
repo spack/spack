@@ -56,7 +56,9 @@ class Hip(CMakePackage):
         # required in the packages.yaml file. Please contact a developer
         # for details.
         mydict = {}
-        fallback_path = os.path.abspath('/opt/rocm')
+        # typically, self.spec.prefix is /opt/rocm/hip, so fallback_path
+        # will be /opt/rocm after dirname is called.
+        fallback_path = os.path.dirname(self.spec.prefix)
         found_fallback_path = os.path.isdir(fallback_path)
 
         if 'llvm-amdgpu' in self.spec:
