@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class PyDocutils(PythonPackage):
@@ -39,3 +40,8 @@ class PyDocutils(PythonPackage):
     depends_on('python@2.2.1:3',      when='@0.6:0.9',       type=('build', 'run'))
     depends_on('python@2.2.1:2.8',    when='@0.5.0:0.5.999', type=('build', 'run'))
     depends_on('python@2.1:2.8',      when='@:0.4',          type=('build', 'run'))
+
+    def install(self, spec, prefix):
+        super.install(spec, prefix)
+        os.symlink(os.path.join(prefix, "bin", "rst2man.py"),
+                   os.path.join(prefix, "bin", "rst2man"))
