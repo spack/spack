@@ -37,7 +37,7 @@ class Lapackpp(CMakePackage):
         return [
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             '-Dbuild_tests=%s'       % self.run_tests,
-            '-DLAPACK_LIBRARIES=%s'  % spec['lapack'].libs.joined(';')
+            self.define('LAPACK_LIBRARIES', spec['lapack'].libs.ld_flags)
         ]
 
     def check(self):
