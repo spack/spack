@@ -67,11 +67,11 @@ class Hip(CMakePackage):
                 raise RuntimeError(msg)
 
             return {
-                'llvm-amdgpu': fallback_prefix.llvm
-                'hsa-rocr-dev': fallback_prefix.hsa
+                'llvm-amdgpu': fallback_prefix.llvm,
+                'hsa-rocr-dev': fallback_prefix.hsa,
                 'rocminfo': fallback_prefix.share.info,
-                'rocm-device-libs': fallback_prefix
-                }
+                'rocm-device-libs': fallback_prefix,
+            }
         else:
             return dict((name, self.spec[name].prefix)
                         for name in ('llvm-amdgpu', 'hsa-rocr-dev', 'rocminfo',
