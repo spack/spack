@@ -26,3 +26,4 @@ class PyIpyparallel(PythonPackage):
     depends_on('py-jupyter-client', type=('build', 'run'))
     depends_on('py-ipykernel@4.4:', type=('build', 'run'))
     depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
+    depends_on('py-tornado@4:', type=('build', 'run'))
