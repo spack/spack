@@ -87,7 +87,7 @@ properties = {
                 ],
             },
             'allow_sgid': {'type': 'boolean'},
-            'binary_distribution_cache_root': {'type': 'string'},
+            'binary_index_root': {'type': 'string'},
         },
     },
 }
