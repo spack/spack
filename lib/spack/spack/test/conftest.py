@@ -318,9 +318,7 @@ spack.config.config = spack.config._config()
 @contextlib.contextmanager
 def use_configuration(config):
     """Context manager to swap out the global Spack configuration."""
-    config._get_config_memoized.cache.clear()
-    saved = spack.config.config
-    spack.config.config = config
+    saved = spack.config.replace_config(config)
 
     # Avoid using real spack configuration that has been cached by other
     # tests, and avoid polluting the cache with spack test configuration
@@ -330,7 +328,7 @@ def use_configuration(config):
 
     yield
 
-    spack.config.config = saved
+    spack.config.replace_config(saved)
     spack.compilers._cache_config_file = saved_compiler_cache
 
 
