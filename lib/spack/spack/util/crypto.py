@@ -45,8 +45,8 @@ class DeprecatedHash(object):
                           " supported in future Spack releases."
                           .format(self.hash_alg))
         if self.disable_security_check:
-            return hashlib.new(
-                self.hash_alg, usedforsecurity=False)  # novermin
+            return hashlib.new(  # novermin
+                self.hash_alg, usedforsecurity=False)
         else:
             return hashlib.new(self.hash_alg)
 
