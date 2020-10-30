@@ -60,6 +60,13 @@ or refer to the full manual below.
 
 .. toctree::
    :maxdepth: 2
+   :caption: How To Guides
+
+   how_to_using_spack
+
+
+.. toctree::
+   :maxdepth: 2
    :caption: Reference
 
    configuration
