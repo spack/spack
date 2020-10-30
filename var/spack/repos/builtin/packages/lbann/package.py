@@ -96,7 +96,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('dihydrogen@:0.0,0.2:', when='@:0.90,0.102: +dihydrogen')
     conflicts('~dihydrogen', when='+distconv')
 
-    depends_on('cudnn', when='@0.90:0.101 +cuda')
+    depends_on('cudnn', when='@0.90:0.100.99 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
     depends_on('cub', when='@0.94:0.98.2 +cuda')
     depends_on('mpi')
@@ -111,8 +111,8 @@ class Lbann(CMakePackage, CudaPackage):
                '+png +tiff +zlib +fast-math ~calib3d ~cuda ~dnn ~eigen'
                '~features2d ~flann ~gtk ~ipp ~ipp_iw ~jasper ~java ~lapack ~ml'
                '~openmp ~opencl ~opencl_svm ~openclamdblas ~openclamdfft'
-               '~pthreads_pf ~python ~qt +shared ~stitching ~superres ~ts ~video'
-               '~videostab ~videoio ~vtk', when='+opencv')
+               '~pthreads_pf ~python ~qt +shared ~stitching ~superres ~ts'
+               '~video ~videostab ~videoio ~vtk', when='+opencv')
 
     # Note that for Power systems we want the environment to add  +powerpc +vsx
     depends_on('opencv@4.1.0: +powerpc +vsx', when='+opencv arch=ppc64le:')
