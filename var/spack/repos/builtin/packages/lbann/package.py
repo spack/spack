@@ -19,7 +19,7 @@ class Lbann(CMakePackage, CudaPackage):
 
     maintainers = ['bvanessen']
 
-    version('develop', preferred=True, branch='develop')
+    version('develop', branch='develop')
     version('0.101', sha256='69d3fe000a88a448dc4f7e263bcb342c34a177bd9744153654528cd86335a1f7')
     version('0.100', sha256='d1bab4fb6f1b80ae83a7286cc536a32830890f6e5b0c3107a17c2600d0796912')
     version('0.99',   sha256='3358d44f1bc894321ce07d733afdf6cb7de39c33e3852d73c9f31f530175b7cd')
