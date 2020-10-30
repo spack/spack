@@ -1640,13 +1640,21 @@ class Spec(object):
         """
         node_list = []
         for s in self.traverse(order='pre', deptype=hash.deptype):
-            node = s.to_node_dict(hash)
-            node[s.name]['hash'] = s.dag_hash()
-            if 'build' in hash.deptype:
-                node[s.name]['build_hash'] = s.build_hash()
-            node_list.append(node)
+            node_list.append(s.node_dict_with_hashes(hash))
 
         return syaml.syaml_dict([('spec', node_list)])
+
+    def node_dict_with_hashes(self, hash=ht.dag_hash):
+        """ Returns a node_dict of this spec with the dag hash added.  If this
+        spec is concrete, the full hash is added as well.  If 'build' is in
+        the hash_type, the build hash is also added. """
+        node = self.to_node_dict(hash)
+        node[self.name]['hash'] = self.dag_hash()
+        if self.concrete:
+            node[self.name]['full_hash'] = self.full_hash()
+        if 'build' in hash.deptype:
+            node[self.name]['build_hash'] = self.build_hash()
+        return node
 
     def to_record_dict(self):
         """Return a "flat" dictionary with name and hash as top-level keys.
