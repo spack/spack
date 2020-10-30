@@ -16,12 +16,14 @@ class Gnuradio(CMakePackage):
     homepage = "https://www.gnuradio.org/"
     url      = "https://github.com/gnuradio/gnuradio/archive/v3.8.2.0.tar.gz"
 
+    maintainers = ['aweits']
+
     version('3.8.2.0', sha256='ddda12b55e3e1d925eefb24afb9d604bca7c9bbe0a431707aa48a2eed53eec2f')
     depends_on('cmake@3.5.1:', type='build')
     depends_on('volk')
     depends_on('python@3.6.5:', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
-    depends_on('swig@3.0.8:')
+    depends_on('swig@3.0.8:', type='build')
     depends_on('log4cpp@1.0:')
     # https://github.com/gnuradio/gnuradio/pull/3566
     depends_on('boost@1.53:1.72.999')
@@ -30,7 +32,7 @@ class Gnuradio(CMakePackage):
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-click-plugins', type=('build', 'run'))
     depends_on('gsl@1.10:')
-    depends_on('fftw~mpi')
+    depends_on('fftw')
     depends_on('libzmq')
     extends('python')
 
