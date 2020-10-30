@@ -57,7 +57,8 @@ class Hip(CMakePackage):
         # assumption does not hold.
         if self.spec.external:
             # typically, self.spec.prefix is /opt/rocm/hip, so fallback_path
-            # will be /opt/rocm.
+            # will be /opt/rocm. The rocminfo executable is usually
+            # found at /opt/rocm/bin/rocminfo.
             fallback_prefix = Prefix(os.path.dirname(self.spec.prefix))
             if not os.path.isdir(fallback_prefix):
                 msg = "Could not determine prefix for other rocm components\n"
@@ -69,7 +70,7 @@ class Hip(CMakePackage):
             return {
                 'llvm-amdgpu': fallback_prefix.llvm,
                 'hsa-rocr-dev': fallback_prefix.hsa,
-                'rocminfo': fallback_prefix.share.info,
+                'rocminfo': fallback_prefix.bin,
                 'rocm-device-libs': fallback_prefix,
             }
         else:
