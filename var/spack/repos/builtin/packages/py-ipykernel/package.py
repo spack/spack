@@ -40,3 +40,9 @@ class PyIpykernel(PythonPackage):
     depends_on('py-pytest-cov', type='test')
     # depends_on('py-flaky', type='test')
     depends_on('py-nose', type='test')
+
+    phases = ['build', 'install', 'install_data']
+
+    def install_data(self):
+        """ install the Jupyter kernel spec """
+        self.spec['python'].command('-m ipykernel', ['install'])
