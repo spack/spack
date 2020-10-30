@@ -17,12 +17,13 @@ import time
 import types
 from six import string_types
 
+import archspec.cpu
+
 try:
     import clingo
 except ImportError:
     clingo = None
 
-import llnl.util.cpu
 import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
@@ -1068,7 +1069,7 @@ class SpackSolverSetup(object):
         key_fn = spack.package_prefs.PackagePrefs(pkg_name, 'target')
         target_specs = [
             spack.spec.Spec('target={0}'.format(target_name))
-            for target_name in llnl.util.cpu.targets
+            for target_name in archspec.cpu.TARGETS
         ]
         preferred_targets = [x for x in target_specs if key_fn(x) < 0]
         if not preferred_targets:
@@ -1218,7 +1219,7 @@ class SpackSolverSetup(object):
             try:
                 target.optimization_flags(compiler.name, compiler.version)
                 supported.append(target)
-            except llnl.util.cpu.UnsupportedMicroarchitecture:
+            except archspec.cpu.UnsupportedMicroarchitecture:
                 continue
             except ValueError:
                 continue
@@ -1253,7 +1254,7 @@ class SpackSolverSetup(object):
         self.gen.h2('Default target')
 
         platform = spack.architecture.platform()
-        uarch = llnl.util.cpu.targets.get(platform.default)
+        uarch = archspec.cpu.TARGETS.get(platform.default)
 
         self.gen.h2('Target compatibility')
 
@@ -1284,7 +1285,7 @@ class SpackSolverSetup(object):
                 continue
 
             print("TTYPE:", type(platform.target(spec.target.name)))
-            target = llnl.util.cpu.targets.get(spec.target.name)
+            target = archspec.cpu.TARGETS.get(spec.target.name)
             if not target:
                 raise ValueError("Invalid target: ", spec.target.name)
             if target not in compatible_targets:
