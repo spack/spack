@@ -32,6 +32,7 @@ class Gnuradio(CMakePackage):
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-click-plugins', type=('build', 'run'))
     depends_on('gsl@1.10:')
+    depends_on('gmp')
     depends_on('fftw')
     depends_on('libzmq')
     extends('python')
