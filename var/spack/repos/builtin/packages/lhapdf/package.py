@@ -27,6 +27,8 @@ class Lhapdf(AutotoolsPackage):
     depends_on('boost',         type='build')
     depends_on('yaml-cpp',      type='build', when='@:6.1.5')
 
+    extends('python')
+
     def configure_args(self):
         args = ['--with-boost=' + self.spec['boost'].prefix,
                 'FCFLAGS=-O3', 'CFLAGS=-O3', 'CXXFLAGS=-O3']

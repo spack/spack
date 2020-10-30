@@ -476,7 +476,8 @@ def installtarball(args):
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.specs)
-    matches = match_downloaded_specs(pkgs, args.multiple, args.otherarch)
+    matches = match_downloaded_specs(pkgs, args.multiple, args.force,
+                                     args.otherarch)
 
     for match in matches:
         install_tarball(match, args)

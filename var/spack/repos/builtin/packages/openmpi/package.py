@@ -168,6 +168,9 @@ class Openmpi(AutotoolsPackage):
     patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
     patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10.999%nag')
 
+    patch('nvhpc-libtool.patch', when='%nvhpc@develop')
+    patch('nvhpc-configure.patch', when='%nvhpc')
+
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
     # support "IGNORE TKR" functionality (e.g. NAG).
     # The issue has been resolved upstream in two steps:
@@ -617,6 +620,10 @@ class Openmpi(AutotoolsPackage):
                         config_args.append('CFLAGS=-D__LP64__')
             else:
                 config_args.append('--without-cuda')
+
+        if spec.satisfies('%nvhpc'):
+            # Workaround compiler issues
+            config_args.append('CFLAGS=-O1')
 
         if '+wrapper-rpath' in spec:
             config_args.append('--enable-wrapper-rpath')

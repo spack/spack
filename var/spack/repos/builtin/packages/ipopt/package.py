@@ -39,7 +39,6 @@ class Ipopt(AutotoolsPackage):
     depends_on('metis@4.0:', when='+metis')
 
     patch('ipopt_ppc_build.patch', when='arch=ppc64le')
-    patch('ipopt_aarch64_build.patch', when='arch=aarch64')
 
     flag_handler = build_system_flags
     build_directory = 'spack-build'

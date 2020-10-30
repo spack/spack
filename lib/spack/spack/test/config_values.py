@@ -35,8 +35,12 @@ def test_set_install_hash_length_upper_case(mock_packages, mutable_config,
     mutable_config.set('config:install_hash_length', 5)
     mutable_config.set(
         'config:install_tree',
-        {'root': str(tmpdir),
-         'projections': {'all': '{name}-{HASH}'}}
+        {
+            'root': str(tmpdir),
+            'projections': {
+                'all': '{name}-{HASH}'
+            }
+        }
     )
     monkeypatch.setattr(spack.store, 'store', spack.store._store())
 

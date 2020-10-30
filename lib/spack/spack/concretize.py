@@ -36,6 +36,7 @@ import spack.compilers
 import spack.architecture
 import spack.error
 import spack.tengine
+import spack.variant as vt
 from spack.config import config
 from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
@@ -60,6 +61,29 @@ class Concretizer(object):
             )
         self.abstract_spec = abstract_spec
         self._adjust_target_answer_generator = None
+
+    def concretize_develop(self, spec):
+        """
+        Add ``dev_path=*`` variant to packages built from local source.
+        """
+        env = spack.environment.get_env(None, None)
+        dev_info = env.dev_specs.get(spec.name, {}) if env else {}
+        if not dev_info:
+            return False
+
+        path = dev_info['path']
+        path = path if os.path.isabs(path) else os.path.join(
+            env.path, path)
+
+        if 'dev_path' in spec.variants:
+            assert spec.variants['dev_path'].value == path
+            changed = False
+        else:
+            spec.variants.setdefault(
+                'dev_path', vt.SingleValuedVariant('dev_path', path))
+            changed = True
+        changed |= spec.constrain(dev_info['spec'])
+        return changed
 
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
@@ -328,6 +352,13 @@ class Concretizer(object):
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
         pkg_cls = spec.package_class
         for name, variant in pkg_cls.variants.items():
+            var = spec.variants.get(name, None)
+            if var and '*' in var:
+                # remove variant wildcard before concretizing
+                # wildcard cannot be combined with other variables in a
+                # multivalue variant, a concrete variant cannot have the value
+                # wildcard, and a wildcard does not constrain a variant
+                spec.variants.pop(name)
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:

@@ -32,7 +32,8 @@ class IbmDatabroker(CMakePackage, PythonPackage):
     depends_on('redis@5.0.2:',    type='run')
     depends_on('libevent@2.1.8', type=('build', 'run'))
 
-    extends('python@3.7:',        when='+python')
+    extends('python',             when='+python')
+    depends_on('python@3.7:',     when='+python')
     depends_on('py-setuptools',   when='+python')
 
     patch('fixes_in_v0.6.1.patch', when='@0.6.1')

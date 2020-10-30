@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.paths import spack_root
+import spack.hooks.sbang as sbang
 
 
 class GobjectIntrospection(Package):
@@ -72,7 +72,7 @@ class GobjectIntrospection(Package):
         make("install")
 
     def setup_build_environment(self, env):
-        env.set('SPACK_SBANG', "%s/bin/sbang" % spack_root)
+        env.set('SPACK_SBANG', sbang.sbang_install_path())
 
     @property
     def parallel(self):
