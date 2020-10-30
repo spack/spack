@@ -156,7 +156,7 @@ class ConfigScope(object):
             self.sections[section] = data
         return self.sections[section]
 
-    def write_section(self, section):
+    def _write_section(self, section):
         filename = self.get_section_filename(section)
         data = self.get_section(section)
 
@@ -252,7 +252,7 @@ class SingleFileScope(ConfigScope):
                 self.sections[section_key] = {section_key: data}
         return self.sections.get(section, None)
 
-    def write_section(self, section):
+    def _write_section(self, section):
         data_to_write = self._raw_data
 
         # If there is no existing data, this section SingleFileScope has never
@@ -304,7 +304,7 @@ class ImmutableConfigScope(ConfigScope):
     This is used for ConfigScopes passed on the command line.
     """
 
-    def write_section(self, section):
+    def _write_section(self, section):
         raise ConfigError("Cannot write to immutable scope %s" % self)
 
     def __repr__(self):
@@ -340,7 +340,7 @@ class InternalConfigScope(ConfigScope):
             self.sections[section] = None
         return self.sections[section]
 
-    def write_section(self, section):
+    def _write_section(self, section):
         """This only validates, as the data is already in memory."""
         data = self.get_section(section)
         if data is not None:
@@ -542,7 +542,7 @@ class Configuration(object):
                     yaml.comments.Comment.attrib,
                     comments)
 
-        scope.write_section(section)
+        scope._write_section(section)
 
     def get_config(self, section, scope=None):
         """Get configuration settings for a section.
