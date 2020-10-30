@@ -3,9 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
-from spack import *
-import os.path
+from spack.util.prefix import Prefix
+import os
 
 
 class Hip(CMakePackage):
@@ -49,68 +48,47 @@ class Hip(CMakePackage):
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
     patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@3.5.0:')
 
-    def get_hip_path_info(self, env, dependent_spec):
-        # Please note that there is currently a bug in how spack detects hip.
-        # There is a workaound involving some manual changes to the following
-        # lines to hard-code the fallback_path. Manual edits will also be
-        # required in the packages.yaml file. Please contact a developer
-        # for details.
-        mydict = {}
-        # typically, self.spec.prefix is /opt/rocm/hip, so fallback_path
-        # will be /opt/rocm after dirname is called.
-        fallback_path = os.path.dirname(self.spec.prefix)
-        found_fallback_path = os.path.isdir(fallback_path)
+    def get_rocm_prefix_info(self):
+        # External packages in Spack do not currently contain dependency
+        # information. External installations of hip therefore must compute
+        # necessary paths to other rocm components by relative paths. This
+        # assumes all components are installed under a single umbrella
+        # directory. Manual edits to `fallback_path` may be necessary if this
+        # assumption does not hold.
+        if self.spec.external:
+            # typically, self.spec.prefix is /opt/rocm/hip, so fallback_path
+            # will be /opt/rocm.
+            fallback_prefix = Prefix(os.path.dirname(self.spec.prefix))
+            if not os.path.isdir(fallback_prefix):
+                msg = "Could not determine prefix for other rocm components\n"
+                msg += "Either report a bug at github.com/spack/spack or "
+                msg += "manually edit fallback_prefix in the package file as "
+                msg += "a workaround."
+                raise RuntimeError(msg)
 
-        if 'llvm-amdgpu' in self.spec:
-            mydict['HIP_CLANG_PATH'] = self.spec['llvm-amdgpu'].prefix.bin
-        elif found_fallback_path:
-            mydict['HIP_CLANG_PATH'] = os.path.join(fallback_path, 'llvm/bin')
-
-        if 'hsa-rocr-dev' in self.spec:
-            mydict['HSA_PATH'] = self.spec['hsa-rocr-dev'].prefix
-        elif found_fallback_path:
-            mydict['HSA_PATH'] = os.path.join(fallback_path, 'hsa')
-
-        if 'rocminfo' in self.spec:
-            mydict['ROCMINFO_PATH'] = self.spec['rocminfo'].prefix
-        elif found_fallback_path:
-            mydict['ROCMINFO_PATH'] = os.path.join(fallback_path, 'share/info')
-
-        if 'rocm-device-libs' in self.spec:
-            mydict['DEVICE_LIB_PATH'] \
-                = self.spec['rocm-device-libs'].prefix.lib
-        elif found_fallback_path:
-            mydict['DEVICE_LIB_PATH'] = os.path.join(fallback_path, 'lib')
-
-        if 'HCC_AMDGPU_TARGET' in env:
-            mydict['HCC_AMDGPU_TARGET'] = env.get('HCC_AMDGPU_TARGET')
+            return {
+                'llvm-amdgpu': fallback_prefix.llvm
+                'hsa-rocr-dev': fallback_prefix.hsa
+                'rocminfo': fallback_prefix.share.info,
+                'rocm-device-libs': fallback_prefix
+                }
         else:
-            mydict['HCC_AMDGPU_TARGET'] = 'gfx900'
-
-        # The required info was not loaded and was not in the fallback path
-        if len(mydict) < 5:
-            raise RuntimeError('''Unable to find hip.
-                                  Please edit get_hip_path_info
-                                  with a valid fallback_path''')
-
-        return mydict
+            return dict((name, self.spec[name].prefix)
+                        for name in ('llvm-amdgpu', 'hsa-rocr-dev', 'rocminfo',
+                                     'rocm-device-libs'))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        # Please note that there is currently a bug in how spack detects hip.
-        # There is a workaound involving some manual changes to
-        # get_hip_path_info to hard-code a fallback path when hip is not
-        # detected. Manual edits will also be needed to the
-        # packages.yaml file. Please contact a developer for details.
-        hip_path_dict = self.get_hip_path_info(env, dependent_spec)
+        # Indirection for dependency paths because hip may be an external in
+        # Spack. See block comment on get_rocm_prefix_info
+        rocm_prefixes = self.get_rocm_prefix_info()
 
         env.set('ROCM_PATH', '')
         env.set('HIP_COMPILER', 'clang')
         env.set('HIP_PLATFORM', 'hcc')
-        env.set('HCC_AMDGPU_TARGET', hip_path_dict['HCC_AMDGPU_TARGET'])
-        env.set('HIP_CLANG_PATH', hip_path_dict['HIP_CLANG_PATH'])
-        env.set('HSA_PATH', hip_path_dict['HSA_PATH'])
-        env.set('ROCMINFO_PATH', hip_path_dict['ROCMINFO_PATH'])
-        env.set('DEVICE_LIB_PATH', hip_path_dict['DEVICE_LIB_PATH'])
+        env.set('HIP_CLANG_PATH', rocm_prefixes['llvm-amdgpu'].bin)
+        env.set('HSA_PATH', rocm_prefixes['hsa-rocr-dev'])
+        env.set('ROCMINFO_PATH', rocm_prefixes['rocminfo'])
+        env.set('DEVICE_LIB_PATH', rocm_prefixes['rocm-device-libs'].lib)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.hipcc = join_path(self.prefix.bin, 'hipcc')
