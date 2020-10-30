@@ -61,14 +61,7 @@ class Camp(CMakePackage, CudaPackage):
         else:
             options.append('-DENABLE_CUDA=OFF')
 
-        # Please note that there is currently a bug in how spack detects hip.
-        # There is a workaound involving some manual changes to the hip
-        # package file and to the packages.yaml file.
-        # Please contact a developer for details.
         if '+hip' in spec:
-            # Possibly add '-DHIP_CLANG_PATH={0}'
-            #  .format(self.spec['llvm-amdgpu'].prefix.bin
-            # in the future if there are issues.
             arch = self.spec.variants['amdgpu_target'].value
             options.extend([
                 '-DENABLE_HIP=ON',
