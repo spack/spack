@@ -39,4 +39,4 @@ class PyPycbc(PythonPackage):
     depends_on('py-ligo-segments', type=('build', 'run'))
     depends_on('py-weave@0.16.0:', when='^python@:2', type=('build', 'run'))
 
-    patch('for_aarch64.patch', when='target=aarch64:')
+    patch('for_aarch64.patch', when='@:1.14.1 target=aarch64:')
