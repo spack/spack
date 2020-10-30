@@ -19,8 +19,8 @@ class Amdfftw(FftwBase):
     AMD Optimized FFTW is the optimized FFTW implementation targeted
     for AMD CPUs.
 
-    For 'single' precision build, please use precision value as float.
-    Example : 'spack install amdfftw precision=float'
+    For single precision build, please use precision value as float.
+    Example : spack install amdfftw precision=float
     """
 
     _name = 'amdfftw'
