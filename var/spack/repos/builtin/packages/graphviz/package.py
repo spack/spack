@@ -120,7 +120,6 @@ class Graphviz(AutotoolsPackage):
     depends_on('libtool', type='build')
     # required to build docs
     depends_on('groff', type='build')
-    depends_on('ghostscript', type='build')
 
     parallel = False
 
