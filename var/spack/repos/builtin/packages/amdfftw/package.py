@@ -19,8 +19,8 @@ class Amdfftw(FftwBase):
     AMD Optimized FFTW is the optimized FFTW implementation targeted
     for AMD CPUs.
 
-    For \'single\' precision build, please use precision value as float.
-    Example : \'spack install amdfftw precision=float\'
+    For 'single' precision build, please use precision value as float.
+    Example : 'spack install amdfftw precision=float'
     """
 
     _name = 'amdfftw'
@@ -40,9 +40,9 @@ class Amdfftw(FftwBase):
 
     provides('fftw-api@3', when='@2:')
 
-    conflicts('precision=quad', when='%aocc', msg="AOCC clang doesn\'t support quad precision")
-    conflicts('+debug', when='%aocc', msg="AOCC clang doesn\'t support debug")
-    conflicts('%gcc@:7.2', when="@2.2:", msg="Recommended GCC version above 7.2 for AMDFFTW")
+    conflicts('precision=quad', when='%aocc', msg="AOCC clang doesn't support quad precision")
+    conflicts('+debug', when='%aocc', msg="AOCC clang doesn't support debug")
+    conflicts('%gcc@:7.2', when="@2.2:", msg="Required GCC version above 7.2 for AMDFFTW")
 
     def configure(self, spec, prefix):
         """Configure function"""

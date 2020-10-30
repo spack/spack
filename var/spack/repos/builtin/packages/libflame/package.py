@@ -126,3 +126,4 @@ class Libflame(LibflameBase):
     version('5.1.0', sha256='e7189b750890bd781fe773f366b374518dd1d89a6513d3d6261bf549826384d1')
 
     provides('flame@5.2', when='@5.2.0')
+    provides('flame@5.1', when='@5.1.0')

@@ -193,18 +193,18 @@ class Fftw(FftwBase):
     version('3.3.4', sha256='8f0cde90929bc05587c3368d2f15cd0530a60b8a9912a8e2979a72dbe5af0982')
     version('2.1.5', sha256='f8057fae1c7df8b99116783ef3e94a6a44518d49c72e2e630c24b689c6022630')
 
-    patch('pfft-3.3.5.patch', when="@3.3.5:+pfft_patches", level=0)
-    patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
-    patch('pgi-3.3.6-pl2.patch', when="@3.3.6-pl2%pgi", level=0)
-    patch('intel-configure.patch', when="@3:3.3.8%intel", level=0)
-
-    provides('fftw-api@2', when='@2.1.5')
-    provides('fftw-api@3', when='@3:')
+    variant(
+        'pfft_patches', default=False,
+        description='Add extra transpose functions for PFFT compatibility')
 
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
     depends_on('libtool', type='build', when='+pfft_patches')
 
-    variant(
-        'pfft_patches', default=False,
-        description='Add extra transpose functions for PFFT compatibility')
+    provides('fftw-api@2', when='@2.1.5')
+    provides('fftw-api@3', when='@3:')
+
+    patch('pfft-3.3.5.patch', when="@3.3.5:+pfft_patches", level=0)
+    patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
+    patch('pgi-3.3.6-pl2.patch', when="@3.3.6-pl2%pgi", level=0)
+    patch('intel-configure.patch', when="@3:3.3.8%intel", level=0)
