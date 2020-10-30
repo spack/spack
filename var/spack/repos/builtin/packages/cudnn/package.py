@@ -257,9 +257,12 @@ class Cudnn(Package):
         install_tree('.', prefix)
 
         if 'target=ppc64le: platform=linux' in spec:
-            target_lib = os.path.join(prefix, 'targets', 'ppc64le-linux', 'lib')
+            target_lib = os.path.join(prefix, 'targets', 
+                                      'ppc64le-linux', 'lib')
             if os.path.isdir(target_lib) and not os.path.isdir(prefix.lib):
                 symlink(target_lib, prefix.lib)
-            target_include = os.path.join(prefix, 'targets', 'ppc64le-linux', 'include')
-            if os.path.isdir(target_include) and not os.path.isdir(prefix.include):
+            target_include = os.path.join(prefix, 'targets', 
+                                          'ppc64le-linux', 'include')
+            if os.path.isdir(target_include) \
+               and not os.path.isdir(prefix.include):
                 symlink(target_include, prefix.include)
