@@ -918,13 +918,12 @@ class SpackSolverSetup(object):
                             )
                         )
                     else:
+                        clauses = self.spec_traverse_clauses(named_cond)
+
                         self.gen.rule(
                             fn.declared_dependency(
                                 dep.pkg.name, dep.spec.name, t
-                            ),
-                            self.gen._and(
-                                *self.spec_clauses(named_cond, body=True)
-                            )
+                            ), self.gen._and(*clauses)
                         )
 
                 # add constraints on the dependency from dep spec.
@@ -945,10 +944,16 @@ class SpackSolverSetup(object):
                             clause,
                             self.gen._and(
                                 fn.depends_on(dep.pkg.name, dep.spec.name),
-                                *self.spec_clauses(named_cond, body=True)
+                                *self.spec_traverse_clauses(named_cond)
                             )
                         )
             self.gen.newline()
+
+    def spec_traverse_clauses(self, named_cond):
+        clauses = []
+        for d in named_cond.traverse():
+            clauses.extend(self.spec_clauses(d, body=True))
+        return clauses
 
     def virtual_preferences(self, pkg_name, func):
         """Call func(vspec, provider, i) for each of pkg's provider prefs."""
