@@ -23,12 +23,7 @@ install trees to define their own layouts with some per-tree
 configuration.
 
 """
-import os
-import re
-import six
-
 import llnl.util.lang
-import llnl.util.tty as tty
 
 import spack.paths
 import spack.config

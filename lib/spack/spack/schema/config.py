@@ -29,9 +29,8 @@ properties = {
                         'properties': union_dicts(
                             {'root': {'type': 'string'}},
                             {'padded_length': {'oneOf': [
-                                    {'type': 'integer', 'minimum': 0},
-                                    {'type': 'boolean'}]},
-                            },
+                                {'type': 'integer', 'minimum': 0},
+                                {'type': 'boolean'}]}},
                             spack.schema.projections.properties,
                         ),
                     },

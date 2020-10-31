@@ -365,6 +365,7 @@ reps = [PAD_STRING for _ in range((MAX_PADDED_LEN // len(PAD_STRING) + 1) + 2)]
 full_padded_string = os.path.join(
     '/path', os.path.sep.join(reps))[:MAX_PADDED_LEN]
 
+
 @pytest.mark.parametrize('config_settings,expected', [
     ([], [None, None, None]),
     ([['config:install_tree:root', '/path']], ['/path', None, None]),
@@ -375,14 +376,11 @@ full_padded_string = os.path.join(
      [None, None, {'all': '{name}'}]),
     ([['config:install_tree:root', '/path'],
       ['config:install_tree:padded_length', 11]],
-     [os.path.join('/path', spack.util.path.SPACK_PATH_PADDING_CHARS[:5]),
-      '/path', None]),
+     [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
     ([['config:install_tree:root', '/path/$padding:11']],
-     [os.path.join('/path', spack.util.path.SPACK_PATH_PADDING_CHARS[:5]),
-      '/path', None]),
+     [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
     ([['config:install_tree', '/path/${padding:11}']],
-     [os.path.join('/path', spack.util.path.SPACK_PATH_PADDING_CHARS[:5]),
-      '/path', None]),
+     [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
     ([['config:install_tree:padded_length', False]], [None, None, None]),
     ([['config:install_tree:padded_length', True],
       ['config:install_tree:root', '/path']],
