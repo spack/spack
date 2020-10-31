@@ -309,6 +309,13 @@ node_target_match_pref(Package, Target) :- node_target_set(Package, Target).
 node_target_match_pref(Dependency, Target)
   :- depends_on(Package, Dependency), node_target_match_pref(Package, Target),
      not node_target_set(Dependency, _).
+
+node_target_match_pref(Dependency, Target)
+  :- depends_on(Package, Dependency),
+     root(Package), node_target(Package, Target),
+     not node_target_match_pref(Package, _),
+     not node_target_set(Dependency, _).
+
 node_target_match(Package, 1)
   :- node_target(Package, Target), node_target_match_pref(Package, Target).
 
