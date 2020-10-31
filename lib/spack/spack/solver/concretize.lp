@@ -21,7 +21,6 @@ version_weight(Package, Weight)
 version_weight(Package, Weight)
   :- version(Package, Version), preferred_version_declared(Package, Version, Weight).
 
-#defined version_conflict/2.
 #defined preferred_version_declared/3.
 
 %-----------------------------------------------------------------------------
@@ -476,33 +475,68 @@ no_flags(Package, FlagType)
 % into our weights.  e.g., a non-default variant resulting from a version
 % constraint counts like a version constraint.  Needs more thought later.
 %
+
 root(Package, 2) :- root(Package), node(Package).
 root(Dependency, 1) :- not root(Dependency), node(Dependency).
 
-% prefer default variants
+% The highest priority is to minimize the:
+% 1. Version weight
+% 2. Number of variants with a non default value, if not set
+% for the root(Package)
+#minimize { Weight@15 : root(Package),version_weight(Package, Weight)}.
 #minimize {
-    Weight*R@10,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value, Weight), root(Package, R)
+    Weight@14,Package,Variant,Value
+    : variant_not_default(Package, Variant, Value, Weight), root(Package)
 }.
-
-% pick most preferred virtual providers
 #minimize{
-    Weight*R@9,Provider : provider_weight(Provider, Weight), root(Package, R)
+    Weight@13,Provider
+    : provider_weight(Provider, Weight), root(Provider)
 }.
 
-% compiler preferences
-#maximize{ Weight@8,Package : compiler_version_match(Package, Weight) }.
-#minimize{ Weight@7,Package : compiler_weight(Package, Weight) }.
-
-% prefer more recent versions.
+% Next, we want to minimize:
+% 1. The weights of the providers
+% 2. The version weight of the providers
+% i.e. use as much as possible the most preferred
+% providers at latest versions
 #minimize{
-    Weight@6,Package : version_weight(Package, Weight)
+    Weight@11,Provider
+    : provider_weight(Provider, Weight), not root(Provider)
+}.
+#minimize{
+    Weight@10,Provider
+    : provider_weight(Provider, _), version_weight(Provider, Weight)
 }.
 
-% fastest target for node
+% For external packages it's more important than for others
+% to match the compiler
+#minimize{
+    Weight@10,Package
+    : compiler_weight(Package, Weight), external(Package)
+}.
 
-% TODO: if these are slightly different by compiler (e.g., skylake is
-% best, gcc supports skylake and broadwell, clang's best is haswell)
-% things seem to get really slow.
+% Then try to use as much as possible:
+% 1. Default variants
+% 2. Latest versions
+% of all the other nodes in the DAG
+#minimize {
+    Weight@9,Package,Variant,Value
+    : variant_not_default(Package, Variant, Value, Weight), not root(Package)
+}.
+#minimize{
+    Weight@8,Package : version_weight(Package, Weight)
+}.
+
+% Try to maximize the number of compiler matches in the DAG,
+% while minimizing the number of nodes. This is done because
+% a maximization on the number of matches for compilers is highly
+% correlated to a preference to have as many nodes as possible
+#minimize{ 1@7,Package : node(Package) }.
+#maximize{ Weight@7,Package : compiler_version_match(Package, Weight) }.
+
+% Try to use preferred compilers
+#minimize{ Weight@6,Package : compiler_weight(Package, Weight) }.
+
+% Maximize the number of matches for targets in the DAG, try
+% to select the preferred target.
 #maximize{ Weight@5,Package : node_target_match(Package, Weight) }.
 #minimize{ Weight@4,Package : node_target_weight(Package, Weight) }.
