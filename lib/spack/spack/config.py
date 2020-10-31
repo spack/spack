@@ -33,6 +33,7 @@ import copy
 import functools
 import os
 import re
+import six
 import sys
 import multiprocessing
 from contextlib import contextmanager
@@ -48,6 +49,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.paths
 import spack.architecture
+import spack.directory_layout
 import spack.schema
 import spack.schema.compilers
 import spack.schema.mirrors
@@ -59,8 +61,10 @@ import spack.schema.upstreams
 import spack.schema.env
 from spack.error import SpackError
 
+import spack.util.path
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
+
 
 #: Dict from section names -> schema for that section
 section_schemas = {
@@ -1133,6 +1137,75 @@ def ensure_latest_format_fn(section):
     section_module = getattr(spack.schema, section)
     update_fn = getattr(section_module, 'update', lambda x: False)
     return update_fn
+
+
+#: default installation root, relative to the Spack install path
+default_install_root = os.path.join(spack.paths.opt_path, 'spack')
+
+
+def parse_install_tree():
+    """Parse old and new formats and return relevant values.
+
+    Encapsulate backwards compatibility capabilities for install_tree
+    and old values that are now parsed as part of install_tree"""
+    install_tree = spack.config.get('config:install_tree', {})
+
+    padded_length = False
+    if isinstance(install_tree, six.string_types):
+        tty.warn("Using deprecated format for configuring install_tree")
+        short_root = install_tree
+        short_root = spack.util.path.canonicalize_path(short_root)
+        # construct projection from previous values for backwards compatibility
+        all_projection = spack.config.get(
+            'config:install_path_scheme',
+            spack.directory_layout.default_projections['all'])
+
+        projections = {'all': all_projection}
+    else:
+        short_root = install_tree.get('root', default_install_root)
+        short_root = spack.util.path.canonicalize_path(short_root)
+
+        padded_length = install_tree.get('padded_length', False)
+        if padded_length is True:
+            padded_length = spack.util.path.get_system_path_max()
+            padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
+
+        projections = install_tree.get(
+            'projections', spack.directory_layout.default_projections)
+
+        path_scheme = spack.config.get('config:install_path_scheme', None)
+        if path_scheme:
+            tty.warn("Deprecated config value 'install_path_scheme' ignored"
+                     " when using new install_tree syntax")
+
+    # Handle backwards compatibility for padding
+    old_pad = re.search(r'\$padding(:\d+)?|\${padding(:\d+)?}', short_root)
+    if old_pad:
+        if padded_length:
+            msg = "Ignoring deprecated padding option in install_tree root "
+            msg += "because new syntax padding is present."
+            tty.warn(msg)
+        else:
+            short_root = short_root.replace(old_pad.group(0), '')
+            if old_pad.group(1) or old_pad.group(2):
+                length_group = 2 if '{' in old_pad.group(0) else 1
+                padded_length = int(old_pad.group(length_group)[1:])
+            else:
+                padded_length = spack.util.path.get_system_path_max()
+                padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
+
+    short_root = short_root.rstrip(os.path.sep)  # canonicalize before padding
+
+    if padded_length:
+        root = spack.util.path.add_padding(short_root, padded_length)
+        if len(root) != padded_length:
+            msg = "Cannot pad %s to %s characters." % (root, padded_length)
+            msg += " It is already %s characters long" % len(root)
+            tty.warn(msg)
+    else:
+        root = short_root
+
+    return (root, short_root, projections)
 
 
 class ConfigError(SpackError):

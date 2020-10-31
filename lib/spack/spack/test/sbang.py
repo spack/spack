@@ -184,13 +184,13 @@ def test_shebang_handles_non_writable_files(script_dir):
 def check_sbang_installation():
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
-    assert sbang_path.startswith(spack.store.layout.root)
+    assert sbang_path.startswith(spack.store.store.short_root)
 
     assert os.path.exists(sbang_path)
     assert fs.is_exe(sbang_path)
 
     status = os.stat(sbang_path)
-    assert (status.st_mode & 0o777) == 0o755
+    assert (status.st_mode & 0o777) == 0o744
 
     status = os.stat(sbang_bin_dir)
     assert (status.st_mode & 0o777) == 0o755
@@ -200,7 +200,7 @@ def test_install_sbang(install_mockery):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
 
-    assert sbang_path.startswith(spack.store.layout.root)
+    assert sbang_path.startswith(spack.store.store.short_root)
     assert not os.path.exists(sbang_bin_dir)
 
     sbang.install_sbang()
