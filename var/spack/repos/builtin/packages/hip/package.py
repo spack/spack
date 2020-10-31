@@ -32,7 +32,7 @@ class Hip(CMakePackage):
         depends_on('comgr@' + ver, type=('build', 'link', 'run'), when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type=('build', 'link', 'run'), when='@' + ver)
-        depends_on('rocminfo@' + ver, type='build', when='@' + ver)
+        depends_on('rocminfo@' + ver, type=('build','run'), when='@' + ver)
 
     # Notice: most likely this will only be a hard dependency on 3.7.0
     depends_on('numactl', when='@3.7.0:')
