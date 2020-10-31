@@ -367,14 +367,15 @@ environment variables:
         with open(file, 'r') as f:
             s = spack.spec.Spec.from_yaml(f)
 
-        if s.concretized().dag_hash() != s.dag_hash():
+        concretized = s.concretized()
+        if concretized.dag_hash() != s.dag_hash():
             msg = 'skipped invalid file "{0}". '
             msg += 'The file does not contain a concrete spec.'
             tty.warn(msg.format(file))
             continue
 
         abstract_specs.append(s)
-        specs.append(s.concretized())
+        specs.append(concretized)
 
     if len(specs) == 0:
         tty.die('The `spack install` command requires a spec to install.')
