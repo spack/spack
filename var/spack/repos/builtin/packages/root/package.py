@@ -372,13 +372,13 @@ class Root(CMakePackage):
             define('ldap', False),
             define_from_variant('mathmore', 'math'),
             define_from_variant('memstat'),  # See conflicts
-            define_from_variant('minimal'),
+            define('minimal', False),
             define_from_variant('minuit'),
             define_from_variant('minuit2', 'minuit'),
             define_from_variant('mlp'),
             define('monalisa', False),
             define_from_variant('mysql'),
-            define_from_variant('odbc'),
+            define('odbc', False),
             define_from_variant('opengl'),
             define('oracle', False),
             define_from_variant('pgsql', 'postgres'),
@@ -388,7 +388,7 @@ class Root(CMakePackage):
             define_from_variant('qtgsi', 'qt4'),  # See conflicts
             define_from_variant('r'),
             define('rfio', False),
-            define_from_variant('roofit'),
+            define('roofit', False),
             define_from_variant('root7'),  # See conflicts
             define('ruby', False),
             define('sapdb', False),
@@ -403,7 +403,7 @@ class Root(CMakePackage):
             define_from_variant('unuran'),
             define_from_variant('vc'),
             define_from_variant('vdt'),
-            define_from_variant('veccore'),
+            define('veccore', False),
             define_from_variant('vmc'),
             define_from_variant('webui', 'root7'),  # requires root7
             define_from_variant('x11', 'x'),
