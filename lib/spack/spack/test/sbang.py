@@ -190,7 +190,7 @@ def check_sbang_installation():
     assert fs.is_exe(sbang_path)
 
     status = os.stat(sbang_path)
-    assert (status.st_mode & 0o777) == 0o744
+    assert (status.st_mode & 0o777) == 0o755
 
     status = os.stat(sbang_bin_dir)
     assert (status.st_mode & 0o777) == 0o755
