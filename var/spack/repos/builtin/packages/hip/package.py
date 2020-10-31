@@ -55,7 +55,8 @@ class Hip(CMakePackage):
         env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
         env.set('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
         env.set('ROCMINFO_PATH', self.spec['rocminfo'].prefix)
-        env.set('DEVICE_LIB_PATH', self.spec['rocm-device-libs'].prefix.lib)
+        env.set('DEVICE_LIB_PATH',
+                self.spec['rocm-device-libs'].libs.directories[0])
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
