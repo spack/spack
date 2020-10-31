@@ -1,0 +1,11 @@
+--- a/elfgcchack.h	2020-08-19 07:55:24.340192000 -0700
++++ b/elfgcchack.h	2020-08-19 07:55:39.952437000 -0700
+@@ -9,7 +9,7 @@
+  */
+ 
+ #ifdef IN_LIBXML
+-#ifdef __GNUC__
++#if defined __GNUC__ && !defined __NVCOMPILER
+ #ifdef PIC
+ #ifdef __linux__
+ #if (__GNUC__ == 3 && __GNUC_MINOR__ >= 3) || (__GNUC__ > 3)

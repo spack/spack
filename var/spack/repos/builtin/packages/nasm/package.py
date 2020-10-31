@@ -26,3 +26,11 @@ class Nasm(AutotoolsPackage):
 
     conflicts('%intel@:14', when='@2.14:',
               msg="Intel 14 has immature C11 support")
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file(r'CFLAGS="\$pa_add_cflags__old_cflags -Werror=.*"',
+                        'CFLAGS="$pa_add_cflags__old_cflags"', 'configure')
+            filter_file(r'CFLAGS="\$pa_add_flags__old_flags -Werror=.*"',
+                        'CFLAGS="$pa_add_flags__old_flags"', 'configure')

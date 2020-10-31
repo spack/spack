@@ -39,6 +39,9 @@ class Libxml2(AutotoolsPackage):
     resource(name='xmlts', url='https://www.w3.org/XML/Test/xmlts20080827.tar.gz',
              sha256='96151685cec997e1f9f3387e3626d61e6284d4d6e66e0e440c209286c03e9cc7')
 
+    patch('nvhpc-configure.patch', when='%nvhpc')
+    patch('nvhpc-elfgcchack.patch', when='%nvhpc')
+
     @property
     def headers(self):
         include_dir = self.spec.prefix.include.libxml2
@@ -61,6 +64,17 @@ class Libxml2(AutotoolsPackage):
             args.append('--without-python')
 
         return args
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-pedantic -Wall -Wextra -Wshadow -Wpointer-arith '
+                        '-Wcast-align -Wwrite-strings -Waggregate-return '
+                        '-Wstrict-prototypes -Wmissing-prototypes '
+                        '-Wnested-externs -Winline -Wredundant-decls',
+                        '-Wall', 'configure')
+            filter_file('-Wno-long-long -Wno-format-extra-args', '',
+                        'configure')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

@@ -669,6 +669,12 @@ class Mfem(Package):
         if install_em:
             install_tree('data', join_path(prefix_share, 'data'))
 
+    def patch(self):
+        # Remove the byte order mark since it messes with some compilers
+        filter_file(u'\uFEFF', '', 'fem/gslib.hpp')
+        filter_file(u'\uFEFF', '', 'fem/gslib.cpp')
+        filter_file(u'\uFEFF', '', 'linalg/hiop.hpp')
+
     @property
     def suitesparse_components(self):
         """Return the SuiteSparse components needed by MFEM."""

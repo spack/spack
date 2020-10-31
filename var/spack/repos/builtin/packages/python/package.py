@@ -224,6 +224,8 @@ class Python(AutotoolsPackage):
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
 
+    conflicts('%nvhpc')
+
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
     _distutil_vars = None

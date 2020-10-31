@@ -27,3 +27,10 @@ class JsonCwx(AutotoolsPackage):
         with working_dir('json-cwx'):
             autogen = Executable("./autogen.sh")
             autogen()
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-Wno-error=deprecated-declarations -Wextra '
+                        '-Wwrite-strings -Wno-unused-parameter -std=gnu99',
+                        '', 'json-cwx/Makefile.am.inc')

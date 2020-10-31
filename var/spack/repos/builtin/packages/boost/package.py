@@ -208,6 +208,9 @@ class Boost(Package):
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
+    # Patch to override the PGI toolset when using the NVIDIA compilers
+    patch('nvhpc.patch', when='%nvhpc')
+
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440
     # See: https://github.com/macports/macports-ports/pull/6726
@@ -252,6 +255,19 @@ class Boost(Package):
     # See https://github.com/boostorg/build/pull/154
     patch('boost_154.patch', when='@:1.63.99')
 
+    def patch(self):
+        # Disable SSSE3 and AVX2 when using the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('dump_avx2', '', 'libs/log/build/Jamfile.v2')
+            filter_file('<define>BOOST_LOG_USE_AVX2', '',
+                        'libs/log/build/Jamfile.v2')
+            filter_file('dump_ssse3', '', 'libs/log/build/Jamfile.v2')
+            filter_file('<define>BOOST_LOG_USE_SSSE3', '',
+                        'libs/log/build/Jamfile.v2')
+
+            filter_file('-fast', '-O1', 'tools/build/src/tools/pgi.jam')
+            filter_file('-fast', '-O1', 'tools/build/src/engine/build.sh')
+
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
             url = "https://dl.bintray.com/boostorg/release/{0}/source/boost_{1}.tar.bz2"
@@ -268,6 +284,7 @@ class Boost(Package):
                     'xlc++': 'xlcpp',
                     'xlc++_r': 'xlcpp',
                     'pgc++': 'pgi',
+                    'nvc++': 'pgi',
                     'FCC': 'clang'}
 
         if spec.satisfies('@1.47:'):

@@ -103,6 +103,7 @@ class Ffmpeg(AutotoolsPackage):
     conflicts('+libwebp', when='@2.1.999:')
     conflicts('+libssh', when='@2.0.999:')
     conflicts('+libzmq', when='@:1.999.999')
+    conflicts('%nvhpc')
 
     @property
     def libs(self):
