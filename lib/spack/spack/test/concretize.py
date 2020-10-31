@@ -675,3 +675,21 @@ class TestConcretize(object):
 
         s = Spec(spec_str).concretized()
         assert s.satisfies(expected_str)
+
+    @pytest.mark.parametrize('spec_str,expected,unexpected', [
+        ('py-extension3 ^python@3.5.1', [], ['py-extension1']),
+        ('py-extension3 ^python@2.7.11', ['py-extension1'], []),
+        ('py-extension3@1.0 ^python@2.7.11', ['patchelf@0.9'], []),
+        ('py-extension3@1.1 ^python@2.7.11', ['patchelf@0.9'], []),
+        ('py-extension3@1.0 ^python@3.5.1', ['patchelf@0.10'], []),
+    ])
+    def test_conditional_dependencies(self, spec_str, expected, unexpected):
+        s = Spec(spec_str).concretized()
+
+        for dep in expected:
+            msg = '"{0}" is not in "{1}" and was expected'
+            assert dep in s, msg.format(dep, spec_str)
+
+        for dep in unexpected:
+            msg = '"{0}" is in "{1}" but was unexpected'
+            assert dep not in s, msg.format(dep, spec_str)
