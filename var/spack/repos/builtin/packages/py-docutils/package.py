@@ -41,7 +41,13 @@ class PyDocutils(PythonPackage):
     depends_on('python@2.2.1:2.8',    when='@0.5.0:0.5.999', type=('build', 'run'))
     depends_on('python@2.1:2.8',      when='@:0.4',          type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        super.install(spec, prefix)
-        os.symlink(os.path.join(prefix, "bin", "rst2man.py"),
-                   os.path.join(prefix, "bin", "rst2man"))
+    phases = ['build', 'install', 'post_install']
+
+    # NOTE: This creates symbolic links to be able to run docutils scripts without .py
+    # file extension similarly to various linux distributions to increase compatibility
+    # with other packages
+    def post_install(self, spec, prefix):
+        bin_path = os.path.join(prefix, "bin")
+        for file in os.listdir(bin_path):
+            if file.endswith(".py"):
+                os.symlink(os.path.join(bin_path, file), os.path.join(bin_path, file[:-3]))
