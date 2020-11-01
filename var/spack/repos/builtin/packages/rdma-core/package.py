@@ -26,6 +26,7 @@ class RdmaCore(CMakePackage):
     version('13', sha256='e5230fd7cda610753ad1252b40a28b1e9cf836423a10d8c2525b081527760d97')
 
     depends_on('pkgconfig', type='build')
+    depends_on('py-docutils', type='build')
     depends_on('libnl')
     conflicts('platform=darwin', msg='rdma-core requires FreeBSD or Linux')
     conflicts('%intel', msg='rdma-core cannot be built with intel (use gcc instead)')
