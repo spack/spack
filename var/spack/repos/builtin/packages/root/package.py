@@ -262,7 +262,7 @@ class Root(CMakePackage):
     conflicts('%gcc@9.0.0:', when='@:6.11.99')
 
     # ROOT <6.14 was incompatible with Python 3.7+
-    conflicts('python@3.7:', when='@:6.13.99 +python')
+    conflicts('^python@3.7:', when='@:6.13.99 +python')
 
     # See README.md
     conflicts('+http',
