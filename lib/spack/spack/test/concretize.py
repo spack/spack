@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
+
 import pytest
 
 import archspec.cpu
@@ -683,6 +685,9 @@ class TestConcretize(object):
         ('py-extension3@1.1 ^python@2.7.11', ['patchelf@0.9'], []),
         ('py-extension3@1.0 ^python@3.5.1', ['patchelf@0.10'], []),
     ])
+    @pytest.mark.skipif(
+        sys.version_info[:2] == (3, 5), reason='Known failure with Python3.5'
+    )
     def test_conditional_dependencies(self, spec_str, expected, unexpected):
         s = Spec(spec_str).concretized()
 
@@ -710,3 +715,143 @@ class TestConcretize(object):
         for dep, num_patches in patched_deps:
             assert s[dep].satisfies('patches=*')
             assert len(s[dep].variants['patches'].value) == num_patches
+
+    @pytest.mark.regression(
+        '267,303,1781,2310,2632,3628'
+    )
+    @pytest.mark.parametrize('spec_str, expected', [
+        # Need to understand that this configuration is possible
+        # only if we use the +mpi variant, which is not the default
+        ('fftw ^mpich', ['+mpi']),
+        # This spec imposes two orthogonal constraints on a dependency,
+        # one of which is conditional. The original concretizer fail since
+        # when it applies the first constraint, it sets the unknown variants
+        # of the dependency to their default values
+        ('quantum-espresso', ['^fftw@1.0+mpi']),
+        # This triggers a conditional dependency on ^fftw@1.0
+        ('quantum-espresso', ['^openblas']),
+        # This constructs a constraint for a dependency og the type
+        # @x.y:x.z where the lower bound is unconditional, the upper bound
+        # is conditional to having a variant set
+        ('quantum-espresso', ['^libelf@0.8.12']),
+        ('quantum-espresso~veritas', ['^libelf@0.8.13'])
+    ])
+    def test_working_around_conflicting_defaults(self, spec_str, expected):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec(spec_str).concretized()
+
+        assert s.concrete
+        for constraint in expected:
+            assert s.satisfies(constraint)
+
+    @pytest.mark.regression('4635')
+    @pytest.mark.parametrize('spec_str,expected', [
+        ('cmake', ['%clang']),
+        ('cmake %gcc', ['%gcc']),
+        ('cmake %clang', ['%clang'])
+    ])
+    def test_external_package_and_compiler_preferences(
+            self, spec_str, expected
+    ):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        packages_yaml = {
+            'all': {
+                'compiler': ['clang', 'gcc'],
+            },
+            'cmake': {
+                'externals': [
+                    {'spec': 'cmake@3.4.3', 'prefix': '/usr'}
+                ],
+                'buildable': False
+            }
+        }
+        spack.config.set('packages', packages_yaml)
+        s = Spec(spec_str).concretized()
+
+        assert s.external
+        for condition in expected:
+            assert s.satisfies(condition)
+
+    @pytest.mark.regression('5651')
+    def test_package_with_constraint_not_met_by_external(
+            self
+    ):
+        """Check that if we have an external package A at version X.Y in
+        packages.yaml, but our spec doesn't allow X.Y as a version, then
+        a new version of A is built that meets the requirements.
+        """
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        packages_yaml = {
+            'libelf': {
+                'externals': [
+                    {'spec': 'libelf@0.8.13', 'prefix': '/usr'}
+                ]
+            }
+        }
+        spack.config.set('packages', packages_yaml)
+
+        # quantum-espresso+veritas requires libelf@:0.8.12
+        s = Spec('quantum-espresso+veritas').concretized()
+        assert s.satisfies('^libelf@0.8.12')
+        assert not s['libelf'].external
+
+    @pytest.mark.regression('9744')
+    def test_cumulative_version_ranges_with_different_length(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec('cumulative-vrange-root').concretized()
+        assert s.concrete
+        assert s.satisfies('^cumulative-vrange-bottom@2.2')
+
+    @pytest.mark.regression('9937')
+    @pytest.mark.skipif(
+        sys.version_info[:2] == (3, 5), reason='Known failure with Python3.5'
+    )
+    def test_dependency_conditional_on_another_dependency_state(self):
+        root_str = 'variant-on-dependency-condition-root'
+        dep_str = 'variant-on-dependency-condition-a'
+        spec_str = '{0} ^{1}'.format(root_str, dep_str)
+
+        s = Spec(spec_str).concretized()
+        assert s.concrete
+        assert s.satisfies('^variant-on-dependency-condition-b')
+
+        s = Spec(spec_str + '+x').concretized()
+        assert s.concrete
+        assert s.satisfies('^variant-on-dependency-condition-b')
+
+        s = Spec(spec_str + '~x').concretized()
+        assert s.concrete
+        assert not s.satisfies('^variant-on-dependency-condition-b')
+
+    @pytest.mark.regression('8082')
+    @pytest.mark.parametrize('spec_str,expected', [
+        ('cmake %gcc', '%gcc'),
+        ('cmake %clang', '%clang')
+    ])
+    def test_compiler_constraint_with_external_package(
+            self, spec_str, expected
+    ):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        packages_yaml = {
+            'cmake': {
+                'externals': [
+                    {'spec': 'cmake@3.4.3', 'prefix': '/usr'}
+                ],
+                'buildable': False
+            }
+        }
+        spack.config.set('packages', packages_yaml)
+
+        s = Spec(spec_str).concretized()
+        assert s.external
+        assert s.satisfies(expected)
