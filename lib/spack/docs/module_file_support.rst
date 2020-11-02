@@ -515,7 +515,7 @@ module files, and to add the correct path to ``MODULEPATH``, you need to
 source the appropriate setup file. Assuming Spack is installed in
 ``$SPACK_ROOT``, run the appropriate command for your shell:
 
-. code-block:: console
+.. code-block:: console
 
    # For bash/zsh/sh
    $ . $SPACK_ROOT/share/spack/setup-env.sh
