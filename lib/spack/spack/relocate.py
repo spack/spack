@@ -6,6 +6,8 @@ import os
 import platform
 import re
 import shutil
+import multiprocessing.pool
+from ordereddict_backport import OrderedDict
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -449,36 +451,26 @@ def needs_text_relocation(m_type, m_subtype):
     return m_type == 'text'
 
 
-def _replace_prefix_text(filename, old_dir, new_dir):
+def _replace_prefix_text(filename, compiled_prefixes):
     """Replace all the occurrences of the old install prefix with a
     new install prefix in text files that are utf-8 encoded.
 
     Args:
         filename (str): target text file (utf-8 encoded)
-        old_dir (str): directory to be searched in the file
-        new_dir (str): substitute for the old directory
+        compiled_prefixes (OrderedDict): OrderedDictionary where the keys are 
+        precompiled regex of the old prefixes and the values are the new 
+        prefixes (uft-8 encoded)
     """
-    # TODO: cache regexes globally to speedup computation
     with open(filename, 'rb+') as f:
         data = f.read()
         f.seek(0)
-        # Replace old_dir with new_dir if it appears at the beginning of a path
-        # Negative lookbehind for a character legal in a path
-        # Then a match group for any characters legal in a compiler flag
-        # Then old_dir
-        # Then characters legal in a path
-        # Ensures we only match the old_dir if it's precedeed by a flag or by
-        # characters not legal in a path, but not if it's preceeded by other
-        # components of a path.
-        old_bytes = old_dir.encode('utf-8')
-        pat = b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % old_bytes
-        repl = b'\\1%s\\2' % new_dir.encode('utf-8')
-        ndata = re.sub(pat, repl, data)
-        f.write(ndata)
+        for old_dir, new_dir in compiled_prefixes.items():
+            data = old_dir.sub(new_dir, data)
+        f.write(data)
         f.truncate()
 
 
-def _replace_prefix_bin(filename, old_dir, new_dir):
+def _replace_prefix_bin(filename, compiled_prefixes):
     """Replace all the occurrences of the old install prefix with a
     new install prefix in binary files.
 
@@ -487,33 +479,28 @@ def _replace_prefix_bin(filename, old_dir, new_dir):
 
     Args:
         filename (str): target binary file
-        old_dir (str): directory to be searched in the file
-        new_dir (str): substitute for the old directory
+        compiled_prefixes (OrderedDict): OrderedDictionary where the keys are 
+        precompiled regex of the old prefixes and the values are the new 
+        prefixes (uft-8 encoded)
     """
-    def replace(match):
-        occurances = match.group().count(old_dir.encode('utf-8'))
-        olen = len(old_dir.encode('utf-8'))
-        nlen = len(new_dir.encode('utf-8'))
-        padding = (olen - nlen) * occurances
-        if padding < 0:
-            return data
-        return match.group().replace(
-            old_dir.encode('utf-8'),
-            os.sep.encode('utf-8') * padding + new_dir.encode('utf-8')
-        )
 
     with open(filename, 'rb+') as f:
-        data = f.read()
+        data = f.read()#.encode('utf-8') # Need to encode a binary?
         f.seek(0)
-        original_data_len = len(data)
-        pat = re.compile(old_dir.encode('utf-8'))
-        if not pat.search(data):
-            return
-        ndata = pat.sub(replace, data)
-        if not len(ndata) == original_data_len:
-            raise BinaryStringReplacementError(
-                filename, original_data_len, len(ndata))
-        f.write(ndata)
+        for orig_prefix, new_prefix in compiled_prefixes.items():
+            original_data_len = len(data)
+            if not orig_prefix.search(data):
+                continue
+            #ndata = old_dir.sub(replace, data)
+            pad_length = len(orig_prefix.pattern) - len(new_prefix)
+            # removed redundant check: if padding >= 0:
+            padding = os.sep * pad_length
+            padding = padding.encode('utf-8')
+            data = orig_prefix.sub(padding + new_prefix, data)
+            if not len(data) == original_data_len:
+                raise BinaryStringReplacementError(
+                    filename, original_data_len, len(data))
+        f.write(data)
         f.truncate()
 
 
@@ -786,6 +773,7 @@ def relocate_links(links, orig_layout_root,
             tty.warn(msg.format(link_target, abs_link, new_install_prefix))
 
 
+<<<<<<< HEAD
 def relocate_text(
         files, orig_layout_root, new_layout_root, orig_install_prefix,
         new_install_prefix, orig_spack, new_spack, new_prefixes
@@ -816,9 +804,39 @@ def relocate_text(
     import spack.hooks.sbang as sbang
     orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
     new_sbang = sbang.sbang_shebang_line()
+=======
+def relocate_text(files, prefixes, concurrency=32):
+    """Relocate text file from the original installation prefix to the
+     new prefix.
+
+     Relocation also affects the the path in Spack's sbang script.
+
+     Args:
+         files (list): Text files to be relocated
+         prefixes (OrderedDict): String prefixes which need to be changed
+         concurrency (int): Preferred degree of parallelism
+    """
+
+    # This now needs to be handled by the caller in all cases
+    # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
+    # new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
+
+    compiled_prefixes = OrderedDict({})
+
+    for old_prefix, new_prefix in prefixes.items():
+        if old_prefix != new_prefix:
+            old_bytes = old_prefix.encode('utf-8')
+            old_prefix = re.compile(
+            b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % old_bytes)
+            new_prefix = b'\\1%s\\2' % new_prefix.encode('utf-8')
+            compiled_prefixes[old_prefix] = new_prefix
+
+    file_args = []
+>>>>>>> minor edits remain
 
     # Do relocations on text that refers to the install tree
     for filename in files:
+<<<<<<< HEAD
         _replace_prefix_text(filename, orig_install_prefix, new_install_prefix)
         for orig_dep_prefix, new_dep_prefix in new_prefixes.items():
             _replace_prefix_text(filename, orig_dep_prefix, new_dep_prefix)
@@ -834,38 +852,59 @@ def relocate_text_bin(
         binaries, orig_install_prefix, new_install_prefix,
         orig_spack, new_spack, new_prefixes
 ):
+=======
+        file_args.append((filename, compiled_prefixes))
+    
+    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+
+    try:
+        tp.map(llnl.util.lang.star(_replace_prefix_text), file_args)
+    finally:
+        tp.terminate()
+        tp.join()
+
+
+def relocate_text_bin(binaries, prefixes, concurrency=32):
+>>>>>>> minor edits remain
     """Replace null terminated path strings hard coded into binaries.
 
     The new install prefix must be shorter than the original one.
 
     Args:
         binaries (list): binaries to be relocated
-        orig_install_prefix (str): install prefix of the original installation
-        new_install_prefix (str): install prefix where we want to relocate
-        orig_spack (str): path to the original Spack
-        new_spack (str): path to the new Spack
-        new_prefixes (dict): dictionary that maps the original prefixes to
-            where they should be relocated
-
+        prefixes (OrderedDict): String prefixes which need to be changed.
+        concurrency (int): Desired degree of parallelism.
+    
     Raises:
       BinaryTextReplaceError: when the new path in longer than the old path
     """
-    # Raise if the new install prefix is longer than the
-    # original one, since it means we can't change the original
-    # binary to relocate it
-    new_prefix_is_shorter = len(new_install_prefix) <= len(orig_install_prefix)
-    if not new_prefix_is_shorter and len(binaries) > 0:
-        raise BinaryTextReplaceError(orig_install_prefix, new_install_prefix)
+
+    compiled_prefixes = OrderedDict({})
+    
+    for orig_prefix, new_prefix in prefixes.items():
+        length_compatible = len(new_prefix) <= len(orig_prefix)
+        if not length_compatible and len(binaries) > 0:
+            raise BinaryTextReplaceError(orig_prefix, new_prefix)
+        if orig_prefix != new_prefix:
+            #TODO: re.escape? sanitize.
+            orig_prefix = re.compile(orig_prefix.encode('utf-8'))
+            new_prefix = new_prefix.encode('utf-8')
+            compiled_prefixes[orig_prefix] = new_prefix
+    
+    #TODO: Rename
+    # multiprocesing.ThreadPool.map requires single argument
+    bin_args = []
 
     for binary in binaries:
-        for old_dep_prefix, new_dep_prefix in new_prefixes.items():
-            if len(new_dep_prefix) <= len(old_dep_prefix):
-                _replace_prefix_bin(binary, old_dep_prefix, new_dep_prefix)
-        _replace_prefix_bin(binary, orig_install_prefix, new_install_prefix)
+        bin_args.append((binary, compiled_prefixes))
 
-    # Note: Replacement of spack directory should not be done. This causes
-    # an incorrect replacement path in the case where the install root is a
-    # subdirectory of the spack directory.
+    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+
+    try:
+        tp.map(llnl.util.lang.star(_replace_prefix_bin), bin_args)
+    finally:
+        tp.terminate()
+        tp.join()
 
 
 def is_relocatable(spec):

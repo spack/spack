@@ -663,3 +663,11 @@ def uniq(sequence):
             uniq_list.append(element)
             last = element
     return uniq_list
+
+
+def star(func):
+    """Unpacks arguments for use with Multiprocessing mapping functions"""
+    def _wrapper(args):
+        return func(*args)
+    return _wrapper
+

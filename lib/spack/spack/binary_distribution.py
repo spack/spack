@@ -12,6 +12,7 @@ import shutil
 import tempfile
 import hashlib
 import glob
+from ordereddict_backport import OrderedDict
 
 from contextlib import closing
 import ruamel.yaml as yaml
@@ -1084,11 +1085,14 @@ def relocate_package(spec, allow_root):
     new_deps = spack.build_environment.get_rpath_deps(spec.package)
     for d in new_deps:
         hash_to_prefix[d.format('{hash}')] = str(d.prefix)
-    prefix_to_prefix = dict()
-    for orig_prefix, hash in prefix_to_hash.items():
-        prefix_to_prefix[orig_prefix] = hash_to_prefix.get(hash, None)
+    orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(old_spack_prefix)
+    new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack_prefix)
+    prefix_to_prefix = OrderedDict({})
     prefix_to_prefix[old_prefix] = new_prefix
     prefix_to_prefix[old_layout_root] = new_layout_root
+    prefix_to_prefix[orig_sbang] = new_sbang
+    for orig_prefix, hash in prefix_to_hash.items():
+        prefix_to_prefix[orig_prefix] = hash_to_prefix.get(hash, None)
 
     tty.debug("Relocating package from",
               "%s to %s." % (old_layout_root, new_layout_root))
@@ -1135,12 +1139,7 @@ def relocate_package(spec, allow_root):
 
         # For all buildcaches
         # relocate the install prefixes in text files including dependencies
-        relocate.relocate_text(text_names,
-                               old_layout_root, new_layout_root,
-                               old_prefix, new_prefix,
-                               old_spack_prefix,
-                               new_spack_prefix,
-                               prefix_to_prefix)
+        relocate.relocate_text(text_names, prefix_to_prefix)
 
         paths_to_relocate = [old_prefix, old_layout_root]
         paths_to_relocate.extend(prefix_to_hash.keys())
@@ -1150,11 +1149,8 @@ def relocate_package(spec, allow_root):
             map(lambda filename: os.path.join(workdir, filename),
                 buildinfo['relocate_binaries'])))
         # relocate the install prefixes in binary files including dependencies
-        relocate.relocate_text_bin(files_to_relocate,
-                                   old_prefix, new_prefix,
-                                   old_spack_prefix,
-                                   new_spack_prefix,
-                                   prefix_to_prefix)
+        # TODO: Only do sbang stuff if not binary
+        relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix)
 
 # If we are installing back to the same location
 # relocate the sbang location if the spack directory changed

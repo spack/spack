@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import sys
+from ordereddict_backport import OrderedDict
 
 from llnl.util.link_tree import LinkTree, MergeConflictError
 from llnl.util import tty
@@ -65,32 +66,33 @@ def view_copy(src, dst, view, spec=None):
         # Not metadata, we have to relocate it
 
         # Get information on where to relocate from/to
-        prefix_to_projection = dict(
-            (dep.prefix, view.get_projection_for_spec(dep))
-            for dep in spec.traverse()
-        )
+        orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
+        new_sbang = '#!/bin/bash {0}/bin/sbang'.format(view._root)
+
+        prefix_to_projection = OrderedDict({
+            spec.prefix: view.get_projection_for_spec(spec),
+            spack.paths.spack_root: view._root,
+            orig_sbang: new_sbang})
+
+        for dep in spec.traverse():
+            prefix_to_projection[dep.prefix] = view.get_projection_for_spec(dep)
+
+
+
+
+        # TODO: Ordering of dict is probably bad here
 
         if spack.relocate.is_binary(dst):
-            # relocate binaries
             spack.relocate.relocate_text_bin(
                 binaries=[dst],
-                orig_install_prefix=spec.prefix,
-                new_install_prefix=view.get_projection_for_spec(spec),
-                orig_spack=spack.paths.spack_root,
-                new_spack=view._root,
-                new_prefixes=prefix_to_projection
+                prefixes=prefix_to_projection
             )
         else:
-            # relocate text
+            #TODO: Prepend?
+            prefix_to_projection[spack.store.layout.root] = view._root
             spack.relocate.relocate_text(
                 files=[dst],
-                orig_layout_root=spack.store.layout.root,
-                new_layout_root=view._root,
-                orig_install_prefix=spec.prefix,
-                new_install_prefix=view.get_projection_for_spec(spec),
-                orig_spack=spack.paths.spack_root,
-                new_spack=view._root,
-                new_prefixes=prefix_to_projection
+                prefixes=prefix_to_projection
             )
 
 
