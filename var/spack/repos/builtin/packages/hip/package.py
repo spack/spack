@@ -32,7 +32,7 @@ class Hip(CMakePackage):
         depends_on('comgr@' + ver, type=('build', 'link', 'run'), when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type=('build', 'link', 'run'), when='@' + ver)
-        depends_on('rocminfo@' + ver, type='build', when='@' + ver)
+        depends_on('rocminfo@' + ver, type=('build', 'run'), when='@' + ver)
 
     # Notice: most likely this will only be a hard dependency on 3.7.0
     depends_on('numactl', when='@3.7.0:')
@@ -47,6 +47,19 @@ class Hip(CMakePackage):
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
     patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@3.5.0:')
+
+    def setup_run_environment(self, env):
+        env.set('ROCM_PATH', '')
+        env.set('HIP_COMPILER', 'clang')
+        env.set('HIP_PLATFORM', 'hcc')
+        env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
+        env.set('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
+        env.set('ROCMINFO_PATH', self.spec['rocminfo'].prefix)
+        env.set('DEVICE_LIB_PATH',
+                self.spec['rocm-device-libs'].libs.directories[0])
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
 
     def get_rocm_prefix_info(self):
         # External packages in Spack do not currently contain dependency
