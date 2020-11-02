@@ -113,13 +113,14 @@ class Amrex(CMakePackage):
             self.define_from_variant('DIM', 'dimensions'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('ENABLE_MPI', 'mpi'),
-            self.define_from_variant('ENABLE_OMP','openmp'),
-            '-DXSDK_PRECISION:STRING=%s'%
+            self.define_from_variant('ENABLE_OMP', 'openmp'),
+            '-DXSDK_PRECISION:STRING=%s' %
             self.spec.variants['precision'].value.upper(),
             self.define_from_variant('XSDK_ENABLE_Fortran', 'fortran'),
             self.define_from_variant('ENABLE_FORTRAN_INTERFACES', 'fortran'),
             self.define_from_variant('ENABLE_EB', 'eb'),
-            self.define_from_variant('ENABLE_LINEAR_SOLVERS', 'linear_solvers'),
+            self.define_from_variant('ENABLE_LINEAR_SOLVERS',
+                                     'linear_solvers'),
             self.define_from_variant('ENABLE_AMRDATA', 'amrdata'),
             self.define_from_variant('ENABLE_PARTICLES', 'particles'),
             self.define_from_variant('ENABLE_SUNDIALS', 'sundials'),
