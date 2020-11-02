@@ -133,7 +133,6 @@ def test_shebang_handling(script_dir):
     assert not sbang.shebang_too_long(script_dir.directory)
 
     with open(script_dir.long_shebang, 'r') as f:
-        import pdb; pdb.set_trace()
         print("------long_shebang (before)")
         print(f.read())
 
