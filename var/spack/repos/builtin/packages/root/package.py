@@ -434,10 +434,6 @@ class Root(CMakePackage):
             options.append(define('cxx' + self.spec.variants['cxxstd'].value,
                                   True))
 
-        if 'mysql-client' in self.spec:
-            options.append(define('MAKE_PROGRAM_PATH',
-                                  self.spec['mysql-client'].prefix.bin))
-
         if '+x+opengl' in self.spec:
             ftgl_prefix = self.spec('ftgl').prefix
             options.append(define('FTGL_ROOT_DIR', ftgl_prefix))
