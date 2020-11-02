@@ -14,5 +14,5 @@ class PyJsonGet(PythonPackage):
 
     version('1.1.1', sha256='0d436f1f2dc8c51ab0249d964bb7f176d724131f76c14adf6fc4687e68ec37ab')
 
-    depends_on('python@3.Z:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build'))
