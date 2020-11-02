@@ -49,14 +49,38 @@ class Hip(CMakePackage):
     patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@3.5.0:')
 
     def setup_run_environment(self, env):
-        env.set('ROCM_PATH', '')
+        rocm_prefixes = self.get_rocm_prefix_info()
+
+        env.set('ROCM_PATH', rocm_prefixes['rocm-path'])
         env.set('HIP_COMPILER', 'clang')
         env.set('HIP_PLATFORM', 'hcc')
-        env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
-        env.set('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
-        env.set('ROCMINFO_PATH', self.spec['rocminfo'].prefix)
-        env.set('DEVICE_LIB_PATH',
-                self.spec['rocm-device-libs'].prefix.lib)
+        env.set('HIP_CLANG_PATH', rocm_prefixes['llvm-amdgpu'].bin)
+        env.set('HSA_PATH', rocm_prefixes['hsa-rocr-dev'])
+        env.set('ROCMINFO_PATH', rocm_prefixes['rocminfo'])
+        env.set('DEVICE_LIB_PATH', rocm_prefixes['rocm-device-libs'].lib)
+
+        print(rocm_prefixes['rocm-path'])
+        print('clang')
+        print('hcc')
+        print(rocm_prefixes['llvm-amdgpu'].bin)
+        print(rocm_prefixes['hsa-rocr-dev'])
+        print(rocm_prefixes['rocminfo'])
+        print(rocm_prefixes['rocm-device-libs'].lib)
+        #if 'amdgpu_target' in dependent_spec.variants:
+        #    arch = dependent_spec.variants['amdgpu_target'].value
+        #    if arch != 'none':
+        #        env.set('HCC_AMDGPU_TARGET', arch)
+        #        print('!!!!arch set!!!!')
+        #        print(arch)
+        #        print(rocm_prefixes)
+        #env.set('ROCM_PATH', '')
+        #env.set('HIP_COMPILER', 'clang')
+        #env.set('HIP_PLATFORM', 'hcc')
+        #env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
+        #env.set('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
+        #env.set('ROCMINFO_PATH', self.spec['rocminfo'].prefix)
+        #env.set('DEVICE_LIB_PATH',
+        #        self.spec['rocm-device-libs'].prefix.lib)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
