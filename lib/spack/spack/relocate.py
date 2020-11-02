@@ -491,7 +491,6 @@ def _replace_prefix_bin(filename, compiled_prefixes):
             original_data_len = len(data)
             if not orig_prefix.search(data):
                 continue
-            #ndata = old_dir.sub(replace, data)
             pad_length = len(orig_prefix.pattern) - len(new_prefix)
             # removed redundant check: if padding >= 0:
             padding = os.sep * pad_length
