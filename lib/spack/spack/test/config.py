@@ -430,6 +430,41 @@ def test_read_config_override_list(mock_low_high_config, write_config_file):
     }
 
 
+def test_ordereddict_merge_order():
+    """"Test that source keys come before dest keys in merge_yaml results."""
+    source = syaml.syaml_dict([
+        ("k1", "v1"),
+        ("k2", "v2"),
+        ("k3", "v3"),
+    ])
+
+    dest = syaml.syaml_dict([
+        ("k4", "v4"),
+        ("k3", "WRONG"),
+        ("k5", "v5"),
+    ])
+
+    result = spack.config.merge_yaml(dest, source)
+    assert "WRONG" not in result.values()
+
+    expected_keys = ["k1", "k2", "k3", "k4", "k5"]
+    expected_items = [
+        ("k1", "v1"), ("k2", "v2"), ("k3", "v3"), ("k4", "v4"), ("k5", "v5")
+    ]
+    assert expected_keys == list(result.keys())
+    assert expected_items == list(result.items())
+
+
+def test_list_merge_order():
+    """"Test that source lists are prepended to dest."""
+    source = ["a", "b", "c"]
+    dest = ["d", "e", "f"]
+
+    result = spack.config.merge_yaml(dest, source)
+
+    assert ["a", "b", "c", "d", "e", "f"] == result
+
+
 def test_internal_config_update(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
 
@@ -731,7 +766,7 @@ config:
     assert data['config']['install_tree'] == {'root': 'dummy_tree_value'}
 
     with pytest.raises(spack.config.ConfigError):
-        scope.write_section('config')
+        scope._write_section('config')
 
 
 def test_single_file_scope(tmpdir, config):
@@ -804,7 +839,7 @@ def test_write_empty_single_file_scope(tmpdir):
     env_schema = spack.schema.env.schema
     scope = spack.config.SingleFileScope(
         'test', str(tmpdir.ensure('config.yaml')), env_schema, ['spack'])
-    scope.write_section('config')
+    scope._write_section('config')
     # confirm we can write empty config
     assert not scope.get_section('config')
 

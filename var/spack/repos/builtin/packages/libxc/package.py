@@ -64,36 +64,17 @@ class Libxc(AutotoolsPackage, CudaPackage):
         )
 
     def setup_build_environment(self, env):
-        optflags = '-O2'
-        if self.compiler.name == 'intel':
-            # Optimizations for the Intel compiler, suggested by CP2K
-            #
-            # Note that not every lowly login node has advanced CPUs:
-            #
-            #   $ icc  -xAVX -axCORE-AVX2 -ipo hello.c
-            #   $ ./a.out
-            #   Please verify that both the operating system and the \
-            #   processor support Intel(R) AVX instructions.
-            #
-            # NB: The same flags are applied in:
-            #   - ../libint/package.py
-            #
-            # Related:
-            #   - ../fftw/package.py        variants: simd, fma
-            #   - ../c-blosc/package.py     variant:  avx2
-            #   - ../r-rcppblaze/package.py AVX* in "info" but not in code?
-            #   - ../openblas/package.py    variants: cpu_target!?!
-            #   - ../cp2k/package.py
-            #
-            # Documentation at:
-            # https://software.intel.com/en-us/cpp-compiler-18.0-developer-guide-and-reference-ax-qax
-            #
-            optflags += ' -xSSE4.2 -axAVX,CORE-AVX2 -ipo'
-            if which('xiar'):
-                env.set('AR', 'xiar')
+        # microarchitecture-specific optimization flags should be controlled
+        # by Spack, otherwise we may end up with contradictory or invalid flags
+        # see https://github.com/spack/spack/issues/17794
+        # libxc on the other hand only sets the generic -O2 when it detects GCC
 
+        optflags = '-O2'
         env.append_flags('CFLAGS',  optflags)
         env.append_flags('FCFLAGS', optflags)
+
+        if '%intel' in self.spec and which('xiar'):
+            env.set('AR', 'xiar')
 
         if '+cuda' in self.spec:
             nvcc = self.spec['cuda'].prefix.bin.nvcc

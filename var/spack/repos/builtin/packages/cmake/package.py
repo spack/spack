@@ -168,7 +168,7 @@ class Cmake(Package):
     # Remove -A from the C++ flags we use when CXX_EXTENSIONS is OFF
     # Should be fixed in 3.19.
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5025
-    patch('pgi-cxx-ansi.patch', when='@3.1:3.18.99')
+    patch('pgi-cxx-ansi.patch', when='@3.15:3.18.99')
 
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
