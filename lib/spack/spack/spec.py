@@ -1649,11 +1649,24 @@ class Spec(object):
         spec is concrete, the full hash is added as well.  If 'build' is in
         the hash_type, the build hash is also added. """
         node = self.to_node_dict(hash)
-        node[self.name]['hash'] = self.dag_hash()
+
         if self.concrete:
-            node[self.name]['full_hash'] = self.full_hash()
-        if 'build' in hash.deptype:
-            node[self.name]['build_hash'] = self.build_hash()
+            # if the spec is concrete, all hashes have already been
+            # computed, DAG hash is required, so always add it
+            node[self.name]['hash'] = self.dag_hash()
+
+            # full_hash and build_hash may not have been computed by
+            # older spack versions, so they may not be on a concrete spec
+            # read in from somewhere. We want to avoid computing
+            # full_hash or build_hash on old specs, as we likely don't
+            # have the information needed to do it right (packages,
+            # patches, etc. have likely changed). So we do not attempt to
+            # recompute full_hash or build_hash for old specs, and we
+            # only write these if they're present.
+            if self._full_hash:
+                node[self.name]['full_hash'] = self._full_hash
+            if self._build_hash and 'build' in hash.deptype:
+                node[self.name]['build_hash'] = self._build_hash
         return node
 
     def to_record_dict(self):
@@ -2332,6 +2345,12 @@ class Spec(object):
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
+
+        # compute all hashes at concretization time, so that we're
+        # guaranteed that if one is there, they're all there.
+        self.dag_hash()
+        self.full_hash()
+        self.build_hash()
 
         # If any spec in the DAG is deprecated, throw an error
         deprecated = []
