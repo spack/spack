@@ -51,6 +51,7 @@ class Brayns(CMakePackage):
     depends_on('vrpn', when='+opendeck')
     depends_on('optix@5.0.1', when='+optix')
     depends_on('cuda', when='+optix')
+    depends_on('glm')
 
     def patch(self):
         for cmake_filename in find(self.stage.source_path, "CMakeLists.txt"):

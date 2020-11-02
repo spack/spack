@@ -45,6 +45,7 @@ class Brion(CMakePackage):
     depends_on('highfive +boost ~mpi')
     depends_on('highfive@2.1.1 +boost ~mpi', when='@3.1.0')
     depends_on('mvdtool ~mpi')
+    depends_on('glm')
 
     def patch(self):
         if self.spec.version == Version('3.1.0'):
