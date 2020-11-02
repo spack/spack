@@ -132,6 +132,11 @@ def test_shebang_handling(script_dir):
     assert not sbang.shebang_too_long(script_dir.binary)
     assert not sbang.shebang_too_long(script_dir.directory)
 
+    with open(script_dir.long_shebang, 'r') as f:
+        import pdb; pdb.set_trace()
+        print("------long_shebang (before)")
+        print(f.read())
+
     sbang.filter_shebangs_in_directory(script_dir.tempdir)
 
     # Make sure this is untouched
@@ -140,6 +145,9 @@ def test_shebang_handling(script_dir):
         assert f.readline() == last_line
 
     # Make sure this got patched.
+    with open(script_dir.long_shebang, 'r') as f:
+        print("------long_shebang (after)")
+        print(f.read())
     with open(script_dir.long_shebang, 'r') as f:
         assert f.readline() == sbang_line
         assert f.readline() == long_line
