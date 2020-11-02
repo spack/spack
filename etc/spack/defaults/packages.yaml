@@ -19,10 +19,10 @@ packages:
     providers:
       D: [ldc]
       awk: [gawk]
-      blas: [openblas]
+      blas: [openblas, amdblis]
       daal: [intel-daal]
       elf: [elfutils]
-      fftw-api: [fftw]
+      fftw-api: [fftw, amdfftw]
       gl: [mesa+opengl, mesa18+opengl, opengl]
       glx: [mesa+glx, mesa18+glx, opengl]
       glu: [mesa-glu, openglu]
@@ -31,7 +31,7 @@ packages:
       ipp: [intel-ipp]
       java: [openjdk, jdk, ibm-java]
       jpeg: [libjpeg-turbo, libjpeg]
-      lapack: [openblas]
+      lapack: [openblas, amdlibflame]
       mariadb-client: [mariadb-c-client, mariadb]
       mkl: [intel-mkl]
       mpe: [mpe2]
@@ -42,12 +42,13 @@ packages:
       pil: [py-pillow]
       pkgconfig: [pkgconf, pkg-config]
       rpc: [libtirpc]
-      scalapack: [netlib-scalapack]
+      scalapack: [netlib-scalapack, amdscalapack]
       sycl: [hipsycl]
       szip: [libszip, libaec]
       tbb: [intel-tbb]
       unwind: [libunwind]
       yacc: [bison, byacc]
+      flame: [libflame, amdlibflame]
     permissions:
       read: world
       write: user
