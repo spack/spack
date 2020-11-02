@@ -100,7 +100,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
     depends_on('cub', when='@0.94:0.98.2 +cuda')
     depends_on('mpi')
-    depends_on('hwloc@2.0:')
+    depends_on('hwloc@1.11:')
 
     depends_on('half', when='+half')
 
