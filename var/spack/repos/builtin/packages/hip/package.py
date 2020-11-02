@@ -56,7 +56,7 @@ class Hip(CMakePackage):
         env.set('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
         env.set('ROCMINFO_PATH', self.spec['rocminfo'].prefix)
         env.set('DEVICE_LIB_PATH',
-                self.spec['rocm-device-libs'].libs.directories[0])
+                self.spec['rocm-device-libs'].prefix.lib)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
