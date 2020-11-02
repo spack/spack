@@ -68,28 +68,46 @@ class Hip(CMakePackage):
                 raise RuntimeError(msg)
 
             return {
+                'rocm-path': fallback_prefix,
                 'llvm-amdgpu': fallback_prefix.llvm,
                 'hsa-rocr-dev': fallback_prefix.hsa,
                 'rocminfo': fallback_prefix.bin,
                 'rocm-device-libs': fallback_prefix,
             }
         else:
-            return dict((name, self.spec[name].prefix)
-                        for name in ('llvm-amdgpu', 'hsa-rocr-dev', 'rocminfo',
-                                     'rocm-device-libs'))
+            mydict = dict((name, self.spec[name].prefix)
+                          for name in ('llvm-amdgpu', 'hsa-rocr-dev',
+                                       'rocminfo', 'rocm-device-libs'))
+            mydict['rocm-path'] = os.path.dirname(self.spec.prefix)
+            return mydict
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Indirection for dependency paths because hip may be an external in
         # Spack. See block comment on get_rocm_prefix_info
         rocm_prefixes = self.get_rocm_prefix_info()
 
-        env.set('ROCM_PATH', '')
+        env.set('ROCM_PATH', rocm_prefixes['rocm-path'])
         env.set('HIP_COMPILER', 'clang')
         env.set('HIP_PLATFORM', 'hcc')
         env.set('HIP_CLANG_PATH', rocm_prefixes['llvm-amdgpu'].bin)
         env.set('HSA_PATH', rocm_prefixes['hsa-rocr-dev'])
         env.set('ROCMINFO_PATH', rocm_prefixes['rocminfo'])
         env.set('DEVICE_LIB_PATH', rocm_prefixes['rocm-device-libs'].lib)
+
+        print(rocm_prefixes['rocm-path'])
+        print('clang')
+        print('hcc')
+        print(rocm_prefixes['llvm-amdgpu'].bin)
+        print(rocm_prefixes['hsa-rocr-dev'])
+        print(rocm_prefixes['rocminfo'])
+        print(rocm_prefixes['rocm-device-libs'].lib)
+        if 'amdgpu_target' in dependent_spec.variants:
+            arch = dependent_spec.variants['amdgpu_target'].value
+            if arch != 'none':
+                env.set('HCC_AMDGPU_TARGET', arch)
+                print('!!!!arch set!!!!')
+                print(arch)
+                print(rocm_prefixes)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.hipcc = join_path(self.prefix.bin, 'hipcc')

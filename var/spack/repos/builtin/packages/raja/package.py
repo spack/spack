@@ -34,6 +34,26 @@ class Raja(CMakePackage, CudaPackage):
     variant('shared', default=True, description='Build Shared Libs')
     variant('examples', default=True, description='Build examples.')
     variant('exercises', default=True, description='Build exercises.')
+    variant('hip', default=False, description='Enable HIP support')
+
+    # possible amd gpu targets for hip builds
+    # TODO: we should add a hip build system description equivalent to
+    # lib/spack/spack/build_systems/cuda.py, where possible hip amd gpu
+    # architectures are defined in a similar way as for cuda gpu
+    # architectures. In the meantime, require users to define
+    # amd gpu type for hip builds with a variant here.
+    amdgpu_targets = (
+        'gfx701', 'gfx801', 'gfx802', 'gfx803',
+        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
+        'gfx1011', 'gfx1012', 'none'
+    )
+    variant('amdgpu_target', default='none', values=amdgpu_targets)
+
+    depends_on('llvm-amdgpu', when='+hip')
+    depends_on('hip', when='+hip')
+
+    # need amd gpu type for hip builds
+    conflicts('amdgpu_target=none', when='+hip')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
@@ -56,6 +76,15 @@ class Raja(CMakePackage, CudaPackage):
         else:
             options.append('-DENABLE_CUDA=OFF')
 
+        if '+hip' in spec:
+            arch = self.spec.variants['amdgpu_target'].value
+            options.extend([
+                '-DENABLE_HIP=ON',
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+        else:
+            options.append('-DENABLE_HIP=OFF')
+
         options.append('-DBUILD_SHARED_LIBS={0}'.format(
             'ON' if '+shared' in spec else 'OFF'))
 
@@ -69,7 +98,7 @@ class Raja(CMakePackage, CudaPackage):
         # is used by the spack compiler wrapper.  This can go away when BLT
         # removes -Werror from GTest flags
         if self.spec.satisfies('%clang target=ppc64le:') or not self.run_tests:
-            options.append('-DENABLE_TESTS=OFF')
+            options.append('-DENABLE_TESTS=ON')
         else:
             options.append('-DENABLE_TESTS=ON')
 
