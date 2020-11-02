@@ -13,7 +13,7 @@ class RocmTensile(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/Tensile/"
     url      = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-3.8.0.tar.gz"
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    
+
     version('3.8.0', sha256='c78a11db85fdf54bfd26533ee6fa98f6a6e789fa423537993061497ac5f22ed6')
     version('3.7.0', sha256='488a7f76ea42a7601d0557f53068ec4832a2c7c06bb1b511470a4e35599a5a4d')
     version('3.5.0', sha256='71eb3eed6625b08a4cedb539dd9b596e3d4cc82a1a8063d37d94c0765b6f8257')
