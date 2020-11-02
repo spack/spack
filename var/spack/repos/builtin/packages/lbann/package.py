@@ -60,7 +60,7 @@ class Lbann(CMakePackage, CudaPackage):
 
     conflicts('@:0.90,0.99:', when='~conduit')
 
-    depends_on('cmake@3.16.0:', type='build')
+    depends_on('cmake@3.17.0:', type='build')
 
     # Specify the correct versions of Hydrogen
     depends_on('hydrogen@:1.3.4', when='@0.95:0.100')

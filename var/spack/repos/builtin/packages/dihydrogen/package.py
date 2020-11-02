@@ -105,7 +105,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
-    depends_on('cmake@3.16.0:', type='build')
+    depends_on('cmake@3.17.0:', type='build')
 
     depends_on('py-breathe', type='build', when='+docs')
     depends_on('doxygen', type='build', when='+docs')
