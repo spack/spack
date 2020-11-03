@@ -66,6 +66,14 @@ def view_copy(src, dst, view, spec=None):
         # Not metadata, we have to relocate it
 
         # Get information on where to relocate from/to
+
+        # This is vestigial code for the *old* location of sbang. Previously,
+        # sbang was a bash script, and it lived in the spack prefix. It is
+        # now a POSIX script that lives in the install prefix. Old packages
+        # will have the old sbang location in their shebangs.
+        import spack.hooks.sbang as sbang
+        orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
+        new_sbang = sbang.sbang_shebang_line()
         orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
         new_sbang = '#!/bin/bash {0}/bin/sbang'.format(view._root)
 

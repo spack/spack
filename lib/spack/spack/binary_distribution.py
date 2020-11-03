@@ -1085,8 +1085,13 @@ def relocate_package(spec, allow_root):
     new_deps = spack.build_environment.get_rpath_deps(spec.package)
     for d in new_deps:
         hash_to_prefix[d.format('{hash}')] = str(d.prefix)
-    orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(old_spack_prefix)
-    new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack_prefix)
+    # This is vestigial code for the *old* location of sbang. Previously,
+    # sbang was a bash script, and it lived in the spack prefix. It is
+    # now a POSIX script that lives in the install prefix. Old packages
+    # will have the old sbang location in their shebangs.
+    import spack.hooks.sbang as sbang
+    orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
+    new_sbang = sbang.sbang_shebang_line()
     prefix_to_prefix = OrderedDict({})
     prefix_to_prefix[old_prefix] = new_prefix
     prefix_to_prefix[old_layout_root] = new_layout_root
