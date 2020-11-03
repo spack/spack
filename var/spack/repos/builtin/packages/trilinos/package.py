@@ -7,6 +7,7 @@ import os
 import sys
 from spack import *
 from spack.operating_systems.mac_os import macos_version
+from spack.pkg.builtin.kokkos import Kokkos
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
@@ -18,7 +19,7 @@ from spack.operating_systems.mac_os import macos_version
 # https://github.com/trilinos/Trilinos/issues/175
 
 
-class Trilinos(CMakePackage):
+class Trilinos(CMakePackage, CudaPackage):
     """The Trilinos Project is an effort to develop algorithms and enabling
     technologies within an object-oriented software framework for the solution
     of large-scale, complex multi-physics engineering and scientific problems.
@@ -73,6 +74,11 @@ class Trilinos(CMakePackage):
             description='global ordinal type for Tpetra')
     variant('fortran',      default=True,
             description='Compile with Fortran support')
+    variant('wrapper', default=False,
+            description="Use nvcc-wrapper for CUDA build")
+    variant('cxxstd', default='11', values=['11', '14', '17'], multi=False)
+    variant('hwloc', default=False,
+            description='Enable hwloc')
     variant('openmp',       default=False,
             description='Enable OpenMP')
     variant('shared',       default=True,
@@ -321,6 +327,18 @@ class Trilinos(CMakePackage):
     conflicts('+adios2', when='@:12.14.1')
     conflicts('+adios2', when='@xsdk-0.2.0')
     conflicts('+pnetcdf', when='~netcdf')
+    conflicts('+wrapper', when='~cuda')
+    conflicts('+wrapper', when='%clang')
+    conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
+    conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
+    conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
+
+    # All compilers except for pgi are in conflict:
+    for __compiler in spack.compilers.supported_compilers():
+        if __compiler != 'clang':
+            conflicts('+cuda', when='~wrapper %{0}'.format(__compiler),
+                      msg='trilinos~wrapper+cuda can only be built with the\
+                      Clang compiler')
 
     # ###################### Dependencies ##########################
 
@@ -369,6 +387,9 @@ class Trilinos(CMakePackage):
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
+    depends_on('kokkos-nvcc-wrapper', when='+wrapper')
+    depends_on('hwloc', when='+hwloc')
+    depends_on('hwloc +cuda', when='+hwloc+cuda')
 
     # Dependencies/conflicts when MPI is disabled
     depends_on('hdf5~mpi', when='+hdf5~mpi')
@@ -389,6 +410,27 @@ class Trilinos(CMakePackage):
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
         return url.format(version.dashed)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        if '+cuda' in self.spec:
+            # currently Trilinos doesn't perform the memory fence so
+            # it relies on blocking CUDA kernel launch. This is needed
+            # in case the dependent app also run a CUDA backend via Trilinos
+            env.set('CUDA_LAUNCH_BLOCKING', '1')
+
+    def setup_dependent_package(self, module, dependent_spec):
+        if '+wrapper' in spec:
+            self.spec.kokkos_cxx = self.spec["kokkos-nvcc-wrapper"].kokkos_cxx
+        else:
+            self.spec.kokkos_cxx = spack_cxx
+
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if '+cuda' in spec and '+wrapper' in spec:
+            if '+mpi' in spec:
+                env.set('OMPI_CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+            else:
+                env.set('CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
 
     def cmake_args(self):
         spec = self.spec
@@ -547,6 +589,9 @@ class Trilinos(CMakePackage):
             define_trilinos_enable('Gtest', 'gtest'),
         ])
 
+        if '+hwloc' in spec:
+            options.append(define_tpl_enable('hwloc'))
+
         options.append(define_tpl_enable('Netcdf'))
         if '+netcdf' in spec:
             options.append(define('NetCDF_ROOT', spec['netcdf-c'].prefix))
@@ -692,7 +737,30 @@ class Trilinos(CMakePackage):
 
         options.append(self.define_from_variant('TPL_ENABLE_ADIOS2', 'adios2'))
 
+        options.append(define(
+            "Kokkos_ARCH_" +
+            Kokkos.spack_micro_arch_map[spec.target.name].upper(),
+            True))
+
         # ################# Miscellaneous Stuff ######################
+        # CUDA
+        options.append(define_tpl_enable('CUDA'))
+        if '+cuda' in spec:
+            options.extend([
+                define('Kokkos_ENABLE_CUDA', True),
+                define('Kokkos_ENABLE_CUDA_UVM', True),
+                define('Kokkos_ENABLE_CUDA_LAMBDA', True)])
+            for iArchCC in spec.variants['cuda_arch'].value:
+                options.append(define(
+                    "Kokkos_ARCH_" +
+                    Kokkos.spack_cuda_arch_map[iArchCC].upper(),
+                    True))
+            if '+wrapper' in spec:
+                cxx_flags.extend(['--expt-extended-lambda'])
+
+        # Set the C++ standard to use
+        options.append(self.define_from_variant(
+            "CMAKE_CXX_STANDARD", "cxxstd"))
 
         # OpenMP
         options.append(define_trilinos_enable('OpenMP'))
@@ -813,3 +881,8 @@ class Trilinos(CMakePackage):
         if '+exodus' in self.spec:
             env.prepend_path('PYTHONPATH',
                              self.prefix.lib)
+
+        if '+cuda' in self.spec:
+            # currently Trilinos doesn't perform the memory fence so
+            # it relies on blocking CUDA kernel launch.
+            env.set('CUDA_LAUNCH_BLOCKING', '1')
