@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyBoom(PythonPackage):
+class PyBoomBootManager(PythonPackage):
     """Boom is a boot manager for Linux systems using boot loaders
     that support the BootLoader Specification for boot entry
     configuration. """
