@@ -237,9 +237,10 @@ def test_missing_curl(tmpdir, monkeypatch):
         err_msg = err_fmt.format(args[0])
         raise spack.util.executable.CommandNotFoundError(err_msg)
 
-    # Patching which_string (versus which) so patch actually works with the
-    # fetch strategy's curl property such that the property is None.
-    monkeypatch.setattr(spack.util.executable, 'which_string', _which)
+    # Patching the 'which' symbol imported by fetch_strategy works
+    # since it is too late in import processing to patch the defining
+    # (spack.util.executable) module's symbol.
+    monkeypatch.setattr(fs, 'which', _which)
 
     testpath = str(tmpdir)
     url = 'http://github.com/spack/spack'
