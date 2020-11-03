@@ -71,6 +71,7 @@ def view_copy(src, dst, view, spec=None):
         # sbang was a bash script, and it lived in the spack prefix. It is
         # now a POSIX script that lives in the install prefix. Old packages
         # will have the old sbang location in their shebangs.
+        # TODO: Not sure which one to use...
         import spack.hooks.sbang as sbang
         orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
         new_sbang = sbang.sbang_shebang_line()
