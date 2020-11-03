@@ -21,20 +21,23 @@ import spack.hooks.sbang as sbang
 from spack.util.executable import which
 
 
+too_long = sbang.shebang_limit + 1
+
+
 short_line        = "#!/this/is/short/bin/bash\n"
-long_line         = "#!/this/" + ('x' * 200) + "/is/long\n"
+long_line         = "#!/this/" + ('x' * too_long) + "/is/long\n"
 
-lua_line          = "#!/this/" + ('x' * 200) + "/is/lua\n"
+lua_line          = "#!/this/" + ('x' * too_long) + "/is/lua\n"
 lua_in_text       = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
-lua_line_patched  = "--!/this/" + ('x' * 200) + "/is/lua\n"
+lua_line_patched  = "--!/this/" + ('x' * too_long) + "/is/lua\n"
 
-node_line         = "#!/this/" + ('x' * 200) + "/is/node\n"
+node_line         = "#!/this/" + ('x' * too_long) + "/is/node\n"
 node_in_text      = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
-node_line_patched = "//!/this/" + ('x' * 200) + "/is/node\n"
+node_line_patched = "//!/this/" + ('x' * too_long) + "/is/node\n"
 
-php_line         = "#!/this/" + ('x' * 200) + "/is/php\n"
+php_line         = "#!/this/" + ('x' * too_long) + "/is/php\n"
 php_in_text      = ("line\n") * 100 + "php\n" + ("line\n" * 100)
-php_line_patched = "<?php #!/this/" + ('x' * 200) + "/is/php\n"
+php_line_patched = "<?php #!/this/" + ('x' * too_long) + "/is/php\n"
 php_line_patched2 = "?>\n"
 
 last_line         = "last!\n"
