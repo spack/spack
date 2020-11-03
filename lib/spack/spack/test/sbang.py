@@ -37,13 +37,17 @@ php_in_text      = ("line\n") * 100 + "php\n" + ("line\n" * 100)
 php_line_patched = "<?php #!/this/" + ('x' * 200) + "/is/php\n"
 php_line_patched2 = "?>\n"
 
-sbang_line        = '#!/bin/sh %s/bin/sbang\n' % spack.store.layout.root
 last_line         = "last!\n"
+
+
+@pytest.fixture
+def sbang_line():
+    yield '#!/bin/sh %s/bin/sbang\n' % spack.store.layout.root
 
 
 class ScriptDirectory(object):
     """Directory full of test scripts to run sbang instrumentation on."""
-    def __init__(self):
+    def __init__(self, sbang_line):
         self.tempdir = tempfile.mkdtemp()
 
         self.directory = os.path.join(self.tempdir, 'dir')
@@ -117,13 +121,13 @@ class ScriptDirectory(object):
 
 
 @pytest.fixture
-def script_dir():
-    sdir = ScriptDirectory()
+def script_dir(sbang_line):
+    sdir = ScriptDirectory(sbang_line)
     yield sdir
     sdir.destroy()
 
 
-def test_shebang_handling(script_dir):
+def test_shebang_handling(script_dir, sbang_line):
     assert sbang.shebang_too_long(script_dir.lua_shebang)
     assert sbang.shebang_too_long(script_dir.long_shebang)
 
@@ -169,13 +173,13 @@ def test_shebang_handling(script_dir):
         assert f.readline() == last_line
 
 
-def test_shebang_handles_non_writable_files(script_dir):
+def test_shebang_handles_non_writable_files(script_dir, sbang_line):
     # make a file non-writable
     st = os.stat(script_dir.long_shebang)
     not_writable_mode = st.st_mode & ~stat.S_IWRITE
     os.chmod(script_dir.long_shebang, not_writable_mode)
 
-    test_shebang_handling(script_dir)
+    test_shebang_handling(script_dir, sbang_line)
 
     st = os.stat(script_dir.long_shebang)
     assert oct(not_writable_mode) == oct(st.st_mode)
