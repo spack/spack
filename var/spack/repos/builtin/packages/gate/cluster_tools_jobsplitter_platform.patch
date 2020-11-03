@@ -1,6 +1,6 @@
-diff -ru a/cluster_tools/jobsplitter/gjs.cc b/cluster_tools/jobsplitter/gjs.cc
+diff -ruN a/cluster_tools/jobsplitter/gjs.cc b/cluster_tools/jobsplitter/gjs.cc
 --- a/cluster_tools/jobsplitter/gjs.cc	2020-03-25 04:30:34.000000000 -0500
-+++ b/cluster_tools/jobsplitter/gjs.cc	2020-10-10 21:01:14.376770641 -0500
++++ b/cluster_tools/jobsplitter/gjs.cc	2020-11-01 14:09:36.980752856 -0600
 @@ -30,15 +30,18 @@
  	cout<<"  -a value alias             : use any alias"<<endl;
  	cout<<"  -numberofsplits, -n   n    : the number of job splits; default=1"<<endl;
@@ -133,9 +133,9 @@ diff -ru a/cluster_tools/jobsplitter/gjs.cc b/cluster_tools/jobsplitter/gjs.cc
  	manager->SetVerboseLevel(verb);
  	manager->StartSplitting();
  	
-diff -ru a/cluster_tools/jobsplitter/include/GateSplitManager.hh b/cluster_tools/jobsplitter/include/GateSplitManager.hh
+diff -ruN a/cluster_tools/jobsplitter/include/GateSplitManager.hh b/cluster_tools/jobsplitter/include/GateSplitManager.hh
 --- a/cluster_tools/jobsplitter/include/GateSplitManager.hh	2020-03-25 04:30:34.000000000 -0500
-+++ b/cluster_tools/jobsplitter/include/GateSplitManager.hh	2020-10-10 21:02:25.136728953 -0500
++++ b/cluster_tools/jobsplitter/include/GateSplitManager.hh	2020-11-01 14:09:36.980752856 -0600
 @@ -21,7 +21,7 @@
  {
  public:
@@ -145,9 +145,9 @@ diff -ru a/cluster_tools/jobsplitter/include/GateSplitManager.hh b/cluster_tools
    ~GateSplitManager();
    void SetVerboseLevel(G4int value) { m_verboseLevel = value; };
    void StartSplitting();
-diff -ru a/cluster_tools/jobsplitter/include/GateToPlatform.hh b/cluster_tools/jobsplitter/include/GateToPlatform.hh
+diff -ruN a/cluster_tools/jobsplitter/include/GateToPlatform.hh b/cluster_tools/jobsplitter/include/GateToPlatform.hh
 --- a/cluster_tools/jobsplitter/include/GateToPlatform.hh	2020-03-25 04:30:34.000000000 -0500
-+++ b/cluster_tools/jobsplitter/include/GateToPlatform.hh	2020-10-10 21:11:45.910390030 -0500
++++ b/cluster_tools/jobsplitter/include/GateToPlatform.hh	2020-11-01 14:09:36.980752856 -0600
 @@ -20,7 +20,7 @@
  {
  public:
@@ -174,10 +174,45 @@ diff -ru a/cluster_tools/jobsplitter/include/GateToPlatform.hh b/cluster_tools/j
    G4String condorScript;
    G4String outputMacfilename;
    G4String outputDir;
-Only in b/cluster_tools/jobsplitter/script: SGE.script
-diff -ru a/cluster_tools/jobsplitter/src/GateSplitManager.cc b/cluster_tools/jobsplitter/src/GateSplitManager.cc
+diff -ruN a/cluster_tools/jobsplitter/script/SGE.script b/cluster_tools/jobsplitter/script/SGE.script
+--- a/cluster_tools/jobsplitter/script/SGE.script	1969-12-31 18:00:00.000000000 -0600
++++ b/cluster_tools/jobsplitter/script/SGE.script	2020-11-01 14:10:22.665715635 -0600
+@@ -0,0 +1,32 @@
++#!/bin/bash
++##############################################################
++#
++#  Standard batch script for SGE in ClusterGATE 
++#  This script will be proccessed by gjs. The
++#  following keywords 
++#   GC_JOBNAME
++#   GC_LOG
++#   GC_ERR
++#   GC_GATE
++#   GC_WORKDIR
++#   GC_QUEUE
++#  will be replaced by actual values.
++#  Do not remove any of them!
++#    
++##############################################################
++#
++# Queue to submit to
++#$ -q GC_SGE_QUEUE
++
++# batch job stderr and stdout
++#$ -o GC_WORKDIR/GC_LOG
++#$ -e GC_WORKDIR/GC_ERR
++
++# Job name
++#$ -N GC_JOBNAME
++
++# Use current working directory
++#$ -cwd
++
++# executable
++GC_GATE 
+diff -ruN a/cluster_tools/jobsplitter/src/GateSplitManager.cc b/cluster_tools/jobsplitter/src/GateSplitManager.cc
 --- a/cluster_tools/jobsplitter/src/GateSplitManager.cc	2020-03-25 04:30:34.000000000 -0500
-+++ b/cluster_tools/jobsplitter/src/GateSplitManager.cc	2020-10-10 21:15:14.371255628 -0500
++++ b/cluster_tools/jobsplitter/src/GateSplitManager.cc	2020-11-01 14:09:36.981752855 -0600
 @@ -17,9 +17,10 @@
  using std::endl;
  
@@ -191,9 +226,9 @@ diff -ru a/cluster_tools/jobsplitter/src/GateSplitManager.cc b/cluster_tools/job
   macParser  = new GateMacfileParser(macfile,nSplits,nAliases,aliases);
   numberOfSplits=nSplits;
  }
-diff -ru a/cluster_tools/jobsplitter/src/GateToPlatform.cc b/cluster_tools/jobsplitter/src/GateToPlatform.cc
+diff -ruN a/cluster_tools/jobsplitter/src/GateToPlatform.cc b/cluster_tools/jobsplitter/src/GateToPlatform.cc
 --- a/cluster_tools/jobsplitter/src/GateToPlatform.cc	2020-03-25 04:30:34.000000000 -0500
-+++ b/cluster_tools/jobsplitter/src/GateToPlatform.cc	2020-10-10 22:04:46.108197968 -0500
++++ b/cluster_tools/jobsplitter/src/GateToPlatform.cc	2020-11-01 14:09:36.981752855 -0600
 @@ -25,12 +25,13 @@
  using std::ifstream;
  using std::ostringstream;
