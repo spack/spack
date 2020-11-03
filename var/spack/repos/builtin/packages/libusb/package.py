@@ -31,5 +31,7 @@ class Libusb(Package):
 
     def install(self, spec, prefix):
         configure('--disable-dependency-tracking',
+                  # no libudev/systemd package currently in spack
+                  '--disable-udev',
                   '--prefix=%s' % self.spec.prefix)
         make('install')
