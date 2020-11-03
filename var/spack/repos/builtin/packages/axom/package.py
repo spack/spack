@@ -422,19 +422,24 @@ class Axom(CMakePackage, CudaPackage):
 
         # Only turn on clangformat support if devtools is on
         if "+devtools" in spec:
-            lc_clangformatpath = "/usr/tce/packages/clang/clang-10.0.0/bin/clang-format"
-            # This works only with Ubuntu + Debian - other distros (Arch/Fedora) use
-            # /usr/bin/clang-format which would require actually running the executable to grab the version
-            apt_clangformatpath = "/usr/bin/clang-format-10"
-            if os.path.exists(lc_clangformatpath):
-                cfg.write(cmake_cache_entry("CLANGFORMAT_EXECUTABLE", lc_clangformatpath))
-            elif os.path.exists(apt_clangformatpath):
-                cfg.write(cmake_cache_entry("CLANGFORMAT_EXECUTABLE", apt_clangformatpath))
-            else:
+            cf_paths = []
+            lc_clangpath = "/usr/tce/packages/clang/clang-10.0.0"
+            cf_paths.append(pjoin(lc_clangpath, "bin/clang-format"))
+            cf_paths.append("/usr/bin/clang-format-10")
+            cf_paths.append("/usr/bin/clang-format")
+
+            cf_found = False
+            for path in cf_paths:
+                if os.path.exists(path):
+                    cf_found = True
+                    cfg.write(cmake_cache_entry("CLANGFORMAT_EXECUTABLE",
+                                                path))
+
+            if not cf_found:
                 cfg.write("# Unable to find clang-format\n\n")
                 cfg.write(cmake_cache_option("ENABLE_CLANGFORMAT", False))
         else:
-            cfg.write("# Devtools disabled\n\n")
+            cfg.write("# ClangFormat disabled due to disabled devtools\n")
             cfg.write(cmake_cache_option("ENABLE_CLANGFORMAT", False))
 
         ##################################
