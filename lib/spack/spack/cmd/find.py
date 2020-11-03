@@ -234,6 +234,8 @@ def find(parser, args):
     # Display the result
     if args.json:
         cmd.display_specs_as_json(results, deps=args.deps)
+    elif args.format:
+        cmd.display_specs(results, args, decorator=decorator, all_headers=True)
     else:
         if env:
             display_env(env, args, decorator)
