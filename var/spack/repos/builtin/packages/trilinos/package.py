@@ -115,6 +115,8 @@ class Trilinos(CMakePackage):
             description='Compile with SuperluDist solvers')
     variant('superlu',      default=False,
             description='Compile with SuperLU solvers')
+    variant('strumpack',    default=False,
+            description='Compile with STRUMPACK solvers')
     variant('x11',          default=False,
             description='Compile with X11')
     variant('zlib',         default=False,
@@ -306,6 +308,8 @@ class Trilinos(CMakePackage):
     # and
     # https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
     conflicts('+superlu-dist', when='+complex+amesos2')
+    conflicts('+strumpack', when='@:13.0.99')
+    conflicts('+strumpack', when='~metis')
     # PnetCDF was only added after v12.10.1
     conflicts('+pnetcdf', when='@0:12.10.1')
     # https://github.com/trilinos/Trilinos/issues/2994
@@ -356,6 +360,8 @@ class Trilinos(CMakePackage):
     depends_on('superlu-dist@develop', when='@develop+superlu-dist')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
     depends_on('superlu+pic@4.3', when='+superlu')
+    depends_on('strumpack+shared', when='+strumpack')
+    depends_on('scalapack', when='+strumpack+mpi')
     # Trilinos can not be built against 64bit int hypre
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
@@ -648,6 +654,17 @@ class Trilinos(CMakePackage):
             options.extend([
                 define('SuperLU_LIBRARY_DIRS', spec['superlu'].prefix.lib),
                 define('SuperLU_INCLUDE_DIRS', spec['superlu'].prefix.include),
+            ])
+
+        options.append(define_tpl_enable('STRUMPACK'))
+        if '+strumpack' in spec:
+            options.extend([
+                define('TPL_ENABLE_STRUMPACK', True),
+                define('Amesos2_ENABLE_STRUMPACK', True),
+                define('STRUMPACK_LIBRARY_DIRS',
+                       spec['strumpack'].libs.directories[0]),
+                define('STRUMPACK_INCLUDE_DIRS',
+                       spec['strumpack'].headers.directories[0]),
             ])
 
         options.append(define_tpl_enable('Pnetcdf'))
