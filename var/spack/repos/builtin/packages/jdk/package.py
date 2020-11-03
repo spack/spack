@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.util.prefix import Prefix
-from spack import *
+import os
+import re
 
 import llnl.util.tty as tty
-import os
+from spack.util.prefix import Prefix
 
 
 class Jdk(Package):
@@ -78,6 +78,19 @@ class Jdk(Package):
     #    override how it is symlinked into a view prefix. Then, spack activate
     #    can symlink all *.jar files to `prefix.lib.ext`
     extendable = True
+
+    executables = ['^java$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('-version', output=str, error=str)
+
+        # Make sure this is actually Oracle JDK, not OpenJDK
+        if 'openjdk' in output:
+            return None
+
+        match = re.search(r'\(build (\S+)\)', output)
+        return match.group(1).replace('+', '_') if match else None
 
     @property
     def home(self):

@@ -14,15 +14,19 @@ class Simulationio(CMakePackage):
     url      = "https://github.com/eschnett/SimulationIO/archive/version/9.0.1.tar.gz"
     git      = "https://github.com/eschnett/SimulationIO.git"
 
-    version('develop', branch='master')
+    maintainers = ['eschnett']
+
+    version('master', branch='master')
     version('9.0.1', sha256='c2f6c99417165f6eb8cbb9c44822d119586675abb34eabd553eb80f44b53e0c8')
 
-    variant('julia', default=False)
-    variant('python', default=True)
+    variant('julia', default=False, description="Enable Julia bindings")
+    variant('python', default=True, description="Enable Python bindings")
 
     variant('pic', default=True,
             description="Produce position-independent code")
 
+    depends_on("asdf-cxx ~python", when='~python')
+    depends_on("asdf-cxx +python", when='+python')
     depends_on('hdf5 +cxx @1.10.1:')
     depends_on('julia', when='+julia', type=('build', 'run'))
     depends_on('py-h5py', when='+python', type=('build', 'run'))

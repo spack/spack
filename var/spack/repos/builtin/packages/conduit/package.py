@@ -85,7 +85,7 @@ class Conduit(Package):
     # CMake
     #######################
     # cmake 3.8.2 or newer
-    depends_on("cmake@3.8.2:3.17.9999", type='build')
+    depends_on("cmake@3.8.2:", type='build')
 
     #######################
     # Python
@@ -144,6 +144,10 @@ class Conduit(Package):
     depends_on("py-sphinx", when="+python+doc", type='build')
     depends_on("py-sphinx-rtd-theme", when="+python+doc", type='build')
     depends_on("doxygen", when="+doc+doxygen")
+
+    # Tentative patch for fj compiler
+    # Cmake will support fj compiler and this patch will be removed
+    patch('fj_flags.patch', when='%fj')
 
     # build phases used by this package
     phases = ["configure", "build", "install"]
@@ -476,9 +480,9 @@ class Conduit(Package):
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
             if spec['mpi'].mpicc == spack_cc:
-                mpicc_path = "cc"
-                mpicxx_path = "CC"
-                mpifc_path = "ftn"
+                mpicc_path = c_compiler
+                mpicxx_path = cpp_compiler
+                mpifc_path = f_compiler
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))

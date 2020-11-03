@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import platform
-import llnl.util.cpu as cpu
+
+import archspec.cpu
+
 from spack.architecture import Platform, Target
 from spack.operating_systems.mac_os import MacOs
 
@@ -12,13 +14,15 @@ from spack.operating_systems.mac_os import MacOs
 class Darwin(Platform):
     priority    = 89
 
+    binary_formats = ['macho']
+
     def __init__(self):
         super(Darwin, self).__init__('darwin')
 
-        for name in cpu.targets:
+        for name in archspec.cpu.TARGETS:
             self.add_target(name, Target(name))
 
-        self.default = cpu.host().name
+        self.default = archspec.cpu.host().name
         self.front_end = self.default
         self.back_end = self.default
 

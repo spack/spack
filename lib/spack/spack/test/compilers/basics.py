@@ -442,6 +442,30 @@ def test_clang_flags():
                         'clang@3.3')
 
 
+def test_aocc_flags():
+    supported_flag_test("debug_flags",
+                        ['-gcodeview', '-gdwarf-2', '-gdwarf-3',
+                         '-gdwarf-4', '-gdwarf-5', '-gline-tables-only',
+                         '-gmodules', '-gz', '-g'],
+                        'aocc@2.2.0')
+    supported_flag_test("opt_flags",
+                        ['-O0', '-O1', '-O2', '-O3', '-Ofast',
+                         '-Os', '-Oz', '-Og',
+                         '-O', '-O4'],
+                        'aocc@2.2.0')
+    supported_flag_test("openmp_flag", "-fopenmp", "aocc@2.2.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "aocc@2.2.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "aocc@2.2.0")
+    supported_flag_test("cxx17_flag", "-std=c++17", "aocc@2.2.0")
+    supported_flag_test("c99_flag", "-std=c99", "aocc@2.2.0")
+    supported_flag_test("c11_flag", "-std=c11", "aocc@2.2.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("version_argument", "--version", "aocc@2.2.0")
+
+
 def test_fj_flags():
     supported_flag_test("openmp_flag", "-Kopenmp", "fj@4.0.0")
     supported_flag_test("cxx98_flag", "-std=c++98", "fj@4.0.0")
@@ -516,6 +540,25 @@ def test_intel_flags():
                         'intel@1.0')
 
 
+def test_oneapi_flags():
+    supported_flag_test("openmp_flag", "-qopenmp", "oneapi@2020.8.0.0827")
+    supported_flag_test("cxx11_flag", "-std=c++11", "oneapi@2020.8.0.0827")
+    supported_flag_test("cxx14_flag", "-std=c++14", "oneapi@2020.8.0.0827")
+    supported_flag_test("c99_flag", "-std=c99", "oneapi@2020.8.0.0827")
+    supported_flag_test("c11_flag", "-std=c1x", "oneapi@2020.8.0.0827")
+    supported_flag_test("cc_pic_flag",  "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("f77_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("fc_pic_flag",  "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("stdcxx_libs", ("-cxxlib",), "oneapi@2020.8.0.0827")
+    supported_flag_test("debug_flags",
+                        ['-debug', '-g', '-g0', '-g1', '-g2', '-g3'],
+                        'oneapi@2020.8.0.0827')
+    supported_flag_test("opt_flags",
+                        ['-O', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os'],
+                        'oneapi@2020.8.0.0827')
+
+
 def test_nag_flags():
     supported_flag_test("openmp_flag", "-openmp", "nag@1.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "nag@1.0")
@@ -531,6 +574,23 @@ def test_nag_flags():
     supported_flag_test("debug_flags", ['-g', '-gline', '-g90'], 'nag@1.0')
     supported_flag_test("opt_flags", ['-O', '-O0', '-O1', '-O2', '-O3', '-O4'],
                         'nag@1.0')
+
+
+def test_nvhpc_flags():
+    supported_flag_test("openmp_flag", "-mp", "nvhpc@20.9")
+    supported_flag_test("cxx11_flag", "--c++11", "nvhpc@20.9")
+    supported_flag_test("cxx14_flag", "--c++14", "nvhpc@20.9")
+    supported_flag_test("cxx17_flag", "--c++17", "nvhpc@20.9")
+    supported_flag_test("c99_flag", "-c99", "nvhpc@20.9")
+    supported_flag_test("c11_flag", "-c11", "nvhpc@20.9")
+    supported_flag_test("cc_pic_flag",  "-fpic", "nvhpc@20.9")
+    supported_flag_test("cxx_pic_flag", "-fpic", "nvhpc@20.9")
+    supported_flag_test("f77_pic_flag", "-fpic", "nvhpc@20.9")
+    supported_flag_test("fc_pic_flag",  "-fpic", "nvhpc@20.9")
+    supported_flag_test("debug_flags", ['-g', '-gopt'], 'nvhpc@20.9')
+    supported_flag_test("opt_flags", ['-O', '-O0', '-O1', '-O2', '-O3', '-O4'],
+                        'nvhpc@20.9')
+    supported_flag_test("stdcxx_libs", ('-c++libs',), 'nvhpc@20.9')
 
 
 def test_pgi_flags():
@@ -737,6 +797,41 @@ fi
     except ProcessError:
         # Confirm environment does not change after failed call
         assert 'SPACK_TEST_CMP_ON' not in os.environ
+
+
+def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
+    # Create compiler
+    gcc = str(tmpdir.join('gcc'))
+    with open(gcc, 'w') as f:
+        f.write("""#!/bin/bash
+echo "4.4.4"
+""")  # Version for which c++11 flag is -std=c++0x
+    fs.set_executable(gcc)
+
+    # Add compiler to config
+    compiler_info = {
+        'spec': 'gcc@foo',
+        'paths': {
+            'cc': gcc,
+            'cxx': None,
+            'f77': None,
+            'fc': None,
+        },
+        'flags': {},
+        'operating_system': 'fake',
+        'target': 'fake',
+        'modules': ['turn_on'],
+        'environment': {},
+        'extra_rpaths': [],
+    }
+    compiler_dict = {'compiler': compiler_info}
+
+    # Run and confirm output
+    compilers = spack.compilers.get_compilers([compiler_dict])
+    assert len(compilers) == 1
+    compiler = compilers[0]
+    flag = compiler.cxx11_flag
+    assert flag == '-std=c++0x'
 
 
 def test_apple_clang_setup_environment(mock_executable, monkeypatch):

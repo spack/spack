@@ -16,7 +16,7 @@ class Blaze(CMakePackage):
     """
 
     homepage = "https://bitbucket.org/blaze-lib/blaze/overview"
-    url      = "https://bitbucket.org/blaze-lib/blaze/downloads/blaze-3.5.tar.gz"
+    url      = "https://bitbucket.org/blaze-lib/blaze/downloads/blaze-3.8.tar.gz"
     git      = "https://bitbucket.org/blaze-lib/blaze.git"
 
     # Blaze requires at least cmake 3.8.0 for C++14 features.
@@ -24,6 +24,9 @@ class Blaze(CMakePackage):
     depends_on('blas')
 
     version('master', branch='master')
+    version('3.8', sha256='dfaae1a3a9fea0b3cc92e78c9858dcc6c93301d59f67de5d388a3a41c8a629ae')
+    version('3.7', sha256='ef3cbc5db7d62dcdde0af88d3c951051254afd750d26773406fddb6afc5ad890')
+    version('3.6', sha256='2ebbadacaf3f066e27352c1e413ead127b7ced8a3b202ae45f39c8f5f12324cc')
     version('3.5', sha256='f50d4a57796b8012d3e6d416667d9abe6f4d95994eb9deb86cd4491381dec624')
     version('3.4', sha256='fd474ab479e81d31edf27d4a529706b418f874caa7b046c67489128c20dda66f')
     version('3.3', sha256='138cbb7b95775c10bf56a5ab3596a32205751299b19699984b6ed55b1bf989d0')

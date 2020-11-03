@@ -28,8 +28,14 @@ class Pkgconf(AutotoolsPackage):
 
     provides('pkgconfig')
 
+    # https://github.com/spack/spack/issues/11704
+    patch('nvhpc.patch', when='@1.7.3%nvhpc')
+
     # TODO: Add a package for the kyua testing framework
     # depends_on('kyua', type='test')
+
+    # https://github.com/spack/spack/issues/3525
+    conflicts('%pgi')
 
     executables = ['^pkgconf$', '^pkg-config$']
 

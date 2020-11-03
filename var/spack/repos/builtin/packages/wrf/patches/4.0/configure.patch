@@ -1,0 +1,44 @@
+--- a/configure	2018-06-08 19:39:31.000000000 -0500
++++ b/configure	2018-11-02 13:33:12.344663826 -0500
+@@ -190,6 +190,13 @@
+   else
+     USENETCDF=" "
+   fi
++  # for netCDF 4.2 and greater, the Fortran library is a separate install
++  if [ -z "$NETCDFF" ]; then
++    NETCDFF="$NETCDF"
++  fi
++  if [ -f "$NETCDFF/lib/libnetcdff.a" ] ; then
++    USENETCDFF="-L$NETCDFF/lib!-lnetcdff" # ! will be replaced with space
++  fi
+   export USENETCDF=$USENETCDF
+   export USENETCDFF=$USENETCDFF
+ else
+@@ -549,7 +556,7 @@
+    srch=`grep -i "^#ARCH.*$os" arch/configure.defaults | grep -i "$mach"`
+    if [ -n "$srch" ] ; then
+      $PERL arch/Config.pl -dmparallel=$COMMLIB -ompparallel=$OMP -perl=$PERL \
+-          -netcdf=$NETCDF -pnetcdf=$PNETCDF -hdf5=$HDF5 -phdf5=$PHDF5 -os=$os -mach=$mach -ldflags=$ldflags \
++          -netcdf=$NETCDF -netcdff=$NETCDFF -pnetcdf=$PNETCDF -hdf5=$HDF5 -phdf5=$PHDF5 -os=$os -mach=$mach -ldflags=$ldflags \
+           -compileflags=$compileflags -opt_level=$opt_level -USENETCDFF=$USENETCDFF -USENETCDF=$USENETCDF \
+           -time=$FORTRAN_COMPILER_TIMER -tfl="$TFL" -cfl="$CFL" -config_line="$config_line" \
+           -wrf_core=$wrf_core -gpfs=$GPFS_PATH -curl=$CURL_PATH -dep_lib_path="$DEP_LIB_PATH"
+@@ -629,14 +636,14 @@
+ echo "If you wish to change the default options, edit the file:"
+ echo "     arch/configure.defaults"
+ 
+-if test -n "$NETCDF" ; then
+-  if [ ! -f $NETCDF/include/netcdf.inc ] ; then
++if test -n "$NETCDFF" ; then
++  if [ ! -f $NETCDFF/include/netcdf.inc ] ; then
+     echo
+-    echo "Error : Not found $NETCDF/include/netcdf.inc"
++    echo "Error : Not found $NETCDFF/include/netcdf.inc"
+     echo "        Please check this installation of NetCDF and re-run this configure script"
+     exit -1
+   fi
+-  grep nf_format_64bit $NETCDF/include/netcdf.inc > /dev/null
++  grep nf_format_64bit $NETCDFF/include/netcdf.inc > /dev/null
+   configure_aaaa=$? ; export configure_aaaa
+   if [ $configure_aaaa -a -z "$WRFIO_NCD_NO_LARGE_FILE_SUPPORT" ] ; then
+     echo "NetCDF users note:"

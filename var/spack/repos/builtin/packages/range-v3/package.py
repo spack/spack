@@ -21,7 +21,8 @@ class RangeV3(CMakePackage):
     git      = "https://github.com/ericniebler/range-v3.git"
     maintainers = ['chissg']
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('0.11.0', sha256='376376615dbba43d3bef75aa590931431ecb49eb36d07bb726a19f680c75e20c')
     version('0.10.0', sha256='5a1cd44e7315d0e8dcb1eee4df6802221456a9d1dbeac53da02ac7bd4ea150cd')
     version('0.5.0', sha256='32e30b3be042246030f31d40394115b751431d9d2b4e0f6d58834b2fd5594280')
     version('0.4.0', sha256='5dbc878b7dfc500fb04b6b9f99d63993a2731ea34b0a4b8d5f670a5a71a18e39')
@@ -61,6 +62,7 @@ class RangeV3(CMakePackage):
     # Known compiler conflicts. Your favorite compiler may also conflict
     # depending on its C++ standard support.
     conflicts('%clang@:3.6.1')
+    conflicts('%clang@:3.9.99', when='@0.11.0:')
     conflicts('%gcc@:4.9.0')
     conflicts('%gcc@:5.2.0', when='cxxstd=14')
     conflicts('%gcc@:5.99.99', when='cxxstd=17')

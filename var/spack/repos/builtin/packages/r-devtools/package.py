@@ -52,7 +52,7 @@ class RDevtools(RPackage):
     depends_on('r-roxygen2@6.1.1:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-roxygen2@7.1.0:', when='@2.3.0:', type=('build', 'run'))
     depends_on('r-rstudioapi@0.7.0:', type=('build', 'run'))
-    depends_on('r-rstudioapi@0.11.0:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-rstudioapi@0.11:', when='@2.3.0:', type=('build', 'run'))
     depends_on('r-rversions@2.0.1:', when='@2.3.0:', type=('build', 'run'))
     depends_on('r-sessioninfo@1.1.1:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-testthat@2.1.1:', when='@2.0.0:', type=('build', 'run'))

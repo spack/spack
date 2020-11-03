@@ -266,6 +266,7 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('2006_201012', sha256='9afb7eee072bfddcf7f3e58420c93463027db2394997ac4c3b87a8b07c707fb0')
     version('2006', sha256='30c6376d6f403985fc2ab381d364522d1420dd58a42cb270d2ad86f8af227edc')
     version('1912_200506', sha256='831a39ff56e268e88374d0a3922479fd80260683e141e51980242cc281484121')
     version('1912_200403', sha256='1de8f4ddd39722b75f6b01ace9f1ba727b53dd999d1cd2b344a8c677ac2db4c0')
@@ -386,7 +387,6 @@ class Openfoam(Package):
         corresponding unpatched directories (eg '1906').
         Older versions (eg, v1612+) had additional '+' in naming
         """
-        tty.info('openfoam: {0}'.format(version))
         if version <= Version('1612'):
             fmt = 'v{0}+/OpenFOAM-v{1}+.tgz'
         else:
@@ -405,7 +405,10 @@ class Openfoam(Package):
     def setup_build_environment(self, env):
         """Sets the build environment (prior to unpacking the sources).
         """
-        pass
+        # Avoid the exception that occurs at runtime
+        # when building with the Fujitsu compiler.
+        if self.spec.satisfies('%fj'):
+            env.set('FOAM_SIGFPE', 'false')
 
     def setup_run_environment(self, env):
         """Sets the run environment (post-installation).
@@ -584,10 +587,10 @@ class Openfoam(Package):
                     backup=False, string=True)
 
     def configure(self, spec, prefix):
-        """Make adjustments to the OpenFOAM configuration files in their various
-        locations: etc/bashrc, etc/config.sh/FEATURE and customizations that
-        don't properly fit get placed in the etc/prefs.sh file (similiarly for
-        csh).
+        """Make adjustments to the OpenFOAM configuration files in their
+        various locations: etc/bashrc, etc/config.sh/FEATURE and
+        customizations that don't properly fit get placed in the etc/prefs.sh
+        file (similiarly for csh).
         """
         # Filtering bashrc, cshrc
         edits = {}
@@ -889,7 +892,7 @@ class OpenfoamArch(object):
             elif target == 'armv7l':
                 platform += 'ARM7'
             elif target == 'aarch64':
-                platform += 'ARM64'
+                platform += 'Arm64'
             elif target == 'ppc64':
                 platform += 'PPC64'
             elif target == 'ppc64le':
@@ -915,9 +918,10 @@ class OpenfoamArch(object):
         # Build WM_OPTIONS
         # ----
         # WM_LABEL_OPTION=Int$WM_LABEL_SIZE
-        # WM_OPTIONS=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_LABEL_OPTION$WM_COMPILE_OPTION
+        # WM_OPTIONS_BASE=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION
+        # WM_OPTIONS=$WM_OPTIONS_BASE$WM_LABEL_OPTION$WM_COMPILE_OPTION
         # or
-        # WM_OPTIONS=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_COMPILE_OPTION
+        # WM_OPTIONS=$WM_OPTIONS_BASE$WM_COMPILE_OPTION
         # ----
         self.options = ''.join([
             self.arch,

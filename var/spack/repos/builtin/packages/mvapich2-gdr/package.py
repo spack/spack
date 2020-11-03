@@ -13,11 +13,11 @@ class Mvapich2Gdr(AutotoolsPackage):
     installable from source and is only available through a binary mirror.
     If you do not find the binary you're looking for, send us an email at
     mvapich@cse.ohio-state.edu. The binary mirror url is:
-    http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2-gdr/
+    http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2-gdr/
     """
 
     homepage = 'http://mvapich.cse.ohio-state.edu'
-    url      = 'http://mvapich.cse.ohio-state.edu:8080/download/mvapich/spack-mirror/mvapich2-gdr/mvapich2-gdr-2.3.4.tar.gz'
+    url      = 'http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2-gdr/mvapich2-gdr-2.3.4.tar.gz'
 
     maintainers = ['nithintsk', 'harisubramoni']
 

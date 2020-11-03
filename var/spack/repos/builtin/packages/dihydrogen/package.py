@@ -14,12 +14,15 @@ class Dihydrogen(CMakePackage, CudaPackage):
        needs of the distributed machine learning effort, LBANN."""
 
     homepage = "https://github.com/LLNL/DiHydrogen.git"
-    url      = "https://github.com/LLNL/DiHydrogen.git"
+    url      = "https://github.com/LLNL/DiHydrogen/archive/v0.1.tar.gz"
     git      = "https://github.com/LLNL/DiHydrogen.git"
 
     maintainers = ['bvanessen']
 
+    version('develop', branch='develop')
     version('master', branch='master')
+
+    version('0.1', sha256='171d4b8adda1e501c38177ec966e6f11f8980bf71345e5f6d87d0a988fef4c4e')
 
     variant('al', default=True,
             description='Builds with Aluminum communication library')
@@ -51,6 +54,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
     # Override the default set of CUDA architectures with the relevant
     # subset from lib/spack/spack/build_systems/cuda.py
     cuda_arch_values = [
+        '30', '32', '35', '37',
+        '50', '52', '53',
         '60', '61', '62',
         '70', '72', '75',
         '80'
@@ -62,12 +67,16 @@ class Dihydrogen(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('catch2', type='test')
 
-    depends_on('aluminum', when='+al ~cuda')
+    # Specify the correct version of Aluminum
+    depends_on('aluminum@0.4:0.4.99', when='@0.1:0.1.99 +al')
+    depends_on('aluminum@0.5:', when='@:0.0,0.2: +al')
+
+    # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
 
     depends_on('cuda', when=('+cuda' or '+legacy'))
     depends_on('cudnn', when=('+cuda' or '+legacy'))
-    depends_on('cub', when=('+cuda' or '+legacy'))
+    depends_on('cub', when='^cuda@:10.99')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('openblas', when='blas=openblas ~openmp_blas ~int64_blas')
@@ -104,8 +113,6 @@ class Dihydrogen(CMakePackage, CudaPackage):
     illegal_cuda_arch_values = [
         '10', '11', '12', '13',
         '20', '21',
-        '30', '32', '35', '37',
-        '50', '52', '53',
     ]
     for value in illegal_cuda_arch_values:
         conflicts('cuda_arch=' + value)

@@ -1,0 +1,26 @@
+diff --git a/examples/testtimeseries.cpp b/examples/testtimeseries.cpp
+index 1f57bac..e3ed88e 100644
+--- a/examples/testtimeseries.cpp
++++ b/examples/testtimeseries.cpp
+@@ -47,8 +47,8 @@ REGISTER_TEMPLATE(DailyBlock);
+ REGISTER(Stock);
+ 
+ inline int random(unsigned mod) { return rand() % mod; }
+-inline float fmax(float x, float y) { return x > y ? x : y; }
+-inline float fmin(float x, float y) { return x < y ? x : y; }
++inline float my_fmax(float x, float y) { return x > y ? x : y; }
++inline float my_fmin(float x, float y) { return x < y ? x : y; }
+ 
+ int main(int argc, char* argv[])
+ {
+@@ -66,8 +66,8 @@ int main(int argc, char* argv[])
+             quote.timestamp = i;
+             quote.open = (float)random(10000)/100;
+             quote.close = (float)random(10000)/100;
+-            quote.high = fmax(quote.open, quote.close);
+-            quote.low = fmin(quote.open, quote.close);
++            quote.high = my_fmax(quote.open, quote.close);
++            quote.low = my_fmin(quote.open, quote.close);
+             quote.volume = random(1000);
+             proc.add(stockId, quote); // add new element in time series
+         }

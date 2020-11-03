@@ -22,7 +22,7 @@ class Memsurfer(PythonPackage):
     variant('osmesa', default=False,
             description='Enable OSMesa support (for VTK)')
 
-    extends('python@3.7:')
+    extends('python')
     depends_on('python@3.7:', type=('build', 'run'))
 
     depends_on('cmake@3.14:', type='build')

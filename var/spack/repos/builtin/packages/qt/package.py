@@ -333,10 +333,13 @@ class Qt(Package):
                     conf('g++-unix'))
 
         if self.spec.satisfies('@4'):
-            # Necessary to build with GCC 6 and other modern compilers
-            # http://stackoverflow.com/questions/10354371/
+            # The gnu98 flag is necessary to build with GCC 6 and other modern
+            # compilers (see http://stackoverflow.com/questions/10354371/);
+            # be permissive because of the abundance of older code, and hide
+            # all warnings because there are so many of them with newer
+            # compilers
             with open(conf('gcc-base'), 'a') as f:
-                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98 -fpermissive -w\n")
 
     @when('@4: %intel')
     def patch(self):
@@ -376,9 +379,11 @@ class Qt(Package):
 
         if self.spec.variants['freetype'].value == 'spack':
             config_args.extend([
-                '-system-freetype',
-                '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include)
+                '-system-freetype'
             ])
+            config_args.extend(
+                self.spec['freetype'].headers.include_flags.split()
+            )
             if not MACOS_VERSION:
                 config_args.append('-fontconfig')
 
@@ -521,6 +526,7 @@ class Qt(Package):
             '-{0}webkit'.format('' if '+webkit' in spec else 'no-'),
             '-{0}phonon'.format('' if '+phonon' in spec else 'no-'),
             '-arch', str(spec.target.family),
+            '-xmlpatterns',
         ])
 
         # Disable phonon backend until gstreamer is setup as dependency

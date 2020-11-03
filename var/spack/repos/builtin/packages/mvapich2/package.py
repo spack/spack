@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 import os.path
 import sys
 
@@ -17,6 +18,8 @@ class Mvapich2(AutotoolsPackage):
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
     maintainers = ['nithintsk', 'harisubramoni']
+
+    executables = ['^mpiname$']
 
     # Prefer the latest stable release
     version('2.3.4', sha256='7226a45c7c98333c8e5d2888119cce186199b430c13b7b1dca1769909e68ea7a')
@@ -121,6 +124,107 @@ class Mvapich2(AutotoolsPackage):
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
     )
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('-a', output=str, error=str)
+        match = re.search(r'^MVAPICH2 (\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        def get_spack_compiler_spec(path):
+            spack_compilers = spack.compilers.find_compilers([path])
+            for spack_compiler in spack_compilers:
+                if os.path.dirname(spack_compiler.cc) == path:
+                    return spack_compiler.spec
+            return None
+        results = []
+        for exe in exes:
+            variants = ''
+            output = Executable(exe)('-a', output=str, error=str)
+
+            if re.search(r'--enable-wrapper-rpath=yes', output):
+                variants += '+wrapperrpath'
+            else:
+                variants += '~wrapperrpath'
+
+            if (re.search(r'--disable-fast', output)
+                and re.search(r'--enable-error-checking=runtime', output)
+                and re.search(r'--enable-error-messages', output)
+                and re.search(r'--enable-g', output)
+                and re.search(r'--enable-debuginfo', output)):
+                variants += '+debug'
+            else:
+                variants += '~debug'
+
+            if re.search('--enable-cuda', output):
+                variants += '+cuda'
+            else:
+                variants += '~cuda'
+
+            if re.search('--enable-registration-cache', output):
+                variants += '+regcache'
+            else:
+                variants += '~regcache'
+
+            match = re.search(r'--enable-threads=(\S+)', output)
+            if match:
+                variants += " threads=" + match.group(1)
+
+            match = re.search(r'--with-ch3-rank-bits=(\S+)', output)
+            if match:
+                variants += " ch3_rank_bits=" + match.group(1)
+
+            pms = []
+            if re.search(r'--with-pm=slurm', output):
+                pms.append('slurm')
+            if re.search(r'--with-pm=[A-Za-z0-9:]*hydra', output):
+                pms.append('hydra')
+            if re.search(r'--with-pm=[A-Za-z0-9:]*gforker', output):
+                pms.append('gforker')
+            if re.search(r'--with-pm=[A-Za-z0-9:]*remshell', output):
+                pms.append('remshell')
+            if pms:
+                variants += " process_managers=" + ",".join(pms)
+
+            fabrics = {
+                'sock': 'ch3:sock',
+                'nemesistcpib': 'ch3:nemesis:tcp,ib',
+                'nemesisibtcp': 'ch3:nemesis:ib,tcp',
+                'nemesisib': 'ch3:nemesis:ib',
+                'nemesis': 'ch3:nemesis',
+                'mrail': 'ch3:mrail',
+                'nemesisofi': 'ch3:nemesis:ofi',
+            }
+            for fabric_name, conf_flag in fabrics.items():
+                if re.search(r'--with-device=' + conf_flag, output):
+                    variants += ' fabrics=' + fabric_name
+                    break
+            else:
+                if re.search(r'--with-device=psm', output):
+                    if re.search(r'--with-psm=', output):
+                        variants += ' fabrics=psm'
+                    elif re.search(r'--with-psm2=', output):
+                        variants += ' fabrics=psm2'
+
+            used_fs = []
+            for fs in ('lustre', 'gpfs', 'nfs', 'ufs'):
+                if re.search(
+                        '--with-file-system=[a-zA-Z0-9+]*' + fs,
+                        output):
+                    used_fs.append(fs)
+            if used_fs:
+                variants += ' file_systems=' + ",".join(used_fs)
+
+            match = re.search(r'CC: (\S+)', output)
+            if match:
+                comp_spec = get_spack_compiler_spec(
+                    os.path.dirname(match.group(1)))
+                if comp_spec:
+                    variants += " %" + str(comp_spec)
+            results.append(variants)
+        return results
 
     @property
     def libs(self):
