@@ -17,9 +17,13 @@ import spack.paths
 import spack.store
 
 
-#: Character limit for shebang line.  Using Linux's 127 characters
-#: here, as it is the shortest I could find on a modern OS.
-shebang_limit = 127
+#: Character limit for shebang line: 127 for Linux; 511 for Mac. Mac
+#: generates longer temporary file paths, which can lead to failures when
+#: generating sbang scripts for tests.
+if sys.platform == 'darwin':
+    shebang_limit = 511
+else:
+    shebang_limit = 127
 
 
 def sbang_install_path():
