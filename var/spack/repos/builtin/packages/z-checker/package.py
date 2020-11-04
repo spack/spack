@@ -22,6 +22,7 @@ class ZChecker(AutotoolsPackage):
             description='Enable mpi compilation')
 
     depends_on('mpi', when="+mpi") 
+
     def configure_args(self):
         args = []
         if '+mpi' in self.spec:
