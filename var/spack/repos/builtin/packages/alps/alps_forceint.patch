@@ -1,0 +1,21 @@
+diff -u -r -N e/alps/src/alps/osiris/xdrcore.C g/alps/src/alps/osiris/xdrcore.C
+--- e/alps/src/alps/osiris/xdrcore.C	2020-11-04 12:59:46.000000000 +0900
++++ g/alps/src/alps/osiris/xdrcore.C	2020-11-04 14:01:11.000000000 +0900
+@@ -132,7 +132,7 @@
+ xdr_int (XDR *xdrs, int *ip)
+ {
+ 
+-#if INT_MAX < LONG_MAX
++#if 1
+   long l;
+ 
+   switch (xdrs->x_op)
+@@ -166,7 +166,7 @@
+ bool_t
+ xdr_u_int (XDR *xdrs, u_int *up)
+ {
+-#if UINT_MAX < ULONG_MAX
++#if 1
+   long l;
+ 
+   switch (xdrs->x_op)

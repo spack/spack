@@ -39,6 +39,9 @@ class Alps(CMakePackage):
 
     # remove a problematic build variable
     patch('mpi.patch')
+    # patch('alps_xmltest.patch')
+    # patch('alps_dbg7.patch')
+    patch('alps_forceint.patch', when='target=aarch64:')
 
     extends('python')
 
@@ -48,4 +51,5 @@ class Alps(CMakePackage):
         args = []
         args.append('Boost_ROOT_DIR=' + self.spec['boost'].prefix)
         args.append("-DCMAKE_CXX_FLAGS={0}".format(self.compiler.cxx98_flag))
+        args.append("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
         return args
