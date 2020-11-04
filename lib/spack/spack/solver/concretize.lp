@@ -432,7 +432,15 @@ node_flag_source(Dependency, Q)
  :- node_flag_source(Package, Q), inherit_flags(Package, Dependency).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
-node_flag(Package, FlagType, Flag),
+node_flag(Package, FlagType, Flag)
+ :- not node_flag_set(Package),
+    compiler_version_flag(Compiler, Version, FlagType, Flag),
+    node_compiler(Package, Compiler),
+    node_compiler_version(Package, Compiler, Version),
+    flag_type(FlagType),
+    compiler(Compiler),
+    compiler_version(Compiler, Version).
+
 node_flag_compiler_default(Package)
  :- not node_flag_set(Package),
     compiler_version_flag(Compiler, Version, FlagType, Flag),
