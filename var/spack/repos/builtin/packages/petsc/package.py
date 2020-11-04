@@ -19,6 +19,7 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.14.1', sha256='0b4681165a9af96594c794b97ac6993452ec902726679f6b50bb450f89d230ed')
     version('3.14.0', sha256='a8f9caba03e0d57d8452c08505cf96be5f6949adaa266e819382162c03ddb9c5')
     version('3.13.6', sha256='67ca2cf3040d08fdc51d27f660ea3157732b24c2f47aae1b19d63f62a39842c2')
     version('3.13.5', sha256='10fc542dab961c8b17db35ad3a208cb184c237fc84e183817e38e6c7ab4b8732')
