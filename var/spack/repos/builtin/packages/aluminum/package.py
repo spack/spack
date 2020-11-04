@@ -61,12 +61,12 @@ class Aluminum(CMakePackage, CudaPackage):
                 '-DALUMINUM_ENABLE_MPI_CUDA_RMA:BOOL=%s' %
                 ('+cuda_rma' in spec)])
         else:
-            args.extend(
+            args.append(
                 '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec))
 
         if '@:0.1,0.6.0:':
-            args.extend([
-                '-DCUB_DIR:FILEPATH=%s' % spec['cub'].prefix.include])
+            args.append(
+                '-DCUB_DIR:FILEPATH=%s' % spec['cub'].prefix.include)
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
         if self.spec.satisfies('%clang platform=darwin'):
