@@ -19,6 +19,8 @@ class Aluminum(CMakePackage, CudaPackage):
     url      = "https://github.com/LLNL/Aluminum/archive/v0.1.tar.gz"
     git      = "https://github.com/LLNL/Aluminum.git"
 
+    maintainers = ['bvanessen']
+
     version('master', branch='master')
     version('0.6.0', sha256='6ca329951f4c7ea52670e46e5020e7e7879d9b56fed5ff8c5df6e624b313e925')
     version('0.5.0', sha256='dc365a5849eaba925355a8efb27005c5f22bcd1dca94aaed8d0d29c265c064c1')
@@ -59,8 +61,8 @@ class Aluminum(CMakePackage, CudaPackage):
                 '-DALUMINUM_ENABLE_MPI_CUDA_RMA:BOOL=%s' %
                 ('+cuda_rma' in spec)])
         else:
-            args.extend([
-                '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec)])
+            args.extend(
+                '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec))
 
         if '@:0.1,0.6.0:':
             args.extend([
