@@ -1090,7 +1090,7 @@ def relocate_package(spec, allow_root):
     # now a POSIX script that lives in the install prefix. Old packages
     # will have the old sbang location in their shebangs.
     import spack.hooks.sbang as sbang
-    orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
+    orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(old_spack_prefix)
     new_sbang = sbang.sbang_shebang_line()
     prefix_to_prefix = OrderedDict({})
     prefix_to_prefix[old_prefix] = new_prefix
@@ -1161,12 +1161,7 @@ def relocate_package(spec, allow_root):
 # relocate the sbang location if the spack directory changed
     else:
         if old_spack_prefix != new_spack_prefix:
-            relocate.relocate_text(text_names,
-                                   old_layout_root, new_layout_root,
-                                   old_prefix, new_prefix,
-                                   old_spack_prefix,
-                                   new_spack_prefix,
-                                   prefix_to_prefix)
+            relocate.relocate_text(text_names, prefix_to_prefix)
 
 
 def extract_tarball(spec, filename, allow_root=False, unsigned=False,

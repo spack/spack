@@ -464,8 +464,8 @@ def _replace_prefix_text(filename, compiled_prefixes):
     with open(filename, 'rb+') as f:
         data = f.read()
         f.seek(0)
-        for old_dir, new_dir in compiled_prefixes.items():
-            data = old_dir.sub(new_dir, data)
+        for orig_prefix_rexp, new_bytes in compiled_prefixes.items():
+            data = orig_prefix_rexp.sub(new_bytes, data)
         f.write(data)
         f.truncate()
 
@@ -485,17 +485,18 @@ def _replace_prefix_bin(filename, compiled_prefixes):
     """
 
     with open(filename, 'rb+') as f:
-        data = f.read()#.encode('utf-8') # Need to encode a binary?
+        data = f.read().encode('utf-8') # Might be excessive...
         f.seek(0)
-        for orig_prefix, new_prefix in compiled_prefixes.items():
+        for orig_prefix_rexp, new_bytes in compiled_prefixes.items():
             original_data_len = len(data)
-            if not orig_prefix.search(data):
+            # Skip this padding hassle if not found
+            if not orig_prefix_rexp.search(data):
                 continue
-            pad_length = len(orig_prefix.pattern) - len(new_prefix)
-            # removed redundant check: if padding >= 0:
+            pad_length = len(orig_prefix_rexp.pattern) - len(new_bytes)
             padding = os.sep * pad_length
             padding = padding.encode('utf-8')
-            data = orig_prefix.sub(padding + new_prefix, data)
+            data = orig_prefix_rexp.sub(padding + new_bytes, data)
+            # Really needs to be the same length
             if not len(data) == original_data_len:
                 raise BinaryStringReplacementError(
                     filename, original_data_len, len(data))
@@ -790,24 +791,25 @@ def relocate_text(files, prefixes, concurrency=32):
 
     compiled_prefixes = OrderedDict({})
 
-    for old_prefix, new_prefix in prefixes.items():
-        if old_prefix != new_prefix:
-            old_bytes = old_prefix.encode('utf-8')
-            old_prefix = re.compile(
-            b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % old_bytes)
-            new_prefix = b'\\1%s\\2' % new_prefix.encode('utf-8')
-            compiled_prefixes[old_prefix] = new_prefix
-
-    file_args = []
+    for orig_prefix, new_prefix in prefixes.items():
+        if orig_prefix != new_prefix:
+            orig_bytes = orig_prefix.encode('utf-8')
+            old_prefix_rexp = re.compile(
+            b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % orig_bytes)
+            new_bytes = b'\\1%s\\2' % new_prefix.encode('utf-8')
+            compiled_prefixes[orig_prefix_rexp] = new_bytes
 
     # Do relocations on text that refers to the install tree
+    # multiprocesing.ThreadPool.map requires single argument
+
+    args = []
     for filename in files:
-        file_args.append((filename, compiled_prefixes))
+        args.append((filename, compiled_prefixes))
     
     tp = multiprocessing.pool.ThreadPool(processes=concurrency)
 
     try:
-        tp.map(llnl.util.lang.star(_replace_prefix_text), file_args)
+        tp.map(llnl.util.lang.star(_replace_prefix_text), args)
     finally:
         tp.terminate()
         tp.join()
@@ -834,22 +836,22 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
         if not length_compatible and len(binaries) > 0:
             raise BinaryTextReplaceError(orig_prefix, new_prefix)
         if orig_prefix != new_prefix:
-            #TODO: re.escape? sanitize.
-            orig_prefix = re.compile(orig_prefix.encode('utf-8'))
-            new_prefix = new_prefix.encode('utf-8')
-            compiled_prefixes[orig_prefix] = new_prefix
+            orig_bytes = re.escape(orig_prefix.encode('utf-8'))
+            orig_prefix_rexp = re.compile(orig_bytes)
+            new_bytes = new_prefix.encode('utf-8')
+            compiled_prefixes[orig_prefix_rexp] = new_bytes
     
-    #TODO: Rename
+    # Do relocations on text in binaries that refers to the install tree
     # multiprocesing.ThreadPool.map requires single argument
-    bin_args = []
+    args = []
 
     for binary in binaries:
-        bin_args.append((binary, compiled_prefixes))
+        args.append((binary, compiled_prefixes))
 
     tp = multiprocessing.pool.ThreadPool(processes=concurrency)
 
     try:
-        tp.map(llnl.util.lang.star(_replace_prefix_bin), bin_args)
+        tp.map(llnl.util.lang.star(_replace_prefix_bin), args)
     finally:
         tp.terminate()
         tp.join()

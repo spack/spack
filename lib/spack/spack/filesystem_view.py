@@ -75,21 +75,13 @@ def view_copy(src, dst, view, spec=None):
         import spack.hooks.sbang as sbang
         orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
         new_sbang = sbang.sbang_shebang_line()
-        orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
-        new_sbang = '#!/bin/bash {0}/bin/sbang'.format(view._root)
 
         prefix_to_projection = OrderedDict({
             spec.prefix: view.get_projection_for_spec(spec),
-            spack.paths.spack_root: view._root,
-            orig_sbang: new_sbang})
+            spack.paths.spack_root: view._root})
 
         for dep in spec.traverse():
             prefix_to_projection[dep.prefix] = view.get_projection_for_spec(dep)
-
-
-
-
-        # TODO: Ordering of dict is probably bad here
 
         if spack.relocate.is_binary(dst):
             spack.relocate.relocate_text_bin(
@@ -97,8 +89,8 @@ def view_copy(src, dst, view, spec=None):
                 prefixes=prefix_to_projection
             )
         else:
-            #TODO: Prepend?
             prefix_to_projection[spack.store.layout.root] = view._root
+            prefix_to_projection[orig_sbang] = new_sbang
             spack.relocate.relocate_text(
                 files=[dst],
                 prefixes=prefix_to_projection
