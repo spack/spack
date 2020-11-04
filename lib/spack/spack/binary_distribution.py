@@ -711,7 +711,7 @@ def generate_package_index(cache_prefix):
         # If we got some kind of S3 (access denied or other connection
         # error), the first non boto-specific class in the exception
         # hierarchy is Exception.  Just print a warning and return
-        msg = 'Encountered problem listing keys at {0}: {1}'.format(
+        msg = 'Encountered problem listing packages at {0}: {1}'.format(
             cache_prefix, err)
         tty.warn(msg)
         return
