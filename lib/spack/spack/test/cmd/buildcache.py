@@ -27,7 +27,7 @@ uninstall = spack.main.SpackCommand('uninstall')
 
 def has_gpg():
     try:
-        gpg = spack.util.gpg.Gpg.gpg()
+        gpg = spack.util.gpg.Gpg()
     except spack.util.gpg.SpackGPGError:
         gpg = None
     return bool(gpg)
