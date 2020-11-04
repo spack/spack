@@ -309,13 +309,13 @@ configure_compilers() {
                     log "updated ${f} with newer GCC"
                 fi
             done
-        elif [[ ${line} = *"pgi"* ]]; then
+        elif [[ ${line} = *"pgi"* || ${line} = *"nvhpc"* ]]; then
             #update pgi modules for network installation
             PGI_DIR=$(dirname $(which makelocalrc))
             makelocalrc ${PGI_DIR} -gcc ${GCC_DIR}/bin/gcc -gpp ${GCC_DIR}/bin/g++ -g77 ${GCC_DIR}/bin/gfortran -x -net
             #configure pgi network license
             template=$(find $PGI_DIR -name localrc* ! -iname "*.bak" | tail -n 1)
-            for node in bbpv1 bbpv2 bbptadm tds03 tds04 r2i3n0 r2i3n1 r2i3n2 r2i3n3 r2i3n4 r2i3n5 r2i3n6; do
+            for node in bbpv1 bbpv2 bbptadm tds03 tds04 r2i3n0 r2i3n1 r2i3n2 r2i3n3 r2i3n4 r2i3n5 r2i3n6 ldir01u01 ldir01u05 ldir01u09 ldir01u13; do
                 cp $template $PGI_DIR/localrc.$node || true
             done
         fi
@@ -413,7 +413,7 @@ populate_mirror() {
 
     if [[ "${what}" = "compilers" ]]; then
         log "populating mirror with proprietary compilers"
-        for compiler in intel intel-parallel-studio pgi; do
+        for compiler in intel intel-parallel-studio pgi nvhpc; do
             mkdir -p ${SPACK_PROPRIETARY_MIRROR_DIR}/${compiler}
             cp ${DEPLOYMENT_DATA}/${compiler}/* ${SPACK_PROPRIETARY_MIRROR_DIR}/${compiler}/
         done
@@ -778,7 +778,7 @@ EOF
 
     if [[ "${export_packages[${what}]}" = "yes" ]]; then
         log "augmenting packages.yaml"
-        spack export --scope=user --module tcl --explicit --exclude 'allinea|py-.*|neuron|hdf5|intel-parallel-studio|pgi' arch=${BASE_ARCHITECTURE} > "${HOME}/packages.yaml"
+        spack export --scope=user --module tcl --explicit --exclude 'allinea|py-.*|neuron|hdf5|intel-parallel-studio|pgi|nvhpc' arch=${BASE_ARCHITECTURE} > "${HOME}/packages.yaml"
     else
         log "copying packages.yaml"
         cp "${HOME}/.spack/packages.yaml" "${HOME}"

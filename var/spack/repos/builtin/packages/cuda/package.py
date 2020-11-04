@@ -20,6 +20,10 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
+    version('11.1.0',
+            sha256='858cbab091fde94556a249b9580fadff55a46eafbcb4d4a741d2dcd358ab94a5',
+            expand=False,
+            url="https://developer.download.nvidia.com/compute/cuda/11.1.0/local_installers/cuda_11.1.0_455.23.05_linux.run")
     version('10.1.243',
             sha256='e7c22dc21278eb1b82f34a60ad7640b41ad3943d929bebda3008b72536855d31',
             expand=False,
@@ -52,8 +56,11 @@ class Cuda(Package):
     # Mojave support -- only macOS High Sierra 10.13 is supported.
     conflicts('arch=darwin-mojave-x86_64')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('CUDA_HOME', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('CUDA_HOME', self.prefix)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.lib64)
 
     def install(self, spec, prefix):
         runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
@@ -96,6 +103,3 @@ class Cuda(Package):
             if 'compat' not in lib.split(os.sep):
                 filtered_libs.append(lib)
         return LibraryList(filtered_libs)
-
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.lib64)

@@ -24,6 +24,7 @@ packages:
       - cuda@9.0.176
       - cuda@9.2.88
       - cuda@10.1.243
+      - cuda@11.1.0
       - cudnn@7.3.0
       # - freeimage@3.18.0
       - glew
