@@ -794,7 +794,7 @@ def relocate_text(files, prefixes, concurrency=32):
     for orig_prefix, new_prefix in prefixes.items():
         if orig_prefix != new_prefix:
             orig_bytes = orig_prefix.encode('utf-8')
-            old_prefix_rexp = re.compile(
+            orig_prefix_rexp = re.compile(
             b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % orig_bytes)
             new_bytes = b'\\1%s\\2' % new_prefix.encode('utf-8')
             compiled_prefixes[orig_prefix_rexp] = new_bytes
