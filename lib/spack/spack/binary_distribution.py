@@ -1317,6 +1317,7 @@ def try_direct_fetch(spec, force=False, full_hash_match=False, mirrors=None):
     specfile_name = tarball_name(spec, '.spec.yaml')
     lenient = not full_hash_match
     found_specs = []
+    spec_full_hash = spec.full_hash()
 
     for mirror in spack.mirror.MirrorCollection(mirrors=mirrors).values():
         buildcache_fetch_url = url_util.join(
@@ -1338,7 +1339,7 @@ def try_direct_fetch(spec, force=False, full_hash_match=False, mirrors=None):
 
         # Do not recompute the full hash for the fetched spec, instead just
         # read the property.
-        if lenient or fetched_spec._full_hash == spec.full_hash():
+        if lenient or fetched_spec._full_hash == spec_full_hash:
             found_specs.append({
                 'mirror_url': mirror.fetch_url,
                 'spec': fetched_spec,
