@@ -84,6 +84,15 @@ class TestConcretizePreferences(object):
             'mpileaks', debug=True, opt=True, shared=False, static=False
         )
 
+    def test_preferred_variants_from_wildcard(self):
+        """
+        Test that 'foo=*' concretizes to any value
+        """
+        update_packages('multivalue-variant', 'variants', 'foo=bar')
+        assert_variant_values(
+            'multivalue-variant foo=*', foo=('bar',)
+        )
+
     def test_preferred_compilers(self):
         """Test preferred compilers are applied correctly
         """

@@ -1185,7 +1185,7 @@ def test_env_activate_view_fails(
         tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate):
     """Sanity check on env activate to make sure it requires shell support"""
     out = env('activate', 'test')
-    assert "To initialize spack's shell commands:" in out
+    assert "To set up shell support" in out
 
 
 def test_stack_yaml_definitions(tmpdir):

@@ -18,6 +18,8 @@ class Madgraph5amc(Package):
     homepage = "https://launchpad.net/mg5amcnlo"
     url      = "https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz"
 
+    version('2.8.1', sha256='acda34414beba201e529b8c03f87f4893fb3f99ed2956a131d60a387e76c5b8c',
+            url="https://launchpad.net/mg5amcnlo/2.0/2.8.x/+download/MG5_aMC_v2.8.1.tar.gz")
     version('2.8.0', sha256='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
             url="https://launchpad.net/mg5amcnlo/2.0/2.8.x/+download/MG5_aMC_v2.8.0.tar.gz")
     version('2.7.3.py3', sha256='400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225')
@@ -44,12 +46,11 @@ class Madgraph5amc(Package):
     depends_on('python@3.7:', when='@2.7.3.py3', type=('build', 'run'))
     depends_on('python@2.7.0:2.8.0,3.7:', when='@2.8.0:', type=('build', 'run'))
 
-    patch('madgraph5amc-2.7.3.patch', level=0, when='@2.7.3.py2~atlas')
+    patch('madgraph5amc.patch', level=0)
     patch('madgraph5amc-2.7.3.atlas.patch', level=0, when='@2.7.3.py2+atlas')
-    patch('madgraph5amc-2.7.3.patch', level=0, when='@2.7.3.py3~atlas')
     patch('madgraph5amc-2.7.3.atlas.patch', level=0, when='@2.7.3.py3+atlas')
-    patch('madgraph5amc-2.7.3.patch', level=0, when='@2.8.0~atlas')
     patch('madgraph5amc-2.8.0.atlas.patch', level=0, when='@2.8.0+atlas')
+    patch('madgraph5amc-2.8.0.atlas.patch', level=0, when='@2.8.1+atlas')
 
     phases = ['edit', 'build', 'install']
 

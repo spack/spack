@@ -29,4 +29,4 @@ class RSf(RPackage):
     depends_on('gdal@2.0.1:')
     depends_on('geos@3.4.0:')
     depends_on('proj@4.8.0:5', when='@:0.7-3')
-    depends_on('proj@4.8.0:', when='@0.7-4:')
+    depends_on('proj@4.8.0:6', when='@0.7-4:')

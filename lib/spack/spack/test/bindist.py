@@ -19,6 +19,7 @@ import spack.cmd.buildcache as buildcache
 import spack.cmd.install as install
 import spack.cmd.uninstall as uninstall
 import spack.cmd.mirror as mirror
+from spack.main import SpackCommand
 import spack.mirror
 import spack.util.gpg
 from spack.directory_layout import YamlDirectoryLayout
@@ -30,6 +31,11 @@ ndef_install_path_scheme = '${PACKAGE}/${VERSION}/${ARCHITECTURE}-${COMPILERNAME
 
 mirror_path_def = None
 mirror_path_rel = None
+
+mirror_cmd = SpackCommand('mirror')
+install_cmd = SpackCommand('install')
+uninstall_cmd = SpackCommand('uninstall')
+buildcache_cmd = SpackCommand('buildcache')
 
 
 @pytest.fixture(scope='function')
@@ -254,7 +260,7 @@ def test_default_rpaths_create_install_default_layout(tmpdir,
 
     args = parser.parse_args(['list', '-l', '-v'])
     buildcache.buildcache(parser, args)
-    bindist._cached_specs = set()
+    bindist.clear_spec_cache()
     spack.stage.purge()
     margs = mparser.parse_args(
         ['rm', '--scope', 'site', 'test-mirror-def'])
@@ -419,7 +425,7 @@ def test_relative_rpaths_install_default_layout(tmpdir,
     args = parser.parse_args(install_args)
     buildcache.buildcache(parser, args)
 
-    bindist._cached_specs = set()
+    bindist.clear_spec_cache()
     spack.stage.purge()
     margs = mparser.parse_args(
         ['rm', '--scope', 'site', 'test-mirror-rel'])
@@ -466,13 +472,15 @@ def test_relative_rpaths_install_nondefault(tmpdir,
     args = parser.parse_args(install_args)
     buildcache.buildcache(parser, args)
 
-    bindist._cached_specs = set()
+    bindist.clear_spec_cache()
     spack.stage.purge()
     margs = mparser.parse_args(
         ['rm', '--scope', 'site', 'test-mirror-rel'])
     mirror.mirror(mparser, margs)
 
 
+@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
+                    reason='This test requires gpg')
 def test_push_and_fetch_keys(mock_gnupghome):
     testpath = str(mock_gnupghome)
 
@@ -518,7 +526,10 @@ def test_push_and_fetch_keys(mock_gnupghome):
                          'install_dir_non_default_layout')
 def test_built_spec_cache(tmpdir,
                           install_mockery):
-    """ Test what's the situation now """
+    """ Because the buildcache list command fetches the buildcache index
+    and uses it to populate the binary_distribution built spec cache, when
+    this test calls get_mirrors_for_spec, it is testing the popluation of
+    that cache from a buildcache index. """
     global mirror_path_rel
 
     mparser = argparse.ArgumentParser()
@@ -546,7 +557,7 @@ def test_built_spec_cache(tmpdir,
         'corge': cspec.full_hash(),
     }
 
-    gspec_results = bindist.get_spec(gspec)
+    gspec_results = bindist.get_mirrors_for_spec(gspec)
 
     gspec_mirrors = {}
     for result in gspec_results:
@@ -555,7 +566,7 @@ def test_built_spec_cache(tmpdir,
         assert(result['mirror_url'] not in gspec_mirrors)
         gspec_mirrors[result['mirror_url']] = True
 
-    cspec_results = bindist.get_spec(cspec, full_hash_match=True)
+    cspec_results = bindist.get_mirrors_for_spec(cspec, full_hash_match=True)
 
     cspec_mirrors = {}
     for result in cspec_results:
@@ -569,3 +580,37 @@ def test_built_spec_cache(tmpdir,
     margs = mparser.parse_args(
         ['rm', '--scope', 'site', 'test-mirror-rel'])
     mirror.mirror(mparser, margs)
+
+
+def test_spec_needs_rebuild(install_mockery_mutable_config, mock_packages,
+                            mock_fetch, monkeypatch, tmpdir):
+    """Make sure needs_rebuild properly compares remote full_hash
+    against locally computed one, avoiding unnecessary rebuilds"""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join('mirror_dir')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+
+    mirror_cmd('add', 'test-mirror', mirror_url)
+
+    s = Spec('libdwarf').concretized()
+
+    # Install a package
+    install_cmd(s.name)
+
+    # Put installed package in the buildcache
+    buildcache_cmd('create', '-u', '-a', '-d', mirror_dir.strpath, s.name)
+
+    rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
+
+    assert not rebuild
+
+    # Now monkey patch Spec to change the full hash on the package
+    def fake_full_hash(spec):
+        print('fake_full_hash')
+        return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+    monkeypatch.setattr(spack.spec.Spec, 'full_hash', fake_full_hash)
+
+    rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
+
+    assert rebuild

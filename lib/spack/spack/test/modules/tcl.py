@@ -133,8 +133,10 @@ class TestTcl(object):
         assert len([x for x in content if 'is-loaded' in x]) == 1
         assert len([x for x in content if 'module load ' in x]) == 1
 
-        # Returns a StringIO instead of a string as no module file was written
-        with pytest.raises(AttributeError):
+        # Catch "Exception" to avoid using FileNotFoundError on Python 3
+        # and IOError on Python 2 or common bases like EnvironmentError
+        # which are not officially documented
+        with pytest.raises(Exception):
             modulefile_content('callpath arch=x86-linux')
 
         content = modulefile_content('zmpi arch=x86-linux')
