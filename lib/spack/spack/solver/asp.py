@@ -1644,7 +1644,7 @@ class SpecBuilder(object):
         spec_info = packages_yaml[pkg]['externals'][int(idx)]
         self._specs[pkg].external_path = spec_info.get('prefix', None)
         self._specs[pkg].external_modules = (
-            spack.spec.Spec._format_module_list(spec_info.get('modules', []))
+            spack.spec.Spec._format_module_list(spec_info.get('modules', None))
         )
         self._specs[pkg].extra_attributes = spec_info.get(
             'extra_attributes', {}

@@ -855,3 +855,14 @@ class TestConcretize(object):
         s = Spec(spec_str).concretized()
         assert s.external
         assert s.satisfies(expected)
+
+    def test_external_packages_have_consistent_hash(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('This tests needs the ASP-based concretizer')
+
+        s, t = Spec('externaltool'), Spec('externaltool')
+        s._old_concretize(), t._new_concretize()
+
+        assert s.dag_hash() == t.dag_hash()
+        assert s.build_hash() == t.build_hash()
+        assert s.full_hash() == t.full_hash()
