@@ -457,8 +457,8 @@ def _replace_prefix_text(filename, compiled_prefixes):
 
     Args:
         filename (str): target text file (utf-8 encoded)
-        compiled_prefixes (OrderedDict): OrderedDictionary where the keys are 
-        precompiled regex of the old prefixes and the values are the new 
+        compiled_prefixes (OrderedDict): OrderedDictionary where the keys are
+        precompiled regex of the old prefixes and the values are the new
         prefixes (uft-8 encoded)
     """
     with open(filename, 'rb+') as f:
@@ -479,13 +479,13 @@ def _replace_prefix_bin(filename, compiled_prefixes):
 
     Args:
         filename (str): target binary file
-        compiled_prefixes (OrderedDict): OrderedDictionary where the keys are 
-        precompiled regex of the old prefixes and the values are the new 
+        compiled_prefixes (OrderedDict): OrderedDictionary where the keys are
+        precompiled regex of the old prefixes and the values are the new
         prefixes (uft-8 encoded)
     """
 
     with open(filename, 'rb+') as f:
-        data = f.read().encode('utf-8') # Might be excessive...
+        data = f.read().encode('utf-8')  # Might be excessive...
         f.seek(0)
         for orig_prefix_rexp, new_bytes in compiled_prefixes.items():
             original_data_len = len(data)
@@ -795,7 +795,7 @@ def relocate_text(files, prefixes, concurrency=32):
         if orig_prefix != new_prefix:
             orig_bytes = orig_prefix.encode('utf-8')
             orig_prefix_rexp = re.compile(
-            b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % orig_bytes)
+                b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % orig_bytes)
             new_bytes = b'\\1%s\\2' % new_prefix.encode('utf-8')
             compiled_prefixes[orig_prefix_rexp] = new_bytes
 
@@ -805,7 +805,7 @@ def relocate_text(files, prefixes, concurrency=32):
     args = []
     for filename in files:
         args.append((filename, compiled_prefixes))
-    
+
     tp = multiprocessing.pool.ThreadPool(processes=concurrency)
 
     try:
@@ -824,13 +824,13 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
         binaries (list): binaries to be relocated
         prefixes (OrderedDict): String prefixes which need to be changed.
         concurrency (int): Desired degree of parallelism.
-    
+
     Raises:
-      BinaryTextReplaceError: when the new path in longer than the old path
+      BinaryTextReplaceError: when the new path is longer than the old path
     """
 
     compiled_prefixes = OrderedDict({})
-    
+
     for orig_prefix, new_prefix in prefixes.items():
         length_compatible = len(new_prefix) <= len(orig_prefix)
         if not length_compatible and len(binaries) > 0:
@@ -840,7 +840,7 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
             orig_prefix_rexp = re.compile(orig_bytes)
             new_bytes = new_prefix.encode('utf-8')
             compiled_prefixes[orig_prefix_rexp] = new_bytes
-    
+
     # Do relocations on text in binaries that refers to the install tree
     # multiprocesing.ThreadPool.map requires single argument
     args = []

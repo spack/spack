@@ -197,8 +197,7 @@ def test_relocate_text(tmpdir):
         filenames = [filename]
         new_dir = '/opt/rh/devtoolset/'
         # Singleton dict doesn't matter if Ordered
-        relocate_text(filenames, 
-                      {old_dir: new_dir})
+        relocate_text(filenames, {old_dir: new_dir})
         with open(filename, "r")as script:
             for line in script:
                 assert(new_dir in line)
