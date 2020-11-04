@@ -14,7 +14,7 @@ class Libcuml(CMakePackage):
     homepage = "https://rapids.ai"
     url      = "https://github.com/rapidsai/cuml/archive/v0.15.0.tar.gz"
 
-    version('0.15.0',  sha256='b6b37c0f370cd4e881fc24083166ee86a934f1b823159ad36fac6457412c79cd')
+    version('0.15.0',  sha256='5c9c656ae4eaa94a426e07d7385fd5ea0e5dc7abff806af2941aee10d4ca99c7')
 
     depends_on('cmake@3.14:', type='build')
     depends_on('zlib')
@@ -26,6 +26,7 @@ class Libcuml(CMakePackage):
     depends_on('googletest')
     depends_on('libcumlprims')
     depends_on('mpi')
+    depends_on('ucx')
 
     root_cmakelists_dir = 'cpp'
 
