@@ -861,7 +861,8 @@ class SpackSolverSetup(object):
                         pkg.name, name, variant.default)
                 )
             else:
-                defaults = variant.default.split(',')
+                spec_variant = variant.make_default()
+                defaults = spec_variant.value
                 for val in sorted(defaults):
                     self.gen.fact(
                         fn.variant_default_value_from_package_py(
