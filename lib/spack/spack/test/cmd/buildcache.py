@@ -40,7 +40,7 @@ def mirror_path(tmpdir):
 
     yield mirror_path
 
-    mirror('rm','--scope','site','spack-mirror-test')
+    mirror('rm', '--scope', 'site', 'spack-mirror-test')
 
 
 @pytest.fixture()
