@@ -87,8 +87,6 @@ def tests_buildcache_keys(
     with capfd.disabled():
         output = buildcache('keys', '-i', '-t', '-f')
 
-    assert 'Spack buildcache keys' in output
-
 
 def tests_buildcache_env_check(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
