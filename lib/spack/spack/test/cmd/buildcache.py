@@ -40,7 +40,8 @@ def mirror_path(tmpdir):
 
     yield mirror_path
 
-    mirror('rm','--scope', 'site', 'spack-mirror-test')
+    mirror('rm','--scope','site','spack-mirror-test')
+
 
 @pytest.fixture()
 def mock_get_specs(database, monkeypatch):
@@ -63,6 +64,7 @@ def mock_get_specs_multiarch(database, monkeypatch):
     monkeypatch.setattr(
         spack.binary_distribution, 'get_specs', lambda: specs
     )
+
 
 @pytest.mark.skipif(not has_gpg(), reason='This test requires gpg')
 def tests_buildcache_keys(
