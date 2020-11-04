@@ -1080,7 +1080,7 @@ class SpackSolverSetup(object):
 
         preferred = preferred_targets[0]
         self.gen.fact(fn.package_target_weight(
-            str(preferred.architecture.target), pkg_name, -10
+            str(preferred.architecture.target), pkg_name, -30
         ))
 
     def preferred_versions(self, pkg_name):
@@ -1190,7 +1190,7 @@ class SpackSolverSetup(object):
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
-                self.gen.fact(f.node_flag(spec.name, flag_type, flag))
+                clauses.append(f.node_flag(spec.name, flag_type, flag))
 
         # TODO
         # namespace
