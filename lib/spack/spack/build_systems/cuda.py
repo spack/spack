@@ -38,8 +38,8 @@ class CudaPackage(PackageBase):
             description='CUDA architecture',
             values=spack.variant.any_combination_of(*cuda_arch_values))
 
-    variant('allow-untested-versions', default=False,
-            description='Allow untested (compiler,CUDA version) combinations')
+    variant('allow-unsupported-compilers', default=False,
+            description='Allow unsupported host compiler and CUDA version combinations')
 
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
     # https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code
@@ -116,14 +116,14 @@ class CudaPackage(PackageBase):
     conflicts('%clang@:3.7,4.1:',
               when='+cuda ^cuda@9.1' + arch_platform)
     conflicts('%clang@:3.7,5.1:', when='+cuda ^cuda@9.2' + arch_platform)
-    conflicts('%clang@:3.7,6.1:', when='+cuda ~allow-untested-versions ^cuda@10.0.130' + arch_platform)
-    conflicts('%clang@:3.7,7.1:', when='+cuda ~allow-untested-versions ^cuda@10.1.105' + arch_platform)
+    conflicts('%clang@:3.7,6.1:', when='+cuda ~allow-unsupported-compilers ^cuda@10.0.130' + arch_platform)
+    conflicts('%clang@:3.7,7.1:', when='+cuda ~allow-unsupported-compilers ^cuda@10.1.105' + arch_platform)
     conflicts('%clang@:3.7,8.1:',
-              when='+cuda ~allow-untested-versions ^cuda@10.1.105:10.1.243' + arch_platform)
-    conflicts('%clang@:3.2,9:', when='+cuda ~allow-untested-versions ^cuda@10.2.89' + arch_platform)
+              when='+cuda ~allow-unsupported-compilers ^cuda@10.1.105:10.1.243' + arch_platform)
+    conflicts('%clang@:3.2,9:', when='+cuda ~allow-unsupported-compilers ^cuda@10.2.89' + arch_platform)
     conflicts('%clang@:5', when='+cuda ^cuda@11.0.2:' + arch_platform)
-    conflicts('%clang@10:', when='+cuda ~allow-untested-versions ^cuda@:11.0.2' + arch_platform)
-    conflicts('%clang@11:', when='+cuda ~allow-untested-versions ^cuda@:11.1.0' + arch_platform)
+    conflicts('%clang@10:', when='+cuda ~allow-unsupported-compilers ^cuda@:11.0.2' + arch_platform)
+    conflicts('%clang@11:', when='+cuda ~allow-unsupported-compilers ^cuda@:11.1.0' + arch_platform)
 
     # x86_64 vs. ppc64le differ according to NVidia docs
     # Linux ppc64le compiler conflicts from Table from the docs below:
@@ -148,9 +148,9 @@ class CudaPackage(PackageBase):
     conflicts('%clang@4:', when='+cuda ^cuda@:9.0.176' + arch_platform)
     conflicts('%clang@5:', when='+cuda ^cuda@:9.1' + arch_platform)
     conflicts('%clang@6:', when='+cuda ^cuda@:9.2' + arch_platform)
-    conflicts('%clang@7:', when='+cuda ~allow-untested-versions ^cuda@10.0.130' + arch_platform)
-    conflicts('%clang@7.1:', when='+cuda ~allow-untested-versions ^cuda@:10.1.105' + arch_platform)
-    conflicts('%clang@8.1:', when='+cuda ~allow-untested-versions ^cuda@:10.2.89' + arch_platform)
+    conflicts('%clang@7:', when='+cuda ~allow-unsupported-compilers ^cuda@10.0.130' + arch_platform)
+    conflicts('%clang@7.1:', when='+cuda ~allow-unsupported-compilers ^cuda@:10.1.105' + arch_platform)
+    conflicts('%clang@8.1:', when='+cuda ~allow-unsupported-compilers ^cuda@:10.2.89' + arch_platform)
     conflicts('%clang@:5', when='+cuda ^cuda@11.0.2:' + arch_platform)
     conflicts('%clang@10:', when='+cuda ^cuda@:11.0.2' + arch_platform)
     conflicts('%clang@11:', when='+cuda ^cuda@:11.1.0' + arch_platform)
