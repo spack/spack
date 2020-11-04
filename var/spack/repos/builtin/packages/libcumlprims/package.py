@@ -20,8 +20,11 @@ class Libcumlprims(Package):
     depends_on('cuda@10.2.0:10.2.999', when='@0.15.0-cuda10.2_gdbd0d39_0')
     depends_on('cuda@10.1.0:10.1.999', when='@0.15.0-cuda10.1_gdbd0d39_0')
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.prepend_path('SPACK_INCLUDE_DIRS', self.prefix.include.cumlprims)
+    @property
+    def headers(self):
+        headers = find_headers('*', self.prefix.include, recursive=True)
+        headers.directories = [self.prefix.include, self.prefix.include.cumlprims]
+        return headers
 
     def url_for_version(self, version):
         url = "https://anaconda.org/nvidia/libcumlprims/{0}/download/linux-64/libcumlprims-{1}.tar.bz2"
