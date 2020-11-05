@@ -76,9 +76,9 @@ class Mpt(Package):
 
         packages:
           mpt:
-            paths:
-              mpt@2.20: /opt/
             buildable: False
-
+            externals:
+            - spec: mpt@2.20
+              prefix: /opt
         """
         raise InstallError(msg)

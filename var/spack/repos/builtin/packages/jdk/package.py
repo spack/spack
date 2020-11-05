@@ -155,11 +155,13 @@ Spack will think it is a variant. Add JDK as an external package by running:
 and adding entries for each installation:
 
     packages:
-        jdk:
-            paths:
-                jdk@10.0.1_10:    /path/to/jdk/Home
-                jdk@1.7.0_45-b18: /path/to/jdk/Home
-            buildable: False""".format(self.homepage)
+      jdk:
+        buildable: False
+        externals:
+        - spec: jdk@10.0.1_10
+          prefix: /path/to/jdk/Home
+        - spec: jdk@1.7.0_45-b18
+          prefix: /path/to/jdk/Home""".format(self.homepage)
 
             tty.die(msg)
 

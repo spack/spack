@@ -31,9 +31,10 @@ class Openglu(Package):
 
         packages:
           openglu:
-            paths:
-              openglu@1.3: /opt/opengl
             buildable: False
+            externals:
+            - spec: openglu@1.3
+              prefix: /opt/opengl
 
         In that case, /opt/opengl/ should contain these two folders:
 
@@ -46,9 +47,10 @@ class Openglu(Package):
 
         packages:
           openglu:
-            paths:
-              openglu@1.3: /usr/X11R6
             buildable: False
+            externals:
+            - spec: openglu@1.3
+              prefix: /usr/X11R6
 
         In that case, /usr/X11R6 should contain
 
