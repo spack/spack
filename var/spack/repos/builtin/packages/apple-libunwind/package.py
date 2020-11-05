@@ -34,10 +34,10 @@ class AppleLibunwind(Package):
 
         packages:
           apple-libunwind:
-            paths:
-              apple-libunwind@35.3: /usr
             buildable: False
-
+            externals:
+            - spec: apple-libunwind@35.3
+              prefix: /usr
         """
         raise InstallError(msg)
 

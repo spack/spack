@@ -42,7 +42,7 @@ import spack.util.web as web_util
 from llnl.util.filesystem import (
     working_dir, mkdirp, temp_rename, temp_cwd, get_single_file)
 from spack.util.compression import decompressor_for, extension
-from spack.util.executable import which
+from spack.util.executable import which, CommandNotFoundError
 from spack.util.string import comma_and, quote
 from spack.version import Version, ver
 
@@ -267,7 +267,10 @@ class URLFetchStrategy(FetchStrategy):
     @property
     def curl(self):
         if not self._curl:
-            self._curl = which('curl', required=True)
+            try:
+                self._curl = which('curl', required=True)
+            except CommandNotFoundError as exc:
+                tty.error(str(exc))
         return self._curl
 
     def source_id(self):

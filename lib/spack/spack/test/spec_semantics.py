@@ -274,8 +274,8 @@ class TestSpecSematics(object):
         check_satisfies('mpich foo=true', 'mpich+foo')
         check_satisfies('mpich~foo', 'mpich foo=FALSE')
         check_satisfies('mpich foo=False', 'mpich~foo')
-        check_satisfies('mpich foo=any', 'mpich~foo')
-        check_satisfies('mpich +foo', 'mpich foo=any')
+        check_satisfies('mpich foo=*', 'mpich~foo')
+        check_satisfies('mpich +foo', 'mpich foo=*')
 
     def test_satisfies_multi_value_variant(self):
         # Check quoting
@@ -288,9 +288,9 @@ class TestSpecSematics(object):
 
         # A more constrained spec satisfies a less constrained one
         check_satisfies('multivalue-variant foo="bar,baz"',
-                        'multivalue-variant foo=any')
+                        'multivalue-variant foo=*')
 
-        check_satisfies('multivalue-variant foo=any',
+        check_satisfies('multivalue-variant foo=*',
                         'multivalue-variant foo="bar,baz"')
 
         check_satisfies('multivalue-variant foo="bar,baz"',
@@ -317,7 +317,7 @@ class TestSpecSematics(object):
         a.concretize()
 
         assert a.satisfies('foobar=bar')
-        assert a.satisfies('foobar=any')
+        assert a.satisfies('foobar=*')
 
         # Assert that an autospec generated from a literal
         # gives the right result for a single valued variant
@@ -451,10 +451,6 @@ class TestSpecSematics(object):
         check_unsatisfiable('mpich', 'mpich+foo', True)
         check_unsatisfiable('mpich', 'mpich~foo', True)
         check_unsatisfiable('mpich', 'mpich foo=1', True)
-
-        # None and any do not satisfy each other
-        check_unsatisfiable('foo=none', 'foo=any')
-        check_unsatisfiable('foo=any', 'foo=none')
 
     def test_unsatisfiable_variant_mismatch(self):
         # No matchi in specs
@@ -624,9 +620,9 @@ class TestSpecSematics(object):
         )
 
         check_constrain(
-            'libelf foo=bar,baz', 'libelf foo=bar,baz', 'libelf foo=any')
+            'libelf foo=bar,baz', 'libelf foo=bar,baz', 'libelf foo=*')
         check_constrain(
-            'libelf foo=bar,baz', 'libelf foo=any', 'libelf foo=bar,baz')
+            'libelf foo=bar,baz', 'libelf foo=*', 'libelf foo=bar,baz')
 
     def test_constrain_compiler_flags(self):
         check_constrain(
@@ -668,8 +664,6 @@ class TestSpecSematics(object):
         check_invalid_constraint('libelf+debug', 'libelf~debug')
         check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
         check_invalid_constraint('libelf debug=True', 'libelf debug=False')
-        check_invalid_constraint('libelf foo=none', 'libelf foo=any')
-        check_invalid_constraint('libelf foo=any', 'libelf foo=none')
 
         check_invalid_constraint(
             'libelf cppflags="-O3"', 'libelf cppflags="-O2"')
@@ -684,7 +678,7 @@ class TestSpecSematics(object):
         check_constrain_changed('libelf', '%gcc')
         check_constrain_changed('libelf%gcc', '%gcc@4.5')
         check_constrain_changed('libelf', '+debug')
-        check_constrain_changed('libelf', 'debug=any')
+        check_constrain_changed('libelf', 'debug=*')
         check_constrain_changed('libelf', '~debug')
         check_constrain_changed('libelf', 'debug=2')
         check_constrain_changed('libelf', 'cppflags="-O3"')
@@ -704,7 +698,7 @@ class TestSpecSematics(object):
         check_constrain_not_changed('libelf+debug', '+debug')
         check_constrain_not_changed('libelf~debug', '~debug')
         check_constrain_not_changed('libelf debug=2', 'debug=2')
-        check_constrain_not_changed('libelf debug=2', 'debug=any')
+        check_constrain_not_changed('libelf debug=2', 'debug=*')
         check_constrain_not_changed(
             'libelf cppflags="-O3"', 'cppflags="-O3"')
 
@@ -918,14 +912,14 @@ class TestSpecSematics(object):
                 for x in ('cflags', 'cxxflags', 'fflags')
             )
 
-    def test_combination_of_any_or_none(self):
+    def test_combination_of_wildcard_or_none(self):
         # Test that using 'none' and another value raises
         with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
             Spec('multivalue-variant foo=none,bar')
 
-        # Test that using 'any' and another value raises
+        # Test that using wildcard and another value raises
         with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
-            Spec('multivalue-variant foo=any,bar')
+            Spec('multivalue-variant foo=*,bar')
 
     @pytest.mark.skipif(
         sys.version_info[0] == 2, reason='__wrapped__ requires python 3'

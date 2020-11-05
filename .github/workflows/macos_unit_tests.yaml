@@ -26,7 +26,7 @@ jobs:
           pip install --upgrade flake8 pep8-naming
     - name: Setup Homebrew packages
       run: |
-        brew install gcc gnupg2 dash kcov
+        brew install dash fish gcc gnupg2 kcov
     - name: Run unit tests
       run: |
         git --version

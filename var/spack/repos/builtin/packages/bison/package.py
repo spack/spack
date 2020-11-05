@@ -46,6 +46,7 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
     depends_on('help2man', type='build')
 
     patch('pgi.patch', when='@3.0.4')
+    patch('nvhpc.patch', when='%nvhpc')
 
     conflicts('%intel@:14', when='@3.4.2:',
               msg="Intel 14 has immature C11 support")

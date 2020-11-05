@@ -19,6 +19,8 @@ class Mpich(AutotoolsPackage):
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 1
 
+    maintainers = ['raffenet', 'yfguo']
+
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)
@@ -162,6 +164,9 @@ spack package at this time.''',
     depends_on("m4", when="@3.3 +hwloc", type="build"),
     depends_on("autoconf@2.67:", when='@3.3 +hwloc', type="build")
 
+    # MPICH's Yaksa submodule requires python to configure
+    depends_on("python@3.0:", when="@develop", type="build")
+
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
     conflicts('netmod=ucx', when='device=ch3')
@@ -287,6 +292,9 @@ spack package at this time.''',
 
         # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
         if self.spec.satisfies('%gcc@10:'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
+        # Same fix but for macOS - avoids issue #17934
+        if self.spec.satisfies('%apple-clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
 
     def setup_run_environment(self, env):

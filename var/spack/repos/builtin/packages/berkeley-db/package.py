@@ -29,7 +29,7 @@ class BerkeleyDb(AutotoolsPackage):
             filter_file(r'gsg_db_server', '', 'dist/Makefile.in')
 
     def configure_args(self):
-        return [
+        config_args = [
             '--disable-static',
             '--enable-cxx',
             '--enable-dbm',
@@ -40,3 +40,10 @@ class BerkeleyDb(AutotoolsPackage):
             # depends on Berkey DB, creating a circular dependency
             '--with-repmgr-ssl=no',
         ]
+
+        # The default glibc provided by CentOS 7 does not provide proper
+        # atomic support when using the NVIDIA compilers
+        if self.spec.satisfies('%nvhpc os=centos7'):
+            config_args.append('--disable-atomicsupport')
+
+        return config_args

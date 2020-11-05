@@ -44,6 +44,9 @@ class Charmpp(Package):
     # support Fujitsu compiler
     patch("fj.patch", when="%fj")
 
+    # support NVIDIA compilers
+    patch("nvhpc.patch", when="%nvhpc")
+
     # Ignore compiler warnings while configuring
     patch("strictpass.patch", when="@:6.8.2")
 

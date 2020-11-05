@@ -39,5 +39,6 @@ class Xcfun(CMakePackage):
             "-DXCFUN_MAX_ORDER=8",
             "-DXCFUN_PYTHON_INTERFACE=ON",
             "-DPYTHON_EXECUTABLE={0}".format(spec['python'].command),
+            "-DENABLE_TESTALL=OFF",
         ]
         return args

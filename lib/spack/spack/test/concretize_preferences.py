@@ -9,7 +9,6 @@ import stat
 import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
-from spack.concretize import NonDeterministicVariantError
 from spack.config import ConfigScope, ConfigError
 from spack.spec import Spec
 from spack.version import Version
@@ -85,22 +84,14 @@ class TestConcretizePreferences(object):
             'mpileaks', debug=True, opt=True, shared=False, static=False
         )
 
-    def test_preferred_variants_from_any(self):
+    def test_preferred_variants_from_wildcard(self):
         """
-        Test that 'foo=any' concretizes to any non-none value
-
-        Test that concretization of variants raises an error attempting
-        non-deterministic concretization from 'any' when preferred value is
-        'none'.
+        Test that 'foo=*' concretizes to any value
         """
         update_packages('multivalue-variant', 'variants', 'foo=bar')
         assert_variant_values(
-            'multivalue-variant foo=any', foo=('bar',)
+            'multivalue-variant foo=*', foo=('bar',)
         )
-
-        update_packages('multivalue-variant', 'variants', 'foo=none')
-        with pytest.raises(NonDeterministicVariantError):
-            concretize('multivalue-variant foo=any')
 
     def test_preferred_compilers(self):
         """Test preferred compilers are applied correctly

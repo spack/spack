@@ -19,6 +19,9 @@ from __future__ import print_function
 import platform
 import os.path
 import tempfile
+
+import archspec.cpu
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
@@ -27,7 +30,6 @@ from functools_backport import reverse_order
 from contextlib import contextmanager
 
 import llnl.util.lang
-import llnl.util.cpu as cpu
 
 import spack.repo
 import spack.abi
@@ -325,7 +327,7 @@ class Concretizer(object):
         """
         target_prefs = PackagePrefs(spec.name, 'target')
         target_specs = [spack.spec.Spec('target=%s' % tname)
-                        for tname in cpu.targets]
+                        for tname in archspec.cpu.TARGETS]
 
         def tspec_filter(s):
             # Filter target specs by whether the architecture
@@ -333,7 +335,7 @@ class Concretizer(object):
             # we only consider x86_64 targets when on an
             # x86_64 machine, etc. This may need to change to
             # enable setting cross compiling as a default
-            target = cpu.targets[str(s.architecture.target)]
+            target = archspec.cpu.TARGETS[str(s.architecture.target)]
             arch_family_name = target.family.name
             return arch_family_name == platform.machine()
 
@@ -352,32 +354,19 @@ class Concretizer(object):
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
         pkg_cls = spec.package_class
         for name, variant in pkg_cls.variants.items():
-            any_set = False
             var = spec.variants.get(name, None)
-            if var and 'any' in var:
-                # remove 'any' variant before concretizing
-                # 'any' cannot be combined with other variables in a
+            if var and '*' in var:
+                # remove variant wildcard before concretizing
+                # wildcard cannot be combined with other variables in a
                 # multivalue variant, a concrete variant cannot have the value
-                # 'any', and 'any' does not constrain a variant except to
-                # preclude the values 'none' and None. We track `any_set` to
-                # avoid replacing 'any' with None, and remove it to continue
-                # concretization.
+                # wildcard, and a wildcard does not constrain a variant
                 spec.variants.pop(name)
-                any_set = True
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:
                     spec.variants[name] = preferred_variants.get(name)
                 else:
                     spec.variants[name] = variant.make_default()
-
-            var = spec.variants[name]
-            if any_set and 'none' in var or None in var:
-                msg = "Attempted non-deterministic setting of variant"
-                msg += " '%s' set to 'any' and preference is." % name
-                msg += "'%s'. Set the variant to a non 'any'" % var.value
-                msg += " value or set a preference for variant '%s'." % name
-                raise NonDeterministicVariantError(msg)
 
         return changed
 
@@ -582,7 +571,7 @@ class Concretizer(object):
         Returns:
             True if any modification happened, False otherwise
         """
-        import llnl.util.cpu
+        import archspec.cpu
 
         # Try to adjust the target only if it is the default
         # target for this platform
@@ -602,14 +591,14 @@ class Concretizer(object):
 
         try:
             current_target.optimization_flags(spec.compiler)
-        except llnl.util.cpu.UnsupportedMicroarchitecture:
+        except archspec.cpu.UnsupportedMicroarchitecture:
             microarchitecture = current_target.microarchitecture
             for ancestor in microarchitecture.ancestors:
                 candidate = None
                 try:
                     candidate = spack.architecture.Target(ancestor)
                     candidate.optimization_flags(spec.compiler)
-                except llnl.util.cpu.UnsupportedMicroarchitecture:
+                except archspec.cpu.UnsupportedMicroarchitecture:
                     continue
 
                 if candidate is not None:
@@ -805,7 +794,3 @@ class NoBuildError(spack.error.SpackError):
         msg = ("The spec\n    '%s'\n    is configured as not buildable, "
                "and no matching external installs were found")
         super(NoBuildError, self).__init__(msg % spec)
-
-
-class NonDeterministicVariantError(spack.error.SpecError):
-    """Raised when a spec variant is set to 'any' and concretizes to 'none'."""

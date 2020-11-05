@@ -39,6 +39,15 @@ class Libxcb(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
+    def configure_args(self):
+        config_args = []
+
+        # -Werror flags are not properly interpreted by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            config_args.append('--disable-selective-werror')
+
+        return config_args
+
     def patch(self):
         filter_file(
             'typedef struct xcb_auth_info_t {',

@@ -15,6 +15,7 @@ class Spla(CMakePackage):
     url      = "https://github.com/eth-cscs/spla/archive/v1.0.0.tar.gz"
     git = 'https://github.com/eth-cscs/spla.git'
 
+    version('1.2.1', sha256='4d7237f752dc6257778c84ee19c9635072b1cb8ce8d9ab6e34a047f63a736b29')
     version('1.2.0', sha256='96ddd13c155ef3d7e40f87a982cdb439cf9e720523e66b6d20125d346ffe8fca')
     version('1.1.1', sha256='907c374d9c53b21b9f67ce648e7b2b09c320db234a1013d3f05919cd93c95a4b')
     version('1.1.0', sha256='b0c4ebe4988abc2b3434e6c50e7eb0612f3f401bc1aa79ad58a6a92dc87fa65b')
@@ -58,4 +59,18 @@ class Spla(CMakePackage):
             args += ["-DSPLA_STATIC=ON"]
         else:
             args += ["-DSPLA_STATIC=OFF"]
+
+        if self.spec['blas'].name == 'openblas':
+            args += ["-DSPLA_HOST_BLAS=OPENBLAS"]
+        elif self.spec['blas'].name in ['amdblis', 'blis']:
+            args += ["-DSPLA_HOST_BLAS=BLIS"]
+        elif self.spec['blas'].name == 'atlas':
+            args += ["-DSPLA_HOST_BLAS=ATLAS"]
+        elif self.spec['blas'].name == 'intel-mkl':
+            args += ["-DSPLA_HOST_BLAS=MKL"]
+        elif self.spec['blas'].name == 'netlib-lapack':
+            args += ["-DSPLA_HOST_BLAS=GENERIC"]
+        elif self.spec['blas'].name == 'cray-libsci':
+            args += ["-DSPLA_HOST_BLAS=CRAY_LIBSCI"]
+
         return args
