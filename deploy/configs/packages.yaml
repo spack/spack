@@ -60,12 +60,6 @@ packages:
     externals:
     - spec: m4@1.4.16
       prefix: /usr
-    # can not be installed with python 3
-  node-js:
-    version: [6.12.2]
-    externals:
-    - spec: node-js@6.12.2
-      prefix: /usr
   openssl:
     version: [1.0.2k]
     externals:

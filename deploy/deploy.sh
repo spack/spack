@@ -87,12 +87,17 @@ while getopts "cgilm" arg; do
 done
 shift $((OPTIND - 1))
 
+declare -A stage_map
+for what in ${stages}; do
+    stage_map[${what}]=1
+done
+
 if [[ "$@" = "all" ]]; then
     set -- ${stages}
 else
     unknown=
     for what in "$@"; do
-        if [[ ! ${spec_definitions[${what}]+_} ]]; then
+        if [[ ! ${stage_map[${what}]+_} ]]; then
             unknown="${unknown} ${what}"
         fi
     done

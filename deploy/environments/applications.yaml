@@ -60,7 +60,7 @@ spack:
     - reportinglib%intel
     - spatial-index@0.2.1
     - spykfunc@0.15.7
-    - steps@3.5.0b+petsc
+    # - steps@3.5.0b+petsc
     - synapsetool@0.6.0
     - touchdetector@5.4.0
     - ultraliser

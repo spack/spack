@@ -18,7 +18,6 @@ spack:
            py-numpy]
         - ['%gcc', '%intel']
     - assimp
-    - parmetis@4.0.3
     - mvdtool+mpi
     - hypre@2.18.2
     - omega-h+gmsh+trilinos@9.31.3.dev2

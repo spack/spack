@@ -47,7 +47,9 @@ modules:
       - intel-mpi
       - ispc
       - julia
+      - llvm
       - mvapich2
+      - pgi
       - python
       - snakemake
       - stat

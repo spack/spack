@@ -31,8 +31,6 @@ modules:
     whitelist:
       - 'gcc'
       - 'intel-parallel-studio'
-      - 'llvm'
-      - 'pgi'
     blacklist:
       - '%gcc'
     gcc:

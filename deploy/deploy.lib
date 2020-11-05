@@ -19,13 +19,14 @@ stages="compilers externals libraries applications"
 # A list of all stage names ever used, to be used for module creation
 historic_stages="compilers tools externals external-libraries serial-libraries parallel-libraries libraries applications"
 
-# Definitions for the installation spec generation. For every stage
-# mentioned above, this should be a list of filenames *without* extension
-# found in `packages`.
-declare -A spec_definitions=([compilers]=compilers
-                             [externals]="tools external-libraries"
-                             [libraries]="serial-libraries python-packages parallel-libraries"
-                             [applications]=bbp-packages)
+# Detect installed compilers and allow future spack stages to use them
+#
+# Note that *all* compilers need to be mentioned in the
+# `configure_compilers` function, otherwise they will not be detected!
+declare -A detect_compilers=([compilers]=yes
+                             [externals]=yes
+                             [libraries]=no
+                             [applications]=no)
 
 # Export installed software as packages to be re-used later
 # Allowed values: yes/no
@@ -42,7 +43,7 @@ declare -A export_packages=([compilers]=no
 
 # Re-use installed software via the chain mechanism
 # Allowed values: yes/no
-declare -A include_in_chain=([compilers]=no
+declare -A include_in_chain=([compilers]=yes
                              [externals]=no
                              [libraries]=yes
                              [applications]=yes)
@@ -244,6 +245,8 @@ update_chain_config() {
         fi
         if [[ "${include_in_chain[${stage}]}" = "yes" ]]; then
             chains="${stage}${chains:+ }${chains}"
+        else
+            chains=""
         fi
     done
     chains="${add}${add:+ }${chains}"
@@ -266,20 +269,42 @@ EOF
 }
 
 configure_compilers() {
-    # Add modules for compilers themselves
-    update_module_path "compilers" "yes"
+    # Add modules for compilers themselves. Should be called after modules
+    # have been generated!
+    local what="$1"
+    update_module_path "${what}" "yes"
     while read -r line; do
         sha="${line%% *}"  # Remove everything after and including the first space
         spec="${line#* }"  # Remove everything up to and including the first space
         set +o nounset
+
+
+        # Skip all but compilers. Compiler variants need to be specified
+        # *after* the version specification!
+        case "${spec}" in
+            gcc@*)
+                ;;
+            intel@*)
+                ;;
+            intel-parallel-studio@*)
+                ;;
+            llvm@*)
+                ;;
+            nvhpc@*)
+                ;;
+            pgi@*)
+                ;;
+            *)
+                continue
+                ;;
+        esac
+
         # When a compiler is compiled with *anything but the base
         # compiler*, it's module will not be generated in the initial
         # module refresh
         #
         # As the input should be sorted by compilers, the module generation
         # will now find the compilers that were used when bootstrapping.
-        log "...regenerating module for ${line}"
-        spack module tcl refresh -y --upstream ${sha}
         log "...processing ${line}"
         cmd=$(spack module tcl loads ${sha}|tail -n 1)
         echo "${cmd}"
@@ -426,55 +451,6 @@ populate_mirror() {
     log "found the following specs"
     echo "${spec_list}"
     spack -d mirror create -D -d ${SPACK_SOURCE_MIRROR_DIR} ${spec_list}
-}
-
-check_specs() {
-    spack spec -Il "$@"
-}
-
-generate_specs() {
-    what="$@"
-
-    if [[ -z "${what}" ]]; then
-        log "asked to generate no specs!"
-        return 1
-    fi
-
-    venv="${DEPLOYMENT_ROOT}/spack/venv"
-
-    log "updating the deployment virtualenv"
-    log "...virtualenv binary: $(which virtualenv)"
-    log "...python binary:     $(which python)"
-    # Recreate the virtualenv and update the command line
-    mkdir -p ${venv}
-    virtualenv -q -p $(which python) ${venv} --clear
-    set +o nounset
-    . ${venv}/bin/activate
-    set -o nounset
-    pip install -q --force-reinstall -U .
-    pip install -U setuptools
-    pip install -U setuptools-scm
-
-    for stage in ${what}; do
-        log "generating specs for ${stage}"
-        datadir="$(install_dir ${stage})/data"
-
-        mkdir -p "${datadir}"
-        env &> "${datadir}/spack_deploy.env"
-        git rev-parse HEAD &> "${datadir}/spack_deploy.version"
-
-        rm -f "${datadir}/specs.txt"
-        for stub in ${spec_definitions[$stage]}; do
-            log "...using ${stub}.yaml"
-            spackd --input packages/${stub}.yaml packages ${BASE_ARCHITECTURE} >> "${datadir}/specs.txt"
-        done
-
-        rpm -q -a > "${datadir}/rpms.txt"
-    done
-    log "leaving the deployment virtualenv"
-    set +o nounset
-    deactivate
-    set -o nounset
 }
 
 copy_configuration() {
@@ -723,7 +699,7 @@ EOF
     log "concretizing environment"
     spack -D "${HOME}/build_environment" concretize -f
     log "installing environment"
-    srun -n18 -c12 -t24:0:0 -Aproj16 -Ccpu -ppre_prod -J"spack!" slurmspack "${HOME}/build_environment"
+    srun -N4 --ntasks-per-node 4 -c12 -t24:0:0 -Aproj16 -Ccpu -pprod -ppre_prod -J"spack!" slurmspack "${HOME}/build_environment"
 
     cat > "${HOME}/stack.xml" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -762,14 +738,14 @@ EOF
         diff -u "${HOME}/packages.yaml.old" "${HOME}/packages.yaml" || true
     fi
 
-    if [[ "${what}" = "compilers" ]]; then
+    if [[ "${detect_compilers[${what}]}" = "yes" ]]; then
         # When adding the compilers, first add everything compiled with the
         # system compiler, then other compilers bootstrapped with new
         # compilers (LLVM, I'm looking at you)
         #
         # Sort by the compiler spec part to achieve this.
         log "adding compilers"
-        configure_compilers < "${HOME}/specs.txt"
+        configure_compilers "${what}" < "${HOME}/specs.txt"
     fi
 
     cp "${HOME}/.spack/compilers.yaml" "${HOME}" || true
