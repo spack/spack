@@ -15,11 +15,13 @@ class Bedtools2(Package):
     homepage = "https://github.com/arq5x/bedtools2"
     url      = "https://github.com/arq5x/bedtools2/archive/v2.26.0.tar.gz"
 
-    version('2.27.1', sha256='edcac089d84e63a51f85c3c189469daa7d42180272130b046856faad3cf79112')
-    version('2.27.0', sha256='e91390b567e577d337c15ca301e264b0355441f5ab90fa4f971622e3043e0ca0')
-    version('2.26.0', sha256='15db784f60a11b104ccbc9f440282e5780e0522b8d55d359a8318a6b61897977')
-    version('2.25.0', sha256='159122afb9978015f7ec85d7b17739b01415a5738086b20a48147eeefcf08cfb')
-    version('2.23.0', sha256='9dacaa561d11ce9835d1d51e5aeb092bcbe117b7119663ec9a671abac6a36056')
+    version('2.29.2', sha256='bc2f36b5d4fc9890c69f607d54da873032628462e88c545dd633d2c787a544a5')
+    version('2.27.1', sha256='c8c2acbaf3f9cb92dcf8e5cd59af6b31ae9c4598efb786ba6c84f66ca72fafd9')
+    version('2.27.0', sha256='e4f0e5616d04ba5ac09c36dec989b1236a5712e67d0b6874ff5e144d7ed4ce60')
+    version('2.26.0', sha256='65f32f32cbf1b91ba42854b40c604aa6a16c7d3b3ec110d6acf438eb22df0a4a')
+    version('2.25.0', sha256='d737ca42e7df76c5455d3e6e0562cdcb62336830eaad290fd4133a328a1ddacc')
+    version('2.24.0', sha256='ea73b8620468c5a15d4ed96dc98c83e5564880bb9651cd75f1dcc96694be60e4')
+    version('2.23.0', sha256='3386b2989550dde014607cad312e8fecbdc942eacbb1c60c5cdac832e3eae251')
 
     depends_on('zlib')
     depends_on('python', type='build')
