@@ -2372,11 +2372,10 @@ class Spec(object):
 
             patches = []
             for cond, dependency in pkg_deps[dspec.spec.name].items():
-                if dspec.parent.satisfies(cond, strict=True):
-                    for pcond, patch_list in dependency.patches.items():
-                        if dspec.spec.satisfies(pcond):
-                            for patch in patch_list:
-                                patches.append(patch)
+                for pcond, patch_list in dependency.patches.items():
+                    if (dspec.parent.satisfies(cond, strict=True)
+                            and dspec.spec.satisfies(pcond)):
+                        patches.extend(patch_list)
             if patches:
                 all_patches = spec_to_patches.setdefault(id(dspec.spec), [])
                 all_patches.extend(patches)

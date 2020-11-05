@@ -111,6 +111,11 @@ needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
 % real dependencies imply new nodes.
 node(Dependency) :- node(Package), depends_on(Package, Dependency).
 
+% Avoid cycles in the DAG
+path(Parent, Child) :- depends_on(Parent, Child).
+path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
+:- path(A, B), path(B, A).
+
 % do not warn if generated program contains none of these.
 #defined depends_on/3.
 #defined declared_dependency/3.
