@@ -20,9 +20,6 @@ class CodeServer(Package):
     depends_on('git@2:')
 
     def install(self, spec, prefix):
-        ln = which('ln')
-        mkdir = which('mkdir')
-
         install_tree('.', prefix)
 
         if spec.version <= Version('3.1.1'):
