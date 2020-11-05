@@ -260,6 +260,10 @@ class Openblas(MakefilePackage):
         if '+consistent_fpcsr' in self.spec:
             make_defs += ['CONSISTENT_FPCSR=1']
 
+        # Flang/f18 does not provide ETIME as an intrinsic
+        if self.spec.satisfies('%clang'):
+            make_defs.append('TIMER=INT_CPU_TIME')
+
         # Prevent errors in `as` assembler from newer instructions
         if self.spec.satisfies('%gcc@:4.8.4'):
             make_defs.append('NO_AVX2=1')
