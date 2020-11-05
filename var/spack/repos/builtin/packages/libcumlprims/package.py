@@ -23,7 +23,8 @@ class Libcumlprims(Package):
     @property
     def headers(self):
         headers = find_headers('*', self.prefix.include, recursive=True)
-        headers.directories = [self.prefix.include, self.prefix.include.cumlprims]
+        headers.directories = [self.prefix.include,
+                               self.prefix.include.cumlprims]
         return headers
 
     def url_for_version(self, version):
