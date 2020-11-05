@@ -63,9 +63,9 @@ class Hydrogen(CMakePackage, CudaPackage):
             description='Use OpenMP taskloops instead of parallel for loops.')
     variant('half', default=True,
             description='Builds with support for FP16 precision data types')
-    depends_on('cmake@3.16.0:', type='build')
+    depends_on('cmake@3.17.0:', type='build')
     depends_on('mpi')
-    depends_on('hwloc@2.0:')
+    depends_on('hwloc@1.11:')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('openblas', when='blas=openblas ~openmp_blas ~int64_blas')
