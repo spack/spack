@@ -7,7 +7,7 @@ from spack import *
 
 
 class Msprime(PythonPackage):
-    """The library is a reimplementation of Hudson’s seminal ms program,
+    """The library is a reimplementation of Hudson's seminal ms program,
     and aims to eventually reproduce all its functionality."""
 
     homepage = "https://msprime.readthedocs.io/en/stable/"
