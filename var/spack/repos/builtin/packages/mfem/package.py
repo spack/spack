@@ -481,8 +481,8 @@ class Mfem(Package):
                     sp_lib += ['-lmpi_mpifh']
             if '+openmp' in strumpack:
                 # The '+openmp' in the spec means strumpack will TRY to find
-                # OpenMP; if not found, we should not add any flags -- how do we
-                # figure out if strumpack found OpenMP?
+                # OpenMP; if not found, we should not add any flags -- how do
+                # we figure out if strumpack found OpenMP?
                 if not self.spec.satisfies('%apple-clang'):
                     sp_opt += [self.compiler.openmp_flag]
             if '^parmetis' in strumpack:
