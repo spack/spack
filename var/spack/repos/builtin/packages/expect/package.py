@@ -37,8 +37,8 @@ class Expect(AutotoolsPackage):
             '--enable-threads',
             '--enable-shared',
             '--enable-64bit',
-            '--with-tcl={0}'.format(spec['tcl'].prefix.lib),
-            '--with-tclinclude={0}'.format(spec['tcl'].prefix.include),
+            '--with-tcl={0}'.format(spec['tcl'].libs.directories[0]),
+            '--with-tclinclude={0}'.format(spec['tcl'].headers.directories[0]),
         ]
 
         return args
