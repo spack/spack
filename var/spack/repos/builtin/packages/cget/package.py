@@ -15,5 +15,5 @@ class Cget(PythonPackage):
     version('0.1.9', sha256='2a7913b601bec615208585eda7e69998a43cc17080d36c2ff2ce8742c9794bf6')
 
     depends_on("py-setuptools", type='build')
-    depends_on("py-six")
+    depends_on("py-six@1.10:", type=('build', 'run'))
     depends_on("py-click")
