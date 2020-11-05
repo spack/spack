@@ -44,7 +44,6 @@ from spack.pkg.builtin.openfoam import add_extra_files
 from spack.pkg.builtin.openfoam import write_environ
 from spack.pkg.builtin.openfoam import rewrite_environ_files
 from spack.pkg.builtin.openfoam import mplib_content
-from spack.pkg.builtin.openfoam import OpenfoamArch
 from spack.util.environment import EnvironmentModifications
 
 
@@ -174,7 +173,7 @@ class OpenfoamOrg(Package):
     @property
     def foam_arch(self):
         if not self._foam_arch:
-            self._foam_arch = OpenfoamArch(self.spec, **self.config)
+            self._foam_arch = OpenfoamorgArch(self.spec, **self.config)
         return self._foam_arch
 
     @property
@@ -390,3 +389,194 @@ class OpenfoamOrg(Package):
                 if os.path.isfile(f)
             ]:
                 os.symlink(f, os.path.basename(f))
+
+# -----------------------------------------------------------------------------
+
+
+class OpenfoamorgArch(object):
+    """OpenfoamorgArch represents architecture/compiler settings for OpenFOAM.
+    The string representation is WM_OPTIONS.
+
+    Keywords
+        label-size=[True]   supports int32/int64
+        compile-option[=-spack]
+        mplib[=USERMPI]
+    """
+
+    #: Map spack compiler names to OpenFOAM compiler names
+    #  By default, simply capitalize the first letter
+    compiler_mapping = {'intel': 'Icc', 'fj': 'Fujitsu'}
+
+    def __init__(self, spec, **kwargs):
+        # Some user settings, to be adjusted manually or via variants
+        self.compiler         = None   # <- %compiler
+        self.arch_option      = ''     # Eg, -march=knl
+        self.label_size       = None   # <- +int64
+        self.precision_option = 'DP'   # <- +float32 | +spdp
+        self.compile_option   = kwargs.get('compile-option', '-spack')
+        self.arch             = None
+        self.options          = None
+        self.mplib            = kwargs.get('mplib', 'USERMPI')
+
+        # Normally support WM_LABEL_OPTION, but not yet for foam-extend
+        if '+int64' in spec:
+            self.label_size = '64'
+        elif kwargs.get('label-size', True):
+            self.label_size = '32'
+
+        if '+spdp' in spec:
+            self.precision_option = 'SPDP'
+        elif '+float32' in spec:
+            self.precision_option = 'SP'
+
+        # Processor/architecture-specific optimizations
+        if '+knl' in spec:
+            self.arch_option = '-march=knl'
+
+        # spec.architecture.platform is like `uname -s`, but lower-case
+        platform = str(spec.architecture.platform)
+
+        # spec.target.family is like `uname -m`
+        target = str(spec.target.family)
+
+        # No spack platform family for ia64 or armv7l
+
+        if platform == 'linux':
+            if target == 'x86_64':
+                platform += '64'
+            elif target == 'ia64':
+                platform += 'IA64'
+            elif target == 'armv7l':
+                platform += 'ARM7'
+            elif target == 'aarch64':
+                platform += 'Arm64'
+            elif target == 'ppc64':
+                platform += 'PPC64'
+            elif target == 'ppc64le':
+                platform += 'PPC64le'
+        elif platform == 'darwin':
+            if target == 'x86_64':
+                platform += '64'
+        # ... and others?
+
+        self.arch = platform
+
+        # Capitalize first letter of compiler name, which corresponds
+        # to how OpenFOAM handles things (eg, gcc -> Gcc).
+        # Use compiler_mapping for special cases.
+        comp = spec.compiler.name
+
+        if comp in self.compiler_mapping:
+            comp = self.compiler_mapping[comp]
+        comp = comp.capitalize()
+
+        self.compiler = comp
+
+        # Build WM_OPTIONS
+        # ----
+        # WM_LABEL_OPTION=Int$WM_LABEL_SIZE
+        # WM_OPTIONS_BASE=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION
+        # WM_OPTIONS=$WM_OPTIONS_BASE$WM_LABEL_OPTION$WM_COMPILE_OPTION
+        # or
+        # WM_OPTIONS=$WM_OPTIONS_BASE$WM_COMPILE_OPTION
+        # ----
+        self.options = ''.join([
+            self.arch,
+            self.compiler,
+            self.precision_option,
+            ('Int' + self.label_size if self.label_size else ''),
+            self.compile_option])
+
+    def __str__(self):
+        return self.options
+
+    def __repr__(self):
+        return str(self)
+
+    def foam_dict(self):
+        """Returns a dictionary for OpenFOAM prefs, bashrc, cshrc."""
+        return dict([
+            ('WM_COMPILER',    self.compiler),
+            ('WM_LABEL_SIZE',  self.label_size),
+            ('WM_PRECISION_OPTION', self.precision_option),
+            ('WM_COMPILE_OPTION', self.compile_option),
+            ('WM_MPLIB',       self.mplib),
+        ])
+
+    def _rule_directory(self, projdir, general=False):
+        """Return the wmake/rules/ General or compiler rules directory.
+        Supports wmake/rules/<ARCH><COMP> and wmake/rules/<ARCH>/<COMP>.
+        """
+        rules_dir = os.path.join(projdir, 'wmake', 'rules')
+        if general:
+            return os.path.join(rules_dir, 'General')
+
+        arch_dir = os.path.join(rules_dir, self.arch)
+        comp_rules = arch_dir + self.compiler
+        if os.path.isdir(comp_rules):
+            return comp_rules
+        else:
+            return os.path.join(arch_dir, self.compiler)
+
+    def has_rule(self, projdir):
+        """Verify that a wmake/rules/ compiler rule exists in the project.
+        """
+        # Insist on a wmake rule for this architecture/compiler combination
+        rule_dir = self._rule_directory(projdir)
+
+        if not os.path.isdir(rule_dir):
+            raise InstallError(
+                'No wmake rule for {0} {1}'.format(self.arch, self.compiler))
+        return True
+
+    def create_rules(self, projdir, foam_pkg):
+        """ Create {c,c++}-spack and mplib{USER,USERMPI}
+        rules in the specified project directory.
+        The compiler rules are based on the respective {c,c++}Opt rules
+        but with additional rpath information for the OpenFOAM libraries.
+
+        The '-spack' rules channel spack information into OpenFOAM wmake
+        rules with minimal modification to OpenFOAM.
+        The rpath is used for the installed libpath (continue to use
+        LD_LIBRARY_PATH for values during the build).
+        """
+        # Note: the 'c' rules normally don't need rpath, since they are just
+        # used for some statically linked wmake tools, but left in anyhow.
+
+        # rpath for installed OpenFOAM libraries
+        rpath = '{0}{1}'.format(
+            foam_pkg.compiler.cxx_rpath_arg,
+            join_path(foam_pkg.projectdir, foam_pkg.archlib))
+
+        user_mpi = mplib_content(foam_pkg.spec)
+        rule_dir = self._rule_directory(projdir)
+
+        with working_dir(rule_dir):
+            # Compiler: copy existing cOpt,c++Opt and modify '*DBUG' value
+            for lang in ['c', 'c++']:
+                src = '{0}Opt'.format(lang)
+                dst = '{0}{1}'.format(lang, self.compile_option)
+                with open(src, 'r') as infile:
+                    with open(dst, 'w') as outfile:
+                        for line in infile:
+                            line = line.rstrip()
+                            outfile.write(line)
+                            if re.match(r'^\S+DBUG\s*=', line):
+                                outfile.write(' ')
+                                outfile.write(rpath)
+                            elif re.match(r'^\S+OPT\s*=', line):
+                                if self.arch_option:
+                                    outfile.write(' ')
+                                    outfile.write(self.arch_option)
+                            outfile.write('\n')
+
+            # MPI rules
+            for mplib in ['mplibUSER', 'mplibUSERMPI']:
+                with open(mplib, 'w') as out:
+                    out.write("""# Use mpi from spack ({name})\n
+PFLAGS  = {FLAGS}
+PINC    = {PINC}
+PLIBS   = {PLIBS}
+""".format(**user_mpi))
+
+# -----------------------------------------------------------------------------
