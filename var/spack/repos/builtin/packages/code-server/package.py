@@ -22,9 +22,8 @@ class CodeServer(Package):
     def install(self, spec, prefix):
         ln = which('ln')
         mkdir = which('mkdir')
-        cp = which('cp')
 
-        cp('-r', '{0}/.'.format(self.stage.source_path), prefix)
+        install_tree('.', prefix)
 
         if spec.version <= Version('3.1.1'):
             mkdir(prefix.bin)
