@@ -15,8 +15,10 @@ class Tskit(PythonPackage):
 
     version('0.3.1', sha256='b9c5a9b2fb62a615e389036946345ef8a35b09f1ffee541995b16f97fedb3d36')
 
-    depends_on('python@3.6:',   type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-svgwrite',   type='run')
-    depends_on('py-jsonschema', type='run')
-    depends_on('py-h5py',       type='run')
+    depends_on('python@3.6:',      type=('build', 'run'))
+    depends_on('py-setuptools',    type=('build', 'run'))
+    depends_on('py-svgwrite',      type=('build', 'run'))
+    depends_on('py-jsonschema',    type=('build', 'run'))
+    depends_on('py-h5py',          type=('build', 'run'))
+    depends_on('py-numpy@1.7:',    type=('build', 'run'))
+    depends_on('py-attrs@19.2.0:', type=('build', 'run'))
