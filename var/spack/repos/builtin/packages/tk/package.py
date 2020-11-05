@@ -53,7 +53,7 @@ class Tk(AutotoolsPackage, SourceforgePackage):
             # Replace stage dir -> installed src dir in tkConfig
             filter_file(
                 stage_src, installed_src,
-                join_path(self.spec.prefix, 'lib', 'tkConfig.sh'))
+                join_path(self.libs.directories[0], 'tkConfig.sh'))
 
     @property
     def libs(self):
@@ -63,19 +63,17 @@ class Tk(AutotoolsPackage, SourceforgePackage):
     def setup_run_environment(self, env):
         # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
-            self.spec.version.up_to(2))))
+        env.set('TK_LIBRARY', self.libs.directories[0])
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
-            self.spec.version.up_to(2))))
+        env.set('TK_LIBRARY', self.libs.directories[0])
 
     def configure_args(self):
         spec = self.spec
         config_args = [
-            '--with-tcl={0}'.format(spec['tcl'].prefix.lib),
-            '--x-includes={0}'.format(spec['libx11'].prefix.include),
-            '--x-libraries={0}'.format(spec['libx11'].prefix.lib)
+            '--with-tcl={0}'.format(spec['tcl'].libs.directories[0]),
+            '--x-includes={0}'.format(spec['libx11'].headers.directories[0]),
+            '--x-libraries={0}'.format(spec['libx11'].libs.directories[0])
         ]
         config_args += self.enable_or_disable('xft')
         config_args += self.enable_or_disable('xss')

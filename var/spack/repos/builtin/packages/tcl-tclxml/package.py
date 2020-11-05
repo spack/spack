@@ -30,10 +30,10 @@ class TclTclxml(AutotoolsPackage):
         return [
             '--exec-prefix={0}'.format(
                 self.prefix),
-            '--with-tcl={0}/lib'.format(
-                self.spec['tcl'].prefix),
-            '--with-xml2-config={0}/bin/xml2-config'.format(
-                self.spec['libxml2'].prefix),
-            '--with-xslt-config={0}/bin/xslt-config'.format(
-                self.spec['libxslt'].prefix),
+            '--with-tcl={0}'.format(
+                self.spec['tcl'].libs.directories[0]),
+            '--with-xml2-config={0}'.format(
+                self.spec['libxml2'].prefix.bin.join('xml2-config')),
+            '--with-xslt-config={0}'.format(
+                self.spec['libxslt'].prefix.bin.join('xslt-config')),
         ]

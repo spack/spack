@@ -258,6 +258,7 @@ class Glib(Package):
         if spec.satisfies('@2:2.99'):
             pattern = 'Libs:'
             repl = 'Libs: -L{0} -Wl,-rpath={0} '.format(
-                   spec['gettext'].prefix.lib)
-            myfile = join_path(self.prefix.lib.pkgconfig, 'glib-2.0.pc')
+                   spec['gettext'].libs.directories[0])
+            myfile = join_path(
+                self.libs.directories[0], 'pkgconfig', 'glib-2.0.pc')
             filter_file(pattern, repl, myfile, backup=False)
