@@ -16,6 +16,7 @@ class Npm(Package):
     # base http://www.npmjs.com/
     url      = "https://registry.npmjs.org/npm/-/npm-6.13.4.tgz"
 
+    version('7.0.11', sha256='5ca03029c81af0bcb2de7a7ff05e4d0edda38dcee13f6a4773c1efe810b3378f')
     version('6.14.8', sha256='fe8e873cb606c06f67f666b4725eb9122c8927f677c8c0baf1477f0ff81f5a2c')
     version('6.13.7', sha256='6adf71c198d61a5790cf0e057f4ab72c6ef6c345d72bed8bb7212cb9db969494')
     version('6.13.4', sha256='a063290bd5fa06a8753de14169b7b243750432f42d01213fbd699e6b85916de7')
@@ -36,6 +37,9 @@ class Npm(Package):
 
     phases = ['configure', 'build', 'install']
 
+    # node did not seem to be able to find all modules in parallel make
+    parallel = False
+
     def patch(self):
         shutil.rmtree('node_modules/node-gyp')
         install_tree('node-gyp/package', 'node_modules/node-gyp')
@@ -50,7 +54,15 @@ class Npm(Package):
         make()
 
     def install(self, spec, prefix):
-        make('install')
+        if spec.satisfies('@:6.999'):
+            make('install')
+        else:
+            # manually re-instate code of the old install target
+            mkdir(prefix.lib)
+            node = spack.util.executable.which('node')
+            node('bin/npm-cli.js', 'pack')
+            node('bin/npm-cli.js', 'install', '-g', '-f',
+                 'npm-{0}.tgz'.format(spec.version))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
