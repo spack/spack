@@ -87,6 +87,8 @@ def tests_buildcache_keys(
     with capfd.disabled():
         output = buildcache('keys', '-i', '-t', '-f')
 
+    assert 'Spack buildcache keys' in output
+
 
 def tests_buildcache_env_check(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
@@ -200,6 +202,8 @@ def tests_buildcache_get_buildcache_name(
     platform.system().lower() != 'linux',
     reason='implementation for MacOS still missing'
 )
+
+
 @pytest.mark.db
 def test_buildcache_preview_just_runs(database):
     buildcache('preview', 'mpileaks')
