@@ -27,3 +27,8 @@ class AtSpi2Atk(MesonPackage):
         """Handle gnome's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/at-spi2-atk'
         return url + '/%s/at-spi2-atk-%s.tar.xz' % (version.up_to(2), version)
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('platform=darwin'):
+            # https://github.com/pybind/pybind11/issues/595
+            env.set('STRIP', 'strip -x')

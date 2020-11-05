@@ -100,3 +100,7 @@ class GdkPixbuf(Package):
         # The "post-install.sh" script uses gdk-pixbuf-query-loaders,
         # which was installed earlier.
         env.prepend_path('PATH', self.prefix.bin)
+
+        if self.spec.satisfies('platform=darwin'):
+            # https://github.com/pybind/pybind11/issues/595
+            env.set('STRIP', 'strip -x')

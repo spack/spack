@@ -54,3 +54,7 @@ class AtSpi2Core(MesonPackage):
     def setup_build_environment(self, env):
         # this avoids an "import site" error in the build
         env.unset('PYTHONHOME')
+
+        if self.spec.satisfies('platform=darwin'):
+            # https://github.com/pybind/pybind11/issues/595
+            env.set('STRIP', 'strip -x')
