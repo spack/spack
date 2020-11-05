@@ -37,6 +37,18 @@ class AtSpi2Core(MesonPackage):
         url = 'http://ftp.gnome.org/pub/gnome/sources/at-spi2-core'
         return url + '/%s/at-spi2-core-%s.tar.xz' % (version.up_to(2), version)
 
+    def setup_run_environment(self, env):
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
+
     def setup_build_environment(self, env):
         # this avoids an "import site" error in the build
         env.unset('PYTHONHOME')

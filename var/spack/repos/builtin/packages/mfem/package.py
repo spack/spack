@@ -45,10 +45,14 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    version('4.2.0',
+            '4352a225b55948d2e73a5ee88cece0e88bdbe7ba6726a23d68b2736d3221a86d',
+            url='https://bit.ly/mfem-4-2', extension='.tar.gz',
+            preferred=True)
+
     version('4.1.0',
             '4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d',
-            url='https://bit.ly/mfem-4-1', extension='.tar.gz',
-            preferred=True)
+            url='https://bit.ly/mfem-4-1', extension='.tar.gz')
 
     # Tagged development version used by xSDK
     version('4.0.1-xsdk', commit='c55c80d17b82d80de04b849dd526e17044f8c99a')
@@ -193,6 +197,8 @@ class Mfem(Package):
     depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:+sundials+mpi')
     depends_on('sundials@5.0.0:', when='@4.0.1-xsdk:+sundials~mpi')
     depends_on('sundials@5.0.0:+mpi+hypre', when='@4.0.1-xsdk:+sundials+mpi')
+    depends_on('sundials@5.4.0:+cuda', when='@4.2.0:+sundials+cuda')
+    depends_on('pumi@2.2.3', when='@4.2.0:+pumi')
     depends_on('pumi', when='+pumi~shared')
     depends_on('pumi+shared', when='+pumi+shared')
     depends_on('gslib@1.0.5:+mpi', when='+gslib+mpi')
@@ -221,17 +227,20 @@ class Mfem(Package):
     conflicts('+superlu-dist',
               when='mfem@:4.0.99 ^hypre@2.16.0: ^superlu-dist@6:')
     # The STRUMPACK v3 interface in MFEM seems to be broken as of MFEM v4.1
-    # when using hypre version >= 2.16.0:
-    conflicts('+strumpack', when='mfem@4.0.0: ^hypre@2.16.0:')
+    # when using hypre version >= 2.16.0.
+    # This issue is resolved in v4.2.
+    conflicts('+strumpack', when='mfem@4.0.0:4.1.99 ^hypre@2.16.0:')
 
-    depends_on('occa@1.0.8:', when='+occa')
+    depends_on('occa@1.0.8:', when='@:4.1.99+occa')
+    depends_on('occa@1.1.0:', when='@4.2.0:+occa')
     depends_on('occa+cuda', when='+occa+cuda')
 
     depends_on('raja@0.10.0:', when='@4.0.1:+raja')
     depends_on('raja@0.7.0:0.9.0', when='@4.0.0+raja')
     depends_on('raja+cuda', when='+raja+cuda')
 
-    depends_on('libceed@0.6:', when='+libceed')
+    depends_on('libceed@0.6:', when='@:4.1.99+libceed')
+    depends_on('libceed@0.7:', when='@4.2.0:+libceed')
     depends_on('libceed+cuda', when='+libceed+cuda')
 
     depends_on('umpire@2.0.0:', when='+umpire')
@@ -474,14 +483,13 @@ class Mfem(Package):
                 ld_flags_from_library_list(spec[sun_spec].libs)]
 
         if '+petsc' in spec:
-            if '+shared' in spec:
+            petsc = spec['petsc']
+            if '+shared' in petsc:
                 options += [
-                    'PETSC_OPT=%s' % spec['petsc'].headers.cpp_flags,
-                    'PETSC_LIB=%s' %
-                    ld_flags_from_library_list(spec['petsc'].libs)]
+                    'PETSC_OPT=%s' % petsc.headers.cpp_flags,
+                    'PETSC_LIB=%s' % ld_flags_from_library_list(petsc.libs)]
             else:
-                options += [
-                    'PETSC_DIR=%s' % spec['petsc'].prefix]
+                options += ['PETSC_DIR=%s' % petsc.prefix]
 
         if '+pumi' in spec:
             pumi_libs = ['pumi', 'crv', 'ma', 'mds', 'apf', 'pcu', 'gmi',

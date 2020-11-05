@@ -86,7 +86,7 @@ class KokkosLegacy(Package):
     variant(
         'host_arch',
         default='none',
-        values=host_values,
+        values=host_values + ('none',),
         description='Set the host architecture to use'
     )
 
@@ -94,7 +94,7 @@ class KokkosLegacy(Package):
     variant(
         'gpu_arch',
         default='none',
-        values=gpu_values,
+        values=gpu_values + ('none',),
         description='Set the GPU architecture to use'
     )
 

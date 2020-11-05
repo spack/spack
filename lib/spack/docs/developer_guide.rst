@@ -620,13 +620,6 @@ for a major release, the steps to make the release are as follows:
 #. Bump the version in ``lib/spack/spack/__init__.py``. See `this example from 0.13.0
    <https://github.com/spack/spack/commit/8eeb64096c98b8a43d1c587f13ece743c864fba9>`_
 
-#. Update the release version lists in these files to include the new version:
-
-   * ``lib/spack/spack/schema/container.py``
-   * ``lib/spack/spack/container/images.json``
-
-.. TODO: We should get rid of this step in some future release.
-
 #. Update ``CHANGELOG.md`` with major highlights in bullet form. Use
    proper markdown formatting, like `this example from 0.15.0
    <https://github.com/spack/spack/commit/d4bf70d9882fcfe88507e9cb444331d7dd7ba71c>`_.
@@ -720,13 +713,6 @@ release:
 
 #. Bump the version in ``lib/spack/spack/__init__.py``. See `this example from 0.14.1
    <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
-
-#. Updaate the release version lists in these files to include the new version:
-
-   * ``lib/spack/spack/schema/container.py``
-   * ``lib/spack/spack/container/images.json``
-
-   **TODO**: We should get rid of this step in some future release.
 
 #. Update ``CHANGELOG.md`` with a list of bugfixes. This is typically just a
    summary of the commits you cherry-picked onto the release branch. See
