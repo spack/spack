@@ -150,6 +150,9 @@ class Coreneuron(CMakePackage):
              '-DPYTHON_EXECUTABLE=%s' % spec["python"].command.path
              ]
 
+        if spec.satisfies('@0.23:'):
+            options.append('-DCORENRN_ENABLE_LEGACY_UNITS=ON')
+
         if spec.satisfies('+nmodl'):
             options.append('-DCORENRN_ENABLE_NMODL=ON')
             options.append('-DCORENRN_NMODL_DIR=%s' % spec['nmodl'].prefix)

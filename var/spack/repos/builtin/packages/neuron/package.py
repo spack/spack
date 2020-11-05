@@ -144,6 +144,8 @@ class Neuron(CMakePackage):
             args.append("-DNRN_ENABLE_MOD_COMPATIBILITY:BOOL=ON")
         if "+binary" in self.spec:
             args.append("-DNRN_ENABLE_BINARY_SPECIAL=ON")
+        if self.spec.satisfies('@7.9.0b:'):
+            args.append('-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON')
 
         return args
 
