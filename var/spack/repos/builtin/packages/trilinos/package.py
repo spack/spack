@@ -419,7 +419,7 @@ class Trilinos(CMakePackage, CudaPackage):
             env.set('CUDA_LAUNCH_BLOCKING', '1')
 
     def setup_dependent_package(self, module, dependent_spec):
-        if '+wrapper' in spec:
+        if '+wrapper' in self.spec:
             self.spec.kokkos_cxx = self.spec["kokkos-nvcc-wrapper"].kokkos_cxx
         else:
             self.spec.kokkos_cxx = spack_cxx
