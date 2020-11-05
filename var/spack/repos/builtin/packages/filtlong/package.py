@@ -22,6 +22,5 @@ class Filtlong(MakefilePackage):
         mkdir(prefix.bin)
         install_tree('bin', prefix.bin)
 
-        datadir = join_path(self.prefix, 'test')
-        mkdir(datadir)
-        install_tree('test', datadir)
+        mkdir(prefix.test)
+        install_tree('test', prefix.test)
