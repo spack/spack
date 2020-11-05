@@ -145,7 +145,7 @@ class Amrex(CMakePackage):
     def cmake_args(self):
         args = [
             '-DUSE_XSDK_DEFAULTS=ON',
-            self.define_from_variant('DIM', 'dimensions'),
+            self.define_from_variant('AMReX_SPACEDIM', 'dimensions'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('AMReX_MPI', 'mpi'),
             self.define_from_variant('AMReX_OMP', 'openmp'),
