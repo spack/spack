@@ -127,6 +127,7 @@ packages:
       - py-bluepy@0.14.14
       - py-bluepymm@0.7.49 ^neuron%intel@19.0.4
       - py-bluepyopt@1.9.27 ^neuron%intel@19.0.4
+      - py-currentscape@0.0.2
 
   #### cellular ####
 
