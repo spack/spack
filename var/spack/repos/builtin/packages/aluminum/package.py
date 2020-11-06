@@ -19,7 +19,10 @@ class Aluminum(CMakePackage, CudaPackage):
     url      = "https://github.com/LLNL/Aluminum/archive/v0.1.tar.gz"
     git      = "https://github.com/LLNL/Aluminum.git"
 
+    maintainers = ['bvanessen']
+
     version('master', branch='master')
+    version('0.6.0', sha256='6ca329951f4c7ea52670e46e5020e7e7879d9b56fed5ff8c5df6e624b313e925')
     version('0.5.0', sha256='dc365a5849eaba925355a8efb27005c5f22bcd1dca94aaed8d0d29c265c064c1')
     version('0.4.0', sha256='4d6fab5481cc7c994b32fb23a37e9ee44041a9f91acf78f981a97cb8ef57bb7d')
     version('0.3.3',   sha256='26e7f263f53c6c6ee0fe216e981a558dfdd7ec997d0dd2a24285a609a6c68f3b')
@@ -39,6 +42,7 @@ class Aluminum(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('nccl', when='+nccl')
     depends_on('hwloc@1.11:')
+    depends_on('cub', when='@:0.1,0.6.0: +cuda')
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
@@ -57,8 +61,12 @@ class Aluminum(CMakePackage, CudaPackage):
                 '-DALUMINUM_ENABLE_MPI_CUDA_RMA:BOOL=%s' %
                 ('+cuda_rma' in spec)])
         else:
-            args.extend([
-                '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec)])
+            args.append(
+                '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec))
+
+        if '@:0.1,0.6.0:':
+            args.append(
+                '-DCUB_DIR:FILEPATH=%s' % spec['cub'].prefix.include)
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
         if self.spec.satisfies('%clang platform=darwin'):
