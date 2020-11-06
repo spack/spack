@@ -61,7 +61,7 @@ class Hydrogen(CMakePackage, CudaPackage):
             description='Builds with Aluminum communication library')
     variant('omp_taskloops', default=False,
             description='Use OpenMP taskloops instead of parallel for loops.')
-    variant('half', default=True,
+    variant('half', default=False,
             description='Builds with support for FP16 precision data types')
     depends_on('cmake@3.17.0:', type='build')
     depends_on('mpi')
