@@ -281,7 +281,7 @@ def test_replace_prefix_bin(hello_world):
     executable = hello_world(rpaths=['/usr/lib', '/usr/lib64'])
 
     # Relocate the RPATHs
-    spack.relocate._replace_prefix_bin(str(executable), '/usr', '/foo')
+    spack.relocate._replace_prefix_bin(str(executable), {b'/usr': b'/foo'})
 
     # Some compilers add rpaths so ensure changes included in final result
     assert '/foo/lib:/foo/lib64' in rpaths_for(executable)
