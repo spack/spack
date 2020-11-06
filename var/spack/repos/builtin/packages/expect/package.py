@@ -24,6 +24,9 @@ class Expect(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
+    # https://github.com/spack/spack/issues/19767
+    conflicts('%apple-clang@12:')
+
     force_autoreconf = True
 
     patch('expect_detect_tcl_private_header_os_x_mountain_lion.patch', when='@5.45')
