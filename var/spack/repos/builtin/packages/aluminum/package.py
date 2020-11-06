@@ -42,7 +42,7 @@ class Aluminum(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('nccl', when='+nccl')
     depends_on('hwloc@1.11:')
-    depends_on('cub', when='@:0.1,0.6.0: +cuda')
+    depends_on('cub', when='@:0.1,0.6.0: +cuda ^cuda@:10.99')
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
@@ -64,9 +64,9 @@ class Aluminum(CMakePackage, CudaPackage):
             args.append(
                 '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec))
 
-        if '@:0.1,0.6.0:':
+        if '@:0.1,0.6.0:' and spec.satisfies('^cuda@:10.99'):
             args.append(
-                '-DCUB_DIR:FILEPATH=%s' % spec['cub'].prefix.include)
+                '-DCUB_DIR:FILEPATH=%s' % spec['cub'].prefix)
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
         if self.spec.satisfies('%clang platform=darwin'):

@@ -98,7 +98,7 @@ class Lbann(CMakePackage, CudaPackage):
 
     depends_on('cudnn', when='@0.90:0.100.99 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
-    depends_on('cub', when='@0.94:0.98.2 +cuda')
+    depends_on('cub', when='@0.94:0.98.2 +cuda ^cuda@:10.99')
     depends_on('mpi')
     depends_on('hwloc@1.11:', when='@:0.90,0.102:')
     depends_on('hwloc@1.11:1.11.99', when='@0.95:0.101.99')
@@ -282,7 +282,7 @@ class Lbann(CMakePackage, CudaPackage):
             args.extend(['-DcuDNN_DIR={0}'.format(
                 spec['cudnn'].prefix)])
 
-        if '+cub' in spec:
+        if '+cub' in spec and spec.satisfies('^cuda@:10.99'):
             args.extend(['-DCUB_DIR={0}'.format(
                 spec['cub'].prefix)])
 
