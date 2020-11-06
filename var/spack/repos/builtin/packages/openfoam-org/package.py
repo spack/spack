@@ -174,7 +174,7 @@ class OpenfoamOrg(Package):
     @property
     def foam_arch(self):
         if not self._foam_arch:
-            self._foam_arch = OpenfoamArch(self.spec, **self.config)
+            self._foam_arch = OpenfoamOrgArch(self.spec, **self.config)
         return self._foam_arch
 
     @property
@@ -390,3 +390,17 @@ class OpenfoamOrg(Package):
                 if os.path.isfile(f)
             ]:
                 os.symlink(f, os.path.basename(f))
+
+
+# -----------------------------------------------------------------------------
+
+class OpenfoamOrgArch(OpenfoamArch):
+    """An openfoam-org variant of OpenfoamArch
+    """
+    def update_arch(self, spec):
+        """Handle differences in WM_ARCH naming
+        """
+        OpenfoamArch.update_arch(self, spec)
+
+        # ARM64 (openfoam) -> Arm64 (openfoam-org)
+        self.arch = self.arch.replace("ARM64", "Arm64")
