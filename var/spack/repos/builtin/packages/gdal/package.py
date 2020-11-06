@@ -484,7 +484,7 @@ class Gdal(AutotoolsPackage):
         ])
 
         # TODO: add packages for these dependencies (only for 3.1 and older)
-        if spec.satisfes('@:3.1'):
+        if spec.satisfies('@:3.1'):
             # https://trac.osgeo.org/gdal/wiki/ArcSDE
             args.append('--with-sde=no')
 
