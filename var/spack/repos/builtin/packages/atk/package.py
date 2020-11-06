@@ -36,11 +36,6 @@ class Atk(Package):
         url = 'http://ftp.gnome.org/pub/gnome/sources/atk'
         return url + '/%s/atk-%s.tar.xz' % (version.up_to(2), version)
 
-    def setup_build_environment(self, env):
-        if self.spec.satisfies('platform=darwin'):
-            # https://github.com/pybind/pybind11/issues/595
-            env.set('STRIP', 'strip -x')
-
     def setup_run_environment(self, env):
         env.prepend_path("GI_TYPELIB_PATH",
                          join_path(self.prefix.lib, 'girepository-1.0'))
