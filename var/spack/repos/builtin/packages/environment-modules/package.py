@@ -54,8 +54,8 @@ class EnvironmentModules(Package):
             "--without-tclx",
             "--with-tclx-ver=0.0",
             # It looks for tclConfig.sh
-            "--with-tcl=" + join_path(tcl.libs.directories[0], 'tclConfig.sh'),
-            "--with-tcl-ver={0}".format(*tcl.version.up_to(2)),
+            "--with-tcl=" + tcl.libs.directories[0],
+            "--with-tcl-ver={0}".format(tcl.version.up_to(2)),
             '--disable-versioning',
             '--datarootdir=' + prefix.share
         ]
