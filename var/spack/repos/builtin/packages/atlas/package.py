@@ -155,7 +155,7 @@ class Atlas(Package):
                                  'test_cblas_dgemm.output')
 
         include_flags = ["-I%s" % self.spec.prefix.include]
-        link_flags = self.libs.ld_flags.split()
+        link_flags = self.spec['atlas'].libs.ld_flags.split()
 
         output = compile_c_and_execute(source_file, include_flags, link_flags)
         compare_output_file(output, blessed_file)

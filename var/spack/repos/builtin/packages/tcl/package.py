@@ -55,7 +55,8 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
             # Replace stage dir -> installed src dir in tclConfig
             filter_file(
                 stage_src, installed_src,
-                join_path(self.libs.directories[0], 'tclConfig.sh'))
+                join_path(self.spec['tcl'].libs.directories[0],
+                          'tclConfig.sh'))
 
         # Don't install binaries in src/ tree
         with working_dir(join_path(installed_src, self.configure_directory)):
@@ -87,14 +88,14 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
     def setup_run_environment(self, env):
         # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
-        env.set('TCL_LIBRARY', self.libs.directories[0])
+        env.set('TCL_LIBRARY', self.spec['tcl'].libs.directories[0])
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
         For further info see: https://wiki.tcl.tk/1787"""
 
-        env.set('TCL_LIBRARY', self.libs.directories[0])
+        env.set('TCL_LIBRARY', self.spec['tcl'].libs.directories[0])
 
         # If we set TCLLIBPATH, we must also ensure that the corresponding
         # tcl is found in the build environment. This to prevent cases
@@ -104,8 +105,8 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
         if not is_system_path(self.prefix.bin):
             env.prepend_path('PATH', self.prefix.bin)
 
-        tcl_paths = [join_path(self.libs.directories[0], 'tcl{0}'.format(
-            self.version.up_to(2)))]
+        tcl_paths = [join_path(self.spec['tcl'].libs.directories[0],
+                               'tcl{0}'.format(self.version.up_to(2)))]
 
         for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
