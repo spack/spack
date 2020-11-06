@@ -670,4 +670,3 @@ def star(func):
     def _wrapper(args):
         return func(*args)
     return _wrapper
-
