@@ -26,6 +26,9 @@ class TclTclxml(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('libxslt')
 
+    # Results in C99 build error
+    conflicts('%apple-clang@12:')
+
     def configure_args(self):
         return [
             '--exec-prefix={0}'.format(
