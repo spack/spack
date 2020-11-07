@@ -203,7 +203,7 @@ class Lbann(CMakePackage, CudaPackage):
 
         if spec.satisfies('@0.94:0.98.2'):
             args.append('-DLBANN_WITH_NCCL:BOOL=%s' %
-                         ('+cuda +nccl' in spec))
+                        ('+cuda +nccl' in spec))
 
         if '+vtune' in spec:
             args.append('-DVTUNE_DIR={0}'.format(spec['vtune'].prefix))
