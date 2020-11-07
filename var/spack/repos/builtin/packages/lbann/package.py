@@ -71,6 +71,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('hydrogen +openmp_blas +shared +int64')
     depends_on('hydrogen +al', when='+al')
     depends_on('hydrogen +cuda', when='+cuda')
+    depends_on('hydrogen ~half', when='~half')
     depends_on('hydrogen +half', when='+half')
     depends_on('hydrogen build_type=Debug', when='build_type=Debug')
 
@@ -91,6 +92,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('dihydrogen +cuda', when='+dihydrogen +cuda')
     depends_on('dihydrogen +al', when='+dihydrogen +al')
     depends_on('dihydrogen +legacy +cuda', when='+distconv')
+    depends_on('dihydrogen ~half', when='+dihydrogen ~half')
     depends_on('dihydrogen +half', when='+dihydrogen +half')
     depends_on('dihydrogen@0.1', when='@0.101:0.101.99 +dihydrogen')
     depends_on('dihydrogen@:0.0,0.2:', when='@:0.90,0.102: +dihydrogen')
