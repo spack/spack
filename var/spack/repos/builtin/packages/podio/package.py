@@ -56,5 +56,5 @@ class Podio(CMakePackage):
             url = "https://github.com/AIDASoft/podio/archive/v%s-%s-%s.tar.gz" % (major, minor, patch)
         return url
 
-    def setup_run_environment(self, spack_env):
-        spack_env.prepend_path('PYTHONPATH', self.prefix.python)
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.python)
