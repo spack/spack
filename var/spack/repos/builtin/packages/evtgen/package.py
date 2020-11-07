@@ -54,5 +54,5 @@ class Evtgen(AutotoolsPackage):
         make('lib_shared')
         make('all')
 
-    def setup_run_environment(self, spack_env):
-        spack_env.set("EVTGEN", self.prefix.share)
+    def setup_run_environment(self, env):
+        env.set("EVTGEN", self.prefix.share)
