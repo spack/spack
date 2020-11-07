@@ -69,8 +69,11 @@ class Lbann(CMakePackage, CudaPackage):
 
     # Add Hydrogen variants
     depends_on('hydrogen +openmp_blas +shared +int64')
+    depends_on('hydrogen ~al', when='~al')
     depends_on('hydrogen +al', when='+al')
+    depends_on('hydrogen ~cuda', when='~cuda')
     depends_on('hydrogen +cuda', when='+cuda')
+    depends_on('hydrogen ~half', when='~half')
     depends_on('hydrogen +half', when='+half')
     depends_on('hydrogen build_type=Debug', when='build_type=Debug')
 
@@ -88,9 +91,12 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
 
     depends_on('dihydrogen +openmp', when='+dihydrogen')
+    depends_on('dihydrogen ~cuda', when='+dihydrogen ~cuda')
     depends_on('dihydrogen +cuda', when='+dihydrogen +cuda')
+    depends_on('dihydrogen ~al', when='+dihydrogen ~al')
     depends_on('dihydrogen +al', when='+dihydrogen +al')
     depends_on('dihydrogen +legacy +cuda', when='+distconv')
+    depends_on('dihydrogen ~half', when='+dihydrogen ~half')
     depends_on('dihydrogen +half', when='+dihydrogen +half')
     depends_on('dihydrogen@0.1', when='@0.101:0.101.99 +dihydrogen')
     depends_on('dihydrogen@:0.0,0.2:', when='@:0.90,0.102: +dihydrogen')
@@ -98,7 +104,7 @@ class Lbann(CMakePackage, CudaPackage):
 
     depends_on('cudnn', when='@0.90:0.100.99 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
-    depends_on('cub', when='@0.94:0.98.2 +cuda')
+    depends_on('cub', when='@0.94:0.98.2 +cuda ^cuda@:10.99')
     depends_on('mpi')
     depends_on('hwloc@1.11:', when='@:0.90,0.102:')
     depends_on('hwloc@1.11:1.11.99', when='@0.95:0.101.99')
@@ -187,23 +193,23 @@ class Lbann(CMakePackage, CudaPackage):
             '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix)])
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.95:'):
-            args.extend([
+            args.append(
                 '-DHydrogen_DIR={0}/CMake/hydrogen'.format(
-                    spec['hydrogen'].prefix)])
+                    spec['hydrogen'].prefix))
         elif spec.satisfies('@0.94'):
-            args.extend([
+            args.append(
                 '-DElemental_DIR={0}/CMake/elemental'.format(
-                    spec['elemental'].prefix)])
+                    spec['elemental'].prefix))
 
         if spec.satisfies('@0.94:0.98.2'):
-            args.extend(['-DLBANN_WITH_NCCL:BOOL=%s' %
-                         ('+cuda +nccl' in spec)])
+            args.append('-DLBANN_WITH_NCCL:BOOL=%s' %
+                        ('+cuda +nccl' in spec))
 
         if '+vtune' in spec:
-            args.extend(['-DVTUNE_DIR={0}'.format(spec['vtune'].prefix)])
+            args.append('-DVTUNE_DIR={0}'.format(spec['vtune'].prefix))
 
         if '+al' in spec:
-            args.extend(['-DAluminum_DIR={0}'.format(spec['aluminum'].prefix)])
+            args.append('-DAluminum_DIR={0}'.format(spec['aluminum'].prefix))
 
         if '+conduit' in spec:
             args.extend([
@@ -223,31 +229,32 @@ class Lbann(CMakePackage, CudaPackage):
                         clang_root)])
 
         if '+opencv' in spec:
-            args.extend(['-DOpenCV_DIR:STRING={0}'.format(
-                spec['opencv'].prefix)])
+            args.append('-DOpenCV_DIR:STRING={0}'.format(
+                spec['opencv'].prefix))
 
         if '+cuda' in spec:
-            args.extend([
+            args.append(
                 '-DCUDA_TOOLKIT_ROOT_DIR={0}'.format(
-                    spec['cuda'].prefix)])
-            args.extend([
+                    spec['cuda'].prefix))
+            args.append(
                 '-DcuDNN_DIR={0}'.format(
-                    spec['cudnn'].prefix)])
+                    spec['cudnn'].prefix))
             if spec.satisfies('@0.94:0.98.2'):
-                args.extend(['-DCUB_DIR={0}'.format(
-                    spec['cub'].prefix)])
+                if spec.satisfies('^cuda@:10.99'):
+                    args.append('-DCUB_DIR={0}'.format(
+                        spec['cub'].prefix))
                 if '+nccl' in spec:
-                    args.extend([
+                    args.append(
                         '-DNCCL_DIR={0}'.format(
-                            spec['nccl'].prefix)])
+                            spec['nccl'].prefix))
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.100:'):
-            args.extend([
-                '-DLBANN_WITH_DIHYDROGEN:BOOL=%s' % ('+dihydrogen' in spec)])
+            args.append(
+                '-DLBANN_WITH_DIHYDROGEN:BOOL=%s' % ('+dihydrogen' in spec))
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.101:'):
-            args.extend([
-                '-DLBANN_WITH_DISTCONV:BOOL=%s' % ('+distconv' in spec)])
+            args.append(
+                '-DLBANN_WITH_DISTCONV:BOOL=%s' % ('+distconv' in spec))
 
         return args
 
@@ -270,20 +277,20 @@ class Lbann(CMakePackage, CudaPackage):
             '-DLBANN_HOME=.'])
 
         if spec.variants['dtype'].value == 'float':
-            args.extend(['-DDATATYPE=4'])
+            args.append('-DDATATYPE=4')
         elif spec.variants['dtype'].value == 'double':
-            args.extend(['-DDATATYPE=8'])
+            args.append('-DDATATYPE=8')
 
         if '+opencv' in spec:
-            args.extend(['-DOpenCV_DIR:STRING={0}'.format(
-                spec['opencv'].prefix)])
+            args.append('-DOpenCV_DIR:STRING={0}'.format(
+                spec['opencv'].prefix))
 
         if '+cudnn' in spec:
-            args.extend(['-DcuDNN_DIR={0}'.format(
-                spec['cudnn'].prefix)])
+            args.append('-DcuDNN_DIR={0}'.format(
+                spec['cudnn'].prefix))
 
-        if '+cub' in spec:
-            args.extend(['-DCUB_DIR={0}'.format(
-                spec['cub'].prefix)])
+        if '+cub' in spec and spec.satisfies('^cuda@:10.99'):
+            args.append('-DCUB_DIR={0}'.format(
+                spec['cub'].prefix))
 
         return args
