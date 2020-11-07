@@ -141,7 +141,7 @@ class Amrex(CMakePackage):
     #
     # For versions > 20.11
     #
-    @when('@20.11:')
+    @when('@20.12:')
     def cmake_args(self):
         args = [
             '-DUSE_XSDK_DEFAULTS=ON',
