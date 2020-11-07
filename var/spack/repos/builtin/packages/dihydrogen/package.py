@@ -151,12 +151,12 @@ class Dihydrogen(CMakePackage, CudaPackage):
                     ))
 
         if '+cuda' in spec or '+legacy' in spec:
-            args.extend(['-DcuDNN_DIR={0}'.format(
-                spec['cudnn'].prefix)])
+            args.append('-DcuDNN_DIR={0}'.format(
+                spec['cudnn'].prefix))
 
         if spec.satisfies('^cuda@:10.99'):
             if '+cuda' in spec or '+legacy' in spec:
-                args.extend(['-DCUB_DIR={0}'.format(
-                    spec['cub'].prefix)])
+                args.append('-DCUB_DIR={0}'.format(
+                    spec['cub'].prefix))
 
         return args
