@@ -21,6 +21,8 @@ class Glib(Package):
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    version('2.66.2', sha256='ec390bed4e8dd0f89e918f385e8d4cfd7470b1ef7c1ce93ec5c4fc6e3c6a17c4')
+    version('2.64.6', sha256='c36ee07a70164c71f046016fe6aaacd6368333c42590bc0cba47c344ffb853f1')
     version('2.64.5', sha256='9cbd5bd2715ead1c28d53c46f7b7b6ff6166f5887b772c1a9e3bf2910cfecc11')
     version('2.64.4', sha256='f7e0b325b272281f0462e0f7fff25a833820cac19911ff677251daf6d87bce50')
     version('2.64.3', sha256='fe9cbc97925d14c804935f067a3ad77ef55c0bbe9befe68962318f5a767ceb22')
@@ -73,7 +75,8 @@ class Glib(Package):
 
     # glib prefers the libc version of gettext, which breaks the build if the
     # external version is also found.
-    patch('meson-gettext.patch', when='@2.58.0:')
+    patch('meson-gettext.patch', when='@2.58:2.64')
+    patch('meson-gettext-2.66.patch', when='@2.66:')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
