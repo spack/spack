@@ -820,6 +820,7 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
         pkg = serialized_pkg.restore()
 
         if not kwargs.get('fake', False):
+            kwargs['unmodified_env'] = os.environ.copy()
             setup_package(pkg, dirty=kwargs.get('dirty', False))
         return_value = function(pkg, kwargs)
         child_pipe.send(return_value)

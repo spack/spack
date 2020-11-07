@@ -372,6 +372,21 @@ def close_connection_and_file(multiprocess_fd, file):
         file.close()
 
 
+@contextmanager
+def replace_environment(env):
+    env = env or {}
+    old_env = os.environ.copy()
+    try:
+        os.environ.clear()
+        for name, val in env.items():
+            os.environ[name] = val
+        yield
+    finally:
+        os.environ.clear()
+        for name, val in old_env.items():
+            os.environ[name] = val
+
+
 class log_output(object):
     """Context manager that logs its output to a file.
 
@@ -408,7 +423,8 @@ class log_output(object):
     work within test frameworks like nose and pytest.
     """
 
-    def __init__(self, file_like=None, echo=False, debug=0, buffer=False):
+    def __init__(self, file_like=None, echo=False, debug=0, buffer=False,
+                 env=None):
         """Create a new output log context manager.
 
         Args:
@@ -436,6 +452,7 @@ class log_output(object):
         self.echo = echo
         self.debug = debug
         self.buffer = buffer
+        self.env = env  # the environment to use for _writer_daemon
 
         self._active = False  # used to prevent re-entry
 
@@ -509,15 +526,16 @@ class log_output(object):
                 # just don't forward input if this fails
                 input_multiprocess_fd = None
 
-            self.process = multiprocessing.Process(
-                target=_writer_daemon,
-                args=(
-                    input_multiprocess_fd, read_multiprocess_fd, write_fd,
-                    self.echo, self.log_file, child_pipe
+            with replace_environment(self.env):
+                self.process = multiprocessing.Process(
+                    target=_writer_daemon,
+                    args=(
+                        input_multiprocess_fd, read_multiprocess_fd, write_fd,
+                        self.echo, self.log_file, child_pipe
+                    )
                 )
-            )
-            self.process.daemon = True  # must set before start()
-            self.process.start()
+                self.process.daemon = True  # must set before start()
+                self.process.start()
 
         finally:
             if input_multiprocess_fd:

@@ -1569,6 +1569,7 @@ def build_process(pkg, kwargs):
     skip_patch = kwargs.get('skip_patch', False)
     verbose = kwargs.get('verbose', False)
     fake = kwargs.get('fake', False)
+    unmodified_env = kwargs.get('unmodified_env', {})
 
     start_time = time.time()
     if not fake:
@@ -1628,7 +1629,9 @@ def build_process(pkg, kwargs):
 
                 # Spawn a daemon that reads from a pipe and redirects
                 # everything to log_path
-                with log_output(pkg.log_path, echo, True) as logger:
+                with log_output(pkg.log_path, echo, True,
+                                env=unmodified_env) as logger:
+
                     for phase_name, phase_attr in zip(
                             pkg.phases, pkg._InstallPhase_phases):
 
