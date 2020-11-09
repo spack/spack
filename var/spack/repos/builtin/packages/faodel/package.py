@@ -55,6 +55,8 @@ class Faodel(CMakePackage):
     patch('faodel_mpi.patch', when='@1.1811.1 ~mpi')
     # FAODEL Github issue #5
     patch('faodel_sbl.patch', when='@1.1811.1 logging=sbl')
+    patch('lambda-capture-f0267fc.patch', when='@1.1906.1')
+    patch('ugni-target-redef-b67e856.patch', when='@1.1906.1')
 
     def cmake_args(self):
         spec = self.spec

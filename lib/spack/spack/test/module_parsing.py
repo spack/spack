@@ -9,7 +9,7 @@ import spack
 
 from spack.util.module_cmd import (
     module,
-    get_path_from_module,
+    path_from_modules,
     get_path_args_from_module_line,
     get_path_from_module_contents
 )
@@ -55,7 +55,7 @@ def test_get_path_from_module_faked(monkeypatch):
             return line
         monkeypatch.setattr(spack.util.module_cmd, 'module', fake_module)
 
-        path = get_path_from_module('mod')
+        path = path_from_modules(['mod'])
         assert path == '/path/to'
 
 
@@ -116,10 +116,10 @@ def test_get_argument_from_module_line():
     bad_lines = ['prepend_path(PATH,/lib/path)',
                  'prepend-path (LD_LIBRARY_PATH) /lib/path']
 
-    assert all(get_path_args_from_module_line(l) == ['/lib/path']
-               for l in simple_lines)
-    assert all(get_path_args_from_module_line(l) == ['/lib/path', '/pkg/path']
-               for l in complex_lines)
+    assert all(get_path_args_from_module_line(x) == ['/lib/path']
+               for x in simple_lines)
+    assert all(get_path_args_from_module_line(x) == ['/lib/path', '/pkg/path']
+               for x in complex_lines)
     for bl in bad_lines:
         with pytest.raises(ValueError):
             get_path_args_from_module_line(bl)

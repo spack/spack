@@ -65,7 +65,9 @@ class Xsdktrilinos(CMakePackage):
         ])
 
         # Fortran lib
-        if spec.satisfies('%gcc') or spec.satisfies('%clang'):
+        if (spec.satisfies('%gcc') or
+                spec.satisfies('%clang') or
+                spec.satisfies('%apple-clang')):
             libgfortran = os.path.dirname(os.popen(
                 '%s --print-file-name libgfortran.a' %
                 join_path(mpi_bin, 'mpif90')).read())

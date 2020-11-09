@@ -33,6 +33,13 @@ class Eagle(MakefilePackage):
         # add htslib link to ldflags
         filter_file('-lcurl', '-lcurl -lhts', 'Makefile', string=True)
 
+        # use spack C compiler
+        filter_file('CC=.*', 'CC={0}'.format(spack_cc), 'Makefile')
+
+        # remove march=native %fj
+        if self.spec.satisfies('%fj'):
+            filter_file('-march=native', '', 'Makefile', string=True)
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
 

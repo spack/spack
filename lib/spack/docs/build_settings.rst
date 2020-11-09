@@ -57,10 +57,13 @@ directory. Here's an example of an external configuration:
 
    packages:
      openmpi:
-       paths:
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64: /opt/openmpi-1.4.3
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug: /opt/openmpi-1.4.3-debug
-         openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64: /opt/openmpi-1.6.5-intel
+       externals:
+       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
+         prefix: /opt/openmpi-1.4.3
+       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
+         prefix: /opt/openmpi-1.4.3-debug
+       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
+         prefix: /opt/openmpi-1.6.5-intel
 
 This example lists three installations of OpenMPI, one built with GCC,
 one built with GCC and debug information, and another built with Intel.
@@ -76,13 +79,15 @@ of the installation prefixes.  The following example says that module
 .. code-block:: yaml
 
    cmake:
-     modules:
-       cmake@3.7.2: CMake/3.7.2
+     externals:
+     - spec: cmake@3.7.2
+       modules:
+       - CMake/3.7.2
 
-Each ``packages.yaml`` begins with a ``packages:`` token, followed
-by a list of package names.  To specify externals, add a ``paths`` or ``modules``
-token under the package name, which lists externals in a
-``spec: /path`` or ``spec: module-name`` format.  Each spec should be as
+Each ``packages.yaml`` begins with a ``packages:`` attribute, followed
+by a list of package names.  To specify externals, add an ``externals:``
+attribute under the package name, which lists externals.
+Each external should specify a ``spec:`` string that should be as
 well-defined as reasonably possible.  If a
 package lacks a spec component, such as missing a compiler or
 package version, then Spack will guess the missing component based
@@ -106,10 +111,13 @@ be:
 
    packages:
      openmpi:
-       paths:
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64: /opt/openmpi-1.4.3
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug: /opt/openmpi-1.4.3-debug
-         openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64: /opt/openmpi-1.6.5-intel
+       externals:
+       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
+         prefix: /opt/openmpi-1.4.3
+       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
+         prefix: /opt/openmpi-1.4.3-debug
+       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
+         prefix: /opt/openmpi-1.6.5-intel
        buildable: False
 
 The addition of the ``buildable`` flag tells Spack that it should never build
@@ -137,10 +145,13 @@ but more conveniently:
      mpi:
        buildable: False
      openmpi:
-       paths:
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64: /opt/openmpi-1.4.3
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug: /opt/openmpi-1.4.3-debug
-         openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64: /opt/openmpi-1.6.5-intel
+       externals:
+       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
+         prefix: /opt/openmpi-1.4.3
+       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
+         prefix: /opt/openmpi-1.4.3-debug
+       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
+         prefix: /opt/openmpi-1.6.5-intel
 
 Implementations can also be listed immediately under the virtual they provide:
 
@@ -172,8 +183,9 @@ After running this command your ``packages.yaml`` may include new entries:
 
    packages:
      cmake:
-       paths:
-         cmake@3.17.2: /usr
+       externals:
+       - spec: cmake@3.17.2
+         prefix: /usr
 
 Generally this is useful for detecting a small set of commonly-used packages;
 for now this is generally limited to finding build-only dependencies.

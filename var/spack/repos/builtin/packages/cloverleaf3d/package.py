@@ -4,11 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import glob
-
-from spack import *
-
-
 class Cloverleaf3d(MakefilePackage):
     """Proxy Application. CloverLeaf3D is 3D version of the
        CloverLeaf mini-app. CloverLeaf is a mini-app that solves
@@ -78,7 +73,5 @@ class Cloverleaf3d(MakefilePackage):
                 prefix.bin)
         install('CloverLeaf3D_{0}/clover.in'.format(self.type_of_build),
                 prefix.bin)
-
-        for f in glob.glob(
-                'CloverLeaf3D_{0}/*.in'.format(self.type_of_build)):
-            install(f, prefix.doc.samples)
+        install('CloverLeaf3D_{0}/*.in'.format(self.type_of_build),
+                prefix.doc.samples)

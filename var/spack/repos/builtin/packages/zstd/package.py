@@ -14,6 +14,7 @@ class Zstd(MakefilePackage):
     homepage = "http://facebook.github.io/zstd/"
     url      = "https://github.com/facebook/zstd/archive/v1.4.3.tar.gz"
 
+    version('1.4.5', sha256='734d1f565c42f691f8420c8d06783ad818060fc390dee43ae0a89f86d0a4f8c2')
     version('1.4.4', sha256='a364f5162c7d1a455cc915e8e3cf5f4bd8b75d09bc0f53965b0c9ca1383c52c8')
     version('1.4.3', sha256='5eda3502ecc285c3c92ee0cc8cd002234dee39d539b3f692997a0e80de1d33de')
     version('1.4.2', sha256='7a6e1dad34054b35e2e847eb3289be8820a5d378228802239852f913c6dcf6a7')
@@ -35,3 +36,26 @@ class Zstd(MakefilePackage):
 
     def install(self, spec, prefix):
         make('install', 'PREFIX={0}'.format(prefix))
+
+    def patch(self):
+        # Remove flags not understood by the NVIDIA compilers
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-fvisibility=hidden', '', 'lib/Makefile')
+            filter_file('-Wc++-compat', '', 'lib/Makefile', string=True)
+            filter_file('-Wcast-align', '', 'lib/Makefile')
+            filter_file('-Wcast-qual', '', 'lib/Makefile')
+            filter_file('-Wdeclaration-after-statement', '', 'lib/Makefile')
+            filter_file('-Wextra', '', 'lib/Makefile')
+            filter_file('-Wfloat-equal', '', 'lib/Makefile')
+            filter_file('-Wformat=2', '', 'lib/Makefile')
+            filter_file('-Winit-self', '', 'lib/Makefile')
+            filter_file('-Wmissing-prototypes', '', 'lib/Makefile')
+            filter_file('-Wpointer-arith', '', 'lib/Makefile')
+            filter_file('-Wredundant-decls', '', 'lib/Makefile')
+            filter_file('-Wshadow', '', 'lib/Makefile')
+            filter_file('-Wstrict-aliasing=1', '', 'lib/Makefile')
+            filter_file('-Wstrict-prototypes', '', 'lib/Makefile')
+            filter_file('-Wswitch-enum', '', 'lib/Makefile')
+            filter_file('-Wundef', '', 'lib/Makefile')
+            filter_file('-Wvla', '', 'lib/Makefile')
+            filter_file('-Wwrite-strings', '', 'lib/Makefile')

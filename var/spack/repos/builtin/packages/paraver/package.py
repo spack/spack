@@ -51,6 +51,6 @@ class Paraver(Package):
                   "--with-paraver=%s" % prefix,
                   "--with-boost=%s" % spec['boost'].prefix,
                   "--with-boost-serialization=boost_serialization",
-                  "--with-wxdir=%s" % spec['wx'].prefix.bin)
+                  "--with-wxdir=%s" % spec['wxwidgets'].prefix.bin)
         make()
         make("install")

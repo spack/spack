@@ -71,6 +71,8 @@ class Pocl(CMakePackage):
     variant("icd", default=False,
             description="Support a system-wide ICD loader")
 
+    depends_on('ocl-icd', when='+icd')
+
     def url_for_version(self, version):
         if version >= Version('1.0'):
             url = "https://github.com/pocl/pocl/archive/v{0}.tar.gz"

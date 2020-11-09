@@ -2,22 +2,40 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import collections
 import os.path
 import platform
+import re
 import shutil
 
 import llnl.util.filesystem
 import pytest
 import spack.architecture
 import spack.concretize
+import spack.hooks.sbang as sbang
 import spack.paths
 import spack.relocate
 import spack.spec
 import spack.store
 import spack.tengine
 import spack.util.executable
+
+
+def rpaths_for(new_binary):
+    """Return the RPATHs or RUNPATHs of a binary."""
+    patchelf = spack.util.executable.which('patchelf')
+    output = patchelf('--print-rpath', str(new_binary), output=str)
+    return output.strip()
+
+
+def text_in_bin(text, binary):
+    with open(str(binary), "rb") as f:
+        data = f.read()
+        f.seek(0)
+        pat = re.compile(text.encode('utf-8'))
+        if not pat.search(data):
+            return False
+        return True
 
 
 @pytest.fixture(params=[True, False])
@@ -90,32 +108,30 @@ def expected_patchelf_path(request, mutable_database, monkeypatch):
 
 
 @pytest.fixture()
-def mock_patchelf(tmpdir):
-    import jinja2
-
+def mock_patchelf(tmpdir, mock_executable):
     def _factory(output):
-        f = tmpdir.mkdir('bin').join('patchelf')
-        t = jinja2.Template('#!/bin/bash\n{{ output }}\n')
-        f.write(t.render(output=output))
-        f.chmod(0o755)
-        return str(f)
-
+        return mock_executable('patchelf', output=output)
     return _factory
 
 
 @pytest.fixture()
 def hello_world(tmpdir):
-    source = tmpdir.join('main.c')
-    source.write("""
-#include <stdio.h>
-int main(){
-    printf("Hello world!");
-}
-""")
-
-    def _factory(rpaths):
+    """Factory fixture that compiles an ELF binary setting its RPATH. Relative
+    paths are encoded with `$ORIGIN` prepended.
+    """
+    def _factory(rpaths, message="Hello world!"):
+        source = tmpdir.join('main.c')
+        source.write("""
+        #include <stdio.h>
+        int main(){{
+            printf("{0}");
+        }}
+        """.format(message))
         gcc = spack.util.executable.which('gcc')
         executable = source.dirpath('main.x')
+        # Encode relative RPATHs using `$ORIGIN` as the root prefix
+        rpaths = [x if os.path.isabs(x) else os.path.join('$ORIGIN', x)
+                  for x in rpaths]
         rpath_str = ':'.join(rpaths)
         opts = [
             '-Wl,--disable-new-dtags',
@@ -126,6 +142,19 @@ int main(){
         return executable
 
     return _factory
+
+
+@pytest.fixture()
+def copy_binary():
+    """Returns a function that copies a binary somewhere and
+    returns the new location.
+    """
+    def _copy_somewhere(orig_binary):
+        new_root = orig_binary.mkdtemp()
+        new_binary = new_root.join('main.x')
+        shutil.copy(str(orig_binary), str(new_binary))
+        return new_binary
+    return _copy_somewhere
 
 
 @pytest.mark.requires_executables(
@@ -243,6 +272,10 @@ def test_set_elf_rpaths_warning(mock_patchelf):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
 def test_replace_prefix_bin(hello_world):
     # Compile an "Hello world!" executable and set RPATHs
     executable = hello_world(rpaths=['/usr/lib', '/usr/lib64'])
@@ -250,23 +283,22 @@ def test_replace_prefix_bin(hello_world):
     # Relocate the RPATHs
     spack.relocate._replace_prefix_bin(str(executable), '/usr', '/foo')
 
-    # Check that the RPATHs changed
-    patchelf = spack.util.executable.which('patchelf')
-    output = patchelf('--print-rpath', str(executable), output=str)
-
     # Some compilers add rpaths so ensure changes included in final result
-    assert '/foo/lib:/foo/lib64' in output
+    assert '/foo/lib:/foo/lib64' in rpaths_for(executable)
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
-def test_relocate_elf_binaries_absolute_paths(hello_world, tmpdir):
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
+def test_relocate_elf_binaries_absolute_paths(
+        hello_world, copy_binary, tmpdir
+):
     # Create an executable, set some RPATHs, copy it to another location
     orig_binary = hello_world(rpaths=[str(tmpdir.mkdir('lib')), '/usr/lib64'])
-    new_root = tmpdir.mkdir('another_dir')
-    shutil.copy(str(orig_binary), str(new_root))
+    new_binary = copy_binary(orig_binary)
 
-    # Relocate the binary
-    new_binary = new_root.join('main.x')
     spack.relocate.relocate_elf_binaries(
         binaries=[str(new_binary)],
         orig_root=str(orig_binary.dirpath()),
@@ -279,38 +311,139 @@ def test_relocate_elf_binaries_absolute_paths(hello_world, tmpdir):
         orig_prefix=None, new_prefix=None
     )
 
-    # Check that the RPATHs changed
-    patchelf = spack.util.executable.which('patchelf')
-    output = patchelf('--print-rpath', str(new_binary), output=str)
-
     # Some compilers add rpaths so ensure changes included in final result
-    assert '/foo/lib:/usr/lib64' in output
+    assert '/foo/lib:/usr/lib64' in rpaths_for(new_binary)
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
-def test_relocate_elf_binaries_relative_paths(hello_world, tmpdir):
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
+def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = hello_world(
-        rpaths=['$ORIGIN/lib', '$ORIGIN/lib64', '/opt/local/lib']
-    )
-    new_root = tmpdir.mkdir('another_dir')
-    shutil.copy(str(orig_binary), str(new_root))
+    orig_binary = hello_world(rpaths=['lib', 'lib64', '/opt/local/lib'])
+    new_binary = copy_binary(orig_binary)
 
-    # Relocate the binary
-    new_binary = new_root.join('main.x')
     spack.relocate.relocate_elf_binaries(
         binaries=[str(new_binary)],
         orig_root=str(orig_binary.dirpath()),
-        new_root=str(new_root),
-        new_prefixes={str(tmpdir): '/foo'},
+        new_root=str(new_binary.dirpath()),
+        new_prefixes={str(orig_binary.dirpath()): '/foo'},
         rel=True,
         orig_prefix=str(orig_binary.dirpath()),
-        new_prefix=str(new_root)
+        new_prefix=str(new_binary.dirpath())
     )
 
-    # Check that the RPATHs changed
-    patchelf = spack.util.executable.which('patchelf')
-    output = patchelf('--print-rpath', str(new_binary), output=str)
+    # Some compilers add rpaths so ensure changes included in final result
+    assert '/foo/lib:/foo/lib64:/opt/local/lib' in rpaths_for(new_binary)
+
+
+@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
+def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
+    orig_binary = hello_world(rpaths=[
+        str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
+    ])
+    new_binary = copy_binary(orig_binary)
+
+    spack.relocate.make_elf_binaries_relative(
+        [str(new_binary)], [str(orig_binary)], str(orig_binary.dirpath())
+    )
 
     # Some compilers add rpaths so ensure changes included in final result
-    assert '/foo/lib:/foo/lib64:/opt/local/lib' in output
+    assert '$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib' in rpaths_for(new_binary)
+
+
+def test_raise_if_not_relocatable(monkeypatch):
+    monkeypatch.setattr(spack.relocate, 'file_is_relocatable', lambda x: False)
+    with pytest.raises(spack.relocate.InstallRootStringError):
+        spack.relocate.raise_if_not_relocatable(
+            ['an_executable'], allow_root=False
+        )
+
+
+@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
+def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
+    orig_binary = hello_world(rpaths=[
+        str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
+    ], message=str(tmpdir))
+    new_binary = copy_binary(orig_binary)
+
+    # Check original directory is in the executabel and the new one is not
+    assert text_in_bin(str(tmpdir), new_binary)
+    assert not text_in_bin(str(new_binary.dirpath()), new_binary)
+
+    # Check this call succeed
+    spack.relocate.relocate_text_bin(
+        [str(new_binary)],
+        str(orig_binary.dirpath()), str(new_binary.dirpath()),
+        spack.paths.spack_root, spack.paths.spack_root,
+        {str(orig_binary.dirpath()): str(new_binary.dirpath())}
+    )
+
+    # Check original directory is not there anymore and it was
+    # substituted with the new one
+    assert not text_in_bin(str(tmpdir), new_binary)
+    assert text_in_bin(str(new_binary.dirpath()), new_binary)
+
+
+def test_relocate_text_bin_raise_if_new_prefix_is_longer():
+    short_prefix = '/short'
+    long_prefix = '/much/longer'
+    with pytest.raises(spack.relocate.BinaryTextReplaceError):
+        spack.relocate.relocate_text_bin(
+            ['item'], short_prefix, long_prefix, None, None, None
+        )
+
+
+@pytest.mark.parametrize("sbang_line", [
+    "#!/bin/bash /path/to/orig/spack/bin/sbang",
+    "#!/bin/sh /orig/layout/root/bin/sbang"
+])
+def test_relocate_text_old_sbang(tmpdir, sbang_line):
+    """Ensure that old and new sbang styles are relocated."""
+
+    old_install_prefix = "/orig/layout/root/orig/install/prefix"
+    new_install_prefix = os.path.join(
+        spack.store.layout.root, "new", "install", "prefix"
+    )
+
+    # input file with an sbang line
+    original = """\
+{0}
+#!/usr/bin/env python
+
+/orig/layout/root/orig/install/prefix
+""".format(sbang_line)
+
+    # expected relocation
+    expected = """\
+{0}
+#!/usr/bin/env python
+
+{1}
+""".format(sbang.sbang_shebang_line(), new_install_prefix)
+
+    path = tmpdir.ensure("path", "to", "file")
+    with path.open("w") as f:
+        f.write(original)
+
+    spack.relocate.relocate_text(
+        [str(path)],
+        "/orig/layout/root",   spack.store.layout.root,
+        old_install_prefix,    new_install_prefix,
+        "/path/to/orig/spack", spack.paths.spack_root,
+        {
+            old_install_prefix: new_install_prefix
+        }
+    )
+
+    assert expected == open(str(path)).read()

@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
-from spack import *
-
 
 class Rhash(MakefilePackage):
     """RHash is a console utility for computing and verifying hash sums of
@@ -52,8 +49,6 @@ class Rhash(MakefilePackage):
         make('install-lib-static', 'DESTDIR={0}'.format(prefix), 'PREFIX=')
 
         if spec.satisfies('platform=darwin'):
-            libs = glob.glob('librhash/*.dylib')
-            for lib in libs:
-                install(lib, prefix.lib)
+            install('librhash/*.dylib', prefix.lib)
         else:
             make('install-lib-shared', 'DESTDIR={0}'.format(prefix), 'PREFIX=')

@@ -66,7 +66,7 @@ class Icedtea(AutotoolsPackage):
     depends_on('jpeg')
     depends_on('lcms')
     depends_on('zlib')
-    depends_on('alsa-lib')
+    depends_on('alsa-lib', when='platform=linux')
 
     provides('java@8', when='@3.4.0:3.99.99')
 

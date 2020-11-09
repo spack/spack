@@ -17,6 +17,7 @@ class Stow(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/stow/"
     gnu_mirror_path = "stow/stow-2.2.2.tar.bz2"
 
+    version('2.3.1', sha256='26a6cfdfdaca0eea742db5487798c15fcd01889dc86bc5aa62614ec9415a422f')
     version('2.2.2', sha256='a0022034960e47a8d23dffb822689f061f7a2d9101c9835cf11bf251597aa6fd')
     version('2.2.0', sha256='86bc30fe1d322a5c80ff3bd7580c2758149aad7c3bbfa18b48a9d95c25d66b05')
     version('2.1.3', sha256='2dff605c801fee9fb7d0fef6988bbb8a0511fad469129b20cae60e0544ba1443')

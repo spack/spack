@@ -27,9 +27,29 @@ def test_chmod_real_entries_ignores_suid_sgid(tmpdir):
 
 def test_chmod_rejects_group_writable_suid(tmpdir):
     path = str(tmpdir.join('file').ensure())
-    mode = stat.S_ISUID | stat.S_ISGID | stat.S_ISVTX
+    mode = stat.S_ISUID
     fs.chmod_x(path, mode)
 
-    perms = stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO
+    perms = stat.S_IWGRP
+    with pytest.raises(InvalidPermissionsError):
+        set_permissions(path, perms)
+
+
+def test_chmod_rejects_world_writable_suid(tmpdir):
+    path = str(tmpdir.join('file').ensure())
+    mode = stat.S_ISUID
+    fs.chmod_x(path, mode)
+
+    perms = stat.S_IWOTH
+    with pytest.raises(InvalidPermissionsError):
+        set_permissions(path, perms)
+
+
+def test_chmod_rejects_world_writable_sgid(tmpdir):
+    path = str(tmpdir.join('file').ensure())
+    mode = stat.S_ISGID
+    fs.chmod_x(path, mode)
+
+    perms = stat.S_IWOTH
     with pytest.raises(InvalidPermissionsError):
         set_permissions(path, perms)

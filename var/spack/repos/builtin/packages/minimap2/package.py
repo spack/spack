@@ -28,7 +28,7 @@ class Minimap2(PythonPackage):
         if self.spec.target.family == 'aarch64':
             make_arg.extend([
                 'arm_neon=1',
-                'aarch64~1'
+                'aarch64=1'
             ])
         make(*make_arg)
         mkdirp(prefix.bin)

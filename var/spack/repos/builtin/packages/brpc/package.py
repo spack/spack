@@ -22,5 +22,6 @@ class Brpc(CMakePackage):
     depends_on('gflags')
     depends_on('protobuf')
     depends_on('leveldb')
+    depends_on('openssl')
 
     patch('narrow.patch', sha256='d7393029443853ddda6c09e3d2185ac2f60920a36a8b685eb83b6b80c1535539', when='@:0.9.7')

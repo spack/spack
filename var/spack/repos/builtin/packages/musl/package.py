@@ -38,7 +38,7 @@ class Musl(Package):
         if self.compiler.name == 'gcc':
             config.filter("WRAPCC_GCC = .*'", "WRAPCC_GCC = {0}'".
                           format(self.compiler.cc))
-        elif self.compiler.name == 'clang':
+        elif self.compiler.name in ('clang', 'apple-clang'):
             config.filter("WRAPCC_CLANG = .*'", "WRAPCC_CLANG = {0}'".
                           format(self.compiler.cc))
 
@@ -46,7 +46,7 @@ class Musl(Package):
         args = ['--prefix={0}'.format(self.prefix)]
         if self.compiler.name == 'gcc':
             args.append('--enable-wrapper=gcc')
-        elif self.compiler.name == 'clang':
+        elif self.compiler.name in ('clang', 'apple-clang'):
             args.append('--enable-wrapper=clang')
         else:
             args.append('--enable-wrapper=no')

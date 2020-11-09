@@ -15,7 +15,7 @@ import six
 import llnl.util.lang
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-import llnl.util.cpu as cpu
+import archspec.cpu
 
 import spack.paths
 import spack.error
@@ -245,7 +245,9 @@ def supported_compilers():
        See available_compilers() to get a list of all the available
        versions of supported compilers.
     """
-    return sorted(name for name in
+    # Hack to be able to call the compiler `apple-clang` while still
+    # using a valid python name for the module
+    return sorted(name if name != 'apple_clang' else 'apple-clang' for name in
                   llnl.util.lang.list_modules(spack.paths.compilers_path))
 
 
@@ -403,7 +405,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
         target = items.get('target', None)
 
         try:
-            current_target = llnl.util.cpu.targets[str(arch_spec.target)]
+            current_target = archspec.cpu.TARGETS[str(arch_spec.target)]
             family = str(current_target.family)
         except KeyError:
             # TODO: Check if this exception handling makes sense, or if we
@@ -415,7 +417,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
         if arch_spec and target and (target != family and target != 'any'):
             # If the family of the target is the family we are seeking,
             # there's an error in the underlying configuration
-            if llnl.util.cpu.targets[target].family == family:
+            if archspec.cpu.TARGETS[target].family == family:
                 msg = ('the "target" field in compilers.yaml accepts only '
                        'target families [replace "{0}" with "{1}"'
                        ' in "{2}" specification]')
@@ -469,7 +471,13 @@ def class_for_compiler_name(compiler_name):
     """Given a compiler module name, get the corresponding Compiler class."""
     assert(supported(compiler_name))
 
-    file_path = os.path.join(spack.paths.compilers_path, compiler_name + ".py")
+    # Hack to be able to call the compiler `apple-clang` while still
+    # using a valid python name for the module
+    module_name = compiler_name
+    if compiler_name == 'apple-clang':
+        module_name = compiler_name.replace('-', '_')
+
+    file_path = os.path.join(spack.paths.compilers_path, module_name + ".py")
     compiler_mod = simp.load_source(_imported_compilers_module, file_path)
     cls = getattr(compiler_mod, mod_to_class(compiler_name))
 
@@ -568,9 +576,7 @@ def arguments_to_detect_version_fn(operating_system, paths):
                         )
                         command_arguments.append(detect_version_args)
 
-        # Reverse it here so that the dict creation (last insert wins)
-        # does not spoil the intended precedence.
-        return reversed(command_arguments)
+        return command_arguments
 
     fn = getattr(
         operating_system, 'arguments_to_detect_version_fn', _default
@@ -642,43 +648,60 @@ def make_compiler_list(detected_versions):
     Returns:
         list of Compiler objects
     """
-    # We don't sort on the path of the compiler
-    sort_fn = lambda x: (x.id, x.variation, x.language)
-    compilers_s = sorted(detected_versions, key=sort_fn)
+    group_fn = lambda x: (x.id, x.variation, x.language)
+    sorted_compilers = sorted(detected_versions, key=group_fn)
 
     # Gather items in a dictionary by the id, name variation and language
     compilers_d = {}
-    for sort_key, group in itertools.groupby(compilers_s, key=sort_fn):
+    for sort_key, group in itertools.groupby(sorted_compilers, key=group_fn):
         compiler_id, name_variation, language = sort_key
         by_compiler_id = compilers_d.setdefault(compiler_id, {})
         by_name_variation = by_compiler_id.setdefault(name_variation, {})
         by_name_variation[language] = next(x.path for x in group)
 
-    # For each unique compiler id select the name variation with most entries
-    # i.e. the one that supports most languages
-    compilers = []
-
-    def _default(cmp_id, paths):
+    def _default_make_compilers(cmp_id, paths):
         operating_system, compiler_name, version = cmp_id
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-        paths = [paths.get(l, None) for l in ('cc', 'cxx', 'f77', 'fc')]
-        target = cpu.host()
+        paths = [paths.get(x, None) for x in ('cc', 'cxx', 'f77', 'fc')]
+        target = archspec.cpu.host()
         compiler = compiler_cls(
             spec, operating_system, str(target.family), paths
         )
         return [compiler]
 
-    for compiler_id, by_compiler_id in compilers_d.items():
-        _, selected_name_variation = max(
-            (len(by_compiler_id[variation]), variation)
-            for variation in by_compiler_id
-        )
+    # For compilers with the same compiler id:
+    #
+    # - Prefer with C compiler to without
+    # - Prefer with C++ compiler to without
+    # - Prefer no variations to variations (e.g., clang to clang-gpu)
+    #
+    sort_fn = lambda variation: (
+        'cc' not in by_compiler_id[variation],  # None last
+        'cxx' not in by_compiler_id[variation],  # None last
+        getattr(variation, 'prefix', None),
+        getattr(variation, 'suffix', None),
+    )
 
-        # Add it to the list of compilers
-        selected = by_compiler_id[selected_name_variation]
+    compilers = []
+    for compiler_id, by_compiler_id in compilers_d.items():
+        ordered = sorted(by_compiler_id, key=sort_fn)
+        selected_variation = ordered[0]
+        selected = by_compiler_id[selected_variation]
+
+        # fill any missing parts from subsequent entries
+        for lang in ['cxx', 'f77', 'fc']:
+            if lang not in selected:
+                next_lang = next((
+                    by_compiler_id[v][lang] for v in ordered
+                    if lang in by_compiler_id[v]), None)
+                if next_lang:
+                    selected[lang] = next_lang
+
         operating_system, _, _ = compiler_id
-        make_compilers = getattr(operating_system, 'make_compilers', _default)
+        make_compilers = getattr(
+            operating_system, 'make_compilers', _default_make_compilers)
+
         compilers.extend(make_compilers(compiler_id, selected))
 
     return compilers
@@ -716,6 +739,8 @@ def is_mixed_toolchain(compiler):
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
+        if toolchains == set(['Clang', 'AppleClang', 'Aocc']):
+            return False
         tty.debug("[TOOLCHAINS] {0}".format(toolchains))
         return True
 

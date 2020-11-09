@@ -13,7 +13,7 @@
 
 """
 import ctypes
-
+import collections
 
 from ordereddict_backport import OrderedDict
 from six import string_types, StringIO
@@ -330,6 +330,22 @@ def dump_annotated(data, stream=None, *args, **kwargs):
 
     if getvalue:
         return getvalue()
+
+
+def sorted_dict(dict_like):
+    """Return an ordered dict with all the fields sorted recursively.
+
+    Args:
+        dict_like (dict): dictionary to be sorted
+
+    Returns:
+        dictionary sorted recursively
+    """
+    result = syaml_dict(sorted(dict_like.items()))
+    for key, value in result.items():
+        if isinstance(value, collections.Mapping):
+            result[key] = sorted_dict(value)
+    return result
 
 
 class SpackYAMLError(spack.error.SpackError):

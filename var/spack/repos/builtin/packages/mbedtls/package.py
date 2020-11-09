@@ -15,7 +15,9 @@ class Mbedtls(CMakePackage):
 
     homepage = "https://tls.mbed.org"
     url      = "https://github.com/ARMmbed/mbedtls/archive/mbedtls-2.2.1.tar.gz"
+    maintainers = ['mwkrentel']
 
+    version('2.16.7', sha256='4786b7d1676f5e4d248f3a7f2d28446876d64962634f060ff21b92c690cfbe86')
     version('2.16.1', sha256='daf0d40f3016c34eb42d1e4b3b52be047e976d566aba8668977723c829af72f3')
     version('2.7.10', sha256='42b19b30b86a798bdb69c5da2f8bbd7d72ffede9a35b888ab986a29480f9dc3e')
     version('2.3.0', sha256='1614ee70be99a18ca8298148308fb725aad4ad31c569438bb51655a4999b14f9')
@@ -33,7 +35,8 @@ class Mbedtls(CMakePackage):
     variant('pic', default=False,
             description='Compile with position independent code.')
 
-    depends_on('cmake@2.6:', type='build')
+    depends_on('cmake@3.1.0:', type='build', when='@2.8.0:')
+    depends_on('cmake@2.6:', type='build', when='@:2.7.99')
     depends_on('perl', type='build')
 
     def flag_handler(self, name, flags):

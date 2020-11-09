@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import pytest
 import os
 
 import spack.paths
@@ -11,6 +11,13 @@ from spack.compiler import _parse_non_system_link_dirs
 #: directory with sample compiler data
 datadir = os.path.join(spack.paths.test_path, 'data',
                        'compiler_verbose_output')
+
+
+@pytest.fixture(autouse=True)
+def allow_nonexistent_paths(monkeypatch):
+    # Allow nonexistent paths to be detected as part of the output
+    # for testing purposes.
+    monkeypatch.setattr(os.path, 'isdir', lambda x: True)
 
 
 def check_link_paths(filename, paths):
@@ -32,8 +39,8 @@ def check_link_paths(filename, paths):
 
 def test_icc16_link_paths():
     check_link_paths('icc-16.0.3.txt', [
-        '/usr/tce/packages/intel/intel-16.0.3/compilers_and_libraries_2016.3.210/linux/compiler/lib/intel64_lin', # noqa
-        '/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3', # noqa
+        '/usr/tce/packages/intel/intel-16.0.3/compilers_and_libraries_2016.3.210/linux/compiler/lib/intel64_lin',  # noqa
+        '/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3',  # noqa
         '/usr/tce/packages/gcc/gcc-4.9.3/lib64'])
 
 
@@ -80,6 +87,28 @@ def test_cce_link_paths():
 def test_clang_apple_ld_link_paths():
     check_link_paths('clang-9.0.0-apple-ld.txt', [
         '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk/usr/lib'])  # noqa
+
+
+def test_nag_mixed_gcc_gnu_ld_link_paths():
+    # This is a test of a mixed NAG/GCC toolchain, i.e. 'cxx' is set to g++ and
+    # is used for the rpath detection. The reference compiler output is a
+    # result of
+    # '/path/to/gcc/bin/g++ -Wl,-v ./main.c'.
+    check_link_paths('collect2-6.3.0-gnu-ld.txt', [
+        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib/gcc/x86_64-pc-linux-gnu/6.5.0',  # noqa
+        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib64',  # noqa
+        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib'])  # noqa
+
+
+def test_nag_link_paths():
+    # This is a test of a NAG-only toolchain, i.e. 'cc' and 'cxx' are empty,
+    # and therefore 'fc' is used for the rpath detection). The reference
+    # compiler output is a result of
+    # 'nagfor -Wc=/path/to/gcc/bin/gcc -Wl,-v ./main.c'.
+    check_link_paths('nag-6.2-gcc-6.5.0.txt', [
+        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib/gcc/x86_64-pc-linux-gnu/6.5.0',  # noqa
+        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib64',  # noqa
+        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib'])  # noqa
 
 
 def test_obscure_parsing_rules():

@@ -11,8 +11,9 @@ class PyFusepy(PythonPackage):
     MacFUSE. It's just one file and is implemented using ctypes."""
 
     homepage = "https://github.com/fusepy/fusepy"
-    url      = "https://github.com/fusepy/fusepy/archive/v2.0.4.tar.gz"
+    url      = "https://pypi.io/packages/source/f/fusepy/fusepy-3.0.1.tar.gz"
 
-    version('2.0.4', sha256='802610ab25ad04fc9ef34d024a0abe41cdcaff6a2cb8b2fb92cdda0057c09d1f')
+    version('3.0.1', sha256='72ff783ec2f43de3ab394e3f7457605bf04c8cf288a2f4068b4cde141d4ee6bd')
+    version('2.0.4', sha256='10f5c7f5414241bffecdc333c4d3a725f1d6605cae6b4eaf86a838ff49cdaf6c')
 
     depends_on('py-setuptools', type='build')

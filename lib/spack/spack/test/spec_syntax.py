@@ -20,6 +20,7 @@ from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
 from spack.spec import DuplicateArchitectureError
 from spack.spec import DuplicateDependencyError, DuplicateCompilerSpecError
 from spack.spec import SpecFilenameError, NoSuchSpecFileError
+from spack.spec import MultipleVersionError
 from spack.variant import DuplicateVariantError
 
 
@@ -149,6 +150,9 @@ class TestSpecSyntax(object):
         self.check_parse("openmpi ^hwloc ^libunwind",
                          "openmpi^hwloc^libunwind")
 
+    def test_version_after_compiler(self):
+        self.check_parse('foo@2.0%bar@1.0', 'foo %bar@1.0 @2.0')
+
     def test_dependencies_with_versions(self):
         self.check_parse("openmpi ^hwloc@1.2e6")
         self.check_parse("openmpi ^hwloc@1.2e6:")
@@ -187,6 +191,32 @@ class TestSpecSyntax(object):
             "mvapich_foo"
             " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2"
             " ^stackwalker@8.1_1e arch=test-redhat6-x86")
+
+    def test_yaml_specs(self):
+        self.check_parse(
+            "yaml-cpp@0.1.8%intel@12.1"
+            " ^boost@3.1.4")
+        tempspec = r"builtin.yaml-cpp%gcc"
+        self.check_parse(
+            tempspec.strip("builtin."),
+            spec=tempspec)
+        tempspec = r"testrepo.yaml-cpp%gcc"
+        self.check_parse(
+            tempspec.strip("testrepo."),
+            spec=tempspec)
+        tempspec = r"builtin.yaml-cpp@0.1.8%gcc"
+        self.check_parse(
+            tempspec.strip("builtin."),
+            spec=tempspec)
+        tempspec = r"builtin.yaml-cpp@0.1.8%gcc@7.2.0"
+        self.check_parse(
+            tempspec.strip("builtin."),
+            spec=tempspec)
+        tempspec = r"builtin.yaml-cpp@0.1.8%gcc@7.2.0" \
+            r" ^boost@3.1.4"
+        self.check_parse(
+            tempspec.strip("builtin."),
+            spec=tempspec)
 
     def test_canonicalize(self):
         self.check_parse(
@@ -321,11 +351,12 @@ class TestSpecSyntax(object):
     @pytest.mark.db
     def test_ambiguous_hash(self, mutable_database):
         x1 = Spec('a')
+        x1.concretize()
         x1._hash = 'xy'
-        x1._concrete = True
         x2 = Spec('a')
+        x2.concretize()
         x2._hash = 'xx'
-        x2._concrete = True
+
         mutable_database.add(x1, spack.store.layout)
         mutable_database.add(x2, spack.store.layout)
 
@@ -405,6 +436,17 @@ class TestSpecSyntax(object):
             'x ^y@1.2 debug=false ~debug'
         ]
         self._check_raises(DuplicateVariantError, duplicates)
+
+    def test_multiple_versions(self):
+        multiples = [
+            'x@1.2@2.3',
+            'x@1.2:2.3@1.4',
+            'x@1.2@2.3:2.4',
+            'x@1.2@2.3,2.4',
+            'x@1.2 +foo~bar @2.3',
+            'x@1.2%y@1.2@2.3:2.4',
+        ]
+        self._check_raises(MultipleVersionError, multiples)
 
     def test_duplicate_dependency(self):
         self._check_raises(DuplicateDependencyError, ["x ^y ^y"])

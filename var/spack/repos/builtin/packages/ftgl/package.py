@@ -33,6 +33,8 @@ class Ftgl(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = ['-DBUILD_SHARED_LIBS={0}'.format(spec.satisfies('+shared'))]
+        if 'darwin' in self.spec.architecture:
+            args.append('-DCMAKE_MACOSX_RPATH=ON')
         return args
 
     # FIXME: See doc variant comment

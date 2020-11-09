@@ -31,8 +31,46 @@ class Nag(spack.compiler.Compiler):
     version_regex = r'NAG Fortran Compiler Release ([0-9.]+)'
 
     @property
+    def verbose_flag(self):
+        # NAG does not support a flag that would enable verbose output and
+        # compilation/linking at the same time (with either '-#' or '-dryrun'
+        # the compiler only prints the commands but does not run them).
+        # Therefore, the only thing we can do is to pass the '-v' argument to
+        # the underlying GCC. In order to get verbose output from the latter
+        # at both compile and linking stages, we need to call NAG with two
+        # additional flags: '-Wc,-v' and '-Wl,-v'. However, we return only
+        # '-Wl,-v' for the following reasons:
+        #   1) the interface of this method does not support multiple flags in
+        #      the return value and, at least currently, verbose output at the
+        #      linking stage has a higher priority for us;
+        #   2) NAG is usually mixed with GCC compiler, which also accepts
+        #      '-Wl,-v' and produces meaningful result with it: '-v' is passed
+        #      to the linker and the latter produces verbose output for the
+        #      linking stage ('-Wc,-v', however, would break the compilation
+        #      with a message from GCC that the flag is not recognized).
+        #
+        # This way, we at least enable the implicit rpath detection, which is
+        # based on compilation of a C file (see method
+        # spack.compiler._get_compiler_link_paths): in the case of a mixed
+        # NAG/GCC toolchain, the flag will be passed to g++ (e.g.
+        # 'g++ -Wl,-v ./main.c'), otherwise, the flag will be passed to nagfor
+        # (e.g. 'nagfor -Wl,-v ./main.c' - note that nagfor recognizes '.c'
+        # extension and treats the file accordingly). The list of detected
+        # rpaths will contain only GCC-related directories and rpaths to
+        # NAG-related directories are injected by nagfor anyway.
+        return "-Wl,-v"
+
+    @property
     def openmp_flag(self):
         return "-openmp"
+
+    @property
+    def debug_flags(self):
+        return ['-g', '-gline', '-g90']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4']
 
     @property
     def cxx11_flag(self):

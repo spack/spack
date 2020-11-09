@@ -6,6 +6,7 @@
 
 from spack import *
 import spack.architecture
+import os
 
 
 class Pmix(AutotoolsPackage):
@@ -32,8 +33,10 @@ class Pmix(AutotoolsPackage):
 
     homepage = "https://pmix.org"
     url      = "https://github.com/pmix/pmix/releases/download/v3.1.3/pmix-3.1.3.tar.bz2"
+    git      = "https://github.com/openpmix/openpmix.git"
     maintainers = ['rhc54']
 
+    version('master', branch='master')
     version('3.1.3',    sha256='118acb9c4e10c4e481406dcffdfa762f314af50db75336bf8460e53b56dc439d')
     version('3.1.2',    sha256='28aed0392d4ca2cdfbdd721e6210c94dadc9830677fea37a0abe9d592c00f9c3')
     version('3.0.2',    sha256='df68f35a3ed9517eeade80b13855cebad8fde2772b36a3f6be87559b6d430670')
@@ -47,12 +50,35 @@ class Pmix(AutotoolsPackage):
     version('2.0.1',    sha256='ba6e0f32936b1859741adb221e18b2c1ee7dc53a6b374b9f7831adf1692b15fd')
     version('1.2.5',    sha256='a2b02d489ee730c06ee40e7f9ffcebb6c35bcb4f95153fab7c4276a3add6ae31')
 
-    depends_on('libevent@2.0.20:2.0.22,2.1.8')
-    depends_on('hwloc@1.11.0:1.11.99,2.0.1:', when='@3.0.0:')
-
     variant('pmi_backwards_compatibility',
             default=True,
             description="Toggle pmi backwards compatibility")
+
+    variant('restful',
+            default=False,
+            description="allow a PMIx server to request services from "
+            "a system-level REST server")
+
+    depends_on('libevent@2.0.20:2.0.22,2.1.8')
+    depends_on('hwloc@1.11.0:1.11.99,2.0.1:', when='@3.0.0:')
+    depends_on("m4", type=("build"), when="@master")
+    depends_on("autoconf", type=("build"), when="@master")
+    depends_on("automake", type=("build"), when="@master")
+    depends_on("libtool", type=("build"), when="@master")
+    depends_on("perl", type=("build"), when="@master")
+    depends_on('curl', when="+restful")
+    depends_on('jansson@2.11:', when="+restful")
+
+    conflicts('@:3.9.9', when='+restful')
+
+    def autoreconf(self, spec, prefix):
+        """Only needed when building from git checkout"""
+        # If configure exists nothing needs to be done
+        if os.path.exists(self.configure_abs_path):
+            return
+        # Else bootstrap with autotools
+        perl = which('perl')
+        perl('./autogen.pl')
 
     def configure_args(self):
 

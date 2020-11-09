@@ -13,11 +13,12 @@ class Jali(CMakePackage):
 
     homepage = "https://github.com/lanl/jali"
     git      = "https://github.com/lanl/jali"
-    url      = "https://github.com/lanl/jali/archive/1.1.4.tar.gz"
+    url      = "https://github.com/lanl/jali/archive/1.1.5.tar.gz"
 
     maintainers = ['raovgarimella']
 
     version('master', branch='master')
+    version('1.1.5', sha256='4f18f3e8b50f20a89918e99596a7226c215944d84df642bc1fb2d6c31464b95b')
     version('1.1.4', sha256='135ab02be1487fcdfb039613cbed630bce336d581a66468c66209db0a9d8a104')
     version('1.1.1', sha256='c96c000b3893ea7f15bbc886524476dd466ae145e77deedc27e412fcc3541207')
     version('1.1.0', sha256='783dfcd6a9284af83bb380ed257fa8b0757dc2f7f9196d935eb974fb6523c644')
@@ -43,15 +44,11 @@ class Jali(CMakePackage):
 
     def cmake_args(self):
         options = []
-        if '+with_mstk' in self.spec:
-            options.append('-DENABLE_MSTK_Mesh=ON')
-        else:
-            options.append('-DENABLE_MSTK_Mesh=OFF')
+
+        # Turn MSTK ON/OFF
+        options.append(self.define_from_variant('ENABLE_MSTK_Mesh', 'mstk'))
 
         # Unit test variant
-        if self.run_tests:
-            options.append('-DENABLE_Tests=ON')
-        else:
-            options.append('-DENABLE_Tests=OFF')
+        options.append(self.define('ENABLE_TESTS', self.run_tests))
 
         return options

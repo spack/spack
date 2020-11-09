@@ -20,6 +20,7 @@ class PyHypothesis(PythonPackage):
 
     # TODO: Add missing dependency required to import hypothesis.extra.django
 
+    version('5.3.0',  sha256='c9fdb53fe3bf1f8e7dcca1a7dd6e430862502f088aca2903d141511212e79429')
     version('4.57.1', sha256='3c4369a4b0a1348561048bcda5f1db951a1b8e2a514ea8e8c70d36e656bf6fa0')
     version('4.41.2', sha256='6847df3ffb4aa52798621dd007e6b61dbcf2d76c30ba37dc2699720e2c734b7a')
     version('4.24.3', sha256='fd90a319f409f34a173156ca704d6c0c6c0bb30a2e43dbf26aced2c75569e5d5')

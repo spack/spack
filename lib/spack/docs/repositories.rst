@@ -280,16 +280,16 @@ you install it, you can use ``spack spec -N``:
 
    Concretized
    --------------------------------
-   builtin.hdf5@1.10.0-patch1%clang@7.0.2-apple+cxx~debug+fortran+mpi+shared~szip~threadsafe arch=darwin-elcapitan-x86_64
-       ^builtin.openmpi@2.0.1%clang@7.0.2-apple~mxm~pmi~psm~psm2~slurm~sqlite3~thread_multiple~tm~verbs+vt arch=darwin-elcapitan-x86_64
-           ^builtin.hwloc@1.11.4%clang@7.0.2-apple arch=darwin-elcapitan-x86_64
-               ^builtin.libpciaccess@0.13.4%clang@7.0.2-apple arch=darwin-elcapitan-x86_64
-                   ^builtin.libtool@2.4.6%clang@7.0.2-apple arch=darwin-elcapitan-x86_64
-                       ^builtin.m4@1.4.17%clang@7.0.2-apple+sigsegv arch=darwin-elcapitan-x86_64
-                           ^builtin.libsigsegv@2.10%clang@7.0.2-apple arch=darwin-elcapitan-x86_64
-                   ^builtin.pkg-config@0.29.1%clang@7.0.2-apple+internal_glib arch=darwin-elcapitan-x86_64
-                   ^builtin.util-macros@1.19.0%clang@7.0.2-apple arch=darwin-elcapitan-x86_64
-       ^builtin.zlib@1.2.8%clang@7.0.2-apple+pic arch=darwin-elcapitan-x86_64
+   builtin.hdf5@1.10.0-patch1%apple-clang@7.0.2+cxx~debug+fortran+mpi+shared~szip~threadsafe arch=darwin-elcapitan-x86_64
+       ^builtin.openmpi@2.0.1%apple-clang@7.0.2~mxm~pmi~psm~psm2~slurm~sqlite3~thread_multiple~tm~verbs+vt arch=darwin-elcapitan-x86_64
+           ^builtin.hwloc@1.11.4%apple-clang@7.0.2 arch=darwin-elcapitan-x86_64
+               ^builtin.libpciaccess@0.13.4%apple-clang@7.0.2 arch=darwin-elcapitan-x86_64
+                   ^builtin.libtool@2.4.6%apple-clang@7.0.2 arch=darwin-elcapitan-x86_64
+                       ^builtin.m4@1.4.17%apple-clang@7.0.2+sigsegv arch=darwin-elcapitan-x86_64
+                           ^builtin.libsigsegv@2.10%apple-clang@7.0.2 arch=darwin-elcapitan-x86_64
+                   ^builtin.pkg-config@0.29.1%apple-clang@7.0.2+internal_glib arch=darwin-elcapitan-x86_64
+                   ^builtin.util-macros@1.19.0%apple-clang@7.0.2 arch=darwin-elcapitan-x86_64
+       ^builtin.zlib@1.2.8%apple-clang@7.0.2+pic arch=darwin-elcapitan-x86_64
 
 .. warning::
 

@@ -11,11 +11,20 @@ class Onednn(CMakePackage):
 
     Formerly known as Intel MKL-DNN and DNNL."""
 
-    homepage = "https://01.org/dnnl"
-    url      = "https://github.com/oneapi-src/oneDNN/archive/v1.4.tar.gz"
+    homepage = "https://01.org/onednn"
+    url      = "https://github.com/oneapi-src/oneDNN/archive/v1.7.tar.gz"
 
     maintainers = ['adamjstewart']
 
+    version('1.7',    sha256='2dbd53578b36bd84bbc3e411d1a4cacc0eed832892818c5fa16b72cbf1dab015')
+    version('1.6.5',  sha256='6258d961fe1757b70d10cf34f0925079401ffae264f056b15024270b11d5c1eb')
+    version('1.6.4',  sha256='5369f7b2f0b52b40890da50c0632c3a5d1082d98325d0f2bff125d19d0dcaa1d')
+    version('1.6.3',  sha256='471c877671f672e4119e5f49143890c5ce2efff80a52a5eaf7ef3730eb3e1738')
+    version('1.6.2',  sha256='83533fcf81cd4c4565bf640b895d1ea0a4563a5dac88af8e5c05813f1af13e25')
+    version('1.6.1',  sha256='6686d01d9493905c9c8bcfabcf5b2cc9ced7de7a41c52bba99e569fd5b63464d')
+    version('1.6',    sha256='f54893e487ccd99586725afdd19f526bb84e3251222586850782e3c7eedb7c4f')
+    version('1.5.1',  sha256='aef4d2a726f76f5b98902491a1a4ac69954039aa8e5a1d67ef6ce58ed00e23a6')
+    version('1.5',    sha256='2aacc00129418185e0bc1269d3ef82f93f08de2c336932989c0c360279129edb')
     version('1.4',    sha256='54737bcb4dc1961d32ee75da3ecc529fa48198f8b2ca863a079e19a9c4adb70f')
     version('1.3',    sha256='b87c23b40a93ef5e479c81028db71c4847225b1a170f82af5e79f1cda826d3bf')
     version('1.2.2',  sha256='251dd17643cff285f38b020fc4ac9245d8d596f3e2140b98982ffc32eae3943c')
@@ -63,7 +72,7 @@ class Onednn(CMakePackage):
     # https://github.com/oneapi-src/oneDNN#requirements-for-building-from-source
     depends_on('cmake@2.8.11:', type='build')
     depends_on('tbb@2017:', when='cpu_runtime=tbb')
-    depends_on('llvm-openmp', when='%clang platform=darwin cpu_runtime=omp')
+    depends_on('llvm-openmp', when='%apple-clang cpu_runtime=omp')
     depends_on('opencl@1.2:', when='gpu_runtime=ocl')
 
     def cmake_args(self):
@@ -80,7 +89,7 @@ class Onednn(CMakePackage):
             args.append('-DDNNL_BUILD_TESTS=OFF')
 
         # https://github.com/oneapi-src/oneDNN/issues/591
-        if self.spec.satisfies('%clang platform=darwin cpu_runtime=omp'):
+        if self.spec.satisfies('%apple-clang cpu_runtime=omp'):
             args.extend([
                 '-DOpenMP_CXX_FLAGS={0}'.format(self.compiler.openmp_flag),
                 '-DOpenMP_C_FLAGS={0}'.format(self.compiler.openmp_flag),

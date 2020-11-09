@@ -16,6 +16,7 @@ class Pkgconf(AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url      = "http://distfiles.dereferenced.org/pkgconf/pkgconf-1.6.3.tar.xz"
 
+    version('1.7.3',  sha256='b846aea51cf696c3392a0ae58bef93e2e72f8e7073ca6ad1ed8b01c85871f9c0')
     version('1.6.3',  sha256='61f0b31b0d5ea0e862b454a80c170f57bad47879c0c42bd8de89200ff62ea210')
     version('1.6.1',  sha256='22b9ee38438901f9d60f180e5182821180854fa738fd071f593ea26a81da208c')
     version('1.6.0',  sha256='6135a3abb576672ba54a899860442ba185063f0f90dae5892f64f7bae8e1ece5')
@@ -27,8 +28,28 @@ class Pkgconf(AutotoolsPackage):
 
     provides('pkgconfig')
 
+    # https://github.com/spack/spack/issues/11704
+    patch('nvhpc.patch', when='@1.7.3%nvhpc')
+
     # TODO: Add a package for the kyua testing framework
     # depends_on('kyua', type='test')
+
+    # https://github.com/spack/spack/issues/3525
+    conflicts('%pgi')
+
+    executables = ['^pkgconf$', '^pkg-config$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        exe = Executable(exe)
+
+        # Make sure this is actually pkgconf, not pkg-config
+        if 'usage: pkgconf' not in exe('--help', output=str, error=str):
+            return None
+
+        version = exe('--version', output=str, error=str).rstrip()
+
+        return version
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Adds the ACLOCAL path for autotools."""

@@ -47,3 +47,13 @@ class Fastjet(AutotoolsPackage):
     version('2.3.1', sha256='16c32b420e1aa7d0b6fecddd980ea0f2b7e3c2c66585e06f0eb3142677ab6ccf')
     version('2.3.0', sha256='e452fe4a9716627bcdb726cfb0917f46a7ac31f6006330a6ccc1abc43d9c2d53')
     # older version use .tar instead of .tar.gz extension, to be added
+
+    variant('shared', default=True, description='Builds a shared version of the library')
+    variant('auto-ptr', default=False, description='Use auto_ptr')
+
+    def configure_args(self):
+        extra_args = ["--enable-allplugins"]
+        extra_args += self.enable_or_disable('shared')
+        extra_args += self.enable_or_disable('auto-ptr')
+
+        return extra_args

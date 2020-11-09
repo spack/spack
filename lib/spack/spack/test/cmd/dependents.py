@@ -26,7 +26,7 @@ def test_transitive_dependents(mock_packages):
     out = dependents('--transitive', 'libelf')
     actual = set(re.split(r'\s+', out.strip()))
     assert actual == set(
-        ['callpath', 'dyninst', 'libdwarf', 'mpileaks', 'multivalue_variant',
+        ['callpath', 'dyninst', 'libdwarf', 'mpileaks', 'multivalue-variant',
          'singlevalue-variant-dependent',
          'patch-a-dependency', 'patch-several-dependencies'])
 
@@ -36,8 +36,8 @@ def test_immediate_installed_dependents(mock_packages, database):
     with color_when(False):
         out = dependents('--installed', 'libelf')
 
-    lines = [l for l in out.strip().split('\n') if not l.startswith('--')]
-    hashes = set([re.split(r'\s+', l)[0] for l in lines])
+    lines = [li for li in out.strip().split('\n') if not li.startswith('--')]
+    hashes = set([re.split(r'\s+', li)[0] for li in lines])
 
     expected = set([spack.store.db.query_one(s).dag_hash(7)
                     for s in ['dyninst', 'libdwarf']])
@@ -53,8 +53,8 @@ def test_transitive_installed_dependents(mock_packages, database):
     with color_when(False):
         out = dependents('--installed', '--transitive', 'fake')
 
-    lines = [l for l in out.strip().split('\n') if not l.startswith('--')]
-    hashes = set([re.split(r'\s+', l)[0] for l in lines])
+    lines = [li for li in out.strip().split('\n') if not li.startswith('--')]
+    hashes = set([re.split(r'\s+', li)[0] for li in lines])
 
     expected = set([spack.store.db.query_one(s).dag_hash(7)
                     for s in ['zmpi', 'callpath^zmpi', 'mpileaks^zmpi']])

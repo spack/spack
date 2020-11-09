@@ -28,6 +28,8 @@ class Steps(CMakePackage):
     depends_on("python")
     depends_on("py-cython")
 
+    patch('for_aarch64.patch', when='target=aarch64:')
+
     def cmake_args(self):
         args = []
         spec = self.spec

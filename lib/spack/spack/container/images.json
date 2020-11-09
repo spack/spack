@@ -6,9 +6,7 @@
     "environment": [],
     "build": "spack/ubuntu-bionic",
     "build_tags": {
-      "develop": "latest",
-      "0.14": "0.14",
-      "0.14.0": "0.14.0"
+      "develop": "latest"
     }
   },
   "ubuntu:16.04": {
@@ -18,9 +16,7 @@
     "environment": [],
     "build": "spack/ubuntu-xenial",
     "build_tags": {
-      "develop": "latest",
-      "0.14": "0.14",
-      "0.14.0": "0.14.0"
+      "develop": "latest"
     }
   },
   "centos:7": {
@@ -30,9 +26,7 @@
     "environment": [],
     "build": "spack/centos7",
     "build_tags": {
-      "develop": "latest",
-      "0.14": "0.14",
-      "0.14.0": "0.14.0"
+      "develop": "latest"
     }
   },
   "centos:6": {
@@ -42,9 +36,7 @@
     "environment": [],
     "build": "spack/centos6",
     "build_tags": {
-      "develop": "latest",
-      "0.14": "0.14",
-      "0.14.0": "0.14.0"
+      "develop": "latest"
     }
   }
 }

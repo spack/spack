@@ -89,6 +89,56 @@ def test_mirror_skip_unstable(tmpdir_factory, mock_packages, config,
             set(['trivial-pkg-with-valid-hash']))
 
 
+class MockMirrorArgs(object):
+    def __init__(self, specs=None, all=False, file=None,
+                 versions_per_spec=None, dependencies=False,
+                 exclude_file=None, exclude_specs=None):
+        self.specs = specs or []
+        self.all = all
+        self.file = file
+        self.versions_per_spec = versions_per_spec
+        self.dependencies = dependencies
+        self.exclude_file = exclude_file
+        self.exclude_specs = exclude_specs
+
+
+def test_exclude_specs(mock_packages):
+    args = MockMirrorArgs(
+        specs=['mpich'],
+        versions_per_spec='all',
+        exclude_specs="mpich@3.0.1:3.0.2 mpich@1.0")
+
+    mirror_specs = spack.cmd.mirror._determine_specs_to_mirror(args)
+    expected_include = set(spack.spec.Spec(x) for x in
+                           ['mpich@3.0.3', 'mpich@3.0.4', 'mpich@3.0'])
+    expected_exclude = set(spack.spec.Spec(x) for x in
+                           ['mpich@3.0.1', 'mpich@3.0.2', 'mpich@1.0'])
+    assert expected_include <= set(mirror_specs)
+    assert (not expected_exclude & set(mirror_specs))
+
+
+def test_exclude_file(mock_packages, tmpdir):
+    exclude_path = os.path.join(str(tmpdir), 'test-exclude.txt')
+    with open(exclude_path, 'w') as exclude_file:
+        exclude_file.write("""\
+mpich@3.0.1:3.0.2
+mpich@1.0
+""")
+
+    args = MockMirrorArgs(
+        specs=['mpich'],
+        versions_per_spec='all',
+        exclude_file=exclude_path)
+
+    mirror_specs = spack.cmd.mirror._determine_specs_to_mirror(args)
+    expected_include = set(spack.spec.Spec(x) for x in
+                           ['mpich@3.0.3', 'mpich@3.0.4', 'mpich@3.0'])
+    expected_exclude = set(spack.spec.Spec(x) for x in
+                           ['mpich@3.0.1', 'mpich@3.0.2', 'mpich@1.0'])
+    assert expected_include <= set(mirror_specs)
+    assert (not expected_exclude & set(mirror_specs))
+
+
 def test_mirror_crud(tmp_scope, capsys):
     with capsys.disabled():
         mirror('add', '--scope', tmp_scope, 'mirror', 'http://spack.io')

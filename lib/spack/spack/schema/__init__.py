@@ -90,11 +90,15 @@ def _make_validator():
         is_error = deprecated['error']
         if not is_error:
             for entry in deprecated_properties:
-                llnl.util.tty.warn(msg.format(property=entry))
+                llnl.util.tty.warn(
+                    msg.format(property=entry, entry=instance[entry])
+                )
         else:
             import jsonschema
             for entry in deprecated_properties:
-                yield jsonschema.ValidationError(msg.format(property=entry))
+                yield jsonschema.ValidationError(
+                    msg.format(property=entry, entry=instance[entry])
+                )
 
     return jsonschema.validators.extend(
         jsonschema.Draft4Validator, {

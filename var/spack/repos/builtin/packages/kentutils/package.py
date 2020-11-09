@@ -22,6 +22,7 @@ class Kentutils(MakefilePackage):
     depends_on('mariadb')
 
     conflicts('%cce')
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%intel')
     conflicts('%nag')

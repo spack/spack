@@ -99,10 +99,21 @@ def test_hms(sec, result):
     assert inst._hms(sec) == result
 
 
-def test_install_msg():
+def test_install_msg(monkeypatch):
+    """Test results of call to install_msg based on debug level."""
     name = 'some-package'
     pid = 123456
-    expected = "{0}: Installing {1}".format(pid, name)
+    install_msg = 'Installing {0}'.format(name)
+
+    monkeypatch.setattr(tty, '_debug', 0)
+    assert inst.install_msg(name, pid) == install_msg
+
+    monkeypatch.setattr(tty, '_debug', 1)
+    assert inst.install_msg(name, pid) == install_msg
+
+    # Expect the PID to be added at debug level 2
+    monkeypatch.setattr(tty, '_debug', 2)
+    expected = "{0}: {1}".format(pid, install_msg)
     assert inst.install_msg(name, pid) == expected
 
 
@@ -146,12 +157,11 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     monkeypatch.setattr(spack.database.Database, 'get_record', _none)
 
     spec.external_path = '/actual/external/path/not/checked'
-    spec.external_module = 'unchecked_module'
+    spec.external_modules = ['unchecked_module']
     inst._process_external_package(spec.package, False)
 
     out = capfd.readouterr()[0]
-    assert 'has external module in {0}'.format(spec.external_module) in out
-    assert 'is actually installed in {0}'.format(spec.external_path) in out
+    assert 'has external module in {0}'.format(spec.external_modules) in out
 
 
 def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
@@ -167,7 +177,7 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
 
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
-    def _spec(spec):
+    def _spec(spec, preferred_mirrors=None):
         return spec
 
     # Skip binary distribution functionality since assume tested elsewhere
@@ -180,20 +190,24 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     spec = spack.spec.Spec('a').concretized()
     assert inst._process_binary_cache_tarball(spec.package, spec, False, False)
 
-    assert 'Installing a from binary cache' in capfd.readouterr()[0]
+    assert 'Extracting a from binary cache' in capfd.readouterr()[0]
 
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
                                        monkeypatch, capsys):
     """Tests SystemExit path for_try_install_from_binary_cache."""
-    def _spec(spec, force):
+    def _mirrors_for_spec(spec, force, full_hash_match=False):
         spec = spack.spec.Spec('mpi').concretized()
-        return {spec: None}
+        return [{
+            'mirror_url': 'notused',
+            'spec': spec,
+        }]
 
     spec = spack.spec.Spec('mpich')
     spec.concretize()
 
-    monkeypatch.setattr(spack.binary_distribution, 'get_spec', _spec)
+    monkeypatch.setattr(
+        spack.binary_distribution, 'get_mirrors_for_spec', _mirrors_for_spec)
 
     with pytest.raises(SystemExit):
         inst._try_install_from_binary_cache(spec.package, False, False)
@@ -247,15 +261,15 @@ def test_installer_ensure_ready_errors(install_mockery):
 
     fmt = r'cannot be installed locally.*{0}'
     # Force an external package error
-    path, module = spec.external_path, spec.external_module
+    path, modules = spec.external_path, spec.external_modules
     spec.external_path = '/actual/external/path/not/checked'
-    spec.external_module = 'unchecked_module'
+    spec.external_modules = ['unchecked_module']
     msg = fmt.format('is external')
     with pytest.raises(inst.ExternalPackageError, match=msg):
         installer._ensure_install_ready(spec.package)
 
     # Force an upstream package error
-    spec.external_path, spec.external_module = path, module
+    spec.external_path, spec.external_modules = path, modules
     spec.package._installed_upstream = True
     msg = fmt.format('is upstream')
     with pytest.raises(inst.UpstreamPackageError, match=msg):
@@ -460,6 +474,58 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
 
     out = str(capsys.readouterr()[1])
     assert "Couldn't copy in provenance for cmake" in out
+
+
+def test_clear_failures_success(install_mockery):
+    """Test the clear_failures happy path."""
+
+    # Set up a test prefix failure lock
+    lock = lk.Lock(spack.store.db.prefix_fail_path, start=1, length=1,
+                   default_timeout=1e-9, desc='test')
+    try:
+        lock.acquire_write()
+    except lk.LockTimeoutError:
+        tty.warn('Failed to write lock the test install failure')
+    spack.store.db._prefix_failures['test'] = lock
+
+    # Set up a fake failure mark (or file)
+    fs.touch(os.path.join(spack.store.db._failure_dir, 'test'))
+
+    # Now clear failure tracking
+    inst.clear_failures()
+
+    # Ensure there are no cached failure locks or failure marks
+    assert len(spack.store.db._prefix_failures) == 0
+    assert len(os.listdir(spack.store.db._failure_dir)) == 0
+
+    # Ensure the core directory and failure lock file still exist
+    assert os.path.isdir(spack.store.db._failure_dir)
+    assert os.path.isfile(spack.store.db.prefix_fail_path)
+
+
+def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
+    """Test the clear_failures exception paths."""
+    orig_fn = os.remove
+    err_msg = 'Mock os remove'
+
+    def _raise_except(path):
+        raise OSError(err_msg)
+
+    # Set up a fake failure mark (or file)
+    fs.touch(os.path.join(spack.store.db._failure_dir, 'test'))
+
+    monkeypatch.setattr(os, 'remove', _raise_except)
+
+    # Clear failure tracking
+    inst.clear_failures()
+
+    # Ensure expected warning generated
+    out = str(capsys.readouterr()[1])
+    assert 'Unable to remove failure' in out
+    assert err_msg in out
+
+    # Restore remove for teardown
+    monkeypatch.setattr(os, 'remove', orig_fn)
 
 
 def test_check_deps_status_install_failure(install_mockery, monkeypatch):
@@ -669,7 +735,7 @@ def test_cleanup_failed_err(install_mockery, tmpdir, monkeypatch, capsys):
 
         installer._cleanup_failed(pkg_id)
         out = str(capsys.readouterr()[1])
-        assert 'exception when removing failure mark' in out
+        assert 'exception when removing failure tracking' in out
         assert msg in out
 
 
@@ -716,6 +782,61 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
 
     out = str(capsys.readouterr())
     assert 'Warning: b failed to install' in out
+
+
+def test_install_fail_on_interrupt(install_mockery, monkeypatch):
+    """Test ctrl-c interrupted install."""
+    err_msg = 'mock keyboard interrupt'
+
+    def _interrupt(installer, task, **kwargs):
+        raise KeyboardInterrupt(err_msg)
+
+    spec, installer = create_installer('a')
+
+    # Raise a KeyboardInterrupt error to trigger early termination
+    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _interrupt)
+
+    with pytest.raises(KeyboardInterrupt, match=err_msg):
+        installer.install()
+
+
+def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
+    """Test fail_fast install when an install failure is detected."""
+    spec, installer = create_installer('a')
+
+    # Make sure the package is identified as failed
+    #
+    # This will prevent b from installing, which will cause the build of a
+    # to be skipped.
+    monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
+
+    with pytest.raises(spack.installer.InstallError):
+        installer.install(fail_fast=True)
+
+    out = str(capsys.readouterr())
+    assert 'Skipping build of a' in out
+
+
+def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
+    """Test fail_fast install when an install failure results from an error."""
+    err_msg = 'mock patch failure'
+
+    def _patch(installer, task, **kwargs):
+        raise RuntimeError(err_msg)
+
+    spec, installer = create_installer('a')
+
+    # Raise a non-KeyboardInterrupt exception to trigger fast failure.
+    #
+    # This will prevent b from installing, which will cause the build of a
+    # to be skipped.
+    monkeypatch.setattr(spack.package.PackageBase, 'do_patch', _patch)
+
+    with pytest.raises(spack.installer.InstallError, matches=err_msg):
+        installer.install(fail_fast=True)
+
+    out = str(capsys.readouterr())
+    assert 'Skipping build of a' in out
 
 
 def test_install_lock_failures(install_mockery, monkeypatch, capfd):

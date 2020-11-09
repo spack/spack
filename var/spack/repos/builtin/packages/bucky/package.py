@@ -19,6 +19,7 @@ class Bucky(MakefilePackage):
 
     # Compilation requires gcc
     conflicts('%cce')
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%intel')
     conflicts('%nag')

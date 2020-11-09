@@ -2,19 +2,15 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
-import fileinput
+import itertools
 import os
 import os.path
-import shutil
-import stat
-import sys
 from subprocess import PIPE
 from subprocess import check_call
 
 import llnl.util.tty as tty
+import llnl.util.filesystem as fs
 from llnl.util.filesystem import working_dir, force_remove
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
@@ -56,8 +52,9 @@ class AutotoolsPackage(PackageBase):
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'AutotoolsPackage'
-    #: Whether or not to update ``config.guess`` on old architectures
-    patch_config_guess = True
+    #: Whether or not to update ``config.guess`` and ``config.sub`` on old
+    #: architectures
+    patch_config_files = True
     #: Whether or not to update ``libtool``
     #: (currently only for Arm/Clang/Fujitsu compilers)
     patch_libtool = True
@@ -80,78 +77,103 @@ class AutotoolsPackage(PackageBase):
     #: Options to be passed to autoreconf when using the default implementation
     autoreconf_extra_args = []
 
+    #: If False deletes all the .la files in the prefix folder
+    #: after the installation. If True instead it installs them.
+    install_libtool_archives = False
+
+    @property
+    def _removed_la_files_log(self):
+        """File containing the list of remove libtool archives"""
+        build_dir = self.build_directory
+        if not os.path.isabs(self.build_directory):
+            build_dir = os.path.join(self.stage.path, build_dir)
+        return os.path.join(build_dir, 'removed_la_files.txt')
+
     @property
     def archive_files(self):
         """Files to archive for packages based on autotools"""
-        return [os.path.join(self.build_directory, 'config.log')]
+        files = [os.path.join(self.build_directory, 'config.log')]
+        if not self.install_libtool_archives:
+            files.append(self._removed_la_files_log)
+        return files
 
     @run_after('autoreconf')
-    def _do_patch_config_guess(self):
-        """Some packages ship with an older config.guess and need to have
-        this updated when installed on a newer architecture. In particular,
-        config.guess fails for PPC64LE for version prior to a 2013-06-10
-        build date (automake 1.13.4) and for ARM (aarch64)."""
-
-        if not self.patch_config_guess or (
+    def _do_patch_config_files(self):
+        """Some packages ship with older config.guess/config.sub files and
+        need to have these updated when installed on a newer architecture.
+        In particular, config.guess fails for PPC64LE for version prior
+        to a 2013-06-10 build date (automake 1.13.4) and for ARM (aarch64).
+        """
+        if not self.patch_config_files or (
                 not self.spec.satisfies('target=ppc64le:') and
                 not self.spec.satisfies('target=aarch64:')
         ):
             return
-        my_config_guess = None
-        config_guess = None
-        if os.path.exists('config.guess'):
-            # First search the top-level source directory
-            my_config_guess = 'config.guess'
-        else:
-            # Then search in all sub directories.
-            # We would like to use AC_CONFIG_AUX_DIR, but not all packages
-            # ship with their configure.in or configure.ac.
-            d = '.'
-            dirs = [os.path.join(d, o) for o in os.listdir(d)
-                    if os.path.isdir(os.path.join(d, o))]
-            for dirname in dirs:
-                path = os.path.join(dirname, 'config.guess')
-                if os.path.exists(path):
-                    my_config_guess = path
 
-        if my_config_guess is not None:
+        # TODO: Expand this to select the 'config.sub'-compatible architecture
+        # for each platform (e.g. 'config.sub' doesn't accept 'power9le', but
+        # does accept 'ppc64le').
+        if self.spec.satisfies('target=ppc64le:'):
+            config_arch = 'ppc64le'
+        elif self.spec.satisfies('target=aarch64:'):
+            config_arch = 'aarch64'
+        else:
+            config_arch = 'local'
+
+        def runs_ok(script_abs_path):
+            # Construct the list of arguments for the call
+            additional_args = {
+                'config.sub': [config_arch]
+            }
+            script_name = os.path.basename(script_abs_path)
+            args = [script_abs_path] + additional_args.get(script_name, [])
+
             try:
-                check_call([my_config_guess], stdout=PIPE, stderr=PIPE)
-                # The package's config.guess already runs OK, so just use it
-                return
+                check_call(args, stdout=PIPE, stderr=PIPE)
             except Exception as e:
                 tty.debug(e)
-        else:
+                return False
+
+            return True
+
+        # Compute the list of files that needs to be patched
+        search_dir = self.stage.path
+        to_be_patched = fs.find(
+            search_dir, files=['config.sub', 'config.guess'], recursive=True
+        )
+        to_be_patched = [f for f in to_be_patched if not runs_ok(f)]
+
+        # If there are no files to be patched, return early
+        if not to_be_patched:
             return
 
-        # Look for a spack-installed automake package
+        # Directories where to search for files to be copied
+        # over the failing ones
+        good_file_dirs = ['/usr/share']
         if 'automake' in self.spec:
-            automake_path = os.path.join(self.spec['automake'].prefix, 'share',
-                                         'automake-' +
-                                         str(self.spec['automake'].version))
-            path = os.path.join(automake_path, 'config.guess')
-            if os.path.exists(path):
-                config_guess = path
-        # Look for the system's config.guess
-        if config_guess is None and os.path.exists('/usr/share'):
-            automake_dir = [s for s in os.listdir('/usr/share') if
-                            "automake" in s]
-            if automake_dir:
-                automake_path = os.path.join('/usr/share', automake_dir[0])
-                path = os.path.join(automake_path, 'config.guess')
-                if os.path.exists(path):
-                    config_guess = path
-        if config_guess is not None:
-            try:
-                check_call([config_guess], stdout=PIPE, stderr=PIPE)
-                mod = os.stat(my_config_guess).st_mode & 0o777 | stat.S_IWUSR
-                os.chmod(my_config_guess, mod)
-                shutil.copyfile(config_guess, my_config_guess)
-                return
-            except Exception as e:
-                tty.debug(e)
+            good_file_dirs.insert(0, self.spec['automake'].prefix)
 
-        raise RuntimeError('Failed to find suitable config.guess')
+        # List of files to be found in the directories above
+        to_be_found = list(set(os.path.basename(f) for f in to_be_patched))
+        substitutes = {}
+        for directory in good_file_dirs:
+            candidates = fs.find(directory, files=to_be_found, recursive=True)
+            candidates = [f for f in candidates if runs_ok(f)]
+            for name, good_files in itertools.groupby(
+                    candidates, key=os.path.basename
+            ):
+                substitutes[name] = next(good_files)
+                to_be_found.remove(name)
+
+        # Check that we found everything we needed
+        if to_be_found:
+            msg = 'Failed to find suitable substitutes for {0}'
+            raise RuntimeError(msg.format(', '.join(to_be_found)))
+
+        # Copy the good files over the bad ones
+        for abs_path in to_be_patched:
+            name = os.path.basename(abs_path)
+            fs.copy(substitutes[name], abs_path)
 
     @run_before('configure')
     def _set_autotools_environment_variables(self):
@@ -174,18 +196,30 @@ class AutotoolsPackage(PackageBase):
         detect the compiler (and patch_libtool is set), patch in the correct
         flags for the Arm, Clang/Flang, and Fujitsu compilers."""
 
-        libtool = os.path.join(self.build_directory, "libtool")
-        if self.patch_libtool and os.path.exists(libtool):
-            if self.spec.satisfies('%arm') or self.spec.satisfies('%clang') \
-                    or self.spec.satisfies('%fj'):
-                for line in fileinput.input(libtool, inplace=True):
-                    # Replace missing flags with those for Arm/Clang
-                    if line == 'wl=""\n':
-                        line = 'wl="-Wl,"\n'
-                    if line == 'pic_flag=""\n':
-                        line = 'pic_flag="{0}"\n'\
-                               .format(self.compiler.cc_pic_flag)
-                    sys.stdout.write(line)
+        # Exit early if we are required not to patch libtool
+        if not self.patch_libtool:
+            return
+
+        for libtool_path in fs.find(
+                self.build_directory, 'libtool', recursive=True):
+            self._patch_libtool(libtool_path)
+
+    def _patch_libtool(self, libtool_path):
+        if self.spec.satisfies('%arm')\
+                or self.spec.satisfies('%clang')\
+                or self.spec.satisfies('%fj'):
+            fs.filter_file('wl=""\n', 'wl="-Wl,"\n', libtool_path)
+            fs.filter_file('pic_flag=""\n',
+                           'pic_flag="{0}"\n'
+                           .format(self.compiler.cc_pic_flag),
+                           libtool_path)
+        if self.spec.satisfies('%fj'):
+            fs.filter_file('-nostdlib', '', libtool_path)
+            rehead = r'/\S*/'
+            objfile = ['fjhpctag.o', 'fjcrt0.o', 'fjlang08.o', 'fjomp.o',
+                       'crti.o', 'crtbeginS.o', 'crtendS.o']
+            for o in objfile:
+                fs.filter_file(rehead + o, '', libtool_path)
 
     @property
     def configure_directory(self):
@@ -234,13 +268,18 @@ class AutotoolsPackage(PackageBase):
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ['-ivf']
-            for dep in spec.dependencies(deptype='build'):
-                if os.path.exists(dep.prefix.share.aclocal):
-                    autoreconf_args.extend([
-                        '-I', dep.prefix.share.aclocal
-                    ])
+            autoreconf_args += self.autoreconf_search_path_args
             autoreconf_args += self.autoreconf_extra_args
             m.autoreconf(*autoreconf_args)
+
+    @property
+    def autoreconf_search_path_args(self):
+        """Arguments to autoreconf to modify the search paths"""
+        search_path_args = []
+        for dep in self.spec.dependencies(deptype='build'):
+            if os.path.exists(dep.prefix.share.aclocal):
+                search_path_args.extend(['-I', dep.prefix.share.aclocal])
+        return search_path_args
 
     @run_after('autoreconf')
     def set_configure_or_die(self):
@@ -497,3 +536,19 @@ class AutotoolsPackage(PackageBase):
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
+
+    @run_after('install')
+    def remove_libtool_archives(self):
+        """Remove all .la files in prefix sub-folders if the package sets
+        ``install_libtool_archives`` to be False.
+        """
+        # If .la files are to be installed there's nothing to do
+        if self.install_libtool_archives:
+            return
+
+        # Remove the files and create a log of what was removed
+        libtool_files = fs.find(str(self.prefix), '*.la', recursive=True)
+        with fs.safe_remove(*libtool_files):
+            fs.mkdirp(os.path.dirname(self._removed_la_files_log))
+            with open(self._removed_la_files_log, mode='w') as f:
+                f.write('\n'.join(libtool_files))

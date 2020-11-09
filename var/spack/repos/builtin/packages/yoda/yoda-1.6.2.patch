@@ -1,0 +1,22 @@
+--- bin/yoda-config.in.orig	2016-07-11 14:43:05.700511377 +0300
++++ bin/yoda-config.in	2016-07-11 14:43:50.312499322 +0300
+@@ -59,7 +59,7 @@
+ 
+ ## "Pre-rolled" build info
+ tmp=$( echo "$*" | egrep -- '--\<cflags\>|--\<cppflags\>|--\<cxxflags\>')
+-test -n "$tmp" && OUT="$OUT -I@includedir@ @BOOST_CPPFLAGS@"
++test -n "$tmp" && OUT="$OUT -I@includedir@"
+ 
+ tmp=$( echo "$*" | egrep -- '--\<ldflags\>|--\<libs\>|--\<ldadd\>')
+ test -n "$tmp" && OUT="$OUT -L@libdir@ -lYODA"
+--- bin/yoda-config.orig	2016-07-11 14:43:31.960503275 +0300
++++ bin/yoda-config	2016-07-11 14:43:41.200501112 +0300
+@@ -59,7 +59,7 @@
+ 
+ ## "Pre-rolled" build info
+ tmp=$( echo "$*" | egrep -- '--\<cflags\>|--\<cppflags\>|--\<cxxflags\>')
+-test -n "$tmp" && OUT="$OUT -I${prefix}/include @BOOST_CPPFLAGS@"
++test -n "$tmp" && OUT="$OUT -I${prefix}/include"
+ 
+ tmp=$( echo "$*" | egrep -- '--\<ldflags\>|--\<libs\>|--\<ldadd\>')
+ test -n "$tmp" && OUT="$OUT -L${exec_prefix}/lib -lYODA"

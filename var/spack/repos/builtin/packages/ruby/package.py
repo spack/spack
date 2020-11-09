@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class Ruby(AutotoolsPackage):
@@ -15,6 +15,7 @@ class Ruby(AutotoolsPackage):
     list_url = "http://cache.ruby-lang.org/pub/ruby/"
     list_depth = 1
 
+    version('2.7.1', sha256='d418483bdd0000576c1370571121a6eb24582116db0b7bb2005e90e250eae418')
     version('2.6.2', sha256='a0405d2bf2c2d2f332033b70dff354d224a864ab0edd462b7a413420453b49ab')
     version('2.5.3', sha256='9828d03852c37c20fa333a0264f2490f07338576734d910ee3fd538c9520846c')
     version('2.2.0', sha256='7671e394abfb5d262fbcd3b27a71bf78737c7e9347fa21c39e58b0bb9c4840fc')
@@ -34,6 +35,10 @@ class Ruby(AutotoolsPackage):
     depends_on('openssl', when='+openssl')
     depends_on('readline', when='+readline')
 
+    # Known build issues when Avira antivirus software is running:
+    # https://github.com/rvm/rvm/issues/4313#issuecomment-374020379
+    # TODO: add check for this and warn user
+
     # gcc-7-based build requires patches (cf. https://bugs.ruby-lang.org/issues/13150)
     patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2.999 %gcc@7:')
     patch('ruby_23_gcc7.patch', level=0, when='@2.3.0:2.3.4 %gcc@7:')
@@ -49,6 +54,14 @@ class Ruby(AutotoolsPackage):
         expand=False
     )
 
+    executables = ['^ruby$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'ruby ([\d.]+)', output)
+        return match.group(1) if match else None
+
     def url_for_version(self, version):
         url = "http://cache.ruby-lang.org/pub/ruby/{0}/ruby-{1}.tar.gz"
         return url.format(version.up_to(2), version)
@@ -61,6 +74,8 @@ class Ruby(AutotoolsPackage):
             args.append("--with-readline-dir=%s"
                         % self.spec['readline'].prefix)
         args.append('--with-tk=%s' % self.spec['tk'].prefix)
+        if self.spec.satisfies("%fj"):
+            args.append('--disable-dtrace')
         return args
 
     def setup_dependent_build_environment(self, env, dependent_spec):
@@ -85,8 +100,9 @@ class Ruby(AutotoolsPackage):
             gem('install', '<gem-name>.gem')
         """
         # Ruby extension builds have global ruby and gem functions
-        module.ruby = Executable(join_path(self.spec.prefix.bin, 'ruby'))
-        module.gem = Executable(join_path(self.spec.prefix.bin, 'gem'))
+        module.ruby = Executable(self.prefix.bin.ruby)
+        module.gem  = Executable(self.prefix.bin.gem)
+        module.rake = Executable(self.prefix.bin.rake)
 
     @run_after('install')
     def post_install(self):
@@ -107,3 +123,14 @@ class Ruby(AutotoolsPackage):
                                             'rubygems',
                                             'ssl_certs')
             install(rubygems_updated_cert_path, rubygems_certs_path)
+
+        rbconfig = find(self.prefix, 'rbconfig.rb')[0]
+        filter_file(r'^(\s*CONFIG\["CXX"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cxx),
+                    rbconfig)
+        filter_file(r'^(\s*CONFIG\["CC"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cc),
+                    rbconfig)
+        filter_file(r'^(\s*CONFIG\["MJIT_CC"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cc),
+                    rbconfig)

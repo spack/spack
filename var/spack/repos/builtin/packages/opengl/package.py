@@ -3,13 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 import sys
-
-from spack import *
 
 
 class Opengl(Package):
     """Placeholder for external OpenGL libraries from hardware vendors"""
+
+    has_code = False
 
     homepage = "https://www.opengl.org/"
 
@@ -35,6 +36,14 @@ class Opengl(Package):
     if sys.platform != 'darwin':
         provides('glx@1.4')
 
+    executables = ['^glxinfo$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)(output=str, error=str)
+        match = re.search(r'OpenGL version string: (\S+)', output)
+        return match.group(1) if match else None
+
     # Override the fetcher method to throw a useful error message;
     # fixes GitHub issue (#7061) in which this package threw a
     # generic, uninformative error during the `fetch` step,
@@ -48,9 +57,10 @@ class Opengl(Package):
 
         packages:
           opengl:
-            paths:
-              opengl@4.5.0: /opt/opengl
             buildable: False
+            externals:
+            - spec: opengl@4.5.0
+              prefix: /opt/opengl
 
         In that case, /opt/opengl/ should contain these two folders:
 
@@ -63,9 +73,10 @@ class Opengl(Package):
 
         packages:
           opengl:
-            paths:
-              opengl@4.1: /usr/X11R6
             buildable: False
+            externals:
+            - spec: opengl@4.1
+              prefix: /usr/X11R6
 
         In that case, /usr/X11R6 should contain
 

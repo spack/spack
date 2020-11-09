@@ -23,7 +23,8 @@ class Tau(Package):
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.1.tar.gz"
     git      = "https://github.com/UO-OACISS/tau2"
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('2.29.1', sha256='4195a0a236bba510ab50a93e13c7f00d9472e8bc46c91de3f0696112a34e34e2')
     version('2.29', sha256='146be769a23c869a7935e8fa5ba79f40ba36b9057a96dda3be6730fc9ca86086')
     version('2.28.2', sha256='64e129a482056755012b91dae2fb4f728dbf3adbab53d49187eca952891c5457')
     version('2.28.1', sha256='b262e5c9977471e9f5a8d729b3db743012df9b0ab8244da2842039f8a3b98b34')
@@ -76,7 +77,6 @@ class Tau(Package):
     # This is a _reasonable_ subset of the full set of TAU
     # architectures supported:
     variant('craycnl', default=False, description='Build for Cray compute nodes')
-    variant('bgq', default=False, description='Build for IBM BlueGene/Q compute nodes')
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
     variant('x86_64', default=False, description='Force build for x86 Linux instead of auto-detect')
 
@@ -89,7 +89,7 @@ class Tau(Package):
     depends_on('libdwarf', when='+libdwarf')
     depends_on('libelf', when='+libdwarf')
     # TAU requires the ELF header support, libiberty and demangle.
-    depends_on('binutils@:2.33.1+libiberty+headers~nls', when='+binutils')
+    depends_on('binutils@:2.33.1+libiberty+headers', when='+binutils')
     depends_on('python@2.7:', when='+python')
     depends_on('libunwind', when='+libunwind')
     depends_on('mpi', when='+mpi', type=('build', 'run', 'link'))
@@ -106,6 +106,8 @@ class Tau(Package):
     # ADIOS2, SQLite only available from 2.29.1 on
     conflicts('+adios2', when='@:2.29.1')
     conflicts('+sqlite', when='@:2.29.1')
+
+    patch('unwind.patch', when="@2.29.0")
 
     def set_compiler_options(self, spec):
 
@@ -144,6 +146,7 @@ class Tau(Package):
 
     def setup_build_environment(self, env):
         env.prepend_path('LIBRARY_PATH', self.spec['zlib'].prefix.lib)
+        env.prepend_path('LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
 
     def install(self, spec, prefix):
         # TAU isn't happy with directories that have '@' in the path.  Sigh.
@@ -158,9 +161,6 @@ class Tau(Package):
 
         if '+craycnl' in spec:
             options.append('-arch=craycnl')
-
-        if '+bgq' in spec:
-            options.append('-arch=bgq')
 
         if '+ppc64le' in spec:
             options.append('-arch=ibm64linux')

@@ -29,8 +29,7 @@ container_schema = {
                 },
                 'spack': {
                     'type': 'string',
-                    'enum': ['develop', '0.14', '0.14.0']
-                }
+                },
             },
             'required': ['image', 'spack']
         },

@@ -16,6 +16,8 @@ class Opencascade(CMakePackage):
     homepage = "https://www.opencascade.com"
     url      = "http://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V7_4_0;sf=tgz"
 
+    version('7.4.0p1', extension='tar.gz',
+            sha256='e00fedc221560fda31653c23a8f3d0eda78095c87519f338d4f4088e2ee9a9c0')
     version('7.4.0', extension='tar.gz',
             sha256='655da7717dac3460a22a6a7ee68860c1da56da2fec9c380d8ac0ac0349d67676')
 
@@ -32,6 +34,14 @@ class Opencascade(CMakePackage):
     depends_on('vtk', when='+vtk')
     depends_on('freeimage', when='+freeimage')
     depends_on('rapidjson', when='+rapidjson')
+    depends_on('freetype')
+    depends_on('tcl')
+    depends_on('tk')
+    depends_on('gl')
+
+    def url_for_version(self, version):
+        url = "http://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V{0};sf=tgz"
+        return url.format(version.underscored)
 
     def cmake_args(self):
         args = []

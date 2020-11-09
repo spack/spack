@@ -25,3 +25,6 @@ class PyPysam(PythonPackage):
     depends_on('samtools')
 
     depends_on('htslib@:1.6', when='@:0.13')
+
+    def setup_build_environment(self, env):
+        env.set('LDFLAGS', self.spec['curl'].libs.search_flags)

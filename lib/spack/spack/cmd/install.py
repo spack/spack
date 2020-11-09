@@ -32,6 +32,7 @@ def update_kwargs_from_args(args, kwargs):
     that will be passed to Package.do_install API"""
 
     kwargs.update({
+        'fail_fast': args.fail_fast,
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
@@ -44,6 +45,7 @@ def update_kwargs_from_args(args, kwargs):
         'explicit': True,  # Always true for install command
         'stop_at': args.until,
         'unsigned': args.unsigned,
+        'full_hash_match': args.full_hash_match,
     })
 
     kwargs.update({
@@ -79,6 +81,9 @@ the dependencies"""
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
     subparser.add_argument(
+        '--fail-fast', action='store_true',
+        help="stop all builds if any build fails (default is best effort)")
+    subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="don't remove the install prefix if installation fails")
     subparser.add_argument(
@@ -103,6 +108,11 @@ the dependencies"""
         '--no-check-signature', action='store_true',
         dest='unsigned', default=False,
         help="do not check signatures of binary packages")
+    subparser.add_argument(
+        '--require-full-hash-match', action='store_true',
+        dest='full_hash_match', default=False, help="""when installing from
+binary mirrors, do not install binary package unless the full hash of the
+remote spec matches that of the local spec""")
     subparser.add_argument(
         '--show-log-on-error', action='store_true',
         help="print full build log to stderr if build fails")
@@ -156,8 +166,15 @@ packages. If neither are chosen, don't run tests for any packages."""
         action='store_true',
         help="Show usage instructions for CDash reporting"
     )
+    subparser.add_argument(
+        '-y', '--yes-to-all',
+        action='store_true',
+        dest='yes_to_all',
+        help="""assume "yes" is the answer to every confirmation request.
+To run completely non-interactively, also specify '--no-checksum'."""
+    )
     add_cdash_args(subparser, False)
-    arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
+    arguments.add_common_arguments(subparser, ['spec'])
 
 
 def add_cdash_args(subparser, add_help):
@@ -264,7 +281,7 @@ environment variables:
         return
 
     if not args.spec and not args.specfiles:
-        # if there are no args but an active environment or spack.yaml file
+        # if there are no args but an active environment
         # then install the packages from it.
         env = ev.get_env(args, 'install')
         if env:
@@ -285,7 +302,18 @@ environment variables:
                 env.regenerate_views()
             return
         else:
-            tty.die("install requires a package argument or a spack.yaml file")
+            msg = "install requires a package argument or active environment"
+            if 'spack.yaml' in os.listdir(os.getcwd()):
+                # There's a spack.yaml file in the working dir, the user may
+                # have intended to use that
+                msg += "\n\n"
+                msg += "Did you mean to install using the `spack.yaml`"
+                msg += " in this directory? Try: \n"
+                msg += "    spack env activate .\n"
+                msg += "    spack install\n"
+                msg += "  OR\n"
+                msg += "    spack --env . install"
+            tty.die(msg)
 
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
@@ -370,13 +398,8 @@ environment variables:
                 if not answer:
                     tty.die('Reinstallation aborted.')
 
-            for abstract, concrete in zip(abstract_specs, specs):
-                if concrete in installed:
-                    with fs.replace_directory_transaction(concrete.prefix):
-                        install_spec(args, kwargs, abstract, concrete)
-                else:
-                    install_spec(args, kwargs, abstract, concrete)
+            # overwrite all concrete explicit specs from this build
+            kwargs['overwrite'] = [spec.dag_hash() for spec in specs]
 
-        else:
-            for abstract, concrete in zip(abstract_specs, specs):
-                install_spec(args, kwargs, abstract, concrete)
+        for abstract, concrete in zip(abstract_specs, specs):
+            install_spec(args, kwargs, abstract, concrete)

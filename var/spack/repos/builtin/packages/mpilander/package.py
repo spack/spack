@@ -31,6 +31,7 @@ class Mpilander(CMakePackage):
     # compiler support
     conflicts('%gcc@:4.7')
     conflicts('%clang@:3.8')
+    conflicts('%apple-clang@:7.4')
     conflicts('%intel@:16')
 
     def cmake_args(self):

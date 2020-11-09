@@ -14,7 +14,7 @@ EXTS       = ["gz", "bz2", "xz", "Z"]
 NOTAR_EXTS = ["zip", "tgz", "tbz2", "txz"]
 
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
-ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(
+ALLOWED_ARCHIVE_TYPES = [".".join(ext) for ext in product(
     PRE_EXTS, EXTS)] + PRE_EXTS + EXTS + NOTAR_EXTS
 
 
@@ -36,7 +36,7 @@ def decompressor_for(path, extension=None):
         bunzip2 = which('bunzip2', required=True)
         return bunzip2
     tar = which('tar', required=True)
-    tar.add_default_arg('-xf')
+    tar.add_default_arg('-oxf')
     return tar
 
 

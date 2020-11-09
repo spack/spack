@@ -49,6 +49,7 @@ class SuiteSparse(Package):
 
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
+    patch('pgi.patch', when='%nvhpc')
 
     # This patch adds '-lm' when linking libgraphblas and when using clang.
     # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
@@ -102,7 +103,7 @@ class SuiteSparse(Package):
         # GraphBLAS/Demo/Program/wildtype_demo.c. For many compilers this is
         # not an issue because c11 or newer is their default. However, for some
         # compilers (e.g. xlc) the c11 flag is necessary.
-        if spec.satisfies('@5.4:'):
+        if spec.satisfies('@5.4:5.7.1') and ('%xl' in spec or '%xl_r' in spec):
             make_args += ['CFLAGS+=%s' % self.compiler.c11_flag]
 
         # 64bit blas in UMFPACK:
@@ -115,7 +116,7 @@ class SuiteSparse(Package):
         # CFLAGS, but not all compilers use the same flags for these
         # optimizations
         if any([x in spec
-                for x in ('%clang', '%gcc', '%intel')]):
+                for x in ('%apple-clang', '%clang', '%gcc', '%intel')]):
             make_args += ['CFLAGS+=-fno-common -fexceptions']
         elif '%pgi' in spec:
             make_args += ['CFLAGS+=--exceptions']
@@ -142,10 +143,17 @@ class SuiteSparse(Package):
         # not possible, mainly because of GraphBLAS.  Thus compile first and
         # install in a second run.
         if '@5.4.0:' in self.spec:
-            make('default', *make_args)
+            make('library', *make_args)
 
         make_args.append('INSTALL=%s' % prefix)
         make('install', *make_args)
+
+    @run_after('install')
+    def fix_darwin_install(self):
+        # The shared libraries are not installed correctly on Darwin:
+        # See https://github.com/DrTimothyAldenDavis/SuiteSparse/issues/42
+        if '+pic platform=darwin' in self.spec:
+            fix_darwin_install_name(self.spec.prefix.lib)
 
     @property
     def libs(self):

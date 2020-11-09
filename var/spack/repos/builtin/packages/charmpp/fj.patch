@@ -1,0 +1,61 @@
+diff --git a/src/arch/netlrts-linux-arm8/cc-fcc.h b/src/arch/netlrts-linux-arm8/cc-fcc.h
+new file mode 100644
+index 000000000..f25b2250a
+--- /dev/null
++++ b/src/arch/netlrts-linux-arm8/cc-fcc.h
+@@ -0,0 +1,6 @@
++#undef CMK_DLL_CC
++
++#undef  CMK_COMPILEMODE_ORIG
++#undef  CMK_COMPILEMODE_ANSI
++#define CMK_COMPILEMODE_ORIG                               1
++#define CMK_COMPILEMODE_ANSI                               0
+diff --git a/src/arch/netlrts-linux-arm8/cc-fcc.sh b/src/arch/netlrts-linux-arm8/cc-fcc.sh
+new file mode 100644
+index 000000000..0efdc417e
+--- /dev/null
++++ b/src/arch/netlrts-linux-arm8/cc-fcc.sh
+@@ -0,0 +1,15 @@
++# Assumes Fujitsu C/C++ compiler:
++CMK_CPP_CHARM="cpp -P"
++CMK_CPP_C="fcc$CMK_COMPILER_SUFFIX"
++CMK_CC="fcc$CMK_COMPILER_SUFFIX"
++CMK_LD="fcc$CMK_COMPILER_SUFFIX"
++CMK_CXX="FCC$CMK_COMPILER_SUFFIX"
++CMK_LDXX="FCC$CMK_COMPILER_SUFFIX"
++
++CMK_CPP_C_FLAGS="-E"
++
++CMK_PIC='' # empty string: will be reset to default by conv-config.sh
++CMK_PIE='-fPIE'
++
++CMK_COMPILER='fcc'
++CMK_WARNINGS_ARE_ERRORS="-Werror"
+diff --git a/src/arch/netlrts-linux-arm8/conv-mach-frt.h b/src/arch/netlrts-linux-arm8/conv-mach-frt.h
+new file mode 100644
+index 000000000..d1ab56ad5
+--- /dev/null
++++ b/src/arch/netlrts-linux-arm8/conv-mach-frt.h
+@@ -0,0 +1 @@
++/* This file intentionally left blank */
+diff --git a/src/arch/netlrts-linux-arm8/conv-mach-frt.sh b/src/arch/netlrts-linux-arm8/conv-mach-frt.sh
+new file mode 100644
+index 000000000..1de93a5ed
+--- /dev/null
++++ b/src/arch/netlrts-linux-arm8/conv-mach-frt.sh
+@@ -0,0 +1,15 @@
++CMK_CF90="frt"
++
++CMK_FPP="$CMK_CF90 -Ccpp"
++
++CMK_CF90_FIXED="$CMK_CF90 -Fixed "
++
++CMK_F90LIBS="-lfj90i -lfj90f -lfjsrcinfo -lfjsrcinfo -lelf"
++
++CMK_CF77=$CMK_CF90
++CMK_F77LIBS=$CMK_F90LIBS
++
++CMK_MOD_NAME_ALLCAPS=
++CMK_MOD_EXT="mod"
++CMK_F90_USE_MODDIR=1
++CMK_F90_MODINC="-I"

@@ -28,20 +28,20 @@ class Ssht(Package):
 
     def install(self, spec, prefix):
         make('default', 'SSHTDIR=.')
-        mkdirp(join_path(prefix, 'include'))
+        mkdirp(join_path(prefix, 'include', 'ssht'))
         install('src/c/ssht.h',
-                join_path(prefix, 'include', 'ssht.h'))
+                join_path(prefix, 'include', 'ssht', 'ssht.h'))
         install('src/c/ssht_adjoint.h',
-                join_path(prefix, 'include', 'ssht_adjoint.h'))
+                join_path(prefix, 'include', 'ssht', 'ssht_adjoint.h'))
         install('src/c/ssht_core.h',
-                join_path(prefix, 'include', 'ssht_core.h'))
+                join_path(prefix, 'include', 'ssht', 'ssht_core.h'))
         install('src/c/ssht_dl.h',
-                join_path(prefix, 'include', 'ssht_dl.h'))
+                join_path(prefix, 'include', 'ssht', 'ssht_dl.h'))
         install('src/c/ssht_error.h',
-                join_path(prefix, 'include', 'ssht_error.h'))
+                join_path(prefix, 'include', 'ssht', 'ssht_error.h'))
         install('src/c/ssht_sampling.h',
-                join_path(prefix, 'include', 'ssht_sampling.h'))
+                join_path(prefix, 'include', 'ssht', 'ssht_sampling.h'))
         install('src/c/ssht_types.h',
-                join_path(prefix, 'include', 'ssht_types.h'))
+                join_path(prefix, 'include', 'ssht', 'ssht_types.h'))
         install_tree('doc/c', join_path(prefix, 'doc'))
         install_tree('lib/c', join_path(prefix, 'lib'))

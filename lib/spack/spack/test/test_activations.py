@@ -408,3 +408,32 @@ def test_perl_activation_view(tmpdir, perl_and_extension_dirs,
     assert not os.path.exists(os.path.join(perl_prefix, 'bin/perl-ext-tool'))
 
     assert os.path.exists(os.path.join(view_dir, 'bin/perl-ext-tool'))
+
+
+def test_is_activated_upstream_extendee(tmpdir, builtin_and_mock_packages,
+                                        monkeypatch):
+    """When an extendee is installed upstream, make sure that the extension
+    spec is never considered to be globally activated for it.
+    """
+    extendee_spec = spack.spec.Spec('python')
+    extendee_spec._concrete = True
+
+    python_name = 'python'
+    tmpdir.ensure(python_name, dir=True)
+
+    python_prefix = str(tmpdir.join(python_name))
+    # Set the prefix on the package's spec reference because that is a copy of
+    # the original spec
+    extendee_spec.package.spec.prefix = python_prefix
+    monkeypatch.setattr(extendee_spec.package.__class__,
+                        'installed_upstream', True)
+
+    ext_name = 'py-extension1'
+    tmpdir.ensure(ext_name, dir=True)
+    ext_pkg = create_ext_pkg(
+        ext_name, str(tmpdir.join(ext_name)), extendee_spec, monkeypatch)
+
+    # The view should not be checked at all if the extendee is installed
+    # upstream, so use 'None' here
+    mock_view = None
+    assert not ext_pkg.is_activated(mock_view)

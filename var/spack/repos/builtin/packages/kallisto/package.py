@@ -18,7 +18,6 @@ class Kallisto(CMakePackage):
 
     depends_on('zlib')
     depends_on('hdf5')
-    depends_on('mpich')
 
     # htslib isn't built in time to be used....
     parallel = False

@@ -62,6 +62,8 @@ class Rose(AutotoolsPackage):
     depends_on("autoconf@2.69:", type="build")
     depends_on("automake@1.14:", type="build")
     depends_on("libtool@2.4:", type="build")
+    depends_on("flex@2.6.4:", type="build")
+    depends_on("bison@3.4.2:", type="build")
 
     # C++11 compatible boost and gcc versions required for +cxx11 variant:
     depends_on("boost@1.60.0:1.64.0,1.65.1,1.66.0:1.67.0 cxxstd=11", when="+cxx11")

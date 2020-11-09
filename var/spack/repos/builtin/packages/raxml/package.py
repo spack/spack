@@ -25,6 +25,7 @@ class Raxml(Package):
 
     # Compiles with either GCC or ICC.
     conflicts('%cce')
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%nag')
     conflicts('%pgi')

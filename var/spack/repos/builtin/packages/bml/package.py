@@ -30,6 +30,7 @@ class Bml(CMakePackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on('mpi', when='+mpi')
+    depends_on('python', type='build')
 
     def cmake_args(self):
         args = [

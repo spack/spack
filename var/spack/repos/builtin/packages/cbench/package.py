@@ -26,6 +26,7 @@ class Cbench(MakefilePackage):
 
     # The following compilers are not supported by Cbench:
     conflicts('%cce')
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%nag')
     conflicts('%xl')
