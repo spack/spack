@@ -861,12 +861,13 @@ class OpenfoamArch(object):
         self.options          = None
         self.mplib            = kwargs.get('mplib', 'USERMPI')
 
-        # Normally support WM_LABEL_OPTION, but not yet for foam-extend
+        # WM_LABEL_OPTION, but perhaps not yet for foam-extend
         if '+int64' in spec:
             self.label_size = '64'
         elif kwargs.get('label-size', True):
             self.label_size = '32'
 
+        # WM_PRECISION_OPTION
         if '+spdp' in spec:
             self.precision_option = 'SPDP'
         elif '+float32' in spec:
@@ -876,6 +877,20 @@ class OpenfoamArch(object):
         if '+knl' in spec:
             self.arch_option = '-march=knl'
 
+        # Capitalize first letter of compiler name to obtain the
+        # OpenFOAM naming (eg, gcc -> Gcc, clang -> Clang, etc).
+        # Use compiler_mapping[] for special cases
+        comp = spec.compiler.name
+        if comp in self.compiler_mapping:
+            comp = self.compiler_mapping[comp]
+
+        self.compiler = comp.capitalize()
+        self.update_arch(spec)
+        self.update_options()
+
+    def update_arch(self, spec):
+        """Set WM_ARCH string corresponding to spack platform/target
+        """
         # spec.architecture.platform is like `uname -s`, but lower-case
         platform = str(spec.architecture.platform)
 
@@ -883,7 +898,6 @@ class OpenfoamArch(object):
         target = str(spec.target.family)
 
         # No spack platform family for ia64 or armv7l
-
         if platform == 'linux':
             if target == 'x86_64':
                 platform += '64'
@@ -901,21 +915,12 @@ class OpenfoamArch(object):
             if target == 'x86_64':
                 platform += '64'
         # ... and others?
-
         self.arch = platform
 
-        # Capitalize first letter of compiler name, which corresponds
-        # to how OpenFOAM handles things (eg, gcc -> Gcc).
-        # Use compiler_mapping for special cases.
-        comp = spec.compiler.name
-
-        if comp in self.compiler_mapping:
-            comp = self.compiler_mapping[comp]
-        comp = comp.capitalize()
-
-        self.compiler = comp
-
-        # Build WM_OPTIONS
+    def update_options(self):
+        """Set WM_OPTIONS string consistent with current settings
+        """
+        # WM_OPTIONS
         # ----
         # WM_LABEL_OPTION=Int$WM_LABEL_SIZE
         # WM_OPTIONS_BASE=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION
