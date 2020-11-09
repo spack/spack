@@ -34,7 +34,8 @@ rm_configs = [
     "~/.spack/linux/compilers.yaml",
     "~/.spack/packages.yaml",
     "~/.spack/mirrors.yaml",
-    "~/.spack/repos.yaml",
+    "~/.spack/modules.yaml",
+    "~/.spack/config.yaml",
 ]
 
 
