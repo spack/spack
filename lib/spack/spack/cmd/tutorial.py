@@ -50,17 +50,12 @@ def tutorial(parser, args):
                 "https://spack-tutorial.readthedocs.io.",
                 "")
         tty.warn("This will modify your Spack configuration by:",
-                 "  - checking out a particular branch of Spack",
                  "  - deleting some configuration in ~/.spack",
                  "  - adding a mirror and trusting its public key",
+                 "  - checking out a particular branch of Spack",
                  "")
         if not tty.get_yes_or_no("Are you sure you want to proceed?"):
             tty.die("Aborted")
-
-    tty.msg("Ensuring we're on the releases/v0.15 branch")
-    git = which("git", required=True)
-    with working_dir(spack.paths.prefix):
-        git("checkout", tutorial_branch)
 
     rm_cmds = ["rm -f %s" % f for f in rm_configs]
     tty.msg("Reverting compiler and repository configuration", *rm_cmds)
@@ -77,3 +72,8 @@ def tutorial(parser, args):
     tty.msg("Ensuring that we trust tutorial binaries",
             "spack gpg trust %s" % tutorial_key)
     spack.util.gpg.trust(tutorial_key)
+
+    tty.msg("Ensuring we're on the releases/v0.15 branch")
+    git = which("git", required=True)
+    with working_dir(spack.paths.prefix):
+        git("checkout", tutorial_branch)
