@@ -344,8 +344,7 @@ Testing Kernel + ArrayHandle PrepareForOutput
 -------------------------------------------
 Testing Kernel + ArrayHandle PrepareForInPlace
 -------------------------------------------
-Ran tests on: {}
-""".format(expected_device)
+Ran tests on: """ + expected_device + "\n"
                 success = output == expected
                 if success:
                     print("Test success")
