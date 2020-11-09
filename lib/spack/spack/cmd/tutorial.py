@@ -65,7 +65,7 @@ def tutorial(parser, args):
             shutil.rmtree(path, ignore_errors=True)
 
     tty.msg("Ensuring that the tutorial binary mirror is configured:",
-            "spack mirrror add tutorial %s" % tutorial_mirror)
+            "spack mirror add tutorial %s" % tutorial_mirror)
     mirror_config = syaml_dict()
     mirror_config["tutorial"] = tutorial_mirror
     spack.config.set('mirrors', mirror_config, scope="user")
