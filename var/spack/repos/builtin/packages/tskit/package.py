@@ -21,4 +21,4 @@ class Tskit(PythonPackage):
     depends_on('py-jsonschema',    type=('build', 'run'))
     depends_on('py-h5py',          type=('build', 'run'))
     depends_on('py-numpy@1.7:',    type=('build', 'run'))
-    depends_on('py-attrs@19.2.0:', type=('build', 'run'))
+    depends_on('py-attrs@19.1.0:', type=('build', 'run'))
