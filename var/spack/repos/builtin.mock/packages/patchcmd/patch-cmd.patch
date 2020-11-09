@@ -3,8 +3,8 @@
 @@ -3,6 +3,7 @@ prefix=$(echo $1 | sed 's/--prefix=//')
  cat > Makefile <<EOF
  all:
-       echo Building...
-+      echo Patchcmd!
+       echo 'Building...'
++      echo 'Patchcmd!'
 
  install:
        mkdir -p $prefix
