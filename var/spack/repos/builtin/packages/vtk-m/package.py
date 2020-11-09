@@ -192,13 +192,14 @@ class VtkM(CMakePackage, CudaPackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
-      # default post installation check
-      pass;
+        # default post installation check
+        # do nothing for now
+        pass
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
     @when('@master')
-    def check_install(self):
+    def check_install_master(self):
         print("Checking VTK-m installation...")
         spec = self.spec
         checkdir = "spack-check"
@@ -212,74 +213,77 @@ class VtkM(CMakePackage, CudaPackage):
 #include <vector>
 
 struct NoArgKernel {
-  VTKM_EXEC void operator()(vtkm::Id) const {}
+    VTKM_EXEC void operator()(vtkm::Id) const {}
 
-  void SetErrorMessageBuffer(
-      const vtkm::exec::internal::ErrorMessageBuffer &errorMessage) {
-    this->ErrorMessage = errorMessage;
-  }
+    void SetErrorMessageBuffer(
+        const vtkm::exec::internal::ErrorMessageBuffer &errorMessage) {
+      this->ErrorMessage = errorMessage;
+    }
 
-  vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
+    vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
 };
 
 template <typename PortalType> struct FillArrayKernel {
-  using ValueType = typename PortalType::ValueType;
+    using ValueType = typename PortalType::ValueType;
 
-  FillArrayKernel(const PortalType &array, ValueType fill)
-      : Array(array), FillValue(fill) {}
+    FillArrayKernel(const PortalType &array, ValueType fill)
+        : Array(array), FillValue(fill) {}
 
-  VTKM_EXEC void operator()(vtkm::Id index) const {
-    this->Array.Set(index, this->FillValue);
-  }
-  void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer &) {
-  }
+    VTKM_EXEC void operator()(vtkm::Id index) const {
+      this->Array.Set(index, this->FillValue);
+    }
+    void SetErrorMessageBuffer(
+        const vtkm::exec::internal::ErrorMessageBuffer &) {
+    }
 
-  PortalType Array;
-  ValueType FillValue;
+    PortalType Array;
+    ValueType FillValue;
 };
 
 
 int main() {
-  vtkm::cont::Initialize();
+    vtkm::cont::Initialize();
 
-  constexpr vtkm::Id size = 1000000;
+    constexpr vtkm::Id size = 1000000;
 #if defined(VTKM_ENABLE_KOKKOS)
-  constexpr vtkm::cont::DeviceAdapterTagKokkos desired_device;
+    constexpr vtkm::cont::DeviceAdapterTagKokkos desired_device;
 #elif defined(VTKM_ENABLE_CUDA)
-  constexpr vtkm::cont::DeviceAdapterTagCuda desired_device;
+    constexpr vtkm::cont::DeviceAdapterTagCuda desired_device;
 #elif defined(VTKM_ENABLE_TBB)
-  constexpr vtkm::cont::DeviceAdapterTagTBB desired_device;
+    constexpr vtkm::cont::DeviceAdapterTagTBB desired_device;
 #elif defined(VTKM_ENABLE_OPENMP)
-  constexpr vtkm::cont::DeviceAdapterTagOpenMP desired_device;
+    constexpr vtkm::cont::DeviceAdapterTagOpenMP desired_device;
 #else
-  #error "No VTK-m Device Adapter enabled"
+    #error "No VTK-m Device Adapter enabled"
 #endif
 
-  std::cout << "-------------------------------------------\n";
-  std::cout << "Testing No Argument Kernel " << std::endl;
-  vtkm::cont::Algorithm::Schedule(desired_device, NoArgKernel(), size);
+    std::cout << "-------------------------------------------\n";
+    std::cout << "Testing No Argument Kernel" << std::endl;
+    vtkm::cont::Algorithm::Schedule(desired_device, NoArgKernel(), size);
 
-  vtkm::cont::ArrayHandle<vtkm::Id> handle;
-  {
-  std::cout << "-------------------------------------------\n";
-  std::cout << "Testing Kernel + ArrayHandle PrepareForOutput" << std::endl;
-  vtkm::cont::Token token;
-  auto portal = handle.PrepareForOutput(size, desired_device, token);
-  vtkm::cont::Algorithm::Schedule(desired_device, FillArrayKernel<decltype(portal)>{portal, 1}, size);
-  }
+    vtkm::cont::ArrayHandle<vtkm::Id> handle;
+    {
+    std::cout << "-------------------------------------------\n";
+    std::cout << "Testing Kernel + ArrayHandle PrepareForOutput" << std::endl;
+    vtkm::cont::Token token;
+    auto portal = handle.PrepareForOutput(size, desired_device, token);
+    vtkm::cont::Algorithm::Schedule(desired_device,
+        FillArrayKernel<decltype(portal)>{portal, 1}, size);
+    }
 
-  {
-  std::cout << "-------------------------------------------\n";
-  std::cout << "Testing Kernel + ArrayHandle PrepareForInPlace" << std::endl;
-  vtkm::cont::Token token;
-  auto portal = handle.PrepareForInPlace(desired_device, token);
-  vtkm::cont::Algorithm::Schedule(desired_device, FillArrayKernel<decltype(portal)>{portal, 2}, size);
-  }
+    {
+    std::cout << "-------------------------------------------\n";
+    std::cout << "Testing Kernel + ArrayHandle PrepareForInPlace" << std::endl;
+    vtkm::cont::Token token;
+    auto portal = handle.PrepareForInPlace(desired_device, token);
+    vtkm::cont::Algorithm::Schedule(desired_device,
+        FillArrayKernel<decltype(portal)>{portal, 2}, size);
+    }
 
-  std::cout << "-------------------------------------------\n";
-  std::cout << "Ran tests on: " << desired_device.GetName() << std::endl;
+    std::cout << "-------------------------------------------\n";
+    std::cout << "Ran tests on: " << desired_device.GetName() << std::endl;
 
-  return 0;
+    return 0;
 }
 """
 
@@ -312,31 +316,29 @@ vtkm_add_target_information(VTKmSmokeTest
                 f.write(cmakelists)
             builddir = "build"
             with working_dir(builddir, create=True):
-                cmake = Executable(spec['cmake'].prefix.bin+"/cmake")
-                cmakefiledir = spec['vtk-m'].prefix.lib+"/cmake"
-                cmakefiledir = cmakefiledir+"/"+os.listdir(cmakefiledir)[0]
-                #print(cmakefiledir)
-                cmake(*(["..", "-DVTKm_DIR="+cmakefiledir]))
+                cmake = Executable(spec['cmake'].prefix.bin + "/cmake")
+                cmakefiledir = spec['vtk-m'].prefix.lib + "/cmake"
+                cmakefiledir = cmakefiledir + "/" + os.listdir(cmakefiledir)[0]
+                cmake(*(["..", "-DVTKm_DIR=" + cmakefiledir]))
                 cmake = Executable('make')
                 make()
                 try:
-                  test = Executable('./VTKmSmokeTest')
-                  output = test(output=str)
+                    test = Executable('./VTKmSmokeTest')
+                    output = test(output=str)
                 except ProcessError:
-                  output = ""
+                    output = ""
                 print(output)
                 if "+hip" in spec:
-                  expected_device = 'Kokkos'
+                    expected_device = 'Kokkos'
                 elif "+cuda" in spec:
-                  expected_device = 'Cuda'
+                    expected_device = 'Cuda'
                 elif "+tbb" in spec:
-                  expected_device = 'TBB'
+                    expected_device = 'TBB'
                 elif "+openmp" in spec:
-                  expected_device = 'OpenMP'
-                  
+                    expected_device = 'OpenMP'
                 expected = """\
 -------------------------------------------
-Testing No Argument Kernel 
+Testing No Argument Kernel
 -------------------------------------------
 Testing Kernel + ArrayHandle PrepareForOutput
 -------------------------------------------
@@ -346,16 +348,16 @@ Ran tests on: {}
 """.format(expected_device)
                 success = output == expected
                 if success:
-                  print("Test success")
+                    print("Test success")
                 if not success:
-                  print("Produced output does not match expected output.")
-                  print("Expected output:")
-                  print('-' * 80)
-                  print(expected)
-                  print('-' * 80)
-                  print("Produced output:")
-                  print('-' * 80)
-                  print(output)
-                  print('-' * 80)
-                  raise RuntimeError("VTK-m install check failed")
+                    print("Produced output does not match expected output.")
+                    print("Expected output:")
+                    print('-' * 80)
+                    print(expected)
+                    print('-' * 80)
+                    print("Produced output:")
+                    print('-' * 80)
+                    print(output)
+                    print('-' * 80)
+                    raise RuntimeError("VTK-m install check failed")
         shutil.rmtree(checkdir)
