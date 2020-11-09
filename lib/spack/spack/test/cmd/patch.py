@@ -17,7 +17,7 @@ patch = SpackCommand('patch')
 
 @pytest.mark.disable_clean_stage_check
 def test_patchcmd(mock_packages, mock_fetch, config,
-                   install_mockery):
+                  install_mockery):
 
     spec = Spec('patchcmd')
     spec.concretize()
