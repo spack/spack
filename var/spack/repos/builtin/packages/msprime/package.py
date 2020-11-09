@@ -17,7 +17,7 @@ class Msprime(PythonPackage):
 
     depends_on('python@3:',     type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('gsl',           type=('build', 'run'))
+    depends_on('gsl',           type=('build', 'link'))
     depends_on('tskit',         type='run')
     depends_on('py-svgwrite',   type='run')
     depends_on('py-jsonschema', type='run')
