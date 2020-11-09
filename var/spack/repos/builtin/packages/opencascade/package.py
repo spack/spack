@@ -35,6 +35,8 @@ class Opencascade(CMakePackage):
     depends_on('freeimage', when='+freeimage')
     depends_on('rapidjson', when='+rapidjson')
     depends_on('freetype')
+    depends_on('libxmu')
+    depends_on('libxi')
     depends_on('tcl')
     depends_on('tk')
     depends_on('gl')
