@@ -30,7 +30,7 @@ def test_stage_cmd(mock_packages, mock_fetch, config,
 def test_stage_path(tmpdir, mock_packages, mock_fetch, config,
                     install_mockery):
 
-    test = os.path.join(tmpdir, 'test')
+    test = os.path.join(tmpdir.strpath, 'test')
     spec = Spec('patchcmd')
     spec.concretize()
 
