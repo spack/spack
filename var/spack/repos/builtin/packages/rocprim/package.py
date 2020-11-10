@@ -14,6 +14,7 @@ class Rocprim(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.9.0', sha256='ace6b4ee4b641280807028375cb0e6fa7b296edba9e9fc09177a5d8d075a716e')
     version('3.8.0', sha256='4d37320d174eaada99dd796d81fa97d5dcc65a6dff8e8ff1c21e8e68acb4ea74')
     version('3.7.0', sha256='225209a0cbd003c241821c8a9192cec5c07c7f1a6ab7da296305fc69f5f6d365')
     version('3.5.0', sha256='29302dbeb27ae88632aa1be43a721f03e7e597c329602f9ca9c9c530c1def40d')
@@ -22,7 +23,7 @@ class Rocprim(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('numactl', type='link', when='@3.7.0:')
-    for ver in ['3.5.0', '3.7.0', '3.8.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
