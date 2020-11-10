@@ -6,8 +6,6 @@
 import os
 import pytest
 
-from llnl.util.filesystem import working_dir
-from spack.util.executable import Executable
 from spack.main import SpackCommand
 from spack.spec import Spec
 
@@ -31,7 +29,7 @@ def test_stage_cmd(mock_packages, mock_fetch, config,
 def test_stage_path(tmpdir, mock_packages, mock_fetch, config,
                     install_mockery):
 
-    test = os.path.join(tmpdir.strpath,'test')
+    test = os.path.join(tmpdir.strpath, 'test')
     spec = Spec('patchcmd')
     spec.concretize()
 
