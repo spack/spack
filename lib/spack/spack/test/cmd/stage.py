@@ -6,6 +6,7 @@
 import os
 import pytest
 
+
 from spack.main import SpackCommand
 from spack.spec import Spec
 
