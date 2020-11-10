@@ -313,8 +313,7 @@ vtkm_add_target_information(VTKmSmokeTest
                 cmakefiledir = spec['vtk-m'].prefix.lib + "/cmake"
                 cmakefiledir = cmakefiledir + "/" + os.listdir(cmakefiledir)[0]
                 cmake(*(["..", "-DVTKm_DIR=" + cmakefiledir]))
-                cmakebuild = Executable('cmake --build .')
-                cmakebuild()
+                cmake(*(["--build", "."]))
                 try:
                     test = Executable('./VTKmSmokeTest')
                     output = test(output=str)
