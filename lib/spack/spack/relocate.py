@@ -490,7 +490,7 @@ def _replace_prefix_bin(filename, byte_prefixes):
         for orig_bytes, new_bytes in byte_prefixes.items():
             original_data_len = len(data)
             # Skip this padding hassle if not found
-            if not orig_bytes in data:
+            if orig_bytes not in data:
                 continue
             pad_length = len(orig_bytes.pattern) - len(new_bytes)
             padding = os.sep * pad_length
