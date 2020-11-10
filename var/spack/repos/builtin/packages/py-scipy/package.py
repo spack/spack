@@ -79,8 +79,7 @@ class PyScipy(PythonPackage):
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
-        if self.spec.satisfies('%intel'):
-            env.set('F90', spack_fc)
+        env.set('F90', spack_fc)
 
         # https://github.com/scipy/scipy/issues/11611
         if self.spec.satisfies('@:1.4 %gcc@10:'):
