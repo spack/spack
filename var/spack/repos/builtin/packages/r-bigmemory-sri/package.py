@@ -14,5 +14,3 @@ class RBigmemorySri(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/bigmemory.sri_0.1.3.tar.gz"
 
     version('0.1.3', sha256='55403252d8bae9627476d1f553236ea5dc7aa6e54da6980526a6cdc66924e155')
-
-    depends_on('r', type=('build', 'run'))
