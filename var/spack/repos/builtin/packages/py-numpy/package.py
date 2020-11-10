@@ -104,6 +104,9 @@ class PyNumpy(PythonPackage):
     # https://github.com/numpy/numpy/pull/13132
     patch('blas-lapack-order.patch', when='@1.15:1.16')
 
+    # Add Fujitsu Fortran compiler
+    patch('add_fj_compiler.patch', when='%fj')
+
     # GCC 4.8 is the minimum version that works
     conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
 
