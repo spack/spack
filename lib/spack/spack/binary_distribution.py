@@ -302,10 +302,7 @@ class BinaryCacheIndex(object):
                 # May need to fetch the index and update the local caches
                 needs_regen = self._fetch_and_cache_index(
                     cached_mirror_url, expect_hash=cached_index_hash)
-                # In this block, the need to regenerate implies a need to
-                # clear as well.  This is the first place we set these to
-                # non-default values, so setting them False is fine.  After
-                # this, we should never set False again, only True.
+                # The need to regenerate implies a need to clear as well.
                 spec_cache_clear_needed |= needs_regen
                 spec_cache_regenerate_needed |= needs_regen
             else:
@@ -333,9 +330,7 @@ class BinaryCacheIndex(object):
                 # Need to fetch the index and update the local caches
                 needs_regen = self._fetch_and_cache_index(mirror_url)
                 # Generally speaking, a new mirror wouldn't imply the need to
-                # clear the spec cache, but don't touch it, which lets the
-                # previous decisions stand.  Also, only change the need to
-                # regenerate possibly from False to True.
+                # clear the spec cache, so leave it as is.
                 if needs_regen:
                     spec_cache_regenerate_needed = True
 
