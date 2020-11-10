@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class PyScipy(PythonPackage):
     """SciPy (pronounced "Sigh Pie") is a Scientific Library for Python.
@@ -12,7 +10,8 @@ class PyScipy(PythonPackage):
     as routines for numerical integration and optimization."""
 
     homepage = "https://www.scipy.org/"
-    url      = "https://pypi.io/packages/source/s/scipy/scipy-1.5.3.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scipy/scipy-1.5.4.tar.gz"
+    git      = "https://github.com/scipy/scipy.git"
 
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -30,6 +29,8 @@ class PyScipy(PythonPackage):
         'scipy.sparse.linalg.eigen.lobpcg', 'scipy.special._precompute'
     ]
 
+    version('master', branch='master')
+    version('1.5.4',  sha256='4a453d5e5689de62e5d38edf40af3f17560bfd63c9c5bd228c18c1f99afa155b')
     version('1.5.3',  sha256='ddae76784574cc4c172f3d5edd7308be16078dd3b977e8746860c76c195fa707')
     version('1.5.2',  sha256='066c513d90eb3fd7567a9e150828d39111ebd88d3e924cdfc9f8ce19ab6f90c9')
     version('1.5.1',  sha256='039572f0ca9578a466683558c5bf1e65d442860ec6e13307d528749cfe6d07b8')
@@ -74,7 +75,7 @@ class PyScipy(PythonPackage):
 
     # https://github.com/scipy/scipy/issues/12860
     patch('https://git.sagemath.org/sage.git/plain/build/pkgs/scipy/patches/extern_decls.patch?id=711fe05025795e44b84233e065d240859ccae5bd',
-          sha256='5433f60831cb554101520a8f8871ac5a32c95f7a971ccd68b69049535b106780', when='@1.2:1.5')
+          sha256='5433f60831cb554101520a8f8871ac5a32c95f7a971ccd68b69049535b106780', when='@1.2:1.5.3')
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/11611
