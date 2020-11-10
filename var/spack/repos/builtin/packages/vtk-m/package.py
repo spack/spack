@@ -189,16 +189,9 @@ class VtkM(CMakePackage, CudaPackage):
 
             return options
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def check_install(self):
-        # default post installation check
-        # do nothing for now
-        pass
-
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
     @when('@master')
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install_master(self):
         print("Checking VTK-m installation...")
         spec = self.spec
@@ -320,8 +313,8 @@ vtkm_add_target_information(VTKmSmokeTest
                 cmakefiledir = spec['vtk-m'].prefix.lib + "/cmake"
                 cmakefiledir = cmakefiledir + "/" + os.listdir(cmakefiledir)[0]
                 cmake(*(["..", "-DVTKm_DIR=" + cmakefiledir]))
-                cmake = Executable('make')
-                make()
+                cmakebuild = Executable('cmake --build .')
+                cmakebuild()
                 try:
                     test = Executable('./VTKmSmokeTest')
                     output = test(output=str)
