@@ -9,6 +9,7 @@
 
 
 from spack import *
+import re
 
 
 class Ispc(CMakePackage):
@@ -19,6 +20,8 @@ class Ispc(CMakePackage):
     homepage = "https://ispc.github.io"
     url      = "https://github.com/ispc/ispc/tarball/v1.14.1"
     maintainers = ['aumuell']
+
+    executables = ['^ispc$']
 
     version('1.14.1', sha256='ca12f26dafbc4ef9605487d03a2156331c1351a4ffefc9bab4d896a466880794')
     version('1.14.0', sha256='1ed72542f56738c632bb02fb0dd56ad8aec3e2487839ebbc0def8334f305a4c7')
@@ -47,3 +50,10 @@ class Ispc(CMakePackage):
         args.append('-DISPC_INCLUDE_TESTS=OFF')
         args.append('-DISPC_INCLUDE_UTILS=OFF')
         return args
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'^Intel.*[iI][sS][pP][cC]\),\s+(\S+)\s+\(build.*\)',
+                          output)
+        return match.group(1) if match else None
