@@ -87,6 +87,9 @@ packages:
       - python
     specs:
       - neuron
-      - neuron+debug
+      - coreneuron
+      - neuron+debug      # Testing/CI
+      - coreneuron+debug
+
       - py-h5py
       - py-mpi4py

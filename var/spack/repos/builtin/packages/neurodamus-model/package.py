@@ -14,6 +14,19 @@ _CORENRN_MODLIST_FNAME = "coreneuron_modlist.txt"
 _BUILD_NEURODAMUS_FNAME = "build_neurodamus.sh"
 
 
+def version_from_model_core_deps(model_core_dep_v):
+    """Creates version specification which depend on both the model
+       and core versions.
+       E.g. using model 1.1 and core 3.0.1 it will define a version
+       '1.1-3.0.1' which takes model from tag 1.1 and depends on core@3.0.1
+    """
+    for model_v, core_v in model_core_dep_v:
+        this_version = model_v + "-" + core_v  # e.g. 1.1-3.0.2
+        version(this_version, tag=model_v, submodules=True, get_full_repo=True)
+        depends_on('neurodamus-core@' + core_v, type='build',
+                   when='@' + this_version)
+
+
 class NeurodamusModel(SimModel):
     """An 'abstract' base package for Simulation Models. Therefore no version.
        Eventually in the future Models are independent entities,
@@ -27,7 +40,10 @@ class NeurodamusModel(SimModel):
     # and dont rpath it so we stay dynamic.
     # 'run' mode will load the same mpi module
     depends_on("mpi", type=('build', 'run'))
-    depends_on('neurodamus-core', type=('build', 'run'))
+
+    # Version >=1.0 freezes core, but 1.0 is the last to not include -core_v
+    # neurodamus models should call `version_from_model_core_deps`
+    depends_on('neurodamus-core@3.0.1', type='build', when='@1.0')
     depends_on('neurodamus-core@:2.99', type=('build', 'run'), when='@:0.99')
     depends_on('neurodamus-core@develop', type=('build', 'run'), when='@develop')
     depends_on('hdf5+mpi')
