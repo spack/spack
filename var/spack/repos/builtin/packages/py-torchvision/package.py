@@ -36,8 +36,6 @@ class PyTorchvision(PythonPackage):
     variant('backend', default='pil', description='Image backend',
             values=('pil', 'accimage', 'png', 'jpeg'), multi=False)
 
-    variant('cuda', default=False, description='Enable CUDA support')
-
     # https://github.com/pytorch/vision#installation
     depends_on('python@3.6:', when='@0.7:', type=('build', 'run'))
     depends_on('python@3.5:', when='@0.6.0:0.6.999', type=('build', 'run'))
@@ -62,9 +60,6 @@ class PyTorchvision(PythonPackage):
     depends_on('py-torch@1.2.0', when='@0.4.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.1.0', when='@0.3.0', type=('build', 'link', 'run'))
     depends_on('py-torch@:1.0.1', when='@0.2.2', type=('build', 'link', 'run'))
-
-    depends_on('py-torch+cuda', when="+cuda")
-    depends_on('py-torch~cuda', when="~cuda")
 
     # https://github.com/pytorch/vision/issues/1712
     depends_on('pil@4.1.1:6', when='@:0.4 backend=pil', type=('build', 'run'))
