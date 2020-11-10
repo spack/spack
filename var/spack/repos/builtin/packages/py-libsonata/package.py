@@ -12,6 +12,7 @@ class PyLibsonata(PythonPackage):
     homepage = "https://github.com/BlueBrain/libsonata"
     git = "https://github.com/BlueBrain/libsonata.git"
 
+    version('0.1.5', tag='v0.1.5', submodules=True, get_full_repo=True)
     version('0.1.4', tag='v0.1.4', submodules=True, get_full_repo=True)
     version('0.1.3', tag='v0.1.3', submodules=True, get_full_repo=True)
     version('0.1.0', tag='v0.1.0', submodules=True, get_full_repo=True)
