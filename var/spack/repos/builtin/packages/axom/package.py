@@ -137,7 +137,7 @@ class Axom(CMakePackage, CudaPackage):
     depends_on("python", when="+devtools")
     depends_on("py-sphinx", when="+devtools")
     depends_on("py-shroud", when="+devtools")
-    depends_on("llvm+clang@10.0.0", when="+devtools")
+    depends_on("llvm+clang@10.0.0", when="+devtools", type='build')
 
     def flag_handler(self, name, flags):
         if name in ('cflags', 'cxxflags', 'fflags'):
