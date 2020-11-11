@@ -492,7 +492,7 @@ def _replace_prefix_bin(filename, byte_prefixes):
             # Skip this padding hassle if not found
             if orig_bytes not in data:
                 continue
-            pad_length = len(orig_bytes.pattern) - len(new_bytes)
+            pad_length = len(orig_bytes) - len(new_bytes)
             padding = os.sep * pad_length
             padding = padding.encode('utf-8')
             data = data.replace(orig_bytes, new_bytes + padding)
@@ -501,7 +501,7 @@ def _replace_prefix_bin(filename, byte_prefixes):
             # Really needs to be the same length
             if not len(data) == original_data_len:
                 print('Length of pad:', pad_length, 'should be', len(padding))
-                print(new_bytes, 'was to replace', orig_bytes.pattern)
+                print(new_bytes, 'was to replace', orig_bytes)
                 raise BinaryStringReplacementError(
                     filename, original_data_len, len(data))
         f.write(data)
