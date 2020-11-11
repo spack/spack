@@ -143,7 +143,7 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    root, sbang_root, projections = spack.config.parse_install_tree()
+    root, sbang_root, projections = parse_install_tree()
     hash_length = spack.config.get('config:install_hash_length')
     return Store(root=root,
                  sbang_root=sbang_root,

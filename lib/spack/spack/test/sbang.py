@@ -37,7 +37,7 @@ php_in_text      = ("line\n") * 100 + "php\n" + ("line\n" * 100)
 php_line_patched = "<?php #!/this/" + ('x' * 200) + "/is/php\n"
 php_line_patched2 = "?>\n"
 
-sbang_line        = '#!/bin/sh %s/bin/sbang\n' % spack.store.layout.root
+sbang_line        = '#!/bin/sh %s/bin/sbang\n' % spack.store.store.sbang_root
 last_line         = "last!\n"
 
 
