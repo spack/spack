@@ -95,11 +95,14 @@ class Mvapich2(AutotoolsPackage):
         'upstream-fabrics',
         default=True,
         description='Use upstream-fabrics in conjunction with the fabrics '
-                    'variant to have rdma-core/psm/opa-psm2 as a dependency. '
-                    'If you have verbs(MOFED)/psm/psm2 installed on the '
-                    'system already, setting this value to false can prevent '
-                    'run time errors caused by conflicts between spack '
-                    'installed and system installed fabrics.'
+        'variant to have rdma-core/psm/opa-psm2 as a dependency. '
+        'Please note that if you have verbs (either from OFED or MOFED), '
+        'PSM or PSM2 installed on the system already, setting this value to '
+        'true may cause unexpected runtime failures due to conflicts between '
+        'the version of the fabric drivers spack installs and the fabric '
+        'version available on the system. In such scenarios, we recommend '
+        'setting this value to false to prevent these potential run time '
+        'errors.'
     )
 
     variant(
