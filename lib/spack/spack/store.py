@@ -34,6 +34,7 @@ import spack.config
 import spack.util.path
 import spack.database
 import spack.directory_layout as dir_layout
+import llnl.util.filesystem as fs
 
 #: default installation root, relative to the Spack install path
 default_root = os.path.join(spack.paths.opt_path, 'spack')
@@ -68,6 +69,7 @@ class Store(object):
     def __init__(self, root, projections=None,
                  hash_length=None, active_upstream=None):
         self.root = root
+        # upstream_dbs = upstream_dbs_from_pointers(root)
         self.db = spack.database.Database(
             root, upstream_dbs=retrieve_upstream_dbs())
         self.layout = dir_layout.YamlDirectoryLayout(
@@ -81,25 +83,54 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
+
+    # Dictionaries of all install trees
+    install_trees = spack.config.get('config:install_trees')
+    shared_install_trees = spack.config.get('config:shared_install_trees')
+
     if install_root:
-        install_tree = spack.util.path.canonicalize_path(install_root)
-    else:
-        install_tree = spack.config.get('config:install_tree')
+        if isinstance(install_root, six.string_types):
+            tty.warn("Using deprecated format for configuring install_tree")
 
-    if isinstance(install_tree, six.string_types):
-        tty.warn("Using deprecated format for configuring install_tree")
-        root = install_tree
+            if install_root in install_trees:
+                root = install_trees[install_root]['root']
+            elif install_root in shared_install_trees:
+                root = shared_install_trees[install_root]['root']
+            else:
+                # TODO: provide the user an option to create a new install tree
+                raise ValueError("Specified install tree does not exist: {0}"
+                                 .format(install_root))
 
-        # construct projection from previous values for backwards compatibility
+            all_projection = spack.config.get(
+                'config:install_path_scheme',
+                dir_layout.default_projections['all'])
+
+            projections = {'all': all_projection}
+        else:
+            if install_root in install_trees:
+                root = install_trees[install_root]
+            elif install_root in shared_install_trees:
+                root = shared_install_trees[install_root]
+            else:
+                # TODO: provide the user an option to create a new install tree
+                raise ValueError("Specified install tree does not exist: {0}"
+                                 .format(install_root))
+    elif shared_install_trees:
+        # If no install tree is specified and there are shared install trees,
+        # then we are in user mode, and the install tree is in ~
+        root = user_install_root
+
         all_projection = spack.config.get(
             'config:install_path_scheme',
             dir_layout.default_projections['all'])
-
         projections = {'all': all_projection}
-    else:
-        root = install_tree.get('root', default_root)
-        root = spack.util.path.canonicalize_path(root)
 
+    else:
+        # If this is not a shared spack instance, then by default we will place
+        # the install prefix inside the Spack tree
+        root = spack.config.get('install_trees')['default']['root']
+
+        install_tree = spack.config.get('install_trees')['default']['root']
         projections = install_tree.get(
             'projections', dir_layout.default_projections)
 
@@ -107,6 +138,14 @@ def _store():
         if path_scheme:
             tty.warn("Deprecated config value 'install_path_scheme' ignored"
                      " when using new install_tree syntax")
+
+    # if init_upstream:
+    #     init_upstream_path = shared_install_trees[init_upstream]
+    #     initialize_upstream_pointer_if_unset(root, init_upstream_path)
+    # elif shared_install_trees and (not upstream_set(root)):
+    #     raise ValueError("Must specify an upstream shared install tree")
+
+    root = spack.util.path.canonicalize_path(root)
 
     return Store(root, projections,
                  spack.config.get('config:install_hash_length'),

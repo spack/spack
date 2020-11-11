@@ -485,24 +485,11 @@ def setup_main_options(args):
     # Target different install root here.
     if args.install_root:
         spack.store.install_root = args.install_root
-        spack.config.upstream = True
     elif args.upstream:
         # Install Package to Global Upstream for multi-user use
-        if args.upstream not in spack.config.get('upstreams'):
-            tty.die("specified upstream does not exist")
-        spack.store.active_upstream = args.upstream
-        root = spack.config.get('upstreams')
-        root = root[args.upstream]['install_tree']
-        root = spack.util.path.canonicalize_path(root)
-        spack.store.install_root = root
-        spack.config.upstream = True
+        spack.store.install_root = args.upstream
     elif args.global_upstream:
-        spack.store.active_upstream = 'global'
-        global_root = spack.config.get('upstreams')
-        global_root = global_root['global']['install_tree']
-        global_root = spack.util.path.canonicalize_path(global_root)
-        spack.store.install_root = global_root
-        spack.config.upstream = True
+        spack.store.install_root = 'global'
 
 
 def allows_unknown_args(command):

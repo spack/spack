@@ -63,8 +63,6 @@ from spack.error import SpackError
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
 
-# Ignore user/local Scoping if variable is true
-upstream = False
 
 #: Dict from section names -> schema for that section
 section_schemas = {
@@ -83,6 +81,7 @@ all_schemas = copy.deepcopy(section_schemas)
 all_schemas.update(dict((key, spack.schema.env.schema)
                         for key in spack.schema.env.keys))
 
+
 #: Builtin paths to configuration files in Spack
 configuration_paths = (
     # Default configuration scope is the lowest-level scope. These are
@@ -96,10 +95,10 @@ configuration_paths = (
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
     ('site', os.path.join(spack.paths.etc_path, 'spack')),
-
-    # User configuration can override both spack defaults and site config
-    ('user', spack.paths.user_config_path)
 )
+
+# User configuration can override both spack defaults and site config
+user_configuration_path = ('user', spack.paths.user_config_path)
 
 #: Hard-coded default values for some key configuration options.
 #: This ensures that Spack will still work even if config.yaml in
@@ -766,9 +765,6 @@ def _config():
     defaults = InternalConfigScope('_builtin', config_defaults)
     cfg.push_scope(defaults)
 
-    if upstream:
-        configuration_paths.pop['user']
-
     # add each scope and its platform-specific directory
     for name, path in configuration_paths:
         cfg.push_scope(ConfigScope(name, path))
@@ -788,6 +784,14 @@ def _config():
 
 #: This is the singleton configuration instance for Spack.
 config = llnl.util.lang.Singleton(_config)
+
+
+def shared_spack():
+    # Note: this (and _config) assume that a shared spack instance will always
+    # define 'shared_install_trees', although it could be that an admin
+    # wants to provide a shared instance without installing any packages to
+    # that instance
+    return bool(spack.config.config.get('config:shared_install_trees'))
 
 
 def get(path, default=None, scope=None):
