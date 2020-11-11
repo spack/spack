@@ -398,7 +398,7 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     for config_setting in config_settings:
         mutable_config.set(*config_setting)
 
-    root, sbang_root, projections = spack.config.parse_install_tree()
+    root, sbang_root, projections = spack.store.parse_install_tree()
 
     assert root == expected_root
     assert sbang_root == expected_sbang_root
