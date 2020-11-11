@@ -496,8 +496,6 @@ def _replace_prefix_bin(filename, byte_prefixes):
             padding = os.sep * pad_length
             padding = padding.encode('utf-8')
             data = data.replace(orig_bytes, new_bytes + padding)
-            # Make sure we're still in bytes format explicitly.
-            data = data.encode('utf-8')
             # Really needs to be the same length
             if not len(data) == original_data_len:
                 print('Length of pad:', pad_length, 'should be', len(padding))
