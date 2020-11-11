@@ -46,4 +46,4 @@ def test_log_parse_show(log_prase_file):
     lines = output.strip().split('\n')
 
     assert "1 warnings" == lines[0]
-    assert len(lines) == 4
+    assert len(lines) == 5
