@@ -13,7 +13,7 @@ class Mvapich2(AutotoolsPackage):
     networks (InfiniBand, Omni-Path, Ethernet/iWARP, and RoCE) and computing
     platforms (x86 (Intel and AMD), ARM and OpenPOWER)"""
 
-    homepage = "http://mvapich.cse.ohio-state.edu/"
+    homepage = "http://mvapich.cse.ohio-state.edu/userguide/userguide_spack/"
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.4.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
@@ -92,6 +92,17 @@ class Mvapich2(AutotoolsPackage):
     )
 
     variant(
+        'upstream-fabrics',
+        default=True,
+        description='Use upstream-fabrics in conjunction with the fabrics '
+                    'variant to have rdma-core/psm/opa-psm2 as a dependency. '
+                    'If you have verbs(MOFED)/psm/psm2 installed on the '
+                    'system already, setting this value to false can prevent '
+                    'run time errors caused by conflicts between spack '
+                    'installed and system installed fabrics.'
+    )
+
+    variant(
         'alloca',
         default=False,
         description='Use alloca to allocate temporary memory if available'
@@ -110,12 +121,12 @@ class Mvapich2(AutotoolsPackage):
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     depends_on('libxml2')
     depends_on('cuda', when='+cuda')
-    depends_on('psm', when='fabrics=psm')
-    depends_on('opa-psm2', when='fabrics=psm2')
-    depends_on('rdma-core', when='fabrics=mrail')
-    depends_on('rdma-core', when='fabrics=nemesisib')
-    depends_on('rdma-core', when='fabrics=nemesistcpib')
-    depends_on('rdma-core', when='fabrics=nemesisibtcp')
+    depends_on('psm', when='fabrics=psm +upstream-fabrics')
+    depends_on('opa-psm2', when='fabrics=psm2 +upstream-fabrics')
+    depends_on('rdma-core', when='fabrics=mrail +upstream-fabrics')
+    depends_on('rdma-core', when='fabrics=nemesisib +upstream-fabrics')
+    depends_on('rdma-core', when='fabrics=nemesistcpib +upstream-fabrics')
+    depends_on('rdma-core', when='fabrics=nemesisibtcp +upstream-fabrics')
     depends_on('libfabric', when='fabrics=nemesisofi')
     depends_on('slurm', when='process_managers=slurm')
 
