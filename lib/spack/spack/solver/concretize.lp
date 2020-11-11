@@ -144,6 +144,9 @@ version_declared(Package, Version, Weight) :- external_version_declared(Package,
 % if a package is not buildable (external_only), only externals are allowed
 external(Package) :- external_only(Package), node(Package).
 
+% a package is a real_node if it is not external
+real_node(Package) :- node(Package), not external(Package).
+
 % if an external version is selected, the package is external and
 % we are using the corresponding spec
 external(Package) :-

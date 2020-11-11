@@ -938,13 +938,13 @@ class SpackSolverSetup(object):
                 # add constraints on the dependency from dep spec.
                 if spack.repo.path.is_virtual(dep.spec.name):
                     self.virtual_constraints.add(str(dep.spec))
+                    conditions = ([fn.real_node(pkg.name)] +
+                                  self.spec_clauses(named_cond, body=True))
                     self.gen.rule(
                         head=fn.single_provider_for(
                             str(dep.spec.name), str(dep.spec.versions)
                         ),
-                        body=self.gen._and(
-                            *self.spec_clauses(named_cond, body=True)
-                        )
+                        body=self.gen._and(*conditions)
                     )
                 else:
                     clauses = self.spec_clauses(dep.spec)
