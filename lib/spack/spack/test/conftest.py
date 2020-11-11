@@ -34,7 +34,7 @@ import spack.repo
 import spack.stage
 import spack.util.executable
 import spack.util.gpg
-import spack.test_state
+import spack.subprocess_context
 import spack.util.spack_yaml as syaml
 
 from spack.util.pattern import Bunch
@@ -45,7 +45,7 @@ from spack.fetch_strategy import FetchError
 @pytest.fixture(autouse=True)
 def clear_recorded_monkeypatches():
     yield
-    spack.test_state.clear_patches()
+    spack.subprocess_context.clear_patches()
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -54,7 +54,7 @@ def record_monkeypatch_setattr():
     saved_setattr = _pytest.monkeypatch.MonkeyPatch.setattr
 
     def record_setattr(cls, target, name, value, *args, **kwargs):
-        spack.test_state.append_patch((target, name, value))
+        spack.subprocess_context.append_patch((target, name, value))
         saved_setattr(cls, target, name, value, *args, **kwargs)
 
     _pytest.monkeypatch.MonkeyPatch.setattr = record_setattr

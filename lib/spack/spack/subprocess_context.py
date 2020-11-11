@@ -3,6 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+"""
+This module handles transmission of Spack state to child processes started
+using the 'spawn' start method. Notably, installations are performed in a
+subprocess and require transmitting the Package object (in such a way
+that the repository is available for importing when it is deserialized);
+installations performed in Spack unit tests may include additional
+modifications to global state in memory that must be replicated in the
+child process.
+"""
+
 from types import ModuleType
 
 import pickle

@@ -528,7 +528,7 @@ class ReadModify(object):
 
 
 def test_030_db_sanity_from_another_process(mutable_database):
-    spack_process = spack.test_state.SpackTestProcess(ReadModify())
+    spack_process = spack.subprocess_context.SpackTestProcess(ReadModify())
     p = spack_process.create()
     p.start()
     p.join()

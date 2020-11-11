@@ -55,7 +55,7 @@ import spack.main
 import spack.paths
 import spack.schema.environment
 import spack.store
-import spack.test_state
+import spack.subprocess_context
 import spack.architecture as arch
 from spack.util.string import plural
 from spack.util.environment import (
@@ -895,7 +895,7 @@ def fork(pkg, function, kwargs):
     parent_pipe, child_pipe = multiprocessing.Pipe()
     input_multiprocess_fd = None
 
-    serialized_pkg = spack.test_state.PackageInstallContext(pkg)
+    serialized_pkg = spack.subprocess_context.PackageInstallContext(pkg)
 
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
