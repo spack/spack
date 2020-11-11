@@ -391,7 +391,7 @@ full_padded_string = os.path.join(
      [full_padded_string, '/path', None]),
 ])
 def test_parse_install_tree(config_settings, expected, mutable_config):
-    expected_root = expected[0] or spack.config.default_install_root
+    expected_root = expected[0] or spack.store.default_install_root
     expected_sbang_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
