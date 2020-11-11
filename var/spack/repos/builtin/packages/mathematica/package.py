@@ -18,6 +18,7 @@ class Mathematica(Package):
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.wolfram.com/mathematica/"
+    url = 'file://{0}/Mathematica_12.0.0_LINUX.sh'.format(os.getcwd())
 
     version('12.1.1',
             sha256='ad47b886be4a9864d70f523f792615a051d4ebc987d9a0f654b645b4eb43b30a',
@@ -31,9 +32,6 @@ class Mathematica(Package):
     license_comment  = '#'
     license_files    = ['Configuration/Licensing/mathpass']
     license_url      = 'https://reference.wolfram.com/language/tutorial/RegistrationAndPasswords.html#857035062'
-
-    def url_for_version(self, version):
-        return 'file://{0}/Mathematica_{1}_LINUX.sh'.format(os.getcwd(), version)
 
     def install(self, spec, prefix):
         # Backup .spack because Mathematica moves it but never restores it
