@@ -81,7 +81,8 @@ class Brion(CMakePackage):
             pathname = os.path.join(target, *site_dir)
             if os.path.isdir(pathname):
                 with working_dir(pathname):
-                    if self.spec.version <= Version('3.2.0'):
+                    if self.spec.version >= Version('3.1.0') and \
+                       self.spec.version <= Version('3.2.0'):
                         python('-c', 'import brain; print(brain)')
                     else:
                         python('-c', 'import brion; print(brion)')
