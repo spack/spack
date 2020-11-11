@@ -5,6 +5,7 @@
 
 import pytest
 
+import os
 import spack.main
 
 logparse = spack.main.SpackCommand('log-parse')
