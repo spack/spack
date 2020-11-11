@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Chai(CMakePackage, CudaPackage):
+class Chai(CMakePackage, CudaPackage, HipPackage):
     """
     Copy-hiding array interface for data migration between memory spaces
     """
@@ -27,23 +27,6 @@ class Chai(CMakePackage, CudaPackage):
     variant('raja', default=False, description='Build plugin for RAJA')
     variant('benchmarks', default=True, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
-    variant('hip', default=False, description='Enable HIP support')
-
-    # possible amd gpu targets for hip builds
-    # TODO: we should add a hip build system description equivalent to
-    # lib/spack/spack/build_systems/cuda.py, where possible hip amd gpu
-    # architectures are defined in a similar way as for cuda gpu
-    # architectures. In the meantime, require users to define
-    # amd gpu type for hip builds with a variant here.
-    amdgpu_targets = (
-        'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-        'gfx1011', 'gfx1012', 'none'
-    )
-    variant('amdgpu_target', default='none', values=amdgpu_targets)
-
-    depends_on('llvm-amdgpu', when='+hip')
-    depends_on('hip', when='+hip')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('umpire')
@@ -52,6 +35,8 @@ class Chai(CMakePackage, CudaPackage):
     depends_on('cmake@3.9:', type='build', when="+cuda")
     depends_on('umpire+cuda', when="+cuda")
     depends_on('raja+cuda', when="+raja+cuda")
+    depends_on('umpire+hip', when="+hip")
+    depends_on('raja+hip', when="+raja+hip")
 
     def cmake_args(self):
         spec = self.spec

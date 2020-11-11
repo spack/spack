@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Umpire(CMakePackage, CudaPackage):
+class Umpire(CMakePackage, CudaPackage, HipPackage):
     """An application-focused API for memory management on NUMA & GPU
     architectures"""
 
@@ -62,24 +62,6 @@ class Umpire(CMakePackage, CudaPackage):
 
     depends_on('blt', type='build')
     depends_on('camp')
-    variant('hip', default=False, description='Enable HIP support')
-
-    # possible amd gpu targets for hip builds
-    # TODO: we should add a hip build system description equivalent to
-    # lib/spack/spack/build_systems/cuda.py, where possible hip amd gpu
-    # architectures are defined in a similar way as for cuda gpu
-    # architectures. In the meantime, require users to define
-    # amd gpu type for hip builds with a variant here.
-    amdgpu_targets = (
-        'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-        'gfx1011', 'gfx1012', 'none'
-    )
-    variant('amdgpu_target', default='none', values=amdgpu_targets)
-
-    depends_on('llvm-amdgpu', when='+hip')
-    depends_on('hsa-rocr-dev', when='+hip')
-    depends_on('hip', when='+hip')
 
     conflicts('+numa', when='@:0.3.2')
     conflicts('~c', when='+fortran', msg='Fortran API requires C API')
