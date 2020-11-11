@@ -64,7 +64,7 @@ from spack.error import SpackError
 import spack.util.spack_yaml as syaml
 
 # Ignore user/local Scoping if variable is true
-upstream = None
+upstream = False
 
 #: Dict from section names -> schema for that section
 section_schemas = {
@@ -781,8 +781,7 @@ def _config():
 
     # we make a special scope for spack commands so that they can
     # override configuration options.
-    if not upstream:
-        cfg.push_scope(InternalConfigScope('command_line'))
+    cfg.push_scope(InternalConfigScope('command_line'))
 
     return cfg
 
