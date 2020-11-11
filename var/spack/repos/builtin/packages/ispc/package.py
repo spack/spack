@@ -39,6 +39,13 @@ class Ispc(CMakePackage):
     patch('fix-linking-against-llvm-10.patch', when='@1.13:1.13.999',
           sha256='d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc')
 
+    def patch(self):
+        filter_file(
+            r'\(bit 32 64\)',
+            '(bit 64)',
+            'cmake/GenerateBuiltins.cmake'
+        )
+
     def cmake_args(self):
         args = []
         args.append('-DARM_ENABLED=FALSE')
