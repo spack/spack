@@ -80,6 +80,9 @@ class TestConcretizePreferences(object):
         # Use different values for the variants and check them again
         ('mpileaks', ['+debug', '+opt', '~shared', '-static'],
          {'debug': True, 'opt': True, 'shared': False, 'static': False}),
+        # Check a multivalued variant with multiple values set
+        ('multivalue-variant', ['foo=bar,baz', 'fee=bar'],
+         {'foo': ('bar', 'baz'), 'fee': 'bar'})
     ])
     def test_preferred_variants(
             self, package_name, variant_value, expected_results

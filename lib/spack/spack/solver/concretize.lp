@@ -504,6 +504,13 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
     Weight@14,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight), root(Package)
 }.
+% If the value is a multivalued variant there could be multiple
+% values set as default. Since a default value has a weight of 0 we
+% need to maximize their number below to ensure they're all set
+#maximize {
+    1@13,Package,Variant,Value
+    : variant_not_default(Package, Variant, Value, Weight), root(Package)
+}.
 #minimize{
     Weight@13,Provider
     : provider_weight(Provider, Weight), root(Provider)
@@ -536,6 +543,13 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 % of all the other nodes in the DAG
 #minimize {
     Weight@9,Package,Variant,Value
+    : variant_not_default(Package, Variant, Value, Weight), not root(Package)
+}.
+% If the value is a multivalued variant there could be multiple
+% values set as default. Since a default value has a weight of 0 we
+% need to maximize their number below to ensure they're all set
+#maximize {
+    1@8,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight), not root(Package)
 }.
 #minimize{
