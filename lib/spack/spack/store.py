@@ -23,13 +23,87 @@ install trees to define their own layouts with some per-tree
 configuration.
 
 """
+import os
+import re
+import six
+
 import llnl.util.lang
+import llnl.util.tty as tty
 
 import spack.paths
 import spack.config
 import spack.util.path
 import spack.database
-import spack.directory_layout as dir_layout
+import spack.directory_layout
+
+
+#: default installation root, relative to the Spack install path
+default_install_root = os.path.join(spack.paths.opt_path, 'spack')
+
+
+def parse_install_tree():
+    """Parse old and new formats and return relevant values.
+
+    Encapsulate backwards compatibility capabilities for install_tree
+    and old values that are now parsed as part of install_tree"""
+    install_tree = spack.config.get('config:install_tree', {})
+
+    padded_length = False
+    if isinstance(install_tree, six.string_types):
+        tty.warn("Using deprecated format for configuring install_tree")
+        sbang_root = install_tree
+        sbang_root = spack.util.path.canonicalize_path(sbang_root)
+        # construct projection from previous values for backwards compatibility
+        all_projection = spack.config.get(
+            'config:install_path_scheme',
+            spack.directory_layout.default_projections['all'])
+
+        projections = {'all': all_projection}
+    else:
+        sbang_root = install_tree.get('root', default_install_root)
+        sbang_root = spack.util.path.canonicalize_path(sbang_root)
+
+        padded_length = install_tree.get('padded_length', False)
+        if padded_length is True:
+            padded_length = spack.util.path.get_system_path_max()
+            padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
+
+        projections = install_tree.get(
+            'projections', spack.directory_layout.default_projections)
+
+        path_scheme = spack.config.get('config:install_path_scheme', None)
+        if path_scheme:
+            tty.warn("Deprecated config value 'install_path_scheme' ignored"
+                     " when using new install_tree syntax")
+
+    # Handle backwards compatibility for padding
+    old_pad = re.search(r'\$padding(:\d+)?|\${padding(:\d+)?}', sbang_root)
+    if old_pad:
+        if padded_length:
+            msg = "Ignoring deprecated padding option in install_tree root "
+            msg += "because new syntax padding is present."
+            tty.warn(msg)
+        else:
+            sbang_root = sbang_root.replace(old_pad.group(0), '')
+            if old_pad.group(1) or old_pad.group(2):
+                length_group = 2 if '{' in old_pad.group(0) else 1
+                padded_length = int(old_pad.group(length_group)[1:])
+            else:
+                padded_length = spack.util.path.get_system_path_max()
+                padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
+
+    sbang_root = sbang_root.rstrip(os.path.sep)  # canonicalize before padding
+
+    if padded_length:
+        root = spack.util.path.add_padding(sbang_root, padded_length)
+        if len(root) != padded_length:
+            msg = "Cannot pad %s to %s characters." % (root, padded_length)
+            msg += " It is already %s characters long" % len(root)
+            tty.warn(msg)
+    else:
+        root = sbang_root
+
+    return (root, sbang_root, projections)
 
 
 class Store(object):
@@ -45,7 +119,8 @@ class Store(object):
 
     Args:
         root (str): path to the root of the install tree
-        short_root (str): path to the root of the install tree without padding
+        sbang_root (str): path to the root of the install tree without padding;
+            the sbang script has to be installed here to work with padded roots
         path_scheme (str): expression according to guidelines in
             ``spack.util.path`` that describes how to construct a path to
             a package prefix in this store
@@ -53,12 +128,12 @@ class Store(object):
             layout; spec hash suffixes will be truncated to this length
     """
     def __init__(
-            self, root, short_root=None, projections=None, hash_length=None):
+            self, root, sbang_root=None, projections=None, hash_length=None):
         self.root = root
-        self.short_root = short_root or root
+        self.sbang_root = sbang_root or root
         self.db = spack.database.Database(
             root, upstream_dbs=retrieve_upstream_dbs())
-        self.layout = dir_layout.YamlDirectoryLayout(
+        self.layout = spack.directory_layout.YamlDirectoryLayout(
             root, projections=projections, hash_length=hash_length)
 
     def reindex(self):
@@ -68,9 +143,12 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    r, sr, p = spack.config.parse_install_tree()
-    hl = spack.config.get('config:install_hash_length')
-    return Store(root=r, short_root=sr, projections=p, hash_length=hl)
+    root, sbang_root, projections = spack.config.parse_install_tree()
+    hash_length = spack.config.get('config:install_hash_length')
+    return Store(root=root,
+                 sbang_root=sbang_root,
+                 projections=projections,
+                 hash_length=hash_length)
 
 
 #: Singleton store instance

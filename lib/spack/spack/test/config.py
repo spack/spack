@@ -392,16 +392,16 @@ full_padded_string = os.path.join(
 ])
 def test_parse_install_tree(config_settings, expected, mutable_config):
     expected_root = expected[0] or spack.config.default_install_root
-    expected_short_root = expected[1] or expected_root
+    expected_sbang_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
     for config_setting in config_settings:
         mutable_config.set(*config_setting)
 
-    root, short_root, projections = spack.config.parse_install_tree()
+    root, sbang_root, projections = spack.config.parse_install_tree()
 
     assert root == expected_root
-    assert short_root == expected_short_root
+    assert sbang_root == expected_sbang_root
     assert projections == expected_proj
 
 
