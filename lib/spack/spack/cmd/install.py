@@ -45,6 +45,7 @@ def update_kwargs_from_args(args, kwargs):
         'explicit': True,  # Always true for install command
         'stop_at': args.until,
         'unsigned': args.unsigned,
+        'full_hash_match': args.full_hash_match,
     })
 
     kwargs.update({
@@ -107,6 +108,11 @@ the dependencies"""
         '--no-check-signature', action='store_true',
         dest='unsigned', default=False,
         help="do not check signatures of binary packages")
+    subparser.add_argument(
+        '--require-full-hash-match', action='store_true',
+        dest='full_hash_match', default=False, help="""when installing from
+binary mirrors, do not install binary package unless the full hash of the
+remote spec matches that of the local spec""")
     subparser.add_argument(
         '--show-log-on-error', action='store_true',
         help="print full build log to stderr if build fails")
@@ -392,13 +398,8 @@ environment variables:
                 if not answer:
                     tty.die('Reinstallation aborted.')
 
-            for abstract, concrete in zip(abstract_specs, specs):
-                if concrete in installed:
-                    with fs.replace_directory_transaction(concrete.prefix):
-                        install_spec(args, kwargs, abstract, concrete)
-                else:
-                    install_spec(args, kwargs, abstract, concrete)
+            # overwrite all concrete explicit specs from this build
+            kwargs['overwrite'] = [spec.dag_hash() for spec in specs]
 
-        else:
-            for abstract, concrete in zip(abstract_specs, specs):
-                install_spec(args, kwargs, abstract, concrete)
+        for abstract, concrete in zip(abstract_specs, specs):
+            install_spec(args, kwargs, abstract, concrete)

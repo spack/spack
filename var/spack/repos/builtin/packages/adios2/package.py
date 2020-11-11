@@ -87,7 +87,6 @@ class Adios2(CMakePackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('libzmq', when='+dataman')
-    depends_on('libzmq', when='@2.4: +ssc')
     depends_on('dataspaces@1.8.0:', when='+dataspaces')
 
     depends_on('hdf5', when='+hdf5')

@@ -11,6 +11,7 @@ class Bowtie2(Package):
     homepage = "http://bowtie-bio.sourceforge.net/bowtie2/index.shtml"
     url      = "http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.3.1/bowtie2-2.3.1-source.zip"
 
+    version('2.4.2', sha256='4cc555eeeeb8ae2d47aaa1551f3f01b57f567a013e4e0d1f30e90f462865027e')
     version('2.4.1', sha256='566d6fb01a361883747103d797308ee4bdb70f6db7d27bfc72a520587815df22')
     version('2.3.5.1', sha256='335c8dafb1487a4a9228ef922fbce4fffba3ce8bc211e2d7085aac092155a53f')
     version('2.3.5', sha256='2b6b2c46fbb5565ba6206b47d07ece8754b295714522149d92acebefef08347b')
@@ -34,6 +35,7 @@ class Bowtie2(Package):
     # seems to have trouble with 6's -std=gnu++14
     conflicts('%gcc@6:', when='@:2.3.1')
     conflicts('@:2.3.5.0', when='target=aarch64:')
+    conflicts('@2.4.1', when='target=aarch64:')
 
     def patch(self):
         if self.spec.target.family == 'aarch64':

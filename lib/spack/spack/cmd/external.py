@@ -230,7 +230,7 @@ def _update_pkg_config(scope, pkg_to_entries, not_buildable):
 
     pkgs_cfg = spack.config.get('packages', scope=scope)
 
-    spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
+    pkgs_cfg = spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
     spack.config.set('packages', pkgs_cfg, scope=scope)
 
     return all_new_specs
@@ -282,7 +282,8 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                 tty.debug(
                     'The following executables in {0} were decidedly not '
                     'part of the package {1}: {2}'
-                    .format(prefix, pkg.name, ', '.join(exes_in_prefix))
+                    .format(prefix, pkg.name, ', '.join(
+                        _convert_to_iterable(exes_in_prefix)))
                 )
 
             for spec in specs:
@@ -295,7 +296,8 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                     continue
 
                 if spec in resolved_specs:
-                    prior_prefix = ', '.join(resolved_specs[spec])
+                    prior_prefix = ', '.join(
+                        _convert_to_iterable(resolved_specs[spec]))
 
                     tty.debug(
                         "Executables in {0} and {1} are both associated"

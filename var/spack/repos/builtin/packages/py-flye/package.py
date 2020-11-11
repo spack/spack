@@ -26,7 +26,7 @@ class PyFlye(PythonPackage):
     msg = 'C++ compiler with C++11 support required'
     conflicts('%gcc@:4.7',   msg=msg)
     conflicts('%clang@:3.2', msg=msg)
-    conflicts('apple-clang@:4.9', msg=msg)
+    conflicts('%apple-clang@:4.9', msg=msg)
 
     def setup_build_environment(self, env):
         if self.spec.target.family == 'aarch64':

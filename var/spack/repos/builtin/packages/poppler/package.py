@@ -62,7 +62,8 @@ class Poppler(CMakePackage):
     # Splash is unconditionally disabled. Unfortunately there's
     # a small section of code in the QT5 wrappers that expects it
     # to be present.
-    patch('poppler_page_splash.patch', when='@0.64.0: ^qt@5.0:')
+    patch('poppler_page_splash.patch', when='@0.64.0:0.90.0 ^qt@5.0:')
+    patch('poppler_page_splash.0.90.1.patch', when='@0.90.1: ^qt@5.0:')
 
     # Only needed to run `make test`
     resource(

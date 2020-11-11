@@ -43,7 +43,8 @@ def build_info(image, spack_version):
 
     # Try to check if we have a tag for this Spack version
     try:
-        build_tag = image_data['build_tags'][spack_version]
+        # Translate version from git to docker if necessary
+        build_tag = image_data['build_tags'].get(spack_version, spack_version)
     except KeyError:
         msg = ('the image "{0}" has no tag for Spack version "{1}" '
                '[valid versions are {2}]')

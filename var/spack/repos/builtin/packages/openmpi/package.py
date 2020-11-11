@@ -168,6 +168,9 @@ class Openmpi(AutotoolsPackage):
     patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
     patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10.999%nag')
 
+    patch('nvhpc-libtool.patch', when='%nvhpc@develop')
+    patch('nvhpc-configure.patch', when='%nvhpc')
+
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
     # support "IGNORE TKR" functionality (e.g. NAG).
     # The issue has been resolved upstream in two steps:
@@ -258,10 +261,12 @@ class Openmpi(AutotoolsPackage):
 
     depends_on('pkgconfig', type='build')
 
-    depends_on('hwloc', when='@4:')
+    depends_on('hwloc@2.0:', when='@4:')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
-    depends_on('hwloc@:1.999', when='@:3.999.999')
+    # Future ompi releases may support it, needs to be verified.
+    # See #7483 for context.
+    depends_on('hwloc@:1.999', when='@:3.999.9999')
 
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('java', when='+java')
@@ -615,6 +620,10 @@ class Openmpi(AutotoolsPackage):
                         config_args.append('CFLAGS=-D__LP64__')
             else:
                 config_args.append('--without-cuda')
+
+        if spec.satisfies('%nvhpc'):
+            # Workaround compiler issues
+            config_args.append('CFLAGS=-O1')
 
         if '+wrapper-rpath' in spec:
             config_args.append('--enable-wrapper-rpath')

@@ -512,12 +512,6 @@ def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     with pytest.raises(ValueError, match="only install concrete packages"):
         spec.package.do_install()
 
-    with pytest.raises(ValueError, match="only fetch concrete packages"):
-        spec.package.do_fetch()
-
-    with pytest.raises(ValueError, match="only stage concrete packages"):
-        spec.package.do_stage()
-
     with pytest.raises(ValueError, match="only patch concrete packages"):
         spec.package.do_patch()
 

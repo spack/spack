@@ -49,6 +49,7 @@ class SuiteSparse(Package):
 
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
+    patch('pgi.patch', when='%nvhpc')
 
     # This patch adds '-lm' when linking libgraphblas and when using clang.
     # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
@@ -146,6 +147,13 @@ class SuiteSparse(Package):
 
         make_args.append('INSTALL=%s' % prefix)
         make('install', *make_args)
+
+    @run_after('install')
+    def fix_darwin_install(self):
+        # The shared libraries are not installed correctly on Darwin:
+        # See https://github.com/DrTimothyAldenDavis/SuiteSparse/issues/42
+        if '+pic platform=darwin' in self.spec:
+            fix_darwin_install_name(self.spec.prefix.lib)
 
     @property
     def libs(self):

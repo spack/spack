@@ -318,8 +318,7 @@ spack.config.config = spack.config._config()
 @contextlib.contextmanager
 def use_configuration(config):
     """Context manager to swap out the global Spack configuration."""
-    saved = spack.config.config
-    spack.config.config = config
+    saved = spack.config.replace_config(config)
 
     # Avoid using real spack configuration that has been cached by other
     # tests, and avoid polluting the cache with spack test configuration
@@ -329,7 +328,7 @@ def use_configuration(config):
 
     yield
 
-    spack.config.config = saved
+    spack.config.replace_config(saved)
     spack.compilers._cache_config_file = saved_compiler_cache
 
 
@@ -425,7 +424,17 @@ def configuration_dir(tmpdir_factory, linux_os):
     # Create temporary 'defaults', 'site' and 'user' folders
     tmpdir.ensure('user', dir=True)
 
-    # Slightly modify compilers.yaml to look like Linux
+    # Slightly modify config.yaml and compilers.yaml
+    config_yaml = test_config.join('config.yaml')
+    modules_root = tmpdir_factory.mktemp('share')
+    tcl_root = modules_root.ensure('modules', dir=True)
+    lmod_root = modules_root.ensure('lmod', dir=True)
+    content = ''.join(config_yaml.read()).format(
+        str(tcl_root), str(lmod_root)
+    )
+    t = tmpdir.join('site', 'config.yaml')
+    t.write(content)
+
     compilers_yaml = test_config.join('compilers.yaml')
     content = ''.join(compilers_yaml.read()).format(linux_os)
     t = tmpdir.join('site', 'compilers.yaml')
