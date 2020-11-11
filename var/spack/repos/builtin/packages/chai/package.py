@@ -35,8 +35,6 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
     depends_on('cmake@3.9:', type='build', when="+cuda")
     depends_on('umpire+cuda', when="+cuda")
     depends_on('raja+cuda', when="+raja+cuda")
-    depends_on('umpire+hip', when="+hip")
-    depends_on('raja+hip', when="+raja+hip")
 
     def cmake_args(self):
         spec = self.spec
