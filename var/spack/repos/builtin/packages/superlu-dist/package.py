@@ -83,7 +83,7 @@ class SuperluDist(CMakePackage, CudaPackage):
         if '+cuda' in spec:
             args.append('-DTPL_ENABLE_CUDALIB=TRUE')
             args.append('-DTPL_CUDA_LIBRARIES=-L%s -lcublas -lcudart'
-                        % spec['cuda'].prefix.lib)
+                        % spec['cuda'].libs.directories[0])
             cuda_arch = spec.variants['cuda_arch'].value
             if cuda_arch[0] != 'none':
                 args.append(
