@@ -573,6 +573,10 @@ class PyclingoDriver(object):
         self.rule(head=expr2, body=expr1)
 
     def one_of_iff(self, head, versions):
+        # if there are no versions, skip this one_of_iff
+        if not versions:
+            return
+
         self.out.write("%s :- %s.\n" % (head, AspOneOf(*versions)))
         self.out.write("%s :- %s.\n" % (AspOneOf(*versions), head))
 
