@@ -13,7 +13,7 @@ class Rocblas(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-3.5.0.tar.gz"
 
-    maintainers = ['haampie']
+    maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('3.9.0', sha256='3ecd2d9fd2be0e1697a191d143a2d447b53a91ae01afb50231d591136ad5e2fe')
     version('3.8.0', sha256='568a9da0360349b1b134d74cc67cbb69b43c06eeca7c33b50072cd26cd3d8900')
