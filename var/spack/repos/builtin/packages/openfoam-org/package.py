@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+#
+# Original Author: Mark Olesen <mark.olesen@esi-group.com>
+#
 # Legal Notice
 # ------------
 # OPENFOAM is a trademark owned by OpenCFD Ltd
@@ -20,13 +23,12 @@
 # - The openfoam-org package is a modified version of the openfoam package.
 #   If changes are needed here, consider if they should also be applied there.
 #
+# - mpi handling: WM_MPLIB=SYSTEMMPI and populate prefs.{csh,sh} with values
+#   from spack.
+#
 # - Building with boost/cgal is not included, since some of the logic is not
 #   entirely clear and thus untested.
 # - Resolution of flex, zlib needs more attention (within OpenFOAM)
-#
-# - mpi handling: WM_MPLIB=SYSTEMMPI and use spack to populate prefs.sh for it.
-#   Provide wmake rules for special purpose 'USER' and 'USERMPI'
-#   mpi implementations, in case these are required.
 #
 # Known issues
 # - Combining +zoltan with +int64 has not been tested, but probably won't work.
@@ -129,7 +131,7 @@ class OpenfoamOrg(Package):
     @property
     def config(self):
         settings = {
-            # Use system mpi for spack
+            # Use SYSTEMMPI since openfoam-org doesn't have USERMPI
             'mplib': 'SYSTEMMPI',
 
             # Add links into bin/, lib/ (eg, for other applications)
