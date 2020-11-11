@@ -149,6 +149,20 @@ class PyMatplotlib(PythonPackage):
     # Patch to pick up correct freetype headers
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')
 
+    def setup_build_environment(self, env):
+        include = []
+        library = []
+        for dep in self.spec.dependencies(deptype='link'):
+            query = self.spec[dep.name]
+            include.extend(query.headers.directories)
+            library.extend(query.libs.directories)
+
+        # Build uses a mix of Spack's compiler wrapper and the actual compiler,
+        # so this is needed to get parts of the build working.
+        # See https://github.com/spack/spack/issues/19843
+        env.set('CPATH', ':'.join(include))
+        env.set('LIBRARY_PATH', ':'.join(library))
+
     @run_before('build')
     def configure(self):
         """Set build options with regards to backend GUI libraries."""
