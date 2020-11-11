@@ -111,12 +111,21 @@ def add_padding(path, length):
     padding to length
 
     Assumes path does not have a trailing path separator"""
-    padding_length = length - len(path) - 1  # -1 for separator
-    if padding_length == 0:
+    padding_length = length - len(path)
+    if padding_length == 1:
+        # The only 1 character addition we can make to a path is `/`
+        # Spack internally runs normpath, so `foo/` will be reduced to `foo`
+        # Even if we removed this behavior from Spack, the user could normalize
+        # the path, removing the additional `/`.
+        # Because we can't expect one character of padding to show up in the
+        # resulting binaries, we warn the user and do not pad by a single char
         tty.warn("Cannot pad path by exactly one character.")
     if padding_length <= 0:
         return path
-    padding = _get_padding_string(padding_length)
+
+    # we subtract 1 from the padding_length to account for the path separator
+    # coming from os.path.join below
+    padding = _get_padding_string(padding_length - 1)
 
     return os.path.join(path, padding)
 
