@@ -46,6 +46,16 @@ class HipPackage(PackageBase):
     def hip_flags(amdgpu_target):
         return '--amdgpu-target={0}'.format(amdgpu_target)
 
+    # https://llvm.org/docs/AMDGPUUsage.html
+    # Possible architectures (not including 'none' option)
+    @staticmethod
+    def amd_gputargets_list():
+        return (
+            'gfx701', 'gfx801', 'gfx802', 'gfx803',
+            'gfx900', 'gfx906', 'gfx908', 'gfx1010',
+            'gfx1011', 'gfx1012'
+        )
+
     # HIP version vs Architecture
 
     # TODO: add a bunch of lines like:

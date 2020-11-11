@@ -66,10 +66,11 @@ class Hip(CMakePackage):
         print(rocm_prefixes['hsa-rocr-dev'])
         print(rocm_prefixes['rocminfo'])
         print(rocm_prefixes['rocm-device-libs'].lib)
-        if 'amdgpu_target' in dependent_spec.variants:
-            arch = dependent_spec.variants['amdgpu_target'].value
+        if 'amdgpu_target' in self.spec.variants:
+            arch = self.spec.variants['amdgpu_target'].value
             if arch != 'none':
                 env.set('HCC_AMDGPU_TARGET', arch)
+                print('HIP set spec run ' + arch)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_run_environment(env)

@@ -61,6 +61,12 @@ class Umpire(CMakePackage, CudaPackage, HipPackage):
     depends_on('cmake@3.9:', when='+cuda', type='build')
 
     depends_on('blt', type='build')
+
+    depends_on('camp+hip', when='+hip')
+    amdgpu_targets = HipPackage.amd_gputargets_list()
+    for val in amdgpu_targets:
+        depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+
     depends_on('camp')
 
     conflicts('+numa', when='@:0.3.2')
@@ -70,6 +76,8 @@ class Umpire(CMakePackage, CudaPackage, HipPackage):
         spec = self.spec
 
         options = []
+        print('UMPIRE spec')
+        print(spec)
 
         options.append("-DBLT_SOURCE_DIR={0}".format(spec['blt'].prefix))
         options.append("-Dcamp_DIR={0}".format(spec['camp'].prefix))

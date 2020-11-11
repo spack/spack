@@ -36,6 +36,13 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
     depends_on('umpire+cuda', when="+cuda")
     depends_on('raja+cuda', when="+raja+cuda")
 
+    amdgpu_targets = HipPackage.amd_gputargets_list()
+    depends_on('umpire+hip', when='+hip')
+    depends_on('raja+hip', when="+raja+hip")
+    for val in amdgpu_targets:
+        depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+        depends_on('raja amdgpu_target=%s' % val, when='+raja amdgpu_target=%s' % val)
+
     def cmake_args(self):
         spec = self.spec
 

@@ -26,6 +26,8 @@ class Camp(CMakePackage, CudaPackage, HipPackage):
         spec = self.spec
 
         options = []
+        print('CAMP SPEC')
+        print(spec)
 
         if '+cuda' in spec:
             options.extend([
