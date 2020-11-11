@@ -839,7 +839,7 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
             raise BinaryTextReplaceError(orig_prefix, new_prefix)
         if orig_prefix != new_prefix:
             # Problem child: creates long pattern; cannot re-extract orig
-            orig_bytes = re.escape(orig_prefix.encode('utf-8'))
+            orig_bytes = orig_prefix.encode('utf-8')
             new_bytes = new_prefix.encode('utf-8')
             byte_prefixes[orig_bytes] = new_bytes
 
