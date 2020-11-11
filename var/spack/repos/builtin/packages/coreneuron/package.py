@@ -46,6 +46,7 @@ class Coreneuron(CMakePackage):
     variant('sympy', default=False, description="Use NMODL with SymPy to solve ODEs")
     variant('sympyopt', default=False, description="Use NMODL with SymPy Optimizations")
     variant('ispc', default=False, description="Enable ISPC backend")
+    variant("legacy-unit", default=True, description="Enable legacy units")
 
     depends_on('bison', type='build')
     depends_on('cmake@3:', type='build')
@@ -150,7 +151,7 @@ class Coreneuron(CMakePackage):
              '-DPYTHON_EXECUTABLE=%s' % spec["python"].command.path
              ]
 
-        if spec.satisfies('@0.23:'):
+        if "+legacy-unit" in self.spec:
             options.append('-DCORENRN_ENABLE_LEGACY_UNITS=ON')
 
         if spec.satisfies('+nmodl'):
