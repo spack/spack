@@ -1178,8 +1178,6 @@ class SpackSolverSetup(object):
         # compiler and compiler version
         if spec.compiler:
             clauses.append(f.node_compiler(spec.name, spec.compiler.name))
-            clauses.append(
-                fn.node_compiler_hard(spec.name, spec.compiler.name))
 
             if spec.compiler.concrete:
                 clauses.append(f.node_compiler_version(
