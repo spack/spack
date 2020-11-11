@@ -10,8 +10,9 @@ class PyDistributed(PythonPackage):
     """Distributed scheduler for Dask"""
 
     homepage = "https://distributed.dask.org/"
-    url      = "https://pypi.io/packages/source/d/distributed/distributed-2.10.0.tar.gz"
+    url      = "https://pypi.io/packages/source/d/distributed/distributed-2.30.1.tar.gz"
 
+    version('2.30.1', sha256='1421d3b84a0885aeb2c4bdc9e8896729c0f053a9375596c9de8864e055e2ac8e')
     version('2.10.0', sha256='2f8cca741a20f776929cbad3545f2df64cf60207fb21f774ef24aad6f6589e8b')
     version('1.28.1', sha256='3bd83f8b7eb5938af5f2be91ccff8984630713f36f8f66097e531a63f141c48a')
 
