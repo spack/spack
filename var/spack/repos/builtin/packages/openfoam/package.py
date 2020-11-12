@@ -20,9 +20,8 @@
 ##############################################################################
 #
 # Notes
-# - mpi handling: WM_MPLIB=USERMPI and use spack to populate an appropriate
-#   configuration and generate wmake rules for 'USER' and 'USERMPI'
-#   mpi implementations.
+# - mpi handling: WM_MPLIB=USERMPI and use spack to generate mplibUSERMPI
+#   wmake rules.
 #
 # - Resolution of flex, zlib needs more attention (within OpenFOAM)
 # - +paraview:
@@ -359,7 +358,7 @@ class Openfoam(Package):
 
     # Some user config settings
     # default: 'compile-option': '-spack',
-    # default: 'mplib': 'USERMPI',     # Use user mpi for spack
+    # default: 'mplib': 'USERMPI',  # User-defined mpi for spack
     config = {
         # Add links into bin/, lib/ (eg, for other applications)
         'link':  False
@@ -978,7 +977,7 @@ class OpenfoamArch(object):
         return True
 
     def create_rules(self, projdir, foam_pkg):
-        """ Create {c,c++}-spack and mplib{USER,USERMPI}
+        """ Create {c,c++}-spack and mplib{USERMPI}
         rules in the specified project directory.
         The compiler rules are based on the respective {c,c++}Opt rules
         but with additional rpath information for the OpenFOAM libraries.
@@ -1019,12 +1018,13 @@ class OpenfoamArch(object):
                             outfile.write('\n')
 
             # MPI rules
-            for mplib in ['mplibUSER', 'mplibUSERMPI']:
+            for mplib in ['mplibUSERMPI']:
                 with open(mplib, 'w') as out:
-                    out.write("""# Use mpi from spack ({name})\n
+                    out.write("""# MPI from spack ({name})\n
 PFLAGS  = {FLAGS}
 PINC    = {PINC}
 PLIBS   = {PLIBS}
+#-------
 """.format(**user_mpi))
 
 # -----------------------------------------------------------------------------

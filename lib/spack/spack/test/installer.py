@@ -626,7 +626,7 @@ def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
     # Preclude any meaningful side-effects
     monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', _true)
     monkeypatch.setattr(inst.PackageInstaller, '_setup_install_dir', _noop)
-    monkeypatch.setattr(spack.build_environment, 'fork', _noop)
+    monkeypatch.setattr(spack.build_environment, 'start_build_process', _noop)
     monkeypatch.setattr(spack.database.Database, 'add', _noop)
     monkeypatch.setattr(spack.compilers, 'add_compilers_to_config', _add)
 

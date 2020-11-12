@@ -300,14 +300,11 @@ class BinaryCacheIndex(object):
             cached_index_path = cache_entry['index_path']
             if cached_mirror_url in configured_mirror_urls:
                 # May need to fetch the index and update the local caches
-                needs_regen = self.fetch_and_cache_index(
+                needs_regen = self._fetch_and_cache_index(
                     cached_mirror_url, expect_hash=cached_index_hash)
-                # In this block, the need to regenerate implies a need to
-                # clear as well.  This is the first place we set these to
-                # non-default values, so setting them False is fine.  After
-                # this, we should never set False again, only True.
-                spec_cache_clear_needed = needs_regen
-                spec_cache_regenerate_needed = needs_regen
+                # The need to regenerate implies a need to clear as well.
+                spec_cache_clear_needed |= needs_regen
+                spec_cache_regenerate_needed |= needs_regen
             else:
                 # No longer have this mirror, cached index should be removed
                 items_to_remove.append({
@@ -331,11 +328,9 @@ class BinaryCacheIndex(object):
         for mirror_url in configured_mirror_urls:
             if mirror_url not in self._local_index_cache:
                 # Need to fetch the index and update the local caches
-                needs_regen = self.fetch_and_cache_index(mirror_url)
+                needs_regen = self._fetch_and_cache_index(mirror_url)
                 # Generally speaking, a new mirror wouldn't imply the need to
-                # clear the spec cache, but don't touch it, which lets the
-                # previous decisions stand.  Also, only change the need to
-                # regenerate possibly from False to True.
+                # clear the spec cache, so leave it as is.
                 if needs_regen:
                     spec_cache_regenerate_needed = True
 
@@ -344,7 +339,7 @@ class BinaryCacheIndex(object):
         if spec_cache_regenerate_needed:
             self.regenerate_spec_cache(clear_existing=spec_cache_clear_needed)
 
-    def fetch_and_cache_index(self, mirror_url, expect_hash=None):
+    def _fetch_and_cache_index(self, mirror_url, expect_hash=None):
         """ Fetch a buildcache index file from a remote mirror and cache it.
 
         If we already have a cached index from this mirror, then we first

@@ -1164,14 +1164,14 @@ def create_or_construct(path, namespace=None):
     return Repo(path)
 
 
-def _path():
+def _path(repo_dirs=None):
     """Get the singleton RepoPath instance for Spack.
 
     Create a RepoPath, add it to sys.meta_path, and return it.
 
     TODO: consider not making this a singleton.
     """
-    repo_dirs = spack.config.get('repos')
+    repo_dirs = repo_dirs or spack.config.get('repos')
     if not repo_dirs:
         raise NoRepoConfiguredError(
             "Spack configuration contains no package repositories.")

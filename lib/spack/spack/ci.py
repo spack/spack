@@ -691,12 +691,19 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 # bootstrap spec lists, then we will add more dependencies to
                 # the job (that compiler and maybe it's dependencies as well).
                 if is_main_phase(phase_name):
+                    spec_arch_family = (release_spec.architecture
+                                                    .target
+                                                    .microarchitecture
+                                                    .family)
                     compiler_pkg_spec = compilers.pkg_spec_for_compiler(
                         release_spec.compiler)
                     for bs in bootstrap_specs:
                         bs_arch = bs['spec'].architecture
+                        bs_arch_family = (bs_arch.target
+                                                 .microarchitecture
+                                                 .family)
                         if (bs['spec'].satisfies(compiler_pkg_spec) and
-                            bs_arch == release_spec.architecture):
+                            bs_arch_family == spec_arch_family):
                             # We found the bootstrap compiler this release spec
                             # should be built with, so for DAG scheduling
                             # purposes, we will at least add the compiler spec
@@ -716,6 +723,15 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                                                  str(bs_arch),
                                                  build_group,
                                                  enable_artifacts_buildcache))
+                        else:
+                            debug_msg = ''.join([
+                                'Considered compiler {0} for spec ',
+                                '{1}, but rejected it either because it was ',
+                                'not the compiler required by the spec, or ',
+                                'because the target arch families of the ',
+                                'spec and the compiler did not match'
+                            ]).format(bs['spec'], release_spec)
+                            tty.debug(debug_msg)
 
                 if enable_cdash_reporting:
                     cdash_build_name = get_cdash_build_name(

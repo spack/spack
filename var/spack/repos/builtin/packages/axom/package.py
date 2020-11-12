@@ -137,6 +137,7 @@ class Axom(CMakePackage, CudaPackage):
     depends_on("python", when="+devtools")
     depends_on("py-sphinx", when="+devtools")
     depends_on("py-shroud", when="+devtools")
+    depends_on("llvm+clang@10.0.0", when="+devtools", type='build')
 
     def flag_handler(self, name, flags):
         if name in ('cflags', 'cxxflags', 'fflags'):
@@ -422,22 +423,9 @@ class Axom(CMakePackage, CudaPackage):
 
         # Only turn on clangformat support if devtools is on
         if "+devtools" in spec:
-            cf_paths = []
-            lc_clangpath = "/usr/tce/packages/clang/clang-10.0.0"
-            cf_paths.append(pjoin(lc_clangpath, "bin/clang-format"))
-            cf_paths.append("/usr/bin/clang-format-10")
-            cf_paths.append("/usr/bin/clang-format")
-
-            cf_found = False
-            for path in cf_paths:
-                if os.path.exists(path):
-                    cf_found = True
-                    cfg.write(cmake_cache_entry("CLANGFORMAT_EXECUTABLE",
-                                                path))
-
-            if not cf_found:
-                cfg.write("# Unable to find clang-format\n\n")
-                cfg.write(cmake_cache_option("ENABLE_CLANGFORMAT", False))
+            clang_fmt_path = spec['llvm'].prefix.bin.join('clang-format')
+            cfg.write(cmake_cache_entry("CLANGFORMAT_EXECUTABLE",
+                                        clang_fmt_path))
         else:
             cfg.write("# ClangFormat disabled due to disabled devtools\n")
             cfg.write(cmake_cache_option("ENABLE_CLANGFORMAT", False))

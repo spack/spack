@@ -78,6 +78,9 @@ class PyScipy(PythonPackage):
           sha256='5433f60831cb554101520a8f8871ac5a32c95f7a971ccd68b69049535b106780', when='@1.2:1.5.3')
 
     def setup_build_environment(self, env):
+        # https://github.com/scipy/scipy/issues/9080
+        env.set('F90', spack_fc)
+
         # https://github.com/scipy/scipy/issues/11611
         if self.spec.satisfies('@:1.4 %gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
