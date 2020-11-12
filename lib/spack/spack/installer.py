@@ -2040,7 +2040,7 @@ class BadInstallPhase(InstallError):
 
     def __init__(self, pkg_name, phase):
         super(BadInstallPhase, self).__init__(
-            '\'{0}\' is not an allowed phase for package {1}'
+            '\'{0}\' is not an valid phase for package {1}'
             .format(phase, pkg_name))
 
 
