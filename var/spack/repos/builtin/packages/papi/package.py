@@ -39,6 +39,7 @@ class Papi(AutotoolsPackage):
     variant('lmsensors', default=False, description='Enable lm_sensors support')
     variant('sde', default=False, description='Enable software defined events')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('nvml', default=False, description='Enable NVML support')
 
     variant('shared', default=True, description='Build shared libraries')
     # PAPI requires building static libraries, so there is no "static" variant
@@ -48,9 +49,11 @@ class Papi(AutotoolsPackage):
 
     depends_on('lm-sensors', when='+lmsensors')
     depends_on('cuda', when='+cuda')
+    depends_on('cuda', when='+nvml')
 
     conflicts('%gcc@8:', when='@5.3.0', msg='Requires GCC version less than 8.0')
     conflicts('+sde', when='@:5.9.99999', msg='Software defined events (SDE) added in 6.0.0')
+    conflicts('^cuda', when='@:5.9.99999', msg='CUDA support for versions < 6.0.0 not implemented')
 
     # This is the only way to match exactly version 6.0.0 without also
     # including version 6.0.0.1 due to spack version matching logic
@@ -68,10 +71,6 @@ class Papi(AutotoolsPackage):
         if '^cuda' in self.spec:
             env.set('PAPI_CUDA_ROOT', self.spec['cuda'].prefix)
 
-            for path in self.spec['cuda'].libs.directories + self.rpath:
-                if path.find('/stubs') > -1:
-                    env.remove_path('SPACK_RPATH_DIRS', path)
-
     setup_run_environment = setup_build_environment
 
     def configure_args(self):
@@ -83,7 +82,8 @@ class Papi(AutotoolsPackage):
         # Build a list of PAPI components
         components = filter(
             lambda x: spec.variants[x].value,
-            ['example', 'infiniband', 'powercap', 'rapl', 'lmsensors', 'sde', 'cuda'])
+            ['example', 'infiniband', 'powercap', 'rapl', 'lmsensors', 'sde',
+             'cuda', 'nvml'])
         if components:
             options.append('--with-components=' + ' '.join(components))
 
