@@ -395,6 +395,9 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     expected_sbang_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
 
+    # config settings is a list of 2-element lists, [path, value]
+    # where path is a config path and value is the value to set at that path
+    # these can be "splatted" in as the arguments to config.set
     for config_setting in config_settings:
         mutable_config.set(*config_setting)
 
