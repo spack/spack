@@ -84,6 +84,7 @@ class Kokkos(CMakePackage, CudaPackage):
 
     spack_micro_arch_map = {
         "graviton": "",
+        "graviton2": "",
         "aarch64": "",
         "arm": "",
         "ppc": "",
