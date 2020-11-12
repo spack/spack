@@ -27,8 +27,8 @@ else:
 
 def sbang_install_path():
     """Location sbang should be installed within Spack's ``install_tree``."""
-    install_path = os.path.join(spack.store.store.unpadded_root,
-                                "bin", "sbang")
+    sbang_root = str(spack.store.unpadded_root)
+    install_path = os.path.join(sbang_root, "bin", "sbang")
     if len(install_path) > shebang_limit:
         raise SbangPathError(
             'Install tree root is too long. Spack cannot patch shebang lines.')

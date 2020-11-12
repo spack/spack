@@ -186,6 +186,10 @@ def _store_root():
     return store.root
 
 
+def _store_unpadded_root():
+    return store.unpadded_root
+
+
 def _store_db():
     return store.db
 
@@ -196,8 +200,10 @@ def _store_layout():
 
 # convenience accessors for parts of the singleton store
 root = llnl.util.lang.LazyReference(_store_root)
+unpadded_root = llnl.util.lang.LazyReference(_store_unpadded_root)
 db = llnl.util.lang.LazyReference(_store_db)
 layout = llnl.util.lang.LazyReference(_store_layout)
+
 
 
 def retrieve_upstream_dbs():
