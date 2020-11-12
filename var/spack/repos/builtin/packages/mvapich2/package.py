@@ -119,7 +119,7 @@ class Mvapich2(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('cuda', when='+cuda')
     depends_on('psm', when='fabrics=psm')
-    depends_on('opa-psm2', when='fabrics=psm')
+    depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('rdma-core', when='fabrics=mrail')
     depends_on('rdma-core', when='fabrics=nemesisib')
     depends_on('rdma-core', when='fabrics=nemesistcpib')
