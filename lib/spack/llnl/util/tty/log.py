@@ -374,6 +374,11 @@ def close_connection_and_file(multiprocess_fd, file):
 
 @contextmanager
 def replace_environment(env):
+    """Replace the current environment (`os.environ`) with `env`.
+
+    If `env` is empty (or None), this unsets all current environment
+    variables.
+    """
     env = env or {}
     old_env = os.environ.copy()
     try:
@@ -697,7 +702,7 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
             stdout
         echo (bool): initial echo setting -- controlled by user and
             preserved across multiple writer daemons
-        log_file_wrapper (file-like): file to log all output
+        log_file_wrapper (FileWrapper): file to log all output
         control_pipe (Pipe): multiprocessing pipe on which to send control
             information to the parent
 
@@ -706,7 +711,7 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
     # the parent process. This process depends on closing all instances of
     # write_fd to terminate the reading loop, so we close the file descriptor
     # here. Forking is the process spawning method everywhere except Mac OS
-    # for Python >= 3.8
+    # for Python >= 3.8 and on Windows
     if sys.version_info < (3, 8) or sys.platform != 'darwin':
         os.close(write_fd)
 

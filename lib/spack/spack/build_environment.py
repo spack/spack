@@ -865,7 +865,7 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
 
 
 def fork(pkg, function, kwargs):
-    """Fork a child process to do part of a spack build.
+    """Create a child process to do part of a spack build.
 
     Args:
 
@@ -883,7 +883,7 @@ def fork(pkg, function, kwargs):
             # do stuff
         build_env.fork(pkg, child_fun)
 
-    Forked processes are run with the build environment set up by
+    The child process is run with the build environment set up by
     spack.build_environment.  This allows package authors to have full
     control over the environment, etc. without affecting other builds
     that might be executed in the same spack call.
@@ -891,6 +891,20 @@ def fork(pkg, function, kwargs):
     If something goes wrong, the child process catches the error and
     passes it to the parent wrapped in a ChildError.  The parent is
     expected to handle (or re-raise) the ChildError.
+
+    This uses `multiprocessing.Process` to create the child process. The
+    mechanism used to create the process differs on different operating
+    systems and for different versions of Python. In some cases "fork"
+    is used (i.e. the "fork" system call) and some cases it starts an
+    entirely new Python interpreter process (in the docs this is referred
+    to as the "spawn" start method). Breaking it down by OS:
+
+    - Linux always uses fork.
+    - Mac OS uses fork before Python 3.8 and "spawn" for 3.8 and after.
+    - Windows always uses the "spawn" start method.
+
+    For more information on `multiprocessing` child process creation
+    mechanisms, see https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
     """
     parent_pipe, child_pipe = multiprocessing.Pipe()
     input_multiprocess_fd = None
