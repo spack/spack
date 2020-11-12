@@ -38,7 +38,7 @@ import spack.directory_layout
 
 
 #: default installation root, relative to the Spack install path
-default_install_root = os.path.join(spack.paths.opt_path, 'spack')
+default_install_tree_root = os.path.join(spack.paths.opt_path, 'spack')
 
 
 def parse_install_tree():
@@ -60,7 +60,7 @@ def parse_install_tree():
 
         projections = {'all': all_projection}
     else:
-        unpadded_root = install_tree.get('root', default_install_root)
+        unpadded_root = install_tree.get('root', default_install_tree_root)
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 
         padded_length = install_tree.get('padded_length', False)
