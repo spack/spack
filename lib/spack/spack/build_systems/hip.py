@@ -3,6 +3,73 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+# Troubleshooting advice for +hip builds:
+#
+# 1. When building with clang, go your compilers.yaml,
+#    add an extry for the amd version of clang, as below.
+#    This will ensure that your entire package is compiled/linked
+#    with the same compiler version. If you use a different version of
+#    clang which is linked against a different version of the gcc library,
+#    you will get errors along the lines of:
+#    undefined reference to
+#       `std::__throw_out_of_range_fmt(char const*, ...)@@GLIBCXX_3.4.20'
+#    which is indicative of a mismatch in standard library versions.
+#
+#    in compilers.yaml
+#    - compiler:
+#        spec: clang@amd
+#        paths:
+#          cc: /opt/rocm/llvm/bin/clang
+#          cxx: /opt/rocm/llvm/bin/clang++
+#          f77:
+#          fc:
+#        flags: {}
+#        operating_system: rhel7
+#        target: x86_64
+#        modules: []
+#        environment: {}
+#        extra_rpaths: []
+#
+#
+# 2. hip and its dependencies are currently NOT picked up by spack
+#    automatically, and should therefore be added to packages.yaml by hand:
+#
+#    in packages.yaml:
+#    hip:
+#      externals:
+#      - spec: hip@3.8.20371-d1886b0b
+#        prefix: /opt/rocm/hip
+#        extra_attributes:
+#          compilers:
+#            c: /opt/rocm/llvm/bin/clang++
+#            c++: /opt/rocm/llvm/bin/clang++
+#            hip: /opt/rocm/hip/bin/hipcc
+#      buildable: false
+#    hsa-rocr-dev:
+#      externals:
+#      - spec: hsa-rocr-dev
+#        prefix: /opt/rocm
+#        extra_attributes:
+#          compilers:
+#            c: /opt/rocm/llvm/bin/clang++
+#            cxx: /opt/rocm/llvm/bin/clang++
+#      buildable: false
+#    llvm-amdgpu:
+#      externals:
+#      - spec: llvm-amdgpu
+#        prefix: /opt/rocm/llvm
+#        extra_attributes:
+#          compilers:
+#            c: /opt/rocm/llvm/bin/clang++
+#            cxx: /opt/rocm/llvm/bin/clang++
+#      buildable: false
+#
+# 3. In part 2, DO NOT list the path to hsa as /opt/rocm/hsa ! You want spack
+#    to find has in /opt/rocm/include/hsa/hsa.h . The directory of
+#    /opt/rocm/hsa also has an hsa.h file, but it won't be found because spack
+#    does not like its directory structure.
+#
+
 from spack.package import PackageBase
 from spack.directives import depends_on, variant, conflicts
 
