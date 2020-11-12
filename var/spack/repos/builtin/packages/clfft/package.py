@@ -20,6 +20,8 @@ class Clfft(CMakePackage):
     depends_on('opencl@1.2:')
     depends_on('boost@1.33.0:', when='+client')
 
+    patch('for_aarch64.patch', when='target=aarch64:')
+
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
