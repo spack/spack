@@ -401,7 +401,9 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
     for config_setting in config_settings:
         mutable_config.set(*config_setting)
 
-    root, unpadded_root, projections = spack.store.parse_install_tree()
+    config_dict = mutable_config.get('config')
+    root, unpadded_root, projections = spack.store.parse_install_tree(
+        config_dict)
 
     assert root == expected_root
     assert unpadded_root == expected_sbang_root
