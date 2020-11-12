@@ -18,6 +18,8 @@ class Nmodl(CMakePackage):
     version('0.3a', commit="86fc52d", submodules=True)
     version('0.2', tag='0.2', submodules=True)
 
+    variant("legacy-unit", default=True, description="Enable legacy units")
+
     depends_on('bison@3.0:3.4.99', when='@:0.3', type='build')
     depends_on('bison@3.0.5:', when='@0.3.1:', type='build')
     depends_on('cmake@3.3.0:', type='build')
@@ -31,11 +33,16 @@ class Nmodl(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         options = []
+
         # installation with pgi fails when debug symbols are added
         if '%pgi' in spec:
             options.append('-DCMAKE_BUILD_TYPE=Release')
         else:
             options.append('-DCMAKE_BUILD_TYPE=RelWithDebInfo')
+
+        if "+legacy-unit" in self.spec:
+            options.append('-DNMODL_ENABLE_LEGACY_UNITS=ON')
+
         return options
 
     def setup_build_environment(self, env):
