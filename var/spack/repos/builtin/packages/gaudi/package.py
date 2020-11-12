@@ -102,7 +102,7 @@ class Gaudi(CMakePackage):
             self.define("GAUDI_USE_GPERFTOOLS",      False), ]
         # this is not really used in spack builds, but needs to be set
         if self.spec.version < Version('34.99'):
-            args.append(["-DHOST_BINARY_TAG=x86_64-linux-gcc9-opt"])
+            args.append("-DHOST_BINARY_TAG=x86_64-linux-gcc9-opt")
         return args
 
     def setup_run_environment(self, env):
