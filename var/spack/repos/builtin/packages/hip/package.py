@@ -60,7 +60,7 @@ class Hip(CMakePackage):
         env.set('DEVICE_LIB_PATH',
                 self.spec['rocm-device-libs'].prefix.amdgcn.bitcode)
         env.set('HIPCC_COMPILE_FLAGS_APPEND',
-                '--rocm-path={}'.format(self.prefix))
+                '--rocm-path={0}'.format(self.prefix))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
