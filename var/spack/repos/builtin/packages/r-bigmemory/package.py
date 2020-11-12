@@ -14,6 +14,7 @@ class RBigmemory(RPackage):
 
     homepage = "https://cloud.r-project.org/web/packages/bigmemory/index.html"
     url      = "https://cloud.r-project.org/src/contrib/bigmemory_4.5.36.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/bigmemory"
 
     version('4.5.36', sha256='18c67fbe6344b2f8223456c4f19ceebcf6c1166255eab81311001fd67a45ef0e')
 
