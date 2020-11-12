@@ -343,6 +343,11 @@ class Openmpi(AutotoolsPackage):
         for exe in exes:
             variants = ''
             output = Executable(exe)("-a", output=str, error=str)
+            # Some of these options we have to find by hoping the
+            # configure string is in the ompi_info output. While this
+            # is usually true, it's not guaranteed.  For anything that
+            # begins with --, we want to use the defaults as provided
+            # by the openmpi package in the absense of any other info.
 
             if re.search(r'--enable-builtin-atomics', output):
                 variants += "+atomics"
