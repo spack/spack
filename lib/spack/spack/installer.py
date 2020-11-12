@@ -1089,10 +1089,12 @@ class PackageInstaller(object):
         try:
             self._setup_install_dir(pkg)
 
-            # Fork a child to do the actual installation.
+            # Create a child process to do the actual installation.
             # Preserve verbosity settings across installs.
-            spack.package.PackageBase._verbose = spack.build_environment.fork(
-                pkg, build_process, kwargs)
+            spack.package.PackageBase._verbose = (
+                spack.build_environment.start_child_process(
+                    pkg, build_process, kwargs)
+            )
 
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
@@ -1557,10 +1559,10 @@ class PackageInstaller(object):
 
 
 def build_process(pkg, kwargs):
-    """This implements the process forked for each build.
+    """Perform the installation/build of the package.
 
-    Has its own process and python module space set up by
-    build_environment.fork().
+    This runs in a separate child process, and has its own process and
+    python module space set up by build_environment.start_child_process().
 
     This function's return value is returned to the parent process.
     """

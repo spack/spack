@@ -864,13 +864,13 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
             input_multiprocess_fd.close()
 
 
-def fork(pkg, function, kwargs):
+def start_child_process(pkg, function, kwargs):
     """Create a child process to do part of a spack build.
 
     Args:
 
         pkg (PackageBase): package whose environment we should set up the
-            forked process for.
+            child process for.
         function (callable): argless function to run in the child
             process.
         dirty (bool): If True, do NOT clean the environment before
@@ -881,7 +881,7 @@ def fork(pkg, function, kwargs):
 
         def child_fun():
             # do stuff
-        build_env.fork(pkg, child_fun)
+        build_env.start_child_process(pkg, child_fun)
 
     The child process is run with the build environment set up by
     spack.build_environment.  This allows package authors to have full
