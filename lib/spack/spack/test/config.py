@@ -406,7 +406,7 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
         config_dict)
 
     assert root == expected_root
-    assert unpadded_root == expected_sbang_root
+    assert unpadded_root == expected_unpadded_root
     assert projections == expected_proj
 
 
