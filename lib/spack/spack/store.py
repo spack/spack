@@ -51,8 +51,8 @@ def parse_install_tree():
     padded_length = False
     if isinstance(install_tree, six.string_types):
         tty.warn("Using deprecated format for configuring install_tree")
-        sbang_root = install_tree
-        sbang_root = spack.util.path.canonicalize_path(sbang_root)
+        unpadded_root = install_tree
+        unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
         # construct projection from previous values for backwards compatibility
         all_projection = spack.config.get(
             'config:install_path_scheme',
@@ -60,8 +60,8 @@ def parse_install_tree():
 
         projections = {'all': all_projection}
     else:
-        sbang_root = install_tree.get('root', default_install_root)
-        sbang_root = spack.util.path.canonicalize_path(sbang_root)
+        unpadded_root = install_tree.get('root', default_install_root)
+        unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 
         padded_length = install_tree.get('padded_length', False)
         if padded_length is True:
@@ -77,14 +77,14 @@ def parse_install_tree():
                      " when using new install_tree syntax")
 
     # Handle backwards compatibility for padding
-    old_pad = re.search(r'\$padding(:\d+)?|\${padding(:\d+)?}', sbang_root)
+    old_pad = re.search(r'\$padding(:\d+)?|\${padding(:\d+)?}', unpadded_root)
     if old_pad:
         if padded_length:
             msg = "Ignoring deprecated padding option in install_tree root "
             msg += "because new syntax padding is present."
             tty.warn(msg)
         else:
-            sbang_root = sbang_root.replace(old_pad.group(0), '')
+            unpadded_root = unpadded_root.replace(old_pad.group(0), '')
             if old_pad.group(1) or old_pad.group(2):
                 length_group = 2 if '{' in old_pad.group(0) else 1
                 padded_length = int(old_pad.group(length_group)[1:])
@@ -92,18 +92,18 @@ def parse_install_tree():
                 padded_length = spack.util.path.get_system_path_max()
                 padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
 
-    sbang_root = sbang_root.rstrip(os.path.sep)  # canonicalize before padding
+    unpadded_root = unpadded_root.rstrip(os.path.sep)  # canonicalize before padding
 
     if padded_length:
-        root = spack.util.path.add_padding(sbang_root, padded_length)
+        root = spack.util.path.add_padding(unpadded_root, padded_length)
         if len(root) != padded_length:
             msg = "Cannot pad %s to %s characters." % (root, padded_length)
             msg += " It is already %s characters long" % len(root)
             tty.warn(msg)
     else:
-        root = sbang_root
+        root = unpadded_root
 
-    return (root, sbang_root, projections)
+    return (root, unpadded_root, projections)
 
 
 class Store(object):
@@ -119,7 +119,7 @@ class Store(object):
 
     Args:
         root (str): path to the root of the install tree
-        sbang_root (str): path to the root of the install tree without padding;
+        unpadded_root (str): path to the root of the install tree without padding;
             the sbang script has to be installed here to work with padded roots
         path_scheme (str): expression according to guidelines in
             ``spack.util.path`` that describes how to construct a path to
@@ -128,9 +128,9 @@ class Store(object):
             layout; spec hash suffixes will be truncated to this length
     """
     def __init__(
-            self, root, sbang_root=None, projections=None, hash_length=None):
+            self, root, unpadded_root=None, projections=None, hash_length=None):
         self.root = root
-        self.sbang_root = sbang_root or root
+        self.unpadded_root = unpadded_root or root
         self.db = spack.database.Database(
             root, upstream_dbs=retrieve_upstream_dbs())
         self.layout = spack.directory_layout.YamlDirectoryLayout(
@@ -143,10 +143,10 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    root, sbang_root, projections = parse_install_tree()
+    root, unpadded_root, projections = parse_install_tree()
     hash_length = spack.config.get('config:install_hash_length')
     return Store(root=root,
-                 sbang_root=sbang_root,
+                 unpadded_root=unpadded_root,
                  projections=projections,
                  hash_length=hash_length)
 

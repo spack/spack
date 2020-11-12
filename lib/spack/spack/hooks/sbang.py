@@ -24,7 +24,7 @@ shebang_limit = 127
 
 def sbang_install_path():
     """Location sbang should be installed within Spack's ``install_tree``."""
-    return os.path.join(spack.store.store.sbang_root, "bin", "sbang")
+    return os.path.join(spack.store.store.unpadded_root, "bin", "sbang")
 
 
 def sbang_shebang_line():
