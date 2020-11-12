@@ -86,21 +86,21 @@ class Gaudi(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define_from_variant("BUILD_TESTING"            , "optional"),
-            self.define_from_variant("GAUDI_USE_AIDA"           , "optional"),
-            self.define_from_variant("GAUDI_USE_CLHEP"          , "optional"),
-            self.define_from_variant("GAUDI_USE_CPPUNIT"        , "optional"),
-            self.define_from_variant("GAUDI_USE_HEPPDT"         , "optional"),
-            self.define_from_variant("GAUDI_USE_JEMALLOC"       , "optional"),
-            self.define_from_variant("GAUDI_USE_UNWIND"         , "optional"),
-            self.define_from_variant("GAUDI_USE_XERCESC"        , "optional"),
-            self.define_from_variant("GAUDI_USE_DOXYGEN"        , "docs"),
-            self.define("GAUDI_USE_PYTHON_MAJOR", str(self.spec['python'].version.up_to(1))),
+            self.define_from_variant("BUILD_TESTING",             "optional"),
+            self.define_from_variant("GAUDI_USE_AIDA",            "optional"),
+            self.define_from_variant("GAUDI_USE_CLHEP",           "optional"),
+            self.define_from_variant("GAUDI_USE_CPPUNIT",         "optional"),
+            self.define_from_variant("GAUDI_USE_HEPPDT",          "optional"),
+            self.define_from_variant("GAUDI_USE_JEMALLOC",        "optional"),
+            self.define_from_variant("GAUDI_USE_UNWIND",          "optional"),
+            self.define_from_variant("GAUDI_USE_XERCESC",         "optional"),
+            self.define_from_variant("GAUDI_USE_DOXYGEN",         "docs"),
+            self.define("GAUDI_USE_PYTHON_MAJOR",
+                        str(self.spec['python'].version.up_to(1))),
             # todo:
-            self.define("GAUDI_USE_INTELAMPLIFIER" , False),
-            self.define("GAUDI_USE_GPERFTOOLS"     , False),
-            ]
-            # this is not really used in spack builds, but needs to be set
+            self.define("GAUDI_USE_INTELAMPLIFIER",  False),
+            self.define("GAUDI_USE_GPERFTOOLS",      False), ]
+        # this is not really used in spack builds, but needs to be set
         if self.spec.version < Version('34.99'):
             args.append(["-DHOST_BINARY_TAG=x86_64-linux-gcc9-opt"])
         return args
