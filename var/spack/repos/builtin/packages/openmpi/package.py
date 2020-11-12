@@ -349,6 +349,8 @@ class Openmpi(AutotoolsPackage):
             match = re.search(r'\bJava bindings: (\S+)', output)
             if match and is_enabled(match.group(1)):
                 variants += "+java"
+            else:
+                variants += "~java"
             if re.search(r'--enable-static', output):
                 variants += "+static"
             elif re.search(r'--disable-static', output):
@@ -360,26 +362,38 @@ class Openmpi(AutotoolsPackage):
                 variants += "~static"
             if re.search(r'\bMCA db: sqlite', output):
                 variants += "+sqlite3"
+            else:
+                variants += "~sqlite3"
             if re.search(r'--enable-contrib-no-build=vt', output):
                 variants += '+vt'
             match = re.search(r'MPI_THREAD_MULTIPLE: (\S+?),?', output)
             if match and is_enabled(match.group(1)):
                 variants += '+thread_multiple'
+            else:
+                variants += '~thread_multiple'
             match = re.search(
                 r'parameter "mpi_built_with_cuda_support" ' +
                 r'\(current value: "(\S+)"',
                 output)
             if match and is_enabled(match.group(1)):
                 variants += '+cuda'
+            else:
+                variants += '~cuda'
             match = re.search(r'\bWrapper compiler rpath: (\S+)', output)
             if match and is_enabled(match.group(1)):
                 variants += '+wrapper-rpath'
+            else:
+                variants += '~wrapper-rpath'
             match = re.search(r'\bC\+\+ bindings: (\S+)', output)
             if match and match.group(1) == 'yes':
                 variants += '+cxx'
+            else:
+                variants += '~cxx'
             match = re.search(r'\bC\+\+ exceptions: (\S+)', output)
             if match and match.group(1) == 'yes':
                 variants += '+cxx_exceptions'
+            else:
+                variants += '~cxx_exceptions'
             if re.search(r'--with-singularity', output):
                 variants += '+singularity'
             if re.search(r'--with-lustre', output):
@@ -387,16 +401,12 @@ class Openmpi(AutotoolsPackage):
             match = re.search(r'Memory debugging support: (\S+)', output)
             if match and is_enabled(match.group(1)):
                 variants += '+memchecker'
+            else:
+                variants += '~memchecker'
             if re.search(r'\bMCA (?:ess|prrte): pmi', output):
                 variants += '+pmi'
-
-            # This code gets all the fabric names from the variants list
-            # Idea taken from the AutotoolsPackage source.
-            def get_options_from_variant(self, name):
-                values = self.variants[name].values
-                if getattr(values, 'feature_values', None):
-                    values = values.feature_values
-                return values
+            else:
+                variants += '~pmi'
 
             fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
@@ -425,7 +435,6 @@ class Openmpi(AutotoolsPackage):
             if compiler_spec:
                 variants += "%" + str(compiler_spec)
             results.append(variants)
-        print(results)
         return results
 
     def url_for_version(self, version):
@@ -839,3 +848,12 @@ def is_enabled(text):
     if text in set(['t', 'true', 'enabled', 'yes', '1']):
         return True
     return False
+
+
+# This code gets all the fabric names from the variants list
+# Idea taken from the AutotoolsPackage source.
+def get_options_from_variant(self, name):
+    values = self.variants[name].values
+    if getattr(values, 'feature_values', None):
+        values = values.feature_values
+    return values
