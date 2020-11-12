@@ -8,7 +8,7 @@ from spack import *
 from sys import stdout
 import glob
 from os import O_NONBLOCK, rename
-from os.path import basename, join as path_join
+from os.path import basename
 from fcntl import fcntl, F_GETFL, F_SETFL
 from subprocess import Popen, PIPE
 import time
@@ -60,39 +60,24 @@ class Wrf(Package):
     for both atmospheric research and operational forecasting applications.
     """
 
-    homepage = (
-        "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
-    )
-    url = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
-    maintainers = ["ptooley"]
-    parallel = False
+    homepage    = "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
+    url         = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
+    maintainers = ["MichaelLaufer", "ptooley"]
 
-    version(
-        "4.2",
-        sha256="c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706",
-    )
-    version(
-        "4.0",
-        sha256="9718f26ee48e6c348d8e28b8bc5e8ff20eafee151334b3959a11b7320999cf65",
-    )
-    version(
-        "3.9.1.1",
-        sha256="a04f5c425bedd262413ec88192a0f0896572cc38549de85ca120863c43df047a",
-        url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
-    )
+    version("4.2", sha256="c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706")
+    version("4.0", sha256="9718f26ee48e6c348d8e28b8bc5e8ff20eafee151334b3959a11b7320999cf65")
+    version("3.9.1.1", sha256="a04f5c425bedd262413ec88192a0f0896572cc38549de85ca120863c43df047a", url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz")
 
     variant(
         "build_type",
         default="dmpar",
         values=("serial", "smpar", "dmpar", "dm+sm"),
     )
-
     variant(
         "nesting",
         default="basic",
         values=("no_nesting", "basic", "preset_moves", "vortex_following"),
     )
-
     variant(
         "compile_type",
         default="em_real",
@@ -111,11 +96,10 @@ class Wrf(Package):
             "em_scm_xy",
         ),
     )
-
     variant(
         "pnetcdf",
         default=True,
-        description="Parallel IO support through Pnetcdf libray",
+        description="Parallel IO support through Pnetcdf library",
     )
 
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
@@ -146,7 +130,7 @@ class Wrf(Package):
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
     patch("patches/4.2/add_aarch64.patch", when="@4.2")
 
-    depends_on("pkg-config", type=("build"))
+    depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
 
     depends_on("mpi")
@@ -301,60 +285,36 @@ class Wrf(Package):
             raise InstallError("Configure failed - unknown error")
 
     def run_compile_script(self):
-        csh_bin = path_join(self.spec["tcsh"].prefix, "bin/csh")
+        csh_bin = self.spec["tcsh"].prefix.bin.csh
+        csh = Executable(csh_bin)
 
-        compilation = Popen(
-            [
-                csh_bin,
-                "./compile",
-                "-j",
-                "10",
-                self.spec.variants["compile_type"].value,
-            ],
-            stdout=PIPE,
-            stderr=PIPE,
+        # num of compile jobs capped at 20 in wrf
+        num_jobs = str(make_jobs if make_jobs < 20 else 20)
+
+        # Now run the compile script and track the output to check for
+        # failure/success We need to do this because upstream use `make -i -k`
+        # and the custom compile script will always return zero regardless of
+        # success or failure
+        result_buf = csh(
+            "./compile",
+            "-j",
+            num_jobs,
+            self.spec.variants["compile_type"].value,
         )
-        setNonBlocking(compilation.stdout)
-        setNonBlocking(compilation.stderr)
-        tty.warn("Running compile")
 
-        stallcounter = 0
-        result_buf = ""
-        while True:
-            line = compilation.stderr.readline().decode()
-            if not line:
-                line = compilation.stdout.readline().decode()
-            if not line:
-                if compilation.poll() is not None:
-                    returncode = compilation.returncode
-                    break
-                if stallcounter > 3000:
-                    raise InstallError(
-                        "Output stalled for 300s, presuming an "
-                        "undetected question."
-                    )
-                time.sleep(0.1)  # Try to do a bit of rate limiting
-                stallcounter += 1
-                continue
-
-            stallcounter = 0
-            stdout.write(line)
-            result_buf += line
-
-        if "Executables successfully built" in result_buf and returncode == 0:
+        if "Executables successfully built" in result_buf:
             return True
 
         return False
 
     def build(self, spec, prefix):
 
-        # num of compile jobs capped at 20 in wrf
         result = self.run_compile_script()
 
         if not result:
             tty.warn(
                 "Compilation failed first time (WRF idiosyncrasies?) "
-                "trying again"
+                "- trying again..."
             )
             result = self.run_compile_script()
 
