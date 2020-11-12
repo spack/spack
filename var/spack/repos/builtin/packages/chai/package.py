@@ -82,6 +82,13 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
         options.append('-DENABLE_TESTS={0}'.format(
             'ON' if self.run_tests else 'OFF'))
 
+        # give clear error for conflict between self.run_tests and
+        # benchmarks variant.
+        if not self.run_tests and '+benchmarks' in spec:
+            raise InstallError(
+                'ENABLE_BENCHMARKS requires ENABLE_TESTS to be ON'
+            )
+
         options.append('-DENABLE_BENCHMARKS={0}'.format(
             'ON' if '+benchmarks' in spec else 'OFF'))
 
