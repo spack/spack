@@ -83,26 +83,20 @@ class Mvapich2(AutotoolsPackage):
 
     variant(
         'fabrics',
-        description='The fabric enabled for this build',
+        description='Select the fabric to be enabled for this build.'
+        'Please note that if you have verbs (either from OFED or MOFED), '
+        'PSM or PSM2 installed on the system already, you may need to '
+        'setup external packages in the package.yaml file for rdma-core '
+        'psm or opa-psm2, depending on your chosen fabrics. This is '
+        'recommended to avoid unexpected runtime failures due to conflicts '
+        'between the version of the fabric drivers spack installs and the '
+        'fabric version available on the system. See the homepage url above '
+        'for more info.',
         default='mrail',
         values=(
             'psm', 'psm2', 'sock', 'nemesisib', 'nemesis', 'mrail',
             'nemesisibtcp', 'nemesistcpib', 'nemesisofi'
         )
-    )
-
-    variant(
-        'upstream-fabrics',
-        default=True,
-        description='Use upstream-fabrics in conjunction with the fabrics '
-        'variant to have rdma-core/psm/opa-psm2 as a dependency. '
-        'Please note that if you have verbs (either from OFED or MOFED), '
-        'PSM or PSM2 installed on the system already, setting this value to '
-        'true may cause unexpected runtime failures due to conflicts between '
-        'the version of the fabric drivers spack installs and the fabric '
-        'version available on the system. In such scenarios, we recommend '
-        'setting this value to false to prevent these potential run time '
-        'errors.'
     )
 
     variant(
@@ -124,12 +118,12 @@ class Mvapich2(AutotoolsPackage):
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     depends_on('libxml2')
     depends_on('cuda', when='+cuda')
-    depends_on('psm', when='fabrics=psm +upstream-fabrics')
-    depends_on('opa-psm2', when='fabrics=psm2 +upstream-fabrics')
-    depends_on('rdma-core', when='fabrics=mrail +upstream-fabrics')
-    depends_on('rdma-core', when='fabrics=nemesisib +upstream-fabrics')
-    depends_on('rdma-core', when='fabrics=nemesistcpib +upstream-fabrics')
-    depends_on('rdma-core', when='fabrics=nemesisibtcp +upstream-fabrics')
+    depends_on('psm', when='fabrics=psm')
+    depends_on('opa-psm2', when='fabrics=psm')
+    depends_on('rdma-core', when='fabrics=mrail')
+    depends_on('rdma-core', when='fabrics=nemesisib')
+    depends_on('rdma-core', when='fabrics=nemesistcpib')
+    depends_on('rdma-core', when='fabrics=nemesisibtcp')
     depends_on('libfabric', when='fabrics=nemesisofi')
     depends_on('slurm', when='process_managers=slurm')
 
