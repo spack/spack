@@ -41,12 +41,21 @@ import spack.directory_layout
 default_install_tree_root = os.path.join(spack.paths.opt_path, 'spack')
 
 
-def parse_install_tree():
-    """Parse old and new formats and return relevant values.
+def parse_install_tree(config_dict):
+    """Parse config settings and return values relevant to the store object.
+
+    Arguments:
+        config_dict (dict): dictionary of config values, as returned from
+            spack.config.get('config')
+
+    Returns:
+        (tuple): triple of the install tree root, the unpadded install tree
+            root (before padding was applied), and the projections for the
+            install tree
 
     Encapsulate backwards compatibility capabilities for install_tree
-    and old values that are now parsed as part of install_tree"""
-    install_tree = spack.config.get('config:install_tree', {})
+    and deprecated values that are now parsed as part of install_tree"""
+    install_tree = config_dict.get('install_tree', {})
 
     padded_length = False
     if isinstance(install_tree, six.string_types):
@@ -54,8 +63,8 @@ def parse_install_tree():
         unpadded_root = install_tree
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
         # construct projection from previous values for backwards compatibility
-        all_projection = spack.config.get(
-            'config:install_path_scheme',
+        all_projection = config_dict.get(
+            'install_path_scheme',
             spack.directory_layout.default_projections['all'])
 
         projections = {'all': all_projection}
@@ -71,7 +80,7 @@ def parse_install_tree():
         projections = install_tree.get(
             'projections', spack.directory_layout.default_projections)
 
-        path_scheme = spack.config.get('config:install_path_scheme', None)
+        path_scheme = config_dict.get('install_path_scheme', None)
         if path_scheme:
             tty.warn("Deprecated config value 'install_path_scheme' ignored"
                      " when using new install_tree syntax")
@@ -143,7 +152,8 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    root, unpadded_root, projections = parse_install_tree()
+    config_dict = spack.config.get('config')
+    root, unpadded_root, projections = parse_install_tree(config_dict)
     hash_length = spack.config.get('config:install_hash_length')
     return Store(root=root,
                  unpadded_root=unpadded_root,
