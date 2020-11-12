@@ -54,7 +54,22 @@ def parse_install_tree(config_dict):
             install tree
 
     Encapsulate backwards compatibility capabilities for install_tree
-    and deprecated values that are now parsed as part of install_tree"""
+    and deprecated values that are now parsed as part of install_tree.
+    """
+    #The following two configs are equivalent, the first being the old format
+    #and the second the new format. The new format is also more flexible.
+
+    #config:
+    #  install_tree: /path/to/root$padding:128
+    #  install_path_scheme: '{name}-{version}'
+
+    #config:
+    #  install_tree:
+    #    root: /path/to/root
+    #    padding: 128
+    #    projections:
+    #      all: '{name}-{version}'
+
     install_tree = config_dict.get('install_tree', {})
 
     padded_length = False
