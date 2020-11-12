@@ -41,7 +41,10 @@ def test_packages_are_pickleable():
         pkg = spack.repo.get(name)
         try:
             pickle.dumps(pkg)
-        except:
+        except Exception:
+            # If there are any failures, keep track of all packages that aren't
+            # pickle-able and re-run the pickling later on to recreate the
+            # error
             failed_to_pickle.append(name)
 
     if failed_to_pickle:
