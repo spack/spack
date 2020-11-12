@@ -864,7 +864,7 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
             input_multiprocess_fd.close()
 
 
-def start_child_process(pkg, function, kwargs):
+def start_build_process(pkg, function, kwargs):
     """Create a child process to do part of a spack build.
 
     Args:
@@ -881,7 +881,7 @@ def start_child_process(pkg, function, kwargs):
 
         def child_fun():
             # do stuff
-        build_env.start_child_process(pkg, child_fun)
+        build_env.start_build_process(pkg, child_fun)
 
     The child process is run with the build environment set up by
     spack.build_environment.  This allows package authors to have full

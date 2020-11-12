@@ -1092,7 +1092,7 @@ class PackageInstaller(object):
             # Create a child process to do the actual installation.
             # Preserve verbosity settings across installs.
             spack.package.PackageBase._verbose = (
-                spack.build_environment.start_child_process(
+                spack.build_environment.start_build_process(
                     pkg, build_process, kwargs)
             )
 
@@ -1562,7 +1562,7 @@ def build_process(pkg, kwargs):
     """Perform the installation/build of the package.
 
     This runs in a separate child process, and has its own process and
-    python module space set up by build_environment.start_child_process().
+    python module space set up by build_environment.start_build_process().
 
     This function's return value is returned to the parent process.
     """
