@@ -205,7 +205,6 @@ db = llnl.util.lang.LazyReference(_store_db)
 layout = llnl.util.lang.LazyReference(_store_layout)
 
 
-
 def retrieve_upstream_dbs():
     other_spack_instances = spack.config.get('upstreams', {})
 
