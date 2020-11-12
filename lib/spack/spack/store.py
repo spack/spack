@@ -56,19 +56,19 @@ def parse_install_tree(config_dict):
     Encapsulate backwards compatibility capabilities for install_tree
     and deprecated values that are now parsed as part of install_tree.
     """
-    #The following two configs are equivalent, the first being the old format
-    #and the second the new format. The new format is also more flexible.
+    # The following two configs are equivalent, the first being the old format
+    # and the second the new format. The new format is also more flexible.
 
-    #config:
-    #  install_tree: /path/to/root$padding:128
-    #  install_path_scheme: '{name}-{version}'
+    # config:
+    #   install_tree: /path/to/root$padding:128
+    #   install_path_scheme: '{name}-{version}'
 
-    #config:
-    #  install_tree:
-    #    root: /path/to/root
-    #    padding: 128
-    #    projections:
-    #      all: '{name}-{version}'
+    # config:
+    #   install_tree:
+    #     root: /path/to/root
+    #     padding: 128
+    #     projections:
+    #       all: '{name}-{version}'
 
     install_tree = config_dict.get('install_tree', {})
 
@@ -116,7 +116,7 @@ def parse_install_tree(config_dict):
                 padded_length = spack.util.path.get_system_path_max()
                 padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
 
-    unpadded_root = unpadded_root.rstrip(os.path.sep)  # canonicalize before padding
+    unpadded_root = unpadded_root.rstrip(os.path.sep)
 
     if padded_length:
         root = spack.util.path.add_padding(unpadded_root, padded_length)
@@ -143,8 +143,9 @@ class Store(object):
 
     Args:
         root (str): path to the root of the install tree
-        unpadded_root (str): path to the root of the install tree without padding;
-            the sbang script has to be installed here to work with padded roots
+        unpadded_root (str): path to the root of the install tree without
+            padding; the sbang script has to be installed here to work with
+            padded roots
         path_scheme (str): expression according to guidelines in
             ``spack.util.path`` that describes how to construct a path to
             a package prefix in this store
@@ -152,7 +153,8 @@ class Store(object):
             layout; spec hash suffixes will be truncated to this length
     """
     def __init__(
-            self, root, unpadded_root=None, projections=None, hash_length=None):
+            self, root, unpadded_root=None, projections=None, hash_length=None
+    ):
         self.root = root
         self.unpadded_root = unpadded_root or root
         self.db = spack.database.Database(
