@@ -12,13 +12,16 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9]
     steps:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: ${{ matrix.python-version }}
     - name: Install Python packages
       run: |
           pip install --upgrade pip six setuptools

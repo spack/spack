@@ -103,10 +103,23 @@ def _store():
 #: Singleton store instance
 store = llnl.util.lang.Singleton(_store)
 
+
+def _store_root():
+    return store.root
+
+
+def _store_db():
+    return store.db
+
+
+def _store_layout():
+    return store.layout
+
+
 # convenience accessors for parts of the singleton store
-root = llnl.util.lang.LazyReference(lambda: store.root)
-db = llnl.util.lang.LazyReference(lambda: store.db)
-layout = llnl.util.lang.LazyReference(lambda: store.layout)
+root = llnl.util.lang.LazyReference(_store_root)
+db = llnl.util.lang.LazyReference(_store_db)
+layout = llnl.util.lang.LazyReference(_store_layout)
 
 
 def retrieve_upstream_dbs():

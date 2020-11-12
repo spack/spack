@@ -149,9 +149,11 @@ def install_dir_default_layout(tmpdir):
     spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
     spack.store.layout = YamlDirectoryLayout(str(tmpdir.join('opt')),
                                              path_scheme=def_install_path_scheme)  # noqa: E501
-    yield spack.store
-    spack.store.store = real_store
-    spack.store.layout = real_layout
+    try:
+        yield spack.store
+    finally:
+        spack.store.store = real_store
+        spack.store.layout = real_layout
 
 
 @pytest.fixture(scope='function')
@@ -162,9 +164,11 @@ def install_dir_non_default_layout(tmpdir):
     spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
     spack.store.layout = YamlDirectoryLayout(str(tmpdir.join('opt')),
                                              path_scheme=ndef_install_path_scheme)  # noqa: E501
-    yield spack.store
-    spack.store.store = real_store
-    spack.store.layout = real_layout
+    try:
+        yield spack.store
+    finally:
+        spack.store.store = real_store
+        spack.store.layout = real_layout
 
 
 args = ['strings', 'file']
@@ -582,6 +586,13 @@ def test_built_spec_cache(tmpdir,
     mirror.mirror(mparser, margs)
 
 
+def fake_full_hash(spec):
+    # Generate an arbitrary hash that is intended to be different than
+    # whatever a Spec reported before (to test actions that trigger when
+    # the hash changes)
+    return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+
+
 def test_spec_needs_rebuild(install_mockery_mutable_config, mock_packages,
                             mock_fetch, monkeypatch, tmpdir):
     """Make sure needs_rebuild properly compares remote full_hash
@@ -606,9 +617,6 @@ def test_spec_needs_rebuild(install_mockery_mutable_config, mock_packages,
     assert not rebuild
 
     # Now monkey patch Spec to change the full hash on the package
-    def fake_full_hash(spec):
-        print('fake_full_hash')
-        return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
     monkeypatch.setattr(spack.spec.Spec, 'full_hash', fake_full_hash)
 
     rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
