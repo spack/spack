@@ -62,6 +62,8 @@ class Umpire(CMakePackage, CudaPackage, HipPackage):
 
     depends_on('blt', type='build')
 
+    # variants +hip and amdgpu_targets are not automatically passed to
+    # dependencies, so do it manually.
     depends_on('camp+hip', when='+hip')
     amdgpu_targets = HipPackage.amd_gputargets_list()
     for val in amdgpu_targets:
@@ -76,9 +78,6 @@ class Umpire(CMakePackage, CudaPackage, HipPackage):
         spec = self.spec
 
         options = []
-        print('UMPIRE spec')
-        print(spec)
-
         options.append("-DBLT_SOURCE_DIR={0}".format(spec['blt'].prefix))
         options.append("-Dcamp_DIR={0}".format(spec['camp'].prefix))
 

@@ -36,6 +36,8 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
     depends_on('umpire+cuda', when="+cuda")
     depends_on('raja+cuda', when="+raja+cuda")
 
+    # variants +hip and amdgpu_targets are not automatically passed to
+    # dependencies, so do it manually.
     amdgpu_targets = HipPackage.amd_gputargets_list()
     depends_on('umpire+hip', when='+hip')
     depends_on('raja+hip', when="+raja+hip")

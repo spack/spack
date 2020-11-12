@@ -59,18 +59,10 @@ class Hip(CMakePackage):
         env.set('ROCMINFO_PATH', rocm_prefixes['rocminfo'])
         env.set('DEVICE_LIB_PATH', rocm_prefixes['rocm-device-libs'].lib)
 
-        print(rocm_prefixes['rocm-path'])
-        print('clang')
-        print('hcc')
-        print(rocm_prefixes['llvm-amdgpu'].bin)
-        print(rocm_prefixes['hsa-rocr-dev'])
-        print(rocm_prefixes['rocminfo'])
-        print(rocm_prefixes['rocm-device-libs'].lib)
         if 'amdgpu_target' in self.spec.variants:
             arch = self.spec.variants['amdgpu_target'].value
             if arch != 'none':
                 env.set('HCC_AMDGPU_TARGET', arch)
-                print('HIP set spec run ' + arch)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
@@ -121,20 +113,10 @@ class Hip(CMakePackage):
         env.set('ROCMINFO_PATH', rocm_prefixes['rocminfo'])
         env.set('DEVICE_LIB_PATH', rocm_prefixes['rocm-device-libs'].lib)
 
-        print(rocm_prefixes['rocm-path'])
-        print('clang')
-        print('hcc')
-        print(rocm_prefixes['llvm-amdgpu'].bin)
-        print(rocm_prefixes['hsa-rocr-dev'])
-        print(rocm_prefixes['rocminfo'])
-        print(rocm_prefixes['rocm-device-libs'].lib)
         if 'amdgpu_target' in dependent_spec.variants:
             arch = dependent_spec.variants['amdgpu_target'].value
             if arch != 'none':
                 env.set('HCC_AMDGPU_TARGET', arch)
-                print('!!!!arch set!!!!')
-                print(arch)
-                print(rocm_prefixes)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.hipcc = join_path(self.prefix.bin, 'hipcc')
