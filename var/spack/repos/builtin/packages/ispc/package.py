@@ -23,6 +23,8 @@ class Ispc(CMakePackage):
     version('1.14.1', sha256='ca12f26dafbc4ef9605487d03a2156331c1351a4ffefc9bab4d896a466880794')
     version('1.14.0', sha256='1ed72542f56738c632bb02fb0dd56ad8aec3e2487839ebbc0def8334f305a4c7')
     version('1.13.0', sha256='aca595508b51dd1ff065c406a3fd7c93822320c510077dd4d97a2b98a23f097a')
+    version('1.12.0', sha256='d9633001825f82ce6fa3f525bdd948db81e56461829e828fac110b41e40225dc')
+
 
     depends_on('python', type='build')
     depends_on('bison', type='build')
@@ -32,19 +34,22 @@ class Ispc(CMakePackage):
     depends_on('llvm~libcxx')
     depends_on('llvm@10:', when='@1.14:')
     depends_on('llvm@10:10.999', when='@1.13:1.13.999')
+    depends_on('llvm@8:8.999', when='@1.12:1.12.999')
 
     patch('don-t-assume-that-ncurses-zlib-are-system-libraries.patch',
-          sha256='d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc')
+          sha256='d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc',
+          when='@1.13:')
 
     patch('fix-linking-against-llvm-10.patch', when='@1.13:1.13.999',
           sha256='d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc')
 
     def patch(self):
-        filter_file(
-            r'\(bit 32 64\)',
-            '(bit 64)',
-            'cmake/GenerateBuiltins.cmake'
-        )
+        if self.spec.satisfies("@1.13:"):
+            filter_file(
+                r'\(bit 32 64\)',
+                '(bit 64)',
+                'cmake/GenerateBuiltins.cmake'
+            )
 
     def cmake_args(self):
         args = []

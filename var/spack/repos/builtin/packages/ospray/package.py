@@ -19,7 +19,7 @@ class Ospray(CMakePackage):
     variant("apps", default=False, description="Build example applications")
 
     depends_on("cmake@3.1:", type="build")
-    depends_on("ispc@:1.13", type="build", when="@:1.999")
+    depends_on("ispc@:1.12", type="build", when="@:1.999")
     depends_on("ninja", type="build")
     depends_on("embree")
     depends_on("mpi")

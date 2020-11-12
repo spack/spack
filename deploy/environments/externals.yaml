@@ -34,7 +34,7 @@ spack:
     - hpcviewer@2020.05
     - hpe-mpi@2.21
     - intel-mpi@2019.7.217
-    - ispc@1.13.0
+    - ispc@1.12.0
     - mvapich2@2.3
     - stat@4.0.2.999
     - valgrind~mpi@3.15.0
