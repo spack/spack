@@ -63,6 +63,11 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build the LLVM C/C++/Objective-C compiler frontend",
     )
     variant(
+        "flang",
+        default=False,
+        description="Build the LLVM Fortran compiler frontend",
+    )
+    variant(
         "omp_debug",
         default=False,
         description="Include debugging code in OpenMP runtime libraries",
@@ -134,7 +139,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("cmake@3.4.3:", type="build")
     depends_on("python@2.7:2.8", when="@:4.999 ~python", type="build")
     depends_on("python", when="@5: ~python", type="build")
-
+    
     # Universal dependency
     depends_on("python@2.7:2.8", when="@:4.999+python")
     depends_on("python", when="@5:+python")
@@ -161,6 +166,8 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("gmp", when="@:3.6.999 +polly")
     depends_on("isl", when="@:3.6.999 +polly")
 
+    # Flang in > 11
+    conflicts("+flang", when="@:10.99")
     conflicts("+lldb", when="~clang")
     conflicts("+libcxx", when="~clang")
     conflicts("+internal_unwind", when="~clang")
@@ -405,6 +412,8 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("clang")
             projects.append("clang-tools-extra")
             projects.append("openmp")
+        if "+flang" in spec:
+            projects.append("flang")
         if "+lldb" in spec:
             projects.append("lldb")
         if "+lld" in spec:
@@ -416,7 +425,7 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("libcxxabi")
             if spec.satisfies("@3.9.0:"):
                 cmake_args.append("-DCLANG_DEFAULT_CXX_STDLIB=libc++")
-        if "+mlir" in spec:
+        if "+mlir" in spec or "+flang" in spec:
             projects.append("mlir")
         if "+internal_unwind" in spec:
             projects.append("libunwind")
@@ -468,7 +477,17 @@ class Llvm(CMakePackage, CudaPackage):
             cmake_args.append("-DLIBOMP_TSAN_SUPPORT=ON")
 
         if self.compiler.name == "gcc":
-            gcc_prefix = ancestor(self.compiler.cc, 2)
+            compiler = Executable(self.compiler.cc)
+            gcc_output = compiler('-print-search-dirs', output=str, error=str)
+
+            for line in gcc_output.splitlines():
+                if line.startswith("install:"):
+                    # Get path and strip any whitespace 
+                    # (causes oddity with ancestor)
+                    gcc_prefix = line.split(":")[1].strip()
+                    gcc_prefix = ancestor(gcc_prefix, 4)
+                    break
+            #gcc_prefix = ancestor(self.compiler.cc, 2)
             cmake_args.append("-DGCC_INSTALL_PREFIX=" + gcc_prefix)
 
         if spec.satisfies("@4.0.0:"):
