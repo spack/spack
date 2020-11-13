@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import sys
 from spack import *
 
 
@@ -158,5 +160,18 @@ class Dihydrogen(CMakePackage, CudaPackage):
             if '+cuda' in spec or '+legacy' in spec:
                 args.append('-DCUB_DIR={0}'.format(
                     spec['cub'].prefix))
+
+        # Add support for OpenMP
+        if '+openmp' in spec:
+            if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
+                if sys.platform == 'darwin':
+                    clang = self.compiler.cc
+                    clang_bin = os.path.dirname(clang)
+                    clang_root = os.path.dirname(clang_bin)
+                    args.extend([
+                        '-DOpenMP_CXX_FLAGS=-fopenmp=libomp',
+                        '-DOpenMP_CXX_LIB_NAMES=libomp',
+                        '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
+                            clang_root)])
 
         return args
