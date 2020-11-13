@@ -905,7 +905,8 @@ class OpenfoamArch(object):
             elif target == 'armv7l':
                 platform += 'ARM7'
             elif target == 'aarch64':
-                platform += 'Arm64'
+                # overwritten as 'Arm64' in openfoam-org
+                platform += 'ARM64'
             elif target == 'ppc64':
                 platform += 'PPC64'
             elif target == 'ppc64le':
