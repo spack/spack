@@ -287,6 +287,10 @@ environment variables:
         parser.print_help()
         return
 
+    reporter = spack.report.collect_info(args.log_format, args)
+    if args.log_file:
+        reporter.filename = args.log_file
+
     if not args.spec and not args.specfiles:
         # if there are no args but an active environment
         # then install the packages from it.
@@ -301,8 +305,17 @@ environment variables:
                     # once, as it can be slow.
                     env.write(regenerate_views=False)
 
-            tty.msg("Installing environment %s" % env.name)
-            env.install_all(args, **kwargs)
+            specs = env.all_specs()
+            if not args.log_file and not reporter.filename:
+                reporter.filename = default_log_file(specs[0])
+            reporter.specs = specs
+
+            tty.msg("Installing environment {0}".format(env.name))
+            with reporter:
+                env.install_all(args, **kwargs)
+
+            tty.debug("Regenerating environment views for {0}"
+                      .format(env.name))
             with env.write_transaction():
                 # It is not strictly required to synchronize view regeneration
                 # but doing so can prevent redundant work in the filesystem.
@@ -333,10 +346,6 @@ environment variables:
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
 
     # 1. Abstract specs from cli
-    reporter = spack.report.collect_info(args.log_format, args)
-    if args.log_file:
-        reporter.filename = args.log_file
-
     abstract_specs = spack.cmd.parse_specs(args.spec)
     tests = False
     if args.test == 'all' or args.run_tests:
