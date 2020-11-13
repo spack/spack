@@ -40,7 +40,8 @@ php_in_text      = ("line\n") * 100 + "php\n" + ("line\n" * 100)
 php_line_patched = "<?php #!/this/" + ('x' * too_long) + "/is/php\n"
 php_line_patched2 = "?>\n"
 
-last_line         = "last!\n"
+sbang_line = '#!/bin/sh %s/bin/sbang\n' % spack.store.store.unpadded_root
+last_line  = "last!\n"
 
 
 @pytest.fixture
@@ -191,7 +192,7 @@ def test_shebang_handles_non_writable_files(script_dir, sbang_line):
 def check_sbang_installation():
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
-    assert sbang_path.startswith(spack.store.layout.root)
+    assert sbang_path.startswith(spack.store.store.unpadded_root)
 
     assert os.path.exists(sbang_path)
     assert fs.is_exe(sbang_path)
@@ -207,7 +208,7 @@ def test_install_sbang(install_mockery):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
 
-    assert sbang_path.startswith(spack.store.layout.root)
+    assert sbang_path.startswith(spack.store.store.unpadded_root)
     assert not os.path.exists(sbang_bin_dir)
 
     sbang.install_sbang()

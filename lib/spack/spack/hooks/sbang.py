@@ -16,7 +16,6 @@ import spack.modules
 import spack.paths
 import spack.store
 
-
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
 #: Different Linux distributions have different limits, but 127 is the
 #: smallest among all modern versions.
@@ -28,7 +27,12 @@ else:
 
 def sbang_install_path():
     """Location sbang should be installed within Spack's ``install_tree``."""
-    return os.path.join(spack.store.layout.root, "bin", "sbang")
+    sbang_root = str(spack.store.unpadded_root)
+    install_path = os.path.join(sbang_root, "bin", "sbang")
+    if len(install_path) > shebang_limit:
+        raise SbangPathError(
+            'Install tree root is too long. Spack cannot patch shebang lines.')
+    return install_path
 
 
 def sbang_shebang_line():
@@ -164,3 +168,7 @@ def post_install(spec):
 
     for directory, _, filenames in os.walk(spec.prefix):
         filter_shebangs_in_directory(directory, filenames)
+
+
+class SbangPathError(spack.error.SpackError):
+    """Raised when the install tree root is too long for sbang to work."""
