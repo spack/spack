@@ -31,7 +31,6 @@ class Nwchem(Package):
     depends_on('python@2.7:2.8', when='@:6', type=('build', 'link', 'run'))
     conflicts('%gcc@10:', when='@:6', msg='NWChem versions prior to 7.0.0 do not build with GCC 10')
 
-
     def install(self, spec, prefix):
         scalapack = spec['scalapack'].libs
         lapack = spec['lapack'].libs
