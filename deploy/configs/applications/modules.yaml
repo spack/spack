@@ -60,6 +60,7 @@ modules:
       - py-efel
       - py-entity-management
       - py-jupyter-notebook
+      - py-minis-validation
       - py-morph-tool
       - py-morphio
       - py-morphology-repair-workflow

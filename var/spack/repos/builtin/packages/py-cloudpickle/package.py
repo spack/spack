@@ -14,6 +14,7 @@ class PyCloudpickle(PythonPackage):
 
     import_modules = ['cloudpickle']
 
+    version('1.5.0', sha256='820c9245cebdec7257211cbe88745101d5d6a042bca11336d78ebd4897ddbc82')
     version('1.2.1', sha256='603244e0f552b72a267d47a7d9b347b27a3430f58a0536037a290e7e0e212ecf')
     version('0.5.2', sha256='b0e63dd89ed5285171a570186751bc9b84493675e99e12789e9a5dc5490ef554')
 
