@@ -35,8 +35,7 @@ class Mathematica(Package):
 
     def install(self, spec, prefix):
         # Backup .spack because Mathematica moves it but never restores it
-        cp = which('cp')
-        cp('-a', join_path(prefix, '.spack'), self.stage.path)
+        copy_tree(join_path(prefix, '.spack'), join_path(self.stage.path, '.spack'))
 
         sh = which('sh')
         sh(self.stage.archive_file, '--', '-auto', '-verbose',
@@ -52,4 +51,4 @@ class Mathematica(Package):
             ln('-s', ws_path, ws_link_path)
 
         # Move back .spack where it belongs
-        cp('-a', join_path(self.stage.path, '.spack'), prefix)
+        copy_tree(join_path(self.stage.path, '.spack'), join_path(prefix, '.spack'))
