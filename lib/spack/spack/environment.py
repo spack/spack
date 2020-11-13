@@ -1442,7 +1442,11 @@ class Environment(object):
             # Ensure links are set appropriately
             for spec in specs_to_install:
                 if spec.package.installed:
-                    self._install_log_links(spec)
+                    try:
+                        self._install_log_links(spec)
+                    except OSError as e:
+                        tty.warn('Could not install log links for {0}: {1}'
+                                 .format(spec.name, str(e)))
 
             with self.write_transaction():
                 self.regenerate_views()
