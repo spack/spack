@@ -59,6 +59,8 @@ if 'ruamel.yaml' in sys.modules:
 if 'ruamel' in sys.modules:
     del sys.modules['ruamel']
 
-# Once we've set up the system path, run the spack main method
 import spack.main  # noqa
-sys.exit(spack.main.main())
+
+# Once we've set up the system path, run the spack main method
+if __name__ == "__main__":
+    sys.exit(spack.main.main())

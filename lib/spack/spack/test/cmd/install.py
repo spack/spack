@@ -811,6 +811,13 @@ def test_install_fails_no_args_suggests_env_activation(tmpdir):
     assert 'using the `spack.yaml` in this directory' in output
 
 
+def fake_full_hash(spec):
+    # Generate an arbitrary hash that is intended to be different than
+    # whatever a Spec reported before (to test actions that trigger when
+    # the hash changes)
+    return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+
+
 def test_cache_install_full_hash_match(
         install_mockery_mutable_config, mock_packages, mock_fetch,
         mock_archive, mutable_config, monkeypatch, tmpdir):
@@ -843,9 +850,6 @@ def test_cache_install_full_hash_match(
     uninstall('-y', s.name)
 
     # Now monkey patch Spec to change the full hash on the package
-    def fake_full_hash(spec):
-        print('fake_full_hash')
-        return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
     monkeypatch.setattr(spack.spec.Spec, 'full_hash', fake_full_hash)
 
     # Check that even if the full hash changes, we install from binary when

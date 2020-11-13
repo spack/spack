@@ -5,6 +5,7 @@
 
 
 import itertools
+import re
 import os
 import sys
 import llnl.util.tty as tty
@@ -29,6 +30,8 @@ class Openmpi(AutotoolsPackage):
     git = "https://github.com/open-mpi/ompi.git"
 
     maintainers = ['hppritcha']
+
+    executables = ['^ompi_info$']
 
     version('master', branch='master')
 
@@ -332,6 +335,117 @@ class Openmpi(AutotoolsPackage):
               msg='singularity support has been dropped in OpenMPI 5')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)(output=str, error=str)
+        match = re.search(r'Open MPI: (\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        results = []
+        for exe in exes:
+            variants = ''
+            output = Executable(exe)("-a", output=str, error=str)
+            # Some of these options we have to find by hoping the
+            # configure string is in the ompi_info output. While this
+            # is usually true, it's not guaranteed.  For anything that
+            # begins with --, we want to use the defaults as provided
+            # by the openmpi package in the absense of any other info.
+
+            if re.search(r'--enable-builtin-atomics', output):
+                variants += "+atomics"
+            match = re.search(r'\bJava bindings: (\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += "+java"
+            else:
+                variants += "~java"
+            if re.search(r'--enable-static', output):
+                variants += "+static"
+            elif re.search(r'--disable-static', output):
+                variants += "~static"
+            elif re.search(r'\bMCA (?:coll|oca|pml): monitoring',
+                           output):
+                # Built multiple variants of openmpi and ran diff.
+                # This seems to be the distinguishing feature.
+                variants += "~static"
+            if re.search(r'\bMCA db: sqlite', output):
+                variants += "+sqlite3"
+            else:
+                variants += "~sqlite3"
+            if re.search(r'--enable-contrib-no-build=vt', output):
+                variants += '+vt'
+            match = re.search(r'MPI_THREAD_MULTIPLE: (\S+?),?', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+thread_multiple'
+            else:
+                variants += '~thread_multiple'
+            match = re.search(
+                r'parameter "mpi_built_with_cuda_support" ' +
+                r'\(current value: "(\S+)"',
+                output)
+            if match and is_enabled(match.group(1)):
+                variants += '+cuda'
+            else:
+                variants += '~cuda'
+            match = re.search(r'\bWrapper compiler rpath: (\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+wrapper-rpath'
+            else:
+                variants += '~wrapper-rpath'
+            match = re.search(r'\bC\+\+ bindings: (\S+)', output)
+            if match and match.group(1) == 'yes':
+                variants += '+cxx'
+            else:
+                variants += '~cxx'
+            match = re.search(r'\bC\+\+ exceptions: (\S+)', output)
+            if match and match.group(1) == 'yes':
+                variants += '+cxx_exceptions'
+            else:
+                variants += '~cxx_exceptions'
+            if re.search(r'--with-singularity', output):
+                variants += '+singularity'
+            if re.search(r'--with-lustre', output):
+                variants += '+lustre'
+            match = re.search(r'Memory debugging support: (\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+memchecker'
+            else:
+                variants += '~memchecker'
+            if re.search(r'\bMCA (?:ess|prrte): pmi', output):
+                variants += '+pmi'
+            else:
+                variants += '~pmi'
+
+            fabrics = get_options_from_variant(cls, "fabrics")
+            used_fabrics = []
+            for fabric in fabrics:
+                match = re.search(r'\bMCA (?:mtl|btl|pml): %s\b' % fabric,
+                                  output)
+                if match:
+                    used_fabrics.append(fabric)
+            if used_fabrics:
+                variants += ' fabrics=' + ','.join(used_fabrics) + ' '
+
+            schedulers = get_options_from_variant(cls, "schedulers")
+            used_schedulers = []
+            for scheduler in schedulers:
+                match = re.search(r'\bMCA (?:prrte|ras): %s\b' % scheduler,
+                                  output)
+                if match:
+                    used_schedulers.append(scheduler)
+            if used_schedulers:
+                variants += ' schedulers=' + ','.join(used_schedulers) + ' '
+
+            # Get the appropriate compiler
+            match = re.search(r'\bC compiler absolute: (\S+)', output)
+            compiler_spec = get_spack_compiler_spec(
+                os.path.dirname(match.group(1)))
+            if compiler_spec:
+                variants += "%" + str(compiler_spec)
+            results.append(variants)
+        return results
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -731,3 +845,29 @@ class Openmpi(AutotoolsPackage):
                     tty.debug("File not present: " + exe)
                 else:
                     copy(script_stub, exe)
+
+
+def get_spack_compiler_spec(path):
+    spack_compilers = spack.compilers.find_compilers([path])
+    actual_compiler = None
+    # check if the compiler actually matches the one we want
+    for spack_compiler in spack_compilers:
+        if os.path.dirname(spack_compiler.cc) == path:
+            actual_compiler = spack_compiler
+            break
+    return actual_compiler.spec if actual_compiler else None
+
+
+def is_enabled(text):
+    if text in set(['t', 'true', 'enabled', 'yes', '1']):
+        return True
+    return False
+
+
+# This code gets all the fabric names from the variants list
+# Idea taken from the AutotoolsPackage source.
+def get_options_from_variant(self, name):
+    values = self.variants[name].values
+    if getattr(values, 'feature_values', None):
+        values = values.feature_values
+    return values

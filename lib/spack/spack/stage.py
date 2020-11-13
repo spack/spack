@@ -690,17 +690,19 @@ class ResourceStage(Stage):
                     install(src, destination_path)
 
 
-@pattern.composite(method_list=[
-    'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
-    'destroy', 'cache_local', 'cache_mirror', 'steal_source',
-    'managed_by_spack'])
-class StageComposite:
+class StageComposite(pattern.Composite):
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
     forwarded to it."""
     #
     # __enter__ and __exit__ delegate to all stages in the composite.
     #
+
+    def __init__(self):
+        super(StageComposite, self).__init__([
+            'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
+            'destroy', 'cache_local', 'cache_mirror', 'steal_source',
+            'managed_by_spack'])
 
     def __enter__(self):
         for item in self:
