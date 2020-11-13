@@ -24,6 +24,7 @@ class Libarchive(AutotoolsPackage):
     depends_on('bzip2')
     depends_on('lz4')
     depends_on('xz')
+    depends_on('libiconv')
     depends_on('lzo')
     depends_on('nettle')
     depends_on('openssl')
