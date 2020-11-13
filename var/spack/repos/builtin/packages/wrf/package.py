@@ -186,9 +186,9 @@ class Wrf(Package):
                 basename(self.compiler.fc),
                 basename(self.compiler.cc),
             )
-            compiler_matches = {
-                x: y for x, y in options.items() if comp_pair in x.lower()
-            }
+            compiler_matches = dict(
+                (x, y) for x, y in options.items() if comp_pair in x.lower()
+            )
             if len(compiler_matches) > 1:
                 tty.warn("Found multiple potential build options")
             try:
