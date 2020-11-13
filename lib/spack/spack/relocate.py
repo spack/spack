@@ -830,7 +830,6 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
     Raises:
       BinaryTextReplaceError: when the new path is longer than the old path
     """
-
     byte_prefixes = OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():
@@ -838,9 +837,14 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
         if not length_compatible and len(binaries) > 0:
             raise BinaryTextReplaceError(orig_prefix, new_prefix)
         if orig_prefix != new_prefix:
-            # Problem child: creates long pattern; cannot re-extract orig
-            orig_bytes = orig_prefix.encode('utf-8')
-            new_bytes = new_prefix.encode('utf-8')
+            if isinstance(orig_prefix, bytes):
+                orig_bytes = orig_prefix
+            else:
+                orig_bytes = orig_prefix.encode('utf-8')
+            if isinstance(new_prefix, bytes):
+                new_bytes = new_prefix
+            else:
+                new_bytes = new_prefix.encode('utf-8')
             byte_prefixes[orig_bytes] = new_bytes
 
     # Do relocations on text in binaries that refers to the install tree
@@ -857,7 +861,6 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
     finally:
         tp.terminate()
         tp.join()
-
 
 def is_relocatable(spec):
     """Returns True if an installed spec is relocatable.
