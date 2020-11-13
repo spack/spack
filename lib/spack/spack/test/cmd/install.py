@@ -827,6 +827,7 @@ def test_cache_install_full_hash_match(
     mirror_url = 'file://{0}'.format(mirror_dir.strpath)
 
     s = Spec('libdwarf').concretized()
+    package_id = spack.installer.package_id(s.package)
 
     # Install a package
     install(s.name)
@@ -842,9 +843,9 @@ def test_cache_install_full_hash_match(
 
     # Make sure we get the binary version by default
     install_output = install('--no-check-signature', s.name, output=str)
-    expect_msg = 'Extracting {0} from binary cache'.format(s.name)
+    expect_extract_msg = 'Extracting {0} from binary cache'.format(package_id)
 
-    assert expect_msg in install_output
+    assert expect_extract_msg in install_output
 
     uninstall('-y', s.name)
 
@@ -857,9 +858,7 @@ def test_cache_install_full_hash_match(
     # Check that even if the full hash changes, we install from binary when
     # we don't explicitly require the full hash to match
     install_output = install('--no-check-signature', s.name, output=str)
-    expect_msg = 'Extracting {0} from binary cache'.format(s.name)
-
-    assert expect_msg in install_output
+    assert expect_extract_msg in install_output
 
     uninstall('-y', s.name)
 
@@ -867,7 +866,7 @@ def test_cache_install_full_hash_match(
     # installs from source.
     install_output = install('--require-full-hash-match', s.name, output=str)
     expect_msg = 'No binary for {0} found: installing from source'.format(
-        s.name)
+        package_id)
 
     assert expect_msg in install_output
 
