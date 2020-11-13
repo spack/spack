@@ -278,7 +278,7 @@ def test_check_before_phase_error(install_mockery):
         inst._check_last_phase(pkg)
 
     err = str(exc_info.value)
-    assert 'is not an allowed phase' in err
+    assert 'is not a valid phase' in err
     assert pkg.stop_before_phase in err
 
 
@@ -290,7 +290,7 @@ def test_check_last_phase_error(install_mockery):
         inst._check_last_phase(pkg)
 
     err = str(exc_info.value)
-    assert 'is not an allowed phase' in err
+    assert 'is not a valid phase' in err
     assert pkg.last_phase in err
 
 

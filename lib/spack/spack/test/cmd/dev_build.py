@@ -100,7 +100,7 @@ def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):
                       'dev-build-test-install@0.0.0')
 
         bad_phase = 'phase_that_does_not_exist'
-        not_allowed = 'is not an allowed phase'
+        not_allowed = 'is not a valid phase'
         out = dev_build('-u', bad_phase, 'dev-build-test-install@0.0.0')
         assert bad_phase in out
         assert not_allowed in out
