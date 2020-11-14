@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
-
 
 class EnvironmentModules(Package):
     """The Environment Modules package provides for the dynamic
@@ -51,21 +49,13 @@ class EnvironmentModules(Package):
     def install(self, spec, prefix):
         tcl = spec['tcl']
 
-        # Determine where we can find tclConfig.sh
-        for tcl_lib_dir in [tcl.prefix.lib, tcl.prefix.lib64]:
-            tcl_config_file = os.path.join(tcl_lib_dir, 'tclConfig.sh')
-            if os.path.exists(tcl_config_file):
-                break
-        else:
-            raise InstallError('Failed to locate tclConfig.sh')
-
         config_args = [
             "--prefix=" + prefix,
             "--without-tclx",
             "--with-tclx-ver=0.0",
             # It looks for tclConfig.sh
-            "--with-tcl=" + tcl_lib_dir,
-            "--with-tcl-ver={0}.{1}".format(*tcl.version.version[0:2]),
+            "--with-tcl=" + tcl.libs.directories[0],
+            "--with-tcl-ver={0}".format(tcl.version.up_to(2)),
             '--disable-versioning',
             '--datarootdir=' + prefix.share
         ]

@@ -83,6 +83,10 @@ class Glib(Package):
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
 
+    @property
+    def libs(self):
+        return find_libraries(['libglib*'], root=self.prefix, recursive=True)
+
     def meson_args(self):
         args = ['-Dgettext=external']
         if self.spec.satisfies('@2.63.5:'):
@@ -256,6 +260,8 @@ class Glib(Package):
         if spec.satisfies('@2:2.99'):
             pattern = 'Libs:'
             repl = 'Libs: -L{0} -Wl,-rpath={0} '.format(
-                   spec['gettext'].prefix.lib)
-            myfile = join_path(self.prefix.lib.pkgconfig, 'glib-2.0.pc')
+                   spec['gettext'].libs.directories[0])
+            myfile = join_path(
+                self.spec['glib'].libs.directories[0],
+                'pkgconfig', 'glib-2.0.pc')
             filter_file(pattern, repl, myfile, backup=False)
