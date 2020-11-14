@@ -10,6 +10,8 @@ import sys
 class Opengl(Package):
     """Placeholder for external OpenGL libraries from hardware vendors"""
 
+    has_code = False
+
     homepage = "https://www.opengl.org/"
 
     provides('gl')
@@ -55,9 +57,10 @@ class Opengl(Package):
 
         packages:
           opengl:
-            paths:
-              opengl@4.5.0: /opt/opengl
             buildable: False
+            externals:
+            - spec: opengl@4.5.0
+              prefix: /opt/opengl
 
         In that case, /opt/opengl/ should contain these two folders:
 
@@ -70,9 +73,10 @@ class Opengl(Package):
 
         packages:
           opengl:
-            paths:
-              opengl@4.1: /usr/X11R6
             buildable: False
+            externals:
+            - spec: opengl@4.1
+              prefix: /usr/X11R6
 
         In that case, /usr/X11R6 should contain
 

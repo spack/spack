@@ -4,12 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for ``llnl/util/filesystem.py``"""
-
-import pytest
 import os
 import shutil
 import stat
 import sys
+
+import pytest
 
 import llnl.util.filesystem as fs
 import spack.paths
@@ -484,3 +484,107 @@ def test_filter_files_multiple(tmpdir):
         assert '<malloc.h>' not in f.read()
         assert '<string.h>' not in f.read()
         assert '<stdio.h>' not in f.read()
+
+
+# Each test input is a tuple of entries which prescribe
+# - the 'subdirs' to be created from tmpdir
+# - the 'files' in that directory
+# - what is to be removed
+@pytest.mark.parametrize('files_or_dirs', [
+    # Remove a file over the two that are present
+    [{'subdirs': None,
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['spack.lock']}],
+    # Remove the entire directory where two files are stored
+    [{'subdirs': 'myenv',
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['myenv']}],
+    # Combine a mix of directories and files
+    [{'subdirs': None,
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['spack.lock']},
+     {'subdirs': 'myenv',
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['myenv']}],
+    # Multiple subdirectories, remove root
+    [{'subdirs': 'work/myenv1',
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': []},
+     {'subdirs': 'work/myenv2',
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['work']}],
+    # Multiple subdirectories, remove each one
+    [{'subdirs': 'work/myenv1',
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['work/myenv1']},
+     {'subdirs': 'work/myenv2',
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['work/myenv2']}],
+    # Remove files with the same name in different directories
+    [{'subdirs': 'work/myenv1',
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['work/myenv1/spack.lock']},
+     {'subdirs': 'work/myenv2',
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['work/myenv2/spack.lock']}],
+    # Remove first the directory, then a file within the directory
+    [{'subdirs': 'myenv',
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['myenv', 'myenv/spack.lock']}],
+    # Remove first a file within a directory, then the directory
+    [{'subdirs': 'myenv',
+      'files': ['spack.lock', 'spack.yaml'],
+      'remove': ['myenv/spack.lock', 'myenv']}],
+])
+@pytest.mark.regression('18441')
+def test_safe_remove(files_or_dirs, tmpdir):
+    # Create a fake directory structure as prescribed by test input
+    to_be_removed, to_be_checked = [], []
+    for entry in files_or_dirs:
+        # Create relative dir
+        subdirs = entry['subdirs']
+        dir = tmpdir if not subdirs else tmpdir.ensure(
+            *subdirs.split('/'), dir=True
+        )
+
+        # Create files in the directory
+        files = entry['files']
+        for f in files:
+            abspath = str(dir.join(f))
+            to_be_checked.append(abspath)
+            fs.touch(abspath)
+
+        # List of things to be removed
+        for r in entry['remove']:
+            to_be_removed.append(str(tmpdir.join(r)))
+
+    # Assert that files are deleted in the context block,
+    # mock a failure by raising an exception
+    with pytest.raises(RuntimeError):
+        with fs.safe_remove(*to_be_removed):
+            for entry in to_be_removed:
+                assert not os.path.exists(entry)
+            raise RuntimeError('Mock a failure')
+
+    # Assert that files are restored
+    for entry in to_be_checked:
+        assert os.path.exists(entry)
+
+
+@pytest.mark.regression('18441')
+def test_content_of_files_with_same_name(tmpdir):
+    # Create two subdirectories containing a file with the same name,
+    # differentiate the files by their content
+    file1 = tmpdir.ensure('myenv1/spack.lock')
+    file2 = tmpdir.ensure('myenv2/spack.lock')
+    file1.write('file1'), file2.write('file2')
+
+    # Use 'safe_remove' to remove the two files
+    with pytest.raises(RuntimeError):
+        with fs.safe_remove(str(file1), str(file2)):
+            raise RuntimeError('Mock a failure')
+
+    # Check both files have been restored correctly
+    # and have not been mixed
+    assert file1.read().strip() == 'file1'
+    assert file2.read().strip() == 'file2'

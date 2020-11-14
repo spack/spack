@@ -55,6 +55,11 @@ class Metis(Package):
     patch('install_gklib_defs_rename.patch', when='@5:')
     patch('gklib_nomisleadingindentation_warning.patch', when='@5: %gcc@6:')
 
+    def setup_build_environment(self, env):
+        # Ignore warnings/errors re unrecognized omp pragmas on %intel
+        if '%intel@14:' in self.spec:
+            env.append_flags('CFLAGS', '-diag-disable 3180')
+
     @when('@5:')
     def patch(self):
         source_path = self.stage.source_path
@@ -219,3 +224,9 @@ class Metis(Package):
             Executable(join_path(prefix.bin, 'gpmetis'))(graph, '2')
             graph = join_path(source_directory, 'graphs', 'metis.mesh')
             Executable(join_path(prefix.bin, 'mpmetis'))(graph, '2')
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if (sys.platform == 'darwin') and ('+shared' in self.spec):
+            fix_darwin_install_name(prefix.lib)

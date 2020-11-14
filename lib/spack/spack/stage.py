@@ -5,13 +5,15 @@
 
 from __future__ import print_function
 
+import errno
+import getpass
+import glob
+import hashlib
 import os
+import shutil
 import stat
 import sys
-import errno
-import hashlib
 import tempfile
-import getpass
 from six import string_types
 from six import iteritems
 
@@ -400,8 +402,14 @@ class Stage(object):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
-    def fetch(self, mirror_only=False):
-        """Downloads an archive or checks out code from a repository."""
+    def fetch(self, mirror_only=False, err_msg=None):
+        """Retrieves the code or archive
+
+        Args:
+            mirror_only (bool): only fetch from a mirror
+            err_msg (str or None): the error message to display if all fetchers
+                fail or ``None`` for the default fetch failure message
+        """
         fetchers = []
         if not mirror_only:
             fetchers.append(self.default_fetcher)
@@ -480,11 +488,45 @@ class Stage(object):
         else:
             print_errors(errors)
 
-            err_msg = 'All fetchers failed for {0}'.format(self.name)
             self.fetcher = self.default_fetcher
-            raise fs.FetchError(err_msg, None)
+            raise fs.FetchError(err_msg or 'All fetchers failed', None)
 
         print_errors(errors)
+
+    def steal_source(self, dest):
+        """Copy the source_path directory in its entirety to directory dest
+
+        This operation creates/fetches/expands the stage if it is not already,
+        and destroys the stage when it is done."""
+        if not self.created:
+            self.create()
+        if not self.expanded and not self.archive_file:
+            self.fetch()
+        if not self.expanded:
+            self.expand_archive()
+
+        if not os.path.isdir(dest):
+            mkdirp(dest)
+
+        # glob all files and directories in the source path
+        hidden_entries = glob.glob(os.path.join(self.source_path, '.*'))
+        entries = glob.glob(os.path.join(self.source_path, '*'))
+
+        # Move all files from stage to destination directory
+        # Include hidden files for VCS repo history
+        for entry in hidden_entries + entries:
+            if os.path.isdir(entry):
+                d = os.path.join(dest, os.path.basename(entry))
+                shutil.copytree(entry, d)
+            else:
+                shutil.copy2(entry, dest)
+
+        # copy archive file if we downloaded from url -- replaces for vcs
+        if self.archive_file and os.path.exists(self.archive_file):
+            shutil.copy2(self.archive_file, dest)
+
+        # remove leftover stage
+        self.destroy()
 
     def check(self):
         """Check the downloaded archive against a checksum digest.
@@ -648,16 +690,19 @@ class ResourceStage(Stage):
                     install(src, destination_path)
 
 
-@pattern.composite(method_list=[
-    'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
-    'destroy', 'cache_local', 'cache_mirror', 'managed_by_spack'])
-class StageComposite:
+class StageComposite(pattern.Composite):
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
     forwarded to it."""
     #
     # __enter__ and __exit__ delegate to all stages in the composite.
     #
+
+    def __init__(self):
+        super(StageComposite, self).__init__([
+            'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
+            'destroy', 'cache_local', 'cache_mirror', 'steal_source',
+            'managed_by_spack'])
 
     def __enter__(self):
         for item in self:
@@ -793,12 +838,12 @@ def get_checksums_for_versions(
     max_len = max(len(str(v)) for v in sorted_versions)
     num_ver = len(sorted_versions)
 
-    tty.debug('Found {0} version{1} of {2}:'.format(
-              num_ver, '' if num_ver == 1 else 's', name),
-              '',
-              *spack.cmd.elide_list(
-                  ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
-                   for v in sorted_versions]))
+    tty.msg('Found {0} version{1} of {2}:'.format(
+            num_ver, '' if num_ver == 1 else 's', name),
+            '',
+            *spack.cmd.elide_list(
+                ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
+                 for v in sorted_versions]))
     print()
 
     if batch:

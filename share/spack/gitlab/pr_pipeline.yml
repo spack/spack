@@ -12,7 +12,7 @@ merge_pipeline:
   only:
   - develop
   variables:
-    SPACK_REF: develop
+    SPACK_REF: ${CI_COMMIT_SHA}
   trigger:
     project: spack/e4s
     strategy: depend

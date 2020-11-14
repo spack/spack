@@ -42,6 +42,6 @@ class Branson(CMakePackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         mkdir(prefix.doc)
-        install('../spack-build/BRANSON', prefix.bin)
+        install(join_path(self.build_directory, 'BRANSON'), prefix.bin)
         install('LICENSE.md', prefix.doc)
         install('README.md', prefix.doc)

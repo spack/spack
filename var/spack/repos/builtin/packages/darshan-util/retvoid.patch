@@ -1,0 +1,12 @@
+diff -u -r -N a/darshan-util/darshan-logutils.c b/darshan-util/darshan-logutils.c
+--- a/darshan-util/darshan-logutils.c	2020-09-04 15:02:21.000000000 +0900
++++ b/darshan-util/darshan-logutils.c	2020-09-04 15:07:44.000000000 +0900
+@@ -1915,7 +1915,7 @@
+     if(ret < 0)
+     {
+         darshan_log_close(fd);
+-        return(-1);
++        return;
+     }
+ 
+     int num = HASH_CNT(hlink, name_hash);

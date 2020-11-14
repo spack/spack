@@ -15,6 +15,8 @@ class Cmake(Package):
 
     executables = ['^cmake$']
 
+    version('3.18.4',   sha256='597c61358e6a92ecbfad42a9b5321ddd801fc7e7eca08441307c9138382d4f77')
+    version('3.18.3',   sha256='2c89f4e30af4914fd6fb5d00f863629812ada848eee4e2d29ec7e456d7fa32e5')
     version('3.18.2',   sha256='5d4e40fc775d3d828c72e5c45906b4d9b59003c9433ff1b36a1cb552bbd51d7e')
     version('3.18.1',   sha256='c0e3338bd37e67155b9d1e9526fec326b5c541f74857771b7ffed0c46ad62508')
     version('3.18.0',   sha256='83b4ffcb9482a73961521d2bafe4a16df0168f03f56e6624c419c461e5317e29')
@@ -116,6 +118,8 @@ class Cmake(Package):
                   'please use %apple-clang. '
                   'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
 
+    conflicts('%nvhpc')
+
     # Really this should conflict since it's enabling or disabling openssl for
     # CMake's internal copy of curl.  Ideally we'd want a way to have the
     # openssl variant disabled when ~ownlibs but there's not really a way to
@@ -160,6 +164,11 @@ class Cmake(Package):
     # The Fujitsu compiler requires the '--linkfortran' option
     # to combine C++ and Fortran programs.
     patch('fujitsu_add_linker_option.patch', when='%fj')
+
+    # Remove -A from the C++ flags we use when CXX_EXTENSIONS is OFF
+    # Should be fixed in 3.19.
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5025
+    patch('pgi-cxx-ansi.patch', when='@3.15:3.18.99')
 
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 

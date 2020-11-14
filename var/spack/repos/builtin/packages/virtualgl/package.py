@@ -18,5 +18,6 @@ class Virtualgl(CMakePackage):
 
     version('2.5.2', sha256='4f43387678b289a24139c5b7c3699740ca555a9f10011c979e51aa4df2b93238')
 
-    depends_on("jpeg")
+    # This package will only work with libjpeg-turbo, not other jpeg providers
+    depends_on("libjpeg-turbo")
     depends_on("glu")

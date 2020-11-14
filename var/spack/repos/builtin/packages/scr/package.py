@@ -29,6 +29,12 @@ class Scr(CMakePackage):
     depends_on('zlib')
     depends_on('mpi')
 
+    # As of mid-2020, develop requires the "master" branch
+    # of a few component libraries
+    depends_on('axl@master', when="@develop")
+    depends_on('kvtree@master', when="@develop")
+    depends_on('redset@master', when="@develop")
+
     # SCR legacy is anything 2.x.x or earlier
     # SCR components is anything 3.x.x or later
     depends_on('er', when="@3:")

@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class Sw4lite(MakefilePackage):
+class Sw4lite(MakefilePackage, CudaPackage):
     """Sw4lite is a bare bone version of SW4 intended for testing
     performance optimizations in a few important numerical kernels of SW4."""
 
@@ -52,6 +52,15 @@ class Sw4lite(MakefilePackage):
             cxxflags.append('-DSW4_CROUTINES')
             targets.append('ckernel=yes')
 
+        if '+cuda' in self.spec:
+            targets.append('NVCC = {0}'.format(
+                self.spec['cuda'].prefix.bin.nvcc))
+            targets.append('HOSTCOMP = {0}'.format(spack_cxx))
+            targets.append('MPIPATH= {0} '.format(self.spec['mpi'].prefix))
+            targets.append('gpuarch= {0}'.format(self.cuda_flags(cuda_arch)))
+            targets.append('MPIINC = {0}'.format(
+                self.spec['mpi'].headers.directories[0]))
+
         targets.append('FC=' + spec['mpi'].mpifc)
         targets.append('CXX=' + spec['mpi'].mpicxx)
 
@@ -69,6 +78,12 @@ class Sw4lite(MakefilePackage):
             targets.append('EXTRA_LINK_FLAGS={0}'.format(lapack_blas.ld_flags))
 
         return targets
+
+    def build(self, spec, prefix):
+        if '+cuda' in spec:
+            make('-f', 'Makefile.cuda')
+        else:
+            make('-f', 'Makefile')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)

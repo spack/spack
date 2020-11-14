@@ -129,7 +129,7 @@ class NaluWind(CMakePackage):
                 test_tol = float(self.spec.variants['test_tol'].value)
                 if test_tol <= 0.0:
                     raise ValueError
-                options.append('-DTEST_TOLERACE:STRING={tol}'.format(
+                options.append('-DTEST_TOLERANCE:STRING={tol}'.format(
                     tol=test_tol))
             except ValueError:
                 print("Specified test_tol must be a positive float. "

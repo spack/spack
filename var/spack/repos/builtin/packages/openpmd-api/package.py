@@ -15,6 +15,7 @@ class OpenpmdApi(CMakePackage):
     maintainers = ['ax3l']
 
     version('dev', branch='dev')
+    version('0.12.0',  tag='0.12.0-alpha')
     version('0.11.1',  tag='0.11.1-alpha')
     version('0.11.0',  tag='0.11.0-alpha')
     version('0.10.3',  tag='0.10.3-alpha')
@@ -35,7 +36,7 @@ class OpenpmdApi(CMakePackage):
     variant('python', default=False,
             description='Enable Python bindings')
 
-    depends_on('cmake@3.11.0:', type='build')
+    depends_on('cmake@3.12.0:', type='build')
     depends_on('mpark-variant@1.4.0:')
     depends_on('catch2@2.6.1:', type='test')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
@@ -46,6 +47,7 @@ class OpenpmdApi(CMakePackage):
     depends_on('adios@1.13.1: ~mpi ~sz', when='~mpi +adios1')
     depends_on('adios@1.13.1: +mpi ~sz', when='+mpi +adios1')
     depends_on('adios2@2.5.0:', when='+adios2')
+    depends_on('adios2@2.6.0:', when='+adios2 @0.12.0:')
     depends_on('adios2@2.5.0: ~mpi', when='~mpi +adios2')
     depends_on('adios2@2.5.0: +mpi', when='+mpi +adios2')
     depends_on('nlohmann-json@3.7.0:')

@@ -60,6 +60,7 @@ class Libxsmm(MakefilePackage):
             description='With generator executable(s)')
     conflicts('+header-only', when='@:1.6.2',
               msg='Header-only is available since v1.6.2!')
+    depends_on('python', type='build')
 
     @property
     def libs(self):

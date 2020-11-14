@@ -1,0 +1,34 @@
+--- a/configure	2020-08-24 14:05:58.117448257 -0700
++++ b/configure	2020-08-24 14:08:33.040348242 -0700
+@@ -9184,7 +9184,7 @@
+ 	lt_prog_compiler_pic='-fPIC'
+ 	lt_prog_compiler_static='-static'
+ 	;;
+-      pgcc* | pgf77* | pgf90* | pgf95* | pgfortran*)
++      pgcc* | pgf77* | pgf90* | pgf95* | pgfortran* | nvc | nvfortran*)
+         # Portland Group compilers (*not* the Pentium gcc compiler,
+ 	# which looks to be a dead project)
+ 	lt_prog_compiler_wl='-Wl,'
+@@ -9226,7 +9226,7 @@
+ 	  lt_prog_compiler_pic='-fPIC'
+ 	  lt_prog_compiler_static='-static'
+ 	  ;;
+-	*Portland\ Group*)
++	*Portland\ Group* | *NVIDIA\ Compilers* | *PGI\ Compilers*)
+ 	  lt_prog_compiler_wl='-Wl,'
+ 	  lt_prog_compiler_pic='-fpic'
+ 	  lt_prog_compiler_static='-Bstatic'
+@@ -9823,11 +9823,11 @@
+ 	tmp_addflag=' $pic_flag'
+ 	tmp_sharedflag='-shared'
+ 	case $cc_basename,$host_cpu in
+-        pgcc*)				# Portland Group C compiler
++        pgcc* | nvc)			# Portland Group C compiler
+ 	  whole_archive_flag_spec='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
+ 	  tmp_addflag=' $pic_flag'
+ 	  ;;
+-	pgf77* | pgf90* | pgf95* | pgfortran*)
++	pgf77* | pgf90* | pgf95* | pgfortran* | nvfortran*)
+ 					# Portland Group f77 and f90 compilers
+ 	  whole_archive_flag_spec='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
+ 	  tmp_addflag=' $pic_flag -Mnomain' ;;

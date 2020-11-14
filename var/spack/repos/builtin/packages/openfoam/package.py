@@ -20,9 +20,8 @@
 ##############################################################################
 #
 # Notes
-# - mpi handling: WM_MPLIB=USERMPI and use spack to populate an appropriate
-#   configuration and generate wmake rules for 'USER' and 'USERMPI'
-#   mpi implementations.
+# - mpi handling: WM_MPLIB=USERMPI and use spack to generate mplibUSERMPI
+#   wmake rules.
 #
 # - Resolution of flex, zlib needs more attention (within OpenFOAM)
 # - +paraview:
@@ -266,6 +265,7 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('2006_201012', sha256='9afb7eee072bfddcf7f3e58420c93463027db2394997ac4c3b87a8b07c707fb0')
     version('2006', sha256='30c6376d6f403985fc2ab381d364522d1420dd58a42cb270d2ad86f8af227edc')
     version('1912_200506', sha256='831a39ff56e268e88374d0a3922479fd80260683e141e51980242cc281484121')
     version('1912_200403', sha256='1de8f4ddd39722b75f6b01ace9f1ba727b53dd999d1cd2b344a8c677ac2db4c0')
@@ -358,7 +358,7 @@ class Openfoam(Package):
 
     # Some user config settings
     # default: 'compile-option': '-spack',
-    # default: 'mplib': 'USERMPI',     # Use user mpi for spack
+    # default: 'mplib': 'USERMPI',  # User-defined mpi for spack
     config = {
         # Add links into bin/, lib/ (eg, for other applications)
         'link':  False
@@ -404,7 +404,10 @@ class Openfoam(Package):
     def setup_build_environment(self, env):
         """Sets the build environment (prior to unpacking the sources).
         """
-        pass
+        # Avoid the exception that occurs at runtime
+        # when building with the Fujitsu compiler.
+        if self.spec.satisfies('%fj'):
+            env.set('FOAM_SIGFPE', 'false')
 
     def setup_run_environment(self, env):
         """Sets the run environment (post-installation).
@@ -857,12 +860,13 @@ class OpenfoamArch(object):
         self.options          = None
         self.mplib            = kwargs.get('mplib', 'USERMPI')
 
-        # Normally support WM_LABEL_OPTION, but not yet for foam-extend
+        # WM_LABEL_OPTION, but perhaps not yet for foam-extend
         if '+int64' in spec:
             self.label_size = '64'
         elif kwargs.get('label-size', True):
             self.label_size = '32'
 
+        # WM_PRECISION_OPTION
         if '+spdp' in spec:
             self.precision_option = 'SPDP'
         elif '+float32' in spec:
@@ -872,6 +876,20 @@ class OpenfoamArch(object):
         if '+knl' in spec:
             self.arch_option = '-march=knl'
 
+        # Capitalize first letter of compiler name to obtain the
+        # OpenFOAM naming (eg, gcc -> Gcc, clang -> Clang, etc).
+        # Use compiler_mapping[] for special cases
+        comp = spec.compiler.name
+        if comp in self.compiler_mapping:
+            comp = self.compiler_mapping[comp]
+
+        self.compiler = comp.capitalize()
+        self.update_arch(spec)
+        self.update_options()
+
+    def update_arch(self, spec):
+        """Set WM_ARCH string corresponding to spack platform/target
+        """
         # spec.architecture.platform is like `uname -s`, but lower-case
         platform = str(spec.architecture.platform)
 
@@ -879,7 +897,6 @@ class OpenfoamArch(object):
         target = str(spec.target.family)
 
         # No spack platform family for ia64 or armv7l
-
         if platform == 'linux':
             if target == 'x86_64':
                 platform += '64'
@@ -888,6 +905,7 @@ class OpenfoamArch(object):
             elif target == 'armv7l':
                 platform += 'ARM7'
             elif target == 'aarch64':
+                # overwritten as 'Arm64' in openfoam-org
                 platform += 'ARM64'
             elif target == 'ppc64':
                 platform += 'PPC64'
@@ -897,21 +915,12 @@ class OpenfoamArch(object):
             if target == 'x86_64':
                 platform += '64'
         # ... and others?
-
         self.arch = platform
 
-        # Capitalize first letter of compiler name, which corresponds
-        # to how OpenFOAM handles things (eg, gcc -> Gcc).
-        # Use compiler_mapping for special cases.
-        comp = spec.compiler.name
-
-        if comp in self.compiler_mapping:
-            comp = self.compiler_mapping[comp]
-        comp = comp.capitalize()
-
-        self.compiler = comp
-
-        # Build WM_OPTIONS
+    def update_options(self):
+        """Set WM_OPTIONS string consistent with current settings
+        """
+        # WM_OPTIONS
         # ----
         # WM_LABEL_OPTION=Int$WM_LABEL_SIZE
         # WM_OPTIONS_BASE=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION
@@ -969,7 +978,7 @@ class OpenfoamArch(object):
         return True
 
     def create_rules(self, projdir, foam_pkg):
-        """ Create {c,c++}-spack and mplib{USER,USERMPI}
+        """ Create {c,c++}-spack and mplib{USERMPI}
         rules in the specified project directory.
         The compiler rules are based on the respective {c,c++}Opt rules
         but with additional rpath information for the OpenFOAM libraries.
@@ -1010,12 +1019,13 @@ class OpenfoamArch(object):
                             outfile.write('\n')
 
             # MPI rules
-            for mplib in ['mplibUSER', 'mplibUSERMPI']:
+            for mplib in ['mplibUSERMPI']:
                 with open(mplib, 'w') as out:
-                    out.write("""# Use mpi from spack ({name})\n
+                    out.write("""# MPI from spack ({name})\n
 PFLAGS  = {FLAGS}
 PINC    = {PINC}
 PLIBS   = {PLIBS}
+#-------
 """.format(**user_mpi))
 
 # -----------------------------------------------------------------------------

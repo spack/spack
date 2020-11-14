@@ -919,6 +919,12 @@ class ForwardQueryToPackage(object):
         raise AttributeError(msg.format(cls_name, self.attribute_name))
 
 
+# Represents a query state in a BuildInterface object
+QueryState = collections.namedtuple(
+    'QueryState', ['name', 'extra_parameters', 'isvirtual']
+)
+
+
 class SpecBuildInterface(lang.ObjectWrapper):
     command = ForwardQueryToPackage(
         'command',
@@ -937,11 +943,6 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
     def __init__(self, spec, name, query_parameters):
         super(SpecBuildInterface, self).__init__(spec)
-
-        # Represents a query state in a BuildInterface object
-        QueryState = collections.namedtuple(
-            'QueryState', ['name', 'extra_parameters', 'isvirtual']
-        )
 
         is_virtual = Spec.is_virtual(name)
         self.last_query = QueryState(
@@ -1010,6 +1011,14 @@ class Spec(object):
         self.external_path = external_path
         self.external_modules = Spec._format_module_list(external_modules)
         self._full_hash = full_hash
+
+        # Older spack versions did not compute full_hash or build_hash,
+        # and we may not have the necessary information to recompute them
+        # if we read in old specs. Old concrete specs are marked "final"
+        # when read in to indicate that we shouldn't recompute full_hash
+        # or build_hash. New specs are not final; we can lazily compute
+        # their hashes.
+        self._hashes_final = False
 
         # This attribute is used to store custom information for
         # external specs. None signal that it was not set yet.
@@ -1640,13 +1649,44 @@ class Spec(object):
         """
         node_list = []
         for s in self.traverse(order='pre', deptype=hash.deptype):
-            node = s.to_node_dict(hash)
-            node[s.name]['hash'] = s.dag_hash()
-            if 'build' in hash.deptype:
-                node[s.name]['build_hash'] = s.build_hash()
-            node_list.append(node)
+            node_list.append(s.node_dict_with_hashes(hash))
 
         return syaml.syaml_dict([('spec', node_list)])
+
+    def node_dict_with_hashes(self, hash=ht.dag_hash):
+        """ Returns a node_dict of this spec with the dag hash added.  If this
+        spec is concrete, the full hash is added as well.  If 'build' is in
+        the hash_type, the build hash is also added. """
+        node = self.to_node_dict(hash)
+        node[self.name]['hash'] = self.dag_hash()
+
+        # full_hash and build_hash are lazily computed -- but if we write
+        # a spec out, we want them to be included. This is effectively
+        # the last chance we get to compute them accurately.
+        if self.concrete:
+            # build and full hashes can be written out if:
+            # 1. they're precomputed (i.e. we read them from somewhere
+            #    and they were already on the spec
+            # 2. we can still compute them lazily (i.e. we just made them and
+            #    have the full dependency graph on-hand)
+            #
+            # we want to avoid recomputing either hash for specs we read
+            # in from the DB or elsewhere, as we may not have the info
+            # (like patches, package versions, etc.) that we need to
+            # compute them. Unknown hashes are better than wrong hashes.
+            write_full_hash = (
+                self._hashes_final and self._full_hash or   # cached and final
+                not self._hashes_final)                     # lazily compute
+            write_build_hash = 'build' in hash.deptype and (
+                self._hashes_final and self._build_hash or  # cached and final
+                not self._hashes_final)                     # lazily compute
+
+            if write_full_hash:
+                node[self.name]['full_hash'] = self.full_hash()
+            if write_build_hash:
+                node[self.name]['build_hash'] = self.build_hash()
+
+        return node
 
     def to_record_dict(self):
         """Return a "flat" dictionary with name and hash as top-level keys.
@@ -1734,6 +1774,11 @@ class Spec(object):
 
         # specs read in are concrete unless marked abstract
         spec._concrete = node.get('concrete', True)
+
+        # this spec may have been built with older packages than we have
+        # on-hand, and we may not have the build dependencies, so mark it
+        # so we don't recompute full_hash and build_hash.
+        spec._hashes_final = spec._concrete
 
         if 'patches' in node:
             patches = node['patches']
@@ -2063,7 +2108,8 @@ class Spec(object):
             # still need to select a concrete package later.
             if not self.virtual:
                 changed |= any(
-                    (concretizer.concretize_architecture(self),
+                    (concretizer.concretize_develop(self),  # special variant
+                     concretizer.concretize_architecture(self),
                      concretizer.concretize_compiler(self),
                      concretizer.adjust_target(self),
                      # flags must be concretized after compiler
@@ -2584,6 +2630,8 @@ class Spec(object):
         else:
             # merge package/vdep information into spec
             try:
+                tty.debug(
+                    "{0} applying constraint {1}".format(self.name, str(dep)))
                 changed |= spec_deps[dep.name].constrain(dep)
             except spack.error.UnsatisfiableSpecError as e:
                 fmt = 'An unsatisfiable {0}'.format(e.constraint_type)
@@ -2696,6 +2744,10 @@ class Spec(object):
 
         if user_spec_deps:
             for name, spec in user_spec_deps.items():
+                if not name:
+                    msg = "Attempted to normalize anonymous dependency spec"
+                    msg += " %s" % spec
+                    raise InvalidSpecDetected(msg)
                 if name not in all_spec_deps:
                     all_spec_deps[name] = spec
                 else:
@@ -2848,6 +2900,9 @@ class Spec(object):
         if not other.satisfies_dependencies(self):
             raise UnsatisfiableDependencySpecError(other, self)
 
+        if any(not d.name for d in other.traverse(root=False)):
+            raise UnconstrainableDependencySpecError(other)
+
         # Handle common first-order constraints directly
         changed = False
         for name in self.common_dependencies(other):
@@ -2999,8 +3054,9 @@ class Spec(object):
             if not self._dependencies:
                 return False
 
-            selfdeps = self.traverse(root=False)
-            otherdeps = other.traverse(root=False)
+            # use list to prevent double-iteration
+            selfdeps = list(self.traverse(root=False))
+            otherdeps = list(other.traverse(root=False))
             if not all(any(d.satisfies(dep, strict=True) for d in selfdeps)
                        for dep in otherdeps):
                 return False
@@ -3157,6 +3213,7 @@ class Spec(object):
             self._dup_deps(other, deptypes, caches)
 
         self._concrete = other._concrete
+        self._hashes_final = other._hashes_final
 
         if caches:
             self._hash = other._hash
@@ -4121,8 +4178,23 @@ class SpecParser(spack.parse.Parser):
 
                         if not dep:
                             # We're adding a dependency to the last spec
-                            self.expect(ID)
-                            dep = self.spec(self.token.value)
+                            if self.accept(ID):
+                                self.previous = self.token
+                                if self.accept(EQ):
+                                    # This is an anonymous dep with a key=value
+                                    # push tokens to be parsed as part of the
+                                    # dep spec
+                                    self.push_tokens(
+                                        [self.previous, self.token])
+                                    dep_name = None
+                                else:
+                                    # named dep (standard)
+                                    dep_name = self.token.value
+                                self.previous = None
+                            else:
+                                # anonymous dep
+                                dep_name = None
+                            dep = self.spec(dep_name)
 
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
@@ -4505,6 +4577,14 @@ class UnsatisfiableDependencySpecError(spack.error.UnsatisfiableSpecError):
     def __init__(self, provided, required):
         super(UnsatisfiableDependencySpecError, self).__init__(
             provided, required, "dependency")
+
+
+class UnconstrainableDependencySpecError(spack.error.SpecError):
+    """Raised when attempting to constrain by an anonymous dependency spec"""
+    def __init__(self, spec):
+        msg = "Cannot constrain by spec '%s'. Cannot constrain by a" % spec
+        msg += " spec containing anonymous dependencies"
+        super(UnconstrainableDependencySpecError, self).__init__(msg)
 
 
 class AmbiguousHashError(spack.error.SpecError):

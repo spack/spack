@@ -14,6 +14,6 @@ class PyPkginfo(PythonPackage):
 
     version('1.5.0.1', sha256='7424f2c8511c186cd5424bbf31045b77435b37a8d604990b79d4e70d741148bb')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-nose', type='test')
     depends_on('py-coverage', type='test')
