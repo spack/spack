@@ -131,7 +131,7 @@ class Hydrogen(CMakePackage, CudaPackage):
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+openmp' in spec),
             '-DHydrogen_ENABLE_QUADMATH:BOOL=%s'     % ('+quad' in spec),
-            '-Dhydrogen_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
+            '-DHydrogen_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
             '-DHydrogen_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
             '-DHydrogen_ENABLE_MPC:BOOL=%s'        % ('+mpfr' in spec),
             '-DHydrogen_GENERAL_LAPACK_FALLBACK=ON',
