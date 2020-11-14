@@ -38,6 +38,8 @@ class Papi(AutotoolsPackage):
     variant('rapl', default=False, description='Enable RAPL support')
     variant('lmsensors', default=False, description='Enable lm_sensors support')
     variant('sde', default=False, description='Enable software defined events')
+    variant('cuda', default=False, description='Enable CUDA support')
+    variant('nvml', default=False, description='Enable NVML support')
 
     variant('shared', default=True, description='Build shared libraries')
     # PAPI requires building static libraries, so there is no "static" variant
@@ -46,9 +48,12 @@ class Papi(AutotoolsPackage):
     # and therefore not implemented here
 
     depends_on('lm-sensors', when='+lmsensors')
+    depends_on('cuda', when='+cuda')
+    depends_on('cuda', when='+nvml')
 
     conflicts('%gcc@8:', when='@5.3.0', msg='Requires GCC version less than 8.0')
-    conflicts('+sde', when='@:5.9.99999', msg='Software defined events (SDE) added in 6.0.0')
+    conflicts('+sde', when='@:5', msg='Software defined events (SDE) added in 6.0.0')
+    conflicts('^cuda', when='@:5', msg='CUDA support for versions < 6.0.0 not implemented')
 
     # This is the only way to match exactly version 6.0.0 without also
     # including version 6.0.0.1 due to spack version matching logic
@@ -63,6 +68,8 @@ class Papi(AutotoolsPackage):
     def setup_build_environment(self, env):
         if '+lmsensors' in self.spec and self.version >= Version('6'):
             env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
+        if '^cuda' in self.spec:
+            env.set('PAPI_CUDA_ROOT', self.spec['cuda'].prefix)
 
     setup_run_environment = setup_build_environment
 
@@ -75,7 +82,8 @@ class Papi(AutotoolsPackage):
         # Build a list of PAPI components
         components = filter(
             lambda x: spec.variants[x].value,
-            ['example', 'infiniband', 'powercap', 'rapl', 'lmsensors', 'sde'])
+            ['example', 'infiniband', 'powercap', 'rapl', 'lmsensors', 'sde',
+             'cuda', 'nvml'])
         if components:
             options.append('--with-components=' + ' '.join(components))
 
