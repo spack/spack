@@ -66,7 +66,7 @@ class Aluminum(CMakePackage, CudaPackage):
 
         if spec.satisfies('@:0.1,0.6.0: +cuda ^cuda@:10.99'):
             args.append(
-                '-DCUB_DIR:FILEPATH=%s' % spec['cub'].prefix.include)
+                '-DCUB_DIR:FILEPATH=%s' % spec['cub'].prefix)
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
         if self.spec.satisfies('%clang platform=darwin'):
