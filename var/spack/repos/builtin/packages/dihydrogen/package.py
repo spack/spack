@@ -105,7 +105,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
-    depends_on('cmake@3.16.0:', type='build')
+    depends_on('cmake@3.17.0:', type='build')
 
     depends_on('py-breathe', type='build', when='+docs')
     depends_on('doxygen', type='build', when='+docs')
@@ -149,5 +149,14 @@ class Dihydrogen(CMakePackage, CudaPackage):
                     args.append('-DCMAKE_CUDA_FLAGS={0}'.format(
                         ' '.join(self.cuda_flags(cuda_arch))
                     ))
+
+        if '+cuda' in spec or '+legacy' in spec:
+            args.append('-DcuDNN_DIR={0}'.format(
+                spec['cudnn'].prefix))
+
+        if spec.satisfies('^cuda@:10.99'):
+            if '+cuda' in spec or '+legacy' in spec:
+                args.append('-DCUB_DIR={0}'.format(
+                    spec['cub'].prefix))
 
         return args

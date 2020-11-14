@@ -53,3 +53,6 @@ class Evtgen(AutotoolsPackage):
         # due to libext_shared depending on lib_shared
         make('lib_shared')
         make('all')
+
+    def setup_run_environment(self, env):
+        env.set("EVTGEN", self.prefix.share)

@@ -20,6 +20,13 @@ config:
     root: $spack/opt/spack
     projections:
       all: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+    # install_tree can include an optional padded length (int or boolean)
+    # default is False (do not pad)
+    # if padded_length is True, Spack will pad as close to the system max path
+    # length as possible
+    # if padded_length is an integer, Spack will pad to that many characters,
+    # assuming it is higher than the length of the install_tree root.
+    # padded_length: 128
 
 
   # Locations where templates should be found

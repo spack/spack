@@ -76,6 +76,9 @@ class Elpa(AutotoolsPackage, CudaPackage):
             msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
             options.append(msg.format(feature))
 
+        if spec.target.family == 'aarch64':
+            options.append('--disable-sse-assembly')
+
         # If no features are found, enable the generic ones
         if not any(f in spec.target for f in simd_features):
             options.append('--enable-generic')

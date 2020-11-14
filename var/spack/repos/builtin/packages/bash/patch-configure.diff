@@ -1,0 +1,154 @@
+--- a/configure	2019-01-02 08:43:31.000000000 -0600
++++ b/configure	2020-11-07 12:17:15.000000000 -0600
+@@ -5336,6 +5336,7 @@
+ /* end confdefs.h.  */
+ 
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <readline/readline.h>
+ 
+ extern int rl_gnu_readline_p;
+@@ -12902,6 +12903,7 @@
+ #endif
+ #include <stdio.h>
+ #include <ctype.h>
++#include <stdlib.h>
+ 
+ main(c, v)
+ int	c;
+@@ -12961,6 +12963,7 @@
+ 
+ #include <sys/types.h>
+ #include <fcntl.h>
++#include <stdlib.h>
+ main()
+ {
+   int fd1, fd2, fl;
+@@ -13012,6 +13015,7 @@
+ #ifdef HAVE_UNISTD_H
+ #  include <unistd.h>
+ #endif
++#include <stdlib.h>
+ main()
+ {
+ # ifdef GETPGRP_VOID
+@@ -13225,6 +13229,7 @@
+ #ifdef HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
++#include <stdlib.h>
+ #if !HAVE_DECL_SYS_SIGLIST
+ extern char *sys_siglist[];
+ #endif
+@@ -13309,6 +13314,7 @@
+ #ifndef UNDER_SYS_SIGLIST_DECLARED
+ extern char *_sys_siglist[];
+ #endif
++#include <stdlib.h>
+ main()
+ {
+ char *msg = (char *)_sys_siglist[2];
+@@ -14626,6 +14632,7 @@
+ #  include <ndir.h>
+ # endif
+ #endif /* HAVE_DIRENT_H */
++#include <stdlib.h>
+ main()
+ {
+ DIR *dir;
+@@ -14677,6 +14684,7 @@
+   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
++#include <stdlib.h>
+ main()
+ {
+ long maxfds = ulimit(4, 0L);
+@@ -14754,6 +14762,7 @@
+ {
+ return "42";
+ }
++#include <stdlib.h>
+ main()
+ {
+ char *s;
+@@ -14805,7 +14814,7 @@
+ #ifdef HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+-
++#include <stdlib.h>
+ main()
+ {
+ 	char	*xpwd;
+@@ -14860,7 +14869,7 @@
+ #include <sys/types.h>
+ #include <signal.h>
+ #include <setjmp.h>
+-
++#include <stdlib.h>
+ main()
+ {
+ #if !defined (_POSIX_VERSION) || !defined (HAVE_POSIX_SIGNALS)
+@@ -14929,7 +14938,8 @@
+ #if defined (HAVE_LOCALE_H)
+ #include <locale.h>
+ #endif
+-
++#include <stdlib.h>
++#include <string.h>
+ main(c, v)
+ int     c;
+ char    *v[];
+@@ -14999,7 +15009,7 @@
+ /* end confdefs.h.  */
+ 
+ #include <stdio.h>
+-
++#include <stdlib.h>
+ main()
+ {
+   int n;
+@@ -15237,6 +15247,7 @@
+ /* end confdefs.h.  */
+ 
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <string.h>
+ 
+ int
+@@ -15380,6 +15391,7 @@
+   nsigint++;
+ }
+ 
++#include <stdlib.h>
+ main()
+ {
+ 	nsigint = 0;
+@@ -15501,7 +15513,7 @@
+ #ifdef HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+-
++#include <stdlib.h>
+ /* Add more tests in here as appropriate. */
+ main()
+ {
+@@ -15697,7 +15709,7 @@
+ #include <sys/wait.h>
+ #include <unistd.h>
+ #include <errno.h>
+-
++#include <stdlib.h>
+ #ifndef errno
+ extern int errno;
+ #endif
+@@ -15811,7 +15823,7 @@
+ 
+ #include <sys/types.h>
+ #include <signal.h>
+-
++#include <stdlib.h>
+ #ifndef NSIG
+ #  define NSIG 64
+ #endif

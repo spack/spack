@@ -107,6 +107,10 @@ class Amrex(CMakePackage):
             url = "https://github.com/AMReX-Codes/amrex/archive/{0}.tar.gz"
         return url.format(version.dotted)
 
+    #
+    # For versions <= 20.11
+    #
+    @when('@:20.11')
     def cmake_args(self):
         args = [
             '-DUSE_XSDK_DEFAULTS=ON',
@@ -128,6 +132,37 @@ class Amrex(CMakePackage):
             self.define_from_variant('ENABLE_HYPRE', 'hypre'),
             self.define_from_variant('ENABLE_PETSC', 'petsc'),
             self.define_from_variant('ENABLE_CUDA', 'cuda'),
+        ]
+        if self.spec.satisfies('%fj'):
+            args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+
+        return args
+
+    #
+    # For versions > 20.11
+    #
+    @when('@20.12:')
+    def cmake_args(self):
+        args = [
+            '-DUSE_XSDK_DEFAULTS=ON',
+            self.define_from_variant('AMReX_SPACEDIM', 'dimensions'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('AMReX_MPI', 'mpi'),
+            self.define_from_variant('AMReX_OMP', 'openmp'),
+            '-DXSDK_PRECISION:STRING=%s' %
+            self.spec.variants['precision'].value.upper(),
+            self.define_from_variant('XSDK_ENABLE_Fortran', 'fortran'),
+            self.define_from_variant('AMReX_FORTRAN_INTERFACES', 'fortran'),
+            self.define_from_variant('AMReX_EB', 'eb'),
+            self.define_from_variant('AMReX_LINEAR_SOLVERS',
+                                     'linear_solvers'),
+            self.define_from_variant('AMReX_AMRDATA', 'amrdata'),
+            self.define_from_variant('AMReX_PARTICLES', 'particles'),
+            self.define_from_variant('AMReX_SUNDIALS', 'sundials'),
+            self.define_from_variant('AMReX_HDF5', 'hdf5'),
+            self.define_from_variant('AMReX_HYPRE', 'hypre'),
+            self.define_from_variant('AMReX_PETSC', 'petsc'),
+            self.define_from_variant('AMReX_CUDA', 'cuda'),
         ]
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
