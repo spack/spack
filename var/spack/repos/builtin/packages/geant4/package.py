@@ -84,6 +84,7 @@ class Geant4(CMakePackage):
 
     # Visualization driver dependencies
     depends_on("gl", when='+opengl')
+    depends_on("glu", when='+opengl')
     depends_on("glx", when='+opengl+x11')
     depends_on("libx11", when='+x11')
     depends_on("libxmu", when='+x11')

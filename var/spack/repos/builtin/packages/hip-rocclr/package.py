@@ -24,15 +24,16 @@ class HipRocclr(CMakePackage):
         url = "https://github.com/ROCm-Developer-Tools/ROCclr/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version('3.9.0', sha256='d248958672ae35ab7f9fbd83827ccf352e2756dfa7819f6b614ace2e1a9a064e')
     version('3.8.0', sha256='10d8aa6f5af7b51813015da603c4e75edc863c3530793f6ed9769ca345c08ed6')
     version('3.7.0', sha256='a49f464bb2eab6317e87e3cc249aba3b2517a34fbdfe50175f0437f69a219adc')
     version('3.5.0', sha256='87c1ee9f02b8aa487b628c543f058198767c474cec3d21700596a73c028959e1')
 
     depends_on('cmake@3:', type='build')
-    depends_on('mesa~llvm@18.3:', type='link')
+    depends_on('mesa~llvm@18.3: swr=none', type='link')
     depends_on('libelf', type='link', when="@3.7.0:")
     depends_on('numactl', type='link', when="@3.7.0:")
-    for ver in ['3.5.0', '3.7.0', '3.8.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
@@ -64,6 +65,13 @@ class HipRocclr(CMakePackage):
              destination='',
              placement='opencl-on-vdi',
              when='@3.8.0')
+    resource(name='opencl-on-vdi',
+             url='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-3.9.0.tar.gz',
+             sha256='286ff64304905384ce524cd8794c28aee216befd6c9267d4187a12e5a21e2daf',
+             expand=True,
+             destination='',
+             placement='opencl-on-vdi',
+             when='@3.9.0')
 
     @run_after('install')
     def deploy_missing_files(self):

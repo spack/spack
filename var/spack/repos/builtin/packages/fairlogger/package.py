@@ -18,6 +18,7 @@ class Fairlogger(CMakePackage):
     # generator = 'Ninja'
 
     version('develop', branch='dev', get_full_repo=True)
+    version('1.9.0', sha256='13bcaa0d4129f8d4e69a0a2ece8e5b7073760082c8aa028e3fc0c11106503095')
     version('1.8.0', sha256='3f0a38dba1411b542d998e02badcc099c057b33a402954fc5c2ab74947a0c42c')
     version('1.7.0', sha256='ef467f0a70afc0549442323d70b165fa0b0b4b4e6f17834573ca15e8e0b007e4')
     version('1.6.2', sha256='5c6ef0c0029eb451fee71756cb96e6c5011040a9813e8889667b6f3b6b04ed03')

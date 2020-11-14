@@ -435,7 +435,7 @@ class Root(CMakePackage):
                                   True))
 
         if '+x+opengl' in self.spec:
-            ftgl_prefix = self.spec('ftgl').prefix
+            ftgl_prefix = self.spec['ftgl'].prefix
             options.append(define('FTGL_ROOT_DIR', ftgl_prefix))
             options.append(define('FTGL_INCLUDE_DIR', ftgl_prefix.include))
         if '+python' in self.spec:

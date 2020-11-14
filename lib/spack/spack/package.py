@@ -901,6 +901,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                               path=self.path)
         return stage
 
+    def _download_search(self):
+        dynamic_fetcher = fs.from_list_url(self)
+        return [dynamic_fetcher] if dynamic_fetcher else []
+
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
         mirror_paths = spack.mirror.mirror_archive_paths(
@@ -912,12 +916,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version,
                                              s.dag_hash())
 
-        def download_search():
-            dynamic_fetcher = fs.from_list_url(self)
-            return [dynamic_fetcher] if dynamic_fetcher else []
-
         stage = Stage(fetcher, mirror_paths=mirror_paths, name=stage_name,
-                      path=self.path, search_fn=download_search)
+                      path=self.path, search_fn=self._download_search)
         return stage
 
     def _make_stage(self):

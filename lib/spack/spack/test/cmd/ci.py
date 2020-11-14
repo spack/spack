@@ -195,6 +195,7 @@ spack:
   definitions:
     - bootstrap:
       - gcc@3.0
+      - gcc@2.0
   specs:
     - dyninst%gcc@3.0
   mirrors:

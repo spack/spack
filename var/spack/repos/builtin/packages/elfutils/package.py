@@ -21,6 +21,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
+    version('0.182', sha256='ecc406914edf335f0b7fc084ebe6c460c4d6d5175bfdd6688c1c78d9146b8858')
     version('0.181', sha256='29a6ad7421ec2acfee489bb4a699908281ead2cb63a20a027ce8804a165f0eb3')
     version('0.180', sha256='b827b6e35c59d188ba97d7cf148fa8dc6f5c68eb6c5981888dfdbb758c0b569d')
     version('0.179', sha256='25a545566cbacaa37ae6222e58f1c48ea4570f53ba991886e2f5ce96e22a23a2')

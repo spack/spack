@@ -32,6 +32,8 @@ class PyGrpcio(PythonPackage):
         env.set('GRPC_PYTHON_BUILD_SYSTEM_OPENSSL', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_ZLIB', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_CARES', True)
+        # https://github.com/grpc/grpc/pull/24449
+        env.set('GRPC_BUILD_WITH_BORING_SSL_ASM', '')
 
         for dep in self.spec.dependencies(deptype='link'):
             query = self.spec[dep.name]
