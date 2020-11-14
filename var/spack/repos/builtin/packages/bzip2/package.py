@@ -39,9 +39,10 @@ class Bzip2(Package, SourcewarePackage):
     @property
     def libs(self):
         shared = '+shared' in self.spec
-        return find_libraries(
-            'libbz2', root=self.prefix, shared=shared, recursive=True
-        )
+        return find_libraries('libbz2', root=self.prefix.lib64, shared=shared,
+                              recursive=False) + \
+            find_libraries('libbz2', root=self.prefix.lib, shared=shared,
+                           recursive=False)
 
     def patch(self):
         # bzip2 comes with two separate Makefiles for static and dynamic builds
