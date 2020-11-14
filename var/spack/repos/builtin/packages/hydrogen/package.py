@@ -34,7 +34,7 @@ class Hydrogen(CMakePackage, CudaPackage):
     variant('shared', default=True,
             description='Enables the build of shared libraries')
     variant('openmp', default=True,
-            description='Make use of OpenMP within CPU-kernels e.g. packing/unpacking')
+            description='Make use of OpenMP within CPU-kernels')
     variant('openmp_blas', default=False,
             description='Use OpenMP for threading in the BLAS library')
     variant('quad', default=False,
