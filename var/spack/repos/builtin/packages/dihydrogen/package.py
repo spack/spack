@@ -112,6 +112,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
     depends_on('py-breathe', type='build', when='+docs')
     depends_on('doxygen', type='build', when='+docs')
 
+    depends_on('llvm-openmp', when='%apple-clang +openmp')
+
     illegal_cuda_arch_values = [
         '10', '11', '12', '13',
         '20', '21',
@@ -161,17 +163,26 @@ class Dihydrogen(CMakePackage, CudaPackage):
                 args.append('-DCUB_DIR={0}'.format(
                     spec['cub'].prefix))
 
-        # Add support for OpenMP
-        if '+openmp' in spec:
-            if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
-                if sys.platform == 'darwin':
-                    clang = self.compiler.cc
-                    clang_bin = os.path.dirname(clang)
-                    clang_root = os.path.dirname(clang_bin)
-                    args.extend([
-                        '-DOpenMP_CXX_FLAGS=-fopenmp=libomp',
-                        '-DOpenMP_CXX_LIB_NAMES=libomp',
-                        '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
-                            clang_root)])
+        # Add support for OpenMP with external (Brew) clang
+        if spec.satisfies('%clang +openmp platform=darwin'):
+            clang = self.compiler.cc
+            clang_bin = os.path.dirname(clang)
+            clang_root = os.path.dirname(clang_bin)
+            args.extend([
+                '-DOpenMP_CXX_FLAGS=-fopenmp=libomp',
+                '-DOpenMP_CXX_LIB_NAMES=libomp',
+                '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
+                    clang_root)])
 
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%apple-clang +openmp'):
+            env.append_flags(
+                'CPPFLAGS', self.compiler.openmp_flag)
+            env.append_flags(
+                'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
