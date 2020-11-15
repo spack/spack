@@ -34,7 +34,7 @@ class XercesC(AutotoolsPackage):
 
     variant('netaccessor',
             default='curl',
-            # todo: add additional values (platform-specific) 
+            # todo: add additional values (platform-specific)
             # 'socket', 'cfurl', 'winsock'
             values=('curl', 'none'),
             multi=False,
@@ -78,7 +78,7 @@ class XercesC(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = []
-        
+
         if 'netaccessor=curl' in spec:
             args.append('--enable-netaccessor-curl')
         else:
