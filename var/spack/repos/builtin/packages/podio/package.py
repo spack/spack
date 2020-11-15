@@ -48,7 +48,7 @@ class Podio(CMakePackage):
     def cmake_args(self):
         args = [
             self.define('BUILD_TESTING', self.run_tests),
-            self.define_from_variants('ENABLE_SIO', 'sio')
+            self.define_from_variant('ENABLE_SIO', 'sio')
         ]
         return args
 
