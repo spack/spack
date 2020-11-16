@@ -19,7 +19,7 @@ class PyPywavelets(PythonPackage):
 
     import_modules = ['pywt', 'pywt.data']
 
-    depends_on('python@3.5:', when='@1.1.1:')
+    depends_on('python@3.5:', type=('build', 'run'), when='@1.1.1:')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
     depends_on('py-numpy@1.9.1:',  type=('build', 'run'))
