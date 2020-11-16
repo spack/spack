@@ -35,7 +35,6 @@ class Dd4hep(CMakePackage):
 
     generator = 'Ninja'
 
-
     # Workarounds for various TBB issues in DD4hep v1.11
     # See https://github.com/AIDASoft/DD4hep/pull/613 .
     patch('tbb-workarounds.patch', when='@1.11.0')
