@@ -91,6 +91,9 @@ class Libceed(Package):
                 opt = '-O -g'
             makeopts += ['OPT=%s' % opt]
 
+            if spec.satisfies('@0.7') and compiler.name in ['xl', 'xl_r']:
+                makeopts += ['CXXFLAGS.XL=-qpic -std=c++11 -MMD']
+
             if 'avx' in self.spec.target:
                 makeopts.append('AVX=1')
 

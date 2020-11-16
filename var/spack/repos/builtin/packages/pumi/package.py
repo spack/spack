@@ -80,7 +80,7 @@ class Pumi(CMakePackage):
             '-DMESHES=%s' % join_path(self.stage.source_path, 'pumi_meshes')
         ]
         if spec.satisfies('@2.2.3'):
-            args += ['-DSCOREC_ENABLE_CXX11=ON']
+            args += ['-DCMAKE_CXX_STANDARD=11']
         if self.spec.satisfies('simmodsuite=base'):
             args.append('-DENABLE_SIMMETRIX=ON')
         if self.spec.satisfies('simmodsuite=kernels') or \

@@ -153,13 +153,13 @@ class Mfem(Package):
 
     conflicts('+shared', when='@:3.3.2')
     conflicts('~static~shared')
-    conflicts('~threadsafe', when='+openmp')
+    conflicts('~threadsafe', when='@:3.99.99+openmp')
 
     conflicts('+cuda', when='@:3.99.99')
     conflicts('+netcdf', when='@:3.1')
     conflicts('+superlu-dist', when='@:3.1')
     # STRUMPACK support was added in mfem v3.3.2, however, here we allow only
-    # strumpack v3 support which is available starting with mfem v4.0:
+    # strumpack v3+ support for which is available starting with mfem v4.0:
     conflicts('+strumpack', when='@:3.99.99')
     conflicts('+gnutls', when='@:3.1')
     conflicts('+zlib', when='@:3.2')
@@ -234,6 +234,7 @@ class Mfem(Package):
     # when using hypre version >= 2.16.0.
     # This issue is resolved in v4.2.
     conflicts('+strumpack', when='mfem@4.0.0:4.1.99 ^hypre@2.16.0:')
+    conflicts('+strumpack ^strumpack+cuda', when='~cuda')
 
     depends_on('occa@1.0.8:', when='@:4.1.99+occa')
     depends_on('occa@1.1.0:', when='@4.2.0:+occa')
@@ -254,6 +255,7 @@ class Mfem(Package):
     patch('mfem-3.4.patch', when='@3.4.0')
     patch('mfem-3.3-3.4-petsc-3.9.patch',
           when='@3.3.0:3.4.0 +petsc ^petsc@3.9.0:')
+    # TODO: do not patch @develop when MFEM PR #1862 is merged.
     patch('mfem-4.2-umpire.patch', when='@4.2.0,develop+umpire')
 
     # Patch to fix MFEM makefile syntax error. See
@@ -479,12 +481,14 @@ class Mfem(Package):
                     sp_lib += ['-lmpifort']
                 elif '^openmpi' in strumpack:
                     sp_lib += ['-lmpi_mpifh']
+                elif '^spectrum-mpi' in strumpack:
+                    sp_lib += ['-lmpi_ibm_mpifh']
             if '+openmp' in strumpack:
                 # The '+openmp' in the spec means strumpack will TRY to find
                 # OpenMP; if not found, we should not add any flags -- how do
                 # we figure out if strumpack found OpenMP?
                 if not self.spec.satisfies('%apple-clang'):
-                    sp_opt += [self.compiler.openmp_flag]
+                    sp_opt += [xcompiler + self.compiler.openmp_flag]
             if '^parmetis' in strumpack:
                 parmetis = strumpack['parmetis']
                 sp_opt += [parmetis.headers.cpp_flags]
@@ -508,6 +512,9 @@ class Mfem(Package):
                 zfp = strumpack['zfp']
                 sp_opt += ['-I%s' % zfp.prefix.include]
                 sp_lib += [ld_flags_from_dirs([zfp.prefix.lib], ['zfp'])]
+            if '+cuda' in strumpack:
+                # assuming also ('+cuda' in spec)
+                sp_lib += ['-lcusolver', '-lcublas']
             options += [
                 'STRUMPACK_OPT=%s' % ' '.join(sp_opt),
                 'STRUMPACK_LIB=%s' % ' '.join(sp_lib)]
@@ -594,7 +601,8 @@ class Mfem(Package):
                 'LIBUNWIND_LIB=%s' % ld_flags_from_library_list(libs)]
 
         if '+openmp' in spec:
-            options += ['OPENMP_OPT=%s' % self.compiler.openmp_flag]
+            options += [
+                'OPENMP_OPT=%s' % (xcompiler + self.compiler.openmp_flag)]
 
         if '+cuda' in spec:
             options += [
@@ -721,11 +729,16 @@ class Mfem(Package):
         if install_em:
             install_tree('data', join_path(prefix_share, 'data'))
 
+    @when('@4.1.0')
     def patch(self):
         # Remove the byte order mark since it messes with some compilers
-        filter_file(u'\uFEFF', '', 'fem/gslib.hpp')
-        filter_file(u'\uFEFF', '', 'fem/gslib.cpp')
-        filter_file(u'\uFEFF', '', 'linalg/hiop.hpp')
+        files_with_bom = [
+            'fem/gslib.hpp', 'fem/gslib.cpp', 'linalg/hiop.hpp',
+            'miniapps/gslib/field-diff.cpp', 'miniapps/gslib/findpts.cpp',
+            'miniapps/gslib/pfindpts.cpp']
+        bom = '\xef\xbb\xbf' if sys.version_info < (3,) else u'\ufeff'
+        for f in files_with_bom:
+            filter_file(bom, '', f)
 
     @property
     def suitesparse_components(self):
@@ -738,12 +751,15 @@ class Mfem(Package):
     @property
     def sundials_components(self):
         """Return the SUNDIALS components needed by MFEM."""
+        spec = self.spec
         sun_comps = 'arkode,cvodes,nvecserial,kinsol'
-        if '+mpi' in self.spec:
-            if self.spec.satisfies('@4.2:'):
+        if '+mpi' in spec:
+            if spec.satisfies('@4.2:'):
                 sun_comps += ',nvecparallel,nvecmpiplusx'
             else:
                 sun_comps += ',nvecparhyp,nvecparallel'
+        if '+cuda' in spec and '+cuda' in spec['sundials']:
+            sun_comps += ',nveccuda'
         return sun_comps
 
     @property
