@@ -10,9 +10,9 @@ class Vgm(CMakePackage):
     """Virtual Geometry Model (VGM) is a geometry conversion tool, actually
     providing conversion between Geant4 and ROOT TGeo geometry models."""
 
-    homepage = "http://github.com/vmc-project/vgm"
-    url      = "http://github.com/vmc-project/vgm/archive/v4-8.tar.gz"
-    git      = "http://github.com/vmc-project/vgm.git"
+    homepage = "https://github.com/vmc-project/vgm"
+    url      = "https://github.com/vmc-project/vgm/archive/v4-8.tar.gz"
+    git      = "https://github.com/vmc-project/vgm.git"
 
     maintainer = ['wdconinc']
 
