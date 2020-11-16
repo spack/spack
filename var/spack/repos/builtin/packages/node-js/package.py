@@ -57,7 +57,7 @@ class NodeJs(Package):
     phases = ['configure', 'build', 'install']
 
     # https://github.com/spack/spack/issues/19310
-    conflicts('node-js%gcc@:4.8',
+    conflicts('%gcc@:4.8',
               msg="fails to build with gcc 4.8 "
                   "(see https://github.com/spack/spack/issues/19310")
 
