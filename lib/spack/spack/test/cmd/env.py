@@ -220,9 +220,16 @@ env:
     with ev.read('test'):
         out = install()
 
-    # Ensure both packages reach install phase processing
+    # Ensure both packages reach install phase processing and are installed
+    out = str(out)
     assert 'depb: Executing phase:' in out
     assert 'a: Executing phase:' in out
+
+    depb = spack.repo.path.get_pkg_class('depb')
+    assert depb.installed, 'Expected depb to be installed'
+
+    a = spack.repo.path.get_pkg_class('a')
+    assert a.installed, 'Expected a to be installed'
 
 
 def test_remove_after_concretize():
