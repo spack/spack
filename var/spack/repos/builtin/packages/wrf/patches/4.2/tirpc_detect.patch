@@ -1,0 +1,129 @@
+From fcc33da2cc325f54c9ff7803854bae22fad32f65 Mon Sep 17 00:00:00 2001
+From: Phil Tooley <phil.tooley@nag.co.uk>
+Date: Fri, 16 Oct 2020 12:39:59 +0100
+Subject: [PATCH] tirpc detection
+
+---
+ arch/Config.pl | 14 ++++++++++++++
+ arch/postamble |  7 +++++--
+ configure      | 28 ++++++++++++++++++++++++----
+ 3 files changed, 43 insertions(+), 6 deletions(-)
+
+diff --git a/arch/Config.pl b/arch/Config.pl
+index 19cc6278..482846ac 100644
+--- a/arch/Config.pl
++++ b/arch/Config.pl
+@@ -7,6 +7,9 @@
+ 
+ select((select(STDOUT), $|=1)[0]);
+ $sw_perl_path = perl ;
++$sw_tirpc_inc = "";
++$sw_tirpc_lib = "";
++$sw_tirpc_libdir = "";
+ $sw_netcdf_path = "" ;
+ $sw_netcdff_path = "" ;
+ $sw_pnetcdf_path = "" ;
+@@ -60,6 +63,15 @@ while ( substr( $ARGV[0], 0, 1 ) eq "-" )
+   {
+     $sw_perl_path = substr( $ARGV[0], 6 ) ;
+   }
++  if ( substr( $ARGV[0], 1, 10 ) eq "tirpc_inc=" )
++  {
++    $sw_tirpc_inc = substr( $ARGV[0], 11 ) ;
++  }
++  if ( substr( $ARGV[0], 1, 10 ) eq "tirpc_lib=" )
++  {
++    $sw_tirpc_libdir = substr( $ARGV[0], 11 ) ;
++    $sw_tirpc_lib = "-ltirpc" ;
++  }
+   if ( substr( $ARGV[0], 1, 7 ) eq "netcdf=" )
+   {
+     $sw_netcdf_path = substr( $ARGV[0], 8 ) ;
+@@ -448,6 +460,8 @@ while ( <CONFIGURE_DEFAULTS> )
+   if ( $latchon == 1 )
+   {
+     $_ =~ s/CONFIGURE_PERL_PATH/$sw_perl_path/g ;
++    $_ =~ s/CONFIGURE_TIRPC_INC/$sw_tirpc_inc/g ;
++    $_ =~ s/CONFIGURE_TIRPC_LIB/$sw_tirpc_libdir $sw_tirpc_lib/g ;
+     $_ =~ s/CONFIGURE_NETCDF_PATH/$sw_netcdf_path/g ;
+     $_ =~ s/CONFIGURE_NETCDFF_PATH/$sw_netcdff_path/g ;
+     $_ =~ s/CONFIGURE_PNETCDF_PATH/$sw_pnetcdf_path/g ;
+diff --git a/arch/postamble b/arch/postamble
+index 93e4ae35..36a39a33 100644
+--- a/arch/postamble
++++ b/arch/postamble
+@@ -36,7 +36,8 @@ ARCHFLAGS       =    $(COREDEFS) -DIWORDSIZE=$(IWORDSIZE) -DDWORDSIZE=$(DWORDSIZ
+ 		      -DNMM_NEST=$(WRF_NMM_NEST)
+ CFLAGS          =    $(CFLAGS_LOCAL) CONFIGURE_DMPARALLEL CONFIGURE_STUBMPI \
+                      CONFIGURE_TERRAIN_AND_LANDUSE \
+-                      -DMAX_HISTORY=$(MAX_HISTORY) CONFIGURE_NMM_CORE
++                      -DMAX_HISTORY=$(MAX_HISTORY) CONFIGURE_NMM_CORE $(TIRPCINC)
++
+ FCFLAGS         =    $(FCOPTIM) $(FCBASEOPTS)
+ ESMF_LIB_FLAGS  =    ESMFLIBFLAG
+ # ESMF 5 -- these are defined in esmf.mk, included above
+@@ -58,7 +59,7 @@ INCLUDE_MODULES =    $(MODULE_SRCH_FLAG) \
+ REGISTRY        =    Registry
+ CC_TOOLS_CFLAGS = CONFIGURE_NMM_CORE
+ 
+-LIB             =    $(LIB_BUNDLED) $(LIB_EXTERNAL) $(LIB_LOCAL) $(LIB_WRF_HYDRO)
++LIB             =    $(LIB_BUNDLED) $(LIB_EXTERNAL) $(LIB_LOCAL) $(LIB_WRF_HYDRO) $(LIB_TIRPC)
+ LDFLAGS         =    $(OMP) $(FCFLAGS) $(LDFLAGS_LOCAL) CONFIGURE_LDFLAGS
+ ENVCOMPDEFS     =    CONFIGURE_COMPILEFLAGS
+ CPPFLAGS        =    $(ARCHFLAGS) $(ENVCOMPDEFS) -I$(LIBINCLUDE) $(TRADFLAG) CONFIGURE_COMMS_INCLUDE
+@@ -68,6 +69,8 @@ HDF5PATH        =    CONFIGURE_HDF5_PATH
+ WRFPLUSPATH     =    CONFIGURE_WRFPLUS_PATH
+ RTTOVPATH       =    CONFIGURE_RTTOV_PATH
+ PNETCDFPATH     =    CONFIGURE_PNETCDF_PATH
++TIRPCINC        =    CONFIGURE_TIRPC_INC
++LIB_TIRPC       =    CONFIGURE_TIRPC_LIB
+ 
+ bundled:  io_only CONFIGURE_ATMOCN
+ external: io_only CONFIGURE_COMMS_EXTERNAL $(ESMF_TARGET)
+diff --git a/configure b/configure
+index 16a9ef57..188b6f03 100755
+--- a/configure
++++ b/configure
+@@ -548,15 +548,35 @@ if test -n "$wrf_core" ; then
+    fi
+ fi
+ 
++# Try to get an include dir for libtirpc, an empty string is acceptable...
++if [ -z $TIRPC_INCLUDE_DIR ]; then
++  TIRPC_INC=$(pkg-config --cflags-only-I libtirpc 2>/dev/null)
++else
++  echo Using passed TIRPC include path
++  TIRPC_INC="-I${TIRPC_INCLUDE_DIR}"
++fi
++echo "TIRPC_INC=${TIRPC_INC}"
++
++# Try to get an include dir for libtirpc, an empty string is acceptable...
++if [ -z $TIRPC_LIB_DIR ]; then
++  TIRPC_LIB=$(pkg-config --libs-only-L libtirpc 2>/dev/null)
++else
++  echo Using passed TIRPC include path
++  TIRPC_LIB="-L${TIRPC_LIB_DIR}"
++fi
++echo "TIRPC_LIB=${TIRPC_LIB}"
++
+ # Found perl, so proceed with configuration
+ if test -n "$PERL" ; then
+    srch=`grep -i "^#ARCH.*$os" arch/configure.defaults | grep -i "$mach"`
+    if [ -n "$srch" ] ; then
+      $PERL arch/Config.pl -dmparallel=$COMMLIB -ompparallel=$OMP -perl=$PERL \
+-          -netcdf=$NETCDF -netcdff=$NETCDFF -pnetcdf=$PNETCDF -hdf5=$HDF5 -phdf5=$PHDF5 -os=$os -mach=$mach -ldflags=$ldflags \
+-          -compileflags=$compileflags -opt_level=$opt_level -USENETCDFF=$USENETCDFF -USENETCDF=$USENETCDF \
+-          -time=$FORTRAN_COMPILER_TIMER -tfl="$TFL" -cfl="$CFL" -config_line="$config_line" \
+-          -wrf_core=$wrf_core -gpfs=$GPFS_PATH -curl=$CURL_PATH -dep_lib_path="$DEP_LIB_PATH"
++        -tirpc_inc=$TIRPC_INC -tirpc_lib=$TIRPC_LIB -netcdf=$NETCDF -netcdff=$NETCDFF \
++        -pnetcdf=$PNETCDF -hdf5=$HDF5 -phdf5=$PHDF5 -os=$os -mach=$mach -ldflags=$ldflags \
++        -compileflags=$compileflags -opt_level=$opt_level -USENETCDFF=$USENETCDFF \
++        -USENETCDF=$USENETCDF -time=$FORTRAN_COMPILER_TIMER -tfl="$TFL" -cfl="$CFL" \
++        -config_line="$config_line" -wrf_core=$wrf_core -gpfs=$GPFS_PATH -curl=$CURL_PATH \
++        -dep_lib_path="$DEP_LIB_PATH"
+      if test ! -f configure.wrf ; then
+        echo "configure.wrf not created! Exiting configure script..."
+        exit 1
+-- 
+2.28.0
+
