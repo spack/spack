@@ -220,18 +220,17 @@ class Wrf(Package):
                 "./arch/configure_new.defaults",
                 "./arch/configure_new.defaults.bak",
             )
-            with open("./arch/configure_new.defaults.bak", "rt") as ifh, open(
-                "./arch/configure_new.defaults", "wt"
-            ) as ofh:
-                for line in ifh:
-                    if line.startswith("DM_"):
-                        line = line.replace(
-                            "mpif90 -f90=$(SFC)", self.spec['mpi'].mpif90
-                        )
-                        line = line.replace(
-                            "mpicc -cc=$(SCC)", self.spec['mpi'].mpicc
-                        )
-                    ofh.write(line)
+            with open("./arch/configure_new.defaults.bak", "rt") as ifh:
+                with open("./arch/configure_new.defaults", "wt") as ofh:
+                    for line in ifh:
+                        if line.startswith("DM_"):
+                            line = line.replace(
+                                "mpif90 -f90=$(SFC)", self.spec['mpi'].mpif90
+                            )
+                            line = line.replace(
+                                "mpicc -cc=$(SCC)", self.spec['mpi'].mpicc
+                            )
+                        ofh.write(line)
 
     def configure(self, spec, prefix):
 
