@@ -751,8 +751,7 @@ class PackageInstaller(object):
 
             # Flag external and upstream packages as being installed
             if dep_pkg.spec.external or dep_pkg.installed_upstream:
-                self._flag_installed(dep_pkg,
-                                     get_dependent_ids(dep_pkg.spec))
+                self._flag_installed(dep_pkg)
                 continue
 
             # Check the database to see if the dependency has been installed
@@ -763,8 +762,7 @@ class PackageInstaller(object):
                     rec.installation_time > request.overwrite_time):
                 tty.debug('Flagging {0} as installed per the database'
                           .format(dep_id))
-                self._flag_installed(dep_pkg,
-                                     get_dependent_ids(dep_pkg.spec))
+                self._flag_installed(dep_pkg)
 
     def _prepare_for_install(self, task):
         """
@@ -1011,8 +1009,7 @@ class PackageInstaller(object):
         # ensure proper status tracking for environment build.
         not_local = _handle_external_and_upstream(request.pkg, True)
         if not_local:
-            self._flag_installed(request.pkg,
-                                 get_dependent_ids(request.pkg.spec))
+            self._flag_installed(request.pkg)
             return
 
         install_compilers = spack.config.get(
@@ -1420,15 +1417,17 @@ class PackageInstaller(object):
         task.status = STATUS_INSTALLED
         self._flag_installed(task.pkg, task.dependents)
 
-    def _flag_installed(self, pkg, dependent_ids):
+    def _flag_installed(self, pkg, dependent_ids=None):
         """
         Flag the package as installed and ensure known by all build tasks of
         known dependents.
 
         Args:
             pkg (Package): Package that has been installed locally, externally
-               or upstream
-            dependent_ids (list of str): list of the package's dependent ids
+                or upstream
+            dependent_ids (list of str or None): list of the package's
+                dependent ids, or None if the dependent ids are limited to
+                those maintained in the package (dependency DAG)
         """
         pkg_id = package_id(pkg)
 
@@ -1441,6 +1440,7 @@ class PackageInstaller(object):
         self.installed.add(pkg_id)
 
         # Update affected dependents
+        dependent_ids = dependent_ids or get_dependent_ids(pkg.spec)
         for dep_id in set(dependent_ids):
             tty.debug('Removing {0} from {1}\'s uninstalled dependencies.'
                       .format(pkg_id, dep_id))
@@ -1522,7 +1522,7 @@ class PackageInstaller(object):
             # some package likely depends on it.
             if not task.explicit:
                 if _handle_external_and_upstream(pkg, False):
-                    self._flag_installed(pkg, get_dependent_ids(spec))
+                    self._flag_installed(pkg, task.dependents)
                     continue
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
