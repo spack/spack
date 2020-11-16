@@ -21,8 +21,8 @@ class Wordnet(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        args.append('--with-tk=%s' % self.spec['tk'].prefix.lib)
-        args.append('--with-tcl=%s' % self.spec['tcl'].prefix.lib)
+        args.append('--with-tk=%s' % self.spec['tk'].libs.directories[0])
+        args.append('--with-tcl=%s' % self.spec['tcl'].libs.directories[0])
         if self.spec.satisfies('^tcl@8.6:'):
             args.append('CPPFLAGS=-DUSE_INTERP_RESULT')
 

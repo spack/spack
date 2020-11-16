@@ -34,6 +34,7 @@ import spack.repo
 import spack.stage
 import spack.util.executable
 import spack.util.gpg
+import spack.subprocess_context
 import spack.util.spack_yaml as syaml
 
 from spack.util.pattern import Bunch
@@ -41,11 +42,34 @@ from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 
 
+@pytest.fixture(autouse=True)
+def clear_recorded_monkeypatches():
+    yield
+    spack.subprocess_context.clear_patches()
+
+
+@pytest.fixture(scope='session', autouse=True)
+def record_monkeypatch_setattr():
+    import _pytest
+    saved_setattr = _pytest.monkeypatch.MonkeyPatch.setattr
+
+    def record_setattr(cls, target, name, value, *args, **kwargs):
+        spack.subprocess_context.append_patch((target, name, value))
+        saved_setattr(cls, target, name, value, *args, **kwargs)
+
+    _pytest.monkeypatch.MonkeyPatch.setattr = record_setattr
+    try:
+        yield
+    finally:
+        _pytest.monkeypatch.MonkeyPatch.setattr = saved_setattr
+
+
+def _can_access(path, perms):
+    return False
+
+
 @pytest.fixture
 def no_path_access(monkeypatch):
-    def _can_access(path, perms):
-        return False
-
     monkeypatch.setattr(os, 'access', _can_access)
 
 
@@ -70,6 +94,10 @@ def clean_user_environment():
         ev.activate(active)
 
 
+def _verify_executables_noop(*args):
+    return None
+
+
 #
 # Disable checks on compiler executable existence
 #
@@ -86,7 +114,7 @@ def mock_compiler_executable_verification(request, monkeypatch):
     if 'enable_compiler_verification' not in request.keywords:
         monkeypatch.setattr(spack.compiler.Compiler,
                             'verify_executables',
-                            lambda x: None)
+                            _verify_executables_noop)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -245,25 +273,27 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
         assert not files_in_stage
 
 
+class MockCache(object):
+    def store(self, copy_cmd, relative_dest):
+        pass
+
+    def fetcher(self, target_path, digest, **kwargs):
+        return MockCacheFetcher()
+
+
+class MockCacheFetcher(object):
+    def fetch(self):
+        raise FetchError('Mock cache always fails for tests')
+
+    def __str__(self):
+        return "[mock fetch cache]"
+
+
 @pytest.fixture(autouse=True)
 def mock_fetch_cache(monkeypatch):
     """Substitutes spack.paths.fetch_cache with a mock object that does nothing
     and raises on fetch.
     """
-    class MockCache(object):
-        def store(self, copy_cmd, relative_dest):
-            pass
-
-        def fetcher(self, target_path, digest, **kwargs):
-            return MockCacheFetcher()
-
-    class MockCacheFetcher(object):
-        def fetch(self):
-            raise FetchError('Mock cache always fails for tests')
-
-        def __str__(self):
-            return "[mock fetch cache]"
-
     monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
 
@@ -286,7 +316,15 @@ def _skip_if_missing_executables(request):
 # FIXME: session-scope. Anyhow doing it is not easy, as it seems
 # FIXME: there's some weird interaction with compilers during concretization.
 spack.architecture.real_platform = spack.architecture.platform
-spack.architecture.platform = lambda: spack.platforms.test.Test()
+
+
+def test_platform():
+    return spack.platforms.test.Test()
+
+
+spack.architecture.platform = test_platform
+
+
 # FIXME: Since we change the architecture above, we have to (re)initialize
 # FIXME: the config singleton. If it gets initialized too early with the
 # FIXME: actual architecture, tests will fail.
@@ -356,14 +394,15 @@ def mock_repo_path():
     yield spack.repo.RepoPath(spack.paths.mock_packages_path)
 
 
+def _pkg_install_fn(pkg, spec, prefix):
+    # sanity_check_prefix requires something in the install directory
+    mkdirp(prefix.bin)
+
+
 @pytest.fixture
 def mock_pkg_install(monkeypatch):
-    def _pkg_install_fn(pkg, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)
-
-    monkeypatch.setattr(spack.package.PackageBase, 'install', _pkg_install_fn,
-                        raising=False)
+    monkeypatch.setattr(spack.package.PackageBase, 'install',
+                        _pkg_install_fn, raising=False)
 
 
 @pytest.fixture(scope='function')
@@ -580,10 +619,10 @@ def mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
 
 
 @pytest.fixture(scope='function')
-def database(mock_store, mock_packages, config):
+def database(mock_store, mock_packages, config, monkeypatch):
     """This activates the mock store, packages, AND config."""
-    with use_store(mock_store):
-        yield mock_store.db
+    monkeypatch.setattr(spack.store, 'store', mock_store)
+    yield mock_store.db
     # Force reading the database again between tests
     mock_store.db.last_seen_verifier = ''
 
@@ -631,6 +670,10 @@ def dirs_with_libfiles(tmpdir_factory):
     yield lib_to_dirs, all_dirs
 
 
+def _compiler_link_paths_noop(*args):
+    return []
+
+
 @pytest.fixture(scope='function', autouse=True)
 def disable_compiler_execution(monkeypatch, request):
     """
@@ -641,31 +684,27 @@ def disable_compiler_execution(monkeypatch, request):
 
     If a test is marked in that way this is a no-op."""
     if 'enable_compiler_link_paths' not in request.keywords:
-        def noop(*args):
-            return []
-
         # Compiler.determine_implicit_rpaths actually runs the compiler. So
         # replace that function with a noop that simulates finding no implicit
         # RPATHs
         monkeypatch.setattr(
             spack.compiler.Compiler,
             '_get_compiler_link_paths',
-            noop
+            _compiler_link_paths_noop
         )
 
 
 @pytest.fixture(scope='function')
 def install_mockery(tmpdir, config, mock_packages, monkeypatch):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
-    real_store = spack.store.store
-    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
+    monkeypatch.setattr(
+        spack.store, 'store', spack.store.Store(str(tmpdir.join('opt'))))
 
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override('config:checksum', False):
         yield
 
     tmpdir.join('opt').remove()
-    spack.store.store = real_store
 
     # Also wipe out any cached prefix failure locks (associated with
     # the session-scoped mock archive).
@@ -687,31 +726,24 @@ def install_mockery_mutable_config(
     also need to modify configuration (and hence would want to use
     'mutable config'): 'install_mockery' does not support this.
     """
-    real_store = spack.store.store
-    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
+    monkeypatch.setattr(
+        spack.store, 'store', spack.store.Store(str(tmpdir.join('opt'))))
 
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override('config:checksum', False):
         yield
 
     tmpdir.join('opt').remove()
-    spack.store.store = real_store
 
 
 @pytest.fixture()
-def mock_fetch(mock_archive):
+def mock_fetch(mock_archive, monkeypatch):
     """Fake the URL for a package so it downloads from a file."""
-    fetcher = FetchStrategyComposite()
-    fetcher.append(URLFetchStrategy(mock_archive.url))
+    mock_fetcher = FetchStrategyComposite()
+    mock_fetcher.append(URLFetchStrategy(mock_archive.url))
 
-    @property
-    def fake_fn(self):
-        return fetcher
-
-    orig_fn = spack.package.PackageBase.fetcher
-    spack.package.PackageBase.fetcher = fake_fn
-    yield
-    spack.package.PackageBase.fetcher = orig_fn
+    monkeypatch.setattr(
+        spack.package.PackageBase, 'fetcher', mock_fetcher)
 
 
 class MockLayout(object):
@@ -737,6 +769,47 @@ def gen_mock_layout(tmpdir):
     yield create_layout
 
 
+class MockConfig(object):
+    def __init__(self, configuration, writer_key):
+        self._configuration = configuration
+        self.writer_key = writer_key
+
+    def configuration(self):
+        return self._configuration
+
+    def writer_configuration(self):
+        return self.configuration()[self.writer_key]
+
+
+class ConfigUpdate(object):
+    def __init__(self, root_for_conf, writer_mod, writer_key, monkeypatch):
+        self.root_for_conf = root_for_conf
+        self.writer_mod = writer_mod
+        self.writer_key = writer_key
+        self.monkeypatch = monkeypatch
+
+    def __call__(self, filename):
+        file = os.path.join(self.root_for_conf, filename + '.yaml')
+        with open(file) as f:
+            mock_config = MockConfig(syaml.load_config(f), self.writer_key)
+
+        self.monkeypatch.setattr(
+            spack.modules.common,
+            'configuration',
+            mock_config.configuration
+        )
+        self.monkeypatch.setattr(
+            self.writer_mod,
+            'configuration',
+            mock_config.writer_configuration
+        )
+        self.monkeypatch.setattr(
+            self.writer_mod,
+            'configuration_registry',
+            {}
+        )
+
+
 @pytest.fixture()
 def module_configuration(monkeypatch, request):
     """Reads the module configuration file from the mock ones prepared
@@ -753,34 +826,7 @@ def module_configuration(monkeypatch, request):
         spack.paths.test_path, 'data', 'modules', writer_key
     )
 
-    def _impl(filename):
-
-        file = os.path.join(root_for_conf, filename + '.yaml')
-        with open(file) as f:
-            configuration = syaml.load_config(f)
-
-        def mock_config_function():
-            return configuration
-
-        def writer_key_function():
-            return mock_config_function()[writer_key]
-
-        monkeypatch.setattr(
-            spack.modules.common,
-            'configuration',
-            mock_config_function
-        )
-        monkeypatch.setattr(
-            writer_mod,
-            'configuration',
-            writer_key_function
-        )
-        monkeypatch.setattr(
-            writer_mod,
-            'configuration_registry',
-            {}
-        )
-    return _impl
+    return ConfigUpdate(root_for_conf, writer_mod, writer_key, monkeypatch)
 
 
 @pytest.fixture()

@@ -235,8 +235,9 @@ def find(parser, args):
     if args.json:
         cmd.display_specs_as_json(results, deps=args.deps)
     else:
-        if env:
-            display_env(env, args, decorator)
+        if not args.format:
+            if env:
+                display_env(env, args, decorator)
         if sys.stdout.isatty() and args.groups:
             tty.msg("%s" % plural(len(results), 'installed package'))
         cmd.display_specs(

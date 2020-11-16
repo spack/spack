@@ -37,3 +37,4 @@ class VotcaXtp(CMakePackage):
     depends_on("libxc", when='@stable,1.5:')
     depends_on("ceres-solver", when='@1.5:1.5.9999')
     depends_on("hdf5+cxx~mpi")
+    depends_on("libint@2.6.0:", when="@1.7:")
