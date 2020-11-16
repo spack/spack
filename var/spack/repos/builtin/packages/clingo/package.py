@@ -37,6 +37,8 @@ class Clingo(CMakePackage):
     depends_on('python', type=("build", "link", "run"), when="+python")
     extends('python', when='+python')
 
+    patch('python38.patch', when="@5.3:5.4")
+
     def patch(self):
         # Doxygen is optional but can't be disabled with a -D, so patch
         # it out if it's really supposed to be disabled

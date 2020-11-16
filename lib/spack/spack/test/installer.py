@@ -177,7 +177,7 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
 
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
-    def _spec(spec):
+    def _spec(spec, preferred_mirrors=None):
         return spec
 
     # Skip binary distribution functionality since assume tested elsewhere
@@ -196,14 +196,18 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
                                        monkeypatch, capsys):
     """Tests SystemExit path for_try_install_from_binary_cache."""
-    def _spec(spec, force):
+    def _mirrors_for_spec(spec, force, full_hash_match=False):
         spec = spack.spec.Spec('mpi').concretized()
-        return {spec: None}
+        return [{
+            'mirror_url': 'notused',
+            'spec': spec,
+        }]
 
     spec = spack.spec.Spec('mpich')
     spec.concretize()
 
-    monkeypatch.setattr(spack.binary_distribution, 'get_spec', _spec)
+    monkeypatch.setattr(
+        spack.binary_distribution, 'get_mirrors_for_spec', _mirrors_for_spec)
 
     with pytest.raises(SystemExit):
         inst._try_install_from_binary_cache(spec.package, False, False)
@@ -622,7 +626,7 @@ def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
     # Preclude any meaningful side-effects
     monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', _true)
     monkeypatch.setattr(inst.PackageInstaller, '_setup_install_dir', _noop)
-    monkeypatch.setattr(spack.build_environment, 'fork', _noop)
+    monkeypatch.setattr(spack.build_environment, 'start_build_process', _noop)
     monkeypatch.setattr(spack.database.Database, 'add', _noop)
     monkeypatch.setattr(spack.compilers, 'add_compilers_to_config', _add)
 

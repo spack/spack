@@ -16,15 +16,35 @@ import spack.modules
 import spack.paths
 import spack.store
 
-
-#: Character limit for shebang line.  Using Linux's 127 characters
-#: here, as it is the shortest I could find on a modern OS.
-shebang_limit = 127
+#: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
+#: Different Linux distributions have different limits, but 127 is the
+#: smallest among all modern versions.
+if sys.platform == 'darwin':
+    shebang_limit = 511
+else:
+    shebang_limit = 127
 
 
 def sbang_install_path():
     """Location sbang should be installed within Spack's ``install_tree``."""
-    return os.path.join(spack.store.layout.root, "bin", "sbang")
+    sbang_root = str(spack.store.unpadded_root)
+    install_path = os.path.join(sbang_root, "bin", "sbang")
+    if len(install_path) > shebang_limit:
+        raise SbangPathError(
+            'Install tree root is too long. Spack cannot patch shebang lines.')
+    return install_path
+
+
+def sbang_shebang_line():
+    """Full shebang line that should be prepended to files to use sbang.
+
+    The line returned does not have a final newline (caller should add it
+    if needed).
+
+    This should be the only place in Spack that knows about what
+    interpreter we use for ``sbang``.
+    """
+    return '#!/bin/sh %s' % sbang_install_path()
 
 
 def shebang_too_long(path):
@@ -51,7 +71,7 @@ def filter_shebang(path):
             original = original.decode('UTF-8')
 
     # This line will be prepended to file
-    new_sbang_line = '#!/bin/sh %s\n' % sbang_install_path()
+    new_sbang_line = '%s\n' % sbang_shebang_line()
 
     # Skip files that are already using sbang.
     if original.startswith(new_sbang_line):
@@ -148,3 +168,7 @@ def post_install(spec):
 
     for directory, _, filenames in os.walk(spec.prefix):
         filter_shebangs_in_directory(directory, filenames)
+
+
+class SbangPathError(spack.error.SpackError):
+    """Raised when the install tree root is too long for sbang to work."""

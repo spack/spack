@@ -28,7 +28,7 @@ class PyLlvmlite(PythonPackage):
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3.99')
 
     # llvmlite compatibility information taken from https://github.com/numba/llvmlite#compatibility
-    depends_on('llvm@10.0:', when='@0.34.0:')
+    depends_on('llvm@10.0:10.0.99', when='@0.34.0:')
     depends_on('llvm@9.0:9.0.99', when='@0.33.0:0.33.99')
     depends_on('llvm@7.0:8.0.99', when='@0.29.0:0.32.99')
     depends_on('llvm@7.0:7.0.99', when='@0.27.0:0.28.99')

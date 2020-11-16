@@ -18,6 +18,9 @@ import spack.util.executable as executable
 # do sanity checks only on packagess modified by a PR
 import spack.cmd.flake8 as flake8
 import spack.util.crypto as crypto
+import pickle
+
+import llnl.util.tty as tty
 
 
 def check_repo():
@@ -30,6 +33,27 @@ def check_repo():
 def test_get_all_packages():
     """Get all packages once and make sure that works."""
     check_repo()
+
+
+def test_packages_are_pickleable():
+    failed_to_pickle = list()
+    for name in spack.repo.all_package_names():
+        pkg = spack.repo.get(name)
+        try:
+            pickle.dumps(pkg)
+        except Exception:
+            # If there are any failures, keep track of all packages that aren't
+            # pickle-able and re-run the pickling later on to recreate the
+            # error
+            failed_to_pickle.append(name)
+
+    if failed_to_pickle:
+        tty.msg('The following packages failed to pickle: ' +
+                ', '.join(failed_to_pickle))
+
+        for name in failed_to_pickle:
+            pkg = spack.repo.get(name)
+            pickle.dumps(pkg)
 
 
 def test_get_all_mock_packages():
