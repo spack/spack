@@ -35,7 +35,7 @@ packages:
       - gettext@0.19.8.1
       - git@2.18.0
       - gmp@6.1.2
-      - graphviz@2.42.2
+      - graphviz+pangocairo@2.42.2
       - help2man@1.47.4
       - hpctoolkit@2019.08.14
       - hpcviewer@2020.05
