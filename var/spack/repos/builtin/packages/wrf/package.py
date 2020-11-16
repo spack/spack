@@ -215,10 +215,7 @@ class Wrf(Package):
 
     def do_configure_fixup(self):
         # Fix mpi compiler wrapper aliases
-        if (
-            self.spec.satisfies("@3.9.1.1")
-            and self.spec.compiler.name == "gcc"
-        ):
+        if self.spec.satisfies("@3.9.1.1 %gcc"):
             rename(
                 "./arch/configure_new.defaults",
                 "./arch/configure_new.defaults.bak",
@@ -228,8 +225,12 @@ class Wrf(Package):
             ) as ofh:
                 for line in ifh:
                     if line.startswith("DM_"):
-                        line = line.replace("mpif90 -f90=$(SFC)", "mpif90")
-                        line = line.replace("mpicc -cc=$(SCC)", "mpicc")
+                        line = line.replace(
+                            "mpif90 -f90=$(SFC)", self.spec['mpi'].mpif90
+                        )
+                        line = line.replace(
+                            "mpicc -cc=$(SCC)", self.spec['mpi'].mpicc
+                        )
                     ofh.write(line)
 
     def configure(self, spec, prefix):
@@ -289,7 +290,7 @@ class Wrf(Package):
         csh = Executable(csh_bin)
 
         # num of compile jobs capped at 20 in wrf
-        num_jobs = str(make_jobs if make_jobs < 20 else 20)
+        num_jobs = str(min(int(make_jobs, 10)))
 
         # Now run the compile script and track the output to check for
         # failure/success We need to do this because upstream use `make -i -k`
