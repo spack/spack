@@ -9,29 +9,48 @@
 Container Images
 ================
 
-Spack can be an ideal tool to setup images for containers since all the
-features discussed in :ref:`environments` can greatly help to manage
-the installation of software during the image build process. Nonetheless,
-building a production image from scratch still requires a lot of
-boilerplate to:
+Spack :ref:`environments` are a great tool to create container images, but
+preparing one that is suitable for production requires some more boilerplate
+than just:
 
-- Get Spack working within the image, possibly running as root
-- Minimize the physical size of the software installed
-- Properly update the system software in the base image
-- Setup the installed software to be directly available on image run
+.. code-block:: docker
 
-To facilitate users with these tasks, Spack provides a command
-to automatically generate recipes for container images based on
-Environments:
+   COPY spack.yaml /environment
+   RUN spack -e /environment install
+
+Additional actions may be needed to minimize the size of the
+container, or to update the system software that is installed in the base
+image, or to set up a proper entrypoint to run the image. These tasks are
+usually both necessary and repetitive, so Spack comes with a command
+to generate recipes for container images starting from a ``spack.yaml``.
+
+--------------------
+A Quick Introduction
+--------------------
+
+Consider having a Spack environment like the following:
+
+.. code-block:: yaml
+
+   spack:
+     specs:
+     - gromacs+mpi
+     - mpich
+
+Producing a ``Dockerfile`` from it is as simple as moving to the directory
+where the ``spack.yaml`` file is stored and giving the following command:
 
 .. code-block:: console
 
-   $ ls
-   spack.yaml
+   $ spack containerize > Dockerfile
 
-   $ spack containerize
+The ``Dockerfile`` that gets created uses multi-stage builds and
+other techniques to minimize the size of the final image:
+
+.. code-block:: docker
+
    # Build stage with Spack pre-installed and ready to be used
-   FROM spack/centos7:latest as builder
+   FROM spack/ubuntu-bionic:latest as builder
 
    # What we want to install and how we want to install it
    # is specified in a manifest file (spack.yaml)
@@ -45,8 +64,8 @@ Environments:
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
-   # Install the software, remove unnecessary deps
-   RUN cd /opt/spack-environment && spack env activate . && spack install && spack gc -y
+   # Install the software, remove unecessary deps
+   RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y
 
    # Strip all the binaries
    RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
@@ -59,41 +78,28 @@ Environments:
    RUN cd /opt/spack-environment && \
        spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
 
-
    # Bare OS image to run the installed executables
-   FROM centos:7
+   FROM ubuntu:18.04
 
    COPY --from=builder /opt/spack-environment /opt/spack-environment
    COPY --from=builder /opt/software /opt/software
    COPY --from=builder /opt/view /opt/view
    COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
 
-   RUN yum update -y && yum install -y epel-release && yum update -y                                   \
-    && yum install -y libgomp \
-    && rm -rf /var/cache/yum  && yum clean all
-
-   RUN echo 'export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][gromacs]\[$(tput setaf 2)\]\u\[$(tput sgr0)\]:\w $ "' >> ~/.bashrc
-
-
-   LABEL "app"="gromacs"
-   LABEL "mpi"="mpich"
-
    ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
 
-In order to build and run the image, execute:
+The image itself can then be built and run in the usual way, with any of the
+tools suitable for the task. For instance, if we decided to use ``docker``:
 
 .. code-block:: bash
 
    $ spack containerize > Dockerfile
    $ docker build -t myimage .
+   [ ... ]
    $ docker run -it myimage
 
-The bits that make this automation possible are discussed in details
-below. All the images generated in this way are based on
-multi-stage builds with:
-
-- A fat ``build`` stage containing common build tools and Spack itself
-- A minimal ``final`` stage containing only the software requested by the user
+The various components involved in the generation of the recipe and their
+configuration are discussed in details in the sections below.
 
 .. _container_spack_images:
 
@@ -145,24 +151,7 @@ Creating Images From Environments
 
 Any Spack Environment can be used for the automatic generation of container
 recipes. Sensible defaults are provided for things like the base image or the
-version of Spack used in the image. The workflow is in general as simple as
-calling ``spack containerize`` from the directory where the environment
-resides:
-
-.. code-block:: console
-
-   $ cat spack.yaml
-   spack:
-     specs:
-     - gromacs+mpi
-     - mpich
-
-   $ # Create a Dockerfile from this environment
-   $ spack containerize > Dockerfile
-
-   $ # Build an image from the Dockerfile
-   $ docker build .
-
+version of Spack used in the image.
 If a finer tuning is needed it can be obtained by adding the relevant metadata
 under the ``container`` attribute of environments:
 
@@ -201,54 +190,175 @@ under the ``container`` attribute of environments:
          app: "gromacs"
          mpi: "mpich"
 
-A detailed list of the options that can be used is in
-:ref:`container_config_options` along with their semantics.
+A detailed description of the options available can be found in the
+:ref:`container_config_options` section.
 
 -------------------
 Setting Base Images
 -------------------
 
-The ``images`` attribute in the ``container`` section needs to be
-customized to set the base images for both the ``build`` and ``final`` stage
-to something other than the default. This attribute can be set in two
-different ways and which one to use depends on the use case at hand.
+The ``images`` subsection is used to select both the image where
+Spack builds the software and the image where the built software
+is installed. This attribute can be set in two different ways and
+which one to use depends on the use case at hand.
 
-The simplest mode just requires to specify an ``os`` and a ``spack`` version:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Use Official Spack Images From Dockerhub
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To generate a recipe that use an official Docker image from the
+Spack organization to build the software and the corresponding official OS image
+to install the built software, the user is just requested to
+specify:
+
+1. An operating system under ``images:os``
+2. A Spack version under ``images:spack``
+
+Any combination of these two values that can be mapped to one of the images
+discussed in :ref:`container_spack_images` is allowed. For instance, the
+following ``spack.yaml``:
 
 .. code-block:: yaml
 
-   container:
-     images:
-       os: centos/7
-       spack: 0.14.3
+   spack:
+     specs:
+     - gromacs+mpi
+     - mpich
 
-Any combination of OS and Spack version that can be matched to an image
-in the Spack repository on Dockerhub is admissible as a value. By employing this mode
-the user instructs Spack to generate a recipe that will start from
-one of the official Spack images in the ``build`` stage and from the
-base OS image in the ``final`` stage.
+     container:
+       images:
+         os: centos/7
+         spack: 0.15.4
 
-There are cases though where using Spack official images in the
-``build`` stage or the official OS image in the ``final`` stage is not enough.
+uses ``spack/centos7:0.15.4``  and ``centos:7`` for the stages where the
+software is respectively built and installed:
+
+.. code-block:: docker
+
+   # Build stage with Spack pre-installed and ready to be used
+   FROM spack/centos7:0.15.4 as builder
+
+   # What we want to install and how we want to install it
+   # is specified in a manifest file (spack.yaml)
+   RUN mkdir /opt/spack-environment \
+   &&  (echo "spack:" \
+   &&   echo "  specs:" \
+   &&   echo "  - gromacs+mpi" \
+   &&   echo "  - mpich" \
+   &&   echo "  concretization: together" \
+   &&   echo "  config:" \
+   &&   echo "    install_tree: /opt/software" \
+   &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
+   [ ... ]
+   # Bare OS image to run the installed executables
+   FROM centos:7
+
+   COPY --from=builder /opt/spack-environment /opt/spack-environment
+   COPY --from=builder /opt/software /opt/software
+   COPY --from=builder /opt/view /opt/view
+   COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+
+   ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
+
+This method of selecting base images is the simplest of the two, and we advise
+to use it whenever possible. There are cases though where using Spack official
+images is not enough to fit production needs. In these situations users can manually
+select which base image to start from in the recipe, as we'll see next.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Use Custom Images Provided by Users
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Consider, as an example, building a production grade image for a CUDA
-enabled application. In that scenario the best thing to do would be to rely
-on custom base images, built ad-hoc from official Nvidia images.
-This can be done employing the second mode of operation for
-the ``images`` attribute that permits to configure exactly
-which images are pulled from Dockerhub:
+application. The best strategy would probably be to build on top of
+images provided by the vendor and regard CUDA as an external package.
+
+Spack doesn't currently provide an official image with CUDA configured
+this way, but users can build it on their own and then configure the
+environment to explicitly pull it. This requires users to:
+
+1. Specify the image used to build the software under ``images:build``
+2. Specify the image used to install the built software under ``images:final``
+
+A ``spack.yaml`` like the following:
 
 .. code-block:: yaml
 
-  container:
-    images:
-      build: myrepo/spack-cuda-10.1-ubuntu18.04:latest
-      final: nvidia/cuda:10.1-base-ubuntu18.04
+   spack:
+     specs:
+     - gromacs@2019.4+cuda build_type=Release
+     - mpich
+     - fftw precision=float
+     packages:
+       cuda:
+         buildable: False
+         externals:
+         - spec: cuda%gcc
+           prefix: /usr/local/cuda
 
-This second mode is considered more advanced and more flexible than the
-first one shown, but requires that users selct or even generate by themselves
-their base images and its their responsibility to ensure that:
+     container:
+       images:
+         build: custom/cuda-10.1-ubuntu18.04:latest
+         final: nvidia/cuda:10.1-base-ubuntu18.04
 
-1. Spack is available in the ``build`` stage and set up to install the required software
+produces, for instance, the following ``Dockerfile``:
+
+.. code-block:: docker
+
+   # Build stage with Spack pre-installed and ready to be used
+   FROM custom/cuda-10.1-ubuntu18.04:latest as builder
+
+   # What we want to install and how we want to install it
+   # is specified in a manifest file (spack.yaml)
+   RUN mkdir /opt/spack-environment \
+   &&  (echo "spack:" \
+   &&   echo "  specs:" \
+   &&   echo "  - gromacs@2019.4+cuda build_type=Release" \
+   &&   echo "  - mpich" \
+   &&   echo "  - fftw precision=float" \
+   &&   echo "  packages:" \
+   &&   echo "    cuda:" \
+   &&   echo "      buildable: false" \
+   &&   echo "      externals:" \
+   &&   echo "      - spec: cuda%gcc" \
+   &&   echo "        prefix: /usr/local/cuda" \
+   &&   echo "  concretization: together" \
+   &&   echo "  config:" \
+   &&   echo "    install_tree: /opt/software" \
+   &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
+
+   # Install the software, remove unecessary deps
+   RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y
+
+   # Strip all the binaries
+   RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
+       xargs file -i | \
+       grep 'charset=binary' | \
+       grep 'x-executable\|x-archive\|x-sharedlib' | \
+       awk -F: '{print $1}' | xargs strip -s
+
+   # Modifications to the environment that are necessary to run
+   RUN cd /opt/spack-environment && \
+       spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
+
+   # Bare OS image to run the installed executables
+   FROM nvidia/cuda:10.1-base-ubuntu18.04
+
+   COPY --from=builder /opt/spack-environment /opt/spack-environment
+   COPY --from=builder /opt/software /opt/software
+   COPY --from=builder /opt/view /opt/view
+   COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+
+   ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
+
+where the base images for both stages are completely custom.
+
+This second mode of selection for base images is more flexible than just
+choosing an operating system and a Spack version, but is also more demanding.
+Users may need to generate by themselves their base images and its also their
+responsibility to ensure that:
+
+1. Spack is available in the ``build`` stage and set up correctly to install the required software
 2. The artifacts produced in the ``build`` stage can be executed in the ``final`` stage
 
 Therefore we don't recommend its use in cases that can be otherwise
@@ -274,15 +384,14 @@ attribute:
    $ spack containerize > hdf5.def
    $ sudo singularity build hdf5.sif hdf5.def
 
-.. note::
-   The minimum version of Singularity required to build a SIF (Singularity Image Format)
-   image from the recipes generated by Spack is ``3.5.3``.
+The minimum version of Singularity required to build a SIF (Singularity Image Format)
+image from the recipes generated by Spack is ``3.5.3``.
 
 .. _container_config_options:
 
----------------------
-Configuration Options
----------------------
+-----------------------
+Configuration Reference
+-----------------------
 
 The tables below describe all the configuration options that are currently supported
 to customize the generation of container recipes:
