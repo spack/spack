@@ -32,6 +32,7 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
+import inspect
 import re
 import multiprocessing
 import os
@@ -881,7 +882,7 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
         ce = ChildError(msg,
                         exc_type.__module__,
                         exc_type.__name__,
-                        tb_string, logfile, package_context)
+                        tb_string, logfile, context, package_context)
         child_pipe.send(ce)
 
     finally:
@@ -982,8 +983,9 @@ def get_package_context(traceback, context=3):
     """Return some context for an error message when the build fails.
 
     Args:
-        traceback (list of tuples): output from traceback.extract_tb() or
-            traceback.extract_stack()
+        traceback (traceback): A traceback from some exception raised during
+            install
+
         context (int): Lines of context to show before and after the line
             where the error happened
 
@@ -992,44 +994,51 @@ def get_package_context(traceback, context=3):
     from there.
 
     """
-    for filename, lineno, function, text in reversed(traceback):
-        if 'package.py' in filename or 'spack/build_systems' in filename:
-            if function not in ('run_test', '_run_test_helper'):
-                # We are in a package and not one of the listed methods
-                # We exclude these methods because we expect errors in them to
-                # be the result of user tests failing, and we show the tests
-                # instead.
-                break
+    def make_stack(tb, stack=None):
+        """Tracebacks come out of the system in caller -> callee order.  Return
+        an array in callee -> caller order so we can traverse it."""
+        if stack is None:
+            stack = []
+        if tb is not None:
+            make_stack(tb.tb_next, stack)
+            stack.append(tb)
+        return stack
 
-    # Package files have a line added at import time, so we adjust the lineno
-    # when we are getting context from a package file instead of a base class
-    adjust = 1 if spack.repo.is_package_file(filename) else 0
-    lineno = lineno - adjust
+    stack = make_stack(traceback)
+
+    for tb in stack:
+        frame = tb.tb_frame
+        if 'self' in frame.f_locals:
+            # Find the first proper subclass of PackageBase.
+            obj = frame.f_locals['self']
+            if isinstance(obj, spack.package.PackageBase):
+                break
 
     # We found obj, the Package implementation we care about.
     # Point out the location in the install method where we failed.
     lines = [
         '{0}:{1:d}, in {2}:'.format(
-            filename,
-            lineno,
-            function
+            inspect.getfile(frame.f_code),
+            frame.f_lineno - 1,  # subtract 1 because f_lineno is 0-indexed
+            frame.f_code.co_name
         )
     ]
 
     # Build a message showing context in the install method.
-    # Adjust for import mangling of package files.
-    with open(filename, 'r') as f:
-        sourcelines = f.readlines()
-    start = max(0, lineno - context - 1)
-    sourcelines = sourcelines[start:lineno + context + 1]
+    sourcelines, start = inspect.getsourcelines(frame)
+
+    # Calculate lineno of the error relative to the start of the function.
+    # Subtract 1 because f_lineno is 0-indexed.
+    fun_lineno = frame.f_lineno - start - 1
+    start_ctx = max(0, fun_lineno - context)
+    sourcelines = sourcelines[start_ctx:fun_lineno + context + 1]
 
     for i, line in enumerate(sourcelines):
-        i = i + adjust  # adjusting for import munging again
-        is_error = start + i == lineno
+        is_error = start_ctx + i == fun_lineno
         mark = '>> ' if is_error else '   '
         # Add start to get lineno relative to start of file, not function.
         marked = '  {0}{1:-6d}{2}'.format(
-            mark, start + i, line.rstrip())
+            mark, start + start_ctx + i, line.rstrip())
         if is_error:
             marked = colorize('@R{%s}' % cescape(marked))
         lines.append(marked)
@@ -1083,15 +1092,15 @@ class ChildError(InstallError):
     # context instead of Python context.
     build_errors = [('spack.util.executable', 'ProcessError')]
 
-    def __init__(self, msg, module, classname, traceback_string, context,
-                 log_type, log_name):
+    def __init__(self, msg, module, classname, traceback_string, log_name,
+                 log_type, context):
         super(ChildError, self).__init__(msg)
         self.module = module
         self.name = classname
         self.traceback = traceback_string
-        self.context = context
-        self.log_type = log_type
         self.log_name = log_name
+        self.log_type = log_type
+        self.context = context
 
     @property
     def long_message(self):
@@ -1124,7 +1133,7 @@ class ChildError(InstallError):
         return out.getvalue()
 
     def __str__(self):
-        return self.message + self.long_message + self.traceback
+        return self.message
 
     def __reduce__(self):
         """__reduce__ is used to serialize (pickle) ChildErrors.
@@ -1137,16 +1146,14 @@ class ChildError(InstallError):
             self.module,
             self.name,
             self.traceback,
-            self.context,
+            self.log_name,
             self.log_type,
-            self.log_name)
+            self.context)
 
 
-def _make_child_error(msg, module, name, traceback, context,
-                      log_type, log):
+def _make_child_error(msg, module, name, traceback, log, log_type, context):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
-    return ChildError(msg, module, name, traceback, context,
-                      log_type, log)
+    return ChildError(msg, module, name, traceback, log, log_type, context)
 
 
 class StopPhase(spack.error.SpackError):

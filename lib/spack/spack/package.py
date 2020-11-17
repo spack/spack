@@ -1748,7 +1748,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             except BaseException as e:
                 # print a summary of the error to the log file
                 # so that cdash and junit reporters know about it
-                exc_type, _, _ = sys.exc_info()
+                exc_type, _, tb = sys.exc_info()
                 print('FAILED: {0}'.format(e))
                 import traceback
                 # remove the current call frame to exclude the extract_stack
@@ -1785,8 +1785,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # The traceback is truncated here, so we can't use it to
                     # traverse the stack.
                     m = '\n'.join(
-                        spack.build_environment.get_package_context(
-                            traceback.extract_stack())
+                        spack.build_environment.get_package_context(tb)
                     )
 
                 exc = e  # e is deleted after this block

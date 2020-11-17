@@ -230,7 +230,8 @@ environment variables:
         parser.print_help()
         return
 
-    reporter = spack.report.collect_info(args.log_format, args)
+    reporter = spack.report.collect_info(
+        spack.package.PackageInstaller, '_install_task', args.log_format, args)
     if args.log_file:
         reporter.filename = args.log_file
 
@@ -289,11 +290,6 @@ environment variables:
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
 
     # 1. Abstract specs from cli
-    reporter = spack.report.collect_info(
-        spack.package.PackageInstaller, '_install_task', args.log_format, args)
-    if args.log_file:
-        reporter.filename = args.log_file
-
     abstract_specs = spack.cmd.parse_specs(args.spec)
     tests = False
     if args.test == 'all' or args.run_tests:
