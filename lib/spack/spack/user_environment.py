@@ -5,6 +5,7 @@
 import sys
 import os
 
+import spack.config
 import spack.util.prefix as prefix
 import spack.util.environment as environment
 import spack.build_environment as build_env
@@ -25,6 +26,10 @@ def prefix_inspections(platform):
         A dictionary mapping subdirectory names to lists of environment
             variables to modify with that directory if it exists.
     """
+    inspections = spack.config.get('modules:prefix_inspections', None)
+    if inspections is not None:
+        return inspections
+
     inspections = {
         'bin': ['PATH'],
         'lib': ['LD_LIBRARY_PATH', 'LIBRARY_PATH'],
