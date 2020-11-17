@@ -189,10 +189,7 @@ class VtkM(CMakePackage, CudaPackage):
 
             return options
 
-    @when('@master')
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def check_install_master(self):
+    def smoke_test(self):
         print("Checking VTK-m installation...")
         spec = self.spec
         checkdir = "spack-check"
@@ -352,3 +349,10 @@ Ran tests on: """ + expected_device + "\n"
                     print('-' * 80)
                     raise RuntimeError("VTK-m install check failed")
         shutil.rmtree(checkdir)
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        spec = self.spec
+        if "@master" in spec:
+            self.smoke_test()
