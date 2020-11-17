@@ -45,7 +45,7 @@ class Camp(CMakePackage, CudaPackage, HipPackage):
             options.extend([
                 '-DENABLE_HIP=ON',
                 '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+                '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch)])
         else:
             options.append('-DENABLE_HIP=OFF')
 

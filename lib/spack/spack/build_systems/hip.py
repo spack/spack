@@ -6,7 +6,7 @@
 # Troubleshooting advice for +hip builds:
 #
 # 1. When building with clang, go your compilers.yaml,
-#    add an extry for the amd version of clang, as below.
+#    add an entry for the amd version of clang, as below.
 #    This will ensure that your entire package is compiled/linked
 #    with the same compiler version. If you use a different version of
 #    clang which is linked against a different version of the gcc library,
@@ -65,7 +65,7 @@
 #      buildable: false
 #
 # 3. In part 2, DO NOT list the path to hsa as /opt/rocm/hsa ! You want spack
-#    to find has in /opt/rocm/include/hsa/hsa.h . The directory of
+#    to find hsa in /opt/rocm/include/hsa/hsa.h . The directory of
 #    /opt/rocm/hsa also has an hsa.h file, but it won't be found because spack
 #    does not like its directory structure.
 #
