@@ -34,7 +34,7 @@ class ParquetConverters(CMakePackage):
     depends_on('synapsetool+mpi')
     depends_on('synapsetool+mpi@:0.5.6', when='@:0.5.2')
     depends_on('mpi')
-    depends_on('range-v3', when='@0.4:')
+    depends_on('range-v3@:0.10', when='@0.4:')
 
     def cmake_args(self):
         return [

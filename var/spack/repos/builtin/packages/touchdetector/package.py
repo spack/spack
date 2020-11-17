@@ -43,7 +43,7 @@ class Touchdetector(CMakePackage):
     depends_on('pugixml', when='@4.5:')
     depends_on('random123', when='@5.3.3:')
     depends_on('range-v3@:0.4', when='@5.0.2:5.3.2')
-    depends_on('range-v3', when='@5.3.3:')
+    depends_on('range-v3@:0.10', when='@5.3.3:')
     depends_on('highfive+mpi', when='@5.3.0:')
     depends_on('nlohmann-json', when='@5.3.3:')
 
