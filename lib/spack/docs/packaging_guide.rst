@@ -1778,8 +1778,18 @@ RPATHs in Spack are handled in one of three ways:
 Parallel builds
 ---------------
 
+Spack supports parallel builds on an individual package and at the
+installation level.  Package-level parallelism is established by the
+``--jobs`` option and its configuration and package recipe equivalents.
+Installation-level parallelism is driven by the DAG(s) of the requested
+package or packages.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Package-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 By default, Spack will invoke ``make()``, or any other similar tool,
-with a ``-j <njobs>`` argument, so that builds run in parallel.
+with a ``-j <njobs>`` argument, so those builds run in parallel.
 The parallelism is determined by the value of the ``build_jobs`` entry
 in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
 how this value is computed).
@@ -1826,6 +1836,43 @@ The first make will run in parallel here, but the second will not.  If
 you set ``parallel`` to ``False`` at the package level, then each call
 to ``make()`` will be sequential by default, but packagers can call
 ``make(parallel=True)`` to override it.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack supports the concurrent installation of packages within a Spack
+instance across multiple processes using file system locks.  This
+parallelism is separate from the package-level achieved through build
+systems' use of the ``-j <njobs>`` option.  With install-level parallelism,
+processes coordinate the installation of the dependencies of specs
+provided on the command line and as part of an environment build with
+only **one process** being allowed to install a given package at a time.
+Refer to :ref:`Dependencies` for more information on dependencies and
+:ref:`installing-environment` for how to install an environment.
+
+Concurrent processes may be any combination of interactive sessions and
+batch jobs.  Which means a ``spack install`` can be running in a terminal
+window while a batch job is running ``spack install`` on the same or
+overlapping dependencies without any process trying to re-do the work of
+another.
+
+For example, if you are using SLURM, you could launch an installation
+of ``mpich`` using the following command:
+
+.. code-block:: console
+
+   $ srun -N 2 -n 8 spack install -j 4 mpich@3.3.2
+
+This will create eight concurrent four-job installation on two different
+nodes.
+
+.. note::
+
+   The effective parallelism will be based on the maximum number of
+   packages that can be installed at the same time, which will limited
+   by the number of packages with no (remaining) uninstalled dependencies.
+
 
 .. _dependencies:
 
