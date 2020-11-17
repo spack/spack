@@ -130,7 +130,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
                 flags.append('-fcommon')
         return (flags, None, None)
 
-    def _test_check_versions(self):
+    def test(self):
         spec_vers = str(self.spec.version)
 
         checks = {
@@ -155,6 +155,3 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
                 .format(exe, expected)
             self.run_test(exe, '--version', expected, installed=True,
                           purpose=reason, skip_missing=True)
-
-    def test(self):
-        self._test_check_versions()
