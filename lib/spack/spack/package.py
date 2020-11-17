@@ -932,6 +932,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                               path=self.path)
         return stage
 
+    def _download_search(self):
+        dynamic_fetcher = fs.from_list_url(self)
+        return [dynamic_fetcher] if dynamic_fetcher else []
+
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
         mirror_paths = spack.mirror.mirror_archive_paths(
@@ -943,12 +947,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version,
                                              s.dag_hash())
 
-        def download_search():
-            dynamic_fetcher = fs.from_list_url(self)
-            return [dynamic_fetcher] if dynamic_fetcher else []
-
         stage = Stage(fetcher, mirror_paths=mirror_paths, name=stage_name,
-                      path=self.path, search_fn=download_search)
+                      path=self.path, search_fn=self._download_search)
         return stage
 
     def _make_stage(self):
@@ -1678,73 +1678,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.test_failures = []
         self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
 
-        def test_process():
-            with tty.log.log_output(self.test_log_file) as logger:
-                with logger.force_echo():
-                    tty.msg('Testing package {0}'
-                            .format(self.test_suite.test_pkg_id(self.spec)))
-
-                # use debug print levels for log file to record commands
-                old_debug = tty.is_debug()
-                tty.set_debug(True)
-
-                # run test methods from the package and all virtuals it
-                # provides virtuals have to be deduped by name
-                v_names = list(set([vspec.name
-                                    for vspec in self.virtuals_provided]))
-
-                # hack for compilers that are not dependencies (yet)
-                # TODO: this all eventually goes away
-                c_names = ('gcc', 'intel', 'intel-parallel-studio', 'pgi')
-                if self.name in c_names:
-                    v_names.extend(['c', 'cxx', 'fortran'])
-                if self.spec.satisfies('llvm+clang'):
-                    v_names.extend(['c', 'cxx'])
-
-                test_specs = [self.spec] + [spack.spec.Spec(v_name)
-                                            for v_name in sorted(v_names)]
-
-                try:
-                    with fsys.working_dir(
-                            self.test_suite.test_dir_for_spec(self.spec)):
-                        for spec in test_specs:
-                            self.test_suite.current_test_spec = spec
-                            # Fail gracefully if a virtual has no package/tests
-                            try:
-                                spec_pkg = spec.package
-                            except spack.repo.UnknownPackageError:
-                                continue
-
-                            # copy test data into test data dir
-                            data_source = Prefix(spec_pkg.package_dir).test
-                            data_dir = self.test_suite.current_test_data_dir
-                            if (os.path.isdir(data_source) and
-                                    not os.path.exists(data_dir)):
-                                # We assume data dir is used read-only
-                                # maybe enforce this later
-                                shutil.copytree(data_source, data_dir)
-
-                            # grab the function for each method so we can call
-                            # it with this package in place of its `self`
-                            # object
-                            test_fn = spec_pkg.__class__.test
-                            if not isinstance(test_fn, types.FunctionType):
-                                test_fn = test_fn.__func__
-
-                            # Run the tests
-                            test_fn(self)
-
-                    # If fail-fast was on, we error out above
-                    # If we collect errors, raise them in batch here
-                    if self.test_failures:
-                        raise TestFailure(self.test_failures)
-
-                finally:
-                    # reset debug level
-                    tty.set_debug(old_debug)
-
-        spack.build_environment.fork(
-            self, test_process, dirty=dirty, fake=False, context='test')
+        kwargs = {k:v for k, v in [('dirty', dirty), ('fake', False),
+                                   ('context', 'test')]}
+        spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
         pass
@@ -2526,6 +2462,71 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+
+
+def test_process(pkg, kwargs):
+    with tty.log.log_output(pkg.test_log_file) as logger:
+        with logger.force_echo():
+            tty.msg('Testing package {0}'
+                    .format(pkg.test_suite.test_pkg_id(pkg.spec)))
+
+        # use debug print levels for log file to record commands
+        old_debug = tty.is_debug()
+        tty.set_debug(True)
+
+        # run test methods from the package and all virtuals it
+        # provides virtuals have to be deduped by name
+        v_names = list(set([vspec.name
+                            for vspec in pkg.virtuals_provided]))
+
+        # hack for compilers that are not dependencies (yet)
+        # TODO: this all eventually goes away
+        c_names = ('gcc', 'intel', 'intel-parallel-studio', 'pgi')
+        if pkg.name in c_names:
+            v_names.extend(['c', 'cxx', 'fortran'])
+        if pkg.spec.satisfies('llvm+clang'):
+            v_names.extend(['c', 'cxx'])
+
+        test_specs = [pkg.spec] + [spack.spec.Spec(v_name)
+                                   for v_name in sorted(v_names)]
+
+        try:
+            with fsys.working_dir(
+                    pkg.test_suite.test_dir_for_spec(pkg.spec)):
+                for spec in test_specs:
+                    pkg.test_suite.current_test_spec = spec
+                    # Fail gracefully if a virtual has no package/tests
+                    try:
+                        spec_pkg = spec.package
+                    except spack.repo.UnknownPackageError:
+                        continue
+
+                    # copy test data into test data dir
+                    data_source = Prefix(spec_pkg.package_dir).test
+                    data_dir = pkg.test_suite.current_test_data_dir
+                    if (os.path.isdir(data_source) and
+                            not os.path.exists(data_dir)):
+                        # We assume data dir is used read-only
+                        # maybe enforce this later
+                        shutil.copytree(data_source, data_dir)
+
+                    # grab the function for each method so we can call
+                    # it with the package 
+                    test_fn = spec_pkg.__class__.test
+                    if not isinstance(test_fn, types.FunctionType):
+                        test_fn = test_fn.__func__
+
+                    # Run the tests
+                    test_fn(pkg)
+
+            # If fail-fast was on, we error out above
+            # If we collect errors, raise them in batch here
+            if pkg.test_failures:
+                raise TestFailure(pkg.test_failures)
+
+        finally:
+            # reset debug level
+            tty.set_debug(old_debug)
 
 
 inject_flags = PackageBase.inject_flags

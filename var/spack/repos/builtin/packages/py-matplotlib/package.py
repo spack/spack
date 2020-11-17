@@ -25,6 +25,7 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units'
     ]
 
+    version('3.3.3', sha256='b1b60c6476c4cfe9e5cf8ab0d3127476fd3d5f05de0f343a452badaad0e4bdec')
     version('3.3.2', sha256='3d2edbf59367f03cd9daf42939ca06383a7d7803e3993eb5ff1bee8e8a3fbb6b')
     version('3.3.1', sha256='87f53bcce90772f942c2db56736788b39332d552461a5cb13f05ff45c1680f0e')
     version('3.3.0', sha256='24e8db94948019d531ce0bcd637ac24b1c8f6744ac86d2aa0eb6dbaeb1386f82')
@@ -86,7 +87,8 @@ class PyMatplotlib(PythonPackage):
     depends_on('freetype@2.3:')  # freetype 2.6.1 needed for tests to pass
     depends_on('qhull@2015.2:', when='@3.3:')
     depends_on('libpng@1.2:')
-    depends_on('py-certifi@2020.6.20:', when='@3.3.1:', type=('build', 'run'))
+    depends_on('py-certifi@2020.6.20:', when='@3.3.1:3.3.2', type=('build', 'run'))
+    depends_on('py-certifi@2020.6.20:', when='@3.3.3:', type='build')
     depends_on('py-numpy@1.11:', type=('build', 'run'))
     depends_on('py-numpy@1.15:', when='@3.3:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))  # See #3813
@@ -148,6 +150,20 @@ class PyMatplotlib(PythonPackage):
 
     # Patch to pick up correct freetype headers
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')
+
+    def setup_build_environment(self, env):
+        include = []
+        library = []
+        for dep in self.spec.dependencies(deptype='link'):
+            query = self.spec[dep.name]
+            include.extend(query.headers.directories)
+            library.extend(query.libs.directories)
+
+        # Build uses a mix of Spack's compiler wrapper and the actual compiler,
+        # so this is needed to get parts of the build working.
+        # See https://github.com/spack/spack/issues/19843
+        env.set('CPATH', ':'.join(include))
+        env.set('LIBRARY_PATH', ':'.join(library))
 
     @run_before('build')
     def configure(self):

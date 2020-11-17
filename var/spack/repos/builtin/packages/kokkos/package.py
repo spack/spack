@@ -83,6 +83,8 @@ class Kokkos(CMakePackage, CudaPackage):
     conflicts("+hip", when="amd_gpu_arch=none")
 
     spack_micro_arch_map = {
+        "graviton": "",
+        "graviton2": "",
         "aarch64": "",
         "arm": "",
         "ppc": "",

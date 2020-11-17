@@ -18,14 +18,6 @@ def test_build_info(image, spack_version, expected):
     assert output == expected
 
 
-@pytest.mark.parametrize('image,spack_version', [
-    ('ubuntu:18.04', 'doesnotexist')
-])
-def test_build_info_error(image, spack_version):
-    with pytest.raises(ValueError, match=r"has no tag for"):
-        spack.container.images.build_info(image, spack_version)
-
-
 @pytest.mark.parametrize('image', [
     'ubuntu:18.04'
 ])

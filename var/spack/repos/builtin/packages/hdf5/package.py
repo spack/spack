@@ -425,4 +425,5 @@ HDF5 version {version} {version}
         self._test_example()
 
         # Run existing install check
-        self._check_install()
+        # TODO: Restore once address built vs. installed state
+        #self._check_install()

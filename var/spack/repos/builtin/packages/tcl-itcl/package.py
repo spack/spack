@@ -22,6 +22,6 @@ class TclItcl(AutotoolsPackage):
         args = [
             '--enable-shared',
             '--enable-threads',
-            '--with-tcl=' + self.spec['tcl'].tcl_lib_dir,
+            '--with-tcl=' + self.spec['tcl'].libs.directories[0],
         ]
         return args

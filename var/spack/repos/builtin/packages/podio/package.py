@@ -28,6 +28,9 @@ class Podio(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release'))
 
+    variant('sio', default=False,
+            description='Build the SIO I/O backend')
+
     # cpack config throws an error on some systems
     patch('cpack.patch', when="@:0.10.0")
     patch('dictloading.patch', when="@0.10.0")
@@ -38,9 +41,15 @@ class Podio(CMakePackage):
     depends_on('python', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-jinja2@2.10.1:', type=('build', 'run'), when='@0.12.0:')
+    depends_on('sio', type=('build', 'run'), when='+sio')
+
+    conflicts('+sio', when='@:0.12', msg='sio support requires at least podio@0.13')
 
     def cmake_args(self):
-        args = ['-DBUILD_TESTING=%s' % self.run_tests, ]
+        args = [
+            self.define('BUILD_TESTING', self.run_tests),
+            self.define_from_variant('ENABLE_SIO', 'sio')
+        ]
         return args
 
     def url_for_version(self, version):
@@ -55,3 +64,6 @@ class Podio(CMakePackage):
         else:
             url = "https://github.com/AIDASoft/podio/archive/v%s-%s-%s.tar.gz" % (major, minor, patch)
         return url
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.python)

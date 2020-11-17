@@ -67,7 +67,7 @@ for your shell:
 That's it! You're ready to use Spack.
 
 Sourcing these files will put the ``spack`` command in your ``PATH``, set
-up your ``MOUDLEPATH`` to use Spack's packages, and add other useful
+up your ``MODULEPATH`` to use Spack's packages, and add other useful
 shell integration for :ref:`certain commands <packaging-shell-support>`,
 :ref:`environments <environments>`, and :ref:`modules <modules>`. For
 ``bash``, it also sets up tab completion.

@@ -40,7 +40,7 @@ class Heffte(CMakePackage):
 
     conflicts('~fftw', when='~mkl~cuda')  # requires at least one backend
     conflicts('+fftw', when='+mkl@:1.0')  # old API supports at most one CPU backend
-    conflicts('openmpi~cuda', when='+cuda')  # +cuda requires CUDA enabled OpenMPI
+    conflicts('^openmpi~cuda', when='+cuda')  # +cuda requires CUDA enabled OpenMPI
     conflicts('~cuda', when='+magma')  # magma requires CUDA or HIP
     conflicts('+python', when="@:1.0")  # python support was added post v1.0
     conflicts('+fortran', when="@:1.0")  # fortran support was added post v1.0

@@ -914,7 +914,8 @@ class Python(AutotoolsPackage):
         return join_path(self.site_packages_dir, "easy-install.pth")
 
     def setup_run_environment(self, env):
-        env.prepend_path('CPATH', os.pathsep.join(self.headers.directories))
+        env.prepend_path('CPATH', os.pathsep.join(
+            self.spec['python'].headers.directories))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
