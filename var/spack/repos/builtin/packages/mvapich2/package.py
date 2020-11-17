@@ -84,14 +84,11 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'fabrics',
         description='Select the fabric to be enabled for this build.'
-        'Please note that if you have verbs (either from OFED or MOFED), '
-        'PSM or PSM2 installed on the system already, you may need to '
-        'setup external packages in the package.yaml file for rdma-core '
-        'psm or opa-psm2, depending on your chosen fabrics. This is '
-        'recommended to avoid unexpected runtime failures due to conflicts '
-        'between the version of the fabric drivers spack installs and the '
-        'fabric version available on the system. See the homepage url above '
-        'for more info.',
+        'If you have verbs (either from OFED or MOFED), PSM or PSM2 '
+        'installed on the system already, you may need to setup external '
+        'packages in the package.yaml file for rdma-core, psm or opa-psm2. '
+        'This is recommended to avoid unexpected runtime failures. For '
+        'more info, visit the homepage url.',
         default='mrail',
         values=(
             'psm', 'psm2', 'sock', 'nemesisib', 'nemesis', 'mrail',
