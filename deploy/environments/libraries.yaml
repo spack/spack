@@ -15,7 +15,8 @@ spack:
            highfive+mpi,
            ospray@1.7.3,
            ospray@1.8.5,
-           py-numpy]
+           py-numpy,
+           py-pandas]
         - ['%gcc', '%intel']
     - assimp
     - mvdtool+mpi
@@ -104,7 +105,6 @@ spack:
     - py-mpi4py
     - py-neurom
     - py-nodeenv
-    - py-pandas
     - py-pathlib2
     - py-pillow
     - py-pip
