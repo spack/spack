@@ -723,6 +723,25 @@ def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
         assert msg in out
 
 
+@pytest.mark.parametrize('installed', [True, False])
+def test_push_task_skip_processed(install_mockery, installed):
+    """Test to ensure skip re-queueing a processed package."""
+    const_arg = installer_args(['a'], {})
+    installer = create_installer(const_arg)
+    assert len(list(installer.build_tasks)) == 0
+
+    # Mark the package as installed OR failed
+    task = create_build_task(installer.build_requests[0].pkg)
+    if installed:
+        installer.installed.add(task.pkg_id)
+    else:
+        installer.failed[task.pkg_id] = None
+
+    installer._push_task(task)
+
+    assert len(list(installer.build_tasks)) == 0
+
+
 def test_requeue_task(install_mockery, capfd):
     """Test to ensure cover _requeue_task."""
     const_arg = installer_args(['a'], {})
