@@ -185,17 +185,53 @@ def test_env_modifications_error_on_activate(
     assert "Warning: couldn't get environment settings" in err
 
 
-def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
+def test_env_install_same_spec_twice(install_mockery, mock_fetch):
     env('create', 'test')
 
     e = ev.read('test')
-    with capfd.disabled():
-        with e:
-            # The first installation outputs the package prefix
-            install('cmake-client')
-            # The second installation attempt will also update the view
-            out = install('cmake-client')
-            assert 'Updating view at' in out
+    with e:
+        # The first installation outputs the package prefix, updates the view
+        out = install('cmake-client')
+        assert 'Updating view at' in out
+
+        # The second installation reports all packages already installed
+        out = install('cmake-client')
+        assert 'already installed' in out
+
+
+def test_env_install_two_specs_same_dep(
+        install_mockery, mock_fetch, tmpdir, capsys):
+    """Test installation of two packages that share a dependency with no
+    connection and the second specifying the dependency as a 'build'
+    dependency.
+    """
+    path = tmpdir.join('spack.yaml')
+
+    with tmpdir.as_cwd():
+        with open(str(path), 'w') as f:
+            f.write("""\
+env:
+  specs:
+  - a
+  - depb
+""")
+
+        env('create', 'test', 'spack.yaml')
+
+    with ev.read('test'):
+        with capsys.disabled():
+            out = install()
+
+    # Ensure both packages reach install phase processing and are installed
+    out = str(out)
+    assert 'depb: Executing phase:' in out
+    assert 'a: Executing phase:' in out
+
+    depb = spack.repo.path.get_pkg_class('depb')
+    assert depb.installed, 'Expected depb to be installed'
+
+    a = spack.repo.path.get_pkg_class('a')
+    assert a.installed, 'Expected a to be installed'
 
 
 def test_remove_after_concretize():
@@ -2094,7 +2130,8 @@ def test_cant_install_single_spec_when_concretizing_together():
     e.concretization = 'together'
 
     with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
-        e.install('zlib')
+        e.concretize_and_add('zlib')
+        e.install_all()
 
 
 def test_duplicate_packages_raise_when_concretizing_together():

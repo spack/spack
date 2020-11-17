@@ -507,7 +507,7 @@ def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     """Test attempts to perform install phases with unconcretized spec."""
     spec = Spec('trivial-install-test-package')
 
-    with pytest.raises(ValueError, match="only install concrete packages"):
+    with pytest.raises(ValueError, match='must have a concrete spec'):
         spec.package.do_install()
 
     with pytest.raises(ValueError, match="only patch concrete packages"):
