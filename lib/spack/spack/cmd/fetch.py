@@ -32,11 +32,16 @@ def fetch(parser, args):
         specs = spack.cmd.parse_specs(args.specs, concretize=True)
     else:
         # No specs were given explicitly, check if we are in an
-        # environment. If yes fetch all uninstalled specs from
-        # it.
+        # environment. If yes, check the missing argument, if yes
+        # fetch all uninstalled specs from it otherwise fetch all.
+        # If we are also not in an environment, complain to the
+        # user that we don't know what to do.
         env = ev.get_env(args, 'fetch')
         if env:
-            specs = env.uninstalled_specs()
+            if args.missing:
+                specs = env.uninstalled_specs()
+            else:
+                specs = env.all_specs()
             if specs == []:
                 tty.die("No uninstalled specs in environment. Did you "
                         "run `spack concretize` yet?")
