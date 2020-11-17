@@ -60,6 +60,8 @@ packages:
     externals:
     - spec: m4@1.4.16
       prefix: /usr
+  node-js:
+    version: [14.13.0]
   openssl:
     version: [1.0.2k]
     externals:
