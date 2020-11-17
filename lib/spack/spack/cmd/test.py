@@ -88,9 +88,6 @@ def setup_parser(subparser):
     # List
     list_parser = sp.add_parser('list', description=test_list.__doc__,
                                 help=first_line(test_list.__doc__))
-    list_parser.add_argument(
-        'filter', nargs=argparse.REMAINDER,
-        help='optional case-insensitive glob patterns to filter results.')
 
     # Find
     find_parser = sp.add_parser('find', description=test_find.__doc__,
@@ -201,9 +198,21 @@ environment variables:
             raise NotImplementedError
 
 
+def has_test_method(pkg):
+    return pkg.test.__func__ != spack.package.PackageBase.test
+
+
 def test_list(args):
     """List all installed packages with available tests."""
-    raise NotImplementedError('This feature is not yet implemented')
+    # TODO: This can be extended to have all of the output formatting options
+    # from `spack find`.
+    env = ev.get_env(args, 'test')
+    hashes = env.all_hashes() if env else None
+
+    specs = spack.store.db.query(hashes=hashes)
+    specs = list(filter(lambda s: has_test_method(s.package), specs))
+
+    spack.cmd.display_specs(specs, long=True)
 
 
 def test_find(args):  # TODO: merge with status (noargs)
