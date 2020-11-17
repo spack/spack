@@ -1000,13 +1000,15 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     assert '{0} failed to install'.format(pkg_ids[0]) in out
 
 
+def _test_install_fail_fast_on_except_patch(installer, **kwargs):
+    """Helper for test_install_fail_fast_on_except."""
+    # This is a module-scope function and not a local function because it
+    # needs to be pickleable.
+    raise RuntimeError('mock patch failure')
+
+
 def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     """Test fail_fast install when an install failure results from an error."""
-    err_msg = 'mock patch failure'
-
-    def _patch(installer, **kwargs):
-        raise RuntimeError(err_msg)
-
     const_arg = installer_args(['a'], {'fail_fast': True})
     installer = create_installer(const_arg)
 
@@ -1014,9 +1016,13 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     #
     # This will prevent b from installing, which will cause the build of a
     # to be skipped.
-    monkeypatch.setattr(spack.package.PackageBase, 'do_patch', _patch)
+    monkeypatch.setattr(
+        spack.package.PackageBase,
+        'do_patch',
+        _test_install_fail_fast_on_except_patch
+    )
 
-    with pytest.raises(inst.InstallError, match=err_msg):
+    with pytest.raises(inst.InstallError, match='mock patch failure'):
         installer.install()
 
     out = str(capsys.readouterr())

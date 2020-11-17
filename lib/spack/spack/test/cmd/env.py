@@ -199,7 +199,8 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch):
         assert 'already installed' in out
 
 
-def test_env_install_two_specs_same_dep(install_mockery, mock_fetch, tmpdir):
+def test_env_install_two_specs_same_dep(
+        install_mockery, mock_fetch, tmpdir, capsys):
     """Test installation of two packages that share a dependency with no
     connection and the second specifying the dependency as a 'build'
     dependency.
@@ -218,7 +219,8 @@ env:
         env('create', 'test', 'spack.yaml')
 
     with ev.read('test'):
-        out = install()
+        with capsys.disabled():
+            out = install()
 
     # Ensure both packages reach install phase processing and are installed
     out = str(out)
