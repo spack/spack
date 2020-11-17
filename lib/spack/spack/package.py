@@ -1705,8 +1705,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.test_failures = []
         self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
 
-        kwargs = {k: v for k,v in [('dirty', dirty), ('fake', False),
-                                   ('context', 'test')]}
+        kwargs = {k: v for (k, v) in [('dirty', dirty), ('fake', False),
+                                      ('context', 'test')]}
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
