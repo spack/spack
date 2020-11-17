@@ -1139,7 +1139,7 @@ class Python(AutotoolsPackage):
         self.run_test('/usr/bin/true', status=1)
 
         # test hello world
-        self.run_test(exe, options=['-c', 'print("hello world!")'],
+        self.run_test(exe, options=['-c', self.print_string('hello world!')],
                       expected=['hello world!'])
 
         # check that the executable comes from the spec prefix
