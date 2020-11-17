@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-
+import os
 
 class Libyogrt(AutotoolsPackage):
     """Your One Get Remaining Time Library."""
@@ -58,3 +58,19 @@ class Libyogrt(AutotoolsPackage):
             args.append('--enable-static=yes')
 
         return args
+
+    def install(self, spec, prefix):
+
+        # Run standard Autotools install first, then create a yogrt.conf file for the selected scheduler
+
+        AutotoolsPackage.install(self, spec, prefix)
+        etcpath = os.path.join(prefix,"etc")
+        if not os.path.isdir(etcpath):
+            mode = 0o755
+            os.mkdir(etcpath, mode)
+            
+        f = open(os.path.join(etcpath,"yogrt.conf"),"w+")
+        f.write("backend=%s\n" % self.spec.variants['scheduler'].value)
+        f.close()
+
+        return 
