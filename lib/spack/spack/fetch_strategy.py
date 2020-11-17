@@ -214,13 +214,16 @@ class BundleFetchStrategy(FetchStrategy):
         """BundlePackages don't have a mirror id."""
 
 
-@pattern.composite(interface=FetchStrategy)
-class FetchStrategyComposite(object):
+class FetchStrategyComposite(pattern.Composite):
     """Composite for a FetchStrategy object.
-
-    Implements the GoF composite pattern.
     """
     matches = FetchStrategy.matches
+
+    def __init__(self):
+        super(FetchStrategyComposite, self).__init__([
+            'fetch', 'check', 'expand', 'reset', 'archive', 'cachable',
+            'mirror_id'
+        ])
 
     def source_id(self):
         component_ids = tuple(i.source_id() for i in self)

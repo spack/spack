@@ -22,6 +22,7 @@ import spack.cmd.mirror as mirror
 from spack.main import SpackCommand
 import spack.mirror
 import spack.util.gpg
+import spack.util.web as web_util
 from spack.directory_layout import YamlDirectoryLayout
 from spack.spec import Spec
 
@@ -149,9 +150,11 @@ def install_dir_default_layout(tmpdir):
     spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
     spack.store.layout = YamlDirectoryLayout(str(tmpdir.join('opt')),
                                              path_scheme=def_install_path_scheme)  # noqa: E501
-    yield spack.store
-    spack.store.store = real_store
-    spack.store.layout = real_layout
+    try:
+        yield spack.store
+    finally:
+        spack.store.store = real_store
+        spack.store.layout = real_layout
 
 
 @pytest.fixture(scope='function')
@@ -162,9 +165,11 @@ def install_dir_non_default_layout(tmpdir):
     spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
     spack.store.layout = YamlDirectoryLayout(str(tmpdir.join('opt')),
                                              path_scheme=ndef_install_path_scheme)  # noqa: E501
-    yield spack.store
-    spack.store.store = real_store
-    spack.store.layout = real_layout
+    try:
+        yield spack.store
+    finally:
+        spack.store.store = real_store
+        spack.store.layout = real_layout
 
 
 args = ['strings', 'file']
@@ -582,6 +587,13 @@ def test_built_spec_cache(tmpdir,
     mirror.mirror(mparser, margs)
 
 
+def fake_full_hash(spec):
+    # Generate an arbitrary hash that is intended to be different than
+    # whatever a Spec reported before (to test actions that trigger when
+    # the hash changes)
+    return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+
+
 def test_spec_needs_rebuild(install_mockery_mutable_config, mock_packages,
                             mock_fetch, monkeypatch, tmpdir):
     """Make sure needs_rebuild properly compares remote full_hash
@@ -606,11 +618,56 @@ def test_spec_needs_rebuild(install_mockery_mutable_config, mock_packages,
     assert not rebuild
 
     # Now monkey patch Spec to change the full hash on the package
-    def fake_full_hash(spec):
-        print('fake_full_hash')
-        return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
     monkeypatch.setattr(spack.spec.Spec, 'full_hash', fake_full_hash)
 
     rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
 
     assert rebuild
+
+
+def test_generate_indices_key_error(monkeypatch, capfd):
+
+    def mock_list_url(url, recursive=False):
+        print('mocked list_url({0}, {1})'.format(url, recursive))
+        raise KeyError('Test KeyError handling')
+
+    monkeypatch.setattr(web_util, 'list_url', mock_list_url)
+
+    test_url = 'file:///fake/keys/dir'
+
+    # Make sure generate_key_index handles the KeyError
+    bindist.generate_key_index(test_url)
+
+    err = capfd.readouterr()[1]
+    assert 'Warning: No keys at {0}'.format(test_url) in err
+
+    # Make sure generate_package_index handles the KeyError
+    bindist.generate_package_index(test_url)
+
+    err = capfd.readouterr()[1]
+    assert 'Warning: No packages at {0}'.format(test_url) in err
+
+
+def test_generate_indices_exception(monkeypatch, capfd):
+
+    def mock_list_url(url, recursive=False):
+        print('mocked list_url({0}, {1})'.format(url, recursive))
+        raise Exception('Test Exception handling')
+
+    monkeypatch.setattr(web_util, 'list_url', mock_list_url)
+
+    test_url = 'file:///fake/keys/dir'
+
+    # Make sure generate_key_index handles the Exception
+    bindist.generate_key_index(test_url)
+
+    err = capfd.readouterr()[1]
+    expect = 'Encountered problem listing keys at {0}'.format(test_url)
+    assert expect in err
+
+    # Make sure generate_package_index handles the Exception
+    bindist.generate_package_index(test_url)
+
+    err = capfd.readouterr()[1]
+    expect = 'Encountered problem listing packages at {0}'.format(test_url)
+    assert expect in err

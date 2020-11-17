@@ -31,6 +31,8 @@ class PyLibensemble(PythonPackage):
     variant('scipy',  default=False, description='Install with scipy')
     variant('petsc4py',  default=False, description='Install with petsc4py')
     variant('nlopt',  default=False, description='Install with nlopt')
+    variant('mpmath',  default=False, description='Install with mpmath')
+    variant('deap',  default=False, description='Install with DEAP')
 
     # depends_on('python@2.7:2.8,3.3:', when='@:0.4.1')
     # depends_on('python@3.5:', when='@0.5.0:')
@@ -46,4 +48,6 @@ class PyLibensemble(PythonPackage):
     depends_on('py-petsc4py', type=('build', 'run'), when='+petsc4py')
     depends_on('py-petsc4py@develop', type=('build', 'run'), when='@develop+petsc4py')
     depends_on('nlopt', type=('build', 'run'), when='+nlopt')
+    depends_on('py-mpmath', type=('build', 'run'), when='+mpmath')
+    depends_on('py-deap', type=('build', 'run'), when='+deap')
     conflicts('~mpi', when='@:0.4.1')

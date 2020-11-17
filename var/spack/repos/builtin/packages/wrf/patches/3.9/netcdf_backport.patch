@@ -1,0 +1,578 @@
+diff -Naur a/Makefile b/Makefile
+--- a/Makefile	2017-08-28 21:29:47.000000000 +0100
++++ b/Makefile	2020-10-15 14:20:18.745280481 +0100
+@@ -868,14 +868,14 @@
+ 	@ echo '--------------------------------------'
+ 	( cd frame ; $(MAKE) $(J) framework; \
+           cd ../external/io_netcdf ; \
+-          $(MAKE) NETCDFPATH="$(NETCDFPATH)" \
+-               FC="$(FC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
++          $(MAKE) NETCDFPATH="$(NETCDFPATH)" FNETCDFFPATH="$(NETCDFFPATH)" \
++               C="$(FC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
+                CPP="$(CPP)" LDFLAGS="$(LDFLAGS)" TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
+ 	       LIB_LOCAL="$(LIB_LOCAL)" \
+                ESMF_MOD_DEPENDENCE="$(ESMF_MOD_DEPENDENCE)" AR="INTERNAL_BUILD_ERROR_SHOULD_NOT_NEED_AR" diffwrf; \
+           cd ../io_netcdf ; \
+-          $(MAKE) NETCDFPATH="$(NETCDFPATH)" \
+-               FC="$(SFC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
++          $(MAKE) NETCDFPATH="$(NETCDFPATH)" FNETCDFFPATH="$(NETCDFFPATH)"\
++               C="$(SFC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
+                CPP="$(CPP)" LDFLAGS="$(LDFLAGS)" TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
+ 	       LIB_LOCAL="$(LIB_LOCAL)" \
+                ESMF_MOD_DEPENDENCE="$(ESMF_MOD_DEPENDENCE)" AR="INTERNAL_BUILD_ERROR_SHOULD_NOT_NEED_AR"; \
+diff -Naur a/arch/Config_new.pl b/arch/Config_new.pl
+--- a/arch/Config_new.pl	2017-08-28 21:29:47.000000000 +0100
++++ b/arch/Config_new.pl	2020-10-15 14:34:48.371350270 +0100
+@@ -8,6 +8,7 @@
+ select((select(STDOUT), $|=1)[0]);
+ $sw_perl_path = perl ;
+ $sw_netcdf_path = "" ;
++$sw_netcdff_path = "" ;
+ $sw_pnetcdf_path = "" ;
+ $sw_hdf5_path=""; 
+ $sw_phdf5_path=""; 
+@@ -64,6 +65,10 @@
+   {
+     $sw_netcdf_path = substr( $ARGV[0], 8 ) ;
+   }
++  if (substr( $ARGV[0], 1, 8) eq "netcdff=" )
++  {
++    $sw_netcdff_path = substr( $ARGV[0], 9) ;
++  }
+   if ( substr( $ARGV[0], 1, 13 ) eq "dep_lib_path=" )
+   {
+     $sw_dep_lib_path = substr( $ARGV[0], 14 ) ;
+@@ -118,6 +123,7 @@
+   if ( substr( $ARGV[0], 1, 11 ) eq "USENETCDFF=" )
+   {
+     $sw_usenetcdff = substr( $ARGV[0], 12 ) ;
++    $sw_usenetcdff =~ s/!/ /g ;
+   }
+   if ( substr( $ARGV[0], 1, 10 ) eq "USENETCDF=" )
+   {
+@@ -445,6 +451,7 @@
+   {
+     $_ =~ s/CONFIGURE_PERL_PATH/$sw_perl_path/g ;
+     $_ =~ s/CONFIGURE_NETCDF_PATH/$sw_netcdf_path/g ;
++    $_ =~ s/CONFIGURE_NETCDFF_PATH/$sw_netcdff_path/g ;
+     $_ =~ s/CONFIGURE_PNETCDF_PATH/$sw_pnetcdf_path/g ;
+     $_ =~ s/CONFIGURE_HDF5_PATH/$sw_hdf5_path/g ;
+     $_ =~ s/CONFIGURE_PHDF5_PATH/$sw_phdf5_path/g ;
+diff -Naur a/arch/conf_tokens b/arch/conf_tokens
+--- a/arch/conf_tokens	2017-08-28 21:29:47.000000000 +0100
++++ b/arch/conf_tokens	2020-10-15 14:24:02.231298416 +0100
+@@ -5,6 +5,7 @@
+        CONFIGURE_DMPARALLEL
+ CONFIGURE_RWORDSIZE
+ CONFIGURE_NETCDF_FLAG
++CONFIGURE_NETCDFF_FLAG
+ CONFIGURE_GRIB2_FLAG
+ CONFIGURE_NETCDF_LIB_PATH
+ CONFIGURE_GRIB2_LIB
+@@ -13,4 +14,5 @@
+ CONFIGURE_WRFIO_NF 
+ CONFIGURE_WRFIO_GRIB2 
+ CONFIGURE_NETCDF_PATH
++CONFIGURE_NETCDFF_PATH
+ CONFIGURE_GRIB2_INC
+diff -Naur a/arch/configure_new.defaults b/arch/configure_new.defaults
+--- a/arch/configure_new.defaults	2017-08-28 21:29:47.000000000 +0100
++++ b/arch/configure_new.defaults	2020-10-15 14:25:07.821303680 +0100
+@@ -1598,6 +1598,7 @@
+ 
+ LIB_EXTERNAL    = \
+                      ../external/io_netcdf/libwrfio_nf.a CONFIGURE_NETCDF_PATH/lib/libnetcdf.lib \
++                     CONFIGURE_NETCDFF_PATH/lib/libnetcdff.lib
+                      ../external/wavelet/libWavelet.a ../external/wavelet/lib_wavelet.a
+ ESMF_IO_LIB     =    ../external/esmf_time_f90/libesmf_time.a
+ LIB_BUNDLED     = \
+diff -Naur a/arch/postamble_new b/arch/postamble_new
+--- a/arch/postamble_new	2017-08-28 21:29:47.000000000 +0100
++++ b/arch/postamble_new	2020-10-15 14:25:31.037305543 +0100
+@@ -45,6 +45,7 @@
+                       -I$(WRF_SRC_ROOT_DIR)/phys \
+                       -I$(WRF_SRC_ROOT_DIR)/chem -I$(WRF_SRC_ROOT_DIR)/inc \
+                       -I$(NETCDFPATH)/include \
++                      -I$(NETCDFFPATH)/include \
+                       CONFIGURE_RTTOV_INC
+ REGISTRY        =    Registry
+ CC_TOOLS_CFLAGS = CONFIGURE_NMM_CORE
+@@ -67,6 +68,7 @@
+ ENVCOMPDEFS     =    CONFIGURE_COMPILEFLAGS
+ CPPFLAGS        =    $(ARCHFLAGS) $(ENVCOMPDEFS) -I$(LIBINCLUDE) $(TRADFLAG) CONFIGURE_COMMS_INCLUDE
+ NETCDFPATH      =    CONFIGURE_NETCDF_PATH
++NETCDFFPATH     =    CONFIGURE_NETCDFF_PATH
+ HDF5PATH        =    CONFIGURE_HDF5_PATH
+ WRFPLUSPATH     =    CONFIGURE_WRFPLUS_PATH
+ RTTOVPATH       =    CONFIGURE_RTTOV_PATH
+@@ -98,7 +100,7 @@
+ 
+ wrfio_nf : 
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_netcdf ; \
+-          make $(J) NETCDFPATH="$(NETCDFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
++          make $(J) NETCDFPATH="$(NETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
+           CC="$(SCC)" CFLAGS="$(CFLAGS)" \
+           FC="$(SFC) $(PROMOTION) $(OMP) $(FCFLAGS)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
+ 
+diff -Naur a/configure b/configure
+--- a/configure	2017-08-28 21:29:47.000000000 +0100
++++ b/configure	2020-10-15 14:29:09.225323053 +0100
+@@ -305,6 +305,15 @@
+   else
+     USENETCDF=" "
+   fi
++  # for netCDF 4.2 and greater, the Fortran library is a separate install
++  if [ -z "$NETCDFF" ]; then
++    NETCDFF="$NETCDF"
++  fi
++  if [ -f "$NETCDFF/lib/libnetcdff.a" ] ; then
++    USENETCDFF="-L$NETCDFF/lib!-lnetcdff" # ! will be replaced with space
++  fi
++  export USENETCDF=$USENETCDF
++  export USENETCDFF=$USENETCDFF
+ else
+   echo "Will configure for use without NetCDF"
+ fi
+@@ -631,10 +640,11 @@
+    srch=`grep -i "^#ARCH.*$os" arch/configure_new.defaults | grep -i "$mach"`
+    if [ -n "$srch" ] ; then
+      $PERL arch/Config_new.pl -dmparallel=$COMMLIB -ompparallel=$OMP -perl=$PERL \
+-          -netcdf=$NETCDF -pnetcdf=$PNETCDF -hdf5=$HDF5 -phdf5=$PHDF5 -os=$os -mach=$mach -ldflags=$ldflags \
+-          -compileflags=$compileflags -opt_level=$opt_level -USENETCDFF=$USENETCDFF -USENETCDF=$USENETCDF \
+-          -time=$FORTRAN_COMPILER_TIMER -tfl="$TFL" -cfl="$CFL" -config_line="$config_line" \
+-          -wrf_core=$wrf_core -gpfs=$GPFS_PATH -curl=$CURL_PATH -dep_lib_path="$DEP_LIB_PATH"
++          -netcdf=$NETCDF -netcdff=$NETCDFF -pnetcdf=$PNETCDF -hdf5=$HDF5 -phdf5=$PHDF5 -os=$os \
++               -mach=$mach -ldflags=$ldflags -compileflags=$compileflags -opt_level=$opt_level \
++               -USENETCDFF=$USENETCDFF -USENETCDF=$USENETCDF -time=$FORTRAN_COMPILER_TIMER \
++               -tfl="$TFL" -cfl="$CFL" -config_line="$config_line" -wrf_core=$wrf_core \
++               -gpfs=$GPFS_PATH -curl=$CURL_PATH -dep_lib_path="$DEP_LIB_PATH"
+      if test ! -f configure.wrf ; then
+        echo "configure.wrf not created! Exiting configure script..."
+        exit 1
+@@ -744,10 +754,10 @@
+ echo "If you wish to change the default options, edit the file:"
+ echo "     arch/configure_new.defaults"
+ 
+-if test -n "$NETCDF" ; then
+-  if [ ! -f $NETCDF/include/netcdf.inc ] ; then
++if test -n "$NETCDFF" ; then
++  if [ ! -f $NETCDFF/include/netcdf.inc ] ; then
+     echo
+-    echo "Error : Not found $NETCDF/include/netcdf.inc"
++    echo "Error : Not found $NETCDFF/include/netcdf.inc"
+     echo "        Please check this installation of NetCDF and re-run this configure script"
+     echo
+     if test -n "$NETCDF4" ; then
+@@ -756,7 +766,7 @@
+     fi
+     exit -1
+   fi
+-  grep nf_format_64bit $NETCDF/include/netcdf.inc > /dev/null
++  grep nf_format_64bit $NETCDFF/include/netcdf.inc > /dev/null
+   configure_aaaa=$? ; export configure_aaaa
+   if [ $configure_aaaa -a -z "$WRFIO_NCD_NO_LARGE_FILE_SUPPORT" ] ; then
+     echo "NetCDF users note:"
+@@ -1092,6 +1102,42 @@
+   echo " "
+   echo "*****************************************************************************"
+ fi
++
++# testing for location of rpc/types.h file, used in landuse
++if [ -f /usr/include/rpc/types.h ] ; then
++  sed -e '/^ARCH_LOCAL/s/$/ -DRPC_TYPES=1/' configure.wrf > configure.wrf.edit
++  mv configure.wrf.edit configure.wrf
++echo standard location of RPC
++elif [ -f /usr/include/tirpc/rpc/types.h ] ; then
++  sed -e '/^ARCH_LOCAL/s/$/ -DRPC_TYPES=2/' configure.wrf > configure.wrf.edit
++  mv configure.wrf.edit configure.wrf
++echo newer location of RPC
++else
++  echo "************************** W A R N I N G ************************************"
++  echo " "
++  echo "The moving nest option is not available due to missing rpc/types.h file."
++  echo "Copy landread.c.dist to landread.c in share directory to bypass compile error."
++  echo " "
++  echo "*****************************************************************************"
++fi
++
++# testing for location of rpc/types.h file, used in landuse
++if [ -f /usr/include/rpc/types.h ] ; then
++  sed -e '/^ARCH_LOCAL/s/$/ -DRPC_TYPES=1/' configure.wrf > configure.wrf.edit
++  mv configure.wrf.edit configure.wrf
++echo standard location of RPC
++elif [ -f /usr/include/tirpc/rpc/types.h ] ; then
++  sed -e '/^ARCH_LOCAL/s/$/ -DRPC_TYPES=2/' configure.wrf > configure.wrf.edit
++  mv configure.wrf.edit configure.wrf
++echo newer location of RPC
++else
++  echo "************************** W A R N I N G ************************************"
++  echo " "
++  echo "The moving nest option is not available due to missing rpc/types.h file."
++  echo "Copy landread.c.dist to landread.c in share directory to bypass compile error."
++  echo " "
++  echo "*****************************************************************************"
++fi
+ 
+ # testing for netcdf4 IO features
+ if [ -n "$NETCDF4" ] ; then
+diff -Naur a/external/io_netcdf/makefile b/external/io_netcdf/makefile
+--- a/external/io_netcdf/makefile	2017-08-28 21:29:47.000000000 +0100
++++ b/external/io_netcdf/makefile	2020-10-15 14:25:49.581307031 +0100
+@@ -3,9 +3,9 @@
+ OBJSL   = wrf_io.o field_routines.o module_wrfsi_static.o
+ OBJS    = $(OBJSL)
+ CODE    = ext_ncd_get_dom_ti.code ext_ncd_get_var_td.code ext_ncd_get_var_ti.code ext_ncd_put_dom_ti.code ext_ncd_put_var_td.code ext_ncd_put_var_ti.code transpose.code 
+-FFLAGS  =  $(FCFLAGS) -I$(NETCDFPATH)/include -I../ioapi_share
+-LIBS    = $(LIB_LOCAL) -L$(NETCDFPATH)/lib -lnetcdf
+-LIBFFS  = $(LIB_LOCAL) -L$(NETCDFPATH)/lib -lnetcdff -lnetcdf $(NETCDF4_DEP_LIB)
++FFLAGS  =  $(FCFLAGS) -I$(NETCDFFPATH)/include -I../ioapi_share
++LIBS    = $(LIB_LOCAL) -L$(NETCDFFPATH)/lib -lnetcdf
++LIBFFS  = $(LIB_LOCAL) -L$(NETCDFFPATH)/lib -lnetcdff -lnetcdf $(NETCDF4_DEP_LIB)
+ CPP1    = $(CPP) -P $(TRADFLAG)
+ M4      = m4 -Uinclude -Uindex -Ulen
+ AR      = ar
+@@ -24,7 +24,7 @@
+ 			$(RANLIB) $@
+ 
+ wrf_io.o:               wrf_io.F90 $(CODE)
+-			grep nf_format_64bit $(NETCDFPATH)/include/netcdf.inc ;\
++			grep nf_format_64bit $(NETCDFFPATH)/include/netcdf.inc ;\
+                         a=$$? ; export a ; \
+ 			if [ $$a -a "$$WRFIO_NCD_LARGE_FILE_SUPPORT" = "1" ] ; then \
+                           $(CPP1) -DWRFIO_NCD_LARGE_FILE_SUPPORT -I../ioapi_share wrf_io.F90 | $(M4) - > wrf_io.f ; \
+@@ -43,14 +43,14 @@
+ 	x=`echo "$(FC)" | awk '{print $$1}'` ; export x ; \
+ 	if [ $$x = "gfortran" ] ; then \
+            echo removing external declaration of iargc for gfortran ; \
+-	   $(CPP1) -I$(NETCDFPATH)/include -I../ioapi_share diffwrf.F90 | sed '/integer *, *external.*iargc/d' > diffwrf.f ;\
++	   $(CPP1) -I$(NETCDFFPATH)/include -I../ioapi_share diffwrf.F90 | sed '/integer *, *external.*iargc/d' > diffwrf.f ;\
+         else \
+-	   $(CPP1) -I$(NETCDFPATH)/include -I../ioapi_share diffwrf.F90 > diffwrf.f ; \
++	   $(CPP1) -I$(NETCDFFPATH)/include -I../ioapi_share diffwrf.F90 > diffwrf.f ; \
+         fi
+ 	$(FC) -c $(FFLAGS) diffwrf.f
+ 	@if [ \( -f ../../frame/wrf_debug.o \) -a \( -f ../../frame/module_wrf_error.o \) -a \( -f $(ESMF_MOD_DEPENDENCE) \) -a \( -f ../../frame/clog.o \) ] ; then \
+ 	  echo "diffwrf io_netcdf is being built now. " ; \
+-          if [ \( -f $(NETCDFPATH)/lib/libnetcdff.a -o -f $(NETCDFPATH)/lib/libnetcdff.so \) ] ; then \
++          if [ \( -f $(NETCDFFPATH)/lib/libnetcdff.a -o -f $(NETCDFPATH)/lib/libnetcdff.so \) ] ; then \
+             $(FC) $(FFLAGS) $(LDFLAGS) -o diffwrf diffwrf.o $(OBJSL) ../../frame/wrf_debug.o ../../frame/module_wrf_error.o ../../frame/clog.o $(ESMF_IO_LIB_EXT) $(LIBFFS) ;\
+           else \
+             $(FC) $(FFLAGS) $(LDFLAGS) -o diffwrf diffwrf.o $(OBJSL) ../../frame/wrf_debug.o ../../frame/module_wrf_error.o ../../frame/clog.o $(ESMF_IO_LIB_EXT) $(LIBS) ;\
+diff -Naur a/tools/reg_parse.c b/tools/reg_parse.c
+--- a/tools/reg_parse.c	2017-08-28 21:29:47.000000000 +0100
++++ b/tools/reg_parse.c	2020-10-15 15:01:56.935480966 +0100
+@@ -1,6 +1,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <ctype.h>
+ #ifdef _WIN32
+ # define rindex(X,Y) strrchr(X,Y)
+ # define index(X,Y) strchr(X,Y)
+@@ -92,7 +93,7 @@
+ {
+   /* Decreased size for SOA from 8192 to 8000--double check if necessary, Manish Shrivastava 2010 */
+   char inln[8000], parseline[8000], parseline_save[8000] ;
+-  int found ; 
++  int found ;
+   char *p, *q ;
+   char *tokens[MAXTOKENS], *toktmp[MAXTOKENS], newdims[NAMELEN_LONG], newdims4d[NAMELEN_LONG],newname[NAMELEN_LONG] ;
+   int i, ii, len_of_tok ;
+@@ -131,7 +132,7 @@
+           fclose( include_fp ) ;
+         } else {
+           fprintf(stderr,"Registry warning: cannot open %s. Ignoring.\n", include_file_name ) ;
+-        } 
++        }
+       }
+     }
+     else if ( !strncmp( p , "ifdef", 5 ) ) {
+@@ -139,7 +140,7 @@
+       p += 5 ; for ( ; ( *p == ' ' || *p == '	' ) && *p != '\0' ; p++ ) ;
+       strncpy(value, p, 31 ) ; value[31] = '\0' ;
+       if ( (p=index(value,'\n')) != NULL ) *p = '\0' ;
+-      if ( (p=index(value,' ')) != NULL ) *p = '\0' ; if ( (p=index(value,'	')) != NULL ) *p = '\0' ; 
++      if ( (p=index(value,' ')) != NULL ) *p = '\0' ; if ( (p=index(value,'	')) != NULL ) *p = '\0' ;
+       ifdef_stack_ptr++ ;
+       ifdef_stack[ifdef_stack_ptr] = ( sym_get(value) != NULL && ifdef_stack[ifdef_stack_ptr-1] ) ;
+       if ( ifdef_stack_ptr >= 100 ) { fprintf(stderr,"Registry fatal: too many nested ifdefs\n") ; exit(1) ; }
+@@ -150,14 +151,14 @@
+       p += 6 ; for ( ; ( *p == ' ' || *p == '	' ) && *p != '\0' ; p++ ) ;
+       strncpy(value, p, 31 ) ; value[31] = '\0' ;
+       if ( (p=index(value,'\n')) != NULL ) *p = '\0' ;
+-      if ( (p=index(value,' ')) != NULL ) *p = '\0' ; if ( (p=index(value,'	')) != NULL ) *p = '\0' ; 
++      if ( (p=index(value,' ')) != NULL ) *p = '\0' ; if ( (p=index(value,'	')) != NULL ) *p = '\0' ;
+       ifdef_stack_ptr++ ;
+       ifdef_stack[ifdef_stack_ptr] = ( sym_get(value) == NULL && ifdef_stack[ifdef_stack_ptr-1] ) ;
+       if ( ifdef_stack_ptr >= 100 ) { fprintf(stderr,"Registry fatal: too many nested ifdefs\n") ; exit(1) ; }
+       continue ;
+     }
+     else if ( !strncmp( p , "endif", 5 ) ) {
+-      ifdef_stack_ptr-- ; 
++      ifdef_stack_ptr-- ;
+       if ( ifdef_stack_ptr < 0 ) { fprintf(stderr,"Registry fatal: unmatched endif\n") ; exit(1) ; }
+       continue ;
+     }
+@@ -166,7 +167,7 @@
+       p += 6 ; for ( ; ( *p == ' ' || *p == '	' ) && *p != '\0' ; p++ ) ;
+       strncpy(value, p, 31 ) ; value[31] = '\0' ;
+       if ( (p=index(value,'\n')) != NULL ) *p = '\0' ;
+-      if ( (p=index(value,' ')) != NULL ) *p = '\0' ; if ( (p=index(value,'	')) != NULL ) *p = '\0' ; 
++      if ( (p=index(value,' ')) != NULL ) *p = '\0' ; if ( (p=index(value,'	')) != NULL ) *p = '\0' ;
+       sym_add( value ) ;
+       continue ;
+     }
+@@ -223,7 +224,7 @@
+         int inbrace = 0 ;
+         strcpy( newdims, "" ) ;
+         strcpy( newdims4d, "" ) ;
+-        is4d = 0 ; wantstend = 0 ; wantsbdy = 0 ; 
++        is4d = 0 ; wantstend = 0 ; wantsbdy = 0 ;
+         for ( i = 0 ; i < (len_of_tok = strlen(tokens[F_DIMS])) ; i++ )
+         {
+           x = tolower(tokens[F_DIMS][i]) ;
+@@ -252,7 +253,7 @@
+ /* next, output some additional entries for the boundary arrays for these guys */
+             if ( is4d == 1 ) {
+               for ( i = 0, found = 0 ; i < ntracers ; i++ ) {
+-	        if ( !strcmp( tokens[F_USE] , tracers[i] ) ) found = 1 ; 
++	        if ( !strcmp( tokens[F_USE] , tracers[i] ) ) found = 1 ;
+               }
+ 	      if ( found == 0 ) {
+ 	        sprintf(tracers[ntracers],tokens[F_USE]) ;
+@@ -304,7 +305,7 @@
+   /* Had to increase size for SOA from 4096 to 7000, Manish Shrivastava 2010 */
+   char inln[7000], parseline[7000] ;
+   char *p, *q ;
+-  char *tokens[MAXTOKENS], *toktmp[MAXTOKENS] ; 
++  char *tokens[MAXTOKENS], *toktmp[MAXTOKENS] ;
+   int i, ii, idim ;
+   int defining_state_field, defining_rconfig_field, defining_i1_field ;
+ 
+@@ -316,7 +317,7 @@
+ /* Had to increase size for SOA from 4096 to 7000, Manish Shrivastava 2010 */
+   while ( fgets ( inln , 7000 , infile ) != NULL )
+   {
+-    strcat( parseline , inln ) ; 
++    strcat( parseline , inln ) ;
+     /* allow \ to continue the end of a line */
+     if (( p = index( parseline,  '\\'  )) != NULL )
+     {
+@@ -330,10 +331,10 @@
+     make_lower( parseline ) ;
+     if (( p = index( parseline , '#' ))  != NULL  ) *p = '\0' ; /* discard comments (dont worry about quotes for now) */
+     if (( p = index( parseline , '\n' )) != NULL  ) *p = '\0' ; /* discard newlines */
+-    for ( i = 0 ; i < MAXTOKENS ; i++ ) tokens[i] = NULL ; 
++    for ( i = 0 ; i < MAXTOKENS ; i++ ) tokens[i] = NULL ;
+     i = 0 ;
+ 
+-    if ((tokens[i] = my_strtok(parseline)) != NULL ) i++ ; 
++    if ((tokens[i] = my_strtok(parseline)) != NULL ) i++ ;
+ 
+     while (( tokens[i] = my_strtok(NULL) ) != NULL && i < MAXTOKENS ) i++ ;
+     if ( i <= 0 ) continue ;
+@@ -362,7 +363,7 @@
+       tokens[TABLE] = "typedef" ;
+       for ( i = MAXTOKENS-1 ; i >= 2 ; i-- ) tokens[i] = tokens[i-1] ; /* shift the fields to the left */
+       tokens[FIELD_OF] = "domain" ;
+-                 if ( !strcmp( tokens[FIELD_TYPE], "double" ) ) tokens[FIELD_TYPE] = "doubleprecision" ; 
++                 if ( !strcmp( tokens[FIELD_TYPE], "double" ) ) tokens[FIELD_TYPE] = "doubleprecision" ;
+       defining_state_field = 1 ;
+     }
+     if      ( !strcmp( tokens[ TABLE ] , "rconfig" ) )
+@@ -383,7 +384,7 @@
+       tokens[TABLE] = "typedef" ;
+       tokens[FIELD_OF]       = "domain" ;
+       tokens[RCNF_TYPE]      = toktmp[RCNF_TYPE_PRE] ;
+-                 if ( !strcmp( tokens[RCNF_TYPE], "double" ) ) tokens[RCNF_TYPE] = "doubleprecision" ; 
++                 if ( !strcmp( tokens[RCNF_TYPE], "double" ) ) tokens[RCNF_TYPE] = "doubleprecision" ;
+       tokens[RCNF_SYM]       = toktmp[RCNF_SYM_PRE] ;
+       tokens[RCNF_IO]        = toktmp[RCNF_IO_PRE] ;
+       tokens[RCNF_DNAME]     = toktmp[RCNF_DNAME_PRE] ;
+@@ -397,13 +398,13 @@
+     }
+     if      ( !strcmp( tokens[ TABLE ] , "i1" ) )
+     {
+-      /* turn a state entry into a typedef to define a field in 
++      /* turn a state entry into a typedef to define a field in
+          the top-level built-in type domain */
+       tokens[TABLE] = "typedef" ;
+       /* shift the fields to the left */
+-      for ( i = MAXTOKENS-1 ; i >= 2 ; i-- ) tokens[i] = tokens[i-1] ; 
++      for ( i = MAXTOKENS-1 ; i >= 2 ; i-- ) tokens[i] = tokens[i-1] ;
+       tokens[FIELD_OF] = "domain" ;
+-                 if ( !strcmp( tokens[FIELD_TYPE], "double" ) ) tokens[FIELD_TYPE] = "doubleprecision" ; 
++                 if ( !strcmp( tokens[FIELD_TYPE], "double" ) ) tokens[FIELD_TYPE] = "doubleprecision" ;
+       defining_i1_field = 1 ;
+     }
+ 
+@@ -415,13 +416,13 @@
+       node_t * field_struct ;
+       node_t * type_struct ;
+ 
+-      if ( !defining_state_field && ! defining_i1_field && 
++      if ( !defining_state_field && ! defining_i1_field &&
+            !defining_rconfig_field && !strcmp(tokens[FIELD_OF],"domain") )
+        { fprintf(stderr,"Registry warning: 'domain' is a reserved registry type name. Cannot 'typedef domain'\n") ; }
+ 
+       type_struct = get_type_entry( tokens[ FIELD_OF ] ) ;
+-      if ( type_struct == NULL ) 
+-      {  
++      if ( type_struct == NULL )
++      {
+         type_struct = new_node( TYPE ) ;
+         strcpy( type_struct->name, tokens[FIELD_OF] ) ;
+         type_struct->type_type = DERIVED ;
+@@ -469,7 +470,7 @@
+       }
+ 
+       field_struct->restart  = 0 ; field_struct->boundary  = 0 ;
+-      for ( i = 0 ; i < MAX_STREAMS ; i++ ) { 
++      for ( i = 0 ; i < MAX_STREAMS ; i++ ) {
+         reset_mask( field_struct->io_mask, i ) ;
+       }
+ 
+@@ -494,14 +495,14 @@
+             mask = field_struct->io_mask ;
+             set_mask( mask , stream ) ;
+             strcpy(tmp1, &(tmp[++i])) ;
+-            for ( p = tmp1  ; *p ; i++, p++ ) { 
++            for ( p = tmp1  ; *p ; i++, p++ ) {
+               c = tolower(*p) ; if ( c >= 'a' && c <= 'z' ) { *p = '\0' ; i-- ; break ; }
+               reset_mask( mask , stream ) ;
+             }
+-            for ( p = tmp1  ; *p ; p++ ) { 
++            for ( p = tmp1  ; *p ; p++ ) {
+               x = *p ;
+-              if ( x >= '0' && x <= '9' ) { 
+-                set_mask( mask , stream + x - '0' ) ; 
++              if ( x >= '0' && x <= '9' ) {
++                set_mask( mask , stream + x - '0' ) ;
+               }
+ 	      else if ( x == '{' ) {
+                 strcpy(tmp2,p+1) ;
+@@ -529,7 +530,7 @@
+             int ii,iii ;
+             char * pp ;
+             char tmp[NAMELEN] ;
+-            strcpy(tmp,tokens[FIELD_IO]) ;   
++            strcpy(tmp,tokens[FIELD_IO]) ;
+ 
+             if (( pp = index(tmp,'}') ) != NULL ) {
+               *pp = '\0' ;
+@@ -553,9 +554,9 @@
+ 	  } else if ( x >= 'a' && x <= 'z' ) {
+ 	    if ( x == 'r' ) { field_struct->restart = 1 ; set_mask( field_struct->io_mask , RESTART_STREAM   ) ; }
+ 	    if ( x == 'b' ) { field_struct->boundary  = 1 ; set_mask( field_struct->io_mask , BOUNDARY_STREAM   ) ; }
+-	    if ( x == 'f' || x == 'd' || x == 'u' || x == 's' ) { 
++	    if ( x == 'f' || x == 'd' || x == 'u' || x == 's' ) {
+                                strcpy(aux_fields,"") ;
+-                               strcpy(fcn_name,"") ; 
++                               strcpy(fcn_name,"") ;
+ 	                       if ( tokens[FIELD_IO][i+1] == '(' )     /* catch a possible error */
+                                {
+ 				 fprintf(stderr,
+@@ -564,7 +565,7 @@
+ 				    "                  equal sign needed before left paren\n") ;
+ 			       }
+ 
+-	                       if ( tokens[FIELD_IO][i+1] == '=' ) 
++	                       if ( tokens[FIELD_IO][i+1] == '=' )
+ 			       {
+ 				 int ii, jj, state ;
+ 				 state = 0 ;
+@@ -629,7 +630,7 @@
+                                    fprintf(stderr,"ERROR: %s %c function invalid.  You must specify the function to call in f=, d=, u= or s= when using the NMM cores.  The ARW interp functions do not correctly handle the E grid.\n",tokens[FIELD_SYM],x);
+                                    exit(1);
+                                  } else {
+-                                   /*  warning should no longer be needed 
++                                   /*  warning should no longer be needed
+                                       fprintf(stderr,"WARNING: %c interpolation unspecified for %s.  Using %s.\n",
+                                            x,tokens[FIELD_SYM],fcn_name);
+                                    */
+@@ -652,23 +653,23 @@
+                                  exit(1);
+                                }
+ #endif
+-	                       if      ( x == 'f' )  { 
+-                                 field_struct->nest_mask |= FORCE_DOWN ; 
++	                       if      ( x == 'f' )  {
++                                 field_struct->nest_mask |= FORCE_DOWN ;
+                                  strcpy(field_struct->force_fcn_name, fcn_name ) ;
+                                  strcpy(field_struct->force_aux_fields, aux_fields ) ;
+                                }
+-                               else if ( x == 'd' )  { 
+-                                 field_struct->nest_mask |= INTERP_DOWN ; 
++                               else if ( x == 'd' )  {
++                                 field_struct->nest_mask |= INTERP_DOWN ;
+                                  strcpy(field_struct->interpd_fcn_name, fcn_name ) ;
+                                  strcpy(field_struct->interpd_aux_fields, aux_fields ) ;
+                                }
+-                               else if ( x == 's' )  { 
+-                                 field_struct->nest_mask |= SMOOTH_UP ; 
++                               else if ( x == 's' )  {
++                                 field_struct->nest_mask |= SMOOTH_UP ;
+                                  strcpy(field_struct->smoothu_fcn_name, fcn_name ) ;
+                                  strcpy(field_struct->smoothu_aux_fields, aux_fields ) ;
+                                }
+-                               else if ( x == 'u' )  { 
+-                                 field_struct->nest_mask |= INTERP_UP ; 
++                               else if ( x == 'u' )  {
++                                 field_struct->nest_mask |= INTERP_UP ;
+                                  strcpy(field_struct->interpu_fcn_name, fcn_name ) ;
+                                  strcpy(field_struct->interpu_aux_fields, aux_fields ) ;
+                                }
+@@ -726,12 +727,12 @@
+       }
+ /**/  else   /* if ( field_struct->scalar_array_member ) */
+       {
+-/* 
++/*
+    Here we are constructing a list of nodes to represent the list of 4D scalar arrays in the model
+ 
+    This list is rooted at the FourD pointer.
+    Each array is represented by its own node; each node has a pointer, members, to the list
+-   of fields that make it up.  
++   of fields that make it up.
+ 
+ */
+ 	node_t * q , * member  ;
+@@ -828,7 +829,7 @@
+ #if 1
+       for ( i = COMM_DEFINE, q=comm_struct->comm_define ; strcmp(tokens[i],"-") ; i++ )  {
+         for(p=tokens[i];*p;p++)if(*p!=' '&&*p!='\t'){*q++=*p;}
+-      } 
++      }
+ #else
+       strcpy( comm_struct->comm_define , tokens[COMM_DEFINE] ) ;
+ #endif
+@@ -843,7 +844,7 @@
+ #if 1
+       for ( i = COMM_DEFINE, q=comm_struct->comm_define ; strcmp(tokens[i],"-") ; i++ )  {
+         for(p=tokens[i];*p;p++)if(*p!=' '&&*p!='\t'){*q++=*p;}
+-      } 
++      }
+ #else
+       strcpy( comm_struct->comm_define , tokens[COMM_DEFINE] ) ;
+ #endif
+@@ -858,7 +859,7 @@
+ #if 1
+       for ( i = COMM_DEFINE, q=comm_struct->comm_define ; strcmp(tokens[i],"-") ; i++ )  {
+         for(p=tokens[i];*p;p++)if(*p!=' '&&*p!='\t'){*q++=*p;}
+-      } 
++      }
+ #else
+       strcpy( comm_struct->comm_define , tokens[COMM_DEFINE] ) ;
+ #endif
+@@ -995,9 +996,9 @@
+ {
+   if      (!strcmp( dimorient , "x" ))
+    { dim_entry->coord_axis = COORD_X ; }
+-  else if (!strcmp( dimorient , "y" )) 
++  else if (!strcmp( dimorient , "y" ))
+    { dim_entry->coord_axis = COORD_Y ; }
+-  else if (!strcmp( dimorient , "z" )) 
++  else if (!strcmp( dimorient , "z" ))
+    { dim_entry->coord_axis = COORD_Z ; }
+   else
+    { dim_entry->coord_axis = COORD_C ; }

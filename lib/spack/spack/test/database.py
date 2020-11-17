@@ -23,7 +23,6 @@ from jsonschema import validate
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
-from llnl.util.lang import fork_context
 
 import spack.repo
 import spack.store
@@ -319,7 +318,7 @@ def _check_merkleiness():
 
 
 def _check_db_sanity(database):
-    """Utiilty function to check db against install layout."""
+    """Utility function to check db against install layout."""
     pkg_in_layout = sorted(spack.store.layout.all_specs())
     actual = sorted(database.query())
 
@@ -517,14 +516,20 @@ def test_026_reindex_after_deprecate(mutable_database):
     _check_db_sanity(mutable_database)
 
 
-def test_030_db_sanity_from_another_process(mutable_database):
-    def read_and_modify():
+class ReadModify(object):
+    """Provide a function which can execute in a separate process that removes
+    a spec from the database.
+    """
+    def __call__(self):
         # check that other process can read DB
-        _check_db_sanity(mutable_database)
-        with mutable_database.write_transaction():
+        _check_db_sanity(spack.store.db)
+        with spack.store.db.write_transaction():
             _mock_remove('mpileaks ^zmpi')
 
-    p = fork_context.Process(target=read_and_modify, args=())
+
+def test_030_db_sanity_from_another_process(mutable_database):
+    spack_process = spack.subprocess_context.SpackTestProcess(ReadModify())
+    p = spack_process.create()
     p.start()
     p.join()
 

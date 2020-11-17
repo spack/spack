@@ -6,7 +6,7 @@
 from spack import *
 
 
-class SuperluDist(CMakePackage):
+class SuperluDist(CMakePackage, CudaPackage):
     """A general purpose library for the direct solution of large, sparse,
     nonsymmetric systems of linear equations on high performance machines."""
 
@@ -14,7 +14,7 @@ class SuperluDist(CMakePackage):
     url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 
-    maintainers = ['xiaoye', 'gchavez2', 'balay']
+    maintainers = ['xiaoye', 'gchavez2', 'balay', 'pghysels']
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
@@ -43,6 +43,8 @@ class SuperluDist(CMakePackage):
     depends_on('lapack')
     depends_on('parmetis')
     depends_on('metis@5:')
+
+    conflicts('+cuda', when='@:6.3.999')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
@@ -77,6 +79,15 @@ class SuperluDist(CMakePackage):
         else:
             args.append('-Denable_openmp=OFF')
             args.append('-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=ON')
+
+        if '+cuda' in spec:
+            args.append('-DTPL_ENABLE_CUDALIB=TRUE')
+            args.append('-DTPL_CUDA_LIBRARIES=-L%s -lcublas -lcudart'
+                        % spec['cuda'].libs.directories[0])
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch[0] != 'none':
+                args.append(
+                    '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
 
         if '+shared' in spec:
             args.append('-DBUILD_SHARED_LIBS:BOOL=ON')

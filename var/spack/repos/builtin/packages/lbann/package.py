@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 from spack import *
 
 
@@ -68,7 +67,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('hydrogen@1.5.0:', when='@:0.90,0.102:')
 
     # Add Hydrogen variants
-    depends_on('hydrogen +openmp_blas +shared +int64')
+    depends_on('hydrogen +openmp +openmp_blas +shared +int64')
     depends_on('hydrogen ~al', when='~al')
     depends_on('hydrogen +al', when='+al')
     depends_on('hydrogen ~cuda', when='~cuda')
@@ -153,6 +152,8 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('catch2', type='test')
     depends_on('clara')
 
+    depends_on('llvm-openmp', when='%apple-clang')
+
     generator = 'Ninja'
     depends_on('ninja', type='build')
 
@@ -168,6 +169,17 @@ class Lbann(CMakePackage, CudaPackage):
             '-DLBANN_VERSION=spack',
             '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
         ]
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%apple-clang'):
+            env.append_flags(
+                'CPPFLAGS', self.compiler.openmp_flag)
+            env.append_flags(
+                'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
 
     # Get any recent versions or non-numeric version
     # Note that develop > numeric and non-develop < numeric
@@ -216,17 +228,16 @@ class Lbann(CMakePackage, CudaPackage):
                 '-DLBANN_CONDUIT_DIR={0}'.format(spec['conduit'].prefix),
                 '-DConduit_DIR={0}'.format(spec['conduit'].prefix)])
 
-        # Add support for OpenMP
-        if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
-            if sys.platform == 'darwin':
-                clang = self.compiler.cc
-                clang_bin = os.path.dirname(clang)
-                clang_root = os.path.dirname(clang_bin)
-                args.extend([
-                    '-DOpenMP_CXX_FLAGS=-fopenmp=libomp',
-                    '-DOpenMP_CXX_LIB_NAMES=libomp',
-                    '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
-                        clang_root)])
+        # Add support for OpenMP with external (Brew) clang
+        if spec.satisfies('%clang platform=darwin'):
+            clang = self.compiler.cc
+            clang_bin = os.path.dirname(clang)
+            clang_root = os.path.dirname(clang_bin)
+            args.extend([
+                '-DOpenMP_CXX_FLAGS=-fopenmp=libomp',
+                '-DOpenMP_CXX_LIB_NAMES=libomp',
+                '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
+                    clang_root)])
 
         if '+opencv' in spec:
             args.append('-DOpenCV_DIR:STRING={0}'.format(

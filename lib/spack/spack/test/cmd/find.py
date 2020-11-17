@@ -209,6 +209,7 @@ def test_find_format(database, config):
 
     output = find('--format', '{name}-{version}-{compiler.name}-{^mpi.name}',
                   'mpileaks')
+    assert "installed package" not in output
     assert set(output.strip().split('\n')) == set([
         "mpileaks-2.3-gcc-zmpi",
         "mpileaks-2.3-gcc-mpich",

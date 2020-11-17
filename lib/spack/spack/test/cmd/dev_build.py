@@ -108,20 +108,24 @@ def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):
                       'dev-build-test-install@0.0.0')
 
 
+def print_spack_cc(*args):
+    # Eat arguments and print environment variable to test
+    print(os.environ.get('CC', ''))
+
+
+# `module unload cray-libsci` in test environment causes failure
+# It does not fail for actual installs
+# build_environment.py imports module directly, so we monkeypatch it there
+# rather than in module_cmd
+def mock_module_noop(*args):
+    pass
+
+
 def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
                            install_mockery):
-    def print_spack_cc(*args):
-        # Eat arguments and print environment variable to test
-        print(os.environ.get('CC', ''))
     monkeypatch.setattr(os, 'execvp', print_spack_cc)
 
-    # `module unload cray-libsci` in test environment causes failure
-    # It does not fail for actual installs
-    # build_environment.py imports module directly, so we monkeypatch it there
-    # rather than in module_cmd
-    def module(*args):
-        pass
-    monkeypatch.setattr(spack.build_environment, 'module', module)
+    monkeypatch.setattr(spack.build_environment, 'module', mock_module_noop)
 
     with tmpdir.as_cwd():
         output = dev_build('-b', 'edit', '--drop-in', 'sh',
