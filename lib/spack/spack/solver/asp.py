@@ -634,7 +634,7 @@ class PyclingoDriver(object):
 
         # With a grounded program, we can run the solve.
         result = Result()
-        models = []  # stable moodels if things go well
+        models = []  # stable models if things go well
         cores = []   # unsatisfiable cores if they do not
 
         def on_model(model):
@@ -973,7 +973,7 @@ class SpackSolverSetup(object):
                 continue
 
             for i, provider in enumerate(providers):
-                func(vspec, provider, i)
+                func(vspec, provider, i + 10)
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")

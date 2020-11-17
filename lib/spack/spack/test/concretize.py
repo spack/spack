@@ -872,3 +872,14 @@ class TestConcretize(object):
 
         assert s.external
         assert 'stuff' not in s
+
+    def test_transitive_conditional_virtual_dependency(self):
+        s = Spec('transitive-conditional-virtual-dependency').concretized()
+
+        # The default for conditional-virtual-dependency is to have
+        # +stuff~mpi, so check that these defaults are respected
+        assert '+stuff' in s['conditional-virtual-dependency']
+        assert '~mpi' in s['conditional-virtual-dependency']
+
+        # 'stuff' is provided by an external package, so check it's present
+        assert 'externalvirtual' in s

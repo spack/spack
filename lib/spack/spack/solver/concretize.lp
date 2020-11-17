@@ -57,10 +57,11 @@ provider(Package, Virtual)
   :- node(Package), provides_virtual(Package, Virtual).
 
 % for any virtual, there can be at most one provider in the DAG
-0 { provider(Package, Virtual) : node(Package) } 1 :- virtual(Virtual).
+0 { provider(Package, Virtual) :
+    node(Package), provides_virtual(Package, Virtual) } 1 :- virtual(Virtual).
 
 % give dependents the virtuals they want
-provider_weight(Dependency, -10)
+provider_weight(Dependency, 0)
  :- virtual(Virtual), depends_on(Package, Dependency),
     provider(Dependency, Virtual),
     external(Dependency).
@@ -84,6 +85,7 @@ provider_weight(Dependency, 100)
  :- virtual(Virtual),
     provider(Dependency, Virtual),
     depends_on(Package, Dependency),
+    not external(Dependency),
     not pkg_provider_preference(Package, Virtual, Dependency, _),
     not default_provider_preference(Virtual, Dependency, _).
 
@@ -355,37 +357,27 @@ node_compiler_version(Package, Compiler, Version) :- node_compiler_version_hard(
    not compiler_supports_os(Compiler, Version, OS),
    not allow_compiler(Compiler, Version).
 
-% dependencies imply we should try to match hard compiler constraints
-% todo: look at what to do about intersecting constraints here. we'd
-% ideally go with the "lowest" pref in the DAG
-node_compiler_match_pref(Package, Compiler)
- :- node_compiler_hard(Package, Compiler).
-node_compiler_match_pref(Dependency, Compiler)
- :- depends_on(Package, Dependency),
-    node_compiler_match_pref(Package, Compiler),
-    not node_compiler_hard(Dependency, _).
-compiler_match(Package, 1)
- :- node_compiler(Package, Compiler),
-    node_compiler_match_pref(Package, Compiler).
-
 % If the compiler is what was prescribed from command line etc.
 % or is the same as a root node, there is a version match
 
-% Compiler prescribed from command line
+% Compiler prescribed in the root spec
 node_compiler_version_match_pref(Package, Compiler, V)
  :- node_compiler_hard(Package, Compiler),
-    node_compiler_version(Package, Compiler, V).
+    node_compiler_version(Package, Compiler, V),
+    not external(Package).
 
-% Compiler inherited from a root node
+% Compiler inherited from a parent node
 node_compiler_version_match_pref(Dependency, Compiler, V)
  :- depends_on(Package, Dependency),
     node_compiler_version_match_pref(Package, Compiler, V),
+    node_compiler_version(Dependency, Compiler, V),
     not node_compiler_hard(Dependency, Compiler).
 
 % Compiler inherited from the root package
 node_compiler_version_match_pref(Dependency, Compiler, V)
  :- depends_on(Package, Dependency),
     node_compiler_version(Package, Compiler, V), root(Package),
+    node_compiler_version(Dependency, Compiler, V),
     not node_compiler_hard(Dependency, Compiler).
 
 compiler_version_match(Package, 1)
@@ -516,25 +508,18 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
     : provider_weight(Provider, Weight), root(Provider)
 }.
 
-% Next, we want to minimize:
-% 1. The weights of the providers
-% 2. The version weight of the providers
-% i.e. use as much as possible the most preferred
-% providers at latest versions
+% Next, we want to minimize the weights of the providers
+% i.e. use as much as possible the most preferred providers
 #minimize{
     Weight@11,Provider
     : provider_weight(Provider, Weight), not root(Provider)
 }.
-#minimize{
-    Weight@10,Provider
-    : provider_weight(Provider, _), version_weight(Provider, Weight)
-}.
 
 % For external packages it's more important than for others
-% to match the compiler
-#minimize{
+% to match the compiler with their parent node
+#maximize{
     Weight@10,Package
-    : compiler_weight(Package, Weight), external(Package)
+    : compiler_version_match(Package, Weight), external(Package)
 }.
 
 % Then try to use as much as possible:
