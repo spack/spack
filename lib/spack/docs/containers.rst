@@ -64,7 +64,7 @@ other techniques to minimize the size of the final image:
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
-   # Install the software, remove unecessary deps
+   # Install the software, remove unnecessary deps
    RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y
 
    # Strip all the binaries
@@ -167,7 +167,8 @@ under the ``container`` attribute of environments:
        # singularity or anything else that is currently supported
        format: docker
 
-       # Sets the base images for the build and final stage
+       # Sets the base images for the stages where Spack builds the
+       # software or where the software gets installed after being built..
        images:
          os: "centos:7"
          spack: develop
@@ -206,10 +207,9 @@ which one to use depends on the use case at hand.
 Use Official Spack Images From Dockerhub
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To generate a recipe that use an official Docker image from the
+To generate a recipe that uses an official Docker image from the
 Spack organization to build the software and the corresponding official OS image
-to install the built software, the user is just requested to
-specify:
+to install the built software, all the user has to do is specify:
 
 1. An operating system under ``images:os``
 2. A Spack version under ``images:spack``
@@ -327,7 +327,7 @@ produces, for instance, the following ``Dockerfile``:
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
-   # Install the software, remove unecessary deps
+   # Install the software, remove unnecessary deps
    RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y
 
    # Strip all the binaries
@@ -355,7 +355,7 @@ where the base images for both stages are completely custom.
 
 This second mode of selection for base images is more flexible than just
 choosing an operating system and a Spack version, but is also more demanding.
-Users may need to generate by themselves their base images and its also their
+Users may need to generate by themselves their base images and it's also their
 responsibility to ensure that:
 
 1. Spack is available in the ``build`` stage and set up correctly to install the required software

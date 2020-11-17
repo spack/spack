@@ -13,7 +13,7 @@ RUN {% if os_package_update %}{{ os_packages_build.update }} \
 RUN mkdir {{ paths.environment }} \
 {{ manifest }} > {{ paths.environment }}/spack.yaml
 
-# Install the software, remove unecessary deps
+# Install the software, remove unnecessary deps
 RUN cd {{ paths.environment }} && spack env activate . && spack install --fail-fast && spack gc -y
 {% if strip %}
 
