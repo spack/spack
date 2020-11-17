@@ -86,3 +86,7 @@ class PyPandas(PythonPackage):
     depends_on('py-pytest-xdist', type='test')
     depends_on('py-hypothesis@3.58:', type='test')
     depends_on('py-pyarrow@0.10.0:', type='test')
+
+    def patch(self):
+        if self.spec.satisfies('%intel@19.1:'):
+            filter_file(r'\["-Werror"\]', '[]', 'setup.py')
