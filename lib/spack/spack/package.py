@@ -1678,7 +1678,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.test_failures = []
         self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
 
-        kwargs = {k:v for k, v in [('dirty', dirty), ('fake', False),
+        kwargs = {k: v for k,v in [('dirty', dirty), ('fake', False),
                                    ('context', 'test')]}
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
@@ -2511,7 +2511,7 @@ def test_process(pkg, kwargs):
                         shutil.copytree(data_source, data_dir)
 
                     # grab the function for each method so we can call
-                    # it with the package 
+                    # it with the package
                     test_fn = spec_pkg.__class__.test
                     if not isinstance(test_fn, types.FunctionType):
                         test_fn = test_fn.__func__

@@ -6,6 +6,7 @@
 import shutil
 import sys
 
+
 class Hdf5(AutotoolsPackage):
     """HDF5 is a data model, library, and file format for storing and managing
     data. It supports an unlimited variety of datatypes, and is designed for
@@ -426,4 +427,4 @@ HDF5 version {version} {version}
 
         # Run existing install check
         # TODO: Restore once address built vs. installed state
-        #self._check_install()
+        # self._check_install()

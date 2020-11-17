@@ -848,7 +848,6 @@ class Openmpi(AutotoolsPackage):
                 else:
                     copy(script_stub, exe)
 
-
     @run_after('install')
     def setup_install_tests(self):
         """
