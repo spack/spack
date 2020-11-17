@@ -35,6 +35,7 @@ def prefix_inspections(platform):
         'include': ['CPATH'],
         'lib/pkgconfig': ['PKG_CONFIG_PATH'],
         'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
+        'share/pkgconfig': ['PKG_CONFIG_PATH'],
         '': ['CMAKE_PREFIX_PATH']
     }
 
