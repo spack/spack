@@ -172,13 +172,16 @@ class Charmpp(Package):
         # Some versions were renamed/removed in 6.11
         if self.spec.version < Version("6.11.0"):
             versions.update({("linux", "i386", "mpi"):       "mpi-linux"})
-            versions.update({("linux", "i386", "multicore"): "multicore-linux"})
+            versions.update({("linux", "i386", "multicore"):
+                             "multicore-linux"})
             versions.update({("linux", "i386", "netlrts"):   "netlrts-linux"})
             versions.update({("linux", "i386", "uth"):       "uth-linux"})
         else:
             versions.update({("linux", "i386", "mpi"):       "mpi-linux-i386"})
-            versions.update({("linux", "i386", "multicore"): "multicore-linux-i386"})
-            versions.update({("linux", "i386", "netlrts"):   "netlrts-linux-i386"})
+            versions.update({("linux", "i386", "multicore"):
+                             "multicore-linux-i386"})
+            versions.update({("linux", "i386", "netlrts"):
+                             "netlrts-linux-i386"})
 
         if (plat, mach, comm) not in versions:
             raise InstallError(
