@@ -347,7 +347,11 @@ class AbstractVariant(object):
 
         old_value = self.value
 
-        values = list(sorted(set(self.value + other.value)))
+        if len(other.value) == 1 and other.value[0] == 'none':
+            values = ("none",)
+        else:
+            values = list(sorted(set(self.value + other.value)))
+
         # If we constraint wildcard by another value, just take value
         if '*' in values and len(values) > 1:
             values.remove('*')
