@@ -132,7 +132,7 @@ jobs:
           . share/spack/setup-env.sh
           spack compiler find
           spack solve mpileaks%gcc
-          coverage run $(which spack) test -v
+          coverage run $(which spack) unit-test -v
           coverage combine
           coverage xml
       - uses: codecov/codecov-action@v1
