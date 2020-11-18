@@ -14,6 +14,8 @@ class Qd(AutotoolsPackage):
     homepage = "https://bitbucket.org/njet/qd-library/src/master/"
     git      = "https://bitbucket.org/njet/qd-library.git"
 
+    tags = ['hep']
+
     version('2.3.13', commit='a57dde9')
 
     depends_on('autoconf', type='build')

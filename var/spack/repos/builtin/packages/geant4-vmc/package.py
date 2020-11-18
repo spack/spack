@@ -13,6 +13,8 @@ class Geant4Vmc(CMakePackage):
     url      = "http://github.com/vmc-project/geant4_vmc/archive/v5-1-p1.tar.gz"
     git      = "http://github.com/vmc-project/geant4_vmc.git"
 
+    tags = ['hep']
+
     maintainer = ['wdconinc']
 
     version('master', branch='master')

@@ -13,6 +13,8 @@ class Mcutils(MakefilePackage):
     homepage = "https://bitbucket.org/andybuckley/mcutils"
     url      = "https://bitbucket.org/andybuckley/mcutils/get/mcutils-1.3.4.tar.gz"
 
+    tags = ['hep']
+
     version('1.3.4', sha256='0bf9795cc248871ab2b663d2eef647311eacaea4982997950096de68747e65a3')
     version('1.3.3', sha256='bfb2f0e0e6de358928436f309f3f1b084d3d652073c440f262de878332116ecb')
     version('1.3.2', sha256='e17d417e8d4f8d17a6879ea18dcd2cd76e161d37eae08b84893504d1b08f9708')

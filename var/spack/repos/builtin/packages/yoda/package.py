@@ -12,6 +12,8 @@ class Yoda(AutotoolsPackage):
     homepage = "https://yoda.hepforge.org/"
     url      = "https://yoda.hepforge.org/downloads/?f=YODA-1.8.3.tar.bz2"
 
+    tags = ['hep']
+
     version('1.8.3', sha256='d9dd0ea5e0f630cdf4893c09a40c78bd44455777c2125385ecc26fa9a2acba8a')
     version('1.8.2', sha256='89558c11cf9b88b0899713e5b4bf8781fdcecc480ff155985ebbf148c6d80bdb')
     version('1.8.1', sha256='51472e12065b9469f13906f0dc609e036d0c1dbd2a8e445e7d654aba73660112')

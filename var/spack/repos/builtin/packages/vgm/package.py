@@ -14,6 +14,8 @@ class Vgm(CMakePackage):
     url      = "http://github.com/vmc-project/vgm/archive/v4-8.tar.gz"
     git      = "http://github.com/vmc-project/vgm.git"
 
+    tags = ['hep']
+
     maintainer = ['wdconinc']
 
     version('master', branch='master')
