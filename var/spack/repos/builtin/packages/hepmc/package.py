@@ -11,6 +11,8 @@ class Hepmc(CMakePackage):
     homepage = "http://hepmc.web.cern.ch/hepmc/"
     url      = "http://hepmc.web.cern.ch/hepmc/releases/hepmc2.06.09.tgz"
 
+    tags = ['hep']
+
     version('2.06.10', sha256='5adedd9e3f7447e1e5fc01b72f745ab87da2c1611df89208bb3d7c6ea94c11a4')
     version('2.06.09', sha256='e0f8fddd38472c5615210894444686ac5d72df3be682f7d151b562b236d9b422')
     version('2.06.08', sha256='8be6c1793e0a045f07ddb88bb64b46de7e66a52e75fb72b3f82f9a3e3ba8a8ce')

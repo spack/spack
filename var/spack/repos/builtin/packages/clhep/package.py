@@ -14,6 +14,8 @@ class Clhep(CMakePackage):
     list_url = "https://proj-clhep.web.cern.ch/proj-clhep/"
     list_depth = 1
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan']
 
     version('2.4.1.3', sha256='27c257934929f4cb1643aa60aeaad6519025d8f0a1c199bc3137ad7368245913')

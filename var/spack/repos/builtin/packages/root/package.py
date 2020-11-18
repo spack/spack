@@ -15,6 +15,8 @@ class Root(CMakePackage):
     homepage = "https://root.cern.ch"
     url      = "https://root.cern/download/root_v6.16.00.source.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['chissg', 'HadrienG2', 'drbenmorgan', 'vvolkl']
 
     # ###################### Versions ##########################

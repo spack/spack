@@ -17,6 +17,8 @@ class Openloops(Package):
     homepage = "https://openloops.hepforge.org/"
     url      = "https://openloops.hepforge.org/downloads?f=OpenLoops-2.1.1.tar.gz"
 
+    tags = ['hep']
+
     version('2.1.1', sha256='f1c47ece812227eab584e2c695fef74423d2f212873f762b8658f728685bcb91')
 
     all_processes = (

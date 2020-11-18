@@ -15,6 +15,8 @@ class Geant4(CMakePackage):
     homepage = "http://geant4.cern.ch/"
     url = "https://gitlab.cern.ch/geant4/geant4/-/archive/v10.6.0/geant4-v10.6.0.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan']
 
     version('10.6.2', sha256='e381e04c02aeade1ed8cdd9fdbe7dcf5d6f0f9b3837a417976b839318a005dbd')

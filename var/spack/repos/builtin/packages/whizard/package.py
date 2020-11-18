@@ -15,6 +15,8 @@ class Whizard(AutotoolsPackage):
     url      = "https://whizard.hepforge.org/downloads/?f=whizard-2.8.3.tar.gz"
     git      = "https://gitlab.tp.nt.uni-siegen.de/whizard/public.git"
 
+    tags = ['hep']
+
     maintainers = ['vvolkl']
 
     version('master', branch="master")
