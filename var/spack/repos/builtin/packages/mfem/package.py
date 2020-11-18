@@ -47,45 +47,45 @@ class Mfem(Package):
 
     version('4.2.0',
             '4352a225b55948d2e73a5ee88cece0e88bdbe7ba6726a23d68b2736d3221a86d',
-            url='https://bit.ly/mfem-4-2', extension='.tar.gz',
+            url='https://bit.ly/mfem-4-2', extension='tar.gz',
             preferred=True)
 
     version('4.1.0',
             '4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d',
-            url='https://bit.ly/mfem-4-1', extension='.tar.gz')
+            url='https://bit.ly/mfem-4-1', extension='tar.gz')
 
     # Tagged development version used by xSDK
     version('4.0.1-xsdk', commit='c55c80d17b82d80de04b849dd526e17044f8c99a')
 
     version('4.0.0',
             'df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727',
-            url='https://bit.ly/mfem-4-0', extension='.tar.gz')
+            url='https://bit.ly/mfem-4-0', extension='tar.gz')
 
     # Tagged development version used by the laghos package:
     version('3.4.1-laghos-v2.0', tag='laghos-v2.0')
 
     version('3.4.0',
             sha256='4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
-            url='https://bit.ly/mfem-3-4', extension='.tar.gz')
+            url='https://bit.ly/mfem-3-4', extension='tar.gz')
 
     version('3.3.2',
             sha256='b70fa3c5080b9ec514fc05f4a04ff74322b99ac4ecd6d99c229f0ed5188fc0ce',
-            url='https://goo.gl/Kd7Jk8', extension='.tar.gz')
+            url='https://goo.gl/Kd7Jk8', extension='tar.gz')
 
     # Tagged development version used by the laghos package:
     version('3.3.1-laghos-v1.0', tag='laghos-v1.0')
 
     version('3.3',
             sha256='b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
-            url='http://goo.gl/Vrpsns', extension='.tar.gz')
+            url='http://goo.gl/Vrpsns', extension='tar.gz')
 
     version('3.2',
             sha256='2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
-            url='http://goo.gl/Y9T75B', extension='.tar.gz')
+            url='http://goo.gl/Y9T75B', extension='tar.gz')
 
     version('3.1',
             sha256='841ea5cf58de6fae4de0f553b0e01ebaab9cd9c67fa821e8a715666ecf18fc57',
-            url='http://goo.gl/xrScXn', extension='.tar.gz')
+            url='http://goo.gl/xrScXn', extension='tar.gz')
 
     variant('static', default=True,
             description='Build static library')
