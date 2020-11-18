@@ -315,11 +315,11 @@ def _process_external_package(pkg, explicit):
     try:
         # Check if the package was already registered in the DB.
         # If this is the case, then just exit.
-        rec = spack.store.db.get_record(spec)
         tty.debug('{0} already registered in DB'.format(pre))
 
-        # Update the value of rec.explicit if it is necessary
-        _update_explicit_entry_in_db(pkg, rec, explicit)
+        # Update the explicit state if it is necessary
+        if explicit:
+            spack.store.db.update_explicit(spec, explicit)
 
     except KeyError:
         # If not, register it and generate the module file.
@@ -393,25 +393,6 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False,
     binary_spec = matches[0]['spec']
     return _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
                                          preferred_mirrors=preferred_mirrors)
-
-
-def _update_explicit_entry_in_db(pkg, rec, explicit):
-    """
-    Ensure the spec is marked explicit in the database.
-
-    Args:
-        pkg (Package): the package whose install record is being updated
-        rec (InstallRecord): the external package
-        explicit (bool): if the package was requested explicitly by the user,
-            ``False`` if it was pulled in as a dependency of an explicit
-            package.
-    """
-    if explicit and not rec.explicit:
-        with spack.store.db.write_transaction():
-            rec = spack.store.db.get_record(pkg.spec)
-            message = '{s.name}@{s.version} : marking the package explicit'
-            tty.debug(message.format(s=pkg.spec))
-            rec.explicit = True
 
 
 def clear_failures():
@@ -816,7 +797,7 @@ class PackageInstaller(object):
 
             # Only update the explicit entry once for the explicit package
             if task.explicit:
-                _update_explicit_entry_in_db(task.pkg, rec, True)
+                spack.store.db.update_explicit(task.pkg.spec, True)
 
             # In case the stage directory has already been created, this
             # check ensures it is removed after we checked that the spec is

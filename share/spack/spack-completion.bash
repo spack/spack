@@ -320,7 +320,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup solve spec stage test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup solve spec stage test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -1085,6 +1085,15 @@ _spack_maintainers() {
         SPACK_COMPREPLY="-h --help --maintained --unmaintained -a --all --by-user"
     else
         _all_packages
+    fi
+}
+
+_spack_mark() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -a --all -e --explicit -i --implicit"
+    else
+        _installed_packages
     fi
 }
 
