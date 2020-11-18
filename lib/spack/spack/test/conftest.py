@@ -84,6 +84,7 @@ def pre_cache(mock_packages):
     spack.repo.path.get_pkg_class('libdwarf')
     spack.repo.path.get_pkg_class('fake')
 
+
 #
 # Disable any activate Spack environment BEFORE all tests
 #
