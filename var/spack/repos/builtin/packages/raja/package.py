@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class Raja(CMakePackage, CudaPackage):
+class Raja(CMakePackage, CudaPackage, HipPackage):
     """RAJA Parallel Framework."""
 
     homepage = "http://software.llnl.gov/RAJA/"
@@ -33,6 +33,8 @@ class Raja(CMakePackage, CudaPackage):
     variant('examples', default=True, description='Build examples.')
     variant('exercises', default=True, description='Build exercises.')
 
+    conflicts('+openmp', when='+hip')
+
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
 
@@ -53,6 +55,15 @@ class Raja(CMakePackage, CudaPackage):
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
         else:
             options.append('-DENABLE_CUDA=OFF')
+
+        if '+hip' in spec:
+            arch = self.spec.variants['amdgpu_target'].value
+            options.extend([
+                '-DENABLE_HIP=ON',
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+        else:
+            options.append('-DENABLE_HIP=OFF')
 
         options.append('-DBUILD_SHARED_LIBS={0}'.format(
             'ON' if '+shared' in spec else 'OFF'))
