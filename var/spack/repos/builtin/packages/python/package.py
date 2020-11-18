@@ -1133,10 +1133,10 @@ class Python(AutotoolsPackage):
         exe = self.command.name
 
         # test hello world
-        self.run_test(exe, options=['-c', 'print("hello world!")'],
+        self.run_test(exe, options=['-c', self.print_string('hello world!')],
                       expected=['hello world!'])
 
         # check that the executable comes from the spec prefix
         # also checks imports work
-        self.run_test(exe, options=['-c', 'import sys; print(sys.executable)'],
+        self.run_test(exe, options=['-c', 'import sys; ' + self.print_string('sys.executable')],
                       expected=[self.spec.prefix])
