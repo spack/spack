@@ -367,19 +367,14 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))
 
     def test(self):
-        perl = which('perl')
-        assert perl is not None
+        """Smoke tests"""
+        exe = self.command.name
 
-        tty.msg('test: Ensuring use of the installed executable')
-        assert os.path.dirname(perl.path) == self.prefix.bin
+        reason = 'test: checking version is {0}'.format(self.spec.version)
+        self.run_test(exe, '--version', ['perl', str(self.spec.version)],
+                      installed=True, purpose=reason)
 
-        tty.msg('test: Checking version')
-        output = perl('--version', output=str.split, error=str.split)
-        assert 'perl' in output
-        assert '(v{0})'.format(self.spec.version) in output
-
-        tty.msg('test: Ensuring perl runs')
+        reason = 'test: ensuring perl runs'
         msg = 'Hello, World!'
-        output = perl('-e', 'use warnings; use strict;\nprint("%s");' % msg,
-                      output=str.split, error=str.split)
-        assert output == msg
+        options = ['-e', 'use warnings; use strict;\nprint("%s\n");' % msg]
+        self.run_test(exe, options, msg, installed=True, purpose=reason)
