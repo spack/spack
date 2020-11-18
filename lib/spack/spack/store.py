@@ -89,32 +89,27 @@ def _store():
     shared_install_trees = spack.config.get('config:shared_install_trees')
 
     if install_root:
+        # Determines if install_root exists
+        if install_root in install_trees:
+            install_tree = install_trees[install_root]
+            root = install_tree['root']
+        elif shared_install_trees and install_root in shared_install_trees:
+            install_tree = shared_install_trees[install_root]
+            root = install_tree['root']
+        else:
+            # TODO: provide the user an option to create a new install tree
+            raise ValueError("Specified install tree does not exist: {0}"
+                             .format(install_root))
+
+        # Tests for deprecated install_root format
         if isinstance(install_root, six.string_types):
             tty.warn("Using deprecated format for configuring install_tree")
-
-            if install_root in install_trees:
-                root = install_trees[install_root]['root']
-            elif install_root in shared_install_trees:
-                root = shared_install_trees[install_root]['root']
-            else:
-                # TODO: provide the user an option to create a new install tree
-                raise ValueError("Specified install tree does not exist: {0}"
-                                 .format(install_root))
-
+            # Set Projections when using deprecated tree format
             all_projection = spack.config.get(
                 'config:install_path_scheme',
                 dir_layout.default_projections['all'])
-
             projections = {'all': all_projection}
-        else:
-            if install_root in install_trees:
-                root = install_trees[install_root]
-            elif install_root in shared_install_trees:
-                root = shared_install_trees[install_root]
-            else:
-                # TODO: provide the user an option to create a new install tree
-                raise ValueError("Specified install tree does not exist: {0}"
-                                 .format(install_root))
+
     elif shared_install_trees:
         # If no install tree is specified and there are shared install trees,
         # then we are in user mode, and the install tree is in ~
@@ -128,11 +123,13 @@ def _store():
     else:
         # If this is not a shared spack instance, then by default we will place
         # the install prefix inside the Spack tree
-        root = spack.config.get('install_trees')['default']['root']
+        root = spack.config.get('config:install_trees')['default']['root']
 
-        install_tree = spack.config.get('install_trees')['default']['root']
-        projections = install_tree.get(
-            'projections', dir_layout.default_projections)
+        install_tree = spack.config.get('config:install_trees')['default']
+        if install_tree['projections']:
+            projections = install_tree['projections']
+        else:
+            projections = dir_layout.default_projections['all']
 
         path_scheme = spack.config.get('config:install_path_scheme', None)
         if path_scheme:
@@ -144,7 +141,6 @@ def _store():
     #     initialize_upstream_pointer_if_unset(root, init_upstream_path)
     # elif shared_install_trees and (not upstream_set(root)):
     #     raise ValueError("Must specify an upstream shared install tree")
-
     root = spack.util.path.canonicalize_path(root)
 
     return Store(root, projections,
