@@ -44,6 +44,7 @@ install_root = None
 active_upstream = None
 init_upstream = None
 
+
 def parse_install_tree(config_dict):
     """Parse config settings and return values relevant to the store object.
 
