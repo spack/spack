@@ -1130,13 +1130,18 @@ class Python(AutotoolsPackage):
 
     def test(self):
         # do not use self.command because we are also testing the run env
-        exe = self.command.name
+        exe = self.spec['python'].command.name
 
         # test hello world
-        self.run_test(exe, options=['-c', self.print_string('hello world!')],
-                      expected=['hello world!'])
+        msg = 'hello world!'
+        reason = 'test: running {0}'.format(msg)
+        options = ['-c', 'print("{0}")'.format(msg)]
+        self.run_test(exe, options=options, expected=[msg], installed=True,
+                      purpose=reason)
 
-        # check that the executable comes from the spec prefix
-        # also checks imports work
-        self.run_test(exe, options=['-c', 'import sys; ' + self.print_string('sys.executable')],
-                      expected=[self.spec.prefix])
+        # checks import works and executable comes from the spec prefix
+        reason = 'test: checking import and executable'
+        print = self.print_string('sys.executable')
+        options = ['-c', 'import sys; {0}'.format(print)]
+        self.run_test(exe, options=options, expected=[self.spec.prefix],
+                      installed=True, purpose=reason)

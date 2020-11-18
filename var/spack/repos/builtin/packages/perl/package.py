@@ -15,7 +15,6 @@ import re
 import os
 from contextlib import contextmanager
 
-import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
 
 from spack import *
@@ -368,7 +367,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     def test(self):
         """Smoke tests"""
-        exe = self.command.name
+        exe = self.spec['perl'].command.name
 
         reason = 'test: checking version is {0}'.format(self.spec.version)
         self.run_test(exe, '--version', ['perl', str(self.spec.version)],
