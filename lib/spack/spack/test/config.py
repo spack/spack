@@ -24,21 +24,28 @@ import spack.schema.mirrors
 import spack.schema.repos
 import spack.util.spack_yaml as syaml
 import spack.util.path as spack_path
+import llnl.util.tty as tty
 
 
 # sample config data
 config_low = {
     'config': {
-        'install_tree': {'root': 'install_tree_path'},
+        'install_trees': {
+          'default': {
+             'root': 'install_tree_path'}},
         'build_stage': ['path1', 'path2', 'path3']}}
 
 config_override_all = {
     'config:': {
-        'install_tree:': {'root': 'override_all'}}}
+        'install_trees': {
+          'default': {
+             'root': 'install_tree_path'}}}}
 
 config_override_key = {
     'config': {
-        'install_tree:': {'root': 'override_key'}}}
+       'install_trees': {
+         'default': {
+            'root': 'install_tree_path'}}}}
 
 config_merge_list = {
     'config': {
@@ -368,28 +375,30 @@ full_padded_string = os.path.join(
 
 @pytest.mark.parametrize('config_settings,expected', [
     ([], [None, None, None]),
-    ([['config:install_tree:root', '/path']], ['/path', None, None]),
-    ([['config:install_tree', '/path']], ['/path', None, None]),
-    ([['config:install_tree:projections', {'all': '{name}'}]],
+    ([['config:install_trees:default:root', '/path']], ['/path', None, None]),
+    ([['config:install_trees:default', '/path']], ['/path', None, None]),
+    ([['config:install_trees:default:projections', {'all': '{name}'}]],
      [None, None, {'all': '{name}'}]),
-    ([['config:install_path_scheme', '{name}']],
+    ([['config:install_trees:default:projections', {'all': '{name}'}]],
      [None, None, {'all': '{name}'}]),
-    ([['config:install_tree:root', '/path'],
-      ['config:install_tree:padded_length', 11]],
+    ([['config:install_trees:default:root', '/path'],
+      ['config:install_trees:default:padded_length', 11]],
      [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
-    ([['config:install_tree:root', '/path/$padding:11']],
+    ([['config:install_trees:default:root', '/path/$padding:11']],
      [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
-    ([['config:install_tree', '/path/${padding:11}']],
+    ([['config:install_trees:default:root', '/path/${padding:11}']],
      [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
-    ([['config:install_tree:padded_length', False]], [None, None, None]),
-    ([['config:install_tree:padded_length', True],
-      ['config:install_tree:root', '/path']],
+    ([['config:install_trees:default:padded_length', False]], [None, None, None]),
+    ([['config:install_trees:default:padded_length', True],
+      ['config:install_trees:default:root', '/path']],
      [full_padded_string, '/path', None]),
-    ([['config:install_tree:', '/path$padding']],
+    ([['config:install_trees:default:root', '/path$padding']],
      [full_padded_string, '/path', None]),
-    ([['config:install_tree:', '/path/${padding}']],
+    ([['config:install_trees:default:root', '/path/${padding}']],
      [full_padded_string, '/path', None]),
 ])
+
+
 def test_parse_install_tree(config_settings, expected, mutable_config):
     expected_root = expected[0] or spack.store.default_install_tree_root
     expected_unpadded_root = expected[1] or expected_root
@@ -419,8 +428,10 @@ def test_read_config_override_all(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_all, 'high')
     assert spack.config.get('config') == {
-        'install_tree': {
-            'root': 'override_all'
+        'install_trees': {
+            'default': {
+                'root': 'install_tree_path'
+            }
         }
     }
 
@@ -429,8 +440,10 @@ def test_read_config_override_key(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_key, 'high')
     assert spack.config.get('config') == {
-        'install_tree': {
-            'root': 'override_key'
+        'install_trees': {
+            'default': {
+                'root': 'install_tree_path'
+            }
         },
         'build_stage': ['path1', 'path2', 'path3']
     }
@@ -440,8 +453,10 @@ def test_read_config_merge_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_merge_list, 'high')
     assert spack.config.get('config') == {
-        'install_tree': {
-            'root': 'install_tree_path'
+        'install_trees': {
+            'default': {
+                'root': 'install_tree_path'
+            }
         },
         'build_stage': ['patha', 'pathb', 'path1', 'path2', 'path3']
     }
@@ -451,8 +466,10 @@ def test_read_config_override_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_list, 'high')
     assert spack.config.get('config') == {
-        'install_tree': {
-            'root': 'install_tree_path'
+        'install_trees': {
+            'default': {
+                'root': 'install_tree_path'
+            }
         },
         'build_stage': config_override_list['config']['build_stage:']
     }
@@ -497,7 +514,7 @@ def test_internal_config_update(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
 
     before = mock_low_high_config.get('config')
-    assert before['install_tree']['root'] == 'install_tree_path'
+    assert before['install_trees']['default']['root'] == 'install_tree_path'
 
     # add an internal configuration scope
     scope = spack.config.InternalConfigScope('command_line')

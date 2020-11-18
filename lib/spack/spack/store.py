@@ -100,7 +100,6 @@ def parse_install_tree(config_dict):
 
     padded_length = False
     if isinstance(install_tree, six.string_types):
-        tty.die(install_tree)
         tty.warn("Using deprecated format for configuring install_tree")
         unpadded_root = install_tree
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
