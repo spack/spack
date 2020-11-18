@@ -333,6 +333,7 @@ def test_results(args):
     if names:
         test_suites = [spack.install_test.get_test_suite(name) for name
                        in names]
+        test_suites = list(filter(lambda ts: ts is not None, test_suites))
         if not test_suites:
             tty.msg('No test suite(s) found in test stage: {0}'
                     .format(', '.join(names)))
