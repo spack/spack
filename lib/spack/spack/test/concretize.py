@@ -938,3 +938,8 @@ class TestConcretize(object):
 
         assert 'openblas@0.2.13' in s
         assert s['openblas'].satisfies('%gcc@4.4.0')
+
+    @pytest.mark.regression('19981')
+    def test_target_ranges_in_conflicts(self):
+        with pytest.raises(spack.error.SpackError):
+            Spec('impossible-concretization').concretized()
