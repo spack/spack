@@ -99,7 +99,6 @@ class Tau(Package):
     depends_on('libunwind', when='+libunwind')
     depends_on('mpi', when='+mpi', type=('build', 'run', 'link'))
     depends_on('cuda', when='+cuda')
-    depends_on('rocm', when='+rocm')
     depends_on('rocprofiler', when='+rocprofiler')
     depends_on('gasnet', when='+gasnet')
     depends_on('adios2', when='+adios2')
