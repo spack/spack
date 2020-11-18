@@ -264,15 +264,11 @@ class Cmake(Package):
                 filter_file('mpc++_r)', 'mpc++_r mpiFCC)', f, string=True)
                 filter_file('mpifc)', 'mpifc mpifrt)', f, string=True)
 
-    def _test_check_versions(self):
-        """Perform version checks on installed package binaries."""
+    def test(self):
+        """Perform smoke tests on the installed package."""
         spec_vers_str = 'version {0}'.format(self.spec.version)
 
         for exe in ['ccmake', 'cmake', 'cpack', 'ctest']:
             reason = 'test version of {0} is {1}'.format(exe, spec_vers_str)
             self.run_test(exe, ['--version'], [spec_vers_str],
                           installed=True, purpose=reason, skip_missing=True)
-
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        self._test_check_versions()
