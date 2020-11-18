@@ -72,22 +72,14 @@ def setup_parser(subparser):
         help="Show usage instructions for CDash reporting"
     )
 
-    length_group = run_parser.add_mutually_exclusive_group()
-    length_group.add_argument(
-        '--smoke', action='store_true', dest='smoke_test', default=True,
-        help='run smoke tests (default)')
-    length_group.add_argument(
-        '--capability', action='store_false', dest='smoke_test', default=True,
-        help='run full capability tests using pavilion')
-
     cd_group = run_parser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
     arguments.add_common_arguments(run_parser, ['installed_specs'])
 
     # List
-    list_parser = sp.add_parser('list', description=test_list.__doc__,
-                                help=first_line(test_list.__doc__))
+    sp.add_parser('list', description=test_list.__doc__,
+                  help=first_line(test_list.__doc__))
 
     # Find
     find_parser = sp.add_parser('find', description=test_find.__doc__,
@@ -190,12 +182,9 @@ environment variables:
     reporter.specs = specs_to_test
 
     with reporter('test', test_suite.stage):
-        if args.smoke_test:
-            test_suite(remove_directory=not args.keep_stage,
-                       dirty=args.dirty,
-                       fail_first=args.fail_first)
-        else:
-            raise NotImplementedError
+        test_suite(remove_directory=not args.keep_stage,
+                   dirty=args.dirty,
+                   fail_first=args.fail_first)
 
 
 def has_test_method(pkg):
