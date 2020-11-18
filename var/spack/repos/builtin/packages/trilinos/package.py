@@ -751,7 +751,9 @@ class Trilinos(CMakePackage, CudaPackage):
             options.extend([
                 define('Kokkos_ENABLE_CUDA', True),
                 define('Kokkos_ENABLE_CUDA_UVM', True),
-                define('Kokkos_ENABLE_CUDA_LAMBDA', True)])
+                define('Kokkos_ENABLE_CUDA_LAMBDA', True),
+                define('Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE', True)])
+
             for iArchCC in spec.variants['cuda_arch'].value:
                 options.append(define(
                     "Kokkos_ARCH_" +
