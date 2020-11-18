@@ -16,7 +16,7 @@ class LibsonataReport(CMakePackage):
     homepage = "https://github.com/BlueBrain/libsonata"
     git = "https://github.com/BlueBrain/libsonata.git"
 
-    version('0.1.1', commit='1f1c7cbe1bc674', submodules=True, get_full_repo=True)
+    version('0.1.4', commit='3881a52ad7fe8b', submodules=True, get_full_repo=True)
     version('develop', branch='master', submodules=False, get_full_repo=True)
 
     variant('mpi', default=True, description="Enable MPI backend")
@@ -34,6 +34,7 @@ class LibsonataReport(CMakePackage):
         result = [
             '-DEXTLIB_FROM_SUBMODULES=ON',
             '-DREPORTS_ONLY=ON',
+            '-DCMAKE_CXX_FLAGS=-DFMT_HEADER_ONLY=1'
         ]
         if self.spec.satisfies('+mpi'):
             result.extend([

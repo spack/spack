@@ -30,7 +30,7 @@ class PyNeurom(PythonPackage):
     depends_on('py-matplotlib@1.3.1:', type='run')
     depends_on('py-morphio@2.3.10:', type='run', when='@mut_morphio')
     depends_on('py-numpy@1.8.0:', type='run')
-    depends_on('py-plotly@3.0.0', type='run', when='+plotly')
+    depends_on('py-plotly@3.0.0:', type='run', when='+plotly')
     depends_on('py-pylru@1.0:', type='run')
     depends_on('py-pyyaml@3.10:', type='run')
     depends_on('py-scipy@0.17.0:', type='run')

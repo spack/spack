@@ -41,7 +41,7 @@ class PyBluepy(PythonPackage):
     depends_on('py-bluepy-configfile@0.1.11:', type='run')
     depends_on('py-libsonata@0.1.3:', type='run')
     depends_on('py-bluepysnap@0.4.1:', type='run')
-
+    depends_on('py-pyrsistent@:0.17', type='run')
     depends_on('brion+python@3.1.0:', type='run')
 
     # TODO: remove once legacy dependencies are removed from BluePy

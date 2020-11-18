@@ -100,7 +100,9 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'file_systems',
         description='List of the ROMIO file systems to activate',
-        values=auto_or_any_combination_of('lustre', 'gpfs', 'nfs', 'ufs'),
+        values=auto_or_any_combination_of(
+            'ime', 'lustre', 'gpfs', 'nfs', 'ufs'
+        ),
     )
 
     depends_on('findutils', type='build')
@@ -296,13 +298,18 @@ class Mvapich2(AutotoolsPackage):
     @property
     def file_system_options(self):
         spec = self.spec
+        opts = []
 
         fs = []
-        for x in ('lustre', 'gpfs', 'nfs', 'ufs'):
+        for x in ('ime', 'lustre', 'gpfs', 'nfs', 'ufs'):
             if 'file_systems={0}'.format(x) in spec:
                 fs.append(x)
+                # TODO : when IME package will be added, replace these paths
+                if x == 'ime':
+                    opts = ["CFLAGS=-I/opt/ddn/ime/include",
+                            "LDFLAGS=-L/opt/ddn/ime/lib",
+                            "LIBS=-lim_client"]
 
-        opts = []
         if len(fs) > 0:
             opts.append('--with-file-system=%s' % '+'.join(fs))
 

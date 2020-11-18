@@ -19,7 +19,8 @@ class Coreneuron(CMakePackage):
     git      = "https://github.com/BlueBrain/CoreNeuron"
 
     version('develop', branch='master', submodules=True)
-    version('0.21a', commit="bf3c823", preferred=True)
+    version('0.22', tag='0.22', submodules=True, preferred=True)
+    version('0.21a', commit="bf3c823", submodules=True)
     version('0.20', tag='0.20', submodules=True)
     version('0.19', tag='0.19', submodules=True)
     version('0.18', tag='0.18', submodules=True)
@@ -45,10 +46,12 @@ class Coreneuron(CMakePackage):
     variant('sympy', default=False, description="Use NMODL with SymPy to solve ODEs")
     variant('sympyopt', default=False, description="Use NMODL with SymPy Optimizations")
     variant('ispc', default=False, description="Enable ISPC backend")
+    variant("legacy-unit", default=True, description="Enable legacy units")
 
     depends_on('bison', type='build')
     depends_on('cmake@3:', type='build')
     depends_on('flex', type='build')
+    depends_on('python', type='build')
 
     depends_on('boost', when='+tests')
     depends_on('cuda', when='+gpu')
@@ -62,7 +65,7 @@ class Coreneuron(CMakePackage):
     # nmodl specific dependency
     depends_on('nmodl@0.3b:', when='@0.17:+nmodl')
     depends_on('nmodl@0.3a', when='@0:0.16+nmodl')
-    depends_on('eigen@3.3.4:~metis~scotch~fftw~suitesparse~mpfr', when='+nmodl')
+    depends_on('eigen@3.3.4:', when='+nmodl')
     depends_on('ispc', when='+ispc')
 
     # Old versions. Required by previous neurodamus package.
@@ -144,8 +147,12 @@ class Coreneuron(CMakePackage):
              % ('ON' if '+openmp' in spec else 'OFF'),
              '-DCORENRN_ENABLE_UNIT_TESTS=%s'
              % ('ON' if '+tests' in spec else 'OFF'),
-             '-DCORENRN_ENABLE_TIMEOUT=OFF'
+             '-DCORENRN_ENABLE_TIMEOUT=OFF',
+             '-DPYTHON_EXECUTABLE=%s' % spec["python"].command.path
              ]
+
+        if "+legacy-unit" in self.spec:
+            options.append('-DCORENRN_ENABLE_LEGACY_UNITS=ON')
 
         if spec.satisfies('+nmodl'):
             options.append('-DCORENRN_ENABLE_NMODL=ON')

@@ -32,7 +32,9 @@ class Neuron(CMakePackage):
     patch("fix_brew_py_18e97a2d.patch", when="@7.8.0c")
 
     version("develop", branch="master")
-    version("7.8.0c",  commit="e529b4f", preferred=True)
+    version("7.9.0a",  commit="fc74b85", preferred=True)
+    version("7.8.1",   tag="7.8.1")
+    version("7.8.0c",  commit="e529b4f")
     version("7.8.0b",  commit="92a208b")
     version("7.6.8",   tag="7.6.8")
     version("7.6.6",   tag="7.6.6")
@@ -76,6 +78,7 @@ class Neuron(CMakePackage):
     variant("rx3d",       default=True,  description="Enable cython translated 3-d rxd. Depends on pysetup")
     variant("shared",     default=True,  description="Build shared libraries")
     variant("tests",      default=False, description="Enable unit tests")
+    variant("legacy-unit", default=True, description="Enable legacy units")
 
     variant("codechecks", default=False,
             description="Perform additional code checks like "
@@ -142,6 +145,8 @@ class Neuron(CMakePackage):
             args.append("-DNRN_ENABLE_MOD_COMPATIBILITY:BOOL=ON")
         if "+binary" in self.spec:
             args.append("-DNRN_ENABLE_BINARY_SPECIAL=ON")
+        if "+legacy-unit" in self.spec:
+            args.append('-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON')
 
         return args
 
@@ -367,23 +372,11 @@ class Neuron(CMakePackage):
         neuron"s configure we dynamically find the architecture-
         specific directory by looking for a specific binary.
         """
-        if self.spec.satisfies("+cmake"):
-            # TODO : fix this when neuron provides an easy way to
-            # detect arch directory
-            neuron_arch = subprocess.Popen(["uname", "-p"],
-                                           stdout=subprocess.PIPE) \
-                .communicate()[0].decode('UTF-8').rstrip()
-        else:
-            file_list = find(self.prefix, "*/bin/nrniv_makefile")
-            # check needed as when initially evaluated the prefix is empty
-            if file_list:
-                neuron_arch = \
-                    os.path.basename(
-                        os.path.dirname(os.path.dirname(file_list[0]))
-                    )
-            else:
-                neuron_arch = ""
-        return neuron_arch
+        return subprocess.Popen(
+            ['awk', '-F=', '$1 == "MODSUBDIR" { print $2; exit; }',
+             str(self.prefix.bin.nrnivmodl)],
+            stdout=subprocess.PIPE
+        ).communicate()[0].decode().strip()
 
     @property
     def basedir(self):

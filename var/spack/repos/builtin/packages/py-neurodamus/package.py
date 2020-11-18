@@ -13,6 +13,10 @@ class PyNeurodamus(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/sim/neurodamus-py"
 
     version('develop', branch='master')
+    version('2.1.1',   tag='2.1.1')
+    version('2.0.2',   tag='2.0.2')
+    version('2.0.0',   tag='2.0.0')
+    version('1.3.2',   tag='1.3.2')
     version('1.3.1',   tag='1.3.1')
     version('1.3.0',   tag='1.3.0')
     version('1.2.1',   tag='1.2.1')
@@ -29,7 +33,6 @@ class PyNeurodamus(PythonPackage):
     depends_on('py-docopt',        type='run')
     depends_on('py-lazy-property', type='run', when='@:1.0.0')
     depends_on('py-six',           type='run', when='@:1.0.0')
-    depends_on('py-scipy',         type='run', when='@1.2.0:')
 
     @run_after('install')
     def install_scripts(self):

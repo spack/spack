@@ -29,7 +29,9 @@ packages:
       - ffmpeg
       - gdb~python@8.2
       - git@2.18.0
-      - graphviz@2.42.2
+      - gmp@6.1.2
+      - graphviz+pangocairo@2.42.2
+      - help2man@1.47.4
       - hpctoolkit@2019.08.14
       - hpcviewer@2020.05
       - hpe-mpi@2.21

@@ -17,7 +17,8 @@ class Brion(CMakePackage):
 
     version('develop', submodules=True)
     version('3.1.0', tag='3.1.0', submodules=True)
-    version('3.2.0', tag='3.2.0', submodules=True, preferred=True)
+    version('3.2.0', tag='3.2.0', submodules=True)
+    version('3.3.0', tag='3.3.0', submodules=True, preferred=True)
 
     variant('python', default=False, description='Build Python wrapping')
     variant('doc', default=False, description='Build documentation')
@@ -45,6 +46,7 @@ class Brion(CMakePackage):
     depends_on('highfive +boost ~mpi')
     depends_on('highfive@2.1.1 +boost ~mpi', when='@3.1.0')
     depends_on('mvdtool ~mpi')
+    depends_on('glm')
 
     def patch(self):
         if self.spec.version == Version('3.1.0'):
@@ -82,7 +84,11 @@ class Brion(CMakePackage):
             pathname = os.path.join(target, *site_dir)
             if os.path.isdir(pathname):
                 with working_dir(pathname):
-                    python('-c', 'import brain; print(brain)')
+                    if self.spec.version >= Version('3.1.0') and \
+                       self.spec.version <= Version('3.2.0'):
+                        python('-c', 'import brain; print(brain)')
+                    else:
+                        python('-c', 'import brion; print(brion)')
 
     def _get_site_dir(self):
         return (self.spec['python']
