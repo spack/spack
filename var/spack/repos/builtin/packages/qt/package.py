@@ -117,7 +117,8 @@ class Qt(Package):
     # https://bugreports.qt.io/browse/QTBUG-78937
     patch('qt5-12-configure.patch', when='@5.12')
     # https://bugreports.qt.io/browse/QTBUG-93402
-    patch('qt5-15-gcc-10.patch', when='@5.9:5.15 %gcc@10:')
+    patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@10:')
+    conflicts('%gcc@10:', when='@5.9:5.12.6')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
