@@ -59,6 +59,7 @@ from spack.package import \
 
 from spack.installer import \
     ExternalPackageError, InstallError, InstallLockError, UpstreamPackageError
+from spack.install_test import get_escaped_text_output
 
 from spack.variant import any_combination_of, auto_or_any_combination_of
 from spack.variant import disjoint_sets

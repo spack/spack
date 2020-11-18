@@ -116,6 +116,9 @@ class Qt(Package):
     patch('qt5-12-intel-overflow.patch', when='@5.12:5.14.0 %intel')
     # https://bugreports.qt.io/browse/QTBUG-78937
     patch('qt5-12-configure.patch', when='@5.12')
+    # https://bugreports.qt.io/browse/QTBUG-93402
+    patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@10:')
+    conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
@@ -333,10 +336,13 @@ class Qt(Package):
                     conf('g++-unix'))
 
         if self.spec.satisfies('@4'):
-            # Necessary to build with GCC 6 and other modern compilers
-            # http://stackoverflow.com/questions/10354371/
+            # The gnu98 flag is necessary to build with GCC 6 and other modern
+            # compilers (see http://stackoverflow.com/questions/10354371/);
+            # be permissive because of the abundance of older code, and hide
+            # all warnings because there are so many of them with newer
+            # compilers
             with open(conf('gcc-base'), 'a') as f:
-                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98 -fpermissive -w\n")
 
     @when('@4: %intel')
     def patch(self):
@@ -523,6 +529,7 @@ class Qt(Package):
             '-{0}webkit'.format('' if '+webkit' in spec else 'no-'),
             '-{0}phonon'.format('' if '+phonon' in spec else 'no-'),
             '-arch', str(spec.target.family),
+            '-xmlpatterns',
         ])
 
         # Disable phonon backend until gstreamer is setup as dependency

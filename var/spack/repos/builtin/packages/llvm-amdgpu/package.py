@@ -12,10 +12,11 @@ class LlvmAmdgpu(CMakePackage):
        optimizers, and run-time environments."""
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
-    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-3.8.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-3.9.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.9.0', sha256='1ff14b56d10c2c44d36c3c412b190d3d8cd1bb12cfc7cd58af004c16fd9987d1')
     version('3.8.0', sha256='93a28464a4d0c1c9f4ba55e473e5d1cde4c5c0e6d087ec8a0a3aef1f5f5208e8')
     version('3.7.0', sha256='3e2542ce54b91b5c841f33d542143e0e43eae95e8785731405af29f08ace725b')
     version('3.5.0', sha256='4878fa85473b24d88edcc89938441edc85d2e8a785e567b7bd7ce274ecc2fd9c')
@@ -29,7 +30,7 @@ class LlvmAmdgpu(CMakePackage):
     depends_on('ncurses+termlib', type='link')
 
     # Will likely only be fixed in LLVM 12 upstream
-    patch('fix-system-zlib-ncurses.patch')
+    patch('fix-system-zlib-ncurses.patch', when='@3.5.0:3.8.0')
 
     root_cmakelists_dir = 'llvm'
 

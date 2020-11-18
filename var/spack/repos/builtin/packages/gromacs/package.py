@@ -2,9 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import llnl.util.cpu
-
-
 class Gromacs(CMakePackage):
     """GROMACS (GROningen MAchine for Chemical Simulations) is a molecular
     dynamics package primarily designed for simulations of proteins, lipids
@@ -75,6 +72,8 @@ class Gromacs(CMakePackage):
             description='GMX_RELAXED_DOUBLE_PRECISION for Fujitsu PRIMEHPC')
     variant('hwloc', default=True,
             description='Use the hwloc portable hardware locality library')
+    variant('lapack', default=False,
+            description='Enables an external LAPACK library')
 
     depends_on('mpi', when='+mpi')
     # define matching plumed versions
@@ -88,13 +87,13 @@ class Gromacs(CMakePackage):
     depends_on('plumed@2.5.0:2.5.9~mpi', when='@2018.6+plumed~mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
-    depends_on('fftw-api@3', when='~cuda')
-    depends_on('mkl', when='fft=mkl')
+    depends_on('fftw-api@3')
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cmake@3.13.0:3.99.99', type='build', when='@master')
     depends_on('cmake@3.13.0:3.99.99', type='build', when='%fj')
     depends_on('cuda', when='+cuda')
+    depends_on('lapack', when='+lapack')
 
     # TODO: openmpi constraint; remove when concretizer is fixed
     depends_on('hwloc@:1.999', when='+hwloc')
@@ -105,6 +104,10 @@ class Gromacs(CMakePackage):
     def patch(self):
         if '+plumed' in self.spec:
             self.spec['plumed'].package.apply_patch(self)
+
+        if self.spec.satisfies('%nvhpc'):
+            # Disable obsolete workaround
+            filter_file('ifdef __PGI', 'if 0', 'src/gromacs/fileio/xdrf.h')
 
     def cmake_args(self):
 
@@ -142,24 +145,35 @@ class Gromacs(CMakePackage):
         if '+opencl' in self.spec:
             options.append('-DGMX_USE_OPENCL=on')
 
+        if '+lapack' in self.spec:
+            options.append('-DGMX_EXTERNAL_LAPACK:BOOL=ON')
+            if self.spec['lapack'].libs:
+                options.append('-DLAPACK_LIBRARIES={0}'.format(
+                    self.spec['lapack'].libs.joined(';')))
+        else:
+            options.append('-DGMX_EXTERNAL_LAPACK:BOOL=OFF')
+
         # Activate SIMD based on properties of the target
         target = self.spec.target
-        if target >= llnl.util.cpu.targets['zen2']:
+        if target >= 'zen2':
             # AMD Family 17h (EPYC Rome)
             options.append('-DGMX_SIMD=AVX2_256')
-        elif target >= llnl.util.cpu.targets['zen']:
+        elif target >= 'zen':
             # AMD Family 17h (EPYC Naples)
             options.append('-DGMX_SIMD=AVX2_128')
-        elif target >= llnl.util.cpu.targets['bulldozer']:
+        elif target >= 'bulldozer':
             # AMD Family 15h
             options.append('-DGMX_SIMD=AVX_128_FMA')
-        elif target >= llnl.util.cpu.targets['power7']:
+        elif 'vsx' in target:
             # IBM Power 7 and beyond
             options.append('-DGMX_SIMD=IBM_VSX')
-        elif target.family == llnl.util.cpu.targets['aarch64']:
+        elif target.family == 'aarch64':
             # ARMv8
-            options.append('-DGMX_SIMD=ARM_NEON_ASIMD')
-        elif target == llnl.util.cpu.targets['mic_knl']:
+            if self.spec.satisfies('%nvhpc'):
+                options.append('-DGMX_SIMD=None')
+            else:
+                options.append('-DGMX_SIMD=ARM_NEON_ASIMD')
+        elif target == 'mic_knl':
             # Intel KNL
             options.append('-DGMX_SIMD=AVX_512_KNL')
         elif target.vendor == 'GenuineIntel':
@@ -172,6 +186,12 @@ class Gromacs(CMakePackage):
                 ('avx2', 'AVX2_256'),
                 ('avx512', 'AVX_512'),
             ]
+
+            # Workaround NVIDIA compiler bug when avx512 is enabled
+            if (self.spec.satisfies('%nvhpc') and
+                ('avx512', 'AVX_512') in simd_features):
+                simd_features.remove(('avx512', 'AVX_512'))
+
             for feature, flag in reversed(simd_features):
                 if feature in target:
                     options.append('-DGMX_SIMD:STRING={0}'.format(flag))

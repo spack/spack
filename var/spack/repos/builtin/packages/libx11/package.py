@@ -27,6 +27,15 @@ class Libx11(AutotoolsPackage, XorgPackage):
     depends_on('util-macros', type='build')
     depends_on('perl', type='build')
 
+    def configure_args(self):
+        config_args = []
+
+        # -Werror flags are not properly interpreted by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            config_args.append('--disable-selective-werror')
+
+        return config_args
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path('XLOCALEDIR', self.prefix.share.X11.locale)
 

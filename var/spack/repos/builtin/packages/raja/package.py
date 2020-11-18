@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class Raja(CMakePackage, CudaPackage):
     """RAJA Parallel Framework."""
@@ -32,6 +30,8 @@ class Raja(CMakePackage, CudaPackage):
 
     variant('openmp', default=True, description='Build OpenMP backend')
     variant('shared', default=True, description='Build Shared Libs')
+    variant('examples', default=True, description='Build examples.')
+    variant('exercises', default=True, description='Build exercises.')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
@@ -41,7 +41,7 @@ class Raja(CMakePackage, CudaPackage):
 
         options = []
         options.append('-DENABLE_OPENMP={0}'.format(
-            'ON' if '+openmp' in spec else 'Off'))
+            'ON' if '+openmp' in spec else 'OFF'))
 
         if '+cuda' in spec:
             options.extend([
@@ -51,16 +51,17 @@ class Raja(CMakePackage, CudaPackage):
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
-                flag = '-arch sm_{0}'.format(cuda_arch[0])
-                options.append('-DCMAKE_CUDA_FLAGS:STRING={0}'.format(flag))
         else:
             options.append('-DENABLE_CUDA=OFF')
 
         options.append('-DBUILD_SHARED_LIBS={0}'.format(
             'ON' if '+shared' in spec else 'OFF'))
 
-        options.append('-DENABLE_CHAI={0}'.format(
-            'ON' if '+chai' in spec else 'OFF'))
+        options.append('-DENABLE_EXAMPLES={0}'.format(
+            'ON' if '+examples' in spec else 'OFF'))
+
+        options.append('-DENABLE_EXERCISES={0}'.format(
+            'ON' if '+exercises' in spec else 'OFF'))
 
         # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
         # is used by the spack compiler wrapper.  This can go away when BLT
@@ -70,8 +71,53 @@ class Raja(CMakePackage, CudaPackage):
         else:
             options.append('-DENABLE_TESTS=ON')
 
-        if '+chai' in spec:
-            options.extend([
-                '-DENABLE_CHAI=ON'])
-
         return options
+
+    @property
+    def build_relpath(self):
+        """Relative path to the cmake build subdirectory."""
+        return join_path('..', self.build_dirname)
+
+    @run_after('install')
+    def setup_build_tests(self):
+        """Copy the build test files after the package is installed to a
+        relative install test subdirectory for use during `spack test run`."""
+        # Now copy the relative files
+        self.cache_extra_test_sources(self.build_relpath)
+
+        # Ensure the path exists since relying on a relative path at the
+        # same level as the normal stage source path.
+        mkdirp(self.install_test_root)
+
+    @property
+    def _extra_tests_path(self):
+        # TODO: The tests should be converted to re-build and run examples
+        # TODO: using the installed libraries.
+        return join_path(self.install_test_root, self.build_relpath, 'bin')
+
+    def _test_examples(self):
+        """Perform very basic checks on a subset of copied examples."""
+        checks = [
+            ('ex5_line-of-sight_solution',
+             [r'RAJA sequential', r'RAJA OpenMP', r'result -- PASS']),
+            ('ex6_stencil-offset-layout_solution',
+             [r'RAJA Views \(permuted\)', r'result -- PASS']),
+            ('ex8_tiled-matrix-transpose_solution',
+             [r'parallel top inner loop',
+              r'collapsed inner loops', r'result -- PASS']),
+            ('kernel-dynamic-tile', [r'Running index', r'(24,24)']),
+            ('plugin-example',
+             [r'Launching host kernel for the 10 time']),
+            ('tut_batched-matrix-multiply', [r'result -- PASS']),
+            ('wave-eqn', [r'Max Error = 2', r'Evolved solution to time'])
+        ]
+        for exe, expected in checks:
+            reason = 'test: checking output of {0} for {1}' \
+                .format(exe, expected)
+            self.run_test(exe, [], expected, installed=False,
+                          purpose=reason, skip_missing=True,
+                          work_dir=self._extra_tests_path)
+
+    def test(self):
+        """Perform smoke tests."""
+        self._test_examples()

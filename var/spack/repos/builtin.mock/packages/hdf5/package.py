@@ -10,6 +10,6 @@ class Hdf5(Package):
 
     version(2.3, 'foobarbaz')
 
-    variant('mpi', default=True, description='Debug variant')
+    variant('mpi', default=True, description='Enable mpi')
 
-    depends_on('mpi', when='mpi')
+    depends_on('mpi', when='+mpi')

@@ -1,0 +1,28 @@
+--- spack-src/setup.py.old	2020-10-28 10:48:02.800927663 +0900
++++ spack-src/setup.py	2020-10-28 10:49:44.755977753 +0900
+@@ -24,12 +24,20 @@
+ 
+ install_requires = ['addict', 'numpy', 'pyyaml']
+ 
+-# If first not installed install second package
+-CHOOSE_INSTALL_REQUIRES = [('opencv-python-headless>=3', 'opencv-python>=3')]
+-
+-for main, secondary in CHOOSE_INSTALL_REQUIRES:
+-    install_requires.append(choose_requirement(main, secondary))
+ 
++try:
++    # OpenCV installed via conda.
++    import cv2  # NOQA: F401
++    major, minor, *rest = cv2.__version__.split('.')
++    if int(major) < 3:
++        raise RuntimeError(
++            f'OpenCV >=3 is required but {cv2.__version__} is installed')
++except ImportError:
++    # If first not installed install second package
++    CHOOSE_INSTALL_REQUIRES = [('opencv-python-headless>=3',
++                                'opencv-python>=3')]
++    for main, secondary in CHOOSE_INSTALL_REQUIRES:
++        install_requires.append(choose_requirement(main, secondary))
+ 
+ def readme():
+     with open('README.rst', encoding='utf-8') as f:

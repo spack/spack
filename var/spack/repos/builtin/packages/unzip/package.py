@@ -19,8 +19,15 @@ class Unzip(MakefilePackage):
     def patch(self):
         filter_file(r'^LFLAGS2=.*', 'LFLAGS2=', join_path('unix', 'configure'))
 
-    make_args = ['-f', join_path('unix', 'Makefile')]
-    build_targets = make_args + ['generic']
+    make_args = [
+        '-f', join_path('unix', 'Makefile'),
+        "LOC=-DLARGE_FILE_SUPPORT"
+    ]
+
+    @property
+    def build_targets(self):
+        target = "macosx" if "platform=darwin" in self.spec else "generic"
+        return self.make_args + [target]
 
     def url_for_version(self, version):
         return 'http://downloads.sourceforge.net/infozip/unzip{0}.tar.gz'.format(version.joined)

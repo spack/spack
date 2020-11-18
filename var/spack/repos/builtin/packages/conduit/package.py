@@ -217,7 +217,7 @@ class Conduit(Package):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def build_test(self):
         with working_dir('spack-build'):
             print("Running Conduit Unit Tests...")
             make("test")
@@ -480,9 +480,9 @@ class Conduit(Package):
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
             if spec['mpi'].mpicc == spack_cc:
-                mpicc_path = "cc"
-                mpicxx_path = "CC"
-                mpifc_path = "ftn"
+                mpicc_path = c_compiler
+                mpicxx_path = cpp_compiler
+                mpifc_path = f_compiler
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))

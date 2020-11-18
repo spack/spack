@@ -98,7 +98,7 @@ class Subversion(AutotoolsPackage):
                 perl = spec['perl'].command
                 perl('Makefile.PL', 'INSTALL_BASE={0}'.format(prefix))
 
-    def test(self):
+    def check(self):
         make('check')
         if '+perl' in self.spec:
             make('check-swig-pl')

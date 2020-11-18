@@ -24,6 +24,7 @@ configuration.
 
 """
 import os
+import re
 import six
 
 import llnl.util.lang
@@ -33,18 +34,126 @@ import spack.paths
 import spack.config
 import spack.util.path
 import spack.database
-import spack.directory_layout as dir_layout
+import spack.directory_layout
 import llnl.util.filesystem as fs
 
 #: default installation root, relative to the Spack install path
-default_root = os.path.join(spack.paths.opt_path, 'spack')
-
-
-user_install_root = os.path.expanduser('~/.spack/install-root')
+default_install_tree_root = os.path.join(spack.paths.opt_path, 'spack')
 
 install_root = None
 active_upstream = None
 init_upstream = None
+
+def parse_install_tree(config_dict):
+    """Parse config settings and return values relevant to the store object.
+
+    Arguments:
+        config_dict (dict): dictionary of config values, as returned from
+            spack.config.get('config')
+
+    Returns:
+        (tuple): triple of the install tree root, the unpadded install tree
+            root (before padding was applied), and the projections for the
+            install tree
+
+    Encapsulate backwards compatibility capabilities for install_tree
+    and deprecated values that are now parsed as part of install_tree.
+    """
+    # The following two configs are equivalent, the first being the old format
+    # and the second the new format. The new format is also more flexible.
+
+    # config:
+    #   install_tree: /path/to/root$padding:128
+    #   install_path_scheme: '{name}-{version}'
+
+    # config:
+    #   install_tree:
+    #     root: /path/to/root
+    #     padding: 128
+    #     projections:
+    #       all: '{name}-{version}'
+
+    # Dictionaries of all install trees
+    install_trees = spack.config.get('config:install_trees')
+    shared_install_trees = spack.config.get('config:shared_install_trees')
+
+    # Tests if non-default install root is specified
+    if install_root:
+        # Determines if install_root exists
+        if install_root in install_trees:
+            install_tree = install_trees[install_root]
+        elif shared_install_trees and install_root in shared_install_trees:
+            install_tree = shared_install_trees[install_root]
+        else:
+            # TODO: provide the user an option to create a new install tree
+            raise ValueError("Specified install tree does not exist: {0}"
+                             .format(install_root))
+    elif shared_install_trees:
+        # If no install tree is specified and there are shared install trees,
+        # then we are in user mode, and the install tree is in ~
+        install_tree = install_trees['user']
+    else:
+        # If this is not a shared spack instance, then by default we will place
+        # the install prefix inside the Spack tree
+        install_tree = spack.config.get('config:install_trees')['default']
+
+    padded_length = False
+    if isinstance(install_tree, six.string_types):
+        tty.die(install_tree)
+        tty.warn("Using deprecated format for configuring install_tree")
+        unpadded_root = install_tree
+        unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
+        # construct projection from previous values for backwards compatibility
+        all_projection = config_dict.get(
+            'install_path_scheme',
+            spack.directory_layout.default_projections['all'])
+
+        projections = {'all': all_projection}
+    else:
+        unpadded_root = install_tree.get('root', default_install_tree_root)
+        unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
+
+        padded_length = install_tree.get('padded_length', False)
+        if padded_length is True:
+            padded_length = spack.util.path.get_system_path_max()
+            padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
+
+        projections = install_tree.get(
+            'projections', spack.directory_layout.default_projections)
+
+        path_scheme = config_dict.get('install_path_scheme', None)
+        if path_scheme:
+            tty.warn("Deprecated config value 'install_path_scheme' ignored"
+                     " when using new install_tree syntax")
+
+    # Handle backwards compatibility for padding
+    old_pad = re.search(r'\$padding(:\d+)?|\${padding(:\d+)?}', unpadded_root)
+    if old_pad:
+        if padded_length:
+            msg = "Ignoring deprecated padding option in install_tree root "
+            msg += "because new syntax padding is present."
+            tty.warn(msg)
+        else:
+            unpadded_root = unpadded_root.replace(old_pad.group(0), '')
+            if old_pad.group(1) or old_pad.group(2):
+                length_group = 2 if '{' in old_pad.group(0) else 1
+                padded_length = int(old_pad.group(length_group)[1:])
+            else:
+                padded_length = spack.util.path.get_system_path_max()
+                padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
+
+    unpadded_root = unpadded_root.rstrip(os.path.sep)
+
+    if padded_length:
+        root = spack.util.path.add_padding(unpadded_root, padded_length)
+        if len(root) != padded_length:
+            msg = "Cannot pad %s to %s characters." % (root, padded_length)
+            msg += " It is already %s characters long" % len(root)
+            tty.warn(msg)
+    else:
+        root = unpadded_root
+
+    return (root, unpadded_root, projections)
 
 
 class Store(object):
@@ -60,19 +169,26 @@ class Store(object):
 
     Args:
         root (str): path to the root of the install tree
+        unpadded_root (str): path to the root of the install tree without
+            padding; the sbang script has to be installed here to work with
+            padded roots
         path_scheme (str): expression according to guidelines in
             ``spack.util.path`` that describes how to construct a path to
             a package prefix in this store
         hash_length (int): length of the hashes used in the directory
             layout; spec hash suffixes will be truncated to this length
     """
-    def __init__(self, root, projections=None,
-                 hash_length=None, active_upstream=None):
+    def __init__(
+            self, root, unpadded_root=None,
+            projections=None, hash_length=None, active_upstream=None
+    ):
         self.root = root
+        self.unpadded_root = unpadded_root or root
         # upstream_dbs = upstream_dbs_from_pointers(root)
+
         self.db = spack.database.Database(
             root, upstream_dbs=retrieve_upstream_dbs())
-        self.layout = dir_layout.YamlDirectoryLayout(
+        self.layout = spack.directory_layout.YamlDirectoryLayout(
             root, projections=projections, hash_length=hash_length)
         self.active_upstream = active_upstream
 
@@ -83,79 +199,40 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-
-    # Dictionaries of all install trees
-    install_trees = spack.config.get('config:install_trees')
-    shared_install_trees = spack.config.get('config:shared_install_trees')
-
-    # Tests if non-default install root is specified
-    if install_root:
-        # Determines if install_root exists
-        if install_root in install_trees:
-            install_tree = install_trees[install_root]
-            root = install_tree['root']
-        elif shared_install_trees and install_root in shared_install_trees:
-            install_tree = shared_install_trees[install_root]
-            root = install_tree['root']
-        else:
-            # TODO: provide the user an option to create a new install tree
-            raise ValueError("Specified install tree does not exist: {0}"
-                             .format(install_root))
-
-        # Tests for deprecated install_root format
-        if isinstance(install_root, six.string_types):
-            tty.warn("Using deprecated format for configuring install_tree")
-            # Set Projections when using deprecated tree format
-            all_projection = spack.config.get(
-                'config:install_path_scheme',
-                dir_layout.default_projections['all'])
-            projections = {'all': all_projection}
-
-    elif shared_install_trees:
-        # If no install tree is specified and there are shared install trees,
-        # then we are in user mode, and the install tree is in ~
-        root = user_install_root
-
-        all_projection = spack.config.get(
-            'config:install_path_scheme',
-            dir_layout.default_projections['all'])
-        projections = {'all': all_projection}
-
-    else:
-        # If this is not a shared spack instance, then by default we will place
-        # the install prefix inside the Spack tree
-        root = spack.config.get('config:install_trees')['default']['root']
-
-        install_tree = spack.config.get('config:install_trees')['default']
-        if install_tree['projections']:
-            projections = install_tree['projections']
-        else:
-            projections = dir_layout.default_projections['all']
-
-        path_scheme = spack.config.get('config:install_path_scheme', None)
-        if path_scheme:
-            tty.warn("Deprecated config value 'install_path_scheme' ignored"
-                     " when using new install_tree syntax")
-
-    # if init_upstream:
-    #     init_upstream_path = shared_install_trees[init_upstream]
-    #     initialize_upstream_pointer_if_unset(root, init_upstream_path)
-    # elif shared_install_trees and (not upstream_set(root)):
-    #     raise ValueError("Must specify an upstream shared install tree")
-    root = spack.util.path.canonicalize_path(root)
-
-    return Store(root, projections,
-                 spack.config.get('config:install_hash_length'),
-                 active_upstream)
+    config_dict = spack.config.get('config')
+    root, unpadded_root, projections = parse_install_tree(config_dict)
+    hash_length = spack.config.get('config:install_hash_length')
+    return Store(root=root,
+                 unpadded_root=unpadded_root,
+                 projections=projections,
+                 hash_length=hash_length)
 
 
 #: Singleton store instance
 store = llnl.util.lang.Singleton(_store)
 
+
+def _store_root():
+    return store.root
+
+
+def _store_unpadded_root():
+    return store.unpadded_root
+
+
+def _store_db():
+    return store.db
+
+
+def _store_layout():
+    return store.layout
+
+
 # convenience accessors for parts of the singleton store
-root = llnl.util.lang.LazyReference(lambda: store.root)
-db = llnl.util.lang.LazyReference(lambda: store.db)
-layout = llnl.util.lang.LazyReference(lambda: store.layout)
+root = llnl.util.lang.LazyReference(_store_root)
+unpadded_root = llnl.util.lang.LazyReference(_store_unpadded_root)
+db = llnl.util.lang.LazyReference(_store_db)
+layout = llnl.util.lang.LazyReference(_store_layout)
 
 
 def retrieve_upstream_dbs():

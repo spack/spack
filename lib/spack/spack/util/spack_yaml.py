@@ -321,7 +321,7 @@ def dump_annotated(data, stream=None, *args, **kwargs):
         stream = StringIO()
         getvalue = stream.getvalue
 
-    # write out annotations and linees, accounting for color
+    # write out annotations and lines, accounting for color
     width = max(clen(a) for a in _annotations)
     formats = ['%%-%ds  %%s\n' % (width + cextra(a)) for a in _annotations]
 
