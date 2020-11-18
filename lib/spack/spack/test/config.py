@@ -24,28 +24,27 @@ import spack.schema.mirrors
 import spack.schema.repos
 import spack.util.spack_yaml as syaml
 import spack.util.path as spack_path
-import llnl.util.tty as tty
 
 
 # sample config data
 config_low = {
     'config': {
         'install_trees': {
-          'default': {
-             'root': 'install_tree_path'}},
+            'default': {
+                'root': 'install_tree_path'}},
         'build_stage': ['path1', 'path2', 'path3']}}
 
 config_override_all = {
     'config:': {
         'install_trees': {
-          'default': {
-             'root': 'install_tree_path'}}}}
+            'default': {
+                'root': 'install_tree_path'}}}}
 
 config_override_key = {
     'config': {
-       'install_trees': {
-         'default': {
-            'root': 'install_tree_path'}}}}
+        'install_trees': {
+            'default': {
+                'root': 'install_tree_path'}}}}
 
 config_merge_list = {
     'config': {
@@ -388,7 +387,8 @@ full_padded_string = os.path.join(
      [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
     ([['config:install_trees:default:root', '/path/${padding:11}']],
      [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
-    ([['config:install_trees:default:padded_length', False]], [None, None, None]),
+    ([['config:install_trees:default:padded_length', False]],
+     [None, None, None]),
     ([['config:install_trees:default:padded_length', True],
       ['config:install_trees:default:root', '/path']],
      [full_padded_string, '/path', None]),
@@ -397,8 +397,6 @@ full_padded_string = os.path.join(
     ([['config:install_trees:default:root', '/path/${padding}']],
      [full_padded_string, '/path', None]),
 ])
-
-
 def test_parse_install_tree(config_settings, expected, mutable_config):
     expected_root = expected[0] or spack.store.default_install_tree_root
     expected_unpadded_root = expected[1] or expected_root
