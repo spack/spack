@@ -77,15 +77,6 @@ def no_path_access(monkeypatch):
 
 
 #
-# This is a giant hack to get around a weird bug
-#
-@pytest.fixture(scope='function', autouse=True)
-def pre_cache(mock_packages):
-    spack.repo.path.get_pkg_class('libdwarf')
-    spack.repo.path.get_pkg_class('fake')
-
-
-#
 # Disable any activate Spack environment BEFORE all tests
 #
 @pytest.fixture(scope='session', autouse=True)

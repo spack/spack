@@ -299,8 +299,8 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
 
     # call this patches here for clarity -- we want patch to be a list,
     # but the caller doesn't have to make it one.
-    if patches and dep_spec.virtual:
-        raise DependencyPatchError("Cannot patch a virtual dependency.")
+#    if patches and dep_spec.virtual:
+#        raise DependencyPatchError("Cannot patch a virtual dependency.")
 
     # ensure patches is a list
     if patches is None:
