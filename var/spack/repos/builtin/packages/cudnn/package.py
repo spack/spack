@@ -137,6 +137,7 @@ _versions = {
 
 }
 
+
 class Cudnn(Package):
     """NVIDIA cuDNN is a GPU-accelerated library of primitives for deep
     neural networks"""
@@ -156,7 +157,7 @@ class Cudnn(Package):
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         cudnn_ver, cuda_ver = ver.split('-')
-        long_ver ="{0}-{1}".format(cudnn_ver, cuda_ver)
+        long_ver = "{0}-{1}".format(cudnn_ver, cuda_ver)
         if pkg:
             version(long_ver, sha256=pkg[0], expand=False)
             # Add constraints matching CUDA version to cuDNN version
@@ -169,7 +170,7 @@ class Cudnn(Package):
         # Get the system and machine arch for building the file path
         sys = "{0}-{1}".format(platform.system(), platform.machine())
         # Munge it to match Nvidia's naming scheme
-        sys_key = sys.lower().replace('x86_64','x64').replace('darwin', 'osx')
+        sys_key = sys.lower().replace('x86_64', 'x64').replace('darwin', 'osx')
 
         if version >= Version('7.2'):
             directory = version[:3]
