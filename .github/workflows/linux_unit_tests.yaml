@@ -117,3 +117,24 @@ jobs:
           git fetch origin ${{ github.ref }}:test-branch
           git checkout test-branch
           share/spack/qa/run-unit-tests
+  clingo:
+    # Test for the clingo based solver
+    runs-on: ubuntu-latest
+    container: spack/github-actions:clingo
+    steps:
+      - name: Run unit tests
+        run: |
+          whoami && echo PWD=$PWD && echo HOME=$HOME && echo SPACK_TEST_SOLVER=$SPACK_TEST_SOLVER
+          which clingo && clingo --version
+          git clone https://github.com/spack/spack.git && cd spack
+          git fetch origin ${{ github.ref }}:test-branch
+          git checkout test-branch
+          . share/spack/setup-env.sh
+          spack compiler find
+          spack solve mpileaks%gcc
+          coverage run $(which spack) test -v
+          coverage combine
+          coverage xml
+      - uses: codecov/codecov-action@v1
+        with:
+          flags: unittests,linux,clingo

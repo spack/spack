@@ -558,6 +558,10 @@ class RepoPath(object):
         for name in self.all_package_names():
             yield self.get(name)
 
+    def all_package_classes(self):
+        for name in self.all_package_names():
+            yield self.get_pkg_class(name)
+
     @property
     def provider_index(self):
         """Merged ProviderIndex from all Repos in the RepoPath."""
@@ -702,6 +706,9 @@ class RepoPath(object):
         Set `use_index` False when calling from a code block that could
         be run during the computation of the provider index."""
         have_name = pkg_name is not None
+        if have_name and not isinstance(pkg_name, str):
+            raise ValueError(
+                "is_virtual(): expected package name, got %s" % type(pkg_name))
         if use_index:
             return have_name and pkg_name in self.provider_index
         else:
@@ -1042,6 +1049,14 @@ class Repo(object):
         """
         for name in self.all_package_names():
             yield self.get(name)
+
+    def all_package_classes(self):
+        """Iterator over all package *classes* in the repository.
+
+        Use this with care, because loading packages is slow.
+        """
+        for name in self.all_package_names():
+            yield self.get_pkg_class(name)
 
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists."""

@@ -135,9 +135,9 @@ properties = {
                 },
                 'deprecatedProperties': {
                     'properties': ['dotkit'],
-                    'message': 'cannot enable "{property}" in modules.yaml '
-                               '[support for {property} module files has been'
-                               ' dropped]',
+                    'message': 'cannot enable "dotkit" in modules.yaml '
+                               '[support for "dotkit" has been dropped '
+                               'in v0.13.0]',
                     'error': False
                 },
             },
@@ -172,9 +172,8 @@ properties = {
         },
         'deprecatedProperties': {
             'properties': ['dotkit'],
-            'message': 'the section "{property}" in modules.yaml has no effect'
-                       ' [support for {property} module files has been '
-                       'dropped]',
+            'message': 'the "dotkit" section in modules.yaml has no effect'
+                       ' [support for "dotkit" has been dropped in v0.13.0]',
             'error': False
         },
     },

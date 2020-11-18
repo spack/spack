@@ -19,6 +19,8 @@ def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
     spec.concretize()
 
+    assert 'dev_path' in spec.variants
+
     with tmpdir.as_cwd():
         with open(spec.package.filename, 'w') as f:
             f.write(spec.package.original_string)

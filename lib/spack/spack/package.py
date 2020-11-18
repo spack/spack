@@ -307,6 +307,10 @@ class PackageMeta(
         _flush_callbacks('run_before')
         _flush_callbacks('run_after')
 
+        # Reset names for packages that inherit from another
+        # package with a different name
+        attr_dict['_name'] = None
+
         return super(PackageMeta, cls).__new__(cls, name, bases, attr_dict)
 
     @staticmethod
@@ -356,7 +360,7 @@ class PackageMeta(
         The name of a package is the name of its Python module, without
         the containing module names.
         """
-        if not hasattr(self, '_name'):
+        if self._name is None:
             self._name = self.module.__name__
             if '.' in self._name:
                 self._name = self._name[self._name.rindex('.') + 1:]
@@ -709,7 +713,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @classmethod
     def possible_dependencies(
             cls, transitive=True, expand_virtuals=True, deptype='all',
-            visited=None, missing=None):
+            visited=None, missing=None, virtuals=None):
         """Return dict of possible dependencies of this package.
 
         Args:
@@ -722,6 +726,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 far, mapped to their immediate dependencies' names.
             missing (dict, optional): dict to populate with packages and their
                 *missing* dependencies.
+            virtuals (set): if provided, populate with virtuals seen so far.
 
         Returns:
             (dict): dictionary mapping dependency names to *their*
@@ -758,6 +763,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             # expand virtuals if enabled, otherwise just stop at virtuals
             if spack.repo.path.is_virtual(name):
+                if virtuals is not None:
+                    virtuals.add(name)
                 if expand_virtuals:
                     providers = spack.repo.path.providers_for(name)
                     dep_names = [spec.name for spec in providers]
@@ -790,7 +797,27 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     continue
 
                 dep_cls.possible_dependencies(
-                    transitive, expand_virtuals, deptype, visited, missing)
+                    transitive, expand_virtuals, deptype, visited, missing,
+                    virtuals)
+
+        return visited
+
+    def enum_constraints(self, visited=None):
+        """Return transitive dependency constraints on this package."""
+        if visited is None:
+            visited = set()
+        visited.add(self.name)
+
+        names = []
+        clauses = []
+
+        for name in self.dependencies:
+            if name not in visited and not spack.spec.Spec(name).virtual:
+                pkg = spack.repo.get(name)
+                dvis, dnames, dclauses = pkg.enum_constraints(visited)
+                visited |= dvis
+                names.extend(dnames)
+                clauses.extend(dclauses)
 
         return visited
 
