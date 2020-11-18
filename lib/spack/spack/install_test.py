@@ -48,6 +48,8 @@ def get_test_stage_dir():
 
 def get_all_test_suites():
     stage_root = get_test_stage_dir()
+    if not os.path.isdir(stage_root):
+        return []
 
     def valid_stage(d):
         dirpath = os.path.join(stage_root, d)
