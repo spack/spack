@@ -91,6 +91,19 @@ def autospec(function):
     return converter
 
 
+def is_package_file(filename):
+    """Determine whether we are in a package file from a repo."""
+    # Package files are named `package.py` and are not in lib/spack/spack
+    # We have to remove the file extension because it can be .py and can be
+    # .pyc depending on context, and can differ between the files
+    import spack.package  # break cycle
+    filename_noext = os.path.splitext(filename)[0]
+    packagebase_filename_noext = os.path.splitext(
+        inspect.getfile(spack.package.PackageBase))[0]
+    return (filename_noext != packagebase_filename_noext and
+            os.path.basename(filename_noext) == 'package')
+
+
 class SpackNamespace(types.ModuleType):
     """ Allow lazy loading of modules."""
 
@@ -130,6 +143,11 @@ class FastPackageChecker(Mapping):
 
         #: Reference to the appropriate entry in the global cache
         self._packages_to_stats = self._paths_cache[packages_path]
+
+    def invalidate(self):
+        """Regenerate cache for this checker."""
+        self._paths_cache[self.packages_path] = self._create_new_cache()
+        self._packages_to_stats = self._paths_cache[self.packages_path]
 
     def _create_new_cache(self):
         """Create a new cache for packages in a repo.
@@ -308,6 +326,9 @@ class ProviderIndexer(Indexer):
         self.index = spack.provider_index.ProviderIndex.from_json(stream)
 
     def update(self, pkg_fullname):
+        name = pkg_fullname.split('.')[-1]
+        if spack.repo.path.is_virtual(name, use_index=False):
+            return
         self.index.remove_provider(pkg_fullname)
         self.index.update(pkg_fullname)
 
@@ -517,12 +538,12 @@ class RepoPath(object):
         """Get the first repo in precedence order."""
         return self.repos[0] if self.repos else None
 
-    def all_package_names(self):
+    def all_package_names(self, include_virtuals=False):
         """Return all unique package names in all repositories."""
         if self._all_package_names is None:
             all_pkgs = set()
             for repo in self.repos:
-                for name in repo.all_package_names():
+                for name in repo.all_package_names(include_virtuals):
                     all_pkgs.add(name)
             self._all_package_names = sorted(all_pkgs, key=lambda n: n.lower())
         return self._all_package_names
@@ -679,12 +700,20 @@ class RepoPath(object):
         """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
-    def is_virtual(self, pkg_name):
-        """True if the package with this name is virtual, False otherwise."""
-        if not isinstance(pkg_name, str):
+    def is_virtual(self, pkg_name, use_index=True):
+        """True if the package with this name is virtual, False otherwise.
+
+        Set `use_index` False when calling from a code block that could
+        be run during the computation of the provider index."""
+        have_name = pkg_name is not None
+        if have_name and not isinstance(pkg_name, str):
             raise ValueError(
                 "is_virtual(): expected package name, got %s" % type(pkg_name))
-        return pkg_name in self.provider_index
+        if use_index:
+            return have_name and pkg_name in self.provider_index
+        else:
+            return have_name and (not self.exists(pkg_name) or
+                                  self.get_pkg_class(pkg_name).virtual)
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
@@ -913,10 +942,6 @@ class Repo(object):
            This dumps the package file and any associated patch files.
            Raises UnknownPackageError if not found.
         """
-        # Some preliminary checks.
-        if spec.virtual:
-            raise UnknownPackageError(spec.name)
-
         if spec.namespace and spec.namespace != self.namespace:
             raise UnknownPackageError(
                 "Repository %s does not contain package %s."
@@ -999,9 +1024,12 @@ class Repo(object):
             self._fast_package_checker = FastPackageChecker(self.packages_path)
         return self._fast_package_checker
 
-    def all_package_names(self):
+    def all_package_names(self, include_virtuals=False):
         """Returns a sorted list of all package names in the Repo."""
-        return sorted(self._pkg_checker.keys())
+        names = sorted(self._pkg_checker.keys())
+        if include_virtuals:
+            return names
+        return [x for x in names if not self.is_virtual(x)]
 
     def packages_with_tags(self, *tags):
         v = set(self.all_package_names())
@@ -1040,7 +1068,7 @@ class Repo(object):
 
     def is_virtual(self, pkg_name):
         """True if the package with this name is virtual, False otherwise."""
-        return self.provider_index.contains(pkg_name)
+        return pkg_name in self.provider_index
 
     def _get_pkg_module(self, pkg_name):
         """Create a module for a particular package.
@@ -1074,7 +1102,8 @@ class Repo(object):
                 # manually construct the error message in order to give the
                 # user the correct package.py where the syntax error is located
                 raise SyntaxError('invalid syntax in {0:}, line {1:}'
-                                  ''.format(file_path, e.lineno))
+                                  .format(file_path, e.lineno))
+
             module.__package__ = self.full_namespace
             module.__loader__ = self
             self._modules[pkg_name] = module
@@ -1205,9 +1234,9 @@ def get(spec):
     return path.get(spec)
 
 
-def all_package_names():
+def all_package_names(include_virtuals=False):
     """Convenience wrapper around ``spack.repo.all_package_names()``."""
-    return path.all_package_names()
+    return path.all_package_names(include_virtuals)
 
 
 def set_path(repo):
