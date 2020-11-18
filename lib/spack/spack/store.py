@@ -88,6 +88,7 @@ def _store():
     install_trees = spack.config.get('config:install_trees')
     shared_install_trees = spack.config.get('config:shared_install_trees')
 
+    # Tests if non-default install root is specified
     if install_root:
         # Determines if install_root exists
         if install_root in install_trees:
