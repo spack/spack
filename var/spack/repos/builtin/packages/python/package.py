@@ -1141,7 +1141,7 @@ class Python(AutotoolsPackage):
 
         # checks import works and executable comes from the spec prefix
         reason = 'test: checking import and executable'
-        print = self.print_string('sys.executable')
-        options = ['-c', 'import sys; {0}'.format(print)]
+        print_str = self.print_string('sys.executable')
+        options = ['-c', 'import sys; {0}'.format(print_str)]
         self.run_test(exe, options=options, expected=[self.spec.prefix],
                       installed=True, purpose=reason)
