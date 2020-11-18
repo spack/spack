@@ -3948,6 +3948,118 @@ using the ``run_before`` decorator.
 
 .. _file-manipulation:
 
+^^^^^^^^^^^^^
+Install Tests
+^^^^^^^^^^^^^
+
+.. warning::
+
+   The API for adding and running install tests is not yet considered
+   stable and may change drastically in future releases. Packages with
+   upstreamed tests will be refactored to match changes to the API.
+
+While build-tests are integrated with the build system, install tests
+may be added to Spack packages to be run independently of the install
+method.
+
+Install tests may be added by defining a ``test`` method with the following signature:
+
+.. code-block:: python
+
+   def test(self):
+
+These tests will be run in an environment set up to provide access to
+this package and all of its dependencies, including ``test``-type
+dependencies. Inside the ``test`` method, standard python ``assert``
+statements and other error reporting mechanisms can be used. Spack
+will report any errors as a test failure.
+
+Inside the test method, individual tests can be run separately (and
+continue transparently after a test failure) using the ``run_test``
+method. The signature for the ``run_test`` method is:
+
+.. code-block:: python
+
+   def run_test(self, exe, options=[], expected=[], status=0, installed=False,
+                purpose='', skip_missing=False, work_dir=None):
+
+This method will operate in ``work_dir`` if one is specified. It will
+search for an executable in the ``PATH`` variable named ``exe``, and
+if ``installed=True`` it will fail if that executable does not come
+from the prefix of the package being tested. If the executable is not
+found, it will fail the test unless ``skip_missing`` is set to
+``True``. The executable will be run with the options specified, and
+the return code will be checked against the ``status`` argument, which
+can be an integer or list of integers. Spack will also check that
+every string in ``expected`` is a regex matching part of the output of
+the executable. The ``purpose`` argument is recorded in the test log
+for debugging purposes.
+
+""""""""""""""""""""""""""""""""""""""
+Install tests that require compilation
+""""""""""""""""""""""""""""""""""""""
+
+Some tests may require access to the compiler with which the package
+was built, especially to test library-only packages. To ensure the
+compiler is configured as part of the test environment, set the
+attribute ``tests_require_compiler = True`` on the package. The
+compiler will be available through the canonical environment variables
+(``CC``, ``CXX``, ``FC``, ``F77``) in the test environment.
+
+""""""""""""""""""""""""""""""""""""""""""""""""
+Install tests that require build-time components
+""""""""""""""""""""""""""""""""""""""""""""""""
+
+Some packages cannot be easily tested without components from the
+build-time test suite. For those packages, the
+``cache_extra_test_sources`` method can be used.
+
+.. code-block:: python
+
+   @run_after('install')
+   def cache_test_sources(self):
+       srcs = ['./tests/foo.c', './tests/bar.c']
+       self.cache_extra_test_sources(srcs)
+
+This method will copy the listed methods into the metadata directory
+of the package at the end of the install phase of the build. They will
+be available to the test method in the directory
+``self._extra_tests_path``.
+
+While source files are generally recommended, for many packages
+binaries may also technically be cached in this way for later testing.
+
+"""""""""""""""""""""
+Running install tests
+"""""""""""""""""""""
+
+Install tests can be run using the ``spack test run`` command. The
+``spack test run`` command will create a ``test suite`` out of the
+specs provided to it, or if no specs are provided it will test all
+specs in the active environment, or all specs installed in Spack if no
+environment is active. Test suites can be named using the ``--alias``
+option; test suites not aliased will use the content hash of their
+specs as their name.
+
+Packages to install test can be queried using the ``spack test list``
+command, which outputs all installed packages with defined ``test``
+methods.
+
+Test suites can be found using the ``spack test find`` command. It
+will list all test suites that have been run and have not been removed
+using the ``spack test remove`` command. The ``spack test remove``
+command will remove tests to declutter the test stage. The ``spack
+test results`` command will show results for completed test suites.
+
+The test stage is the working directory for all install tests run with
+Spack. By default, Spack uses ``~/.spack/test`` as the test stage. The
+test stage can be set in the high-level config:
+
+.. code-block:: yaml
+
+   config:
+     test_stage: /path/to/stage
+
 ---------------------------
 File manipulation functions
 ---------------------------

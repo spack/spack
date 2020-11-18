@@ -204,7 +204,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def build_test(self):
         make('test')
 
     def install(self, spec, prefix):
@@ -364,3 +364,16 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         else:
             msg = 'Unable to locate {0} command in {1}'
             raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))
+
+    def test(self):
+        """Smoke tests"""
+        exe = self.spec['perl'].command.name
+
+        reason = 'test: checking version is {0}'.format(self.spec.version)
+        self.run_test(exe, '--version', ['perl', str(self.spec.version)],
+                      installed=True, purpose=reason)
+
+        reason = 'test: ensuring perl runs'
+        msg = 'Hello, World!'
+        options = ['-e', 'use warnings; use strict;\nprint("%s\n");' % msg]
+        self.run_test(exe, options, msg, installed=True, purpose=reason)

@@ -45,6 +45,7 @@ properties = {
                     {'type': 'array',
                      'items': {'type': 'string'}}],
             },
+            'test_stage': {'type': 'string'},
             'extensions': {
                 'type': 'array',
                 'items': {'type': 'string'}

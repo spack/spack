@@ -1610,12 +1610,12 @@ def build_process(pkg, kwargs):
 
     This function's return value is returned to the parent process.
     """
-    keep_stage = kwargs.get('keep_stage', False)
-    install_source = kwargs.get('install_source', False)
-    skip_patch = kwargs.get('skip_patch', False)
-    verbose = kwargs.get('verbose', False)
     fake = kwargs.get('fake', False)
+    install_source = kwargs.get('install_source', False)
+    keep_stage = kwargs.get('keep_stage', False)
+    skip_patch = kwargs.get('skip_patch', False)
     unmodified_env = kwargs.get('unmodified_env', {})
+    verbose = kwargs.get('verbose', False)
 
     start_time = time.time()
     if not fake:
@@ -1958,6 +1958,7 @@ class BuildRequest(object):
     def _add_default_args(self):
         """Ensure standard install options are set to at least the default."""
         for arg, default in [('cache_only', False),
+                             ('context', 'build'),  # installs *always* build
                              ('dirty', False),
                              ('fail_fast', False),
                              ('fake', False),

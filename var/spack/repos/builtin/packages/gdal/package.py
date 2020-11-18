@@ -124,7 +124,7 @@ class Gdal(AutotoolsPackage):
     depends_on('hdf5', when='+hdf5')
     depends_on('kealib', when='+kea @2:')
     depends_on('netcdf-c', when='+netcdf')
-    depends_on('jasper@1.900.1', patches='uuid.patch', when='+jasper')
+    depends_on('jasper@1.900.1', patches=[patch('uuid.patch')], when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
     depends_on('xerces-c', when='+xerces')
     depends_on('expat', when='+expat')

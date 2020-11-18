@@ -1273,3 +1273,14 @@ def mock_executable(tmpdir):
         return str(f)
 
     return _factory
+
+
+@pytest.fixture()
+def mock_test_stage(mutable_config, tmpdir):
+    # NOTE: This fixture MUST be applied after any fixture that uses
+    # the config fixture under the hood
+    # No need to unset because we use mutable_config
+    tmp_stage = str(tmpdir.join('test_stage'))
+    mutable_config.set('config:test_stage', tmp_stage)
+
+    yield tmp_stage
