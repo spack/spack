@@ -255,8 +255,7 @@ class Mfem(Package):
     patch('mfem-3.4.patch', when='@3.4.0')
     patch('mfem-3.3-3.4-petsc-3.9.patch',
           when='@3.3.0:3.4.0 +petsc ^petsc@3.9.0:')
-    # TODO: do not patch @develop when MFEM PR #1862 is merged.
-    patch('mfem-4.2-umpire.patch', when='@4.2.0,develop+umpire')
+    patch('mfem-4.2-umpire.patch', when='@4.2.0+umpire')
 
     # Patch to fix MFEM makefile syntax error. See
     # https://github.com/mfem/mfem/issues/1042 for the bug report and
