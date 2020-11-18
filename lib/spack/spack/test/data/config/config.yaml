@@ -1,6 +1,9 @@
 config:
-  install_tree:
-    root: ~/.spack/opt/spack
+  install_trees:
+    default:
+      root: ~/.spack/opt/spack
+      projections:
+        all: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
   template_dirs:
   - $spack/share/spack/templates
   - $spack/lib/spack/spack/test/data/templates
