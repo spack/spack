@@ -274,10 +274,11 @@ def _report_suite_results(test_suite, args, constraints):
             for s in spack.store.db.query(spec, installed=True):
                 specs[s.dag_hash()] = s
         specs = sorted(specs.values())
-        test_specs = {test_suite.test_pkg_id(s): s for s in test_suite.specs
-                      if s in specs}
+        test_specs = dict((test_suite.test_pkg_id(s), s) for s in
+                          test_suite.specs if s in specs)
     else:
-        test_specs = {test_suite.test_pkg_id(s): s for s in test_suite.specs}
+        test_specs = dict((test_suite.test_pkg_id(s), s) for s in
+                          test_suite.specs)
 
     if not test_specs:
         return
