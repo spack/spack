@@ -3952,6 +3952,12 @@ using the ``run_before`` decorator.
 Install Tests
 ^^^^^^^^^^^^^
 
+.. warning::
+
+   The API for adding and running install tests is not yet considered
+   stable and may change drastically in future releases. Packages with
+   upstreamed tests will be refactored to match changes to the API.
+
 While build-tests are integrated with the build system, install tests
 may be added to Spack packages to be run independently of the install
 method.
