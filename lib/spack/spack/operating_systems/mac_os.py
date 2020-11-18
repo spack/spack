@@ -53,6 +53,7 @@ class MacOs(OperatingSystem):
             '10.13': 'highsierra',
             '10.14': 'mojave',
             '10.15': 'catalina',
+            '10.16': 'bigsur',
             '11.0':  'bigsur',
         }
 

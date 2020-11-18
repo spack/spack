@@ -14,10 +14,13 @@ import spack.compilers.clang
 import spack.compilers.fj
 import spack.compilers.gcc
 import spack.compilers.intel
+import spack.compilers.oneapi
 import spack.compilers.nag
+import spack.compilers.nvhpc
 import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
+import spack.compilers.aocc
 
 from spack.operating_systems.cray_frontend import CrayFrontend
 import spack.util.module_cmd
@@ -104,19 +107,19 @@ def test_clang_version_detection(version_str, expected_version):
 
 @pytest.mark.parametrize('version_str,expected_version', [
     # C compiler
-    ('fcc (FCC) 4.0.0 20190314\n'
+    ('fcc (FCC) 4.0.0a 20190314\n'
      'simulating gcc version 6.1\n'
      'Copyright FUJITSU LIMITED 2019',
-     '4.0.0'),
+     '4.0.0a'),
     # C++ compiler
-    ('FCC (FCC) 4.0.0 20190314\n'
+    ('FCC (FCC) 4.0.0a 20190314\n'
      'simulating gcc version 6.1\n'
      'Copyright FUJITSU LIMITED 2019',
-     '4.0.0'),
+     '4.0.0a'),
     # Fortran compiler
-    ('frt (FRT) 4.0.0 20190314\n'
+    ('frt (FRT) 4.0.0a 20190314\n'
      'Copyright FUJITSU LIMITED 2019',
-     '4.0.0')
+     '4.0.0a')
 ])
 def test_fj_version_detection(version_str, expected_version):
     version = spack.compilers.fj.Fj.extract_version_from_output(version_str)
@@ -149,11 +152,96 @@ def test_intel_version_detection(version_str, expected_version):
 
 
 @pytest.mark.parametrize('version_str,expected_version', [
+    (  # ICX
+        'Intel(R) oneAPI DPC++ Compiler Pro 2021.1 (2020.8.0.0827)\n'
+        'Target: x86_64-unknown-linux-gnu\n'
+        'Thread model: posix\n'
+        'InstalledDir: /soft/restricted/CNDA/sdk/\n'
+        '2020.9.15.1/oneapi/compiler/2021.1-beta09/linux/bin',
+        '2020.8.0.0827'
+    ),
+    (  # ICPX
+        'Intel(R) oneAPI DPC++ Compiler Pro 2021.1 (2020.8.0.0827)\n'
+        'Target: x86_64-unknown-linux-gnu\n'
+        'Thread model: posix\n'
+        'InstalledDir: /soft/restricted/CNDA/sdk/\n'
+        '2020.9.15.1/oneapi/compiler/2021.1-beta09/linux/bin',
+        '2020.8.0.0827'
+    )
+    # Detection will fail for ifx because it can't parse it from this.
+    # (  # IFX
+    #     'ifx (IFORT) 2021.1 Beta 20200827\n'
+    #     'Copyright (C) 1985-2020 Intel Corporation. All rights reserved.',
+    #     '2020.8.0.0827'
+    # )
+])
+def test_oneapi_version_detection(version_str, expected_version):
+    version = spack.compilers.oneapi.Oneapi.extract_version_from_output(
+        version_str
+    )
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
     ('NAG Fortran Compiler Release 6.0(Hibiya) Build 1037\n'
      'Product NPL6A60NA for x86-64 Linux\n', '6.0')
 ])
 def test_nag_version_detection(version_str, expected_version):
     version = spack.compilers.nag.Nag.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    # C compiler on x86-64
+    ('nvc 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on x86-64
+    ('nvc++ 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on x86-64
+    ('nvfortran 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C compiler on Power
+    ('nvc 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on Power
+    ('nvc++ 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on Power
+    ('nvfortran 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C compiler on Arm
+    ('nvc 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on Arm
+    ('nvc++ 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on Arm
+    ('nvfortran 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9')
+])
+def test_nvhpc_version_detection(version_str, expected_version):
+    version = spack.compilers.nvhpc.Nvhpc.extract_version_from_output(
+        version_str
+    )
     assert version == expected_version
 
 
@@ -204,6 +292,8 @@ def test_xl_version_detection(version_str, expected_version):
     ('pgi', '19.1a'),
     ('intel', '9.0.0'),
     ('intel', '0.0.0-foobar')
+    # ('oneapi', '2021.1'),
+    # ('oneapi', '2021.1-foobar')
 ])
 def test_cray_frontend_compiler_detection(
         compiler, version, tmpdir, monkeypatch, working_env
@@ -233,3 +323,18 @@ def test_cray_frontend_compiler_detection(
 
     paths = cray_fe_os.compiler_search_paths
     assert paths == [str(compiler_dir)]
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    # This applies to C,C++ and FORTRAN compiler
+    ('AMD clang version 10.0.0 (CLANG: AOCC_2.2.0-Build#93 2020_06_25)'
+     '(based on LLVM Mirror.Version.10.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '2.2.0'
+     )
+])
+def test_aocc_version_detection(version_str, expected_version):
+    version = spack.compilers.aocc.Aocc.extract_version_from_output(
+        version_str
+    )
+    assert version == expected_version

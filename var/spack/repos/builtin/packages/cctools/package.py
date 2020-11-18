@@ -15,6 +15,7 @@ class Cctools(AutotoolsPackage):
     homepage = "https://cctools.readthedocs.io"
     url      = "https://ccl.cse.nd.edu/software/files/cctools-7.1.5-source.tar.gz"
 
+    version('7.1.7', sha256='63cbfabe52591d41a1b27040bf27700d2a11b2f30cb2e25132e0016fb1aade03')
     version('7.1.5', sha256='c01415fd47a1d9626b6c556e0dc0a6b0d3cd67224fa060cabd44ff78eede1d8a')
     version('7.1.3', sha256='b937878ab429dda31bc692e5d9ffb402b9eb44bb674c07a934bb769cee4165ba')
     version('7.1.2', sha256='ca871e9fe245d047d4c701271cf2b868e6e3a170e8834c1887157ed855985131')
@@ -45,6 +46,10 @@ class Cctools(AutotoolsPackage):
         f = 'dttools/src/memfdexe.c'
         kwargs = {'ignore_absent': False, 'backup': True, 'string': True}
         filter_file(before, after, f, **kwargs)
+        if self.spec.satisfies('%fj'):
+            makefiles = ['chirp/src/Makefile', 'grow/src/Makefile']
+            for m in makefiles:
+                filter_file('-fstack-protector-all', '', m)
 
     def configure_args(self):
         args = []

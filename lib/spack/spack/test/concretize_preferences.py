@@ -6,6 +6,7 @@
 import pytest
 import stat
 
+import spack.config
 import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
@@ -70,18 +71,33 @@ def assert_variant_values(spec, **variants):
 
 @pytest.mark.usefixtures('concretize_scope', 'mock_packages')
 class TestConcretizePreferences(object):
-    def test_preferred_variants(self):
-        """Test preferred variants are applied correctly
+    @pytest.mark.parametrize('package_name,variant_value,expected_results', [
+        ('mpileaks', '~debug~opt+shared+static',
+         {'debug': False, 'opt': False, 'shared': True, 'static': True}),
+        # Check that using a list of variants instead of a single string works
+        ('mpileaks', ['~debug', '~opt', '+shared', '+static'],
+         {'debug': False, 'opt': False, 'shared': True, 'static': True}),
+        # Use different values for the variants and check them again
+        ('mpileaks', ['+debug', '+opt', '~shared', '-static'],
+         {'debug': True, 'opt': True, 'shared': False, 'static': False}),
+        # Check a multivalued variant with multiple values set
+        ('multivalue-variant', ['foo=bar,baz', 'fee=bar'],
+         {'foo': ('bar', 'baz'), 'fee': 'bar'})
+    ])
+    def test_preferred_variants(
+            self, package_name, variant_value, expected_results
+    ):
+        """Test preferred variants are applied correctly"""
+        update_packages(package_name, 'variants', variant_value)
+        assert_variant_values(package_name, **expected_results)
+
+    def test_preferred_variants_from_wildcard(self):
         """
-        update_packages('mpileaks', 'variants', '~debug~opt+shared+static')
+        Test that 'foo=*' concretizes to any value
+        """
+        update_packages('multivalue-variant', 'variants', 'foo=bar')
         assert_variant_values(
-            'mpileaks', debug=False, opt=False, shared=True, static=True
-        )
-        update_packages(
-            'mpileaks', 'variants', ['+debug', '+opt', '~shared', '-static']
-        )
-        assert_variant_values(
-            'mpileaks', debug=True, opt=True, shared=False, static=False
+            'multivalue-variant foo=*', foo=('bar',)
         )
 
     def test_preferred_compilers(self):
@@ -100,12 +116,16 @@ class TestConcretizePreferences(object):
         # Try the last available compiler
         compiler = str(compiler_list[-1])
         update_packages('mpileaks', 'compiler', [compiler])
-        spec = concretize('mpileaks os=redhat6 target=x86')
+        spec = concretize('mpileaks os=redhat6')
         assert spec.compiler == spack.spec.CompilerSpec(compiler)
 
     def test_preferred_target(self, mutable_mock_repo):
-        """Test preferred compilers are applied correctly
-        """
+        """Test preferred targets are applied correctly"""
+        # FIXME: This test was a false negative, since the default and
+        # FIXME: the preferred target were the same
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known bug in the original concretizer')
+
         spec = concretize('mpich')
         default = str(spec.target)
         preferred = str(spec.target.family)
@@ -115,13 +135,13 @@ class TestConcretizePreferences(object):
         assert str(spec.target) == preferred
 
         spec = concretize('mpileaks')
-        assert str(spec['mpileaks'].target) == default
+        assert str(spec['mpileaks'].target) == preferred
         assert str(spec['mpich'].target) == preferred
 
-        update_packages('mpileaks', 'target', [preferred])
+        update_packages('mpileaks', 'target', [default])
         spec = concretize('mpileaks')
-        assert str(spec['mpich'].target) == preferred
-        assert str(spec['mpich'].target) == preferred
+        assert str(spec['mpich'].target) == default
+        assert str(spec['mpich'].target) == default
 
     def test_preferred_versions(self):
         """Test preferred package versions are applied correctly
@@ -198,8 +218,9 @@ all:
         mpi: [mpich]
 mpich:
     buildable: false
-    paths:
-        mpich@3.0.4: /dummy/path
+    externals:
+    - spec: mpich@3.0.4
+      prefix: /dummy/path
 """)
         spack.config.set('packages', conf, scope='concretize')
 
@@ -229,8 +250,9 @@ all:
         mpi: [mpich]
 mpi:
     buildable: false
-    modules:
-        mpich@3.0.4: dummy
+    externals:
+    - spec: mpich@3.0.4
+      modules: [dummy]
 """)
         spack.config.set('packages', conf, scope='concretize')
 

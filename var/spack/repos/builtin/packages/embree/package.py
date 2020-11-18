@@ -1,31 +1,73 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 
+
 class Embree(CMakePackage):
-    """High-performance ray tracing kernel"""
+    """Intel Embree High Performance Ray Tracing Kernels"""
 
-    homepage = "https://embree.github.io/"
-    url = "https://github.com/embree/embree/archive/v3.5.1.tar.gz"
-    generator = 'Ninja'
+    homepage = "https://embree.org"
+    url      = "https://github.com/embree/embree/archive/v3.7.0.tar.gz"
+    maintainers = ['aumuell']
 
+    version('3.12.1', sha256='0c9e760b06e178197dd29c9a54f08ff7b184b0487b5ba8b8be058e219e23336e')
+    version('3.12.0', sha256='f3646977c45a9ece1fb0cfe107567adcc645b1c77c27b36572d0aa98b888190c')
     version('3.11.0', sha256='2ccc365c00af4389aecc928135270aba7488e761c09d7ebbf1bf3e62731b147d')
-    version('3.10.0', sha256='378783983262593e1e096d2bb9af5c626d5640aec5ca82a2d60563c1fd865420')
-    version('3.9.0', sha256='8ab88965456b70553f62f08dda16dd7d87c6021d5a3a1fd4a7611b90a9f2949d')
-    version('3.8.0', sha256='3153e32aca07b38b804353ae2f31ddc8d25201fcffb7b506aa7f2e8f36448fb7')
-    version('3.7.0', sha256='2b6300ebe30bb3d2c6e5f23112b4e21a25a384a49c5e3c35440aa6f3c8d9fe84')
-    version('3.6.1', sha256='9030ab589cf7134b5995af3639b5e3e9aacaab95d839f619817e2c1348c9b51a')
-    version('3.6.0', sha256='a8bdb4420f29c09c31bc094021b3a48305de770f662c37c879e9b54d67f94156')
-    version('3.5.2', sha256='245af8820a820af94679fa1d43a05a9c825451be0d603b6165229556adf49517')
+    version('3.10.0', sha256='f1f7237360165fb8859bf71ee5dd8caec1fe02d4d2f49e89c11d250afa067aff')
+    version('3.9.0',  sha256='53855e2ceb639289b20448ae9deab991151aa5f0bc7f9cc02f2af4dd6199d5d1')
+    version('3.8.0',  sha256='40cbc90640f63c318e109365d29aea00003e4bd14aaba8bb654fc1010ea5753a')
+    version('3.7.0',  sha256='2b6300ebe30bb3d2c6e5f23112b4e21a25a384a49c5e3c35440aa6f3c8d9fe84')
 
-    depends_on('cmake@2.8.11:', type='build')
-    depends_on('cmake@3.1:', type='build', when='@3.10:')
-    depends_on('ispc', type='build')
-    depends_on('ninja', type='build')
+    # default to Release, as RelWithDebInfo creates a lot of overhead
+    variant('build_type', default='Release',
+            description='CMake build type',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
+    variant('ispc', default=True, description='Enable ISPC support')
+    depends_on('ispc', when='+ispc', type='build')
+
     depends_on('tbb')
 
     def cmake_args(self):
-        return ['-DEMBREE_TUTORIALS=OFF', '-DEMBREE_IGNORE_INVALID_RAYS=ON']
+        spec = self.spec
+
+        args = []
+
+        args.append('-DBUILD_TESTING=OFF')
+        args.append('-DEMBREE_TUTORIALS=OFF')
+        args.append('-DEMBREE_IGNORE_CMAKE_CXX_FLAGS=ON')
+
+        if 'ispc' in spec:
+            args.append('-DEMBREE_ISPC_SUPPORT=ON')
+        else:
+            args.append('-DEMBREE_ISPC_SUPPORT=OFF')
+
+        # code selection and defines controlling namespace names are based on
+        # defines controlled by compiler flags, so disable ISAs below compiler
+        # flags chosen by spack
+        if spec.target >= 'nehalem':
+            args.append('-DEMBREE_ISA_SSE2=OFF')
+        else:
+            args.append('-DEMBREE_ISA_SSE2=ON')
+
+        if spec.target >= 'sandybridge':
+            args.append('-DEMBREE_ISA_SSE42=OFF')
+        else:
+            args.append('-DEMBREE_ISA_SSE42=ON')
+
+        if spec.target >= 'haswell':
+            args.append('-DEMBREE_ISA_AVX=OFF')
+        else:
+            args.append('-DEMBREE_ISA_AVX=ON')
+
+        if spec.target >= 'skylake_avx512':
+            args.append('-DEMBREE_ISA_AVX2=OFF')
+        else:
+            args.append('-DEMBREE_ISA_AVX2=ON')
+
+        args.append('-DEMBREE_ISA_AVX512SKX=ON')
+
+        return args

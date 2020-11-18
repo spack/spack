@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Wireshark(CMakePackage):
     """Graphical network analyzer and capture tool"""
@@ -99,6 +96,5 @@ class Wireshark(CMakePackage):
             folders = ['.', 'epan/crypt', 'epan/dfilter', 'epan/dissectors',
                        'epan/ftypes', 'epan/wmem', 'wiretap', 'wsutil']
             for folder in folders:
-                headers = glob.glob(join_path(folder, '*.h'))
-                for h in headers:
-                    install(h, join_path(prefix.include, 'wireshark', folder))
+                install(join_path(folder, '*.h'),
+                        join_path(prefix.include.wireshark, folder))

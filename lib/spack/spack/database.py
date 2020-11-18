@@ -209,7 +209,7 @@ class InstallRecord(object):
 
         for field_name in include_fields:
             if field_name == 'spec':
-                rec_dict.update({'spec': self.spec.to_node_dict()})
+                rec_dict.update({'spec': self.spec.node_dict_with_hashes()})
             elif field_name == 'deprecated_for' and self.deprecated_for:
                 rec_dict.update({'deprecated_for': self.deprecated_for})
             else:
@@ -1112,10 +1112,13 @@ class Database(object):
             # the original hash of concrete specs.
             new_spec._mark_concrete()
             new_spec._hash = key
+            new_spec._full_hash = spec._full_hash
 
         else:
-            # If it is already there, mark it as installed.
+            # If it is already there, mark it as installed and update
+            # installation time
             self._data[key].installed = True
+            self._data[key].installation_time = _now()
 
         self._data[key].explicit = explicit
 

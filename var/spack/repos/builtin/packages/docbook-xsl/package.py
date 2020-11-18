@@ -28,8 +28,8 @@ class DocbookXsl(Package):
 
     def setup_run_environment(self, env):
         catalog = self.catalog
-        env.set('XML_CATALOG_FILES', catalog, separator=' ')
+        env.prepend_path('XML_CATALOG_FILES', catalog, separator=' ')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         catalog = self.catalog
-        env.prepend_path("XML_CATALOG_FILES", catalog)
+        env.prepend_path("XML_CATALOG_FILES", catalog, separator=' ')

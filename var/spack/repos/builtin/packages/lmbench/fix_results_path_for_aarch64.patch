@@ -1,0 +1,13 @@
+diff --git a/scripts/results b/scripts/results
+index cd07c15..282ed19 100755
+--- a/scripts/results
++++ b/scripts/results
+@@ -27,7 +27,7 @@ cd ../bin/$OS
+ PATH=.:${PATH}; export PATH
+ export SYNC_MAX
+ export OUTPUT
+-lmbench $CONFIG 2>../${RESULTS}
++lmbench $CONFIG 2>${RESULTS}
+ 
+ if [ X$MAIL = Xyes ]
+ then	echo Mailing results

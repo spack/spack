@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class Gmake(AutotoolsPackage, GNUMirrorPackage):
@@ -28,6 +28,14 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     patch('https://src.fedoraproject.org/rpms/make/raw/519a7c5bcbead22e6ea2d2c2341d981ef9e25c0d/f/make-4.2.1-glob-fix-2.patch', level=1, sha256='fe5b60d091c33f169740df8cb718bf4259f84528b42435194ffe0dd5b79cd125', when='@4.2.1')
     patch('https://src.fedoraproject.org/rpms/make/raw/519a7c5bcbead22e6ea2d2c2341d981ef9e25c0d/f/make-4.2.1-glob-fix-3.patch', level=1, sha256='ca60bd9c1a1b35bc0dc58b6a4a19d5c2651f7a94a4b22b2c5ea001a1ca7a8a7f', when='@:4.2.1')
+
+    executables = ['^g?make$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU Make (\S+)', output)
+        return match.group(1) if match else None
 
     def configure_args(self):
         args = []

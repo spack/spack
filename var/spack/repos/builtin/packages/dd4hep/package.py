@@ -22,12 +22,18 @@ class Dd4hep(CMakePackage):
     maintainers = ['vvolkl', 'drbenmorgan']
 
     version('master', branch='master')
+    version('1.14.1', sha256='5b5742f1e23c2b36d3174cca95f810ce909c0eb66f3d6d7acb0ba657819e6717')
+    version('1.14.0', sha256='b603aa3c0db8dda392253aa71fa4a0f0c3c9715d47df0b895d45c1e8849f4895')
+    version('1.13.1', sha256='83fa70cd74ce93b2f52f098388dff58d179f05ace5b50aea3f408bb8abf7cb73')
+    version('1.13.0', sha256='0b1f9d902ebe21a9178c1e41204c066b29f68c8836fd1d03a9ce979811ddb295')
     version('1.12.1', sha256='85e8c775ec03c499ce10911e228342e757c81ce9ef2a9195cb253b85175a2e93')
     version('1.12.0', sha256='133a1fb8ce0466d2482f3ebb03e60b3bebb9b2d3e33d14ba15c8fbb91706b398')
     version('1.11.2', sha256='96a53dd26cb8df11c6dae54669fbc9cc3c90dd47c67e07b24be9a1341c95abc4')
     version('1.11.1', sha256='d7902dd7f6744bbda92f6e303ad5a3410eec4a0d2195cdc86f6c1167e72893f0')
     version('1.11.0', sha256='25643296f15f9d11ad4ad550b7c3b92e8974fc56f1ee8e4455501010789ae7b6')
     version('1.10.0', sha256='1d6b5d1c368dc8bcedd9c61b7c7e1a44bad427f8bd34932516aff47c88a31d95')
+
+    generator = 'Ninja'
 
     # Workarounds for various TBB issues in DD4hep v1.11
     # See https://github.com/AIDASoft/DD4hep/pull/613 .
@@ -37,14 +43,20 @@ class Dd4hep(CMakePackage):
     variant('xercesc', default=False, description="Enable 'Detector Builders' based on XercesC")
     variant('geant4', default=False, description="Enable the simulation part based on Geant4")
     variant('assimp', default=False, description="Enable CAD interface based on Assimp")
+    variant('hepmc3', default=False, description="Enable build with hepmc3")
+    variant('lcio', default=False, description="Enable build with lcio")
+    variant('debug', default=False, description="Enable debug build")
 
     depends_on('cmake @3.12:', type='build')
+    depends_on('ninja', type='build')
     depends_on('boost @1.49:')
     depends_on('root @6.08: +gdml +math +opengl +python +x')
     extends('python')
     depends_on('xerces-c', when='+xercesc')
     depends_on('geant4@10.2.2:', when='+geant4')
     depends_on('assimp', when='+assimp')
+    depends_on('hepmc3', when="+hepmc3")
+    depends_on('lcio', when="+lcio")
 
     def cmake_args(self):
         spec = self.spec
@@ -56,7 +68,10 @@ class Dd4hep(CMakePackage):
             "-DCMAKE_CXX_STANDARD={0}".format(cxxstd),
             "-DDD4HEP_USE_XERCESC={0}".format(spec.satisfies('+xercesc')),
             "-DDD4HEP_USE_GEANT4={0}".format(spec.satisfies('+geant4')),
+            "-DDD4HEP_USE_LCIO={0}".format(spec.satisfies('+lcio')),
             "-DDD4HEP_LOAD_ASSIMP={0}".format(spec.satisfies('+assimp')),
+            "-DDD4HEP_USE_HEPMC3={0}".format(spec.satisfies('+hepmc3')),
+            "-DDD4HEP_BUILD_DEBUG={0}".format(spec.satisfies('+debug')),
             "-DBUILD_TESTING={0}".format(self.run_tests),
             "-DBOOST_ROOT={0}".format(spec['boost'].prefix),
             "-DBoost_NO_BOOST_CMAKE=ON",
@@ -67,6 +82,8 @@ class Dd4hep(CMakePackage):
     def setup_run_environment(self, env):
         # used p.ex. in ddsim to find DDDetectors dir
         env.set("DD4hepINSTALL", self.prefix)
+        env.set("DD4hep_DIR", self.prefix)
+        env.set("DD4hep_ROOT", self.prefix)
 
     def url_for_version(self, version):
         # dd4hep releases are dashes and padded with a leading zero

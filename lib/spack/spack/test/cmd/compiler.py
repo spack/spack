@@ -250,3 +250,35 @@ def test_compiler_find_prefer_no_suffix(
 
     assert clang['paths']['cc'] == str(clangdir.join('clang'))
     assert clang['paths']['cxx'] == str(clangdir.join('clang++'))
+
+
+def test_compiler_find_path_order(
+        no_compilers_yaml, working_env, clangdir):
+    """Ensure that we find compilers that come first in the PATH first
+    """
+
+    with clangdir.as_cwd():
+        os.mkdir('first_in_path')
+        shutil.copy('gcc-8', 'first_in_path/gcc-8')
+        shutil.copy('g++-8', 'first_in_path/g++-8')
+        shutil.copy('gfortran-8', 'first_in_path/gfortran-8')
+
+    # the first_in_path folder should be searched first
+    os.environ['PATH'] = '{0}:{1}'.format(
+        str(clangdir.join("first_in_path")),
+        str(clangdir),
+    )
+
+    compiler('find', '--scope=site')
+
+    config = spack.compilers.get_compiler_config('site', False)
+
+    gcc = next(c['compiler'] for c in config
+               if c['compiler']['spec'] == 'gcc@8.4.0')
+
+    assert gcc['paths'] == {
+        'cc': str(clangdir.join('first_in_path', 'gcc-8')),
+        'cxx': str(clangdir.join('first_in_path', 'g++-8')),
+        'f77': str(clangdir.join('first_in_path', 'gfortran-8')),
+        'fc': str(clangdir.join('first_in_path', 'gfortran-8')),
+    }

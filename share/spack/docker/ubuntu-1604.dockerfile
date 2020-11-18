@@ -9,20 +9,6 @@ ENV DOCKERFILE_BASE=ubuntu:16.04      \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
     container=docker
 
-COPY bin   $SPACK_ROOT/bin
-COPY etc   $SPACK_ROOT/etc
-COPY lib   $SPACK_ROOT/lib
-COPY share $SPACK_ROOT/share
-COPY var   $SPACK_ROOT/var
-RUN mkdir -p $SPACK_ROOT/opt/spack
-
-RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /usr/local/bin/docker-shell \
- && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /usr/local/bin/interactive-shell \
- && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /usr/local/bin/spack-env
-
 RUN apt-get -yqq update \
  && apt-get -yqq install --no-install-recommends \
         build-essential \
@@ -47,6 +33,20 @@ RUN apt-get -yqq update \
  && locale-gen en_US.UTF-8 \
  && pip3 install boto3 \
  && rm -rf /var/lib/apt/lists/*
+
+COPY bin   $SPACK_ROOT/bin
+COPY etc   $SPACK_ROOT/etc
+COPY lib   $SPACK_ROOT/lib
+COPY share $SPACK_ROOT/share
+COPY var   $SPACK_ROOT/var
+RUN mkdir -p $SPACK_ROOT/opt/spack
+
+RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/docker-shell \
+ && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/interactive-shell \
+ && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/spack-env
 
 # Add LANG default to en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8

@@ -26,7 +26,7 @@ class PyPycbc(PythonPackage):
     depends_on('py-decorator@3.4.2:', type=('build', 'run'))
     depends_on('py-scipy@0.16.0:', type=('build', 'run'))
     depends_on('py-matplotlib@1.5.1:', type=('build', 'run'))
-    depends_on('py-pillow', type=('build', 'run'))
+    depends_on('pil', type=('build', 'run'))
     depends_on('py-h5py@2.5:', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-astropy@2.0.3:', type=('build', 'run'))
@@ -38,3 +38,5 @@ class PyPycbc(PythonPackage):
     depends_on('py-six@1.10.0:', type=('build', 'run'))
     depends_on('py-ligo-segments', type=('build', 'run'))
     depends_on('py-weave@0.16.0:', when='^python@:2', type=('build', 'run'))
+
+    patch('for_aarch64.patch', when='@:1.14.1 target=aarch64:')

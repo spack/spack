@@ -45,6 +45,15 @@ class Thrift(Package):
 
     # Variant dependencies
     extends('python', when='+python')
+    depends_on('py-setuptools', type=('build', 'run'), when='+python')
+    depends_on('py-six@1.7.2:', type=('build', 'run'), when='@0.10.0:+python')
+    depends_on('py-tornado', type=('build', 'run'), when='+python')
+    depends_on('py-twisted', type=('build', 'run'), when='+python')
+    depends_on('py-zope-interface', type=('build', 'run'), when='+python')
+    depends_on('py-ipaddress', type=('build', 'run'), when='+python ^python@2')
+    depends_on('py-backports-ssl-match-hostname@3.5:', when='+python ^python@:3.4', type=('build', 'run'))
+    depends_on('py-pure-sasl', type=('build', 'run'), when='+python')
+    depends_on('scons', type=('build', 'run'), when='+python')
 
     depends_on('zlib', when='+c')
     depends_on('libevent', when='+c')

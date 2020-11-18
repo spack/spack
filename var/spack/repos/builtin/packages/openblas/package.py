@@ -18,6 +18,8 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.12', sha256='65a7d3a4010a4e3bd5c0baa41a234797cd3a1735449a4a5902129152601dc57b')
+    version('0.3.11', sha256='bc4617971179e037ae4e8ebcd837e46db88422f7b365325bd7aba31d1921a673')
     version('0.3.10', sha256='0484d275f87e9b8641ff2eecaa9df2830cbe276ac79ad80494822721de6e1693')
     version('0.3.9', sha256='17d4677264dfbc4433e97076220adc79b050e4f8a083ea3f853a53af253bc380')
     version('0.3.8', sha256='8f86ade36f0dbed9ac90eb62575137388359d97d8f93093b38abe166ad7ef3a8')
@@ -96,9 +98,19 @@ class Openblas(MakefilePackage):
     # Fix ICE in LLVM 9.0.0 https://github.com/xianyi/OpenBLAS/pull/2329
     # Patch as in https://github.com/xianyi/OpenBLAS/pull/2597
     patch('openblas_appleclang11.patch', when='@0.3.8:0.3.9 %apple-clang@11.0.3')
+    # There was an error in Reference-LAPACK that is triggeret by Xcode12
+    # fixed upstream by https://github.com/xianyi/OpenBLAS/pull/2808 and
+    # should be included in post 0.3.10 versions. Application to earlier
+    # versions was not tested.
+    # See also https://github.com/xianyi/OpenBLAS/issues/2870
+    patch('https://github.com/xianyi/OpenBLAS/commit/f42e84d46c52f4ee1e05af8f365cd85de8a77b95.patch',
+          sha256='7b1eec78d1b1f55d3a3f1249696be7da0e2e1cd3b7fadae852e97dc860f8a7fd',
+          when='@0.3.8:0.3.10 %apple-clang@12.0.0:')
 
     # Add conditions to f_check to determine the Fujitsu compiler
-    patch('openblas_fujitsu.patch', when='%fj')
+    patch('openblas_fujitsu.patch', when='@:0.3.10 %fj')
+    patch('openblas_fujitsu_v0.3.11.patch', when='@0.3.11: %fj')
+    patch('openblas_fujitsu2.patch', when='@0.3.10: %fj')
 
     # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')
@@ -250,6 +262,10 @@ class Openblas(MakefilePackage):
         # between threads (x86/x86_64 only).
         if '+consistent_fpcsr' in self.spec:
             make_defs += ['CONSISTENT_FPCSR=1']
+
+        # Flang/f18 does not provide ETIME as an intrinsic
+        if self.spec.satisfies('%clang'):
+            make_defs.append('TIMER=INT_CPU_TIME')
 
         # Prevent errors in `as` assembler from newer instructions
         if self.spec.satisfies('%gcc@:4.8.4'):

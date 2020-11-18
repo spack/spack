@@ -26,7 +26,7 @@ class Fj(spack.compiler.Compiler):
                   'fc': 'fj/frt'}
 
     version_argument = '--version'
-    version_regex = r'\((?:FCC|FRT)\) ([\d.]+)'
+    version_regex = r'\((?:FCC|FRT)\) ([a-z\d.]+)'
 
     required_libs = ['libfj90i', 'libfj90f', 'libfjsrcinfo']
 

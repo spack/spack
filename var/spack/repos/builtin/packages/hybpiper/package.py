@@ -3,10 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-import os
-
 
 class Hybpiper(Package):
     """HybPiper was designed for targeted sequence capture, in which DNA
@@ -36,7 +32,4 @@ class Hybpiper(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        files = glob.iglob("*.py")
-        for file in files:
-            if os.path.isfile(file):
-                install(file, prefix.bin)
+        install('*.py', prefix.bin)

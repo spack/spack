@@ -23,6 +23,7 @@ class Charmpp(Package):
 
     version("develop", branch="master")
 
+    version('6.10.2', sha256='7abb4cace8aebdfbb8006eac03eb766897c009cfb919da0d0a33f74c3b4e6deb')
     version('6.10.1', sha256='ab96198105daabbb8c8bdf370f87b0523521ce502c656cb6cd5b89f69a2c70a8')
     version('6.10.0', sha256='7c526a78aa0c202b7f0418b345138e7dc40496f0bb7b9e301e0381980450b25c')
     version("6.9.0", sha256="85ed660e46eeb7a6fc6b32deab08226f647c244241948f6b592ebcd2b6050cbd")
@@ -43,6 +44,9 @@ class Charmpp(Package):
     # support Fujitsu compiler
     patch("fj.patch", when="%fj")
 
+    # support NVIDIA compilers
+    patch("nvhpc.patch", when="%nvhpc")
+
     # Ignore compiler warnings while configuring
     patch("strictpass.patch", when="@:6.8.2")
 
@@ -52,7 +56,7 @@ class Charmpp(Package):
         "build-target",
         default="LIBS",
         # AMPI also builds charm++, LIBS also builds AMPI and charm++
-        values=("charm++", "AMPI", "LIBS"),
+        values=("charm++", "AMPI", "LIBS", "ChaNGa"),
         description="Specify the target to build"
     )
 
@@ -168,9 +172,6 @@ class Charmpp(Package):
             ("win",     "x86_64",   "netlrts"):     "netlrts-win-x86_64",
             ("cnl",     "x86_64",   "gni"):         "gni-crayxc",
             ("cnl",     "x86_64",   "mpi"):         "mpi-crayxc",
-            ("cnk",     "x86_64",   "mpi"):         "mpi-bluegeneq",
-            ("cnk",     "x86_64",   "pami"):        "pami-bluegeneq",
-            ("cnk",     "x86_64",   "pamilrts"):    "pamilrts-bluegeneq",
         }
         if (plat, mach, comm) not in versions:
             raise InstallError(
@@ -217,7 +218,7 @@ class Charmpp(Package):
                                     present on the system")
 
         target = spec.variants["build-target"].value
-        builddir = prefix + "/" + str(self.charmarch)
+        builddir = prefix
 
         # We assume that Spack's compiler wrappers make this work. If
         # not, then we need to query the compiler vendor from Spack

@@ -27,6 +27,7 @@ class Express(CMakePackage):
     # patch from the debian package repo:
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=811859
     patch('gcc-6.patch', when='%gcc@6.0.0:')
+    patch('gcc-6.patch', when='%fj')
 
     def patch(self):
         with working_dir('src'):

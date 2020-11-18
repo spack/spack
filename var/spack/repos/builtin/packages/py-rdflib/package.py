@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,18 +7,22 @@ from spack import *
 
 
 class PyRdflib(PythonPackage):
-    """RDFLib is a Python library for working with RDF, a simple yet
-    powerful language for representing information as graphs."""
+    """RDFLib is a pure Python package for working with RDF. RDFLib
+       contains most things you need to work with RDF, including:
+    parsers and serializers for RDF/XML, N3, NTriples, N-Quads,
+    Turtle, TriX, Trig and JSON-LD (via a plugin).  a Graph interface
+    which can be backed by any one of a number of Store
+    implementations store implementations for in-memory storage and
+    persistent storage on top of the Berkeley DB a SPARQL 1.1
+    implementation - supporting SPARQL 1.1 Queries and Update
+    statements """
 
-    homepage = "https://rdflib.readthedocs.io/en/stable"
-    url      = "https://pypi.io/packages/source/r/rdflib/rdflib-4.2.2.tar.gz"
+    homepage = "https://github.com/RDFLib/rdflib"
+    url      = "https://pypi.io/packages/source/r/rdflib/rdflib-5.0.0.tar.gz"
 
-    version('4.2.2', sha256='da1df14552555c5c7715d8ce71c08f404c988c58a1ecd38552d0da4fc261280d')
+    version('5.0.0', sha256='78149dd49d385efec3b3adfbd61c87afaf1281c30d3fcaf1b323b34f603fb155')
 
     depends_on('py-setuptools', type='build')
-
-    depends_on('py-six', type='run')
-    depends_on('py-isodate', type='run')
-    depends_on('py-html5lib', type='run')
-    depends_on('py-requests', type='run')
-    depends_on('py-pyparsing', type='run')
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-pyparsing', type=('build', 'run'))
+    depends_on('py-isodate', type=('build', 'run'))

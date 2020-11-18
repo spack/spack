@@ -20,9 +20,8 @@
 ##############################################################################
 #
 # Notes
-# - mpi handling: WM_MPLIB=USERMPI and use spack to populate an appropriate
-#   configuration and generate wmake rules for 'USER' and 'USERMPI'
-#   mpi implementations.
+# - mpi handling: WM_MPLIB=USERMPI and use spack to generate mplibUSERMPI
+#   wmake rules.
 #
 # - Resolution of flex, zlib needs more attention (within OpenFOAM)
 # - +paraview:
@@ -214,11 +213,12 @@ def mplib_content(spec, pre=None):
     """The mpi settings (from spack) for the OpenFOAM wmake includes, which
     allows later reuse within OpenFOAM.
 
-    Optional parameter 'pre' to provide alternative prefix
+    Optional parameter 'pre' to provide alternative prefix for
+    bin and lib directories.
     """
     mpi_spec = spec['mpi']
     bin = mpi_spec.prefix.bin
-    inc = mpi_spec.prefix.include
+    inc = mpi_spec.headers.directories[0]  # Currently only need first one
     lib = pkglib(mpi_spec)
 
     libname = 'mpi'
@@ -265,6 +265,7 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('2006_201012', sha256='9afb7eee072bfddcf7f3e58420c93463027db2394997ac4c3b87a8b07c707fb0')
     version('2006', sha256='30c6376d6f403985fc2ab381d364522d1420dd58a42cb270d2ad86f8af227edc')
     version('1912_200506', sha256='831a39ff56e268e88374d0a3922479fd80260683e141e51980242cc281484121')
     version('1912_200403', sha256='1de8f4ddd39722b75f6b01ace9f1ba727b53dd999d1cd2b344a8c677ac2db4c0')
@@ -283,6 +284,8 @@ class Openfoam(Package):
 
     variant('float32', default=False,
             description='Use single-precision')
+    variant('spdp', default=False,
+            description='Use single/double mixed precision')
     variant('int64', default=False,
             description='With 64-bit labels')
     variant('knl', default=False,
@@ -317,6 +320,7 @@ class Openfoam(Package):
     # introduced by the restriction within scotch!
     depends_on('flex@:2.6.1,2.6.4:')
     depends_on('cmake', type='build')
+    depends_on('m4', type='build')
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
     depends_on('scotch~metis+mpi~int64', when='+scotch~int64')
@@ -349,12 +353,12 @@ class Openfoam(Package):
     # kahip patch (wmake)
     patch('https://develop.openfoam.com/Development/openfoam/commit/8831dfc58b0295d0d301a78341dd6f4599073d45.patch',
           when='@1806',
-          sha256='21f1ab68c82dfa41ed1a4439427c94c43ddda02c84175c30da623d905d3e5d61'
+          sha256='531146be868dd0cda70c1cf12a22110a38a30fd93b5ada6234be3d6c9256c6cf'
           )
 
     # Some user config settings
     # default: 'compile-option': '-spack',
-    # default: 'mplib': 'USERMPI',     # Use user mpi for spack
+    # default: 'mplib': 'USERMPI',  # User-defined mpi for spack
     config = {
         # Add links into bin/, lib/ (eg, for other applications)
         'link':  False
@@ -382,7 +386,6 @@ class Openfoam(Package):
         corresponding unpatched directories (eg '1906').
         Older versions (eg, v1612+) had additional '+' in naming
         """
-        tty.info('openfoam: {0}'.format(version))
         if version <= Version('1612'):
             fmt = 'v{0}+/OpenFOAM-v{1}+.tgz'
         else:
@@ -401,7 +404,10 @@ class Openfoam(Package):
     def setup_build_environment(self, env):
         """Sets the build environment (prior to unpacking the sources).
         """
-        pass
+        # Avoid the exception that occurs at runtime
+        # when building with the Fujitsu compiler.
+        if self.spec.satisfies('%fj'):
+            env.set('FOAM_SIGFPE', 'false')
 
     def setup_run_environment(self, env):
         """Sets the run environment (post-installation).
@@ -580,10 +586,10 @@ class Openfoam(Package):
                     backup=False, string=True)
 
     def configure(self, spec, prefix):
-        """Make adjustments to the OpenFOAM configuration files in their various
-        locations: etc/bashrc, etc/config.sh/FEATURE and customizations that
-        don't properly fit get placed in the etc/prefs.sh file (similiarly for
-        csh).
+        """Make adjustments to the OpenFOAM configuration files in their
+        various locations: etc/bashrc, etc/config.sh/FEATURE and
+        customizations that don't properly fit get placed in the etc/prefs.sh
+        file (similiarly for csh).
         """
         # Filtering bashrc, cshrc
         edits = {}
@@ -773,15 +779,17 @@ class Openfoam(Package):
 
         # Having wmake and ~source is actually somewhat pointless...
         # Install 'etc' before 'bin' (for symlinks)
-        dirs = ['etc', 'bin', 'wmake']
+        # META-INFO for 1812 and later (or backported)
+        dirs = ['META-INFO', 'etc', 'bin', 'wmake']
         if '+source' in spec:
             dirs.extend(['applications', 'src', 'tutorials'])
 
         for d in dirs:
-            install_tree(
-                d,
-                join_path(self.projectdir, d),
-                symlinks=True)
+            if os.path.isdir(d):
+                install_tree(
+                    d,
+                    join_path(self.projectdir, d),
+                    symlinks=True)
 
         dirs = ['platforms']
         if '+source' in spec:
@@ -846,28 +854,42 @@ class OpenfoamArch(object):
         self.compiler         = None   # <- %compiler
         self.arch_option      = ''     # Eg, -march=knl
         self.label_size       = None   # <- +int64
-        self.precision_option = 'DP'   # <- +float32
+        self.precision_option = 'DP'   # <- +float32 | +spdp
         self.compile_option   = kwargs.get('compile-option', '-spack')
         self.arch             = None
         self.options          = None
         self.mplib            = kwargs.get('mplib', 'USERMPI')
 
-        # Normally support WM_LABEL_OPTION, but not yet for foam-extend
+        # WM_LABEL_OPTION, but perhaps not yet for foam-extend
         if '+int64' in spec:
             self.label_size = '64'
         elif kwargs.get('label-size', True):
             self.label_size = '32'
 
-        if '+float32' in spec:
+        # WM_PRECISION_OPTION
+        if '+spdp' in spec:
+            self.precision_option = 'SPDP'
+        elif '+float32' in spec:
             self.precision_option = 'SP'
-
-        # TDB: mixed precision?
-        # self.precision_option = 'SPDP'
 
         # Processor/architecture-specific optimizations
         if '+knl' in spec:
             self.arch_option = '-march=knl'
 
+        # Capitalize first letter of compiler name to obtain the
+        # OpenFOAM naming (eg, gcc -> Gcc, clang -> Clang, etc).
+        # Use compiler_mapping[] for special cases
+        comp = spec.compiler.name
+        if comp in self.compiler_mapping:
+            comp = self.compiler_mapping[comp]
+
+        self.compiler = comp.capitalize()
+        self.update_arch(spec)
+        self.update_options()
+
+    def update_arch(self, spec):
+        """Set WM_ARCH string corresponding to spack platform/target
+        """
         # spec.architecture.platform is like `uname -s`, but lower-case
         platform = str(spec.architecture.platform)
 
@@ -875,7 +897,6 @@ class OpenfoamArch(object):
         target = str(spec.target.family)
 
         # No spack platform family for ia64 or armv7l
-
         if platform == 'linux':
             if target == 'x86_64':
                 platform += '64'
@@ -884,6 +905,7 @@ class OpenfoamArch(object):
             elif target == 'armv7l':
                 platform += 'ARM7'
             elif target == 'aarch64':
+                # overwritten as 'Arm64' in openfoam-org
                 platform += 'ARM64'
             elif target == 'ppc64':
                 platform += 'PPC64'
@@ -893,26 +915,18 @@ class OpenfoamArch(object):
             if target == 'x86_64':
                 platform += '64'
         # ... and others?
-
         self.arch = platform
 
-        # Capitalize first letter of compiler name, which corresponds
-        # to how OpenFOAM handles things (eg, gcc -> Gcc).
-        # Use compiler_mapping for special cases.
-        comp = spec.compiler.name
-
-        if comp in self.compiler_mapping:
-            comp = self.compiler_mapping[comp]
-        comp = comp.capitalize()
-
-        self.compiler = comp
-
-        # Build WM_OPTIONS
+    def update_options(self):
+        """Set WM_OPTIONS string consistent with current settings
+        """
+        # WM_OPTIONS
         # ----
         # WM_LABEL_OPTION=Int$WM_LABEL_SIZE
-        # WM_OPTIONS=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_LABEL_OPTION$WM_COMPILE_OPTION
+        # WM_OPTIONS_BASE=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION
+        # WM_OPTIONS=$WM_OPTIONS_BASE$WM_LABEL_OPTION$WM_COMPILE_OPTION
         # or
-        # WM_OPTIONS=$WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_COMPILE_OPTION
+        # WM_OPTIONS=$WM_OPTIONS_BASE$WM_COMPILE_OPTION
         # ----
         self.options = ''.join([
             self.arch,
@@ -964,7 +978,7 @@ class OpenfoamArch(object):
         return True
 
     def create_rules(self, projdir, foam_pkg):
-        """ Create {c,c++}-spack and mplib{USER,USERMPI}
+        """ Create {c,c++}-spack and mplib{USERMPI}
         rules in the specified project directory.
         The compiler rules are based on the respective {c,c++}Opt rules
         but with additional rpath information for the OpenFOAM libraries.
@@ -1005,12 +1019,13 @@ class OpenfoamArch(object):
                             outfile.write('\n')
 
             # MPI rules
-            for mplib in ['mplibUSER', 'mplibUSERMPI']:
+            for mplib in ['mplibUSERMPI']:
                 with open(mplib, 'w') as out:
-                    out.write("""# Use mpi from spack ({name})\n
+                    out.write("""# MPI from spack ({name})\n
 PFLAGS  = {FLAGS}
 PINC    = {PINC}
 PLIBS   = {PLIBS}
+#-------
 """.format(**user_mpi))
 
 # -----------------------------------------------------------------------------

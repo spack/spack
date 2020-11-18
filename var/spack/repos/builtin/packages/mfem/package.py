@@ -45,10 +45,14 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    version('4.2.0',
+            '4352a225b55948d2e73a5ee88cece0e88bdbe7ba6726a23d68b2736d3221a86d',
+            url='https://bit.ly/mfem-4-2', extension='.tar.gz',
+            preferred=True)
+
     version('4.1.0',
             '4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d',
-            url='https://bit.ly/mfem-4-1', extension='.tar.gz',
-            preferred=True)
+            url='https://bit.ly/mfem-4-1', extension='.tar.gz')
 
     # Tagged development version used by xSDK
     version('4.0.1-xsdk', commit='c55c80d17b82d80de04b849dd526e17044f8c99a')
@@ -92,12 +96,6 @@ class Mfem(Package):
     # Can we make the default value for 'metis' to depend on the 'mpi' value?
     variant('metis', default=True,
             description='Enable METIS support')
-    # TODO: The 'hypre' variant is the same as 'mpi', we may want to remove it.
-    #       For now, keep the 'hypre' variant while ignoring its setting. This
-    #       is done to preserve compatibility with other packages that refer to
-    #       it, e.g. xSDK.
-    variant('hypre', default=True,
-            description='Required for MPI parallelism')
     variant('openmp', default=False,
             description='Enable OpenMP parallelism')
     variant('cuda', default=False, description='Enable CUDA support')
@@ -199,6 +197,8 @@ class Mfem(Package):
     depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:+sundials+mpi')
     depends_on('sundials@5.0.0:', when='@4.0.1-xsdk:+sundials~mpi')
     depends_on('sundials@5.0.0:+mpi+hypre', when='@4.0.1-xsdk:+sundials+mpi')
+    depends_on('sundials@5.4.0:+cuda', when='@4.2.0:+sundials+cuda')
+    depends_on('pumi@2.2.3', when='@4.2.0:+pumi')
     depends_on('pumi', when='+pumi~shared')
     depends_on('pumi+shared', when='+pumi+shared')
     depends_on('gslib@1.0.5:+mpi', when='+gslib+mpi')
@@ -227,17 +227,20 @@ class Mfem(Package):
     conflicts('+superlu-dist',
               when='mfem@:4.0.99 ^hypre@2.16.0: ^superlu-dist@6:')
     # The STRUMPACK v3 interface in MFEM seems to be broken as of MFEM v4.1
-    # when using hypre version >= 2.16.0:
-    conflicts('+strumpack', when='mfem@4.0.0: ^hypre@2.16.0:')
+    # when using hypre version >= 2.16.0.
+    # This issue is resolved in v4.2.
+    conflicts('+strumpack', when='mfem@4.0.0:4.1.99 ^hypre@2.16.0:')
 
-    depends_on('occa@1.0.8:', when='+occa')
+    depends_on('occa@1.0.8:', when='@:4.1.99+occa')
+    depends_on('occa@1.1.0:', when='@4.2.0:+occa')
     depends_on('occa+cuda', when='+occa+cuda')
 
     depends_on('raja@0.10.0:', when='@4.0.1:+raja')
     depends_on('raja@0.7.0:0.9.0', when='@4.0.0+raja')
     depends_on('raja+cuda', when='+raja+cuda')
 
-    depends_on('libceed@0.6:', when='+libceed')
+    depends_on('libceed@0.6:', when='@:4.1.99+libceed')
+    depends_on('libceed@0.7:', when='@4.2.0:+libceed')
     depends_on('libceed+cuda', when='+libceed+cuda')
 
     depends_on('umpire@2.0.0:', when='+umpire')
@@ -480,10 +483,13 @@ class Mfem(Package):
                 ld_flags_from_library_list(spec[sun_spec].libs)]
 
         if '+petsc' in spec:
-            options += [
-                'PETSC_OPT=%s' % spec['petsc'].headers.cpp_flags,
-                'PETSC_LIB=%s' %
-                ld_flags_from_library_list(spec['petsc'].libs)]
+            petsc = spec['petsc']
+            if '+shared' in petsc:
+                options += [
+                    'PETSC_OPT=%s' % petsc.headers.cpp_flags,
+                    'PETSC_LIB=%s' % ld_flags_from_library_list(petsc.libs)]
+            else:
+                options += ['PETSC_DIR=%s' % petsc.prefix]
 
         if '+pumi' in spec:
             pumi_libs = ['pumi', 'crv', 'ma', 'mds', 'apf', 'pcu', 'gmi',
@@ -500,10 +506,16 @@ class Mfem(Package):
                 ld_flags_from_dirs([spec['gslib'].prefix.lib], ['gs'])]
 
         if '+netcdf' in spec:
+            lib_flags = ld_flags_from_dirs([spec['netcdf-c'].prefix.lib],
+                                           ['netcdf'])
+            hdf5 = spec['hdf5:hl']
+            if hdf5.satisfies('~shared'):
+                hdf5_libs = hdf5.libs
+                hdf5_libs += LibraryList(find_system_libraries('libdl'))
+                lib_flags += " " + ld_flags_from_library_list(hdf5_libs)
             options += [
                 'NETCDF_OPT=-I%s' % spec['netcdf-c'].prefix.include,
-                'NETCDF_LIB=%s' %
-                ld_flags_from_dirs([spec['netcdf-c'].prefix.lib], ['netcdf'])]
+                'NETCDF_LIB=%s' % lib_flags]
 
         if '+zlib' in spec:
             if "@:3.3.2" in spec:
@@ -665,6 +677,12 @@ class Mfem(Package):
         if install_em:
             install_tree('data', join_path(prefix_share, 'data'))
 
+    def patch(self):
+        # Remove the byte order mark since it messes with some compilers
+        filter_file(u'\uFEFF', '', 'fem/gslib.hpp')
+        filter_file(u'\uFEFF', '', 'fem/gslib.cpp')
+        filter_file(u'\uFEFF', '', 'linalg/hiop.hpp')
+
     @property
     def suitesparse_components(self):
         """Return the SuiteSparse components needed by MFEM."""
@@ -676,9 +694,12 @@ class Mfem(Package):
     @property
     def sundials_components(self):
         """Return the SUNDIALS components needed by MFEM."""
-        sun_comps = 'arkode,cvode,nvecserial,kinsol'
+        sun_comps = 'arkode,cvodes,nvecserial,kinsol'
         if '+mpi' in self.spec:
-            sun_comps += ',nvecparhyp,nvecparallel'
+            if self.spec.satisfies('@4.2:'):
+                sun_comps += ',nvecparallel,nvecmpiplusx'
+            else:
+                sun_comps += ',nvecparhyp,nvecparallel'
         return sun_comps
 
     @property

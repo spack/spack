@@ -21,3 +21,7 @@ class Axel(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('gettext')
     depends_on('openssl')
+
+    def autoreconf(self, spec, prefix):
+        bash = which('bash')
+        bash('./autogen.sh')

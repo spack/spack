@@ -36,6 +36,10 @@ class Swfft(MakefilePackage):
         targets.append('DFFT_MPI_CXX=%s' % spec['mpi'].mpicxx)
         targets.append('DFFT_MPI_F90=%s' % spec['mpi'].mpifc)
 
+        if self.spec.satisfies('%nvhpc'):
+            # remove -Wno-deprecated -std=gnu99
+            targets.append('DFFT_MPI_CFLAGS=-g -O3 -Wall')
+
         return targets
 
     def install(self, spec, prefix):

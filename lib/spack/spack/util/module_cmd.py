@@ -135,18 +135,34 @@ def get_path_args_from_module_line(line):
     return paths
 
 
-def get_path_from_module(mod):
-    """Inspects a TCL module for entries that indicate the absolute path
-    at which the library supported by said module can be found.
-    """
-    # Read the module
-    text = module('show', mod).split('\n')
+def path_from_modules(modules):
+    """Inspect a list of TCL modules for entries that indicate the absolute
+    path at which the library supported by said module can be found.
 
-    p = get_path_from_module_contents(text, mod)
-    if p and not os.path.exists(p):
-        tty.warn("Extracted path from module does not exist:"
-                 "\n\tExtracted path: " + p)
-    return p
+    Args:
+        modules (list): module files to be loaded to get an external package
+
+    Returns:
+        Guess of the prefix path where the package
+    """
+    assert isinstance(modules, list), 'the "modules" argument must be a list'
+
+    best_choice = None
+    for module_name in modules:
+        # Read the current module and return a candidate path
+        text = module('show', module_name).split('\n')
+        candidate_path = get_path_from_module_contents(text, module_name)
+
+        if candidate_path and not os.path.exists(candidate_path):
+            msg = ("Extracted path from module does not exist "
+                   "[module={0}, path={0}]")
+            tty.warn(msg.format(module_name, candidate_path))
+
+        # If anything is found, then it's the best choice. This means
+        # that we give preference to the last module to be loaded
+        # for packages requiring to load multiple modules in sequence
+        best_choice = candidate_path or best_choice
+    return best_choice
 
 
 def get_path_from_module_contents(text, module_name):

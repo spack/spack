@@ -55,7 +55,8 @@ def mock_pkg_git_repo(tmpdir_factory):
         git('add', '.')
         git('config', 'user.email', 'testing@spack.io')
         git('config', 'user.name', 'Spack Testing')
-        git('commit', '-m', 'initial mock repo commit')
+        git('-c', 'commit.gpgsign=false', 'commit',
+            '-m', 'initial mock repo commit')
 
         # add commit with pkg-a, pkg-b, pkg-c packages
         mkdirp('pkg-a', 'pkg-b', 'pkg-c')
@@ -66,7 +67,8 @@ def mock_pkg_git_repo(tmpdir_factory):
         with open('pkg-b/package.py', 'w') as f:
             f.write(pkg_template.format(name='PkgC'))
         git('add', 'pkg-a', 'pkg-b', 'pkg-c')
-        git('commit', '-m', 'add pkg-a, pkg-b, pkg-c')
+        git('-c', 'commit.gpgsign=false', 'commit',
+            '-m', 'add pkg-a, pkg-b, pkg-c')
 
         # remove pkg-c, add pkg-d
         with open('pkg-b/package.py', 'a') as f:
@@ -77,7 +79,8 @@ def mock_pkg_git_repo(tmpdir_factory):
             f.write(pkg_template.format(name='PkgD'))
         git('add', 'pkg-d')
         git('rm', '-rf', 'pkg-c')
-        git('commit', '-m', 'change pkg-b, remove pkg-c, add pkg-d')
+        git('-c', 'commit.gpgsign=false', 'commit',
+            '-m', 'change pkg-b, remove pkg-c, add pkg-d')
 
     with spack.repo.swap(mock_repo):
         yield mock_repo_packages

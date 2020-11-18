@@ -17,6 +17,8 @@ class Podio(CMakePackage):
     maintainers = ['vvolkl', 'drbenmorgan']
 
     version('master', branch='master')
+    version('0.12.0', sha256='1729a2ce21e8b307fc37dfb9a9f5ae031e9f4be4992385cf99dba3e5fdf5323a')
+    version('0.11.0', sha256='4b2765566a14f0ddece2c894634e0a8e4f42f3e44392addb9110d856f6267fb6')
     version('0.10.0', sha256='b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2')
     version('0.9.2', sha256='8234d1b9636029124235ef81199a1220968dcc7fdaeab81cdc96a47af332d240')
     version('0.9.0', sha256='3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f')
@@ -26,32 +28,29 @@ class Podio(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release'))
 
+    variant('sio', default=False,
+            description='Build the SIO I/O backend')
+
     # cpack config throws an error on some systems
     patch('cpack.patch', when="@:0.10.0")
     patch('dictloading.patch', when="@0.10.0")
 
-    depends_on('root@6.08.06:')
+    depends_on('root@6.08.06: cxxstd=17')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('python', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-jinja2@2.10.1:', type=('build', 'run'), when='@0.12.0:')
+    depends_on('sio', type=('build', 'run'), when='+sio')
+
+    conflicts('+sio', when='@:0.12', msg='sio support requires at least podio@0.13')
 
     def cmake_args(self):
-        args = []
-        # C++ Standard
-        args.append('-DCMAKE_CXX_STANDARD=%s'
-                    % self.spec['root'].variants['cxxstd'].value)
-        args.append('-DBUILD_TESTING=%s' % self.run_tests)
+        args = [
+            self.define('BUILD_TESTING', self.run_tests),
+            self.define_from_variant('ENABLE_SIO', 'sio')
+        ]
         return args
-
-    def setup_build_environment(self, spack_env):
-        spack_env.prepend_path('LD_LIBRARY_PATH', self.spec['root'].prefix.lib)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('PODIO', self.prefix)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        env.set('PODIO', self.prefix)
 
     def url_for_version(self, version):
         # podio releases are dashes and padded with a leading zero
@@ -65,3 +64,6 @@ class Podio(CMakePackage):
         else:
             url = "https://github.com/AIDASoft/podio/archive/v%s-%s-%s.tar.gz" % (major, minor, patch)
         return url
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.python)

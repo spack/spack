@@ -9,7 +9,6 @@ both in memory and in its file
 """
 import datetime
 import functools
-import multiprocessing
 import os
 import pytest
 import json
@@ -319,7 +318,7 @@ def _check_merkleiness():
 
 
 def _check_db_sanity(database):
-    """Utiilty function to check db against install layout."""
+    """Utility function to check db against install layout."""
     pkg_in_layout = sorted(spack.store.layout.all_specs())
     actual = sorted(database.query())
 
@@ -517,14 +516,20 @@ def test_026_reindex_after_deprecate(mutable_database):
     _check_db_sanity(mutable_database)
 
 
-def test_030_db_sanity_from_another_process(mutable_database):
-    def read_and_modify():
+class ReadModify(object):
+    """Provide a function which can execute in a separate process that removes
+    a spec from the database.
+    """
+    def __call__(self):
         # check that other process can read DB
-        _check_db_sanity(mutable_database)
-        with mutable_database.write_transaction():
+        _check_db_sanity(spack.store.db)
+        with spack.store.db.write_transaction():
             _mock_remove('mpileaks ^zmpi')
 
-    p = multiprocessing.Process(target=read_and_modify, args=())
+
+def test_030_db_sanity_from_another_process(mutable_database):
+    spack_process = spack.subprocess_context.SpackTestProcess(ReadModify())
+    p = spack_process.create()
     p.start()
     p.join()
 
@@ -643,6 +648,10 @@ def test_090_non_root_ref_counts(mutable_database):
     assert mpich_rec.ref_count == 0
 
 
+@pytest.mark.skipif(
+    os.environ.get('SPACK_TEST_SOLVER') == 'clingo',
+    reason='Test for Clingo are run in a container with root permissions'
+)
 def test_100_no_write_with_exception_on_remove(database):
     def fail_while_writing():
         with database.write_transaction():
@@ -660,6 +669,10 @@ def test_100_no_write_with_exception_on_remove(database):
         assert len(database.query('mpileaks ^zmpi', installed=any)) == 1
 
 
+@pytest.mark.skipif(
+    os.environ.get('SPACK_TEST_SOLVER') == 'clingo',
+    reason='Test for Clingo are run in a container with root permissions'
+)
 def test_110_no_write_with_exception_on_install(database):
     def fail_while_writing():
         with database.write_transaction():
@@ -689,17 +702,17 @@ def test_115_reindex_with_packages_not_in_repo(mutable_database):
 def test_external_entries_in_db(mutable_database):
     rec = mutable_database.get_record('mpileaks ^zmpi')
     assert rec.spec.external_path is None
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
 
     rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
     rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
-    assert rec.spec.external_module is None
+    assert not rec.spec.external_modules
     assert rec.explicit is True
 
 

@@ -182,13 +182,15 @@ class Neuron(CMakePackage):
     @when("~cmake")
     def get_arch_options(self, spec):
         options = []
-        # need to enable bg-q arch
-        if "bgq" in self.spec.architecture:
-            options.extend(["--enable-bluegeneQ", "--host=powerpc64"])
 
-        # on os-x disable building carbon "click" utility
-        if "darwin" in self.spec.architecture:
-            options.append("macdarwin=no")
+        if spec.satisfies('+cross-compile'):
+            options.extend(['cross_compiling=yes',
+                            '--without-memacs',
+                            '--without-nmodl'])
+
+        # on os-x disable building carbon 'click' utility
+        if 'darwin' in self.spec.architecture:
+            options.append('macdarwin=no')
 
         return options
 
@@ -270,13 +272,10 @@ class Neuron(CMakePackage):
         # build components for front-end arch in cross compiling environment
         options = ["--prefix=%s" % prefix, "--with-nmodl-only", "--without-x"]
 
-        if "bgq" in self.spec.architecture:
-            flags = "-qarch=ppc64"
-            options.extend(["CFLAGS=%s" % flags, "CXXFLAGS=%s" % flags])
-
-        if "cray" in self.spec.architecture:
-            flags = "-target-cpu=x86_64 -target-network=none"
-            options.extend(["CFLAGS=%s" % flags, "CXXFLAGS=%s" % flags])
+        if 'cray' in self.spec.architecture:
+            flags = '-target-cpu=x86_64 -target-network=none'
+            options.extend(['CFLAGS=%s' % flags,
+                            'CXXFLAGS=%s' % flags])
 
         configure = Executable(join_path(self.stage.source_path, "configure"))
         configure(*options)

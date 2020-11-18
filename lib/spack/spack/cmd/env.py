@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import shutil
 import sys
 from collections import namedtuple
 
@@ -14,6 +15,7 @@ from llnl.util.tty.color import colorize
 
 import spack.config
 import spack.schema.env
+import spack.cmd.common.arguments
 import spack.cmd.install
 import spack.cmd.uninstall
 import spack.cmd.modules
@@ -37,6 +39,8 @@ subcommands = [
     ['status', 'st'],
     'loads',
     'view',
+    'update',
+    'revert'
 ]
 
 
@@ -80,17 +84,10 @@ def env_activate_setup_parser(subparser):
 def env_activate(args):
     env = args.activate_env
     if not args.shell:
-        msg = [
-            "This command works best with Spack's shell support",
-            ""
-        ] + spack.cmd.common.shell_init_instructions + [
-            'Or, if you want to use `spack env activate` without initializing',
-            'shell support, you can run one of these:',
-            '',
-            '    eval `spack env activate --sh %s`   # for bash/sh' % env,
-            '    eval `spack env activate --csh %s`  # for csh/tcsh' % env,
-        ]
-        tty.msg(*msg)
+        spack.cmd.common.shell_init_instructions(
+            "spack env activate",
+            "    eval `spack env activate {sh_arg} %s`" % env,
+        )
         return 1
 
     if ev.exists(env) and not args.dir:
@@ -137,17 +134,10 @@ def env_deactivate_setup_parser(subparser):
 
 def env_deactivate(args):
     if not args.shell:
-        msg = [
-            "This command works best with Spack's shell support",
-            ""
-        ] + spack.cmd.common.shell_init_instructions + [
-            'Or, if you want to use `spack env activate` without initializing',
-            'shell support, you can run one of these:',
-            '',
-            '    eval `spack env deactivate --sh`   # for bash/sh',
-            '    eval `spack env deactivate --csh`  # for csh/tcsh',
-        ]
-        tty.msg(*msg)
+        spack.cmd.common.shell_init_instructions(
+            "spack env deactivate",
+            "    eval `spack env deactivate {sh_arg}`",
+        )
         return 1
 
     if 'SPACK_ENV' not in os.environ:
@@ -392,6 +382,80 @@ def env_loads(args):
 
     print('To load this environment, type:')
     print('   source %s' % loads_file)
+
+
+def env_update_setup_parser(subparser):
+    """update environments to the latest format"""
+    subparser.add_argument(
+        metavar='env', dest='env',
+        help='name or directory of the environment to activate'
+    )
+    spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
+
+
+def env_update(args):
+    manifest_file = ev.manifest_file(args.env)
+    backup_file = manifest_file + ".bkp"
+    needs_update = not ev.is_latest_format(manifest_file)
+
+    if not needs_update:
+        tty.msg('No update needed for the environment "{0}"'.format(args.env))
+        return
+
+    proceed = True
+    if not args.yes_to_all:
+        msg = ('The environment "{0}" is going to be updated to the latest '
+               'schema format.\nIf the environment is updated, versions of '
+               'Spack that are older than this version may not be able to '
+               'read it. Spack stores backups of the updated environment '
+               'which can be retrieved with "spack env revert"')
+        tty.msg(msg.format(args.env))
+        proceed = tty.get_yes_or_no('Do you want to proceed?', default=False)
+
+    if not proceed:
+        tty.die('Operation aborted.')
+
+    ev.update_yaml(manifest_file, backup_file=backup_file)
+    msg = 'Environment "{0}" has been updated [backup={1}]'
+    tty.msg(msg.format(args.env, backup_file))
+
+
+def env_revert_setup_parser(subparser):
+    """restore environments to their state before update"""
+    subparser.add_argument(
+        metavar='env', dest='env',
+        help='name or directory of the environment to activate'
+    )
+    spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
+
+
+def env_revert(args):
+    manifest_file = ev.manifest_file(args.env)
+    backup_file = manifest_file + ".bkp"
+
+    # Check that both the spack.yaml and the backup exist, the inform user
+    # on what is going to happen and ask for confirmation
+    if not os.path.exists(manifest_file):
+        msg = 'cannot fine the manifest file of the environment [file={0}]'
+        tty.die(msg.format(manifest_file))
+    if not os.path.exists(backup_file):
+        msg = 'cannot find the old manifest file to be restored [file={0}]'
+        tty.die(msg.format(backup_file))
+
+    proceed = True
+    if not args.yes_to_all:
+        msg = ('Spack is going to overwrite the current manifest file'
+               ' with a backup copy [manifest={0}, backup={1}]')
+        tty.msg(msg.format(manifest_file, backup_file))
+        proceed = tty.get_yes_or_no('Do you want to proceed?', default=False)
+
+    if not proceed:
+        tty.die('Operation aborted.')
+
+    shutil.copy(backup_file, manifest_file)
+    os.remove(backup_file)
+    msg = 'Environment "{0}" reverted to old state'
+    tty.msg(msg.format(manifest_file))
 
 
 #: Dictionary mapping subcommand names and aliases to functions

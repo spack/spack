@@ -49,6 +49,8 @@ class Steps(CMakePackage):
     conflicts("+distmesh~mpi",
               msg="steps+distmesh requires +mpi")
 
+    patch('for_aarch64.patch', when='target=aarch64:')
+
     def cmake_args(self):
         args = []
         spec = self.spec

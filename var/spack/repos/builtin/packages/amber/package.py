@@ -9,28 +9,41 @@ import shutil
 
 
 class Amber(Package, CudaPackage):
-    """Amber is a suite of biomolecular simulation programs.
+    """Amber is a suite of biomolecular simulation programs together
+       with Amber tools.
 
-       Note: A manual download is required for Amber.
-       Spack will search your current directory for the download file.
-       Alternatively, add this file to a mirror so that Spack can find it.
+       Note: The version number is composed of the Amber version (major)
+       and the tools version (minor). A manual download is required for
+       both Amber and Amber tools.
+       Spack will search your current directory for the download files.
+       Alternatively, add the files to a mirror so that Spack can find them.
        For instructions on how to set up a mirror, see
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://ambermd.org/"
-    url      = "file://{0}/Amber18.tar.bz2".format(os.getcwd())
+    url = "file://{0}/Amber18.tar.bz2".format(os.getcwd())
     maintainers = ['hseara']
 
-    version('18', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277')
-    version('16', sha256='3b7ef281fd3c46282a51b6a6deed9ed174a1f6d468002649d84bfc8a2577ae5d')
+    def url_for_version(self, version):
+        url = "file://{0}/Amber{1}.tar.bz2".format(
+            os.getcwd(), version.up_to(1))
+        return url
+
+    version(
+        '18.20', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277')
+    version(
+        '18.19', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277')
+    version(
+        '16.16', sha256='3b7ef281fd3c46282a51b6a6deed9ed174a1f6d468002649d84bfc8a2577ae5d')
 
     resources = [
         # [version amber, version ambertools , sha256sum]
+        ('18', '20', 'b1e1f8f277c54e88abc9f590e788bbb2f7a49bcff5e8d8a6eacfaf332a4890f9'),
         ('18', '19', '0c86937904854b64e4831e047851f504ec45b42e593db4ded92c1bee5973e699'),
         ('16', '16', '7b876afe566e9dd7eb6a5aa952a955649044360f15c1f5d4d91ba7f41f3105fa'),
     ]
     for ver, ambertools_ver, checksum in resources:
-        resource(when='@{0}'.format(ver),
+        resource(when='@{0}.{1}'.format(ver, ambertools_ver),
                  name='AmberTools',
                  url='file://{0}/AmberTools{1}.tar.bz2'.format(os.getcwd(),
                                                                ambertools_ver),
@@ -78,6 +91,19 @@ class Amber(Package, CudaPackage):
         patch(patch_url_str.format(ver, num),
               sha256=checksum, level=0, when='@{0}'.format(ver))
 
+    # Patch to add ppc64le in config.guess
+    patch('ppc64le.patch', when='@18.20')
+
+    # Patch to add aarch64 in config.guess
+    patch('aarch64.patch', when='@18.20')
+
+    # Workaround to modify the AmberTools script when using the NVIDIA
+    # compilers
+    patch('nvhpc.patch', when='@18.20 %nvhpc')
+
+    # Workaround to use NVIDIA compilers to build the bundled Boost
+    patch('nvhpc-boost.patch', when='@18.20 %nvhpc')
+
     variant('mpi', description='Build MPI executables',
             default=True)
     variant('openmp', description='Use OpenMP pragmas to parallelize',
@@ -88,6 +114,7 @@ class Amber(Package, CudaPackage):
             default=False)
 
     depends_on('zlib')
+    depends_on('bzip2')
     depends_on('flex', type='build')
     depends_on('bison', type='build')
     depends_on('netcdf-fortran')
@@ -100,14 +127,24 @@ class Amber(Package, CudaPackage):
     depends_on('cuda@7.5.18', when='@:16+cuda')
 
     # conflicts
-    conflicts('+x11', when='platform=cray', msg='x11 amber applications not available for cray')
-    conflicts('+openmp', when='%clang', msg='OpenMP optimizations not available for the clang compiler')
-    conflicts('+openmp', when='%apple-clang', msg='OpenMP optimizations not available for the Apple clang compiler')
-    conflicts('+openmp', when='%pgi', msg='OpenMP optimizations not available for the pgi compiler')
+    conflicts('+x11', when='platform=cray',
+              msg='x11 amber applications not available for cray')
+    conflicts('+openmp', when='%clang',
+              msg='OpenMP not available for the clang compiler')
+    conflicts('+openmp', when='%apple-clang',
+              msg='OpenMP not available for the Apple clang compiler')
+    conflicts('+openmp', when='%pgi',
+              msg='OpenMP not available for the pgi compiler')
 
     def setup_build_environment(self, env):
         amber_src = self.stage.source_path
         env.set('AMBERHOME', amber_src)
+
+        # The bundled Boost does not detect the bzip2 package, but
+        # will silently fall back to a system install (if available).
+        # Force it to use the bzip2 package.
+        env.prepend_path('CPATH', self.spec['bzip2'].prefix.include)
+
         # CUDA
         if self.spec.satisfies('+cuda'):
             env.set('CUDA_HOME', self.spec['cuda'].prefix)
@@ -129,6 +166,8 @@ class Amber(Package, CudaPackage):
             compiler = 'intel'
         elif self.spec.satisfies('%pgi'):
             compiler = 'pgi'
+        elif self.spec.satisfies('%nvhpc'):
+            compiler = 'pgi'
         elif self.spec.satisfies('%clang'):
             compiler = 'clang'
         else:
@@ -148,6 +187,10 @@ class Amber(Package, CudaPackage):
             update(*(['--update']))
         else:
             base_args += ['--no-updates']
+
+        # Non-x86 architecture
+        if self.spec.target.family != 'x86_64':
+            base_args += ['-nosse']
 
         # Single core
         conf(*(base_args + [compiler]))

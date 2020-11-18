@@ -3,15 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import platform
 from spack.architecture import Platform, Target
 from spack.architecture import OperatingSystem
 
 
 class Test(Platform):
     priority    = 1000000
-    front_end   = 'x86'
-    back_end    = 'x86_64'
-    default     = 'x86_64'
+
+    if platform.system().lower() == 'darwin':
+        binary_formats = ['macho']
+
+    front_end = 'x86_64'
+    back_end = 'core2'
+    default = 'core2'
 
     front_os = 'redhat6'
     back_os = 'debian6'

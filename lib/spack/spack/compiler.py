@@ -18,6 +18,7 @@ import llnl.util.tty as tty
 
 import spack.error
 import spack.spec
+import spack.version
 import spack.architecture
 import spack.util.executable
 import spack.util.module_cmd
@@ -201,7 +202,7 @@ class Compiler(object):
     fc_names = []
 
     # Optional prefix regexes for searching for this type of compiler.
-    # Prefixes are sometimes used for toolchains, e.g. 'powerpc-bgq-linux-'
+    # Prefixes are sometimes used for toolchains
     prefixes = []
 
     # Optional suffix regexes for searching for this type of compiler.
@@ -278,7 +279,8 @@ class Compiler(object):
         self.target = target
         self.modules = modules or []
         self.alias = alias
-        self.extra_rpaths = extra_rpaths
+        self.environment = environment or {}
+        self.extra_rpaths = extra_rpaths or []
         self.enable_implicit_rpaths = enable_implicit_rpaths
 
         self.cc  = paths[0]
@@ -292,9 +294,6 @@ class Compiler(object):
             else:
                 self.fc  = paths[3]
 
-        self.environment = environment
-        self.extra_rpaths = extra_rpaths or []
-
         # Unfortunately have to make sure these params are accepted
         # in the same order they are returned by sorted(flags)
         # in compilers/__init__.py
@@ -303,6 +302,10 @@ class Compiler(object):
             value = kwargs.get(flag, None)
             if value is not None:
                 self.flags[flag] = tokenize_flags(value)
+
+        # caching value for compiler reported version
+        # used for version checks for API, e.g. C++11 flag
+        self._real_version = None
 
     def verify_executables(self):
         """Raise an error if any of the compiler executables is not valid.
@@ -332,6 +335,20 @@ class Compiler(object):
     @property
     def version(self):
         return self.spec.version
+
+    @property
+    def real_version(self):
+        """Executable reported compiler version used for API-determinations
+
+        E.g. C++11 flag checks.
+        """
+        if not self._real_version:
+            try:
+                self._real_version = spack.version.Version(
+                    self.get_real_version())
+            except spack.util.executable.ProcessError:
+                self._real_version = self.version
+        return self._real_version
 
     def implicit_rpaths(self):
         if self.enable_implicit_rpaths is False:

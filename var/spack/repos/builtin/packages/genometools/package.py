@@ -23,6 +23,8 @@ class Genometools(MakefilePackage):
     # build fails with gcc 7"
     conflicts('%gcc@7.1.0:', when='@:1.5.9')
 
+    patch('signed.patch', when='%fj')
+
     def install(self, spec, prefix):
         make('install', 'prefix=%s' % prefix)
 

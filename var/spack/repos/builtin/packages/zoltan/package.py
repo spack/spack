@@ -133,13 +133,16 @@ class Zoltan(AutotoolsPackage):
                 '--with-mpi-libs= '
             ])
 
+        config_fcflags = config_cflags[:]
+        if spec.satisfies('%gcc@10:+fortran'):
+            config_fcflags.append('-fallow-argument-mismatch')
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
         # ability to descend directly into the package's source directory.
         config_args.extend([
             '--with-cflags={0}'.format(' '.join(config_cflags)),
             '--with-cxxflags={0}'.format(' '.join(config_cflags)),
-            '--with-fcflags={0}'.format(' '.join(config_cflags))
+            '--with-fcflags={0}'.format(' '.join(config_fcflags))
         ])
         return config_args
 

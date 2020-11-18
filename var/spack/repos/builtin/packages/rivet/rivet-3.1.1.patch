@@ -1,0 +1,11 @@
+--- configure.ac.orig	2020-05-12 11:26:03.482506197 +0200
++++ configure.ac	2020-05-12 11:54:55.569077342 +0200
+@@ -211,7 +211,7 @@
+   if test "$fjmajor" -lt 3; then
+     AC_MSG_ERROR([FastJet version 3.0.0 or later is required])
+   fi
+-  FASTJETLIBADD="$($FJCONFIG --plugins --shared --libs| tr ' ' '\n' | grep -v gcc  | tr '\n' ' ')"
++  FASTJETLIBADD="$($FJCONFIG --plugins --shared --libs)"
+ else
+   FASTJETLIBADD="-L$FASTJETLIBPATH -l$FASTJETLIBNAME"
+   FASTJETLIBADD="$FASTJETLIBADD -lSISConePlugin -lsiscone -lsiscone_spherical"

@@ -10,8 +10,9 @@ class PyFuture(PythonPackage):
     """Clean single-source support for Python 3 and 2"""
 
     homepage = "https://python-future.org/"
-    url = "https://pypi.io/packages/source/f/future/future-0.16.0.tar.gz"
+    url = "https://pypi.io/packages/source/f/future/future-0.18.2.tar.gz"
 
+    version('0.18.2', sha256='b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d')
     version('0.17.1', sha256='67045236dcfd6816dc439556d009594abf643e5eb48992e36beac09c2ca659b8')
     version('0.17.0', sha256='eb6d4df04f1fb538c99f69c9a28b255d1ee4e825d479b9c62fc38c0cf38065a4')
     version('0.16.0', sha256='e39ced1ab767b5936646cedba8bcce582398233d6a627067d4c6a454c90cfedb')

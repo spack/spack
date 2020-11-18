@@ -320,7 +320,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup solve spec stage test tutorial undevelop uninstall unload url verify versions view"
     fi
 }
 
@@ -434,7 +434,7 @@ _spack_buildcache_copy() {
 }
 
 _spack_buildcache_update_index() {
-    SPACK_COMPREPLY="-h --help -d --mirror-url"
+    SPACK_COMPREPLY="-h --help -d --mirror-url -k --keys"
 }
 
 _spack_cd() {
@@ -465,7 +465,7 @@ _spack_ci() {
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref --optimize --dependencies"
+    SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies"
 }
 
 _spack_ci_rebuild() {
@@ -570,7 +570,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit list add remove rm"
+        SPACK_COMPREPLY="get blame edit list add remove rm update revert"
     fi
 }
 
@@ -632,6 +632,24 @@ _spack_config_rm() {
     fi
 }
 
+_spack_config_update() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
+    else
+        _config_sections
+    fi
+}
+
+_spack_config_revert() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
+    else
+        _config_sections
+    fi
+}
+
 _spack_containerize() {
     SPACK_COMPREPLY="-h --help"
 }
@@ -639,7 +657,7 @@ _spack_containerize() {
 _spack_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage -n --name -t --template -r --repo -N --namespace -f --force --skip-editor"
+        SPACK_COMPREPLY="-h --help --keep-stage -n --name -t --template -r --repo -N --namespace -f --force --skip-editor -b --batch"
     else
         SPACK_COMPREPLY=""
     fi
@@ -701,7 +719,16 @@ _spack_deprecate() {
 _spack_dev_build() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet --drop-in -b --before -u --until --clean --dirty"
+        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet --drop-in --test -b --before -u --until --clean --dirty"
+    else
+        _all_packages
+    fi
+}
+
+_spack_develop() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -p --path --no-clone --clone -f --force"
     else
         _all_packages
     fi
@@ -725,7 +752,7 @@ _spack_env() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view"
+        SPACK_COMPREPLY="activate deactivate create remove rm list ls status st loads view update revert"
     fi
 }
 
@@ -803,6 +830,24 @@ _spack_env_view() {
     fi
 }
 
+_spack_env_update() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
+    else
+        _environments
+    fi
+}
+
+_spack_env_revert() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
+    else
+        _environments
+    fi
+}
+
 _spack_extensions() {
     if $list_options
     then
@@ -817,17 +862,21 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find"
+        SPACK_COMPREPLY="find list"
     fi
 }
 
 _spack_external_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --not-buildable"
+        SPACK_COMPREPLY="-h --help --not-buildable --scope"
     else
         _all_packages
     fi
+}
+
+_spack_external_list() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_fetch() {
@@ -866,7 +915,7 @@ _spack_gpg() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="verify trust untrust sign create list init export"
+        SPACK_COMPREPLY="verify trust untrust sign create list init export publish"
     fi
 }
 
@@ -932,6 +981,15 @@ _spack_gpg_export() {
     fi
 }
 
+_spack_gpg_publish() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url --rebuild-index"
+    else
+        _keys
+    fi
+}
+
 _spack_graph() {
     if $list_options
     then
@@ -962,7 +1020,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --require-full-hash-match --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash -y --yes-to-all --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp"
     else
         _all_packages
     fi
@@ -1406,6 +1464,15 @@ _spack_setup() {
     fi
 }
 
+_spack_solve() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --show --models -l --long -L --very-long -I --install-status -y --yaml -j --json -c --cover -N --namespaces -t --types --timers --stats"
+    else
+        _all_packages
+    fi
+}
+
 _spack_spec() {
     if $list_options
     then
@@ -1430,6 +1497,19 @@ _spack_test() {
         SPACK_COMPREPLY="-h --help -H --pytest-help -l --list -L --list-long -N --list-names --extension -s -k --showlocals"
     else
         _tests
+    fi
+}
+
+_spack_tutorial() {
+    SPACK_COMPREPLY="-h --help -y --yes-to-all"
+}
+
+_spack_undevelop() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -a --all"
+    else
+        _all_packages
     fi
 }
 

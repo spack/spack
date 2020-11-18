@@ -145,6 +145,10 @@ class Conduit(Package):
     depends_on("py-sphinx-rtd-theme", when="+python+doc", type='build')
     depends_on("doxygen", when="+doc+doxygen")
 
+    # Tentative patch for fj compiler
+    # Cmake will support fj compiler and this patch will be removed
+    patch('fj_flags.patch', when='%fj')
+
     # build phases used by this package
     phases = ["configure", "build", "install"]
 
@@ -408,7 +412,7 @@ class Conduit(Package):
                     cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID",
                                                 "XL"))
 
-                if 'xl@coral' in os.getenv('SPACK_COMPILER_SPEC', ""):
+                if (f_compiler is not None) and ("xlf" in f_compiler):
                     # Fix missing std linker flag in xlc compiler
                     flags = "-WF,-C! -qxlf2003=polymorphic"
                     cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS",
@@ -416,10 +420,15 @@ class Conduit(Package):
                     # Grab lib directory for the current fortran compiler
                     libdir = os.path.join(os.path.dirname(
                                           os.path.dirname(f_compiler)), "lib")
-                    flags  = "${BLT_EXE_LINKER_FLAGS} -lstdc++ "
-                    flags += "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
+                    rpaths = "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
+
+                    flags  = "${BLT_EXE_LINKER_FLAGS} -lstdc++ " + rpaths
                     cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS",
                                                 flags))
+                    if "+shared" in spec:
+                        flags = "${CMAKE_SHARED_LINKER_FLAGS} " + rpaths
+                        cfg.write(cmake_cache_entry(
+                                  "CMAKE_SHARED_LINKER_FLAGS", flags))
 
         #######################
         # Python
@@ -471,9 +480,9 @@ class Conduit(Package):
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
             if spec['mpi'].mpicc == spack_cc:
-                mpicc_path = "cc"
-                mpicxx_path = "CC"
-                mpifc_path = "ftn"
+                mpicc_path = c_compiler
+                mpicxx_path = cpp_compiler
+                mpifc_path = f_compiler
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))

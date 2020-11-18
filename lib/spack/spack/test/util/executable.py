@@ -40,6 +40,36 @@ print(u'\\xc3')
         assert u'\xc3' == script(output=str).strip()
 
 
+def test_which_relative_path_with_slash(tmpdir, working_env):
+    tmpdir.ensure('exe')
+    path = str(tmpdir.join('exe'))
+    os.environ['PATH'] = ''
+
+    with tmpdir.as_cwd():
+        no_exe = ex.which('./exe')
+        assert no_exe is None
+
+        fs.set_executable(path)
+        exe = ex.which('./exe')
+        assert exe.path == path
+
+
+def test_which_with_slash_ignores_path(tmpdir, working_env):
+    tmpdir.ensure('exe')
+    tmpdir.ensure('bin{0}exe'.format(os.path.sep))
+
+    path = str(tmpdir.join('exe'))
+    wrong_path = str(tmpdir.join('bin', 'exe'))
+    os.environ['PATH'] = os.path.dirname(wrong_path)
+
+    fs.set_executable(path)
+    fs.set_executable(wrong_path)
+
+    with tmpdir.as_cwd():
+        exe = ex.which('./exe')
+        assert exe.path == path
+
+
 def test_which(tmpdir):
     os.environ["PATH"] = str(tmpdir)
     assert ex.which("spack-test-exe") is None

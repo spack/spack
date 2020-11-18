@@ -11,13 +11,19 @@ class Pugixml(CMakePackage):
     """Light-weight, simple, and fast XML parser for C++ with XPath support"""
 
     homepage = "http://pugixml.org/"
-    url      = "http://github.com/zeux/pugixml/tarball/v1.8.1"
+    url      = "https://github.com/zeux/pugixml/releases/download/v1.10/pugixml-1.10.tar.gz"
 
     version('1.9', 'cac3d11a62e391f834caa239e8b18b4e9ebc46c8c144403473665584044f1666')
     version('1.8.1', sha256='929c4657c207260f8cc28e5b788b7499dffdba60d83d59f55ea33d873d729cd4')
+    version('1.10', sha256='55f399fbb470942410d348584dc953bcaec926415d3462f471ef350f29b5870a')
+
+    variant('shared', default=True, description='Enable shared libraries')
 
     def cmake_args(self):
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL=ON'
-        ]
+            '-DBUILD_SHARED_AND_STATIC_LIBS:BOOL=OFF',
+            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON',
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in self.spec else 'OFF')]
+
         return args

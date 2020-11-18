@@ -2,12 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
 import os.path
 import re
 import platform
-import llnl.util.cpu as cpu
+
+import archspec.cpu
+
 import llnl.util.tty as tty
 from spack.paths import build_env_path
 from spack.util.executable import Executable
@@ -60,10 +61,12 @@ class Cray(Platform):
             raise NoPlatformError()
 
         # Setup frontend targets
-        for name in cpu.targets:
+        for name in archspec.cpu.TARGETS:
             if name not in self.targets:
                 self.add_target(name, Target(name))
-        self.front_end = os.environ.get('SPACK_FRONT_END', cpu.host().name)
+        self.front_end = os.environ.get(
+            'SPACK_FRONT_END', archspec.cpu.host().name
+        )
         if self.front_end not in self.targets:
             self.add_target(self.front_end, Target(self.front_end))
 
@@ -111,14 +114,14 @@ class Cray(Platform):
     @classmethod
     def detect(cls):
         """
-        Detect whether this system is a cray machine.
+        Detect whether this system is a Cray machine.
 
-        We detect the cray platform based on the availability through `module`
-        of the cray programming environment. If this environment is available,
-        we can use it to find compilers, target modules, etc. If the cray
+        We detect the Cray platform based on the availability through `module`
+        of the Cray programming environment. If this environment is available,
+        we can use it to find compilers, target modules, etc. If the Cray
         programming environment is not available via modules, then we will
-        treat it as a standard linux system, as the cray compiler wrappers
-        and other componenets of the cray programming environment are
+        treat it as a standard linux system, as the Cray compiler wrappers
+        and other components of the Cray programming environment are
         irrelevant without module support.
         """
         return 'opt/cray' in os.environ.get('MODULEPATH', '')
@@ -143,13 +146,13 @@ class Cray(Platform):
                 tty.debug("Found default module:%s" % default_from_module)
                 return default_from_module
             else:
-                front_end = cpu.host().name
+                front_end = archspec.cpu.host().name
                 if front_end in list(
                         map(lambda x: _target_name_from_craype_target_name(x),
                             self._avail_targets())
                 ):
                     tty.debug("default to front-end architecture")
-                    return cpu.host().name
+                    return archspec.cpu.host().name
                 else:
                     return platform.machine()
 
@@ -167,7 +170,8 @@ class Cray(Platform):
                 if 'craype-' in mod:
                     name = mod[7:]
                     _n = name.replace('-', '_')  # test for mic-knl/mic_knl
-                    is_target_name = name in cpu.targets or _n in cpu.targets
+                    is_target_name = (name in archspec.cpu.TARGETS or
+                                      _n in archspec.cpu.TARGETS)
                     is_cray_target_name = name in _craype_name_to_target_name
                     if is_target_name or is_cray_target_name:
                         targets.append(name)

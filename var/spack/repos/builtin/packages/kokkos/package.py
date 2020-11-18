@@ -13,8 +13,11 @@ class Kokkos(CMakePackage, CudaPackage):
     git = "https://github.com/kokkos/kokkos.git"
     url = "https://github.com/kokkos/kokkos/archive/3.1.01.tar.gz"
 
+    maintainers = ['jjwilke']
+
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('3.2.00', sha256='05e1b4dd1ef383ca56fe577913e1ff31614764e65de6d6f2a163b2bddb60b3e9')
     version('3.1.01', sha256='ff5024ebe8570887d00246e2793667e0d796b08c77a8227fe271127d36eec9dd')
     version('3.1.00', sha256="b935c9b780e7330bcb80809992caa2b66fd387e3a1c261c955d622dae857d878")
     version('3.0.00', sha256="c00613d0194a4fbd0726719bbed8b0404ed06275f310189b3493f5739042a92b")
@@ -80,6 +83,8 @@ class Kokkos(CMakePackage, CudaPackage):
     conflicts("+hip", when="amd_gpu_arch=none")
 
     spack_micro_arch_map = {
+        "graviton": "",
+        "graviton2": "",
         "aarch64": "",
         "arm": "",
         "ppc": "",
@@ -169,9 +174,13 @@ class Kokkos(CMakePackage, CudaPackage):
     variant("wrapper", default=False,
             description="Use nvcc-wrapper for CUDA build")
     depends_on("kokkos-nvcc-wrapper", when="+wrapper")
+    depends_on("kokkos-nvcc-wrapper@develop", when="@develop+wrapper")
+    depends_on("kokkos-nvcc-wrapper@master", when="@master+wrapper")
     conflicts("+wrapper", when="~cuda")
 
     variant("std", default="11", values=["11", "14", "17", "20"], multi=False)
+    variant("pic", default=False, description="Build position independent code")
+
     # nvcc does not currently work with C++17 or C++20
     conflicts("+cuda", when="std=17")
     conflicts("+cuda", when="std=20")
@@ -207,6 +216,9 @@ class Kokkos(CMakePackage, CudaPackage):
         isdiy = "+diy" in spec
         if isdiy:
             options.append("-DSpack_WORKAROUND=On")
+
+        if "+pic" in spec:
+            options.append("-DCMAKE_POSITION_INDEPENDENT_CODE=ON")
 
         spack_microarches = []
         if "+cuda" in spec:

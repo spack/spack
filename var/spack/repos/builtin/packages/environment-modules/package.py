@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
-
 
 class EnvironmentModules(Package):
     """The Environment Modules package provides for the dynamic
@@ -12,10 +10,14 @@ class EnvironmentModules(Package):
     """
 
     homepage = 'https://cea-hpc.github.io/modules/'
-    url = 'https://github.com/cea-hpc/modules/releases/download/v4.5.1/modules-4.5.1.tar.gz'
+    url = 'https://github.com/cea-hpc/modules/releases/download/v4.6.1/modules-4.6.1.tar.gz'
 
     maintainers = ['xdelaruelle']
 
+    version('4.6.1', sha256='3445df39abe5838b94552b53e7dbff56ada8347b9fdc6c04a72297d5b04af76f')
+    version('4.6.0', sha256='b42b14bb696bf1075ade1ecaefe7735dbe411db4c29031a1dae549435eafa946')
+    version('4.5.3', sha256='7cbd9c61e6dcd82a3f81b5ced92c3cf84ecc5489639bdfc94869256383a2c915')
+    version('4.5.2', sha256='74ccc9ab0fea0064ff3f4c5841435cef13cc6d9869b3c2b25e5ca4efa64a69a1')
     version('4.5.1', sha256='7d4bcc8559e7fbbc52e526fc86a15b161ff4422aa49eee37897ee7a48eb64ac2')
     version('4.5.0', sha256='5f46336f612553af5553d99347f387f733de0aaa0d80d4572e67615289382ec8')
     version('4.4.1', sha256='3c20cfb2ff8a4d74ac6d566e7b5fa9dd220d96d17e6d8a4ae29b1ec0107ee407')
@@ -48,26 +50,24 @@ class EnvironmentModules(Package):
     def install(self, spec, prefix):
         tcl = spec['tcl']
 
-        # Determine where we can find tclConfig.sh
-        for tcl_lib_dir in [tcl.prefix.lib, tcl.prefix.lib64]:
-            tcl_config_file = os.path.join(tcl_lib_dir, 'tclConfig.sh')
-            if os.path.exists(tcl_config_file):
-                break
-        else:
-            raise InstallError('Failed to locate tclConfig.sh')
-
         config_args = [
             "--prefix=" + prefix,
             "--without-tclx",
             "--with-tclx-ver=0.0",
             # It looks for tclConfig.sh
-            "--with-tcl=" + tcl_lib_dir,
-            "--with-tcl-ver={0}.{1}".format(*tcl.version.version[0:2]),
-            '--disable-dependency-tracking',
-            '--disable-silent-rules',
+            "--with-tcl=" + tcl.libs.directories[0],
+            "--with-tcl-ver={0}".format(tcl.version.up_to(2)),
             '--disable-versioning',
             '--datarootdir=' + prefix.share
         ]
+
+        # ./configure script on version 4.5.2 breaks when specific options are
+        # set (see https://github.com/cea-hpc/modules/issues/354)
+        if not spec.satisfies('@4.5.2'):
+            config_args.extend([
+                '--disable-dependency-tracking',
+                '--disable-silent-rules'
+            ])
 
         if '~X' in spec:
             config_args = ['--without-x'] + config_args

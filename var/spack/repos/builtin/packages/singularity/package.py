@@ -24,12 +24,16 @@ class Singularity(MakefilePackage):
     '''
 
     homepage = "https://www.sylabs.io/singularity/"
-    url      = "https://github.com/sylabs/singularity/releases/download/v3.1.1/singularity-3.1.1.tar.gz"
+    url      = "https://github.com/sylabs/singularity/releases/download/v3.6.4/singularity-3.6.4.tar.gz"
     git      = "https://github.com/sylabs/singularity.git"
 
     maintainers = ['alalazo']
     version('master', branch='master')
 
+    version('3.6.4', sha256='71233a81d6bb4d686d8dc636b3e3e962a372f54001921c89a12b062cefd9e79f')
+    version('3.6.3', sha256='b1a985757a9907d8db0f102fc170a25387e715f7ff31957be964bf47914ea2fd')
+    version('3.6.2', sha256='dfd7ec7376ca0321c47787388fb3e781034edf99068f66efc36109e516024d9b')
+    version('3.6.1', sha256='6cac56106ee7f209150aaee9f8788d03b58796af1b767245d343f0b8a691121c')
     version('3.5.3', sha256='0c76f1e3808bf4c10e92b17150314b2b816be79f8101be448a6e9d7a96c9e486')
     version('3.5.2', sha256='f9c21e289377a4c40ed7a78a0c95e1ff416dec202ed49a6c616dd2c37700eab8')
     version('3.4.1', sha256='638fd7cc5ab2a20e779b8768f73baf21909148339d6c4edf6ff61349c53a70c2')

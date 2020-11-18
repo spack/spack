@@ -11,9 +11,10 @@ class Xrootd(CMakePackage):
     """The XROOTD project aims at giving high performance, scalable fault
        tolerant access to data repositories of many kinds."""
     homepage = "http://xrootd.org"
-    url      = "http://xrootd.org/download/v4.6.0/xrootd-4.6.0.tar.gz"
+    url      = "http://xrootd.org/download/v5.0.1/xrootd-5.0.1.tar.gz"
 
-    version('4.12.3', sha256='6f2ca1accc8d49d605706bb556777c753860bf46d845b1ee11393a5cb5987f15')
+    version('5.0.1', sha256='ff4462b0b61db4cc01dda0e26abdd78e43649ee7ac5e90f7a05b74328ff5ac83')
+    version('4.12.3', sha256='6f2ca1accc8d49d605706bb556777c753860bf46d845b1ee11393a5cb5987f15', preferred=True)
     version('4.12.2', sha256='29f7bc3ea51b9d5d310eabd177152245d4160223325933c67f938ed5120f67bb')
     version('4.12.1', sha256='7350d9196a26d17719b839fd242849e3995692fda25f242e67ac6ec907218d13')
     version('4.12.0', sha256='69ef4732256d9a88127de4bfdf96bbf73348e0c70ce1d756264871a0ffadd2fc')
@@ -55,6 +56,7 @@ class Xrootd(CMakePackage):
     depends_on('bzip2')
     depends_on('cmake@2.6:', type='build')
     depends_on('libxml2', when='+http')
+    depends_on('libuuid', when="@4.11.0:")
     depends_on('openssl')
     depends_on('python', when='+python')
     depends_on('readline', when='+readline')

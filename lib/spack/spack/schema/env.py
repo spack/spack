@@ -8,9 +8,12 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/env.py
    :lines: 36-
 """
+import warnings
+
 from llnl.util.lang import union_dicts
 
 import spack.schema.merged
+import spack.schema.packages
 import spack.schema.projections
 
 #: legal first keys in the schema
@@ -68,6 +71,25 @@ schema = {
                         'default': [],
                         'items': {
                             'type': 'string'
+                        },
+                    },
+                    'develop': {
+                        'type': 'object',
+                        'default': {},
+                        'additionalProperties': False,
+                        'patternProperties': {
+                            r'\w[\w-]*': {
+                                'type': 'object',
+                                'additionalProperties': False,
+                                'properties': {
+                                    'spec': {
+                                        'type': 'string'
+                                    },
+                                    'path': {
+                                        'type': 'string'
+                                    },
+                                },
+                            },
                         },
                     },
                     'definitions': {
@@ -133,3 +155,22 @@ schema = {
         }
     }
 }
+
+
+def update(data):
+    """Update the data in place to remove deprecated properties.
+
+    Args:
+        data (dict): dictionary to be updated
+
+    Returns:
+        True if data was changed, False otherwise
+    """
+    if 'include' in data:
+        msg = ("included configuration files should be updated manually"
+               " [files={0}]")
+        warnings.warn(msg.format(', '.join(data['include'])))
+
+    if 'packages' in data:
+        return spack.schema.packages.update(data['packages'])
+    return False

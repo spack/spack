@@ -1,24 +1,29 @@
-##############################################################################
 # Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class PyIpyparallel(PythonPackage):
-    """Use multiple instances of IPython in parallel, interactively."""
+    """IPython's architecture for parallel and distributed computing."""
 
-    homepage = "http://ipython.org"
-    url = "https://pypi.io/packages/source/i/ipyparallel/ipyparallel-6.2.2.tar.gz"
+    homepage = "https://github.com/ipython/ipyparallel"
+    url      = "https://github.com/ipython/ipyparallel/archive/6.3.0.tar.gz"
 
-    version('6.3.0', sha256='0a97b276c62db633e9e97a816282bdd166f9df74e28204f0c8fa54b71944cfdc')
-    version('6.2.2', sha256='02b225966d5c20f12b1fba0b6b10aa5d352a6b492e075f137ff0ff6e95b9358e')
+    version('6.3.0', sha256='b18f6e10ffbcf6f97cac9ce6edc32365302e8496a5252407b91c61b654882147')
+    version('6.2.5', sha256='f6de54a29f7beb97872aa49dfa606dea5f3ed20d2433e3a7200ac2ea9b2a4388')
+    version('6.2.4', sha256='84aa117647b358133643aad1082ea8a56ab8a17693cc3bc2b150746a37e7332e')
 
+    depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-tornado', type='run')
-    depends_on('py-traitlets', type='run')
-    depends_on('py-pyzmq', type='run')
-    depends_on('py-ipython', type='run')
-    depends_on('py-ipykernel', type='run')
-    depends_on('py-futures', type='run', when='^python@2.7.0:2.7.999')
+    depends_on('py-ipython-genutils', type=('build', 'run'))
+    depends_on('py-decorator', type=('build', 'run'))
+    depends_on('py-pyzmq@13:', type=('build', 'run'))
+    depends_on('py-traitlets@4.3:', type=('build', 'run'))
+    depends_on('py-ipython@4:', type=('build', 'run'))
+    depends_on('py-jupyter-client', type=('build', 'run'))
+    depends_on('py-ipykernel@4.4:', type=('build', 'run'))
+    depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
+    depends_on('py-tornado@4:', type=('build', 'run'))

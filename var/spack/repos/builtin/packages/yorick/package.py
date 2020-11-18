@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Yorick(Package):
@@ -35,9 +34,12 @@ class Yorick(Package):
         url = "https://github.com/dhmunro/yorick/archive/y_{0}.tar.gz"
         return url.format(version.underscored)
 
-    def install(self, spec, prefix):
-        os.environ['FORTRAN_LINKAGE'] = '-Df_linkage'
+    def setup_build_environment(self, env):
+        env.set('FORTRAN_LINKAGE', '-Df_linkage')
+        if self.spec.satisfies('arch=aarch64:'):
+            env.set('FPU_IGNORE', '1')
 
+    def install(self, spec, prefix):
         make("config")
 
         filter_file(r'^CC.+',

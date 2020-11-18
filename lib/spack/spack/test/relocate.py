@@ -12,6 +12,7 @@ import llnl.util.filesystem
 import pytest
 import spack.architecture
 import spack.concretize
+import spack.hooks.sbang as sbang
 import spack.paths
 import spack.relocate
 import spack.spec
@@ -271,6 +272,10 @@ def test_set_elf_rpaths_warning(mock_patchelf):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
 def test_replace_prefix_bin(hello_world):
     # Compile an "Hello world!" executable and set RPATHs
     executable = hello_world(rpaths=['/usr/lib', '/usr/lib64'])
@@ -283,6 +288,10 @@ def test_replace_prefix_bin(hello_world):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
 def test_relocate_elf_binaries_absolute_paths(
         hello_world, copy_binary, tmpdir
 ):
@@ -307,6 +316,10 @@ def test_relocate_elf_binaries_absolute_paths(
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
 def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
     orig_binary = hello_world(rpaths=['lib', 'lib64', '/opt/local/lib'])
@@ -327,6 +340,10 @@ def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
 def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
     orig_binary = hello_world(rpaths=[
         str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
@@ -350,6 +367,10 @@ def test_raise_if_not_relocatable(monkeypatch):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
 def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     orig_binary = hello_world(rpaths=[
         str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
@@ -381,3 +402,48 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer():
         spack.relocate.relocate_text_bin(
             ['item'], short_prefix, long_prefix, None, None, None
         )
+
+
+@pytest.mark.parametrize("sbang_line", [
+    "#!/bin/bash /path/to/orig/spack/bin/sbang",
+    "#!/bin/sh /orig/layout/root/bin/sbang"
+])
+def test_relocate_text_old_sbang(tmpdir, sbang_line):
+    """Ensure that old and new sbang styles are relocated."""
+
+    old_install_prefix = "/orig/layout/root/orig/install/prefix"
+    new_install_prefix = os.path.join(
+        spack.store.layout.root, "new", "install", "prefix"
+    )
+
+    # input file with an sbang line
+    original = """\
+{0}
+#!/usr/bin/env python
+
+/orig/layout/root/orig/install/prefix
+""".format(sbang_line)
+
+    # expected relocation
+    expected = """\
+{0}
+#!/usr/bin/env python
+
+{1}
+""".format(sbang.sbang_shebang_line(), new_install_prefix)
+
+    path = tmpdir.ensure("path", "to", "file")
+    with path.open("w") as f:
+        f.write(original)
+
+    spack.relocate.relocate_text(
+        [str(path)],
+        "/orig/layout/root",   spack.store.layout.root,
+        old_install_prefix,    new_install_prefix,
+        "/path/to/orig/spack", spack.paths.spack_root,
+        {
+            old_install_prefix: new_install_prefix
+        }
+    )
+
+    assert expected == open(str(path)).read()

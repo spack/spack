@@ -7,6 +7,7 @@ import os
 import sys
 from spack import *
 from spack.operating_systems.mac_os import macos_version
+from spack.pkg.builtin.kokkos import Kokkos
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
@@ -18,7 +19,7 @@ from spack.operating_systems.mac_os import macos_version
 # https://github.com/trilinos/Trilinos/issues/175
 
 
-class Trilinos(CMakePackage):
+class Trilinos(CMakePackage, CudaPackage):
     """The Trilinos Project is an effort to develop algorithms and enabling
     technologies within an object-oriented software framework for the solution
     of large-scale, complex multi-physics engineering and scientific problems.
@@ -28,13 +29,15 @@ class Trilinos(CMakePackage):
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
     git      = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers = ['aprokop', 'keitat']
+    maintainers = ['keitat']
 
     # ###################### Versions ##########################
 
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
     version('master', branch='master')
+    version('13.0.1', commit='4796b92fb0644ba8c531dd9953e7a4878b05c62d')  # tag trilinos-release-13-0-1
+    version('13.0.0', commit='9fec35276d846a667bc668ff4cbdfd8be0dfea08')  # tag trilinos-release-13-0-0
     version('12.18.1', commit='55a75997332636a28afc9db1aee4ae46fe8d93e7')  # tag trilinos-release-12-8-1
     version('12.14.1', sha256='52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
     version('12.12.1', sha256='5474c5329c6309224a7e1726cf6f0d855025b2042959e4e2be2748bd6bb49e18')
@@ -72,6 +75,11 @@ class Trilinos(CMakePackage):
             description='global ordinal type for Tpetra')
     variant('fortran',      default=True,
             description='Compile with Fortran support')
+    variant('wrapper', default=False,
+            description="Use nvcc-wrapper for CUDA build")
+    variant('cxxstd', default='11', values=['11', '14', '17'], multi=False)
+    variant('hwloc', default=False,
+            description='Enable hwloc')
     variant('openmp',       default=False,
             description='Enable OpenMP')
     variant('shared',       default=True,
@@ -114,6 +122,8 @@ class Trilinos(CMakePackage):
             description='Compile with SuperluDist solvers')
     variant('superlu',      default=False,
             description='Compile with SuperLU solvers')
+    variant('strumpack',    default=False,
+            description='Compile with STRUMPACK solvers')
     variant('x11',          default=False,
             description='Compile with X11')
     variant('zlib',         default=False,
@@ -197,8 +207,6 @@ class Trilinos(CMakePackage):
     # External package options
     variant('dtk',          default=False,
             description='Enable DataTransferKit')
-    variant('fortrilinos',  default=False,
-            description='Enable ForTrilinos')
     variant('mesquite',     default=False,
             description='Enable Mesquite')
 
@@ -219,11 +227,6 @@ class Trilinos(CMakePackage):
              placement='DataTransferKit',
              submodules=True,
              when='+dtk @develop')
-    resource(name='fortrilinos',
-             git='https://github.com/trilinos/ForTrilinos.git',
-             tag='develop',
-             placement='packages/ForTrilinos',
-             when='+fortrilinos')
     resource(name='mesquite',
              url='https://github.com/trilinos/mesquite/archive/trilinos-release-12-12-1.tar.gz',
              sha256='e0d09b0939dbd461822477449dca611417316e8e8d8268fd795debb068edcbb5',
@@ -245,9 +248,11 @@ class Trilinos(CMakePackage):
     conflicts('+amesos', when='~epetra')
     conflicts('+amesos', when='~teuchos')
     conflicts('+anasazi', when='~teuchos')
+    conflicts('+aztec', when='~epetra')
     conflicts('+belos', when='~teuchos')
     conflicts('+epetraext', when='~epetra')
     conflicts('+epetraext', when='~teuchos')
+    conflicts('+exodus', when='~netcdf')
     conflicts('+ifpack2', when='~belos')
     conflicts('+ifpack2', when='~teuchos')
     conflicts('+ifpack2', when='~tpetra')
@@ -295,9 +300,6 @@ class Trilinos(CMakePackage):
     conflicts('+dtk', when='~tpetra')
     # Only allow DTK with Trilinos 12.14 and develop
     conflicts('+dtk', when='@0:12.12.99,master')
-    conflicts('+fortrilinos', when='~fortran')
-    conflicts('+fortrilinos', when='@:99')
-    conflicts('+fortrilinos', when='@master')
     # Only allow Mesquite with Trilinos 12.12 and up, and develop
     conflicts('+mesquite', when='@0:12.10.99,master')
     # Can only use one type of SuperLU
@@ -313,6 +315,8 @@ class Trilinos(CMakePackage):
     # and
     # https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
     conflicts('+superlu-dist', when='+complex+amesos2')
+    conflicts('+strumpack', when='@:13.0.99')
+    conflicts('+strumpack', when='~metis')
     # PnetCDF was only added after v12.10.1
     conflicts('+pnetcdf', when='@0:12.10.1')
     # https://github.com/trilinos/Trilinos/issues/2994
@@ -324,6 +328,18 @@ class Trilinos(CMakePackage):
     conflicts('+adios2', when='@:12.14.1')
     conflicts('+adios2', when='@xsdk-0.2.0')
     conflicts('+pnetcdf', when='~netcdf')
+    conflicts('+wrapper', when='~cuda')
+    conflicts('+wrapper', when='%clang')
+    conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
+    conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
+    conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
+
+    # All compilers except for pgi are in conflict:
+    for __compiler in spack.compilers.supported_compilers():
+        if __compiler != 'clang':
+            conflicts('+cuda', when='~wrapper %{0}'.format(__compiler),
+                      msg='trilinos~wrapper+cuda can only be built with the\
+                      Clang compiler')
 
     # ###################### Dependencies ##########################
 
@@ -340,6 +356,7 @@ class Trilinos(CMakePackage):
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
+    depends_on('hdf5+mpi', when="+hdf5+mpi")
     depends_on('netcdf-c+mpi', when="+netcdf~pnetcdf+mpi")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
     depends_on('parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
@@ -358,9 +375,13 @@ class Trilinos(CMakePackage):
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
     depends_on('superlu-dist@4.4:5.3', when='@12.6.2:12.12.1+superlu-dist')
+    depends_on('superlu-dist@5.4:6.2.0', when='@12.12.2:13.0.0+superlu-dist')
+    depends_on('superlu-dist@6.3.0:', when='@13.0.1:+superlu-dist')
     depends_on('superlu-dist@develop', when='@develop+superlu-dist')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
     depends_on('superlu+pic@4.3', when='+superlu')
+    depends_on('strumpack+shared', when='+strumpack')
+    depends_on('scalapack', when='+strumpack+mpi')
     # Trilinos can not be built against 64bit int hypre
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
@@ -368,6 +389,9 @@ class Trilinos(CMakePackage):
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
+    depends_on('kokkos-nvcc-wrapper', when='+wrapper')
+    depends_on('hwloc', when='+hwloc')
+    depends_on('hwloc +cuda', when='+hwloc+cuda')
 
     # Dependencies/conflicts when MPI is disabled
     depends_on('hdf5~mpi', when='+hdf5~mpi')
@@ -382,10 +406,33 @@ class Trilinos(CMakePackage):
     patch('xlf_tpetra.patch', when='@12.12.1%xl_r')
     patch('xlf_tpetra.patch', when='@12.12.1%clang')
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
+    patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
+    patch('cray_secas.patch', when='@12.14.1:12.18.1%cce')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
         return url.format(version.dashed)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        if '+cuda' in self.spec:
+            # currently Trilinos doesn't perform the memory fence so
+            # it relies on blocking CUDA kernel launch. This is needed
+            # in case the dependent app also run a CUDA backend via Trilinos
+            env.set('CUDA_LAUNCH_BLOCKING', '1')
+
+    def setup_dependent_package(self, module, dependent_spec):
+        if '+wrapper' in self.spec:
+            self.spec.kokkos_cxx = self.spec["kokkos-nvcc-wrapper"].kokkos_cxx
+        else:
+            self.spec.kokkos_cxx = spack_cxx
+
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if '+cuda' in spec and '+wrapper' in spec:
+            if '+mpi' in spec:
+                env.set('OMPI_CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+            else:
+                env.set('CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
 
     def cmake_args(self):
         spec = self.spec
@@ -430,7 +477,6 @@ class Trilinos(CMakePackage):
             # Force Trilinos to use the MPI wrappers instead of raw compilers
             # this is needed on Apple systems that require full resolution of
             # all symbols when linking shared libraries
-            mpi_bin = spec['mpi'].prefix.bin
             options.extend([
                 define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
                 define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
@@ -516,6 +562,13 @@ class Trilinos(CMakePackage):
             ])
 
         if '+stratimikos' in spec:
+            # Explicitly enable Thyra (ThyraCore is required). If you don't do
+            # this, then you get "NOT setting ${pkg}_ENABLE_Thyra=ON since
+            # Thyra is NOT enabled at this point!" leading to eventual build
+            # errors if using MueLu because `Xpetra_ENABLE_Thyra` is set to
+            # off.
+            options.append(define('Trilinos_ENABLE_Thyra', True))
+
             # Add thyra adapters based on package enables
             options.extend(
                 define_trilinos_enable('Thyra' + pkg + 'Adapters', pkg.lower())
@@ -537,6 +590,9 @@ class Trilinos(CMakePackage):
             define_tpl_enable('X11'),
             define_trilinos_enable('Gtest', 'gtest'),
         ])
+
+        if '+hwloc' in spec:
+            options.append(define_tpl_enable('hwloc'))
 
         options.append(define_tpl_enable('Netcdf'))
         if '+netcdf' in spec:
@@ -647,6 +703,17 @@ class Trilinos(CMakePackage):
                 define('SuperLU_INCLUDE_DIRS', spec['superlu'].prefix.include),
             ])
 
+        options.append(define_tpl_enable('STRUMPACK'))
+        if '+strumpack' in spec:
+            options.extend([
+                define('TPL_ENABLE_STRUMPACK', True),
+                define('Amesos2_ENABLE_STRUMPACK', True),
+                define('STRUMPACK_LIBRARY_DIRS',
+                       spec['strumpack'].libs.directories[0]),
+                define('STRUMPACK_INCLUDE_DIRS',
+                       spec['strumpack'].headers.directories[0]),
+            ])
+
         options.append(define_tpl_enable('Pnetcdf'))
         if '+pnetcdf' in spec:
             options.extend([
@@ -672,7 +739,30 @@ class Trilinos(CMakePackage):
 
         options.append(self.define_from_variant('TPL_ENABLE_ADIOS2', 'adios2'))
 
+        options.append(define(
+            "Kokkos_ARCH_" +
+            Kokkos.spack_micro_arch_map[spec.target.name].upper(),
+            True))
+
         # ################# Miscellaneous Stuff ######################
+        # CUDA
+        options.append(define_tpl_enable('CUDA'))
+        if '+cuda' in spec:
+            options.extend([
+                define('Kokkos_ENABLE_CUDA', True),
+                define('Kokkos_ENABLE_CUDA_UVM', True),
+                define('Kokkos_ENABLE_CUDA_LAMBDA', True)])
+            for iArchCC in spec.variants['cuda_arch'].value:
+                options.append(define(
+                    "Kokkos_ARCH_" +
+                    Kokkos.spack_cuda_arch_map[iArchCC].upper(),
+                    True))
+            if '+wrapper' in spec:
+                cxx_flags.extend(['--expt-extended-lambda'])
+
+        # Set the C++ standard to use
+        options.append(self.define_from_variant(
+            "CMAKE_CXX_STANDARD", "cxxstd"))
 
         # OpenMP
         options.append(define_trilinos_enable('OpenMP'))
@@ -690,7 +780,7 @@ class Trilinos(CMakePackage):
             if '+mpi' in spec:
                 libgfortran = os.path.dirname(os.popen(
                     '%s --print-file-name libgfortran.a' %
-                    join_path(mpi_bin, 'mpif90')).read())
+                    spec['mpi'].mpifc).read())
                 options.append(define(
                     'Trilinos_EXTRA_LINK_FLAGS',
                     '-L%s/ -lgfortran' % (libgfortran),
@@ -712,17 +802,36 @@ class Trilinos(CMakePackage):
             'explicit_template_instantiation'))
 
         if '+explicit_template_instantiation' in spec and '+tpetra' in spec:
-            gotype = spec.variants['gotype'].value
             options.extend([
                 define('Tpetra_INST_DOUBLE', True),
-                define('Tpetra_INST_INT_INT', gotype == 'int'),
-                define('Tpetra_INST_INT_LONG', gotype == 'long'),
-                define('Tpetra_INST_INT_LONG_LONG', gotype == 'long_long'),
                 define('Tpetra_INST_COMPLEX_DOUBLE', complex_s),
                 define('Tpetra_INST_COMPLEX_FLOAT', float_s and complex_s),
                 define('Tpetra_INST_FLOAT', float_s),
                 define('Tpetra_INST_SERIAL', True),
             ])
+
+            gotype = spec.variants['gotype'].value
+            # default in older Trilinos versions to enable multiple GOs
+            if ((gotype == 'none') and spec.satisfies('@:12.14.1')):
+                options.extend([
+                    '-DTpetra_INST_INT_INT:BOOL=ON',
+                    '-DTpetra_INST_INT_LONG:BOOL=ON',
+                    '-DTpetra_INST_INT_LONG_LONG:BOOL=ON'
+                ])
+            # set default GO in newer versions to long
+            elif (gotype == 'none'):
+                options.extend([
+                    '-DTpetra_INST_INT_INT:BOOL=OFF',
+                    '-DTpetra_INST_INT_LONG:BOOL=ON',
+                    '-DTpetra_INST_INT_LONG_LONG:BOOL=OFF'
+                ])
+            # if another GO is specified, use this
+            else:
+                options.extend([
+                    define('Tpetra_INST_INT_INT', gotype == 'int'),
+                    define('Tpetra_INST_INT_LONG', gotype == 'long'),
+                    define('Tpetra_INST_INT_LONG_LONG', gotype == 'long_long'),
+                ])
 
         # disable due to compiler / config errors:
         if spec.satisfies('%xl') or spec.satisfies('%xl_r'):
@@ -769,3 +878,13 @@ class Trilinos(CMakePackage):
                         (r'\1\3'),
                         '%s/cmake/Trilinos/TrilinosConfig.cmake' %
                         self.prefix.lib)
+
+    def setup_run_environment(self, env):
+        if '+exodus' in self.spec:
+            env.prepend_path('PYTHONPATH',
+                             self.prefix.lib)
+
+        if '+cuda' in self.spec:
+            # currently Trilinos doesn't perform the memory fence so
+            # it relies on blocking CUDA kernel launch.
+            env.set('CUDA_LAUNCH_BLOCKING', '1')

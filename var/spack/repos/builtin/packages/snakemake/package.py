@@ -16,7 +16,7 @@ class Snakemake(PythonPackage):
     version('5.6.0', sha256='65b944bcf06fd31b5da7430a6012a542c4c3c05a822b92ca218f2406eabd2c24')
     version('3.11.2', sha256='f7a3b586bc2195f2dce4a4817b7ec828b6d2a0cff74a04e0f7566dcd923f9761')
 
-    depends_on('python@3.3:')
+    depends_on('python@3.3:3.6.999')
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
 
