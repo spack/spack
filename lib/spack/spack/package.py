@@ -1731,6 +1731,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Clear test failures
         self.test_failures = []
         self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
+        fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
         kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
         spack.build_environment.start_build_process(self, test_process, kwargs)
