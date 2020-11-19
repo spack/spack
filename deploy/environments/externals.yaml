@@ -7,6 +7,8 @@ spack:
       providers:
         mpi: [hpe-mpi@2.21]
         lapack: [intel-mkl@2019.3.199]
+    graphviz:
+      variants: +pangocairo
     mvapich2:
       variants: fabrics=mrail process_managers=slurm file_systems=gpfs
     pgi:
@@ -18,6 +20,7 @@ spack:
   specs:
     - llvm@10.0.0
     - pgi@19.10
+    - nvhpc@20.9 install_type=network
     - arm-forge@20.0.3-Redhat-7.0-x86_64
     - blender
     - cmake@3.15.3
@@ -30,6 +33,7 @@ spack:
     - gdb~python@8.2
     - git@2.18.0
     - graphviz@2.42.2
+    - help2man@1.47.4
     - hpctoolkit@2019.08.14
     - hpcviewer@2020.05
     - hpe-mpi@2.21
@@ -44,12 +48,12 @@ spack:
     - cuda@9.0.176
     - cuda@9.2.88
     - cuda@10.1.243
+    - cuda@11.1.0
     - cudnn@7.3.0.29-9.0-linux-x64
     - glew
     - gmsh+metis~mpi+oce+openmp+shared@4.4.1
     - hdf5~mpi@1.10.5
     - intel-mkl@2019.3.199
-    - jdk@1.8.0_131-b11
     - julia
     - libjpeg
     - libjpeg-turbo

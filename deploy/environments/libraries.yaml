@@ -11,21 +11,26 @@ spack:
       version: [3.8.3]
   specs:
     - matrix:
-        - [hdf5+mpi@1.10.5,
-           highfive+mpi,
-           ospray@1.7.3,
-           ospray@1.8.5,
-           py-numpy,
-           py-pandas]
+        - [
+            coreneuron,
+            coreneuron+debug,
+            hdf5+mpi@1.10.5,
+            highfive+mpi,
+            neuron,
+            neuron+debug,
+            ospray@1.7.3,
+            ospray@1.8.5,
+            python,
+            py-h5py,
+            py-h5py~mpi,
+            py-mpi4py,
+            py-numpy,
+            py-pandas
+          ]
         - ['%gcc', '%intel']
     - assimp
-    - mvdtool+mpi
-    - hypre@2.18.2
-    - omega-h+gmsh+trilinos@9.31.3.dev2
-    - superlu-dist@5.4.0
-    - petsc+int64+mpi@3.13.1
-    - boost+python@1.73.0
     - boost+python@1.70.0
+    - boost+python@1.73.0
     - catch2
     - deflect
     - eigen
@@ -33,51 +38,36 @@ spack:
     - gmsh
     - hdf5~mpi
     - highfive~mpi
+    - hypre@2.18.2
     - libarchive
     - morphio
     - morpho-kit
+    - mvdtool+mpi
     - neuron+mpi~debug%intel
-    - openscenegraph build_type=Release
     - nlohmann-json +single_header
+    - omega-h+gmsh+trilinos@9.31.3.dev2
+    - openscenegraph build_type=Release
+    - parmetis@4.0.3
+    - petsc+int64+mpi@3.13.1
     - pugixml
-    - random123
-    - range-v3
-    - rockets
-    - rocksdb~static
-    - spark@3.0.0
-
-    # Python
-    - py-scipy
-    - py-matplotlib
-    - python-dev
-    - py-scikit-learn
-    # for Spykfunc
-    - py-mvdtool~mpi
-    - py-morpho-kit
-    - py-py4j
-    - py-pyarrow+parquet@0.15.1
-    - py-pyspark@3.0.0
-    - py-dask-mpi
-    # Others
-    - py-munkres
-    - py-aspy-yaml
     - py-argcomplete
     - py-argparse
+    - py-aspy-yaml
     - py-babel
     - py-beautifulsoup4
     - py-breathe
-    # - py-bokeh
     - py-cached-property
     - py-cffi
     - py-cfgv
     - py-click
-    - py-cmake-format
     - py-clustershell
+    - py-cmake-format
     - py-configparser
     - py-contextlib2
     - py-coverage
     - py-cycler
     - py-cython
+    - py-dask-mpi
     - py-dateutil
     - py-deap
     - py-decorator
@@ -86,7 +76,6 @@ spack:
     - py-flake8
     - py-funcsigs
     - py-future
-    - py-h5py~mpi
     - py-hdfs
     - py-humanize
     - py-identify
@@ -101,8 +90,11 @@ spack:
     - py-line-profiler
     - py-lxml
     - py-markdown
+    - py-matplotlib
     - py-morphio
-    - py-mpi4py
+    - py-morpho-kit
+    - py-munkres
+    - py-mvdtool~mpi
     - py-neurom
     - py-nodeenv
     - py-pathlib2
@@ -112,11 +104,16 @@ spack:
     - py-ply
     - py-pre-commit
     - py-progress
+    - py-py4j
+    - py-pyarrow+parquet@0.15.1
     - py-pylru
+    - py-pyspark@3.0.0
     - py-pytest
     - py-pyyaml
     - py-regex
     - py-requests
+    - py-scikit-learn
+    - py-scipy
     - py-seaborn
     - py-setuptools
     - py-setuptools-scm
@@ -125,6 +122,7 @@ spack:
     - py-sphinx
     - py-sphinx-rtd-theme
     - py-sympy
+    - python-dev
     - py-toml
     - py-urllib3
     - py-virtualenv
@@ -132,3 +130,9 @@ spack:
     - py-virtualenvwrapper
     - py-wheel
     - py-zipp
+    - random123
+    - range-v3
+    - rockets
+    - rocksdb~static
+    - spark@3.0.0
+    - superlu-dist@5.4.0
