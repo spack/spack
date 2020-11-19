@@ -19,7 +19,6 @@ class Simde(MesonPackage):
     git      = "https://github.com/simd-everywhere/simde.git"
 
     version('0.6.0', sha256='25a8b8c69c17ddc2f6209e86caa6b12d4ed91c0f841617efc56e5675eea84915')
-    version('0.5.0', tag='v0.5.0', submodules=True)
 
     patch('sve-gcc.patch', when='@0.6.0 %gcc')
     conflicts('%gcc@8', when='target=a64fx',
