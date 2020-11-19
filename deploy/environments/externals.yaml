@@ -5,10 +5,13 @@ spack:
     all:
       compiler: [gcc@9.3.0]
       providers:
+        jpeg: [libjpeg-turbo]
         mpi: [hpe-mpi@2.21]
         lapack: [intel-mkl@2019.3.199]
     cairo:
-      variants: +png+svg
+      externals:
+      - spec: cairo+X+fc+ft+gobject+pdf+png+svg@1.15.12
+        prefix: /usr
     graphviz:
       variants: +pangocairo
     mvapich2:
@@ -57,8 +60,6 @@ spack:
     - hdf5~mpi@1.10.5
     - intel-mkl@2019.3.199
     - julia
-    - libjpeg
-    - libjpeg-turbo
     - libxml2
     - libxslt
     - ncurses
@@ -67,7 +68,7 @@ spack:
     - optix
     - python@3.8.3
     - qhull@2015.2
-    - qt@5.14.2 ^libjpeg-turbo
+    - qt@5.14.2
     - readline
     - snakemake
     - sqlite
@@ -76,4 +77,4 @@ spack:
     - vrpn
     - zlib@1.2.11
     - libzmq+libsodium@4.3.2%intel@19.1.1.217
-    # - timemory@3.0.1
+    - timemory@3.0.1
