@@ -13,7 +13,7 @@ class Mvapich2(AutotoolsPackage):
     networks (InfiniBand, Omni-Path, Ethernet/iWARP, and RoCE) and computing
     platforms (x86 (Intel and AMD), ARM and OpenPOWER)"""
 
-    homepage = "http://mvapich.cse.ohio-state.edu/"
+    homepage = "http://mvapich.cse.ohio-state.edu/userguide/userguide_spack/"
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.4.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
@@ -83,7 +83,12 @@ class Mvapich2(AutotoolsPackage):
 
     variant(
         'fabrics',
-        description='The fabric enabled for this build',
+        description='Select the fabric to be enabled for this build.'
+        'If you have verbs (either from OFED or MOFED), PSM or PSM2 '
+        'installed on the system already, you may need to setup external '
+        'packages in the package.yaml file for rdma-core, psm or opa-psm2. '
+        'This is recommended to avoid unexpected runtime failures. For '
+        'more info, visit the homepage url.',
         default='mrail',
         values=(
             'psm', 'psm2', 'sock', 'nemesisib', 'nemesis', 'mrail',
