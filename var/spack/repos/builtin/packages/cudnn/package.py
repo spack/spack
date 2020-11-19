@@ -161,7 +161,7 @@ class Cudnn(Package):
         if pkg:
             version(long_ver, sha256=pkg[0], expand=False)
             # Add constraints matching CUDA version to cuDNN version
-            cuda_req = 'cuda@{0}.0:{0}.099'.format(cuda_ver)
+            cuda_req = 'cuda@{0}.0:{0}.999'.format(cuda_ver)
             cudnn_ver_req = '@{0}'.format(long_ver)
             depends_on(cuda_req, when=cudnn_ver_req)
 
