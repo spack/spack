@@ -77,7 +77,7 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Fortran support')
     variant('wrapper', default=False,
             description="Use nvcc-wrapper for CUDA build")
-    variant('cuda_rdc', default=True,
+    variant('cuda_rdc', default=False,
             description='turn on RDC for CUDA build')
     variant('cxxstd', default='11', values=['11', '14', '17'], multi=False)
     variant('hwloc', default=False,
