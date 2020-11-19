@@ -159,7 +159,7 @@ class Cudnn(Package):
         cudnn_ver, cuda_ver = ver.split('-')
         long_ver = "{0}-{1}".format(cudnn_ver, cuda_ver)
         if pkg:
-            version(long_ver, sha256=pkg, expand=False)
+            version(long_ver, sha256=pkg)
             # Add constraints matching CUDA version to cuDNN version
             cuda_req = 'cuda@{0}.0:{0}.999'.format(cuda_ver)
             cudnn_ver_req = '@{0}'.format(long_ver)
