@@ -24,10 +24,12 @@ import sys
 import textwrap
 import time
 import traceback
-
 import six
+import types
 
+import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
+
 import spack.compilers
 import spack.config
 import spack.dependency
@@ -45,15 +47,14 @@ import spack.store
 import spack.url
 import spack.util.environment
 import spack.util.web
-from llnl.util.filesystem import mkdirp, touch, working_dir
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from ordereddict_backport import OrderedDict
-from six import StringIO
-from six import string_types
-from six import with_metaclass
 from spack.filesystem_view import YamlFilesystemView
 from spack.installer import PackageInstaller, InstallError
+from spack.install_test import TestFailure, TestSuite
+from spack.util.executable import which, ProcessError
+from spack.util.prefix import Prefix
 from spack.stage import stage_prefix, Stage, ResourceStage, StageComposite
 from spack.util.package_hash import package_hash
 from spack.version import Version
@@ -452,7 +453,21 @@ class PackageViewMixin(object):
             view.remove_file(src, dst)
 
 
-class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
+def test_log_pathname(test_stage, spec):
+    """Build the pathname of the test log file
+
+    Args:
+        test_stage (str): path to the test stage directory
+        spec (Spec): instance of the spec under test
+
+    Returns:
+        (str): the pathname of the test log file
+    """
+    return os.path.join(test_stage,
+                        'test-{0}-out.txt'.format(TestSuite.test_pkg_id(spec)))
+
+
+class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -541,6 +556,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: A list or set of build time test functions to be called when tests
     #: are executed or 'None' if there are no such test functions.
     build_time_test_callbacks = None
+
+    #: By default, packages are not virtual
+    #: Virtual packages override this attribute
+    virtual = False
 
     #: Most Spack packages are used to install source or binary code while
     #: those that do not can be used to install a set of other Spack packages.
@@ -632,6 +651,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: List of attributes to be excluded from a package's hash.
     metadata_attrs = ['homepage', 'url', 'urls', 'list_url', 'extendable',
                       'parallel', 'make_jobs']
+
+    #: Boolean. If set to ``True``, the smoke/install test requires a compiler.
+    #: This is currently used by smoke tests to ensure a compiler is available
+    #: to build a custom test code.
+    test_requires_compiler = False
+
+    #: List of test failures encountered during a smoke/install test run.
+    test_failures = None
+
+    #: TestSuite instance used to manage smoke/install tests for one or more
+    #: specs.
+    test_suite = None
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -1002,19 +1033,22 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return os.path.join(self.stage.path, _spack_build_envfile)
 
     @property
+    def metadata_dir(self):
+        """Return the install metadata directory."""
+        return spack.store.layout.metadata_path(self.spec)
+
+    @property
     def install_env_path(self):
         """
         Return the build environment file path on successful installation.
         """
-        install_path = spack.store.layout.metadata_path(self.spec)
-
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
-        old_filename = os.path.join(install_path, 'build.env')
+        old_filename = os.path.join(self.metadata_dir, 'build.env')
         if os.path.exists(old_filename):
             return old_filename
         else:
-            return os.path.join(install_path, _spack_build_envfile)
+            return os.path.join(self.metadata_dir, _spack_build_envfile)
 
     @property
     def log_path(self):
@@ -1031,16 +1065,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def install_log_path(self):
         """Return the build log file path on successful installation."""
-        install_path = spack.store.layout.metadata_path(self.spec)
-
         # Backward compatibility: Return the name of an existing install log.
         for filename in ['build.out', 'build.txt']:
-            old_log = os.path.join(install_path, filename)
+            old_log = os.path.join(self.metadata_dir, filename)
             if os.path.exists(old_log):
                 return old_log
 
         # Otherwise, return the current install log path name.
-        return os.path.join(install_path, _spack_build_logfile)
+        return os.path.join(self.metadata_dir, _spack_build_logfile)
 
     @property
     def configure_args_path(self):
@@ -1050,9 +1082,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def install_configure_args_path(self):
         """Return the configure args file path on successful installation."""
-        install_path = spack.store.layout.metadata_path(self.spec)
+        return os.path.join(self.metadata_dir, _spack_configure_argsfile)
 
-        return os.path.join(install_path, _spack_configure_argsfile)
+    @property
+    def install_test_root(self):
+        """Return the install test root directory."""
+        return os.path.join(self.metadata_dir, 'test')
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -1322,7 +1357,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise FetchError("Archive was empty for %s" % self.name)
         else:
             # Support for post-install hooks requires a stage.source_path
-            mkdirp(self.stage.source_path)
+            fsys.mkdirp(self.stage.source_path)
 
     def do_patch(self):
         """Applies patches if they haven't been applied already."""
@@ -1368,7 +1403,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         patched = False
         for patch in patches:
             try:
-                with working_dir(self.stage.source_path):
+                with fsys.working_dir(self.stage.source_path):
                     patch.apply(self.stage)
                 tty.debug('Applied patch {0}'.format(patch.path_or_url))
                 patched = True
@@ -1377,12 +1412,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
                 # Touch bad file if anything goes wrong.
                 tty.msg('Patch %s failed.' % patch.path_or_url)
-                touch(bad_file)
+                fsys.touch(bad_file)
                 raise
 
         if has_patch_fun:
             try:
-                with working_dir(self.stage.source_path):
+                with fsys.working_dir(self.stage.source_path):
                     self.patch()
                 tty.debug('Ran patch() for {0}'.format(self.name))
                 patched = True
@@ -1400,7 +1435,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
                 # Touch bad file if anything goes wrong.
                 tty.msg('patch() function failed for {0}'.format(self.name))
-                touch(bad_file)
+                fsys.touch(bad_file)
                 raise
 
         # Get rid of any old failed file -- patches have either succeeded
@@ -1411,9 +1446,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # touch good or no patches file so that we skip next time.
         if patched:
-            touch(good_file)
+            fsys.touch(good_file)
         else:
-            touch(no_patches_file)
+            fsys.touch(no_patches_file)
 
     @classmethod
     def all_patches(cls):
@@ -1657,6 +1692,175 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         builder = PackageInstaller([(self, kwargs)])
         builder.install()
 
+    def cache_extra_test_sources(self, srcs):
+        """Copy relative source paths to the corresponding install test subdir
+
+        This method is intended as an optional install test setup helper for
+        grabbing source files/directories during the installation process and
+        copying them to the installation test subdirectory for subsequent use
+        during install testing.
+
+        Args:
+            srcs (str or list of str): relative path for files and or
+                subdirectories located in the staged source path that are to
+                be copied to the corresponding location(s) under the install
+                testing directory.
+        """
+        paths = [srcs] if isinstance(srcs, six.string_types) else srcs
+
+        for path in paths:
+            src_path = os.path.join(self.stage.source_path, path)
+            dest_path = os.path.join(self.install_test_root, path)
+            if os.path.isdir(src_path):
+                fsys.install_tree(src_path, dest_path)
+            else:
+                fsys.mkdirp(os.path.dirname(dest_path))
+                fsys.copy(src_path, dest_path)
+
+    def do_test(self, dirty=False):
+        if self.test_requires_compiler:
+            compilers = spack.compilers.compilers_for_spec(
+                self.spec.compiler, arch_spec=self.spec.architecture)
+            if not compilers:
+                tty.error('Skipping tests for package %s\n' %
+                          self.spec.format('{name}-{version}-{hash:7}') +
+                          'Package test requires missing compiler %s' %
+                          self.spec.compiler)
+                return
+
+        # Clear test failures
+        self.test_failures = []
+        self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
+        fsys.touch(self.test_log_file)  # Otherwise log_parse complains
+
+        kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
+        spack.build_environment.start_build_process(self, test_process, kwargs)
+
+    def test(self):
+        pass
+
+    def run_test(self, exe, options=[], expected=[], status=0,
+                 installed=False, purpose='', skip_missing=False,
+                 work_dir=None):
+        """Run the test and confirm the expected results are obtained
+
+        Log any failures and continue, they will be re-raised later
+
+        Args:
+            exe (str): the name of the executable
+            options (str or list of str): list of options to pass to the runner
+            expected (str or list of str): list of expected output strings.
+                Each string is a regex expected to match part of the output.
+            status (int or list of int): possible passing status values
+                with 0 meaning the test is expected to succeed
+            installed (bool): if ``True``, the executable must be in the
+                install prefix
+            purpose (str): message to display before running test
+            skip_missing (bool): skip the test if the executable is not
+                in the install prefix bin directory or the provided work_dir
+            work_dir (str or None): path to the smoke test directory
+        """
+        wdir = '.' if work_dir is None else work_dir
+        with fsys.working_dir(wdir):
+            try:
+                runner = which(exe)
+                if runner is None and skip_missing:
+                    return
+                assert runner is not None, \
+                    "Failed to find executable '{0}'".format(exe)
+
+                self._run_test_helper(
+                    runner, options, expected, status, installed, purpose)
+                print("PASSED")
+                return True
+            except BaseException as e:
+                # print a summary of the error to the log file
+                # so that cdash and junit reporters know about it
+                exc_type, _, tb = sys.exc_info()
+                print('FAILED: {0}'.format(e))
+                import traceback
+                # remove the current call frame to exclude the extract_stack
+                # call from the error
+                stack = traceback.extract_stack()[:-1]
+
+                # Package files have a line added at import time, so we re-read
+                # the file to make line numbers match. We have to subtract two
+                # from the line number because the original line number is
+                # inflated once by the import statement and the lines are
+                # displaced one by the import statement.
+                for i, entry in enumerate(stack):
+                    filename, lineno, function, text = entry
+                    if spack.repo.is_package_file(filename):
+                        with open(filename, 'r') as f:
+                            lines = f.readlines()
+                        new_lineno = lineno - 2
+                        text = lines[new_lineno]
+                        stack[i] = (filename, new_lineno, function, text)
+
+                # Format the stack to print and print it
+                out = traceback.format_list(stack)
+                for line in out:
+                    print(line.rstrip('\n'))
+
+                if exc_type is spack.util.executable.ProcessError:
+                    out = six.StringIO()
+                    spack.build_environment.write_log_summary(
+                        out, 'test', self.test_log_file, last=1)
+                    m = out.getvalue()
+                else:
+                    # We're below the package context, so get context from
+                    # stack instead of from traceback.
+                    # The traceback is truncated here, so we can't use it to
+                    # traverse the stack.
+                    m = '\n'.join(
+                        spack.build_environment.get_package_context(tb)
+                    )
+
+                exc = e  # e is deleted after this block
+
+                # If we fail fast, raise another error
+                if spack.config.get('config:fail_fast', False):
+                    raise TestFailure([(exc, m)])
+                else:
+                    self.test_failures.append((exc, m))
+                return False
+
+    def _run_test_helper(self, runner, options, expected, status, installed,
+                         purpose):
+        status = [status] if isinstance(status, six.integer_types) else status
+        expected = [expected] if isinstance(expected, six.string_types) else \
+            expected
+        options = [options] if isinstance(options, six.string_types) else \
+            options
+
+        if purpose:
+            tty.msg(purpose)
+        else:
+            tty.debug('test: {0}: expect command status in {1}'
+                      .format(runner.name, status))
+
+        if installed:
+            msg = "Executable '{0}' expected in prefix".format(runner.name)
+            msg += ", found in {0} instead".format(runner.path)
+            assert runner.path.startswith(self.spec.prefix), msg
+
+        try:
+            output = runner(*options, output=str.split, error=str.split)
+
+            assert 0 in status, \
+                'Expected {0} execution to fail'.format(runner.name)
+        except ProcessError as err:
+            output = str(err)
+            match = re.search(r'exited with status ([0-9]+)', output)
+            if not (match and int(match.group(1)) in status):
+                raise
+
+        for check in expected:
+            cmd = ' '.join([runner.name] + options)
+            msg = "Expected '{0}' to match output of `{1}`".format(check, cmd)
+            msg += '\n\nOutput: {0}'.format(output)
+            assert re.search(check, output), msg
+
     def unit_test_check(self):
         """Hook for unit tests to assert things about package internals.
 
@@ -1678,7 +1882,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """This function checks whether install succeeded."""
 
         def check_paths(path_list, filetype, predicate):
-            if isinstance(path_list, string_types):
+            if isinstance(path_list, six.string_types):
                 path_list = [path_list]
 
             for path in path_list:
@@ -2031,7 +2235,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # copy spec metadata to "deprecated" dir of deprecator
         depr_yaml = spack.store.layout.deprecated_file_path(spec,
                                                             deprecator)
-        fs.mkdirp(os.path.dirname(depr_yaml))
+        fsys.mkdirp(os.path.dirname(depr_yaml))
         shutil.copy2(self_yaml, depr_yaml)
 
         # Any specs deprecated in favor of this spec are re-deprecated in
@@ -2210,7 +2414,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         doc = re.sub(r'\s+', ' ', self.__doc__)
         lines = textwrap.wrap(doc, 72)
-        results = StringIO()
+        results = six.StringIO()
         for line in lines:
             results.write((" " * indent) + line + "\n")
         return results.getvalue()
@@ -2311,6 +2515,71 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+
+
+def test_process(pkg, kwargs):
+    with tty.log.log_output(pkg.test_log_file) as logger:
+        with logger.force_echo():
+            tty.msg('Testing package {0}'
+                    .format(pkg.test_suite.test_pkg_id(pkg.spec)))
+
+        # use debug print levels for log file to record commands
+        old_debug = tty.is_debug()
+        tty.set_debug(True)
+
+        # run test methods from the package and all virtuals it
+        # provides virtuals have to be deduped by name
+        v_names = list(set([vspec.name
+                            for vspec in pkg.virtuals_provided]))
+
+        # hack for compilers that are not dependencies (yet)
+        # TODO: this all eventually goes away
+        c_names = ('gcc', 'intel', 'intel-parallel-studio', 'pgi')
+        if pkg.name in c_names:
+            v_names.extend(['c', 'cxx', 'fortran'])
+        if pkg.spec.satisfies('llvm+clang'):
+            v_names.extend(['c', 'cxx'])
+
+        test_specs = [pkg.spec] + [spack.spec.Spec(v_name)
+                                   for v_name in sorted(v_names)]
+
+        try:
+            with fsys.working_dir(
+                    pkg.test_suite.test_dir_for_spec(pkg.spec)):
+                for spec in test_specs:
+                    pkg.test_suite.current_test_spec = spec
+                    # Fail gracefully if a virtual has no package/tests
+                    try:
+                        spec_pkg = spec.package
+                    except spack.repo.UnknownPackageError:
+                        continue
+
+                    # copy test data into test data dir
+                    data_source = Prefix(spec_pkg.package_dir).test
+                    data_dir = pkg.test_suite.current_test_data_dir
+                    if (os.path.isdir(data_source) and
+                            not os.path.exists(data_dir)):
+                        # We assume data dir is used read-only
+                        # maybe enforce this later
+                        shutil.copytree(data_source, data_dir)
+
+                    # grab the function for each method so we can call
+                    # it with the package
+                    test_fn = spec_pkg.__class__.test
+                    if not isinstance(test_fn, types.FunctionType):
+                        test_fn = test_fn.__func__
+
+                    # Run the tests
+                    test_fn(pkg)
+
+            # If fail-fast was on, we error out above
+            # If we collect errors, raise them in batch here
+            if pkg.test_failures:
+                raise TestFailure(pkg.test_failures)
+
+        finally:
+            # reset debug level
+            tty.set_debug(old_debug)
 
 
 inject_flags = PackageBase.inject_flags

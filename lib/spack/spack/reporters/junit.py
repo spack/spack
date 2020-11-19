@@ -33,3 +33,6 @@ class JUnit(Reporter):
             formatted = template.render(report_data)
             # Pre-emptively remove all ANSI escape sequences
             fd.write(ANTI_ANSI.sub('', formatted).encode('utf-8'))
+
+    def test_report(self, filename, report_data):
+        self.build_report(filename, report_data)

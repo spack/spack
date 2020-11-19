@@ -70,6 +70,10 @@ config:
     - ~/.spack/stage
   # - $spack/var/spack/stage
 
+  # Directory in which to run tests and store test results.
+  # Tests will be stored in directories named by date/time and package
+  # name/hash.
+  test_stage: ~/.spack/test
 
   # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.

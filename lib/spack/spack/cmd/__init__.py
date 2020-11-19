@@ -343,6 +343,7 @@ def display_specs(specs, args=None, **kwargs):
         decorators (dict): dictionary mappng specs to decorators
         header_callback (function): called at start of arch/compiler groups
         all_headers (bool): show headers even when arch/compiler aren't defined
+        output (stream): A file object to write to. Default is ``sys.stdout``
 
     """
     def get_arg(name, default=None):
@@ -363,6 +364,7 @@ def display_specs(specs, args=None, **kwargs):
     variants      = get_arg('variants', False)
     groups        = get_arg('groups', True)
     all_headers   = get_arg('all_headers', False)
+    output        = get_arg('output', sys.stdout)
 
     decorator     = get_arg('decorator', None)
     if decorator is None:
@@ -411,32 +413,39 @@ def display_specs(specs, args=None, **kwargs):
 
         # unless any of these are set, we can just colify and be done.
         if not any((deps, paths)):
-            colify((f[0] for f in formatted), indent=indent)
-            return
+            colify((f[0] for f in formatted), indent=indent, output=output)
+            return ''
 
         # otherwise, we'll print specs one by one
         max_width = max(len(f[0]) for f in formatted)
         path_fmt = "%%-%ds%%s" % (max_width + 2)
 
-        for string, spec in formatted:
-            if not string:
-                print()  # print newline from above
-                continue
+        out = ''
+        # getting lots of prefixes requires DB lookups. Ensure
+        # all spec.prefix calls are in one transaction.
+        with spack.store.db.read_transaction():
+            for string, spec in formatted:
+                if not string:
+                    # print newline from above
+                    out += '\n'
+                    continue
 
-            if paths:
-                print(path_fmt % (string, spec.prefix))
-            else:
-                print(string)
+                if paths:
+                    out += path_fmt % (string, spec.prefix) + '\n'
+                else:
+                    out += string + '\n'
 
-    # both branches perform sorting operations that access the prefix or
-    # get it directly. getting lots of prefixes requires DB lookups. Ensure
-    # all spec.prefix calls are in one transaction.
-    with spack.store.db.read_transaction():
-        if groups:
-            for specs in iter_groups(specs, indent, all_headers):
-                format_list(specs)
-        else:
-                format_list(sorted(specs))
+        return out
+
+    out = ''
+    if groups:
+        for specs in iter_groups(specs, indent, all_headers):
+            out += format_list(specs)
+    else:
+        out = format_list(sorted(specs))
+
+    output.write(out)
+    output.flush()
 
 
 def spack_is_git_repo():

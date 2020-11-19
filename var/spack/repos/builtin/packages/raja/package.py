@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class Raja(CMakePackage, CudaPackage):
     """RAJA Parallel Framework."""
@@ -74,3 +72,52 @@ class Raja(CMakePackage, CudaPackage):
             options.append('-DENABLE_TESTS=ON')
 
         return options
+
+    @property
+    def build_relpath(self):
+        """Relative path to the cmake build subdirectory."""
+        return join_path('..', self.build_dirname)
+
+    @run_after('install')
+    def setup_build_tests(self):
+        """Copy the build test files after the package is installed to a
+        relative install test subdirectory for use during `spack test run`."""
+        # Now copy the relative files
+        self.cache_extra_test_sources(self.build_relpath)
+
+        # Ensure the path exists since relying on a relative path at the
+        # same level as the normal stage source path.
+        mkdirp(self.install_test_root)
+
+    @property
+    def _extra_tests_path(self):
+        # TODO: The tests should be converted to re-build and run examples
+        # TODO: using the installed libraries.
+        return join_path(self.install_test_root, self.build_relpath, 'bin')
+
+    def _test_examples(self):
+        """Perform very basic checks on a subset of copied examples."""
+        checks = [
+            ('ex5_line-of-sight_solution',
+             [r'RAJA sequential', r'RAJA OpenMP', r'result -- PASS']),
+            ('ex6_stencil-offset-layout_solution',
+             [r'RAJA Views \(permuted\)', r'result -- PASS']),
+            ('ex8_tiled-matrix-transpose_solution',
+             [r'parallel top inner loop',
+              r'collapsed inner loops', r'result -- PASS']),
+            ('kernel-dynamic-tile', [r'Running index', r'(24,24)']),
+            ('plugin-example',
+             [r'Launching host kernel for the 10 time']),
+            ('tut_batched-matrix-multiply', [r'result -- PASS']),
+            ('wave-eqn', [r'Max Error = 2', r'Evolved solution to time'])
+        ]
+        for exe, expected in checks:
+            reason = 'test: checking output of {0} for {1}' \
+                .format(exe, expected)
+            self.run_test(exe, [], expected, installed=False,
+                          purpose=reason, skip_missing=True,
+                          work_dir=self._extra_tests_path)
+
+    def test(self):
+        """Perform smoke tests."""
+        self._test_examples()

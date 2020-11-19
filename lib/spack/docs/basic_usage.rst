@@ -280,6 +280,102 @@ and removed everything that is not either:
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages
 or :ref:`dependency-types` for a more thorough treatment of dependency types.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Marking packages explicit or implicit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, Spack will mark packages a user installs as explicitly installed,
+while all of its dependencies will be marked as implicitly installed. Packages
+can be marked manually as explicitly or implicitly installed by using
+``spack mark``. This can be used in combination with ``spack gc`` to clean up
+packages that are no longer required.
+
+.. code-block:: console
+
+  $ spack install m4
+  ==> 29005: Installing libsigsegv
+  [...]
+  ==> 29005: Installing m4
+  [...]
+
+  $ spack install m4 ^libsigsegv@2.11
+  ==> 39798: Installing libsigsegv
+  [...]
+  ==> 39798: Installing m4
+  [...]
+
+  $ spack find -d
+  ==> 4 installed packages
+  -- linux-fedora32-haswell / gcc@10.1.1 --------------------------
+  libsigsegv@2.11
+
+  libsigsegv@2.12
+
+  m4@1.4.18
+      libsigsegv@2.12
+
+  m4@1.4.18
+      libsigsegv@2.11
+
+  $ spack gc
+  ==> There are no unused specs. Spack's store is clean.
+
+  $ spack mark -i m4 ^libsigsegv@2.11
+  ==> m4@1.4.18 : marking the package implicit
+
+  $ spack gc
+  ==> The following packages will be uninstalled:
+
+      -- linux-fedora32-haswell / gcc@10.1.1 --------------------------
+      5fj7p2o libsigsegv@2.11  c6ensc6 m4@1.4.18
+
+  ==> Do you want to proceed? [y/N]
+
+In the example above, we ended up with two versions of ``m4`` since they depend
+on different versions of ``libsigsegv``. ``spack gc`` will not remove any of
+the packages since both versions of ``m4`` have been installed explicitly
+and both versions of ``libsigsegv`` are required by the ``m4`` packages.
+
+``spack mark`` can also be used to implement upgrade workflows. The following
+example demonstrates how the ``spack mark`` and ``spack gc`` can be used to
+only keep the current version of a package installed.
+
+When updating Spack via ``git pull``, new versions for either ``libsigsegv``
+or ``m4`` might be introduced. This will cause Spack to install duplicates.
+Since we only want to keep one version, we mark everything as implicitly
+installed before updating Spack. If there is no new version for either of the
+packages, ``spack install`` will simply mark them as explicitly installed and
+``spack gc`` will not remove them.
+
+.. code-block:: console
+
+  $ spack install m4
+  ==> 62843: Installing libsigsegv
+  [...]
+  ==> 62843: Installing m4
+  [...]
+
+  $ spack mark -i -a
+  ==> m4@1.4.18 : marking the package implicit
+
+  $ git pull
+  [...]
+
+  $ spack install m4
+  [...]
+  ==> m4@1.4.18 : marking the package explicit
+  [...]
+
+  $ spack gc
+  ==> There are no unused specs. Spack's store is clean.
+
+When using this workflow for installations that contain more packages, care
+has to be taken to either only mark selected packages or issue ``spack install``
+for all packages that should be kept.
+
+You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly
+or implicitly installed packages.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-Downloadable Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^

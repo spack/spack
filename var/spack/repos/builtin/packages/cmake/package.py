@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
 
 
@@ -250,7 +251,7 @@ class Cmake(Package):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def build_test(self):
         # Some tests fail, takes forever
         make('test')
 
@@ -262,3 +263,12 @@ class Cmake(Package):
                 filter_file('mpcc_r)', 'mpcc_r mpifcc)', f, string=True)
                 filter_file('mpc++_r)', 'mpc++_r mpiFCC)', f, string=True)
                 filter_file('mpifc)', 'mpifc mpifrt)', f, string=True)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        spec_vers_str = 'version {0}'.format(self.spec.version)
+
+        for exe in ['ccmake', 'cmake', 'cpack', 'ctest']:
+            reason = 'test version of {0} is {1}'.format(exe, spec_vers_str)
+            self.run_test(exe, ['--version'], [spec_vers_str],
+                          installed=True, purpose=reason, skip_missing=True)
