@@ -53,7 +53,7 @@ class Brayns(CMakePackage):
     depends_on('cuda', when='+optix')
     depends_on('glm')
 
-    patch('brion.patch', when='@develop')
+    # patch('brion.patch', when='@develop')
     patch('fix_forgotten_algorithm.patch', when='@0.8.0')
 
     def patch(self):
