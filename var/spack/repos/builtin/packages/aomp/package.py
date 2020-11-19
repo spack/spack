@@ -319,7 +319,7 @@ class Aomp(Package):
             kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
             with working_dir('aomp-dir/hip-on-vdi'):
                 match = '^#!/usr/bin/python'
-                python = '/usr/bin/env python2.7'
+                python = self.spec['python'].command.path
                 substitute = "#!{python}".format(python=python)
                 files = [
                     'hip_prof_gen.py', 'vdi/hip_prof_gen.py'
