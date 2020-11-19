@@ -96,7 +96,11 @@ def test_apple_clang_version_detection(
     ('clang version 8.0.0-3 (tags/RELEASE_800/final)\n'
      'Target: aarch64-unknown-linux-gnu\n'
      'Thread model: posix\n'
-     'InstalledDir: /usr/bin\n', '8.0.0')
+     'InstalledDir: /usr/bin\n', '8.0.0'),
+    ('clang version 11.0.0\n'
+     'Target: aarch64-unknown-linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir: /usr/bin\n', '11.0.0')
 ])
 def test_clang_version_detection(version_str, expected_version):
     version = spack.compilers.clang.Clang.extract_version_from_output(
